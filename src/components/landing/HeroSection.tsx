@@ -2,6 +2,9 @@ import { Box, Container, Typography, Button, Stack, Chip } from '@mui/material';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
+import FolderSpecialIcon from '@mui/icons-material/FolderSpecial';
+import BubbleChartIcon from '@mui/icons-material/BubbleChart';
 
 export const HeroSection = () => {
   return (
@@ -12,7 +15,7 @@ export const HeroSection = () => {
         alignItems: 'center',
         position: 'relative',
         overflow: 'hidden',
-        pt: 8,
+        pt: 12,
       }}
     >
       {/* Background effects */}
@@ -157,34 +160,57 @@ export const HeroSection = () => {
             </Stack>
           </motion.div>
 
+          {/* Feature cards instead of image */}
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.5 }}
           >
-            <Box
-              sx={{
-                mt: 8,
-                p: 2,
-                borderRadius: 3,
-                background: 'linear-gradient(145deg, rgba(38, 38, 38, 0.8) 0%, rgba(31, 31, 31, 0.8) 100%)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                backdropFilter: 'blur(10px)',
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-              }}
+            <Stack
+              direction={{ xs: 'column', md: 'row' }}
+              spacing={3}
+              sx={{ mt: 10 }}
+              justifyContent="center"
             >
-              <Box
-                component="img"
-                src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&h=600&fit=crop"
-                alt="Dashboard Preview"
-                sx={{
-                  width: '100%',
-                  height: 'auto',
-                  borderRadius: 2,
-                  opacity: 0.9,
-                }}
-              />
-            </Box>
+              {[
+                { icon: <NotificationsActiveIcon sx={{ fontSize: 32 }} />, label: 'Alerts', count: 'Real-time' },
+                { icon: <FolderSpecialIcon sx={{ fontSize: 32 }} />, label: 'Cases', count: 'Collaborative' },
+                { icon: <BubbleChartIcon sx={{ fontSize: 32 }} />, label: 'Observables', count: 'Enriched' },
+              ].map((item, index) => (
+                <motion.div
+                  key={item.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.6 + index * 0.1 }}
+                >
+                  <Box
+                    sx={{
+                      p: 4,
+                      borderRadius: 3,
+                      background: 'rgba(33, 33, 33, 0.6)',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      backdropFilter: 'blur(10px)',
+                      minWidth: 200,
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        borderColor: 'rgba(255, 102, 0, 0.3)',
+                        transform: 'translateY(-4px)',
+                      },
+                    }}
+                  >
+                    <Box sx={{ color: 'primary.main', mb: 2 }}>
+                      {item.icon}
+                    </Box>
+                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
+                      {item.label}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                      {item.count}
+                    </Typography>
+                  </Box>
+                </motion.div>
+              ))}
+            </Stack>
           </motion.div>
         </Box>
       </Container>

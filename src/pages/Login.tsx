@@ -16,6 +16,7 @@ import {
 import { motion } from 'framer-motion';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import { getApiUrl, API_ENDPOINTS } from '@/config/api';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -31,7 +32,7 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const response = await fetch('https://shuffler.io/api/v1/login', {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.login), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
