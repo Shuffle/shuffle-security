@@ -13,9 +13,9 @@ export const StatsSection = () => {
     <Box
       sx={{
         py: 10,
-        background: 'linear-gradient(180deg, rgba(34, 184, 207, 0.05) 0%, transparent 100%)',
-        borderTop: '1px solid rgba(148, 163, 184, 0.1)',
-        borderBottom: '1px solid rgba(148, 163, 184, 0.1)',
+        background: 'linear-gradient(180deg, rgba(255, 102, 0, 0.04) 0%, transparent 100%)',
+        borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
       }}
     >
       <Container maxWidth="lg">
@@ -34,7 +34,7 @@ export const StatsSection = () => {
                     sx={{
                       fontWeight: 700,
                       fontSize: { xs: '2.5rem', md: '3.5rem' },
-                      background: 'linear-gradient(135deg, #22b8cf 0%, #0ea5e9 100%)',
+                      background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
                       WebkitBackgroundClip: 'text',
                       WebkitTextFillColor: 'transparent',
                       mb: 1,

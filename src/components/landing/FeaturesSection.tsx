@@ -18,7 +18,7 @@ const features = [
     icon: <FolderSpecialIcon sx={{ fontSize: 40 }} />,
     title: 'Case Investigation',
     description: 'Create comprehensive cases from alerts, track investigation progress, and maintain detailed audit trails.',
-    color: '#22b8cf',
+    color: '#FF6600',
   },
   {
     icon: <AssignmentIcon sx={{ fontSize: 40 }} />,
@@ -42,7 +42,7 @@ const features = [
     icon: <AutoFixHighIcon sx={{ fontSize: 40 }} />,
     title: 'Automated Actions',
     description: 'Configure automated response actions to accelerate containment and reduce mean time to respond.',
-    color: '#0ea5e9',
+    color: '#FF6600',
   },
 ];
 
@@ -93,7 +93,7 @@ export const FeaturesSection = () => {
             <Box
               component="span"
               sx={{
-                background: 'linear-gradient(135deg, #22b8cf 0%, #0ea5e9 100%)',
+                background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
               }}

@@ -4,10 +4,10 @@ export const muiTheme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: '#22b8cf',
-      light: '#3bc9db',
-      dark: '#1aa3b4',
-      contrastText: '#0f172a',
+      main: '#FF6600',
+      light: '#FF8533',
+      dark: '#CC5200',
+      contrastText: '#ffffff',
     },
     secondary: {
       main: '#64748b',
@@ -35,15 +35,15 @@ export const muiTheme = createTheme({
       dark: '#2563eb',
     },
     background: {
-      default: '#0f172a',
-      paper: '#1e293b',
+      default: '#1a1a1a',
+      paper: '#212121',
     },
     text: {
-      primary: '#f8fafc',
-      secondary: '#94a3b8',
-      disabled: '#64748b',
+      primary: '#ffffff',
+      secondary: 'rgba(255,255,255,0.6)',
+      disabled: 'rgba(255,255,255,0.3)',
     },
-    divider: 'rgba(148, 163, 184, 0.12)',
+    divider: 'rgba(255, 255, 255, 0.08)',
   },
   typography: {
     fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
@@ -84,18 +84,18 @@ export const muiTheme = createTheme({
           fontWeight: 600,
         },
         containedPrimary: {
-          background: 'linear-gradient(135deg, #22b8cf 0%, #0ea5e9 100%)',
-          boxShadow: '0 4px 14px rgba(34, 184, 207, 0.25)',
+          background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
+          boxShadow: '0 4px 14px rgba(255, 102, 0, 0.25)',
           '&:hover': {
-            background: 'linear-gradient(135deg, #3bc9db 0%, #38bdf8 100%)',
-            boxShadow: '0 6px 20px rgba(34, 184, 207, 0.35)',
+            background: 'linear-gradient(135deg, #FF8533 0%, #FF9955 100%)',
+            boxShadow: '0 6px 20px rgba(255, 102, 0, 0.35)',
           },
         },
         outlined: {
-          borderColor: 'rgba(34, 184, 207, 0.5)',
+          borderColor: 'rgba(255, 102, 0, 0.5)',
           '&:hover': {
-            borderColor: '#22b8cf',
-            backgroundColor: 'rgba(34, 184, 207, 0.08)',
+            borderColor: '#FF6600',
+            backgroundColor: 'rgba(255, 102, 0, 0.08)',
           },
         },
       },
@@ -103,9 +103,9 @@ export const muiTheme = createTheme({
     MuiCard: {
       styleOverrides: {
         root: {
-          backgroundImage: 'linear-gradient(145deg, #1e293b 0%, #162032 100%)',
+          backgroundImage: 'linear-gradient(145deg, #262626 0%, #1f1f1f 100%)',
           borderRadius: 12,
-          border: '1px solid rgba(148, 163, 184, 0.1)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
         },
       },
     },
@@ -119,28 +119,28 @@ export const muiTheme = createTheme({
     MuiAppBar: {
       styleOverrides: {
         root: {
-          backgroundColor: 'rgba(15, 23, 42, 0.8)',
+          backgroundColor: 'rgba(26, 26, 26, 0.9)',
           backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(148, 163, 184, 0.1)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
         },
       },
     },
     MuiDrawer: {
       styleOverrides: {
         paper: {
-          backgroundColor: '#0c1222',
-          borderRight: '1px solid rgba(148, 163, 184, 0.1)',
+          backgroundColor: '#181818',
+          borderRight: '1px solid rgba(255, 255, 255, 0.08)',
         },
       },
     },
     MuiTableCell: {
       styleOverrides: {
         root: {
-          borderBottom: '1px solid rgba(148, 163, 184, 0.1)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
         },
         head: {
           fontWeight: 600,
-          backgroundColor: 'rgba(30, 41, 59, 0.5)',
+          backgroundColor: 'rgba(33, 33, 33, 0.5)',
         },
       },
     },

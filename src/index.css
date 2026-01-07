@@ -6,34 +6,34 @@
 
 @layer base {
   :root {
-    /* Core backgrounds */
-    --background: 222 47% 11%;
-    --background-elevated: 220 43% 14%;
-    --background-surface: 218 39% 17%;
+    /* Core backgrounds - Shuffle dark theme */
+    --background: 0 0% 10%;
+    --background-elevated: 0 0% 13%;
+    --background-surface: 0 0% 16%;
     
-    --foreground: 210 40% 98%;
-    --foreground-muted: 215 20% 65%;
+    --foreground: 0 0% 100%;
+    --foreground-muted: 0 0% 60%;
 
-    --card: 218 39% 15%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 13%;
+    --card-foreground: 0 0% 100%;
 
-    --popover: 218 39% 13%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 100%;
 
-    /* Primary - Teal/Cyan accent */
-    --primary: 187 72% 45%;
-    --primary-foreground: 222 47% 11%;
-    --primary-glow: 187 72% 55%;
+    /* Primary - Shuffle Orange */
+    --primary: 24 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 24 100% 60%;
 
     /* Secondary */
-    --secondary: 220 43% 22%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 0 0% 18%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 220 30% 20%;
-    --muted-foreground: 215 20% 55%;
+    --muted: 0 0% 16%;
+    --muted-foreground: 0 0% 50%;
 
-    --accent: 187 72% 45%;
-    --accent-foreground: 222 47% 11%;
+    --accent: 24 100% 50%;
+    --accent-foreground: 0 0% 100%;
 
     /* Severity colors */
     --severity-critical: 0 84% 60%;
@@ -43,42 +43,42 @@
     --severity-info: 210 100% 56%;
 
     /* Status colors */
-    --status-open: 187 72% 45%;
+    --status-open: 24 100% 50%;
     --status-in-progress: 45 93% 47%;
     --status-resolved: 142 71% 45%;
-    --status-closed: 215 20% 55%;
+    --status-closed: 0 0% 50%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 220 30% 25%;
-    --border-subtle: 220 30% 20%;
-    --input: 220 30% 22%;
-    --ring: 187 72% 45%;
+    --border: 0 0% 20%;
+    --border-subtle: 0 0% 16%;
+    --input: 0 0% 18%;
+    --ring: 24 100% 50%;
 
     --radius: 0.5rem;
 
-    /* Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(222 47% 11%) 0%, hsl(220 43% 17%) 50%, hsl(222 47% 11%) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(218 39% 17%) 0%, hsl(220 43% 14%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(187 72% 45%) 0%, hsl(199 89% 48%) 100%);
-    --gradient-glow: radial-gradient(ellipse at center, hsl(187 72% 45% / 0.15) 0%, transparent 70%);
+    /* Gradients - Shuffle orange theme */
+    --gradient-hero: linear-gradient(135deg, hsl(0 0% 10%) 0%, hsl(0 0% 14%) 50%, hsl(0 0% 10%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 14%) 0%, hsl(0 0% 12%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(24 100% 50%) 0%, hsl(24 100% 60%) 100%);
+    --gradient-glow: radial-gradient(ellipse at center, hsl(24 100% 50% / 0.15) 0%, transparent 70%);
 
     /* Shadows */
-    --shadow-sm: 0 1px 2px 0 hsl(222 47% 5% / 0.5);
-    --shadow-md: 0 4px 6px -1px hsl(222 47% 5% / 0.5), 0 2px 4px -2px hsl(222 47% 5% / 0.5);
-    --shadow-lg: 0 10px 15px -3px hsl(222 47% 5% / 0.6), 0 4px 6px -4px hsl(222 47% 5% / 0.6);
-    --shadow-glow: 0 0 20px hsl(187 72% 45% / 0.3);
+    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.5);
+    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.5), 0 2px 4px -2px hsl(0 0% 0% / 0.5);
+    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.6), 0 4px 6px -4px hsl(0 0% 0% / 0.6);
+    --shadow-glow: 0 0 20px hsl(24 100% 50% / 0.3);
 
     /* Sidebar */
-    --sidebar-background: 222 47% 9%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 187 72% 45%;
-    --sidebar-primary-foreground: 222 47% 11%;
-    --sidebar-accent: 220 43% 18%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 220 30% 20%;
-    --sidebar-ring: 187 72% 45%;
+    --sidebar-background: 0 0% 9%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 24 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 16%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 16%;
+    --sidebar-ring: 24 100% 50%;
   }
 }
 
@@ -147,10 +147,10 @@
 
   @keyframes pulse-glow {
     0%, 100% { 
-      box-shadow: 0 0 20px hsl(187 72% 45% / 0.3);
+      box-shadow: 0 0 20px hsl(24 100% 50% / 0.3);
     }
     50% { 
-      box-shadow: 0 0 40px hsl(187 72% 45% / 0.5);
+      box-shadow: 0 0 40px hsl(24 100% 50% / 0.5);
     }
   }
 }

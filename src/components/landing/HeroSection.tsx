@@ -2,7 +2,6 @@ import { Box, Container, Typography, Button, Stack, Chip } from '@mui/material';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 
 export const HeroSection = () => {
   return (
@@ -25,7 +24,7 @@ export const HeroSection = () => {
           transform: 'translateX(-50%)',
           width: '150%',
           height: '80%',
-          background: 'radial-gradient(ellipse at center, rgba(34, 184, 207, 0.08) 0%, transparent 60%)',
+          background: 'radial-gradient(ellipse at center, rgba(255, 102, 0, 0.06) 0%, transparent 60%)',
           pointerEvents: 'none',
         }}
       />
@@ -37,8 +36,8 @@ export const HeroSection = () => {
           right: 0,
           bottom: 0,
           backgroundImage: `
-            linear-gradient(rgba(34, 184, 207, 0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(34, 184, 207, 0.03) 1px, transparent 1px)
+            linear-gradient(rgba(255, 102, 0, 0.02) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 102, 0, 0.02) 1px, transparent 1px)
           `,
           backgroundSize: '60px 60px',
           pointerEvents: 'none',
@@ -53,14 +52,14 @@ export const HeroSection = () => {
             transition={{ duration: 0.6 }}
           >
             <Chip
-              label="🚀 Now with AI-powered threat detection"
+              label="🔒 Powered by Shuffle Automation"
               sx={{
                 mb: 3,
                 py: 2.5,
                 px: 1,
                 fontSize: '0.9rem',
-                background: 'rgba(34, 184, 207, 0.1)',
-                border: '1px solid rgba(34, 184, 207, 0.3)',
+                background: 'rgba(255, 102, 0, 0.1)',
+                border: '1px solid rgba(255, 102, 0, 0.3)',
                 color: 'primary.main',
               }}
             />
@@ -80,16 +79,16 @@ export const HeroSection = () => {
                 mb: 3,
               }}
             >
-              Security Operations,{' '}
+              Case Management,{' '}
               <Box
                 component="span"
                 sx={{
-                  background: 'linear-gradient(135deg, #22b8cf 0%, #0ea5e9 100%)',
+                  background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                 }}
               >
-                Unified
+                Simplified
               </Box>
             </Typography>
           </motion.div>
@@ -128,7 +127,7 @@ export const HeroSection = () => {
             >
               <Button
                 component={Link}
-                to="/dashboard"
+                to="/login"
                 variant="contained"
                 size="large"
                 endIcon={<ArrowForwardIcon />}
@@ -138,19 +137,22 @@ export const HeroSection = () => {
                   fontSize: '1.1rem',
                 }}
               >
-                Start Free Trial
+                Get Started
               </Button>
               <Button
+                component="a"
+                href="https://shuffler.io/docs"
+                target="_blank"
+                rel="noopener noreferrer"
                 variant="outlined"
                 size="large"
-                startIcon={<PlayArrowIcon />}
                 sx={{
                   py: 1.5,
                   px: 4,
                   fontSize: '1.1rem',
                 }}
               >
-                Watch Demo
+                Read Docs
               </Button>
             </Stack>
           </motion.div>
@@ -165,8 +167,8 @@ export const HeroSection = () => {
                 mt: 8,
                 p: 2,
                 borderRadius: 3,
-                background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.8) 0%, rgba(22, 32, 50, 0.8) 100%)',
-                border: '1px solid rgba(148, 163, 184, 0.1)',
+                background: 'linear-gradient(145deg, rgba(38, 38, 38, 0.8) 0%, rgba(31, 31, 31, 0.8) 100%)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
                 backdropFilter: 'blur(10px)',
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
               }}

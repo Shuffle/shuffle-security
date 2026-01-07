@@ -16,15 +16,22 @@ import {
   useTheme,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import SecurityIcon from '@mui/icons-material/Security';
 import { motion } from 'framer-motion';
 
 const navItems = [
   { label: 'Features', href: '#features' },
-  { label: 'Solutions', href: '#solutions' },
-  { label: 'Pricing', href: '#pricing' },
-  { label: 'Documentation', href: '#docs' },
+  { label: 'Docs', href: 'https://shuffler.io/docs' },
 ];
+
+// Shuffle logo SVG component
+const ShuffleLogo = () => (
+  <svg width="32" height="32" viewBox="0 0 56 56" fill="none">
+    <path
+      d="M14 14h28v6H20v16h16v-10h-8v-6h14v22H14V14z"
+      fill="#FF6600"
+    />
+  </svg>
+);
 
 export const LandingNavbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -44,21 +51,21 @@ export const LandingNavbar = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <SecurityIcon sx={{ color: 'primary.main', fontSize: 32 }} />
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <ShuffleLogo />
               <Typography
                 variant="h6"
                 component={Link}
                 to="/"
                 sx={{
                   fontWeight: 700,
-                  background: 'linear-gradient(135deg, #22b8cf 0%, #0ea5e9 100%)',
+                  background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   textDecoration: 'none',
                 }}
               >
-                SecureOps
+                Shuffle Cases
               </Typography>
             </Box>
           </motion.div>
@@ -75,6 +82,8 @@ export const LandingNavbar = () => {
                   <Typography
                     component="a"
                     href={item.href}
+                    target={item.href.startsWith('http') ? '_blank' : undefined}
+                    rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
                     sx={{
                       color: 'text.secondary',
                       textDecoration: 'none',
@@ -110,8 +119,10 @@ export const LandingNavbar = () => {
                     Sign In
                   </Button>
                   <Button
-                    component={Link}
-                    to="/dashboard"
+                    component="a"
+                    href="https://shuffler.io/register"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     variant="contained"
                   >
                     Get Started
@@ -148,6 +159,7 @@ export const LandingNavbar = () => {
                 <ListItemButton
                   component="a"
                   href={item.href}
+                  target={item.href.startsWith('http') ? '_blank' : undefined}
                   onClick={handleDrawerToggle}
                 >
                   <ListItemText primary={item.label} />
@@ -161,8 +173,10 @@ export const LandingNavbar = () => {
             </ListItem>
             <ListItem sx={{ px: 2, pt: 2 }}>
               <Button
-                component={Link}
-                to="/dashboard"
+                component="a"
+                href="https://shuffler.io/register"
+                target="_blank"
+                rel="noopener noreferrer"
                 variant="contained"
                 fullWidth
                 onClick={handleDrawerToggle}

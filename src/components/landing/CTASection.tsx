@@ -18,8 +18,8 @@ export const CTASection = () => {
               textAlign: 'center',
               p: { xs: 4, md: 8 },
               borderRadius: 4,
-              background: 'linear-gradient(145deg, rgba(34, 184, 207, 0.1) 0%, rgba(14, 165, 233, 0.05) 100%)',
-              border: '1px solid rgba(34, 184, 207, 0.2)',
+              background: 'linear-gradient(145deg, rgba(255, 102, 0, 0.1) 0%, rgba(255, 133, 51, 0.05) 100%)',
+              border: '1px solid rgba(255, 102, 0, 0.2)',
               position: 'relative',
               overflow: 'hidden',
             }}
@@ -33,7 +33,7 @@ export const CTASection = () => {
                 transform: 'translateX(-50%)',
                 width: '200%',
                 height: '200%',
-                background: 'radial-gradient(ellipse at center, rgba(34, 184, 207, 0.1) 0%, transparent 50%)',
+                background: 'radial-gradient(ellipse at center, rgba(255, 102, 0, 0.1) 0%, transparent 50%)',
                 pointerEvents: 'none',
               }}
             />
@@ -60,7 +60,7 @@ export const CTASection = () => {
                 position: 'relative',
               }}
             >
-              Join leading security teams who trust SecureOps for their incident response needs.
+              Join leading security teams who trust Shuffle Cases for their incident response needs.
             </Typography>
             <Stack
               direction={{ xs: 'column', sm: 'row' }}
@@ -70,15 +70,19 @@ export const CTASection = () => {
             >
               <Button
                 component={Link}
-                to="/dashboard"
+                to="/login"
                 variant="contained"
                 size="large"
                 endIcon={<ArrowForwardIcon />}
                 sx={{ py: 1.5, px: 4 }}
               >
-                Start Free Trial
+                Get Started
               </Button>
               <Button
+                component="a"
+                href="https://shuffler.io/contact"
+                target="_blank"
+                rel="noopener noreferrer"
                 variant="outlined"
                 size="large"
                 sx={{ py: 1.5, px: 4 }}

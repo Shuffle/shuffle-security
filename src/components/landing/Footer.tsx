@@ -1,16 +1,36 @@
 import { Box, Container, Typography, Grid, Link as MuiLink, Stack, IconButton } from '@mui/material';
 import { Link } from 'react-router-dom';
-import SecurityIcon from '@mui/icons-material/Security';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
 import TwitterIcon from '@mui/icons-material/Twitter';
 
 const footerLinks = {
-  Product: ['Features', 'Pricing', 'Integrations', 'Changelog'],
-  Company: ['About', 'Blog', 'Careers', 'Contact'],
-  Resources: ['Documentation', 'API Reference', 'Community', 'Support'],
-  Legal: ['Privacy', 'Terms', 'Security', 'Compliance'],
+  Product: [
+    { label: 'Features', href: '#features' },
+    { label: 'Pricing', href: 'https://shuffler.io/pricing' },
+    { label: 'Integrations', href: 'https://shuffler.io/apps' },
+  ],
+  Resources: [
+    { label: 'Documentation', href: 'https://shuffler.io/docs' },
+    { label: 'API Reference', href: 'https://shuffler.io/docs/API' },
+    { label: 'Community', href: 'https://discord.gg/shuffle' },
+  ],
+  Company: [
+    { label: 'About', href: 'https://shuffler.io/about' },
+    { label: 'Blog', href: 'https://shuffler.io/blog' },
+    { label: 'Contact', href: 'https://shuffler.io/contact' },
+  ],
 };
+
+// Shuffle logo SVG component
+const ShuffleLogo = () => (
+  <svg width="28" height="28" viewBox="0 0 56 56" fill="none">
+    <path
+      d="M14 14h28v6H20v16h16v-10h-8v-6h14v22H14V14z"
+      fill="#FF6600"
+    />
+  </svg>
+);
 
 export const Footer = () => {
   return (
@@ -18,54 +38,78 @@ export const Footer = () => {
       component="footer"
       sx={{
         py: 8,
-        borderTop: '1px solid rgba(148, 163, 184, 0.1)',
-        background: 'linear-gradient(180deg, transparent 0%, rgba(12, 18, 34, 0.5) 100%)',
+        borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+        background: 'linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.3) 100%)',
       }}
     >
       <Container maxWidth="lg">
         <Grid container spacing={8}>
           <Grid size={{ xs: 12, md: 4 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-              <SecurityIcon sx={{ color: 'primary.main', fontSize: 28 }} />
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+              <ShuffleLogo />
               <Typography
                 variant="h6"
                 sx={{
                   fontWeight: 700,
-                  background: 'linear-gradient(135deg, #22b8cf 0%, #0ea5e9 100%)',
+                  background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                 }}
               >
-                SecureOps
+                Shuffle Cases
               </Typography>
             </Box>
             <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3, maxWidth: 280 }}>
-              Empowering security teams with intelligent incident response and collaboration tools.
+              Empowering security teams with intelligent case management and collaboration tools.
             </Typography>
             <Stack direction="row" spacing={1}>
-              <IconButton size="small" sx={{ color: 'text.secondary', '&:hover': { color: 'primary.main' } }}>
+              <IconButton 
+                component="a"
+                href="https://github.com/shuffle"
+                target="_blank"
+                rel="noopener noreferrer"
+                size="small" 
+                sx={{ color: 'text.secondary', '&:hover': { color: 'primary.main' } }}
+              >
                 <GitHubIcon />
               </IconButton>
-              <IconButton size="small" sx={{ color: 'text.secondary', '&:hover': { color: 'primary.main' } }}>
+              <IconButton 
+                component="a"
+                href="https://linkedin.com/company/shuffler"
+                target="_blank"
+                rel="noopener noreferrer"
+                size="small" 
+                sx={{ color: 'text.secondary', '&:hover': { color: 'primary.main' } }}
+              >
                 <LinkedInIcon />
               </IconButton>
-              <IconButton size="small" sx={{ color: 'text.secondary', '&:hover': { color: 'primary.main' } }}>
+              <IconButton 
+                component="a"
+                href="https://twitter.com/shuffleio"
+                target="_blank"
+                rel="noopener noreferrer"
+                size="small" 
+                sx={{ color: 'text.secondary', '&:hover': { color: 'primary.main' } }}
+              >
                 <TwitterIcon />
               </IconButton>
             </Stack>
           </Grid>
 
           {Object.entries(footerLinks).map(([category, links]) => (
-            <Grid size={{ xs: 6, sm: 3, md: 2 }} key={category}>
+            <Grid size={{ xs: 6, sm: 4, md: 2 }} key={category}>
               <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2 }}>
                 {category}
               </Typography>
               <Stack spacing={1.5}>
                 {links.map((link) => (
                   <MuiLink
-                    key={link}
-                    component={Link}
-                    to="#"
+                    key={link.label}
+                    component={link.href.startsWith('http') || link.href.startsWith('#') ? 'a' : Link}
+                    href={link.href.startsWith('http') || link.href.startsWith('#') ? link.href : undefined}
+                    to={!link.href.startsWith('http') && !link.href.startsWith('#') ? link.href : undefined}
+                    target={link.href.startsWith('http') ? '_blank' : undefined}
+                    rel={link.href.startsWith('http') ? 'noopener noreferrer' : undefined}
                     sx={{
                       color: 'text.secondary',
                       textDecoration: 'none',
@@ -76,7 +120,7 @@ export const Footer = () => {
                       },
                     }}
                   >
-                    {link}
+                    {link.label}
                   </MuiLink>
                 ))}
               </Stack>
@@ -88,7 +132,7 @@ export const Footer = () => {
           sx={{
             mt: 8,
             pt: 4,
-            borderTop: '1px solid rgba(148, 163, 184, 0.1)',
+            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
             display: 'flex',
             flexDirection: { xs: 'column', sm: 'row' },
             justifyContent: 'space-between',
@@ -97,13 +141,23 @@ export const Footer = () => {
           }}
         >
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            © 2026 SecureOps. All rights reserved.
+            © 2026 Shuffle. All rights reserved.
           </Typography>
           <Stack direction="row" spacing={3}>
-            <MuiLink href="#" sx={{ color: 'text.secondary', fontSize: '0.875rem', textDecoration: 'none' }}>
+            <MuiLink 
+              href="https://shuffler.io/privacy" 
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={{ color: 'text.secondary', fontSize: '0.875rem', textDecoration: 'none' }}
+            >
               Privacy Policy
             </MuiLink>
-            <MuiLink href="#" sx={{ color: 'text.secondary', fontSize: '0.875rem', textDecoration: 'none' }}>
+            <MuiLink 
+              href="https://shuffler.io/terms" 
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={{ color: 'text.secondary', fontSize: '0.875rem', textDecoration: 'none' }}
+            >
               Terms of Service
             </MuiLink>
           </Stack>
