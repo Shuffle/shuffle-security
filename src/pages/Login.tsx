@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
   Card,
@@ -17,6 +17,8 @@ import { motion } from 'framer-motion';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { getApiUrl, API_ENDPOINTS } from '@/config/api';
+import { LandingNavbar } from '@/components/landing/LandingNavbar';
+import { useAuth } from '@/context/AuthContext';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -25,6 +27,16 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login, isAuthenticated } = useAuth();
+
+  const from = location.state?.from?.pathname || '/dashboard';
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, from]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,10 +59,10 @@ const Login = () => {
       }
 
       if (data.session_token) {
-        localStorage.setItem('session_token', data.session_token);
+        login(data.session_token);
       }
 
-      navigate('/dashboard');
+      navigate(from, { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred during login');
     } finally {
@@ -59,16 +71,18 @@ const Login = () => {
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        p: 3,
-        bgcolor: '#1a1a1a',
-      }}
-    >
+    <Box sx={{ minHeight: '100vh', bgcolor: '#1a1a1a' }}>
+      <LandingNavbar />
+      <Box
+        sx={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          p: 3,
+          pt: 12,
+        }}
+      >
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -298,6 +312,7 @@ const Login = () => {
           </CardContent>
         </Card>
       </motion.div>
+      </Box>
     </Box>
   );
 };
