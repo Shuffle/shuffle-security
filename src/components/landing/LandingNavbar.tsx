@@ -20,7 +20,7 @@ import { motion } from 'framer-motion';
 
 const navItems = [
   { label: 'Features', href: '#features' },
-  { label: 'Docs', href: 'https://shuffler.io/docs' },
+  { label: 'Docs', href: '/docs', internal: true },
 ];
 
 // Shuffle logo SVG component
@@ -79,24 +79,41 @@ export const LandingNavbar = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                 >
-                  <Typography
-                    component="a"
-                    href={item.href}
-                    target={item.href.startsWith('http') ? '_blank' : undefined}
-                    rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                    sx={{
-                      color: 'text.secondary',
-                      textDecoration: 'none',
-                      fontWeight: 500,
-                      fontSize: '0.95rem',
-                      transition: 'color 0.2s',
-                      '&:hover': {
-                        color: 'primary.main',
-                      },
-                    }}
-                  >
-                    {item.label}
-                  </Typography>
+                  {item.internal ? (
+                    <Typography
+                      component={Link}
+                      to={item.href}
+                      sx={{
+                        color: 'text.secondary',
+                        textDecoration: 'none',
+                        fontWeight: 500,
+                        fontSize: '0.95rem',
+                        transition: 'color 0.2s',
+                        '&:hover': {
+                          color: 'primary.main',
+                        },
+                      }}
+                    >
+                      {item.label}
+                    </Typography>
+                  ) : (
+                    <Typography
+                      component="a"
+                      href={item.href}
+                      sx={{
+                        color: 'text.secondary',
+                        textDecoration: 'none',
+                        fontWeight: 500,
+                        fontSize: '0.95rem',
+                        transition: 'color 0.2s',
+                        '&:hover': {
+                          color: 'primary.main',
+                        },
+                      }}
+                    >
+                      {item.label}
+                    </Typography>
+                  )}
                 </motion.div>
               ))}
             </Box>
@@ -157,9 +174,8 @@ export const LandingNavbar = () => {
             {navItems.map((item) => (
               <ListItem key={item.label} disablePadding>
                 <ListItemButton
-                  component="a"
-                  href={item.href}
-                  target={item.href.startsWith('http') ? '_blank' : undefined}
+                  component={item.internal ? Link : 'a'}
+                  {...(item.internal ? { to: item.href } : { href: item.href })}
                   onClick={handleDrawerToggle}
                 >
                   <ListItemText primary={item.label} />

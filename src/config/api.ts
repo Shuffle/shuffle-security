@@ -8,8 +8,9 @@
  */
 
 export const API_CONFIG = {
-  // Change this to your Shuffle backend URL
-  baseUrl: 'https://shuffler.io',
+  // Shuffle backend URL - can be overridden via environment variable
+  // See .env.example for configuration options
+  baseUrl: import.meta.env.VITE_SHUFFLE_API_URL || 'https://shuffler.io',
   
   // API version
   version: 'v1',

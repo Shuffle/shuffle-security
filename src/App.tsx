@@ -11,6 +11,7 @@ import DashboardHome from '@/pages/dashboard/DashboardHome';
 import AlertsPage from '@/pages/dashboard/AlertsPage';
 import CasesPage from '@/pages/dashboard/CasesPage';
 import TemplatesPage from '@/pages/dashboard/TemplatesPage';
+import DocsPage from '@/pages/docs/DocsPage';
 import NotFound from './pages/NotFound';
 
 const queryClient = new QueryClient();
@@ -24,6 +25,8 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/docs" element={<DocsPage />} />
+            <Route path="/docs/:slug" element={<DocsPage />} />
             <Route
               path="/dashboard"
               element={
