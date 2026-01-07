@@ -1,0 +1,94 @@
+import { Box, Container, Typography, Button, Stack } from '@mui/material';
+import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+
+export const CTASection = () => {
+  return (
+    <Box sx={{ py: 15 }}>
+      <Container maxWidth="md">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
+          <Box
+            sx={{
+              textAlign: 'center',
+              p: { xs: 4, md: 8 },
+              borderRadius: 4,
+              background: 'linear-gradient(145deg, rgba(34, 184, 207, 0.1) 0%, rgba(14, 165, 233, 0.05) 100%)',
+              border: '1px solid rgba(34, 184, 207, 0.2)',
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Glow effect */}
+            <Box
+              sx={{
+                position: 'absolute',
+                top: '-50%',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '200%',
+                height: '200%',
+                background: 'radial-gradient(ellipse at center, rgba(34, 184, 207, 0.1) 0%, transparent 50%)',
+                pointerEvents: 'none',
+              }}
+            />
+
+            <Typography
+              variant="h3"
+              sx={{
+                mb: 2,
+                fontWeight: 700,
+                fontSize: { xs: '1.75rem', md: '2.5rem' },
+                position: 'relative',
+              }}
+            >
+              Ready to Transform Your Security Operations?
+            </Typography>
+            <Typography
+              variant="h6"
+              sx={{
+                color: 'text.secondary',
+                mb: 4,
+                fontWeight: 400,
+                maxWidth: 500,
+                mx: 'auto',
+                position: 'relative',
+              }}
+            >
+              Join leading security teams who trust SecureOps for their incident response needs.
+            </Typography>
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={2}
+              justifyContent="center"
+              sx={{ position: 'relative' }}
+            >
+              <Button
+                component={Link}
+                to="/dashboard"
+                variant="contained"
+                size="large"
+                endIcon={<ArrowForwardIcon />}
+                sx={{ py: 1.5, px: 4 }}
+              >
+                Start Free Trial
+              </Button>
+              <Button
+                variant="outlined"
+                size="large"
+                sx={{ py: 1.5, px: 4 }}
+              >
+                Contact Sales
+              </Button>
+            </Stack>
+          </Box>
+        </motion.div>
+      </Container>
+    </Box>
+  );
+};
