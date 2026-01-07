@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Card,
@@ -7,18 +7,53 @@ import {
   Typography,
   TextField,
   Button,
-  Divider,
   Checkbox,
   FormControlLabel,
-  Link as MuiLink,
+  Alert,
+  CircularProgress,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import SecurityIcon from '@mui/icons-material/Security';
-import GoogleIcon from '@mui/icons-material/Google';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const response = await fetch('https://shuffler.io/api/v1/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.reason || data.message || 'Login failed');
+      }
+
+      // Store auth data if needed
+      if (data.session_token) {
+        localStorage.setItem('session_token', data.session_token);
+      }
+
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred during login');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Box
@@ -40,7 +75,7 @@ const Login = () => {
           transform: 'translateX(-50%)',
           width: '100%',
           height: '60%',
-          background: 'radial-gradient(ellipse at center, rgba(34, 184, 207, 0.08) 0%, transparent 60%)',
+          background: 'radial-gradient(ellipse at center, rgba(255, 102, 0, 0.08) 0%, transparent 60%)',
           pointerEvents: 'none',
         }}
       />
@@ -59,12 +94,12 @@ const Login = () => {
                   variant="h5"
                   sx={{
                     fontWeight: 700,
-                    background: 'linear-gradient(135deg, #22b8cf 0%, #0ea5e9 100%)',
+                    background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                   }}
                 >
-                  SecureOps
+                  Shuffle Cases
                 </Typography>
               </Box>
               <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
@@ -75,28 +110,21 @@ const Login = () => {
               </Typography>
             </Box>
 
-            <Button
-              fullWidth
-              variant="outlined"
-              startIcon={<GoogleIcon />}
-              sx={{ mb: 3, py: 1.5 }}
-            >
-              Continue with Google
-            </Button>
+            {error && (
+              <Alert severity="error" sx={{ mb: 3 }}>
+                {error}
+              </Alert>
+            )}
 
-            <Divider sx={{ mb: 3 }}>
-              <Typography variant="caption" sx={{ color: 'text.secondary', px: 2 }}>
-                or sign in with email
-              </Typography>
-            </Divider>
-
-            <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+            <Box component="form" onSubmit={handleLogin} sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
               <TextField
-                label="Email Address"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                label="Username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 fullWidth
+                required
+                disabled={loading}
               />
               <TextField
                 label="Password"
@@ -104,44 +132,26 @@ const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 fullWidth
+                required
+                disabled={loading}
               />
 
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <FormControlLabel
-                  control={<Checkbox size="small" />}
-                  label={<Typography variant="body2">Remember me</Typography>}
-                />
-                <MuiLink
-                  component={Link}
-                  to="#"
-                  sx={{ fontSize: '0.875rem', color: 'primary.main', textDecoration: 'none' }}
-                >
-                  Forgot password?
-                </MuiLink>
-              </Box>
+              <FormControlLabel
+                control={<Checkbox size="small" disabled={loading} />}
+                label={<Typography variant="body2">Remember me</Typography>}
+              />
 
               <Button
-                component={Link}
-                to="/dashboard"
+                type="submit"
                 variant="contained"
                 size="large"
                 fullWidth
+                disabled={loading}
                 sx={{ py: 1.5, mt: 1 }}
               >
-                Sign In
+                {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
               </Button>
             </Box>
-
-            <Typography variant="body2" sx={{ textAlign: 'center', mt: 3, color: 'text.secondary' }}>
-              Don't have an account?{' '}
-              <MuiLink
-                component={Link}
-                to="#"
-                sx={{ color: 'primary.main', textDecoration: 'none', fontWeight: 600 }}
-              >
-                Sign up
-              </MuiLink>
-            </Typography>
           </CardContent>
         </Card>
       </motion.div>
