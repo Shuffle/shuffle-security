@@ -5,7 +5,7 @@ import { muiTheme } from '@/theme/muiTheme';
 import { AuthProvider } from '@/context/AuthContext';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import Index from './pages/Index';
-import Login from './pages/Login';
+import AuthPage from './pages/AuthPage';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import DashboardHome from '@/pages/dashboard/DashboardHome';
 import AlertsPage from '@/pages/dashboard/AlertsPage';
@@ -24,7 +24,8 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
+            <Route path="/login" element={<AuthPage mode="login" />} />
+            <Route path="/register" element={<AuthPage mode="register" />} />
             <Route path="/docs" element={<DocsPage />} />
             <Route path="/docs/:slug" element={<DocsPage />} />
             <Route
