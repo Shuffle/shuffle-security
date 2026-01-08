@@ -27,6 +27,7 @@ import ExpandMore from '@mui/icons-material/ExpandMore';
 import SearchIcon from '@mui/icons-material/Search';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { useAuth } from '@/context/AuthContext';
+import { IntegrationStatus } from './IntegrationStatus';
 
 const drawerWidth = 260;
 const collapsedWidth = 64;
@@ -443,6 +444,11 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
           </Box>
         ))}
       </List>
+      {/* Integrations Section */}
+      <Box sx={{ mt: 2 }}>
+        <Divider sx={{ borderColor: 'hsl(var(--border))', mx: collapsed ? 1 : 2, mb: 1 }} />
+        <IntegrationStatus collapsed={collapsed} />
+      </Box>
 
       {/* Bottom Section */}
       <Box sx={{ mt: 'auto' }}>
