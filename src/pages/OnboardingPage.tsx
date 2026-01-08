@@ -25,6 +25,7 @@ const OnboardingPage = () => {
   const navigate = useNavigate();
   const [activeStep, setActiveStep] = useState(0);
   const [selectedApps, setSelectedApps] = useState<AlgoliaSearchApp[]>([]);
+  const [searchQuery, setSearchQuery] = useState('email');
   const [authStates, setAuthStates] = useState<Record<string, ToolAuthState>>({});
   const [enrichmentState, setEnrichmentState] = useState<EnrichmentState>({
     threat_list: { enabled: true, config: {} },
@@ -275,6 +276,8 @@ const OnboardingPage = () => {
                   <TicketingSystemSearch
                     selectedApps={selectedApps}
                     onAppsChange={setSelectedApps}
+                    searchQuery={searchQuery}
+                    onSearchQueryChange={setSearchQuery}
                   />
                 )}
 

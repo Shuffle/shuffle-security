@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useRef } from 'react';
 import {
   Box,
   Typography,
@@ -7,17 +7,21 @@ import {
 import { Mail, Shield, Search, Globe } from 'lucide-react';
 import { SingulJS } from '@/lib/singul-local';
 import type { AlgoliaSearchApp, SingulJSHandle } from '@/lib/singul-local';
+import { API_CONFIG } from '@/config/api';
 
 interface TicketingSystemSearchProps {
   selectedApps: AlgoliaSearchApp[];
   onAppsChange: (apps: AlgoliaSearchApp[]) => void;
+  searchQuery: string;
+  onSearchQueryChange: (query: string) => void;
 }
 
 export const TicketingSystemSearch = ({ 
   selectedApps,
   onAppsChange,
+  searchQuery,
+  onSearchQueryChange,
 }: TicketingSystemSearchProps) => {
-  const [searchQuery, setSearchQuery] = useState('email');
   const singulRef = useRef<SingulJSHandle>(null);
 
   const categories = [
@@ -84,7 +88,7 @@ export const TicketingSystemSearch = ({
               }}
               onClick={() => {
                 const term = category.searchTerm || '';
-                setSearchQuery(term);
+                onSearchQueryChange(term);
                 if (singulRef.current) {
                   singulRef.current.search(term);
                 }
@@ -128,11 +132,14 @@ export const TicketingSystemSearch = ({
       <SingulJS
         ref={singulRef}
         authToken="demo-token"
+        apiKey={API_CONFIG.apiKey || undefined}
+        apiBaseUrl={API_CONFIG.baseUrl}
         placeholder="Search all available integrations..."
         layout="grid"
         gridColumns={3}
         inline={true}
         initialQuery="email"
+        hitsPerPage={40}
         showDescription={true}
         showCategories={true}
         showCheckbox={true}
@@ -143,7 +150,7 @@ export const TicketingSystemSearch = ({
           onAppsChange(apps);
         }}
         onSearchChange={(query) => {
-          setSearchQuery(query);
+          onSearchQueryChange(query);
         }}
         customStyles={{
           container: { 

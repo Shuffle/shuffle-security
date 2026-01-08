@@ -9,6 +9,7 @@ export type { SingulJSHandle } from './SingulJS';
 export type {
   AlgoliaSearchApp,
   AppSelectedEvent,
+  AppAuthentication,
   CustomStyles,
   SingulJSProps,
 } from './singul.helpers';

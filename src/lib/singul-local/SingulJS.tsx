@@ -6,7 +6,7 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo, useImperativeHandle } from 'react';
 import { algoliasearch, SearchClient } from 'algoliasearch';
-import type { AlgoliaSearchApp, AppSelectedEvent, SingulJSProps } from './singul.helpers';
+import type { AlgoliaSearchApp, AppSelectedEvent, SingulJSProps, AppAuthentication } from './singul.helpers';
 import './singul.css';
 
 const ALGOLIA_APP_ID = 'JNSS5CFDZZ';
@@ -30,6 +30,10 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
   preventDefault = false,
   inline = false,
   initialQuery = '',
+  hitsPerPage = 15,
+  apiKey,
+  apiBaseUrl = 'https://shuffler.io',
+  authenticatedApps: externalAuthenticatedApps,
   customStyles = {},
   className = '',
   renderItem,
@@ -45,12 +49,44 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [internalSelectedApps, setInternalSelectedApps] = useState<AlgoliaSearchApp[]>(selectedApps);
+  const [authenticatedApps, setAuthenticatedApps] = useState<AppAuthentication[]>(externalAuthenticatedApps || []);
   const hasInitialized = useRef(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
   const searchClient = useRef<SearchClient | null>(null);
+
+  // Fetch authenticated apps when apiKey is provided
+  useEffect(() => {
+    if (apiKey) {
+      const fetchAuthenticatedApps = async () => {
+        try {
+          const response = await fetch(`${apiBaseUrl}/api/v1/apps/authentication`, {
+            headers: {
+              'Authorization': `Bearer ${apiKey}`,
+            },
+          });
+          if (response.ok) {
+            const data = await response.json();
+            if (Array.isArray(data)) {
+              setAuthenticatedApps(data);
+            }
+          }
+        } catch (error) {
+          console.error('Failed to fetch authenticated apps:', error);
+        }
+      };
+      fetchAuthenticatedApps();
+    }
+  }, [apiKey, apiBaseUrl]);
+
+  // Sync external authenticatedApps
+  useEffect(() => {
+    if (externalAuthenticatedApps) {
+      setAuthenticatedApps(externalAuthenticatedApps);
+    }
+  }, [externalAuthenticatedApps]);
 
   // Initialize Algolia client and run initial search
   useEffect(() => {
@@ -86,6 +122,13 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
+  // Check if an app is authenticated (valid)
+  const isAppAuthenticated = useCallback((app: AlgoliaSearchApp) => {
+    return authenticatedApps.some(
+      auth => auth.app.name.toLowerCase() === app.name.toLowerCase() && auth.validation?.valid
+    );
+  }, [authenticatedApps]);
+
   // Perform search
   const performSearch = useCallback(async (searchQuery: string) => {
     if (!searchClient.current) {
@@ -98,7 +141,7 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
         indexName: 'appsearch',
         searchParams: {
           query: searchQuery || '', // Empty string gets top results
-          hitsPerPage: 15,
+          hitsPerPage,
         },
       });
 
@@ -113,7 +156,7 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [hitsPerPage]);
 
   // Expose imperative methods via ref
   useImperativeHandle(ref, () => ({
@@ -215,6 +258,7 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
   const renderAppItem = (app: AlgoliaSearchApp, index: number) => {
     const selected = isAppSelected(app);
     const isHighlighted = index === selectedIndex;
+    const authenticated = isAppAuthenticated(app);
 
     // Use custom render if provided
     if (renderItem) {
@@ -224,7 +268,7 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
           onClick={() => selectApp(app)}
           onMouseEnter={() => setSelectedIndex(index)}
         >
-          {renderItem(app, selected, () => selectApp(app))}
+          {renderItem(app, selected, () => selectApp(app), authenticated)}
         </div>
       );
     }

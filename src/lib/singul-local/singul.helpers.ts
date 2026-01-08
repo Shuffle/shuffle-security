@@ -69,6 +69,21 @@ export interface CustomStyles {
   checkboxChecked?: React.CSSProperties;
 }
 
+export interface AppAuthentication {
+  app: {
+    id: string;
+    name: string;
+    large_image: string;
+  };
+  fields: Array<{ key: string; value: string }>;
+  id: string;
+  label: string;
+  validation: {
+    valid: boolean;
+    error?: string;
+  };
+}
+
 export interface SingulJSProps {
   // Required
   authToken: string;
@@ -96,13 +111,23 @@ export interface SingulJSProps {
   inline?: boolean;
   /** Initial search query to run on mount */
   initialQuery?: string;
+  /** Number of results per search (default: 15) */
+  hitsPerPage?: number;
+  
+  // Authentication
+  /** API key for fetching authenticated apps from /api/v1/apps/authentication */
+  apiKey?: string;
+  /** Base URL for API calls (default: https://shuffler.io) */
+  apiBaseUrl?: string;
+  /** Manually provided authenticated apps (used when apiKey is not provided) */
+  authenticatedApps?: AppAuthentication[];
   
   // Styling
   customStyles?: CustomStyles;
   className?: string;
   
   // Custom Rendering
-  renderItem?: (app: AlgoliaSearchApp, isSelected: boolean, onSelect: () => void) => React.ReactNode;
+  renderItem?: (app: AlgoliaSearchApp, isSelected: boolean, onSelect: () => void, isAuthenticated: boolean) => React.ReactNode;
   renderEmptyState?: () => React.ReactNode;
   renderLoadingState?: () => React.ReactNode;
   
