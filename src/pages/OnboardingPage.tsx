@@ -99,8 +99,9 @@ const OnboardingPage = () => {
       sx={{
         minHeight: '100vh',
         position: 'relative',
-        overflow: 'hidden',
         backgroundColor: 'hsl(0 0% 10%)',
+        overflowX: 'hidden',
+        pb: 8,
       }}
     >
       {/* Background effects - matching landing page */}
