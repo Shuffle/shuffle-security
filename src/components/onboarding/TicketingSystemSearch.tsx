@@ -8,9 +8,11 @@ import {
   Card,
   CardContent,
   Checkbox,
+  Divider,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import SearchIcon from '@mui/icons-material/Search';
+import { SingulJS } from '@singulio/singul/react';
 
 export interface TicketingSystem {
   id: string;
@@ -250,6 +252,56 @@ export const TicketingSystemSearch = ({ selectedSystems, onSelectionChange }: Ti
           </Typography>
         </Box>
       )}
+
+      {/* Singul Integration Search */}
+      <Divider sx={{ my: 4, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+      
+      <Box>
+        <Typography
+          variant="overline"
+          sx={{
+            color: 'rgba(255, 102, 0, 0.8)',
+            fontWeight: 600,
+            letterSpacing: 1.5,
+            mb: 1,
+            display: 'block',
+          }}
+        >
+          Or search all integrations
+        </Typography>
+        <Typography
+          variant="body2"
+          sx={{ color: 'rgba(255, 255, 255, 0.4)', mb: 2 }}
+        >
+          Use Singul to find and connect any integration
+        </Typography>
+        <Box
+          sx={{
+            '& > div': {
+              width: '100%',
+            },
+          }}
+        >
+          <SingulJS
+            authToken="demo-token"
+            placeholder="Search all available integrations..."
+            customStyles={{
+              container: { 
+                width: '100%',
+                backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                borderRadius: '12px',
+              },
+              input: {
+                backgroundColor: 'transparent',
+                color: 'white',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '12px',
+                padding: '12px 16px',
+              },
+            }}
+          />
+        </Box>
+      </Box>
     </Box>
   );
 };
