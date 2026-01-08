@@ -104,13 +104,14 @@ const OnboardingPage = () => {
         position: 'relative',
         backgroundColor: 'hsl(0 0% 10%)',
         overflowX: 'hidden',
-        pb: 8,
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
       {/* Background effects - matching landing page */}
       <Box
         sx={{
-          position: 'absolute',
+          position: 'fixed',
           top: '10%',
           left: '50%',
           transform: 'translateX(-50%)',
@@ -118,11 +119,12 @@ const OnboardingPage = () => {
           height: '80%',
           background: 'radial-gradient(ellipse at center, rgba(255, 102, 0, 0.06) 0%, transparent 60%)',
           pointerEvents: 'none',
+          zIndex: 0,
         }}
       />
       <Box
         sx={{
-          position: 'absolute',
+          position: 'fixed',
           top: 0,
           left: 0,
           right: 0,
@@ -133,26 +135,33 @@ const OnboardingPage = () => {
           `,
           backgroundSize: '60px 60px',
           pointerEvents: 'none',
+          zIndex: 0,
         }}
       />
 
-      <Container maxWidth="lg" sx={{ position: 'relative', py: 6 }}>
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Box sx={{ textAlign: 'center', mb: 6 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, mb: 3 }}>
-              <svg width="48" height="48" viewBox="0 0 56 56" fill="none">
+      {/* Sticky Header with Step Indicator */}
+      <Box
+        sx={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 100,
+          backgroundColor: 'hsla(0, 0%, 10%, 0.95)',
+          backdropFilter: 'blur(20px)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          py: 3,
+        }}
+      >
+        <Container maxWidth="lg">
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <svg width="36" height="36" viewBox="0 0 56 56" fill="none">
                 <path
                   d="M14 14h28v6H20v16h16v-10h-8v-6h14v22H14V14z"
                   fill="#FF6600"
                 />
               </svg>
               <Typography
-                variant="h3"
+                variant="h5"
                 sx={{
                   fontWeight: 700,
                   background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
@@ -164,26 +173,19 @@ const OnboardingPage = () => {
               </Typography>
             </Box>
             <Chip
-              label="⚡ Quick Setup • Connect your tools in minutes"
+              label="⚡ Quick Setup"
+              size="small"
               sx={{
-                py: 2.5,
-                px: 1,
-                fontSize: '0.9rem',
+                fontSize: '0.8rem',
                 background: 'rgba(255, 102, 0, 0.1)',
                 border: '1px solid rgba(255, 102, 0, 0.3)',
                 color: '#FF6600',
               }}
             />
           </Box>
-        </motion.div>
 
-        {/* Step Indicator */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 6 }}>
+          {/* Step Indicator */}
+          <Box sx={{ display: 'flex', justifyContent: 'center' }}>
             <Stack direction="row" spacing={2}>
               {steps.map((step, index) => (
                 <Box
@@ -203,8 +205,8 @@ const OnboardingPage = () => {
                 >
                   <Box
                     sx={{
-                      width: 44,
-                      height: 44,
+                      width: 40,
+                      height: 40,
                       borderRadius: '50%',
                       display: 'flex',
                       alignItems: 'center',
@@ -223,7 +225,7 @@ const OnboardingPage = () => {
                       boxShadow: index === activeStep ? '0 0 20px rgba(255, 102, 0, 0.4)' : 'none',
                     }}
                   >
-                    {index < activeStep ? <CheckCircleOutlineIcon fontSize="small" /> : step.icon}
+                    {index < activeStep ? <CheckCircleOutlineIcon sx={{ fontSize: 18 }} /> : step.icon}
                   </Box>
                   <Typography
                     className="step-label"
@@ -255,143 +257,155 @@ const OnboardingPage = () => {
               ))}
             </Stack>
           </Box>
-        </motion.div>
+        </Container>
+      </Box>
 
-        {/* Content Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <Box
-            sx={{
-              background: 'rgba(33, 33, 33, 0.6)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              borderRadius: 4,
-              p: { xs: 3, md: 5 },
-              mb: 4,
-              minHeight: 400,
-            }}
+      {/* Scrollable Content Area */}
+      <Box sx={{ flex: 1, overflowY: 'auto', position: 'relative', zIndex: 1 }}>
+        <Container maxWidth="lg" sx={{ py: 4 }}>
+          {/* Content Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
           >
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeStep}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                {activeStep === 0 && (
-                  <TicketingSystemSearch
-                    selectedApps={selectedApps}
-                    onAppsChange={setSelectedApps}
-                    searchQuery={searchQuery}
-                    onSearchQueryChange={setSearchQuery}
-                  />
-                )}
-
-                {activeStep === 1 && (
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <ToolAuthentication
-                      apps={selectedApps}
-                      authStates={authStates}
-                      onAuthChange={handleAuthChange}
-                      onTestConnection={handleTestConnection}
+            <Box
+              sx={{
+                background: 'rgba(33, 33, 33, 0.6)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                borderRadius: 4,
+                p: { xs: 3, md: 5 },
+                minHeight: 400,
+              }}
+            >
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeStep}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {activeStep === 0 && (
+                    <TicketingSystemSearch
+                      selectedApps={selectedApps}
+                      onAppsChange={setSelectedApps}
+                      searchQuery={searchQuery}
+                      onSearchQueryChange={setSearchQuery}
                     />
-                    
-                    <AppAuthConfig
-                      apps={selectedApps}
-                      authStates={authStates}
-                      onAuthChange={handleAuthChange}
-                      onTestConnection={handleTestConnection}
+                  )}
+
+                  {activeStep === 1 && (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <ToolAuthentication
+                        apps={selectedApps}
+                        authStates={authStates}
+                        onAuthChange={handleAuthChange}
+                        onTestConnection={handleTestConnection}
+                      />
+                      
+                      <AppAuthConfig
+                        apps={selectedApps}
+                        authStates={authStates}
+                        onAuthChange={handleAuthChange}
+                        onTestConnection={handleTestConnection}
+                      />
+                    </Box>
+                  )}
+
+                  {activeStep === 2 && (
+                    <EnrichmentConfig
+                      enrichmentState={enrichmentState}
+                      onEnrichmentChange={setEnrichmentState}
                     />
-                  </Box>
-                )}
+                  )}
 
-                {activeStep === 2 && (
-                  <EnrichmentConfig
-                    enrichmentState={enrichmentState}
-                    onEnrichmentChange={setEnrichmentState}
-                  />
-                )}
-
-                {activeStep === 3 && (
-                  <Box sx={{ textAlign: 'center', py: 6 }}>
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-                    >
-                      <Box
-                        sx={{
-                          width: 100,
-                          height: 100,
-                          borderRadius: '50%',
-                          background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          mx: 'auto',
-                          mb: 4,
-                          boxShadow: '0 0 40px rgba(34, 197, 94, 0.4)',
-                        }}
+                  {activeStep === 3 && (
+                    <Box sx={{ textAlign: 'center', py: 6 }}>
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: 'spring', stiffness: 200, damping: 15 }}
                       >
-                        <CheckCircleOutlineIcon sx={{ fontSize: 56, color: 'white' }} />
-                      </Box>
-                    </motion.div>
-                    <Typography
-                      variant="h4"
-                      sx={{ color: 'white', fontWeight: 700, mb: 2 }}
-                    >
-                      You're All Set!
-                    </Typography>
-                    <Typography
-                      variant="body1"
-                      sx={{ color: 'rgba(255, 255, 255, 0.6)', mb: 4, maxWidth: 400, mx: 'auto' }}
-                    >
-                      {connectedCount} integration{connectedCount !== 1 ? 's' : ''} connected.
-                      You can manage your integrations anytime from the sidebar.
-                    </Typography>
-                    <Stack direction="row" spacing={1} justifyContent="center" flexWrap="wrap" useFlexGap>
-                      {selectedApps
-                        .filter((app) => authStates[app.objectID]?.status === 'connected')
-                        .map((app) => (
-                          <Chip
-                            key={app.objectID}
-                            label={app.name.replace(/_/g, ' ')}
-                            avatar={
-                              app.image_url ? (
-                                <Box
-                                  component="img"
-                                  src={app.image_url}
-                                  alt={app.name}
-                                  sx={{ width: 24, height: 24, borderRadius: '50%' }}
-                                />
-                              ) : undefined
-                            }
-                            sx={{
-                              background: 'rgba(34, 197, 94, 0.1)',
-                              border: '1px solid rgba(34, 197, 94, 0.3)',
-                              color: '#22c55e',
-                              fontWeight: 500,
-                            }}
-                          />
-                        ))}
-                    </Stack>
-                  </Box>
-                )}
-              </motion.div>
-            </AnimatePresence>
-          </Box>
-        </motion.div>
+                        <Box
+                          sx={{
+                            width: 100,
+                            height: 100,
+                            borderRadius: '50%',
+                            background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            mx: 'auto',
+                            mb: 4,
+                            boxShadow: '0 0 40px rgba(34, 197, 94, 0.4)',
+                          }}
+                        >
+                          <CheckCircleOutlineIcon sx={{ fontSize: 56, color: 'white' }} />
+                        </Box>
+                      </motion.div>
+                      <Typography
+                        variant="h4"
+                        sx={{ color: 'white', fontWeight: 700, mb: 2 }}
+                      >
+                        You're All Set!
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        sx={{ color: 'rgba(255, 255, 255, 0.6)', mb: 4, maxWidth: 400, mx: 'auto' }}
+                      >
+                        {connectedCount} integration{connectedCount !== 1 ? 's' : ''} connected.
+                        You can manage your integrations anytime from the sidebar.
+                      </Typography>
+                      <Stack direction="row" spacing={1} justifyContent="center" flexWrap="wrap" useFlexGap>
+                        {selectedApps
+                          .filter((app) => authStates[app.objectID]?.status === 'connected')
+                          .map((app) => (
+                            <Chip
+                              key={app.objectID}
+                              label={app.name.replace(/_/g, ' ')}
+                              avatar={
+                                app.image_url ? (
+                                  <Box
+                                    component="img"
+                                    src={app.image_url}
+                                    alt={app.name}
+                                    sx={{ width: 24, height: 24, borderRadius: '50%' }}
+                                  />
+                                ) : undefined
+                              }
+                              sx={{
+                                background: 'rgba(34, 197, 94, 0.1)',
+                                border: '1px solid rgba(34, 197, 94, 0.3)',
+                                color: '#22c55e',
+                                fontWeight: 500,
+                              }}
+                            />
+                          ))}
+                      </Stack>
+                    </Box>
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            </Box>
+          </motion.div>
+        </Container>
+      </Box>
 
-        {/* Navigation */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-        >
+      {/* Sticky Footer with Navigation */}
+      <Box
+        sx={{
+          position: 'sticky',
+          bottom: 0,
+          zIndex: 100,
+          backgroundColor: 'hsla(0, 0%, 10%, 0.95)',
+          backdropFilter: 'blur(20px)',
+          borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+          py: 2,
+        }}
+      >
+        <Container maxWidth="lg">
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Button
               onClick={handleBack}
@@ -442,8 +456,8 @@ const OnboardingPage = () => {
               </Button>
             </Stack>
           </Box>
-        </motion.div>
-      </Container>
+        </Container>
+      </Box>
     </Box>
   );
 };

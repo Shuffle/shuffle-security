@@ -195,7 +195,8 @@ const AppAuthCard = ({
       });
       if (response.ok) {
         const data = await response.json();
-        setDocsContent(data.data || data.content || 'No documentation available.');
+        // Use "reason" field which contains markdown, fallback to other fields
+        setDocsContent(data.reason || data.data || data.content || 'No documentation available.');
       } else {
         setDocsContent('Failed to load documentation.');
       }
@@ -242,67 +243,39 @@ const AppAuthCard = ({
           </Link>
         </Box>
 
-        {/* One-click Login Button */}
-        <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
-          <Button
-            variant="contained"
-            startIcon={
-              app.image_url ? (
-                <Box
-                  component="img"
-                  src={app.image_url}
-                  alt={app.name}
-                  sx={{ width: 24, height: 24, borderRadius: 1, objectFit: 'contain' }}
-                />
-              ) : null
-            }
-            onClick={() => {
-              const authUrl = `https://shuffler.io/appauth?app_id=${app.objectID}`;
-              window.open(authUrl, '_blank', 'width=600,height=700');
-            }}
-            sx={{
-              flex: 1,
-              py: 1.5,
-              backgroundColor: 'rgba(255, 255, 255, 0.08)',
-              color: 'white',
-              fontWeight: 600,
-              justifyContent: 'flex-start',
-              textTransform: 'none',
-              fontSize: '1rem',
-              '&:hover': {
-                backgroundColor: 'rgba(255, 255, 255, 0.12)',
-              },
-            }}
-          >
-            One-click Login
-          </Button>
-          <Tooltip title="Use organization credentials">
-            <IconButton
-              sx={{
-                backgroundColor: 'rgba(255, 102, 0, 0.15)',
-                color: '#FF6600',
-                '&:hover': { backgroundColor: 'rgba(255, 102, 0, 0.25)' },
-              }}
-            >
-              <GroupIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="View documentation">
-            <IconButton
-              onClick={(e) => {
-                e.stopPropagation();
-                handleOpenDocs();
-              }}
-              sx={{
-                backgroundColor: 'rgba(59, 130, 246, 0.15)',
-                color: '#60a5fa',
-                '&:hover': { backgroundColor: 'rgba(59, 130, 246, 0.25)' },
-              }}
-            >
-              <MenuBookIcon />
-            </IconButton>
-          </Tooltip>
-        </Box>
+        {/* Quick Connect Button */}
+        <Button
+          variant="outlined"
+          fullWidth
+          startIcon={
+            app.image_url ? (
+              <Box
+                component="img"
+                src={app.image_url}
+                alt={app.name}
+                sx={{ width: 24, height: 24, borderRadius: 1, objectFit: 'contain' }}
+              />
+            ) : <LockIcon />
+          }
+          onClick={() => {
+            const authUrl = `https://shuffler.io/appauth?app_id=${app.objectID}`;
+            window.open(authUrl, '_blank', 'width=600,height=700');
+          }}
+          sx={{
+            py: 1.5,
+            borderColor: 'rgba(255, 102, 0, 0.4)',
+            color: 'white',
+            fontWeight: 600,
+            textTransform: 'none',
+            fontSize: '1rem',
+            '&:hover': {
+              borderColor: '#FF6600',
+              backgroundColor: 'rgba(255, 102, 0, 0.08)',
+            },
+          }}
+        >
+          Quick Connect with {app.name.replace(/_/g, ' ')}
+        </Button>
 
         {/* OR Divider */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -510,6 +483,8 @@ const AppAuthCard = ({
   };
 
   const renderParameterFields = () => {
+    // Don't render parameters for OAuth2 apps - they use the OAuth2 fields
+    if (isOAuth2) return null;
     if (!auth?.parameters || auth.parameters.length === 0) return null;
 
     return (
@@ -658,7 +633,7 @@ const AppAuthCard = ({
               </Typography>
             )}
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             {appConfig?.authentication?.type && (
               <Chip
                 label={appConfig.authentication.type.toUpperCase()}
@@ -683,6 +658,24 @@ const AppAuthCard = ({
                 '& .MuiChip-icon': { color: statusConfig.color },
               }}
             />
+            <Tooltip title="View documentation">
+              <IconButton
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleOpenDocs();
+                }}
+                sx={{
+                  color: 'rgba(255, 255, 255, 0.4)',
+                  '&:hover': { 
+                    color: '#60a5fa',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                  },
+                }}
+              >
+                <MenuBookIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
             <IconButton
               size="small"
               sx={{
@@ -745,45 +738,28 @@ const AppAuthCard = ({
                 )}
 
                 {!isOAuth2 && (
-                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                    <Button
-                      variant="contained"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onTestConnection(app.objectID);
-                      }}
-                      disabled={authState.status === 'testing'}
-                      sx={{
-                        background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
-                        boxShadow: '0 4px 14px rgba(255, 102, 0, 0.25)',
-                        fontWeight: 600,
-                        '&:hover': {
-                          background: 'linear-gradient(135deg, #FF8533 0%, #FF9955 100%)',
-                        },
-                        '&.Mui-disabled': {
-                          background: 'rgba(255, 255, 255, 0.1)',
-                          color: 'rgba(255, 255, 255, 0.3)',
-                        },
-                      }}
-                    >
-                      {authState.status === 'testing' ? 'Testing...' : 'Test Connection'}
-                    </Button>
-                    <Tooltip title="View documentation">
-                      <IconButton
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleOpenDocs();
-                        }}
-                        sx={{
-                          backgroundColor: 'rgba(59, 130, 246, 0.15)',
-                          color: '#60a5fa',
-                          '&:hover': { backgroundColor: 'rgba(59, 130, 246, 0.25)' },
-                        }}
-                      >
-                        <MenuBookIcon />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
+                  <Button
+                    variant="contained"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onTestConnection(app.objectID);
+                    }}
+                    disabled={authState.status === 'testing'}
+                    sx={{
+                      background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
+                      boxShadow: '0 4px 14px rgba(255, 102, 0, 0.25)',
+                      fontWeight: 600,
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #FF8533 0%, #FF9955 100%)',
+                      },
+                      '&.Mui-disabled': {
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        color: 'rgba(255, 255, 255, 0.3)',
+                      },
+                    }}
+                  >
+                    {authState.status === 'testing' ? 'Testing...' : 'Test Connection'}
+                  </Button>
                 )}
               </Box>
             )}
