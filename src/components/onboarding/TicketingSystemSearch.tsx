@@ -12,7 +12,8 @@ import {
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import SearchIcon from '@mui/icons-material/Search';
-import { SingulJS } from '@singulio/singul/react';
+import { SingulJS } from '@/lib/singul-local';
+import type { AlgoliaSearchApp } from '@/lib/singul-local';
 
 export interface TicketingSystem {
   id: string;
@@ -258,117 +259,147 @@ export const TicketingSystemSearch = ({ selectedSystems, onSelectionChange }: Ti
       
       <Box>
         <Typography
-          variant="overline"
+          variant="h5"
           sx={{
-            color: 'rgba(255, 102, 0, 0.8)',
-            fontWeight: 600,
-            letterSpacing: 1.5,
+            color: 'white',
+            fontWeight: 700,
             mb: 1,
-            display: 'block',
           }}
         >
-          Or search all integrations
+          Or Search All Integrations
         </Typography>
         <Typography
-          variant="body2"
-          sx={{ color: 'rgba(255, 255, 255, 0.4)', mb: 2 }}
+          variant="body1"
+          sx={{ color: 'rgba(255, 255, 255, 0.5)', mb: 3 }}
         >
-          Use Singul to find and connect any integration
+          Use Singul to find and connect any integration from our catalog.
         </Typography>
-        <Box
-          sx={{
-            '& > div': {
+        <SingulJS
+          authToken="demo-token"
+          placeholder="Search all available integrations..."
+          layout="grid"
+          gridColumns={3}
+          showDescription={true}
+          showCategories={true}
+          showCheckbox={true}
+          multiSelect={true}
+          preventDefault={true}
+          onSelectionChange={(apps) => {
+            console.log('Selected apps:', apps);
+          }}
+          customStyles={{
+            container: { 
               width: '100%',
             },
+            inputWrapper: {
+              backgroundColor: 'rgba(0, 0, 0, 0.3)',
+              borderRadius: '12px',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+            },
+            input: {
+              backgroundColor: 'transparent',
+              color: 'white',
+              border: 'none',
+              borderRadius: '12px',
+              padding: '12px 16px',
+              fontSize: '14px',
+            },
+            searchIcon: {
+              color: 'rgba(255, 255, 255, 0.4)',
+            },
+            spinner: {
+              borderColor: 'rgba(255, 255, 255, 0.2)',
+              borderTopColor: '#FF6600',
+            },
+            dropdown: {
+              backgroundColor: 'rgba(26, 26, 26, 0.98)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '12px',
+              marginTop: '12px',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
+              maxHeight: '500px',
+              padding: '8px',
+              gap: '12px',
+            },
+            dropdownItem: {
+              backgroundColor: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '12px',
+              padding: '16px',
+              color: 'white',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+            },
+            dropdownItemHover: {
+              borderColor: 'rgba(255, 102, 0, 0.5)',
+              backgroundColor: 'rgba(255, 255, 255, 0.05)',
+              transform: 'translateY(-2px)',
+            },
+            selectedItem: {
+              backgroundColor: 'rgba(255, 102, 0, 0.1)',
+              borderColor: '#FF6600',
+            },
+            appInfo: {
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '12px',
+            },
+            appIcon: {
+              width: '40px',
+              height: '40px',
+              borderRadius: '8px',
+              backgroundColor: 'rgba(255, 255, 255, 0.05)',
+              objectFit: 'contain' as const,
+              padding: '4px',
+            },
+            appDetails: {
+              display: 'flex',
+              flexDirection: 'column' as const,
+              gap: '4px',
+              flex: 1,
+            },
+            appName: {
+              fontSize: '14px',
+              fontWeight: 600,
+              color: 'white',
+            },
+            appDescription: {
+              fontSize: '12px',
+              color: 'rgba(255, 255, 255, 0.5)',
+              lineHeight: 1.4,
+            },
+            appCategory: {
+              marginTop: '8px',
+              padding: '2px 8px',
+              backgroundColor: 'rgba(255, 255, 255, 0.05)',
+              color: 'rgba(255, 255, 255, 0.4)',
+              fontSize: '10px',
+              fontWeight: 600,
+              textTransform: 'uppercase' as const,
+              letterSpacing: '0.5px',
+              borderRadius: '4px',
+              display: 'inline-block',
+              width: 'fit-content',
+            },
+            checkbox: {
+              border: '2px solid rgba(255, 255, 255, 0.2)',
+            },
+            checkboxChecked: {
+              backgroundColor: '#FF6600',
+              borderColor: '#FF6600',
+            },
+            emptyState: {
+              padding: '32px',
+              color: 'rgba(255, 255, 255, 0.4)',
+              textAlign: 'center' as const,
+              fontSize: '14px',
+              backgroundColor: 'rgba(255, 255, 255, 0.03)',
+              borderRadius: '12px',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              gridColumn: '1 / -1',
+            },
           }}
-        >
-          <SingulJS
-            authToken="demo-token"
-            placeholder="Search all available integrations..."
-            customStyles={{
-              container: { 
-                width: '100%',
-                backgroundColor: 'transparent',
-                borderRadius: '12px',
-              },
-              inputWrapper: {
-                backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                borderRadius: '12px',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-              },
-              input: {
-                backgroundColor: 'transparent',
-                color: 'white',
-                border: 'none',
-                borderRadius: '12px',
-                padding: '12px 16px',
-                fontSize: '14px',
-              },
-              searchIcon: {
-                color: 'rgba(255, 255, 255, 0.4)',
-              },
-              loadingSpinner: {
-                color: '#FF6600',
-              },
-              dropdown: {
-                backgroundColor: 'rgba(26, 26, 26, 0.98)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                borderRadius: '12px',
-                marginTop: '8px',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
-                maxHeight: '400px',
-                overflowY: 'auto',
-                padding: '8px',
-              },
-              dropdownItem: {
-                backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                borderRadius: '12px',
-                padding: '16px',
-                marginBottom: '8px',
-                color: 'white',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-              },
-              selectedItem: {
-                backgroundColor: 'rgba(255, 102, 0, 0.1)',
-                borderColor: '#FF6600',
-              },
-              appInfo: {
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-              },
-              appIcon: {
-                width: '40px',
-                height: '40px',
-                borderRadius: '8px',
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                objectFit: 'contain',
-                padding: '4px',
-              },
-              appDetails: {
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '2px',
-              },
-              appName: {
-                fontSize: '14px',
-                fontWeight: '600',
-                color: 'white',
-              },
-              emptyState: {
-                padding: '32px',
-                color: 'rgba(255, 255, 255, 0.4)',
-                textAlign: 'center',
-                fontSize: '14px',
-                backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                borderRadius: '12px',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-              },
-            }}
-          />
-        </Box>
+        />
       </Box>
     </Box>
   );
