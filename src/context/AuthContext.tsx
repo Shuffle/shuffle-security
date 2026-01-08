@@ -1,13 +1,17 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { getApiUrl, API_CONFIG, getAuthHeader } from '@/config/api';
 
+interface Organization {
+  name: string;
+  id: string;
+  image?: string;
+}
+
 interface UserInfo {
   username?: string;
   id?: string;
-  active_org?: {
-    name: string;
-    id: string;
-  };
+  active_org?: Organization;
+  orgs?: Organization[];
 }
 
 interface AuthContextType {
@@ -18,6 +22,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   isLoading: boolean;
   refreshUserInfo: () => Promise<void>;
+  setActiveOrg: (orgId: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -47,6 +52,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           username: data.username,
           id: data.id,
           active_org: data.active_org,
+          orgs: data.orgs || [],
         });
         return true;
       } else {
@@ -115,10 +121,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await fetchUserInfo(token);
   }, [fetchUserInfo]);
 
+  const setActiveOrg = useCallback(async (orgId: string) => {
+    try {
+      const token = localStorage.getItem('session_token');
+      const response = await fetch(getApiUrl('/orgs/' + orgId + '/change'), {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          ...getAuthHeader(token),
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        // Refresh user info to get updated active_org
+        await fetchUserInfo(token);
+      }
+    } catch (err) {
+      console.error('Failed to change org:', err);
+    }
+  }, [fetchUserInfo]);
+
   const logout = useCallback(async () => {
     // Clear local state FIRST to prevent race conditions
     const currentToken = sessionToken;
     localStorage.removeItem('session_token');
+    API_CONFIG.setApiKey(null);
     setSessionToken(null);
     setIsAuthenticated(false);
     setUserInfo(null);
@@ -148,6 +176,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         logout,
         isLoading,
         refreshUserInfo,
+        setActiveOrg,
       }}
     >
       {children}

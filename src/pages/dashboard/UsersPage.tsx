@@ -14,7 +14,7 @@ import {
   CircularProgress,
   Alert,
 } from '@mui/material';
-import { getApiUrl } from '@/config/api';
+import { getApiUrl, getAuthHeader } from '@/config/api';
 import { useAuth } from '@/context/AuthContext';
 
 interface User {
@@ -35,10 +35,10 @@ const UsersPage = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await fetch(getApiUrl('/users/getusers'), {
+        const response = await fetch(getApiUrl('/getusers'), {
           credentials: 'include',
           headers: {
-            'Authorization': `Bearer ${sessionToken}`,
+            ...getAuthHeader(sessionToken),
           },
         });
 
@@ -56,14 +56,12 @@ const UsersPage = () => {
       }
     };
 
-    if (sessionToken) {
-      fetchUsers();
-    }
+    fetchUsers();
   }, [sessionToken]);
 
   return (
     <Box sx={{ p: 4 }}>
-      <Typography variant="h4" sx={{ fontWeight: 600, mb: 4 }}>
+      <Typography variant="h4" sx={{ fontWeight: 600, mb: 4, color: 'hsl(var(--foreground))' }}>
         Users
       </Typography>
 
@@ -75,24 +73,30 @@ const UsersPage = () => {
 
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-          <CircularProgress />
+          <CircularProgress sx={{ color: 'hsl(var(--primary))' }} />
         </Box>
       ) : (
-        <TableContainer component={Paper} sx={{ bgcolor: 'background.paper' }}>
+        <TableContainer 
+          component={Paper} 
+          sx={{ 
+            bgcolor: 'hsl(var(--card))',
+            border: '1px solid hsl(var(--border))',
+          }}
+        >
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>User</TableCell>
-                <TableCell>Role</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Organizations</TableCell>
+                <TableCell sx={{ color: 'hsl(var(--muted-foreground))' }}>User</TableCell>
+                <TableCell sx={{ color: 'hsl(var(--muted-foreground))' }}>Role</TableCell>
+                <TableCell sx={{ color: 'hsl(var(--muted-foreground))' }}>Status</TableCell>
+                <TableCell sx={{ color: 'hsl(var(--muted-foreground))' }}>Organizations</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {users.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={4} align="center" sx={{ py: 4 }}>
-                    <Typography color="text.secondary">
+                    <Typography sx={{ color: 'hsl(var(--muted-foreground))' }}>
                       No users found
                     </Typography>
                   </TableCell>
@@ -102,28 +106,36 @@ const UsersPage = () => {
                   <TableRow key={user.id} hover>
                     <TableCell>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Avatar sx={{ bgcolor: 'primary.main', width: 32, height: 32 }}>
+                        <Avatar sx={{ bgcolor: 'hsl(var(--primary))', width: 32, height: 32 }}>
                           {user.username?.charAt(0).toUpperCase() || '?'}
                         </Avatar>
-                        <Typography variant="body2">{user.username}</Typography>
+                        <Typography variant="body2" sx={{ color: 'hsl(var(--foreground))' }}>
+                          {user.username}
+                        </Typography>
                       </Box>
                     </TableCell>
                     <TableCell>
                       <Chip
                         label={user.role || 'user'}
                         size="small"
-                        color={user.role === 'admin' ? 'primary' : 'default'}
+                        sx={{
+                          bgcolor: user.role === 'admin' ? 'hsl(var(--primary))' : 'hsl(var(--muted))',
+                          color: user.role === 'admin' ? 'hsl(var(--primary-foreground))' : 'hsl(var(--foreground))',
+                        }}
                       />
                     </TableCell>
                     <TableCell>
                       <Chip
                         label={user.active !== false ? 'Active' : 'Inactive'}
                         size="small"
-                        color={user.active !== false ? 'success' : 'default'}
+                        sx={{
+                          bgcolor: user.active !== false ? 'hsla(142, 76%, 36%, 0.2)' : 'hsl(var(--muted))',
+                          color: user.active !== false ? 'hsl(142, 76%, 36%)' : 'hsl(var(--muted-foreground))',
+                        }}
                       />
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
                         {user.orgs?.length || 1}
                       </Typography>
                     </TableCell>

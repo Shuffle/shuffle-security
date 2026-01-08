@@ -40,10 +40,10 @@ const App = () => (
                 </ProtectedRoute>
               }
             >
-              <Route index element={<AlertsPage />} />
+              <Route index element={<CasesPage />} />
               <Route path="alerts" element={<AlertsPage />} />
               <Route path="cases" element={<CasesPage />} />
-              <Route path="templates/*" element={<TemplatesPage />} />
+              <Route path="templates" element={<TemplatesPage />} />
               <Route path="users" element={<UsersPage />} />
               <Route path="organizations" element={<OrganizationsPage />} />
               <Route path="settings" element={<SettingsPage />} />
