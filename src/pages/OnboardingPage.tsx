@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { TicketingSystemSearch } from '@/components/onboarding/TicketingSystemSearch';
 import type { AlgoliaSearchApp } from '@/lib/singul-local';
 import { ToolAuthentication, ToolAuthState, AuthStatus } from '@/components/onboarding/ToolAuthentication';
+import { AppAuthConfig, AppAuthState } from '@/components/onboarding/AppAuthConfig';
 import { EnrichmentConfig, EnrichmentState } from '@/components/onboarding/EnrichmentConfig';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -291,12 +292,21 @@ const OnboardingPage = () => {
                 )}
 
                 {activeStep === 1 && (
-                  <ToolAuthentication
-                    apps={selectedApps}
-                    authStates={authStates}
-                    onAuthChange={handleAuthChange}
-                    onTestConnection={handleTestConnection}
-                  />
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <ToolAuthentication
+                      apps={selectedApps}
+                      authStates={authStates}
+                      onAuthChange={handleAuthChange}
+                      onTestConnection={handleTestConnection}
+                    />
+                    
+                    <AppAuthConfig
+                      apps={selectedApps}
+                      authStates={authStates}
+                      onAuthChange={handleAuthChange}
+                      onTestConnection={handleTestConnection}
+                    />
+                  </Box>
                 )}
 
                 {activeStep === 2 && (
