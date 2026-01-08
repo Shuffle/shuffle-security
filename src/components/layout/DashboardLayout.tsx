@@ -2,7 +2,6 @@ import { useState, ReactNode } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Box } from '@mui/material';
 import { AppSidebar } from './AppSidebar';
-import { AppHeader } from './AppHeader';
 
 interface DashboardLayoutProps {
   children?: ReactNode;
@@ -25,10 +24,10 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           flexDirection: 'column',
           minHeight: '100vh',
           transition: 'margin 0.2s ease',
+          backgroundColor: 'hsl(var(--background))',
         }}
       >
-        <AppHeader />
-        <Box sx={{ flexGrow: 1 }}>
+        <Box sx={{ flexGrow: 1, p: 3 }}>
           {children || <Outlet />}
         </Box>
       </Box>
