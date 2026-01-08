@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -29,6 +30,7 @@ const SettingsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const { sessionToken, logout } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUserInfo = async () => {
@@ -61,7 +63,7 @@ const SettingsPage = () => {
 
   const handleLogout = async () => {
     await logout();
-    window.location.href = '/login';
+    navigate('/login', { replace: true });
   };
 
   return (

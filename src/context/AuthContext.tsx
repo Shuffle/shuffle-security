@@ -27,7 +27,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = useCallback(async () => {
-    // Call the Shuffle logout API
+    // Clear local state FIRST to prevent race conditions
+    localStorage.removeItem('session_token');
+    setSessionToken(null);
+    
+    // Then call the Shuffle logout API
     try {
       await fetch(getApiUrl(API_ENDPOINTS.logout), {
         method: 'POST',
@@ -40,10 +44,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (err) {
       console.error('Logout API call failed:', err);
     }
-    
-    // Clear local state regardless of API success
-    localStorage.removeItem('session_token');
-    setSessionToken(null);
   }, [sessionToken]);
 
   return (
