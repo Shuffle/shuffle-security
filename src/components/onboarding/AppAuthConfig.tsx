@@ -795,10 +795,9 @@ const AppAuthCard = ({
                       const isActive = authEntry.active === true;
                       const isValid = authEntry.validation?.valid === true;
                       return (
-                        <MenuItem key={entryId} value={entryId} sx={{ color: 'white' }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                            <Typography sx={{ flex: 1 }}>{entryLabel}</Typography>
-                            <Box sx={{ display: 'flex', gap: 0.5 }}>
+                        <MenuItem key={entryId} value={entryId} sx={{ color: 'white', py: 1 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%', minWidth: 0 }}>
+                            <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
                               <Chip
                                 label={isActive ? 'Configured' : 'Not configured'}
                                 size="small"
@@ -820,6 +819,15 @@ const AppAuthCard = ({
                                 }}
                               />
                             </Box>
+                            <Typography sx={{ 
+                              flex: 1, 
+                              overflow: 'hidden', 
+                              textOverflow: 'ellipsis', 
+                              whiteSpace: 'nowrap',
+                              minWidth: 0,
+                            }}>
+                              {entryLabel}
+                            </Typography>
                           </Box>
                         </MenuItem>
                       );
@@ -856,7 +864,15 @@ const AppAuthCard = ({
 
             {/* Show form only if no auths exist OR "Add new" is selected */}
             {(apiAuthEntries.length === 0 || showAddNewForm) && (
-              <>
+              <Box sx={{ 
+                p: 3, 
+                backgroundColor: 'rgba(0, 0, 0, 0.2)', 
+                borderRadius: 2,
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+              }}>
+                <Typography variant="subtitle2" sx={{ color: '#FF6600', fontWeight: 600, mb: 2 }}>
+                  {apiAuthEntries.length === 0 ? 'Configure Authentication' : 'Add New Authentication'}
+                </Typography>
                 {loading ? (
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', py: 4 }}>
                     <CircularProgress size={32} sx={{ color: '#FF6600' }} />
@@ -922,7 +938,7 @@ const AppAuthCard = ({
                     )}
                   </Box>
                 )}
-              </>
+              </Box>
             )}
           </Box>
         </Collapse>
