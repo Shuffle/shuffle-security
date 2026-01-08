@@ -441,39 +441,43 @@ const AppAuthCard = ({
 
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {auth.parameters.map((param) => (
-          <TextField
-            key={param.id}
-            label={
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                {param.name}
-                {param.required && (
-                  <Typography component="span" sx={{ color: '#ef4444', fontSize: '0.8rem' }}>*</Typography>
-                )}
-              </Box>
-            }
-            type={param.name.toLowerCase().includes('password') || param.name.toLowerCase().includes('secret') || param.name.toLowerCase().includes('key') ? 'password' : 'text'}
-            placeholder={param.example || `Enter ${param.name}`}
-            value={localCredentials[param.id] || ''}
-            onChange={(e) => handleCredentialChange(param.id, e.target.value)}
-            error={!!fieldErrors[param.id]}
-            helperText={fieldErrors[param.id] || param.description}
-            fullWidth
-            size="small"
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                borderRadius: 2,
-                '& fieldset': { borderColor: fieldErrors[param.id] ? '#ef4444' : 'rgba(255, 255, 255, 0.1)' },
-                '&:hover fieldset': { borderColor: fieldErrors[param.id] ? '#ef4444' : 'rgba(255, 255, 255, 0.2)' },
-                '&.Mui-focused fieldset': { borderColor: fieldErrors[param.id] ? '#ef4444' : '#FF6600' },
-              },
-              '& .MuiInputBase-input': { color: 'white' },
-              '& .MuiInputLabel-root': { color: 'rgba(255, 255, 255, 0.5)' },
-              '& .MuiFormHelperText-root': { color: fieldErrors[param.id] ? '#ef4444' : 'rgba(255, 255, 255, 0.4)' },
-            }}
-          />
-        ))}
+        {auth.parameters.map((param, index) => {
+          // Use param.id if available, otherwise fallback to name or index
+          const fieldKey = param.id || param.name || `param_${index}`;
+          return (
+            <TextField
+              key={fieldKey}
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  {param.name}
+                  {param.required && (
+                    <Typography component="span" sx={{ color: '#ef4444', fontSize: '0.8rem' }}>*</Typography>
+                  )}
+                </Box>
+              }
+              type={param.name.toLowerCase().includes('password') || param.name.toLowerCase().includes('secret') || param.name.toLowerCase().includes('key') ? 'password' : 'text'}
+              placeholder={param.example || `Enter ${param.name}`}
+              value={localCredentials[fieldKey] || ''}
+              onChange={(e) => handleCredentialChange(fieldKey, e.target.value)}
+              error={!!fieldErrors[fieldKey]}
+              helperText={fieldErrors[fieldKey] || param.description}
+              fullWidth
+              size="small"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                  borderRadius: 2,
+                  '& fieldset': { borderColor: fieldErrors[fieldKey] ? '#ef4444' : 'rgba(255, 255, 255, 0.1)' },
+                  '&:hover fieldset': { borderColor: fieldErrors[fieldKey] ? '#ef4444' : 'rgba(255, 255, 255, 0.2)' },
+                  '&.Mui-focused fieldset': { borderColor: fieldErrors[fieldKey] ? '#ef4444' : '#FF6600' },
+                },
+                '& .MuiInputBase-input': { color: 'white' },
+                '& .MuiInputLabel-root': { color: 'rgba(255, 255, 255, 0.5)' },
+                '& .MuiFormHelperText-root': { color: fieldErrors[fieldKey] ? '#ef4444' : 'rgba(255, 255, 255, 0.4)' },
+              }}
+            />
+          );
+        })}
       </Box>
     );
   };
@@ -532,8 +536,10 @@ const AppAuthCard = ({
     
     // Check required parameters are filled
     if (auth?.parameters) {
-      for (const param of auth.parameters) {
-        if (param.required && !localCredentials[param.id]) return false;
+      for (let i = 0; i < auth.parameters.length; i++) {
+        const param = auth.parameters[i];
+        const fieldKey = param.id || param.name || `param_${i}`;
+        if (param.required && !localCredentials[fieldKey]) return false;
       }
     }
     
