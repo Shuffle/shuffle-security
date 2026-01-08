@@ -42,6 +42,8 @@ const ticketingSystems: TicketingSystem[] = [
 interface TicketingSystemSearchProps {
   selectedSystems: TicketingSystem[];
   onSelectionChange: (systems: TicketingSystem[]) => void;
+  selectedApps: AlgoliaSearchApp[];
+  onAppsChange: (apps: AlgoliaSearchApp[]) => void;
 }
 
 const containerVariants = {
@@ -57,9 +59,13 @@ const itemVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
 };
 
-export const TicketingSystemSearch = ({ selectedSystems, onSelectionChange }: TicketingSystemSearchProps) => {
+export const TicketingSystemSearch = ({ 
+  selectedSystems, 
+  onSelectionChange,
+  selectedApps,
+  onAppsChange,
+}: TicketingSystemSearchProps) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedApps, setSelectedApps] = useState<AlgoliaSearchApp[]>([]);
   const singulRef = useRef<SingulJSHandle>(null);
 
   const filteredSystems = ticketingSystems.filter(
@@ -333,47 +339,6 @@ export const TicketingSystemSearch = ({ selectedSystems, onSelectionChange }: Ti
           ))}
         </Box>
 
-        {/* Selected Apps Display */}
-        {selectedApps.length > 0 && (
-          <Box sx={{ mb: 3 }}>
-            <Typography
-              variant="body2"
-              sx={{ color: 'rgba(255, 255, 255, 0.5)', mb: 2 }}
-            >
-              Selected integrations ({selectedApps.length}):
-            </Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-              {selectedApps.map((app) => (
-                <Chip
-                  key={app.objectID}
-                  label={app.name}
-                  avatar={
-                    app.image_url ? (
-                      <img 
-                        src={app.image_url} 
-                        alt={app.name}
-                        style={{ width: 20, height: 20, borderRadius: 4 }}
-                      />
-                    ) : undefined
-                  }
-                  onDelete={() => {
-                    setSelectedApps(selectedApps.filter(a => a.objectID !== app.objectID));
-                  }}
-                  sx={{
-                    background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
-                    color: 'white',
-                    fontWeight: 500,
-                    '& .MuiChip-deleteIcon': {
-                      color: 'rgba(255, 255, 255, 0.7)',
-                      '&:hover': { color: 'white' },
-                    },
-                  }}
-                />
-              ))}
-            </Box>
-          </Box>
-        )}
-
         <SingulJS
           ref={singulRef}
           authToken="demo-token"
@@ -388,8 +353,7 @@ export const TicketingSystemSearch = ({ selectedSystems, onSelectionChange }: Ti
           preventDefault={true}
           selectedApps={selectedApps}
           onSelectionChange={(apps) => {
-            setSelectedApps(apps);
-            console.log('Selected apps:', apps);
+            onAppsChange(apps);
           }}
           customStyles={{
             container: { 
@@ -498,6 +462,58 @@ export const TicketingSystemSearch = ({ selectedSystems, onSelectionChange }: Ti
             },
           }}
         />
+
+        {/* Selected Apps Display - Below search */}
+        {selectedApps.length > 0 && (
+          <Box sx={{ mt: 4 }}>
+            <Typography
+              variant="body2"
+              sx={{ color: 'rgba(255, 255, 255, 0.5)', mb: 2 }}
+            >
+              Selected integrations ({selectedApps.length}):
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              {selectedApps.map((app) => (
+                <Chip
+                  key={app.objectID}
+                  label={app.name.replace(/_/g, ' ')}
+                  avatar={
+                    app.image_url ? (
+                      <Box
+                        component="img"
+                        src={app.image_url} 
+                        alt={app.name}
+                        sx={{ 
+                          width: 24, 
+                          height: 24, 
+                          borderRadius: '50%',
+                          objectFit: 'contain',
+                          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                        }}
+                      />
+                    ) : undefined
+                  }
+                  onDelete={() => {
+                    onAppsChange(selectedApps.filter(a => a.objectID !== app.objectID));
+                  }}
+                  sx={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    color: 'rgba(255, 255, 255, 0.9)',
+                    fontWeight: 500,
+                    '& .MuiChip-avatar': {
+                      marginLeft: '4px',
+                    },
+                    '& .MuiChip-deleteIcon': {
+                      color: 'rgba(255, 255, 255, 0.5)',
+                      '&:hover': { color: 'white' },
+                    },
+                  }}
+                />
+              ))}
+            </Box>
+          </Box>
+        )}
       </Box>
     </Box>
   );
