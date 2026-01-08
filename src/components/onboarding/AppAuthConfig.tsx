@@ -144,18 +144,35 @@ const AppAuthCard = ({
   apiAuthEntries: ApiAuthEntry[];
   onSelectAuth?: (appId: string, authId: string) => void;
 }) => {
+  // Helper to get best default auth: prioritize validated, otherwise last entry
+  const getBestDefaultAuth = (entries: ApiAuthEntry[]): string => {
+    if (entries.length === 0) return ADD_NEW_AUTH;
+    
+    // First, find a validated entry
+    const validatedEntry = entries.find(e => e.validation?.valid === true);
+    if (validatedEntry) {
+      return validatedEntry.id || validatedEntry.label || '0';
+    }
+    
+    // Otherwise, use the last entry (assuming API returns in chronological order)
+    const lastEntry = entries[entries.length - 1];
+    return lastEntry.id || lastEntry.label || '0';
+  };
+
   // Track selected auth from dropdown
   const [selectedAuthId, setSelectedAuthId] = useState<string>(() => {
-    // Default to first existing auth if available
-    return apiAuthEntries.length > 0 ? (apiAuthEntries[0].id || apiAuthEntries[0].label || '0') : ADD_NEW_AUTH;
+    return getBestDefaultAuth(apiAuthEntries);
   });
 
-  // Update selection when apiAuthEntries changes
+  // Track if user explicitly selected "Add new" to prevent override
+  const [userSelectedAddNew, setUserSelectedAddNew] = useState(false);
+
+  // Update selection when apiAuthEntries changes, but only if user didn't explicitly choose "Add new"
   useEffect(() => {
-    if (apiAuthEntries.length > 0 && selectedAuthId === ADD_NEW_AUTH) {
-      setSelectedAuthId(apiAuthEntries[0].id || apiAuthEntries[0].label || '0');
+    if (apiAuthEntries.length > 0 && !userSelectedAddNew) {
+      setSelectedAuthId(getBestDefaultAuth(apiAuthEntries));
     }
-  }, [apiAuthEntries, selectedAuthId]);
+  }, [apiAuthEntries, userSelectedAddNew]);
 
   const showAddNewForm = selectedAuthId === ADD_NEW_AUTH;
   
@@ -767,6 +784,8 @@ const AppAuthCard = ({
                     onChange={(e) => {
                       const value = e.target.value as string;
                       setSelectedAuthId(value);
+                      // Track if user explicitly selected "Add new"
+                      setUserSelectedAddNew(value === ADD_NEW_AUTH);
                       if (value !== ADD_NEW_AUTH && onSelectAuth) {
                         onSelectAuth(app.objectID, value);
                       }
