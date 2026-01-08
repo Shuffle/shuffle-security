@@ -16,7 +16,6 @@ import {
   Collapse,
 } from '@mui/material';
 import SecurityIcon from '@mui/icons-material/Security';
-import DashboardIcon from '@mui/icons-material/Dashboard';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import FolderSpecialIcon from '@mui/icons-material/FolderSpecial';
 import AssignmentIcon from '@mui/icons-material/Assignment';
@@ -39,7 +38,6 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { label: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
   { label: 'Alerts', icon: <NotificationsActiveIcon />, path: '/dashboard/alerts' },
   { label: 'Cases', icon: <FolderSpecialIcon />, path: '/dashboard/cases' },
   { 
