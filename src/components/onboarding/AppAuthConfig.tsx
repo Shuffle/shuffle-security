@@ -561,6 +561,9 @@ const AppAuthCard = ({
 
   // Helper to update local credentials and notify parent
   const handleCredentialChange = (key: string, value: string) => {
+    // Ignore empty keys
+    if (!key || key.trim() === '') return;
+    
     const updated = { ...localCredentials, [key]: value };
     setLocalCredentials(updated);
     onAuthChange(app.objectID, updated);
