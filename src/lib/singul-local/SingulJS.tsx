@@ -23,6 +23,7 @@ export const SingulJS: React.FC<SingulJSProps> = ({
   multiSelect = false,
   selectedApps = [],
   preventDefault = false,
+  inline = false,
   customStyles = {},
   className = '',
   renderItem,
@@ -260,7 +261,7 @@ export const SingulJS: React.FC<SingulJSProps> = ({
   return (
     <div
       ref={containerRef}
-      className={`singul-container ${className}`}
+      className={`singul-container ${inline ? 'singul-inline' : ''} ${className}`}
       style={customStyles.container}
     >
       <div className="singul-search-bar-container">
@@ -274,7 +275,7 @@ export const SingulJS: React.FC<SingulJSProps> = ({
             value={query}
             onChange={handleInputChange}
             onFocus={() => {
-              if (query.trim() && results.length > 0) {
+              if (!inline && query.trim() && results.length > 0) {
                 setIsOpen(true);
               }
             }}
@@ -298,7 +299,36 @@ export const SingulJS: React.FC<SingulJSProps> = ({
           )}
         </div>
 
-        {isOpen && (
+        {/* Inline Results Container */}
+        {inline && (
+          <div
+            className={`singul-results-container ${layout === 'grid' ? 'singul-results-grid' : ''}`}
+            style={{
+              ...customStyles.resultsContainer,
+              ...getGridColumnsStyle,
+              ...(layout === 'grid' ? { display: 'grid' } : {}),
+            }}
+          >
+            {results.length > 0 ? (
+              results.map((app, index) => renderAppItem(app, index))
+            ) : query.trim() ? (
+              <div className="singul-empty-state" style={customStyles.emptyState}>
+                {renderEmptyState ? (
+                  renderEmptyState()
+                ) : (
+                  <>No apps found for "{query}"</>
+                )}
+              </div>
+            ) : (
+              <div className="singul-empty-state" style={customStyles.emptyState}>
+                Start typing to search integrations...
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Dropdown Results (non-inline mode) */}
+        {!inline && isOpen && (
           <div
             className={`singul-dropdown ${layout === 'grid' ? 'singul-dropdown-grid' : ''}`}
             style={{

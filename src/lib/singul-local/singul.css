@@ -145,6 +145,23 @@
   padding: var(--singul-grid-gap);
 }
 
+/* Inline Results Container */
+.singul-results-container {
+  margin-top: 16px;
+  min-height: 200px;
+}
+
+.singul-results-container.singul-results-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--singul-grid-columns), 1fr);
+  gap: var(--singul-grid-gap);
+}
+
+/* Inline mode container */
+.singul-container.singul-inline .singul-search-bar-container {
+  position: static;
+}
+
 .singul-dropdown-item {
   padding: var(--singul-item-padding);
   cursor: pointer;

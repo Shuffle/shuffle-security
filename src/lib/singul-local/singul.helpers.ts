@@ -62,6 +62,7 @@ export interface CustomStyles {
   emptyState?: React.CSSProperties;
   loadingState?: React.CSSProperties;
   errorState?: React.CSSProperties;
+  resultsContainer?: React.CSSProperties;
   
   // Selection
   checkbox?: React.CSSProperties;
@@ -89,6 +90,10 @@ export interface SingulJSProps {
   multiSelect?: boolean;
   selectedApps?: AlgoliaSearchApp[];
   preventDefault?: boolean;
+  
+  // Display Mode
+  /** When true, results show inline on the page instead of as a dropdown */
+  inline?: boolean;
   
   // Styling
   customStyles?: CustomStyles;

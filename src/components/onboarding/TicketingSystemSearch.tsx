@@ -59,6 +59,7 @@ const itemVariants = {
 
 export const TicketingSystemSearch = ({ selectedSystems, onSelectionChange }: TicketingSystemSearchProps) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedApps, setSelectedApps] = useState<AlgoliaSearchApp[]>([]);
 
   const filteredSystems = ticketingSystems.filter(
     (system) =>
@@ -330,23 +331,61 @@ export const TicketingSystemSearch = ({ selectedSystems, onSelectionChange }: Ti
           ))}
         </Box>
 
-        <Typography
-          variant="body2"
-          sx={{ color: 'rgba(255, 255, 255, 0.4)', mb: 2 }}
-        >
-          Or search directly:
-        </Typography>
+        {/* Selected Apps Display */}
+        {selectedApps.length > 0 && (
+          <Box sx={{ mb: 3 }}>
+            <Typography
+              variant="body2"
+              sx={{ color: 'rgba(255, 255, 255, 0.5)', mb: 2 }}
+            >
+              Selected integrations ({selectedApps.length}):
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              {selectedApps.map((app) => (
+                <Chip
+                  key={app.objectID}
+                  label={app.name}
+                  avatar={
+                    app.image_url ? (
+                      <img 
+                        src={app.image_url} 
+                        alt={app.name}
+                        style={{ width: 20, height: 20, borderRadius: 4 }}
+                      />
+                    ) : undefined
+                  }
+                  onDelete={() => {
+                    setSelectedApps(selectedApps.filter(a => a.objectID !== app.objectID));
+                  }}
+                  sx={{
+                    background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
+                    color: 'white',
+                    fontWeight: 500,
+                    '& .MuiChip-deleteIcon': {
+                      color: 'rgba(255, 255, 255, 0.7)',
+                      '&:hover': { color: 'white' },
+                    },
+                  }}
+                />
+              ))}
+            </Box>
+          </Box>
+        )}
+
         <SingulJS
           authToken="demo-token"
           placeholder="Search all available integrations..."
           layout="grid"
           gridColumns={3}
+          inline={true}
           showDescription={true}
           showCategories={true}
           showCheckbox={true}
           multiSelect={true}
           preventDefault={true}
+          selectedApps={selectedApps}
           onSelectionChange={(apps) => {
+            setSelectedApps(apps);
             console.log('Selected apps:', apps);
           }}
           customStyles={{
@@ -373,14 +412,8 @@ export const TicketingSystemSearch = ({ selectedSystems, onSelectionChange }: Ti
               borderColor: 'rgba(255, 255, 255, 0.2)',
               borderTopColor: '#FF6600',
             },
-            dropdown: {
-              backgroundColor: 'rgba(26, 26, 26, 0.98)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              borderRadius: '12px',
-              marginTop: '12px',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
-              maxHeight: '500px',
-              padding: '8px',
+            resultsContainer: {
+              marginTop: '16px',
               gap: '12px',
             },
             dropdownItem: {
