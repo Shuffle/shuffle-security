@@ -3,6 +3,7 @@ import { Box, Container, Typography, Button, Chip, Stack } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { TicketingSystemSearch, TicketingSystem } from '@/components/onboarding/TicketingSystemSearch';
+import type { AlgoliaSearchApp } from '@/lib/singul-local';
 import { ToolAuthentication, ToolAuthState, AuthStatus } from '@/components/onboarding/ToolAuthentication';
 import { EnrichmentConfig, EnrichmentState } from '@/components/onboarding/EnrichmentConfig';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
@@ -24,6 +25,7 @@ const OnboardingPage = () => {
   const navigate = useNavigate();
   const [activeStep, setActiveStep] = useState(0);
   const [selectedSystems, setSelectedSystems] = useState<TicketingSystem[]>([]);
+  const [selectedApps, setSelectedApps] = useState<AlgoliaSearchApp[]>([]);
   const [authStates, setAuthStates] = useState<Record<string, ToolAuthState>>({});
   const [enrichmentState, setEnrichmentState] = useState<EnrichmentState>({
     threat_list: { enabled: true, config: {} },
@@ -83,7 +85,7 @@ const OnboardingPage = () => {
   };
 
   const canProceed = () => {
-    if (activeStep === 0) return selectedSystems.length > 0;
+    if (activeStep === 0) return selectedSystems.length > 0 || selectedApps.length > 0;
     if (activeStep === 1) {
       return selectedSystems.some((s) => authStates[s.id]?.status === 'connected');
     }
@@ -274,6 +276,8 @@ const OnboardingPage = () => {
                   <TicketingSystemSearch
                     selectedSystems={selectedSystems}
                     onSelectionChange={setSelectedSystems}
+                    selectedApps={selectedApps}
+                    onAppsChange={setSelectedApps}
                   />
                 )}
 
