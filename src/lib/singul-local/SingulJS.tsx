@@ -4,7 +4,7 @@
  * https://github.com/Shuffle/singul.js
  */
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo, useImperativeHandle } from 'react';
 import { algoliasearch, SearchClient } from 'algoliasearch';
 import type { AlgoliaSearchApp, AppSelectedEvent, SingulJSProps } from './singul.helpers';
 import './singul.css';
@@ -12,7 +12,12 @@ import './singul.css';
 const ALGOLIA_APP_ID = 'JNSS5CFDZZ';
 const ALGOLIA_API_KEY = 'c8f882473ff42d41158430be09ec2b4e';
 
-export const SingulJS: React.FC<SingulJSProps> = ({
+export interface SingulJSHandle {
+  search: (query: string) => void;
+  clear: () => void;
+}
+
+export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
   authToken,
   placeholder = 'Search apps...',
   layout = 'list',
@@ -32,7 +37,7 @@ export const SingulJS: React.FC<SingulJSProps> = ({
   onAppSelected,
   onSelectionChange,
   onSearchChange,
-}) => {
+}, ref) => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<AlgoliaSearchApp[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -98,6 +103,25 @@ export const SingulJS: React.FC<SingulJSProps> = ({
       setIsLoading(false);
     }
   }, []);
+
+  // Expose imperative methods via ref
+  useImperativeHandle(ref, () => ({
+    search: (searchQuery: string) => {
+      setQuery(searchQuery);
+      onSearchChange?.(searchQuery);
+      if (searchQuery.trim()) {
+        performSearch(searchQuery);
+      } else {
+        setResults([]);
+        setIsOpen(false);
+      }
+    },
+    clear: () => {
+      setQuery('');
+      setResults([]);
+      setIsOpen(false);
+    },
+  }), [performSearch, onSearchChange]);
 
   // Handle input change
   const handleInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
@@ -353,6 +377,8 @@ export const SingulJS: React.FC<SingulJSProps> = ({
       </div>
     </div>
   );
-};
+});
+
+SingulJS.displayName = 'SingulJS';
 
 export default SingulJS;

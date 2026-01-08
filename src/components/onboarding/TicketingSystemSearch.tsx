@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
   Box,
   TextField,
@@ -13,7 +13,7 @@ import {
 import { motion } from 'framer-motion';
 import SearchIcon from '@mui/icons-material/Search';
 import { SingulJS } from '@/lib/singul-local';
-import type { AlgoliaSearchApp } from '@/lib/singul-local';
+import type { AlgoliaSearchApp, SingulJSHandle } from '@/lib/singul-local';
 
 export interface TicketingSystem {
   id: string;
@@ -60,6 +60,7 @@ const itemVariants = {
 export const TicketingSystemSearch = ({ selectedSystems, onSelectionChange }: TicketingSystemSearchProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedApps, setSelectedApps] = useState<AlgoliaSearchApp[]>([]);
+  const singulRef = useRef<SingulJSHandle>(null);
 
   const filteredSystems = ticketingSystems.filter(
     (system) =>
@@ -286,10 +287,10 @@ export const TicketingSystemSearch = ({ selectedSystems, onSelectionChange }: Ti
           }}
         >
           {[
-            { id: 'email', label: 'Email', icon: '📧', description: 'Gmail, Outlook, Exchange' },
-            { id: 'siem', label: 'SIEM', icon: '🛡️', description: 'Splunk, Sentinel, QRadar' },
-            { id: 'edr', label: 'EDR', icon: '🔍', description: 'CrowdStrike, Carbon Black' },
-            { id: 'other', label: 'Anywhere Else', icon: '🔗', description: 'Any other source' },
+            { id: 'email', label: 'Email', icon: '📧', description: 'Gmail, Outlook, Exchange', searchTerm: 'email' },
+            { id: 'siem', label: 'SIEM', icon: '🛡️', description: 'Splunk, Sentinel, QRadar', searchTerm: 'siem' },
+            { id: 'edr', label: 'EDR', icon: '🔍', description: 'CrowdStrike, Carbon Black', searchTerm: 'edr' },
+            { id: 'other', label: 'Anywhere Else', icon: '🔗', description: 'Any other source', searchTerm: '' },
           ].map((category) => (
             <Box
               key={category.id}
@@ -308,8 +309,9 @@ export const TicketingSystemSearch = ({ selectedSystems, onSelectionChange }: Ti
                 },
               }}
               onClick={() => {
-                // Could pre-fill search with category-specific terms
-                console.log('Category clicked:', category.id);
+                if (singulRef.current) {
+                  singulRef.current.search(category.searchTerm || category.label);
+                }
               }}
             >
               <Typography sx={{ fontSize: '2rem', mb: 1 }}>
@@ -373,6 +375,7 @@ export const TicketingSystemSearch = ({ selectedSystems, onSelectionChange }: Ti
         )}
 
         <SingulJS
+          ref={singulRef}
           authToken="demo-token"
           placeholder="Search all available integrations..."
           layout="grid"
