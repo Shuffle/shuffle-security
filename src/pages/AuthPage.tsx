@@ -109,7 +109,7 @@ const AuthPage = ({ mode }: AuthPageProps) => {
       if (sessionToken) {
         setSuccess(true);
         setLoading(false);
-        login(sessionToken);
+        await login(sessionToken);
         setTimeout(() => {
           navigate(from, { replace: true });
         }, 1500);
