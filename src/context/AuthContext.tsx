@@ -14,9 +14,10 @@ interface AuthContextType {
   isAuthenticated: boolean;
   sessionToken: string | null;
   userInfo: UserInfo | null;
-  login: (token: string) => void;
+  login: (token: string) => Promise<void>;
   logout: () => Promise<void>;
   isLoading: boolean;
+  refreshUserInfo: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -76,11 +77,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     verifyAuth();
   }, []);
 
-  const login = useCallback((token: string) => {
+  const fetchUserInfo = useCallback(async (token: string) => {
+    try {
+      const response = await fetch(getApiUrl('/getinfo'), {
+        credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success === true) {
+        setUserInfo({
+          username: data.username,
+          id: data.id,
+          active_org: data.active_org,
+        });
+      }
+    } catch (err) {
+      console.error('Failed to fetch user info:', err);
+    }
+  }, []);
+
+  const login = useCallback(async (token: string) => {
     localStorage.setItem('session_token', token);
     setSessionToken(token);
     setIsAuthenticated(true);
-  }, []);
+    await fetchUserInfo(token);
+  }, [fetchUserInfo]);
+
+  const refreshUserInfo = useCallback(async () => {
+    const token = localStorage.getItem('session_token');
+    if (token) {
+      await fetchUserInfo(token);
+    }
+  }, [fetchUserInfo]);
 
   const logout = useCallback(async () => {
     // Clear local state FIRST to prevent race conditions
@@ -113,6 +145,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         login,
         logout,
         isLoading,
+        refreshUserInfo,
       }}
     >
       {children}
