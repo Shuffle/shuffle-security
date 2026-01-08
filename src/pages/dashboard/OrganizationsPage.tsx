@@ -38,6 +38,7 @@ const OrganizationsPage = () => {
     const fetchOrgs = async () => {
       try {
         const response = await fetch(getApiUrl('/orgs'), {
+          credentials: 'include',
           headers: {
             'Authorization': `Bearer ${sessionToken}`,
           },

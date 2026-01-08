@@ -36,6 +36,7 @@ const UsersPage = () => {
     const fetchUsers = async () => {
       try {
         const response = await fetch(getApiUrl('/users/getusers'), {
+          credentials: 'include',
           headers: {
             'Authorization': `Bearer ${sessionToken}`,
           },

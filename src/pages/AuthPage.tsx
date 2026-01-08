@@ -82,6 +82,7 @@ const AuthPage = ({ mode }: AuthPageProps) => {
 
       const response = await fetch(getApiUrl(endpoint), {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
