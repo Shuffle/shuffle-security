@@ -81,6 +81,29 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
     }
   }, [apiKey, apiBaseUrl]);
 
+  // Auto-select authenticated apps when they're loaded
+  useEffect(() => {
+    if (authenticatedApps.length > 0 && results.length > 0) {
+      const validAuthApps = authenticatedApps.filter(auth => auth.validation?.valid);
+      const appsToAutoSelect = results.filter(app => 
+        validAuthApps.some(auth => auth.app.name.toLowerCase() === app.name.toLowerCase())
+      );
+      
+      if (appsToAutoSelect.length > 0) {
+        const newSelection = [...internalSelectedApps];
+        appsToAutoSelect.forEach(app => {
+          if (!newSelection.some(a => a.objectID === app.objectID)) {
+            newSelection.push(app);
+          }
+        });
+        if (newSelection.length !== internalSelectedApps.length) {
+          setInternalSelectedApps(newSelection);
+          onSelectionChange?.(newSelection);
+        }
+      }
+    }
+  }, [authenticatedApps, results]);
+
   // Sync external authenticatedApps
   useEffect(() => {
     if (externalAuthenticatedApps) {
@@ -276,7 +299,7 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
     return (
       <div
         key={app.objectID}
-        className={`singul-dropdown-item ${selected ? 'singul-selected' : ''}`}
+        className={`singul-dropdown-item ${selected ? 'singul-selected' : ''} ${authenticated ? 'singul-authenticated' : ''}`}
         style={{
           ...customStyles.dropdownItem,
           ...(selected ? customStyles.selectedItem : {}),
@@ -285,16 +308,28 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
       >
         <div className="singul-app-info" style={customStyles.appInfo}>
           {app.image_url && (
-            <img
-              src={app.image_url}
-              alt={app.name}
-              className="singul-app-icon"
-              style={customStyles.appIcon}
-            />
+            <div style={{ position: 'relative' }}>
+              <img
+                src={app.image_url}
+                alt={app.name}
+                className="singul-app-icon"
+                style={customStyles.appIcon}
+              />
+              {authenticated && (
+                <div className="singul-auth-badge" title="Already authenticated">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
+              )}
+            </div>
           )}
           <div className="singul-app-details" style={customStyles.appDetails}>
             <span className="singul-app-name" style={customStyles.appName}>
               {app.name.replace(/_/g, ' ')}
+              {authenticated && (
+                <span className="singul-auth-label">Connected</span>
+              )}
             </span>
             {showDescription && app.description && (
               <span className="singul-app-description" style={customStyles.appDescription}>
