@@ -118,27 +118,35 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
           minHeight: 64,
         }}
       >
-        {/* Shuffle Logo */}
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1.5,
-            flexShrink: 0,
-          }}
-        >
-          <svg width="32" height="32" viewBox="0 0 56 56" fill="none">
-            <path
-              d="M14 14h28v6H20v16h16v-10h-8v-6h14v22H14V14z"
-              fill="#FF6600"
-            />
-          </svg>
-          {!collapsed && (
-            <Typography sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, fontSize: '1rem' }}>
-              Shuffle
-            </Typography>
-          )}
-        </Box>
+        {/* Shuffle Logo - Links to Home */}
+        <Tooltip title="Go to Home" placement="right">
+          <Box
+            component={Link}
+            to="/"
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.5,
+              flexShrink: 0,
+              textDecoration: 'none',
+              '&:hover': {
+                opacity: 0.8,
+              },
+            }}
+          >
+            <svg width="32" height="32" viewBox="0 0 56 56" fill="none">
+              <path
+                d="M14 14h28v6H20v16h16v-10h-8v-6h14v22H14V14z"
+                fill="#FF6600"
+              />
+            </svg>
+            {!collapsed && (
+              <Typography sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, fontSize: '1rem' }}>
+                Shuffle
+              </Typography>
+            )}
+          </Box>
+        </Tooltip>
         
         <IconButton 
           onClick={onToggle} 

@@ -23,12 +23,12 @@ const navItems = [
   { label: 'Docs', href: '/docs', internal: true },
 ];
 
-// Shuffle logo SVG component
+// Shuffle logo SVG component (white for landing page)
 const ShuffleLogo = () => (
   <svg width="32" height="32" viewBox="0 0 56 56" fill="none">
     <path
       d="M14 14h28v6H20v16h16v-10h-8v-6h14v22H14V14z"
-      fill="#FF6600"
+      fill="#FFFFFF"
     />
   </svg>
 );
@@ -51,22 +51,34 @@ export const LandingNavbar = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Box 
+              component={Link} 
+              to="/"
+              sx={{ display: 'flex', alignItems: 'center', gap: 1.5, textDecoration: 'none' }}
+            >
               <ShuffleLogo />
-              <Typography
-                variant="h6"
-                component={Link}
-                to="/"
-                sx={{
-                  fontWeight: 700,
-                  background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  textDecoration: 'none',
-                }}
-              >
-                Shuffle Cases
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5 }}>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: 700,
+                    color: '#FFFFFF',
+                  }}
+                >
+                  Shuffle
+                </Typography>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: 700,
+                    background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                  }}
+                >
+                  Cases
+                </Typography>
+              </Box>
             </Box>
           </motion.div>
 
