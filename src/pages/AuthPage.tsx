@@ -30,6 +30,8 @@ const AuthPage = ({ mode }: AuthPageProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [mfaRequired, setMfaRequired] = useState(false);
+  const [mfaCode, setMfaCode] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
   const { login, isAuthenticated } = useAuth();
@@ -48,6 +50,8 @@ const AuthPage = ({ mode }: AuthPageProps) => {
     setError('');
     setPassword('');
     setConfirmPassword('');
+    setMfaRequired(false);
+    setMfaCode('');
   }, [mode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -68,15 +72,28 @@ const AuthPage = ({ mode }: AuthPageProps) => {
 
     try {
       const endpoint = isLogin ? API_ENDPOINTS.login : '/users/register';
+      const body: Record<string, string> = { username, password };
+      
+      if (mfaRequired && mfaCode) {
+        body.mfa_code = mfaCode;
+      }
+
       const response = await fetch(getApiUrl(endpoint), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify(body),
       });
 
       const data = await response.json();
+
+      // Handle MFA redirect
+      if (data.reason === 'MFA_REDIRECT') {
+        setMfaRequired(true);
+        setLoading(false);
+        return;
+      }
 
       if (!response.ok) {
         throw new Error(data.reason || data.message || `${isLogin ? 'Login' : 'Registration'} failed`);
@@ -293,6 +310,49 @@ const AuthPage = ({ mode }: AuthPageProps) => {
                       disabled={loading}
                       sx={inputSx}
                     />
+                  </Box>
+                )}
+
+                {mfaRequired && (
+                  <Box sx={{ mb: 4 }}>
+                    <Typography
+                      component="label"
+                      sx={{
+                        display: 'block',
+                        mb: 1,
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                        color: '#fff',
+                      }}
+                    >
+                      MFA Code
+                    </Typography>
+                    <TextField
+                      type="text"
+                      placeholder="Enter your MFA code"
+                      value={mfaCode}
+                      onChange={(e) => setMfaCode(e.target.value)}
+                      fullWidth
+                      required
+                      autoFocus
+                      disabled={loading}
+                      inputProps={{ 
+                        maxLength: 6,
+                        inputMode: 'numeric',
+                        pattern: '[0-9]*'
+                      }}
+                      sx={inputSx}
+                    />
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        display: 'block',
+                        mt: 1,
+                        color: 'rgba(255,255,255,0.5)',
+                      }}
+                    >
+                      Enter the code from your authenticator app
+                    </Typography>
                   </Box>
                 )}
 
