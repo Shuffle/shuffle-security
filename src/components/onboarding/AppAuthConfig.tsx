@@ -13,12 +13,22 @@ import {
   IconButton,
   Link,
   Divider,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Checkbox,
+  ListItemText,
+  OutlinedInput,
+  Tooltip,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import LockIcon from '@mui/icons-material/Lock';
+import GroupIcon from '@mui/icons-material/Group';
 import type { AlgoliaSearchApp } from '@/lib/singul-local';
 import { API_CONFIG, getApiUrl } from '@/config/api';
 
@@ -154,77 +164,287 @@ const AppAuthCard = ({
   const statusConfig = getStatusConfig(authState.status);
   const auth = appConfig?.authentication;
 
+  const [selectedScopes, setSelectedScopes] = useState<string[]>(auth?.scope || []);
+
   const renderOAuth2Fields = () => {
     if (!auth || auth.type !== 'oauth2') return null;
 
+    const availableScopes = auth.scope || [];
+
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        {/* OAuth2 Info Banner */}
-        <Box
-          sx={{
-            p: 2,
-            borderRadius: 2,
-            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%)',
-            border: '1px solid rgba(59, 130, 246, 0.2)',
-          }}
-        >
-          <Typography variant="subtitle2" sx={{ color: '#60a5fa', fontWeight: 600, mb: 1 }}>
-            OAuth 2.0 Authentication
+        {/* Header with description */}
+        <Box>
+          <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', mb: 1 }}>
+            OAuth2 requires a Client ID and Client Secret to authenticate, defined in your app's remote website.
           </Typography>
-          <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', mb: 2 }}>
-            {auth.description || 'This app uses OAuth 2.0 for secure authentication. Click the button below to authorize.'}
+          <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+            Your redirect URL: <Typography component="span" sx={{ color: '#FF6600', fontWeight: 600 }}>
+              {auth.redirect_uri || 'https://shuffler.io/set_authentication'}
+            </Typography>
           </Typography>
-          
+          <Link
+            href="https://shuffler.io/docs/extensions#app_authentication"
+            target="_blank"
+            sx={{ 
+              color: '#FF6600', 
+              fontSize: '0.875rem',
+              textDecoration: 'none',
+              '&:hover': { textDecoration: 'underline' },
+            }}
+          >
+            Learn more about OAuth2 with Shuffle
+          </Link>
+        </Box>
+
+        {/* One-click Login Button */}
+        <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
           <Button
             variant="contained"
-            startIcon={<OpenInNewIcon />}
+            startIcon={
+              app.image_url ? (
+                <Box
+                  component="img"
+                  src={app.image_url}
+                  alt={app.name}
+                  sx={{ width: 24, height: 24, borderRadius: 1, objectFit: 'contain' }}
+                />
+              ) : null
+            }
             onClick={() => {
-              // Build OAuth URL
               const authUrl = `https://shuffler.io/appauth?app_id=${app.objectID}`;
               window.open(authUrl, '_blank', 'width=600,height=700');
             }}
             sx={{
-              background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+              flex: 1,
+              py: 1.5,
+              backgroundColor: 'rgba(255, 255, 255, 0.08)',
+              color: 'white',
               fontWeight: 600,
+              justifyContent: 'flex-start',
+              textTransform: 'none',
+              fontSize: '1rem',
               '&:hover': {
-                background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
+                backgroundColor: 'rgba(255, 255, 255, 0.12)',
               },
             }}
           >
-            Authorize with {app.name.replace(/_/g, ' ')}
+            One-click Login
           </Button>
+          <Tooltip title="Use organization credentials">
+            <IconButton
+              sx={{
+                backgroundColor: 'rgba(255, 102, 0, 0.15)',
+                color: '#FF6600',
+                '&:hover': { backgroundColor: 'rgba(255, 102, 0, 0.25)' },
+              }}
+            >
+              <GroupIcon />
+            </IconButton>
+          </Tooltip>
         </Box>
 
-        {/* Scope Information */}
-        {auth.scope && auth.scope.length > 0 && (
+        {/* OR Divider */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Divider sx={{ flex: 1, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+          <Typography sx={{ color: 'rgba(255, 255, 255, 0.4)', fontSize: '0.875rem' }}>OR</Typography>
+          <Divider sx={{ flex: 1, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+        </Box>
+
+        {/* Manual Fields */}
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {/* URL Field */}
           <Box>
-            <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.5)', mb: 1, display: 'block' }}>
-              Requested Permissions
-            </Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-              {auth.scope.map((scope, index) => (
-                <Chip
-                  key={index}
-                  label={scope}
-                  size="small"
-                  sx={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    color: 'rgba(255, 255, 255, 0.7)',
-                    fontSize: '0.7rem',
-                    height: 24,
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+              <LockIcon sx={{ fontSize: 16, color: 'rgba(255, 255, 255, 0.5)' }} />
+              <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>url</Typography>
+            </Box>
+            <TextField
+              placeholder={auth.token_uri || 'https://api.example.com'}
+              value={authState.credentials['url'] || auth.token_uri || ''}
+              onChange={(e) =>
+                onAuthChange(app.objectID, {
+                  ...authState.credentials,
+                  url: e.target.value,
+                })
+              }
+              fullWidth
+              size="small"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                  borderRadius: 2,
+                  '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.1)' },
+                  '&:hover fieldset': { borderColor: 'rgba(255, 255, 255, 0.2)' },
+                  '&.Mui-focused fieldset': { borderColor: '#FF6600' },
+                },
+                '& .MuiInputBase-input': { color: 'white' },
+              }}
+            />
+          </Box>
+
+          {/* Client ID */}
+          <TextField
+            label="Client ID"
+            placeholder="Enter your Client ID"
+            value={authState.credentials['client_id'] || ''}
+            onChange={(e) =>
+              onAuthChange(app.objectID, {
+                ...authState.credentials,
+                client_id: e.target.value,
+              })
+            }
+            fullWidth
+            size="small"
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                borderRadius: 2,
+                '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.1)' },
+                '&:hover fieldset': { borderColor: 'rgba(255, 255, 255, 0.2)' },
+                '&.Mui-focused fieldset': { borderColor: '#FF6600' },
+              },
+              '& .MuiInputBase-input': { color: 'white' },
+              '& .MuiInputLabel-root': { color: 'rgba(255, 255, 255, 0.5)' },
+            }}
+          />
+
+          {/* Client Secret */}
+          <TextField
+            label="Client Secret"
+            type="password"
+            placeholder="Enter your Client Secret"
+            value={authState.credentials['client_secret'] || ''}
+            onChange={(e) =>
+              onAuthChange(app.objectID, {
+                ...authState.credentials,
+                client_secret: e.target.value,
+              })
+            }
+            fullWidth
+            size="small"
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                borderRadius: 2,
+                '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.1)' },
+                '&:hover fieldset': { borderColor: 'rgba(255, 255, 255, 0.2)' },
+                '&.Mui-focused fieldset': { borderColor: '#FF6600' },
+              },
+              '& .MuiInputBase-input': { color: 'white' },
+              '& .MuiInputLabel-root': { color: 'rgba(255, 255, 255, 0.5)' },
+            }}
+          />
+
+          {/* Scopes Dropdown */}
+          {availableScopes.length > 0 && (
+            <Box>
+              <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.5)', mb: 1 }}>
+                Scopes (access rights)
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <FormControl fullWidth size="small">
+                  <Select
+                    multiple
+                    value={selectedScopes}
+                    onChange={(e) => {
+                      const value = e.target.value as string[];
+                      setSelectedScopes(value);
+                      onAuthChange(app.objectID, {
+                        ...authState.credentials,
+                        scopes: value.join(' '),
+                      });
+                    }}
+                    input={<OutlinedInput />}
+                    renderValue={(selected) => selected.length === 0 ? 'Search Scopes' : `${selected.length} scope(s) selected`}
+                    displayEmpty
+                    sx={{
+                      backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                      borderRadius: 2,
+                      color: 'white',
+                      '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.1)' },
+                      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.2)' },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#FF6600' },
+                      '& .MuiSvgIcon-root': { color: 'rgba(255, 255, 255, 0.5)' },
+                    }}
+                    MenuProps={{
+                      PaperProps: {
+                        sx: {
+                          backgroundColor: '#1a1a1a',
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          maxHeight: 300,
+                        },
+                      },
+                    }}
+                  >
+                    {availableScopes.map((scope) => (
+                      <MenuItem key={scope} value={scope} sx={{ color: 'white' }}>
+                        <Checkbox 
+                          checked={selectedScopes.indexOf(scope) > -1}
+                          sx={{ color: 'rgba(255, 255, 255, 0.5)', '&.Mui-checked': { color: '#FF6600' } }}
+                        />
+                        <ListItemText primary={scope} sx={{ '& .MuiTypography-root': { color: 'white' } }} />
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <Checkbox
+                  checked={selectedScopes.length === availableScopes.length}
+                  indeterminate={selectedScopes.length > 0 && selectedScopes.length < availableScopes.length}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedScopes(availableScopes);
+                      onAuthChange(app.objectID, {
+                        ...authState.credentials,
+                        scopes: availableScopes.join(' '),
+                      });
+                    } else {
+                      setSelectedScopes([]);
+                      onAuthChange(app.objectID, {
+                        ...authState.credentials,
+                        scopes: '',
+                      });
+                    }
+                  }}
+                  sx={{ 
+                    color: 'rgba(255, 255, 255, 0.5)', 
+                    '&.Mui-checked': { color: '#FF6600' },
+                    '&.MuiCheckbox-indeterminate': { color: '#FF6600' },
                   }}
                 />
-              ))}
+              </Box>
             </Box>
-          </Box>
-        )}
-
-        {/* Technical Details (collapsible) */}
-        <Box sx={{ mt: 1 }}>
-          <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.3)' }}>
-            Redirect URI: {auth.redirect_uri || 'Not specified'}
-          </Typography>
+          )}
         </Box>
+
+        {/* Authenticate Button */}
+        <Button
+          variant="contained"
+          disabled={!authState.credentials['client_id'] || !authState.credentials['client_secret']}
+          onClick={(e) => {
+            e.stopPropagation();
+            onTestConnection(app.objectID);
+          }}
+          sx={{
+            py: 1.5,
+            background: authState.credentials['client_id'] && authState.credentials['client_secret']
+              ? 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)'
+              : 'rgba(255, 255, 255, 0.1)',
+            color: authState.credentials['client_id'] && authState.credentials['client_secret']
+              ? 'white'
+              : 'rgba(255, 255, 255, 0.3)',
+            fontWeight: 600,
+            '&:hover': {
+              background: 'linear-gradient(135deg, #FF8533 0%, #FF9955 100%)',
+            },
+            '&.Mui-disabled': {
+              background: 'rgba(255, 255, 255, 0.1)',
+              color: 'rgba(255, 255, 255, 0.3)',
+            },
+          }}
+        >
+          Authenticate
+        </Button>
       </Box>
     );
   };
