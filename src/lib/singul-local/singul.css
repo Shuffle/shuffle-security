@@ -370,8 +370,9 @@
     max-height: 300px;
   }
   
-  .singul-dropdown.singul-dropdown-grid {
-    --singul-grid-columns: 1;
+  .singul-dropdown.singul-dropdown-grid,
+  .singul-results-container.singul-results-grid {
+    --singul-grid-columns: 1 !important;
   }
   
   .singul-dropdown-item {
@@ -385,7 +386,8 @@
 }
 
 @media (min-width: 769px) and (max-width: 1024px) {
-  .singul-dropdown.singul-dropdown-grid {
-    --singul-grid-columns: 2;
+  .singul-dropdown.singul-dropdown-grid,
+  .singul-results-container.singul-results-grid {
+    --singul-grid-columns: 2 !important;
   }
 }
