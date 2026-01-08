@@ -154,38 +154,6 @@ const OnboardingPage = () => {
         }}
       >
         <Container maxWidth="lg">
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <svg width="36" height="36" viewBox="0 0 56 56" fill="none">
-                <path
-                  d="M14 14h28v6H20v16h16v-10h-8v-6h14v22H14V14z"
-                  fill="#FF6600"
-                />
-              </svg>
-              <Typography
-                variant="h5"
-                sx={{
-                  fontWeight: 700,
-                  background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}
-              >
-                Shuffle Cases
-              </Typography>
-            </Box>
-            <Chip
-              label="⚡ Quick Setup"
-              size="small"
-              sx={{
-                fontSize: '0.8rem',
-                background: 'rgba(255, 102, 0, 0.1)',
-                border: '1px solid rgba(255, 102, 0, 0.3)',
-                color: '#FF6600',
-              }}
-            />
-          </Box>
-
           {/* Step Indicator */}
           <Box sx={{ display: 'flex', justifyContent: 'center' }}>
             <Stack direction="row" spacing={2}>
