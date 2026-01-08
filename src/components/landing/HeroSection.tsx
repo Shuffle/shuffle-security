@@ -82,7 +82,6 @@ export const HeroSection = () => {
                 mb: 3,
               }}
             >
-              Case Management,{' '}
               <Box
                 component="span"
                 sx={{
@@ -91,8 +90,9 @@ export const HeroSection = () => {
                   WebkitTextFillColor: 'transparent',
                 }}
               >
-                Your Way
-              </Box>
+                Accessible
+              </Box>{' '}
+              Case Management
             </Typography>
           </motion.div>
 
@@ -105,15 +105,14 @@ export const HeroSection = () => {
               variant="h5"
               sx={{
                 color: 'text.secondary',
-                maxWidth: 750,
+                maxWidth: 600,
                 mx: 'auto',
                 mb: 5,
                 fontWeight: 400,
                 lineHeight: 1.6,
               }}
             >
-              Import alerts and cases from any ITSM system. Configure every workflow. 
-              Deploy AI agents that are verbose, controllable, and reach into your on-premises environments.
+              Open-source security operations, built on Shuffle Automation.
             </Typography>
           </motion.div>
 
