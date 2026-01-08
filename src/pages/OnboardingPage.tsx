@@ -104,7 +104,11 @@ const OnboardingPage = () => {
     }));
   };
 
-  const handleTestConnection = (systemId: string) => {
+  const handleTestConnection = async (systemId: string) => {
+    // Find the app info
+    const app = selectedApps.find(a => a.objectID === systemId);
+    if (!app) return;
+
     setAuthStates((prev) => ({
       ...prev,
       [systemId]: {
@@ -113,17 +117,58 @@ const OnboardingPage = () => {
       },
     }));
 
-    setTimeout(() => {
-      const success = Math.random() > 0.3;
+    try {
+      // Call Singul API to test the connection
+      const response = await fetch('https://singul.io/api/list_messages', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          app: app.name.toLowerCase(),
+        }),
+      });
+
+      const result = await response.json();
+      
+      // Check if the response indicates success
+      const success = response.ok && result.success !== false;
+      
       setAuthStates((prev) => ({
         ...prev,
         [systemId]: {
           ...prev[systemId],
           status: success ? 'connected' : 'error',
-          errorMessage: success ? undefined : 'Failed to connect. Please check your credentials.',
+          errorMessage: success ? undefined : (result.reason || result.error || 'Failed to connect. Please check your credentials.'),
         },
       }));
-    }, 1500);
+
+      // Refresh authenticated apps list to update validation status
+      if (success) {
+        const authResponse = await fetch(`${API_CONFIG.baseUrl}/api/v1/apps/authentication`, {
+          headers: {
+            'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+          },
+        });
+        if (authResponse.ok) {
+          const authData = await authResponse.json();
+          if (authData.data) {
+            setAuthenticatedApps(authData.data);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Test connection failed:', error);
+      setAuthStates((prev) => ({
+        ...prev,
+        [systemId]: {
+          ...prev[systemId],
+          status: 'error',
+          errorMessage: error instanceof Error ? error.message : 'Connection test failed. Please try again.',
+        },
+      }));
+    }
   };
 
   const handleSaveAuth = async (appId: string, credentials: Record<string, string>): Promise<boolean> => {
