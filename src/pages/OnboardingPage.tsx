@@ -25,7 +25,13 @@ const OnboardingPage = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [selectedSystems, setSelectedSystems] = useState<TicketingSystem[]>([]);
   const [authStates, setAuthStates] = useState<Record<string, ToolAuthState>>({});
-  const [enrichmentState, setEnrichmentState] = useState<EnrichmentState>({});
+  const [enrichmentState, setEnrichmentState] = useState<EnrichmentState>({
+    threat_list: { enabled: true, config: {} },
+    ai_triage: { enabled: true, config: {} },
+    email_notify: { enabled: true, config: {} },
+    slack_notify: { enabled: true, config: {} },
+    auto_assign: { enabled: true, config: {} },
+  });
 
   const handleNext = () => {
     if (activeStep === steps.length - 1) {
