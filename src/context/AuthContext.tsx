@@ -5,6 +5,8 @@ interface Organization {
   name: string;
   id: string;
   image?: string;
+  region_url?: string;
+  creator_org?: string;
 }
 
 interface UserInfo {

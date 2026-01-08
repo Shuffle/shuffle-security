@@ -57,6 +57,63 @@ interface AppSidebarProps {
   onToggle: () => void;
 }
 
+// Region flag mapping based on region_url
+const getRegionFlag = (regionUrl?: string): { flag: string; code: string } => {
+  if (!regionUrl) return { flag: '🌐', code: '' };
+  
+  const url = regionUrl.toLowerCase();
+  if (url.includes('shuffler.io') && !url.includes('eu-2') && !url.includes('ca.') && !url.includes('au.')) {
+    return { flag: '🇬🇧', code: 'UK' };
+  }
+  if (url.includes('us.') || url.includes('us-')) {
+    return { flag: '🇺🇸', code: 'US' };
+  }
+  if (url.includes('eu-2') || url.includes('eu2')) {
+    return { flag: '🇪🇺', code: 'EU-2' };
+  }
+  if (url.includes('ca.') || url.includes('canada')) {
+    return { flag: '🇨🇦', code: 'CA' };
+  }
+  if (url.includes('au.') || url.includes('aus') || url.includes('australia')) {
+    return { flag: '🇦🇺', code: 'AUS' };
+  }
+  return { flag: '🇬🇧', code: 'UK' }; // Default to UK for shuffler.io
+};
+
+// Sort orgs with parent-child hierarchy
+const sortOrgsWithHierarchy = (orgs: Array<{ id: string; name: string; creator_org?: string; region_url?: string }>) => {
+  const orgMap = new Map(orgs.map(org => [org.id, org]));
+  const result: Array<{ org: typeof orgs[0]; level: number }> = [];
+  const processed = new Set<string>();
+
+  // Find root orgs (no creator_org or creator_org not in list)
+  const rootOrgs = orgs.filter(org => !org.creator_org || !orgMap.has(org.creator_org));
+  
+  const addOrgWithChildren = (org: typeof orgs[0], level: number) => {
+    if (processed.has(org.id)) return;
+    processed.add(org.id);
+    result.push({ org, level });
+    
+    // Find children
+    const children = orgs.filter(o => o.creator_org === org.id);
+    children.sort((a, b) => a.name.localeCompare(b.name));
+    children.forEach(child => addOrgWithChildren(child, level + 1));
+  };
+
+  // Sort root orgs alphabetically and process
+  rootOrgs.sort((a, b) => a.name.localeCompare(b.name));
+  rootOrgs.forEach(org => addOrgWithChildren(org, 0));
+
+  // Add any remaining orgs that weren't processed (orphans with missing parents)
+  orgs.forEach(org => {
+    if (!processed.has(org.id)) {
+      result.push({ org, level: 1 }); // Treat as sub-org level
+    }
+  });
+
+  return result;
+};
+
 export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -64,6 +121,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
   const [expandedItems, setExpandedItems] = useState<string[]>(['Cases']);
 
   const organizations = userInfo?.orgs || [];
+  const sortedOrgs = sortOrgsWithHierarchy(organizations);
   const selectedOrg = userInfo?.active_org || organizations[0];
 
   const handleExpand = (label: string) => {
@@ -364,36 +422,52 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
             <Autocomplete
               value={selectedOrg}
               onChange={(_, newValue) => handleOrgChange(newValue)}
-              options={organizations}
+              options={sortedOrgs.map(item => item.org)}
               getOptionLabel={(option) => option.name}
               isOptionEqualToValue={(option, value) => option.id === value.id}
               size="small"
               disableClearable
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  placeholder="Select organization"
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      backgroundColor: 'hsl(var(--muted))',
-                      borderRadius: 1,
-                      fontSize: '0.875rem',
-                      '& fieldset': {
-                        borderColor: 'transparent',
+              renderInput={(params) => {
+                const region = getRegionFlag(selectedOrg?.region_url);
+                return (
+                  <TextField
+                    {...params}
+                    placeholder="Select organization"
+                    slotProps={{
+                      input: {
+                        ...params.InputProps,
+                        startAdornment: selectedOrg ? (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, ml: 0.5 }}>
+                            <span style={{ fontSize: '14px' }}>{region.flag}</span>
+                            <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
+                              {region.code}
+                            </Typography>
+                          </Box>
+                        ) : null,
                       },
-                      '&:hover fieldset': {
-                        borderColor: 'hsl(var(--border))',
+                    }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        backgroundColor: 'hsl(var(--muted))',
+                        borderRadius: 1,
+                        fontSize: '0.875rem',
+                        '& fieldset': {
+                          borderColor: 'transparent',
+                        },
+                        '&:hover fieldset': {
+                          borderColor: 'hsl(var(--border))',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: 'hsl(var(--primary))',
+                        },
                       },
-                      '&.Mui-focused fieldset': {
-                        borderColor: 'hsl(var(--primary))',
+                      '& .MuiInputBase-input': {
+                        color: 'hsl(var(--foreground))',
                       },
-                    },
-                    '& .MuiInputBase-input': {
-                      color: 'hsl(var(--foreground))',
-                    },
-                  }}
-                />
-              )}
+                    }}
+                  />
+                );
+              }}
               slotProps={{
                 paper: {
                   sx: {
@@ -401,29 +475,45 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                     border: '1px solid hsl(var(--border))',
                     borderRadius: 1,
                     mt: 0.5,
+                    maxHeight: 300,
                   },
                 },
               }}
-              renderOption={(props, option) => (
-                <Box
-                  component="li"
-                  {...props}
-                  key={option.id}
-                  sx={{
-                    fontSize: '0.875rem',
-                    color: 'hsl(var(--foreground))',
-                    backgroundColor: 'hsl(var(--card))',
-                    '&:hover': {
-                      backgroundColor: 'hsl(var(--muted)) !important',
-                    },
-                    '&.Mui-focused': {
-                      backgroundColor: 'hsl(var(--muted)) !important',
-                    },
-                  }}
-                >
-                  {option.name}
-                </Box>
-              )}
+              renderOption={(props, option) => {
+                const sortedItem = sortedOrgs.find(item => item.org.id === option.id);
+                const level = sortedItem?.level || 0;
+                const region = getRegionFlag(option.region_url);
+                
+                return (
+                  <Box
+                    component="li"
+                    {...props}
+                    key={option.id}
+                    sx={{
+                      fontSize: '0.875rem',
+                      color: 'hsl(var(--foreground))',
+                      backgroundColor: 'hsl(var(--card))',
+                      pl: `${16 + level * 16}px !important`,
+                      '&:hover': {
+                        backgroundColor: 'hsl(var(--muted)) !important',
+                      },
+                      '&.Mui-focused': {
+                        backgroundColor: 'hsl(var(--muted)) !important',
+                      },
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <span style={{ fontSize: '14px' }}>{region.flag}</span>
+                      <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', minWidth: 28 }}>
+                        {region.code}
+                      </Typography>
+                      <Typography sx={{ fontSize: '0.875rem' }}>
+                        {option.name}
+                      </Typography>
+                    </Box>
+                  </Box>
+                );
+              }}
             />
           </Box>
         ) : (
