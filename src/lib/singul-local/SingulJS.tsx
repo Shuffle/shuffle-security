@@ -411,13 +411,18 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
             }}
           >
             {results.length > 0 ? (
-              results.map((app, index) => renderAppItem(app, index))
+              <>
+                {results.map((app, index) => renderAppItem(app, index))}
+                <div className="singul-end-of-results" style={customStyles.emptyState}>
+                  Can't find what you're looking for? Try a different search term or browse our full integration catalog.
+                </div>
+              </>
             ) : query.trim() ? (
               <div className="singul-empty-state" style={customStyles.emptyState}>
                 {renderEmptyState ? (
                   renderEmptyState()
                 ) : (
-                  <>No apps found for "{query}"</>
+                  <>No integrations match "{query}". Try searching for a different app or category.</>
                 )}
               </div>
             ) : (
