@@ -288,15 +288,62 @@ export const TicketingSystemSearch = ({ selectedSystems, onSelectionChange }: Ti
             customStyles={{
               container: { 
                 width: '100%',
+                backgroundColor: 'transparent',
+                borderRadius: '12px',
+              },
+              inputWrapper: {
                 backgroundColor: 'rgba(0, 0, 0, 0.3)',
                 borderRadius: '12px',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
               },
               input: {
                 backgroundColor: 'transparent',
                 color: 'white',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                border: 'none',
                 borderRadius: '12px',
                 padding: '12px 16px',
+                fontSize: '14px',
+              },
+              searchIcon: {
+                color: 'rgba(255, 255, 255, 0.4)',
+              },
+              loadingSpinner: {
+                color: '#FF6600',
+              },
+              dropdown: {
+                backgroundColor: 'rgba(30, 30, 30, 0.98)',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                borderRadius: '12px',
+                marginTop: '8px',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
+                maxHeight: '300px',
+                overflowY: 'auto',
+              },
+              dropdownItem: {
+                padding: '12px 16px',
+                color: 'rgba(255, 255, 255, 0.8)',
+                cursor: 'pointer',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+              },
+              selectedItem: {
+                backgroundColor: 'rgba(255, 102, 0, 0.15)',
+                color: '#FF6600',
+              },
+              appIcon: {
+                width: '32px',
+                height: '32px',
+                borderRadius: '6px',
+                marginRight: '12px',
+              },
+              appName: {
+                fontSize: '14px',
+                fontWeight: '500',
+              },
+              emptyState: {
+                padding: '24px',
+                color: 'rgba(255, 255, 255, 0.4)',
+                textAlign: 'center',
+                fontSize: '14px',
               },
             }}
           />
