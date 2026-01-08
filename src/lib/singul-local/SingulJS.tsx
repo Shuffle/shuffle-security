@@ -304,6 +304,7 @@ export const SingulJS: React.FC<SingulJSProps> = ({
             style={{
               ...customStyles.dropdown,
               ...getGridColumnsStyle,
+              ...(layout === 'grid' ? { display: 'grid' } : {}),
             }}
           >
             {results.length > 0 ? (
