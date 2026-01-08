@@ -35,16 +35,34 @@ const AuthPage = ({ mode }: AuthPageProps) => {
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, isLoading: authLoading } = useAuth();
 
   const isLogin = mode === 'login';
-  const from = location.state?.from?.pathname || '/dashboard';
+  const from = location.state?.from?.pathname || '/dashboard/cases';
 
+  // Redirect if already authenticated (e.g., via API key)
   useEffect(() => {
-    if (isAuthenticated) {
+    if (!authLoading && isAuthenticated) {
       navigate(from, { replace: true });
     }
-  }, [isAuthenticated, navigate, from]);
+  }, [isAuthenticated, authLoading, navigate, from]);
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <Box 
+        sx={{ 
+          minHeight: '100vh', 
+          bgcolor: '#1a1a1a',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <CircularProgress sx={{ color: '#FF6600' }} />
+      </Box>
+    );
+  }
 
   // Clear form when switching modes
   useEffect(() => {
