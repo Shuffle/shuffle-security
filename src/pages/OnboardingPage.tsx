@@ -261,7 +261,7 @@ const OnboardingPage = () => {
       </Box>
 
       {/* Scrollable Content Area */}
-      <Box sx={{ flex: 1, overflowY: 'auto', position: 'relative', zIndex: 1 }}>
+      <Box sx={{ flex: 1, overflowY: 'auto', position: 'relative', zIndex: 1, pb: 10 }}>
         <Container maxWidth="lg" sx={{ py: 4 }}>
           {/* Content Card */}
           <motion.div
@@ -393,11 +393,13 @@ const OnboardingPage = () => {
         </Container>
       </Box>
 
-      {/* Sticky Footer with Navigation */}
+      {/* Fixed Footer with Navigation */}
       <Box
         sx={{
-          position: 'sticky',
+          position: 'fixed',
           bottom: 0,
+          left: 0,
+          right: 0,
           zIndex: 100,
           backgroundColor: 'hsla(0, 0%, 10%, 0.95)',
           backdropFilter: 'blur(20px)',
