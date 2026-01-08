@@ -255,7 +255,7 @@ export const TicketingSystemSearch = ({ selectedSystems, onSelectionChange }: Ti
       )}
 
       {/* Singul Integration Search */}
-      <Divider sx={{ my: 4, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+      <Divider sx={{ my: 5, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
       
       <Box>
         <Typography
@@ -266,13 +266,75 @@ export const TicketingSystemSearch = ({ selectedSystems, onSelectionChange }: Ti
             mb: 1,
           }}
         >
-          Or Search All Integrations
+          Connect Your Alert Sources
         </Typography>
         <Typography
           variant="body1"
-          sx={{ color: 'rgba(255, 255, 255, 0.5)', mb: 3 }}
+          sx={{ color: 'rgba(255, 255, 255, 0.5)', mb: 4 }}
         >
-          Use Singul to find and connect any integration from our catalog.
+          Search and connect integrations from any of these ingest areas.
+        </Typography>
+
+        {/* Ingest Area Categories */}
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' },
+            gap: 2,
+            mb: 4,
+          }}
+        >
+          {[
+            { id: 'email', label: 'Email', icon: '📧', description: 'Gmail, Outlook, Exchange' },
+            { id: 'siem', label: 'SIEM', icon: '🛡️', description: 'Splunk, Sentinel, QRadar' },
+            { id: 'edr', label: 'EDR', icon: '🔍', description: 'CrowdStrike, Carbon Black' },
+            { id: 'other', label: 'Anywhere Else', icon: '🔗', description: 'Any other source' },
+          ].map((category) => (
+            <Box
+              key={category.id}
+              sx={{
+                p: 3,
+                backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                borderRadius: 3,
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                textAlign: 'center',
+                '&:hover': {
+                  borderColor: 'rgba(255, 102, 0, 0.5)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  transform: 'translateY(-2px)',
+                },
+              }}
+              onClick={() => {
+                // Could pre-fill search with category-specific terms
+                console.log('Category clicked:', category.id);
+              }}
+            >
+              <Typography sx={{ fontSize: '2rem', mb: 1 }}>
+                {category.icon}
+              </Typography>
+              <Typography
+                variant="subtitle1"
+                sx={{ color: 'white', fontWeight: 600, mb: 0.5 }}
+              >
+                {category.label}
+              </Typography>
+              <Typography
+                variant="caption"
+                sx={{ color: 'rgba(255, 255, 255, 0.4)', display: 'block' }}
+              >
+                {category.description}
+              </Typography>
+            </Box>
+          ))}
+        </Box>
+
+        <Typography
+          variant="body2"
+          sx={{ color: 'rgba(255, 255, 255, 0.4)', mb: 2 }}
+        >
+          Or search directly:
         </Typography>
         <SingulJS
           authToken="demo-token"
