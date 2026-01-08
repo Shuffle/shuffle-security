@@ -49,6 +49,15 @@ const AuthPage = ({ mode }: AuthPageProps) => {
     }
   }, [isAuthenticated, authLoading, navigate, from]);
 
+  // Clear form when switching modes
+  useEffect(() => {
+    setError('');
+    setPassword('');
+    setConfirmPassword('');
+    setMfaRequired(false);
+    setMfaCode('');
+  }, [mode]);
+
   // Show loading while checking auth
   if (authLoading) {
     return (
@@ -65,15 +74,6 @@ const AuthPage = ({ mode }: AuthPageProps) => {
       </Box>
     );
   }
-
-  // Clear form when switching modes
-  useEffect(() => {
-    setError('');
-    setPassword('');
-    setConfirmPassword('');
-    setMfaRequired(false);
-    setMfaCode('');
-  }, [mode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
