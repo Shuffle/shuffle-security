@@ -4,8 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { TicketingSystemSearch } from '@/components/onboarding/TicketingSystemSearch';
 import type { AlgoliaSearchApp } from '@/lib/singul-local';
-import { ToolAuthentication, ToolAuthState, AuthStatus } from '@/components/onboarding/ToolAuthentication';
-import { AppAuthConfig, AppAuthState } from '@/components/onboarding/AppAuthConfig';
+import { AppAuthConfig, AppAuthState, AuthStatus } from '@/components/onboarding/AppAuthConfig';
 import { EnrichmentConfig, EnrichmentState } from '@/components/onboarding/EnrichmentConfig';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -42,7 +41,7 @@ const OnboardingPage = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [selectedApps, setSelectedApps] = useState<AlgoliaSearchApp[]>([]);
   const [searchQuery, setSearchQuery] = useState('email');
-  const [authStates, setAuthStates] = useState<Record<string, ToolAuthState>>({});
+  const [authStates, setAuthStates] = useState<Record<string, AppAuthState>>({});
   const [authenticatedApps, setAuthenticatedApps] = useState<ApiAuthEntry[]>([]);
   const [enrichmentState, setEnrichmentState] = useState<EnrichmentState>({
     threat_list: { enabled: true, config: {} },
@@ -309,22 +308,13 @@ const OnboardingPage = () => {
                   )}
 
                   {activeStep === 1 && (
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      <ToolAuthentication
-                        apps={selectedApps}
-                        authStates={authStates}
-                        onAuthChange={handleAuthChange}
-                        onTestConnection={handleTestConnection}
-                      />
-                      
-                      <AppAuthConfig
-                        apps={selectedApps}
-                        authStates={authStates}
-                        authenticatedApps={authenticatedApps}
-                        onAuthChange={handleAuthChange}
-                        onTestConnection={handleTestConnection}
-                      />
-                    </Box>
+                    <AppAuthConfig
+                      apps={selectedApps}
+                      authStates={authStates}
+                      authenticatedApps={authenticatedApps}
+                      onAuthChange={handleAuthChange}
+                      onTestConnection={handleTestConnection}
+                    />
                   )}
 
                   {activeStep === 2 && (
