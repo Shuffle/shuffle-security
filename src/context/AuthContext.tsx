@@ -138,6 +138,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (response.ok) {
         // Refresh user info to get updated active_org
         await fetchUserInfo(token);
+      } else {
+        console.warn('Org change failed - this endpoint may require session auth instead of API key');
       }
     } catch (err) {
       console.error('Failed to change org:', err);

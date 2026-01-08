@@ -49,7 +49,6 @@ const navItems: NavItem[] = [
     ],
   },
   { label: 'Users', icon: <PeopleIcon />, path: '/dashboard/users' },
-  { label: 'Organizations', icon: <BusinessIcon />, path: '/dashboard/organizations' },
 ];
 
 interface AppSidebarProps {
@@ -169,12 +168,12 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
         zIndex: 1200,
       }}
     >
-      {/* Header with Logo and Toggle */}
+      {/* Header with Logo */}
       <Box
         sx={{
           display: 'flex',
           alignItems: 'center',
-          justifyContent: collapsed ? 'center' : 'space-between',
+          justifyContent: 'center',
           p: 2,
           minHeight: 64,
         }}
@@ -203,25 +202,37 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
             </svg>
             {!collapsed && (
               <Typography sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, fontSize: '1rem' }}>
-                Shuffle
+                Cases
               </Typography>
             )}
           </Box>
         </Tooltip>
-        
+      </Box>
+
+      {/* Divider with Toggle Button */}
+      <Box sx={{ position: 'relative', mx: collapsed ? 1 : 2 }}>
+        <Divider sx={{ borderColor: 'hsl(var(--border))' }} />
         <IconButton 
           onClick={onToggle} 
           size="small" 
           sx={{ 
+            position: 'absolute',
+            right: collapsed ? '50%' : -12,
+            top: '50%',
+            transform: collapsed ? 'translate(50%, -50%)' : 'translateY(-50%)',
             color: 'hsl(var(--muted-foreground))',
-            backgroundColor: collapsed ? 'hsl(var(--muted))' : 'transparent',
+            backgroundColor: 'hsl(var(--card))',
+            border: '1px solid hsl(var(--border))',
             borderRadius: 1,
+            width: 24,
+            height: 24,
+            zIndex: 1,
             '&:hover': {
               backgroundColor: 'hsl(var(--muted))',
             },
           }}
         >
-          {collapsed ? <ChevronRightIcon fontSize="small" /> : <ChevronLeftIcon fontSize="small" />}
+          {collapsed ? <ChevronRightIcon sx={{ fontSize: 16 }} /> : <ChevronLeftIcon sx={{ fontSize: 16 }} />}
         </IconButton>
       </Box>
 

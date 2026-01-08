@@ -24,12 +24,12 @@ const navItems = [
   { label: 'Docs', href: '/docs', internal: true },
 ];
 
-// Shuffle logo SVG component (white for landing page)
+// Shuffle logo SVG component (orange for landing page)
 const ShuffleLogo = () => (
   <svg width="32" height="32" viewBox="0 0 56 56" fill="none">
     <path
       d="M14 14h28v6H20v16h16v-10h-8v-6h14v22H14V14z"
-      fill="#FFFFFF"
+      fill="#FF6600"
     />
   </svg>
 );
