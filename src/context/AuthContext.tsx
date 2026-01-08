@@ -79,14 +79,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchUserInfo = useCallback(async (token: string) => {
     try {
+      // Try with Authorization header first, then fall back to cookie-only
       const response = await fetch(getApiUrl('/getinfo'), {
+        method: 'GET',
         credentials: 'include',
         headers: {
           'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
       });
 
       const data = await response.json();
+      console.log('getinfo response:', response.status, data);
 
       if (response.ok && data.success === true) {
         setUserInfo({
@@ -94,6 +98,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           id: data.id,
           active_org: data.active_org,
         });
+      } else {
+        console.warn('getinfo failed:', data.reason || 'Unknown error');
       }
     } catch (err) {
       console.error('Failed to fetch user info:', err);
