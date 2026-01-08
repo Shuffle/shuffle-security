@@ -29,6 +29,7 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
   selectedApps = [],
   preventDefault = false,
   inline = false,
+  initialQuery = '',
   customStyles = {},
   className = '',
   renderItem,
@@ -38,21 +39,33 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
   onSelectionChange,
   onSearchChange,
 }, ref) => {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(initialQuery);
   const [results, setResults] = useState<AlgoliaSearchApp[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [internalSelectedApps, setInternalSelectedApps] = useState<AlgoliaSearchApp[]>(selectedApps);
+  const hasInitialized = useRef(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
   const searchClient = useRef<SearchClient | null>(null);
 
-  // Initialize Algolia client
+  // Initialize Algolia client and run initial search
   useEffect(() => {
     searchClient.current = algoliasearch(ALGOLIA_APP_ID, ALGOLIA_API_KEY);
+    
+    // Run initial search after client is ready
+    if (!hasInitialized.current) {
+      hasInitialized.current = true;
+      setTimeout(() => {
+        if (searchClient.current) {
+          performSearch(initialQuery);
+          onSearchChange?.(initialQuery);
+        }
+      }, 100);
+    }
   }, []);
 
   // Sync external selectedApps
@@ -75,9 +88,7 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
 
   // Perform search
   const performSearch = useCallback(async (searchQuery: string) => {
-    if (!searchClient.current || !searchQuery.trim()) {
-      setResults([]);
-      setIsOpen(false);
+    if (!searchClient.current) {
       return;
     }
 
@@ -86,7 +97,7 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
       const searchResult = await searchClient.current.searchSingleIndex({
         indexName: 'appsearch',
         searchParams: {
-          query: searchQuery,
+          query: searchQuery || '', // Empty string gets top results
           hitsPerPage: 15,
         },
       });
@@ -109,19 +120,14 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
     search: (searchQuery: string) => {
       setQuery(searchQuery);
       onSearchChange?.(searchQuery);
-      if (searchQuery.trim()) {
-        performSearch(searchQuery);
-      } else {
-        setResults([]);
-        setIsOpen(false);
-      }
+      performSearch(searchQuery);
     },
     clear: () => {
       setQuery('');
-      setResults([]);
-      setIsOpen(false);
+      performSearch(''); // Show top results when cleared
     },
-  }), [performSearch, onSearchChange]);
+    getQuery: () => query,
+  }), [performSearch, onSearchChange, query]);
 
   // Handle input change
   const handleInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
@@ -132,12 +138,6 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
 
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current);
-    }
-
-    if (!value.trim()) {
-      setResults([]);
-      setIsOpen(false);
-      return;
     }
 
     debounceTimer.current = setTimeout(() => {

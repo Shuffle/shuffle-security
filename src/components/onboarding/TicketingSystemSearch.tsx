@@ -65,8 +65,24 @@ export const TicketingSystemSearch = ({
   selectedApps,
   onAppsChange,
 }: TicketingSystemSearchProps) => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState('email'); // Default to email
   const singulRef = useRef<SingulJSHandle>(null);
+
+  // Categories with their search terms
+  const categories = [
+    { id: 'email', label: 'Email', icon: '📧', description: 'Gmail, Outlook, Exchange', searchTerm: 'email' },
+    { id: 'siem', label: 'SIEM', icon: '🛡️', description: 'Splunk, Sentinel, QRadar', searchTerm: 'siem' },
+    { id: 'edr', label: 'EDR', icon: '🔍', description: 'CrowdStrike, Carbon Black', searchTerm: 'edr' },
+    { id: 'other', label: 'Anywhere Else', icon: '🔗', description: 'Any other source', searchTerm: '' },
+  ];
+
+  // Check if current search matches a category
+  const getActiveCategory = () => {
+    const lowerQuery = searchQuery.toLowerCase().trim();
+    return categories.find(c => c.searchTerm && c.searchTerm.toLowerCase() === lowerQuery)?.id || null;
+  };
+
+  const activeCategory = getActiveCategory();
 
   const filteredSystems = ticketingSystems.filter(
     (system) =>
@@ -292,51 +308,51 @@ export const TicketingSystemSearch = ({
             mb: 4,
           }}
         >
-          {[
-            { id: 'email', label: 'Email', icon: '📧', description: 'Gmail, Outlook, Exchange', searchTerm: 'email' },
-            { id: 'siem', label: 'SIEM', icon: '🛡️', description: 'Splunk, Sentinel, QRadar', searchTerm: 'siem' },
-            { id: 'edr', label: 'EDR', icon: '🔍', description: 'CrowdStrike, Carbon Black', searchTerm: 'edr' },
-            { id: 'other', label: 'Anywhere Else', icon: '🔗', description: 'Any other source', searchTerm: '' },
-          ].map((category) => (
-            <Box
-              key={category.id}
-              sx={{
-                p: 3,
-                backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                borderRadius: 3,
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                textAlign: 'center',
-                '&:hover': {
-                  borderColor: 'rgba(255, 102, 0, 0.5)',
-                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                  transform: 'translateY(-2px)',
-                },
-              }}
-              onClick={() => {
-                if (singulRef.current) {
-                  singulRef.current.search(category.searchTerm || category.label);
-                }
-              }}
-            >
-              <Typography sx={{ fontSize: '2rem', mb: 1 }}>
-                {category.icon}
-              </Typography>
-              <Typography
-                variant="subtitle1"
-                sx={{ color: 'white', fontWeight: 600, mb: 0.5 }}
+          {categories.map((category) => {
+            const isActive = activeCategory === category.id;
+            return (
+              <Box
+                key={category.id}
+                sx={{
+                  p: 3,
+                  backgroundColor: isActive ? 'rgba(255, 102, 0, 0.1)' : 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid',
+                  borderColor: isActive ? '#FF6600' : 'rgba(255, 255, 255, 0.08)',
+                  borderRadius: 3,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  textAlign: 'center',
+                  '&:hover': {
+                    borderColor: 'rgba(255, 102, 0, 0.5)',
+                    backgroundColor: isActive ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                  },
+                }}
+                onClick={() => {
+                  const term = category.searchTerm || '';
+                  setSearchQuery(term);
+                  if (singulRef.current) {
+                    singulRef.current.search(term);
+                  }
+                }}
               >
-                {category.label}
-              </Typography>
-              <Typography
-                variant="caption"
-                sx={{ color: 'rgba(255, 255, 255, 0.4)', display: 'block' }}
-              >
-                {category.description}
-              </Typography>
-            </Box>
-          ))}
+                <Typography sx={{ fontSize: '2rem', mb: 1 }}>
+                  {category.icon}
+                </Typography>
+                <Typography
+                  variant="subtitle1"
+                  sx={{ color: 'white', fontWeight: 600, mb: 0.5 }}
+                >
+                  {category.label}
+                </Typography>
+                <Typography
+                  variant="caption"
+                  sx={{ color: 'rgba(255, 255, 255, 0.4)', display: 'block' }}
+                >
+                  {category.description}
+                </Typography>
+              </Box>
+            );
+          })}
         </Box>
 
         <SingulJS
@@ -346,6 +362,7 @@ export const TicketingSystemSearch = ({
           layout="grid"
           gridColumns={3}
           inline={true}
+          initialQuery="email"
           showDescription={true}
           showCategories={true}
           showCheckbox={true}
@@ -354,6 +371,9 @@ export const TicketingSystemSearch = ({
           selectedApps={selectedApps}
           onSelectionChange={(apps) => {
             onAppsChange(apps);
+          }}
+          onSearchChange={(query) => {
+            setSearchQuery(query);
           }}
           customStyles={{
             container: { 

@@ -186,8 +186,9 @@
   padding: var(--singul-item-padding);
   cursor: pointer;
   border-bottom: var(--singul-item-border);
-  transition: all 0.2s ease-in-out;
+  transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
   overflow: hidden;
+  outline: none;
 }
 
 .singul-dropdown-item:last-child {
@@ -208,14 +209,19 @@
 .singul-results-grid .singul-dropdown-item {
   border: 1px solid var(--singul-item-border);
   border-radius: var(--singul-dropdown-border-radius);
-  border-bottom: 1px solid var(--singul-item-border);
   max-height: 120px;
   overflow: hidden;
+}
+
+.singul-dropdown-grid .singul-dropdown-item:hover,
+.singul-results-grid .singul-dropdown-item:hover {
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .singul-dropdown-grid .singul-dropdown-item.singul-selected,
 .singul-results-grid .singul-dropdown-item.singul-selected {
   border-color: var(--singul-item-selected-border);
+  background-color: var(--singul-item-selected-bg);
 }
 
 .singul-app-info {

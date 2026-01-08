@@ -94,6 +94,8 @@ export interface SingulJSProps {
   // Display Mode
   /** When true, results show inline on the page instead of as a dropdown */
   inline?: boolean;
+  /** Initial search query to run on mount */
+  initialQuery?: string;
   
   // Styling
   customStyles?: CustomStyles;
