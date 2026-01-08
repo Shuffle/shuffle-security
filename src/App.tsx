@@ -6,6 +6,7 @@ import { AuthProvider } from '@/context/AuthContext';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import Index from './pages/Index';
 import AuthPage from './pages/AuthPage';
+import OnboardingPage from './pages/OnboardingPage';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import AlertsPage from '@/pages/dashboard/AlertsPage';
 import CasesPage from '@/pages/dashboard/CasesPage';
@@ -30,6 +31,14 @@ const App = () => (
             <Route path="/register" element={<AuthPage mode="register" />} />
             <Route path="/docs" element={<DocsPage />} />
             <Route path="/docs/:slug" element={<DocsPage />} />
+            <Route
+              path="/onboarding"
+              element={
+                <ProtectedRoute>
+                  <OnboardingPage />
+                </ProtectedRoute>
+              }
+            />
             
             {/* Dashboard routes with shared layout */}
             <Route
