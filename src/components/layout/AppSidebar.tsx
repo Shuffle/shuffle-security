@@ -168,7 +168,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
         zIndex: 1200,
       }}
     >
-      {/* Header with Logo */}
+      {/* Header with Logo and Toggle on right edge */}
       <Box
         sx={{
           display: 'flex',
@@ -176,6 +176,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
           justifyContent: 'center',
           p: 2,
           minHeight: 64,
+          position: 'relative',
         }}
       >
         {/* Shuffle Logo - Links to Home */}
@@ -207,19 +208,16 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
             )}
           </Box>
         </Tooltip>
-      </Box>
 
-      {/* Divider with Toggle Button */}
-      <Box sx={{ position: 'relative', mx: collapsed ? 1 : 2 }}>
-        <Divider sx={{ borderColor: 'hsl(var(--border))' }} />
+        {/* Toggle button on right edge */}
         <IconButton 
           onClick={onToggle} 
           size="small" 
           sx={{ 
             position: 'absolute',
-            right: collapsed ? '50%' : -12,
+            right: -12,
             top: '50%',
-            transform: collapsed ? 'translate(50%, -50%)' : 'translateY(-50%)',
+            transform: 'translateY(-50%)',
             color: 'hsl(var(--muted-foreground))',
             backgroundColor: 'hsl(var(--card))',
             border: '1px solid hsl(var(--border))',
