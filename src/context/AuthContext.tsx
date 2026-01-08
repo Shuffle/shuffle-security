@@ -59,14 +59,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  // Verify authentication on mount
+  // Verify authentication on mount (runs once when app loads)
   useEffect(() => {
     const verifyAuth = async () => {
+      console.log('AuthContext: verifyAuth running on mount');
       const token = localStorage.getItem('session_token');
       setSessionToken(token);
       
       // If we have an API key, use that for auth verification
       if (API_CONFIG.apiKey) {
+        console.log('AuthContext: Using API key for authentication');
         const success = await fetchUserInfo(token);
         if (success) {
           setIsAuthenticated(true);
@@ -77,12 +79,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       // Otherwise, require a session token
       if (!token) {
+        console.log('AuthContext: No token found, not authenticated');
         setIsAuthenticated(false);
         setUserInfo(null);
         setIsLoading(false);
         return;
       }
 
+      console.log('AuthContext: Verifying session token');
       const success = await fetchUserInfo(token);
       if (success) {
         setIsAuthenticated(true);
