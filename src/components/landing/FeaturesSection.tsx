@@ -11,7 +11,7 @@ const features = [
   {
     icon: <AutoFixHighIcon sx={{ fontSize: 40 }} />,
     title: 'AI Agents',
-    description: 'Verbose, controllable AI agents assist with alert triage, case escalations, and response actions—with full visibility into every decision.',
+    description: 'Verbose, controllable AI agents assist with triage, escalations, and response—running on cloud APIs or your own local models.',
     color: '#FF6600',
   },
   {
