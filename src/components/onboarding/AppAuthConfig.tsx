@@ -881,82 +881,53 @@ const AppAuthCard = ({
               </Box>
             )}
 
-            {/* Show form only if no auths exist OR "Add new" is selected */}
+            {/* Show message when no auths exist or "Add new" is selected */}
             {(apiAuthEntries.length === 0 || showAddNewForm) && (
               <Box sx={{ 
                 p: 3, 
                 backgroundColor: 'rgba(0, 0, 0, 0.2)', 
                 borderRadius: 2,
                 border: '1px solid rgba(255, 255, 255, 0.08)',
+                textAlign: 'center',
               }}>
                 <Typography variant="subtitle2" sx={{ color: '#FF6600', fontWeight: 600, mb: 2 }}>
-                  {apiAuthEntries.length === 0 ? 'Configure Authentication' : 'Add New Authentication'}
+                  {apiAuthEntries.length === 0 ? 'No Authentication Configured' : 'Add New Authentication'}
                 </Typography>
-                {loading ? (
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', py: 4 }}>
-                    <CircularProgress size={32} sx={{ color: '#FF6600' }} />
-                    <Typography sx={{ ml: 2, color: 'rgba(255, 255, 255, 0.5)' }}>
-                      Loading configuration...
-                    </Typography>
-                  </Box>
-                ) : error ? (
-                  <Alert
-                    severity="error"
-                    sx={{
-                      backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                      color: '#ef4444',
-                      border: '1px solid rgba(239, 68, 68, 0.3)',
-                      borderRadius: 2,
-                    }}
-                  >
-                    {error}
-                  </Alert>
-                ) : (
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                    {renderOAuth2Fields()}
-                    {renderParameterFields()}
-                    {renderApiKeyFields()}
-
-                    {authState.status === 'error' && authState.errorMessage && (
-                      <Alert
-                        severity="error"
-                        sx={{
-                          backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                          color: '#ef4444',
-                          border: '1px solid rgba(239, 68, 68, 0.3)',
-                          borderRadius: 2,
-                        }}
-                      >
-                        {authState.errorMessage}
-                      </Alert>
-                    )}
-
-                    {!isOAuth2 && (
-                      <Button
-                        variant="contained"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onTestConnection(app.objectID);
-                        }}
-                        disabled={authState.status === 'testing'}
-                        sx={{
-                          background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
-                          boxShadow: '0 4px 14px rgba(255, 102, 0, 0.25)',
-                          fontWeight: 600,
-                          '&:hover': {
-                            background: 'linear-gradient(135deg, #FF8533 0%, #FF9955 100%)',
-                          },
-                          '&.Mui-disabled': {
-                            background: 'rgba(255, 255, 255, 0.1)',
-                            color: 'rgba(255, 255, 255, 0.3)',
-                          },
-                        }}
-                      >
-                        {authState.status === 'testing' ? 'Testing...' : 'Test Connection'}
-                      </Button>
-                    )}
-                  </Box>
-                )}
+                <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.5)', mb: 3 }}>
+                  Use the button below to authenticate with {app.name.replace(/_/g, ' ')} via Shuffle.
+                </Typography>
+                <Button
+                  variant="outlined"
+                  fullWidth
+                  startIcon={
+                    app.image_url ? (
+                      <Box
+                        component="img"
+                        src={app.image_url}
+                        alt={app.name}
+                        sx={{ width: 24, height: 24, borderRadius: 1, objectFit: 'contain' }}
+                      />
+                    ) : <LockIcon />
+                  }
+                  onClick={() => {
+                    const authUrl = `https://shuffler.io/appauth?app_id=${app.objectID}`;
+                    window.open(authUrl, '_blank', 'width=600,height=700');
+                  }}
+                  sx={{
+                    py: 1.5,
+                    borderColor: 'rgba(255, 102, 0, 0.4)',
+                    color: 'white',
+                    fontWeight: 600,
+                    textTransform: 'none',
+                    fontSize: '1rem',
+                    '&:hover': {
+                      borderColor: '#FF6600',
+                      backgroundColor: 'rgba(255, 102, 0, 0.08)',
+                    },
+                  }}
+                >
+                  Connect with {app.name.replace(/_/g, ' ')}
+                </Button>
               </Box>
             )}
           </Box>
