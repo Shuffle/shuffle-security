@@ -349,6 +349,16 @@
   color: #f59e0b;
 }
 
+.singul-not-configured-label {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.singul-not-tested-label {
+  background-color: rgba(156, 163, 175, 0.15);
+  color: #9ca3af;
+}
+
 /* Item states */
 .singul-dropdown-item.singul-validated {
   border-color: rgba(34, 197, 94, 0.3);

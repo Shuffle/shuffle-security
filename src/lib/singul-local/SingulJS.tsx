@@ -68,9 +68,12 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
             },
           });
           if (response.ok) {
-            const data = await response.json();
-            if (Array.isArray(data)) {
-              setAuthenticatedApps(data);
+            const result = await response.json();
+            // Handle both { success: true, data: [...] } and direct array response
+            const authData = result.data || result;
+            if (Array.isArray(authData)) {
+              console.log('Loaded authenticated apps:', authData.length, authData.map(a => a.app?.name));
+              setAuthenticatedApps(authData);
             }
           }
         } catch (error) {
@@ -311,7 +314,7 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
       );
     }
 
-    // Show both chips separately if applicable
+    // Show both chips (configured/not configured AND tested/not tested)
     return (
       <div
         key={app.objectID}
@@ -331,30 +334,25 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
                 className="singul-app-icon"
                 style={customStyles.appIcon}
               />
-              {authState.validated && (
-                <div className="singul-auth-badge singul-validated-badge" title="Tested">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                </div>
-              )}
             </div>
           )}
           <div className="singul-app-details" style={customStyles.appDetails}>
             <span className="singul-app-name" style={customStyles.appName}>
               {app.name.replace(/_/g, ' ')}
             </span>
-            {/* Show both chips separately */}
-            {(authState.configured || authState.validated) && (
-              <div className="singul-auth-chips">
-                {authState.configured && (
-                  <span className="singul-auth-label singul-configured-label">Configured</span>
-                )}
-                {authState.validated && (
-                  <span className="singul-auth-label singul-validated-label">Tested</span>
-                )}
-              </div>
-            )}
+            {/* Show both status chips */}
+            <div className="singul-auth-chips">
+              {authState.configured ? (
+                <span className="singul-auth-label singul-configured-label">Configured</span>
+              ) : (
+                <span className="singul-auth-label singul-not-configured-label">Not configured</span>
+              )}
+              {authState.validated ? (
+                <span className="singul-auth-label singul-validated-label">Tested</span>
+              ) : (
+                <span className="singul-auth-label singul-not-tested-label">Not tested</span>
+              )}
+            </div>
             {showDescription && app.description && (
               <span className="singul-app-description" style={customStyles.appDescription}>
                 {app.description}
