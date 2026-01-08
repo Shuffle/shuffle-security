@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { getApiUrl, API_ENDPOINTS } from '@/config/api';
+import { getApiUrl, API_CONFIG, getAuthHeader } from '@/config/api';
 
 interface UserInfo {
   username?: string;
@@ -28,63 +28,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Verify authentication on mount and when token changes
-  useEffect(() => {
-    const verifyAuth = async () => {
-      const token = localStorage.getItem('session_token');
-      setSessionToken(token);
-      
-      if (!token) {
-        setIsAuthenticated(false);
-        setUserInfo(null);
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        const response = await fetch(getApiUrl('/getinfo'), {
-          credentials: 'include',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-
-        const data = await response.json();
-
-        if (response.ok && data.success === true) {
-          setIsAuthenticated(true);
-          setUserInfo({
-            username: data.username,
-            id: data.id,
-            active_org: data.active_org,
-          });
-        } else {
-          // Token is invalid, clear it
-          localStorage.removeItem('session_token');
-          setSessionToken(null);
-          setIsAuthenticated(false);
-          setUserInfo(null);
-        }
-      } catch (err) {
-        console.error('Auth verification failed:', err);
-        setIsAuthenticated(false);
-        setUserInfo(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    verifyAuth();
-  }, []);
-
-  const fetchUserInfo = useCallback(async (token: string) => {
+  const fetchUserInfo = useCallback(async (token?: string | null) => {
     try {
-      // Try with Authorization header first, then fall back to cookie-only
       const response = await fetch(getApiUrl('/getinfo'), {
         method: 'GET',
         credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          ...getAuthHeader(token),
           'Content-Type': 'application/json',
         },
       });
@@ -98,13 +48,56 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           id: data.id,
           active_org: data.active_org,
         });
+        return true;
       } else {
         console.warn('getinfo failed:', data.reason || 'Unknown error');
+        return false;
       }
     } catch (err) {
       console.error('Failed to fetch user info:', err);
+      return false;
     }
   }, []);
+
+  // Verify authentication on mount
+  useEffect(() => {
+    const verifyAuth = async () => {
+      const token = localStorage.getItem('session_token');
+      setSessionToken(token);
+      
+      // If we have an API key, use that for auth verification
+      if (API_CONFIG.apiKey) {
+        const success = await fetchUserInfo(token);
+        if (success) {
+          setIsAuthenticated(true);
+        }
+        setIsLoading(false);
+        return;
+      }
+      
+      // Otherwise, require a session token
+      if (!token) {
+        setIsAuthenticated(false);
+        setUserInfo(null);
+        setIsLoading(false);
+        return;
+      }
+
+      const success = await fetchUserInfo(token);
+      if (success) {
+        setIsAuthenticated(true);
+      } else {
+        // Token is invalid, clear it
+        localStorage.removeItem('session_token');
+        setSessionToken(null);
+        setIsAuthenticated(false);
+        setUserInfo(null);
+      }
+      setIsLoading(false);
+    };
+
+    verifyAuth();
+  }, [fetchUserInfo]);
 
   const login = useCallback(async (token: string) => {
     localStorage.setItem('session_token', token);
@@ -115,13 +108,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const refreshUserInfo = useCallback(async () => {
     const token = localStorage.getItem('session_token');
-    if (token) {
-      await fetchUserInfo(token);
-    }
+    await fetchUserInfo(token);
   }, [fetchUserInfo]);
 
   const logout = useCallback(async () => {
     // Clear local state FIRST to prevent race conditions
+    const currentToken = sessionToken;
     localStorage.removeItem('session_token');
     setSessionToken(null);
     setIsAuthenticated(false);
@@ -129,11 +121,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     // Then call the Shuffle logout API
     try {
-      await fetch(getApiUrl(API_ENDPOINTS.logout), {
+      await fetch(getApiUrl('/logout'), {
         method: 'POST',
         credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${sessionToken}`,
+          ...getAuthHeader(currentToken),
           'Content-Type': 'application/json',
         },
       });
