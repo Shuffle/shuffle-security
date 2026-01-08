@@ -11,11 +11,22 @@ export const API_CONFIG = {
   // Shuffle backend URL - can be overridden via environment variable
   baseUrl: import.meta.env.VITE_SHUFFLE_API_URL || 'https://shuffler.io',
   
-  // API key for local development (optional - uses session token if not set)
-  apiKey: import.meta.env.VITE_SHUFFLE_API_KEY || null,
-  
   // API version
   version: 'v1',
+  
+  // Get API key from localStorage (for local development)
+  get apiKey(): string | null {
+    return localStorage.getItem('shuffle_api_key');
+  },
+  
+  // Set API key in localStorage
+  setApiKey(key: string | null) {
+    if (key) {
+      localStorage.setItem('shuffle_api_key', key);
+    } else {
+      localStorage.removeItem('shuffle_api_key');
+    }
+  },
 };
 
 // Computed API endpoint
