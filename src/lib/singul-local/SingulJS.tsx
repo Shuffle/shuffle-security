@@ -250,7 +250,7 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
           )}
           <div className="singul-app-details" style={customStyles.appDetails}>
             <span className="singul-app-name" style={customStyles.appName}>
-              {app.name}
+              {app.name.replace(/_/g, ' ')}
             </span>
             {showDescription && app.description && (
               <span className="singul-app-description" style={customStyles.appDescription}>

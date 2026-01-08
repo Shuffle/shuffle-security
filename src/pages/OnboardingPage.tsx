@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Box, Container, Typography, Button, Chip, Stack } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { TicketingSystemSearch, TicketingSystem } from '@/components/onboarding/TicketingSystemSearch';
+import { TicketingSystemSearch } from '@/components/onboarding/TicketingSystemSearch';
 import type { AlgoliaSearchApp } from '@/lib/singul-local';
 import { ToolAuthentication, ToolAuthState, AuthStatus } from '@/components/onboarding/ToolAuthentication';
 import { EnrichmentConfig, EnrichmentState } from '@/components/onboarding/EnrichmentConfig';
@@ -24,7 +24,6 @@ const steps = [
 const OnboardingPage = () => {
   const navigate = useNavigate();
   const [activeStep, setActiveStep] = useState(0);
-  const [selectedSystems, setSelectedSystems] = useState<TicketingSystem[]>([]);
   const [selectedApps, setSelectedApps] = useState<AlgoliaSearchApp[]>([]);
   const [authStates, setAuthStates] = useState<Record<string, ToolAuthState>>({});
   const [enrichmentState, setEnrichmentState] = useState<EnrichmentState>({
@@ -37,10 +36,10 @@ const OnboardingPage = () => {
 
   const handleNext = () => {
     if (activeStep === steps.length - 1) {
-      const connectedSystems = selectedSystems.filter(
-        (s) => authStates[s.id]?.status === 'connected'
+      const connectedApps = selectedApps.filter(
+        (app) => authStates[app.objectID]?.status === 'connected'
       );
-      localStorage.setItem('connected_integrations', JSON.stringify(connectedSystems));
+      localStorage.setItem('connected_integrations', JSON.stringify(connectedApps));
       navigate('/dashboard/alerts');
     } else {
       setActiveStep((prev) => prev + 1);
@@ -85,15 +84,15 @@ const OnboardingPage = () => {
   };
 
   const canProceed = () => {
-    if (activeStep === 0) return selectedSystems.length > 0 || selectedApps.length > 0;
+    if (activeStep === 0) return selectedApps.length > 0;
     if (activeStep === 1) {
-      return selectedSystems.some((s) => authStates[s.id]?.status === 'connected');
+      return selectedApps.some((app) => authStates[app.objectID]?.status === 'connected');
     }
     return true;
   };
 
-  const connectedCount = selectedSystems.filter(
-    (s) => authStates[s.id]?.status === 'connected'
+  const connectedCount = selectedApps.filter(
+    (app) => authStates[app.objectID]?.status === 'connected'
   ).length;
 
   return (
@@ -274,8 +273,6 @@ const OnboardingPage = () => {
               >
                 {activeStep === 0 && (
                   <TicketingSystemSearch
-                    selectedSystems={selectedSystems}
-                    onSelectionChange={setSelectedSystems}
                     selectedApps={selectedApps}
                     onAppsChange={setSelectedApps}
                   />
@@ -283,7 +280,7 @@ const OnboardingPage = () => {
 
                 {activeStep === 1 && (
                   <ToolAuthentication
-                    systems={selectedSystems}
+                    apps={selectedApps}
                     authStates={authStates}
                     onAuthChange={handleAuthChange}
                     onTestConnection={handleTestConnection}
@@ -335,12 +332,22 @@ const OnboardingPage = () => {
                       You can manage your integrations anytime from the sidebar.
                     </Typography>
                     <Stack direction="row" spacing={1} justifyContent="center" flexWrap="wrap" useFlexGap>
-                      {selectedSystems
-                        .filter((s) => authStates[s.id]?.status === 'connected')
-                        .map((system) => (
+                      {selectedApps
+                        .filter((app) => authStates[app.objectID]?.status === 'connected')
+                        .map((app) => (
                           <Chip
-                            key={system.id}
-                            label={`${system.icon} ${system.name}`}
+                            key={app.objectID}
+                            label={app.name.replace(/_/g, ' ')}
+                            avatar={
+                              app.image_url ? (
+                                <Box
+                                  component="img"
+                                  src={app.image_url}
+                                  alt={app.name}
+                                  sx={{ width: 24, height: 24, borderRadius: '50%' }}
+                                />
+                              ) : undefined
+                            }
                             sx={{
                               background: 'rgba(34, 197, 94, 0.1)',
                               border: '1px solid rgba(34, 197, 94, 0.3)',
