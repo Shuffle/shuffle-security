@@ -173,10 +173,9 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
         sx={{
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
+          justifyContent: 'flex-start',
           p: 2,
           minHeight: 64,
-          position: 'relative',
         }}
       >
         {/* Shuffle Logo - Links to Home */}
@@ -208,31 +207,30 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
             )}
           </Box>
         </Tooltip>
-
-        {/* Toggle button on right edge */}
-        <IconButton 
-          onClick={onToggle} 
-          size="small" 
-          sx={{ 
-            position: 'absolute',
-            right: -12,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            color: 'hsl(var(--muted-foreground))',
-            backgroundColor: 'hsl(var(--card))',
-            border: '1px solid hsl(var(--border))',
-            borderRadius: 1,
-            width: 24,
-            height: 24,
-            zIndex: 1,
-            '&:hover': {
-              backgroundColor: 'hsl(var(--muted))',
-            },
-          }}
-        >
-          {collapsed ? <ChevronRightIcon sx={{ fontSize: 16 }} /> : <ChevronLeftIcon sx={{ fontSize: 16 }} />}
-        </IconButton>
       </Box>
+
+      {/* Toggle button on right edge of sidebar */}
+      <IconButton 
+        onClick={onToggle} 
+        size="small" 
+        sx={{ 
+          position: 'absolute',
+          right: -12,
+          top: 32,
+          color: 'hsl(var(--muted-foreground))',
+          backgroundColor: 'hsl(var(--card))',
+          border: '1px solid hsl(var(--border))',
+          borderRadius: 1,
+          width: 24,
+          height: 24,
+          zIndex: 1300,
+          '&:hover': {
+            backgroundColor: 'hsl(var(--muted))',
+          },
+        }}
+      >
+        {collapsed ? <ChevronRightIcon sx={{ fontSize: 16 }} /> : <ChevronLeftIcon sx={{ fontSize: 16 }} />}
+      </IconButton>
 
       {/* Search Bar */}
       {!collapsed ? (
