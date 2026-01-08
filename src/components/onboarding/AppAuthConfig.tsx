@@ -51,6 +51,17 @@ const isOAuth2Type = (type: string | undefined): boolean => {
   return lowerType === 'oauth2' || lowerType === 'oauth2-app';
 };
 
+// URL validation helper
+const isValidUrl = (value: string): boolean => {
+  if (!value) return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
+
 interface AuthParameter {
   description: string;
   example: string;
@@ -186,6 +197,7 @@ const AppAuthCard = ({
 
   // Local credentials state for the form
   const [localCredentials, setLocalCredentials] = useState<Record<string, string>>(authState.credentials || {});
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // App config fetching for dynamic fields
   const [loading, setLoading] = useState(false);
@@ -444,20 +456,21 @@ const AppAuthCard = ({
             placeholder={param.example || `Enter ${param.name}`}
             value={localCredentials[param.id] || ''}
             onChange={(e) => handleCredentialChange(param.id, e.target.value)}
+            error={!!fieldErrors[param.id]}
+            helperText={fieldErrors[param.id] || param.description}
             fullWidth
             size="small"
-            helperText={param.description}
             sx={{
               '& .MuiOutlinedInput-root': {
                 backgroundColor: 'rgba(0, 0, 0, 0.3)',
                 borderRadius: 2,
-                '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.1)' },
-                '&:hover fieldset': { borderColor: 'rgba(255, 255, 255, 0.2)' },
-                '&.Mui-focused fieldset': { borderColor: '#FF6600' },
+                '& fieldset': { borderColor: fieldErrors[param.id] ? '#ef4444' : 'rgba(255, 255, 255, 0.1)' },
+                '&:hover fieldset': { borderColor: fieldErrors[param.id] ? '#ef4444' : 'rgba(255, 255, 255, 0.2)' },
+                '&.Mui-focused fieldset': { borderColor: fieldErrors[param.id] ? '#ef4444' : '#FF6600' },
               },
               '& .MuiInputBase-input': { color: 'white' },
               '& .MuiInputLabel-root': { color: 'rgba(255, 255, 255, 0.5)' },
-              '& .MuiFormHelperText-root': { color: 'rgba(255, 255, 255, 0.4)' },
+              '& .MuiFormHelperText-root': { color: fieldErrors[param.id] ? '#ef4444' : 'rgba(255, 255, 255, 0.4)' },
             }}
           />
         ))}
@@ -493,6 +506,40 @@ const AppAuthCard = ({
     );
   };
 
+  // Validate a single field
+  const validateField = (key: string, value: string): string | null => {
+    const lowerKey = key.toLowerCase();
+    if (lowerKey.includes('url') || lowerKey === 'url') {
+      if (!value) return 'URL is required';
+      if (!isValidUrl(value)) return 'Please enter a valid URL (e.g., https://example.com)';
+    }
+    return null;
+  };
+
+  // Check if all required fields are valid for saving
+  const isFormValid = (): boolean => {
+    // Must have at least one credential
+    if (Object.keys(localCredentials).length === 0) return false;
+    
+    // Check for any field errors
+    if (Object.values(fieldErrors).some(err => err)) return false;
+    
+    // Validate all current credentials
+    for (const [key, value] of Object.entries(localCredentials)) {
+      const error = validateField(key, value);
+      if (error) return false;
+    }
+    
+    // Check required parameters are filled
+    if (auth?.parameters) {
+      for (const param of auth.parameters) {
+        if (param.required && !localCredentials[param.id]) return false;
+      }
+    }
+    
+    return true;
+  };
+
   const handleSave = async () => {
     setSaving(true);
     setSaveSuccess(null);
@@ -502,6 +549,7 @@ const AppAuthCard = ({
     if (success) {
       setUserSelectedAddNew(false);
       setLocalCredentials({}); // Clear form after success
+      setFieldErrors({}); // Clear errors
     }
   };
 
@@ -510,6 +558,13 @@ const AppAuthCard = ({
     const updated = { ...localCredentials, [key]: value };
     setLocalCredentials(updated);
     onAuthChange(app.objectID, updated);
+    
+    // Validate the field
+    const error = validateField(key, value);
+    setFieldErrors(prev => ({
+      ...prev,
+      [key]: error || '',
+    }));
   };
 
   return (
@@ -852,7 +907,7 @@ const AppAuthCard = ({
                             e.stopPropagation();
                             handleSave();
                           }}
-                          disabled={saving || Object.keys(localCredentials).length === 0}
+                          disabled={saving || !isFormValid()}
                           sx={{
                             flex: 1,
                             borderColor: 'rgba(255, 102, 0, 0.4)',
@@ -876,7 +931,7 @@ const AppAuthCard = ({
                             e.stopPropagation();
                             onTestConnection(app.objectID);
                           }}
-                          disabled={authState.status === 'testing'}
+                          disabled={authState.status === 'testing' || !isConfigured}
                           sx={{
                             flex: 1,
                             background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
@@ -891,7 +946,7 @@ const AppAuthCard = ({
                             },
                           }}
                         >
-                          {authState.status === 'testing' ? 'Testing...' : 'Test Connection'}
+                          {authState.status === 'testing' ? 'Testing...' : !isConfigured ? 'Save First to Test' : 'Test Connection'}
                         </Button>
                       </Box>
                     )}
