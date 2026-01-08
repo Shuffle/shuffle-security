@@ -58,6 +58,7 @@ const AuthPage = ({ mode }: AuthPageProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess(false);
 
     if (!isLogin && password !== confirmPassword) {
       setError('Passwords do not match');
@@ -100,12 +101,18 @@ const AuthPage = ({ mode }: AuthPageProps) => {
         throw new Error(data.reason || data.message || `${isLogin ? 'Login' : 'Registration'} failed`);
       }
 
-      if (data.session_token) {
+      // Extract session token from cookies array or direct field
+      const sessionToken = data.session_token || 
+        data.cookies?.find((c: { key: string; value: string }) => c.key === 'session_token')?.value;
+
+      if (sessionToken) {
         setSuccess(true);
-        login(data.session_token);
+        setLoading(false);
+        login(sessionToken);
         setTimeout(() => {
           navigate(from, { replace: true });
         }, 1500);
+        return;
       } else if (!isLogin) {
         // Registration successful, redirect to login
         navigate('/login', { state: { message: 'Registration successful. Please log in.' } });
