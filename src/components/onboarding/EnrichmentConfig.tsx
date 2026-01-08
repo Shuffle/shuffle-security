@@ -33,31 +33,12 @@ interface EnrichmentOption {
 
 const enrichmentOptions: EnrichmentOption[] = [
   {
-    id: 'virustotal',
-    name: 'VirusTotal',
-    description: 'Automatically check IPs, domains, and file hashes',
+    id: 'threat_list',
+    name: 'Threat List Comparisons',
+    description: 'Compare indicators against known threat intelligence lists',
     icon: <SecurityIcon />,
-    color: '#3b82f6',
-    category: 'enrichment',
-    configFields: [{ label: 'API Key', placeholder: 'Your VirusTotal API key', type: 'password' }],
-  },
-  {
-    id: 'shodan',
-    name: 'Shodan',
-    description: 'Enrich with internet-facing asset information',
-    icon: <DnsIcon />,
     color: '#ef4444',
     category: 'enrichment',
-    configFields: [{ label: 'API Key', placeholder: 'Your Shodan API key', type: 'password' }],
-  },
-  {
-    id: 'hibp',
-    name: 'Have I Been Pwned',
-    description: 'Check if emails appear in known breaches',
-    icon: <PersonSearchIcon />,
-    color: '#f59e0b',
-    category: 'enrichment',
-    configFields: [{ label: 'API Key', placeholder: 'Your HIBP API key', type: 'password' }],
   },
   {
     id: 'ai_triage',
