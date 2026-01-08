@@ -55,7 +55,7 @@ export const HeroSection = () => {
             transition={{ duration: 0.6 }}
           >
             <Chip
-              label="🔒 Powered by Shuffle Automation"
+              label="⚡ Built on Shuffle Automation • Cloud & On-Premises"
               sx={{
                 mb: 3,
                 py: 2.5,
@@ -91,7 +91,7 @@ export const HeroSection = () => {
                   WebkitTextFillColor: 'transparent',
                 }}
               >
-                Simplified
+                Your Way
               </Box>
             </Typography>
           </motion.div>
@@ -105,15 +105,15 @@ export const HeroSection = () => {
               variant="h5"
               sx={{
                 color: 'text.secondary',
-                maxWidth: 700,
+                maxWidth: 750,
                 mx: 'auto',
                 mb: 5,
                 fontWeight: 400,
                 lineHeight: 1.6,
               }}
             >
-              Streamline your security workflows with intelligent alert management,
-              collaborative case investigation, and automated response actions.
+              Import alerts and cases from any ITSM system. Configure every workflow. 
+              Deploy AI agents that are verbose, controllable, and reach into your on-premises environments.
             </Typography>
           </motion.div>
 
@@ -173,9 +173,9 @@ export const HeroSection = () => {
               justifyContent="center"
             >
               {[
-                { icon: <NotificationsActiveIcon sx={{ fontSize: 32 }} />, label: 'Alerts', count: 'Real-time' },
-                { icon: <FolderSpecialIcon sx={{ fontSize: 32 }} />, label: 'Cases', count: 'Collaborative' },
-                { icon: <BubbleChartIcon sx={{ fontSize: 32 }} />, label: 'Observables', count: 'Enriched' },
+                { icon: <NotificationsActiveIcon sx={{ fontSize: 32 }} />, label: 'Any ITSM', count: 'Import from anywhere' },
+                { icon: <FolderSpecialIcon sx={{ fontSize: 32 }} />, label: 'Full Control', count: 'Configure everything' },
+                { icon: <BubbleChartIcon sx={{ fontSize: 32 }} />, label: 'AI Agents', count: 'Verbose & controllable' },
               ].map((item, index) => (
                 <motion.div
                   key={item.label}

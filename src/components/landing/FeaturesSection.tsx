@@ -9,10 +9,28 @@ import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 
 const features = [
   {
+    icon: <AutoFixHighIcon sx={{ fontSize: 40 }} />,
+    title: 'AI Agents',
+    description: 'Verbose, controllable AI agents assist with alert triage, case escalations, and response actions—with full visibility into every decision.',
+    color: '#FF6600',
+  },
+  {
     icon: <NotificationsActiveIcon sx={{ fontSize: 40 }} />,
-    title: 'Alert Management',
-    description: 'Centralize and prioritize security alerts from multiple sources with intelligent severity classification and deduplication.',
+    title: 'Universal ITSM Import',
+    description: "Import alerts and cases from any ITSM system you're currently using. ServiceNow, Jira, PagerDuty, or custom—we connect to all of them.",
     color: '#ef4444',
+  },
+  {
+    icon: <BubbleChartIcon sx={{ fontSize: 40 }} />,
+    title: 'Cloud & On-Premises',
+    description: 'Built on Shuffle Automation to reach into both cloud and on-premises environments. No data leaves your control unless you want it to.',
+    color: '#22c55e',
+  },
+  {
+    icon: <AssignmentIcon sx={{ fontSize: 40 }} />,
+    title: 'Full Configurability',
+    description: 'Control is a core priority. Customize every workflow, template, and automation rule to match how your team actually works.',
+    color: '#f59e0b',
   },
   {
     icon: <FolderSpecialIcon sx={{ fontSize: 40 }} />,
@@ -21,28 +39,10 @@ const features = [
     color: '#FF6600',
   },
   {
-    icon: <AssignmentIcon sx={{ fontSize: 40 }} />,
-    title: 'Task Workflows',
-    description: 'Define custom task templates and workflows to standardize your incident response procedures.',
-    color: '#f59e0b',
-  },
-  {
-    icon: <BubbleChartIcon sx={{ fontSize: 40 }} />,
-    title: 'Observable Analysis',
-    description: 'Track and analyze indicators of compromise (IOCs) with automated enrichment and correlation.',
-    color: '#22c55e',
-  },
-  {
     icon: <PeopleIcon sx={{ fontSize: 40 }} />,
     title: 'Multi-Tenancy',
     description: 'Securely manage multiple organizations with isolated data, custom branding, and role-based access.',
     color: '#8b5cf6',
-  },
-  {
-    icon: <AutoFixHighIcon sx={{ fontSize: 40 }} />,
-    title: 'Automated Actions',
-    description: 'Configure automated response actions to accelerate containment and reduce mean time to respond.',
-    color: '#FF6600',
   },
 ];
 
