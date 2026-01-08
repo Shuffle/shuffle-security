@@ -184,6 +184,9 @@ const AppAuthCard = ({
   const isConfigured = selectedAuth?.active === true || apiAuthEntries.some(a => a.active === true);
   const isTested = selectedAuth?.validation?.valid === true || apiAuthEntries.some(a => a.validation?.valid === true);
 
+  // Local credentials state for the form
+  const [localCredentials, setLocalCredentials] = useState<Record<string, string>>(authState.credentials || {});
+
   // App config fetching for dynamic fields
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -331,13 +334,8 @@ const AppAuthCard = ({
           <TextField
             label="Client ID"
             placeholder="Enter your Client ID"
-            value={authState.credentials['client_id'] || ''}
-            onChange={(e) =>
-              onAuthChange(app.objectID, {
-                ...authState.credentials,
-                client_id: e.target.value,
-              })
-            }
+            value={localCredentials['client_id'] || ''}
+            onChange={(e) => handleCredentialChange('client_id', e.target.value)}
             fullWidth
             size="small"
             sx={{
@@ -357,13 +355,8 @@ const AppAuthCard = ({
             label="Client Secret"
             type="password"
             placeholder="Enter your Client Secret"
-            value={authState.credentials['client_secret'] || ''}
-            onChange={(e) =>
-              onAuthChange(app.objectID, {
-                ...authState.credentials,
-                client_secret: e.target.value,
-              })
-            }
+            value={localCredentials['client_secret'] || ''}
+            onChange={(e) => handleCredentialChange('client_secret', e.target.value)}
             fullWidth
             size="small"
             sx={{
@@ -388,10 +381,7 @@ const AppAuthCard = ({
                 onChange={(e) => {
                   const value = e.target.value as string[];
                   setSelectedScopes(value);
-                  onAuthChange(app.objectID, {
-                    ...authState.credentials,
-                    scopes: value.join(' '),
-                  });
+                  handleCredentialChange('scopes', value.join(' '));
                 }}
                 input={<OutlinedInput />}
                 renderValue={(selected) => selected.length === 0 ? 'Select Scopes' : `${selected.length} scope(s) selected`}
@@ -452,13 +442,8 @@ const AppAuthCard = ({
             }
             type={param.name.toLowerCase().includes('password') || param.name.toLowerCase().includes('secret') || param.name.toLowerCase().includes('key') ? 'password' : 'text'}
             placeholder={param.example || `Enter ${param.name}`}
-            value={authState.credentials[param.id] || ''}
-            onChange={(e) =>
-              onAuthChange(app.objectID, {
-                ...authState.credentials,
-                [param.id]: e.target.value,
-              })
-            }
+            value={localCredentials[param.id] || ''}
+            onChange={(e) => handleCredentialChange(param.id, e.target.value)}
             fullWidth
             size="small"
             helperText={param.description}
@@ -489,13 +474,8 @@ const AppAuthCard = ({
         label="API Key"
         type="password"
         placeholder="Enter your API key"
-        value={authState.credentials['api_key'] || ''}
-        onChange={(e) =>
-          onAuthChange(app.objectID, {
-            ...authState.credentials,
-            api_key: e.target.value,
-          })
-        }
+        value={localCredentials['api_key'] || ''}
+        onChange={(e) => handleCredentialChange('api_key', e.target.value)}
         fullWidth
         size="small"
         sx={{
@@ -516,12 +496,20 @@ const AppAuthCard = ({
   const handleSave = async () => {
     setSaving(true);
     setSaveSuccess(null);
-    const success = await onSaveAuth(app.objectID, authState.credentials);
+    const success = await onSaveAuth(app.objectID, localCredentials);
     setSaving(false);
     setSaveSuccess(success);
     if (success) {
       setUserSelectedAddNew(false);
+      setLocalCredentials({}); // Clear form after success
     }
+  };
+
+  // Helper to update local credentials and notify parent
+  const handleCredentialChange = (key: string, value: string) => {
+    const updated = { ...localCredentials, [key]: value };
+    setLocalCredentials(updated);
+    onAuthChange(app.objectID, updated);
   };
 
   return (
@@ -864,7 +852,7 @@ const AppAuthCard = ({
                             e.stopPropagation();
                             handleSave();
                           }}
-                          disabled={saving || Object.keys(authState.credentials).length === 0}
+                          disabled={saving || Object.keys(localCredentials).length === 0}
                           sx={{
                             flex: 1,
                             borderColor: 'rgba(255, 102, 0, 0.4)',
