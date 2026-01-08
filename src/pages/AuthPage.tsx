@@ -15,7 +15,7 @@ import {
 import { motion } from 'framer-motion';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import { getApiUrl, API_ENDPOINTS } from '@/config/api';
+import { getApiUrl, API_ENDPOINTS, API_CONFIG } from '@/config/api';
 import { LandingNavbar } from '@/components/landing/LandingNavbar';
 import { useAuth } from '@/context/AuthContext';
 
@@ -33,9 +33,11 @@ const AuthPage = ({ mode }: AuthPageProps) => {
   const [mfaRequired, setMfaRequired] = useState(false);
   const [mfaCode, setMfaCode] = useState('');
   const [success, setSuccess] = useState(false);
+  const [apiKey, setApiKey] = useState('');
+  const [showApiKeyInput, setShowApiKeyInput] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { login, isAuthenticated, isLoading: authLoading, refreshUserInfo } = useAuth();
 
   const isLogin = mode === 'login';
   const from = location.state?.from?.pathname || '/dashboard/cases';
@@ -468,6 +470,71 @@ const AuthPage = ({ mode }: AuthPageProps) => {
                   {isLogin ? 'Register here' : 'Sign in'}
                 </Link>
               </Typography>
+
+              {/* Developer API Key Section */}
+              {isLogin && (
+                <Box sx={{ mt: 4, pt: 3, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                  <Typography
+                    variant="body2"
+                    onClick={() => setShowApiKeyInput(!showApiKeyInput)}
+                    sx={{
+                      textAlign: 'center',
+                      color: 'rgba(255,255,255,0.4)',
+                      cursor: 'pointer',
+                      fontSize: '0.75rem',
+                      '&:hover': { color: 'rgba(255,255,255,0.6)' },
+                    }}
+                  >
+                    {showApiKeyInput ? '▼ Hide API Key Login' : '▶ Developer: Use API Key'}
+                  </Typography>
+                  
+                  {showApiKeyInput && (
+                    <Box sx={{ mt: 2 }}>
+                      <TextField
+                        type="password"
+                        placeholder="Enter your Shuffle API key"
+                        value={apiKey}
+                        onChange={(e) => setApiKey(e.target.value)}
+                        fullWidth
+                        size="small"
+                        sx={{
+                          mb: 1.5,
+                          '& .MuiOutlinedInput-root': {
+                            bgcolor: '#2a2a2a',
+                            fontSize: '0.875rem',
+                            '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
+                            '&:hover fieldset': { borderColor: '#FF6600' },
+                            '&.Mui-focused fieldset': { borderColor: '#FF6600' },
+                          },
+                          '& .MuiInputBase-input': { color: '#fff' },
+                        }}
+                      />
+                      <Button
+                        fullWidth
+                        size="small"
+                        onClick={async () => {
+                          if (apiKey.trim()) {
+                            API_CONFIG.setApiKey(apiKey.trim());
+                            setSuccess(true);
+                            await refreshUserInfo();
+                            setTimeout(() => {
+                              window.location.reload();
+                            }, 500);
+                          }
+                        }}
+                        sx={{
+                          bgcolor: 'rgba(255,102,0,0.2)',
+                          color: '#FF6600',
+                          textTransform: 'none',
+                          '&:hover': { bgcolor: 'rgba(255,102,0,0.3)' },
+                        }}
+                      >
+                        Save API Key & Login
+                      </Button>
+                    </Box>
+                  )}
+                </Box>
+              )}
             </CardContent>
           </Card>
         </motion.div>
