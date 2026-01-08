@@ -5,6 +5,7 @@
  */
 
 export { SingulJS, default } from './SingulJS';
+export type { SingulJSHandle } from './SingulJS';
 export type {
   AlgoliaSearchApp,
   AppSelectedEvent,

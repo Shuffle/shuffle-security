@@ -148,13 +148,33 @@
 /* Inline Results Container */
 .singul-results-container {
   margin-top: 16px;
-  min-height: 200px;
+  max-height: 400px;
+  overflow-y: auto;
 }
 
 .singul-results-container.singul-results-grid {
   display: grid;
   grid-template-columns: repeat(var(--singul-grid-columns), 1fr);
   gap: var(--singul-grid-gap);
+}
+
+/* Custom scrollbar for results */
+.singul-results-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.singul-results-container::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.singul-results-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.singul-results-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 /* Inline mode container */
