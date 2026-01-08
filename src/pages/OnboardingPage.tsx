@@ -131,11 +131,13 @@ const OnboardingPage = () => {
     const app = selectedApps.find(a => a.objectID === appId);
     if (!app) return false;
 
-    // Build fields array from credentials
-    const fields = Object.entries(credentials).map(([key, value]) => ({
-      key,
-      value,
-    }));
+    // Build fields array from credentials, filtering out empty keys
+    const fields = Object.entries(credentials)
+      .filter(([key, value]) => key && key.trim() !== '' && value && value.trim() !== '')
+      .map(([key, value]) => ({
+        key,
+        value,
+      }));
 
     const payload = {
       label: `Auth for ${app.name.replace(/_/g, ' ')}`,
