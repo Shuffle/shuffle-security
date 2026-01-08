@@ -145,18 +145,17 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
-  // Check if an app is configured (has credentials)
+  // Check if an app is configured (found in authentication API with active: true)
   const isAppConfigured = useCallback((app: AlgoliaSearchApp) => {
-    const authApp = authenticatedApps.find(
-      auth => auth.app.name.toLowerCase() === app.name.toLowerCase()
+    return authenticatedApps.some(
+      auth => auth.app.name.toLowerCase() === app.name.toLowerCase() && auth.active === true
     );
-    return authApp?.configured === true || (authApp?.fields && authApp.fields.length > 0);
   }, [authenticatedApps]);
 
-  // Check if an app is validated (tests passed)
+  // Check if an app is validated/tested (validation.valid is true)
   const isAppValidated = useCallback((app: AlgoliaSearchApp) => {
     return authenticatedApps.some(
-      auth => auth.app.name.toLowerCase() === app.name.toLowerCase() && auth.validation?.valid
+      auth => auth.app.name.toLowerCase() === app.name.toLowerCase() && auth.validation?.valid === true
     );
   }, [authenticatedApps]);
 
@@ -312,10 +311,7 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
       );
     }
 
-    // Determine which status to show: validated > configured > none
-    const showValidated = authState.validated;
-    const showConfigured = authState.configured && !authState.validated;
-
+    // Show both chips separately if applicable
     return (
       <div
         key={app.objectID}
@@ -336,16 +332,9 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
                 style={customStyles.appIcon}
               />
               {authState.validated && (
-                <div className="singul-auth-badge singul-validated-badge" title="Validated">
+                <div className="singul-auth-badge singul-validated-badge" title="Tested">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                     <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                </div>
-              )}
-              {showConfigured && (
-                <div className="singul-auth-badge singul-configured-badge" title="Configured">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                    <circle cx="12" cy="12" r="3" />
                   </svg>
                 </div>
               )}
@@ -354,13 +343,18 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
           <div className="singul-app-details" style={customStyles.appDetails}>
             <span className="singul-app-name" style={customStyles.appName}>
               {app.name.replace(/_/g, ' ')}
-              {showValidated && (
-                <span className="singul-auth-label singul-validated-label">Validated</span>
-              )}
-              {showConfigured && (
-                <span className="singul-auth-label singul-configured-label">Configured</span>
-              )}
             </span>
+            {/* Show both chips separately */}
+            {(authState.configured || authState.validated) && (
+              <div className="singul-auth-chips">
+                {authState.configured && (
+                  <span className="singul-auth-label singul-configured-label">Configured</span>
+                )}
+                {authState.validated && (
+                  <span className="singul-auth-label singul-validated-label">Tested</span>
+                )}
+              </div>
+            )}
             {showDescription && app.description && (
               <span className="singul-app-description" style={customStyles.appDescription}>
                 {app.description}

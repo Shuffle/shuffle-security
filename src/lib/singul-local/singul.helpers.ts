@@ -78,8 +78,8 @@ export interface AppAuthentication {
   fields: Array<{ key: string; value: string }>;
   id: string;
   label: string;
-  /** Whether the app has authentication configured (credentials entered) */
-  configured?: boolean;
+  /** Whether this authentication entry is active */
+  active?: boolean;
   validation: {
     /** Whether the authentication has been validated (tests ran successfully) */
     valid: boolean;
