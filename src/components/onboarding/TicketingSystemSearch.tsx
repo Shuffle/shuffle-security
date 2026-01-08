@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import SearchIcon from '@mui/icons-material/Search';
+import { Mail, Shield, Search, Globe } from 'lucide-react';
 import { SingulJS } from '@/lib/singul-local';
 import type { AlgoliaSearchApp, SingulJSHandle } from '@/lib/singul-local';
 
@@ -70,15 +71,16 @@ export const TicketingSystemSearch = ({
 
   // Categories with their search terms
   const categories = [
-    { id: 'email', label: 'Email', icon: '📧', description: 'Gmail, Outlook, Exchange', searchTerm: 'email' },
-    { id: 'siem', label: 'SIEM', icon: '🛡️', description: 'Splunk, Sentinel, QRadar', searchTerm: 'siem' },
-    { id: 'edr', label: 'EDR', icon: '🔍', description: 'CrowdStrike, Carbon Black', searchTerm: 'edr' },
-    { id: 'other', label: 'Anywhere Else', icon: '🔗', description: 'Any other source', searchTerm: '' },
+    { id: 'email', label: 'Email', icon: Mail, description: 'Gmail, Outlook, Exchange', searchTerm: 'email', color: '#FF6600' },
+    { id: 'siem', label: 'SIEM', icon: Shield, description: 'Splunk, Sentinel, QRadar', searchTerm: 'siem', color: '#FF6600' },
+    { id: 'edr', label: 'EDR', icon: Search, description: 'CrowdStrike, Carbon Black', searchTerm: 'edr', color: '#FF6600' },
+    { id: 'other', label: 'Anywhere Else', icon: Globe, description: 'Any other source', searchTerm: '', color: '#FF6600' },
   ];
 
-  // Check if current search matches a category
+  // Check if current search matches a category (empty search = "other")
   const getActiveCategory = () => {
     const lowerQuery = searchQuery.toLowerCase().trim();
+    if (lowerQuery === '') return 'other';
     return categories.find(c => c.searchTerm && c.searchTerm.toLowerCase() === lowerQuery)?.id || null;
   };
 
@@ -335,9 +337,24 @@ export const TicketingSystemSearch = ({
                   }
                 }}
               >
-                <Typography sx={{ fontSize: '2rem', mb: 1 }}>
-                  {category.icon}
-                </Typography>
+                <Box
+                  sx={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: '50%',
+                    backgroundColor: isActive ? 'rgba(255, 102, 0, 0.2)' : 'rgba(255, 255, 255, 0.08)',
+                    border: '2px solid',
+                    borderColor: isActive ? '#FF6600' : 'rgba(255, 255, 255, 0.15)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    mx: 'auto',
+                    mb: 1.5,
+                    transition: 'all 0.3s ease',
+                  }}
+                >
+                  <category.icon size={22} color={isActive ? '#FF6600' : 'rgba(255, 255, 255, 0.6)'} />
+                </Box>
                 <Typography
                   variant="subtitle1"
                   sx={{ color: 'white', fontWeight: 600, mb: 0.5 }}
