@@ -466,7 +466,9 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
               size="small"
               disableClearable
               renderInput={(params) => {
-                const region = getRegionFlag(selectedOrg?.region_url);
+                // Find the full org data from the list to get region_url
+                const fullOrgData = organizations.find(org => org.id === selectedOrg?.id);
+                const region = getRegionFlag(fullOrgData?.region_url || selectedOrg?.region_url);
                 return (
                   <TextField
                     {...params}
