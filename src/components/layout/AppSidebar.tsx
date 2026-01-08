@@ -62,22 +62,25 @@ const getRegionFlag = (regionUrl?: string): { flag: string; code: string } => {
   if (!regionUrl) return { flag: '🌐', code: '' };
   
   const url = regionUrl.toLowerCase();
-  if (url.includes('shuffler.io') && !url.includes('eu-2') && !url.includes('ca.') && !url.includes('au.')) {
-    return { flag: '🇬🇧', code: 'UK' };
-  }
-  if (url.includes('us.') || url.includes('us-')) {
+  
+  // Check US regions first (california, us.)
+  if (url.includes('california') || url.includes('us.') || url.includes('us-')) {
     return { flag: '🇺🇸', code: 'US' };
   }
+  // EU-2 region
   if (url.includes('eu-2') || url.includes('eu2')) {
     return { flag: '🇪🇺', code: 'EU-2' };
   }
+  // Canada
   if (url.includes('ca.') || url.includes('canada')) {
     return { flag: '🇨🇦', code: 'CA' };
   }
+  // Australia
   if (url.includes('au.') || url.includes('aus') || url.includes('australia')) {
     return { flag: '🇦🇺', code: 'AUS' };
   }
-  return { flag: '🇬🇧', code: 'UK' }; // Default to UK for shuffler.io
+  // Default to UK for shuffler.io
+  return { flag: '🇬🇧', code: 'UK' };
 };
 
 // Sort orgs with parent-child hierarchy
@@ -475,7 +478,13 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                     border: '1px solid hsl(var(--border))',
                     borderRadius: 1,
                     mt: 0.5,
+                    minWidth: 280,
                     maxHeight: 300,
+                    overflow: 'auto',
+                    '& .MuiAutocomplete-listbox': {
+                      padding: 0,
+                      maxHeight: 'none',
+                    },
                   },
                 },
               }}
@@ -483,17 +492,19 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                 const sortedItem = sortedOrgs.find(item => item.org.id === option.id);
                 const level = sortedItem?.level || 0;
                 const region = getRegionFlag(option.region_url);
+                const { key, ...restProps } = props;
                 
                 return (
                   <Box
                     component="li"
-                    {...props}
                     key={option.id}
+                    {...restProps}
                     sx={{
                       fontSize: '0.875rem',
                       color: 'hsl(var(--foreground))',
                       backgroundColor: 'hsl(var(--card))',
                       pl: `${16 + level * 16}px !important`,
+                      py: 1,
                       '&:hover': {
                         backgroundColor: 'hsl(var(--muted)) !important',
                       },

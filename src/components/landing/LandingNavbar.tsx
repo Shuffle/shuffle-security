@@ -17,6 +17,7 @@ import {
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { motion } from 'framer-motion';
+import { useAuth } from '@/context/AuthContext';
 
 const navItems = [
   { label: 'Features', href: '#features' },
@@ -37,6 +38,7 @@ export const LandingNavbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const { isAuthenticated } = useAuth();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -62,7 +64,9 @@ export const LandingNavbar = () => {
                   variant="h6"
                   sx={{
                     fontWeight: 700,
-                    color: '#FFFFFF',
+                    background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
                   }}
                 >
                   Shuffle
@@ -71,9 +75,7 @@ export const LandingNavbar = () => {
                   variant="h6"
                   sx={{
                     fontWeight: 700,
-                    background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
+                    color: '#FFFFFF',
                   }}
                 >
                   Cases
@@ -139,23 +141,35 @@ export const LandingNavbar = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               {!isMobile && (
                 <>
-                  <Button
-                    component={Link}
-                    to="/login"
-                    variant="text"
-                    sx={{ color: 'text.secondary' }}
-                  >
-                    Sign In
-                  </Button>
-                  <Button
-                    component="a"
-                    href="https://shuffler.io/register"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    variant="contained"
-                  >
-                    Get Started
-                  </Button>
+                  {isAuthenticated ? (
+                    <Button
+                      component={Link}
+                      to="/dashboard"
+                      variant="contained"
+                    >
+                      Go to Product
+                    </Button>
+                  ) : (
+                    <>
+                      <Button
+                        component={Link}
+                        to="/login"
+                        variant="text"
+                        sx={{ color: 'text.secondary' }}
+                      >
+                        Sign In
+                      </Button>
+                      <Button
+                        component="a"
+                        href="https://shuffler.io/register"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        variant="contained"
+                      >
+                        Get Started
+                      </Button>
+                    </>
+                  )}
                 </>
               )}
               {isMobile && (
@@ -194,24 +208,40 @@ export const LandingNavbar = () => {
                 </ListItemButton>
               </ListItem>
             ))}
-            <ListItem disablePadding>
-              <ListItemButton component={Link} to="/login" onClick={handleDrawerToggle}>
-                <ListItemText primary="Sign In" />
-              </ListItemButton>
-            </ListItem>
-            <ListItem sx={{ px: 2, pt: 2 }}>
-              <Button
-                component="a"
-                href="https://shuffler.io/register"
-                target="_blank"
-                rel="noopener noreferrer"
-                variant="contained"
-                fullWidth
-                onClick={handleDrawerToggle}
-              >
-                Get Started
-              </Button>
-            </ListItem>
+            {isAuthenticated ? (
+              <ListItem sx={{ px: 2, pt: 2 }}>
+                <Button
+                  component={Link}
+                  to="/dashboard"
+                  variant="contained"
+                  fullWidth
+                  onClick={handleDrawerToggle}
+                >
+                  Go to Product
+                </Button>
+              </ListItem>
+            ) : (
+              <>
+                <ListItem disablePadding>
+                  <ListItemButton component={Link} to="/login" onClick={handleDrawerToggle}>
+                    <ListItemText primary="Sign In" />
+                  </ListItemButton>
+                </ListItem>
+                <ListItem sx={{ px: 2, pt: 2 }}>
+                  <Button
+                    component="a"
+                    href="https://shuffler.io/register"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    variant="contained"
+                    fullWidth
+                    onClick={handleDrawerToggle}
+                  >
+                    Get Started
+                  </Button>
+                </ListItem>
+              </>
+            )}
           </List>
         </Box>
       </Drawer>
