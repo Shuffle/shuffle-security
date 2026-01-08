@@ -5,15 +5,11 @@ import {
   Typography,
   Chip,
   InputAdornment,
-  Paper,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
+  Card,
+  CardContent,
   Checkbox,
-  Avatar,
 } from '@mui/material';
+import { motion } from 'framer-motion';
 import SearchIcon from '@mui/icons-material/Search';
 
 export interface TicketingSystem {
@@ -22,27 +18,41 @@ export interface TicketingSystem {
   icon: string;
   description: string;
   category: 'ticketing' | 'siem' | 'itsm' | 'other';
+  color: string;
 }
 
 const ticketingSystems: TicketingSystem[] = [
-  { id: 'jira', name: 'Jira', icon: '🎫', description: 'Atlassian issue tracking', category: 'ticketing' },
-  { id: 'servicenow', name: 'ServiceNow', icon: '⚙️', description: 'IT service management', category: 'itsm' },
-  { id: 'zendesk', name: 'Zendesk', icon: '💬', description: 'Customer support platform', category: 'ticketing' },
-  { id: 'freshdesk', name: 'Freshdesk', icon: '🌿', description: 'Customer engagement suite', category: 'ticketing' },
-  { id: 'pagerduty', name: 'PagerDuty', icon: '🚨', description: 'Incident management', category: 'other' },
-  { id: 'splunk', name: 'Splunk', icon: '📊', description: 'Security information and event management', category: 'siem' },
-  { id: 'qradar', name: 'IBM QRadar', icon: '🔷', description: 'Security intelligence platform', category: 'siem' },
-  { id: 'sentinel', name: 'Microsoft Sentinel', icon: '🛡️', description: 'Cloud-native SIEM', category: 'siem' },
-  { id: 'thehive', name: 'TheHive', icon: '🐝', description: 'Security incident response', category: 'siem' },
-  { id: 'opsgenie', name: 'Opsgenie', icon: '📟', description: 'Alert management', category: 'other' },
-  { id: 'slack', name: 'Slack', icon: '💼', description: 'Team communication', category: 'other' },
-  { id: 'teams', name: 'Microsoft Teams', icon: '👥', description: 'Collaboration platform', category: 'other' },
+  { id: 'jira', name: 'Jira', icon: '🎫', description: 'Atlassian issue tracking', category: 'ticketing', color: '#0052CC' },
+  { id: 'servicenow', name: 'ServiceNow', icon: '⚙️', description: 'IT service management', category: 'itsm', color: '#62d84e' },
+  { id: 'zendesk', name: 'Zendesk', icon: '💬', description: 'Customer support platform', category: 'ticketing', color: '#03363D' },
+  { id: 'freshdesk', name: 'Freshdesk', icon: '🌿', description: 'Customer engagement suite', category: 'ticketing', color: '#25c16f' },
+  { id: 'pagerduty', name: 'PagerDuty', icon: '🚨', description: 'Incident management', category: 'other', color: '#06AC38' },
+  { id: 'splunk', name: 'Splunk', icon: '📊', description: 'Security information and event management', category: 'siem', color: '#65A637' },
+  { id: 'qradar', name: 'IBM QRadar', icon: '🔷', description: 'Security intelligence platform', category: 'siem', color: '#0f62fe' },
+  { id: 'sentinel', name: 'Microsoft Sentinel', icon: '🛡️', description: 'Cloud-native SIEM', category: 'siem', color: '#0078D4' },
+  { id: 'thehive', name: 'TheHive', icon: '🐝', description: 'Security incident response', category: 'siem', color: '#FFC107' },
+  { id: 'opsgenie', name: 'Opsgenie', icon: '📟', description: 'Alert management', category: 'other', color: '#2684FF' },
+  { id: 'slack', name: 'Slack', icon: '💼', description: 'Team communication', category: 'other', color: '#4A154B' },
+  { id: 'teams', name: 'Microsoft Teams', icon: '👥', description: 'Collaboration platform', category: 'other', color: '#6264A7' },
 ];
 
 interface TicketingSystemSearchProps {
   selectedSystems: TicketingSystem[];
   onSelectionChange: (systems: TicketingSystem[]) => void;
 }
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.05 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+};
 
 export const TicketingSystemSearch = ({ selectedSystems, onSelectionChange }: TicketingSystemSearchProps) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -66,11 +76,21 @@ export const TicketingSystemSearch = ({ selectedSystems, onSelectionChange }: Ti
 
   return (
     <Box>
-      <Typography variant="h6" sx={{ mb: 1, color: 'hsl(var(--foreground))' }}>
+      <Typography
+        variant="h5"
+        sx={{
+          color: 'white',
+          fontWeight: 700,
+          mb: 1,
+        }}
+      >
         Select Your Ticketing Systems
       </Typography>
-      <Typography variant="body2" sx={{ mb: 3, color: 'hsl(var(--muted-foreground))' }}>
-        Choose the tools you currently use for alert and case management. We'll help you connect them.
+      <Typography
+        variant="body1"
+        sx={{ mb: 4, color: 'rgba(255, 255, 255, 0.5)' }}
+      >
+        Choose the tools you currently use for alert and case management.
       </Typography>
 
       {/* Search Input */}
@@ -80,20 +100,23 @@ export const TicketingSystemSearch = ({ selectedSystems, onSelectionChange }: Ti
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         sx={{
-          mb: 2,
+          mb: 3,
           '& .MuiOutlinedInput-root': {
-            backgroundColor: 'hsl(var(--muted))',
-            borderRadius: 2,
-            '& fieldset': { borderColor: 'transparent' },
-            '&:hover fieldset': { borderColor: 'hsl(var(--border))' },
-            '&.Mui-focused fieldset': { borderColor: 'hsl(var(--primary))' },
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+            borderRadius: 3,
+            '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.1)' },
+            '&:hover fieldset': { borderColor: 'rgba(255, 255, 255, 0.2)' },
+            '&.Mui-focused fieldset': { borderColor: '#FF6600' },
           },
-          '& .MuiInputBase-input': { color: 'hsl(var(--foreground))' },
+          '& .MuiInputBase-input': {
+            color: 'white',
+            '&::placeholder': { color: 'rgba(255, 255, 255, 0.4)' },
+          },
         }}
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
-              <SearchIcon sx={{ color: 'hsl(var(--muted-foreground))' }} />
+              <SearchIcon sx={{ color: 'rgba(255, 255, 255, 0.4)' }} />
             </InputAdornment>
           ),
         }}
@@ -101,18 +124,19 @@ export const TicketingSystemSearch = ({ selectedSystems, onSelectionChange }: Ti
 
       {/* Selected Systems */}
       {selectedSystems.length > 0 && (
-        <Box sx={{ mb: 2, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+        <Box sx={{ mb: 3, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
           {selectedSystems.map((system) => (
             <Chip
               key={system.id}
               label={`${system.icon} ${system.name}`}
               onDelete={() => toggleSystem(system)}
               sx={{
-                backgroundColor: 'hsl(var(--primary))',
-                color: 'hsl(var(--primary-foreground))',
+                background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
+                color: 'white',
+                fontWeight: 500,
                 '& .MuiChip-deleteIcon': {
-                  color: 'hsl(var(--primary-foreground))',
-                  '&:hover': { color: 'hsl(var(--primary-foreground))' },
+                  color: 'rgba(255, 255, 255, 0.7)',
+                  '&:hover': { color: 'white' },
                 },
               }}
             />
@@ -120,81 +144,112 @@ export const TicketingSystemSearch = ({ selectedSystems, onSelectionChange }: Ti
         </Box>
       )}
 
-      {/* Systems List */}
-      <Paper
-        sx={{
-          backgroundColor: 'hsl(var(--muted))',
-          border: '1px solid hsl(var(--border))',
-          borderRadius: 2,
-          maxHeight: 320,
-          overflow: 'auto',
-        }}
-      >
-        <List disablePadding>
-          {filteredSystems.map((system) => (
-            <ListItem key={system.id} disablePadding>
-              <ListItemButton
-                onClick={() => toggleSystem(system)}
-                sx={{
-                  py: 1.5,
-                  '&:hover': { backgroundColor: 'hsl(var(--background))' },
-                }}
-              >
-                <ListItemIcon sx={{ minWidth: 40 }}>
-                  <Checkbox
-                    checked={isSelected(system.id)}
-                    sx={{
-                      color: 'hsl(var(--muted-foreground))',
-                      '&.Mui-checked': { color: 'hsl(var(--primary))' },
-                    }}
-                  />
-                </ListItemIcon>
-                <Avatar
+      {/* Systems Grid */}
+      <motion.div variants={containerVariants} initial="hidden" animate="visible">
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
+            gap: 2,
+            maxHeight: 400,
+            overflow: 'auto',
+            pr: 1,
+            '&::-webkit-scrollbar': { width: 6 },
+            '&::-webkit-scrollbar-track': { background: 'rgba(255, 255, 255, 0.05)', borderRadius: 3 },
+            '&::-webkit-scrollbar-thumb': { background: 'rgba(255, 255, 255, 0.1)', borderRadius: 3 },
+          }}
+        >
+          {filteredSystems.map((system) => {
+            const selected = isSelected(system.id);
+            return (
+              <motion.div key={system.id} variants={itemVariants}>
+                <Card
+                  onClick={() => toggleSystem(system)}
                   sx={{
-                    width: 32,
-                    height: 32,
-                    mr: 2,
-                    backgroundColor: 'hsl(var(--background))',
-                    fontSize: '1rem',
+                    cursor: 'pointer',
+                    background: selected ? 'rgba(255, 102, 0, 0.1)' : 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid',
+                    borderColor: selected ? '#FF6600' : 'rgba(255, 255, 255, 0.08)',
+                    borderRadius: 3,
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      borderColor: selected ? '#FF6600' : 'rgba(255, 102, 0, 0.5)',
+                      transform: 'translateY(-2px)',
+                      background: selected ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                    },
                   }}
                 >
-                  {system.icon}
-                </Avatar>
-                <ListItemText
-                  primary={system.name}
-                  secondary={system.description}
-                  primaryTypographyProps={{
-                    sx: { color: 'hsl(var(--foreground))', fontWeight: 500 },
-                  }}
-                  secondaryTypographyProps={{
-                    sx: { color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem' },
-                  }}
-                />
-                <Chip
-                  label={system.category.toUpperCase()}
-                  size="small"
-                  sx={{
-                    backgroundColor: 'hsl(var(--background))',
-                    color: 'hsl(var(--muted-foreground))',
-                    fontSize: '0.65rem',
-                    height: 20,
-                  }}
-                />
-              </ListItemButton>
-            </ListItem>
-          ))}
-          {filteredSystems.length === 0 && (
-            <ListItem>
-              <ListItemText
-                primary="No systems found"
-                secondary="Try a different search term"
-                primaryTypographyProps={{ sx: { color: 'hsl(var(--foreground))' } }}
-                secondaryTypographyProps={{ sx: { color: 'hsl(var(--muted-foreground))' } }}
-              />
-            </ListItem>
-          )}
-        </List>
-      </Paper>
+                  <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
+                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                      <Box
+                        sx={{
+                          fontSize: '1.5rem',
+                          width: 40,
+                          height: 40,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          borderRadius: 2,
+                        }}
+                      >
+                        {system.icon}
+                      </Box>
+                      <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ color: 'white', fontWeight: 600, mb: 0.5 }}
+                        >
+                          {system.name}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: 'rgba(255, 255, 255, 0.4)',
+                            display: 'block',
+                            lineHeight: 1.4,
+                          }}
+                        >
+                          {system.description}
+                        </Typography>
+                      </Box>
+                      <Checkbox
+                        checked={selected}
+                        sx={{
+                          color: 'rgba(255, 255, 255, 0.2)',
+                          '&.Mui-checked': { color: '#FF6600' },
+                          p: 0,
+                        }}
+                      />
+                    </Box>
+                    <Chip
+                      label={system.category.toUpperCase()}
+                      size="small"
+                      sx={{
+                        mt: 1.5,
+                        height: 20,
+                        fontSize: '0.6rem',
+                        fontWeight: 600,
+                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                        color: 'rgba(255, 255, 255, 0.4)',
+                        letterSpacing: 0.5,
+                      }}
+                    />
+                  </CardContent>
+                </Card>
+              </motion.div>
+            );
+          })}
+        </Box>
+      </motion.div>
+
+      {filteredSystems.length === 0 && (
+        <Box sx={{ textAlign: 'center', py: 6 }}>
+          <Typography sx={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+            No systems found. Try a different search term.
+          </Typography>
+        </Box>
+      )}
     </Box>
   );
 };
