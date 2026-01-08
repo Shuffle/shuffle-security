@@ -1,10 +1,14 @@
-import { useState } from 'react';
+import { useState, ReactNode } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Box } from '@mui/material';
 import { AppSidebar } from './AppSidebar';
 import { AppHeader } from './AppHeader';
 
-export const DashboardLayout = () => {
+interface DashboardLayoutProps {
+  children?: ReactNode;
+}
+
+export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
@@ -24,8 +28,8 @@ export const DashboardLayout = () => {
         }}
       >
         <AppHeader />
-        <Box sx={{ flexGrow: 1, p: 3 }}>
-          <Outlet />
+        <Box sx={{ flexGrow: 1 }}>
+          {children || <Outlet />}
         </Box>
       </Box>
     </Box>

@@ -7,10 +7,12 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import Index from './pages/Index';
 import AuthPage from './pages/AuthPage';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import DashboardHome from '@/pages/dashboard/DashboardHome';
 import AlertsPage from '@/pages/dashboard/AlertsPage';
 import CasesPage from '@/pages/dashboard/CasesPage';
 import TemplatesPage from '@/pages/dashboard/TemplatesPage';
+import UsersPage from '@/pages/dashboard/UsersPage';
+import OrganizationsPage from '@/pages/dashboard/OrganizationsPage';
+import SettingsPage from '@/pages/dashboard/SettingsPage';
 import DocsPage from '@/pages/docs/DocsPage';
 import NotFound from './pages/NotFound';
 
@@ -28,16 +30,10 @@ const App = () => (
             <Route path="/register" element={<AuthPage mode="register" />} />
             <Route path="/docs" element={<DocsPage />} />
             <Route path="/docs/:slug" element={<DocsPage />} />
+            
+            {/* Dashboard routes with shared layout */}
             <Route
               path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <DashboardHome />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/alerts"
               element={
                 <ProtectedRoute>
                   <DashboardLayout />
@@ -45,18 +41,14 @@ const App = () => (
               }
             >
               <Route index element={<AlertsPage />} />
+              <Route path="alerts" element={<AlertsPage />} />
+              <Route path="cases" element={<CasesPage />} />
+              <Route path="templates/*" element={<TemplatesPage />} />
+              <Route path="users" element={<UsersPage />} />
+              <Route path="organizations" element={<OrganizationsPage />} />
+              <Route path="settings" element={<SettingsPage />} />
             </Route>
-            <Route
-              path="/cases"
-              element={
-                <ProtectedRoute>
-                  <DashboardLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<CasesPage />} />
-              <Route path="templates" element={<TemplatesPage />} />
-            </Route>
+            
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
