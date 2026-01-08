@@ -152,29 +152,30 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
 
   return (
     <>
-      {/* Toggle button - outside sidebar to avoid overflow clipping */}
-      <IconButton 
-        onClick={onToggle} 
-        size="small" 
-        sx={{ 
-          position: 'fixed',
-          left: collapsed ? collapsedWidth + 10 - 12 : drawerWidth + 10 - 12,
-          top: 'calc(2.5% + 22px)',
-          color: 'hsl(var(--muted-foreground))',
-          backgroundColor: 'hsl(var(--card))',
-          border: '1px solid hsl(var(--border))',
-          borderRadius: 1,
-          width: 24,
-          height: 24,
-          zIndex: 1300,
-          transition: 'left 0.2s ease',
-          '&:hover': {
-            backgroundColor: 'hsl(var(--muted))',
-          },
-        }}
-      >
-        {collapsed ? <ChevronRightIcon sx={{ fontSize: 16 }} /> : <ChevronLeftIcon sx={{ fontSize: 16 }} />}
-      </IconButton>
+      {/* Toggle button - outside sidebar only when collapsed to avoid clipping */}
+      {collapsed && (
+        <IconButton 
+          onClick={onToggle} 
+          size="small" 
+          sx={{ 
+            position: 'fixed',
+            left: collapsedWidth + 10 - 12,
+            top: 'calc(2.5% + 22px)',
+            color: 'hsl(var(--muted-foreground))',
+            backgroundColor: 'hsl(var(--card))',
+            border: '1px solid hsl(var(--border))',
+            borderRadius: 1,
+            width: 24,
+            height: 24,
+            zIndex: 1300,
+            '&:hover': {
+              backgroundColor: 'hsl(var(--muted))',
+            },
+          }}
+        >
+          <ChevronRightIcon sx={{ fontSize: 16 }} />
+        </IconButton>
+      )}
 
       <Box
         sx={{
@@ -193,12 +194,12 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
           zIndex: 1200,
         }}
       >
-      {/* Header with Logo and Toggle on right edge */}
+      {/* Header with Logo and Toggle */}
       <Box
         sx={{
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'flex-start',
+          justifyContent: 'space-between',
           p: 2,
           minHeight: 64,
         }}
@@ -232,6 +233,25 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
             )}
           </Box>
         </Tooltip>
+
+        {/* Toggle button - inside when expanded */}
+        {!collapsed && (
+          <IconButton 
+            onClick={onToggle} 
+            size="small" 
+            sx={{ 
+              color: 'hsl(var(--muted-foreground))',
+              borderRadius: 1,
+              width: 24,
+              height: 24,
+              '&:hover': {
+                backgroundColor: 'hsl(var(--muted))',
+              },
+            }}
+          >
+            <ChevronLeftIcon sx={{ fontSize: 16 }} />
+          </IconButton>
+        )}
       </Box>
 
       {/* Search Bar */}
