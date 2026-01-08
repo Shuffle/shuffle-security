@@ -126,6 +126,60 @@ const OnboardingPage = () => {
     }, 1500);
   };
 
+  const handleSaveAuth = async (appId: string, credentials: Record<string, string>): Promise<boolean> => {
+    // Find the app info
+    const app = selectedApps.find(a => a.objectID === appId);
+    if (!app) return false;
+
+    // Build fields array from credentials
+    const fields = Object.entries(credentials).map(([key, value]) => ({
+      key,
+      value,
+    }));
+
+    const payload = {
+      label: `Auth for ${app.name.replace(/_/g, ' ')}`,
+      app: {
+        name: app.name,
+        id: app.objectID,
+        app_version: '1.0.0',
+      },
+      fields,
+      active: true,
+    };
+
+    try {
+      const response = await fetch(`${API_CONFIG.baseUrl}/api/v1/apps/authentication`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        // Refresh authenticated apps list
+        const authResponse = await fetch(`${API_CONFIG.baseUrl}/api/v1/apps/authentication`, {
+          headers: {
+            'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+          },
+        });
+        if (authResponse.ok) {
+          const authData = await authResponse.json();
+          if (authData.data) {
+            setAuthenticatedApps(authData.data);
+          }
+        }
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Failed to save authentication:', error);
+      return false;
+    }
+  };
+
   const canProceed = () => {
     if (activeStep === 0) return selectedApps.length > 0;
     if (activeStep === 1) {
@@ -314,6 +368,7 @@ const OnboardingPage = () => {
                       authenticatedApps={authenticatedApps}
                       onAuthChange={handleAuthChange}
                       onTestConnection={handleTestConnection}
+                      onSaveAuth={handleSaveAuth}
                     />
                   )}
 

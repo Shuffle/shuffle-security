@@ -103,6 +103,7 @@ interface AppAuthConfigProps {
   authenticatedApps?: ApiAuthEntry[];
   onAuthChange: (appId: string, credentials: Record<string, string>) => void;
   onTestConnection: (appId: string) => void;
+  onSaveAuth: (appId: string, credentials: Record<string, string>) => Promise<boolean>;
   onSelectAuth?: (appId: string, authId: string) => void;
 }
 
@@ -128,6 +129,7 @@ const AppAuthCard = ({
   onToggle,
   onAuthChange,
   onTestConnection,
+  onSaveAuth,
   apiAuthEntries,
   onSelectAuth,
 }: {
@@ -137,6 +139,7 @@ const AppAuthCard = ({
   onToggle: () => void;
   onAuthChange: (appId: string, credentials: Record<string, string>) => void;
   onTestConnection: (appId: string) => void;
+  onSaveAuth: (appId: string, credentials: Record<string, string>) => Promise<boolean>;
   apiAuthEntries: ApiAuthEntry[];
   onSelectAuth?: (appId: string, authId: string) => void;
 }) => {
@@ -183,6 +186,8 @@ const AppAuthCard = ({
 
   // App config fetching for dynamic fields
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [appConfig, setAppConfig] = useState<DecodedApp | null>(null);
 
@@ -507,6 +512,18 @@ const AppAuthCard = ({
       />
     );
   };
+
+  const handleSave = async () => {
+    setSaving(true);
+    setSaveSuccess(null);
+    const success = await onSaveAuth(app.objectID, authState.credentials);
+    setSaving(false);
+    setSaveSuccess(success);
+    if (success) {
+      setUserSelectedAddNew(false);
+    }
+  };
+
   return (
     <motion.div variants={itemVariants}>
       <Card
@@ -571,7 +588,17 @@ const AppAuthCard = ({
               {app.name.replace(/_/g, ' ')}
             </Typography>
             {app.description && (
-              <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.4)' }}>
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  color: 'rgba(255, 255, 255, 0.4)',
+                  display: 'block',
+                  maxWidth: 300,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
                 {app.description}
               </Typography>
             )}
@@ -800,30 +827,85 @@ const AppAuthCard = ({
                       </Alert>
                     )}
 
-                    {/* Test Connection button for non-OAuth2 apps */}
-                    {!isOAuth2 && (
-                      <Button
-                        variant="contained"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onTestConnection(app.objectID);
-                        }}
-                        disabled={authState.status === 'testing'}
+                    {saveSuccess === true && (
+                      <Alert
+                        severity="success"
                         sx={{
-                          background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
-                          boxShadow: '0 4px 14px rgba(255, 102, 0, 0.25)',
-                          fontWeight: 600,
-                          '&:hover': {
-                            background: 'linear-gradient(135deg, #FF8533 0%, #FF9955 100%)',
-                          },
-                          '&.Mui-disabled': {
-                            background: 'rgba(255, 255, 255, 0.1)',
-                            color: 'rgba(255, 255, 255, 0.3)',
-                          },
+                          backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                          color: '#22c55e',
+                          border: '1px solid rgba(34, 197, 94, 0.3)',
+                          borderRadius: 2,
                         }}
                       >
-                        {authState.status === 'testing' ? 'Testing...' : 'Test Connection'}
-                      </Button>
+                        Authentication saved successfully!
+                      </Alert>
+                    )}
+
+                    {saveSuccess === false && (
+                      <Alert
+                        severity="error"
+                        sx={{
+                          backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                          color: '#ef4444',
+                          border: '1px solid rgba(239, 68, 68, 0.3)',
+                          borderRadius: 2,
+                        }}
+                      >
+                        Failed to save authentication. Please try again.
+                      </Alert>
+                    )}
+
+                    {/* Save and Test buttons */}
+                    {!isOAuth2 && (
+                      <Box sx={{ display: 'flex', gap: 2 }}>
+                        <Button
+                          variant="outlined"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSave();
+                          }}
+                          disabled={saving || Object.keys(authState.credentials).length === 0}
+                          sx={{
+                            flex: 1,
+                            borderColor: 'rgba(255, 102, 0, 0.4)',
+                            color: 'white',
+                            fontWeight: 600,
+                            '&:hover': {
+                              borderColor: '#FF6600',
+                              backgroundColor: 'rgba(255, 102, 0, 0.08)',
+                            },
+                            '&.Mui-disabled': {
+                              borderColor: 'rgba(255, 255, 255, 0.1)',
+                              color: 'rgba(255, 255, 255, 0.3)',
+                            },
+                          }}
+                        >
+                          {saving ? 'Saving...' : 'Save Authentication'}
+                        </Button>
+                        <Button
+                          variant="contained"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onTestConnection(app.objectID);
+                          }}
+                          disabled={authState.status === 'testing'}
+                          sx={{
+                            flex: 1,
+                            background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
+                            boxShadow: '0 4px 14px rgba(255, 102, 0, 0.25)',
+                            fontWeight: 600,
+                            '&:hover': {
+                              background: 'linear-gradient(135deg, #FF8533 0%, #FF9955 100%)',
+                            },
+                            '&.Mui-disabled': {
+                              background: 'rgba(255, 255, 255, 0.1)',
+                              color: 'rgba(255, 255, 255, 0.3)',
+                            },
+                          }}
+                        >
+                          {authState.status === 'testing' ? 'Testing...' : 'Test Connection'}
+                        </Button>
+                      </Box>
                     )}
                   </Box>
                 )}
@@ -921,6 +1003,7 @@ export const AppAuthConfig = ({
   authenticatedApps = [],
   onAuthChange,
   onTestConnection,
+  onSaveAuth,
   onSelectAuth,
 }: AppAuthConfigProps) => {
   const [expanded, setExpanded] = useState<string | false>(apps[0]?.objectID || false);
@@ -983,6 +1066,7 @@ export const AppAuthConfig = ({
                 onToggle={() => setExpanded(isExpanded ? false : app.objectID)}
                 onAuthChange={onAuthChange}
                 onTestConnection={onTestConnection}
+                onSaveAuth={onSaveAuth}
                 apiAuthEntries={apiAuthEntries}
                 onSelectAuth={onSelectAuth}
               />
