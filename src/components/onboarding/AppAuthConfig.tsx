@@ -21,6 +21,9 @@ import {
   ListItemText,
   OutlinedInput,
   Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -29,8 +32,12 @@ import ErrorIcon from '@mui/icons-material/Error';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import LockIcon from '@mui/icons-material/Lock';
 import GroupIcon from '@mui/icons-material/Group';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
+import CloseIcon from '@mui/icons-material/Close';
 import type { AlgoliaSearchApp } from '@/lib/singul-local';
 import { API_CONFIG, getApiUrl } from '@/config/api';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 export type AuthStatus = 'pending' | 'testing' | 'connected' | 'error';
 
@@ -40,6 +47,13 @@ export interface AppAuthState {
   credentials: Record<string, string>;
   errorMessage?: string;
 }
+
+// Helper to check if auth type is OAuth2 (includes oauth2-app variant)
+const isOAuth2Type = (type: string | undefined): boolean => {
+  if (!type) return false;
+  const lowerType = type.toLowerCase();
+  return lowerType === 'oauth2' || lowerType === 'oauth2-app';
+};
 
 interface AuthParameter {
   description: string;
@@ -163,11 +177,42 @@ const AppAuthCard = ({
 
   const statusConfig = getStatusConfig(authState.status);
   const auth = appConfig?.authentication;
+  const isOAuth2 = isOAuth2Type(auth?.type);
 
   const [selectedScopes, setSelectedScopes] = useState<string[]>(auth?.scope || []);
+  const [docsOpen, setDocsOpen] = useState(false);
+  const [docsContent, setDocsContent] = useState<string>('');
+  const [docsLoading, setDocsLoading] = useState(false);
+
+  const fetchDocs = async () => {
+    setDocsLoading(true);
+    try {
+      const encodedName = encodeURIComponent(app.name);
+      const response = await fetch(getApiUrl(`/docs/${encodedName}?location=openapi`), {
+        headers: {
+          'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setDocsContent(data.data || data.content || 'No documentation available.');
+      } else {
+        setDocsContent('Failed to load documentation.');
+      }
+    } catch (error) {
+      setDocsContent('Error loading documentation.');
+    } finally {
+      setDocsLoading(false);
+    }
+  };
+
+  const handleOpenDocs = () => {
+    setDocsOpen(true);
+    fetchDocs();
+  };
 
   const renderOAuth2Fields = () => {
-    if (!auth || auth.type !== 'oauth2') return null;
+    if (!auth || !isOAuth2) return null;
 
     const availableScopes = auth.scope || [];
 
@@ -240,6 +285,21 @@ const AppAuthCard = ({
               }}
             >
               <GroupIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="View documentation">
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation();
+                handleOpenDocs();
+              }}
+              sx={{
+                backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                color: '#60a5fa',
+                '&:hover': { backgroundColor: 'rgba(59, 130, 246, 0.25)' },
+              }}
+            >
+              <MenuBookIcon />
             </IconButton>
           </Tooltip>
         </Box>
@@ -498,7 +558,7 @@ const AppAuthCard = ({
 
   const renderApiKeyFields = () => {
     // For non-OAuth apps without parameters, show generic API key field
-    if (auth?.type === 'oauth2' || (auth?.parameters && auth.parameters.length > 0)) return null;
+    if (isOAuth2 || (auth?.parameters && auth.parameters.length > 0)) return null;
 
     return (
       <TextField
@@ -684,36 +744,131 @@ const AppAuthCard = ({
                   </Alert>
                 )}
 
-                {auth?.type !== 'oauth2' && (
-                  <Button
-                    variant="contained"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onTestConnection(app.objectID);
-                    }}
-                    disabled={authState.status === 'testing'}
-                    sx={{
-                      alignSelf: 'flex-start',
-                      background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
-                      boxShadow: '0 4px 14px rgba(255, 102, 0, 0.25)',
-                      fontWeight: 600,
-                      '&:hover': {
-                        background: 'linear-gradient(135deg, #FF8533 0%, #FF9955 100%)',
-                      },
-                      '&.Mui-disabled': {
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        color: 'rgba(255, 255, 255, 0.3)',
-                      },
-                    }}
-                  >
-                    {authState.status === 'testing' ? 'Testing...' : 'Test Connection'}
-                  </Button>
+                {!isOAuth2 && (
+                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                    <Button
+                      variant="contained"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onTestConnection(app.objectID);
+                      }}
+                      disabled={authState.status === 'testing'}
+                      sx={{
+                        background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
+                        boxShadow: '0 4px 14px rgba(255, 102, 0, 0.25)',
+                        fontWeight: 600,
+                        '&:hover': {
+                          background: 'linear-gradient(135deg, #FF8533 0%, #FF9955 100%)',
+                        },
+                        '&.Mui-disabled': {
+                          background: 'rgba(255, 255, 255, 0.1)',
+                          color: 'rgba(255, 255, 255, 0.3)',
+                        },
+                      }}
+                    >
+                      {authState.status === 'testing' ? 'Testing...' : 'Test Connection'}
+                    </Button>
+                    <Tooltip title="View documentation">
+                      <IconButton
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenDocs();
+                        }}
+                        sx={{
+                          backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                          color: '#60a5fa',
+                          '&:hover': { backgroundColor: 'rgba(59, 130, 246, 0.25)' },
+                        }}
+                      >
+                        <MenuBookIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
                 )}
               </Box>
             )}
           </Box>
         </Collapse>
       </Card>
+
+      {/* Documentation Modal */}
+      <Dialog
+        open={docsOpen}
+        onClose={() => setDocsOpen(false)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            backgroundColor: '#1a1a1a',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: 3,
+            maxHeight: '80vh',
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+            color: 'white',
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            {app.image_url && (
+              <Box
+                component="img"
+                src={app.image_url}
+                alt={app.name}
+                sx={{ width: 32, height: 32, borderRadius: 1, objectFit: 'contain' }}
+              />
+            )}
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              {app.name.replace(/_/g, ' ')} Documentation
+            </Typography>
+          </Box>
+          <IconButton onClick={() => setDocsOpen(false)} sx={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ pt: 3 }}>
+          {docsLoading ? (
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', py: 6 }}>
+              <CircularProgress size={32} sx={{ color: '#FF6600' }} />
+              <Typography sx={{ ml: 2, color: 'rgba(255, 255, 255, 0.5)' }}>
+                Loading documentation...
+              </Typography>
+            </Box>
+          ) : (
+            <Box
+              sx={{
+                color: 'rgba(255, 255, 255, 0.8)',
+                '& h1, & h2, & h3, & h4': { color: 'white', mt: 3, mb: 2 },
+                '& p': { mb: 2, lineHeight: 1.7 },
+                '& code': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  px: 1,
+                  py: 0.5,
+                  borderRadius: 1,
+                  fontSize: '0.875rem',
+                },
+                '& pre': {
+                  backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                  p: 2,
+                  borderRadius: 2,
+                  overflow: 'auto',
+                },
+                '& a': { color: '#FF6600' },
+                '& ul, & ol': { pl: 3, mb: 2 },
+                '& li': { mb: 1 },
+              }}
+            >
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{docsContent}</ReactMarkdown>
+            </Box>
+          )}
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 };
