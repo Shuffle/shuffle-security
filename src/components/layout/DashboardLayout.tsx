@@ -1,17 +1,25 @@
-import { useState, ReactNode } from 'react';
+import { useState, useEffect, ReactNode } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Box } from '@mui/material';
 import { AppSidebar } from './AppSidebar';
 
 const drawerWidth = 260;
 const collapsedWidth = 64;
+const SIDEBAR_STATE_KEY = 'shuffle-cases-sidebar-collapsed';
 
 interface DashboardLayoutProps {
   children?: ReactNode;
 }
 
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    const saved = localStorage.getItem(SIDEBAR_STATE_KEY);
+    return saved === 'true';
+  });
+
+  useEffect(() => {
+    localStorage.setItem(SIDEBAR_STATE_KEY, String(sidebarCollapsed));
+  }, [sidebarCollapsed]);
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', backgroundColor: 'hsl(var(--background))' }}>
