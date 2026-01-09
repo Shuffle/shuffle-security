@@ -54,9 +54,8 @@ const severityOptions = [
 
 const statusOptions = [
   { id: 1, label: 'New' },
-  { id: 2, label: 'In Progress' },
-  { id: 3, label: 'Suppressed' },
-  { id: 99, label: 'Other' },
+  { id: 2, label: 'Escalated' },
+  { id: 3, label: 'Resolved' },
 ];
 
 export const CreateAlertDialog = ({ open, onClose, onSubmit }: CreateAlertDialogProps) => {

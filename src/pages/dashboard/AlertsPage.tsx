@@ -28,10 +28,11 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import AddIcon from '@mui/icons-material/Add';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import FolderSpecialIcon from '@mui/icons-material/FolderSpecial';
-import DeleteIcon from '@mui/icons-material/Delete';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useDatastore } from '@/hooks/useDatastore';
 import { DATASTORE_CATEGORIES } from '@/services/datastore';
 import { CreateAlertDialog, OCSFDetection } from '@/components/alerts/CreateAlertDialog';
+import { AlertDetailDialog } from '@/components/alerts/AlertDetailDialog';
 
 interface DisplayAlert {
   id: string;
@@ -42,12 +43,13 @@ interface DisplayAlert {
   assignee: string | null;
   created: string;
   isDummy?: boolean;
+  rawOCSF?: OCSFDetection;
 }
 
 // Dummy alerts for demo purposes
 const dummyAlerts: DisplayAlert[] = [
   { id: 'DEMO-001', title: 'Suspicious Login Activity', source: 'SIEM', severity: 'critical', status: 'new', assignee: 'John D.', created: '2026-01-07 10:23', isDummy: true },
-  { id: 'DEMO-002', title: 'Malware Detection on Endpoint', source: 'EDR', severity: 'high', status: 'in_progress', assignee: 'Sarah M.', created: '2026-01-07 10:15', isDummy: true },
+  { id: 'DEMO-002', title: 'Malware Detection on Endpoint', source: 'EDR', severity: 'high', status: 'escalated', assignee: 'Sarah M.', created: '2026-01-07 10:15', isDummy: true },
   { id: 'DEMO-003', title: 'Unusual Outbound Traffic', source: 'Firewall', severity: 'medium', status: 'new', assignee: null, created: '2026-01-07 09:45', isDummy: true },
   { id: 'DEMO-004', title: 'Brute Force Attack Detected', source: 'IDS', severity: 'high', status: 'escalated', assignee: 'Mike R.', created: '2026-01-07 09:30', isDummy: true },
   { id: 'DEMO-005', title: 'Policy Violation - USB Device', source: 'DLP', severity: 'low', status: 'resolved', assignee: 'John D.', created: '2026-01-07 09:12', isDummy: true },
@@ -63,11 +65,8 @@ const severityColors: Record<string, string> = {
 
 const statusColors: Record<string, { bg: string; text: string }> = {
   new: { bg: 'rgba(34, 184, 207, 0.15)', text: '#22b8cf' },
-  in_progress: { bg: 'rgba(249, 115, 22, 0.15)', text: '#f97316' },
   escalated: { bg: 'rgba(239, 68, 68, 0.15)', text: '#ef4444' },
   resolved: { bg: 'rgba(34, 197, 94, 0.15)', text: '#22c55e' },
-  suppressed: { bg: 'rgba(148, 163, 184, 0.15)', text: '#94a3b8' },
-  other: { bg: 'rgba(148, 163, 184, 0.15)', text: '#94a3b8' },
 };
 
 // Convert OCSF severity to display severity
@@ -86,9 +85,9 @@ const mapOCSFSeverity = (severityId: number): string => {
 const mapOCSFStatus = (statusId: number): string => {
   switch (statusId) {
     case 1: return 'new';
-    case 2: return 'in_progress';
-    case 3: return 'suppressed';
-    default: return 'other';
+    case 2: return 'escalated';
+    case 3: return 'resolved';
+    default: return 'new';
   }
 };
 
@@ -106,6 +105,7 @@ const parseOCSFToAlert = (ocsf: OCSFDetection): DisplayAlert => {
     assignee: null,
     created: formattedDate,
     isDummy: false,
+    rawOCSF: ocsf,
   };
 };
 
@@ -117,6 +117,8 @@ const AlertsPage = () => {
   const [menuAlertId, setMenuAlertId] = useState<string | null>(null);
   const [alerts, setAlerts] = useState<DisplayAlert[]>(dummyAlerts);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedAlert, setSelectedAlert] = useState<DisplayAlert | null>(null);
 
   const { items: datastoreItems, isLoading, error, fetchItems, addItem } = useDatastore({
     category: DATASTORE_CATEGORIES.ALERTS,
@@ -157,6 +159,7 @@ const AlertsPage = () => {
   };
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, id: string) => {
+    event.stopPropagation();
     setAnchorEl(event.currentTarget);
     setMenuAlertId(id);
   };
@@ -166,10 +169,47 @@ const AlertsPage = () => {
     setMenuAlertId(null);
   };
 
+  const handleRowClick = (alert: DisplayAlert) => {
+    setSelectedAlert(alert);
+    setDetailDialogOpen(true);
+  };
+
+  const handleViewDetails = () => {
+    const alert = alerts.find(a => a.id === menuAlertId);
+    if (alert) {
+      setSelectedAlert(alert);
+      setDetailDialogOpen(true);
+    }
+    handleMenuClose();
+  };
+
   const handleCreateAlert = async (ocsf: OCSFDetection) => {
     const key = ocsf.finding_info.uid;
     await addItem(key, ocsf);
   };
+
+  const handleResolveAlert = async (alertId: string) => {
+    // Find the alert and update its status to resolved
+    const alert = alerts.find(a => a.id === alertId);
+    if (!alert || alert.isDummy || !alert.rawOCSF) return;
+
+    const updatedOCSF: OCSFDetection = {
+      ...alert.rawOCSF,
+      status_id: 3, // Resolved
+      status: 'Resolved',
+    };
+
+    await addItem(alertId, updatedOCSF);
+  };
+
+  const handleResolveFromMenu = async () => {
+    if (menuAlertId) {
+      await handleResolveAlert(menuAlertId);
+    }
+    handleMenuClose();
+  };
+
+  const currentMenuAlert = alerts.find(a => a.id === menuAlertId);
 
   return (
     <motion.div
@@ -221,9 +261,6 @@ const AlertsPage = () => {
                 <Button variant="outlined" color="primary">
                   Create Case ({selected.length})
                 </Button>
-                <Button variant="outlined" color="error">
-                  Dismiss ({selected.length})
-                </Button>
               </Box>
             )}
           </Box>
@@ -255,8 +292,9 @@ const AlertsPage = () => {
                     hover
                     selected={selected.includes(alert.id)}
                     sx={{ cursor: 'pointer' }}
+                    onClick={() => handleRowClick(alert)}
                   >
-                    <TableCell padding="checkbox">
+                    <TableCell padding="checkbox" onClick={(e) => e.stopPropagation()}>
                       <Checkbox
                         checked={selected.includes(alert.id)}
                         onChange={() => handleSelect(alert.id)}
@@ -341,7 +379,7 @@ const AlertsPage = () => {
                         {alert.created}
                       </Typography>
                     </TableCell>
-                    <TableCell align="right">
+                    <TableCell align="right" onClick={(e) => e.stopPropagation()}>
                       <IconButton
                         size="small"
                         onClick={(e) => handleMenuOpen(e, alert.id)}
@@ -380,7 +418,7 @@ const AlertsPage = () => {
           },
         }}
       >
-        <MenuItem onClick={handleMenuClose}>
+        <MenuItem onClick={handleViewDetails}>
           <VisibilityIcon fontSize="small" sx={{ mr: 1.5 }} />
           View Details
         </MenuItem>
@@ -388,16 +426,28 @@ const AlertsPage = () => {
           <FolderSpecialIcon fontSize="small" sx={{ mr: 1.5 }} />
           Create Case
         </MenuItem>
-        <MenuItem onClick={handleMenuClose} sx={{ color: 'error.main' }}>
-          <DeleteIcon fontSize="small" sx={{ mr: 1.5 }} />
-          Dismiss
-        </MenuItem>
+        {currentMenuAlert && !currentMenuAlert.isDummy && currentMenuAlert.status !== 'resolved' && (
+          <MenuItem onClick={handleResolveFromMenu} sx={{ color: 'success.main' }}>
+            <CheckCircleIcon fontSize="small" sx={{ mr: 1.5 }} />
+            Close Alert
+          </MenuItem>
+        )}
       </Menu>
 
       <CreateAlertDialog
         open={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
         onSubmit={handleCreateAlert}
+      />
+
+      <AlertDetailDialog
+        open={detailDialogOpen}
+        alert={selectedAlert}
+        onClose={() => {
+          setDetailDialogOpen(false);
+          setSelectedAlert(null);
+        }}
+        onResolve={handleResolveAlert}
       />
     </motion.div>
   );
