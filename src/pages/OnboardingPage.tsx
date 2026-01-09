@@ -119,8 +119,7 @@ const OnboardingPage = () => {
 
     try {
       // Call Singul API to test the connection
-      const appName = app.name.toLowerCase();
-      const response = await fetch(`${API_CONFIG.singulBaseUrl}/api/test_api/${appName}`, {
+      const response = await fetch(`${API_CONFIG.singulBaseUrl}/api/test_api`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${API_CONFIG.apiKey}`,
