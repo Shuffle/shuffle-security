@@ -40,7 +40,7 @@ const AuthPage = ({ mode }: AuthPageProps) => {
   const { login, isAuthenticated, isLoading: authLoading, refreshUserInfo } = useAuth();
 
   const isLogin = mode === 'login';
-  const from = location.state?.from?.pathname || '/dashboard/cases';
+  const from = location.state?.from?.pathname || '/alerts';
 
   // Redirect if already authenticated (e.g., via API key)
   useEffect(() => {

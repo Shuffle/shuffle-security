@@ -122,13 +122,13 @@ export const AppHeader = ({ title = 'Dashboard' }: AppHeaderProps) => {
               </Typography>
             </Box>
             <Divider sx={{ borderColor: 'rgba(148, 163, 184, 0.1)' }} />
-            <MenuItem component={Link} to="/dashboard/profile">
+            <MenuItem component={Link} to="/settings">
               <ListItemIcon>
                 <PersonIcon fontSize="small" />
               </ListItemIcon>
               Profile
             </MenuItem>
-            <MenuItem component={Link} to="/dashboard/settings">
+            <MenuItem component={Link} to="/settings">
               <ListItemIcon>
                 <SettingsIcon fontSize="small" />
               </ListItemIcon>
