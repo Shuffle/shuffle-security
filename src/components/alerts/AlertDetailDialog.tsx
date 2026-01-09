@@ -70,7 +70,6 @@ const statusOptions = [
 export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }: AlertDetailDialogProps) => {
   const [editedTitle, setEditedTitle] = useState('');
   const [editedSeverity, setEditedSeverity] = useState('');
-  const [editedStatus, setEditedStatus] = useState('');
   const [editedAssignee, setEditedAssignee] = useState('');
   const [hasChanges, setHasChanges] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -80,26 +79,24 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
     if (alert) {
       setEditedTitle(alert.title);
       setEditedSeverity(alert.severity);
-      setEditedStatus(alert.status);
       setEditedAssignee(alert.assignee || '');
       setHasChanges(false);
     }
   }, [alert]);
 
-  // Track changes
+  // Track changes (status is not editable directly)
   useEffect(() => {
     if (!alert) return;
     const changed = 
       editedTitle !== alert.title ||
       editedSeverity !== alert.severity ||
-      editedStatus !== alert.status ||
       editedAssignee !== (alert.assignee || '');
     setHasChanges(changed);
-  }, [alert, editedTitle, editedSeverity, editedStatus, editedAssignee]);
+  }, [alert, editedTitle, editedSeverity, editedAssignee]);
 
   if (!alert) return null;
 
-  const isResolved = editedStatus === 'resolved';
+  const isResolved = alert.status === 'resolved';
   const isDemo = alert.isDummy;
 
   const handleResolve = async () => {
@@ -114,14 +111,11 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
     
     setSaving(true);
     const severityOption = severityOptions.find(s => s.value === editedSeverity);
-    const statusOption = statusOptions.find(s => s.value === editedStatus);
     
     const updates: Partial<OCSFDetection> = {
       message: editedTitle,
       severity_id: severityOption?.id || 3,
       severity: severityOption?.label || 'Medium',
-      status_id: statusOption?.id || 1,
-      status: statusOption?.label || 'New',
     };
 
     if (alert.rawOCSF.finding_info) {
@@ -176,11 +170,11 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
             )}
           </Box>
           <Chip
-            label={editedStatus.replace('_', ' ')}
+            label={alert.status.replace('_', ' ')}
             size="small"
             sx={{
-              backgroundColor: statusColors[editedStatus]?.bg || 'rgba(148, 163, 184, 0.1)',
-              color: statusColors[editedStatus]?.text || '#94a3b8',
+              backgroundColor: statusColors[alert.status]?.bg || 'rgba(148, 163, 184, 0.1)',
+              color: statusColors[alert.status]?.text || '#94a3b8',
               fontWeight: 500,
               textTransform: 'capitalize',
             }}
@@ -241,21 +235,21 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
               </Select>
             </FormControl>
 
-            <FormControl fullWidth size="small" disabled={isDemo}>
-              <InputLabel>Status</InputLabel>
-              <Select
-                value={editedStatus}
-                label="Status"
-                onChange={(e) => setEditedStatus(e.target.value)}
-                sx={inputSx['& .MuiOutlinedInput-root']}
-              >
-                {statusOptions.map((opt) => (
-                  <MenuItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            <Box>
+              <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
+                Status
+              </Typography>
+              <Chip
+                label={alert.status.replace('_', ' ')}
+                size="small"
+                sx={{
+                  backgroundColor: statusColors[alert.status]?.bg || 'rgba(148, 163, 184, 0.1)',
+                  color: statusColors[alert.status]?.text || '#94a3b8',
+                  fontWeight: 500,
+                  textTransform: 'capitalize',
+                }}
+              />
+            </Box>
 
             <TextField
               label="Assignee"
