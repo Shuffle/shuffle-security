@@ -15,23 +15,21 @@ import {
   TextField,
   InputAdornment,
   Button,
-  Menu,
-  MenuItem,
   Checkbox,
   TablePagination,
   CircularProgress,
+  Tooltip,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
 import AddIcon from '@mui/icons-material/Add';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import FolderSpecialIcon from '@mui/icons-material/FolderSpecial';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useDatastore } from '@/hooks/useDatastore';
 import { DATASTORE_CATEGORIES } from '@/services/datastore';
-import { CreateAlertDialog, OCSFDetection } from '@/components/alerts/CreateAlertDialog';
+import { CreateAlertDialog, OCSFDetection, Observable } from '@/components/alerts/CreateAlertDialog';
 import { AlertDetailDialog } from '@/components/alerts/AlertDetailDialog';
 
 interface DisplayAlert {
@@ -42,17 +40,22 @@ interface DisplayAlert {
   status: string;
   assignee: string | null;
   created: string;
+  edited?: string;
+  tlp?: string;
+  pap?: string;
+  references?: string[];
+  observables?: Observable[];
   isDummy?: boolean;
   rawOCSF?: OCSFDetection;
 }
 
 // Dummy alerts for demo purposes
 const dummyAlerts: DisplayAlert[] = [
-  { id: 'DEMO-001', title: 'Suspicious Login Activity', source: 'SIEM', severity: 'critical', status: 'new', assignee: 'John D.', created: '2026-01-07 10:23', isDummy: true },
-  { id: 'DEMO-002', title: 'Malware Detection on Endpoint', source: 'EDR', severity: 'high', status: 'escalated', assignee: 'Sarah M.', created: '2026-01-07 10:15', isDummy: true },
-  { id: 'DEMO-003', title: 'Unusual Outbound Traffic', source: 'Firewall', severity: 'medium', status: 'new', assignee: null, created: '2026-01-07 09:45', isDummy: true },
-  { id: 'DEMO-004', title: 'Brute Force Attack Detected', source: 'IDS', severity: 'high', status: 'escalated', assignee: 'Mike R.', created: '2026-01-07 09:30', isDummy: true },
-  { id: 'DEMO-005', title: 'Policy Violation - USB Device', source: 'DLP', severity: 'low', status: 'resolved', assignee: 'John D.', created: '2026-01-07 09:12', isDummy: true },
+  { id: 'DEMO-001', title: 'Suspicious Login Activity', source: 'SIEM', severity: 'critical', status: 'new', assignee: 'John D.', created: '2026-01-07 10:23', tlp: 'TLP:RED', pap: 'PAP:RED', isDummy: true },
+  { id: 'DEMO-002', title: 'Malware Detection on Endpoint', source: 'EDR', severity: 'high', status: 'escalated', assignee: 'Sarah M.', created: '2026-01-07 10:15', tlp: 'TLP:AMBER', pap: 'PAP:AMBER', isDummy: true },
+  { id: 'DEMO-003', title: 'Unusual Outbound Traffic', source: 'Firewall', severity: 'medium', status: 'new', assignee: null, created: '2026-01-07 09:45', tlp: 'TLP:GREEN', pap: 'PAP:GREEN', isDummy: true },
+  { id: 'DEMO-004', title: 'Brute Force Attack Detected', source: 'IDS', severity: 'high', status: 'escalated', assignee: 'Mike R.', created: '2026-01-07 09:30', tlp: 'TLP:AMBER', pap: 'PAP:AMBER', isDummy: true },
+  { id: 'DEMO-005', title: 'Policy Violation - USB Device', source: 'DLP', severity: 'low', status: 'resolved', assignee: 'John D.', created: '2026-01-07 09:12', tlp: 'TLP:CLEAR', pap: 'PAP:CLEAR', isDummy: true },
 ];
 
 const severityColors: Record<string, string> = {
@@ -67,6 +70,14 @@ const statusColors: Record<string, { bg: string; text: string }> = {
   new: { bg: 'rgba(34, 184, 207, 0.15)', text: '#22b8cf' },
   escalated: { bg: 'rgba(239, 68, 68, 0.15)', text: '#ef4444' },
   resolved: { bg: 'rgba(34, 197, 94, 0.15)', text: '#22c55e' },
+};
+
+const tlpColors: Record<string, string> = {
+  'TLP:CLEAR': '#ffffff',
+  'TLP:GREEN': '#22c55e',
+  'TLP:AMBER': '#f59e0b',
+  'TLP:AMBER+STRICT': '#f59e0b',
+  'TLP:RED': '#ef4444',
 };
 
 // Convert OCSF severity to display severity
@@ -91,30 +102,44 @@ const mapOCSFStatus = (statusId: number): string => {
   }
 };
 
+// Format timestamp from datastore
+const formatTimestamp = (timestamp: number | string | undefined): string => {
+  if (!timestamp) return 'Unknown';
+  const date = new Date(typeof timestamp === 'string' ? parseInt(timestamp, 10) * 1000 : timestamp);
+  if (isNaN(date.getTime())) return 'Unknown';
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+};
+
 // Parse OCSF detection to display alert
-const parseOCSFToAlert = (ocsf: OCSFDetection): DisplayAlert => {
-  const date = new Date(ocsf.time);
-  const formattedDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-  
-  return {
-    id: ocsf.finding_info?.uid || `ALR-${ocsf.time}`,
-    title: ocsf.finding_info?.title || ocsf.message,
-    source: ocsf.metadata?.product?.name || ocsf.finding_info?.types?.[0] || 'Unknown',
-    severity: mapOCSFSeverity(ocsf.severity_id),
-    status: mapOCSFStatus(ocsf.status_id),
-    assignee: null,
-    created: formattedDate,
-    isDummy: false,
-    rawOCSF: ocsf,
-  };
+const parseOCSFToAlert = (item: { key: string; value: string; created?: number; edited?: number }): DisplayAlert | null => {
+  try {
+    const ocsf = JSON.parse(item.value) as OCSFDetection;
+    
+    return {
+      id: ocsf.finding_info?.uid || item.key,
+      title: ocsf.finding_info?.title || ocsf.message,
+      source: ocsf.metadata?.product?.name || ocsf.finding_info?.types?.[0] || 'Unknown',
+      severity: mapOCSFSeverity(ocsf.severity_id),
+      status: mapOCSFStatus(ocsf.status_id),
+      assignee: ocsf.assignee || null,
+      created: formatTimestamp(item.created),
+      edited: item.edited ? formatTimestamp(item.edited) : undefined,
+      tlp: ocsf.tlp,
+      pap: ocsf.pap,
+      references: ocsf.finding_info?.references,
+      observables: ocsf.observables,
+      isDummy: false,
+      rawOCSF: ocsf,
+    };
+  } catch {
+    return null;
+  }
 };
 
 const AlertsPage = () => {
   const [selected, setSelected] = useState<string[]>([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [menuAlertId, setMenuAlertId] = useState<string | null>(null);
   const [alerts, setAlerts] = useState<DisplayAlert[]>(dummyAlerts);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
@@ -131,14 +156,9 @@ const AlertsPage = () => {
 
   // Parse datastore items (OCSF format) and combine with dummy alerts
   useEffect(() => {
-    const realAlerts: DisplayAlert[] = datastoreItems.map((item) => {
-      try {
-        const ocsf = JSON.parse(item.value) as OCSFDetection;
-        return parseOCSFToAlert(ocsf);
-      } catch {
-        return null;
-      }
-    }).filter((a): a is DisplayAlert => a !== null);
+    const realAlerts: DisplayAlert[] = datastoreItems
+      .map((item) => parseOCSFToAlert(item))
+      .filter((a): a is DisplayAlert => a !== null);
 
     // Real alerts first, then dummy alerts
     setAlerts([...realAlerts, ...dummyAlerts]);
@@ -158,29 +178,9 @@ const AlertsPage = () => {
     );
   };
 
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, id: string) => {
-    event.stopPropagation();
-    setAnchorEl(event.currentTarget);
-    setMenuAlertId(id);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-    setMenuAlertId(null);
-  };
-
   const handleRowClick = (alert: DisplayAlert) => {
     setSelectedAlert(alert);
     setDetailDialogOpen(true);
-  };
-
-  const handleViewDetails = () => {
-    const alert = alerts.find(a => a.id === menuAlertId);
-    if (alert) {
-      setSelectedAlert(alert);
-      setDetailDialogOpen(true);
-    }
-    handleMenuClose();
   };
 
   const handleCreateAlert = async (ocsf: OCSFDetection) => {
@@ -190,7 +190,6 @@ const AlertsPage = () => {
   };
 
   const handleResolveAlert = async (alertId: string) => {
-    // Find the alert and update its status to resolved
     const alert = alerts.find(a => a.id === alertId);
     if (!alert || alert.isDummy || !alert.rawOCSF) return;
 
@@ -201,7 +200,7 @@ const AlertsPage = () => {
     };
 
     await addItem(alertId, updatedOCSF);
-    await fetchItems(); // Refresh list
+    await fetchItems();
   };
 
   const handleUpdateAlert = async (alertId: string, updates: Partial<OCSFDetection>) => {
@@ -218,17 +217,8 @@ const AlertsPage = () => {
     };
 
     await addItem(alertId, updatedOCSF);
-    await fetchItems(); // Refresh list
+    await fetchItems();
   };
-
-  const handleResolveFromMenu = async () => {
-    if (menuAlertId) {
-      await handleResolveAlert(menuAlertId);
-    }
-    handleMenuClose();
-  };
-
-  const currentMenuAlert = alerts.find(a => a.id === menuAlertId);
 
   return (
     <motion.div
@@ -298,6 +288,7 @@ const AlertsPage = () => {
                   <TableCell>Alert</TableCell>
                   <TableCell>Source</TableCell>
                   <TableCell>Severity</TableCell>
+                  <TableCell>TLP</TableCell>
                   <TableCell>Status</TableCell>
                   <TableCell>Assignee</TableCell>
                   <TableCell>Created</TableCell>
@@ -375,6 +366,21 @@ const AlertsPage = () => {
                       </Box>
                     </TableCell>
                     <TableCell>
+                      {alert.tlp && (
+                        <Chip
+                          label={alert.tlp}
+                          size="small"
+                          sx={{
+                            backgroundColor: `${tlpColors[alert.tlp] || '#94a3b8'}20`,
+                            color: tlpColors[alert.tlp] || '#94a3b8',
+                            border: tlpColors[alert.tlp] === '#ffffff' ? '1px solid #666' : 'none',
+                            fontWeight: 500,
+                            fontSize: '0.7rem',
+                          }}
+                        />
+                      )}
+                    </TableCell>
+                    <TableCell>
                       <Chip
                         label={alert.status.replace('_', ' ')}
                         size="small"
@@ -399,12 +405,32 @@ const AlertsPage = () => {
                       </Typography>
                     </TableCell>
                     <TableCell align="right" onClick={(e) => e.stopPropagation()}>
-                      <IconButton
-                        size="small"
-                        onClick={(e) => handleMenuOpen(e, alert.id)}
-                      >
-                        <MoreVertIcon />
-                      </IconButton>
+                      <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
+                        <Tooltip title="View Details">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleRowClick(alert)}
+                          >
+                            <VisibilityIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Create Case">
+                          <IconButton size="small">
+                            <FolderSpecialIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        {!alert.isDummy && alert.status !== 'resolved' && (
+                          <Tooltip title="Resolve Alert">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleResolveAlert(alert.id)}
+                              sx={{ color: 'success.main' }}
+                            >
+                              <CheckCircleIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                      </Box>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -425,32 +451,6 @@ const AlertsPage = () => {
           />
         </CardContent>
       </Card>
-
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-        PaperProps={{
-          sx: {
-            minWidth: 180,
-          },
-        }}
-      >
-        <MenuItem onClick={handleViewDetails}>
-          <VisibilityIcon fontSize="small" sx={{ mr: 1.5 }} />
-          View Details
-        </MenuItem>
-        <MenuItem onClick={handleMenuClose}>
-          <FolderSpecialIcon fontSize="small" sx={{ mr: 1.5 }} />
-          Create Case
-        </MenuItem>
-        {currentMenuAlert && !currentMenuAlert.isDummy && currentMenuAlert.status !== 'resolved' && (
-          <MenuItem onClick={handleResolveFromMenu} sx={{ color: 'success.main' }}>
-            <CheckCircleIcon fontSize="small" sx={{ mr: 1.5 }} />
-            Close Alert
-          </MenuItem>
-        )}
-      </Menu>
 
       <CreateAlertDialog
         open={createDialogOpen}

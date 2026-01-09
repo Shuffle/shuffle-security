@@ -14,10 +14,19 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  IconButton,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import SaveIcon from '@mui/icons-material/Save';
-import { OCSFDetection } from './CreateAlertDialog';
+import AddIcon from '@mui/icons-material/Add';
+import { 
+  OCSFDetection, 
+  Observable, 
+  severityOptions, 
+  observableTypes,
+  tlpLevels,
+  papLevels,
+} from './CreateAlertDialog';
 
 interface DisplayAlert {
   id: string;
@@ -27,6 +36,11 @@ interface DisplayAlert {
   status: string;
   assignee: string | null;
   created: string;
+  edited?: string;
+  tlp?: string;
+  pap?: string;
+  references?: string[];
+  observables?: Observable[];
   isDummy?: boolean;
   rawOCSF?: OCSFDetection;
 }
@@ -53,24 +67,18 @@ const statusColors: Record<string, { bg: string; text: string }> = {
   resolved: { bg: 'rgba(34, 197, 94, 0.15)', text: '#22c55e' },
 };
 
-const severityOptions = [
-  { value: 'informational', label: 'Informational', id: 1 },
-  { value: 'low', label: 'Low', id: 2 },
-  { value: 'medium', label: 'Medium', id: 3 },
-  { value: 'high', label: 'High', id: 4 },
-  { value: 'critical', label: 'Critical', id: 5 },
-];
-
-const statusOptions = [
-  { value: 'new', label: 'New', id: 1 },
-  { value: 'escalated', label: 'Escalated', id: 2 },
-  { value: 'resolved', label: 'Resolved', id: 3 },
-];
-
 export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }: AlertDetailDialogProps) => {
   const [editedTitle, setEditedTitle] = useState('');
+  const [editedMessage, setEditedMessage] = useState('');
   const [editedSeverity, setEditedSeverity] = useState('');
   const [editedAssignee, setEditedAssignee] = useState('');
+  const [editedTlp, setEditedTlp] = useState('TLP:AMBER');
+  const [editedPap, setEditedPap] = useState('PAP:AMBER');
+  const [editedReferences, setEditedReferences] = useState<string[]>([]);
+  const [newReference, setNewReference] = useState('');
+  const [editedObservables, setEditedObservables] = useState<Observable[]>([]);
+  const [newObservableType, setNewObservableType] = useState('ip');
+  const [newObservableValue, setNewObservableValue] = useState('');
   const [hasChanges, setHasChanges] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -78,21 +86,53 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
   useEffect(() => {
     if (alert) {
       setEditedTitle(alert.title);
+      setEditedMessage(alert.rawOCSF?.message || '');
       setEditedSeverity(alert.severity);
       setEditedAssignee(alert.assignee || '');
+      setEditedTlp(alert.tlp || 'TLP:AMBER');
+      setEditedPap(alert.pap || 'PAP:AMBER');
+      setEditedReferences(alert.references || []);
+      setEditedObservables(alert.observables || []);
       setHasChanges(false);
     }
   }, [alert]);
 
-  // Track changes (status is not editable directly)
+  // Track changes
   useEffect(() => {
     if (!alert) return;
     const changed = 
       editedTitle !== alert.title ||
+      editedMessage !== (alert.rawOCSF?.message || '') ||
       editedSeverity !== alert.severity ||
-      editedAssignee !== (alert.assignee || '');
+      editedAssignee !== (alert.assignee || '') ||
+      editedTlp !== (alert.tlp || 'TLP:AMBER') ||
+      editedPap !== (alert.pap || 'PAP:AMBER') ||
+      JSON.stringify(editedReferences) !== JSON.stringify(alert.references || []) ||
+      JSON.stringify(editedObservables) !== JSON.stringify(alert.observables || []);
     setHasChanges(changed);
-  }, [alert, editedTitle, editedSeverity, editedAssignee]);
+  }, [alert, editedTitle, editedMessage, editedSeverity, editedAssignee, editedTlp, editedPap, editedReferences, editedObservables]);
+
+  const handleAddReference = () => {
+    if (newReference.trim()) {
+      setEditedReferences([...editedReferences, newReference.trim()]);
+      setNewReference('');
+    }
+  };
+
+  const handleRemoveReference = (index: number) => {
+    setEditedReferences(editedReferences.filter((_, i) => i !== index));
+  };
+
+  const handleAddObservable = () => {
+    if (newObservableValue.trim()) {
+      setEditedObservables([...editedObservables, { type: newObservableType, value: newObservableValue.trim() }]);
+      setNewObservableValue('');
+    }
+  };
+
+  const handleRemoveObservable = (index: number) => {
+    setEditedObservables(editedObservables.filter((_, i) => i !== index));
+  };
 
   if (!alert) return null;
 
@@ -113,17 +153,20 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
     const severityOption = severityOptions.find(s => s.value === editedSeverity);
     
     const updates: Partial<OCSFDetection> = {
-      message: editedTitle,
+      message: editedMessage || editedTitle,
       severity_id: severityOption?.id || 3,
       severity: severityOption?.label || 'Medium',
-    };
-
-    if (alert.rawOCSF.finding_info) {
-      updates.finding_info = {
+      tlp: editedTlp,
+      pap: editedPap,
+      assignee: editedAssignee.trim() || undefined,
+      observables: editedObservables.length > 0 ? editedObservables : undefined,
+      finding_info: {
         ...alert.rawOCSF.finding_info,
         title: editedTitle,
-      };
-    }
+        references: editedReferences.length > 0 ? editedReferences : undefined,
+        src_url: editedReferences[0] || '',
+      },
+    };
 
     await onUpdate(alert.id, updates);
     setSaving(false);
@@ -183,7 +226,7 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
       </DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, pt: 1 }}>
-          {/* Editable Title */}
+          {/* Title */}
           <Box>
             <TextField
               label="Title"
@@ -198,10 +241,23 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
             </Typography>
           </Box>
 
+          {/* Message */}
+          <TextField
+            label="Message / Description"
+            value={editedMessage}
+            onChange={(e) => setEditedMessage(e.target.value)}
+            fullWidth
+            multiline
+            rows={3}
+            disabled={isDemo}
+            sx={inputSx}
+          />
+
           <Divider sx={{ borderColor: 'rgba(148, 163, 184, 0.1)' }} />
 
-          {/* Editable Fields Grid */}
+          {/* Fields Grid */}
           <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 3 }}>
+            {/* Severity */}
             <FormControl fullWidth size="small" disabled={isDemo}>
               <InputLabel>Severity</InputLabel>
               <Select
@@ -235,6 +291,7 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
               </Select>
             </FormControl>
 
+            {/* Status (read-only) */}
             <Box>
               <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
                 Status
@@ -251,6 +308,47 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
               />
             </Box>
 
+            {/* TLP */}
+            <FormControl fullWidth size="small" disabled={isDemo}>
+              <InputLabel>TLP</InputLabel>
+              <Select
+                value={editedTlp}
+                label="TLP"
+                onChange={(e) => setEditedTlp(e.target.value)}
+                sx={inputSx['& .MuiOutlinedInput-root']}
+              >
+                {tlpLevels.map((opt) => (
+                  <MenuItem key={opt.value} value={opt.value}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: opt.color, border: opt.color === '#ffffff' ? '1px solid #666' : 'none' }} />
+                      {opt.label}
+                    </Box>
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            {/* PAP */}
+            <FormControl fullWidth size="small" disabled={isDemo}>
+              <InputLabel>PAP</InputLabel>
+              <Select
+                value={editedPap}
+                label="PAP"
+                onChange={(e) => setEditedPap(e.target.value)}
+                sx={inputSx['& .MuiOutlinedInput-root']}
+              >
+                {papLevels.map((opt) => (
+                  <MenuItem key={opt.value} value={opt.value}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: opt.color, border: opt.color === '#ffffff' ? '1px solid #666' : 'none' }} />
+                      {opt.label}
+                    </Box>
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            {/* Assignee */}
             <TextField
               label="Assignee"
               value={editedAssignee}
@@ -261,6 +359,7 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
               sx={inputSx}
             />
 
+            {/* Source */}
             <Box>
               <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
                 Source
@@ -272,6 +371,7 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
               />
             </Box>
 
+            {/* Created */}
             <Box>
               <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
                 Created
@@ -280,6 +380,136 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
                 {alert.created}
               </Typography>
             </Box>
+
+            {/* Edited */}
+            {alert.edited && (
+              <Box>
+                <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
+                  Last Edited
+                </Typography>
+                <Typography variant="body2">
+                  {alert.edited}
+                </Typography>
+              </Box>
+            )}
+          </Box>
+
+          <Divider sx={{ borderColor: 'rgba(148, 163, 184, 0.1)' }} />
+
+          {/* URL References */}
+          <Box>
+            <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary' }}>
+              URL References
+            </Typography>
+            {!isDemo && (
+              <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                <TextField
+                  size="small"
+                  value={newReference}
+                  onChange={(e) => setNewReference(e.target.value)}
+                  placeholder="https://example.com/reference"
+                  fullWidth
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddReference();
+                    }
+                  }}
+                  sx={inputSx}
+                />
+                <IconButton 
+                  onClick={handleAddReference} 
+                  size="small" 
+                  sx={{ bgcolor: 'rgba(255,255,255,0.05)', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
+                  disabled={!newReference.trim()}
+                >
+                  <AddIcon />
+                </IconButton>
+              </Box>
+            )}
+            {editedReferences.length > 0 ? (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                {editedReferences.map((ref, idx) => (
+                  <Chip
+                    key={idx}
+                    label={ref.length > 40 ? ref.substring(0, 40) + '...' : ref}
+                    size="small"
+                    onDelete={isDemo ? undefined : () => handleRemoveReference(idx)}
+                    sx={{ maxWidth: '100%' }}
+                  />
+                ))}
+              </Box>
+            ) : (
+              <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
+                No references
+              </Typography>
+            )}
+          </Box>
+
+          {/* Observables */}
+          <Box>
+            <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary' }}>
+              Observables (IOCs)
+            </Typography>
+            {!isDemo && (
+              <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                <TextField
+                  select
+                  size="small"
+                  value={newObservableType}
+                  onChange={(e) => setNewObservableType(e.target.value)}
+                  sx={{ minWidth: 120, ...inputSx }}
+                >
+                  {observableTypes.map((type) => (
+                    <MenuItem key={type} value={type}>
+                      {type}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <TextField
+                  size="small"
+                  value={newObservableValue}
+                  onChange={(e) => setNewObservableValue(e.target.value)}
+                  placeholder="Value..."
+                  fullWidth
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddObservable();
+                    }
+                  }}
+                  sx={inputSx}
+                />
+                <IconButton 
+                  onClick={handleAddObservable} 
+                  size="small" 
+                  sx={{ bgcolor: 'rgba(255,255,255,0.05)', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
+                  disabled={!newObservableValue.trim()}
+                >
+                  <AddIcon />
+                </IconButton>
+              </Box>
+            )}
+            {editedObservables.length > 0 ? (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                {editedObservables.map((obs, idx) => (
+                  <Chip
+                    key={idx}
+                    label={`${obs.type}: ${obs.value}`}
+                    size="small"
+                    onDelete={isDemo ? undefined : () => handleRemoveObservable(idx)}
+                    sx={{ 
+                      bgcolor: 'rgba(255, 102, 0, 0.15)',
+                      '& .MuiChip-label': { fontFamily: 'monospace', fontSize: '0.75rem' }
+                    }}
+                  />
+                ))}
+              </Box>
+            ) : (
+              <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
+                No observables
+              </Typography>
+            )}
           </Box>
 
           {/* OCSF Data (if available) */}

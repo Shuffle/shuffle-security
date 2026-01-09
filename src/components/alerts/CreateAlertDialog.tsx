@@ -13,7 +13,6 @@ import {
   Chip,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import CloseIcon from '@mui/icons-material/Close';
 
 // Generate a 10-character unique ID
 const generateAlertId = (): string => {
@@ -32,6 +31,22 @@ export interface Observable {
   type: string;
   value: string;
 }
+
+// TLP and PAP levels
+export const tlpLevels = [
+  { value: 'TLP:CLEAR', label: 'TLP:CLEAR', color: '#ffffff' },
+  { value: 'TLP:GREEN', label: 'TLP:GREEN', color: '#22c55e' },
+  { value: 'TLP:AMBER', label: 'TLP:AMBER', color: '#f59e0b' },
+  { value: 'TLP:AMBER+STRICT', label: 'TLP:AMBER+STRICT', color: '#f59e0b' },
+  { value: 'TLP:RED', label: 'TLP:RED', color: '#ef4444' },
+];
+
+export const papLevels = [
+  { value: 'PAP:CLEAR', label: 'PAP:CLEAR', color: '#ffffff' },
+  { value: 'PAP:GREEN', label: 'PAP:GREEN', color: '#22c55e' },
+  { value: 'PAP:AMBER', label: 'PAP:AMBER', color: '#f59e0b' },
+  { value: 'PAP:RED', label: 'PAP:RED', color: '#ef4444' },
+];
 
 // OCSF Detection Finding format
 export interface OCSFDetection {
@@ -53,6 +68,9 @@ export interface OCSFDetection {
     references?: string[];
   };
   observables?: Observable[];
+  tlp?: string;
+  pap?: string;
+  assignee?: string;
   metadata: {
     product: {
       name: string;
@@ -68,15 +86,15 @@ interface CreateAlertDialogProps {
   onSubmit: (alert: OCSFDetection) => Promise<void>;
 }
 
-const severityOptions = [
-  { id: 1, label: 'Informational' },
-  { id: 2, label: 'Low' },
-  { id: 3, label: 'Medium' },
-  { id: 4, label: 'High' },
-  { id: 5, label: 'Critical' },
+export const severityOptions = [
+  { id: 1, label: 'Informational', value: 'informational' },
+  { id: 2, label: 'Low', value: 'low' },
+  { id: 3, label: 'Medium', value: 'medium' },
+  { id: 4, label: 'High', value: 'high' },
+  { id: 5, label: 'Critical', value: 'critical' },
 ];
 
-const observableTypes = [
+export const observableTypes = [
   'ip',
   'domain',
   'url',
@@ -95,6 +113,9 @@ export const CreateAlertDialog = ({ open, onClose, onSubmit }: CreateAlertDialog
   const [message, setMessage] = useState('');
   const [severityId, setSeverityId] = useState(3);
   const [source, setSource] = useState('');
+  const [tlp, setTlp] = useState('TLP:AMBER');
+  const [pap, setPap] = useState('PAP:AMBER');
+  const [assignee, setAssignee] = useState('');
   const [references, setReferences] = useState<string[]>([]);
   const [newReference, setNewReference] = useState('');
   const [observables, setObservables] = useState<Observable[]>([]);
@@ -150,6 +171,9 @@ export const CreateAlertDialog = ({ open, onClose, onSubmit }: CreateAlertDialog
         references: references.length > 0 ? references : undefined,
       },
       observables: observables.length > 0 ? observables : undefined,
+      tlp,
+      pap,
+      assignee: assignee.trim() || undefined,
       metadata: {
         product: {
           name: source || 'Manual Entry',
@@ -169,6 +193,9 @@ export const CreateAlertDialog = ({ open, onClose, onSubmit }: CreateAlertDialog
     setMessage('');
     setSeverityId(3);
     setSource('');
+    setTlp('TLP:AMBER');
+    setPap('PAP:AMBER');
+    setAssignee('');
     setReferences([]);
     setNewReference('');
     setObservables([]);
@@ -191,6 +218,7 @@ export const CreateAlertDialog = ({ open, onClose, onSubmit }: CreateAlertDialog
       </DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 1 }}>
+          {/* Title */}
           <TextField
             label="Title"
             value={title}
@@ -199,6 +227,8 @@ export const CreateAlertDialog = ({ open, onClose, onSubmit }: CreateAlertDialog
             required
             placeholder="e.g., Suspicious Login Activity"
           />
+
+          {/* Message */}
           <TextField
             label="Message / Description"
             value={message}
@@ -208,6 +238,8 @@ export const CreateAlertDialog = ({ open, onClose, onSubmit }: CreateAlertDialog
             rows={3}
             placeholder="Detailed description of the alert..."
           />
+
+          {/* Source + Severity */}
           <Box sx={{ display: 'flex', gap: 2 }}>
             <TextField
               label="Source / Product"
@@ -231,6 +263,51 @@ export const CreateAlertDialog = ({ open, onClose, onSubmit }: CreateAlertDialog
             </TextField>
           </Box>
 
+          {/* TLP + PAP */}
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <TextField
+              select
+              label="TLP"
+              value={tlp}
+              onChange={(e) => setTlp(e.target.value)}
+              fullWidth
+            >
+              {tlpLevels.map((opt) => (
+                <MenuItem key={opt.value} value={opt.value}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: opt.color, border: opt.color === '#ffffff' ? '1px solid #666' : 'none' }} />
+                    {opt.label}
+                  </Box>
+                </MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              select
+              label="PAP"
+              value={pap}
+              onChange={(e) => setPap(e.target.value)}
+              fullWidth
+            >
+              {papLevels.map((opt) => (
+                <MenuItem key={opt.value} value={opt.value}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: opt.color, border: opt.color === '#ffffff' ? '1px solid #666' : 'none' }} />
+                    {opt.label}
+                  </Box>
+                </MenuItem>
+              ))}
+            </TextField>
+          </Box>
+
+          {/* Assignee */}
+          <TextField
+            label="Assignee"
+            value={assignee}
+            onChange={(e) => setAssignee(e.target.value)}
+            fullWidth
+            placeholder="e.g., John Doe"
+          />
+
           {/* URL References */}
           <Box>
             <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary' }}>
@@ -243,9 +320,19 @@ export const CreateAlertDialog = ({ open, onClose, onSubmit }: CreateAlertDialog
                 onChange={(e) => setNewReference(e.target.value)}
                 placeholder="https://example.com/reference"
                 fullWidth
-                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddReference())}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddReference();
+                  }
+                }}
               />
-              <IconButton onClick={handleAddReference} size="small" sx={{ bgcolor: 'rgba(255,255,255,0.05)' }}>
+              <IconButton 
+                onClick={handleAddReference} 
+                size="small" 
+                sx={{ bgcolor: 'rgba(255,255,255,0.05)', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
+                disabled={!newReference.trim()}
+              >
                 <AddIcon />
               </IconButton>
             </Box>
@@ -289,9 +376,19 @@ export const CreateAlertDialog = ({ open, onClose, onSubmit }: CreateAlertDialog
                 onChange={(e) => setNewObservableValue(e.target.value)}
                 placeholder="Value..."
                 fullWidth
-                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddObservable())}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddObservable();
+                  }
+                }}
               />
-              <IconButton onClick={handleAddObservable} size="small" sx={{ bgcolor: 'rgba(255,255,255,0.05)' }}>
+              <IconButton 
+                onClick={handleAddObservable} 
+                size="small" 
+                sx={{ bgcolor: 'rgba(255,255,255,0.05)', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
+                disabled={!newObservableValue.trim()}
+              >
                 <AddIcon />
               </IconButton>
             </Box>
