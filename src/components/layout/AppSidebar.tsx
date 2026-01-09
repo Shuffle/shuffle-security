@@ -40,16 +40,16 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { label: 'Alerts', icon: <NotificationsActiveIcon />, path: '/dashboard/alerts' },
+  { label: 'Alerts', icon: <NotificationsActiveIcon />, path: '/alerts' },
   { 
     label: 'Cases', 
     icon: <FolderSpecialIcon />,
-    path: '/dashboard/cases',
+    path: '/cases',
     children: [
-      { label: 'Templates', path: '/dashboard/templates' },
+      { label: 'Templates', path: '/templates' },
     ],
   },
-  { label: 'Users', icon: <PeopleIcon />, path: '/dashboard/users' },
+  { label: 'Users', icon: <PeopleIcon />, path: '/users' },
 ];
 
 interface AppSidebarProps {
@@ -576,7 +576,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
 
         {/* Settings Button (User Section) */}
         <Box
-          onClick={() => navigate('/dashboard/settings')}
+          onClick={() => navigate('/settings')}
           sx={{
             p: 2,
             pt: 0,

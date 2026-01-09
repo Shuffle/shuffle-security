@@ -40,22 +40,20 @@ const App = () => (
               }
             />
             
-            {/* Dashboard routes with shared layout */}
+            {/* Product routes with shared layout */}
             <Route
-              path="/dashboard"
               element={
                 <ProtectedRoute>
                   <DashboardLayout />
                 </ProtectedRoute>
               }
             >
-              <Route index element={<CasesPage />} />
-              <Route path="alerts" element={<AlertsPage />} />
-              <Route path="cases" element={<CasesPage />} />
-              <Route path="templates" element={<TemplatesPage />} />
-              <Route path="users" element={<UsersPage />} />
-              <Route path="organizations" element={<OrganizationsPage />} />
-              <Route path="settings" element={<SettingsPage />} />
+              <Route path="/alerts" element={<AlertsPage />} />
+              <Route path="/cases" element={<CasesPage />} />
+              <Route path="/templates" element={<TemplatesPage />} />
+              <Route path="/users" element={<UsersPage />} />
+              <Route path="/organizations" element={<OrganizationsPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
             </Route>
             
             <Route path="*" element={<NotFound />} />
