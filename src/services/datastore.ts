@@ -157,4 +157,5 @@ export const DATASTORE_CATEGORIES = {
   ALERTS: 'shuffle-alerts',
   CASES: 'shuffle-cases',
   TEMPLATES: 'shuffle-templates',
+  CONFIGURATION: 'shuffle-cases-configuration',
 } as const;
