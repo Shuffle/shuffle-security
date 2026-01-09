@@ -12,7 +12,7 @@ export const API_CONFIG = {
   baseUrl: import.meta.env.VITE_SHUFFLE_API_URL || 'https://shuffler.io',
   
   // Singul backend URL - can be overridden via environment variable
-  singulBaseUrl: import.meta.env.VITE_SINGUL_API_URL || 'https://singul.io',
+  singulBaseUrl: import.meta.env.VITE_SINGUL_API_URL || 'https://e12e28fa94e6.ngrok-free.app',
   
   // API version
   version: 'v1',
