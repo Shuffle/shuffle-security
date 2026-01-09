@@ -11,6 +11,8 @@ export interface DatastoreItem {
   key: string;
   value: string;
   category: string;
+  created?: number;
+  edited?: number;
 }
 
 export interface DatastoreResponse {
@@ -127,7 +129,8 @@ export const getDatastoreByCategory = async (
   }
 
   const data = await response.json();
-  return { success: true, data: Array.isArray(data) ? data : data.data || [] };
+  // API returns items in 'keys' array, not 'data'
+  return { success: true, data: Array.isArray(data) ? data : data.keys || data.data || [] };
 };
 
 /**
