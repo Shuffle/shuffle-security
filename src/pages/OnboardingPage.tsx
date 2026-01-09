@@ -120,7 +120,7 @@ const OnboardingPage = () => {
     try {
       // Call Singul API to test the connection
       const appName = app.name.toLowerCase();
-      const response = await fetch(`https://singul.io/api/list_messages/${appName}`, {
+      const response = await fetch(`https://singul.io/api/test_api/${appName}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${API_CONFIG.apiKey}`,
