@@ -200,6 +200,24 @@ const AlertsPage = () => {
     };
 
     await addItem(alertId, updatedOCSF);
+    await fetchItems(); // Refresh list
+  };
+
+  const handleUpdateAlert = async (alertId: string, updates: Partial<OCSFDetection>) => {
+    const alert = alerts.find(a => a.id === alertId);
+    if (!alert || alert.isDummy || !alert.rawOCSF) return;
+
+    const updatedOCSF: OCSFDetection = {
+      ...alert.rawOCSF,
+      ...updates,
+      finding_info: {
+        ...alert.rawOCSF.finding_info,
+        ...(updates.finding_info || {}),
+      },
+    };
+
+    await addItem(alertId, updatedOCSF);
+    await fetchItems(); // Refresh list
   };
 
   const handleResolveFromMenu = async () => {
@@ -447,6 +465,7 @@ const AlertsPage = () => {
           setSelectedAlert(null);
         }}
         onResolve={handleResolveAlert}
+        onUpdate={handleUpdateAlert}
       />
     </motion.div>
   );

@@ -27,17 +27,20 @@ export const setDatastoreItem = async (
   value: string | object,
   category: string
 ): Promise<DatastoreResponse> => {
+  // API always expects a list, even for single items
+  const payload = [{
+    key,
+    value: typeof value === 'string' ? value : JSON.stringify(value),
+    category,
+  }];
+
   const response = await fetch(`${API_CONFIG.baseUrl}/api/v2/datastore`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       ...getAuthHeader(API_CONFIG.apiKey),
     },
-    body: JSON.stringify({
-      key,
-      value: typeof value === 'string' ? value : JSON.stringify(value),
-      category,
-    }),
+    body: JSON.stringify(payload),
   });
 
   if (!response.ok) {

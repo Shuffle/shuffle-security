@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -8,8 +9,14 @@ import {
   Typography,
   Chip,
   Divider,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import SaveIcon from '@mui/icons-material/Save';
 import { OCSFDetection } from './CreateAlertDialog';
 
 interface DisplayAlert {
@@ -29,6 +36,7 @@ interface AlertDetailDialogProps {
   alert: DisplayAlert | null;
   onClose: () => void;
   onResolve: (alertId: string) => Promise<void>;
+  onUpdate?: (alertId: string, updates: Partial<OCSFDetection>) => Promise<void>;
 }
 
 const severityColors: Record<string, string> = {
@@ -45,14 +53,102 @@ const statusColors: Record<string, { bg: string; text: string }> = {
   resolved: { bg: 'rgba(34, 197, 94, 0.15)', text: '#22c55e' },
 };
 
-export const AlertDetailDialog = ({ open, alert, onClose, onResolve }: AlertDetailDialogProps) => {
+const severityOptions = [
+  { value: 'informational', label: 'Informational', id: 1 },
+  { value: 'low', label: 'Low', id: 2 },
+  { value: 'medium', label: 'Medium', id: 3 },
+  { value: 'high', label: 'High', id: 4 },
+  { value: 'critical', label: 'Critical', id: 5 },
+];
+
+const statusOptions = [
+  { value: 'new', label: 'New', id: 1 },
+  { value: 'escalated', label: 'Escalated', id: 2 },
+  { value: 'resolved', label: 'Resolved', id: 3 },
+];
+
+export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }: AlertDetailDialogProps) => {
+  const [editedTitle, setEditedTitle] = useState('');
+  const [editedSeverity, setEditedSeverity] = useState('');
+  const [editedStatus, setEditedStatus] = useState('');
+  const [editedAssignee, setEditedAssignee] = useState('');
+  const [hasChanges, setHasChanges] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  // Reset form when alert changes
+  useEffect(() => {
+    if (alert) {
+      setEditedTitle(alert.title);
+      setEditedSeverity(alert.severity);
+      setEditedStatus(alert.status);
+      setEditedAssignee(alert.assignee || '');
+      setHasChanges(false);
+    }
+  }, [alert]);
+
+  // Track changes
+  useEffect(() => {
+    if (!alert) return;
+    const changed = 
+      editedTitle !== alert.title ||
+      editedSeverity !== alert.severity ||
+      editedStatus !== alert.status ||
+      editedAssignee !== (alert.assignee || '');
+    setHasChanges(changed);
+  }, [alert, editedTitle, editedSeverity, editedStatus, editedAssignee]);
+
   if (!alert) return null;
 
-  const isResolved = alert.status === 'resolved';
+  const isResolved = editedStatus === 'resolved';
+  const isDemo = alert.isDummy;
 
   const handleResolve = async () => {
+    setSaving(true);
     await onResolve(alert.id);
+    setSaving(false);
     onClose();
+  };
+
+  const handleSave = async () => {
+    if (!onUpdate || !alert.rawOCSF) return;
+    
+    setSaving(true);
+    const severityOption = severityOptions.find(s => s.value === editedSeverity);
+    const statusOption = statusOptions.find(s => s.value === editedStatus);
+    
+    const updates: Partial<OCSFDetection> = {
+      message: editedTitle,
+      severity_id: severityOption?.id || 3,
+      severity: severityOption?.label || 'Medium',
+      status_id: statusOption?.id || 1,
+      status: statusOption?.label || 'New',
+    };
+
+    if (alert.rawOCSF.finding_info) {
+      updates.finding_info = {
+        ...alert.rawOCSF.finding_info,
+        title: editedTitle,
+      };
+    }
+
+    await onUpdate(alert.id, updates);
+    setSaving(false);
+    setHasChanges(false);
+  };
+
+  const inputSx = {
+    '& .MuiOutlinedInput-root': {
+      bgcolor: 'rgba(0, 0, 0, 0.2)',
+      '& fieldset': {
+        borderColor: 'rgba(255,255,255,0.1)',
+      },
+      '&:hover fieldset': {
+        borderColor: 'rgba(255,255,255,0.2)',
+      },
+      '&.Mui-focused fieldset': {
+        borderColor: '#FF6600',
+      },
+    },
   };
 
   return (
@@ -68,7 +164,7 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve }: AlertDeta
             <Typography variant="h6" sx={{ fontWeight: 600 }}>
               Alert Details
             </Typography>
-            {alert.isDummy && (
+            {isDemo && (
               <Chip
                 label="Demo"
                 size="small"
@@ -80,11 +176,11 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve }: AlertDeta
             )}
           </Box>
           <Chip
-            label={alert.status.replace('_', ' ')}
+            label={editedStatus.replace('_', ' ')}
             size="small"
             sx={{
-              backgroundColor: statusColors[alert.status]?.bg || 'rgba(148, 163, 184, 0.1)',
-              color: statusColors[alert.status]?.text || '#94a3b8',
+              backgroundColor: statusColors[editedStatus]?.bg || 'rgba(148, 163, 184, 0.1)',
+              color: statusColors[editedStatus]?.text || '#94a3b8',
               fontWeight: 500,
               textTransform: 'capitalize',
             }}
@@ -92,46 +188,84 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve }: AlertDeta
         </Box>
       </DialogTitle>
       <DialogContent>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {/* Header Info */}
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, pt: 1 }}>
+          {/* Editable Title */}
           <Box>
-            <Typography variant="h5" sx={{ fontWeight: 600, mb: 1 }}>
-              {alert.title}
-            </Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            <TextField
+              label="Title"
+              value={editedTitle}
+              onChange={(e) => setEditedTitle(e.target.value)}
+              fullWidth
+              disabled={isDemo}
+              sx={inputSx}
+            />
+            <Typography variant="caption" sx={{ color: 'text.secondary', mt: 0.5, display: 'block' }}>
               ID: {alert.id}
             </Typography>
           </Box>
 
           <Divider sx={{ borderColor: 'rgba(148, 163, 184, 0.1)' }} />
 
-          {/* Details Grid */}
+          {/* Editable Fields Grid */}
           <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 3 }}>
-            <Box>
-              <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
-                Severity
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Box
-                  sx={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: '50%',
-                    backgroundColor: severityColors[alert.severity] || '#94a3b8',
-                  }}
-                />
-                <Typography
-                  variant="body1"
-                  sx={{
-                    color: severityColors[alert.severity] || '#94a3b8',
-                    fontWeight: 600,
-                    textTransform: 'capitalize',
-                  }}
-                >
-                  {alert.severity}
-                </Typography>
-              </Box>
-            </Box>
+            <FormControl fullWidth size="small" disabled={isDemo}>
+              <InputLabel>Severity</InputLabel>
+              <Select
+                value={editedSeverity}
+                label="Severity"
+                onChange={(e) => setEditedSeverity(e.target.value)}
+                sx={{
+                  ...inputSx['& .MuiOutlinedInput-root'],
+                  '& .MuiSelect-select': {
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                  },
+                }}
+              >
+                {severityOptions.map((opt) => (
+                  <MenuItem key={opt.value} value={opt.value}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box
+                        sx={{
+                          width: 10,
+                          height: 10,
+                          borderRadius: '50%',
+                          backgroundColor: severityColors[opt.value],
+                        }}
+                      />
+                      {opt.label}
+                    </Box>
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth size="small" disabled={isDemo}>
+              <InputLabel>Status</InputLabel>
+              <Select
+                value={editedStatus}
+                label="Status"
+                onChange={(e) => setEditedStatus(e.target.value)}
+                sx={inputSx['& .MuiOutlinedInput-root']}
+              >
+                {statusOptions.map((opt) => (
+                  <MenuItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <TextField
+              label="Assignee"
+              value={editedAssignee}
+              onChange={(e) => setEditedAssignee(e.target.value)}
+              size="small"
+              disabled={isDemo}
+              placeholder="Unassigned"
+              sx={inputSx}
+            />
 
             <Box>
               <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
@@ -146,18 +280,9 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve }: AlertDeta
 
             <Box>
               <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
-                Assignee
-              </Typography>
-              <Typography variant="body1">
-                {alert.assignee || 'Unassigned'}
-              </Typography>
-            </Box>
-
-            <Box>
-              <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
                 Created
               </Typography>
-              <Typography variant="body1">
+              <Typography variant="body2">
                 {alert.created}
               </Typography>
             </Box>
@@ -191,18 +316,29 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve }: AlertDeta
           )}
         </Box>
       </DialogContent>
-      <DialogActions sx={{ p: 2, pt: 1 }}>
+      <DialogActions sx={{ p: 2, pt: 1, gap: 1 }}>
         <Button onClick={onClose}>
           Close
         </Button>
-        {!isResolved && !alert.isDummy && (
+        {!isDemo && hasChanges && onUpdate && (
+          <Button
+            variant="outlined"
+            startIcon={<SaveIcon />}
+            onClick={handleSave}
+            disabled={saving}
+          >
+            Save Changes
+          </Button>
+        )}
+        {!isResolved && !isDemo && (
           <Button
             variant="contained"
             color="success"
             startIcon={<CheckCircleIcon />}
             onClick={handleResolve}
+            disabled={saving}
           >
-            Mark as Resolved
+            Resolve Alert
           </Button>
         )}
       </DialogActions>
