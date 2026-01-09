@@ -93,10 +93,13 @@ const mapOCSFStatus = (statusId: number): string => {
   }
 };
 
-// Format timestamp from datastore
+// Format timestamp from datastore (Unix seconds to readable date)
 const formatTimestamp = (timestamp: number | string | undefined): string => {
   if (!timestamp) return 'Unknown';
-  const date = new Date(typeof timestamp === 'string' ? parseInt(timestamp, 10) * 1000 : timestamp);
+  // Convert to number and check if it's Unix seconds (10 digits) vs milliseconds (13 digits)
+  const ts = typeof timestamp === 'string' ? parseInt(timestamp, 10) : timestamp;
+  const ms = ts < 10000000000 ? ts * 1000 : ts; // Convert seconds to milliseconds if needed
+  const date = new Date(ms);
   if (isNaN(date.getTime())) return 'Unknown';
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
 };
