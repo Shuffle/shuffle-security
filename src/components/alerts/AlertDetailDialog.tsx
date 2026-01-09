@@ -41,7 +41,6 @@ interface DisplayAlert {
   pap?: string;
   references?: string[];
   observables?: Observable[];
-  isDummy?: boolean;
   rawOCSF?: OCSFDetection;
 }
 
@@ -137,7 +136,6 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
   if (!alert) return null;
 
   const isResolved = alert.status === 'resolved';
-  const isDemo = alert.isDummy;
 
   const handleResolve = async () => {
     setSaving(true);
@@ -197,21 +195,9 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
     >
       <DialogTitle>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              Alert Details
-            </Typography>
-            {isDemo && (
-              <Chip
-                label="Demo"
-                size="small"
-                sx={{
-                  backgroundColor: 'rgba(139, 92, 246, 0.2)',
-                  color: '#a78bfa',
-                }}
-              />
-            )}
-          </Box>
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            Alert Details
+          </Typography>
           <Chip
             label={alert.status.replace('_', ' ')}
             size="small"
@@ -226,14 +212,12 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
       </DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, pt: 1 }}>
-          {/* Title */}
           <Box>
             <TextField
               label="Title"
               value={editedTitle}
               onChange={(e) => setEditedTitle(e.target.value)}
               fullWidth
-              disabled={isDemo}
               sx={inputSx}
             />
             <Typography variant="caption" sx={{ color: 'text.secondary', mt: 0.5, display: 'block' }}>
@@ -241,7 +225,6 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
             </Typography>
           </Box>
 
-          {/* Message */}
           <TextField
             label="Message / Description"
             value={editedMessage}
@@ -249,7 +232,6 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
             fullWidth
             multiline
             rows={3}
-            disabled={isDemo}
             sx={inputSx}
           />
 
@@ -258,7 +240,7 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
           {/* Fields Grid */}
           <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 3 }}>
             {/* Severity */}
-            <FormControl fullWidth size="small" disabled={isDemo}>
+            <FormControl fullWidth size="small">
               <InputLabel>Severity</InputLabel>
               <Select
                 value={editedSeverity}
@@ -309,7 +291,7 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
             </Box>
 
             {/* TLP */}
-            <FormControl fullWidth size="small" disabled={isDemo}>
+            <FormControl fullWidth size="small">
               <InputLabel>TLP</InputLabel>
               <Select
                 value={editedTlp}
@@ -329,7 +311,7 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
             </FormControl>
 
             {/* PAP */}
-            <FormControl fullWidth size="small" disabled={isDemo}>
+            <FormControl fullWidth size="small">
               <InputLabel>PAP</InputLabel>
               <Select
                 value={editedPap}
@@ -354,7 +336,6 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
               value={editedAssignee}
               onChange={(e) => setEditedAssignee(e.target.value)}
               size="small"
-              disabled={isDemo}
               placeholder="Unassigned"
               sx={inputSx}
             />
@@ -396,13 +377,11 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
 
           <Divider sx={{ borderColor: 'rgba(148, 163, 184, 0.1)' }} />
 
-          {/* URL References */}
           <Box>
             <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary' }}>
               URL References
             </Typography>
-            {!isDemo && (
-              <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+            <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
                 <TextField
                   size="small"
                   value={newReference}
@@ -424,9 +403,8 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
                   disabled={!newReference.trim()}
                 >
                   <AddIcon />
-                </IconButton>
-              </Box>
-            )}
+              </IconButton>
+            </Box>
             {editedReferences.length > 0 ? (
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                 {editedReferences.map((ref, idx) => (
@@ -434,7 +412,7 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
                     key={idx}
                     label={ref.length > 40 ? ref.substring(0, 40) + '...' : ref}
                     size="small"
-                    onDelete={isDemo ? undefined : () => handleRemoveReference(idx)}
+                    onDelete={() => handleRemoveReference(idx)}
                     sx={{ maxWidth: '100%' }}
                   />
                 ))}
@@ -446,13 +424,11 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
             )}
           </Box>
 
-          {/* Observables */}
           <Box>
             <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary' }}>
               Observables (IOCs)
             </Typography>
-            {!isDemo && (
-              <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+            <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
                 <TextField
                   select
                   size="small"
@@ -487,9 +463,8 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
                   disabled={!newObservableValue.trim()}
                 >
                   <AddIcon />
-                </IconButton>
-              </Box>
-            )}
+              </IconButton>
+            </Box>
             {editedObservables.length > 0 ? (
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                 {editedObservables.map((obs, idx) => (
@@ -497,7 +472,7 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
                     key={idx}
                     label={`${obs.type}: ${obs.value}`}
                     size="small"
-                    onDelete={isDemo ? undefined : () => handleRemoveObservable(idx)}
+                    onDelete={() => handleRemoveObservable(idx)}
                     sx={{ 
                       bgcolor: 'rgba(255, 102, 0, 0.15)',
                       '& .MuiChip-label': { fontFamily: 'monospace', fontSize: '0.75rem' }
@@ -544,7 +519,7 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
         <Button onClick={onClose}>
           Close
         </Button>
-        {!isDemo && hasChanges && onUpdate && (
+        {hasChanges && onUpdate && (
           <Button
             variant="outlined"
             startIcon={<SaveIcon />}
@@ -554,7 +529,7 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
             Save Changes
           </Button>
         )}
-        {!isResolved && !isDemo && (
+        {!isResolved && (
           <Button
             variant="contained"
             color="success"
