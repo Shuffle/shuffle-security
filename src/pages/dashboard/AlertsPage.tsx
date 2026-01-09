@@ -45,18 +45,8 @@ interface DisplayAlert {
   pap?: string;
   references?: string[];
   observables?: Observable[];
-  isDummy?: boolean;
   rawOCSF?: OCSFDetection;
 }
-
-// Dummy alerts for demo purposes
-const dummyAlerts: DisplayAlert[] = [
-  { id: 'DEMO-001', title: 'Suspicious Login Activity', source: 'SIEM', severity: 'critical', status: 'new', assignee: 'John D.', created: '2026-01-07 10:23', tlp: 'TLP:RED', pap: 'PAP:RED', isDummy: true },
-  { id: 'DEMO-002', title: 'Malware Detection on Endpoint', source: 'EDR', severity: 'high', status: 'escalated', assignee: 'Sarah M.', created: '2026-01-07 10:15', tlp: 'TLP:AMBER', pap: 'PAP:AMBER', isDummy: true },
-  { id: 'DEMO-003', title: 'Unusual Outbound Traffic', source: 'Firewall', severity: 'medium', status: 'new', assignee: null, created: '2026-01-07 09:45', tlp: 'TLP:GREEN', pap: 'PAP:GREEN', isDummy: true },
-  { id: 'DEMO-004', title: 'Brute Force Attack Detected', source: 'IDS', severity: 'high', status: 'escalated', assignee: 'Mike R.', created: '2026-01-07 09:30', tlp: 'TLP:AMBER', pap: 'PAP:AMBER', isDummy: true },
-  { id: 'DEMO-005', title: 'Policy Violation - USB Device', source: 'DLP', severity: 'low', status: 'resolved', assignee: 'John D.', created: '2026-01-07 09:12', tlp: 'TLP:CLEAR', pap: 'PAP:CLEAR', isDummy: true },
-];
 
 const severityColors: Record<string, string> = {
   critical: '#ef4444',
@@ -128,7 +118,6 @@ const parseOCSFToAlert = (item: { key: string; value: string; created?: number; 
       pap: ocsf.pap,
       references: ocsf.finding_info?.references,
       observables: ocsf.observables,
-      isDummy: false,
       rawOCSF: ocsf,
     };
   } catch {
@@ -140,7 +129,7 @@ const AlertsPage = () => {
   const [selected, setSelected] = useState<string[]>([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [alerts, setAlerts] = useState<DisplayAlert[]>(dummyAlerts);
+  const [alerts, setAlerts] = useState<DisplayAlert[]>([]);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedAlert, setSelectedAlert] = useState<DisplayAlert | null>(null);
@@ -160,8 +149,7 @@ const AlertsPage = () => {
       .map((item) => parseOCSFToAlert(item))
       .filter((a): a is DisplayAlert => a !== null);
 
-    // Real alerts first, then dummy alerts
-    setAlerts([...realAlerts, ...dummyAlerts]);
+    setAlerts(realAlerts);
   }, [datastoreItems]);
 
   const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -191,7 +179,7 @@ const AlertsPage = () => {
 
   const handleResolveAlert = async (alertId: string) => {
     const alert = alerts.find(a => a.id === alertId);
-    if (!alert || alert.isDummy || !alert.rawOCSF) return;
+    if (!alert || !alert.rawOCSF) return;
 
     const updatedOCSF: OCSFDetection = {
       ...alert.rawOCSF,
@@ -205,7 +193,7 @@ const AlertsPage = () => {
 
   const handleUpdateAlert = async (alertId: string, updates: Partial<OCSFDetection>) => {
     const alert = alerts.find(a => a.id === alertId);
-    if (!alert || alert.isDummy || !alert.rawOCSF) return;
+    if (!alert || !alert.rawOCSF) return;
 
     const updatedOCSF: OCSFDetection = {
       ...alert.rawOCSF,
@@ -311,29 +299,13 @@ const AlertsPage = () => {
                       />
                     </TableCell>
                     <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box>
-                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                            {alert.title}
-                          </Typography>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                              {alert.id}
-                            </Typography>
-                            {alert.isDummy && (
-                              <Chip
-                                label="Demo"
-                                size="small"
-                                sx={{
-                                  height: 16,
-                                  fontSize: '0.65rem',
-                                  backgroundColor: 'rgba(139, 92, 246, 0.2)',
-                                  color: '#a78bfa',
-                                }}
-                              />
-                            )}
-                          </Box>
-                        </Box>
+                      <Box>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          {alert.title}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                          {alert.id}
+                        </Typography>
                       </Box>
                     </TableCell>
                     <TableCell>
@@ -419,7 +391,7 @@ const AlertsPage = () => {
                             <FolderSpecialIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
-                        {!alert.isDummy && alert.status !== 'resolved' && (
+                        {alert.status !== 'resolved' && (
                           <Tooltip title="Resolve Alert">
                             <IconButton
                               size="small"
