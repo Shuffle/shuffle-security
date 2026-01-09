@@ -152,11 +152,18 @@ const parseAlertFromDatastore = (item: { key: string; value: string; created?: n
   }
 };
 
+interface Filters {
+  severity: string | null;
+  status: string | null;
+  tlp: string | null;
+}
+
 const AlertsPage = () => {
   const [selected, setSelected] = useState<string[]>([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [alerts, setAlerts] = useState<DisplayAlert[]>([]);
+  const [filters, setFilters] = useState<Filters>({ severity: null, status: null, tlp: null });
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedAlert, setSelectedAlert] = useState<DisplayAlert | null>(null);
@@ -235,6 +242,30 @@ const AlertsPage = () => {
     await fetchItems();
   };
 
+  // Filter alerts based on active filters
+  const filteredAlerts = alerts.filter((alert) => {
+    if (filters.severity && alert.severity !== filters.severity) return false;
+    if (filters.status && alert.status !== filters.status) return false;
+    if (filters.tlp && alert.tlp !== filters.tlp) return false;
+    return true;
+  });
+
+  const handleChipFilter = (type: keyof Filters, value: string) => (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setFilters((prev) => ({
+      ...prev,
+      [type]: prev[type] === value ? null : value,
+    }));
+    setPage(0);
+  };
+
+  const clearFilters = () => {
+    setFilters({ severity: null, status: null, tlp: null });
+    setPage(0);
+  };
+
+  const hasActiveFilters = filters.severity || filters.status || filters.tlp;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -274,7 +305,7 @@ const AlertsPage = () => {
 
       <Card>
         <CardContent sx={{ p: 0 }}>
-          <Box sx={{ p: 2, display: 'flex', gap: 2, borderBottom: '1px solid rgba(148, 163, 184, 0.1)' }}>
+          <Box sx={{ p: 2, display: 'flex', gap: 2, alignItems: 'center', borderBottom: '1px solid rgba(148, 163, 184, 0.1)' }}>
             <TextField
               size="small"
               placeholder="Search alerts..."
@@ -287,9 +318,39 @@ const AlertsPage = () => {
               }}
               sx={{ width: 300 }}
             />
-            <Button variant="outlined" startIcon={<FilterListIcon />}>
-              Filters
-            </Button>
+            {hasActiveFilters && (
+              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                  Filters:
+                </Typography>
+                {filters.severity && (
+                  <Chip
+                    label={`Severity: ${filters.severity}`}
+                    size="small"
+                    onDelete={() => setFilters((prev) => ({ ...prev, severity: null }))}
+                    sx={{ textTransform: 'capitalize' }}
+                  />
+                )}
+                {filters.status && (
+                  <Chip
+                    label={`Status: ${filters.status}`}
+                    size="small"
+                    onDelete={() => setFilters((prev) => ({ ...prev, status: null }))}
+                    sx={{ textTransform: 'capitalize' }}
+                  />
+                )}
+                {filters.tlp && (
+                  <Chip
+                    label={filters.tlp}
+                    size="small"
+                    onDelete={() => setFilters((prev) => ({ ...prev, tlp: null }))}
+                  />
+                )}
+                <Button size="small" onClick={clearFilters} sx={{ minWidth: 'auto' }}>
+                  Clear all
+                </Button>
+              </Box>
+            )}
             {selected.length > 0 && (
               <Box sx={{ display: 'flex', gap: 1, ml: 'auto' }}>
                 <Button variant="outlined" color="primary">
@@ -305,8 +366,8 @@ const AlertsPage = () => {
                 <TableRow>
                   <TableCell padding="checkbox">
                     <Checkbox
-                      indeterminate={selected.length > 0 && selected.length < alerts.length}
-                      checked={selected.length === alerts.length}
+                      indeterminate={selected.length > 0 && selected.length < filteredAlerts.length}
+                      checked={filteredAlerts.length > 0 && selected.length === filteredAlerts.length}
                       onChange={handleSelectAll}
                     />
                   </TableCell>
@@ -321,7 +382,7 @@ const AlertsPage = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {alerts.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((alert) => (
+                {filteredAlerts.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((alert) => (
                   <TableRow
                     key={alert.id}
                     hover
@@ -353,38 +414,38 @@ const AlertsPage = () => {
                       />
                     </TableCell>
                     <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box
-                          sx={{
-                            width: 8,
-                            height: 8,
-                            borderRadius: '50%',
-                            backgroundColor: severityColors[alert.severity] || '#94a3b8',
-                          }}
-                        />
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            color: severityColors[alert.severity] || '#94a3b8',
-                            fontWeight: 600,
-                            textTransform: 'capitalize',
-                          }}
-                        >
-                          {alert.severity}
-                        </Typography>
-                      </Box>
+                      <Chip
+                        label={alert.severity}
+                        size="small"
+                        onClick={handleChipFilter('severity', alert.severity)}
+                        sx={{
+                          backgroundColor: `${severityColors[alert.severity] || '#94a3b8'}20`,
+                          color: severityColors[alert.severity] || '#94a3b8',
+                          fontWeight: 500,
+                          textTransform: 'capitalize',
+                          cursor: 'pointer',
+                          '&:hover': {
+                            backgroundColor: `${severityColors[alert.severity] || '#94a3b8'}35`,
+                          },
+                        }}
+                      />
                     </TableCell>
                     <TableCell>
                       {alert.tlp && (
                         <Chip
                           label={alert.tlp}
                           size="small"
+                          onClick={handleChipFilter('tlp', alert.tlp)}
                           sx={{
                             backgroundColor: `${tlpColors[alert.tlp] || '#94a3b8'}20`,
                             color: tlpColors[alert.tlp] || '#94a3b8',
                             border: tlpColors[alert.tlp] === '#ffffff' ? '1px solid #666' : 'none',
                             fontWeight: 500,
                             fontSize: '0.7rem',
+                            cursor: 'pointer',
+                            '&:hover': {
+                              backgroundColor: `${tlpColors[alert.tlp] || '#94a3b8'}35`,
+                            },
                           }}
                         />
                       )}
@@ -393,11 +454,16 @@ const AlertsPage = () => {
                       <Chip
                         label={alert.status.replace('_', ' ')}
                         size="small"
+                        onClick={handleChipFilter('status', alert.status)}
                         sx={{
                           backgroundColor: statusColors[alert.status]?.bg || 'rgba(148, 163, 184, 0.1)',
                           color: statusColors[alert.status]?.text || '#94a3b8',
                           fontWeight: 500,
                           textTransform: 'capitalize',
+                          cursor: 'pointer',
+                          '&:hover': {
+                            opacity: 0.8,
+                          },
                         }}
                       />
                     </TableCell>
@@ -449,7 +515,7 @@ const AlertsPage = () => {
 
           <TablePagination
             component="div"
-            count={alerts.length}
+            count={filteredAlerts.length}
             page={page}
             onPageChange={(_, newPage) => setPage(newPage)}
             rowsPerPage={rowsPerPage}
