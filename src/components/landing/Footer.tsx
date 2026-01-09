@@ -75,7 +75,7 @@ export const Footer = () => {
               </IconButton>
               <IconButton 
                 component="a"
-                href="https://linkedin.com/company/shuffler"
+                href="https://www.linkedin.com/company/shuffleio/"
                 target="_blank"
                 rel="noopener noreferrer"
                 size="small" 
