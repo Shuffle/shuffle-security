@@ -119,15 +119,13 @@ const OnboardingPage = () => {
 
     try {
       // Call Singul API to test the connection
-      const response = await fetch('https://singul.io/api/list_messages', {
+      const appName = app.name.toLowerCase();
+      const response = await fetch(`https://singul.io/api/list_messages/${appName}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${API_CONFIG.apiKey}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          app: app.name.toLowerCase(),
-        }),
       });
 
       const result = await response.json();
