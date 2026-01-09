@@ -31,8 +31,9 @@ import FolderSpecialIcon from '@mui/icons-material/FolderSpecial';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useDatastore } from '@/hooks/useDatastore';
 import { DATASTORE_CATEGORIES } from '@/services/datastore';
+import { CreateAlertDialog, OCSFDetection } from '@/components/alerts/CreateAlertDialog';
 
-interface Alert {
+interface DisplayAlert {
   id: string;
   title: string;
   source: string;
@@ -40,18 +41,16 @@ interface Alert {
   status: string;
   assignee: string | null;
   created: string;
+  isDummy?: boolean;
 }
 
-// Dummy alerts for initial data / fallback
-const dummyAlerts: Alert[] = [
-  { id: 'ALR-001', title: 'Suspicious Login Activity', source: 'SIEM', severity: 'critical', status: 'new', assignee: 'John D.', created: '2026-01-07 10:23' },
-  { id: 'ALR-002', title: 'Malware Detection on Endpoint', source: 'EDR', severity: 'high', status: 'in_progress', assignee: 'Sarah M.', created: '2026-01-07 10:15' },
-  { id: 'ALR-003', title: 'Unusual Outbound Traffic', source: 'Firewall', severity: 'medium', status: 'new', assignee: null, created: '2026-01-07 09:45' },
-  { id: 'ALR-004', title: 'Brute Force Attack Detected', source: 'IDS', severity: 'high', status: 'escalated', assignee: 'Mike R.', created: '2026-01-07 09:30' },
-  { id: 'ALR-005', title: 'Policy Violation - USB Device', source: 'DLP', severity: 'low', status: 'resolved', assignee: 'John D.', created: '2026-01-07 09:12' },
-  { id: 'ALR-006', title: 'Phishing Email Reported', source: 'Email Gateway', severity: 'medium', status: 'new', assignee: null, created: '2026-01-07 08:55' },
-  { id: 'ALR-007', title: 'Privilege Escalation Attempt', source: 'SIEM', severity: 'critical', status: 'in_progress', assignee: 'Sarah M.', created: '2026-01-07 08:30' },
-  { id: 'ALR-008', title: 'Unauthorized Access Attempt', source: 'IAM', severity: 'high', status: 'new', assignee: null, created: '2026-01-07 08:15' },
+// Dummy alerts for demo purposes
+const dummyAlerts: DisplayAlert[] = [
+  { id: 'DEMO-001', title: 'Suspicious Login Activity', source: 'SIEM', severity: 'critical', status: 'new', assignee: 'John D.', created: '2026-01-07 10:23', isDummy: true },
+  { id: 'DEMO-002', title: 'Malware Detection on Endpoint', source: 'EDR', severity: 'high', status: 'in_progress', assignee: 'Sarah M.', created: '2026-01-07 10:15', isDummy: true },
+  { id: 'DEMO-003', title: 'Unusual Outbound Traffic', source: 'Firewall', severity: 'medium', status: 'new', assignee: null, created: '2026-01-07 09:45', isDummy: true },
+  { id: 'DEMO-004', title: 'Brute Force Attack Detected', source: 'IDS', severity: 'high', status: 'escalated', assignee: 'Mike R.', created: '2026-01-07 09:30', isDummy: true },
+  { id: 'DEMO-005', title: 'Policy Violation - USB Device', source: 'DLP', severity: 'low', status: 'resolved', assignee: 'John D.', created: '2026-01-07 09:12', isDummy: true },
 ];
 
 const severityColors: Record<string, string> = {
@@ -59,6 +58,7 @@ const severityColors: Record<string, string> = {
   high: '#f97316',
   medium: '#eab308',
   low: '#22c55e',
+  informational: '#3b82f6',
 };
 
 const statusColors: Record<string, { bg: string; text: string }> = {
@@ -66,6 +66,47 @@ const statusColors: Record<string, { bg: string; text: string }> = {
   in_progress: { bg: 'rgba(249, 115, 22, 0.15)', text: '#f97316' },
   escalated: { bg: 'rgba(239, 68, 68, 0.15)', text: '#ef4444' },
   resolved: { bg: 'rgba(34, 197, 94, 0.15)', text: '#22c55e' },
+  suppressed: { bg: 'rgba(148, 163, 184, 0.15)', text: '#94a3b8' },
+  other: { bg: 'rgba(148, 163, 184, 0.15)', text: '#94a3b8' },
+};
+
+// Convert OCSF severity to display severity
+const mapOCSFSeverity = (severityId: number): string => {
+  switch (severityId) {
+    case 1: return 'informational';
+    case 2: return 'low';
+    case 3: return 'medium';
+    case 4: return 'high';
+    case 5: return 'critical';
+    default: return 'medium';
+  }
+};
+
+// Convert OCSF status to display status
+const mapOCSFStatus = (statusId: number): string => {
+  switch (statusId) {
+    case 1: return 'new';
+    case 2: return 'in_progress';
+    case 3: return 'suppressed';
+    default: return 'other';
+  }
+};
+
+// Parse OCSF detection to display alert
+const parseOCSFToAlert = (ocsf: OCSFDetection): DisplayAlert => {
+  const date = new Date(ocsf.time);
+  const formattedDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+  
+  return {
+    id: ocsf.finding_info?.uid || `ALR-${ocsf.time}`,
+    title: ocsf.finding_info?.title || ocsf.message,
+    source: ocsf.metadata?.product?.name || ocsf.finding_info?.types?.[0] || 'Unknown',
+    severity: mapOCSFSeverity(ocsf.severity_id),
+    status: mapOCSFStatus(ocsf.status_id),
+    assignee: null,
+    created: formattedDate,
+    isDummy: false,
+  };
 };
 
 const AlertsPage = () => {
@@ -74,9 +115,10 @@ const AlertsPage = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [menuAlertId, setMenuAlertId] = useState<string | null>(null);
-  const [alerts, setAlerts] = useState<Alert[]>(dummyAlerts);
+  const [alerts, setAlerts] = useState<DisplayAlert[]>(dummyAlerts);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
-  const { items: datastoreItems, isLoading, error, fetchItems, addItems } = useDatastore({
+  const { items: datastoreItems, isLoading, error, fetchItems, addItem } = useDatastore({
     category: DATASTORE_CATEGORIES.ALERTS,
   });
 
@@ -85,25 +127,19 @@ const AlertsPage = () => {
     fetchItems();
   }, [fetchItems]);
 
-  // Merge datastore items with dummy alerts
+  // Parse datastore items (OCSF format) and combine with dummy alerts
   useEffect(() => {
-    if (datastoreItems.length > 0) {
-      const parsedAlerts: Alert[] = datastoreItems.map((item) => {
-        try {
-          return JSON.parse(item.value) as Alert;
-        } catch {
-          return null;
-        }
-      }).filter((a): a is Alert => a !== null);
+    const realAlerts: DisplayAlert[] = datastoreItems.map((item) => {
+      try {
+        const ocsf = JSON.parse(item.value) as OCSFDetection;
+        return parseOCSFToAlert(ocsf);
+      } catch {
+        return null;
+      }
+    }).filter((a): a is DisplayAlert => a !== null);
 
-      // Combine with dummy alerts, avoiding duplicates by ID
-      const existingIds = new Set(parsedAlerts.map(a => a.id));
-      const combinedAlerts = [
-        ...parsedAlerts,
-        ...dummyAlerts.filter(a => !existingIds.has(a.id)),
-      ];
-      setAlerts(combinedAlerts);
-    }
+    // Real alerts first, then dummy alerts
+    setAlerts([...realAlerts, ...dummyAlerts]);
   }, [datastoreItems]);
 
   const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -130,13 +166,9 @@ const AlertsPage = () => {
     setMenuAlertId(null);
   };
 
-  const handleSyncDummyAlerts = async () => {
-    // Sync dummy alerts to the datastore
-    const itemsToSync = dummyAlerts.map(alert => ({
-      key: alert.id,
-      value: alert,
-    }));
-    await addItems(itemsToSync);
+  const handleCreateAlert = async (ocsf: OCSFDetection) => {
+    const key = ocsf.finding_info.uid;
+    await addItem(key, ocsf);
   };
 
   return (
@@ -157,14 +189,13 @@ const AlertsPage = () => {
             </Typography>
           )}
         </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button variant="outlined" onClick={handleSyncDummyAlerts}>
-            Sync to Datastore
-          </Button>
-          <Button variant="contained" startIcon={<AddIcon />}>
-            Create Alert
-          </Button>
-        </Box>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => setCreateDialogOpen(true)}
+        >
+          Create Alert
+        </Button>
       </Box>
 
       <Card>
@@ -232,13 +263,29 @@ const AlertsPage = () => {
                       />
                     </TableCell>
                     <TableCell>
-                      <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                          {alert.title}
-                        </Typography>
-                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                          {alert.id}
-                        </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box>
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                            {alert.title}
+                          </Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                              {alert.id}
+                            </Typography>
+                            {alert.isDummy && (
+                              <Chip
+                                label="Demo"
+                                size="small"
+                                sx={{
+                                  height: 16,
+                                  fontSize: '0.65rem',
+                                  backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                                  color: '#a78bfa',
+                                }}
+                              />
+                            )}
+                          </Box>
+                        </Box>
                       </Box>
                     </TableCell>
                     <TableCell>
@@ -346,6 +393,12 @@ const AlertsPage = () => {
           Dismiss
         </MenuItem>
       </Menu>
+
+      <CreateAlertDialog
+        open={createDialogOpen}
+        onClose={() => setCreateDialogOpen(false)}
+        onSubmit={handleCreateAlert}
+      />
     </motion.div>
   );
 };

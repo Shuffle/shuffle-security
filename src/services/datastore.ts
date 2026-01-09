@@ -109,7 +109,7 @@ export const getDatastoreByCategory = async (
   category: string
 ): Promise<DatastoreResponse> => {
   const response = await fetch(
-    `${API_CONFIG.baseUrl}/api/v2/datastore?category=${encodeURIComponent(category)}`,
+    `${API_CONFIG.baseUrl}/api/v2/datastore/category/${encodeURIComponent(category)}`,
     {
       method: 'GET',
       headers: {
