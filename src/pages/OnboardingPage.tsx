@@ -125,6 +125,9 @@ const OnboardingPage = () => {
           'Authorization': `Bearer ${API_CONFIG.apiKey}`,
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          app: app.name.toLowerCase(),
+        }),
       });
 
       const result = await response.json();
