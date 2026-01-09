@@ -215,14 +215,21 @@ const AlertsPage = () => {
     const alert = alerts.find(a => a.id === alertId);
     if (!alert || !alert.rawOCSF) return;
 
+    // Optimistically update local state immediately
+    setAlerts(prev => prev.map(a => 
+      a.id === alertId 
+        ? { ...a, status: 'resolved' } 
+        : a
+    ));
+
     const updatedOCSF: OCSFDetection = {
       ...alert.rawOCSF,
       status_id: 3, // Resolved
       status: 'Resolved',
     };
 
+    // Persist to datastore in background
     await addItem(alertId, updatedOCSF);
-    await fetchItems();
   };
 
   const handleUpdateAlert = async (alertId: string, updates: Partial<OCSFDetection>) => {

@@ -1,0 +1,287 @@
+import { useState, useEffect } from 'react';
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  TextField,
+  IconButton,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  CircularProgress,
+  Chip,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+} from '@mui/material';
+import { motion } from 'framer-motion';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+import { useDatastore } from '@/hooks/useDatastore';
+
+const CATEGORY = 'shuffle-cases custom fields';
+
+type FieldType = 'text' | 'number' | 'select' | 'date' | 'boolean';
+
+interface CustomField {
+  name: string;
+  key: string;
+  type: FieldType;
+  required: boolean;
+  options?: string[]; // For select type
+  description?: string;
+}
+
+const fieldTypes: { value: FieldType; label: string }[] = [
+  { value: 'text', label: 'Text' },
+  { value: 'number', label: 'Number' },
+  { value: 'select', label: 'Select / Dropdown' },
+  { value: 'date', label: 'Date' },
+  { value: 'boolean', label: 'Yes / No' },
+];
+
+const CustomFieldsPage = () => {
+  const { items, isLoading, error, fetchItems, addItem, removeItem } = useDatastore({ category: CATEGORY });
+  const [fields, setFields] = useState<CustomField[]>([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingField, setEditingField] = useState<CustomField | null>(null);
+  const [formData, setFormData] = useState<CustomField>({ name: '', key: '', type: 'text', required: false, description: '' });
+  const [optionsInput, setOptionsInput] = useState('');
+
+  useEffect(() => {
+    fetchItems();
+  }, [fetchItems]);
+
+  useEffect(() => {
+    const parsed: CustomField[] = items.map(item => {
+      try {
+        return JSON.parse(item.value) as CustomField;
+      } catch {
+        return { name: item.key, key: item.key, type: 'text' as FieldType, required: false };
+      }
+    });
+    setFields(parsed);
+  }, [items]);
+
+  const handleOpenDialog = (field?: CustomField) => {
+    if (field) {
+      setEditingField(field);
+      setFormData(field);
+      setOptionsInput(field.options?.join(', ') || '');
+    } else {
+      setEditingField(null);
+      setFormData({ name: '', key: '', type: 'text', required: false, description: '' });
+      setOptionsInput('');
+    }
+    setDialogOpen(true);
+  };
+
+  const handleSave = async () => {
+    if (!formData.name || !formData.key) return;
+    
+    const fieldToSave: CustomField = {
+      ...formData,
+      options: formData.type === 'select' && optionsInput 
+        ? optionsInput.split(',').map(o => o.trim()).filter(Boolean)
+        : undefined,
+    };
+    
+    if (editingField && editingField.key !== formData.key) {
+      await removeItem(editingField.key);
+    }
+    await addItem(formData.key, fieldToSave);
+    setDialogOpen(false);
+    setFormData({ name: '', key: '', type: 'text', required: false, description: '' });
+    setOptionsInput('');
+  };
+
+  const handleDelete = async (key: string) => {
+    await removeItem(key);
+  };
+
+  const generateKey = (name: string) => {
+    return name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Typography variant="h5" sx={{ fontWeight: 600 }}>Custom Fields</Typography>
+          {isLoading && <CircularProgress size={20} />}
+        </Box>
+        <Button variant="outlined" startIcon={<AddIcon />} onClick={() => handleOpenDialog()}>
+          Add Custom Field
+        </Button>
+      </Box>
+
+      {error && (
+        <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>
+      )}
+
+      <Card>
+        <CardContent sx={{ p: 0 }}>
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Name</TableCell>
+                  <TableCell>Key</TableCell>
+                  <TableCell>Type</TableCell>
+                  <TableCell>Required</TableCell>
+                  <TableCell>Description</TableCell>
+                  <TableCell align="right">Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {fields.map((field) => (
+                  <TableRow key={field.key} hover>
+                    <TableCell>
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>{field.name}</Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.75rem', color: 'text.secondary' }}>
+                        {field.key}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip 
+                        label={fieldTypes.find(t => t.value === field.type)?.label || field.type} 
+                        size="small" 
+                        sx={{ textTransform: 'capitalize' }} 
+                      />
+                      {field.type === 'select' && field.options && (
+                        <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', mt: 0.5 }}>
+                          Options: {field.options.join(', ')}
+                        </Typography>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Chip 
+                        label={field.required ? 'Yes' : 'No'} 
+                        size="small" 
+                        color={field.required ? 'primary' : 'default'}
+                        sx={{ fontSize: '0.7rem' }}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                        {field.description || '-'}
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="right">
+                      <IconButton size="small" onClick={() => handleOpenDialog(field)}>
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton size="small" onClick={() => handleDelete(field.key)} color="error">
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {fields.length === 0 && !isLoading && (
+                  <TableRow>
+                    <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                      <Typography color="text.secondary">No custom fields configured. Click "Add Custom Field" to create one.</Typography>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </CardContent>
+      </Card>
+
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>{editingField ? 'Edit Custom Field' : 'Add Custom Field'}</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+            <TextField
+              label="Display Name"
+              value={formData.name}
+              onChange={(e) => {
+                const name = e.target.value;
+                setFormData({ 
+                  ...formData, 
+                  name,
+                  key: editingField ? formData.key : generateKey(name),
+                });
+              }}
+              fullWidth
+              placeholder="e.g., Customer ID"
+            />
+            <TextField
+              label="Field Key"
+              value={formData.key}
+              onChange={(e) => setFormData({ ...formData, key: e.target.value })}
+              fullWidth
+              placeholder="e.g., customer_id"
+              disabled={!!editingField}
+              helperText="Used as the internal identifier. Cannot be changed after creation."
+              sx={{ '& input': { fontFamily: 'monospace' } }}
+            />
+            <FormControl fullWidth>
+              <InputLabel>Field Type</InputLabel>
+              <Select
+                value={formData.type}
+                label="Field Type"
+                onChange={(e) => setFormData({ ...formData, type: e.target.value as FieldType })}
+              >
+                {fieldTypes.map((type) => (
+                  <MenuItem key={type.value} value={type.value}>{type.label}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            {formData.type === 'select' && (
+              <TextField
+                label="Options (comma-separated)"
+                value={optionsInput}
+                onChange={(e) => setOptionsInput(e.target.value)}
+                fullWidth
+                placeholder="e.g., Low, Medium, High"
+                helperText="Enter dropdown options separated by commas"
+              />
+            )}
+            <FormControl fullWidth>
+              <InputLabel>Required</InputLabel>
+              <Select
+                value={formData.required ? 'yes' : 'no'}
+                label="Required"
+                onChange={(e) => setFormData({ ...formData, required: e.target.value === 'yes' })}
+              >
+                <MenuItem value="no">No</MenuItem>
+                <MenuItem value="yes">Yes</MenuItem>
+              </Select>
+            </FormControl>
+            <TextField
+              label="Description"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              fullWidth
+              placeholder="Optional description or help text"
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleSave} variant="contained" disabled={!formData.name || !formData.key}>
+            Save
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </motion.div>
+  );
+};
+
+export default CustomFieldsPage;

@@ -47,6 +47,8 @@ const navItems: NavItem[] = [
     path: '/cases',
     children: [
       { label: 'Templates', path: '/templates' },
+      { label: 'IOC Types', path: '/cases/ioc-types' },
+      { label: 'Custom Fields', path: '/cases/custom-fields' },
     ],
   },
   { label: 'Users', icon: <PeopleIcon />, path: '/users' },
