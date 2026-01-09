@@ -414,7 +414,6 @@ const AlertsPage = () => {
         PaperProps={{
           sx: {
             minWidth: 180,
-            backgroundImage: 'linear-gradient(145deg, #1e293b 0%, #162032 100%)',
           },
         }}
       >

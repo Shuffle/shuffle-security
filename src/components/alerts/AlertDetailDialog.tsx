@@ -61,11 +61,6 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve }: AlertDeta
       onClose={onClose}
       maxWidth="md"
       fullWidth
-      PaperProps={{
-        sx: {
-          backgroundImage: 'linear-gradient(145deg, #1e293b 0%, #162032 100%)',
-        },
-      }}
     >
       <DialogTitle>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

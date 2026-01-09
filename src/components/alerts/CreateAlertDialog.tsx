@@ -119,11 +119,6 @@ export const CreateAlertDialog = ({ open, onClose, onSubmit }: CreateAlertDialog
       onClose={handleClose}
       maxWidth="sm"
       fullWidth
-      PaperProps={{
-        sx: {
-          backgroundImage: 'linear-gradient(145deg, #1e293b 0%, #162032 100%)',
-        },
-      }}
     >
       <DialogTitle>
         <Typography variant="h6" sx={{ fontWeight: 600 }}>

@@ -133,6 +133,30 @@ export const muiTheme = createTheme({
         },
       },
     },
+    MuiDialog: {
+      styleOverrides: {
+        paper: {
+          backgroundImage: 'linear-gradient(145deg, #262626 0%, #1f1f1f 100%)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+        },
+      },
+    },
+    MuiMenu: {
+      styleOverrides: {
+        paper: {
+          backgroundImage: 'linear-gradient(145deg, #262626 0%, #1f1f1f 100%)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+        },
+      },
+    },
+    MuiPopover: {
+      styleOverrides: {
+        paper: {
+          backgroundImage: 'linear-gradient(145deg, #262626 0%, #1f1f1f 100%)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+        },
+      },
+    },
     MuiTableCell: {
       styleOverrides: {
         root: {
