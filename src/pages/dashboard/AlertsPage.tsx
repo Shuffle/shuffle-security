@@ -101,26 +101,49 @@ const formatTimestamp = (timestamp: number | string | undefined): string => {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
 };
 
-// Parse OCSF detection to display alert
-const parseOCSFToAlert = (item: { key: string; value: string; created?: number; edited?: number }): DisplayAlert | null => {
+// Parse alert from datastore (handles both OCSF and legacy formats)
+const parseAlertFromDatastore = (item: { key: string; value: string; created?: number; edited?: number }): DisplayAlert | null => {
   try {
-    const ocsf = JSON.parse(item.value) as OCSFDetection;
+    const data = JSON.parse(item.value);
     
-    return {
-      id: ocsf.finding_info?.uid || item.key,
-      title: ocsf.finding_info?.title || ocsf.message,
-      source: ocsf.metadata?.product?.name || ocsf.finding_info?.types?.[0] || 'Unknown',
-      severity: mapOCSFSeverity(ocsf.severity_id),
-      status: mapOCSFStatus(ocsf.status_id),
-      assignee: ocsf.assignee || null,
-      created: formatTimestamp(item.created),
-      edited: item.edited ? formatTimestamp(item.edited) : undefined,
-      tlp: ocsf.tlp,
-      pap: ocsf.pap,
-      references: ocsf.finding_info?.references,
-      observables: ocsf.observables,
-      rawOCSF: ocsf,
-    };
+    // Check if it's OCSF format (has finding_info or severity_id)
+    const isOCSF = data.finding_info || data.severity_id !== undefined;
+    
+    if (isOCSF) {
+      const ocsf = data as OCSFDetection;
+      return {
+        id: ocsf.finding_info?.uid || item.key,
+        title: ocsf.finding_info?.title || ocsf.message || 'Untitled',
+        source: ocsf.metadata?.product?.name || ocsf.finding_info?.types?.[0] || 'Unknown',
+        severity: mapOCSFSeverity(ocsf.severity_id),
+        status: mapOCSFStatus(ocsf.status_id),
+        assignee: ocsf.assignee || null,
+        created: formatTimestamp(item.created),
+        edited: item.edited ? formatTimestamp(item.edited) : undefined,
+        tlp: ocsf.tlp,
+        pap: ocsf.pap,
+        references: ocsf.finding_info?.references,
+        observables: ocsf.observables,
+        rawOCSF: ocsf,
+      };
+    } else {
+      // Legacy format - simple object with direct properties
+      return {
+        id: data.id || item.key,
+        title: data.title || 'Untitled',
+        source: data.source || 'Unknown',
+        severity: (data.severity || 'medium').toLowerCase(),
+        status: (data.status || 'new').toLowerCase().replace('_', ''),
+        assignee: data.assignee || null,
+        created: formatTimestamp(item.created),
+        edited: item.edited ? formatTimestamp(item.edited) : undefined,
+        tlp: data.tlp,
+        pap: data.pap,
+        references: data.references,
+        observables: data.observables,
+        rawOCSF: undefined, // Legacy format doesn't have OCSF data
+      };
+    }
   } catch {
     return null;
   }
@@ -147,7 +170,7 @@ const AlertsPage = () => {
   // Parse datastore items (OCSF format) and combine with dummy alerts
   useEffect(() => {
     const realAlerts: DisplayAlert[] = datastoreItems
-      .map((item) => parseOCSFToAlert(item))
+      .map((item) => parseAlertFromDatastore(item))
       .filter((a): a is DisplayAlert => a !== null);
 
     setAlerts(realAlerts);
