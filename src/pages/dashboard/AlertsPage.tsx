@@ -186,6 +186,7 @@ const AlertsPage = () => {
   const handleCreateAlert = async (ocsf: OCSFDetection) => {
     const key = ocsf.finding_info.uid;
     await addItem(key, ocsf);
+    await fetchItems(); // Refresh list after creating
   };
 
   const handleResolveAlert = async (alertId: string) => {
