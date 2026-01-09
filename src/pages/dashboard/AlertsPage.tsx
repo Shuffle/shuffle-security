@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Card,
@@ -19,6 +19,7 @@ import {
   MenuItem,
   Checkbox,
   TablePagination,
+  CircularProgress,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import SearchIcon from '@mui/icons-material/Search';
@@ -28,8 +29,21 @@ import AddIcon from '@mui/icons-material/Add';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import FolderSpecialIcon from '@mui/icons-material/FolderSpecial';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { useDatastore } from '@/hooks/useDatastore';
+import { DATASTORE_CATEGORIES } from '@/services/datastore';
 
-const alerts = [
+interface Alert {
+  id: string;
+  title: string;
+  source: string;
+  severity: string;
+  status: string;
+  assignee: string | null;
+  created: string;
+}
+
+// Dummy alerts for initial data / fallback
+const dummyAlerts: Alert[] = [
   { id: 'ALR-001', title: 'Suspicious Login Activity', source: 'SIEM', severity: 'critical', status: 'new', assignee: 'John D.', created: '2026-01-07 10:23' },
   { id: 'ALR-002', title: 'Malware Detection on Endpoint', source: 'EDR', severity: 'high', status: 'in_progress', assignee: 'Sarah M.', created: '2026-01-07 10:15' },
   { id: 'ALR-003', title: 'Unusual Outbound Traffic', source: 'Firewall', severity: 'medium', status: 'new', assignee: null, created: '2026-01-07 09:45' },
@@ -60,6 +74,37 @@ const AlertsPage = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [menuAlertId, setMenuAlertId] = useState<string | null>(null);
+  const [alerts, setAlerts] = useState<Alert[]>(dummyAlerts);
+
+  const { items: datastoreItems, isLoading, error, fetchItems, addItems } = useDatastore({
+    category: DATASTORE_CATEGORIES.ALERTS,
+  });
+
+  // Fetch alerts from datastore on mount
+  useEffect(() => {
+    fetchItems();
+  }, [fetchItems]);
+
+  // Merge datastore items with dummy alerts
+  useEffect(() => {
+    if (datastoreItems.length > 0) {
+      const parsedAlerts: Alert[] = datastoreItems.map((item) => {
+        try {
+          return JSON.parse(item.value) as Alert;
+        } catch {
+          return null;
+        }
+      }).filter((a): a is Alert => a !== null);
+
+      // Combine with dummy alerts, avoiding duplicates by ID
+      const existingIds = new Set(parsedAlerts.map(a => a.id));
+      const combinedAlerts = [
+        ...parsedAlerts,
+        ...dummyAlerts.filter(a => !existingIds.has(a.id)),
+      ];
+      setAlerts(combinedAlerts);
+    }
+  }, [datastoreItems]);
 
   const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.checked) {
@@ -85,6 +130,15 @@ const AlertsPage = () => {
     setMenuAlertId(null);
   };
 
+  const handleSyncDummyAlerts = async () => {
+    // Sync dummy alerts to the datastore
+    const itemsToSync = dummyAlerts.map(alert => ({
+      key: alert.id,
+      value: alert,
+    }));
+    await addItems(itemsToSync);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -92,12 +146,25 @@ const AlertsPage = () => {
       transition={{ duration: 0.4 }}
     >
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h5" sx={{ fontWeight: 600 }}>
-          Alerts
-        </Typography>
-        <Button variant="contained" startIcon={<AddIcon />}>
-          Create Alert
-        </Button>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Typography variant="h5" sx={{ fontWeight: 600 }}>
+            Alerts
+          </Typography>
+          {isLoading && <CircularProgress size={20} />}
+          {error && (
+            <Typography variant="caption" color="error">
+              {error}
+            </Typography>
+          )}
+        </Box>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button variant="outlined" onClick={handleSyncDummyAlerts}>
+            Sync to Datastore
+          </Button>
+          <Button variant="contained" startIcon={<AddIcon />}>
+            Create Alert
+          </Button>
+        </Box>
       </Box>
 
       <Card>
@@ -188,13 +255,13 @@ const AlertsPage = () => {
                             width: 8,
                             height: 8,
                             borderRadius: '50%',
-                            backgroundColor: severityColors[alert.severity],
+                            backgroundColor: severityColors[alert.severity] || '#94a3b8',
                           }}
                         />
                         <Typography
                           variant="body2"
                           sx={{
-                            color: severityColors[alert.severity],
+                            color: severityColors[alert.severity] || '#94a3b8',
                             fontWeight: 600,
                             textTransform: 'capitalize',
                           }}
@@ -208,8 +275,8 @@ const AlertsPage = () => {
                         label={alert.status.replace('_', ' ')}
                         size="small"
                         sx={{
-                          backgroundColor: statusColors[alert.status].bg,
-                          color: statusColors[alert.status].text,
+                          backgroundColor: statusColors[alert.status]?.bg || 'rgba(148, 163, 184, 0.1)',
+                          color: statusColors[alert.status]?.text || '#94a3b8',
                           fontWeight: 500,
                           textTransform: 'capitalize',
                         }}

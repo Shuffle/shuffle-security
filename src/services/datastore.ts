@@ -1,0 +1,160 @@
+/**
+ * Shuffle Datastore Service
+ * 
+ * Provides reusable functions for interacting with the Shuffle datastore API.
+ * Supports CRUD operations with category-based organization.
+ */
+
+import { API_CONFIG, getAuthHeader } from '@/config/api';
+
+export interface DatastoreItem {
+  key: string;
+  value: string;
+  category: string;
+}
+
+export interface DatastoreResponse {
+  success: boolean;
+  data?: DatastoreItem[];
+  error?: string;
+}
+
+/**
+ * Set a single item in the datastore
+ */
+export const setDatastoreItem = async (
+  key: string,
+  value: string | object,
+  category: string
+): Promise<DatastoreResponse> => {
+  const response = await fetch(`${API_CONFIG.baseUrl}/api/v2/datastore`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeader(API_CONFIG.apiKey),
+    },
+    body: JSON.stringify({
+      key,
+      value: typeof value === 'string' ? value : JSON.stringify(value),
+      category,
+    }),
+  });
+
+  if (!response.ok) {
+    return { success: false, error: `Failed to set datastore item: ${response.statusText}` };
+  }
+
+  return { success: true };
+};
+
+/**
+ * Set multiple items in the datastore (bulk create)
+ */
+export const setDatastoreItems = async (
+  items: { key: string; value: string | object }[],
+  category: string
+): Promise<DatastoreResponse> => {
+  const payload = items.map(item => ({
+    key: item.key,
+    value: typeof item.value === 'string' ? item.value : JSON.stringify(item.value),
+    category,
+  }));
+
+  const response = await fetch(`${API_CONFIG.baseUrl}/api/v2/datastore`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeader(API_CONFIG.apiKey),
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    return { success: false, error: `Failed to set datastore items: ${response.statusText}` };
+  }
+
+  return { success: true };
+};
+
+/**
+ * Get a single item from the datastore
+ */
+export const getDatastoreItem = async (
+  key: string,
+  category: string
+): Promise<DatastoreResponse & { item?: DatastoreItem }> => {
+  const response = await fetch(
+    `${API_CONFIG.baseUrl}/api/v2/datastore/${encodeURIComponent(key)}?category=${encodeURIComponent(category)}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader(API_CONFIG.apiKey),
+      },
+    }
+  );
+
+  if (!response.ok) {
+    return { success: false, error: `Failed to get datastore item: ${response.statusText}` };
+  }
+
+  const data = await response.json();
+  return { success: true, item: data };
+};
+
+/**
+ * Get all items in a category
+ */
+export const getDatastoreByCategory = async (
+  category: string
+): Promise<DatastoreResponse> => {
+  const response = await fetch(
+    `${API_CONFIG.baseUrl}/api/v2/datastore?category=${encodeURIComponent(category)}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader(API_CONFIG.apiKey),
+      },
+    }
+  );
+
+  if (!response.ok) {
+    return { success: false, error: `Failed to get datastore items: ${response.statusText}` };
+  }
+
+  const data = await response.json();
+  return { success: true, data: Array.isArray(data) ? data : data.data || [] };
+};
+
+/**
+ * Delete a single item from the datastore
+ */
+export const deleteDatastoreItem = async (
+  key: string,
+  category: string
+): Promise<DatastoreResponse> => {
+  const response = await fetch(
+    `${API_CONFIG.baseUrl}/api/v2/datastore/${encodeURIComponent(key)}?category=${encodeURIComponent(category)}`,
+    {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader(API_CONFIG.apiKey),
+      },
+    }
+  );
+
+  if (!response.ok) {
+    return { success: false, error: `Failed to delete datastore item: ${response.statusText}` };
+  }
+
+  return { success: true };
+};
+
+// Category constants for consistency
+export const DATASTORE_CATEGORIES = {
+  ALERTS: 'shuffle-alerts',
+  CASES: 'shuffle-cases',
+  TEMPLATES: 'shuffle-templates',
+} as const;
