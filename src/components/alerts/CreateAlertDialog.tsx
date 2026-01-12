@@ -11,9 +11,13 @@ import {
   Typography,
   IconButton,
   Chip,
+  FormControl,
+  InputLabel,
+  Select,
+  CircularProgress,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-
+import { useUsers } from '@/hooks/useUsers';
 // Generate a 10-character unique ID
 const generateAlertId = (): string => {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -122,6 +126,7 @@ export const CreateAlertDialog = ({ open, onClose, onSubmit }: CreateAlertDialog
   const [newObservableType, setNewObservableType] = useState('ip');
   const [newObservableValue, setNewObservableValue] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { users, loading: usersLoading } = useUsers();
 
   const handleAddReference = () => {
     if (newReference.trim()) {
@@ -300,13 +305,34 @@ export const CreateAlertDialog = ({ open, onClose, onSubmit }: CreateAlertDialog
           </Box>
 
           {/* Assignee */}
-          <TextField
-            label="Assignee"
-            value={assignee}
-            onChange={(e) => setAssignee(e.target.value)}
-            fullWidth
-            placeholder="e.g., John Doe"
-          />
+          <FormControl fullWidth>
+            <InputLabel>Assignee</InputLabel>
+            <Select
+              value={assignee}
+              label="Assignee"
+              onChange={(e) => setAssignee(e.target.value)}
+              disabled={usersLoading}
+              endAdornment={usersLoading ? <CircularProgress size={20} sx={{ mr: 2 }} /> : null}
+              MenuProps={{
+                PaperProps: {
+                  sx: {
+                    bgcolor: 'hsl(var(--popover))',
+                    border: '1px solid hsl(var(--border))',
+                    zIndex: 9999,
+                  },
+                },
+              }}
+            >
+              <MenuItem value="">
+                <em>Unassigned</em>
+              </MenuItem>
+              {users.map((user) => (
+                <MenuItem key={user.id} value={user.username}>
+                  {user.username}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
           {/* URL References */}
           <Box>
