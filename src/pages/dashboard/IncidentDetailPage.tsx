@@ -209,7 +209,21 @@ const IncidentDetailPage = () => {
   // Load incident
   useEffect(() => {
     if (!datastoreLoading && datastoreItems.length > 0 && id) {
-      const item = datastoreItems.find(i => i.key === id);
+      // Find by key OR by finding_info.uid (the displayed ID might differ from datastore key)
+      let item = datastoreItems.find(i => i.key === id);
+      
+      // If not found by key, search by parsed ID
+      if (!item) {
+        item = datastoreItems.find(i => {
+          try {
+            const data = JSON.parse(i.value);
+            return data.finding_info?.uid === id;
+          } catch {
+            return false;
+          }
+        });
+      }
+      
       if (item) {
         const parsed = parseIncidentFromDatastore(item);
         if (parsed) {
