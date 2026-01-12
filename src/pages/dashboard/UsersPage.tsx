@@ -25,10 +25,7 @@ import {
   MenuItem,
   TextField,
   Stack,
-  Tooltip,
   Collapse,
-  Card,
-  CardContent,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -38,10 +35,14 @@ import {
   ExpandLess as ExpandLessIcon,
   Schedule as ScheduleIcon,
   CheckCircle as CheckCircleIcon,
+  Upload as UploadIcon,
+  SmartToy as AiIcon,
 } from '@mui/icons-material';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 import { useAuth } from '@/context/AuthContext';
 import { setDatastoreItem, getDatastoreItem, DATASTORE_CATEGORIES } from '@/services/datastore';
+import { WeeklyScheduleTimeline, AI_AGENT_SCHEDULE } from '@/components/users/WeeklyScheduleTimeline';
+import { ScheduleImportDialog } from '@/components/users/ScheduleImportDialog';
 
 // Escalation levels for assignment priority
 type EscalationLevel = 'tier1' | 'tier2' | 'tier3' | 'manager';
@@ -133,6 +134,9 @@ const UsersPage = () => {
   const [escalationDialogOpen, setEscalationDialogOpen] = useState(false);
   const [escalationUserId, setEscalationUserId] = useState<string | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<EscalationLevel>('tier1');
+  
+  // Import dialog
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
   
   // Schedule entry form
   const [entryStartDate, setEntryStartDate] = useState('');
@@ -411,6 +415,33 @@ const UsersPage = () => {
     );
   };
 
+  // Handle imported schedules
+  const handleImportSchedules = (importedSchedules: UserSchedule[]) => {
+    // Merge with existing schedules
+    const newUserSchedules = [...config.userSchedules];
+    
+    for (const imported of importedSchedules) {
+      const existingIndex = newUserSchedules.findIndex(s => s.userId === imported.userId);
+      if (existingIndex >= 0) {
+        // Merge schedules
+        newUserSchedules[existingIndex] = {
+          ...newUserSchedules[existingIndex],
+          schedules: [...newUserSchedules[existingIndex].schedules, ...imported.schedules],
+        };
+      } else {
+        newUserSchedules.push(imported);
+      }
+    }
+    
+    saveConfig({ ...config, userSchedules: newUserSchedules });
+  };
+
+  // Get all schedules including AI Agent for timeline
+  const allSchedulesForTimeline = [
+    AI_AGENT_SCHEDULE,
+    ...config.userSchedules,
+  ];
+
   return (
     <Box sx={{ p: 4 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
@@ -422,6 +453,17 @@ const UsersPage = () => {
             Manage users and their auto-assignment schedules
           </Typography>
         </Box>
+        <Button
+          variant="outlined"
+          startIcon={<UploadIcon />}
+          onClick={() => setImportDialogOpen(true)}
+          sx={{
+            borderColor: 'hsl(var(--border))',
+            color: 'hsl(var(--foreground))',
+          }}
+        >
+          Import Schedule
+        </Button>
       </Box>
 
       {error && (
@@ -447,13 +489,53 @@ const UsersPage = () => {
           <CircularProgress sx={{ color: 'hsl(var(--primary))' }} />
         </Box>
       ) : (
-        <TableContainer 
-          component={Paper} 
-          sx={{ 
-            bgcolor: 'hsl(var(--card))',
-            border: '1px solid hsl(var(--border))',
-          }}
-        >
+        <>
+          {/* Weekly Timeline */}
+          <WeeklyScheduleTimeline userSchedules={allSchedulesForTimeline} />
+
+          {/* AI Agent Row */}
+          <Paper 
+            sx={{ 
+              p: 2, 
+              mb: 3,
+              bgcolor: 'hsl(var(--card))',
+              border: '1px solid hsl(var(--border))',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Avatar sx={{ bgcolor: '#9c27b0', width: 40, height: 40 }}>
+                <AiIcon />
+              </Avatar>
+              <Box>
+                <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+                  AI Agent
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                  24/7 fallback coverage • Handles alerts when no human is available
+                </Typography>
+              </Box>
+            </Box>
+            <Chip 
+              label="Always Active" 
+              size="small"
+              sx={{ 
+                bgcolor: '#9c27b040',
+                color: '#9c27b0',
+                fontWeight: 500,
+              }} 
+            />
+          </Paper>
+
+          <TableContainer 
+            component={Paper} 
+            sx={{ 
+              bgcolor: 'hsl(var(--card))',
+              border: '1px solid hsl(var(--border))',
+            }}
+          >
           <Table>
             <TableHead>
               <TableRow>
@@ -630,6 +712,7 @@ const UsersPage = () => {
             </TableBody>
           </Table>
         </TableContainer>
+        </>
       )}
 
       {/* Escalation Level Dialog */}
@@ -739,6 +822,14 @@ const UsersPage = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Schedule Import Dialog */}
+      <ScheduleImportDialog
+        open={importDialogOpen}
+        onClose={() => setImportDialogOpen(false)}
+        existingUsers={users}
+        onImport={handleImportSchedules}
+      />
     </Box>
   );
 };
