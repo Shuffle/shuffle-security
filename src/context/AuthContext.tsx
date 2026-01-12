@@ -50,12 +50,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.log('getinfo response:', response.status, data);
 
       if (response.ok && data.success === true) {
-        setUserInfo({
+        const info = {
           username: data.username,
           id: data.id,
           active_org: data.active_org,
           orgs: data.orgs || [],
-        });
+        };
+        setUserInfo(info);
+        // Store in localStorage so datastore service can access org ID
+        localStorage.setItem('shuffle_user_info', JSON.stringify(info));
         return true;
       } else {
         console.warn('getinfo failed:', data.reason || 'Unknown error');
@@ -150,6 +153,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Clear local state FIRST to prevent race conditions
     const currentToken = sessionToken;
     localStorage.removeItem('session_token');
+    localStorage.removeItem('shuffle_user_info');
     API_CONFIG.setApiKey(null);
     setSessionToken(null);
     setIsAuthenticated(false);
