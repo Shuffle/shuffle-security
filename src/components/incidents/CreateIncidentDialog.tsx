@@ -66,6 +66,19 @@ export interface ActivityItem {
   details?: Record<string, unknown>;
 }
 
+// Task item for incident tasks/checklist
+export interface IncidentTask {
+  id: string;
+  title: string;
+  completed: boolean;
+  assignee?: string;
+  dueDate?: string; // ISO date string
+  dependsOn?: string; // ID of task this depends on
+  createdAt: number;
+  completedAt?: number;
+  createdBy?: string;
+}
+
 // OCSF Incident Finding format (class_id: 2005)
 export interface OCSFIncidentFinding {
   class_uid: 2005; // Incident Finding
@@ -96,6 +109,8 @@ export interface OCSFIncidentFinding {
   related_findings?: string[];
   // Activity/collaboration tracking
   activity?: ActivityItem[];
+  // Tasks/checklist
+  tasks?: IncidentTask[];
   metadata: {
     product: {
       name: string;
