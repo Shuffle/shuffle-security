@@ -10,6 +10,7 @@ import AuthPage from './pages/AuthPage';
 import OnboardingPage from './pages/OnboardingPage';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import IncidentsPage from '@/pages/dashboard/IncidentsPage';
+import IncidentDetailPage from '@/pages/dashboard/IncidentDetailPage';
 import TemplatesPage from '@/pages/dashboard/TemplatesPage';
 import IOCTypesPage from '@/pages/dashboard/IOCTypesPage';
 import CustomFieldsPage from '@/pages/dashboard/CustomFieldsPage';
@@ -62,6 +63,7 @@ const App = () => (
               }
             >
               <Route path="/incidents" element={<IncidentsPage />} />
+              <Route path="/incidents/:id" element={<IncidentDetailPage />} />
               <Route path="/templates" element={<TemplatesPage />} />
               <Route path="/incidents/ioc-types" element={<IOCTypesPage />} />
               <Route path="/incidents/custom-fields" element={<CustomFieldsPage />} />
