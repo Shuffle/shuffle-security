@@ -187,8 +187,8 @@ Refer to the [Shuffle documentation](https://shuffler.io/docs) for detailed CORS
 
 Once connected, explore:
 
-- **[Alerts](/alerts)** — View and manage security alerts
-- **[Cases](/cases)** — Create and track investigation cases
-- **[Templates](/cases/templates)** — Build reusable case templates
+- **[Incidents](/incidents)** — View and manage security incidents
+- **[Templates](/templates)** — Build reusable incident templates
+- **[Custom Fields](/incidents/custom-fields)** — Configure custom fields for incidents
 
 For API details, see the [Shuffle API Documentation](https://shuffler.io/docs/API).
