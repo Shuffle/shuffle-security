@@ -34,7 +34,7 @@ import HistoryIcon from '@mui/icons-material/History';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { useDatastore } from '@/hooks/useDatastore';
 import { useAuth } from '@/context/AuthContext';
-import { DATASTORE_CATEGORIES } from '@/services/datastore';
+import { DATASTORE_CATEGORIES, getDatastoreItem } from '@/services/datastore';
 import { useUsers } from '@/hooks/useUsers';
 import { useCustomFields, CustomField } from '@/hooks/useCustomFields';
 import { 
@@ -202,30 +202,31 @@ const IncidentDetailPage = () => {
   
   const { users, loading: usersLoading } = useUsers();
   const { fields: customFields } = useCustomFields();
-  const { items: datastoreItems, isLoading: datastoreLoading, addItem, fetchItems } = useDatastore({
+  const { addItem } = useDatastore({
     category: DATASTORE_CATEGORIES.INCIDENTS,
   });
 
-  // Load incident
+  // Load incident using direct key lookup (faster than list API)
   useEffect(() => {
-    if (!datastoreLoading && datastoreItems.length > 0 && id) {
-      // Find by key OR by finding_info.uid (the displayed ID might differ from datastore key)
-      let item = datastoreItems.find(i => i.key === id);
-      
-      // If not found by key, search by parsed ID
-      if (!item) {
-        item = datastoreItems.find(i => {
-          try {
-            const data = JSON.parse(i.value);
-            return data.finding_info?.uid === id;
-          } catch {
-            return false;
-          }
-        });
+    const loadIncident = async () => {
+      if (!id) {
+        setLoading(false);
+        return;
       }
+
+      setLoading(true);
       
-      if (item) {
-        const parsed = parseIncidentFromDatastore(item);
+      // Try direct key lookup first
+      const result = await getDatastoreItem(id, DATASTORE_CATEGORIES.INCIDENTS);
+      
+      if (result.success && result.item) {
+        const parsed = parseIncidentFromDatastore({
+          key: result.item.key,
+          value: result.item.value,
+          created: result.item.created,
+          edited: result.item.edited,
+        });
+        
         if (parsed) {
           setIncident(parsed);
           setEditedTitle(parsed.title);
@@ -239,18 +240,17 @@ const IncidentDetailPage = () => {
           setEditedObservables(parsed.observables || []);
           setEditedCustomFields(parsed.rawOCSF?.customFields || {});
           setActivity(parsed.activity || []);
+          setLoading(false);
+          return;
         }
       }
+      
+      // Key not found - incident doesn't exist
       setLoading(false);
-    } else if (!datastoreLoading && datastoreItems.length === 0) {
-      setLoading(false);
-    }
-  }, [datastoreItems, datastoreLoading, id]);
+    };
 
-  // Fetch on mount
-  useEffect(() => {
-    fetchItems();
-  }, [fetchItems]);
+    loadIncident();
+  }, [id]);
 
   // Track changes
   useEffect(() => {
@@ -385,7 +385,6 @@ const IncidentDetailPage = () => {
     setSaving(false);
     setHasChanges(false);
     toast.success('Incident updated');
-    await fetchItems();
   };
 
   const handleResolve = async () => {
@@ -521,7 +520,7 @@ const IncidentDetailPage = () => {
     }
   };
 
-  if (loading || datastoreLoading) {
+  if (loading) {
     return (
       <Box sx={{ p: 4 }}>
         <Skeleton variant="rectangular" height={60} sx={{ mb: 3 }} />
