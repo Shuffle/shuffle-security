@@ -15,6 +15,7 @@ import {
   FormControl,
   InputLabel,
   IconButton,
+  CircularProgress,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import SaveIcon from '@mui/icons-material/Save';
@@ -27,6 +28,7 @@ import {
   tlpLevels,
   papLevels,
 } from './CreateAlertDialog';
+import { useUsers } from '@/hooks/useUsers';
 
 interface DisplayAlert {
   id: string;
@@ -80,6 +82,7 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
   const [newObservableValue, setNewObservableValue] = useState('');
   const [hasChanges, setHasChanges] = useState(false);
   const [saving, setSaving] = useState(false);
+  const { users, loading: usersLoading } = useUsers();
 
   // Reset form when alert changes
   useEffect(() => {
@@ -331,14 +334,35 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
             </FormControl>
 
             {/* Assignee */}
-            <TextField
-              label="Assignee"
-              value={editedAssignee}
-              onChange={(e) => setEditedAssignee(e.target.value)}
-              size="small"
-              placeholder="Unassigned"
-              sx={inputSx}
-            />
+            <FormControl fullWidth size="small">
+              <InputLabel>Assignee</InputLabel>
+              <Select
+                value={editedAssignee}
+                label="Assignee"
+                onChange={(e) => setEditedAssignee(e.target.value)}
+                disabled={usersLoading}
+                endAdornment={usersLoading ? <CircularProgress size={16} sx={{ mr: 2 }} /> : null}
+                sx={inputSx['& .MuiOutlinedInput-root']}
+                MenuProps={{
+                  PaperProps: {
+                    sx: {
+                      bgcolor: 'hsl(var(--popover))',
+                      border: '1px solid hsl(var(--border))',
+                      zIndex: 9999,
+                    },
+                  },
+                }}
+              >
+                <MenuItem value="">
+                  <em>Unassigned</em>
+                </MenuItem>
+                {users.map((user) => (
+                  <MenuItem key={user.id} value={user.username}>
+                    {user.username}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
             {/* Source */}
             <Box>
