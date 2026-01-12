@@ -46,6 +46,7 @@ import {
   papLevels,
   ActivityItem,
 } from '@/components/incidents/CreateIncidentDialog';
+import { ResolveIncidentDialog, ResolutionData, RESOLUTION_REASONS } from '@/components/incidents/ResolveIncidentDialog';
 import { toast } from 'sonner';
 
 // Re-export ActivityItem type is now imported from CreateIncidentDialog
@@ -219,6 +220,7 @@ const IncidentDetailPage = () => {
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   
   const [isSaving, setIsSaving] = useState(false);
+  const [showResolveDialog, setShowResolveDialog] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pendingSaveRef = useRef(false);
   
@@ -431,16 +433,19 @@ const IncidentDetailPage = () => {
     toast.success('Comment added');
   };
 
-  const handleResolve = async () => {
+  const handleResolve = async (resolutionData: ResolutionData) => {
     if (!incident) return;
     
     setIsSaving(true);
+    
+    const reasonLabel = RESOLUTION_REASONS.find(r => r.value === resolutionData.reason)?.label || resolutionData.reason;
+    
     const resolveActivity: ActivityItem = {
       id: `status-${Date.now()}`,
       type: 'status',
       user: currentUsername,
       timestamp: Date.now(),
-      content: 'Marked as Resolved',
+      content: `Resolved: ${reasonLabel}${resolutionData.notes ? ` - ${resolutionData.notes}` : ''}`,
     };
     
     const updatedActivity = [...activity, resolveActivity];
@@ -450,6 +455,12 @@ const IncidentDetailPage = () => {
       ...incident.rawOCSF,
       status_id: 3,
       status: 'Resolved',
+      resolution: {
+        reason: resolutionData.reason,
+        notes: resolutionData.notes,
+        resolved_by: currentUsername,
+        resolved_at: Date.now(),
+      },
       activity: updatedActivity,
     } : {
       id: incident.id,
@@ -458,11 +469,18 @@ const IncidentDetailPage = () => {
       severity: editedSeverity,
       status: 'resolved',
       assignee: editedAssignee.trim() || undefined,
+      resolution: {
+        reason: resolutionData.reason,
+        notes: resolutionData.notes,
+        resolved_by: currentUsername,
+        resolved_at: Date.now(),
+      },
       activity: updatedActivity,
     };
 
     await addItem(incident.id, resolvedData);
     setIsSaving(false);
+    setShowResolveDialog(false);
     toast.success('Incident resolved');
     navigate('/incidents');
   };
@@ -684,7 +702,7 @@ const IncidentDetailPage = () => {
               <Button 
                 variant="outlined"
                 startIcon={<CheckCircleIcon />} 
-                onClick={handleResolve} 
+                onClick={() => setShowResolveDialog(true)} 
                 disabled={isSaving}
                 sx={{ color: '#22c55e', borderColor: '#22c55e', '&:hover': { borderColor: '#22c55e', bgcolor: 'rgba(34, 197, 94, 0.1)' } }}
               >
@@ -694,6 +712,15 @@ const IncidentDetailPage = () => {
           </Box>
         </Box>
       </Box>
+
+      {/* Resolve Dialog */}
+      <ResolveIncidentDialog
+        open={showResolveDialog}
+        onClose={() => setShowResolveDialog(false)}
+        onResolve={handleResolve}
+        incidentTitle={incident?.title || ''}
+        isLoading={isSaving}
+      />
 
       {/* Main Content */}
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' }, gap: 3 }}>
