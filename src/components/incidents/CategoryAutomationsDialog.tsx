@@ -25,6 +25,17 @@ import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 
 import { CategoryAutomation } from '@/services/datastore';
 
+// API format for automations
+interface AutomationApiFormat {
+  name: string;
+  description: string;
+  options: { key: string; value: string }[];
+  icon: string;
+  enabled: boolean;
+  type?: string;
+  disabled?: boolean;
+}
+
 interface CategoryAutomationsDialogProps {
   open: boolean;
   onClose: () => void;
@@ -33,30 +44,42 @@ interface CategoryAutomationsDialogProps {
   onAutomationsChange: (automations: CategoryAutomation[]) => void;
 }
 
-const automationTypes = [
+const automationConfigs = [
   {
     type: 'workflow',
+    name: 'Run workflow',
+    description: 'Runs one or more workflows with the updated value as runtime argument',
     icon: AccountTreeIcon,
-    label: 'Run workflow',
     color: '#3b82f6',
+    apiIcon: '',
+    optionKey: 'workflow_id',
   },
   {
     type: 'webhook',
+    name: 'Send webhook',
+    description: 'Sends the updated value to a specified webhook URL as a POST request',
     icon: WebhookIcon,
-    label: 'Send webhook',
     color: '#8b5cf6',
+    apiIcon: '',
+    optionKey: 'webhook_url',
   },
   {
     type: 'ai_agent',
+    name: 'Run AI Agent',
+    description: 'Runs an AI Agent to process the updated value. Uses built-in ShuffleAI configs. Learn more: https://shuffler.io/docs/AI',
     icon: SmartToyIcon,
-    label: 'Run AI Agent',
     color: '#10b981',
+    apiIcon: '',
+    apiType: 'singul',
   },
   {
     type: 'enrich',
+    name: 'Enrich',
+    description: "Enriches the data. Only runs on valid JSON data AND if the 'enrichment' field does not exist.",
     icon: EnhancedEncryptionIcon,
-    label: 'Enrich',
     color: '#f59e0b',
+    apiIcon: '/images/logos/singul.svg',
+    apiType: 'singul',
   },
 ];
 
@@ -88,12 +111,12 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
     if (open) {
       // Initialize with all automation types, preserving existing states
       const existingMap = new Map((initialAutomations || []).map(a => [a.type, a]));
-      const allAutomations: CategoryAutomation[] = automationTypes.map(at => {
-        const existing = existingMap.get(at.type as CategoryAutomation['type']);
+      const allAutomations: CategoryAutomation[] = automationConfigs.map(config => {
+        const existing = existingMap.get(config.type as CategoryAutomation['type']);
         return existing || {
-          id: `auto-${at.type}`,
-          name: at.label,
-          type: at.type as CategoryAutomation['type'],
+          id: `auto-${config.type}`,
+          name: config.name,
+          type: config.type as CategoryAutomation['type'],
           trigger: 'on_edit' as const,
           enabled: false,
         };
@@ -119,24 +142,56 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
 
     setIsSaving(true);
     try {
-      const enabledAutomations = automations.filter(a => a.enabled);
+      // Build API format payload
+      const apiAutomations: AutomationApiFormat[] = automationConfigs.map(config => {
+        const automation = automations.find(a => a.type === config.type);
+        const isEnabled = automation?.enabled || false;
+        
+        const baseAutomation: AutomationApiFormat = {
+          name: config.name,
+          description: config.description,
+          options: [{ key: config.optionKey || '', value: automation?.workflow_id || automation?.webhook_url || '' }],
+          icon: config.apiIcon || '',
+          enabled: isEnabled,
+        };
+
+        if (config.apiType) {
+          baseAutomation.type = config.apiType;
+        }
+
+        return baseAutomation;
+      });
+
+      // Add "Send message" as disabled (per API format)
+      apiAutomations.push({
+        name: 'Send message',
+        description: '',
+        type: 'singul',
+        options: [{ key: 'app', value: '' }],
+        icon: '',
+        disabled: true,
+        enabled: false,
+      });
+
+      const payload = {
+        category,
+        automations: apiAutomations,
+      };
       
-      const response = await fetch(getApiUrl(`/orgs/${orgId}/update_category`), {
+      const response = await fetch(getApiUrl('/api/v2/datastore/automate'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           ...getAuthHeader(API_CONFIG.apiKey),
         },
-        body: JSON.stringify({
-          category,
-          automations: enabledAutomations,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
         throw new Error('Failed to save automations');
       }
 
+      const enabledAutomations = automations.filter(a => a.enabled);
       onAutomationsChange(enabledAutomations);
       toast.success('Automations saved');
       onClose();
@@ -234,9 +289,9 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             {automations.map((automation) => {
-              const typeConfig = automationTypes.find(at => at.type === automation.type);
-              if (!typeConfig) return null;
-              const TypeIcon = typeConfig.icon;
+              const config = automationConfigs.find(c => c.type === automation.type);
+              if (!config) return null;
+              const TypeIcon = config.icon;
 
               return (
                 <Box
@@ -268,13 +323,13 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
                       color: 'rgba(255,255,255,0.3)',
                       p: 0.5,
                       '&.Mui-checked': {
-                        color: typeConfig.color,
+                        color: config.color,
                       },
                     }}
                   />
                   <TypeIcon 
                     sx={{ 
-                      color: automation.enabled ? typeConfig.color : 'rgba(255,255,255,0.4)',
+                      color: automation.enabled ? config.color : 'rgba(255,255,255,0.4)',
                       fontSize: 22,
                       transition: 'color 0.15s',
                     }} 
@@ -288,7 +343,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
                       transition: 'all 0.15s',
                     }}
                   >
-                    {typeConfig.label}
+                    {config.name}
                   </Typography>
                   
                   {automation.enabled && (
