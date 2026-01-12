@@ -16,6 +16,8 @@ import {
   InputLabel,
   IconButton,
   CircularProgress,
+  FormControlLabel,
+  Switch,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import SaveIcon from '@mui/icons-material/Save';
@@ -29,6 +31,7 @@ import {
   papLevels,
 } from './CreateAlertDialog';
 import { useUsers } from '@/hooks/useUsers';
+import { useCustomFields, CustomField } from '@/hooks/useCustomFields';
 
 interface DisplayAlert {
   id: string;
@@ -43,6 +46,7 @@ interface DisplayAlert {
   pap?: string;
   references?: string[];
   observables?: Observable[];
+  customFields?: Record<string, string | number | boolean>;
   rawOCSF?: OCSFDetection;
 }
 
@@ -80,9 +84,11 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
   const [editedObservables, setEditedObservables] = useState<Observable[]>([]);
   const [newObservableType, setNewObservableType] = useState('ip');
   const [newObservableValue, setNewObservableValue] = useState('');
+  const [editedCustomFields, setEditedCustomFields] = useState<Record<string, string | number | boolean>>({});
   const [hasChanges, setHasChanges] = useState(false);
   const [saving, setSaving] = useState(false);
   const { users, loading: usersLoading } = useUsers();
+  const { fields: customFields } = useCustomFields();
 
   // Reset form when alert changes
   useEffect(() => {
@@ -95,6 +101,7 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
       setEditedPap(alert.pap || 'PAP:AMBER');
       setEditedReferences(alert.references || []);
       setEditedObservables(alert.observables || []);
+      setEditedCustomFields(alert.rawOCSF?.customFields || {});
       setHasChanges(false);
     }
   }, [alert]);
@@ -110,9 +117,10 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
       editedTlp !== (alert.tlp || 'TLP:AMBER') ||
       editedPap !== (alert.pap || 'PAP:AMBER') ||
       JSON.stringify(editedReferences) !== JSON.stringify(alert.references || []) ||
-      JSON.stringify(editedObservables) !== JSON.stringify(alert.observables || []);
+      JSON.stringify(editedObservables) !== JSON.stringify(alert.observables || []) ||
+      JSON.stringify(editedCustomFields) !== JSON.stringify(alert.rawOCSF?.customFields || {});
     setHasChanges(changed);
-  }, [alert, editedTitle, editedMessage, editedSeverity, editedAssignee, editedTlp, editedPap, editedReferences, editedObservables]);
+  }, [alert, editedTitle, editedMessage, editedSeverity, editedAssignee, editedTlp, editedPap, editedReferences, editedObservables, editedCustomFields]);
 
   const handleAddReference = () => {
     if (newReference.trim()) {
@@ -161,6 +169,7 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
       pap: editedPap,
       assignee: editedAssignee.trim() || undefined,
       observables: editedObservables.length > 0 ? editedObservables : undefined,
+      customFields: Object.keys(editedCustomFields).length > 0 ? editedCustomFields : undefined,
       finding_info: {
         ...alert.rawOCSF.finding_info,
         title: editedTitle,
@@ -172,6 +181,96 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
     await onUpdate(alert.id, updates);
     setSaving(false);
     setHasChanges(false);
+  };
+
+  const handleCustomFieldChange = (field: CustomField, value: string | number | boolean) => {
+    setEditedCustomFields(prev => ({
+      ...prev,
+      [field.key]: value,
+    }));
+  };
+
+  const renderCustomField = (field: CustomField) => {
+    const value = editedCustomFields[field.key];
+    
+    switch (field.type) {
+      case 'text':
+        return (
+          <TextField
+            key={field.key}
+            label={field.name}
+            value={value || ''}
+            onChange={(e) => handleCustomFieldChange(field, e.target.value)}
+            fullWidth
+            size="small"
+            sx={inputSx}
+          />
+        );
+      case 'number':
+        return (
+          <TextField
+            key={field.key}
+            label={field.name}
+            type="number"
+            value={value || ''}
+            onChange={(e) => handleCustomFieldChange(field, Number(e.target.value))}
+            fullWidth
+            size="small"
+            sx={inputSx}
+          />
+        );
+      case 'select':
+        return (
+          <FormControl key={field.key} fullWidth size="small">
+            <InputLabel>{field.name}</InputLabel>
+            <Select
+              value={value || ''}
+              label={field.name}
+              onChange={(e) => handleCustomFieldChange(field, e.target.value)}
+              sx={inputSx['& .MuiOutlinedInput-root']}
+            >
+              <MenuItem value="">
+                <em>None</em>
+              </MenuItem>
+              {field.options?.map((opt) => (
+                <MenuItem key={opt} value={opt}>
+                  {opt}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        );
+      case 'date':
+        return (
+          <TextField
+            key={field.key}
+            label={field.name}
+            type="date"
+            value={value || ''}
+            onChange={(e) => handleCustomFieldChange(field, e.target.value)}
+            fullWidth
+            InputLabelProps={{ shrink: true }}
+            size="small"
+            sx={inputSx}
+          />
+        );
+      case 'boolean':
+        return (
+          <FormControlLabel
+            key={field.key}
+            control={
+              <Switch
+                checked={Boolean(value)}
+                onChange={(e) => handleCustomFieldChange(field, e.target.checked)}
+              />
+            }
+            label={field.name}
+            sx={{ color: 'hsl(var(--foreground))' }}
+          />
+        );
+      default:
+        return null;
+    }
   };
 
   const inputSx = {
@@ -511,7 +610,20 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
             )}
           </Box>
 
-          {/* OCSF Data (if available) */}
+          {/* Custom Fields */}
+          {customFields.length > 0 && (
+            <>
+              <Divider sx={{ borderColor: 'rgba(148, 163, 184, 0.1)' }} />
+              <Box>
+                <Typography variant="subtitle2" sx={{ mb: 1.5, color: 'text.secondary' }}>
+                  Custom Fields
+                </Typography>
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2 }}>
+                  {customFields.map((field) => renderCustomField(field))}
+                </Box>
+              </Box>
+            </>
+          )}
           {alert.rawOCSF && (
             <>
               <Divider sx={{ borderColor: 'rgba(148, 163, 184, 0.1)' }} />

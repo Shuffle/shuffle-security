@@ -57,6 +57,28 @@ const IOCTypesPage = () => {
     fetchItems();
   }, [fetchItems]);
 
+  // Auto-initialize defaults if org has no IOC types
+  useEffect(() => {
+    const autoInitialize = async () => {
+      if (isLoading) return;
+      if (items.length === 0) {
+        // Check localStorage to avoid repeated initialization attempts in same session
+        const initKey = 'shuffle_ioc_defaults_checked';
+        if (sessionStorage.getItem(initKey)) return;
+        
+        sessionStorage.setItem(initKey, 'true');
+        
+        // Initialize default IOC types
+        for (const ioc of defaultIOCTypes) {
+          await addItem(ioc.name, ioc);
+        }
+        await fetchItems();
+      }
+    };
+    
+    autoInitialize();
+  }, [items, isLoading, addItem, fetchItems]);
+
   useEffect(() => {
     const parsed: IOCType[] = items.map(item => {
       try {
