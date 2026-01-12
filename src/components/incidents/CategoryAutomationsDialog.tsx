@@ -11,10 +11,11 @@ import {
   Divider,
   CircularProgress,
   Checkbox,
+  TextField,
+  Autocomplete,
   Chip,
 } from '@mui/material';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
-import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import WebhookIcon from '@mui/icons-material/Webhook';
@@ -36,6 +37,11 @@ interface AutomationApiFormat {
   disabled?: boolean;
 }
 
+interface Workflow {
+  id: string;
+  name: string;
+}
+
 interface CategoryAutomationsDialogProps {
   open: boolean;
   onClose: () => void;
@@ -53,6 +59,7 @@ const automationConfigs = [
     color: '#3b82f6',
     apiIcon: '',
     optionKey: 'workflow_id',
+    hasConfig: true,
   },
   {
     type: 'webhook',
@@ -62,6 +69,7 @@ const automationConfigs = [
     color: '#8b5cf6',
     apiIcon: '',
     optionKey: 'webhook_url',
+    hasConfig: true,
   },
   {
     type: 'ai_agent',
@@ -71,6 +79,7 @@ const automationConfigs = [
     color: '#10b981',
     apiIcon: '',
     apiType: 'singul',
+    hasConfig: false,
   },
   {
     type: 'enrich',
@@ -80,6 +89,7 @@ const automationConfigs = [
     color: '#f59e0b',
     apiIcon: '/images/logos/singul.svg',
     apiType: 'singul',
+    hasConfig: false,
   },
 ];
 
@@ -106,6 +116,36 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
   const [automations, setAutomations] = useState<CategoryAutomation[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [workflows, setWorkflows] = useState<Workflow[]>([]);
+  const [loadingWorkflows, setLoadingWorkflows] = useState(false);
+  const [selectedWorkflows, setSelectedWorkflows] = useState<Workflow[]>([]);
+  const [webhookUrl, setWebhookUrl] = useState('');
+
+  // Fetch workflows when dialog opens
+  useEffect(() => {
+    if (open) {
+      const fetchWorkflows = async () => {
+        setLoadingWorkflows(true);
+        try {
+          const response = await fetch(getApiUrl('/api/v1/workflows'), {
+            headers: {
+              ...getAuthHeader(API_CONFIG.apiKey),
+            },
+          });
+          if (response.ok) {
+            const data = await response.json();
+            const workflowList = Array.isArray(data) ? data : data.workflows || [];
+            setWorkflows(workflowList.map((w: any) => ({ id: w.id, name: w.name || w.id })));
+          }
+        } catch (error) {
+          console.error('Failed to fetch workflows:', error);
+        } finally {
+          setLoadingWorkflows(false);
+        }
+      };
+      fetchWorkflows();
+    }
+  }, [open]);
 
   useEffect(() => {
     if (open) {
@@ -130,8 +170,39 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
       });
       setAutomations(allAutomations);
       setHasChanges(false);
+
+      // Extract existing workflow IDs and webhook URL
+      const workflowAutomation = existingByName.get('Run workflow');
+      if (workflowAutomation?.options) {
+        const workflowOption = workflowAutomation.options.find(o => o.key === 'workflow_id');
+        if (workflowOption?.value) {
+          const ids = workflowOption.value.split(',').filter(Boolean);
+          // Will be populated once workflows are loaded
+          setSelectedWorkflows(ids.map(id => ({ id: id.trim(), name: id.trim() })));
+        }
+      }
+
+      const webhookAutomation = existingByName.get('Send webhook');
+      if (webhookAutomation?.options) {
+        const urlOption = webhookAutomation.options.find(o => o.key === 'webhook_url');
+        if (urlOption?.value) {
+          setWebhookUrl(urlOption.value);
+        }
+      }
     }
   }, [open, initialAutomations]);
+
+  // Update selected workflows with names once workflows are loaded
+  useEffect(() => {
+    if (workflows.length > 0 && selectedWorkflows.length > 0) {
+      setSelectedWorkflows(prev => 
+        prev.map(sw => {
+          const found = workflows.find(w => w.id === sw.id);
+          return found || sw;
+        })
+      );
+    }
+  }, [workflows]);
 
   const handleToggleAutomation = (type: string) => {
     setAutomations(automations.map(a => 
@@ -154,10 +225,17 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
         const automation = automations.find(a => a.type === config.type);
         const isEnabled = automation?.enabled || false;
         
+        let optionValue = '';
+        if (config.type === 'workflow') {
+          optionValue = selectedWorkflows.map(w => w.id).join(',');
+        } else if (config.type === 'webhook') {
+          optionValue = webhookUrl;
+        }
+        
         const baseAutomation: AutomationApiFormat = {
           name: config.name,
           description: config.description,
-          options: [{ key: config.optionKey || '', value: automation?.workflow_id || automation?.webhook_url || '' }],
+          options: [{ key: config.optionKey || '', value: optionValue }],
           icon: config.apiIcon || '',
           enabled: isEnabled,
         };
@@ -229,7 +307,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <RocketLaunchIcon sx={{ color: enabledCount > 0 ? '#4ade80' : 'text.secondary', fontSize: 28 }} />
           <Typography variant="h6" sx={{ fontSize: '1.1rem', fontWeight: 600 }}>
-            Automation for '{category}'
+            Automation for Incidents
           </Typography>
         </Box>
         <IconButton
@@ -294,7 +372,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
             Do
           </Typography>
 
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
             {automations.map((automation) => {
               const config = automationConfigs.find(c => c.type === automation.type);
               if (!config) return null;
@@ -304,75 +382,139 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
                 <Box
                   key={automation.id || automation.name}
                   sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 2,
-                    py: 1.5,
-                    px: 1.5,
                     borderRadius: 1.5,
-                    cursor: 'pointer',
                     transition: 'all 0.15s',
                     bgcolor: automation.enabled ? 'rgba(255,255,255,0.03)' : 'transparent',
                     border: '1px solid',
                     borderColor: automation.enabled ? 'rgba(255,255,255,0.08)' : 'transparent',
-                    '&:hover': {
-                      bgcolor: 'rgba(255,255,255,0.04)',
-                    },
                   }}
-                  onClick={() => handleToggleAutomation(automation.type)}
                 >
-                  <Checkbox
-                    checked={automation.enabled}
-                    onChange={() => handleToggleAutomation(automation.type)}
-                    onClick={(e) => e.stopPropagation()}
-                    size="small"
+                  <Box
                     sx={{
-                      color: 'rgba(255,255,255,0.3)',
-                      p: 0.5,
-                      '&.Mui-checked': {
-                        color: config.color,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 2,
+                      py: 1.5,
+                      px: 1.5,
+                      cursor: 'pointer',
+                      '&:hover': {
+                        bgcolor: 'rgba(255,255,255,0.02)',
                       },
                     }}
-                  />
-                  <TypeIcon 
-                    sx={{ 
-                      color: automation.enabled ? config.color : 'rgba(255,255,255,0.4)',
-                      fontSize: 22,
-                      transition: 'color 0.15s',
-                    }} 
-                  />
-                  <Typography 
-                    sx={{ 
-                      flex: 1,
-                      fontSize: '0.95rem',
-                      color: automation.enabled ? 'text.primary' : 'rgba(255,255,255,0.6)',
-                      fontWeight: automation.enabled ? 500 : 400,
-                      transition: 'all 0.15s',
-                    }}
+                    onClick={() => handleToggleAutomation(automation.type!)}
                   >
-                    {config.name}
-                  </Typography>
-                  
-                  {automation.enabled && (
-                    <Chip
-                      label="Configure"
+                    <Checkbox
+                      checked={automation.enabled}
+                      onChange={() => handleToggleAutomation(automation.type!)}
+                      onClick={(e) => e.stopPropagation()}
                       size="small"
-                      variant="outlined"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toast.info('Configuration options coming soon');
-                      }}
                       sx={{
-                        height: 26,
-                        fontSize: '0.75rem',
-                        borderColor: 'rgba(255,255,255,0.15)',
-                        color: 'text.secondary',
-                        '&:hover': {
-                          borderColor: 'rgba(255,255,255,0.3)',
-                          bgcolor: 'rgba(255,255,255,0.05)',
+                        color: 'rgba(255,255,255,0.3)',
+                        p: 0.5,
+                        '&.Mui-checked': {
+                          color: config.color,
                         },
                       }}
                     />
+                    <TypeIcon 
+                      sx={{ 
+                        color: automation.enabled ? config.color : 'rgba(255,255,255,0.4)',
+                        fontSize: 22,
+                        transition: 'color 0.15s',
+                      }} 
+                    />
+                    <Typography 
+                      sx={{ 
+                        flex: 1,
+                        fontSize: '0.95rem',
+                        color: automation.enabled ? 'text.primary' : 'rgba(255,255,255,0.6)',
+                        fontWeight: automation.enabled ? 500 : 400,
+                        transition: 'all 0.15s',
+                      }}
+                    >
+                      {config.name}
+                    </Typography>
+                  </Box>
+
+                  {/* Workflow Configuration */}
+                  {automation.enabled && automation.type === 'workflow' && (
+                    <Box sx={{ px: 2, pb: 2, pt: 0.5 }}>
+                      <Autocomplete
+                        multiple
+                        size="small"
+                        options={workflows}
+                        loading={loadingWorkflows}
+                        value={selectedWorkflows}
+                        onChange={(_, newValue) => {
+                          setSelectedWorkflows(newValue);
+                          setHasChanges(true);
+                        }}
+                        getOptionLabel={(option) => option.name}
+                        isOptionEqualToValue={(option, value) => option.id === value.id}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            placeholder="Select workflows to run"
+                            sx={{
+                              '& .MuiOutlinedInput-root': {
+                                bgcolor: 'rgba(0,0,0,0.2)',
+                              },
+                            }}
+                          />
+                        )}
+                        renderTags={(value, getTagProps) =>
+                          value.map((option, index) => (
+                            <Chip
+                              {...getTagProps({ index })}
+                              key={option.id}
+                              label={option.name}
+                              size="small"
+                              sx={{
+                                bgcolor: 'rgba(59, 130, 246, 0.2)',
+                                color: '#3b82f6',
+                                '& .MuiChip-deleteIcon': {
+                                  color: 'rgba(59, 130, 246, 0.6)',
+                                  '&:hover': { color: '#3b82f6' },
+                                },
+                              }}
+                            />
+                          ))
+                        }
+                        sx={{
+                          '& .MuiAutocomplete-popupIndicator': { color: 'text.secondary' },
+                          '& .MuiAutocomplete-clearIndicator': { color: 'text.secondary' },
+                        }}
+                        slotProps={{
+                          paper: {
+                            sx: {
+                              bgcolor: '#2a2a2a',
+                              border: '1px solid rgba(255,255,255,0.1)',
+                            },
+                          },
+                        }}
+                      />
+                    </Box>
+                  )}
+
+                  {/* Webhook Configuration */}
+                  {automation.enabled && automation.type === 'webhook' && (
+                    <Box sx={{ px: 2, pb: 2, pt: 0.5 }}>
+                      <TextField
+                        size="small"
+                        fullWidth
+                        placeholder="https://your-webhook-url.com"
+                        value={webhookUrl}
+                        onChange={(e) => {
+                          setWebhookUrl(e.target.value);
+                          setHasChanges(true);
+                        }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            bgcolor: 'rgba(0,0,0,0.2)',
+                          },
+                        }}
+                      />
+                    </Box>
                   )}
                 </Box>
               );
@@ -383,14 +525,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
 
       <Divider sx={{ borderColor: 'rgba(255,255,255,0.06)' }} />
 
-      <DialogActions sx={{ px: 4, py: 2.5, justifyContent: 'space-between' }}>
-        <Button
-          startIcon={<AddIcon />}
-          onClick={() => toast.info('Additional automation types coming soon')}
-          sx={{ color: 'text.secondary' }}
-        >
-          Add action
-        </Button>
+      <DialogActions sx={{ px: 4, py: 2.5, justifyContent: 'flex-end' }}>
         <Box sx={{ display: 'flex', gap: 1.5 }}>
           <Button onClick={onClose} disabled={isSaving}>
             Cancel
