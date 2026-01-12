@@ -1,6 +1,7 @@
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'sonner';
 import { muiTheme } from '@/theme/muiTheme';
 import { AuthProvider } from '@/context/AuthContext';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
@@ -25,6 +26,17 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider theme={muiTheme}>
       <CssBaseline />
+      <Toaster 
+        position="bottom-right" 
+        theme="dark"
+        toastOptions={{
+          style: {
+            background: 'linear-gradient(180deg, #262626 0%, #1f1f1f 100%)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            color: 'hsl(var(--foreground))',
+          },
+        }}
+      />
       <AuthProvider>
         <BrowserRouter>
           <Routes>

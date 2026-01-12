@@ -37,7 +37,9 @@ import {
   CheckCircle as CheckCircleIcon,
   Upload as UploadIcon,
   SmartToy as AiIcon,
+  CalendarMonth as CalendarIcon,
 } from '@mui/icons-material';
+import { toast } from 'sonner';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 import { useAuth } from '@/context/AuthContext';
 import { setDatastoreItem, getDatastoreItem, DATASTORE_CATEGORIES } from '@/services/datastore';
@@ -120,7 +122,6 @@ const UsersPage = () => {
   const [configLoading, setConfigLoading] = useState(true);
   const [configError, setConfigError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   
   // Expanded rows
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
@@ -137,6 +138,9 @@ const UsersPage = () => {
   
   // Import dialog
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  
+  // Schedule timeline dialog
+  const [timelineDialogOpen, setTimelineDialogOpen] = useState(false);
   
   // Schedule entry form
   const [entryStartDate, setEntryStartDate] = useState('');
@@ -250,8 +254,7 @@ const UsersPage = () => {
       if (response.success) {
         setConfig(configToSave);
         if (!silent) {
-          setSuccessMessage('Schedule saved successfully');
-          setTimeout(() => setSuccessMessage(null), 3000);
+          toast.success('Schedule saved successfully');
         }
       } else {
         throw new Error(response.error || 'Failed to save configuration');
@@ -453,17 +456,35 @@ const UsersPage = () => {
             Manage users and their auto-assignment schedules
           </Typography>
         </Box>
-        <Button
-          variant="outlined"
-          startIcon={<UploadIcon />}
-          onClick={() => setImportDialogOpen(true)}
-          sx={{
-            borderColor: 'hsl(var(--border))',
-            color: 'hsl(var(--foreground))',
-          }}
-        >
-          Import Schedule
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button
+            variant="contained"
+            startIcon={<CalendarIcon />}
+            onClick={() => setTimelineDialogOpen(true)}
+            sx={{
+              bgcolor: 'hsl(var(--primary))',
+              color: 'hsl(var(--primary-foreground))',
+            }}
+          >
+            View Scheduling
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<UploadIcon />}
+            disabled
+            sx={{
+              borderColor: 'hsl(var(--border))',
+              color: 'hsl(var(--muted-foreground))',
+              '&.Mui-disabled': {
+                borderColor: 'hsl(var(--border))',
+                color: 'hsl(var(--muted-foreground))',
+                opacity: 0.5,
+              },
+            }}
+          >
+            Import Schedule
+          </Button>
+        </Box>
       </Box>
 
       {error && (
@@ -477,12 +498,6 @@ const UsersPage = () => {
           {configError}
         </Alert>
       )}
-      
-      {successMessage && (
-        <Alert severity="success" sx={{ mb: 3 }}>
-          {successMessage}
-        </Alert>
-      )}
 
       {loading || configLoading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
@@ -490,8 +505,6 @@ const UsersPage = () => {
         </Box>
       ) : (
         <>
-          {/* Weekly Timeline */}
-          <WeeklyScheduleTimeline userSchedules={allSchedulesForTimeline} />
 
           {/* AI Agent Row */}
           <Paper 
@@ -820,6 +833,30 @@ const UsersPage = () => {
           >
             {isSaving ? <CircularProgress size={20} /> : 'Save'}
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Schedule Timeline Dialog */}
+      <Dialog 
+        open={timelineDialogOpen} 
+        onClose={() => setTimelineDialogOpen(false)} 
+        maxWidth="lg" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            background: 'linear-gradient(180deg, #262626 0%, #1f1f1f 100%)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+          },
+        }}
+      >
+        <DialogTitle sx={{ color: 'hsl(var(--foreground))' }}>
+          On-Call Schedule
+        </DialogTitle>
+        <DialogContent>
+          <WeeklyScheduleTimeline userSchedules={allSchedulesForTimeline} />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setTimelineDialogOpen(false)}>Close</Button>
         </DialogActions>
       </Dialog>
 
