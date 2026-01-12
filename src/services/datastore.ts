@@ -15,9 +15,31 @@ export interface DatastoreItem {
   edited?: number;
 }
 
+export interface CategoryAutomation {
+  id: string;
+  name: string;
+  type: 'workflow' | 'webhook' | 'ai_agent' | 'enrich';
+  trigger: 'on_create' | 'on_edit' | 'on_delete';
+  workflow_id?: string;
+  webhook_url?: string;
+  enabled: boolean;
+}
+
+export interface CategoryConfig {
+  id: string;
+  org_id: string;
+  category: string;
+  automations: CategoryAutomation[] | null;
+  settings: {
+    timeout: number;
+    public: boolean;
+  };
+}
+
 export interface DatastoreResponse {
   success: boolean;
   data?: DatastoreItem[];
+  categoryConfig?: CategoryConfig;
   error?: string;
 }
 
@@ -170,8 +192,12 @@ export const getDatastoreByCategory = async (
   }
 
   const data = await response.json();
-  // API returns items in 'keys' array
-  return { success: true, data: Array.isArray(data) ? data : data.keys || data.data || [] };
+  // API returns items in 'keys' array and category config
+  return { 
+    success: true, 
+    data: Array.isArray(data) ? data : data.keys || data.data || [],
+    categoryConfig: data.category_config,
+  };
 };
 
 /**
