@@ -16,8 +16,7 @@ import {
   Autocomplete,
   TextField,
 } from '@mui/material';
-import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
-import FolderSpecialIcon from '@mui/icons-material/FolderSpecial';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import PeopleIcon from '@mui/icons-material/People';
 import BusinessIcon from '@mui/icons-material/Business';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
@@ -40,15 +39,14 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { label: 'Alerts', icon: <NotificationsActiveIcon />, path: '/alerts' },
   { 
-    label: 'Cases', 
-    icon: <FolderSpecialIcon />,
-    path: '/cases',
+    label: 'Incidents', 
+    icon: <WarningAmberIcon />,
+    path: '/incidents',
     children: [
       { label: 'Templates', path: '/templates' },
-      { label: 'IOC Types', path: '/cases/ioc-types' },
-      { label: 'Custom Fields', path: '/cases/custom-fields' },
+      { label: 'IOC Types', path: '/incidents/ioc-types' },
+      { label: 'Custom Fields', path: '/incidents/custom-fields' },
     ],
   },
   { label: 'Users', icon: <PeopleIcon />, path: '/users' },
@@ -123,7 +121,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { userInfo, setActiveOrg } = useAuth();
-  const [expandedItems, setExpandedItems] = useState<string[]>(['Cases']);
+  const [expandedItems, setExpandedItems] = useState<string[]>(['Incidents']);
 
   const organizations = userInfo?.orgs || [];
   const sortedOrgs = sortOrgsWithHierarchy(organizations);

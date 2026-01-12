@@ -9,8 +9,7 @@ import Index from './pages/Index';
 import AuthPage from './pages/AuthPage';
 import OnboardingPage from './pages/OnboardingPage';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import AlertsPage from '@/pages/dashboard/AlertsPage';
-import CasesPage from '@/pages/dashboard/CasesPage';
+import IncidentsPage from '@/pages/dashboard/IncidentsPage';
 import TemplatesPage from '@/pages/dashboard/TemplatesPage';
 import IOCTypesPage from '@/pages/dashboard/IOCTypesPage';
 import CustomFieldsPage from '@/pages/dashboard/CustomFieldsPage';
@@ -62,11 +61,10 @@ const App = () => (
                 </ProtectedRoute>
               }
             >
-              <Route path="/alerts" element={<AlertsPage />} />
-              <Route path="/cases" element={<CasesPage />} />
+              <Route path="/incidents" element={<IncidentsPage />} />
               <Route path="/templates" element={<TemplatesPage />} />
-              <Route path="/cases/ioc-types" element={<IOCTypesPage />} />
-              <Route path="/cases/custom-fields" element={<CustomFieldsPage />} />
+              <Route path="/incidents/ioc-types" element={<IOCTypesPage />} />
+              <Route path="/incidents/custom-fields" element={<CustomFieldsPage />} />
               <Route path="/users" element={<UsersPage />} />
               <Route path="/organizations" element={<OrganizationsPage />} />
               <Route path="/settings" element={<SettingsPage />} />

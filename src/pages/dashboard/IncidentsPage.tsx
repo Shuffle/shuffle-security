@@ -22,52 +22,56 @@ import {
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import SearchIcon from '@mui/icons-material/Search';
-import FilterListIcon from '@mui/icons-material/FilterList';
 import AddIcon from '@mui/icons-material/Add';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import FolderSpecialIcon from '@mui/icons-material/FolderSpecial';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useDatastore } from '@/hooks/useDatastore';
 import { DATASTORE_CATEGORIES, getDatastoreByCategory, setDatastoreItems } from '@/services/datastore';
-import { CreateAlertDialog, OCSFDetection, Observable } from '@/components/alerts/CreateAlertDialog';
-import { AlertDetailDialog } from '@/components/alerts/AlertDetailDialog';
+import { CreateIncidentDialog, OCSFIncidentFinding, Observable } from '@/components/incidents/CreateIncidentDialog';
+import { IncidentDetailDialog } from '@/components/incidents/IncidentDetailDialog';
 
-// Legacy category for migration
+// Legacy categories for migration
 const LEGACY_ALERTS_CATEGORY = 'shuffle-alerts';
+const LEGACY_SECURITY_ALERTS_CATEGORY = 'shuffle-security_alerts';
 
 // Check if migration already happened (stored in localStorage)
-const MIGRATION_KEY = 'shuffle_alerts_migrated_v1';
+const MIGRATION_KEY = 'shuffle_incidents_migrated_v1';
 
-// Migrate data from old category to new category (one-time only)
-const migrateAlertsData = async (): Promise<number> => {
+// Migrate data from old categories to new INCIDENTS category (one-time only)
+const migrateToIncidents = async (): Promise<number> => {
   // Skip if already migrated
   if (localStorage.getItem(MIGRATION_KEY)) {
     return 0;
   }
 
   try {
-    // Fetch from old category
-    const oldData = await getDatastoreByCategory(LEGACY_ALERTS_CATEGORY);
-    if (!oldData.success || !oldData.data || oldData.data.length === 0) {
+    let allItems: { key: string; value: string }[] = [];
+
+    // Fetch from old alert category
+    const oldAlerts = await getDatastoreByCategory(LEGACY_ALERTS_CATEGORY);
+    if (oldAlerts.success && oldAlerts.data && oldAlerts.data.length > 0) {
+      allItems = [...allItems, ...oldAlerts.data.map(item => ({ key: item.key, value: item.value }))];
+    }
+
+    // Fetch from security_alerts category
+    const securityAlerts = await getDatastoreByCategory(LEGACY_SECURITY_ALERTS_CATEGORY);
+    if (securityAlerts.success && securityAlerts.data && securityAlerts.data.length > 0) {
+      allItems = [...allItems, ...securityAlerts.data.map(item => ({ key: item.key, value: item.value }))];
+    }
+
+    if (allItems.length === 0) {
       // Mark as migrated even if no data (nothing to migrate)
       localStorage.setItem(MIGRATION_KEY, new Date().toISOString());
       return 0;
     }
 
-    // Prepare items for new category
-    const itemsToMigrate = oldData.data.map(item => ({
-      key: item.key,
-      value: item.value,
-    }));
-
-    // Write to new category
-    const result = await setDatastoreItems(itemsToMigrate, DATASTORE_CATEGORIES.ALERTS);
+    // Write to new INCIDENTS category
+    const result = await setDatastoreItems(allItems, DATASTORE_CATEGORIES.INCIDENTS);
     if (result.success) {
-      console.log(`Migrated ${itemsToMigrate.length} alerts to new category`);
-      // Mark as migrated
+      console.log(`Migrated ${allItems.length} items to INCIDENTS category`);
       localStorage.setItem(MIGRATION_KEY, new Date().toISOString());
-      return itemsToMigrate.length;
+      return allItems.length;
     }
     return 0;
   } catch (err) {
@@ -76,7 +80,7 @@ const migrateAlertsData = async (): Promise<number> => {
   }
 };
 
-interface DisplayAlert {
+interface DisplayIncident {
   id: string;
   title: string;
   source: string;
@@ -89,7 +93,8 @@ interface DisplayAlert {
   pap?: string;
   references?: string[];
   observables?: Observable[];
-  rawOCSF?: OCSFDetection;
+  relatedFindings?: string[];
+  rawOCSF?: OCSFIncidentFinding;
 }
 
 const severityColors: Record<string, string> = {
@@ -102,6 +107,7 @@ const severityColors: Record<string, string> = {
 
 const statusColors: Record<string, { bg: string; text: string }> = {
   new: { bg: 'rgba(34, 184, 207, 0.15)', text: '#22b8cf' },
+  in_progress: { bg: 'rgba(249, 115, 22, 0.15)', text: '#f97316' },
   escalated: { bg: 'rgba(239, 68, 68, 0.15)', text: '#ef4444' },
   resolved: { bg: 'rgba(34, 197, 94, 0.15)', text: '#22c55e' },
 };
@@ -130,7 +136,7 @@ const mapOCSFSeverity = (severityId: number): string => {
 const mapOCSFStatus = (statusId: number): string => {
   switch (statusId) {
     case 1: return 'new';
-    case 2: return 'escalated';
+    case 2: return 'in_progress';
     case 3: return 'resolved';
     default: return 'new';
   }
@@ -139,16 +145,15 @@ const mapOCSFStatus = (statusId: number): string => {
 // Format timestamp from datastore (Unix seconds to readable date)
 const formatTimestamp = (timestamp: number | string | undefined): string => {
   if (!timestamp) return 'Unknown';
-  // Convert to number and check if it's Unix seconds (10 digits) vs milliseconds (13 digits)
   const ts = typeof timestamp === 'string' ? parseInt(timestamp, 10) : timestamp;
-  const ms = ts < 10000000000 ? ts * 1000 : ts; // Convert seconds to milliseconds if needed
+  const ms = ts < 10000000000 ? ts * 1000 : ts;
   const date = new Date(ms);
   if (isNaN(date.getTime())) return 'Unknown';
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
 };
 
-// Parse alert from datastore (handles both OCSF and legacy formats)
-const parseAlertFromDatastore = (item: { key: string; value: string; created?: number; edited?: number }): DisplayAlert | null => {
+// Parse incident from datastore (handles both OCSF Incident Finding and legacy formats)
+const parseIncidentFromDatastore = (item: { key: string; value: string; created?: number; edited?: number }): DisplayIncident | null => {
   try {
     const data = JSON.parse(item.value);
     
@@ -156,7 +161,7 @@ const parseAlertFromDatastore = (item: { key: string; value: string; created?: n
     const isOCSF = data.finding_info || data.severity_id !== undefined;
     
     if (isOCSF) {
-      const ocsf = data as OCSFDetection;
+      const ocsf = data as OCSFIncidentFinding;
       return {
         id: ocsf.finding_info?.uid || item.key,
         title: ocsf.finding_info?.title || ocsf.message || 'Untitled',
@@ -170,6 +175,7 @@ const parseAlertFromDatastore = (item: { key: string; value: string; created?: n
         pap: ocsf.pap,
         references: ocsf.finding_info?.references,
         observables: ocsf.observables,
+        relatedFindings: ocsf.related_findings,
         rawOCSF: ocsf,
       };
     } else {
@@ -187,7 +193,7 @@ const parseAlertFromDatastore = (item: { key: string; value: string; created?: n
         pap: data.pap,
         references: data.references,
         observables: data.observables,
-        rawOCSF: undefined, // Legacy format doesn't have OCSF data
+        rawOCSF: undefined,
       };
     }
   } catch {
@@ -201,27 +207,26 @@ interface Filters {
   tlp: string | null;
 }
 
-const AlertsPage = () => {
+const IncidentsPage = () => {
   const [selected, setSelected] = useState<string[]>([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [alerts, setAlerts] = useState<DisplayAlert[]>([]);
+  const [incidents, setIncidents] = useState<DisplayIncident[]>([]);
   const [filters, setFilters] = useState<Filters>({ severity: null, status: null, tlp: null });
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
-  const [selectedAlert, setSelectedAlert] = useState<DisplayAlert | null>(null);
+  const [selectedIncident, setSelectedIncident] = useState<DisplayIncident | null>(null);
 
   const { items: datastoreItems, isLoading, error, fetchItems, addItem } = useDatastore({
-    category: DATASTORE_CATEGORIES.ALERTS,
+    category: DATASTORE_CATEGORIES.INCIDENTS,
   });
 
-  // Migrate data from old category and fetch alerts on mount
+  // Migrate data from old categories and fetch incidents on mount
   useEffect(() => {
     const init = async () => {
-      const migratedCount = await migrateAlertsData();
+      const migratedCount = await migrateToIncidents();
       if (migratedCount > 0) {
-        console.log(`Migration complete: ${migratedCount} alerts moved`);
-        // Wait a moment for API to propagate the data before fetching
+        console.log(`Migration complete: ${migratedCount} items moved to incidents`);
         await new Promise(resolve => setTimeout(resolve, 1500));
       }
       await fetchItems();
@@ -229,18 +234,18 @@ const AlertsPage = () => {
     init();
   }, [fetchItems]);
 
-  // Parse datastore items (OCSF format) and combine with dummy alerts
+  // Parse datastore items
   useEffect(() => {
-    const realAlerts: DisplayAlert[] = datastoreItems
-      .map((item) => parseAlertFromDatastore(item))
-      .filter((a): a is DisplayAlert => a !== null);
+    const realIncidents: DisplayIncident[] = datastoreItems
+      .map((item) => parseIncidentFromDatastore(item))
+      .filter((a): a is DisplayIncident => a !== null);
 
-    setAlerts(realAlerts);
+    setIncidents(realIncidents);
   }, [datastoreItems]);
 
   const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.checked) {
-      setSelected(alerts.map((a) => a.id));
+      setSelected(incidents.map((i) => i.id));
     } else {
       setSelected([]);
     }
@@ -252,60 +257,59 @@ const AlertsPage = () => {
     );
   };
 
-  const handleRowClick = (alert: DisplayAlert) => {
-    setSelectedAlert(alert);
+  const handleRowClick = (incident: DisplayIncident) => {
+    setSelectedIncident(incident);
     setDetailDialogOpen(true);
   };
 
-  const handleCreateAlert = async (ocsf: OCSFDetection) => {
+  const handleCreateIncident = async (ocsf: OCSFIncidentFinding) => {
     const key = ocsf.finding_info.uid;
     await addItem(key, ocsf);
-    await fetchItems(); // Refresh list after creating
+    await fetchItems();
   };
 
-  const handleResolveAlert = async (alertId: string) => {
-    const alert = alerts.find(a => a.id === alertId);
-    if (!alert || !alert.rawOCSF) return;
+  const handleResolveIncident = async (incidentId: string) => {
+    const incident = incidents.find(i => i.id === incidentId);
+    if (!incident || !incident.rawOCSF) return;
 
     // Optimistically update local state immediately
-    setAlerts(prev => prev.map(a => 
-      a.id === alertId 
-        ? { ...a, status: 'resolved' } 
-        : a
+    setIncidents(prev => prev.map(i => 
+      i.id === incidentId 
+        ? { ...i, status: 'resolved' } 
+        : i
     ));
 
-    const updatedOCSF: OCSFDetection = {
-      ...alert.rawOCSF,
+    const updatedOCSF: OCSFIncidentFinding = {
+      ...incident.rawOCSF,
       status_id: 3, // Resolved
       status: 'Resolved',
     };
 
-    // Persist to datastore in background
-    await addItem(alertId, updatedOCSF);
+    await addItem(incidentId, updatedOCSF);
   };
 
-  const handleUpdateAlert = async (alertId: string, updates: Partial<OCSFDetection>) => {
-    const alert = alerts.find(a => a.id === alertId);
-    if (!alert || !alert.rawOCSF) return;
+  const handleUpdateIncident = async (incidentId: string, updates: Partial<OCSFIncidentFinding>) => {
+    const incident = incidents.find(i => i.id === incidentId);
+    if (!incident || !incident.rawOCSF) return;
 
-    const updatedOCSF: OCSFDetection = {
-      ...alert.rawOCSF,
+    const updatedOCSF: OCSFIncidentFinding = {
+      ...incident.rawOCSF,
       ...updates,
       finding_info: {
-        ...alert.rawOCSF.finding_info,
+        ...incident.rawOCSF.finding_info,
         ...(updates.finding_info || {}),
       },
     };
 
-    await addItem(alertId, updatedOCSF);
+    await addItem(incidentId, updatedOCSF);
     await fetchItems();
   };
 
-  // Filter alerts based on active filters
-  const filteredAlerts = alerts.filter((alert) => {
-    if (filters.severity && alert.severity !== filters.severity) return false;
-    if (filters.status && alert.status !== filters.status) return false;
-    if (filters.tlp && alert.tlp !== filters.tlp) return false;
+  // Filter incidents based on active filters
+  const filteredIncidents = incidents.filter((incident) => {
+    if (filters.severity && incident.severity !== filters.severity) return false;
+    if (filters.status && incident.status !== filters.status) return false;
+    if (filters.tlp && incident.tlp !== filters.tlp) return false;
     return true;
   });
 
@@ -334,7 +338,7 @@ const AlertsPage = () => {
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Typography variant="h5" sx={{ fontWeight: 600 }}>
-            Alerts
+            Incidents
           </Typography>
           {isLoading && <CircularProgress size={20} />}
           {error && (
@@ -357,7 +361,7 @@ const AlertsPage = () => {
             startIcon={<AddIcon />}
             onClick={() => setCreateDialogOpen(true)}
           >
-            Create Alert
+            Create Incident
           </Button>
         </Box>
       </Box>
@@ -367,7 +371,7 @@ const AlertsPage = () => {
           <Box sx={{ p: 2, display: 'flex', gap: 2, alignItems: 'center', borderBottom: '1px solid rgba(148, 163, 184, 0.1)' }}>
             <TextField
               size="small"
-              placeholder="Search alerts..."
+              placeholder="Search incidents..."
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -413,7 +417,7 @@ const AlertsPage = () => {
             {selected.length > 0 && (
               <Box sx={{ display: 'flex', gap: 1, ml: 'auto' }}>
                 <Button variant="outlined" color="primary">
-                  Create Case ({selected.length})
+                  Merge Selected ({selected.length})
                 </Button>
               </Box>
             )}
@@ -425,12 +429,12 @@ const AlertsPage = () => {
                 <TableRow>
                   <TableCell padding="checkbox">
                     <Checkbox
-                      indeterminate={selected.length > 0 && selected.length < filteredAlerts.length}
-                      checked={filteredAlerts.length > 0 && selected.length === filteredAlerts.length}
+                      indeterminate={selected.length > 0 && selected.length < filteredIncidents.length}
+                      checked={filteredIncidents.length > 0 && selected.length === filteredIncidents.length}
                       onChange={handleSelectAll}
                     />
                   </TableCell>
-                  <TableCell>Alert</TableCell>
+                  <TableCell>Incident</TableCell>
                   <TableCell>Source</TableCell>
                   <TableCell>Severity</TableCell>
                   <TableCell>TLP</TableCell>
@@ -441,69 +445,69 @@ const AlertsPage = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filteredAlerts.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((alert) => (
+                {filteredIncidents.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((incident) => (
                   <TableRow
-                    key={alert.id}
+                    key={incident.id}
                     hover
-                    selected={selected.includes(alert.id)}
+                    selected={selected.includes(incident.id)}
                     sx={{ cursor: 'pointer' }}
-                    onClick={() => handleRowClick(alert)}
+                    onClick={() => handleRowClick(incident)}
                   >
                     <TableCell padding="checkbox" onClick={(e) => e.stopPropagation()}>
                       <Checkbox
-                        checked={selected.includes(alert.id)}
-                        onChange={() => handleSelect(alert.id)}
+                        checked={selected.includes(incident.id)}
+                        onChange={() => handleSelect(incident.id)}
                       />
                     </TableCell>
                     <TableCell>
                       <Box>
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                          {alert.title}
+                          {incident.title}
                         </Typography>
                         <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                          {alert.id}
+                          {incident.id}
                         </Typography>
                       </Box>
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={alert.source}
+                        label={incident.source}
                         size="small"
                         sx={{ backgroundColor: 'rgba(148, 163, 184, 0.1)' }}
                       />
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={alert.severity}
+                        label={incident.severity}
                         size="small"
-                        onClick={handleChipFilter('severity', alert.severity)}
+                        onClick={handleChipFilter('severity', incident.severity)}
                         sx={{
-                          backgroundColor: `${severityColors[alert.severity] || '#94a3b8'}20`,
-                          color: severityColors[alert.severity] || '#94a3b8',
+                          backgroundColor: `${severityColors[incident.severity] || '#94a3b8'}20`,
+                          color: severityColors[incident.severity] || '#94a3b8',
                           fontWeight: 500,
                           textTransform: 'capitalize',
                           cursor: 'pointer',
                           '&:hover': {
-                            backgroundColor: `${severityColors[alert.severity] || '#94a3b8'}35`,
+                            backgroundColor: `${severityColors[incident.severity] || '#94a3b8'}35`,
                           },
                         }}
                       />
                     </TableCell>
                     <TableCell>
-                      {alert.tlp && (
+                      {incident.tlp && (
                         <Chip
-                          label={alert.tlp}
+                          label={incident.tlp}
                           size="small"
-                          onClick={handleChipFilter('tlp', alert.tlp)}
+                          onClick={handleChipFilter('tlp', incident.tlp)}
                           sx={{
-                            backgroundColor: `${tlpColors[alert.tlp] || '#94a3b8'}20`,
-                            color: tlpColors[alert.tlp] || '#94a3b8',
-                            border: tlpColors[alert.tlp] === '#ffffff' ? '1px solid #666' : 'none',
+                            backgroundColor: `${tlpColors[incident.tlp] || '#94a3b8'}20`,
+                            color: tlpColors[incident.tlp] || '#94a3b8',
+                            border: tlpColors[incident.tlp] === '#ffffff' ? '1px solid #666' : 'none',
                             fontWeight: 500,
                             fontSize: '0.7rem',
                             cursor: 'pointer',
                             '&:hover': {
-                              backgroundColor: `${tlpColors[alert.tlp] || '#94a3b8'}35`,
+                              backgroundColor: `${tlpColors[incident.tlp] || '#94a3b8'}35`,
                             },
                           }}
                         />
@@ -511,12 +515,12 @@ const AlertsPage = () => {
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={alert.status.replace('_', ' ')}
+                        label={incident.status.replace('_', ' ')}
                         size="small"
-                        onClick={handleChipFilter('status', alert.status)}
+                        onClick={handleChipFilter('status', incident.status)}
                         sx={{
-                          backgroundColor: statusColors[alert.status]?.bg || 'rgba(148, 163, 184, 0.1)',
-                          color: statusColors[alert.status]?.text || '#94a3b8',
+                          backgroundColor: statusColors[incident.status]?.bg || 'rgba(148, 163, 184, 0.1)',
+                          color: statusColors[incident.status]?.text || '#94a3b8',
                           fontWeight: 500,
                           textTransform: 'capitalize',
                           cursor: 'pointer',
@@ -527,7 +531,7 @@ const AlertsPage = () => {
                       />
                     </TableCell>
                     <TableCell>
-                      {alert.assignee || (
+                      {incident.assignee || (
                         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                           Unassigned
                         </Typography>
@@ -535,7 +539,7 @@ const AlertsPage = () => {
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                        {alert.created}
+                        {incident.created}
                       </Typography>
                     </TableCell>
                     <TableCell align="right" onClick={(e) => e.stopPropagation()}>
@@ -543,21 +547,16 @@ const AlertsPage = () => {
                         <Tooltip title="View Details">
                           <IconButton
                             size="small"
-                            onClick={() => handleRowClick(alert)}
+                            onClick={() => handleRowClick(incident)}
                           >
                             <VisibilityIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
-                        <Tooltip title="Create Case">
-                          <IconButton size="small">
-                            <FolderSpecialIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        {alert.status !== 'resolved' && (
-                          <Tooltip title="Resolve Alert">
+                        {incident.status !== 'resolved' && (
+                          <Tooltip title="Resolve Incident">
                             <IconButton
                               size="small"
-                              onClick={() => handleResolveAlert(alert.id)}
+                              onClick={() => handleResolveIncident(incident.id)}
                               sx={{ color: 'success.main' }}
                             >
                               <CheckCircleIcon fontSize="small" />
@@ -574,7 +573,7 @@ const AlertsPage = () => {
 
           <TablePagination
             component="div"
-            count={filteredAlerts.length}
+            count={filteredIncidents.length}
             page={page}
             onPageChange={(_, newPage) => setPage(newPage)}
             rowsPerPage={rowsPerPage}
@@ -586,24 +585,24 @@ const AlertsPage = () => {
         </CardContent>
       </Card>
 
-      <CreateAlertDialog
+      <CreateIncidentDialog
         open={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
-        onSubmit={handleCreateAlert}
+        onSubmit={handleCreateIncident}
       />
 
-      <AlertDetailDialog
+      <IncidentDetailDialog
         open={detailDialogOpen}
-        alert={selectedAlert}
+        incident={selectedIncident}
         onClose={() => {
           setDetailDialogOpen(false);
-          setSelectedAlert(null);
+          setSelectedIncident(null);
         }}
-        onResolve={handleResolveAlert}
-        onUpdate={handleUpdateAlert}
+        onResolve={handleResolveIncident}
+        onUpdate={handleUpdateIncident}
       />
     </motion.div>
   );
 };
 
-export default AlertsPage;
+export default IncidentsPage;

@@ -23,7 +23,7 @@ import { useUsers } from '@/hooks/useUsers';
 import { useCustomFields, CustomField } from '@/hooks/useCustomFields';
 
 // Generate a 10-character unique ID
-const generateAlertId = (): string => {
+const generateIncidentId = (): string => {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
   const array = new Uint8Array(10);
@@ -56,8 +56,10 @@ export const papLevels = [
   { value: 'PAP:RED', label: 'PAP:RED', color: '#ef4444' },
 ];
 
-// OCSF Detection Finding format
-export interface OCSFDetection {
+// OCSF Incident Finding format (class_id: 2005)
+export interface OCSFIncidentFinding {
+  class_uid: 2005; // Incident Finding
+  class_name: 'Incident Finding';
   message: string;
   severity_id: number;
   severity: string;
@@ -80,6 +82,8 @@ export interface OCSFDetection {
   pap?: string;
   assignee?: string;
   customFields?: Record<string, string | number | boolean>;
+  // Linked detection findings (for grouping)
+  related_findings?: string[];
   metadata: {
     product: {
       name: string;
@@ -89,10 +93,10 @@ export interface OCSFDetection {
   };
 }
 
-interface CreateAlertDialogProps {
+interface CreateIncidentDialogProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (alert: OCSFDetection) => Promise<void>;
+  onSubmit: (incident: OCSFIncidentFinding) => Promise<void>;
 }
 
 export const severityOptions = [
@@ -117,7 +121,7 @@ export const observableTypes = [
   'other',
 ];
 
-export const CreateAlertDialog = ({ open, onClose, onSubmit }: CreateAlertDialogProps) => {
+export const CreateIncidentDialog = ({ open, onClose, onSubmit }: CreateIncidentDialogProps) => {
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [severityId, setSeverityId] = useState(3);
@@ -133,7 +137,7 @@ export const CreateAlertDialog = ({ open, onClose, onSubmit }: CreateAlertDialog
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, string | number | boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { users, loading: usersLoading } = useUsers();
-  const { fields: customFields, loading: fieldsLoading } = useCustomFields();
+  const { fields: customFields } = useCustomFields();
 
   const handleAddReference = () => {
     if (newReference.trim()) {
@@ -162,14 +166,16 @@ export const CreateAlertDialog = ({ open, onClose, onSubmit }: CreateAlertDialog
 
     setIsSubmitting(true);
     const severity = severityOptions.find(s => s.id === severityId)?.label || 'Medium';
-    const alertId = generateAlertId();
+    const incidentId = generateIncidentId();
 
-    const detection: OCSFDetection = {
+    const incident: OCSFIncidentFinding = {
+      class_uid: 2005,
+      class_name: 'Incident Finding',
       message: message || title,
       severity_id: severityId,
       severity,
-      type_uid: 200101, // Detection Finding: Create
-      type_name: 'Detection Finding',
+      type_uid: 200501, // Incident Finding: Create
+      type_name: 'Incident Finding',
       activity_id: 1,
       activity_name: 'Create',
       status_id: 1, // Always start as New
@@ -177,7 +183,7 @@ export const CreateAlertDialog = ({ open, onClose, onSubmit }: CreateAlertDialog
       time: Date.now(),
       finding_info: {
         title,
-        uid: alertId,
+        uid: incidentId,
         src_url: references[0] || '',
         types: [source || 'Manual'],
         references: references.length > 0 ? references : undefined,
@@ -196,7 +202,7 @@ export const CreateAlertDialog = ({ open, onClose, onSubmit }: CreateAlertDialog
       },
     };
 
-    await onSubmit(detection);
+    await onSubmit(incident);
     setIsSubmitting(false);
     handleClose();
   };
@@ -318,7 +324,10 @@ export const CreateAlertDialog = ({ open, onClose, onSubmit }: CreateAlertDialog
     >
       <DialogTitle>
         <Typography variant="h6" sx={{ fontWeight: 600 }}>
-          Create Alert (OCSF Detection)
+          Create Incident
+        </Typography>
+        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+          OCSF Incident Finding (class_uid: 2005)
         </Typography>
       </DialogTitle>
       <DialogContent>
@@ -341,7 +350,7 @@ export const CreateAlertDialog = ({ open, onClose, onSubmit }: CreateAlertDialog
             fullWidth
             multiline
             rows={3}
-            placeholder="Detailed description of the alert..."
+            placeholder="Detailed description of the incident..."
           />
 
           {/* Source + Severity */}
@@ -558,7 +567,7 @@ export const CreateAlertDialog = ({ open, onClose, onSubmit }: CreateAlertDialog
           onClick={handleSubmit}
           disabled={!title.trim() || isSubmitting}
         >
-          {isSubmitting ? 'Creating...' : 'Create Alert'}
+          {isSubmitting ? 'Creating...' : 'Create Incident'}
         </Button>
       </DialogActions>
     </Dialog>

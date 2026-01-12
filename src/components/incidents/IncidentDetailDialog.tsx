@@ -23,17 +23,17 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import SaveIcon from '@mui/icons-material/Save';
 import AddIcon from '@mui/icons-material/Add';
 import { 
-  OCSFDetection, 
+  OCSFIncidentFinding, 
   Observable, 
   severityOptions, 
   observableTypes,
   tlpLevels,
   papLevels,
-} from './CreateAlertDialog';
+} from './CreateIncidentDialog';
 import { useUsers } from '@/hooks/useUsers';
 import { useCustomFields, CustomField } from '@/hooks/useCustomFields';
 
-interface DisplayAlert {
+interface DisplayIncident {
   id: string;
   title: string;
   source: string;
@@ -47,15 +47,16 @@ interface DisplayAlert {
   references?: string[];
   observables?: Observable[];
   customFields?: Record<string, string | number | boolean>;
-  rawOCSF?: OCSFDetection;
+  relatedFindings?: string[];
+  rawOCSF?: OCSFIncidentFinding;
 }
 
-interface AlertDetailDialogProps {
+interface IncidentDetailDialogProps {
   open: boolean;
-  alert: DisplayAlert | null;
+  incident: DisplayIncident | null;
   onClose: () => void;
-  onResolve: (alertId: string) => Promise<void>;
-  onUpdate?: (alertId: string, updates: Partial<OCSFDetection>) => Promise<void>;
+  onResolve: (incidentId: string) => Promise<void>;
+  onUpdate?: (incidentId: string, updates: Partial<OCSFIncidentFinding>) => Promise<void>;
 }
 
 const severityColors: Record<string, string> = {
@@ -68,11 +69,12 @@ const severityColors: Record<string, string> = {
 
 const statusColors: Record<string, { bg: string; text: string }> = {
   new: { bg: 'rgba(34, 184, 207, 0.15)', text: '#22b8cf' },
+  in_progress: { bg: 'rgba(249, 115, 22, 0.15)', text: '#f97316' },
   escalated: { bg: 'rgba(239, 68, 68, 0.15)', text: '#ef4444' },
   resolved: { bg: 'rgba(34, 197, 94, 0.15)', text: '#22c55e' },
 };
 
-export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }: AlertDetailDialogProps) => {
+export const IncidentDetailDialog = ({ open, incident, onClose, onResolve, onUpdate }: IncidentDetailDialogProps) => {
   const [editedTitle, setEditedTitle] = useState('');
   const [editedMessage, setEditedMessage] = useState('');
   const [editedSeverity, setEditedSeverity] = useState('');
@@ -90,37 +92,37 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
   const { users, loading: usersLoading } = useUsers();
   const { fields: customFields } = useCustomFields();
 
-  // Reset form when alert changes
+  // Reset form when incident changes
   useEffect(() => {
-    if (alert) {
-      setEditedTitle(alert.title);
-      setEditedMessage(alert.rawOCSF?.message || '');
-      setEditedSeverity(alert.severity);
-      setEditedAssignee(alert.assignee || '');
-      setEditedTlp(alert.tlp || 'TLP:AMBER');
-      setEditedPap(alert.pap || 'PAP:AMBER');
-      setEditedReferences(alert.references || []);
-      setEditedObservables(alert.observables || []);
-      setEditedCustomFields(alert.rawOCSF?.customFields || {});
+    if (incident) {
+      setEditedTitle(incident.title);
+      setEditedMessage(incident.rawOCSF?.message || '');
+      setEditedSeverity(incident.severity);
+      setEditedAssignee(incident.assignee || '');
+      setEditedTlp(incident.tlp || 'TLP:AMBER');
+      setEditedPap(incident.pap || 'PAP:AMBER');
+      setEditedReferences(incident.references || []);
+      setEditedObservables(incident.observables || []);
+      setEditedCustomFields(incident.rawOCSF?.customFields || {});
       setHasChanges(false);
     }
-  }, [alert]);
+  }, [incident]);
 
   // Track changes
   useEffect(() => {
-    if (!alert) return;
+    if (!incident) return;
     const changed = 
-      editedTitle !== alert.title ||
-      editedMessage !== (alert.rawOCSF?.message || '') ||
-      editedSeverity !== alert.severity ||
-      editedAssignee !== (alert.assignee || '') ||
-      editedTlp !== (alert.tlp || 'TLP:AMBER') ||
-      editedPap !== (alert.pap || 'PAP:AMBER') ||
-      JSON.stringify(editedReferences) !== JSON.stringify(alert.references || []) ||
-      JSON.stringify(editedObservables) !== JSON.stringify(alert.observables || []) ||
-      JSON.stringify(editedCustomFields) !== JSON.stringify(alert.rawOCSF?.customFields || {});
+      editedTitle !== incident.title ||
+      editedMessage !== (incident.rawOCSF?.message || '') ||
+      editedSeverity !== incident.severity ||
+      editedAssignee !== (incident.assignee || '') ||
+      editedTlp !== (incident.tlp || 'TLP:AMBER') ||
+      editedPap !== (incident.pap || 'PAP:AMBER') ||
+      JSON.stringify(editedReferences) !== JSON.stringify(incident.references || []) ||
+      JSON.stringify(editedObservables) !== JSON.stringify(incident.observables || []) ||
+      JSON.stringify(editedCustomFields) !== JSON.stringify(incident.rawOCSF?.customFields || {});
     setHasChanges(changed);
-  }, [alert, editedTitle, editedMessage, editedSeverity, editedAssignee, editedTlp, editedPap, editedReferences, editedObservables, editedCustomFields]);
+  }, [incident, editedTitle, editedMessage, editedSeverity, editedAssignee, editedTlp, editedPap, editedReferences, editedObservables, editedCustomFields]);
 
   const handleAddReference = () => {
     if (newReference.trim()) {
@@ -144,24 +146,24 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
     setEditedObservables(editedObservables.filter((_, i) => i !== index));
   };
 
-  if (!alert) return null;
+  if (!incident) return null;
 
-  const isResolved = alert.status === 'resolved';
+  const isResolved = incident.status === 'resolved';
 
   const handleResolve = async () => {
     setSaving(true);
-    await onResolve(alert.id);
+    await onResolve(incident.id);
     setSaving(false);
     onClose();
   };
 
   const handleSave = async () => {
-    if (!onUpdate || !alert.rawOCSF) return;
+    if (!onUpdate || !incident.rawOCSF) return;
     
     setSaving(true);
     const severityOption = severityOptions.find(s => s.value === editedSeverity);
     
-    const updates: Partial<OCSFDetection> = {
+    const updates: Partial<OCSFIncidentFinding> = {
       message: editedMessage || editedTitle,
       severity_id: severityOption?.id || 3,
       severity: severityOption?.label || 'Medium',
@@ -171,14 +173,14 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
       observables: editedObservables.length > 0 ? editedObservables : undefined,
       customFields: Object.keys(editedCustomFields).length > 0 ? editedCustomFields : undefined,
       finding_info: {
-        ...alert.rawOCSF.finding_info,
+        ...incident.rawOCSF.finding_info,
         title: editedTitle,
         references: editedReferences.length > 0 ? editedReferences : undefined,
         src_url: editedReferences[0] || '',
       },
     };
 
-    await onUpdate(alert.id, updates);
+    await onUpdate(incident.id, updates);
     setSaving(false);
     setHasChanges(false);
   };
@@ -297,15 +299,20 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
     >
       <DialogTitle>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            Alert Details
-          </Typography>
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              Incident Details
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+              OCSF Incident Finding (class_uid: 2005)
+            </Typography>
+          </Box>
           <Chip
-            label={alert.status.replace('_', ' ')}
+            label={incident.status.replace('_', ' ')}
             size="small"
             sx={{
-              backgroundColor: statusColors[alert.status]?.bg || 'rgba(148, 163, 184, 0.1)',
-              color: statusColors[alert.status]?.text || '#94a3b8',
+              backgroundColor: statusColors[incident.status]?.bg || 'rgba(148, 163, 184, 0.1)',
+              color: statusColors[incident.status]?.text || '#94a3b8',
               fontWeight: 500,
               textTransform: 'capitalize',
             }}
@@ -323,7 +330,7 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
               sx={inputSx}
             />
             <Typography variant="caption" sx={{ color: 'text.secondary', mt: 0.5, display: 'block' }}>
-              ID: {alert.id}
+              ID: {incident.id}
             </Typography>
           </Box>
 
@@ -381,11 +388,11 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
                 Status
               </Typography>
               <Chip
-                label={alert.status.replace('_', ' ')}
+                label={incident.status.replace('_', ' ')}
                 size="small"
                 sx={{
-                  backgroundColor: statusColors[alert.status]?.bg || 'rgba(148, 163, 184, 0.1)',
-                  color: statusColors[alert.status]?.text || '#94a3b8',
+                  backgroundColor: statusColors[incident.status]?.bg || 'rgba(148, 163, 184, 0.1)',
+                  color: statusColors[incident.status]?.text || '#94a3b8',
                   fontWeight: 500,
                   textTransform: 'capitalize',
                 }}
@@ -469,7 +476,7 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
                 Source
               </Typography>
               <Chip
-                label={alert.source}
+                label={incident.source}
                 size="small"
                 sx={{ backgroundColor: 'rgba(148, 163, 184, 0.1)' }}
               />
@@ -481,18 +488,18 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
                 Created
               </Typography>
               <Typography variant="body2">
-                {alert.created}
+                {incident.created}
               </Typography>
             </Box>
 
             {/* Edited */}
-            {alert.edited && (
+            {incident.edited && (
               <Box>
                 <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
                   Last Edited
                 </Typography>
                 <Typography variant="body2">
-                  {alert.edited}
+                  {incident.edited}
                 </Typography>
               </Box>
             )}
@@ -624,12 +631,35 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
               </Box>
             </>
           )}
-          {alert.rawOCSF && (
+
+          {/* Related Findings */}
+          {incident.relatedFindings && incident.relatedFindings.length > 0 && (
             <>
               <Divider sx={{ borderColor: 'rgba(148, 163, 184, 0.1)' }} />
               <Box>
                 <Typography variant="subtitle2" sx={{ mb: 1.5, color: 'text.secondary' }}>
-                  OCSF Detection Data
+                  Related Detection Findings
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {incident.relatedFindings.map((findingId, idx) => (
+                    <Chip
+                      key={idx}
+                      label={findingId}
+                      size="small"
+                      sx={{ bgcolor: 'rgba(59, 130, 246, 0.15)', fontFamily: 'monospace' }}
+                    />
+                  ))}
+                </Box>
+              </Box>
+            </>
+          )}
+
+          {incident.rawOCSF && (
+            <>
+              <Divider sx={{ borderColor: 'rgba(148, 163, 184, 0.1)' }} />
+              <Box>
+                <Typography variant="subtitle2" sx={{ mb: 1.5, color: 'text.secondary' }}>
+                  OCSF Incident Data
                 </Typography>
                 <Box
                   sx={{
@@ -643,7 +673,7 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
                   }}
                 >
                   <pre style={{ margin: 0 }}>
-                    {JSON.stringify(alert.rawOCSF, null, 2)}
+                    {JSON.stringify(incident.rawOCSF, null, 2)}
                   </pre>
                 </Box>
               </Box>
@@ -673,7 +703,7 @@ export const AlertDetailDialog = ({ open, alert, onClose, onResolve, onUpdate }:
             onClick={handleResolve}
             disabled={saving}
           >
-            Resolve Alert
+            Resolve Incident
           </Button>
         )}
       </DialogActions>
