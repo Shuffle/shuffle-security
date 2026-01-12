@@ -30,10 +30,12 @@ import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import ViewColumnIcon from '@mui/icons-material/ViewColumn';
+import SettingsIcon from '@mui/icons-material/Settings';
 import { useDatastore } from '@/hooks/useDatastore';
 import { useAuth } from '@/context/AuthContext';
-import { DATASTORE_CATEGORIES, getDatastoreByCategory, setDatastoreItems } from '@/services/datastore';
+import { DATASTORE_CATEGORIES, getDatastoreByCategory, setDatastoreItems, CategoryAutomation } from '@/services/datastore';
 import { CreateIncidentDialog, OCSFIncidentFinding, Observable } from '@/components/incidents/CreateIncidentDialog';
+import { CategoryAutomationsDialog } from '@/components/incidents/CategoryAutomationsDialog';
 
 // Legacy categories for migration
 const LEGACY_ALERTS_CATEGORY = 'shuffle-alerts';
@@ -250,6 +252,8 @@ const IncidentsPage = () => {
   const [incidents, setIncidents] = useState<DisplayIncident[]>([]);
   const [filters, setFilters] = useState<Filters>({ severity: null, status: null, tlp: null, assignee: null });
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [automationsDialogOpen, setAutomationsDialogOpen] = useState(false);
+  const [categoryAutomations, setCategoryAutomations] = useState<CategoryAutomation[] | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Sorting
@@ -279,6 +283,10 @@ const IncidentsPage = () => {
       const migratedCount = await migrateToIncidents();
       if (migratedCount > 0) {
         await new Promise(resolve => setTimeout(resolve, 1500));
+      }
+      const result = await getDatastoreByCategory(DATASTORE_CATEGORIES.INCIDENTS);
+      if (result.success && result.categoryConfig?.automations) {
+        setCategoryAutomations(result.categoryConfig.automations);
       }
       await fetchItems();
     };
@@ -629,16 +637,31 @@ const IncidentsPage = () => {
             <Typography variant="caption" color="error">{error}</Typography>
           )}
         </Box>
-        <ButtonGroup variant="outlined">
-          <Tooltip title="Refresh">
-            <Button onClick={() => fetchItems()} disabled={isLoading} sx={{ minWidth: 'auto', px: 1.5 }}>
-              <RefreshIcon />
-            </Button>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Tooltip title="Category Automations">
+            <IconButton 
+              onClick={() => setAutomationsDialogOpen(true)}
+              sx={{ 
+                color: categoryAutomations?.some(a => a.enabled) ? 'primary.main' : 'text.secondary',
+                border: '1px solid',
+                borderColor: categoryAutomations?.some(a => a.enabled) ? 'primary.main' : 'rgba(255,255,255,0.1)',
+                borderRadius: 1,
+              }}
+            >
+              <SettingsIcon fontSize="small" />
+            </IconButton>
           </Tooltip>
-          <Button startIcon={<AddIcon />} onClick={() => setCreateDialogOpen(true)}>
-            Create Incident
-          </Button>
-        </ButtonGroup>
+          <ButtonGroup variant="outlined">
+            <Tooltip title="Refresh">
+              <Button onClick={() => fetchItems()} disabled={isLoading} sx={{ minWidth: 'auto', px: 1.5 }}>
+                <RefreshIcon />
+              </Button>
+            </Tooltip>
+            <Button startIcon={<AddIcon />} onClick={() => setCreateDialogOpen(true)}>
+              Create Incident
+            </Button>
+          </ButtonGroup>
+        </Box>
       </Box>
 
       <Card>
@@ -862,6 +885,14 @@ const IncidentsPage = () => {
         open={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
         onSubmit={handleCreateIncident}
+      />
+
+      <CategoryAutomationsDialog
+        open={automationsDialogOpen}
+        onClose={() => setAutomationsDialogOpen(false)}
+        category={DATASTORE_CATEGORIES.INCIDENTS}
+        automations={categoryAutomations}
+        onAutomationsChange={setCategoryAutomations}
       />
     </motion.div>
   );
