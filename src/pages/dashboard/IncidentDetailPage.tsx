@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -18,13 +18,13 @@ import {
   CardContent,
   Avatar,
   Button,
-  ButtonGroup,
+  
   Tooltip,
   Skeleton,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import SaveIcon from '@mui/icons-material/Save';
+
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import AddIcon from '@mui/icons-material/Add';
 import SendIcon from '@mui/icons-material/Send';
@@ -218,8 +218,9 @@ const IncidentDetailPage = () => {
   const [newComment, setNewComment] = useState('');
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   
-  const [hasChanges, setHasChanges] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingSaveRef = useRef(false);
   
   const { users, loading: usersLoading } = useUsers();
   const { fields: customFields } = useCustomFields();
@@ -239,7 +240,6 @@ const IncidentDetailPage = () => {
       
       // Try direct key lookup first
       const result = await getDatastoreItem(id, DATASTORE_CATEGORIES.INCIDENTS);
-      console.log('getDatastoreItem result:', result);
       
       if (result.success && result.item) {
         // API returns { key, value, ... } directly - use item.key or fall back to the id
@@ -249,7 +249,6 @@ const IncidentDetailPage = () => {
           created: result.item.created,
           edited: result.item.edited,
         };
-        console.log('Parsing item:', itemData);
         const parsed = parseIncidentFromDatastore(itemData);
         
         if (parsed) {
@@ -277,10 +276,71 @@ const IncidentDetailPage = () => {
     loadIncident();
   }, [id]);
 
-  // Track changes
+  // Auto-save with debounce
+  const saveToDatastore = useCallback(async () => {
+    if (!incident?.id) return;
+    
+    setIsSaving(true);
+    pendingSaveRef.current = false;
+    
+    const severityOption = severityOptions.find(s => s.value === editedSeverity);
+    const statusId = editedStatus === 'new' ? 1 : editedStatus === 'in_progress' ? 2 : 3;
+    
+    // Build the updated data - support both OCSF and legacy formats
+    const updatedData = incident.rawOCSF ? {
+      ...incident.rawOCSF,
+      message: editedMessage || editedTitle,
+      severity_id: severityOption?.id || 3,
+      severity: severityOption?.label || 'Medium',
+      status_id: statusId,
+      status: editedStatus === 'new' ? 'New' : editedStatus === 'in_progress' ? 'In Progress' : 'Resolved',
+      tlp: editedTlp,
+      pap: editedPap,
+      assignee: editedAssignee.trim() || undefined,
+      observables: editedObservables.length > 0 ? editedObservables : undefined,
+      customFields: Object.keys(editedCustomFields).length > 0 ? editedCustomFields : undefined,
+      activity,
+      finding_info: {
+        ...incident.rawOCSF.finding_info,
+        title: editedTitle,
+        references: editedReferences.length > 0 ? editedReferences : undefined,
+        src_url: editedReferences[0] || '',
+      },
+    } : {
+      id: incident.id,
+      title: editedTitle,
+      source: incident.source,
+      severity: editedSeverity,
+      status: editedStatus,
+      assignee: editedAssignee.trim() || undefined,
+      tlp: editedTlp,
+      pap: editedPap,
+      references: editedReferences,
+      observables: editedObservables,
+      customFields: editedCustomFields,
+      activity,
+    };
+
+    try {
+      await addItem(incident.id, updatedData);
+    } catch (error) {
+      toast.error('Failed to save changes');
+    } finally {
+      setIsSaving(false);
+    }
+  }, [incident, editedTitle, editedMessage, editedSeverity, editedAssignee, editedStatus, editedTlp, editedPap, editedReferences, editedObservables, editedCustomFields, activity, addItem]);
+
+  // Debounced auto-save trigger
   useEffect(() => {
     if (!incident) return;
-    const changed = 
+    
+    // Clear any pending save
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    
+    // Check if there are actual changes
+    const hasChanges = 
       editedTitle !== incident.title ||
       editedMessage !== (incident.rawOCSF?.message || '') ||
       editedSeverity !== incident.severity ||
@@ -291,8 +351,21 @@ const IncidentDetailPage = () => {
       JSON.stringify(editedReferences) !== JSON.stringify(incident.references || []) ||
       JSON.stringify(editedObservables) !== JSON.stringify(incident.observables || []) ||
       JSON.stringify(editedCustomFields) !== JSON.stringify(incident.rawOCSF?.customFields || {});
-    setHasChanges(changed);
-  }, [incident, editedTitle, editedMessage, editedSeverity, editedAssignee, editedStatus, editedTlp, editedPap, editedReferences, editedObservables, editedCustomFields]);
+    
+    if (hasChanges) {
+      pendingSaveRef.current = true;
+      // Debounce: save after 800ms of no changes
+      saveTimeoutRef.current = setTimeout(() => {
+        saveToDatastore();
+      }, 800);
+    }
+    
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [incident, editedTitle, editedMessage, editedSeverity, editedAssignee, editedStatus, editedTlp, editedPap, editedReferences, editedObservables, editedCustomFields, saveToDatastore]);
 
   // MTTD/MTTR calculation
   const metrics = useMemo(() => {
@@ -358,64 +431,10 @@ const IncidentDetailPage = () => {
     toast.success('Comment added');
   };
 
-  const handleSave = async () => {
-    if (!incident?.rawOCSF) return;
-    
-    setSaving(true);
-    const severityOption = severityOptions.find(s => s.value === editedSeverity);
-    const statusId = editedStatus === 'new' ? 1 : editedStatus === 'in_progress' ? 2 : 3;
-    
-    // Track changes for activity log
-    const changes: string[] = [];
-    if (editedTitle !== incident.title) changes.push(`Title changed to "${editedTitle}"`);
-    if (editedSeverity !== incident.severity) changes.push(`Severity changed to ${editedSeverity}`);
-    if (editedAssignee !== (incident.assignee || '')) {
-      changes.push(editedAssignee ? `Assigned to ${editedAssignee}` : 'Unassigned');
-    }
-    if (editedStatus !== incident.status) changes.push(`Status changed to ${editedStatus}`);
-    
-    const changeActivity: ActivityItem[] = changes.map(content => ({
-      id: `change-${Date.now()}-${Math.random()}`,
-      type: 'change' as const,
-      user: currentUsername,
-      timestamp: Date.now(),
-      content,
-    }));
-    
-    const updatedActivity = [...activity, ...changeActivity];
-    
-    const updatedOCSF: OCSFIncidentFinding = {
-      ...incident.rawOCSF,
-      message: editedMessage || editedTitle,
-      severity_id: severityOption?.id || 3,
-      severity: severityOption?.label || 'Medium',
-      status_id: statusId,
-      status: editedStatus === 'new' ? 'New' : editedStatus === 'in_progress' ? 'In Progress' : 'Resolved',
-      tlp: editedTlp,
-      pap: editedPap,
-      assignee: editedAssignee.trim() || undefined,
-      observables: editedObservables.length > 0 ? editedObservables : undefined,
-      customFields: Object.keys(editedCustomFields).length > 0 ? editedCustomFields : undefined,
-      activity: updatedActivity,
-      finding_info: {
-        ...incident.rawOCSF.finding_info,
-        title: editedTitle,
-        references: editedReferences.length > 0 ? editedReferences : undefined,
-        src_url: editedReferences[0] || '',
-      },
-    };
-
-    await addItem(incident.id, updatedOCSF);
-    setActivity(updatedActivity);
-    setSaving(false);
-    setHasChanges(false);
-    toast.success('Incident updated');
-  };
-
   const handleResolve = async () => {
-    if (!incident?.rawOCSF) return;
+    if (!incident) return;
     
-    setSaving(true);
+    setIsSaving(true);
     const resolveActivity: ActivityItem = {
       id: `status-${Date.now()}`,
       type: 'status',
@@ -426,15 +445,24 @@ const IncidentDetailPage = () => {
     
     const updatedActivity = [...activity, resolveActivity];
     
-    const updatedOCSF: OCSFIncidentFinding = {
+    // Build resolved data - support both OCSF and legacy formats
+    const resolvedData = incident.rawOCSF ? {
       ...incident.rawOCSF,
       status_id: 3,
       status: 'Resolved',
       activity: updatedActivity,
+    } : {
+      id: incident.id,
+      title: editedTitle,
+      source: incident.source,
+      severity: editedSeverity,
+      status: 'resolved',
+      assignee: editedAssignee.trim() || undefined,
+      activity: updatedActivity,
     };
 
-    await addItem(incident.id, updatedOCSF);
-    setSaving(false);
+    await addItem(incident.id, resolvedData);
+    setIsSaving(false);
     toast.success('Incident resolved');
     navigate('/incidents');
   };
@@ -645,23 +673,25 @@ const IncidentDetailPage = () => {
             </Box>
           )}
           
-          <ButtonGroup variant="outlined">
-            {hasChanges && (
-              <Button startIcon={<SaveIcon />} onClick={handleSave} disabled={saving}>
-                Save
-              </Button>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            {isSaving && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <CircularProgress size={16} />
+                <Typography variant="body2" color="text.secondary">Saving...</Typography>
+              </Box>
             )}
             {!isResolved && (
               <Button 
+                variant="outlined"
                 startIcon={<CheckCircleIcon />} 
                 onClick={handleResolve} 
-                disabled={saving}
+                disabled={isSaving}
                 sx={{ color: '#22c55e', borderColor: '#22c55e', '&:hover': { borderColor: '#22c55e', bgcolor: 'rgba(34, 197, 94, 0.1)' } }}
               >
                 Resolve
               </Button>
             )}
-          </ButtonGroup>
+          </Box>
         </Box>
       </Box>
 
