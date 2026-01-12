@@ -240,6 +240,8 @@ interface Filters {
   severity: string | null;
   status: string | null;
   tlp: string | null;
+  assignee: string | null;
+  showAll: boolean;
 }
 
 const IncidentsPage = () => {
@@ -250,7 +252,7 @@ const IncidentsPage = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(50);
   const [incidents, setIncidents] = useState<DisplayIncident[]>([]);
-  const [filters, setFilters] = useState<Filters>({ severity: null, status: null, tlp: null });
+  const [filters, setFilters] = useState<Filters>({ severity: null, status: null, tlp: null, assignee: null, showAll: false });
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedIncident, setSelectedIncident] = useState<DisplayIncident | null>(null);
@@ -301,23 +303,49 @@ const IncidentsPage = () => {
     localStorage.setItem(STORAGE_KEY_COLUMNS, JSON.stringify([...visibleColumns]));
   }, [visibleColumns]);
 
-  // Smart default filter based on user
+  // Determine the active view mode for display
+  const activeViewMode = useMemo(() => {
+    if (filters.showAll) return 'all';
+    if (filters.assignee) return 'assignee';
+    
+    // Smart default detection
+    const userIncidents = incidents.filter(i => i.assignee === currentUsername && i.status !== 'resolved');
+    if (userIncidents.length > 0) return 'my_incidents';
+    
+    const newIncidents = incidents.filter(i => i.status === 'new');
+    if (newIncidents.length > 0) return 'new_only';
+    
+    return 'non_resolved';
+  }, [incidents, currentUsername, filters.showAll, filters.assignee]);
+
+  // Smart default filter based on user or explicit filter
   const smartFilteredIncidents = useMemo(() => {
-    // First, check if user has assigned incidents
+    // If show all, return everything
+    if (filters.showAll) {
+      return incidents;
+    }
+
+    // If explicit assignee filter
+    if (filters.assignee !== null) {
+      if (filters.assignee === '') {
+        return incidents.filter(i => !i.assignee);
+      }
+      return incidents.filter(i => i.assignee === filters.assignee);
+    }
+
+    // Smart defaults
     const userIncidents = incidents.filter(i => i.assignee === currentUsername && i.status !== 'resolved');
     if (userIncidents.length > 0) {
       return userIncidents;
     }
 
-    // If no assigned incidents, show "new" ones
     const newIncidents = incidents.filter(i => i.status === 'new');
     if (newIncidents.length > 0) {
       return newIncidents;
     }
 
-    // Otherwise show all non-resolved
     return incidents.filter(i => i.status !== 'resolved');
-  }, [incidents, currentUsername]);
+  }, [incidents, currentUsername, filters.showAll, filters.assignee]);
 
   // Apply additional filters and search
   const filteredIncidents = useMemo(() => {
@@ -480,12 +508,31 @@ const IncidentsPage = () => {
   };
 
   const clearFilters = () => {
-    setFilters({ severity: null, status: null, tlp: null });
+    setFilters({ severity: null, status: null, tlp: null, assignee: null, showAll: false });
     setSearchQuery('');
     setPage(0);
   };
 
-  const hasActiveFilters = filters.severity || filters.status || filters.tlp || searchQuery.trim();
+  const hasActiveFilters = filters.severity || filters.status || filters.tlp || filters.assignee !== null || filters.showAll || searchQuery.trim();
+
+  // Get unique assignees for filter dropdown
+  const uniqueAssignees = useMemo(() => {
+    const assignees = new Set<string>();
+    incidents.forEach(i => {
+      if (i.assignee) assignees.add(i.assignee);
+    });
+    return Array.from(assignees).sort();
+  }, [incidents]);
+
+  const [assigneeMenuAnchor, setAssigneeMenuAnchor] = useState<null | HTMLElement>(null);
+
+  const viewModeLabels: Record<string, string> = {
+    all: 'All Incidents',
+    assignee: `Assigned to: ${filters.assignee || 'Unassigned'}`,
+    my_incidents: `My Incidents (${currentUsername})`,
+    new_only: 'New Incidents',
+    non_resolved: 'Non-Resolved',
+  };
 
   const renderCellContent = (incident: DisplayIncident, column: ColumnKey) => {
     switch (column) {
@@ -615,7 +662,7 @@ const IncidentsPage = () => {
 
       <Card>
         <CardContent sx={{ p: 0 }}>
-          <Box sx={{ p: 2, display: 'flex', gap: 2, alignItems: 'center', borderBottom: '1px solid rgba(148, 163, 184, 0.1)' }}>
+          <Box sx={{ p: 2, display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap', borderBottom: '1px solid rgba(148, 163, 184, 0.1)' }}>
             <TextField
               size="small"
               placeholder="Search incidents..."
@@ -631,13 +678,95 @@ const IncidentsPage = () => {
               sx={{ width: 280 }}
             />
 
+            {/* Current view mode indicator */}
+            <Chip
+              label={viewModeLabels[activeViewMode]}
+              size="small"
+              sx={{
+                backgroundColor: 'rgba(255, 102, 0, 0.15)',
+                color: '#ff6600',
+                fontWeight: 500,
+              }}
+            />
+
+            {/* Assignee filter dropdown */}
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={(e) => setAssigneeMenuAnchor(e.currentTarget)}
+              sx={{ textTransform: 'none' }}
+            >
+              Assignee
+            </Button>
+            <Menu
+              anchorEl={assigneeMenuAnchor}
+              open={Boolean(assigneeMenuAnchor)}
+              onClose={() => setAssigneeMenuAnchor(null)}
+            >
+              <MenuItem 
+                onClick={() => { 
+                  setFilters(prev => ({ ...prev, assignee: currentUsername, showAll: false })); 
+                  setAssigneeMenuAnchor(null); 
+                  setPage(0);
+                }}
+                selected={filters.assignee === currentUsername}
+              >
+                My Incidents
+              </MenuItem>
+              <MenuItem 
+                onClick={() => { 
+                  setFilters(prev => ({ ...prev, assignee: '', showAll: false })); 
+                  setAssigneeMenuAnchor(null);
+                  setPage(0);
+                }}
+                selected={filters.assignee === ''}
+              >
+                Unassigned
+              </MenuItem>
+              <Divider />
+              {uniqueAssignees.map((assignee) => (
+                <MenuItem 
+                  key={assignee}
+                  onClick={() => { 
+                    setFilters(prev => ({ ...prev, assignee, showAll: false })); 
+                    setAssigneeMenuAnchor(null);
+                    setPage(0);
+                  }}
+                  selected={filters.assignee === assignee}
+                >
+                  {assignee}
+                </MenuItem>
+              ))}
+            </Menu>
+
+            {/* Show All toggle */}
+            <FormControlLabel
+              control={
+                <Switch
+                  size="small"
+                  checked={filters.showAll}
+                  onChange={(e) => {
+                    setFilters(prev => ({ 
+                      ...prev, 
+                      showAll: e.target.checked, 
+                      assignee: e.target.checked ? null : prev.assignee 
+                    }));
+                    setPage(0);
+                  }}
+                />
+              }
+              label={<Typography variant="body2">Show All</Typography>}
+              sx={{ ml: 0 }}
+            />
+
             <Tooltip title="Configure columns">
               <IconButton onClick={(e) => setColumnMenuAnchor(e.currentTarget)} size="small">
                 <ViewColumnIcon />
               </IconButton>
             </Tooltip>
 
-            {hasActiveFilters && (
+            {/* Active filters */}
+            {(filters.severity || filters.status || filters.tlp) && (
               <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                 {filters.severity && (
                   <Chip
@@ -658,10 +787,13 @@ const IncidentsPage = () => {
                 {filters.tlp && (
                   <Chip label={filters.tlp} size="small" onDelete={() => setFilters((prev) => ({ ...prev, tlp: null }))} />
                 )}
-                <Button size="small" onClick={clearFilters} sx={{ minWidth: 'auto' }}>
-                  Clear
-                </Button>
               </Box>
+            )}
+
+            {hasActiveFilters && (
+              <Button size="small" onClick={clearFilters} sx={{ minWidth: 'auto' }}>
+                Reset
+              </Button>
             )}
 
             {selected.length > 0 && (
