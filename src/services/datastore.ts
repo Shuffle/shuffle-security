@@ -89,7 +89,7 @@ export const getDatastoreItem = async (
   category: string
 ): Promise<DatastoreResponse & { item?: DatastoreItem }> => {
   const response = await fetch(
-    `${API_CONFIG.baseUrl}/api/v2/datastore/${encodeURIComponent(key)}?category=${encodeURIComponent(category)}`,
+    `${API_CONFIG.baseUrl}/api/v2/datastore/${encodeURIComponent(key)}?category=${category}`,
     {
       method: 'GET',
       headers: {
@@ -114,7 +114,7 @@ export const getDatastoreByCategory = async (
   category: string
 ): Promise<DatastoreResponse> => {
   const response = await fetch(
-    `${API_CONFIG.baseUrl}/api/v2/datastore/category/${encodeURIComponent(category)}`,
+    `${API_CONFIG.baseUrl}/api/v2/datastore/category/${category}`,
     {
       method: 'GET',
       headers: {
@@ -141,7 +141,7 @@ export const deleteDatastoreItem = async (
   category: string
 ): Promise<DatastoreResponse> => {
   const response = await fetch(
-    `${API_CONFIG.baseUrl}/api/v2/datastore/${encodeURIComponent(key)}?category=${encodeURIComponent(category)}`,
+    `${API_CONFIG.baseUrl}/api/v2/datastore/${encodeURIComponent(key)}?category=${category}`,
     {
       method: 'DELETE',
       headers: {
