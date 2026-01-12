@@ -7,36 +7,27 @@ import {
   Button,
   Box,
   Typography,
-  Switch,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   IconButton,
-  Paper,
   Divider,
   CircularProgress,
+  Checkbox,
+  Chip,
+  FormControl,
+  Select,
+  MenuItem,
 } from '@mui/material';
-import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
+import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import AddIcon from '@mui/icons-material/Add';
-import DeleteIcon from '@mui/icons-material/Delete';
+import CloseIcon from '@mui/icons-material/Close';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import WebhookIcon from '@mui/icons-material/Webhook';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import EnhancedEncryptionIcon from '@mui/icons-material/EnhancedEncryption';
+import SendIcon from '@mui/icons-material/Send';
 import { toast } from 'sonner';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 
-export interface CategoryAutomation {
-  id: string;
-  name: string;
-  type: 'workflow' | 'webhook' | 'ai_agent' | 'enrich';
-  trigger: 'on_create' | 'on_edit' | 'on_delete';
-  workflow_id?: string;
-  webhook_url?: string;
-  enabled: boolean;
-}
+import { CategoryAutomation } from '@/services/datastore';
 
 interface CategoryAutomationsDialogProps {
   open: boolean;
@@ -46,33 +37,43 @@ interface CategoryAutomationsDialogProps {
   onAutomationsChange: (automations: CategoryAutomation[]) => void;
 }
 
-const automationTypeConfig = {
-  workflow: {
+const automationTypes = [
+  {
+    type: 'workflow',
     icon: AccountTreeIcon,
-    label: 'Run Workflow',
+    label: 'Run workflow',
     color: '#3b82f6',
   },
-  webhook: {
+  {
+    type: 'webhook',
     icon: WebhookIcon,
-    label: 'Send Webhook',
+    label: 'Send webhook',
     color: '#8b5cf6',
   },
-  ai_agent: {
+  {
+    type: 'ai_agent',
     icon: SmartToyIcon,
     label: 'Run AI Agent',
     color: '#10b981',
   },
-  enrich: {
+  {
+    type: 'enrich',
     icon: EnhancedEncryptionIcon,
     label: 'Enrich',
     color: '#f59e0b',
   },
-};
+  {
+    type: 'send_message',
+    icon: SendIcon,
+    label: 'Send message',
+    color: '#6b7280',
+  },
+];
 
 const triggerOptions = [
-  { value: 'on_edit', label: 'On Edit' },
-  { value: 'on_create', label: 'On Create' },
-  { value: 'on_delete', label: 'On Delete' },
+  { value: 'on_edit', label: 'A key is edited' },
+  { value: 'on_create', label: 'A key is created' },
+  { value: 'on_delete', label: 'A key is deleted' },
 ];
 
 const getOrgId = (): string | null => {
@@ -98,34 +99,45 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
   const [automations, setAutomations] = useState<CategoryAutomation[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [selectedTrigger, setSelectedTrigger] = useState<string>('on_edit');
 
   useEffect(() => {
     if (open) {
-      setAutomations(initialAutomations || []);
+      // Initialize with all automation types, preserving existing states
+      const existingMap = new Map((initialAutomations || []).map(a => [a.type, a]));
+      const allAutomations: CategoryAutomation[] = automationTypes.map(at => {
+        const existing = existingMap.get(at.type as CategoryAutomation['type']);
+        return existing || {
+          id: `auto-${at.type}`,
+          name: at.label,
+          type: at.type as CategoryAutomation['type'],
+          trigger: 'on_edit' as const,
+          enabled: false,
+        };
+      });
+      setAutomations(allAutomations);
       setHasChanges(false);
+      
+      // Set trigger from first enabled automation or default
+      const enabledAuto = allAutomations.find(a => a.enabled);
+      if (enabledAuto) {
+        setSelectedTrigger(enabledAuto.trigger);
+      }
     }
   }, [open, initialAutomations]);
 
-  const handleAddAutomation = () => {
-    const newAutomation: CategoryAutomation = {
-      id: `auto-${Date.now()}`,
-      name: 'New Automation',
-      type: 'workflow',
-      trigger: 'on_edit',
-      enabled: true,
-    };
-    setAutomations([...automations, newAutomation]);
-    setHasChanges(true);
-  };
-
-  const handleRemoveAutomation = (id: string) => {
-    setAutomations(automations.filter(a => a.id !== id));
-    setHasChanges(true);
-  };
-
-  const handleUpdateAutomation = (id: string, updates: Partial<CategoryAutomation>) => {
+  const handleToggleAutomation = (type: string) => {
     setAutomations(automations.map(a => 
-      a.id === id ? { ...a, ...updates } : a
+      a.type === type ? { ...a, enabled: !a.enabled, trigger: selectedTrigger as CategoryAutomation['trigger'] } : a
+    ));
+    setHasChanges(true);
+  };
+
+  const handleTriggerChange = (trigger: string) => {
+    setSelectedTrigger(trigger);
+    // Update all enabled automations with new trigger
+    setAutomations(automations.map(a => 
+      a.enabled ? { ...a, trigger: trigger as CategoryAutomation['trigger'] } : a
     ));
     setHasChanges(true);
   };
@@ -139,7 +151,8 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
 
     setIsSaving(true);
     try {
-      // Update category config via API
+      const enabledAutomations = automations.filter(a => a.enabled);
+      
       const response = await fetch(getApiUrl(`/orgs/${orgId}/update_category`), {
         method: 'POST',
         headers: {
@@ -148,7 +161,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
         },
         body: JSON.stringify({
           category,
-          automations,
+          automations: enabledAutomations,
         }),
       });
 
@@ -156,7 +169,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
         throw new Error('Failed to save automations');
       }
 
-      onAutomationsChange(automations);
+      onAutomationsChange(enabledAutomations);
       toast.success('Automations saved');
       onClose();
     } catch (error) {
@@ -166,18 +179,13 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
     }
   };
 
-  const inputSx = {
-    '& .MuiOutlinedInput-root': {
-      bgcolor: 'rgba(255,255,255,0.03)',
-      '&:hover': { bgcolor: 'rgba(255,255,255,0.05)' },
-    },
-  };
+  const enabledCount = automations.filter(a => a.enabled).length;
 
   return (
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="md"
+      maxWidth="sm"
       fullWidth
       PaperProps={{
         sx: {
@@ -187,202 +195,157 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
         },
       }}
     >
-      <DialogTitle sx={{ pb: 1 }}>
+      <DialogTitle sx={{ pb: 1, pr: 6 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <AutoFixHighIcon sx={{ color: 'primary.main' }} />
-          <Typography variant="h6">Category Automations</Typography>
+          <RocketLaunchIcon sx={{ color: enabledCount > 0 ? '#4ade80' : 'text.secondary' }} />
+          <Box>
+            <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600 }}>
+              Automation for category '{category}'
+            </Typography>
+          </Box>
         </Box>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-          Configure what happens automatically when incidents are created, edited, or deleted.
-        </Typography>
+        <IconButton
+          onClick={onClose}
+          sx={{
+            position: 'absolute',
+            right: 12,
+            top: 12,
+            color: 'text.secondary',
+          }}
+        >
+          <CloseIcon />
+        </IconButton>
       </DialogTitle>
 
-      <DialogContent>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-          {automations.length === 0 ? (
-            <Paper
-              elevation={0}
+      <DialogContent sx={{ pt: 2 }}>
+        {/* Trigger Section */}
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block', fontWeight: 500, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            When
+          </Typography>
+          <FormControl size="small" fullWidth>
+            <Select
+              value={selectedTrigger}
+              onChange={(e) => handleTriggerChange(e.target.value)}
               sx={{
-                p: 4,
-                textAlign: 'center',
-                bgcolor: 'rgba(255,255,255,0.02)',
-                border: '1px dashed rgba(255,255,255,0.1)',
-                borderRadius: 2,
+                bgcolor: 'rgba(255,255,255,0.03)',
+                '&:hover': { bgcolor: 'rgba(255,255,255,0.05)' },
               }}
             >
-              <Typography color="text.secondary" sx={{ mb: 2 }}>
-                No automations configured
-              </Typography>
-              <Button
-                variant="outlined"
-                startIcon={<AddIcon />}
-                onClick={handleAddAutomation}
-              >
-                Add Automation
-              </Button>
-            </Paper>
-          ) : (
-            <>
-              {automations.map((automation, index) => {
-                const typeConfig = automationTypeConfig[automation.type] || automationTypeConfig.workflow;
-                const TypeIcon = typeConfig.icon;
+              {triggerOptions.map((opt) => (
+                <MenuItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
 
-                return (
-                  <Paper
-                    key={automation.id}
-                    elevation={0}
+        <Divider sx={{ mb: 2, borderColor: 'rgba(255,255,255,0.06)' }} />
+
+        {/* Actions Section */}
+        <Box>
+          <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block', fontWeight: 500, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            Do
+          </Typography>
+
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            {automations.map((automation) => {
+              const typeConfig = automationTypes.find(at => at.type === automation.type);
+              if (!typeConfig) return null;
+              const TypeIcon = typeConfig.icon;
+
+              return (
+                <Box
+                  key={automation.id}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1.5,
+                    py: 1.5,
+                    px: 1,
+                    borderRadius: 1,
+                    cursor: 'pointer',
+                    transition: 'background 0.15s',
+                    '&:hover': {
+                      bgcolor: 'rgba(255,255,255,0.03)',
+                    },
+                  }}
+                  onClick={() => handleToggleAutomation(automation.type)}
+                >
+                  <Checkbox
+                    checked={automation.enabled}
+                    onChange={() => handleToggleAutomation(automation.type)}
+                    onClick={(e) => e.stopPropagation()}
+                    size="small"
                     sx={{
-                      p: 2,
-                      bgcolor: automation.enabled ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.01)',
-                      border: '1px solid',
-                      borderColor: automation.enabled ? `${typeConfig.color}33` : 'rgba(255,255,255,0.05)',
-                      borderRadius: 2,
-                      opacity: automation.enabled ? 1 : 0.6,
+                      color: 'rgba(255,255,255,0.3)',
+                      '&.Mui-checked': {
+                        color: typeConfig.color,
+                      },
+                    }}
+                  />
+                  <TypeIcon 
+                    sx={{ 
+                      color: automation.enabled ? typeConfig.color : 'text.secondary',
+                      fontSize: 20,
+                      transition: 'color 0.15s',
+                    }} 
+                  />
+                  <Typography 
+                    sx={{ 
+                      flex: 1,
+                      color: automation.enabled ? 'text.primary' : 'text.secondary',
+                      fontWeight: automation.enabled ? 500 : 400,
+                      transition: 'all 0.15s',
                     }}
                   >
-                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          width: 40,
-                          height: 40,
-                          borderRadius: 1,
-                          bgcolor: `${typeConfig.color}22`,
-                          flexShrink: 0,
-                        }}
-                      >
-                        <TypeIcon sx={{ color: typeConfig.color }} />
-                      </Box>
-
-                      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                          <TextField
-                            size="small"
-                            label="Name"
-                            value={automation.name}
-                            onChange={(e) => handleUpdateAutomation(automation.id, { name: e.target.value })}
-                            sx={{ flex: 1, ...inputSx }}
-                          />
-                          <FormControl size="small" sx={{ minWidth: 140, ...inputSx }}>
-                            <InputLabel>Type</InputLabel>
-                            <Select
-                              value={automation.type}
-                              label="Type"
-                              onChange={(e) => handleUpdateAutomation(automation.id, { type: e.target.value as CategoryAutomation['type'] })}
-                            >
-                              <MenuItem value="workflow">
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                  <AccountTreeIcon sx={{ fontSize: 16 }} />
-                                  Run Workflow
-                                </Box>
-                              </MenuItem>
-                              <MenuItem value="webhook">
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                  <WebhookIcon sx={{ fontSize: 16 }} />
-                                  Send Webhook
-                                </Box>
-                              </MenuItem>
-                              <MenuItem value="ai_agent">
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                  <SmartToyIcon sx={{ fontSize: 16 }} />
-                                  Run AI Agent
-                                </Box>
-                              </MenuItem>
-                              <MenuItem value="enrich">
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                  <EnhancedEncryptionIcon sx={{ fontSize: 16 }} />
-                                  Enrich
-                                </Box>
-                              </MenuItem>
-                            </Select>
-                          </FormControl>
-                          <FormControl size="small" sx={{ minWidth: 120, ...inputSx }}>
-                            <InputLabel>Trigger</InputLabel>
-                            <Select
-                              value={automation.trigger}
-                              label="Trigger"
-                              onChange={(e) => handleUpdateAutomation(automation.id, { trigger: e.target.value as CategoryAutomation['trigger'] })}
-                            >
-                              {triggerOptions.map((opt) => (
-                                <MenuItem key={opt.value} value={opt.value}>
-                                  {opt.label}
-                                </MenuItem>
-                              ))}
-                            </Select>
-                          </FormControl>
-                        </Box>
-
-                        {(automation.type === 'workflow') && (
-                          <TextField
-                            size="small"
-                            label="Workflow ID"
-                            placeholder="Enter workflow ID to run"
-                            value={automation.workflow_id || ''}
-                            onChange={(e) => handleUpdateAutomation(automation.id, { workflow_id: e.target.value })}
-                            sx={inputSx}
-                          />
-                        )}
-
-                        {automation.type === 'webhook' && (
-                          <TextField
-                            size="small"
-                            label="Webhook URL"
-                            placeholder="https://..."
-                            value={automation.webhook_url || ''}
-                            onChange={(e) => handleUpdateAutomation(automation.id, { webhook_url: e.target.value })}
-                            sx={inputSx}
-                          />
-                        )}
-                      </Box>
-
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Switch
-                          checked={automation.enabled}
-                          onChange={(e) => handleUpdateAutomation(automation.id, { enabled: e.target.checked })}
-                          size="small"
-                        />
-                        <IconButton
-                          size="small"
-                          onClick={() => handleRemoveAutomation(automation.id)}
-                          sx={{ color: 'text.secondary', '&:hover': { color: '#ef4444' } }}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </Box>
-                    </Box>
-                  </Paper>
-                );
-              })}
-
-              <Button
-                variant="outlined"
-                startIcon={<AddIcon />}
-                onClick={handleAddAutomation}
-                sx={{ alignSelf: 'flex-start' }}
-              >
-                Add Automation
-              </Button>
-            </>
-          )}
+                    {typeConfig.label}
+                  </Typography>
+                  
+                  {automation.enabled && (
+                    <Chip
+                      label="Save"
+                      size="small"
+                      variant="outlined"
+                      sx={{
+                        height: 24,
+                        fontSize: '0.7rem',
+                        borderColor: 'rgba(255,255,255,0.15)',
+                        color: 'text.secondary',
+                      }}
+                    />
+                  )}
+                </Box>
+              );
+            })}
+          </Box>
         </Box>
       </DialogContent>
 
-      <Divider />
+      <Divider sx={{ borderColor: 'rgba(255,255,255,0.06)' }} />
 
-      <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={onClose} disabled={isSaving}>
-          Cancel
-        </Button>
+      <DialogActions sx={{ px: 3, py: 2, justifyContent: 'space-between' }}>
         <Button
-          variant="contained"
-          onClick={handleSave}
-          disabled={!hasChanges || isSaving}
-          startIcon={isSaving ? <CircularProgress size={16} /> : undefined}
+          startIcon={<AddIcon />}
+          onClick={() => toast.info('Additional automation types coming soon')}
+          sx={{ color: 'text.secondary' }}
         >
-          {isSaving ? 'Saving...' : 'Save Changes'}
+          Add action
         </Button>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button onClick={onClose} disabled={isSaving}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleSave}
+            disabled={!hasChanges || isSaving}
+            startIcon={isSaving ? <CircularProgress size={16} /> : undefined}
+          >
+            {isSaving ? 'Saving...' : 'Save'}
+          </Button>
+        </Box>
       </DialogActions>
     </Dialog>
   );

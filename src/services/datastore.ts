@@ -18,7 +18,7 @@ export interface DatastoreItem {
 export interface CategoryAutomation {
   id: string;
   name: string;
-  type: 'workflow' | 'webhook' | 'ai_agent' | 'enrich';
+  type: 'workflow' | 'webhook' | 'ai_agent' | 'enrich' | 'send_message';
   trigger: 'on_create' | 'on_edit' | 'on_delete';
   workflow_id?: string;
   webhook_url?: string;
