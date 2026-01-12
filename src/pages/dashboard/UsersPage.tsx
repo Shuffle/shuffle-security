@@ -640,14 +640,13 @@ const UsersPage = () => {
                         <TableCell>
                           <Button
                             size="small"
-                            variant={schedule?.enabled ? 'contained' : 'outlined'}
+                            variant="outlined"
                             startIcon={schedule?.enabled ? <CheckCircleIcon /> : <ScheduleIcon />}
                             onClick={() => handleToggleEnabled(user.id)}
                             disabled={isSaving}
                             sx={{
-                              bgcolor: schedule?.enabled ? 'hsl(var(--primary))' : 'transparent',
-                              color: schedule?.enabled ? 'hsl(var(--primary-foreground))' : 'hsl(var(--muted-foreground))',
-                              borderColor: 'hsl(var(--border))',
+                              borderColor: schedule?.enabled ? 'hsl(142, 76%, 36%)' : 'hsl(var(--border))',
+                              color: schedule?.enabled ? 'hsl(142, 76%, 36%)' : 'hsl(var(--muted-foreground))',
                             }}
                           >
                             {schedule?.enabled ? 'Enabled' : 'Disabled'}
