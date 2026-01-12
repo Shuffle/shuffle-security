@@ -18,13 +18,15 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import BoltIcon from '@mui/icons-material/Bolt';
 
 export interface CategoryAutomation {
-  id: string;
+  id?: string;
   name: string;
-  type: 'workflow' | 'webhook' | 'ai_agent' | 'enrich' | 'send_message';
-  trigger: 'on_create' | 'on_edit' | 'on_delete';
+  type?: 'workflow' | 'webhook' | 'ai_agent' | 'enrich' | 'send_message';
+  trigger?: 'on_create' | 'on_edit' | 'on_delete';
   workflow_id?: string;
   webhook_url?: string;
   enabled: boolean;
+  description?: string;
+  options?: { key: string; value: string }[];
 }
 
 interface CategoryAutomationsProps {

@@ -110,10 +110,17 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
   useEffect(() => {
     if (open) {
       // Initialize with all automation types, preserving existing states
-      const existingMap = new Map((initialAutomations || []).map(a => [a.type, a]));
+      // Match by name since API uses name as identifier
+      const existingByName = new Map((initialAutomations || []).map(a => [a.name, a]));
       const allAutomations: CategoryAutomation[] = automationConfigs.map(config => {
-        const existing = existingMap.get(config.type as CategoryAutomation['type']);
-        return existing || {
+        const existing = existingByName.get(config.name);
+        if (existing) {
+          return {
+            ...existing,
+            type: config.type as CategoryAutomation['type'],
+          };
+        }
+        return {
           id: `auto-${config.type}`,
           name: config.name,
           type: config.type as CategoryAutomation['type'],
@@ -295,7 +302,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
 
               return (
                 <Box
-                  key={automation.id}
+                  key={automation.id || automation.name}
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
