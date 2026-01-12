@@ -9,27 +9,11 @@ import {
   Alert,
   Avatar,
   Divider,
-  Tabs,
-  Tab,
 } from '@mui/material';
 import { getApiUrl, getAuthHeader, API_CONFIG } from '@/config/api';
 import { useAuth } from '@/context/AuthContext';
-import { AssignmentScheduleConfig } from '@/components/settings/AssignmentScheduleConfig';
 
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
-
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-  return (
-    <div role="tabpanel" hidden={value !== index} {...other}>
-      {value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
-    </div>
-  );
-}
+// Settings types
 
 interface Settings {
   username?: string;
@@ -45,7 +29,6 @@ const SettingsPage = () => {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [tabValue, setTabValue] = useState(0);
   const { sessionToken, logout, userInfo } = useAuth();
   const navigate = useNavigate();
 
@@ -107,120 +90,93 @@ const SettingsPage = () => {
         Settings
       </Typography>
 
-      <Tabs 
-        value={tabValue} 
-        onChange={(_, newValue) => setTabValue(newValue)}
-        sx={{ 
-          borderBottom: 1, 
-          borderColor: 'hsl(var(--border))',
-          '& .MuiTab-root': {
-            color: 'hsl(var(--muted-foreground))',
-            '&.Mui-selected': {
-              color: 'hsl(var(--primary))',
-            },
-          },
-          '& .MuiTabs-indicator': {
-            backgroundColor: 'hsl(var(--primary))',
-          },
-        }}
-      >
-        <Tab label="Account" />
-        <Tab label="Assignment Schedules" />
-      </Tabs>
+      {error && (
+        <Alert severity="warning" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
 
-      <TabPanel value={tabValue} index={0}>
-        {error && (
-          <Alert severity="warning" sx={{ mb: 3 }}>
-            {error}
-          </Alert>
-        )}
-
-        {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-            <CircularProgress sx={{ color: 'hsl(var(--primary))' }} />
-          </Box>
-        ) : (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, maxWidth: 500 }}>
-            <Paper 
-              sx={{ 
-                p: 3,
-                bgcolor: 'hsl(var(--card))',
-                border: '1px solid hsl(var(--border))',
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                <Avatar
-                  sx={{ 
-                    width: 56, 
-                    height: 56, 
-                    bgcolor: 'hsl(var(--primary))',
-                    color: 'hsl(var(--primary-foreground))',
-                    fontSize: '1.25rem',
-                    fontWeight: 600,
-                  }}
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+          <CircularProgress sx={{ color: 'hsl(var(--primary))' }} />
+        </Box>
+      ) : (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, maxWidth: 500 }}>
+          <Paper 
+            sx={{ 
+              p: 3,
+              bgcolor: 'hsl(var(--card))',
+              border: '1px solid hsl(var(--border))',
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+              <Avatar
+                sx={{ 
+                  width: 56, 
+                  height: 56, 
+                  bgcolor: 'hsl(var(--primary))',
+                  color: 'hsl(var(--primary-foreground))',
+                  fontSize: '1.25rem',
+                  fontWeight: 600,
+                }}
+              >
+                {getUserInitial()}
+              </Avatar>
+              <Box>
+                <Typography 
+                  variant="h6" 
+                  sx={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}
                 >
-                  {getUserInitial()}
-                </Avatar>
-                <Box>
-                  <Typography 
-                    variant="h6" 
-                    sx={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}
-                  >
-                    {settings?.username || userInfo?.username || 'User'}
-                  </Typography>
-                  <Typography 
-                    variant="body2" 
-                    sx={{ color: 'hsl(var(--muted-foreground))' }}
-                  >
-                    {settings?.active_org?.name || userInfo?.active_org?.name || 'No organization'}
-                  </Typography>
-                </Box>
+                  {settings?.username || userInfo?.username || 'User'}
+                </Typography>
+                <Typography 
+                  variant="body2" 
+                  sx={{ color: 'hsl(var(--muted-foreground))' }}
+                >
+                  {settings?.active_org?.name || userInfo?.active_org?.name || 'No organization'}
+                </Typography>
               </Box>
-            </Paper>
+            </Box>
+          </Paper>
 
-            <Divider sx={{ borderColor: 'hsl(var(--border))' }} />
+          <Divider sx={{ borderColor: 'hsl(var(--border))' }} />
 
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {API_CONFIG.apiKey && (
-                <Button
-                  variant="outlined"
-                  onClick={handleClearApiKey}
-                  sx={{
-                    borderColor: 'hsl(var(--border))',
-                    color: 'hsl(var(--foreground))',
-                    '&:hover': {
-                      borderColor: 'hsl(var(--primary))',
-                      bgcolor: 'hsla(var(--primary), 0.1)',
-                    },
-                  }}
-                >
-                  Clear API Key
-                </Button>
-              )}
-              
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {API_CONFIG.apiKey && (
               <Button
                 variant="outlined"
-                color="error"
-                onClick={handleLogout}
+                onClick={handleClearApiKey}
                 sx={{
-                  borderColor: 'hsl(0, 84%, 60%)',
-                  color: 'hsl(0, 84%, 60%)',
+                  borderColor: 'hsl(var(--border))',
+                  color: 'hsl(var(--foreground))',
                   '&:hover': {
-                    borderColor: 'hsl(0, 84%, 50%)',
-                    bgcolor: 'hsla(0, 84%, 60%, 0.1)',
+                    borderColor: 'hsl(var(--primary))',
+                    bgcolor: 'hsla(var(--primary), 0.1)',
                   },
                 }}
               >
-                Sign Out
+                Clear API Key
               </Button>
-            </Box>
+            )}
+            
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={handleLogout}
+              sx={{
+                borderColor: 'hsl(0, 84%, 60%)',
+                color: 'hsl(0, 84%, 60%)',
+                '&:hover': {
+                  borderColor: 'hsl(0, 84%, 50%)',
+                  bgcolor: 'hsla(0, 84%, 60%, 0.1)',
+                },
+              }}
+            >
+              Sign Out
+            </Button>
           </Box>
-        )}
-      </TabPanel>
-
-      <TabPanel value={tabValue} index={1}>
-        <AssignmentScheduleConfig />
-      </TabPanel>
+        </Box>
+      )}
     </Box>
   );
 };
