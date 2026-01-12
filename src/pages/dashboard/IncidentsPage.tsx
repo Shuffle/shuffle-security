@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Card,
@@ -15,6 +16,7 @@ import {
   TextField,
   InputAdornment,
   Button,
+  ButtonGroup,
   Checkbox,
   TablePagination,
   CircularProgress,
@@ -22,22 +24,16 @@ import {
   Menu,
   MenuItem,
   TableSortLabel,
-  FormControlLabel,
-  Switch,
-  Divider,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ViewColumnIcon from '@mui/icons-material/ViewColumn';
 import { useDatastore } from '@/hooks/useDatastore';
 import { useAuth } from '@/context/AuthContext';
 import { DATASTORE_CATEGORIES, getDatastoreByCategory, setDatastoreItems } from '@/services/datastore';
 import { CreateIncidentDialog, OCSFIncidentFinding, Observable } from '@/components/incidents/CreateIncidentDialog';
-import { IncidentDetailDialog } from '@/components/incidents/IncidentDetailDialog';
 
 // Legacy categories for migration
 const LEGACY_ALERTS_CATEGORY = 'shuffle-alerts';
@@ -244,6 +240,7 @@ interface Filters {
 }
 
 const IncidentsPage = () => {
+  const navigate = useNavigate();
   const { userInfo } = useAuth();
   const currentUsername = userInfo?.username || '';
 
@@ -253,8 +250,6 @@ const IncidentsPage = () => {
   const [incidents, setIncidents] = useState<DisplayIncident[]>([]);
   const [filters, setFilters] = useState<Filters>({ severity: null, status: null, tlp: null, assignee: null });
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
-  const [selectedIncident, setSelectedIncident] = useState<DisplayIncident | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Sorting
@@ -449,8 +444,7 @@ const IncidentsPage = () => {
   };
 
   const handleRowClick = (incident: DisplayIncident) => {
-    setSelectedIncident(incident);
-    setDetailDialogOpen(true);
+    navigate(`/incidents/${incident.id}`);
   };
 
   const handleCreateIncident = async (ocsf: OCSFIncidentFinding) => {
@@ -635,23 +629,16 @@ const IncidentsPage = () => {
             <Typography variant="caption" color="error">{error}</Typography>
           )}
         </Box>
-        <Box sx={{ display: 'flex', gap: 1.5 }}>
-          <Button
-            variant="outlined"
-            startIcon={<RefreshIcon />}
-            onClick={() => fetchItems()}
-            disabled={isLoading}
-          >
-            Refresh
-          </Button>
-          <Button
-            variant="outlined"
-            startIcon={<AddIcon />}
-            onClick={() => setCreateDialogOpen(true)}
-          >
+        <ButtonGroup variant="outlined">
+          <Tooltip title="Refresh">
+            <Button onClick={() => fetchItems()} disabled={isLoading} sx={{ minWidth: 'auto', px: 1.5 }}>
+              <RefreshIcon />
+            </Button>
+          </Tooltip>
+          <Button startIcon={<AddIcon />} onClick={() => setCreateDialogOpen(true)}>
             Create Incident
           </Button>
-        </Box>
+        </ButtonGroup>
       </Box>
 
       <Card>
@@ -815,24 +802,11 @@ const IncidentsPage = () => {
                       </TableCell>
                     ))}
                     <TableCell align="right" onClick={(e) => e.stopPropagation()}>
-                      <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
-                        <Tooltip title="View Details">
-                          <IconButton size="small" onClick={() => handleRowClick(incident)}>
-                            <VisibilityIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        {incident.status !== 'resolved' && (
-                          <Tooltip title="Resolve Incident">
-                            <IconButton
-                              size="small"
-                              onClick={() => handleResolveIncident(incident.id)}
-                              sx={{ color: 'success.main' }}
-                            >
-                              <CheckCircleIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                        )}
-                      </Box>
+                      <Tooltip title="Open">
+                        <IconButton size="small" onClick={() => handleRowClick(incident)}>
+                          <AddIcon fontSize="small" sx={{ transform: 'rotate(45deg)' }} />
+                        </IconButton>
+                      </Tooltip>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -876,14 +850,10 @@ const IncidentsPage = () => {
         <Typography variant="subtitle2" sx={{ px: 2, py: 1, color: 'text.secondary' }}>
           Visible Columns
         </Typography>
-        <Divider />
         {COLUMNS.map((col) => (
           <MenuItem key={col.key} onClick={() => toggleColumn(col.key)} dense>
-            <FormControlLabel
-              control={<Switch size="small" checked={visibleColumns.has(col.key)} />}
-              label={col.label}
-              sx={{ width: '100%', m: 0 }}
-            />
+            <Checkbox size="small" checked={visibleColumns.has(col.key)} sx={{ p: 0.5, mr: 1 }} />
+            {col.label}
           </MenuItem>
         ))}
       </Menu>
@@ -892,17 +862,6 @@ const IncidentsPage = () => {
         open={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
         onSubmit={handleCreateIncident}
-      />
-
-      <IncidentDetailDialog
-        open={detailDialogOpen}
-        incident={selectedIncident}
-        onClose={() => {
-          setDetailDialogOpen(false);
-          setSelectedIncident(null);
-        }}
-        onResolve={handleResolveIncident}
-        onUpdate={handleUpdateIncident}
       />
     </motion.div>
   );

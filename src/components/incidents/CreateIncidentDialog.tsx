@@ -56,6 +56,16 @@ export const papLevels = [
   { value: 'PAP:RED', label: 'PAP:RED', color: '#ef4444' },
 ];
 
+// Activity item for collaborative tracking
+export interface ActivityItem {
+  id: string;
+  type: 'comment' | 'change' | 'status' | 'assignment' | 'created';
+  user: string;
+  timestamp: number;
+  content: string;
+  details?: Record<string, unknown>;
+}
+
 // OCSF Incident Finding format (class_id: 2005)
 export interface OCSFIncidentFinding {
   class_uid: 2005; // Incident Finding
@@ -84,6 +94,8 @@ export interface OCSFIncidentFinding {
   customFields?: Record<string, string | number | boolean>;
   // Linked detection findings (for grouping)
   related_findings?: string[];
+  // Activity/collaboration tracking
+  activity?: ActivityItem[];
   metadata: {
     product: {
       name: string;
