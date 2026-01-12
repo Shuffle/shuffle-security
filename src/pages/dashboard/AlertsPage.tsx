@@ -36,12 +36,22 @@ import { AlertDetailDialog } from '@/components/alerts/AlertDetailDialog';
 // Legacy category for migration
 const LEGACY_ALERTS_CATEGORY = 'shuffle-alerts';
 
-// Migrate data from old category to new category
+// Check if migration already happened (stored in localStorage)
+const MIGRATION_KEY = 'shuffle_alerts_migrated_v1';
+
+// Migrate data from old category to new category (one-time only)
 const migrateAlertsData = async (): Promise<number> => {
+  // Skip if already migrated
+  if (localStorage.getItem(MIGRATION_KEY)) {
+    return 0;
+  }
+
   try {
     // Fetch from old category
     const oldData = await getDatastoreByCategory(LEGACY_ALERTS_CATEGORY);
     if (!oldData.success || !oldData.data || oldData.data.length === 0) {
+      // Mark as migrated even if no data (nothing to migrate)
+      localStorage.setItem(MIGRATION_KEY, new Date().toISOString());
       return 0;
     }
 
@@ -55,6 +65,8 @@ const migrateAlertsData = async (): Promise<number> => {
     const result = await setDatastoreItems(itemsToMigrate, DATASTORE_CATEGORIES.ALERTS);
     if (result.success) {
       console.log(`Migrated ${itemsToMigrate.length} alerts to new category`);
+      // Mark as migrated
+      localStorage.setItem(MIGRATION_KEY, new Date().toISOString());
       return itemsToMigrate.length;
     }
     return 0;
