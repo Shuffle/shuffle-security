@@ -83,7 +83,7 @@ const OnboardingPage = () => {
         (app) => authStates[app.objectID]?.status === 'connected'
       );
       localStorage.setItem('connected_integrations', JSON.stringify(connectedApps));
-      navigate('/alerts');
+      navigate('/incidents');
     } else {
       setActiveStep((prev) => prev + 1);
     }
@@ -529,7 +529,7 @@ const OnboardingPage = () => {
             <Stack direction="row" spacing={2}>
               {activeStep < steps.length - 1 && (
                 <Button
-                  onClick={() => navigate('/alerts')}
+                  onClick={() => navigate('/incidents')}
                   sx={{
                     color: 'rgba(255, 255, 255, 0.5)',
                     '&:hover': { color: 'white', backgroundColor: 'rgba(255, 255, 255, 0.05)' },

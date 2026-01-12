@@ -144,7 +144,7 @@ export const LandingNavbar = () => {
                   {isAuthenticated ? (
                     <Button
                       component={Link}
-                      to="/alerts"
+                      to="/incidents"
                       variant="contained"
                     >
                       Go to Product
@@ -212,7 +212,7 @@ export const LandingNavbar = () => {
               <ListItem sx={{ px: 2, pt: 2 }}>
                 <Button
                   component={Link}
-                  to="/alerts"
+                  to="/incidents"
                   variant="contained"
                   fullWidth
                   onClick={handleDrawerToggle}
