@@ -14,17 +14,15 @@ import {
   CircularProgress,
   FormControlLabel,
   Switch,
-  Card,
-  CardContent,
   Avatar,
   Button,
-  
   Tooltip,
   Skeleton,
+  Collapse,
+  LinearProgress,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import AddIcon from '@mui/icons-material/Add';
 import SendIcon from '@mui/icons-material/Send';
@@ -32,6 +30,12 @@ import PersonIcon from '@mui/icons-material/Person';
 import EditIcon from '@mui/icons-material/Edit';
 import HistoryIcon from '@mui/icons-material/History';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import SecurityIcon from '@mui/icons-material/Security';
+import LinkIcon from '@mui/icons-material/Link';
+import SettingsIcon from '@mui/icons-material/Settings';
+import DescriptionIcon from '@mui/icons-material/Description';
 import { useDatastore } from '@/hooks/useDatastore';
 import { useAuth } from '@/context/AuthContext';
 import { DATASTORE_CATEGORIES, getDatastoreItem } from '@/services/datastore';
@@ -43,13 +47,10 @@ import {
   severityOptions, 
   observableTypes,
   tlpLevels,
-  papLevels,
   ActivityItem,
 } from '@/components/incidents/CreateIncidentDialog';
 import { ResolveIncidentDialog, ResolutionData, RESOLUTION_REASONS } from '@/components/incidents/ResolveIncidentDialog';
 import { toast } from 'sonner';
-
-// Re-export ActivityItem type is now imported from CreateIncidentDialog
 
 interface DisplayIncident {
   id: string;
@@ -110,6 +111,16 @@ const formatRelativeTime = (timestamp: number): string => {
   return formatTimestamp(timestamp);
 };
 
+const formatDuration = (ms: number): string => {
+  const minutes = Math.floor(ms / 60000);
+  const hours = Math.floor(ms / 3600000);
+  const days = Math.floor(ms / 86400000);
+  
+  if (minutes < 60) return `${minutes}m`;
+  if (hours < 24) return `${hours}h ${minutes % 60}m`;
+  return `${days}d ${hours % 24}h`;
+};
+
 const parseTimestamp = (timestamp: number | string | undefined): number => {
   if (!timestamp) return 0;
   const ts = typeof timestamp === 'string' ? parseInt(timestamp, 10) : timestamp;
@@ -165,7 +176,6 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
       };
     }
     
-    // Fallback for legacy/simple format
     return {
       id: data.id || item.key,
       title: data.title || 'Untitled',
@@ -191,6 +201,68 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
   }
 };
 
+// Collapsible Section Component
+const Section = ({ 
+  title, 
+  icon: Icon, 
+  children, 
+  defaultOpen = true,
+  badge,
+}: { 
+  title: string; 
+  icon: React.ElementType; 
+  children: React.ReactNode; 
+  defaultOpen?: boolean;
+  badge?: string | number;
+}) => {
+  const [open, setOpen] = useState(defaultOpen);
+  
+  return (
+    <Box sx={{ 
+      bgcolor: 'rgba(255,255,255,0.02)', 
+      borderRadius: 2, 
+      border: '1px solid rgba(255,255,255,0.06)',
+      overflow: 'hidden',
+    }}>
+      <Box 
+        onClick={() => setOpen(!open)}
+        sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: 1.5, 
+          px: 2.5, 
+          py: 2,
+          cursor: 'pointer',
+          '&:hover': { bgcolor: 'rgba(255,255,255,0.02)' },
+        }}
+      >
+        <Icon sx={{ fontSize: 20, color: 'text.secondary' }} />
+        <Typography variant="subtitle2" sx={{ flex: 1, fontWeight: 600 }}>
+          {title}
+        </Typography>
+        {badge !== undefined && (
+          <Chip 
+            label={badge} 
+            size="small" 
+            sx={{ 
+              height: 20, 
+              fontSize: '0.7rem',
+              bgcolor: 'rgba(255, 102, 0, 0.15)',
+              color: '#ff6600',
+            }} 
+          />
+        )}
+        {open ? <ExpandLessIcon sx={{ color: 'text.secondary' }} /> : <ExpandMoreIcon sx={{ color: 'text.secondary' }} />}
+      </Box>
+      <Collapse in={open}>
+        <Box sx={{ px: 2.5, pb: 2.5 }}>
+          {children}
+        </Box>
+      </Collapse>
+    </Box>
+  );
+};
+
 const IncidentDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -207,7 +279,6 @@ const IncidentDetailPage = () => {
   const [editedAssignee, setEditedAssignee] = useState('');
   const [editedStatus, setEditedStatus] = useState('');
   const [editedTlp, setEditedTlp] = useState('TLP:AMBER');
-  const [editedPap, setEditedPap] = useState('PAP:AMBER');
   const [editedReferences, setEditedReferences] = useState<string[]>([]);
   const [newReference, setNewReference] = useState('');
   const [editedObservables, setEditedObservables] = useState<Observable[]>([]);
@@ -230,7 +301,7 @@ const IncidentDetailPage = () => {
     category: DATASTORE_CATEGORIES.INCIDENTS,
   });
 
-  // Load incident using direct key lookup (faster than list API)
+  // Load incident
   useEffect(() => {
     const loadIncident = async () => {
       if (!id) {
@@ -239,12 +310,9 @@ const IncidentDetailPage = () => {
       }
 
       setLoading(true);
-      
-      // Try direct key lookup first
       const result = await getDatastoreItem(id, DATASTORE_CATEGORIES.INCIDENTS);
       
       if (result.success && result.item) {
-        // API returns { key, value, ... } directly - use item.key or fall back to the id
         const itemData = {
           key: result.item.key || id,
           value: result.item.value,
@@ -261,7 +329,6 @@ const IncidentDetailPage = () => {
           setEditedAssignee(parsed.assignee || '');
           setEditedStatus(parsed.status);
           setEditedTlp(parsed.tlp || 'TLP:AMBER');
-          setEditedPap(parsed.pap || 'PAP:AMBER');
           setEditedReferences(parsed.references || []);
           setEditedObservables(parsed.observables || []);
           setEditedCustomFields(parsed.rawOCSF?.customFields || {});
@@ -271,7 +338,6 @@ const IncidentDetailPage = () => {
         }
       }
       
-      // Key not found - incident doesn't exist
       setLoading(false);
     };
 
@@ -288,7 +354,6 @@ const IncidentDetailPage = () => {
     const severityOption = severityOptions.find(s => s.value === editedSeverity);
     const statusId = editedStatus === 'new' ? 1 : editedStatus === 'in_progress' ? 2 : 3;
     
-    // Build the updated data - support both OCSF and legacy formats
     const updatedData = incident.rawOCSF ? {
       ...incident.rawOCSF,
       message: editedMessage || editedTitle,
@@ -297,7 +362,6 @@ const IncidentDetailPage = () => {
       status_id: statusId,
       status: editedStatus === 'new' ? 'New' : editedStatus === 'in_progress' ? 'In Progress' : 'Resolved',
       tlp: editedTlp,
-      pap: editedPap,
       assignee: editedAssignee.trim() || undefined,
       observables: editedObservables.length > 0 ? editedObservables : undefined,
       customFields: Object.keys(editedCustomFields).length > 0 ? editedCustomFields : undefined,
@@ -316,7 +380,6 @@ const IncidentDetailPage = () => {
       status: editedStatus,
       assignee: editedAssignee.trim() || undefined,
       tlp: editedTlp,
-      pap: editedPap,
       references: editedReferences,
       observables: editedObservables,
       customFields: editedCustomFields,
@@ -330,18 +393,16 @@ const IncidentDetailPage = () => {
     } finally {
       setIsSaving(false);
     }
-  }, [incident, editedTitle, editedMessage, editedSeverity, editedAssignee, editedStatus, editedTlp, editedPap, editedReferences, editedObservables, editedCustomFields, activity, addItem]);
+  }, [incident, editedTitle, editedMessage, editedSeverity, editedAssignee, editedStatus, editedTlp, editedReferences, editedObservables, editedCustomFields, activity, addItem]);
 
-  // Debounced auto-save trigger
+  // Debounced auto-save
   useEffect(() => {
     if (!incident) return;
     
-    // Clear any pending save
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
     
-    // Check if there are actual changes
     const hasChanges = 
       editedTitle !== incident.title ||
       editedMessage !== (incident.rawOCSF?.message || '') ||
@@ -349,14 +410,12 @@ const IncidentDetailPage = () => {
       editedAssignee !== (incident.assignee || '') ||
       editedStatus !== incident.status ||
       editedTlp !== (incident.tlp || 'TLP:AMBER') ||
-      editedPap !== (incident.pap || 'PAP:AMBER') ||
       JSON.stringify(editedReferences) !== JSON.stringify(incident.references || []) ||
       JSON.stringify(editedObservables) !== JSON.stringify(incident.observables || []) ||
       JSON.stringify(editedCustomFields) !== JSON.stringify(incident.rawOCSF?.customFields || {});
     
     if (hasChanges) {
       pendingSaveRef.current = true;
-      // Debounce: save after 800ms of no changes
       saveTimeoutRef.current = setTimeout(() => {
         saveToDatastore();
       }, 800);
@@ -367,24 +426,28 @@ const IncidentDetailPage = () => {
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [incident, editedTitle, editedMessage, editedSeverity, editedAssignee, editedStatus, editedTlp, editedPap, editedReferences, editedObservables, editedCustomFields, saveToDatastore]);
+  }, [incident, editedTitle, editedMessage, editedSeverity, editedAssignee, editedStatus, editedTlp, editedReferences, editedObservables, editedCustomFields, saveToDatastore]);
 
-  // MTTD/MTTR calculation
+  // Metrics calculation
   const metrics = useMemo(() => {
     if (!incident) return null;
     
     const createdAt = incident.createdTs;
-    const resolvedAt = incident.status === 'resolved' ? (incident.editedTs || Date.now()) : null;
+    const now = Date.now();
+    const age = now - createdAt;
+    const resolvedAt = incident.status === 'resolved' ? (incident.editedTs || now) : null;
+    const mttr = resolvedAt ? resolvedAt - createdAt : null;
     
-    // MTTD: Time from detection (created) - we'd need external data for true detection time
-    // For now, show time since created
-    const mttd = createdAt ? formatRelativeTime(createdAt) : null;
+    // Progress bar: Max 24 hours for visualization
+    const maxAge = 24 * 60 * 60 * 1000;
+    const ageProgress = Math.min((age / maxAge) * 100, 100);
     
-    // MTTR: Time to resolve
-    const mttr = resolvedAt ? Math.round((resolvedAt - createdAt) / 60000) : null;
-    const mttrFormatted = mttr ? (mttr < 60 ? `${mttr}m` : `${Math.round(mttr / 60)}h ${mttr % 60}m`) : null;
-    
-    return { mttd, mttr: mttrFormatted };
+    return { 
+      age: formatDuration(age),
+      ageMs: age,
+      ageProgress,
+      mttr: mttr ? formatDuration(mttr) : null,
+    };
   }, [incident]);
 
   const handleAddReference = () => {
@@ -424,7 +487,6 @@ const IncidentDetailPage = () => {
     setActivity(updatedActivity);
     setNewComment('');
     
-    // Save to datastore
     const updatedOCSF: OCSFIncidentFinding = {
       ...incident.rawOCSF,
       activity: updatedActivity,
@@ -450,7 +512,6 @@ const IncidentDetailPage = () => {
     
     const updatedActivity = [...activity, resolveActivity];
     
-    // Build resolved data - support both OCSF and legacy formats
     const resolvedData = incident.rawOCSF ? {
       ...incident.rawOCSF,
       status_id: 3,
@@ -594,10 +655,10 @@ const IncidentDetailPage = () => {
   if (loading) {
     return (
       <Box sx={{ p: 4 }}>
-        <Skeleton variant="rectangular" height={60} sx={{ mb: 3 }} />
-        <Box sx={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 3 }}>
-          <Skeleton variant="rectangular" height={400} />
-          <Skeleton variant="rectangular" height={400} />
+        <Skeleton variant="rectangular" height={120} sx={{ mb: 3, borderRadius: 2 }} />
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Skeleton variant="rectangular" height={200} sx={{ borderRadius: 2 }} />
+          <Skeleton variant="rectangular" height={150} sx={{ borderRadius: 2 }} />
         </Box>
       </Box>
     );
@@ -624,17 +685,39 @@ const IncidentDetailPage = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      {/* Header */}
-      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <IconButton onClick={() => navigate('/incidents')} sx={{ bgcolor: 'rgba(255,255,255,0.05)' }}>
+      {/* Summary Header Card */}
+      <Box sx={{ 
+        bgcolor: 'rgba(255,255,255,0.02)', 
+        borderRadius: 2, 
+        border: '1px solid rgba(255,255,255,0.08)',
+        p: 3,
+        mb: 3,
+      }}>
+        {/* Top Row: Back + Title + Actions */}
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 3 }}>
+          <IconButton onClick={() => navigate('/incidents')} sx={{ bgcolor: 'rgba(255,255,255,0.05)', mt: 0.5 }}>
             <ArrowBackIcon />
           </IconButton>
-          <Box>
-            <Typography variant="h5" sx={{ fontWeight: 600 }}>
-              {editedTitle}
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 1, mt: 0.5, alignItems: 'center' }}>
+          
+          <Box sx={{ flex: 1 }}>
+            <TextField
+              value={editedTitle}
+              onChange={(e) => setEditedTitle(e.target.value)}
+              variant="standard"
+              fullWidth
+              InputProps={{
+                disableUnderline: true,
+                sx: { 
+                  fontSize: '1.5rem', 
+                  fontWeight: 600,
+                  '&:hover': { bgcolor: 'rgba(255,255,255,0.03)' },
+                  borderRadius: 1,
+                  px: 1,
+                  mx: -1,
+                },
+              }}
+            />
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mt: 1, flexWrap: 'wrap' }}>
               <Typography variant="caption" sx={{ color: 'text.secondary', fontFamily: 'monospace' }}>
                 {incident.id}
               </Typography>
@@ -658,59 +741,368 @@ const IncidentDetailPage = () => {
                   textTransform: 'capitalize',
                 }}
               />
-            </Box>
-          </Box>
-        </Box>
-        
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-          {/* Metrics */}
-          {metrics && (
-            <Box sx={{ display: 'flex', gap: 3, mr: 2 }}>
-              <Tooltip title="Time since created">
-                <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
-                    Age
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    {metrics.mttd}
-                  </Typography>
-                </Box>
-              </Tooltip>
-              {metrics.mttr && (
-                <Tooltip title="Mean Time to Resolve">
-                  <Box sx={{ textAlign: 'center' }}>
-                    <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
-                      MTTR
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#22c55e' }}>
-                      {metrics.mttr}
-                    </Typography>
-                  </Box>
-                </Tooltip>
+              {editedTlp && (
+                <Chip
+                  label={editedTlp}
+                  size="small"
+                  sx={{
+                    backgroundColor: 'rgba(255,255,255,0.1)',
+                    fontSize: '0.65rem',
+                  }}
+                />
               )}
             </Box>
-          )}
+          </Box>
           
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             {isSaving && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <CircularProgress size={16} />
-                <Typography variant="body2" color="text.secondary">Saving...</Typography>
+                <Typography variant="caption" color="text.secondary">Saving...</Typography>
               </Box>
             )}
             {!isResolved && (
               <Button 
-                variant="outlined"
+                variant="contained"
                 startIcon={<CheckCircleIcon />} 
                 onClick={() => setShowResolveDialog(true)} 
                 disabled={isSaving}
-                sx={{ color: '#22c55e', borderColor: '#22c55e', '&:hover': { borderColor: '#22c55e', bgcolor: 'rgba(34, 197, 94, 0.1)' } }}
+                sx={{ 
+                  bgcolor: '#22c55e', 
+                  '&:hover': { bgcolor: '#16a34a' },
+                }}
               >
                 Resolve
               </Button>
             )}
           </Box>
         </Box>
+
+        {/* Metrics Row */}
+        <Box sx={{ 
+          display: 'grid', 
+          gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(5, 1fr)' }, 
+          gap: 2,
+          pt: 2,
+          borderTop: '1px solid rgba(255,255,255,0.06)',
+        }}>
+          {/* Age / MTTD */}
+          <Box>
+            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
+              Age
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                {metrics?.age}
+              </Typography>
+            </Box>
+            <LinearProgress 
+              variant="determinate" 
+              value={metrics?.ageProgress || 0} 
+              sx={{ 
+                mt: 0.5, 
+                height: 3, 
+                borderRadius: 1,
+                bgcolor: 'rgba(255,255,255,0.1)',
+                '& .MuiLinearProgress-bar': {
+                  bgcolor: (metrics?.ageProgress || 0) > 75 ? '#ef4444' : (metrics?.ageProgress || 0) > 50 ? '#f97316' : '#22c55e',
+                },
+              }} 
+            />
+          </Box>
+
+          {/* MTTR */}
+          <Box>
+            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
+              MTTR
+            </Typography>
+            <Typography variant="body2" sx={{ fontWeight: 600, color: metrics?.mttr ? '#22c55e' : 'text.secondary' }}>
+              {metrics?.mttr || '—'}
+            </Typography>
+          </Box>
+
+          {/* Status */}
+          <Box>
+            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
+              Status
+            </Typography>
+            <FormControl size="small" sx={{ minWidth: 120 }}>
+              <Select
+                value={editedStatus}
+                onChange={(e) => setEditedStatus(e.target.value)}
+                variant="standard"
+                disableUnderline
+                sx={{ 
+                  fontWeight: 600,
+                  color: statusColors[editedStatus]?.text,
+                  '& .MuiSelect-icon': { color: 'text.secondary' },
+                }}
+              >
+                <MenuItem value="new">New</MenuItem>
+                <MenuItem value="in_progress">In Progress</MenuItem>
+                <MenuItem value="resolved">Resolved</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+
+          {/* Severity */}
+          <Box>
+            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
+              Severity
+            </Typography>
+            <FormControl size="small" sx={{ minWidth: 100 }}>
+              <Select
+                value={editedSeverity}
+                onChange={(e) => setEditedSeverity(e.target.value)}
+                variant="standard"
+                disableUnderline
+                sx={{ 
+                  fontWeight: 600,
+                  color: severityColors[editedSeverity],
+                  textTransform: 'capitalize',
+                  '& .MuiSelect-icon': { color: 'text.secondary' },
+                }}
+              >
+                {severityOptions.map((opt) => (
+                  <MenuItem key={opt.value} value={opt.value}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: severityColors[opt.value] }} />
+                      {opt.label}
+                    </Box>
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+
+          {/* Assignee */}
+          <Box>
+            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
+              Assignee
+            </Typography>
+            <FormControl size="small" sx={{ minWidth: 120 }}>
+              <Select
+                value={editedAssignee}
+                onChange={(e) => setEditedAssignee(e.target.value)}
+                variant="standard"
+                disableUnderline
+                disabled={usersLoading}
+                displayEmpty
+                sx={{ 
+                  fontWeight: 600,
+                  '& .MuiSelect-icon': { color: 'text.secondary' },
+                }}
+                MenuProps={{ PaperProps: { sx: { bgcolor: '#2a2a2a', border: '1px solid rgba(255,255,255,0.1)' } } }}
+              >
+                <MenuItem value=""><em>Unassigned</em></MenuItem>
+                {users.map((user) => (
+                  <MenuItem key={user.id} value={user.username}>{user.username}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+        </Box>
+      </Box>
+
+      {/* Main Content - Collapsible Sections */}
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {/* Description */}
+        <Section title="Description" icon={DescriptionIcon} defaultOpen={true}>
+          <TextField
+            value={editedMessage}
+            onChange={(e) => setEditedMessage(e.target.value)}
+            fullWidth
+            multiline
+            rows={3}
+            placeholder="Add a description..."
+            size="small"
+            sx={inputSx}
+          />
+          <Box sx={{ display: 'flex', gap: 3, mt: 2, flexWrap: 'wrap' }}>
+            <Box>
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>Source</Typography>
+              <Typography variant="body2">{incident.source}</Typography>
+            </Box>
+            <Box>
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>Created</Typography>
+              <Typography variant="body2">{incident.created}</Typography>
+            </Box>
+            {incident.edited && (
+              <Box>
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>Last Updated</Typography>
+                <Typography variant="body2">{incident.edited}</Typography>
+              </Box>
+            )}
+          </Box>
+        </Section>
+
+        {/* Observables */}
+        <Section 
+          title="Observables (IOCs)" 
+          icon={SecurityIcon} 
+          defaultOpen={editedObservables.length > 0}
+          badge={editedObservables.length > 0 ? editedObservables.length : undefined}
+        >
+          <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+            <TextField
+              select
+              size="small"
+              value={newObservableType}
+              onChange={(e) => setNewObservableType(e.target.value)}
+              sx={{ minWidth: 120, ...inputSx }}
+            >
+              {observableTypes.map((type) => (
+                <MenuItem key={type} value={type}>{type}</MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              size="small"
+              value={newObservableValue}
+              onChange={(e) => setNewObservableValue(e.target.value)}
+              placeholder="Value..."
+              fullWidth
+              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddObservable())}
+              sx={inputSx}
+            />
+            <IconButton onClick={handleAddObservable} disabled={!newObservableValue.trim()} sx={{ bgcolor: 'rgba(255,255,255,0.05)' }}>
+              <AddIcon />
+            </IconButton>
+          </Box>
+          {editedObservables.length > 0 ? (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+              {editedObservables.map((obs, idx) => (
+                <Chip
+                  key={idx}
+                  label={`${obs.type}: ${obs.value}`}
+                  size="small"
+                  onDelete={() => handleRemoveObservable(idx)}
+                  sx={{ bgcolor: 'rgba(255, 102, 0, 0.15)', '& .MuiChip-label': { fontFamily: 'monospace', fontSize: '0.75rem' } }}
+                />
+              ))}
+            </Box>
+          ) : (
+            <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
+              No observables added
+            </Typography>
+          )}
+        </Section>
+
+        {/* Custom Fields */}
+        {customFields.length > 0 && (
+          <Section title="Custom Fields" icon={SettingsIcon} defaultOpen={false}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 2 }}>
+              {customFields.map((field) => renderCustomField(field))}
+            </Box>
+          </Section>
+        )}
+
+        {/* References */}
+        <Section 
+          title="References" 
+          icon={LinkIcon} 
+          defaultOpen={editedReferences.length > 0}
+          badge={editedReferences.length > 0 ? editedReferences.length : undefined}
+        >
+          <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+            <TextField
+              size="small"
+              value={newReference}
+              onChange={(e) => setNewReference(e.target.value)}
+              placeholder="https://example.com/reference"
+              fullWidth
+              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddReference())}
+              sx={inputSx}
+            />
+            <IconButton onClick={handleAddReference} disabled={!newReference.trim()} sx={{ bgcolor: 'rgba(255,255,255,0.05)' }}>
+              <AddIcon />
+            </IconButton>
+          </Box>
+          {editedReferences.length > 0 ? (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+              {editedReferences.map((ref, idx) => (
+                <Chip
+                  key={idx}
+                  label={ref.length > 50 ? ref.substring(0, 50) + '...' : ref}
+                  size="small"
+                  onDelete={() => handleRemoveReference(idx)}
+                  onClick={() => window.open(ref, '_blank')}
+                  sx={{ cursor: 'pointer' }}
+                />
+              ))}
+            </Box>
+          ) : (
+            <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
+              No references added
+            </Typography>
+          )}
+        </Section>
+
+        {/* Activity / Timeline */}
+        <Section 
+          title="Activity" 
+          icon={HistoryIcon} 
+          defaultOpen={true}
+          badge={activity.length > 0 ? activity.length : undefined}
+        >
+          {/* Comment input */}
+          <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+            <TextField
+              size="small"
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder="Add a comment..."
+              fullWidth
+              multiline
+              maxRows={4}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleAddComment();
+                }
+              }}
+              sx={inputSx}
+            />
+            <IconButton 
+              onClick={handleAddComment} 
+              disabled={!newComment.trim()} 
+              sx={{ bgcolor: 'rgba(255, 102, 0, 0.15)', color: '#ff6600', '&:hover': { bgcolor: 'rgba(255, 102, 0, 0.25)' } }}
+            >
+              <SendIcon />
+            </IconButton>
+          </Box>
+
+          <Divider sx={{ mb: 2, borderColor: 'rgba(255,255,255,0.06)' }} />
+
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, maxHeight: 400, overflowY: 'auto' }}>
+            {activity.length === 0 ? (
+              <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center', py: 3 }}>
+                No activity yet
+              </Typography>
+            ) : (
+              [...activity].reverse().map((item) => (
+                <Box key={item.id} sx={{ display: 'flex', gap: 1.5, p: 1.5, borderRadius: 1, bgcolor: 'rgba(0,0,0,0.2)' }}>
+                  <Avatar sx={{ width: 28, height: 28, bgcolor: item.type === 'comment' ? 'rgba(255, 102, 0, 0.2)' : 'rgba(148, 163, 184, 0.2)' }}>
+                    {getActivityIcon(item.type)}
+                  </Avatar>
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.85rem' }}>
+                        {item.user}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: 'text.secondary', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <AccessTimeIcon sx={{ fontSize: 12 }} />
+                        {formatRelativeTime(item.timestamp)}
+                      </Typography>
+                    </Box>
+                    <Typography variant="body2" sx={{ color: item.type === 'comment' ? 'text.primary' : 'text.secondary', fontSize: '0.85rem' }}>
+                      {item.content}
+                    </Typography>
+                  </Box>
+                </Box>
+              ))
+            )}
+          </Box>
+        </Section>
       </Box>
 
       <ResolveIncidentDialog
@@ -720,303 +1112,6 @@ const IncidentDetailPage = () => {
         incidentTitle={incident?.title || ''}
         isLoading={isSaving}
       />
-
-      {/* Main Content */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' }, gap: 3 }}>
-        {/* Left Column - Details */}
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {/* Basic Info */}
-          <Card>
-            <CardContent>
-              <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 2 }}>
-                Details
-              </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-                <TextField
-                  label="Title"
-                  value={editedTitle}
-                  onChange={(e) => setEditedTitle(e.target.value)}
-                  fullWidth
-                  size="small"
-                  sx={inputSx}
-                />
-                <TextField
-                  label="Description"
-                  value={editedMessage}
-                  onChange={(e) => setEditedMessage(e.target.value)}
-                  fullWidth
-                  multiline
-                  rows={3}
-                  size="small"
-                  sx={inputSx}
-                />
-                
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2 }}>
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Severity</InputLabel>
-                    <Select
-                      value={editedSeverity}
-                      label="Severity"
-                      onChange={(e) => setEditedSeverity(e.target.value)}
-                      sx={inputSx['& .MuiOutlinedInput-root']}
-                    >
-                      {severityOptions.map((opt) => (
-                        <MenuItem key={opt.value} value={opt.value}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: severityColors[opt.value] }} />
-                            {opt.label}
-                          </Box>
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Status</InputLabel>
-                    <Select
-                      value={editedStatus}
-                      label="Status"
-                      onChange={(e) => setEditedStatus(e.target.value)}
-                      sx={inputSx['& .MuiOutlinedInput-root']}
-                    >
-                      <MenuItem value="new">New</MenuItem>
-                      <MenuItem value="in_progress">In Progress</MenuItem>
-                      <MenuItem value="resolved">Resolved</MenuItem>
-                    </Select>
-                  </FormControl>
-
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Assignee</InputLabel>
-                    <Select
-                      value={editedAssignee}
-                      label="Assignee"
-                      onChange={(e) => setEditedAssignee(e.target.value)}
-                      disabled={usersLoading}
-                      sx={inputSx['& .MuiOutlinedInput-root']}
-                      MenuProps={{ PaperProps: { sx: { bgcolor: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))', zIndex: 9999 } } }}
-                    >
-                      <MenuItem value=""><em>Unassigned</em></MenuItem>
-                      {users.map((user) => (
-                        <MenuItem key={user.id} value={user.username}>{user.username}</MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-
-                  <FormControl fullWidth size="small">
-                    <InputLabel>TLP</InputLabel>
-                    <Select
-                      value={editedTlp}
-                      label="TLP"
-                      onChange={(e) => setEditedTlp(e.target.value)}
-                      sx={inputSx['& .MuiOutlinedInput-root']}
-                    >
-                      {tlpLevels.map((opt) => (
-                        <MenuItem key={opt.value} value={opt.value}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: opt.color, border: opt.color === '#ffffff' ? '1px solid #666' : 'none' }} />
-                            {opt.label}
-                          </Box>
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Box>
-
-                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                  <Box>
-                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>Created</Typography>
-                    <Typography variant="body2">{incident.created}</Typography>
-                  </Box>
-                  {incident.edited && (
-                    <Box>
-                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>Last Updated</Typography>
-                      <Typography variant="body2">{incident.edited}</Typography>
-                    </Box>
-                  )}
-                  <Box>
-                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>Source</Typography>
-                    <Typography variant="body2">{incident.source}</Typography>
-                  </Box>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-
-          {/* Observables */}
-          <Card>
-            <CardContent>
-              <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 2 }}>
-                Observables (IOCs)
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                <TextField
-                  select
-                  size="small"
-                  value={newObservableType}
-                  onChange={(e) => setNewObservableType(e.target.value)}
-                  sx={{ minWidth: 120, ...inputSx }}
-                >
-                  {observableTypes.map((type) => (
-                    <MenuItem key={type} value={type}>{type}</MenuItem>
-                  ))}
-                </TextField>
-                <TextField
-                  size="small"
-                  value={newObservableValue}
-                  onChange={(e) => setNewObservableValue(e.target.value)}
-                  placeholder="Value..."
-                  fullWidth
-                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddObservable())}
-                  sx={inputSx}
-                />
-                <IconButton onClick={handleAddObservable} disabled={!newObservableValue.trim()} sx={{ bgcolor: 'rgba(255,255,255,0.05)' }}>
-                  <AddIcon />
-                </IconButton>
-              </Box>
-              {editedObservables.length > 0 ? (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {editedObservables.map((obs, idx) => (
-                    <Chip
-                      key={idx}
-                      label={`${obs.type}: ${obs.value}`}
-                      size="small"
-                      onDelete={() => handleRemoveObservable(idx)}
-                      sx={{ bgcolor: 'rgba(255, 102, 0, 0.15)', '& .MuiChip-label': { fontFamily: 'monospace', fontSize: '0.75rem' } }}
-                    />
-                  ))}
-                </Box>
-              ) : (
-                <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
-                  No observables added
-                </Typography>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Custom Fields */}
-          {customFields.length > 0 && (
-            <Card>
-              <CardContent>
-                <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 2 }}>
-                  Custom Fields
-                </Typography>
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2 }}>
-                  {customFields.map((field) => renderCustomField(field))}
-                </Box>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* References */}
-          <Card>
-            <CardContent>
-              <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 2 }}>
-                References
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                <TextField
-                  size="small"
-                  value={newReference}
-                  onChange={(e) => setNewReference(e.target.value)}
-                  placeholder="https://example.com/reference"
-                  fullWidth
-                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddReference())}
-                  sx={inputSx}
-                />
-                <IconButton onClick={handleAddReference} disabled={!newReference.trim()} sx={{ bgcolor: 'rgba(255,255,255,0.05)' }}>
-                  <AddIcon />
-                </IconButton>
-              </Box>
-              {editedReferences.length > 0 ? (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {editedReferences.map((ref, idx) => (
-                    <Chip
-                      key={idx}
-                      label={ref.length > 50 ? ref.substring(0, 50) + '...' : ref}
-                      size="small"
-                      onDelete={() => handleRemoveReference(idx)}
-                      onClick={() => window.open(ref, '_blank')}
-                      sx={{ cursor: 'pointer' }}
-                    />
-                  ))}
-                </Box>
-              ) : (
-                <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
-                  No references added
-                </Typography>
-              )}
-            </CardContent>
-          </Card>
-        </Box>
-
-        {/* Right Column - Activity */}
-        <Box>
-          <Card sx={{ position: 'sticky', top: 16 }}>
-            <CardContent>
-              <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <HistoryIcon fontSize="small" />
-                Activity
-              </Typography>
-              
-              {/* Comment input */}
-              <Box sx={{ display: 'flex', gap: 1, mb: 3 }}>
-                <TextField
-                  size="small"
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Add a comment..."
-                  fullWidth
-                  multiline
-                  maxRows={4}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleAddComment();
-                    }
-                  }}
-                  sx={inputSx}
-                />
-                <IconButton onClick={handleAddComment} disabled={!newComment.trim()} sx={{ bgcolor: 'rgba(255, 102, 0, 0.15)', color: '#ff6600', '&:hover': { bgcolor: 'rgba(255, 102, 0, 0.25)' } }}>
-                  <SendIcon />
-                </IconButton>
-              </Box>
-
-              <Divider sx={{ mb: 2, borderColor: 'rgba(148, 163, 184, 0.1)' }} />
-
-              {/* Activity list */}
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, maxHeight: 500, overflowY: 'auto' }}>
-                {activity.length === 0 ? (
-                  <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center', py: 4 }}>
-                    No activity yet
-                  </Typography>
-                ) : (
-                  [...activity].reverse().map((item) => (
-                    <Box key={item.id} sx={{ display: 'flex', gap: 1.5, p: 1.5, borderRadius: 1, bgcolor: 'rgba(0,0,0,0.2)' }}>
-                      <Avatar sx={{ width: 32, height: 32, bgcolor: item.type === 'comment' ? 'rgba(255, 102, 0, 0.2)' : 'rgba(148, 163, 184, 0.2)' }}>
-                        {getActivityIcon(item.type)}
-                      </Avatar>
-                      <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                            {item.user}
-                          </Typography>
-                          <Typography variant="caption" sx={{ color: 'text.secondary', display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                            <AccessTimeIcon sx={{ fontSize: 12 }} />
-                            {formatRelativeTime(item.timestamp)}
-                          </Typography>
-                        </Box>
-                        <Typography variant="body2" sx={{ color: item.type === 'comment' ? 'text.primary' : 'text.secondary' }}>
-                          {item.content}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  ))
-                )}
-              </Box>
-            </CardContent>
-          </Card>
-        </Box>
-      </Box>
     </motion.div>
   );
 };
