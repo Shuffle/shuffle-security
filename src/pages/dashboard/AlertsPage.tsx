@@ -209,8 +209,10 @@ const AlertsPage = () => {
       const migratedCount = await migrateAlertsData();
       if (migratedCount > 0) {
         console.log(`Migration complete: ${migratedCount} alerts moved`);
+        // Wait a moment for API to propagate the data before fetching
+        await new Promise(resolve => setTimeout(resolve, 1500));
       }
-      fetchItems();
+      await fetchItems();
     };
     init();
   }, [fetchItems]);
