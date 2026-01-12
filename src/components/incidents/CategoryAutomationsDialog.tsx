@@ -224,7 +224,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
           ) : (
             <>
               {automations.map((automation, index) => {
-                const typeConfig = automationTypeConfig[automation.type];
+                const typeConfig = automationTypeConfig[automation.type] || automationTypeConfig.workflow;
                 const TypeIcon = typeConfig.icon;
 
                 return (
