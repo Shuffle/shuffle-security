@@ -25,6 +25,9 @@ import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import SearchIcon from '@mui/icons-material/Search';
 import SettingsIcon from '@mui/icons-material/Settings';
+import DescriptionIcon from '@mui/icons-material/Description';
+import FingerprintIcon from '@mui/icons-material/Fingerprint';
+import TuneIcon from '@mui/icons-material/Tune';
 import { useAuth } from '@/context/AuthContext';
 import { IntegrationStatus } from './IntegrationStatus';
 
@@ -35,7 +38,7 @@ interface NavItem {
   label: string;
   icon: React.ReactNode;
   path?: string;
-  children?: { label: string; path: string }[];
+  children?: { label: string; path: string; icon: React.ReactNode }[];
 }
 
 const navItems: NavItem[] = [
@@ -44,9 +47,9 @@ const navItems: NavItem[] = [
     icon: <WarningAmberIcon />,
     path: '/incidents',
     children: [
-      { label: 'Templates', path: '/templates' },
-      { label: 'IOC Types', path: '/incidents/ioc-types' },
-      { label: 'Custom Fields', path: '/incidents/custom-fields' },
+      { label: 'Templates', path: '/templates', icon: <DescriptionIcon fontSize="small" /> },
+      { label: 'IOC Types', path: '/incidents/ioc-types', icon: <FingerprintIcon fontSize="small" /> },
+      { label: 'Custom Fields', path: '/incidents/custom-fields', icon: <TuneIcon fontSize="small" /> },
     ],
   },
   { label: 'Users', icon: <PeopleIcon />, path: '/users' },
@@ -360,6 +363,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                     </ListItemButton>
                   </ListItem>
                 </Tooltip>
+                {/* Expanded: show children in collapsible list */}
                 {!collapsed && (
                   <Collapse in={expandedItems.includes(item.label)} timeout="auto" unmountOnExit>
                     <List component="div" disablePadding>
@@ -369,20 +373,25 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                             component={Link}
                             to={child.path}
                             sx={{
-                              pl: 4,
+                              pl: 3,
                               borderRadius: 1,
                               minHeight: 36,
                               backgroundColor: isActive(child.path) ? 'hsl(var(--muted))' : 'transparent',
                               '&:hover': {
                                 backgroundColor: 'hsl(var(--muted))',
                               },
-                              '&::before': {
-                                content: '"•"',
-                                marginRight: 1.5,
-                                color: 'hsl(var(--muted-foreground))',
-                              },
                             }}
                           >
+                            <ListItemIcon
+                              sx={{
+                                minWidth: 28,
+                                color: isActive(child.path) 
+                                  ? 'hsl(var(--primary))' 
+                                  : 'hsl(var(--muted-foreground))',
+                              }}
+                            >
+                              {child.icon}
+                            </ListItemIcon>
                             <ListItemText
                               primary={child.label}
                               primaryTypographyProps={{
@@ -398,6 +407,42 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                       ))}
                     </List>
                   </Collapse>
+                )}
+                {/* Collapsed: show children as icon-only buttons */}
+                {collapsed && (
+                  <List component="div" disablePadding sx={{ mt: 0.5 }}>
+                    {item.children.map((child) => (
+                      <Tooltip key={child.path} title={child.label} placement="right">
+                        <ListItem disablePadding sx={{ mb: 0.5 }}>
+                          <ListItemButton
+                            component={Link}
+                            to={child.path}
+                            sx={{
+                              borderRadius: 1,
+                              minHeight: 32,
+                              justifyContent: 'center',
+                              px: 1.5,
+                              backgroundColor: isActive(child.path) ? 'hsl(var(--muted))' : 'transparent',
+                              '&:hover': {
+                                backgroundColor: 'hsl(var(--muted))',
+                              },
+                            }}
+                          >
+                            <ListItemIcon
+                              sx={{
+                                minWidth: 0,
+                                color: isActive(child.path) 
+                                  ? 'hsl(var(--primary))' 
+                                  : 'hsl(var(--muted-foreground))',
+                              }}
+                            >
+                              {child.icon}
+                            </ListItemIcon>
+                          </ListItemButton>
+                        </ListItem>
+                      </Tooltip>
+                    ))}
+                  </List>
                 )}
               </>
             ) : (
