@@ -3,12 +3,6 @@ import {
   Box,
   Typography,
   Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Chip,
   Avatar,
   CircularProgress,
@@ -26,19 +20,22 @@ import {
   TextField,
   Stack,
   Collapse,
+  LinearProgress,
 } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
   ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon,
   Schedule as ScheduleIcon,
   CheckCircle as CheckCircleIcon,
   Upload as UploadIcon,
   SmartToy as AiIcon,
   CalendarMonth as CalendarIcon,
+  AccessTime as AccessTimeIcon,
+  Person as PersonIcon,
 } from '@mui/icons-material';
+import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 import { useAuth } from '@/context/AuthContext';
@@ -50,17 +47,24 @@ import { ScheduleImportDialog } from '@/components/users/ScheduleImportDialog';
 type EscalationLevel = 'tier1' | 'tier2' | 'tier3' | 'manager';
 
 const ESCALATION_LABELS: Record<EscalationLevel, string> = {
-  tier1: 'Tier 1 - First Response',
-  tier2: 'Tier 2 - Specialist',
-  tier3: 'Tier 3 - Expert',
-  manager: 'Manager - Escalation',
+  tier1: 'Tier 1',
+  tier2: 'Tier 2',
+  tier3: 'Tier 3',
+  manager: 'Manager',
+};
+
+const ESCALATION_DESCRIPTIONS: Record<EscalationLevel, string> = {
+  tier1: 'First Response',
+  tier2: 'Specialist',
+  tier3: 'Expert',
+  manager: 'Escalation',
 };
 
 const ESCALATION_COLORS: Record<EscalationLevel, string> = {
-  tier1: '#4caf50',
-  tier2: '#2196f3',
-  tier3: '#ff9800',
-  manager: '#f44336',
+  tier1: '#22c55e',
+  tier2: '#3b82f6',
+  tier3: '#f59e0b',
+  manager: '#ef4444',
 };
 
 interface ScheduleEntry {
@@ -110,6 +114,20 @@ const createDefaultSchedule = (): ScheduleEntry => ({
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   daysOfWeek: [1, 2, 3, 4, 5],
 });
+
+// Motion variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.05 },
+  },
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0 },
+};
 
 const UsersPage = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -205,11 +223,9 @@ const UsersPage = () => {
       if (loading || configLoading || users.length === 0 || config.autoInitialized) return;
       if (config.userSchedules.length > 0) return;
       
-      // Create a default rotation with all active users
       const activeUsers = users.filter(u => u.active !== false);
       if (activeUsers.length === 0) return;
       
-      // Distribute users across escalation levels
       const newSchedules: UserSchedule[] = activeUsers.map((user, index) => {
         let escalationLevel: EscalationLevel = 'tier1';
         if (user.role === 'admin') {
@@ -290,7 +306,6 @@ const UsersPage = () => {
       );
       saveConfig({ ...config, userSchedules: newUserSchedules });
     } else {
-      // Create new schedule for user
       const user = users.find(u => u.id === userId);
       if (user) {
         const newSchedule: UserSchedule = {
@@ -418,15 +433,12 @@ const UsersPage = () => {
     );
   };
 
-  // Handle imported schedules
   const handleImportSchedules = (importedSchedules: UserSchedule[]) => {
-    // Merge with existing schedules
     const newUserSchedules = [...config.userSchedules];
     
     for (const imported of importedSchedules) {
       const existingIndex = newUserSchedules.findIndex(s => s.userId === imported.userId);
       if (existingIndex >= 0) {
-        // Merge schedules
         newUserSchedules[existingIndex] = {
           ...newUserSchedules[existingIndex],
           schedules: [...newUserSchedules[existingIndex].schedules, ...imported.schedules],
@@ -439,322 +451,567 @@ const UsersPage = () => {
     saveConfig({ ...config, userSchedules: newUserSchedules });
   };
 
-  // Get all schedules including AI Agent for timeline
   const allSchedulesForTimeline = [
     AI_AGENT_SCHEDULE,
     ...config.userSchedules,
   ];
 
+  // Stats
+  const activeUsers = users.filter(u => u.active !== false).length;
+  const configuredUsers = config.userSchedules.filter(s => s.enabled).length;
+  const adminCount = users.filter(u => u.role === 'admin').length;
+
   return (
-    <Box sx={{ p: 4 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-        <Box>
-          <Typography variant="h4" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-            Users
-          </Typography>
-          <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))', mt: 0.5 }}>
-            Manage users and their auto-assignment schedules
-          </Typography>
-        </Box>
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <Button
-            variant="outlined"
-            startIcon={<CalendarIcon />}
-            onClick={() => setTimelineDialogOpen(true)}
-            sx={{
-              borderColor: 'hsl(var(--border))',
-              color: 'hsl(var(--foreground))',
-            }}
-          >
-            View Scheduling
-          </Button>
-          <Button
-            variant="outlined"
-            startIcon={<UploadIcon />}
-            disabled
-            sx={{
-              borderColor: 'hsl(var(--border))',
-              color: 'hsl(var(--muted-foreground))',
-              '&.Mui-disabled': {
+    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1400, mx: 'auto' }}>
+      {/* Header */}
+      <Box sx={{ mb: 5 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2 }}>
+          <Box>
+            <Typography 
+              variant="h4" 
+              sx={{ 
+                fontWeight: 700, 
+                color: 'hsl(var(--foreground))',
+                letterSpacing: '-0.02em',
+              }}
+            >
+              Team Members
+            </Typography>
+            <Typography variant="body1" sx={{ color: 'hsl(var(--muted-foreground))', mt: 1 }}>
+              Configure on-call schedules and auto-assignment for your team
+            </Typography>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 1.5 }}>
+            <Button
+              variant="outlined"
+              startIcon={<CalendarIcon />}
+              onClick={() => setTimelineDialogOpen(true)}
+              sx={{
                 borderColor: 'hsl(var(--border))',
-                color: 'hsl(var(--muted-foreground))',
-                opacity: 0.5,
-              },
-            }}
-          >
-            Import Schedule
-          </Button>
+                color: 'hsl(var(--foreground))',
+                '&:hover': {
+                  borderColor: 'hsl(var(--primary))',
+                  bgcolor: 'hsl(var(--primary) / 0.1)',
+                },
+              }}
+            >
+              Schedule View
+            </Button>
+          </Box>
+        </Box>
+
+        {/* Stats Cards */}
+        <Box 
+          component={motion.div}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          sx={{ 
+            display: 'grid', 
+            gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' }, 
+            gap: 2, 
+            mt: 4 
+          }}
+        >
+          {[
+            { label: 'Total Users', value: users.length, icon: PersonIcon, color: 'hsl(var(--primary))' },
+            { label: 'Active', value: activeUsers, icon: CheckCircleIcon, color: '#22c55e' },
+            { label: 'On-Call Enabled', value: configuredUsers, icon: ScheduleIcon, color: '#3b82f6' },
+          ].map((stat) => (
+            <Paper
+              key={stat.label}
+              sx={{
+                p: 2.5,
+                bgcolor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: 2,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2,
+              }}
+            >
+              <Box
+                sx={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 1.5,
+                  bgcolor: `${stat.color}15`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <stat.icon sx={{ color: stat.color, fontSize: 22 }} />
+              </Box>
+              <Box>
+                <Typography variant="h5" sx={{ fontWeight: 700, color: 'hsl(var(--foreground))' }}>
+                  {stat.value}
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                  {stat.label}
+                </Typography>
+              </Box>
+            </Paper>
+          ))}
         </Box>
       </Box>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
+        <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
           {error}
         </Alert>
       )}
       
       {configError && (
-        <Alert severity="error" sx={{ mb: 3 }}>
+        <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
           {configError}
         </Alert>
       )}
 
+      {isSaving && (
+        <LinearProgress 
+          sx={{ 
+            mb: 2, 
+            borderRadius: 1,
+            bgcolor: 'hsl(var(--muted))',
+            '& .MuiLinearProgress-bar': {
+              bgcolor: 'hsl(var(--primary))',
+            },
+          }} 
+        />
+      )}
+
       {loading || configLoading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 12 }}>
           <CircularProgress sx={{ color: 'hsl(var(--primary))' }} />
         </Box>
       ) : (
-        <>
-
-          {/* AI Agent Row */}
-          <Paper 
-            sx={{ 
-              p: 2, 
-              mb: 3,
-              bgcolor: 'hsl(var(--card))',
-              border: '1px solid hsl(var(--border))',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Avatar sx={{ bgcolor: '#9c27b0', width: 40, height: 40 }}>
-                <AiIcon />
-              </Avatar>
-              <Box>
-                <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-                  AI Agent
-                </Typography>
-                <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-                  24/7 fallback coverage • Handles alerts when no human is available
-                </Typography>
-              </Box>
-            </Box>
-            <Chip 
-              label="Always Active" 
-              size="small"
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="show"
+        >
+          {/* AI Agent Card */}
+          <motion.div variants={cardVariants}>
+            <Paper 
               sx={{ 
-                bgcolor: '#9c27b040',
-                color: '#9c27b0',
-                fontWeight: 500,
-              }} 
-            />
-          </Paper>
+                p: 3, 
+                mb: 3,
+                bgcolor: 'linear-gradient(135deg, hsl(270 50% 15%) 0%, hsl(270 40% 12%) 100%)',
+                background: 'linear-gradient(135deg, hsl(270 50% 15%) 0%, hsl(270 40% 12%) 100%)',
+                border: '1px solid hsl(270 50% 30% / 0.3)',
+                borderRadius: 2,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: 2,
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5 }}>
+                <Avatar 
+                  sx={{ 
+                    bgcolor: '#9333ea', 
+                    width: 48, 
+                    height: 48,
+                    boxShadow: '0 0 20px #9333ea40',
+                  }}
+                >
+                  <AiIcon />
+                </Avatar>
+                <Box>
+                  <Typography variant="h6" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+                    AI Agent
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                    24/7 fallback • Handles alerts when no human is available
+                  </Typography>
+                </Box>
+              </Box>
+              <Chip 
+                label="Always Active" 
+                size="small"
+                sx={{ 
+                  bgcolor: '#9333ea30',
+                  color: '#c084fc',
+                  fontWeight: 600,
+                  border: '1px solid #9333ea40',
+                  px: 1,
+                }} 
+              />
+            </Paper>
+          </motion.div>
 
-          <TableContainer 
-            component={Paper} 
-            sx={{ 
-              bgcolor: 'hsl(var(--card))',
-              border: '1px solid hsl(var(--border))',
-            }}
-          >
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ color: 'hsl(var(--muted-foreground))', width: 48 }} />
-                <TableCell sx={{ color: 'hsl(var(--muted-foreground))' }}>User</TableCell>
-                <TableCell sx={{ color: 'hsl(var(--muted-foreground))' }}>Role</TableCell>
-                <TableCell sx={{ color: 'hsl(var(--muted-foreground))' }}>Status</TableCell>
-                <TableCell sx={{ color: 'hsl(var(--muted-foreground))' }}>Escalation Level</TableCell>
-                <TableCell sx={{ color: 'hsl(var(--muted-foreground))' }}>Auto-Assign</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {users.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
-                    <Typography sx={{ color: 'hsl(var(--muted-foreground))' }}>
-                      No users found
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                users.map((user) => {
-                  const schedule = getUserSchedule(user.id);
-                  const isExpanded = expandedRows.has(user.id);
-                  
-                  return (
-                    <>
-                      <TableRow key={user.id} hover>
-                        <TableCell>
-                          <IconButton 
-                            size="small" 
-                            onClick={() => toggleRow(user.id)}
-                            sx={{ color: 'hsl(var(--muted-foreground))' }}
+          {/* User Cards */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {users.length === 0 ? (
+              <Paper 
+                sx={{ 
+                  p: 6, 
+                  textAlign: 'center',
+                  bgcolor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: 2,
+                }}
+              >
+                <PersonIcon sx={{ fontSize: 48, color: 'hsl(var(--muted-foreground))', mb: 2 }} />
+                <Typography sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                  No users found
+                </Typography>
+              </Paper>
+            ) : (
+              users.map((user) => {
+                const schedule = getUserSchedule(user.id);
+                const isExpanded = expandedRows.has(user.id);
+                
+                return (
+                  <motion.div key={user.id} variants={cardVariants}>
+                    <Paper
+                      sx={{
+                        bgcolor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: 2,
+                        overflow: 'hidden',
+                        transition: 'border-color 0.2s',
+                        '&:hover': {
+                          borderColor: 'hsl(var(--border) / 0.8)',
+                        },
+                      }}
+                    >
+                      {/* Main Row */}
+                      <Box
+                        sx={{
+                          p: 2.5,
+                          display: 'grid',
+                          gridTemplateColumns: { xs: '1fr', md: 'auto 1fr auto auto auto auto' },
+                          alignItems: 'center',
+                          gap: { xs: 2, md: 3 },
+                        }}
+                      >
+                        {/* Avatar & Name */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                          <Avatar 
+                            sx={{ 
+                              bgcolor: 'hsl(var(--primary))', 
+                              width: 44, 
+                              height: 44,
+                              fontWeight: 600,
+                              fontSize: '1.1rem',
+                            }}
                           >
-                            {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                          </IconButton>
-                        </TableCell>
-                        <TableCell>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Avatar sx={{ bgcolor: 'hsl(var(--primary))', width: 32, height: 32 }}>
-                              {user.username?.charAt(0).toUpperCase() || '?'}
-                            </Avatar>
-                            <Typography variant="body2" sx={{ color: 'hsl(var(--foreground))' }}>
+                            {user.username?.charAt(0).toUpperCase() || '?'}
+                          </Avatar>
+                          <Box>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
                               {user.username}
                             </Typography>
-                          </Box>
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={user.role || 'user'}
-                            size="small"
-                            sx={{
-                              bgcolor: user.role === 'admin' ? 'hsl(var(--primary))' : 'hsl(var(--muted))',
-                              color: user.role === 'admin' ? 'hsl(var(--primary-foreground))' : 'hsl(var(--foreground))',
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={user.active !== false ? 'Active' : 'Inactive'}
-                            size="small"
-                            sx={{
-                              bgcolor: user.active !== false ? 'hsla(142, 76%, 36%, 0.2)' : 'hsl(var(--muted))',
-                              color: user.active !== false ? 'hsl(142, 76%, 36%)' : 'hsl(var(--muted-foreground))',
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            {schedule ? (
+                            <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
                               <Chip
-                                label={ESCALATION_LABELS[schedule.escalationLevel]}
+                                label={user.role || 'user'}
                                 size="small"
-                                sx={{ 
-                                  bgcolor: ESCALATION_COLORS[schedule.escalationLevel],
-                                  color: 'white',
+                                sx={{
+                                  height: 22,
+                                  fontSize: '0.7rem',
+                                  fontWeight: 600,
+                                  bgcolor: user.role === 'admin' ? 'hsl(var(--primary) / 0.15)' : 'hsl(var(--muted))',
+                                  color: user.role === 'admin' ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '0.05em',
                                 }}
                               />
-                            ) : (
-                              <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-                                Not configured
-                              </Typography>
-                            )}
-                            <IconButton size="small" onClick={() => handleEditEscalation(user.id)}>
-                              <EditIcon fontSize="small" sx={{ color: 'hsl(var(--muted-foreground))' }} />
-                            </IconButton>
-                          </Box>
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            startIcon={schedule?.enabled ? <CheckCircleIcon /> : <ScheduleIcon />}
-                            onClick={() => handleToggleEnabled(user.id)}
-                            disabled={isSaving}
-                            sx={{
-                              borderColor: schedule?.enabled ? 'hsl(142, 76%, 36%)' : 'hsl(var(--border))',
-                              color: schedule?.enabled ? 'hsl(142, 76%, 36%)' : 'hsl(var(--muted-foreground))',
-                            }}
-                          >
-                            {schedule?.enabled ? 'Enabled' : 'Disabled'}
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                      
-                      {/* Expanded row for schedule details */}
-                      <TableRow>
-                        <TableCell colSpan={6} sx={{ py: 0, px: 0 }}>
-                          <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                            <Box sx={{ p: 3, bgcolor: 'hsl(var(--muted) / 0.3)' }}>
-                              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                                <Typography variant="subtitle2" sx={{ color: 'hsl(var(--foreground))' }}>
-                                  Availability Windows
-                                </Typography>
-                                <Button
-                                  size="small"
-                                  startIcon={<AddIcon />}
-                                  onClick={() => handleAddScheduleEntry(user.id)}
-                                >
-                                  Add Window
-                                </Button>
-                              </Box>
-                              
-                              {!schedule || schedule.schedules.length === 0 ? (
-                                <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))', fontStyle: 'italic' }}>
-                                  No availability windows configured - user will not be auto-assigned
-                                </Typography>
-                              ) : (
-                                <TableContainer component={Paper} variant="outlined" sx={{ bgcolor: 'hsl(var(--card))' }}>
-                                  <Table size="small">
-                                    <TableHead>
-                                      <TableRow>
-                                        <TableCell sx={{ color: 'hsl(var(--muted-foreground))' }}>Date Range</TableCell>
-                                        <TableCell sx={{ color: 'hsl(var(--muted-foreground))' }}>Hours</TableCell>
-                                        <TableCell sx={{ color: 'hsl(var(--muted-foreground))' }}>Days</TableCell>
-                                        <TableCell sx={{ color: 'hsl(var(--muted-foreground))', width: 80 }}>Actions</TableCell>
-                                      </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                      {schedule.schedules.map((entry) => (
-                                        <TableRow key={entry.id}>
-                                          <TableCell sx={{ color: 'hsl(var(--foreground))' }}>
-                                            {new Date(entry.startDate).toLocaleDateString()} - {new Date(entry.endDate).toLocaleDateString()}
-                                          </TableCell>
-                                          <TableCell sx={{ color: 'hsl(var(--foreground))' }}>
-                                            {entry.startTime} - {entry.endTime}
-                                          </TableCell>
-                                          <TableCell sx={{ color: 'hsl(var(--foreground))' }}>
-                                            {entry.daysOfWeek.map(d => DAYS_OF_WEEK[d]).join(', ')}
-                                          </TableCell>
-                                          <TableCell>
-                                            <IconButton size="small" onClick={() => handleEditScheduleEntry(user.id, entry)}>
-                                              <EditIcon fontSize="small" sx={{ color: 'hsl(var(--muted-foreground))' }} />
-                                            </IconButton>
-                                            <IconButton size="small" color="error" onClick={() => handleDeleteScheduleEntry(user.id, entry.id)}>
-                                              <DeleteIcon fontSize="small" />
-                                            </IconButton>
-                                          </TableCell>
-                                        </TableRow>
-                                      ))}
-                                    </TableBody>
-                                  </Table>
-                                </TableContainer>
-                              )}
                             </Box>
-                          </Collapse>
-                        </TableCell>
-                      </TableRow>
-                    </>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        </>
+                          </Box>
+                        </Box>
+
+                        {/* Spacer for grid */}
+                        <Box sx={{ display: { xs: 'none', md: 'block' } }} />
+
+                        {/* Status */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Box
+                            sx={{
+                              width: 8,
+                              height: 8,
+                              borderRadius: '50%',
+                              bgcolor: user.active !== false ? '#22c55e' : 'hsl(var(--muted-foreground))',
+                              boxShadow: user.active !== false ? '0 0 8px #22c55e60' : 'none',
+                            }}
+                          />
+                          <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                            {user.active !== false ? 'Active' : 'Inactive'}
+                          </Typography>
+                        </Box>
+
+                        {/* Escalation Level */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          {schedule ? (
+                            <Box
+                              onClick={() => handleEditEscalation(user.id)}
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                                px: 1.5,
+                                py: 0.75,
+                                borderRadius: 1.5,
+                                border: `1px solid ${ESCALATION_COLORS[schedule.escalationLevel]}40`,
+                                bgcolor: `${ESCALATION_COLORS[schedule.escalationLevel]}15`,
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                '&:hover': {
+                                  bgcolor: `${ESCALATION_COLORS[schedule.escalationLevel]}25`,
+                                },
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  width: 8,
+                                  height: 8,
+                                  borderRadius: '50%',
+                                  bgcolor: ESCALATION_COLORS[schedule.escalationLevel],
+                                }}
+                              />
+                              <Typography variant="body2" sx={{ color: 'hsl(var(--foreground))', fontWeight: 500 }}>
+                                {ESCALATION_LABELS[schedule.escalationLevel]}
+                              </Typography>
+                            </Box>
+                          ) : (
+                            <Button
+                              size="small"
+                              onClick={() => handleEditEscalation(user.id)}
+                              sx={{ 
+                                color: 'hsl(var(--muted-foreground))',
+                                textTransform: 'none',
+                              }}
+                            >
+                              Set level
+                            </Button>
+                          )}
+                        </Box>
+
+                        {/* Auto-Assign Toggle */}
+                        <Button
+                          size="small"
+                          variant={schedule?.enabled ? 'contained' : 'outlined'}
+                          startIcon={schedule?.enabled ? <CheckCircleIcon /> : <ScheduleIcon />}
+                          onClick={() => handleToggleEnabled(user.id)}
+                          disabled={isSaving}
+                          sx={{
+                            minWidth: 110,
+                            borderColor: schedule?.enabled ? 'transparent' : 'hsl(var(--border))',
+                            bgcolor: schedule?.enabled ? '#22c55e' : 'transparent',
+                            color: schedule?.enabled ? 'white' : 'hsl(var(--muted-foreground))',
+                            '&:hover': {
+                              bgcolor: schedule?.enabled ? '#16a34a' : 'hsl(var(--muted) / 0.5)',
+                              borderColor: schedule?.enabled ? 'transparent' : 'hsl(var(--border))',
+                            },
+                          }}
+                        >
+                          {schedule?.enabled ? 'On-Call' : 'Off'}
+                        </Button>
+
+                        {/* Expand Button */}
+                        <IconButton 
+                          size="small" 
+                          onClick={() => toggleRow(user.id)}
+                          sx={{ 
+                            color: 'hsl(var(--muted-foreground))',
+                            transition: 'transform 0.2s',
+                            transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                          }}
+                        >
+                          <ExpandMoreIcon />
+                        </IconButton>
+                      </Box>
+                      
+                      {/* Expanded Content */}
+                      <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                        <Box 
+                          sx={{ 
+                            p: 3, 
+                            borderTop: '1px solid hsl(var(--border))',
+                            bgcolor: 'hsl(var(--muted) / 0.2)',
+                          }}
+                        >
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                              <AccessTimeIcon sx={{ fontSize: 18, color: 'hsl(var(--muted-foreground))' }} />
+                              <Typography variant="subtitle2" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}>
+                                Availability Windows
+                              </Typography>
+                            </Box>
+                            <Button
+                              size="small"
+                              startIcon={<AddIcon />}
+                              onClick={() => handleAddScheduleEntry(user.id)}
+                              sx={{
+                                color: 'hsl(var(--primary))',
+                                '&:hover': {
+                                  bgcolor: 'hsl(var(--primary) / 0.1)',
+                                },
+                              }}
+                            >
+                              Add Window
+                            </Button>
+                          </Box>
+                          
+                          {!schedule || schedule.schedules.length === 0 ? (
+                            <Paper
+                              sx={{
+                                p: 3,
+                                textAlign: 'center',
+                                bgcolor: 'hsl(var(--card))',
+                                border: '1px dashed hsl(var(--border))',
+                                borderRadius: 2,
+                              }}
+                            >
+                              <ScheduleIcon sx={{ fontSize: 32, color: 'hsl(var(--muted-foreground))', mb: 1 }} />
+                              <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                                No availability windows configured
+                              </Typography>
+                              <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                                Add windows to enable auto-assignment
+                              </Typography>
+                            </Paper>
+                          ) : (
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                              {schedule.schedules.map((entry) => (
+                                <Paper
+                                  key={entry.id}
+                                  sx={{
+                                    p: 2,
+                                    bgcolor: 'hsl(var(--card))',
+                                    border: '1px solid hsl(var(--border))',
+                                    borderRadius: 1.5,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    gap: 2,
+                                    flexWrap: 'wrap',
+                                  }}
+                                >
+                                  <Box sx={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                                    <Box>
+                                      <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', display: 'block', mb: 0.5 }}>
+                                        Date Range
+                                      </Typography>
+                                      <Typography variant="body2" sx={{ color: 'hsl(var(--foreground))', fontWeight: 500 }}>
+                                        {new Date(entry.startDate).toLocaleDateString()} – {new Date(entry.endDate).toLocaleDateString()}
+                                      </Typography>
+                                    </Box>
+                                    <Box>
+                                      <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', display: 'block', mb: 0.5 }}>
+                                        Hours
+                                      </Typography>
+                                      <Typography variant="body2" sx={{ color: 'hsl(var(--foreground))', fontWeight: 500 }}>
+                                        {entry.startTime} – {entry.endTime}
+                                      </Typography>
+                                    </Box>
+                                    <Box>
+                                      <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', display: 'block', mb: 0.5 }}>
+                                        Days
+                                      </Typography>
+                                      <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                        {DAYS_OF_WEEK.map((day, idx) => (
+                                          <Box
+                                            key={day}
+                                            sx={{
+                                              width: 28,
+                                              height: 24,
+                                              borderRadius: 0.5,
+                                              display: 'flex',
+                                              alignItems: 'center',
+                                              justifyContent: 'center',
+                                              fontSize: '0.7rem',
+                                              fontWeight: 500,
+                                              bgcolor: entry.daysOfWeek.includes(idx) ? 'hsl(var(--primary))' : 'hsl(var(--muted))',
+                                              color: entry.daysOfWeek.includes(idx) ? 'white' : 'hsl(var(--muted-foreground))',
+                                            }}
+                                          >
+                                            {day.charAt(0)}
+                                          </Box>
+                                        ))}
+                                      </Box>
+                                    </Box>
+                                  </Box>
+                                  <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                    <IconButton 
+                                      size="small" 
+                                      onClick={() => handleEditScheduleEntry(user.id, entry)}
+                                      sx={{ color: 'hsl(var(--muted-foreground))' }}
+                                    >
+                                      <EditIcon fontSize="small" />
+                                    </IconButton>
+                                    <IconButton 
+                                      size="small" 
+                                      onClick={() => handleDeleteScheduleEntry(user.id, entry.id)}
+                                      sx={{ 
+                                        color: 'hsl(var(--muted-foreground))',
+                                        '&:hover': { color: '#ef4444' },
+                                      }}
+                                    >
+                                      <DeleteIcon fontSize="small" />
+                                    </IconButton>
+                                  </Box>
+                                </Paper>
+                              ))}
+                            </Box>
+                          )}
+                        </Box>
+                      </Collapse>
+                    </Paper>
+                  </motion.div>
+                );
+              })
+            )}
+          </Box>
+        </motion.div>
       )}
 
-      {/* Escalation Level Dialog */}
+      {/* Dialogs */}
       <Dialog open={escalationDialogOpen} onClose={() => setEscalationDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Set Escalation Level</DialogTitle>
         <DialogContent>
-          <FormControl fullWidth sx={{ mt: 2 }}>
-            <InputLabel>Escalation Level</InputLabel>
-            <Select
-              value={selectedLevel}
-              onChange={(e) => setSelectedLevel(e.target.value as EscalationLevel)}
-              label="Escalation Level"
-            >
-              {Object.entries(ESCALATION_LABELS).map(([key, label]) => (
-                <MenuItem key={key} value={key}>
-                  <Box display="flex" alignItems="center" gap={1}>
-                    <Box 
-                      sx={{ 
-                        width: 12, 
-                        height: 12, 
-                        borderRadius: '50%', 
-                        bgcolor: ESCALATION_COLORS[key as EscalationLevel] 
-                      }} 
-                    />
+          <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            {(Object.entries(ESCALATION_LABELS) as [EscalationLevel, string][]).map(([key, label]) => (
+              <Paper
+                key={key}
+                onClick={() => setSelectedLevel(key)}
+                sx={{
+                  p: 2,
+                  cursor: 'pointer',
+                  border: selectedLevel === key 
+                    ? `2px solid ${ESCALATION_COLORS[key]}` 
+                    : '2px solid hsl(var(--border))',
+                  borderRadius: 2,
+                  bgcolor: selectedLevel === key ? `${ESCALATION_COLORS[key]}10` : 'transparent',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 2,
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    borderColor: ESCALATION_COLORS[key],
+                  },
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 12,
+                    height: 12,
+                    borderRadius: '50%',
+                    bgcolor: ESCALATION_COLORS[key],
+                  }}
+                />
+                <Box>
+                  <Typography variant="subtitle2" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}>
                     {label}
-                  </Box>
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                    {ESCALATION_DESCRIPTIONS[key]}
+                  </Typography>
+                </Box>
+              </Paper>
+            ))}
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setEscalationDialogOpen(false)}>Cancel</Button>
@@ -764,11 +1021,10 @@ const UsersPage = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Schedule Entry Dialog */}
       <Dialog open={scheduleDialogOpen} onClose={() => setScheduleDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>{editingEntry ? 'Edit Availability Window' : 'Add Availability Window'}</DialogTitle>
         <DialogContent>
-          <Stack spacing={3} sx={{ mt: 1 }}>
+          <Stack spacing={3} sx={{ mt: 2 }}>
             <Box display="flex" gap={2}>
               <TextField
                 label="Start Date"
@@ -808,15 +1064,21 @@ const UsersPage = () => {
             </Box>
 
             <Box>
-              <Typography variant="body2" mb={1}>Days of Week</Typography>
+              <Typography variant="body2" sx={{ mb: 1.5, color: 'hsl(var(--foreground))' }}>Days of Week</Typography>
               <Box display="flex" gap={1} flexWrap="wrap">
                 {DAYS_OF_WEEK.map((day, index) => (
                   <Chip
                     key={day}
                     label={day}
                     onClick={() => toggleDay(index)}
-                    color={entryDays.includes(index) ? 'primary' : 'default'}
-                    variant={entryDays.includes(index) ? 'filled' : 'outlined'}
+                    sx={{
+                      bgcolor: entryDays.includes(index) ? 'hsl(var(--primary))' : 'hsl(var(--muted))',
+                      color: entryDays.includes(index) ? 'white' : 'hsl(var(--muted-foreground))',
+                      fontWeight: 500,
+                      '&:hover': {
+                        bgcolor: entryDays.includes(index) ? 'hsl(var(--primary))' : 'hsl(var(--muted))',
+                      },
+                    }}
                   />
                 ))}
               </Box>
@@ -835,7 +1097,6 @@ const UsersPage = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Schedule Timeline Dialog */}
       <Dialog 
         open={timelineDialogOpen} 
         onClose={() => setTimelineDialogOpen(false)} 
@@ -859,7 +1120,6 @@ const UsersPage = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Schedule Import Dialog */}
       <ScheduleImportDialog
         open={importDialogOpen}
         onClose={() => setImportDialogOpen(false)}
