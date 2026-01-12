@@ -458,12 +458,12 @@ const UsersPage = () => {
         </Box>
         <Box sx={{ display: 'flex', gap: 2 }}>
           <Button
-            variant="contained"
+            variant="outlined"
             startIcon={<CalendarIcon />}
             onClick={() => setTimelineDialogOpen(true)}
             sx={{
-              bgcolor: 'hsl(var(--primary))',
-              color: 'hsl(var(--primary-foreground))',
+              borderColor: 'hsl(var(--border))',
+              color: 'hsl(var(--foreground))',
             }}
           >
             View Scheduling
