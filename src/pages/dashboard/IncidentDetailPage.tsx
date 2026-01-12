@@ -34,8 +34,7 @@ import HistoryIcon from '@mui/icons-material/History';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { useDatastore } from '@/hooks/useDatastore';
 import { useAuth } from '@/context/AuthContext';
-import { DATASTORE_CATEGORIES, getDatastoreItem, getDatastoreByCategory, CategoryAutomation } from '@/services/datastore';
-import { CategoryAutomations } from '@/components/incidents/CategoryAutomations';
+import { DATASTORE_CATEGORIES, getDatastoreItem } from '@/services/datastore';
 import { useUsers } from '@/hooks/useUsers';
 import { useCustomFields, CustomField } from '@/hooks/useCustomFields';
 import { 
@@ -222,8 +221,6 @@ const IncidentDetailPage = () => {
   
   const [isSaving, setIsSaving] = useState(false);
   const [showResolveDialog, setShowResolveDialog] = useState(false);
-  const [categoryAutomations, setCategoryAutomations] = useState<CategoryAutomation[] | null>(null);
-  const [automationsLoading, setAutomationsLoading] = useState(true);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pendingSaveRef = useRef(false);
   
@@ -280,19 +277,6 @@ const IncidentDetailPage = () => {
 
     loadIncident();
   }, [id]);
-
-  // Load category automations
-  useEffect(() => {
-    const loadAutomations = async () => {
-      setAutomationsLoading(true);
-      const result = await getDatastoreByCategory(DATASTORE_CATEGORIES.INCIDENTS);
-      if (result.success && result.categoryConfig?.automations) {
-        setCategoryAutomations(result.categoryConfig.automations);
-      }
-      setAutomationsLoading(false);
-    };
-    loadAutomations();
-  }, []);
 
   // Auto-save with debounce
   const saveToDatastore = useCallback(async () => {
@@ -729,12 +713,6 @@ const IncidentDetailPage = () => {
         </Box>
       </Box>
 
-      {/* Category Automations */}
-      {(categoryAutomations?.length || automationsLoading) && (
-        <Box sx={{ mt: -1, mb: 2 }}>
-          <CategoryAutomations automations={categoryAutomations} isLoading={automationsLoading} />
-        </Box>
-      )}
       <ResolveIncidentDialog
         open={showResolveDialog}
         onClose={() => setShowResolveDialog(false)}
