@@ -218,14 +218,18 @@ const IncidentDetailPage = () => {
       
       // Try direct key lookup first
       const result = await getDatastoreItem(id, DATASTORE_CATEGORIES.INCIDENTS);
+      console.log('getDatastoreItem result:', result);
       
       if (result.success && result.item) {
-        const parsed = parseIncidentFromDatastore({
-          key: result.item.key,
+        // API returns { key, value, ... } directly - use item.key or fall back to the id
+        const itemData = {
+          key: result.item.key || id,
           value: result.item.value,
           created: result.item.created,
           edited: result.item.edited,
-        });
+        };
+        console.log('Parsing item:', itemData);
+        const parsed = parseIncidentFromDatastore(itemData);
         
         if (parsed) {
           setIncident(parsed);
