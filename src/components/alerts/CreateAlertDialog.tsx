@@ -15,9 +15,13 @@ import {
   InputLabel,
   Select,
   CircularProgress,
+  FormControlLabel,
+  Switch,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { useUsers } from '@/hooks/useUsers';
+import { useCustomFields, CustomField } from '@/hooks/useCustomFields';
+
 // Generate a 10-character unique ID
 const generateAlertId = (): string => {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -75,6 +79,7 @@ export interface OCSFDetection {
   tlp?: string;
   pap?: string;
   assignee?: string;
+  customFields?: Record<string, string | number | boolean>;
   metadata: {
     product: {
       name: string;
@@ -125,8 +130,10 @@ export const CreateAlertDialog = ({ open, onClose, onSubmit }: CreateAlertDialog
   const [observables, setObservables] = useState<Observable[]>([]);
   const [newObservableType, setNewObservableType] = useState('ip');
   const [newObservableValue, setNewObservableValue] = useState('');
+  const [customFieldValues, setCustomFieldValues] = useState<Record<string, string | number | boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { users, loading: usersLoading } = useUsers();
+  const { fields: customFields, loading: fieldsLoading } = useCustomFields();
 
   const handleAddReference = () => {
     if (newReference.trim()) {
@@ -179,6 +186,7 @@ export const CreateAlertDialog = ({ open, onClose, onSubmit }: CreateAlertDialog
       tlp,
       pap,
       assignee: assignee.trim() || undefined,
+      customFields: Object.keys(customFieldValues).length > 0 ? customFieldValues : undefined,
       metadata: {
         product: {
           name: source || 'Manual Entry',
@@ -206,7 +214,99 @@ export const CreateAlertDialog = ({ open, onClose, onSubmit }: CreateAlertDialog
     setObservables([]);
     setNewObservableType('ip');
     setNewObservableValue('');
+    setCustomFieldValues({});
     onClose();
+  };
+
+  const handleCustomFieldChange = (field: CustomField, value: string | number | boolean) => {
+    setCustomFieldValues(prev => ({
+      ...prev,
+      [field.key]: value,
+    }));
+  };
+
+  const renderCustomField = (field: CustomField) => {
+    const value = customFieldValues[field.key];
+    
+    switch (field.type) {
+      case 'text':
+        return (
+          <TextField
+            key={field.key}
+            label={field.name}
+            value={value || ''}
+            onChange={(e) => handleCustomFieldChange(field, e.target.value)}
+            fullWidth
+            required={field.required}
+            placeholder={field.description}
+            size="small"
+          />
+        );
+      case 'number':
+        return (
+          <TextField
+            key={field.key}
+            label={field.name}
+            type="number"
+            value={value || ''}
+            onChange={(e) => handleCustomFieldChange(field, Number(e.target.value))}
+            fullWidth
+            required={field.required}
+            placeholder={field.description}
+            size="small"
+          />
+        );
+      case 'select':
+        return (
+          <FormControl key={field.key} fullWidth size="small">
+            <InputLabel>{field.name}</InputLabel>
+            <Select
+              value={value || ''}
+              label={field.name}
+              onChange={(e) => handleCustomFieldChange(field, e.target.value)}
+              required={field.required}
+            >
+              <MenuItem value="">
+                <em>None</em>
+              </MenuItem>
+              {field.options?.map((opt) => (
+                <MenuItem key={opt} value={opt}>
+                  {opt}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        );
+      case 'date':
+        return (
+          <TextField
+            key={field.key}
+            label={field.name}
+            type="date"
+            value={value || ''}
+            onChange={(e) => handleCustomFieldChange(field, e.target.value)}
+            fullWidth
+            required={field.required}
+            InputLabelProps={{ shrink: true }}
+            size="small"
+          />
+        );
+      case 'boolean':
+        return (
+          <FormControlLabel
+            key={field.key}
+            control={
+              <Switch
+                checked={Boolean(value)}
+                onChange={(e) => handleCustomFieldChange(field, e.target.checked)}
+              />
+            }
+            label={field.name}
+          />
+        );
+      default:
+        return null;
+    }
   };
 
   return (
@@ -435,6 +535,18 @@ export const CreateAlertDialog = ({ open, onClose, onSubmit }: CreateAlertDialog
               </Box>
             )}
           </Box>
+
+          {/* Custom Fields */}
+          {customFields.length > 0 && (
+            <Box>
+              <Typography variant="subtitle2" sx={{ mb: 1.5, color: 'text.secondary' }}>
+                Custom Fields
+              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {customFields.map((field) => renderCustomField(field))}
+              </Box>
+            </Box>
+          )}
         </Box>
       </DialogContent>
       <DialogActions sx={{ p: 2, pt: 1 }}>
