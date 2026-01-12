@@ -30,7 +30,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import ViewColumnIcon from '@mui/icons-material/ViewColumn';
-import SettingsIcon from '@mui/icons-material/Settings';
+import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import { useDatastore } from '@/hooks/useDatastore';
 import { useAuth } from '@/context/AuthContext';
 import { DATASTORE_CATEGORIES, getDatastoreByCategory, setDatastoreItems, CategoryAutomation } from '@/services/datastore';
@@ -642,13 +642,16 @@ const IncidentsPage = () => {
             <IconButton 
               onClick={() => setAutomationsDialogOpen(true)}
               sx={{ 
-                color: categoryAutomations?.some(a => a.enabled) ? 'primary.main' : 'text.secondary',
+                color: categoryAutomations?.some(a => a.enabled) ? '#4ade80' : 'text.secondary',
                 border: '1px solid',
-                borderColor: categoryAutomations?.some(a => a.enabled) ? 'primary.main' : 'rgba(255,255,255,0.1)',
+                borderColor: categoryAutomations?.some(a => a.enabled) ? '#4ade80' : 'rgba(255,255,255,0.1)',
                 borderRadius: 1,
+                '&:hover': {
+                  borderColor: categoryAutomations?.some(a => a.enabled) ? '#4ade80' : 'rgba(255,255,255,0.2)',
+                },
               }}
             >
-              <SettingsIcon fontSize="small" />
+              <RocketLaunchIcon fontSize="small" />
             </IconButton>
           </Tooltip>
           <ButtonGroup variant="outlined">
