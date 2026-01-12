@@ -36,6 +36,10 @@ import SecurityIcon from '@mui/icons-material/Security';
 import LinkIcon from '@mui/icons-material/Link';
 import SettingsIcon from '@mui/icons-material/Settings';
 import DescriptionIcon from '@mui/icons-material/Description';
+import TaskAltIcon from '@mui/icons-material/TaskAlt';
+import DeleteIcon from '@mui/icons-material/Delete';
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
 import { useDatastore } from '@/hooks/useDatastore';
 import { useAuth } from '@/context/AuthContext';
 import { DATASTORE_CATEGORIES, getDatastoreItem } from '@/services/datastore';
@@ -48,9 +52,53 @@ import {
   observableTypes,
   tlpLevels,
   ActivityItem,
+  IncidentTask,
 } from '@/components/incidents/CreateIncidentDialog';
 import { ResolveIncidentDialog, ResolutionData, RESOLUTION_REASONS } from '@/components/incidents/ResolveIncidentDialog';
 import { toast } from 'sonner';
+
+interface TaskTemplate {
+  id: string;
+  name: string;
+  tasks: Omit<IncidentTask, 'id' | 'createdAt' | 'completed'>[];
+}
+
+// Default templates based on incident type/severity
+const DEFAULT_TASK_TEMPLATES: TaskTemplate[] = [
+  {
+    id: 'standard-triage',
+    name: 'Standard Triage',
+    tasks: [
+      { title: 'Initial assessment', assignee: '' },
+      { title: 'Collect evidence', assignee: '', dependsOn: 'Initial assessment' },
+      { title: 'Determine scope', assignee: '', dependsOn: 'Collect evidence' },
+      { title: 'Document findings', assignee: '' },
+    ],
+  },
+  {
+    id: 'malware-investigation',
+    name: 'Malware Investigation',
+    tasks: [
+      { title: 'Isolate affected systems', assignee: '' },
+      { title: 'Capture memory dump', assignee: '', dependsOn: 'Isolate affected systems' },
+      { title: 'Analyze malware sample', assignee: '' },
+      { title: 'Identify IOCs', assignee: '', dependsOn: 'Analyze malware sample' },
+      { title: 'Check lateral movement', assignee: '', dependsOn: 'Identify IOCs' },
+      { title: 'Remediation plan', assignee: '' },
+    ],
+  },
+  {
+    id: 'phishing-response',
+    name: 'Phishing Response',
+    tasks: [
+      { title: 'Identify recipients', assignee: '' },
+      { title: 'Block sender domain', assignee: '' },
+      { title: 'Check for clicks/downloads', assignee: '', dependsOn: 'Identify recipients' },
+      { title: 'Reset compromised credentials', assignee: '', dependsOn: 'Check for clicks/downloads' },
+      { title: 'User awareness notification', assignee: '' },
+    ],
+  },
+];
 
 interface DisplayIncident {
   id: string;
@@ -70,6 +118,7 @@ interface DisplayIncident {
   customFields?: Record<string, string | number | boolean>;
   relatedFindings?: string[];
   activity?: ActivityItem[];
+  tasks?: IncidentTask[];
   rawOCSF?: OCSFIncidentFinding;
 }
 
@@ -290,6 +339,11 @@ const IncidentDetailPage = () => {
   const [newComment, setNewComment] = useState('');
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   
+  // Tasks
+  const [tasks, setTasks] = useState<IncidentTask[]>([]);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [showTemplateMenu, setShowTemplateMenu] = useState(false);
+  
   const [isSaving, setIsSaving] = useState(false);
   const [showResolveDialog, setShowResolveDialog] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -333,6 +387,7 @@ const IncidentDetailPage = () => {
           setEditedObservables(parsed.observables || []);
           setEditedCustomFields(parsed.rawOCSF?.customFields || {});
           setActivity(parsed.activity || []);
+          setTasks(parsed.tasks || parsed.rawOCSF?.tasks || []);
           setLoading(false);
           return;
         }
@@ -366,6 +421,7 @@ const IncidentDetailPage = () => {
       observables: editedObservables.length > 0 ? editedObservables : undefined,
       customFields: Object.keys(editedCustomFields).length > 0 ? editedCustomFields : undefined,
       activity,
+      tasks: tasks.length > 0 ? tasks : undefined,
       finding_info: {
         ...incident.rawOCSF.finding_info,
         title: editedTitle,
@@ -384,6 +440,7 @@ const IncidentDetailPage = () => {
       observables: editedObservables,
       customFields: editedCustomFields,
       activity,
+      tasks,
     };
 
     try {
@@ -393,7 +450,7 @@ const IncidentDetailPage = () => {
     } finally {
       setIsSaving(false);
     }
-  }, [incident, editedTitle, editedMessage, editedSeverity, editedAssignee, editedStatus, editedTlp, editedReferences, editedObservables, editedCustomFields, activity, addItem]);
+  }, [incident, editedTitle, editedMessage, editedSeverity, editedAssignee, editedStatus, editedTlp, editedReferences, editedObservables, editedCustomFields, activity, tasks, addItem]);
 
   // Debounced auto-save
   useEffect(() => {
@@ -412,7 +469,8 @@ const IncidentDetailPage = () => {
       editedTlp !== (incident.tlp || 'TLP:AMBER') ||
       JSON.stringify(editedReferences) !== JSON.stringify(incident.references || []) ||
       JSON.stringify(editedObservables) !== JSON.stringify(incident.observables || []) ||
-      JSON.stringify(editedCustomFields) !== JSON.stringify(incident.rawOCSF?.customFields || {});
+      JSON.stringify(editedCustomFields) !== JSON.stringify(incident.rawOCSF?.customFields || {}) ||
+      JSON.stringify(tasks) !== JSON.stringify(incident.tasks || incident.rawOCSF?.tasks || []);
     
     if (hasChanges) {
       pendingSaveRef.current = true;
@@ -426,7 +484,7 @@ const IncidentDetailPage = () => {
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [incident, editedTitle, editedMessage, editedSeverity, editedAssignee, editedStatus, editedTlp, editedReferences, editedObservables, editedCustomFields, saveToDatastore]);
+  }, [incident, editedTitle, editedMessage, editedSeverity, editedAssignee, editedStatus, editedTlp, editedReferences, editedObservables, editedCustomFields, tasks, saveToDatastore]);
 
   // Metrics calculation
   const metrics = useMemo(() => {
@@ -551,6 +609,75 @@ const IncidentDetailPage = () => {
       ...prev,
       [field.key]: value,
     }));
+  };
+
+  // Task handlers
+  const handleAddTask = () => {
+    if (!newTaskTitle.trim()) return;
+    const newTask: IncidentTask = {
+      id: `task-${Date.now()}`,
+      title: newTaskTitle.trim(),
+      completed: false,
+      createdAt: Date.now(),
+      createdBy: currentUsername,
+    };
+    setTasks([...tasks, newTask]);
+    setNewTaskTitle('');
+  };
+
+  const handleToggleTask = (taskId: string) => {
+    setTasks(tasks.map(task => 
+      task.id === taskId 
+        ? { 
+            ...task, 
+            completed: !task.completed, 
+            completedAt: !task.completed ? Date.now() : undefined 
+          } 
+        : task
+    ));
+  };
+
+  const handleUpdateTaskAssignee = (taskId: string, assignee: string) => {
+    setTasks(tasks.map(task => 
+      task.id === taskId ? { ...task, assignee } : task
+    ));
+  };
+
+  const handleUpdateTaskDueDate = (taskId: string, dueDate: string) => {
+    setTasks(tasks.map(task => 
+      task.id === taskId ? { ...task, dueDate } : task
+    ));
+  };
+
+  const handleDeleteTask = (taskId: string) => {
+    setTasks(tasks.filter(task => task.id !== taskId));
+  };
+
+  const handleApplyTemplate = (template: TaskTemplate) => {
+    const newTasks: IncidentTask[] = template.tasks.map((t, index) => ({
+      id: `task-${Date.now()}-${index}`,
+      title: t.title,
+      completed: false,
+      assignee: t.assignee || undefined,
+      dependsOn: t.dependsOn,
+      createdAt: Date.now(),
+      createdBy: currentUsername,
+    }));
+    setTasks([...tasks, ...newTasks]);
+    setShowTemplateMenu(false);
+    toast.success(`Applied "${template.name}" template`);
+  };
+
+  const isTaskBlocked = (task: IncidentTask): boolean => {
+    if (!task.dependsOn) return false;
+    const dependencyTask = tasks.find(t => t.title === task.dependsOn);
+    return dependencyTask ? !dependencyTask.completed : false;
+  };
+
+  const getTaskProgress = () => {
+    if (tasks.length === 0) return 0;
+    const completedCount = tasks.filter(t => t.completed).length;
+    return Math.round((completedCount / tasks.length) * 100);
   };
 
   const inputSx = {
@@ -717,41 +844,9 @@ const IncidentDetailPage = () => {
                 },
               }}
             />
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mt: 1, flexWrap: 'wrap' }}>
-              <Typography variant="caption" sx={{ color: 'text.secondary', fontFamily: 'monospace' }}>
-                {incident.id}
-              </Typography>
-              <Chip
-                label={editedStatus.replace('_', ' ')}
-                size="small"
-                sx={{
-                  backgroundColor: statusColors[editedStatus]?.bg,
-                  color: statusColors[editedStatus]?.text,
-                  fontWeight: 500,
-                  textTransform: 'capitalize',
-                }}
-              />
-              <Chip
-                label={editedSeverity}
-                size="small"
-                sx={{
-                  backgroundColor: `${severityColors[editedSeverity]}20`,
-                  color: severityColors[editedSeverity],
-                  fontWeight: 500,
-                  textTransform: 'capitalize',
-                }}
-              />
-              {editedTlp && (
-                <Chip
-                  label={editedTlp}
-                  size="small"
-                  sx={{
-                    backgroundColor: 'rgba(255,255,255,0.1)',
-                    fontSize: '0.65rem',
-                  }}
-                />
-              )}
-            </Box>
+            <Typography variant="caption" sx={{ color: 'text.secondary', fontFamily: 'monospace', mt: 0.5 }}>
+              {incident.id}
+            </Typography>
           </Box>
           
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -996,7 +1091,217 @@ const IncidentDetailPage = () => {
           </Section>
         )}
 
-        {/* References */}
+        {/* Tasks */}
+        <Section 
+          title="Tasks" 
+          icon={TaskAltIcon} 
+          defaultOpen={true}
+          badge={tasks.length > 0 ? `${tasks.filter(t => t.completed).length}/${tasks.length}` : undefined}
+        >
+          {/* Progress bar */}
+          {tasks.length > 0 && (
+            <Box sx={{ mb: 2 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                  Progress
+                </Typography>
+                <Typography variant="caption" sx={{ color: getTaskProgress() === 100 ? '#22c55e' : 'text.secondary' }}>
+                  {getTaskProgress()}%
+                </Typography>
+              </Box>
+              <LinearProgress 
+                variant="determinate" 
+                value={getTaskProgress()} 
+                sx={{ 
+                  height: 4, 
+                  borderRadius: 2,
+                  bgcolor: 'rgba(255,255,255,0.1)',
+                  '& .MuiLinearProgress-bar': {
+                    bgcolor: getTaskProgress() === 100 ? '#22c55e' : '#ff6600',
+                    borderRadius: 2,
+                  },
+                }} 
+              />
+            </Box>
+          )}
+
+          {/* Add task input + template button */}
+          <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+            <TextField
+              size="small"
+              value={newTaskTitle}
+              onChange={(e) => setNewTaskTitle(e.target.value)}
+              placeholder="Add a task..."
+              fullWidth
+              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTask())}
+              sx={inputSx}
+            />
+            <IconButton onClick={handleAddTask} disabled={!newTaskTitle.trim()} sx={{ bgcolor: 'rgba(255,255,255,0.05)' }}>
+              <AddIcon />
+            </IconButton>
+            <Box sx={{ position: 'relative' }}>
+              <Tooltip title="Apply template">
+                <IconButton 
+                  onClick={() => setShowTemplateMenu(!showTemplateMenu)} 
+                  sx={{ bgcolor: 'rgba(255, 102, 0, 0.15)', color: '#ff6600', '&:hover': { bgcolor: 'rgba(255, 102, 0, 0.25)' } }}
+                >
+                  <PlaylistAddIcon />
+                </IconButton>
+              </Tooltip>
+              {showTemplateMenu && (
+                <Box sx={{ 
+                  position: 'absolute', 
+                  top: '100%', 
+                  right: 0, 
+                  mt: 1, 
+                  bgcolor: '#2a2a2a', 
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 1,
+                  py: 1,
+                  minWidth: 200,
+                  zIndex: 10,
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                }}>
+                  <Typography variant="caption" sx={{ px: 2, color: 'text.secondary', display: 'block', mb: 0.5 }}>
+                    Apply Template
+                  </Typography>
+                  {DEFAULT_TASK_TEMPLATES.map((template) => (
+                    <Box 
+                      key={template.id}
+                      onClick={() => handleApplyTemplate(template)}
+                      sx={{ 
+                        px: 2, 
+                        py: 1, 
+                        cursor: 'pointer',
+                        '&:hover': { bgcolor: 'rgba(255,255,255,0.05)' },
+                      }}
+                    >
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        {template.name}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                        {template.tasks.length} tasks
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              )}
+            </Box>
+          </Box>
+
+          {/* Task list */}
+          {tasks.length > 0 ? (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {tasks.map((task) => {
+                const isBlocked = isTaskBlocked(task);
+                const dependencyTask = task.dependsOn ? tasks.find(t => t.title === task.dependsOn) : null;
+                
+                return (
+                  <Box 
+                    key={task.id}
+                    sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: 1.5,
+                      p: 1.5,
+                      borderRadius: 1,
+                      bgcolor: task.completed ? 'rgba(34, 197, 94, 0.08)' : isBlocked ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.2)',
+                      border: '1px solid',
+                      borderColor: task.completed ? 'rgba(34, 197, 94, 0.2)' : isBlocked ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.08)',
+                      opacity: isBlocked ? 0.6 : 1,
+                    }}
+                  >
+                    <DragIndicatorIcon sx={{ fontSize: 16, color: 'text.disabled', cursor: 'grab' }} />
+                    
+                    <IconButton 
+                      size="small" 
+                      onClick={() => !isBlocked && handleToggleTask(task.id)}
+                      disabled={isBlocked}
+                      sx={{ 
+                        p: 0.5,
+                        color: task.completed ? '#22c55e' : 'text.secondary',
+                      }}
+                    >
+                      {task.completed ? (
+                        <CheckCircleIcon fontSize="small" />
+                      ) : (
+                        <Box sx={{ 
+                          width: 18, 
+                          height: 18, 
+                          borderRadius: '50%', 
+                          border: '2px solid currentColor',
+                        }} />
+                      )}
+                    </IconButton>
+                    
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          textDecoration: task.completed ? 'line-through' : 'none',
+                          color: task.completed ? 'text.secondary' : 'text.primary',
+                        }}
+                      >
+                        {task.title}
+                      </Typography>
+                      {isBlocked && dependencyTask && (
+                        <Typography variant="caption" sx={{ color: 'warning.main', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          ⏳ Waiting on: {dependencyTask.title}
+                        </Typography>
+                      )}
+                    </Box>
+                    
+                    <FormControl size="small" sx={{ minWidth: 100 }}>
+                      <Select
+                        value={task.assignee || ''}
+                        onChange={(e) => handleUpdateTaskAssignee(task.id, e.target.value)}
+                        variant="standard"
+                        disableUnderline
+                        displayEmpty
+                        disabled={usersLoading}
+                        sx={{ 
+                          fontSize: '0.75rem',
+                          '& .MuiSelect-icon': { fontSize: 16 },
+                        }}
+                      >
+                        <MenuItem value=""><em>Unassigned</em></MenuItem>
+                        {users.map((user) => (
+                          <MenuItem key={user.id} value={user.username}>{user.username}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    
+                    <TextField
+                      type="date"
+                      size="small"
+                      value={task.dueDate || ''}
+                      onChange={(e) => handleUpdateTaskDueDate(task.id, e.target.value)}
+                      InputProps={{ 
+                        disableUnderline: true,
+                        sx: { fontSize: '0.75rem' } 
+                      }}
+                      variant="standard"
+                      sx={{ width: 120 }}
+                    />
+                    
+                    <IconButton 
+                      size="small" 
+                      onClick={() => handleDeleteTask(task.id)}
+                      sx={{ color: 'text.secondary', '&:hover': { color: '#ef4444' } }}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
+                );
+              })}
+            </Box>
+          ) : (
+            <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic', textAlign: 'center', py: 2 }}>
+              No tasks yet. Add a task or apply a template to get started.
+            </Typography>
+          )}
+        </Section>
+
         <Section 
           title="References" 
           icon={LinkIcon} 
