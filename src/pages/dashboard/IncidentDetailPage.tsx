@@ -163,7 +163,28 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
         rawOCSF: ocsf,
       };
     }
-    return null;
+    
+    // Fallback for legacy/simple format
+    return {
+      id: data.id || item.key,
+      title: data.title || 'Untitled',
+      source: data.source || 'Unknown',
+      severity: data.severity || 'medium',
+      status: data.status || 'new',
+      assignee: data.assignee || null,
+      created: data.created || formatTimestamp(item.created),
+      createdTs: parseTimestamp(item.created),
+      edited: item.edited ? formatTimestamp(item.edited) : undefined,
+      editedTs: item.edited ? parseTimestamp(item.edited) : undefined,
+      tlp: data.tlp,
+      pap: data.pap,
+      references: data.references || [],
+      observables: data.observables || [],
+      customFields: data.customFields || {},
+      relatedFindings: data.relatedFindings || [],
+      activity: data.activity || [],
+      rawOCSF: data,
+    };
   } catch {
     return null;
   }
