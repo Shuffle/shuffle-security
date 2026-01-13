@@ -628,7 +628,7 @@ const IncidentsPage = () => {
           )}
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Tooltip title="Category Automations">
+          <Tooltip title="Automation for Incidents">
             <IconButton 
               onClick={() => setAutomationsDialogOpen(true)}
               sx={{ 
@@ -644,16 +644,39 @@ const IncidentsPage = () => {
               <RocketLaunchIcon fontSize="small" />
             </IconButton>
           </Tooltip>
-          <ButtonGroup variant="outlined">
-            <Tooltip title="Refresh">
-              <Button onClick={() => fetchItems()} disabled={isLoading} sx={{ minWidth: 'auto', px: 1.5 }}>
-                <RefreshIcon />
-              </Button>
-            </Tooltip>
-            <Button startIcon={<AddIcon />} onClick={() => setCreateDialogOpen(true)}>
-              Create Incident
-            </Button>
-          </ButtonGroup>
+          <Tooltip title="Refresh">
+            <IconButton 
+              onClick={() => fetchItems()} 
+              disabled={isLoading}
+              sx={{ 
+                color: 'text.secondary',
+                border: '1px solid',
+                borderColor: 'rgba(255,255,255,0.1)',
+                borderRadius: 1,
+                '&:hover': {
+                  borderColor: 'rgba(255,255,255,0.2)',
+                },
+              }}
+            >
+              <RefreshIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Create Incident">
+            <IconButton 
+              onClick={() => setCreateDialogOpen(true)}
+              sx={{ 
+                color: 'text.secondary',
+                border: '1px solid',
+                borderColor: 'rgba(255,255,255,0.1)',
+                borderRadius: 1,
+                '&:hover': {
+                  borderColor: 'rgba(255,255,255,0.2)',
+                },
+              }}
+            >
+              <AddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
         </Box>
       </Box>
 
