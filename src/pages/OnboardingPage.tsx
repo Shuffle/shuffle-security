@@ -49,12 +49,11 @@ const OnboardingPage = () => {
   const [authStates, setAuthStates] = useState<Record<string, AppAuthState>>({});
   const [authenticatedApps, setAuthenticatedApps] = useState<ApiAuthEntry[]>([]);
   const [enrichmentState, setEnrichmentState] = useState<EnrichmentState>({
+    automatic_ingestion: { enabled: true, config: {} },
     integration_search: { enabled: true, config: {} },
     threat_list: { enabled: true, config: {} },
-    ai_triage: { enabled: true, config: {} },
     email_notify: { enabled: true, config: {} },
-    slack_notify: { enabled: true, config: {} },
-    auto_assign: { enabled: true, config: {} },
+    chat_notify: { enabled: true, config: {} },
   });
 
   // Load saved selected tools from datastore on mount
@@ -476,6 +475,7 @@ const OnboardingPage = () => {
                     <EnrichmentConfig
                       enrichmentState={enrichmentState}
                       onEnrichmentChange={setEnrichmentState}
+                      authenticatedApps={authenticatedApps}
                     />
                   )}
 

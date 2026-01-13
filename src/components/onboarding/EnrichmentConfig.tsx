@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -9,18 +9,16 @@ import {
   IconButton,
   Collapse,
   TextField,
-  FormControlLabel,
+  Avatar,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import SecurityIcon from '@mui/icons-material/Security';
-import DnsIcon from '@mui/icons-material/Dns';
-import PersonSearchIcon from '@mui/icons-material/PersonSearch';
-import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import EmailIcon from '@mui/icons-material/Email';
 import ChatIcon from '@mui/icons-material/Chat';
 import TravelExploreIcon from '@mui/icons-material/TravelExplore';
+import DownloadIcon from '@mui/icons-material/Download';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 interface EnrichmentOption {
   id: string;
@@ -30,9 +28,26 @@ interface EnrichmentOption {
   color: string;
   category: 'enrichment' | 'response';
   configFields?: { label: string; placeholder: string; type?: string }[];
+  // For dynamic options with connected apps
+  connectedApps?: ConnectedApp[];
 }
 
-const enrichmentOptions: EnrichmentOption[] = [
+interface ConnectedApp {
+  id: string;
+  name: string;
+  image?: string;
+}
+
+// Base static options
+const baseEnrichmentOptions: Omit<EnrichmentOption, 'connectedApps'>[] = [
+  {
+    id: 'automatic_ingestion',
+    name: 'Automatic Ingestion',
+    description: 'Automatically ingest and normalize data from connected tools',
+    icon: <DownloadIcon />,
+    color: '#22c55e',
+    category: 'enrichment',
+  },
   {
     id: 'integration_search',
     name: 'Integration Search',
@@ -49,43 +64,6 @@ const enrichmentOptions: EnrichmentOption[] = [
     color: '#ef4444',
     category: 'enrichment',
   },
-  {
-    id: 'ai_triage',
-    name: 'AI-Powered Triage',
-    description: 'Use AI to automatically categorize and prioritize alerts',
-    icon: <AutoFixHighIcon />,
-    color: '#FF6600',
-    category: 'enrichment',
-  },
-  {
-    id: 'email_notify',
-    name: 'Email Notifications',
-    description: 'Send email alerts for critical severity issues',
-    icon: <EmailIcon />,
-    color: '#22c55e',
-    category: 'response',
-    configFields: [
-      { label: 'SMTP Server', placeholder: 'smtp.company.com' },
-      { label: 'From Address', placeholder: 'alerts@company.com' },
-    ],
-  },
-  {
-    id: 'slack_notify',
-    name: 'Slack Notifications',
-    description: 'Post alerts to Slack channels',
-    icon: <ChatIcon />,
-    color: '#8b5cf6',
-    category: 'response',
-    configFields: [{ label: 'Webhook URL', placeholder: 'https://hooks.slack.com/...', type: 'password' }],
-  },
-  {
-    id: 'auto_assign',
-    name: 'Auto-Assignment',
-    description: 'Automatically assign cases based on type and severity',
-    icon: <NotificationsActiveIcon />,
-    color: '#06b6d4',
-    category: 'response',
-  },
 ];
 
 export interface EnrichmentState {
@@ -95,9 +73,25 @@ export interface EnrichmentState {
   };
 }
 
+// Type for authenticated apps from API
+interface ApiAuthEntry {
+  app: {
+    id: string;
+    name: string;
+    large_image?: string;
+    categories?: string[];
+  };
+  active?: boolean;
+  validation?: {
+    valid: boolean;
+    error?: string;
+  };
+}
+
 interface EnrichmentConfigProps {
   enrichmentState: EnrichmentState;
   onEnrichmentChange: (state: EnrichmentState) => void;
+  authenticatedApps?: ApiAuthEntry[];
 }
 
 const containerVariants = {
@@ -113,8 +107,79 @@ const itemVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
 };
 
-export const EnrichmentConfig = ({ enrichmentState, onEnrichmentChange }: EnrichmentConfigProps) => {
+// Email app detection
+const EMAIL_APP_PATTERNS = ['gmail', 'outlook', 'email', 'microsoft_graph', 'office365', 'exchange', 'imap', 'smtp'];
+const isEmailApp = (appName: string) => 
+  EMAIL_APP_PATTERNS.some(pattern => appName.toLowerCase().includes(pattern));
+
+// Communication app detection
+const COMMUNICATION_CATEGORIES = ['COMMUNICATION', 'communication', 'Communication'];
+const isCommunicationApp = (app: ApiAuthEntry) => {
+  const categories = app.app.categories || [];
+  return categories.some(cat => COMMUNICATION_CATEGORIES.includes(cat)) ||
+    ['slack', 'teams', 'discord', 'mattermost', 'telegram', 'webhook'].some(
+      pattern => app.app.name.toLowerCase().includes(pattern)
+    );
+};
+
+export const EnrichmentConfig = ({ 
+  enrichmentState, 
+  onEnrichmentChange,
+  authenticatedApps = [],
+}: EnrichmentConfigProps) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  // Build dynamic options based on connected apps
+  const enrichmentOptions = useMemo(() => {
+    const options: EnrichmentOption[] = [...baseEnrichmentOptions];
+    
+    // Get validated/active apps
+    const validatedApps = authenticatedApps.filter(
+      auth => auth.active || auth.validation?.valid
+    );
+    
+    // Email apps for Email Notifications
+    const emailApps = validatedApps.filter(auth => isEmailApp(auth.app.name));
+    
+    // Communication apps for Chat Notifications
+    const commApps = validatedApps.filter(auth => isCommunicationApp(auth));
+    
+    // Add Email Notifications if email apps are connected
+    options.push({
+      id: 'email_notify',
+      name: 'Email Notifications',
+      description: emailApps.length > 0 
+        ? 'Send email alerts for critical severity issues'
+        : 'Connect an email tool (Gmail, Outlook) to enable email notifications',
+      icon: <EmailIcon />,
+      color: '#22c55e',
+      category: 'response',
+      connectedApps: emailApps.map(auth => ({
+        id: auth.app.id,
+        name: auth.app.name,
+        image: auth.app.large_image,
+      })),
+    });
+    
+    // Add Chat Notifications with connected communication tools
+    options.push({
+      id: 'chat_notify',
+      name: 'Chat Notifications',
+      description: commApps.length > 0 
+        ? 'Post alerts to your connected communication tools'
+        : 'Connect a chat tool (Slack, Teams, Discord) to enable chat notifications',
+      icon: <ChatIcon />,
+      color: '#8b5cf6',
+      category: 'response',
+      connectedApps: commApps.map(auth => ({
+        id: auth.app.id,
+        name: auth.app.name,
+        image: auth.app.large_image,
+      })),
+    });
+    
+    return options;
+  }, [authenticatedApps]);
 
   const toggleOption = (id: string) => {
     const current = enrichmentState[id] || { enabled: false, config: {} };
@@ -158,6 +223,7 @@ export const EnrichmentConfig = ({ enrichmentState, onEnrichmentChange }: Enrich
             const state = enrichmentState[option.id] || { enabled: false, config: {} };
             const isExpanded = expandedId === option.id;
             const hasConfig = option.configFields && option.configFields.length > 0;
+            const hasConnectedApps = option.connectedApps && option.connectedApps.length > 0;
 
             return (
               <motion.div key={option.id} variants={itemVariants}>
@@ -169,6 +235,7 @@ export const EnrichmentConfig = ({ enrichmentState, onEnrichmentChange }: Enrich
                     borderRadius: 3,
                     backdropFilter: 'blur(10px)',
                     transition: 'all 0.3s ease',
+                    opacity: (!hasConnectedApps && (option.id === 'email_notify' || option.id === 'chat_notify')) ? 0.5 : 1,
                     '&:hover': {
                       borderColor: state.enabled ? option.color : 'rgba(255, 102, 0, 0.3)',
                       transform: 'translateY(-2px)',
@@ -193,12 +260,42 @@ export const EnrichmentConfig = ({ enrichmentState, onEnrichmentChange }: Enrich
                         {option.icon}
                       </Box>
                       <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-                        <Typography
-                          variant="subtitle1"
-                          sx={{ color: 'white', fontWeight: 600 }}
-                        >
-                          {option.name}
-                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
+                          <Typography
+                            variant="subtitle1"
+                            sx={{ color: 'white', fontWeight: 600 }}
+                          >
+                            {option.name}
+                          </Typography>
+                          {/* Show connected apps as badges */}
+                          {hasConnectedApps && (
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                              {option.connectedApps!.slice(0, 3).map((app) => (
+                                <Avatar
+                                  key={app.id}
+                                  src={app.image}
+                                  alt={app.name}
+                                  sx={{
+                                    width: 20,
+                                    height: 20,
+                                    fontSize: '0.6rem',
+                                    border: '1px solid rgba(255,255,255,0.2)',
+                                  }}
+                                >
+                                  {app.name[0]}
+                                </Avatar>
+                              ))}
+                              {option.connectedApps!.length > 3 && (
+                                <Chip
+                                  label={`+${option.connectedApps!.length - 3}`}
+                                  size="small"
+                                  sx={{ height: 20, fontSize: '0.6rem' }}
+                                />
+                              )}
+                              <CheckCircleIcon sx={{ fontSize: 14, color: '#22c55e', ml: 0.5 }} />
+                            </Box>
+                          )}
+                        </Box>
                         <Typography
                           variant="body2"
                           sx={{ color: 'rgba(255, 255, 255, 0.5)', lineHeight: 1.4 }}
@@ -223,6 +320,7 @@ export const EnrichmentConfig = ({ enrichmentState, onEnrichmentChange }: Enrich
                         <Switch
                           checked={state.enabled}
                           onChange={() => toggleOption(option.id)}
+                          disabled={!hasConnectedApps && (option.id === 'email_notify' || option.id === 'chat_notify')}
                           sx={{
                             '& .MuiSwitch-switchBase.Mui-checked': {
                               color: option.color,
