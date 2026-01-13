@@ -166,12 +166,30 @@ export const EnrichmentConfig = ({
   const deduplicateApps = (apps: ApiAuthEntry[]): ApiAuthEntry[] => {
     const appMap = new Map<string, ApiAuthEntry>();
     apps.forEach(auth => {
-      // Normalize: lowercase, trim, replace spaces/underscores for deduplication
-      const normalizedName = auth.app.name.toLowerCase().trim().replace(/[\s_-]+/g, '_');
+      // Normalize: lowercase, trim, replace spaces/underscores/hyphens for deduplication
+      const normalizedName = auth.app.name.toLowerCase().trim().replace(/[\s_\-]+/g, '_');
       const existing = appMap.get(normalizedName);
-      // Prioritize validated apps
-      if (!existing || (auth.validation?.valid && !existing.validation?.valid)) {
+      
+      if (!existing) {
         appMap.set(normalizedName, auth);
+      } else {
+        // Merge: prioritize validated apps, and keep whichever has an image
+        const isNewValidated = auth.validation?.valid === true;
+        const isExistingValidated = existing.validation?.valid === true;
+        const newHasImage = !!auth.app.large_image;
+        const existingHasImage = !!existing.app.large_image;
+        
+        // Replace if: new is validated and existing isn't, OR same validation but new has image and existing doesn't
+        if ((isNewValidated && !isExistingValidated) || 
+            (isNewValidated === isExistingValidated && newHasImage && !existingHasImage)) {
+          appMap.set(normalizedName, auth);
+        } else if (!existingHasImage && newHasImage) {
+          // Keep existing but copy the image from new
+          appMap.set(normalizedName, {
+            ...existing,
+            app: { ...existing.app, large_image: auth.app.large_image }
+          });
+        }
       }
     });
     return Array.from(appMap.values());
