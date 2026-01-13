@@ -1949,6 +1949,161 @@ const IncidentDetailPage = () => {
         </Box>
       )}
         </Box>
+
+        {/* Right Activity Sidebar */}
+        <Box sx={{ 
+          width: 320,
+          flexShrink: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          bgcolor: 'hsl(var(--card))',
+          borderRadius: 2,
+          border: '1px solid hsl(var(--border))',
+          overflow: 'hidden',
+          maxHeight: 'calc(100vh - 180px)',
+        }}>
+          {/* Activity Header */}
+          <Box sx={{ 
+            px: 2, 
+            py: 1.5, 
+            borderBottom: '1px solid hsl(var(--border))',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <HistoryIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Activity</Typography>
+              {activity.length > 0 && (
+                <Chip 
+                  label={activity.length} 
+                  size="small" 
+                  sx={{ 
+                    height: 18, 
+                    fontSize: '0.65rem',
+                    bgcolor: 'rgba(255, 102, 0, 0.15)',
+                    color: '#ff6600',
+                  }} 
+                />
+              )}
+            </Box>
+          </Box>
+
+          {/* Comment Input */}
+          <Box sx={{ 
+            p: 2, 
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
+          }}>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Avatar sx={{ width: 28, height: 28, bgcolor: 'rgba(255, 102, 0, 0.2)' }}>
+                <PersonIcon sx={{ fontSize: 16, color: '#ff6600' }} />
+              </Avatar>
+              <Box sx={{ flex: 1 }}>
+                <MentionInput
+                  value={newComment}
+                  onChange={setNewComment}
+                  size="small"
+                  fullWidth
+                  multiline
+                  rows={2}
+                  placeholder="Add a comment..."
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      bgcolor: 'rgba(0, 0, 0, 0.2)',
+                      fontSize: '0.8rem',
+                      '& fieldset': { borderColor: 'rgba(255,255,255,0.08)' },
+                      '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.15)' },
+                      '&.Mui-focused fieldset': { borderColor: '#FF6600' },
+                    },
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey && newComment.trim()) {
+                      e.preventDefault();
+                      handleAddComment();
+                    }
+                  }}
+                />
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+                  <IconButton 
+                    size="small" 
+                    onClick={handleAddComment}
+                    disabled={!newComment.trim()}
+                    sx={{ 
+                      bgcolor: newComment.trim() ? 'rgba(255, 102, 0, 0.15)' : 'transparent',
+                      color: newComment.trim() ? '#ff6600' : 'text.disabled',
+                      '&:hover': { bgcolor: 'rgba(255, 102, 0, 0.25)' },
+                    }}
+                  >
+                    <SendIcon sx={{ fontSize: 16 }} />
+                  </IconButton>
+                </Box>
+              </Box>
+            </Box>
+          </Box>
+
+          {/* Activity Feed */}
+          <Box sx={{ 
+            flex: 1, 
+            overflowY: 'auto',
+            p: 1.5,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 1,
+          }}>
+            {activity.length === 0 ? (
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                py: 4,
+                color: 'text.secondary',
+              }}>
+                <HistoryIcon sx={{ fontSize: 32, mb: 1, opacity: 0.5 }} />
+                <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
+                  No activity yet
+                </Typography>
+              </Box>
+            ) : (
+              [...activity].reverse().map((item) => (
+                <Box
+                  key={item.id}
+                  sx={{
+                    display: 'flex',
+                    gap: 1.5,
+                    p: 1.5,
+                    borderRadius: 1.5,
+                    bgcolor: item.type === 'comment' ? 'rgba(255, 102, 0, 0.05)' : 'rgba(0,0,0,0.15)',
+                    border: '1px solid',
+                    borderColor: item.type === 'comment' ? 'rgba(255, 102, 0, 0.1)' : 'rgba(255,255,255,0.04)',
+                  }}
+                >
+                  <Avatar sx={{ 
+                    width: 24, 
+                    height: 24, 
+                    bgcolor: item.type === 'comment' ? 'rgba(255, 102, 0, 0.2)' : 'rgba(255,255,255,0.08)',
+                  }}>
+                    {getActivityIcon(item.type)}
+                  </Avatar>
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.25 }}>
+                      <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.75rem' }}>
+                        {item.user}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.65rem' }}>
+                        {formatRelativeTime(item.timestamp)}
+                      </Typography>
+                    </Box>
+                    <MentionText 
+                      text={item.content} 
+                      sx={{ fontSize: '0.8rem', color: 'text.secondary' }}
+                    />
+                  </Box>
+                </Box>
+              ))
+            )}
+          </Box>
+        </Box>
       </Box>
 
 
