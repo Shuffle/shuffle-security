@@ -526,6 +526,10 @@ const OnboardingPage = () => {
                     <EnrichmentConfig
                       enrichmentState={enrichmentState}
                       onEnrichmentChange={setEnrichmentState}
+                      onSave={(state) => {
+                        setDatastoreItem(AUTOMATION_CONFIG_KEY, state, ONBOARDING_CONFIG_CATEGORY)
+                          .catch(error => console.error('Failed to save automation config:', error));
+                      }}
                       authenticatedApps={authenticatedApps}
                       selectedApps={selectedApps}
                     />

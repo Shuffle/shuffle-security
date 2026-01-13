@@ -103,6 +103,7 @@ interface SelectedApp {
 interface EnrichmentConfigProps {
   enrichmentState: EnrichmentState;
   onEnrichmentChange: (state: EnrichmentState) => void;
+  onSave?: (state: EnrichmentState) => void;
   authenticatedApps?: AuthAppEntry[];
   selectedApps?: SelectedApp[];
 }
@@ -220,6 +221,7 @@ const SourceChip = ({ label, apps, validatedCount, pendingCount, hasEnabledValid
 export const EnrichmentConfig = ({
   enrichmentState, 
   onEnrichmentChange,
+  onSave,
   authenticatedApps = [],
   selectedApps = [],
 }: EnrichmentConfigProps) => {
@@ -439,34 +441,43 @@ export const EnrichmentConfig = ({
 
   const toggleOption = (id: string) => {
     const current = enrichmentState[id] || { enabled: false, config: {} };
-    onEnrichmentChange({
+    const newState = {
       ...enrichmentState,
       [id]: { ...current, enabled: !current.enabled },
-    });
+    };
+    onEnrichmentChange(newState);
+    // Optimistically save
+    onSave?.(newState);
   };
 
   const updateConfig = (id: string, field: string, value: string) => {
     const current = enrichmentState[id] || { enabled: false, config: {} };
-    onEnrichmentChange({
+    const newState = {
       ...enrichmentState,
       [id]: {
         ...current,
         config: { ...current.config, [field]: value },
       },
-    });
+    };
+    onEnrichmentChange(newState);
+    // Optimistically save
+    onSave?.(newState);
   };
 
   const toggleTool = (optionId: string, appId: string) => {
     const current = enrichmentState[optionId] || { enabled: false, config: {}, tools: {} };
     const currentTools = current.tools || {};
     const isCurrentlyEnabled = currentTools[appId] !== false; // Default to true if not set
-    onEnrichmentChange({
+    const newState = {
       ...enrichmentState,
       [optionId]: {
         ...current,
         tools: { ...currentTools, [appId]: !isCurrentlyEnabled },
       },
-    });
+    };
+    onEnrichmentChange(newState);
+    // Optimistically save
+    onSave?.(newState);
   };
 
   // Get app info for checking default enable state
