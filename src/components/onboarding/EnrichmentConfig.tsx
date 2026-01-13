@@ -10,6 +10,7 @@ import {
   Collapse,
   TextField,
   Avatar,
+  Tooltip,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -523,24 +524,43 @@ export const EnrichmentConfig = ({
                                 {source.apps.length > 0 && (
                                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
                                     {source.apps.slice(0, 2).map((app) => (
-                                      <Box key={app.id} sx={{ position: 'relative' }}>
-                                        <Avatar
-                                          src={app.image}
-                                          alt={app.name}
-                                          sx={{
-                                            width: 16,
-                                            height: 16,
-                                            fontSize: '0.5rem',
-                                            border: '1px solid',
-                                            borderColor: app.isValidated 
-                                              ? 'rgba(34, 197, 94, 0.5)' 
-                                              : 'rgba(255, 152, 0, 0.5)',
-                                            opacity: app.isValidated ? 1 : 0.7,
-                                          }}
-                                        >
-                                          {app.name[0]}
-                                        </Avatar>
-                                      </Box>
+                                      <Tooltip 
+                                        key={app.id}
+                                        title={
+                                          <Box>
+                                            <Typography variant="caption" sx={{ fontWeight: 600 }}>{app.name}</Typography>
+                                            <Typography variant="caption" sx={{ display: 'block', opacity: 0.8 }}>
+                                              {app.isValidated ? 'Validated' : 'Pending'}
+                                              {app.isSelected ? ' • This setup' : ' • Pre-existing'}
+                                            </Typography>
+                                          </Box>
+                                        }
+                                        arrow
+                                        placement="top"
+                                      >
+                                        <Box sx={{ position: 'relative' }}>
+                                          <Avatar
+                                            src={app.image}
+                                            alt={app.name}
+                                            sx={{
+                                              width: 16,
+                                              height: 16,
+                                              fontSize: '0.5rem',
+                                              border: '1px solid',
+                                              borderColor: app.isValidated 
+                                                ? 'rgba(34, 197, 94, 0.5)' 
+                                                : 'rgba(255, 152, 0, 0.5)',
+                                              opacity: app.isValidated ? 1 : 0.7,
+                                              outline: app.isSelected 
+                                                ? '2px solid rgba(59, 130, 246, 0.5)' 
+                                                : 'none',
+                                              outlineOffset: 1,
+                                            }}
+                                          >
+                                            {app.name[0]}
+                                          </Avatar>
+                                        </Box>
+                                      </Tooltip>
                                     ))}
                                     {source.apps.length > 2 && (
                                       <Typography
@@ -682,9 +702,26 @@ export const EnrichmentConfig = ({
                                           />
                                         </Box>
                                         <Box>
-                                          <Typography variant="body2" sx={{ color: 'white' }}>
-                                            {app.name}
-                                          </Typography>
+                                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                                            <Typography variant="body2" sx={{ color: 'white' }}>
+                                              {app.name}
+                                            </Typography>
+                                            {app.isSelected && (
+                                              <Chip
+                                                label="This setup"
+                                                size="small"
+                                                sx={{
+                                                  height: 16,
+                                                  fontSize: '0.55rem',
+                                                  fontWeight: 600,
+                                                  background: 'rgba(59, 130, 246, 0.2)',
+                                                  color: '#60a5fa',
+                                                  border: '1px solid rgba(59, 130, 246, 0.3)',
+                                                  '& .MuiChip-label': { px: 0.75 },
+                                                }}
+                                              />
+                                            )}
+                                          </Box>
                                           <Typography 
                                             variant="caption" 
                                             sx={{ 
@@ -693,6 +730,11 @@ export const EnrichmentConfig = ({
                                             }}
                                           >
                                             {app.isValidated ? 'Validated' : 'Pending authentication'}
+                                            {!app.isSelected && (
+                                              <Box component="span" sx={{ color: 'rgba(255,255,255,0.4)', ml: 0.5 }}>
+                                                • Pre-existing
+                                              </Box>
+                                            )}
                                           </Typography>
                                         </Box>
                                       </Box>
