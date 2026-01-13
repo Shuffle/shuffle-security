@@ -78,6 +78,7 @@ export const IntegrationStatus = ({ collapsed }: IntegrationStatusProps) => {
               app: ApiAuthEntry['app']; 
               instances: AuthInstance[];
               hasValidAuth: boolean;
+              bestImage: string;
             }>();
             
             authData.forEach(entry => {
@@ -87,6 +88,7 @@ export const IntegrationStatus = ({ collapsed }: IntegrationStatusProps) => {
               const appName = entry.app.name.toLowerCase().trim().replace(/[\s_-]+/g, '_');
               const existing = appMap.get(appName);
               const isValidated = entry.validation?.valid === true;
+              const entryImage = entry.app.large_image || '';
               const instance: AuthInstance = {
                 label: entry.label || entry.id || 'Default',
                 isValidated,
@@ -95,21 +97,26 @@ export const IntegrationStatus = ({ collapsed }: IntegrationStatusProps) => {
               if (existing) {
                 existing.instances.push(instance);
                 if (isValidated) existing.hasValidAuth = true;
+                // Keep track of any available image (prefer one that exists)
+                if (!existing.bestImage && entryImage) {
+                  existing.bestImage = entryImage;
+                }
               } else {
                 appMap.set(appName, { 
                   app: entry.app, 
                   instances: [instance],
                   hasValidAuth: isValidated,
+                  bestImage: entryImage,
                 });
               }
             });
             
             // Convert to integration objects and sort by validation status
             const dedupedIntegrations = Array.from(appMap.values())
-              .map(({ app, instances, hasValidAuth }) => ({
+              .map(({ app, instances, hasValidAuth, bestImage }) => ({
                 id: app.id,
                 name: app.name,
-                icon: app.large_image || '',
+                icon: bestImage || app.large_image || '',
                 category: app.categories?.[0] || 'Integration',
                 hasValidAuth,
                 authInstances: instances,
