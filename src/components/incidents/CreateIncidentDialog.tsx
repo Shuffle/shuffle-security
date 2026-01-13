@@ -77,6 +77,7 @@ export interface IncidentTask {
   createdAt: number;
   completedAt?: number;
   createdBy?: string;
+  aiWorking?: boolean; // True when AI Agent is actively working on this task
 }
 
 // OCSF Incident Finding format (class_id: 2005)
