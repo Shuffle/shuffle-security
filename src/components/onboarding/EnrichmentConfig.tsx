@@ -504,10 +504,14 @@ export const EnrichmentConfig = ({
                         {option.ingestionSources && (
                           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                             {option.ingestionSources.map((source) => {
-                              const validatedCount = source.apps.filter(a => a.isValidated).length;
+                              const validatedApps = source.apps.filter(a => a.isValidated);
+                              const validatedCount = validatedApps.length;
                               const pendingCount = source.apps.length - validatedCount;
                               const hasAny = source.apps.length > 0;
-                              const allValidated = hasAny && pendingCount === 0;
+                              // Check if any validated app is enabled
+                              const hasEnabledValidated = validatedApps.some(a => 
+                                isToolEnabled(option.id, a.id)
+                              );
                               const hasPending = pendingCount > 0;
                               
                               return (
@@ -520,13 +524,13 @@ export const EnrichmentConfig = ({
                                     px: 1.5,
                                     py: 0.75,
                                     borderRadius: 2,
-                                    background: allValidated 
+                                    background: hasEnabledValidated 
                                       ? 'rgba(34, 197, 94, 0.1)' 
                                       : hasPending 
                                         ? 'rgba(255, 152, 0, 0.1)'
                                         : 'rgba(255, 255, 255, 0.05)',
                                     border: '1px solid',
-                                    borderColor: allValidated 
+                                    borderColor: hasEnabledValidated 
                                       ? 'rgba(34, 197, 94, 0.3)' 
                                       : hasPending
                                         ? 'rgba(255, 152, 0, 0.3)'
@@ -536,7 +540,7 @@ export const EnrichmentConfig = ({
                                   <Typography
                                     variant="caption"
                                     sx={{
-                                      color: allValidated 
+                                      color: hasEnabledValidated 
                                         ? '#22c55e' 
                                         : hasPending 
                                           ? '#ff9800'
@@ -802,12 +806,16 @@ export const EnrichmentConfig = ({
                                         size="small"
                                         checked={isToolEnabled(option.id, app.id)}
                                         onChange={() => toggleTool(option.id, app.id)}
+                                        disabled={!app.isValidated}
                                         sx={{
                                           '& .MuiSwitch-switchBase.Mui-checked': {
                                             color: option.color,
                                           },
                                           '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
                                             backgroundColor: option.color,
+                                          },
+                                          '&.Mui-disabled': {
+                                            opacity: 0.4,
                                           },
                                         }}
                                       />
