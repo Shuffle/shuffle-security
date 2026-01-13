@@ -238,11 +238,20 @@ export const EnrichmentConfig = ({
       }
     });
     
+    // Sort apps: 1) Selected + Validated, 2) Selected + Pending, 3) Pre-existing + Validated, 4) Pre-existing + Pending
+    const sortApps = (apps: ConnectedApp[]): ConnectedApp[] => {
+      return [...apps].sort((a, b) => {
+        const scoreA = (a.isSelected ? 2 : 0) + (a.isValidated ? 1 : 0);
+        const scoreB = (b.isSelected ? 2 : 0) + (b.isValidated ? 1 : 0);
+        return scoreB - scoreA; // Higher score first
+      });
+    };
+    
     const ingestionSources: IngestionSource[] = [
-      { category: 'email', label: 'Email', apps: ingestionByCategory.email },
-      { category: 'cases', label: 'Cases', apps: ingestionByCategory.cases },
-      { category: 'edr', label: 'EDR', apps: ingestionByCategory.edr },
-      { category: 'siem', label: 'SIEM', apps: ingestionByCategory.siem },
+      { category: 'email', label: 'Email', apps: sortApps(ingestionByCategory.email) },
+      { category: 'cases', label: 'Cases', apps: sortApps(ingestionByCategory.cases) },
+      { category: 'edr', label: 'EDR', apps: sortApps(ingestionByCategory.edr) },
+      { category: 'siem', label: 'SIEM', apps: sortApps(ingestionByCategory.siem) },
     ];
     
     const validatedCount = Object.values(ingestionByCategory).flat().filter(a => a.isValidated).length;
