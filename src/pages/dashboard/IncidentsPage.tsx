@@ -109,7 +109,7 @@ const COLUMNS: ColumnConfig[] = [
   { key: 'source', label: 'Source', defaultVisible: false, sortable: true },
   { key: 'severity', label: 'Severity', defaultVisible: true, sortable: true },
   { key: 'tlp', label: 'TLP', defaultVisible: false, sortable: true },
-  { key: 'status', label: 'Status', defaultVisible: true, sortable: true },
+  { key: 'status', label: 'Status', defaultVisible: false, sortable: true },
   { key: 'assignee', label: 'Assignee', defaultVisible: true, sortable: true },
   { key: 'created', label: 'Created', defaultVisible: false, sortable: true },
   { key: 'edited', label: 'Last Updated', defaultVisible: true, sortable: true },
