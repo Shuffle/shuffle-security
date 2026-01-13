@@ -362,54 +362,67 @@ const IncidentDetailPage = () => {
     category: DATASTORE_CATEGORIES.INCIDENTS,
   });
 
-  // Load incident
-  useEffect(() => {
-    const loadIncident = async () => {
-      if (!id) {
+  // Load incident function (reusable for refresh)
+  const loadIncident = useCallback(async (showLoading = true) => {
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+
+    if (showLoading) setLoading(true);
+    const result = await getDatastoreItem(id, DATASTORE_CATEGORIES.INCIDENTS);
+    
+    if (result.success && result.item) {
+      const itemData = {
+        key: result.item.key || id,
+        value: result.item.value,
+        created: result.item.created,
+        edited: result.item.edited,
+      };
+      const parsed = parseIncidentFromDatastore(itemData);
+      
+      if (parsed) {
+        setIncident(parsed);
+        setEditedTitle(parsed.title);
+        setEditedMessage(parsed.rawOCSF?.message || '');
+        setEditedSeverity(parsed.severity);
+        setEditedAssignee(parsed.assignee || '');
+        setEditedStatus(parsed.status);
+        setEditedTlp(parsed.tlp || 'TLP:AMBER');
+        setEditedReferences(parsed.references || []);
+        setEditedObservables(parsed.observables || []);
+        setEditedCustomFields(parsed.rawOCSF?.customFields || {});
+        setActivity(parsed.activity || []);
+        const loadedTasks = parsed.tasks || parsed.rawOCSF?.tasks || [];
+        setTasks(loadedTasks);
+        // Auto-switch to Details tab if no tasks (only on initial load)
+        if (showLoading && loadedTasks.length === 0) {
+          setActiveTab(1);
+        }
         setLoading(false);
         return;
       }
-
-      setLoading(true);
-      const result = await getDatastoreItem(id, DATASTORE_CATEGORIES.INCIDENTS);
-      
-      if (result.success && result.item) {
-        const itemData = {
-          key: result.item.key || id,
-          value: result.item.value,
-          created: result.item.created,
-          edited: result.item.edited,
-        };
-        const parsed = parseIncidentFromDatastore(itemData);
-        
-        if (parsed) {
-          setIncident(parsed);
-          setEditedTitle(parsed.title);
-          setEditedMessage(parsed.rawOCSF?.message || '');
-          setEditedSeverity(parsed.severity);
-          setEditedAssignee(parsed.assignee || '');
-          setEditedStatus(parsed.status);
-          setEditedTlp(parsed.tlp || 'TLP:AMBER');
-          setEditedReferences(parsed.references || []);
-          setEditedObservables(parsed.observables || []);
-          setEditedCustomFields(parsed.rawOCSF?.customFields || {});
-          setActivity(parsed.activity || []);
-          const loadedTasks = parsed.tasks || parsed.rawOCSF?.tasks || [];
-          setTasks(loadedTasks);
-          // Auto-switch to Details tab if no tasks
-          if (loadedTasks.length === 0) {
-            setActiveTab(1);
-          }
-          setLoading(false);
-          return;
-        }
-      }
-      
-      setLoading(false);
-    };
-
-    loadIncident();
+    }
+    
+    setLoading(false);
   }, [id]);
+
+  // Initial load
+  useEffect(() => {
+    loadIncident();
+  }, [loadIncident]);
+
+  // Auto-refresh every 30 seconds to keep incident up-to-date
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      // Only refresh if not currently saving
+      if (!pendingSaveRef.current && !isSaving) {
+        loadIncident(false);
+      }
+    }, 30000);
+
+    return () => clearInterval(intervalId);
+  }, [loadIncident, isSaving]);
 
   // Fetch correlations
   useEffect(() => {
@@ -532,25 +545,48 @@ const IncidentDetailPage = () => {
     };
   }, [incident, editedTitle, editedMessage, editedSeverity, editedAssignee, editedStatus, editedTlp, editedReferences, editedObservables, editedCustomFields, tasks, saveToDatastore]);
 
-  // Metrics calculation
+  // Metrics calculation with MTTD and MTTR
   const metrics = useMemo(() => {
     if (!incident) return null;
     
     const createdAt = incident.createdTs;
     const now = Date.now();
     const age = now - createdAt;
-    const resolvedAt = incident.status === 'resolved' ? (incident.editedTs || now) : null;
-    const mttr = resolvedAt ? resolvedAt - createdAt : null;
     
-    // Progress bar: Max 24 hours for visualization
+    // MTTD (Mean Time to Detect): Time from event creation to first status change or activity
+    const firstActivity = incident.activity?.find(a => a.type !== 'created');
+    const mttdMs = firstActivity ? firstActivity.timestamp - createdAt : age;
+    
+    // MTTR (Mean Time to Resolve): Time from creation to resolution
+    const resolvedAt = incident.status === 'resolved' ? (incident.editedTs || now) : null;
+    const mttrMs = resolvedAt ? resolvedAt - createdAt : null;
+    
+    // Progress bars: Max thresholds for visualization
+    const maxMttd = 4 * 60 * 60 * 1000; // 4 hours target for detection
+    const maxMttr = 24 * 60 * 60 * 1000; // 24 hours target for resolution
     const maxAge = 24 * 60 * 60 * 1000;
+    
+    const mttdProgress = Math.min((mttdMs / maxMttd) * 100, 100);
+    const mttrProgress = mttrMs ? Math.min((mttrMs / maxMttr) * 100, 100) : Math.min((age / maxMttr) * 100, 100);
     const ageProgress = Math.min((age / maxAge) * 100, 100);
+    
+    // Determine color based on performance
+    const getMttdColor = (progress: number) => progress < 50 ? '#22c55e' : progress < 80 ? '#f59e0b' : '#ef4444';
+    const getMttrColor = (progress: number) => progress < 50 ? '#22c55e' : progress < 80 ? '#f59e0b' : '#ef4444';
     
     return { 
       age: formatDuration(age),
       ageMs: age,
       ageProgress,
-      mttr: mttr ? formatDuration(mttr) : null,
+      mttd: formatDuration(mttdMs),
+      mttdMs,
+      mttdProgress,
+      mttdColor: getMttdColor(mttdProgress),
+      mttr: mttrMs ? formatDuration(mttrMs) : null,
+      mttrMs,
+      mttrProgress,
+      mttrColor: getMttrColor(mttrProgress),
+      isResolved: !!resolvedAt,
     };
   }, [incident]);
 
@@ -949,9 +985,12 @@ const IncidentDetailPage = () => {
             <Tooltip title="Refresh">
               <IconButton 
                 size="small"
+                onClick={() => loadIncident(false)}
                 sx={{ 
                   border: '1px solid hsl(var(--border))',
                   borderRadius: 1,
+                  width: 32,
+                  height: 32,
                 }}
               >
                 <RefreshIcon fontSize="small" />
@@ -967,6 +1006,9 @@ const IncidentDetailPage = () => {
                 sx={{ 
                   borderColor: '#22c55e',
                   color: '#22c55e',
+                  height: 32,
+                  minWidth: 'auto',
+                  px: 2,
                   '&:hover': { borderColor: '#22c55e', bgcolor: 'rgba(34, 197, 94, 0.1)' },
                 }}
               >
@@ -980,6 +1022,8 @@ const IncidentDetailPage = () => {
                 sx={{ 
                   border: '1px solid hsl(var(--border))',
                   borderRadius: 1,
+                  width: 32,
+                  height: 32,
                 }}
               >
                 <SettingsIcon fontSize="small" />
@@ -1359,6 +1403,88 @@ const IncidentDetailPage = () => {
               size="small"
               sx={inputSx}
             />
+            {/* MTTD/MTTR Visual Bars */}
+            <Box sx={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(2, 1fr)', 
+              gap: 2, 
+              mt: 3,
+              p: 2,
+              bgcolor: 'rgba(0,0,0,0.2)',
+              borderRadius: 1.5,
+              border: '1px solid rgba(255,255,255,0.06)',
+            }}>
+              {/* MTTD */}
+              <Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <AccessTimeIcon sx={{ fontSize: 16, color: metrics?.mttdColor || 'text.secondary' }} />
+                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+                      MTTD (Time to Detect)
+                    </Typography>
+                  </Box>
+                  <Typography variant="body2" sx={{ fontWeight: 600, color: metrics?.mttdColor }}>
+                    {metrics?.mttd || '—'}
+                  </Typography>
+                </Box>
+                <LinearProgress 
+                  variant="determinate" 
+                  value={metrics?.mttdProgress || 0}
+                  sx={{ 
+                    height: 6, 
+                    borderRadius: 3,
+                    bgcolor: 'rgba(255,255,255,0.08)',
+                    '& .MuiLinearProgress-bar': {
+                      bgcolor: metrics?.mttdColor,
+                      borderRadius: 3,
+                    },
+                  }} 
+                />
+                <Typography variant="caption" sx={{ color: 'text.disabled', mt: 0.5, display: 'block' }}>
+                  Target: &lt;4h
+                </Typography>
+              </Box>
+
+              {/* MTTR */}
+              <Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <CheckCircleIcon sx={{ fontSize: 16, color: metrics?.isResolved ? '#22c55e' : (metrics?.mttrColor || 'text.secondary') }} />
+                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+                      MTTR (Time to Resolve)
+                    </Typography>
+                  </Box>
+                  <Typography variant="body2" sx={{ fontWeight: 600, color: metrics?.isResolved ? '#22c55e' : metrics?.mttrColor }}>
+                    {metrics?.mttr || (metrics?.isResolved ? '—' : 'In progress')}
+                  </Typography>
+                </Box>
+                <LinearProgress 
+                  variant={metrics?.isResolved ? 'determinate' : 'buffer'}
+                  value={metrics?.isResolved ? (metrics?.mttrProgress || 0) : 0}
+                  valueBuffer={metrics?.mttrProgress || 0}
+                  sx={{ 
+                    height: 6, 
+                    borderRadius: 3,
+                    bgcolor: 'rgba(255,255,255,0.08)',
+                    '& .MuiLinearProgress-bar': {
+                      bgcolor: metrics?.isResolved ? '#22c55e' : metrics?.mttrColor,
+                      borderRadius: 3,
+                    },
+                    '& .MuiLinearProgress-dashed': {
+                      backgroundSize: '8px 8px',
+                    },
+                    '& .MuiLinearProgress-bar2Buffer': {
+                      bgcolor: `${metrics?.mttrColor}40`,
+                    },
+                  }} 
+                />
+                <Typography variant="caption" sx={{ color: 'text.disabled', mt: 0.5, display: 'block' }}>
+                  Target: &lt;24h
+                </Typography>
+              </Box>
+            </Box>
+
+            {/* Metadata row */}
             <Box sx={{ display: 'flex', gap: 3, mt: 2, flexWrap: 'wrap' }}>
               <Box>
                 <Typography variant="caption" sx={{ color: 'text.secondary' }}>Source</Typography>
@@ -1378,12 +1504,6 @@ const IncidentDetailPage = () => {
                 <Typography variant="caption" sx={{ color: 'text.secondary' }}>Age</Typography>
                 <Typography variant="body2">{metrics?.age}</Typography>
               </Box>
-              {metrics?.mttr && (
-                <Box>
-                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>MTTR</Typography>
-                  <Typography variant="body2" sx={{ color: '#22c55e' }}>{metrics.mttr}</Typography>
-                </Box>
-              )}
             </Box>
           </Section>
 
