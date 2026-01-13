@@ -20,6 +20,8 @@ import {
   Skeleton,
   Collapse,
   LinearProgress,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -40,6 +42,7 @@ import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import { useDatastore } from '@/hooks/useDatastore';
 import { useAuth } from '@/context/AuthContext';
 import { DATASTORE_CATEGORIES, getDatastoreItem } from '@/services/datastore';
@@ -346,6 +349,7 @@ const IncidentDetailPage = () => {
   
   const [isSaving, setIsSaving] = useState(false);
   const [showResolveDialog, setShowResolveDialog] = useState(false);
+  const [activeTab, setActiveTab] = useState(0); // 0=Tasks, 1=Details, 2=Activity
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pendingSaveRef = useRef(false);
   
@@ -812,182 +816,195 @@ const IncidentDetailPage = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      {/* Summary Header Card */}
-      <Box sx={{ 
-        bgcolor: 'rgba(255,255,255,0.02)', 
-        borderRadius: 2, 
-        border: '1px solid rgba(255,255,255,0.08)',
-        p: 3,
-        mb: 3,
-      }}>
-        {/* Top Row: Back + Title + Actions */}
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 3 }}>
-          <IconButton onClick={() => navigate('/incidents')} sx={{ bgcolor: 'rgba(255,255,255,0.05)', mt: 0.5 }}>
-            <ArrowBackIcon />
-          </IconButton>
-          
-          <Box sx={{ flex: 1 }}>
-            <TextField
-              value={editedTitle}
-              onChange={(e) => setEditedTitle(e.target.value)}
-              variant="standard"
-              fullWidth
-              InputProps={{
-                disableUnderline: true,
-                sx: { 
-                  fontSize: '1.5rem', 
-                  fontWeight: 600,
-                  '&:hover': { bgcolor: 'rgba(255,255,255,0.03)' },
-                  borderRadius: 1,
-                  px: 1,
-                  mx: -1,
-                },
-              }}
-            />
-            <Typography variant="caption" sx={{ color: 'text.secondary', fontFamily: 'monospace', mt: 0.5 }}>
-              {incident.id}
-            </Typography>
+      {/* Compact Header */}
+      <Box sx={{ mb: 2 }}>
+        {/* Back link */}
+        <Box 
+          onClick={() => navigate('/incidents')} 
+          sx={{ 
+            display: 'inline-flex', 
+            alignItems: 'center', 
+            gap: 0.5, 
+            color: '#22b8cf', 
+            cursor: 'pointer',
+            mb: 2,
+            '&:hover': { textDecoration: 'underline' },
+          }}
+        >
+          <ArrowBackIcon sx={{ fontSize: 18 }} />
+          <Typography variant="body2">Back to Incidents</Typography>
+        </Box>
+
+        {/* Main header card */}
+        <Box sx={{ 
+          display: 'flex',
+          alignItems: 'center',
+          gap: 2,
+          p: 2,
+          borderRadius: 2,
+          bgcolor: 'hsl(var(--card))',
+          border: '1px solid hsl(var(--border))',
+        }}>
+          {/* Icon */}
+          <Box
+            sx={{
+              width: 56,
+              height: 56,
+              borderRadius: 2,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: `${severityColors[editedSeverity]}15`,
+              border: `1px solid ${severityColors[editedSeverity]}30`,
+              flexShrink: 0,
+            }}
+          >
+            <TaskAltIcon sx={{ fontSize: 28, color: severityColors[editedSeverity] }} />
           </Box>
-          
+
+          {/* Title and meta */}
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <TextField
+                value={editedTitle}
+                onChange={(e) => setEditedTitle(e.target.value)}
+                variant="standard"
+                InputProps={{
+                  disableUnderline: true,
+                  sx: { 
+                    fontSize: '1.1rem', 
+                    fontWeight: 600,
+                    '&:hover': { bgcolor: 'rgba(255,255,255,0.03)' },
+                    borderRadius: 1,
+                    px: 0.5,
+                  },
+                }}
+                sx={{ flex: 1 }}
+              />
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontFamily: 'monospace' }}>
+                {incident.source}
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>•</Typography>
+              <Chip
+                size="small"
+                label={editedStatus === 'new' ? 'New' : editedStatus === 'in_progress' ? 'In Progress' : 'Resolved'}
+                sx={{
+                  height: 20,
+                  fontSize: '0.7rem',
+                  backgroundColor: statusColors[editedStatus]?.bg,
+                  color: statusColors[editedStatus]?.text,
+                }}
+              />
+            </Box>
+          </Box>
+
+          {/* Right side actions */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {isSaving && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <CircularProgress size={16} />
-                <Typography variant="caption" color="text.secondary">Saving...</Typography>
-              </Box>
-            )}
+            {isSaving && <CircularProgress size={18} />}
+            
+            <Tooltip title="Refresh">
+              <IconButton 
+                size="small"
+                sx={{ 
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: 1,
+                }}
+              >
+                <RefreshIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+
             {!isResolved && (
               <Button 
-                variant="contained"
-                startIcon={<CheckCircleIcon />} 
+                variant="outlined"
+                size="small"
                 onClick={() => setShowResolveDialog(true)} 
                 disabled={isSaving}
                 sx={{ 
-                  bgcolor: '#22c55e', 
-                  '&:hover': { bgcolor: '#16a34a' },
+                  borderColor: '#22c55e',
+                  color: '#22c55e',
+                  '&:hover': { borderColor: '#22c55e', bgcolor: 'rgba(34, 197, 94, 0.1)' },
                 }}
               >
                 Resolve
               </Button>
             )}
-          </Box>
-        </Box>
 
-        {/* Metrics Row */}
-        <Box sx={{ 
-          display: 'grid', 
-          gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(5, 1fr)' }, 
-          gap: 2,
-          pt: 2,
-          borderTop: '1px solid rgba(255,255,255,0.06)',
-        }}>
-          {/* Age / MTTD */}
-          <Box>
-            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
-              Age
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                {metrics?.age}
-              </Typography>
-            </Box>
-            <LinearProgress 
-              variant="determinate" 
-              value={metrics?.ageProgress || 0} 
-              sx={{ 
-                mt: 0.5, 
-                height: 3, 
-                borderRadius: 1,
-                bgcolor: 'rgba(255,255,255,0.1)',
-                '& .MuiLinearProgress-bar': {
-                  bgcolor: (metrics?.ageProgress || 0) > 75 ? '#ef4444' : (metrics?.ageProgress || 0) > 50 ? '#f97316' : '#22c55e',
-                },
-              }} 
-            />
-          </Box>
-
-          {/* MTTR */}
-          <Box>
-            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
-              MTTR
-            </Typography>
-            <Typography variant="body2" sx={{ fontWeight: 600, color: metrics?.mttr ? '#22c55e' : 'text.secondary' }}>
-              {metrics?.mttr || '—'}
-            </Typography>
-          </Box>
-
-          {/* Status */}
-          <Box>
-            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
-              Status
-            </Typography>
-            <FormControl size="small" sx={{ minWidth: 120 }}>
-              <Select
-                value={editedStatus}
-                onChange={(e) => setEditedStatus(e.target.value)}
-                variant="standard"
-                disableUnderline
+            <Tooltip title="Settings">
+              <IconButton 
+                size="small"
                 sx={{ 
-                  fontWeight: 600,
-                  color: statusColors[editedStatus]?.text,
-                  '& .MuiSelect-icon': { color: 'text.secondary' },
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: 1,
                 }}
               >
-                <MenuItem value="new">New</MenuItem>
-                <MenuItem value="in_progress">In Progress</MenuItem>
-                <MenuItem value="resolved">Resolved</MenuItem>
-              </Select>
-            </FormControl>
+                <SettingsIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
           </Box>
+        </Box>
+      </Box>
 
-          {/* Severity */}
-          <Box>
-            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
-              Severity
-            </Typography>
-            <FormControl size="small" sx={{ minWidth: 100 }}>
+      {/* Tabs and Search Row */}
+      <Box sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'space-between',
+        mb: 2,
+      }}>
+        <Tabs 
+          value={activeTab} 
+          onChange={(_, v) => setActiveTab(v)}
+          sx={{
+            minHeight: 36,
+            '& .MuiTabs-indicator': { bgcolor: '#ff6600' },
+            '& .MuiTab-root': {
+              minHeight: 36,
+              py: 0,
+              textTransform: 'none',
+              fontWeight: 500,
+              color: 'text.secondary',
+              '&.Mui-selected': { color: 'white' },
+            },
+          }}
+        >
+          <Tab label={`Tasks ${tasks.length > 0 ? `(${tasks.filter(t => t.completed).length}/${tasks.length})` : ''}`} />
+          <Tab label="Details" />
+          <Tab label={`Activity ${activity.length > 0 ? `(${activity.length})` : ''}`} />
+        </Tabs>
+
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          {/* Quick metadata chips */}
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <FormControl size="small">
               <Select
                 value={editedSeverity}
                 onChange={(e) => setEditedSeverity(e.target.value)}
                 variant="standard"
                 disableUnderline
                 sx={{ 
-                  fontWeight: 600,
+                  fontSize: '0.8rem',
+                  fontWeight: 500,
                   color: severityColors[editedSeverity],
                   textTransform: 'capitalize',
-                  '& .MuiSelect-icon': { color: 'text.secondary' },
                 }}
               >
                 {severityOptions.map((opt) => (
-                  <MenuItem key={opt.value} value={opt.value}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: severityColors[opt.value] }} />
-                      {opt.label}
-                    </Box>
-                  </MenuItem>
+                  <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
                 ))}
               </Select>
             </FormControl>
-          </Box>
-
-          {/* Assignee */}
-          <Box>
-            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
-              Assignee
-            </Typography>
-            <FormControl size="small" sx={{ minWidth: 120 }}>
+            <Typography variant="caption" sx={{ color: 'text.disabled' }}>|</Typography>
+            <FormControl size="small">
               <Select
                 value={editedAssignee}
                 onChange={(e) => setEditedAssignee(e.target.value)}
                 variant="standard"
                 disableUnderline
-                disabled={usersLoading}
                 displayEmpty
-                sx={{ 
-                  fontWeight: 600,
-                  '& .MuiSelect-icon': { color: 'text.secondary' },
-                }}
-                MenuProps={{ PaperProps: { sx: { bgcolor: '#2a2a2a', border: '1px solid rgba(255,255,255,0.1)' } } }}
+                sx={{ fontSize: '0.8rem' }}
               >
                 <MenuItem value=""><em>Unassigned</em></MenuItem>
                 {users.map((user) => (
@@ -999,356 +1016,371 @@ const IncidentDetailPage = () => {
         </Box>
       </Box>
 
-      {/* Main Content - Collapsible Sections */}
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {/* Description */}
-        <Section title="Description" icon={DescriptionIcon} defaultOpen={true}>
-          <TextField
-            value={editedMessage}
-            onChange={(e) => setEditedMessage(e.target.value)}
-            fullWidth
-            multiline
-            rows={3}
-            placeholder="Add a description..."
-            size="small"
-            sx={inputSx}
-          />
-          <Box sx={{ display: 'flex', gap: 3, mt: 2, flexWrap: 'wrap' }}>
-            <Box>
-              <Typography variant="caption" sx={{ color: 'text.secondary' }}>Source</Typography>
-              <Typography variant="body2">{incident.source}</Typography>
-            </Box>
-            <Box>
-              <Typography variant="caption" sx={{ color: 'text.secondary' }}>Created</Typography>
-              <Typography variant="body2">{incident.created}</Typography>
-            </Box>
-            {incident.edited && (
-              <Box>
-                <Typography variant="caption" sx={{ color: 'text.secondary' }}>Last Updated</Typography>
-                <Typography variant="body2">{incident.edited}</Typography>
+      {/* Tab Content */}
+      {activeTab === 0 && (
+        /* Tasks Tab */
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {/* Tasks Section - inline, no collapsible wrapper */}
+          <Box sx={{ 
+            bgcolor: 'rgba(255,255,255,0.02)', 
+            borderRadius: 2, 
+            border: '1px solid rgba(255,255,255,0.06)',
+            p: 2.5,
+          }}>
+            {/* Progress bar */}
+            {tasks.length > 0 && (
+              <Box sx={{ mb: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    Progress
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: getTaskProgress() === 100 ? '#22c55e' : 'text.secondary' }}>
+                    {getTaskProgress()}%
+                  </Typography>
+                </Box>
+                <LinearProgress 
+                  variant="determinate" 
+                  value={getTaskProgress()} 
+                  sx={{ 
+                    height: 4, 
+                    borderRadius: 2,
+                    bgcolor: 'rgba(255,255,255,0.1)',
+                    '& .MuiLinearProgress-bar': {
+                      bgcolor: getTaskProgress() === 100 ? '#22c55e' : '#ff6600',
+                      borderRadius: 2,
+                    },
+                  }} 
+                />
               </Box>
             )}
-          </Box>
-        </Section>
 
-        {/* Observables */}
-        <Section 
-          title="Observables (IOCs)" 
-          icon={SecurityIcon} 
-          defaultOpen={editedObservables.length > 0}
-          badge={editedObservables.length > 0 ? editedObservables.length : undefined}
-        >
-          <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-            <TextField
-              select
-              size="small"
-              value={newObservableType}
-              onChange={(e) => setNewObservableType(e.target.value)}
-              sx={{ minWidth: 120, ...inputSx }}
-            >
-              {observableTypes.map((type) => (
-                <MenuItem key={type} value={type}>{type}</MenuItem>
-              ))}
-            </TextField>
-            <TextField
-              size="small"
-              value={newObservableValue}
-              onChange={(e) => setNewObservableValue(e.target.value)}
-              placeholder="Value..."
-              fullWidth
-              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddObservable())}
-              sx={inputSx}
-            />
-            <IconButton onClick={handleAddObservable} disabled={!newObservableValue.trim()} sx={{ bgcolor: 'rgba(255,255,255,0.05)' }}>
-              <AddIcon />
-            </IconButton>
-          </Box>
-          {editedObservables.length > 0 ? (
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-              {editedObservables.map((obs, idx) => (
-                <Chip
-                  key={idx}
-                  label={`${obs.type}: ${obs.value}`}
-                  size="small"
-                  onDelete={() => handleRemoveObservable(idx)}
-                  sx={{ bgcolor: 'rgba(255, 102, 0, 0.15)', '& .MuiChip-label': { fontFamily: 'monospace', fontSize: '0.75rem' } }}
-                />
-              ))}
-            </Box>
-          ) : (
-            <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
-              No observables added
-            </Typography>
-          )}
-        </Section>
-
-        {/* Custom Fields */}
-        {customFields.length > 0 && (
-          <Section title="Custom Fields" icon={SettingsIcon} defaultOpen={false}>
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 2 }}>
-              {customFields.map((field) => renderCustomField(field))}
-            </Box>
-          </Section>
-        )}
-
-        {/* Tasks */}
-        <Section 
-          title="Tasks" 
-          icon={TaskAltIcon} 
-          defaultOpen={true}
-          badge={tasks.length > 0 ? `${tasks.filter(t => t.completed).length}/${tasks.length}` : undefined}
-        >
-          {/* Progress bar */}
-          {tasks.length > 0 && (
-            <Box sx={{ mb: 2 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                  Progress
-                </Typography>
-                <Typography variant="caption" sx={{ color: getTaskProgress() === 100 ? '#22c55e' : 'text.secondary' }}>
-                  {getTaskProgress()}%
-                </Typography>
-              </Box>
-              <LinearProgress 
-                variant="determinate" 
-                value={getTaskProgress()} 
-                sx={{ 
-                  height: 4, 
-                  borderRadius: 2,
-                  bgcolor: 'rgba(255,255,255,0.1)',
-                  '& .MuiLinearProgress-bar': {
-                    bgcolor: getTaskProgress() === 100 ? '#22c55e' : '#ff6600',
-                    borderRadius: 2,
-                  },
-                }} 
+            {/* Add task input + template button */}
+            <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+              <TextField
+                size="small"
+                value={newTaskTitle}
+                onChange={(e) => setNewTaskTitle(e.target.value)}
+                placeholder="Add a task..."
+                fullWidth
+                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTask())}
+                sx={inputSx}
               />
+              <IconButton onClick={handleAddTask} disabled={!newTaskTitle.trim()} sx={{ bgcolor: 'rgba(255,255,255,0.05)' }}>
+                <AddIcon />
+              </IconButton>
+              <Box sx={{ position: 'relative' }}>
+                <Tooltip title="Apply template">
+                  <IconButton 
+                    onClick={() => setShowTemplateMenu(!showTemplateMenu)} 
+                    sx={{ bgcolor: 'rgba(255, 102, 0, 0.15)', color: '#ff6600', '&:hover': { bgcolor: 'rgba(255, 102, 0, 0.25)' } }}
+                  >
+                    <PlaylistAddIcon />
+                  </IconButton>
+                </Tooltip>
+                {showTemplateMenu && (
+                  <Box sx={{ 
+                    position: 'absolute', 
+                    top: '100%', 
+                    right: 0, 
+                    mt: 1, 
+                    bgcolor: '#2a2a2a', 
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: 1,
+                    py: 1,
+                    minWidth: 200,
+                    zIndex: 10,
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                  }}>
+                    <Typography variant="caption" sx={{ px: 2, color: 'text.secondary', display: 'block', mb: 0.5 }}>
+                      Apply Template
+                    </Typography>
+                    {DEFAULT_TASK_TEMPLATES.map((template) => (
+                      <Box 
+                        key={template.id}
+                        onClick={() => handleApplyTemplate(template)}
+                        sx={{ 
+                          px: 2, 
+                          py: 1, 
+                          cursor: 'pointer',
+                          '&:hover': { bgcolor: 'rgba(255,255,255,0.05)' },
+                        }}
+                      >
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          {template.name}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                          {template.tasks.length} tasks
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                )}
+              </Box>
             </Box>
-          )}
 
-          {/* Add task input + template button */}
-          <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-            <TextField
-              size="small"
-              value={newTaskTitle}
-              onChange={(e) => setNewTaskTitle(e.target.value)}
-              placeholder="Add a task..."
-              fullWidth
-              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTask())}
-              sx={inputSx}
-            />
-            <IconButton onClick={handleAddTask} disabled={!newTaskTitle.trim()} sx={{ bgcolor: 'rgba(255,255,255,0.05)' }}>
-              <AddIcon />
-            </IconButton>
-            <Box sx={{ position: 'relative' }}>
-              <Tooltip title="Apply template">
-                <IconButton 
-                  onClick={() => setShowTemplateMenu(!showTemplateMenu)} 
-                  sx={{ bgcolor: 'rgba(255, 102, 0, 0.15)', color: '#ff6600', '&:hover': { bgcolor: 'rgba(255, 102, 0, 0.25)' } }}
-                >
-                  <PlaylistAddIcon />
-                </IconButton>
-              </Tooltip>
-              {showTemplateMenu && (
-                <Box sx={{ 
-                  position: 'absolute', 
-                  top: '100%', 
-                  right: 0, 
-                  mt: 1, 
-                  bgcolor: '#2a2a2a', 
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: 1,
-                  py: 1,
-                  minWidth: 200,
-                  zIndex: 10,
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-                }}>
-                  <Typography variant="caption" sx={{ px: 2, color: 'text.secondary', display: 'block', mb: 0.5 }}>
-                    Apply Template
-                  </Typography>
-                  {DEFAULT_TASK_TEMPLATES.map((template) => (
+            {/* Task list */}
+            {tasks.length > 0 ? (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                {tasks.map((task) => {
+                  const isBlocked = isTaskBlocked(task);
+                  const dependencyTask = task.dependsOn ? tasks.find(t => t.title === task.dependsOn) : null;
+                  
+                  return (
                     <Box 
-                      key={template.id}
-                      onClick={() => handleApplyTemplate(template)}
+                      key={task.id}
                       sx={{ 
-                        px: 2, 
-                        py: 1, 
-                        cursor: 'pointer',
-                        '&:hover': { bgcolor: 'rgba(255,255,255,0.05)' },
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: 1.5,
+                        p: 1.5,
+                        borderRadius: 1,
+                        bgcolor: task.completed ? 'rgba(34, 197, 94, 0.08)' : isBlocked ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.2)',
+                        border: '1px solid',
+                        borderColor: task.completed ? 'rgba(34, 197, 94, 0.2)' : isBlocked ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.08)',
+                        opacity: isBlocked ? 0.6 : 1,
                       }}
                     >
-                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                        {template.name}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                        {template.tasks.length} tasks
-                      </Typography>
+                      <DragIndicatorIcon sx={{ fontSize: 16, color: 'text.disabled', cursor: 'grab' }} />
+                      
+                      <IconButton 
+                        size="small" 
+                        onClick={() => !isBlocked && handleToggleTask(task.id)}
+                        disabled={isBlocked}
+                        sx={{ 
+                          p: 0.5,
+                          color: task.completed ? '#22c55e' : 'text.secondary',
+                        }}
+                      >
+                        {task.completed ? (
+                          <CheckCircleIcon fontSize="small" />
+                        ) : (
+                          <Box sx={{ 
+                            width: 18, 
+                            height: 18, 
+                            borderRadius: '50%', 
+                            border: '2px solid currentColor',
+                          }} />
+                        )}
+                      </IconButton>
+                      
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            textDecoration: task.completed ? 'line-through' : 'none',
+                            color: task.completed ? 'text.secondary' : 'text.primary',
+                          }}
+                        >
+                          {task.title}
+                        </Typography>
+                        {isBlocked && dependencyTask && (
+                          <Typography variant="caption" sx={{ color: 'warning.main', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            ⏳ Waiting on: {dependencyTask.title}
+                          </Typography>
+                        )}
+                      </Box>
+                      
+                      <FormControl size="small" sx={{ minWidth: 100 }}>
+                        <Select
+                          value={task.assignee || ''}
+                          onChange={(e) => handleUpdateTaskAssignee(task.id, e.target.value)}
+                          variant="standard"
+                          disableUnderline
+                          displayEmpty
+                          disabled={usersLoading}
+                          sx={{ fontSize: '0.75rem' }}
+                        >
+                          <MenuItem value=""><em>Unassigned</em></MenuItem>
+                          {users.map((user) => (
+                            <MenuItem key={user.id} value={user.username}>{user.username}</MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                      
+                      <TextField
+                        type="date"
+                        size="small"
+                        value={task.dueDate || ''}
+                        onChange={(e) => handleUpdateTaskDueDate(task.id, e.target.value)}
+                        InputProps={{ disableUnderline: true, sx: { fontSize: '0.75rem' } }}
+                        variant="standard"
+                        sx={{ width: 120 }}
+                      />
+                      
+                      <IconButton 
+                        size="small" 
+                        onClick={() => handleDeleteTask(task.id)}
+                        sx={{ color: 'text.secondary', '&:hover': { color: '#ef4444' } }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
                     </Box>
-                  ))}
+                  );
+                })}
+              </Box>
+            ) : (
+              <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic', textAlign: 'center', py: 2 }}>
+                No tasks yet. Add a task or apply a template to get started.
+              </Typography>
+            )}
+          </Box>
+        </Box>
+      )}
+
+      {activeTab === 1 && (
+        /* Details Tab */
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {/* Description */}
+          <Section title="Description" icon={DescriptionIcon} defaultOpen={true}>
+            <TextField
+              value={editedMessage}
+              onChange={(e) => setEditedMessage(e.target.value)}
+              fullWidth
+              multiline
+              rows={3}
+              placeholder="Add a description..."
+              size="small"
+              sx={inputSx}
+            />
+            <Box sx={{ display: 'flex', gap: 3, mt: 2, flexWrap: 'wrap' }}>
+              <Box>
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>Source</Typography>
+                <Typography variant="body2">{incident.source}</Typography>
+              </Box>
+              <Box>
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>Created</Typography>
+                <Typography variant="body2">{incident.created}</Typography>
+              </Box>
+              {incident.edited && (
+                <Box>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>Last Updated</Typography>
+                  <Typography variant="body2">{incident.edited}</Typography>
+                </Box>
+              )}
+              <Box>
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>Age</Typography>
+                <Typography variant="body2">{metrics?.age}</Typography>
+              </Box>
+              {metrics?.mttr && (
+                <Box>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>MTTR</Typography>
+                  <Typography variant="body2" sx={{ color: '#22c55e' }}>{metrics.mttr}</Typography>
                 </Box>
               )}
             </Box>
-          </Box>
+          </Section>
 
-          {/* Task list */}
-          {tasks.length > 0 ? (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              {tasks.map((task) => {
-                const isBlocked = isTaskBlocked(task);
-                const dependencyTask = task.dependsOn ? tasks.find(t => t.title === task.dependsOn) : null;
-                
-                return (
-                  <Box 
-                    key={task.id}
-                    sx={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: 1.5,
-                      p: 1.5,
-                      borderRadius: 1,
-                      bgcolor: task.completed ? 'rgba(34, 197, 94, 0.08)' : isBlocked ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.2)',
-                      border: '1px solid',
-                      borderColor: task.completed ? 'rgba(34, 197, 94, 0.2)' : isBlocked ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.08)',
-                      opacity: isBlocked ? 0.6 : 1,
-                    }}
-                  >
-                    <DragIndicatorIcon sx={{ fontSize: 16, color: 'text.disabled', cursor: 'grab' }} />
-                    
-                    <IconButton 
-                      size="small" 
-                      onClick={() => !isBlocked && handleToggleTask(task.id)}
-                      disabled={isBlocked}
-                      sx={{ 
-                        p: 0.5,
-                        color: task.completed ? '#22c55e' : 'text.secondary',
-                      }}
-                    >
-                      {task.completed ? (
-                        <CheckCircleIcon fontSize="small" />
-                      ) : (
-                        <Box sx={{ 
-                          width: 18, 
-                          height: 18, 
-                          borderRadius: '50%', 
-                          border: '2px solid currentColor',
-                        }} />
-                      )}
-                    </IconButton>
-                    
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Typography 
-                        variant="body2" 
-                        sx={{ 
-                          textDecoration: task.completed ? 'line-through' : 'none',
-                          color: task.completed ? 'text.secondary' : 'text.primary',
-                        }}
-                      >
-                        {task.title}
-                      </Typography>
-                      {isBlocked && dependencyTask && (
-                        <Typography variant="caption" sx={{ color: 'warning.main', display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          ⏳ Waiting on: {dependencyTask.title}
-                        </Typography>
-                      )}
-                    </Box>
-                    
-                    <FormControl size="small" sx={{ minWidth: 100 }}>
-                      <Select
-                        value={task.assignee || ''}
-                        onChange={(e) => handleUpdateTaskAssignee(task.id, e.target.value)}
-                        variant="standard"
-                        disableUnderline
-                        displayEmpty
-                        disabled={usersLoading}
-                        sx={{ 
-                          fontSize: '0.75rem',
-                          '& .MuiSelect-icon': { fontSize: 16 },
-                        }}
-                      >
-                        <MenuItem value=""><em>Unassigned</em></MenuItem>
-                        {users.map((user) => (
-                          <MenuItem key={user.id} value={user.username}>{user.username}</MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                    
-                    <TextField
-                      type="date"
-                      size="small"
-                      value={task.dueDate || ''}
-                      onChange={(e) => handleUpdateTaskDueDate(task.id, e.target.value)}
-                      InputProps={{ 
-                        disableUnderline: true,
-                        sx: { fontSize: '0.75rem' } 
-                      }}
-                      variant="standard"
-                      sx={{ width: 120 }}
-                    />
-                    
-                    <IconButton 
-                      size="small" 
-                      onClick={() => handleDeleteTask(task.id)}
-                      sx={{ color: 'text.secondary', '&:hover': { color: '#ef4444' } }}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Box>
-                );
-              })}
+          {/* Observables */}
+          <Section 
+            title="Observables (IOCs)" 
+            icon={SecurityIcon} 
+            defaultOpen={editedObservables.length > 0}
+            badge={editedObservables.length > 0 ? editedObservables.length : undefined}
+          >
+            <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+              <TextField
+                select
+                size="small"
+                value={newObservableType}
+                onChange={(e) => setNewObservableType(e.target.value)}
+                sx={{ minWidth: 120, ...inputSx }}
+              >
+                {observableTypes.map((type) => (
+                  <MenuItem key={type} value={type}>{type}</MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                size="small"
+                value={newObservableValue}
+                onChange={(e) => setNewObservableValue(e.target.value)}
+                placeholder="Value..."
+                fullWidth
+                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddObservable())}
+                sx={inputSx}
+              />
+              <IconButton onClick={handleAddObservable} disabled={!newObservableValue.trim()} sx={{ bgcolor: 'rgba(255,255,255,0.05)' }}>
+                <AddIcon />
+              </IconButton>
             </Box>
-          ) : (
-            <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic', textAlign: 'center', py: 2 }}>
-              No tasks yet. Add a task or apply a template to get started.
-            </Typography>
-          )}
-        </Section>
+            {editedObservables.length > 0 ? (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                {editedObservables.map((obs, idx) => (
+                  <Chip
+                    key={idx}
+                    label={`${obs.type}: ${obs.value}`}
+                    size="small"
+                    onDelete={() => handleRemoveObservable(idx)}
+                    sx={{ bgcolor: 'rgba(255, 102, 0, 0.15)', '& .MuiChip-label': { fontFamily: 'monospace', fontSize: '0.75rem' } }}
+                  />
+                ))}
+              </Box>
+            ) : (
+              <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
+                No observables added
+              </Typography>
+            )}
+          </Section>
 
-        <Section 
-          title="References" 
-          icon={LinkIcon} 
-          defaultOpen={editedReferences.length > 0}
-          badge={editedReferences.length > 0 ? editedReferences.length : undefined}
-        >
-          <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-            <TextField
-              size="small"
-              value={newReference}
-              onChange={(e) => setNewReference(e.target.value)}
-              placeholder="https://example.com/reference"
-              fullWidth
-              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddReference())}
-              sx={inputSx}
-            />
-            <IconButton onClick={handleAddReference} disabled={!newReference.trim()} sx={{ bgcolor: 'rgba(255,255,255,0.05)' }}>
-              <AddIcon />
-            </IconButton>
-          </Box>
-          {editedReferences.length > 0 ? (
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-              {editedReferences.map((ref, idx) => (
-                <Chip
-                  key={idx}
-                  label={ref.length > 50 ? ref.substring(0, 50) + '...' : ref}
-                  size="small"
-                  onDelete={() => handleRemoveReference(idx)}
-                  onClick={() => window.open(ref, '_blank')}
-                  sx={{ cursor: 'pointer' }}
-                />
-              ))}
+          {/* Custom Fields */}
+          {customFields.length > 0 && (
+            <Section title="Custom Fields" icon={SettingsIcon} defaultOpen={false}>
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 2 }}>
+                {customFields.map((field) => renderCustomField(field))}
+              </Box>
+            </Section>
+          )}
+
+          {/* References */}
+          <Section 
+            title="References" 
+            icon={LinkIcon} 
+            defaultOpen={editedReferences.length > 0}
+            badge={editedReferences.length > 0 ? editedReferences.length : undefined}
+          >
+            <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+              <TextField
+                size="small"
+                value={newReference}
+                onChange={(e) => setNewReference(e.target.value)}
+                placeholder="https://example.com/reference"
+                fullWidth
+                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddReference())}
+                sx={inputSx}
+              />
+              <IconButton onClick={handleAddReference} disabled={!newReference.trim()} sx={{ bgcolor: 'rgba(255,255,255,0.05)' }}>
+                <AddIcon />
+              </IconButton>
             </Box>
-          ) : (
-            <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
-              No references added
-            </Typography>
-          )}
-        </Section>
+            {editedReferences.length > 0 ? (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                {editedReferences.map((ref, idx) => (
+                  <Chip
+                    key={idx}
+                    label={ref.length > 50 ? ref.substring(0, 50) + '...' : ref}
+                    size="small"
+                    onDelete={() => handleRemoveReference(idx)}
+                    onClick={() => window.open(ref, '_blank')}
+                    sx={{ cursor: 'pointer' }}
+                  />
+                ))}
+              </Box>
+            ) : (
+              <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
+                No references added
+              </Typography>
+            )}
+          </Section>
+        </Box>
+      )}
 
-        {/* Activity / Timeline */}
-        <Section 
-          title="Activity" 
-          icon={HistoryIcon} 
-          defaultOpen={true}
-          badge={activity.length > 0 ? activity.length : undefined}
-        >
+      {activeTab === 2 && (
+        /* Activity Tab */
+        <Box sx={{ 
+          bgcolor: 'rgba(255,255,255,0.02)', 
+          borderRadius: 2, 
+          border: '1px solid rgba(255,255,255,0.06)',
+          p: 2.5,
+        }}>
           {/* Comment input */}
           <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
             <TextField
@@ -1378,7 +1410,7 @@ const IncidentDetailPage = () => {
 
           <Divider sx={{ mb: 2, borderColor: 'rgba(255,255,255,0.06)' }} />
 
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, maxHeight: 400, overflowY: 'auto' }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, maxHeight: 500, overflowY: 'auto' }}>
             {activity.length === 0 ? (
               <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center', py: 3 }}>
                 No activity yet
@@ -1407,8 +1439,8 @@ const IncidentDetailPage = () => {
               ))
             )}
           </Box>
-        </Section>
-      </Box>
+        </Box>
+      )}
 
       <ResolveIncidentDialog
         open={showResolveDialog}
