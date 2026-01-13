@@ -341,10 +341,28 @@ export const EnrichmentConfig = ({
     });
   };
 
+  // Get app info for checking default enable state
+  const getAppInfo = (optionId: string, appId: string): ConnectedApp | undefined => {
+    const option = enrichmentOptions.find(o => o.id === optionId);
+    if (!option) return undefined;
+    if (option.ingestionSources) {
+      return option.ingestionSources.flatMap(s => s.apps).find(a => a.id === appId);
+    }
+    if (option.connectedApps) {
+      return option.connectedApps.find(a => a.id === appId);
+    }
+    return undefined;
+  };
+
   const isToolEnabled = (optionId: string, appId: string): boolean => {
     const current = enrichmentState[optionId];
-    if (!current?.tools) return true; // Default to enabled
-    return current.tools[appId] !== false;
+    // If explicitly set, use that value
+    if (current?.tools && appId in current.tools) {
+      return current.tools[appId] !== false;
+    }
+    // Default: only enable if both selected in this setup AND validated
+    const appInfo = getAppInfo(optionId, appId);
+    return appInfo?.isSelected === true && appInfo?.isValidated === true;
   };
 
   // Get all tools for an option (from ingestion sources or connected apps)
