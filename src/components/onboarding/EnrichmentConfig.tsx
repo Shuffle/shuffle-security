@@ -162,11 +162,26 @@ export const EnrichmentConfig = ({
 }: EnrichmentConfigProps) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  // Deduplicate apps by normalized name (same logic as sidebar)
+  const deduplicateApps = (apps: ApiAuthEntry[]): ApiAuthEntry[] => {
+    const appMap = new Map<string, ApiAuthEntry>();
+    apps.forEach(auth => {
+      // Normalize: lowercase, trim, replace spaces/underscores for deduplication
+      const normalizedName = auth.app.name.toLowerCase().trim().replace(/[\s_-]+/g, '_');
+      const existing = appMap.get(normalizedName);
+      // Prioritize validated apps
+      if (!existing || (auth.validation?.valid && !existing.validation?.valid)) {
+        appMap.set(normalizedName, auth);
+      }
+    });
+    return Array.from(appMap.values());
+  };
+
   // Build dynamic options based on connected apps
   const enrichmentOptions = useMemo(() => {
-    // Get validated/active apps
-    const validatedApps = authenticatedApps.filter(
-      auth => auth.active || auth.validation?.valid
+    // Get validated/active apps and deduplicate
+    const validatedApps = deduplicateApps(
+      authenticatedApps.filter(auth => auth.active || auth.validation?.valid)
     );
     
     // Build ingestion sources by category
@@ -211,10 +226,10 @@ export const EnrichmentConfig = ({
       return opt;
     });
     
-    // Email apps for Email Notifications
+    // Email apps for Email Notifications (already deduplicated)
     const emailApps = validatedApps.filter(auth => isEmailApp(auth.app.name));
     
-    // Communication apps for Chat Notifications
+    // Communication apps for Chat Notifications (already deduplicated)
     const commApps = validatedApps.filter(auth => isCommunicationApp(auth));
     
     // Add Email Notifications
