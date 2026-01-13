@@ -992,21 +992,104 @@ const IncidentDetailPage = () => {
                 sx={{ flex: 1 }}
               />
             </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5, flexWrap: 'wrap' }}>
               <Typography variant="caption" sx={{ color: 'text.secondary', fontFamily: 'monospace' }}>
                 {incident.source}
               </Typography>
-              <Typography variant="caption" sx={{ color: 'text.secondary' }}>•</Typography>
-              <Chip
-                size="small"
-                label={editedStatus === 'new' ? 'New' : editedStatus === 'in_progress' ? 'In Progress' : 'Resolved'}
-                sx={{
-                  height: 20,
-                  fontSize: '0.7rem',
-                  backgroundColor: statusColors[editedStatus]?.bg,
-                  color: statusColors[editedStatus]?.text,
-                }}
-              />
+              <Typography variant="caption" sx={{ color: 'text.disabled' }}>•</Typography>
+              
+              {/* Status dropdown */}
+              <FormControl size="small" variant="standard">
+                <Select
+                  value={editedStatus}
+                  onChange={(e) => setEditedStatus(e.target.value)}
+                  disableUnderline
+                  sx={{
+                    fontSize: '0.7rem',
+                    fontWeight: 600,
+                    bgcolor: statusColors[editedStatus]?.bg,
+                    color: statusColors[editedStatus]?.text,
+                    borderRadius: 1,
+                    px: 1,
+                    py: 0.25,
+                    '& .MuiSelect-select': { py: 0, pr: 2.5 },
+                    '& .MuiSvgIcon-root': { color: statusColors[editedStatus]?.text, fontSize: 16 },
+                  }}
+                >
+                  <MenuItem value="new">New</MenuItem>
+                  <MenuItem value="in_progress">In Progress</MenuItem>
+                  <MenuItem value="resolved">Resolved</MenuItem>
+                </Select>
+              </FormControl>
+              
+              <Typography variant="caption" sx={{ color: 'text.disabled' }}>•</Typography>
+              
+              {/* Severity dropdown */}
+              <FormControl size="small" variant="standard">
+                <Select
+                  value={editedSeverity}
+                  onChange={(e) => setEditedSeverity(e.target.value)}
+                  disableUnderline
+                  sx={{
+                    fontSize: '0.7rem',
+                    fontWeight: 600,
+                    bgcolor: `${severityColors[editedSeverity]}20`,
+                    color: severityColors[editedSeverity],
+                    borderRadius: 1,
+                    px: 1,
+                    py: 0.25,
+                    textTransform: 'capitalize',
+                    '& .MuiSelect-select': { py: 0, pr: 2.5 },
+                    '& .MuiSvgIcon-root': { color: severityColors[editedSeverity], fontSize: 16 },
+                  }}
+                >
+                  <MenuItem value="critical">Critical</MenuItem>
+                  <MenuItem value="high">High</MenuItem>
+                  <MenuItem value="medium">Medium</MenuItem>
+                  <MenuItem value="low">Low</MenuItem>
+                  <MenuItem value="informational">Informational</MenuItem>
+                </Select>
+              </FormControl>
+              
+              <Typography variant="caption" sx={{ color: 'text.disabled' }}>•</Typography>
+              
+              {/* Assignee dropdown */}
+              <FormControl size="small" variant="standard">
+                <Select
+                  value={editedAssignee || ''}
+                  onChange={(e) => setEditedAssignee(e.target.value)}
+                  displayEmpty
+                  disableUnderline
+                  disabled={usersLoading}
+                  sx={{
+                    fontSize: '0.7rem',
+                    fontWeight: 500,
+                    color: editedAssignee ? 'text.primary' : 'text.secondary',
+                    '& .MuiSelect-select': { py: 0, pr: 2.5 },
+                    '& .MuiSvgIcon-root': { fontSize: 16 },
+                  }}
+                  renderValue={(value) => value || 'Unassigned'}
+                >
+                  <MenuItem value="">Unassigned</MenuItem>
+                  <MenuItem value="AI Agent">
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#22c55e' }} />
+                      AI Agent
+                    </Box>
+                  </MenuItem>
+                  {users.map((user) => (
+                    <MenuItem key={user.id} value={user.username}>{user.username}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              
+              <Typography variant="caption" sx={{ color: 'text.disabled' }}>•</Typography>
+              
+              {/* Last edited */}
+              <Typography variant="caption" sx={{ color: 'text.disabled', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <AccessTimeIcon sx={{ fontSize: 12 }} />
+                {incident.editedTs ? formatTimestamp(incident.editedTs) : formatTimestamp(incident.createdTs)}
+              </Typography>
             </Box>
           </Box>
 
