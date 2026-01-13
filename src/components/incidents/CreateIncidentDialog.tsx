@@ -19,9 +19,11 @@ import {
   Switch,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import PlaylistAddCheckIcon from '@mui/icons-material/PlaylistAddCheck';
 import { useUsers } from '@/hooks/useUsers';
 import { useCustomFields, CustomField } from '@/hooks/useCustomFields';
 import { useIOCTypes } from '@/hooks/useIOCTypes';
+import { useCaseTemplates, CaseTemplate } from '@/hooks/useCaseTemplates';
 
 // Generate a 10-character unique ID
 const generateIncidentId = (): string => {
@@ -188,10 +190,44 @@ export const CreateIncidentDialog = ({ open, onClose, onSubmit }: CreateIncident
   const [newObservableType, setNewObservableType] = useState('ip');
   const [newObservableValue, setNewObservableValue] = useState('');
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, string | number | boolean>>({});
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
+  const [tasks, setTasks] = useState<IncidentTask[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { users, loading: usersLoading } = useUsers();
   const { fields: customFields } = useCustomFields();
   const { observableTypeNames } = useIOCTypes();
+  const { templates, trackUsage } = useCaseTemplates();
+
+  // Handle template selection
+  const handleTemplateSelect = (templateId: string) => {
+    setSelectedTemplateId(templateId);
+    if (templateId) {
+      const template = templates.find(t => t.id === templateId);
+      if (template) {
+        // Apply template tasks
+        const templateTasks: IncidentTask[] = template.tasks.map((t, index) => ({
+          id: `task-${Date.now()}-${index}`,
+          title: t.title,
+          description: t.description,
+          category: t.category,
+          assignee: t.assignee,
+          dependsOn: t.dependsOn,
+          completed: false,
+          createdAt: Date.now(),
+        }));
+        setTasks(templateTasks);
+        // Optionally set severity from template
+        if (template.severity) {
+          const severityOption = severityOptions.find(s => s.value === template.severity);
+          if (severityOption) {
+            setSeverityId(severityOption.id);
+          }
+        }
+      }
+    } else {
+      setTasks([]);
+    }
+  };
 
   const handleAddReference = () => {
     if (newReference.trim()) {
@@ -247,6 +283,7 @@ export const CreateIncidentDialog = ({ open, onClose, onSubmit }: CreateIncident
       pap,
       assignee: assignee.trim() || undefined,
       customFields: Object.keys(customFieldValues).length > 0 ? customFieldValues : undefined,
+      tasks: tasks.length > 0 ? tasks : undefined,
       metadata: {
         product: {
           name: source || 'Manual Entry',
@@ -255,6 +292,11 @@ export const CreateIncidentDialog = ({ open, onClose, onSubmit }: CreateIncident
         version: '1.0.0',
       },
     };
+
+    // Track template usage if one was selected
+    if (selectedTemplateId) {
+      await trackUsage(selectedTemplateId);
+    }
 
     await onSubmit(incident);
     setIsSubmitting(false);
@@ -275,6 +317,8 @@ export const CreateIncidentDialog = ({ open, onClose, onSubmit }: CreateIncident
     setNewObservableType('ip');
     setNewObservableValue('');
     setCustomFieldValues({});
+    setSelectedTemplateId('');
+    setTasks([]);
     onClose();
   };
 
@@ -386,6 +430,67 @@ export const CreateIncidentDialog = ({ open, onClose, onSubmit }: CreateIncident
       </DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 1 }}>
+          {/* Template Selection */}
+          {templates.length > 0 && (
+            <Box sx={{ 
+              p: 2, 
+              bgcolor: 'rgba(255, 102, 0, 0.05)', 
+              borderRadius: 2, 
+              border: '1px solid rgba(255, 102, 0, 0.2)',
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+                <PlaylistAddCheckIcon sx={{ fontSize: 18, color: '#ff6600' }} />
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                  Apply Template
+                </Typography>
+                <Typography variant="caption" sx={{ color: 'text.secondary', ml: 'auto' }}>
+                  Optional
+                </Typography>
+              </Box>
+              <FormControl fullWidth size="small">
+                <Select
+                  value={selectedTemplateId}
+                  onChange={(e) => handleTemplateSelect(e.target.value)}
+                  displayEmpty
+                  sx={{ bgcolor: 'background.paper' }}
+                >
+                  <MenuItem value="">
+                    <em>No template (start blank)</em>
+                  </MenuItem>
+                  {templates.map((template) => (
+                    <MenuItem key={template.id} value={template.id}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+                        <Typography variant="body2">{template.name}</Typography>
+                        <Typography variant="caption" sx={{ color: 'text.secondary', ml: 'auto' }}>
+                          {template.tasks.length} tasks
+                        </Typography>
+                      </Box>
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              {selectedTemplateId && tasks.length > 0 && (
+                <Box sx={{ mt: 1.5, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {tasks.slice(0, 3).map((task) => (
+                    <Chip 
+                      key={task.id} 
+                      label={task.title} 
+                      size="small" 
+                      sx={{ fontSize: '0.7rem', height: 22 }} 
+                    />
+                  ))}
+                  {tasks.length > 3 && (
+                    <Chip 
+                      label={`+${tasks.length - 3} more`} 
+                      size="small" 
+                      sx={{ fontSize: '0.7rem', height: 22, bgcolor: 'rgba(255,255,255,0.1)' }} 
+                    />
+                  )}
+                </Box>
+              )}
+            </Box>
+          )}
+
           {/* Title */}
           <TextField
             label="Title"

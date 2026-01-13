@@ -216,6 +216,7 @@ export const deleteDatastoreItem = async (
 
   const payload: Record<string, string> = {
     key,
+    org_id: orgId,
   };
   
   if (category) {

@@ -48,6 +48,7 @@ import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { useUsers } from '@/hooks/useUsers';
 import { useCustomFields, CustomField } from '@/hooks/useCustomFields';
 import { useIOCTypes } from '@/hooks/useIOCTypes';
+import { useCaseTemplates, CaseTemplate } from '@/hooks/useCaseTemplates';
 import { 
   OCSFIncidentFinding, 
   Observable, 
@@ -65,48 +66,7 @@ import { TaskDateTimePicker } from '@/components/incidents/TaskDateTimePicker';
 import { FileAttachments } from '@/components/incidents/FileAttachments';
 import { toast } from 'sonner';
 
-interface TaskTemplate {
-  id: string;
-  name: string;
-  tasks: Omit<IncidentTask, 'id' | 'createdAt' | 'completed'>[];
-}
-
-// Default templates based on incident type/severity
-const DEFAULT_TASK_TEMPLATES: TaskTemplate[] = [
-  {
-    id: 'standard-triage',
-    name: 'Standard Triage',
-    tasks: [
-      { title: 'Initial assessment', assignee: '' },
-      { title: 'Collect evidence', assignee: '', dependsOn: 'Initial assessment' },
-      { title: 'Determine scope', assignee: '', dependsOn: 'Collect evidence' },
-      { title: 'Document findings', assignee: '' },
-    ],
-  },
-  {
-    id: 'malware-investigation',
-    name: 'Malware Investigation',
-    tasks: [
-      { title: 'Isolate affected systems', assignee: '' },
-      { title: 'Capture memory dump', assignee: '', dependsOn: 'Isolate affected systems' },
-      { title: 'Analyze malware sample', assignee: '' },
-      { title: 'Identify IOCs', assignee: '', dependsOn: 'Analyze malware sample' },
-      { title: 'Check lateral movement', assignee: '', dependsOn: 'Identify IOCs' },
-      { title: 'Remediation plan', assignee: '' },
-    ],
-  },
-  {
-    id: 'phishing-response',
-    name: 'Phishing Response',
-    tasks: [
-      { title: 'Identify recipients', assignee: '' },
-      { title: 'Block sender domain', assignee: '' },
-      { title: 'Check for clicks/downloads', assignee: '', dependsOn: 'Identify recipients' },
-      { title: 'Reset compromised credentials', assignee: '', dependsOn: 'Check for clicks/downloads' },
-      { title: 'User awareness notification', assignee: '' },
-    ],
-  },
-];
+// TaskTemplate interface is now imported from useCaseTemplates
 
 interface DisplayIncident {
   id: string;
@@ -367,6 +327,7 @@ const IncidentDetailPage = () => {
   const { users, loading: usersLoading } = useUsers();
   const { fields: customFields } = useCustomFields();
   const { observableTypeNames } = useIOCTypes();
+  const { templates: caseTemplates, trackUsage: trackTemplateUsage } = useCaseTemplates();
   const { addItem } = useDatastore({
     category: DATASTORE_CATEGORIES.INCIDENTS,
   });
@@ -792,11 +753,13 @@ const IncidentDetailPage = () => {
     setTasks(tasks.filter(task => task.id !== taskId));
   };
 
-  const handleApplyTemplate = (template: TaskTemplate) => {
+  const handleApplyTemplate = async (template: CaseTemplate) => {
     autoProgressStatus();
     const newTasks: IncidentTask[] = template.tasks.map((t, index) => ({
       id: `task-${Date.now()}-${index}`,
       title: t.title,
+      description: t.description,
+      category: t.category,
       completed: false,
       assignee: t.assignee || undefined,
       dependsOn: t.dependsOn,
@@ -805,6 +768,7 @@ const IncidentDetailPage = () => {
     }));
     setTasks([...tasks, ...newTasks]);
     setShowTemplateMenu(false);
+    await trackTemplateUsage(template.id);
     toast.success(`Applied "${template.name}" template`);
   };
 
@@ -1321,7 +1285,7 @@ const IncidentDetailPage = () => {
                     <Typography variant="caption" sx={{ px: 2, color: 'text.secondary', display: 'block', mb: 0.5 }}>
                       Apply Template
                     </Typography>
-                    {DEFAULT_TASK_TEMPLATES.map((template) => (
+                    {caseTemplates.map((template) => (
                       <Box 
                         key={template.id}
                         onClick={() => handleApplyTemplate(template)}
