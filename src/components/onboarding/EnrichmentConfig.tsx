@@ -183,34 +183,36 @@ interface ThreatIntelSource {
 interface SourceChipProps {
   label: string;
   apps: ConnectedApp[];
-  validatedCount: number;
-  pendingCount: number;
-  hasEnabledValidated: boolean;
-  hasPending: boolean;
+  activeCount: number;
+  totalCount: number;
+  hasAnyActive: boolean;
   optionId: string;
   isToolEnabled: (optionId: string, appId: string) => boolean;
 }
 
-const SourceChip = ({ label, apps, validatedCount, pendingCount, hasEnabledValidated, hasPending }: SourceChipProps) => {
+const SourceChip = ({ label, apps, activeCount, totalCount, hasAnyActive, optionId, isToolEnabled }: SourceChipProps) => {
   const hasAny = apps.length > 0;
+  // Filter to only show active (enabled) apps
+  const activeApps = apps.filter(app => isToolEnabled(optionId, app.id));
+  
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, px: 1.5, py: 0.75, borderRadius: 2,
-      background: hasEnabledValidated ? 'rgba(34, 197, 94, 0.1)' : hasPending ? 'rgba(255, 152, 0, 0.1)' : 'rgba(255, 255, 255, 0.05)',
-      border: '1px solid', borderColor: hasEnabledValidated ? 'rgba(34, 197, 94, 0.3)' : hasPending ? 'rgba(255, 152, 0, 0.3)' : 'rgba(255, 255, 255, 0.1)',
+      background: hasAnyActive ? 'rgba(34, 197, 94, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+      border: '1px solid', borderColor: hasAnyActive ? 'rgba(34, 197, 94, 0.3)' : 'rgba(255, 255, 255, 0.1)',
     }}>
-      <Typography variant="caption" sx={{ color: hasEnabledValidated ? '#22c55e' : hasPending ? '#ff9800' : 'rgba(255, 255, 255, 0.4)', fontWeight: 500 }}>
-        {label}{hasAny && <Box component="span" sx={{ ml: 0.5, opacity: 0.8 }}>({validatedCount}{pendingCount > 0 ? `+${pendingCount}` : ''})</Box>}
+      <Typography variant="caption" sx={{ color: hasAnyActive ? '#22c55e' : 'rgba(255, 255, 255, 0.4)', fontWeight: 500 }}>
+        {label}{hasAny && <Box component="span" sx={{ ml: 0.5, opacity: 0.8 }}>({activeCount}/{totalCount})</Box>}
       </Typography>
-      {apps.length > 0 && (
+      {activeApps.length > 0 && (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
-          {apps.slice(0, 2).map((app) => (
-            <Tooltip key={app.id} title={<Box><Typography variant="caption" sx={{ fontWeight: 600 }}>{app.name}</Typography><Typography variant="caption" sx={{ display: 'block', opacity: 0.8 }}>{app.isValidated ? 'Validated' : app.hasAuthConfig ? 'Pending validation' : 'Pending auth'}{app.isSelected ? ' • This setup' : ' • Pre-existing'}</Typography></Box>} arrow placement="top">
+          {activeApps.slice(0, 2).map((app) => (
+            <Tooltip key={app.id} title={<Box><Typography variant="caption" sx={{ fontWeight: 600 }}>{app.name}</Typography><Typography variant="caption" sx={{ display: 'block', opacity: 0.8 }}>Active{app.isSelected ? ' • This setup' : ' • Pre-existing'}</Typography></Box>} arrow placement="top">
               <Box sx={{ position: 'relative' }}>
-                <Avatar src={app.image} alt={app.name} sx={{ width: 16, height: 16, fontSize: '0.5rem', border: '1px solid', borderColor: app.isValidated ? 'rgba(34, 197, 94, 0.5)' : app.hasAuthConfig ? 'rgba(255, 152, 0, 0.5)' : 'rgba(239, 68, 68, 0.5)', opacity: app.isValidated ? 1 : 0.7, outline: app.isSelected ? '2px solid rgba(59, 130, 246, 0.5)' : 'none', outlineOffset: 1 }}>{app.name[0]}</Avatar>
+                <Avatar src={app.image} alt={app.name} sx={{ width: 16, height: 16, fontSize: '0.5rem', border: '1px solid', borderColor: 'rgba(34, 197, 94, 0.5)' }}>{app.name[0]}</Avatar>
               </Box>
             </Tooltip>
           ))}
-          {apps.length > 2 && <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.6rem', ml: 0.25 }}>+{apps.length - 2}</Typography>}
+          {activeApps.length > 2 && <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.6rem', ml: 0.25 }}>+{activeApps.length - 2}</Typography>}
         </Box>
       )}
     </Box>
@@ -655,21 +657,18 @@ export const EnrichmentConfig = ({
                         {option.ingestionSources && (
                           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                             {option.ingestionSources.map((source) => {
-                              const validatedApps = source.apps.filter(a => a.isValidated);
-                              const validatedCount = validatedApps.length;
-                              const pendingCount = source.apps.length - validatedCount;
-                              const hasEnabledValidated = validatedApps.some(a => isToolEnabled(option.id, a.id));
-                              const hasPending = pendingCount > 0;
+                              const activeCount = source.apps.filter(a => isToolEnabled(option.id, a.id)).length;
+                              const totalCount = source.apps.length;
+                              const hasAnyActive = activeCount > 0;
                               
                               return (
                                 <SourceChip
                                   key={source.category}
                                   label={source.label}
                                   apps={source.apps}
-                                  validatedCount={validatedCount}
-                                  pendingCount={pendingCount}
-                                  hasEnabledValidated={hasEnabledValidated}
-                                  hasPending={hasPending}
+                                  activeCount={activeCount}
+                                  totalCount={totalCount}
+                                  hasAnyActive={hasAnyActive}
                                   optionId={option.id}
                                   isToolEnabled={isToolEnabled}
                                 />
@@ -682,21 +681,18 @@ export const EnrichmentConfig = ({
                         {option.notificationSources && (
                           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                             {option.notificationSources.map((source) => {
-                              const validatedApps = source.apps.filter(a => a.isValidated);
-                              const validatedCount = validatedApps.length;
-                              const pendingCount = source.apps.length - validatedCount;
-                              const hasEnabledValidated = validatedApps.some(a => isToolEnabled(option.id, a.id));
-                              const hasPending = pendingCount > 0;
+                              const activeCount = source.apps.filter(a => isToolEnabled(option.id, a.id)).length;
+                              const totalCount = source.apps.length;
+                              const hasAnyActive = activeCount > 0;
                               
                               return (
                                 <SourceChip
                                   key={source.category}
                                   label={source.label}
                                   apps={source.apps}
-                                  validatedCount={validatedCount}
-                                  pendingCount={pendingCount}
-                                  hasEnabledValidated={hasEnabledValidated}
-                                  hasPending={hasPending}
+                                  activeCount={activeCount}
+                                  totalCount={totalCount}
+                                  hasAnyActive={hasAnyActive}
                                   optionId={option.id}
                                   isToolEnabled={isToolEnabled}
                                 />
@@ -709,21 +705,18 @@ export const EnrichmentConfig = ({
                         {option.threatIntelSources && (
                           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                             {option.threatIntelSources.map((source) => {
-                              const validatedApps = source.apps.filter(a => a.isValidated);
-                              const validatedCount = validatedApps.length;
-                              const pendingCount = source.apps.length - validatedCount;
-                              const hasEnabledValidated = validatedApps.some(a => isToolEnabled(option.id, a.id));
-                              const hasPending = pendingCount > 0;
+                              const activeCount = source.apps.filter(a => isToolEnabled(option.id, a.id)).length;
+                              const totalCount = source.apps.length;
+                              const hasAnyActive = activeCount > 0;
                               
                               return (
                                 <SourceChip
                                   key={source.category}
                                   label={source.label}
                                   apps={source.apps}
-                                  validatedCount={validatedCount}
-                                  pendingCount={pendingCount}
-                                  hasEnabledValidated={hasEnabledValidated}
-                                  hasPending={hasPending}
+                                  activeCount={activeCount}
+                                  totalCount={totalCount}
+                                  hasAnyActive={hasAnyActive}
                                   optionId={option.id}
                                   isToolEnabled={isToolEnabled}
                                 />
