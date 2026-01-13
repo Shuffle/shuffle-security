@@ -601,30 +601,43 @@ const IncidentDetailPage = () => {
     };
   }, [incident]);
 
+  // Auto-transition status to "in_progress" when any action is taken
+  const autoProgressStatus = useCallback(() => {
+    if (editedStatus === 'new') {
+      setEditedStatus('in_progress');
+    }
+  }, [editedStatus]);
+
   const handleAddReference = () => {
     if (newReference.trim()) {
+      autoProgressStatus();
       setEditedReferences([...editedReferences, newReference.trim()]);
       setNewReference('');
     }
   };
 
   const handleRemoveReference = (index: number) => {
+    autoProgressStatus();
     setEditedReferences(editedReferences.filter((_, i) => i !== index));
   };
 
   const handleAddObservable = () => {
     if (newObservableValue.trim()) {
+      autoProgressStatus();
       setEditedObservables([...editedObservables, { type: newObservableType, value: newObservableValue.trim() }]);
       setNewObservableValue('');
     }
   };
 
   const handleRemoveObservable = (index: number) => {
+    autoProgressStatus();
     setEditedObservables(editedObservables.filter((_, i) => i !== index));
   };
 
   const handleAddComment = async () => {
     if (!newComment.trim() || !incident?.rawOCSF) return;
+    
+    autoProgressStatus();
     
     const commentActivity: ActivityItem = {
       id: `comment-${Date.now()}`,
@@ -707,6 +720,7 @@ const IncidentDetailPage = () => {
   // Task handlers
   const handleAddTask = () => {
     if (!newTaskTitle.trim()) return;
+    autoProgressStatus();
     const newTask: IncidentTask = {
       id: `task-${Date.now()}`,
       title: newTaskTitle.trim(),
@@ -719,6 +733,7 @@ const IncidentDetailPage = () => {
   };
 
   const handleToggleTask = (taskId: string) => {
+    autoProgressStatus();
     setTasks(tasks.map(task => 
       task.id === taskId 
         ? { 
@@ -771,6 +786,7 @@ const IncidentDetailPage = () => {
   };
 
   const handleApplyTemplate = (template: TaskTemplate) => {
+    autoProgressStatus();
     const newTasks: IncidentTask[] = template.tasks.map((t, index) => ({
       id: `task-${Date.now()}-${index}`,
       title: t.title,
@@ -996,34 +1012,19 @@ const IncidentDetailPage = () => {
               />
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5, flexWrap: 'wrap' }}>
-              {/* Status dropdown - no "New" option */}
-              <FormControl size="small" variant="standard">
-                <Select
-                  value={editedStatus}
-                  onChange={(e) => setEditedStatus(e.target.value)}
-                  disableUnderline
-                  sx={{
-                    fontSize: '0.7rem',
-                    fontWeight: 600,
-                    bgcolor: statusColors[editedStatus]?.bg,
-                    color: statusColors[editedStatus]?.text,
-                    borderRadius: 1,
-                    px: 1,
-                    py: 0.25,
-                    '& .MuiSelect-select': { py: 0, pr: 2.5 },
-                    '& .MuiSvgIcon-root': { color: statusColors[editedStatus]?.text, fontSize: 16 },
-                  }}
-                  MenuProps={{
-                    PaperProps: {
-                      sx: { bgcolor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }
-                    }
-                  }}
-                >
-                  {editedStatus === 'new' && <MenuItem value="new">New</MenuItem>}
-                  <MenuItem value="in_progress">In Progress</MenuItem>
-                  <MenuItem value="resolved">Resolved</MenuItem>
-                </Select>
-              </FormControl>
+              {/* Status badge (read-only) */}
+              <Chip
+                label={editedStatus === 'new' ? 'New' : editedStatus === 'in_progress' ? 'In Progress' : 'Resolved'}
+                size="small"
+                sx={{
+                  fontSize: '0.7rem',
+                  fontWeight: 600,
+                  height: 22,
+                  bgcolor: statusColors[editedStatus]?.bg,
+                  color: statusColors[editedStatus]?.text,
+                  '& .MuiChip-label': { px: 1.5 },
+                }}
+              />
               
               <Typography variant="caption" sx={{ color: 'text.disabled' }}>•</Typography>
               
