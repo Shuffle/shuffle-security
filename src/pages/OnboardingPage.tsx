@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Box, Container, Typography, Button, Chip, Stack } from '@mui/material';
+import { Box, Container, Typography, Button, Chip, Stack, Tooltip } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { TicketingSystemSearch } from '@/components/onboarding/TicketingSystemSearch';
@@ -540,68 +540,209 @@ const OnboardingPage = () => {
                   )}
 
                   {activeStep === 3 && (
-                    <Box sx={{ textAlign: 'center', py: 6 }}>
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-                      >
+                    <Box sx={{ py: 4 }}>
+                      {/* Success Header */}
+                      <Box sx={{ textAlign: 'center', mb: 5 }}>
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+                        >
+                          <Box
+                            sx={{
+                              width: 80,
+                              height: 80,
+                              borderRadius: '50%',
+                              background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              mx: 'auto',
+                              mb: 3,
+                              boxShadow: '0 0 40px rgba(34, 197, 94, 0.4)',
+                            }}
+                          >
+                            <CheckCircleOutlineIcon sx={{ fontSize: 44, color: 'white' }} />
+                          </Box>
+                        </motion.div>
+                        <Typography
+                          variant="h4"
+                          sx={{ color: 'white', fontWeight: 700, mb: 1, fontSize: { xs: '1.5rem', sm: '2rem' } }}
+                        >
+                          You're All Set!
+                        </Typography>
+                        <Typography
+                          variant="body1"
+                          sx={{ color: 'rgba(255, 255, 255, 0.6)', maxWidth: 400, mx: 'auto' }}
+                        >
+                          Your security automation is configured and ready to go.
+                        </Typography>
+                      </Box>
+
+                      {/* Two Column Layout */}
+                      <Box sx={{ 
+                        display: 'grid', 
+                        gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, 
+                        gap: 3,
+                      }}>
+                        {/* Connected Apps Section */}
                         <Box
                           sx={{
-                            width: 100,
-                            height: 100,
-                            borderRadius: '50%',
-                            background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            mx: 'auto',
-                            mb: 4,
-                            boxShadow: '0 0 40px rgba(34, 197, 94, 0.4)',
+                            background: 'rgba(0, 0, 0, 0.2)',
+                            borderRadius: 3,
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                            p: 3,
                           }}
                         >
-                          <CheckCircleOutlineIcon sx={{ fontSize: 56, color: 'white' }} />
+                          <Typography
+                            sx={{ color: 'white', fontWeight: 600, mb: 2, fontSize: '1rem' }}
+                          >
+                            Connected Apps ({authenticatedApps.filter(a => a.validation?.valid).length}/{authenticatedApps.length})
+                          </Typography>
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
+                            {authenticatedApps.length > 0 ? (
+                              authenticatedApps.map((auth, index) => {
+                                const isValid = auth.validation?.valid === true;
+                                return (
+                                  <Tooltip 
+                                    key={`${auth.app?.id || index}`} 
+                                    title={
+                                      <Box sx={{ textAlign: 'left', p: 0.5 }}>
+                                        <Typography sx={{ fontWeight: 600, fontSize: '0.85rem' }}>
+                                          {auth.app?.name?.replace(/_/g, ' ') || 'Unknown'}
+                                        </Typography>
+                                        <Typography sx={{ fontSize: '0.75rem', color: isValid ? '#22c55e' : '#f59e0b' }}>
+                                          {isValid ? 'Validated' : 'Pending validation'}
+                                        </Typography>
+                                      </Box>
+                                    }
+                                    placement="top"
+                                  >
+                                    <Box
+                                      sx={{
+                                        position: 'relative',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                      }}
+                                    >
+                                      {auth.app?.large_image ? (
+                                        <Box
+                                          component="img"
+                                          src={auth.app.large_image}
+                                          alt={auth.app?.name || 'App'}
+                                          sx={{
+                                            width: 36,
+                                            height: 36,
+                                            borderRadius: '50%',
+                                            objectFit: 'contain',
+                                            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                            p: 0.5,
+                                          }}
+                                        />
+                                      ) : (
+                                        <Box
+                                          sx={{
+                                            width: 36,
+                                            height: 36,
+                                            borderRadius: '50%',
+                                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            fontSize: '0.875rem',
+                                            color: 'white',
+                                            fontWeight: 600,
+                                          }}
+                                        >
+                                          {auth.app?.name?.charAt(0)?.toUpperCase() || '?'}
+                                        </Box>
+                                      )}
+                                      <Box
+                                        sx={{
+                                          position: 'absolute',
+                                          bottom: -2,
+                                          right: -2,
+                                          width: 12,
+                                          height: 12,
+                                          borderRadius: '50%',
+                                          backgroundColor: isValid ? '#22c55e' : '#f59e0b',
+                                          border: '2px solid rgba(33, 33, 33, 0.9)',
+                                        }}
+                                      />
+                                    </Box>
+                                  </Tooltip>
+                                );
+                              })
+                            ) : (
+                              <Typography sx={{ color: 'rgba(255, 255, 255, 0.4)', fontSize: '0.875rem' }}>
+                                No apps connected yet
+                              </Typography>
+                            )}
+                          </Box>
                         </Box>
-                      </motion.div>
-                      <Typography
-                        variant="h4"
-                        sx={{ color: 'white', fontWeight: 700, mb: 2 }}
-                      >
-                        You're All Set!
-                      </Typography>
-                      <Typography
-                        variant="body1"
-                        sx={{ color: 'rgba(255, 255, 255, 0.6)', mb: 4, maxWidth: 400, mx: 'auto' }}
-                      >
-                        {connectedCount} integration{connectedCount !== 1 ? 's' : ''} connected.
-                        You can manage your integrations anytime from the sidebar.
-                      </Typography>
-                      <Stack direction="row" spacing={1} justifyContent="center" flexWrap="wrap" useFlexGap>
-                        {selectedApps
-                          .filter((app) => authStates[app.objectID]?.status === 'connected')
-                          .map((app) => (
-                            <Chip
-                              key={app.objectID}
-                              label={app.name.replace(/_/g, ' ')}
-                              avatar={
-                                app.image_url ? (
-                                  <Box
-                                    component="img"
-                                    src={app.image_url}
-                                    alt={app.name}
-                                    sx={{ width: 24, height: 24, borderRadius: '50%' }}
+
+                        {/* Automation Status Section */}
+                        <Box
+                          sx={{
+                            background: 'rgba(0, 0, 0, 0.2)',
+                            borderRadius: 3,
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                            p: 3,
+                          }}
+                        >
+                          <Typography
+                            sx={{ color: 'white', fontWeight: 600, mb: 2, fontSize: '1rem' }}
+                          >
+                            Automation Enabled
+                          </Typography>
+                          <Stack spacing={1.5}>
+                            {[
+                              { key: 'automatic_ingestion', label: 'Automatic Ingestion', icon: '📥' },
+                              { key: 'threat_list', label: 'Threat Intel Comparison', icon: '🛡️' },
+                              { key: 'email_notify', label: 'Email Notifications', icon: '📧' },
+                              { key: 'chat_notify', label: 'Chat Notifications', icon: '💬' },
+                            ].map(({ key, label, icon }) => {
+                              const isEnabled = enrichmentState[key]?.enabled;
+                              return (
+                                <Box
+                                  key={key}
+                                  sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1.5,
+                                    py: 0.75,
+                                  }}
+                                >
+                                  <Typography sx={{ fontSize: '1.1rem' }}>{icon}</Typography>
+                                  <Typography
+                                    sx={{
+                                      color: isEnabled ? 'white' : 'rgba(255, 255, 255, 0.4)',
+                                      fontSize: '0.875rem',
+                                      flex: 1,
+                                    }}
+                                  >
+                                    {label}
+                                  </Typography>
+                                  <Chip
+                                    label={isEnabled ? 'Enabled' : 'Disabled'}
+                                    size="small"
+                                    sx={{
+                                      height: 22,
+                                      fontSize: '0.7rem',
+                                      backgroundColor: isEnabled
+                                        ? 'rgba(34, 197, 94, 0.15)'
+                                        : 'rgba(156, 163, 175, 0.15)',
+                                      color: isEnabled ? '#22c55e' : '#9ca3af',
+                                      fontWeight: 500,
+                                    }}
                                   />
-                                ) : undefined
-                              }
-                              sx={{
-                                background: 'rgba(34, 197, 94, 0.1)',
-                                border: '1px solid rgba(34, 197, 94, 0.3)',
-                                color: '#22c55e',
-                                fontWeight: 500,
-                              }}
-                            />
-                          ))}
-                      </Stack>
+                                </Box>
+                              );
+                            })}
+                          </Stack>
+                        </Box>
+                      </Box>
                     </Box>
                   )}
                 </motion.div>
