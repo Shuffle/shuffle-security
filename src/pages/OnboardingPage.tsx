@@ -105,7 +105,7 @@ const OnboardingPage = () => {
     fetchAuthenticatedApps();
   }, []);
 
-  const handleNext = async () => {
+  const handleNext = () => {
     if (activeStep === steps.length - 1) {
       const connectedApps = selectedApps.filter(
         (app) => authStates[app.objectID]?.status === 'connected'
@@ -113,36 +113,31 @@ const OnboardingPage = () => {
       localStorage.setItem('connected_integrations', JSON.stringify(connectedApps));
       navigate('/incidents');
     } else {
-      // When moving from step 0 (Select Tools) to step 1 (Authentication)
-      if (activeStep === 0 && selectedApps.length > 0) {
-        try {
-          // Save selected tools to datastore
-          await setDatastoreItem(SELECTED_TOOLS_KEY, selectedApps, ONBOARDING_CONFIG_CATEGORY);
-          
-          // Generate workflow for ingest
-          const appNames = selectedApps.map(app => app.name).join(',');
-          const generateResponse = await fetch(getApiUrl('/api/v2/workflows/generate'), {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${API_CONFIG.apiKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              label: 'Ingest Tickets',
-              app_name: appNames,
-              category: 'cases',
-            }),
-          });
-          
-          if (!generateResponse.ok) {
-            console.error('Failed to generate workflow:', await generateResponse.text());
-          }
-        } catch (error) {
-          console.error('Failed to save tools or generate workflow:', error);
-        }
-      }
-      
+      // Navigate immediately (optimistic)
       setActiveStep((prev) => prev + 1);
+      
+      // When moving from step 0 (Select Tools) to step 1 (Authentication)
+      // Run API calls in background
+      if (activeStep === 0 && selectedApps.length > 0) {
+        // Save selected tools to datastore (fire and forget)
+        setDatastoreItem(SELECTED_TOOLS_KEY, selectedApps, ONBOARDING_CONFIG_CATEGORY)
+          .catch(error => console.error('Failed to save tools:', error));
+        
+        // Generate workflow for ingest (fire and forget)
+        const appNames = selectedApps.map(app => app.name).join(',');
+        fetch(getApiUrl('/api/v2/workflows/generate'), {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            label: 'Ingest Tickets',
+            app_name: appNames,
+            category: 'cases',
+          }),
+        }).catch(error => console.error('Failed to generate workflow:', error));
+      }
     }
   };
 
