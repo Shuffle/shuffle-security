@@ -20,7 +20,8 @@ interface Integration {
   id: string;
   name: string;
   icon: string;
-  status: 'connected' | 'partial' | 'pending';
+  category: string;
+  hasValidAuth: boolean;
   authInstances: AuthInstance[];
 }
 
@@ -31,6 +32,7 @@ interface ApiAuthEntry {
     id: string;
     name: string;
     large_image?: string;
+    categories?: string[];
   };
   active?: boolean;
   validation?: {
@@ -75,6 +77,7 @@ export const IntegrationStatus = ({ collapsed }: IntegrationStatusProps) => {
             const appMap = new Map<string, { 
               app: ApiAuthEntry['app']; 
               instances: AuthInstance[];
+              hasValidAuth: boolean;
             }>();
             
             authData.forEach(entry => {
@@ -82,39 +85,40 @@ export const IntegrationStatus = ({ collapsed }: IntegrationStatusProps) => {
               
               const appName = entry.app.name.toLowerCase().trim();
               const existing = appMap.get(appName);
+              const isValidated = entry.validation?.valid === true;
               const instance: AuthInstance = {
                 label: entry.label || entry.id || 'Default',
-                isValidated: entry.validation?.valid === true,
+                isValidated,
               };
               
               if (existing) {
                 existing.instances.push(instance);
+                if (isValidated) existing.hasValidAuth = true;
               } else {
                 appMap.set(appName, { 
                   app: entry.app, 
-                  instances: [instance] 
+                  instances: [instance],
+                  hasValidAuth: isValidated,
                 });
               }
             });
             
-            // Convert to integration objects
-            const dedupedIntegrations = Array.from(appMap.values()).map(({ app, instances }) => {
-              const validatedCount = instances.filter(i => i.isValidated).length;
-              let status: Integration['status'] = 'pending';
-              if (validatedCount === instances.length) {
-                status = 'connected';
-              } else if (validatedCount > 0) {
-                status = 'partial';
-              }
-              
-              return {
+            // Convert to integration objects and sort by validation status
+            const dedupedIntegrations = Array.from(appMap.values())
+              .map(({ app, instances, hasValidAuth }) => ({
                 id: app.id,
                 name: app.name,
                 icon: app.large_image || '',
-                status,
+                category: app.categories?.[0] || 'Integration',
+                hasValidAuth,
                 authInstances: instances,
-              };
-            });
+              }))
+              .sort((a, b) => {
+                // Valid first, then alphabetically
+                if (a.hasValidAuth && !b.hasValidAuth) return -1;
+                if (!a.hasValidAuth && b.hasValidAuth) return 1;
+                return a.name.localeCompare(b.name);
+              });
             
             setIntegrations(dedupedIntegrations);
           }
@@ -129,15 +133,8 @@ export const IntegrationStatus = ({ collapsed }: IntegrationStatusProps) => {
     fetchIntegrations();
   }, []);
 
-  const getStatusColor = (status: Integration['status']) => {
-    switch (status) {
-      case 'connected':
-        return 'hsl(var(--severity-low))';
-      case 'partial':
-        return 'hsl(var(--severity-medium))';
-      default:
-        return 'hsl(var(--muted-foreground))';
-    }
+  const getStatusColor = (hasValidAuth: boolean) => {
+    return hasValidAuth ? 'hsl(var(--severity-low))' : 'hsl(var(--muted-foreground))';
   };
 
   // Icon-only view for both collapsed and expanded states
@@ -176,26 +173,32 @@ export const IntegrationStatus = ({ collapsed }: IntegrationStatusProps) => {
               <Tooltip 
                 key={integration.id} 
                 title={
-                  <Box sx={{ textAlign: 'left', minWidth: 140 }}>
-                    <Typography sx={{ fontWeight: 600, fontSize: '0.8rem', mb: 0.5 }}>
+                  <Box sx={{ textAlign: 'left', minWidth: 160, p: 0.5 }}>
+                    <Typography sx={{ fontWeight: 600, fontSize: '0.85rem', color: 'hsl(var(--foreground))' }}>
                       {integration.name}
                     </Typography>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
+                    <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', mb: 1, textTransform: 'capitalize' }}>
+                      {integration.category}
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                       {integration.authInstances.map((instance, idx) => (
-                        <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                           <Box 
                             sx={{ 
-                              width: 6, 
-                              height: 6, 
+                              width: 7, 
+                              height: 7, 
                               borderRadius: '50%', 
                               backgroundColor: instance.isValidated 
                                 ? 'hsl(var(--severity-low))' 
-                                : 'hsl(var(--muted-foreground))',
+                                : 'hsl(var(--severity-medium))',
                               flexShrink: 0,
                             }} 
                           />
-                          <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))' }}>
+                          <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--foreground))', opacity: 0.9 }}>
                             {instance.label}
+                          </Typography>
+                          <Typography sx={{ fontSize: '0.65rem', color: instance.isValidated ? 'hsl(var(--severity-low))' : 'hsl(var(--muted-foreground))', ml: 'auto' }}>
+                            {instance.isValidated ? 'Valid' : 'Pending'}
                           </Typography>
                         </Box>
                       ))}
@@ -258,7 +261,7 @@ export const IntegrationStatus = ({ collapsed }: IntegrationStatusProps) => {
                       width: 8,
                       height: 8,
                       borderRadius: '50%',
-                      backgroundColor: getStatusColor(integration.status),
+                      backgroundColor: getStatusColor(integration.hasValidAuth),
                       border: '1.5px solid hsl(var(--card))',
                     }}
                   />
