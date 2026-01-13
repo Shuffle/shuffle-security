@@ -476,8 +476,8 @@ const OnboardingPage = () => {
       </Box>
 
       {/* Scrollable Content Area */}
-      <Box sx={{ flex: 1, overflowY: 'auto', position: 'relative', zIndex: 1, pt: 18, pb: 10 }}>
-        <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Box sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', position: 'relative', zIndex: 1, pt: 18, pb: 10 }}>
+        <Container maxWidth="lg" sx={{ py: 4, px: { xs: 2, sm: 3 } }}>
           {/* Content Card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -490,8 +490,11 @@ const OnboardingPage = () => {
                 backdropFilter: 'blur(20px)',
                 border: '1px solid rgba(255, 255, 255, 0.08)',
                 borderRadius: 4,
-                p: { xs: 3, md: 5 },
+                p: { xs: 2, sm: 3, md: 5 },
                 minHeight: 400,
+                width: '100%',
+                maxWidth: '100%',
+                overflow: 'hidden',
               }}
             >
               <AnimatePresence mode="wait">
@@ -501,6 +504,7 @@ const OnboardingPage = () => {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   transition={{ duration: 0.3 }}
+                  style={{ width: '100%', maxWidth: '100%', overflow: 'hidden' }}
                 >
                   {activeStep === 0 && (
                     <TicketingSystemSearch
