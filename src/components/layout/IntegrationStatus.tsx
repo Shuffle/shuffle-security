@@ -39,6 +39,11 @@ export const IntegrationStatus = ({ collapsed }: IntegrationStatusProps) => {
   const navigate = useNavigate();
   const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [loading, setLoading] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+
+  const defaultLimit = collapsed ? 4 : 8;
+  const displayLimit = expanded ? integrations.length : defaultLimit;
+  const hasMore = integrations.length > defaultLimit;
 
   // Fetch enabled integrations from API
   useEffect(() => {
@@ -148,7 +153,7 @@ export const IntegrationStatus = ({ collapsed }: IntegrationStatusProps) => {
           <CircularProgress size={20} sx={{ color: 'hsl(var(--muted-foreground))' }} />
         ) : (
           <>
-            {integrations.slice(0, collapsed ? 4 : 8).map((integration) => (
+            {integrations.slice(0, displayLimit).map((integration) => (
               <Tooltip 
                 key={integration.id} 
                 title={
@@ -225,9 +230,10 @@ export const IntegrationStatus = ({ collapsed }: IntegrationStatusProps) => {
               </Tooltip>
             ))}
             
-            {integrations.length > (collapsed ? 4 : 8) && (
-              <Tooltip title={`+${integrations.length - (collapsed ? 4 : 8)} more integrations`} placement="right">
+            {hasMore && !expanded && (
+              <Tooltip title={`Show all ${integrations.length} integrations`} placement="right">
                 <Avatar
+                  onClick={() => setExpanded(true)}
                   sx={{
                     width: 26,
                     height: 26,
@@ -235,9 +241,33 @@ export const IntegrationStatus = ({ collapsed }: IntegrationStatusProps) => {
                     fontSize: '0.65rem',
                     color: 'hsl(var(--muted-foreground))',
                     cursor: 'pointer',
+                    '&:hover': {
+                      backgroundColor: 'hsl(var(--accent))',
+                    },
                   }}
                 >
-                  +{integrations.length - (collapsed ? 4 : 8)}
+                  +{integrations.length - defaultLimit}
+                </Avatar>
+              </Tooltip>
+            )}
+            
+            {expanded && hasMore && (
+              <Tooltip title="Show less" placement="right">
+                <Avatar
+                  onClick={() => setExpanded(false)}
+                  sx={{
+                    width: 26,
+                    height: 26,
+                    backgroundColor: 'hsl(var(--muted))',
+                    fontSize: '0.65rem',
+                    color: 'hsl(var(--muted-foreground))',
+                    cursor: 'pointer',
+                    '&:hover': {
+                      backgroundColor: 'hsl(var(--accent))',
+                    },
+                  }}
+                >
+                  −
                 </Avatar>
               </Tooltip>
             )}
