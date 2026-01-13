@@ -142,7 +142,7 @@ export const MentionInput = ({ value, onChange, onSubmit, ...props }: MentionInp
           side="top"
           align="start" 
           sideOffset={4}
-          className="w-52 p-1 bg-neutral-900 border border-white/15 shadow-xl max-h-64 overflow-y-auto"
+          className="w-64 p-1 bg-neutral-900 border border-white/15 shadow-xl max-h-64 overflow-y-auto overflow-x-hidden"
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
           <Typography 
