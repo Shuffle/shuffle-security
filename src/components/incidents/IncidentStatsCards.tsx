@@ -108,8 +108,6 @@ const StatCard = ({ icon: Icon, iconColor, iconBg, value, label, trend, delay, o
 export const IncidentStatsCards = ({ incidents, onFilterChange, currentUsername }: IncidentStatsCardsProps) => {
   // Calculate stats
   const resolvedCount = incidents.filter(i => i.status === 'resolved').length;
-  const totalCount = incidents.length;
-  const resolutionRate = totalCount > 0 ? ((resolvedCount / totalCount) * 100).toFixed(1) : '0';
   
   const criticalCount = incidents.filter(i => i.severity === 'critical' || i.severity === 'high').length;
   const newCount = incidents.filter(i => i.status === 'new').length;
@@ -188,14 +186,6 @@ export const IncidentStatsCards = ({ incidents, onFilterChange, currentUsername 
         delay={0.15}
         clickable={!!onFilterChange}
         onClick={() => onFilterChange?.('status', 'resolved')}
-      />
-      <StatCard
-        icon={TrendingUp}
-        iconColor="#3b82f6"
-        iconBg="rgba(59, 130, 246, 0.15)"
-        value={`${resolutionRate}%`}
-        label="Resolution Rate"
-        delay={0.2}
       />
       <StatCard
         icon={statusConfig.escalated.icon}
