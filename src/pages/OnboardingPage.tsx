@@ -19,6 +19,7 @@ import { setDatastoreItem, getDatastoreItem } from '@/services/datastore';
 // Datastore category for onboarding config
 const ONBOARDING_CONFIG_CATEGORY = 'singul-onboarding-config';
 const SELECTED_TOOLS_KEY = 'selected_tools';
+const AUTOMATION_CONFIG_KEY = 'automation_config';
 
 // Type for authenticated apps from API
 interface ApiAuthEntry {
@@ -85,27 +86,40 @@ const OnboardingPage = () => {
       setActiveStep(stepFromPath);
     }
   }, [location.pathname]);
-  // Load saved selected tools from datastore on mount
+  
+  // Load saved config from datastore on mount
   useEffect(() => {
-    const loadSavedTools = async () => {
+    const loadSavedConfig = async () => {
       if (!API_CONFIG.apiKey) return;
       
       try {
-        const response = await getDatastoreItem(SELECTED_TOOLS_KEY, ONBOARDING_CONFIG_CATEGORY);
-        if (response.success && response.item?.value) {
-          const savedTools = typeof response.item.value === 'string' 
-            ? JSON.parse(response.item.value) 
-            : response.item.value;
+        // Load selected tools
+        const toolsResponse = await getDatastoreItem(SELECTED_TOOLS_KEY, ONBOARDING_CONFIG_CATEGORY);
+        if (toolsResponse.success && toolsResponse.item?.value) {
+          const savedTools = typeof toolsResponse.item.value === 'string' 
+            ? JSON.parse(toolsResponse.item.value) 
+            : toolsResponse.item.value;
           if (Array.isArray(savedTools) && savedTools.length > 0) {
             setSelectedApps(savedTools);
           }
         }
+        
+        // Load automation config
+        const automationResponse = await getDatastoreItem(AUTOMATION_CONFIG_KEY, ONBOARDING_CONFIG_CATEGORY);
+        if (automationResponse.success && automationResponse.item?.value) {
+          const savedConfig = typeof automationResponse.item.value === 'string'
+            ? JSON.parse(automationResponse.item.value)
+            : automationResponse.item.value;
+          if (savedConfig && typeof savedConfig === 'object') {
+            setEnrichmentState(prev => ({ ...prev, ...savedConfig }));
+          }
+        }
       } catch (error) {
-        console.error('Failed to load saved tools:', error);
+        console.error('Failed to load saved config:', error);
       }
     };
     
-    loadSavedTools();
+    loadSavedConfig();
   }, []);
 
   // Fetch authenticated apps from API
@@ -166,6 +180,14 @@ const OnboardingPage = () => {
             category: 'cases',
           }),
         }).catch(error => console.error('Failed to generate workflow:', error));
+      }
+      
+      // When moving from step 2 (Automate) to step 3 (Complete)
+      // Save the automation configuration
+      if (activeStep === 2) {
+        setDatastoreItem(AUTOMATION_CONFIG_KEY, enrichmentState, ONBOARDING_CONFIG_CATEGORY)
+          .then(() => console.log('Automation config saved'))
+          .catch(error => console.error('Failed to save automation config:', error));
       }
     }
   };
