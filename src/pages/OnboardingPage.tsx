@@ -571,18 +571,20 @@ const OnboardingPage = () => {
       >
         <Container maxWidth="lg">
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Button
-              onClick={handleBack}
-              disabled={activeStep === 0}
-              startIcon={<ArrowBackIcon />}
-              sx={{
-                color: 'rgba(255, 255, 255, 0.5)',
-                '&:hover': { color: 'white', backgroundColor: 'rgba(255, 255, 255, 0.05)' },
-                '&.Mui-disabled': { color: 'rgba(255, 255, 255, 0.2)' },
-              }}
-            >
-              Back
-            </Button>
+            {activeStep > 0 ? (
+              <Button
+                onClick={handleBack}
+                startIcon={<ArrowBackIcon />}
+                sx={{
+                  color: 'rgba(255, 255, 255, 0.5)',
+                  '&:hover': { color: 'white', backgroundColor: 'rgba(255, 255, 255, 0.05)' },
+                }}
+              >
+                Back
+              </Button>
+            ) : (
+              <Box />
+            )}
             <Stack direction="row" spacing={2}>
               {activeStep < steps.length - 1 && (
                 <Button
