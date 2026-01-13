@@ -392,7 +392,12 @@ const IncidentDetailPage = () => {
           setEditedObservables(parsed.observables || []);
           setEditedCustomFields(parsed.rawOCSF?.customFields || {});
           setActivity(parsed.activity || []);
-          setTasks(parsed.tasks || parsed.rawOCSF?.tasks || []);
+          const loadedTasks = parsed.tasks || parsed.rawOCSF?.tasks || [];
+          setTasks(loadedTasks);
+          // Auto-switch to Details tab if no tasks
+          if (loadedTasks.length === 0) {
+            setActiveTab(1);
+          }
           setLoading(false);
           return;
         }
@@ -1263,6 +1268,16 @@ const IncidentDetailPage = () => {
                           sx={{ fontSize: '0.75rem' }}
                         >
                           <MenuItem value=""><em>Unassigned</em></MenuItem>
+                          <MenuItem value="AI Agent" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Box component="span" sx={{ 
+                              width: 6, 
+                              height: 6, 
+                              borderRadius: '50%', 
+                              bgcolor: '#22c55e',
+                              display: 'inline-block',
+                            }} />
+                            AI Agent
+                          </MenuItem>
                           {users.map((user) => (
                             <MenuItem key={user.id} value={user.username}>{user.username}</MenuItem>
                           ))}
