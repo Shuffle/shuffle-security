@@ -32,9 +32,9 @@ export const API_CONFIG = {
   },
 };
 
-// Computed API endpoint
+// Computed API endpoint - pass full path including /api/v1 or /api/v2
 export const getApiUrl = (endpoint: string): string => {
-  return `${API_CONFIG.baseUrl}/api/${API_CONFIG.version}${endpoint}`;
+  return `${API_CONFIG.baseUrl}${endpoint}`;
 };
 
 // Common endpoints

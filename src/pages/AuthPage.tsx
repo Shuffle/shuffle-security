@@ -100,7 +100,7 @@ const AuthPage = ({ mode }: AuthPageProps) => {
         body.mfa_code = mfaCode;
       }
 
-      const response = await fetch(getApiUrl(endpoint), {
+      const response = await fetch(getApiUrl(`/api/v1${endpoint}`), {
         method: 'POST',
         credentials: 'include',
         headers: {

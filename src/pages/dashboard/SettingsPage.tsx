@@ -35,7 +35,7 @@ const SettingsPage = () => {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const response = await fetch(getApiUrl('/getsettings'), {
+        const response = await fetch(getApiUrl('/api/v1/getsettings'), {
           credentials: 'include',
           headers: {
             ...getAuthHeader(sessionToken),

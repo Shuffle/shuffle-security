@@ -214,7 +214,7 @@ const AppAuthCard = ({
       setError(null);
       
       try {
-        const response = await fetch(getApiUrl(`/apps/${app.objectID}/config`), {
+        const response = await fetch(getApiUrl(`/api/v1/apps/${app.objectID}/config`), {
           headers: {
             'Authorization': `Bearer ${API_CONFIG.apiKey}`,
           },
@@ -263,7 +263,7 @@ const AppAuthCard = ({
     setDocsLoading(true);
     try {
       const encodedName = encodeURIComponent(app.name);
-      const response = await fetch(getApiUrl(`/docs/${encodedName}?location=openapi`), {
+      const response = await fetch(getApiUrl(`/api/v1/docs/${encodedName}?location=openapi`), {
         headers: {
           'Authorization': `Bearer ${API_CONFIG.apiKey}`,
         },
