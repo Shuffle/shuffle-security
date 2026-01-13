@@ -90,20 +90,8 @@ interface DisplayIncident {
   rawOCSF?: OCSFIncidentFinding;
 }
 
-const severityColors: Record<string, string> = {
-  critical: '#ef4444',
-  high: '#f97316',
-  medium: '#eab308',
-  low: '#22c55e',
-  informational: '#3b82f6',
-};
-
-const statusColors: Record<string, { bg: string; text: string }> = {
-  new: { bg: 'rgba(34, 184, 207, 0.15)', text: '#22b8cf' },
-  in_progress: { bg: 'rgba(249, 115, 22, 0.15)', text: '#f97316' },
-  escalated: { bg: 'rgba(239, 68, 68, 0.15)', text: '#ef4444' },
-  resolved: { bg: 'rgba(34, 197, 94, 0.15)', text: '#22c55e' },
-};
+// Status and severity colors now imported from shared config
+import { statusConfig, severityColors } from '@/config/incidentConfig';
 
 const formatTimestamp = (timestamp: number | string | undefined): string => {
   if (!timestamp) return 'Unknown';
@@ -985,14 +973,14 @@ const IncidentDetailPage = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5, flexWrap: 'wrap' }}>
               {/* Status badge (read-only) */}
               <Chip
-                label={editedStatus === 'new' ? 'New' : editedStatus === 'in_progress' ? 'In Progress' : 'Resolved'}
+                label={statusConfig[editedStatus]?.label || editedStatus.replace('_', ' ')}
                 size="small"
                 sx={{
                   fontSize: '0.7rem',
                   fontWeight: 600,
                   height: 22,
-                  bgcolor: statusColors[editedStatus]?.bg,
-                  color: statusColors[editedStatus]?.text,
+                  bgcolor: statusConfig[editedStatus]?.bg,
+                  color: statusConfig[editedStatus]?.color,
                   '& .MuiChip-label': { px: 1.5 },
                 }}
               />

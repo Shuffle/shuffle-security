@@ -1,13 +1,11 @@
 import { Box, Typography } from '@mui/material';
 import { motion } from 'framer-motion';
 import {
-  CheckCircle,
   TrendingUp,
   Clock,
-  MessageSquare,
-  AlertTriangle,
-  User,
+  LucideIcon,
 } from 'lucide-react';
+import { statusConfig } from '@/config/incidentConfig';
 
 interface DisplayIncident {
   id: string;
@@ -25,7 +23,7 @@ interface IncidentStatsCardsProps {
 }
 
 interface StatCardProps {
-  icon: typeof CheckCircle;
+  icon: LucideIcon;
   iconColor: string;
   iconBg: string;
   value: string | number;
@@ -115,6 +113,7 @@ export const IncidentStatsCards = ({ incidents, onFilterChange, currentUsername 
   
   const criticalCount = incidents.filter(i => i.severity === 'critical' || i.severity === 'high').length;
   const newCount = incidents.filter(i => i.status === 'new').length;
+  const inProgressCount = incidents.filter(i => i.status === 'in_progress').length;
   const yourCount = currentUsername ? incidents.filter(i => i.assignee === currentUsername && i.status !== 'resolved').length : 0;
 
   // Calculate average response time (time from created to first update)
@@ -135,6 +134,11 @@ export const IncidentStatsCards = ({ incidents, onFilterChange, currentUsername 
     }
   }
 
+  // Get icons and colors from shared config
+  const newConfig = statusConfig.new;
+  const inProgressConfig = statusConfig.in_progress;
+  const resolvedConfig = statusConfig.resolved;
+
   return (
     <Box
       sx={{
@@ -145,7 +149,7 @@ export const IncidentStatsCards = ({ incidents, onFilterChange, currentUsername 
     >
       {currentUsername && (
         <StatCard
-          icon={User}
+          icon={statusConfig.new.icon}
           iconColor="#a855f7"
           iconBg="rgba(168, 85, 247, 0.15)"
           value={yourCount}
@@ -156,9 +160,9 @@ export const IncidentStatsCards = ({ incidents, onFilterChange, currentUsername 
         />
       )}
       <StatCard
-        icon={MessageSquare}
-        iconColor="#22b8cf"
-        iconBg="rgba(34, 184, 207, 0.15)"
+        icon={newConfig.icon}
+        iconColor={newConfig.color}
+        iconBg={newConfig.bg}
         value={newCount}
         label="New"
         delay={0.05}
@@ -166,12 +170,22 @@ export const IncidentStatsCards = ({ incidents, onFilterChange, currentUsername 
         onClick={() => onFilterChange?.('status', 'new')}
       />
       <StatCard
-        icon={CheckCircle}
-        iconColor="#22c55e"
-        iconBg="rgba(34, 197, 94, 0.15)"
+        icon={inProgressConfig.icon}
+        iconColor={inProgressConfig.color}
+        iconBg={inProgressConfig.bg}
+        value={inProgressCount}
+        label="In Progress"
+        delay={0.1}
+        clickable={!!onFilterChange}
+        onClick={() => onFilterChange?.('status', 'in_progress')}
+      />
+      <StatCard
+        icon={resolvedConfig.icon}
+        iconColor={resolvedConfig.color}
+        iconBg={resolvedConfig.bg}
         value={resolvedCount}
         label="Resolved"
-        delay={0.05}
+        delay={0.15}
         clickable={!!onFilterChange}
         onClick={() => onFilterChange?.('status', 'resolved')}
       />
@@ -181,15 +195,15 @@ export const IncidentStatsCards = ({ incidents, onFilterChange, currentUsername 
         iconBg="rgba(59, 130, 246, 0.15)"
         value={`${resolutionRate}%`}
         label="Resolution Rate"
-        delay={0.1}
+        delay={0.2}
       />
       <StatCard
-        icon={AlertTriangle}
-        iconColor="#ef4444"
-        iconBg="rgba(239, 68, 68, 0.15)"
+        icon={statusConfig.escalated.icon}
+        iconColor={statusConfig.escalated.color}
+        iconBg={statusConfig.escalated.bg}
         value={criticalCount}
         label="Critical/High"
-        delay={0.15}
+        delay={0.25}
         clickable={!!onFilterChange}
         onClick={() => onFilterChange?.('severity', 'critical')}
       />
@@ -199,7 +213,7 @@ export const IncidentStatsCards = ({ incidents, onFilterChange, currentUsername 
         iconBg="rgba(245, 158, 11, 0.15)"
         value={avgResponseTime}
         label="Avg Response"
-        delay={0.2}
+        delay={0.3}
       />
     </Box>
   );

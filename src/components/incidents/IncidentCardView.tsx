@@ -7,16 +7,13 @@ import {
   Radar,
   Send,
   Cpu,
-  Flame,
-  Clock,
-  CheckCircle,
   ChevronRight,
   Lock,
-  Zap,
   Globe,
   Terminal,
   Bug,
 } from 'lucide-react';
+import { statusConfig, severityColors } from '@/config/incidentConfig';
 
 interface DisplayIncident {
   id: string;
@@ -38,27 +35,7 @@ interface IncidentCardViewProps {
   onFilterChange?: (type: 'severity' | 'status' | 'assignee', value: string) => void;
 }
 
-const statusColors: Record<string, { bg: string; text: string }> = {
-  new: { bg: 'rgba(34, 184, 207, 0.15)', text: '#22b8cf' },
-  in_progress: { bg: 'rgba(249, 115, 22, 0.15)', text: '#f97316' },
-  escalated: { bg: 'rgba(239, 68, 68, 0.15)', text: '#ef4444' },
-  resolved: { bg: 'rgba(34, 197, 94, 0.15)', text: '#22c55e' },
-};
-
-const severityColors: Record<string, string> = {
-  critical: '#ef4444',
-  high: '#f97316',
-  medium: '#eab308',
-  low: '#22c55e',
-  informational: '#3b82f6',
-};
-
-const statusConfig: Record<string, { icon: typeof CheckCircle; color: string }> = {
-  new: { icon: Clock, color: '#22b8cf' },
-  in_progress: { icon: Zap, color: '#f97316' },
-  escalated: { icon: Flame, color: '#ef4444' },
-  resolved: { icon: CheckCircle, color: '#22c55e' },
-};
+// Status and severity colors now imported from @/config/incidentConfig
 
 // Map incident types/sources to icons - more original choices
 const getIncidentIcon = (source: string, title: string) => {
@@ -112,8 +89,8 @@ export const IncidentCardView = ({ incidents, onIncidentClick, onFilterChange }:
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
       {incidents.map((incident, index) => {
         const IconComponent = getIncidentIcon(incident.source, incident.title);
-        const StatusIcon = statusConfig[incident.status]?.icon || Clock;
-        const statusColor = statusConfig[incident.status]?.color || '#94a3b8';
+        const statusInfo = statusConfig[incident.status] || statusConfig.new;
+        const StatusIcon = statusInfo.icon;
         const severityColor = severityColors[incident.severity] || '#94a3b8';
 
         return (
@@ -174,7 +151,7 @@ export const IncidentCardView = ({ incidents, onIncidentClick, onFilterChange }:
                   >
                     {incident.title}
                   </Typography>
-                  <StatusIcon size={16} color={statusColor} />
+                  <StatusIcon size={16} color={statusInfo.color} />
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                   <Typography
@@ -229,17 +206,16 @@ export const IncidentCardView = ({ incidents, onIncidentClick, onFilterChange }:
                   }}
                 />
                 <Chip
-                  label={incident.status.replace('_', ' ')}
+                  label={statusInfo.label}
                   size="small"
                   onClick={(e) => {
                     e.stopPropagation();
                     onFilterChange?.('status', incident.status);
                   }}
                   sx={{
-                    backgroundColor: statusColors[incident.status]?.bg || 'rgba(148, 163, 184, 0.1)',
-                    color: statusColors[incident.status]?.text || '#94a3b8',
+                    backgroundColor: statusInfo.bg,
+                    color: statusInfo.color,
                     fontWeight: 500,
-                    textTransform: 'capitalize',
                     fontSize: '0.7rem',
                     height: 24,
                     cursor: 'pointer',
