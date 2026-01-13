@@ -293,6 +293,7 @@ const IncidentDetailPage = () => {
   
   // Activity/comments
   const [newComment, setNewComment] = useState('');
+  const [commentAttachments, setCommentAttachments] = useState<FileAttachment[]>([]);
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   
   // Tasks
@@ -591,7 +592,7 @@ const IncidentDetailPage = () => {
   };
 
   const handleAddComment = async () => {
-    if (!newComment.trim() || !incident?.rawOCSF) return;
+    if ((!newComment.trim() && commentAttachments.length === 0) || !incident?.rawOCSF) return;
     
     autoProgressStatus();
     
@@ -600,12 +601,14 @@ const IncidentDetailPage = () => {
       type: 'comment',
       user: currentUsername,
       timestamp: Date.now(),
-      content: newComment.trim(),
+      content: newComment.trim() || (commentAttachments.length > 0 ? `Attached ${commentAttachments.length} file(s)` : ''),
+      attachments: commentAttachments.length > 0 ? [...commentAttachments] : undefined,
     };
     
     const updatedActivity = [...activity, commentActivity];
     setActivity(updatedActivity);
     setNewComment('');
+    setCommentAttachments([]);
     
     const updatedOCSF: OCSFIncidentFinding = {
       ...incident.rawOCSF,
@@ -1672,6 +1675,10 @@ const IncidentDetailPage = () => {
             {/* Metadata row */}
             <Box sx={{ display: 'flex', gap: 3, mt: 2, flexWrap: 'wrap' }}>
               <Box>
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>ID</Typography>
+                <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.75rem' }}>{incident.id}</Typography>
+              </Box>
+              <Box>
                 <Typography variant="caption" sx={{ color: 'text.secondary' }}>Source</Typography>
                 <Typography variant="body2">{incident.source}</Typography>
               </Box>
@@ -1690,57 +1697,19 @@ const IncidentDetailPage = () => {
                 <Typography variant="body2">{metrics?.age}</Typography>
               </Box>
             </Box>
-          </Section>
 
-          {/* Observables */}
-          <Section 
-            title="Observables (IOCs)" 
-            icon={SecurityIcon} 
-            defaultOpen={editedObservables.length > 0}
-            badge={editedObservables.length > 0 ? editedObservables.length : undefined}
-          >
-            <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-              <TextField
-                select
-                size="small"
-                value={newObservableType}
-                onChange={(e) => setNewObservableType(e.target.value)}
-                sx={{ minWidth: 120, ...inputSx }}
-              >
-                {observableTypeNames.map((type) => (
-                  <MenuItem key={type} value={type}>{type}</MenuItem>
-                ))}
-              </TextField>
-              <TextField
-                size="small"
-                value={newObservableValue}
-                onChange={(e) => setNewObservableValue(e.target.value)}
-                placeholder="Value..."
-                fullWidth
-                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddObservable())}
-                sx={inputSx}
-              />
-              <IconButton onClick={handleAddObservable} disabled={!newObservableValue.trim()} sx={{ bgcolor: 'rgba(255,255,255,0.05)' }}>
-                <AddIcon />
-              </IconButton>
-            </Box>
-            {editedObservables.length > 0 ? (
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                {editedObservables.map((obs, idx) => (
-                  <Chip
-                    key={idx}
-                    label={`${obs.type}: ${obs.value}`}
-                    size="small"
-                    onDelete={() => handleRemoveObservable(idx)}
-                    sx={{ bgcolor: 'rgba(255, 102, 0, 0.15)', '& .MuiChip-label': { fontFamily: 'monospace', fontSize: '0.75rem' } }}
-                  />
-                ))}
-              </Box>
-            ) : (
-              <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
-                No observables added
+            {/* Attachments - inline like task attachments */}
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 1 }}>
+                Attachments
               </Typography>
-            )}
+              <FileAttachments
+                attachments={incidentAttachments}
+                onChange={setIncidentAttachments}
+                namespace="incidents"
+                labels={[incident.id]}
+              />
+            </Box>
           </Section>
 
           {/* Custom Fields */}
@@ -1791,21 +1760,6 @@ const IncidentDetailPage = () => {
                 No references added
               </Typography>
             )}
-          </Section>
-
-          {/* File Attachments */}
-          <Section 
-            title="Attachments" 
-            icon={DescriptionIcon} 
-            defaultOpen={incidentAttachments.length > 0}
-            badge={incidentAttachments.length > 0 ? incidentAttachments.length : undefined}
-          >
-            <FileAttachments
-              attachments={incidentAttachments}
-              onChange={setIncidentAttachments}
-              namespace="incidents"
-              labels={[incident.id]}
-            />
           </Section>
         </Box>
       )}
@@ -2118,47 +2072,57 @@ const IncidentDetailPage = () => {
               <Avatar sx={{ width: 28, height: 28, bgcolor: 'rgba(255, 102, 0, 0.2)' }}>
                 <PersonIcon sx={{ fontSize: 16, color: '#ff6600' }} />
               </Avatar>
-              <Box sx={{ flex: 1, position: 'relative' }}>
-                <MentionInput
-                  value={newComment}
-                  onChange={setNewComment}
-                  size="small"
-                  fullWidth
-                  multiline
-                  rows={2}
-                  placeholder="Add a comment..."
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      bgcolor: 'rgba(0, 0, 0, 0.2)',
-                      fontSize: '0.8rem',
-                      pr: 5,
-                      '& fieldset': { borderColor: 'rgba(255,255,255,0.08)' },
-                      '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.15)' },
-                      '&.Mui-focused fieldset': { borderColor: '#FF6600' },
-                    },
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey && newComment.trim()) {
-                      e.preventDefault();
-                      handleAddComment();
-                    }
-                  }}
+              <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Box sx={{ position: 'relative' }}>
+                  <MentionInput
+                    value={newComment}
+                    onChange={setNewComment}
+                    size="small"
+                    fullWidth
+                    multiline
+                    rows={2}
+                    placeholder="Add a comment..."
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        bgcolor: 'rgba(0, 0, 0, 0.2)',
+                        fontSize: '0.8rem',
+                        pr: 5,
+                        '& fieldset': { borderColor: 'rgba(255,255,255,0.08)' },
+                        '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.15)' },
+                        '&.Mui-focused fieldset': { borderColor: '#FF6600' },
+                      },
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey && (newComment.trim() || commentAttachments.length > 0)) {
+                        e.preventDefault();
+                        handleAddComment();
+                      }
+                    }}
+                  />
+                  <IconButton 
+                    size="small" 
+                    onClick={handleAddComment}
+                    disabled={!newComment.trim() && commentAttachments.length === 0}
+                    sx={{ 
+                      position: 'absolute',
+                      right: 8,
+                      bottom: 8,
+                      bgcolor: (newComment.trim() || commentAttachments.length > 0) ? 'rgba(255, 102, 0, 0.15)' : 'transparent',
+                      color: (newComment.trim() || commentAttachments.length > 0) ? '#ff6600' : 'text.disabled',
+                      '&:hover': { bgcolor: 'rgba(255, 102, 0, 0.25)' },
+                    }}
+                  >
+                    <SendIcon sx={{ fontSize: 16 }} />
+                  </IconButton>
+                </Box>
+                {/* Comment Attachments */}
+                <FileAttachments
+                  attachments={commentAttachments}
+                  onChange={setCommentAttachments}
+                  namespace="incidents"
+                  labels={[incident.id, 'comments']}
+                  compact
                 />
-                <IconButton 
-                  size="small" 
-                  onClick={handleAddComment}
-                  disabled={!newComment.trim()}
-                  sx={{ 
-                    position: 'absolute',
-                    right: 8,
-                    bottom: 8,
-                    bgcolor: newComment.trim() ? 'rgba(255, 102, 0, 0.15)' : 'transparent',
-                    color: newComment.trim() ? '#ff6600' : 'text.disabled',
-                    '&:hover': { bgcolor: 'rgba(255, 102, 0, 0.25)' },
-                  }}
-                >
-                  <SendIcon sx={{ fontSize: 16 }} />
-                </IconButton>
               </Box>
             </Box>
           </Box>
@@ -2220,6 +2184,24 @@ const IncidentDetailPage = () => {
                       text={item.content} 
                       sx={{ fontSize: '0.8rem', color: 'text.secondary' }}
                     />
+                    {/* Display attachments if present */}
+                    {item.attachments && item.attachments.length > 0 && (
+                      <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        {item.attachments.map((att, i) => (
+                          <Chip
+                            key={i}
+                            label={att.filename}
+                            size="small"
+                            sx={{
+                              height: 20,
+                              fontSize: '0.65rem',
+                              bgcolor: 'rgba(59, 130, 246, 0.1)',
+                              color: '#3b82f6',
+                            }}
+                          />
+                        ))}
+                      </Box>
+                    )}
                   </Box>
                 </Box>
               ))
