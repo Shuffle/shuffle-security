@@ -456,8 +456,14 @@ const IncidentDetailPage = () => {
           const data = await response.json();
           // API returns array directly with { key, amount, ref[] }
           const correlationData = Array.isArray(data) ? data : (data.correlations || data.data || []);
-          // Filter out the current incident from correlations
-          setCorrelations(correlationData.filter((c: { key: string }) => c.key.toLowerCase() !== id?.toLowerCase()));
+          // Filter out noise: current incident key, status values, severity values, and common non-meaningful keys
+          const noiseKeys = new Set([
+            'new', 'in_progress', 'resolved', 'escalated', 'closed', 'open', 'pending',
+            'critical', 'high', 'medium', 'low', 'informational', 'info', 'warning', 'error',
+            'unknown', 'none', 'null', 'undefined', 'true', 'false',
+            id?.toLowerCase(),
+          ].filter(Boolean));
+          setCorrelations(correlationData.filter((c: { key: string }) => !noiseKeys.has(c.key.toLowerCase())));
         }
       } catch (error) {
         console.error('Failed to fetch correlations:', error);
