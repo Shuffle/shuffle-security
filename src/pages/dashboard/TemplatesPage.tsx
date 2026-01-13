@@ -1,183 +1,476 @@
+import { useState } from 'react';
 import {
   Box,
   Card,
   CardContent,
   Typography,
-  Grid,
   Button,
   Chip,
   IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  CircularProgress,
+  Tooltip,
 } from '@mui/material';
+import Grid from '@mui/material/Grid';
 import { motion } from 'framer-motion';
 import AddIcon from '@mui/icons-material/Add';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import AssignmentIcon from '@mui/icons-material/Assignment';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-
-const caseTemplates = [
-  {
-    id: 'TPL-001',
-    name: 'Ransomware Investigation',
-    description: 'Standard procedure for investigating ransomware incidents including containment and recovery.',
-    tasks: 12,
-    severity: 'critical',
-    usageCount: 45,
-  },
-  {
-    id: 'TPL-002',
-    name: 'Phishing Analysis',
-    description: 'Template for analyzing and responding to phishing attempts and campaigns.',
-    tasks: 8,
-    severity: 'high',
-    usageCount: 128,
-  },
-  {
-    id: 'TPL-003',
-    name: 'Malware Analysis',
-    description: 'Comprehensive malware analysis workflow including static and dynamic analysis.',
-    tasks: 15,
-    severity: 'high',
-    usageCount: 67,
-  },
-  {
-    id: 'TPL-004',
-    name: 'Data Breach Response',
-    description: 'Incident response procedure for potential data breach scenarios.',
-    tasks: 18,
-    severity: 'critical',
-    usageCount: 23,
-  },
-  {
-    id: 'TPL-005',
-    name: 'Unauthorized Access',
-    description: 'Investigation template for unauthorized access attempts and credential compromise.',
-    tasks: 10,
-    severity: 'medium',
-    usageCount: 89,
-  },
-  {
-    id: 'TPL-006',
-    name: 'DDoS Attack Response',
-    description: 'Response and mitigation procedures for distributed denial of service attacks.',
-    tasks: 7,
-    severity: 'high',
-    usageCount: 34,
-  },
-];
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
+import { useCaseTemplates, CaseTemplate, TemplateTask } from '@/hooks/useCaseTemplates';
+import { TaskEditor } from '@/components/incidents/TaskEditor';
+import { IncidentTask, taskCategories } from '@/components/incidents/CreateIncidentDialog';
+import { toast } from 'sonner';
 
 const severityColors: Record<string, string> = {
   critical: '#ef4444',
   high: '#f97316',
   medium: '#eab308',
   low: '#22c55e',
+  informational: '#3b82f6',
 };
 
 const TemplatesPage = () => {
+  const { 
+    templates, 
+    isLoading, 
+    createTemplate, 
+    updateTemplate, 
+    deleteTemplate,
+    initializeDefaults,
+  } = useCaseTemplates();
+  
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<CaseTemplate | null>(null);
+  const [menuAnchor, setMenuAnchor] = useState<{ el: HTMLElement; template: CaseTemplate } | null>(null);
+  
+  // Form state
+  const [formName, setFormName] = useState('');
+  const [formDescription, setFormDescription] = useState('');
+  const [formSeverity, setFormSeverity] = useState<string>('medium');
+  const [formTasks, setFormTasks] = useState<IncidentTask[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleOpenCreate = () => {
+    setSelectedTemplate(null);
+    setFormName('');
+    setFormDescription('');
+    setFormSeverity('medium');
+    setFormTasks([]);
+    setEditDialogOpen(true);
+  };
+
+  const handleOpenEdit = (template: CaseTemplate) => {
+    setSelectedTemplate(template);
+    setFormName(template.name);
+    setFormDescription(template.description || '');
+    setFormSeverity(template.severity || 'medium');
+    // Convert TemplateTask to IncidentTask for editing
+    setFormTasks(template.tasks.map((t, idx) => ({
+      id: `task-${idx}`,
+      title: t.title,
+      description: t.description,
+      category: t.category,
+      assignee: t.assignee || '',
+      dependsOn: t.dependsOn,
+      completed: false,
+      createdAt: Date.now(),
+    })));
+    setEditDialogOpen(true);
+    setMenuAnchor(null);
+  };
+
+  const handleOpenDelete = (template: CaseTemplate) => {
+    setSelectedTemplate(template);
+    setDeleteDialogOpen(true);
+    setMenuAnchor(null);
+  };
+
+  const handleSaveTemplate = async () => {
+    if (!formName.trim()) {
+      toast.error('Template name is required');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      // Convert IncidentTask back to TemplateTask
+      const templateTasks: TemplateTask[] = formTasks.map(t => ({
+        title: t.title,
+        description: t.description,
+        category: t.category,
+        assignee: t.assignee,
+        dependsOn: t.dependsOn,
+      }));
+
+      if (selectedTemplate) {
+        await updateTemplate(selectedTemplate.id, {
+          name: formName,
+          description: formDescription,
+          severity: formSeverity,
+          tasks: templateTasks,
+        });
+        toast.success('Template updated');
+      } else {
+        await createTemplate({
+          name: formName,
+          description: formDescription,
+          severity: formSeverity,
+          tasks: templateTasks,
+        });
+        toast.success('Template created');
+      }
+      setEditDialogOpen(false);
+    } catch (err) {
+      toast.error('Failed to save template');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedTemplate) return;
+    setIsSaving(true);
+    try {
+      await deleteTemplate(selectedTemplate.id);
+      toast.success('Template deleted');
+      setDeleteDialogOpen(false);
+    } catch (err) {
+      toast.error('Failed to delete template');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleAddTask = () => {
+    setFormTasks([...formTasks, {
+      id: `task-${Date.now()}`,
+      title: 'New task',
+      assignee: '',
+      completed: false,
+      createdAt: Date.now(),
+    }]);
+  };
+
+  const handleResetToDefaults = async () => {
+    setIsSaving(true);
+    try {
+      await initializeDefaults();
+      toast.success('Default templates restored');
+    } catch (err) {
+      toast.error('Failed to restore defaults');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
+      {/* Header */}
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h5" sx={{ fontWeight: 600 }}>
-          Case Templates
-        </Typography>
-        <Button variant="contained" startIcon={<AddIcon />}>
-          New Template
-        </Button>
-      </Box>
-
-      <Grid container spacing={3}>
-        {caseTemplates.map((template, index) => (
-          <Grid size={{ xs: 12, md: 6, lg: 4 }} key={template.id}>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: index * 0.05 }}
-            >
-              <Card
-                sx={{
-                  height: '100%',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: '0 12px 24px -12px rgba(0, 0, 0, 0.4)',
-                  },
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Typography variant="h5" sx={{ fontWeight: 600 }}>
+            Case Templates
+          </Typography>
+          {isLoading && <CircularProgress size={20} />}
+        </Box>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          {templates.length === 0 && (
+            <Tooltip title="Restore default templates">
+              <IconButton
+                onClick={handleResetToDefaults}
+                disabled={isSaving}
+                sx={{ 
+                  color: 'text.secondary',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 1,
                 }}
               >
-                <CardContent sx={{ p: 3 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                    <Box
-                      sx={{
-                        p: 1.5,
-                        borderRadius: 2,
-                        backgroundColor: `${severityColors[template.severity]}15`,
-                        color: severityColors[template.severity],
-                      }}
-                    >
-                      <AssignmentIcon />
+                <RefreshIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
+          <Button 
+            variant="contained" 
+            startIcon={<AddIcon />}
+            onClick={handleOpenCreate}
+            sx={{ bgcolor: '#ff6600', '&:hover': { bgcolor: '#e55c00' } }}
+          >
+            New Template
+          </Button>
+        </Box>
+      </Box>
+
+      {/* Template Grid */}
+      {templates.length === 0 && !isLoading ? (
+        <Box sx={{ 
+          textAlign: 'center', 
+          py: 8,
+          bgcolor: 'rgba(0,0,0,0.2)',
+          borderRadius: 2,
+          border: '1px dashed rgba(255,255,255,0.1)',
+        }}>
+          <AssignmentIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 2 }} />
+          <Typography variant="h6" sx={{ color: 'text.secondary', mb: 1 }}>
+            No templates yet
+          </Typography>
+          <Typography variant="body2" sx={{ color: 'text.disabled', mb: 3 }}>
+            Create a template to standardize your incident workflows
+          </Typography>
+          <Button 
+            variant="outlined" 
+            startIcon={<RefreshIcon />}
+            onClick={handleResetToDefaults}
+            sx={{ mr: 2 }}
+          >
+            Load Defaults
+          </Button>
+          <Button 
+            variant="contained" 
+            startIcon={<AddIcon />}
+            onClick={handleOpenCreate}
+          >
+            Create Template
+          </Button>
+        </Box>
+      ) : (
+        <Grid container spacing={3}>
+          {templates.map((template, index) => (
+            <Grid size={{ xs: 12, md: 6, lg: 4 }} key={template.id}>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: index * 0.05 }}
+              >
+                <Card
+                  sx={{
+                    height: '100%',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                      boxShadow: '0 12px 24px -12px rgba(0, 0, 0, 0.4)',
+                      borderColor: 'rgba(255, 102, 0, 0.3)',
+                    },
+                  }}
+                  onClick={() => handleOpenEdit(template)}
+                >
+                  <CardContent sx={{ p: 3 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                      <Box
+                        sx={{
+                          p: 1.5,
+                          borderRadius: 2,
+                          backgroundColor: `${severityColors[template.severity || 'medium']}15`,
+                          color: severityColors[template.severity || 'medium'],
+                        }}
+                      >
+                        <AssignmentIcon />
+                      </Box>
+                      <Box sx={{ display: 'flex', gap: 0.5 }}>
+                        <Tooltip title="Edit">
+                          <IconButton 
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenEdit(template);
+                            }}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Delete">
+                          <IconButton 
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenDelete(template);
+                            }}
+                            sx={{ '&:hover': { color: '#ef4444' } }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
                     </Box>
-                    <IconButton size="small">
-                      <MoreVertIcon fontSize="small" />
-                    </IconButton>
-                  </Box>
 
-                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                    {template.name}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: 'text.secondary',
-                      mb: 2,
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                      minHeight: 40,
-                    }}
-                  >
-                    {template.description}
-                  </Typography>
-
-                  <Box sx={{ display: 'flex', gap: 1, mb: 3 }}>
-                    <Chip
-                      label={template.severity}
-                      size="small"
-                      sx={{
-                        backgroundColor: `${severityColors[template.severity]}20`,
-                        color: severityColors[template.severity],
-                        fontWeight: 600,
-                        textTransform: 'capitalize',
-                      }}
-                    />
-                    <Chip
-                      label={`${template.tasks} tasks`}
-                      size="small"
-                      sx={{ backgroundColor: 'rgba(148, 163, 184, 0.1)' }}
-                    />
-                  </Box>
-
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                      Used {template.usageCount} times
+                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+                      {template.name}
                     </Typography>
-                    <Button
-                      size="small"
-                      startIcon={<ContentCopyIcon />}
-                      sx={{ color: 'primary.main' }}
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: 'text.secondary',
+                        mb: 2,
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        minHeight: 40,
+                      }}
                     >
-                      Use Template
-                    </Button>
-                  </Box>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </Grid>
-        ))}
-      </Grid>
+                      {template.description || 'No description'}
+                    </Typography>
+
+                    <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+                      <Chip
+                        label={template.severity || 'medium'}
+                        size="small"
+                        sx={{
+                          backgroundColor: `${severityColors[template.severity || 'medium']}20`,
+                          color: severityColors[template.severity || 'medium'],
+                          fontWeight: 600,
+                          textTransform: 'capitalize',
+                        }}
+                      />
+                      <Chip
+                        label={`${template.tasks.length} task${template.tasks.length !== 1 ? 's' : ''}`}
+                        size="small"
+                        sx={{ backgroundColor: 'rgba(148, 163, 184, 0.1)' }}
+                      />
+                    </Box>
+
+                    {template.usageCount !== undefined && template.usageCount > 0 && (
+                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                        Used {template.usageCount} time{template.usageCount !== 1 ? 's' : ''}
+                      </Typography>
+                    )}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </Grid>
+          ))}
+        </Grid>
+      )}
+
+      {/* Edit/Create Dialog */}
+      <Dialog 
+        open={editDialogOpen} 
+        onClose={() => setEditDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: 'hsl(var(--card))',
+            backgroundImage: 'none',
+          }
+        }}
+      >
+        <DialogTitle>
+          {selectedTemplate ? 'Edit Template' : 'Create Template'}
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+            <TextField
+              label="Template Name"
+              value={formName}
+              onChange={(e) => setFormName(e.target.value)}
+              fullWidth
+              required
+            />
+            <TextField
+              label="Description"
+              value={formDescription}
+              onChange={(e) => setFormDescription(e.target.value)}
+              fullWidth
+              multiline
+              rows={2}
+            />
+            <FormControl fullWidth>
+              <InputLabel>Default Severity</InputLabel>
+              <Select
+                value={formSeverity}
+                label="Default Severity"
+                onChange={(e) => setFormSeverity(e.target.value)}
+              >
+                <MenuItem value="critical">Critical</MenuItem>
+                <MenuItem value="high">High</MenuItem>
+                <MenuItem value="medium">Medium</MenuItem>
+                <MenuItem value="low">Low</MenuItem>
+                <MenuItem value="informational">Informational</MenuItem>
+              </Select>
+            </FormControl>
+
+            {/* Tasks Section */}
+            <Box sx={{ mt: 2 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                  Tasks ({formTasks.length})
+                </Typography>
+                <Button 
+                  size="small" 
+                  startIcon={<PlaylistAddIcon />}
+                  onClick={handleAddTask}
+                >
+                  Add Task
+                </Button>
+              </Box>
+              <TaskEditor
+                tasks={formTasks}
+                onTasksChange={setFormTasks}
+                incidentId="template"
+                compact={false}
+              />
+            </Box>
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
+          <Button 
+            variant="contained" 
+            onClick={handleSaveTemplate}
+            disabled={isSaving}
+          >
+            {isSaving ? <CircularProgress size={20} /> : (selectedTemplate ? 'Update' : 'Create')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog 
+        open={deleteDialogOpen} 
+        onClose={() => setDeleteDialogOpen(false)}
+        PaperProps={{
+          sx: {
+            bgcolor: 'hsl(var(--card))',
+            backgroundImage: 'none',
+          }
+        }}
+      >
+        <DialogTitle>Delete Template</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete "{selectedTemplate?.name}"? This action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+          <Button 
+            variant="contained" 
+            color="error" 
+            onClick={handleDelete}
+            disabled={isSaving}
+          >
+            {isSaving ? <CircularProgress size={20} /> : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </motion.div>
   );
 };
