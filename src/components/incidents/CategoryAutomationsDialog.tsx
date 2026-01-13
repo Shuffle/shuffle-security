@@ -127,7 +127,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
       const fetchWorkflows = async () => {
         setLoadingWorkflows(true);
         try {
-          const response = await fetch(getApiUrl('/api/v1/workflows'), {
+          const response = await fetch(getApiUrl('/workflows'), {
             headers: {
               ...getAuthHeader(API_CONFIG.apiKey),
             },
