@@ -399,10 +399,18 @@ const OnboardingPage = () => {
           py: 3,
         }}
       >
-        <Container maxWidth="lg">
+        <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>
           {/* Step Indicator */}
-          <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-            <Stack direction="row" spacing={2}>
+          <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%', overflow: 'hidden' }}>
+            <Stack 
+              direction="row" 
+              spacing={{ xs: 1, sm: 2 }}
+              sx={{ 
+                flexWrap: 'nowrap',
+                justifyContent: 'center',
+                maxWidth: '100%',
+              }}
+            >
               {steps.map((step, index) => (
                 <Box
                   key={step.label}
@@ -410,8 +418,9 @@ const OnboardingPage = () => {
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 1.5,
+                    gap: { xs: 0.5, sm: 1.5 },
                     cursor: 'pointer',
+                    flexShrink: 0,
                     '&:hover': {
                       '& .step-label': {
                         color: index === activeStep ? 'white' : 'rgba(255, 255, 255, 0.7)',
@@ -421,8 +430,8 @@ const OnboardingPage = () => {
                 >
                   <Box
                     sx={{
-                      width: 40,
-                      height: 40,
+                      width: { xs: 32, sm: 40 },
+                      height: { xs: 32, sm: 40 },
                       borderRadius: '50%',
                       display: 'flex',
                       alignItems: 'center',
@@ -439,9 +448,10 @@ const OnboardingPage = () => {
                       transition: 'all 0.3s ease',
                       color: index <= activeStep ? 'white' : 'rgba(255, 255, 255, 0.4)',
                       boxShadow: index === activeStep ? '0 0 20px rgba(255, 102, 0, 0.4)' : 'none',
+                      flexShrink: 0,
                     }}
                   >
-                    {index < activeStep ? <CheckCircleOutlineIcon sx={{ fontSize: 18 }} /> : step.icon}
+                    {index < activeStep ? <CheckCircleOutlineIcon sx={{ fontSize: { xs: 14, sm: 18 } }} /> : step.icon}
                   </Box>
                   <Typography
                     className="step-label"
@@ -449,8 +459,9 @@ const OnboardingPage = () => {
                     sx={{
                       color: index === activeStep ? 'white' : 'rgba(255, 255, 255, 0.4)',
                       fontWeight: index === activeStep ? 600 : 400,
-                      display: { xs: 'none', sm: 'block' },
+                      display: { xs: 'none', md: 'block' },
                       transition: 'color 0.2s ease',
+                      whiteSpace: 'nowrap',
                     }}
                   >
                     {step.label}
@@ -458,14 +469,15 @@ const OnboardingPage = () => {
                   {index < steps.length - 1 && (
                     <Box
                       sx={{
-                        width: 40,
+                        width: { xs: 16, sm: 40 },
                         height: 2,
                         background:
                           index < activeStep
                             ? 'linear-gradient(90deg, #22c55e, #16a34a)'
                             : 'rgba(255, 255, 255, 0.1)',
                         borderRadius: 1,
-                        display: { xs: 'none', md: 'block' },
+                        display: { xs: 'block', md: 'block' },
+                        flexShrink: 0,
                       }}
                     />
                   )}
@@ -477,8 +489,8 @@ const OnboardingPage = () => {
       </Box>
 
       {/* Scrollable Content Area */}
-      <Box sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', position: 'relative', zIndex: 1, pt: 18, pb: 10 }}>
-        <Container maxWidth="lg" sx={{ py: 4, px: { xs: 2, sm: 3 } }}>
+      <Box sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', position: 'relative', zIndex: 1, pt: { xs: 14, sm: 18 }, pb: 10, width: '100%' }}>
+        <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 }, px: { xs: 2, sm: 3 }, width: '100%', maxWidth: '100%' }}>
           {/* Content Card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}

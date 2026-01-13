@@ -577,7 +577,7 @@ const AppAuthCard = ({
   };
 
   return (
-    <motion.div variants={itemVariants}>
+    <motion.div variants={itemVariants} style={{ width: '100%', maxWidth: '100%' }}>
       <Card
         sx={{
           background: isTested 
@@ -593,6 +593,8 @@ const AppAuthCard = ({
           backdropFilter: 'blur(10px)',
           overflow: 'hidden',
           transition: 'all 0.3s ease',
+          width: '100%',
+          maxWidth: '100%',
         }}
       >
         <CardContent
@@ -1208,7 +1210,7 @@ export const AppAuthConfig = ({
   const totalCount = sortedApps.length;
 
   return (
-    <Box>
+    <Box sx={{ width: '100%', maxWidth: '100%', overflow: 'hidden' }}>
       <Typography
         variant="h5"
         sx={{
@@ -1240,7 +1242,7 @@ export const AppAuthConfig = ({
       />
 
       <motion.div variants={containerVariants} initial="hidden" animate="visible">
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%', maxWidth: '100%' }}>
           {sortedApps.map((app) => {
             const authState = authStates[app.objectID] || { systemId: app.objectID, status: 'pending' as const, credentials: {} };
             const isExpanded = expanded === app.objectID;
