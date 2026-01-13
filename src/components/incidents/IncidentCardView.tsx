@@ -2,15 +2,20 @@ import { Box, Typography, Chip } from '@mui/material';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
-  Shield,
-  FileText,
-  Search,
-  Mail,
-  Activity,
-  AlertTriangle,
+  Fingerprint,
+  FileCode,
+  Radar,
+  Send,
+  Cpu,
+  Flame,
   Clock,
   CheckCircle,
   ChevronRight,
+  Lock,
+  Zap,
+  Globe,
+  Terminal,
+  Bug,
 } from 'lucide-react';
 
 interface DisplayIncident {
@@ -42,32 +47,41 @@ const severityColors: Record<string, string> = {
 
 const statusConfig: Record<string, { icon: typeof CheckCircle; color: string }> = {
   new: { icon: Clock, color: '#22b8cf' },
-  in_progress: { icon: Activity, color: '#f97316' },
-  escalated: { icon: AlertTriangle, color: '#ef4444' },
+  in_progress: { icon: Zap, color: '#f97316' },
+  escalated: { icon: Flame, color: '#ef4444' },
   resolved: { icon: CheckCircle, color: '#22c55e' },
 };
 
-// Map incident types/sources to icons
+// Map incident types/sources to icons - more original choices
 const getIncidentIcon = (source: string, title: string) => {
   const lowerTitle = title.toLowerCase();
   const lowerSource = source.toLowerCase();
   
   if (lowerTitle.includes('login') || lowerTitle.includes('auth') || lowerTitle.includes('block')) {
-    return Shield;
+    return Fingerprint;
   }
   if (lowerTitle.includes('firewall') || lowerSource.includes('firewall')) {
-    return FileText;
+    return Lock;
   }
   if (lowerTitle.includes('scan') || lowerTitle.includes('vulnerability')) {
-    return Search;
+    return Radar;
   }
   if (lowerTitle.includes('report') || lowerTitle.includes('email') || lowerTitle.includes('sent')) {
-    return Mail;
+    return Send;
   }
   if (lowerTitle.includes('endpoint') || lowerTitle.includes('quarantine')) {
-    return Activity;
+    return Cpu;
   }
-  return Shield;
+  if (lowerTitle.includes('malware') || lowerTitle.includes('virus')) {
+    return Bug;
+  }
+  if (lowerTitle.includes('network') || lowerSource.includes('network')) {
+    return Globe;
+  }
+  if (lowerTitle.includes('code') || lowerTitle.includes('script')) {
+    return FileCode;
+  }
+  return Terminal;
 };
 
 const formatRelativeTime = (timestamp: number): string => {
