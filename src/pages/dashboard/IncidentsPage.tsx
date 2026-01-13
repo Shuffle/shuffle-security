@@ -521,7 +521,15 @@ const IncidentsPage = () => {
         
         {/* Stats sidebar */}
         <Box sx={{ display: { xs: 'none', lg: 'block' } }}>
-          <IncidentStatsCards incidents={incidents} />
+          <IncidentStatsCards 
+            incidents={incidents} 
+            onFilterChange={(type, value) => {
+              setFilters(prev => ({
+                ...prev,
+                [type]: prev[type] === value ? null : value,
+              }));
+            }}
+          />
         </Box>
       </Box>
 

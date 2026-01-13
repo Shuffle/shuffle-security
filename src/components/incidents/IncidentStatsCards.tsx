@@ -19,6 +19,7 @@ interface DisplayIncident {
 
 interface IncidentStatsCardsProps {
   incidents: DisplayIncident[];
+  onFilterChange?: (type: 'status' | 'severity', value: string | null) => void;
 }
 
 interface StatCardProps {
@@ -29,21 +30,30 @@ interface StatCardProps {
   label: string;
   trend?: { value: string; positive: boolean };
   delay: number;
+  onClick?: () => void;
+  clickable?: boolean;
 }
 
-const StatCard = ({ icon: Icon, iconColor, iconBg, value, label, trend, delay }: StatCardProps) => (
+const StatCard = ({ icon: Icon, iconColor, iconBg, value, label, trend, delay, onClick, clickable }: StatCardProps) => (
   <motion.div
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.3, delay }}
   >
     <Box
+      onClick={onClick}
       sx={{
         p: 2.5,
         borderRadius: 2,
         backgroundColor: 'hsl(var(--card))',
         border: '1px solid hsl(var(--border))',
         height: '100%',
+        cursor: clickable ? 'pointer' : 'default',
+        transition: 'all 0.2s ease',
+        '&:hover': clickable ? {
+          borderColor: iconColor,
+          bgcolor: `${iconBg}`,
+        } : {},
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 1.5 }}>
@@ -95,7 +105,7 @@ const StatCard = ({ icon: Icon, iconColor, iconBg, value, label, trend, delay }:
   </motion.div>
 );
 
-export const IncidentStatsCards = ({ incidents }: IncidentStatsCardsProps) => {
+export const IncidentStatsCards = ({ incidents, onFilterChange }: IncidentStatsCardsProps) => {
   // Calculate stats
   const resolvedCount = incidents.filter(i => i.status === 'resolved').length;
   const totalCount = incidents.length;
@@ -131,13 +141,24 @@ export const IncidentStatsCards = ({ incidents }: IncidentStatsCardsProps) => {
       }}
     >
       <StatCard
+        icon={MessageSquare}
+        iconColor="#22b8cf"
+        iconBg="rgba(34, 184, 207, 0.15)"
+        value={newCount}
+        label="New"
+        delay={0}
+        clickable={!!onFilterChange}
+        onClick={() => onFilterChange?.('status', 'new')}
+      />
+      <StatCard
         icon={CheckCircle}
         iconColor="#22c55e"
         iconBg="rgba(34, 197, 94, 0.15)"
         value={resolvedCount}
         label="Resolved"
-        trend={{ value: '15%', positive: true }}
-        delay={0}
+        delay={0.05}
+        clickable={!!onFilterChange}
+        onClick={() => onFilterChange?.('status', 'resolved')}
       />
       <StatCard
         icon={TrendingUp}
@@ -145,15 +166,6 @@ export const IncidentStatsCards = ({ incidents }: IncidentStatsCardsProps) => {
         iconBg="rgba(59, 130, 246, 0.15)"
         value={`${resolutionRate}%`}
         label="Resolution Rate"
-        trend={{ value: '2.1%', positive: true }}
-        delay={0.05}
-      />
-      <StatCard
-        icon={Clock}
-        iconColor="#f59e0b"
-        iconBg="rgba(245, 158, 11, 0.15)"
-        value={avgResponseTime}
-        label="Avg Response"
         delay={0.1}
       />
       <StatCard
@@ -163,6 +175,16 @@ export const IncidentStatsCards = ({ incidents }: IncidentStatsCardsProps) => {
         value={criticalCount}
         label="Critical/High"
         delay={0.15}
+        clickable={!!onFilterChange}
+        onClick={() => onFilterChange?.('severity', 'critical')}
+      />
+      <StatCard
+        icon={Clock}
+        iconColor="#f59e0b"
+        iconBg="rgba(245, 158, 11, 0.15)"
+        value={avgResponseTime}
+        label="Avg Response"
+        delay={0.2}
       />
     </Box>
   );
