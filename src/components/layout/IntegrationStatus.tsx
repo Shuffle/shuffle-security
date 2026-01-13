@@ -83,7 +83,8 @@ export const IntegrationStatus = ({ collapsed }: IntegrationStatusProps) => {
             authData.forEach(entry => {
               if (!entry.active && !entry.validation?.valid) return; // Skip inactive/unvalidated
               
-              const appName = entry.app.name.toLowerCase().trim();
+              // Normalize: lowercase, trim, replace spaces/underscores for deduplication
+              const appName = entry.app.name.toLowerCase().trim().replace(/[\s_-]+/g, '_');
               const existing = appMap.get(appName);
               const isValidated = entry.validation?.valid === true;
               const instance: AuthInstance = {
