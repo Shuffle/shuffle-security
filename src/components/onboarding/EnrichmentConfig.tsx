@@ -34,6 +34,10 @@ interface EnrichmentOption {
   connectedApps?: ConnectedApp[];
   // For ingestion sources breakdown
   ingestionSources?: IngestionSource[];
+  // For notification sources breakdown (chat, email)
+  notificationSources?: NotificationSource[];
+  // For threat intel sources
+  threatIntelSources?: ThreatIntelSource[];
   // For disabled/coming soon options
   disabled?: boolean;
 }
@@ -68,12 +72,13 @@ const baseEnrichmentOptions: (Omit<EnrichmentOption, 'connectedApps'> & { isDyna
     disabled: true,
   },
   {
-    id: 'threat_list',
-    name: 'Threat List Comparisons',
-    description: 'Compare indicators against known threat intelligence lists',
+    id: 'threat_intel',
+    name: 'Threat Intel',
+    description: 'Compare indicators against known threat intelligence lists and feeds',
     icon: <SecurityIcon />,
     color: '#ef4444',
     category: 'enrichment',
+    isDynamic: true, // Will be built with Threat Intel sources
   },
 ];
 
@@ -134,7 +139,14 @@ const CASES_PATTERNS = ['jira', 'servicenow', 'zendesk', 'freshdesk', 'pagerduty
 const EDR_PATTERNS = ['crowdstrike', 'sentinelone', 'carbon black', 'defender', 'cylance', 'sophos', 'trellix', 'vmware', 'tanium', 'falcon', 'edr'];
 const SIEM_PATTERNS = ['splunk', 'elastic', 'qradar', 'sentinel', 'chronicle', 'logrhythm', 'sumo logic', 'graylog', 'wazuh', 'siem', 'arcsight'];
 
+// Threat Intel source detection
+const THREAT_INTEL_PATTERNS = ['virustotal', 'shodan', 'alienvault', 'otx', 'threatcrowd', 'urlscan', 'hybrid-analysis', 'abuseipdb', 'greynoise', 'urlhaus', 'malwarebazaar', 'threatfox', 'misp', 'opencti', 'recorded future', 'mandiant', 'crowdstrike intel', 'intel471', 'flashpoint', 'domaintools'];
+const isThreatIntelApp = (appName: string) =>
+  THREAT_INTEL_PATTERNS.some(pattern => appName.toLowerCase().includes(pattern));
+
 type IngestionCategory = 'email' | 'cases' | 'edr' | 'siem';
+type NotificationCategory = 'chat' | 'email';
+type ThreatIntelCategory = 'threat_intel';
 
 const getIngestionCategory = (app: AuthAppEntry): IngestionCategory | null => {
   const name = app.app.name.toLowerCase();
@@ -154,7 +166,57 @@ interface IngestionSource {
   apps: ConnectedApp[];
 }
 
-export const EnrichmentConfig = ({ 
+interface NotificationSource {
+  category: NotificationCategory;
+  label: string;
+  apps: ConnectedApp[];
+}
+
+interface ThreatIntelSource {
+  category: ThreatIntelCategory;
+  label: string;
+  apps: ConnectedApp[];
+}
+
+// Helper component for rendering source category chips
+interface SourceChipProps {
+  label: string;
+  apps: ConnectedApp[];
+  validatedCount: number;
+  pendingCount: number;
+  hasEnabledValidated: boolean;
+  hasPending: boolean;
+  optionId: string;
+  isToolEnabled: (optionId: string, appId: string) => boolean;
+}
+
+const SourceChip = ({ label, apps, validatedCount, pendingCount, hasEnabledValidated, hasPending }: SourceChipProps) => {
+  const hasAny = apps.length > 0;
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, px: 1.5, py: 0.75, borderRadius: 2,
+      background: hasEnabledValidated ? 'rgba(34, 197, 94, 0.1)' : hasPending ? 'rgba(255, 152, 0, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+      border: '1px solid', borderColor: hasEnabledValidated ? 'rgba(34, 197, 94, 0.3)' : hasPending ? 'rgba(255, 152, 0, 0.3)' : 'rgba(255, 255, 255, 0.1)',
+    }}>
+      <Typography variant="caption" sx={{ color: hasEnabledValidated ? '#22c55e' : hasPending ? '#ff9800' : 'rgba(255, 255, 255, 0.4)', fontWeight: 500 }}>
+        {label}{hasAny && <Box component="span" sx={{ ml: 0.5, opacity: 0.8 }}>({validatedCount}{pendingCount > 0 ? `+${pendingCount}` : ''})</Box>}
+      </Typography>
+      {apps.length > 0 && (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+          {apps.slice(0, 2).map((app) => (
+            <Tooltip key={app.id} title={<Box><Typography variant="caption" sx={{ fontWeight: 600 }}>{app.name}</Typography><Typography variant="caption" sx={{ display: 'block', opacity: 0.8 }}>{app.isValidated ? 'Validated' : app.hasAuthConfig ? 'Pending validation' : 'Pending auth'}{app.isSelected ? ' • This setup' : ' • Pre-existing'}</Typography></Box>} arrow placement="top">
+              <Box sx={{ position: 'relative' }}>
+                <Avatar src={app.image} alt={app.name} sx={{ width: 16, height: 16, fontSize: '0.5rem', border: '1px solid', borderColor: app.isValidated ? 'rgba(34, 197, 94, 0.5)' : app.hasAuthConfig ? 'rgba(255, 152, 0, 0.5)' : 'rgba(239, 68, 68, 0.5)', opacity: app.isValidated ? 1 : 0.7, outline: app.isSelected ? '2px solid rgba(59, 130, 246, 0.5)' : 'none', outlineOffset: 1 }}>{app.name[0]}</Avatar>
+              </Box>
+            </Tooltip>
+          ))}
+          {apps.length > 2 && <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.6rem', ml: 0.25 }}>+{apps.length - 2}</Typography>}
+        </Box>
+      )}
+    </Box>
+  );
+};
+
+export const EnrichmentConfig = ({
   enrichmentState, 
   onEnrichmentChange,
   authenticatedApps = [],
@@ -271,51 +333,95 @@ export const EnrichmentConfig = ({
           ingestionSources,
         };
       }
+      if (opt.id === 'threat_intel') {
+        // Build Threat Intel sources from authenticated apps
+        const threatIntelApps: ConnectedApp[] = [];
+        dedupedApps.forEach(({ app, bestImage, hasValidAuth }) => {
+          if (isThreatIntelApp(app.name)) {
+            threatIntelApps.push({
+              id: app.id,
+              name: app.name,
+              image: bestImage || app.large_image,
+              isValidated: hasValidAuth,
+              isSelected: isAppSelected(app.name),
+              hasAuthConfig: true,
+            });
+          }
+        });
+        // Also add selected threat intel apps that aren't authenticated yet
+        selectedApps.forEach(selApp => {
+          const normalizedName = selApp.name.toLowerCase().trim().replace(/[\s_\-]+/g, '_');
+          if (!appValidationMap.has(normalizedName) && isThreatIntelApp(selApp.name)) {
+            threatIntelApps.push({
+              id: selApp.objectID,
+              name: selApp.name,
+              image: selApp.image_url,
+              isValidated: false,
+              isSelected: true,
+              hasAuthConfig: false,
+            });
+          }
+        });
+        
+        const threatIntelSources: ThreatIntelSource[] = [
+          { category: 'threat_intel', label: 'Threat Intel', apps: sortApps(threatIntelApps) },
+        ];
+        const tiValidatedCount = threatIntelApps.filter(a => a.isValidated).length;
+        const tiTotalCount = threatIntelApps.length;
+        
+        return {
+          ...opt,
+          description: tiTotalCount > 0
+            ? `${tiValidatedCount} validated${tiTotalCount > tiValidatedCount ? `, ${tiTotalCount - tiValidatedCount} pending` : ''}`
+            : 'Connect threat intelligence tools to compare indicators',
+          threatIntelSources,
+        };
+      }
       return opt;
     });
     
-    // Email apps for Email Notifications - filter from deduplicated apps with valid auth
-    const emailApps = dedupedApps.filter(({ app, hasValidAuth }) => 
-      hasValidAuth && isEmailApp(app.name)
-    );
-    
-    // Communication apps for Chat Notifications - filter from deduplicated apps with valid auth
-    const commApps = dedupedApps.filter(({ app, hasValidAuth }) => 
-      hasValidAuth && isCommunicationApp({ app, active: true, validation: { valid: true } })
-    );
-    
-    // Add Email Notifications
-    options.push({
-      id: 'email_notify',
-      name: 'Email Notifications',
-      description: emailApps.length > 0 
-        ? 'Send email alerts for critical severity issues'
-        : 'Connect an email tool (Gmail, Outlook) to enable email notifications',
-      icon: <EmailIcon />,
-      color: '#22c55e',
-      category: 'response',
-      connectedApps: emailApps.map(({ app, bestImage }) => ({
+    // Email apps for Notifications - filter from deduplicated apps with valid auth
+    const emailNotifyApps: ConnectedApp[] = dedupedApps
+      .filter(({ app, hasValidAuth }) => hasValidAuth && isEmailApp(app.name))
+      .map(({ app, bestImage, hasValidAuth }) => ({
         id: app.id,
         name: app.name,
         image: bestImage || app.large_image,
-      })),
-    });
+        isValidated: hasValidAuth,
+        isSelected: isAppSelected(app.name),
+        hasAuthConfig: true,
+      }));
     
-    // Add Chat Notifications with connected communication tools
+    // Communication apps for Notifications - filter from deduplicated apps with valid auth
+    const chatNotifyApps: ConnectedApp[] = dedupedApps
+      .filter(({ app, hasValidAuth }) => hasValidAuth && isCommunicationApp({ app, active: true, validation: { valid: true } }))
+      .map(({ app, bestImage, hasValidAuth }) => ({
+        id: app.id,
+        name: app.name,
+        image: bestImage || app.large_image,
+        isValidated: hasValidAuth,
+        isSelected: isAppSelected(app.name),
+        hasAuthConfig: true,
+      }));
+    
+    const notificationSources: NotificationSource[] = [
+      { category: 'chat', label: 'Chat', apps: sortApps(chatNotifyApps) },
+      { category: 'email', label: 'Email', apps: sortApps(emailNotifyApps) },
+    ];
+    
+    const notifyTotal = emailNotifyApps.length + chatNotifyApps.length;
+    
+    // Add combined Notifications option
     options.push({
-      id: 'chat_notify',
-      name: 'Chat Notifications',
-      description: commApps.length > 0 
-        ? 'Post alerts to your connected communication tools'
-        : 'Connect a chat tool (Slack, Teams, Discord) to enable chat notifications',
+      id: 'notifications',
+      name: 'Notifications',
+      description: notifyTotal > 0 
+        ? `Send alerts via ${chatNotifyApps.length > 0 ? 'Chat' : ''}${chatNotifyApps.length > 0 && emailNotifyApps.length > 0 ? ' & ' : ''}${emailNotifyApps.length > 0 ? 'Email' : ''}`
+        : 'Connect email or chat tools to enable notifications',
       icon: <ChatIcon />,
       color: '#8b5cf6',
       category: 'response',
-      connectedApps: commApps.map(({ app, bestImage }) => ({
-        id: app.id,
-        name: app.name,
-        image: bestImage || app.large_image,
-      })),
+      notificationSources,
     });
     
     return options;
@@ -360,6 +466,12 @@ export const EnrichmentConfig = ({
     if (option.ingestionSources) {
       return option.ingestionSources.flatMap(s => s.apps).find(a => a.id === appId);
     }
+    if (option.notificationSources) {
+      return option.notificationSources.flatMap(s => s.apps).find(a => a.id === appId);
+    }
+    if (option.threatIntelSources) {
+      return option.threatIntelSources.flatMap(s => s.apps).find(a => a.id === appId);
+    }
     if (option.connectedApps) {
       return option.connectedApps.find(a => a.id === appId);
     }
@@ -377,10 +489,16 @@ export const EnrichmentConfig = ({
     return appInfo?.isSelected === true && appInfo?.isValidated === true;
   };
 
-  // Get all tools for an option (from ingestion sources or connected apps)
+  // Get all tools for an option (from various sources or connected apps)
   const getAllToolsForOption = (option: EnrichmentOption): ConnectedApp[] => {
     if (option.ingestionSources) {
       return option.ingestionSources.flatMap(s => s.apps);
+    }
+    if (option.notificationSources) {
+      return option.notificationSources.flatMap(s => s.apps);
+    }
+    if (option.threatIntelSources) {
+      return option.threatIntelSources.flatMap(s => s.apps);
     }
     if (option.connectedApps) {
       return option.connectedApps;
@@ -413,7 +531,9 @@ export const EnrichmentConfig = ({
             const hasConfig = option.configFields && option.configFields.length > 0;
             const hasConnectedApps = option.connectedApps && option.connectedApps.length > 0;
             const hasIngestionSources = option.ingestionSources && option.ingestionSources.some(s => s.apps.length > 0);
-            const isDisabled = option.disabled || (!hasConnectedApps && (option.id === 'email_notify' || option.id === 'chat_notify'));
+            const hasNotificationSources = option.notificationSources && option.notificationSources.some(s => s.apps.length > 0);
+            const hasThreatIntelSources = option.threatIntelSources && option.threatIntelSources.some(s => s.apps.length > 0);
+            const isDisabled = option.disabled || (option.id === 'notifications' && !hasNotificationSources);
             const allTools = getAllToolsForOption(option);
             const hasExpandableTools = allTools.length > 0 && !isDisabled;
 
@@ -495,7 +615,11 @@ export const EnrichmentConfig = ({
                         </Box>
                         <Typography
                           variant="body2"
-                          sx={{ color: 'rgba(255, 255, 255, 0.5)', lineHeight: 1.4, mb: option.ingestionSources ? 1.5 : 0 }}
+                          sx={{ 
+                            color: 'rgba(255, 255, 255, 0.5)', 
+                            lineHeight: 1.4, 
+                            mb: (option.ingestionSources || option.notificationSources || option.threatIntelSources) ? 1.5 : 0 
+                          }}
                         >
                           {option.description}
                         </Typography>
@@ -507,112 +631,75 @@ export const EnrichmentConfig = ({
                               const validatedApps = source.apps.filter(a => a.isValidated);
                               const validatedCount = validatedApps.length;
                               const pendingCount = source.apps.length - validatedCount;
-                              const hasAny = source.apps.length > 0;
-                              // Check if any validated app is enabled
-                              const hasEnabledValidated = validatedApps.some(a => 
-                                isToolEnabled(option.id, a.id)
-                              );
+                              const hasEnabledValidated = validatedApps.some(a => isToolEnabled(option.id, a.id));
                               const hasPending = pendingCount > 0;
                               
                               return (
-                                <Box
+                                <SourceChip
                                   key={source.category}
-                                  sx={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 0.75,
-                                    px: 1.5,
-                                    py: 0.75,
-                                    borderRadius: 2,
-                                    background: hasEnabledValidated 
-                                      ? 'rgba(34, 197, 94, 0.1)' 
-                                      : hasPending 
-                                        ? 'rgba(255, 152, 0, 0.1)'
-                                        : 'rgba(255, 255, 255, 0.05)',
-                                    border: '1px solid',
-                                    borderColor: hasEnabledValidated 
-                                      ? 'rgba(34, 197, 94, 0.3)' 
-                                      : hasPending
-                                        ? 'rgba(255, 152, 0, 0.3)'
-                                        : 'rgba(255, 255, 255, 0.1)',
-                                  }}
-                                >
-                                  <Typography
-                                    variant="caption"
-                                    sx={{
-                                      color: hasEnabledValidated 
-                                        ? '#22c55e' 
-                                        : hasPending 
-                                          ? '#ff9800'
-                                          : 'rgba(255, 255, 255, 0.4)',
-                                      fontWeight: 500,
-                                    }}
-                                  >
-                                    {source.label}
-                                    {hasAny && (
-                                      <Box component="span" sx={{ ml: 0.5, opacity: 0.8 }}>
-                                        ({validatedCount}{pendingCount > 0 ? `+${pendingCount}` : ''})
-                                      </Box>
-                                    )}
-                                  </Typography>
-                                {source.apps.length > 0 && (
-                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
-                                    {source.apps.slice(0, 2).map((app) => (
-                                      <Tooltip 
-                                        key={app.id}
-                                        title={
-                                          <Box>
-                                            <Typography variant="caption" sx={{ fontWeight: 600 }}>{app.name}</Typography>
-                                            <Typography variant="caption" sx={{ display: 'block', opacity: 0.8 }}>
-                                              {app.isValidated 
-                                                ? 'Validated' 
-                                                : app.hasAuthConfig 
-                                                  ? 'Pending validation' 
-                                                  : 'Pending auth'}
-                                              {app.isSelected ? ' • This setup' : ' • Pre-existing'}
-                                            </Typography>
-                                          </Box>
-                                        }
-                                        arrow
-                                        placement="top"
-                                      >
-                                        <Box sx={{ position: 'relative' }}>
-                                          <Avatar
-                                            src={app.image}
-                                            alt={app.name}
-                                            sx={{
-                                              width: 16,
-                                              height: 16,
-                                              fontSize: '0.5rem',
-                                              border: '1px solid',
-                                              borderColor: app.isValidated 
-                                                ? 'rgba(34, 197, 94, 0.5)' 
-                                                : app.hasAuthConfig
-                                                  ? 'rgba(255, 152, 0, 0.5)'
-                                                  : 'rgba(239, 68, 68, 0.5)',
-                                              opacity: app.isValidated ? 1 : 0.7,
-                                              outline: app.isSelected 
-                                                ? '2px solid rgba(59, 130, 246, 0.5)' 
-                                                : 'none',
-                                              outlineOffset: 1,
-                                            }}
-                                          >
-                                            {app.name[0]}
-                                          </Avatar>
-                                        </Box>
-                                      </Tooltip>
-                                    ))}
-                                    {source.apps.length > 2 && (
-                                      <Typography
-                                        variant="caption"
-                                        sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.6rem', ml: 0.25 }}
-                                      >
-                                        +{source.apps.length - 2}
-                                      </Typography>
-                                    )}
-                                  </Box>
-                                )}
-                              </Box>
+                                  label={source.label}
+                                  apps={source.apps}
+                                  validatedCount={validatedCount}
+                                  pendingCount={pendingCount}
+                                  hasEnabledValidated={hasEnabledValidated}
+                                  hasPending={hasPending}
+                                  optionId={option.id}
+                                  isToolEnabled={isToolEnabled}
+                                />
+                              );
+                            })}
+                          </Box>
+                        )}
+                        
+                        {/* Notification sources breakdown */}
+                        {option.notificationSources && (
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                            {option.notificationSources.map((source) => {
+                              const validatedApps = source.apps.filter(a => a.isValidated);
+                              const validatedCount = validatedApps.length;
+                              const pendingCount = source.apps.length - validatedCount;
+                              const hasEnabledValidated = validatedApps.some(a => isToolEnabled(option.id, a.id));
+                              const hasPending = pendingCount > 0;
+                              
+                              return (
+                                <SourceChip
+                                  key={source.category}
+                                  label={source.label}
+                                  apps={source.apps}
+                                  validatedCount={validatedCount}
+                                  pendingCount={pendingCount}
+                                  hasEnabledValidated={hasEnabledValidated}
+                                  hasPending={hasPending}
+                                  optionId={option.id}
+                                  isToolEnabled={isToolEnabled}
+                                />
+                              );
+                            })}
+                          </Box>
+                        )}
+                        
+                        {/* Threat Intel sources breakdown */}
+                        {option.threatIntelSources && (
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                            {option.threatIntelSources.map((source) => {
+                              const validatedApps = source.apps.filter(a => a.isValidated);
+                              const validatedCount = validatedApps.length;
+                              const pendingCount = source.apps.length - validatedCount;
+                              const hasEnabledValidated = validatedApps.some(a => isToolEnabled(option.id, a.id));
+                              const hasPending = pendingCount > 0;
+                              
+                              return (
+                                <SourceChip
+                                  key={source.category}
+                                  label={source.label}
+                                  apps={source.apps}
+                                  validatedCount={validatedCount}
+                                  pendingCount={pendingCount}
+                                  hasEnabledValidated={hasEnabledValidated}
+                                  hasPending={hasPending}
+                                  optionId={option.id}
+                                  isToolEnabled={isToolEnabled}
+                                />
                               );
                             })}
                           </Box>
