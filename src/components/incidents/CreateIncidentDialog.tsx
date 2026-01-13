@@ -21,6 +21,7 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import { useUsers } from '@/hooks/useUsers';
 import { useCustomFields, CustomField } from '@/hooks/useCustomFields';
+import { useIOCTypes } from '@/hooks/useIOCTypes';
 
 // Generate a 10-character unique ID
 const generateIncidentId = (): string => {
@@ -157,6 +158,8 @@ export const severityOptions = [
   { id: 5, label: 'Critical', value: 'critical' },
 ];
 
+// DEPRECATED: Use useIOCTypes().observableTypeNames instead
+// This is kept for backwards compatibility but components should migrate to the hook
 export const observableTypes = [
   'ip',
   'domain',
@@ -188,6 +191,7 @@ export const CreateIncidentDialog = ({ open, onClose, onSubmit }: CreateIncident
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { users, loading: usersLoading } = useUsers();
   const { fields: customFields } = useCustomFields();
+  const { observableTypeNames } = useIOCTypes();
 
   const handleAddReference = () => {
     if (newReference.trim()) {
@@ -549,7 +553,7 @@ export const CreateIncidentDialog = ({ open, onClose, onSubmit }: CreateIncident
                 onChange={(e) => setNewObservableType(e.target.value)}
                 sx={{ minWidth: 120 }}
               >
-                {observableTypes.map((type) => (
+                {observableTypeNames.map((type) => (
                   <MenuItem key={type} value={type}>
                     {type}
                   </MenuItem>
