@@ -76,6 +76,8 @@ export interface EnrichmentState {
   [key: string]: {
     enabled: boolean;
     config: Record<string, string>;
+    // Individual tool toggles (keyed by app id)
+    tools?: Record<string, boolean>;
   };
 }
 
@@ -271,6 +273,36 @@ export const EnrichmentConfig = ({
     });
   };
 
+  const toggleTool = (optionId: string, appId: string) => {
+    const current = enrichmentState[optionId] || { enabled: false, config: {}, tools: {} };
+    const currentTools = current.tools || {};
+    const isCurrentlyEnabled = currentTools[appId] !== false; // Default to true if not set
+    onEnrichmentChange({
+      ...enrichmentState,
+      [optionId]: {
+        ...current,
+        tools: { ...currentTools, [appId]: !isCurrentlyEnabled },
+      },
+    });
+  };
+
+  const isToolEnabled = (optionId: string, appId: string): boolean => {
+    const current = enrichmentState[optionId];
+    if (!current?.tools) return true; // Default to enabled
+    return current.tools[appId] !== false;
+  };
+
+  // Get all tools for an option (from ingestion sources or connected apps)
+  const getAllToolsForOption = (option: EnrichmentOption): ConnectedApp[] => {
+    if (option.ingestionSources) {
+      return option.ingestionSources.flatMap(s => s.apps);
+    }
+    if (option.connectedApps) {
+      return option.connectedApps;
+    }
+    return [];
+  };
+
   const enrichmentItems = enrichmentOptions.filter((o) => o.category === 'enrichment');
   const responseItems = enrichmentOptions.filter((o) => o.category === 'response');
 
@@ -297,6 +329,8 @@ export const EnrichmentConfig = ({
             const hasConnectedApps = option.connectedApps && option.connectedApps.length > 0;
             const hasIngestionSources = option.ingestionSources && option.ingestionSources.some(s => s.apps.length > 0);
             const isDisabled = option.disabled || (!hasConnectedApps && (option.id === 'email_notify' || option.id === 'chat_notify'));
+            const allTools = getAllToolsForOption(option);
+            const hasExpandableTools = allTools.length > 0 && !isDisabled;
 
             return (
               <motion.div key={option.id} variants={itemVariants}>
@@ -445,7 +479,20 @@ export const EnrichmentConfig = ({
                         )}
                       </Box>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, pt: 0.5 }}>
-                        {hasConfig && state.enabled && (
+                        {hasExpandableTools && (
+                          <IconButton
+                            size="small"
+                            onClick={() => setExpandedId(isExpanded ? null : option.id)}
+                            sx={{
+                              color: 'rgba(255, 255, 255, 0.5)',
+                              transform: isExpanded ? 'rotate(180deg)' : 'none',
+                              transition: 'transform 0.3s ease',
+                            }}
+                          >
+                            <ExpandMoreIcon />
+                          </IconButton>
+                        )}
+                        {hasConfig && state.enabled && !hasExpandableTools && (
                           <IconButton
                             size="small"
                             onClick={() => setExpandedId(isExpanded ? null : option.id)}
@@ -474,7 +521,143 @@ export const EnrichmentConfig = ({
                       </Box>
                     </Box>
 
-                    {hasConfig && (
+                    {/* Expandable tools list */}
+                    {hasExpandableTools && (
+                      <Collapse in={isExpanded}>
+                        <Box sx={{ mt: 2, pl: 7 }}>
+                          <Typography
+                            variant="caption"
+                            sx={{ color: 'rgba(255, 255, 255, 0.4)', mb: 1.5, display: 'block' }}
+                          >
+                            Toggle individual tools:
+                          </Typography>
+                          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                            {option.ingestionSources ? (
+                              // Group by category for ingestion sources
+                              option.ingestionSources.filter(s => s.apps.length > 0).map((source) => (
+                                <Box key={source.category}>
+                                  <Typography
+                                    variant="caption"
+                                    sx={{ 
+                                      color: 'rgba(255, 255, 255, 0.5)', 
+                                      fontWeight: 600,
+                                      textTransform: 'uppercase',
+                                      letterSpacing: 0.5,
+                                      fontSize: '0.65rem',
+                                      mb: 0.5,
+                                      display: 'block',
+                                    }}
+                                  >
+                                    {source.label}
+                                  </Typography>
+                                  {source.apps.map((app) => (
+                                    <Box
+                                      key={app.id}
+                                      sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        py: 0.75,
+                                        px: 1.5,
+                                        borderRadius: 1.5,
+                                        background: 'rgba(0, 0, 0, 0.2)',
+                                        mb: 0.5,
+                                        '&:hover': {
+                                          background: 'rgba(0, 0, 0, 0.3)',
+                                        },
+                                      }}
+                                    >
+                                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                        <Avatar
+                                          src={app.image}
+                                          alt={app.name}
+                                          sx={{
+                                            width: 24,
+                                            height: 24,
+                                            fontSize: '0.7rem',
+                                            border: '1px solid rgba(255,255,255,0.2)',
+                                          }}
+                                        >
+                                          {app.name[0]}
+                                        </Avatar>
+                                        <Typography variant="body2" sx={{ color: 'white' }}>
+                                          {app.name}
+                                        </Typography>
+                                      </Box>
+                                      <Switch
+                                        size="small"
+                                        checked={isToolEnabled(option.id, app.id)}
+                                        onChange={() => toggleTool(option.id, app.id)}
+                                        sx={{
+                                          '& .MuiSwitch-switchBase.Mui-checked': {
+                                            color: option.color,
+                                          },
+                                          '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                                            backgroundColor: option.color,
+                                          },
+                                        }}
+                                      />
+                                    </Box>
+                                  ))}
+                                </Box>
+                              ))
+                            ) : (
+                              // Flat list for connected apps
+                              allTools.map((app) => (
+                                <Box
+                                  key={app.id}
+                                  sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    py: 0.75,
+                                    px: 1.5,
+                                    borderRadius: 1.5,
+                                    background: 'rgba(0, 0, 0, 0.2)',
+                                    '&:hover': {
+                                      background: 'rgba(0, 0, 0, 0.3)',
+                                    },
+                                  }}
+                                >
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                    <Avatar
+                                      src={app.image}
+                                      alt={app.name}
+                                      sx={{
+                                        width: 24,
+                                        height: 24,
+                                        fontSize: '0.7rem',
+                                        border: '1px solid rgba(255,255,255,0.2)',
+                                      }}
+                                    >
+                                      {app.name[0]}
+                                    </Avatar>
+                                    <Typography variant="body2" sx={{ color: 'white' }}>
+                                      {app.name}
+                                    </Typography>
+                                  </Box>
+                                  <Switch
+                                    size="small"
+                                    checked={isToolEnabled(option.id, app.id)}
+                                    onChange={() => toggleTool(option.id, app.id)}
+                                    sx={{
+                                      '& .MuiSwitch-switchBase.Mui-checked': {
+                                        color: option.color,
+                                      },
+                                      '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                                        backgroundColor: option.color,
+                                      },
+                                    }}
+                                  />
+                                </Box>
+                              ))
+                            )}
+                          </Box>
+                        </Box>
+                      </Collapse>
+                    )}
+
+                    {hasConfig && !hasExpandableTools && (
                       <Collapse in={isExpanded && state.enabled}>
                         <Box sx={{ mt: 3, pl: 7, display: 'flex', flexDirection: 'column', gap: 2 }}>
                           {option.configFields!.map((field) => (
