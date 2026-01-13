@@ -1112,19 +1112,6 @@ const IncidentDetailPage = () => {
               </Button>
             )}
 
-            <Tooltip title="Settings">
-              <IconButton 
-                size="small"
-                sx={{ 
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: 1,
-                  width: 32,
-                  height: 32,
-                }}
-              >
-                <SettingsIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
           </Box>
         </Box>
       </Box>
