@@ -4,7 +4,7 @@ import {
   Typography,
   Chip,
 } from '@mui/material';
-import { Mail, Radar, Search, Globe } from 'lucide-react';
+import { Mail, Radar, Search, Globe, Ticket } from 'lucide-react';
 import { SingulJS } from '@/lib/singul-local';
 import type { AlgoliaSearchApp, SingulJSHandle } from '@/lib/singul-local';
 import { API_CONFIG } from '@/config/api';
@@ -24,17 +24,21 @@ export const TicketingSystemSearch = ({
 }: TicketingSystemSearchProps) => {
   const singulRef = useRef<SingulJSHandle>(null);
 
-  const categories = [
+  const mainCategories = [
     { id: 'email', label: 'Email', icon: Mail, description: 'Inboxes & mail servers', searchTerm: 'email' },
     { id: 'siem', label: 'SIEM', icon: Radar, description: 'Log aggregation', searchTerm: 'siem' },
     { id: 'edr', label: 'EDR', icon: Search, description: 'Endpoint detection', searchTerm: 'edr' },
-    { id: 'other', label: 'Anywhere Else', icon: Globe, description: 'Any other source', searchTerm: '' },
+    { id: 'cases', label: 'Cases', icon: Ticket, description: 'Ticketing & support', searchTerm: 'cases' },
   ];
+
+  const catchAllCategory = { id: 'other', label: 'Anywhere Else', icon: Globe, description: 'Browse all available integrations', searchTerm: '' };
+
+  const allCategories = [...mainCategories, catchAllCategory];
 
   const getActiveCategory = () => {
     const lowerQuery = searchQuery.toLowerCase().trim();
     if (lowerQuery === '') return 'other';
-    return categories.find(c => c.searchTerm && c.searchTerm.toLowerCase() === lowerQuery)?.id || null;
+    return allCategories.find(c => c.searchTerm && c.searchTerm.toLowerCase() === lowerQuery)?.id || null;
   };
 
   const activeCategory = getActiveCategory();
@@ -58,16 +62,16 @@ export const TicketingSystemSearch = ({
         Search and connect integrations from any of these ingest areas.
       </Typography>
 
-      {/* Ingest Area Categories */}
+      {/* Main Categories */}
       <Box
         sx={{
           display: 'grid',
           gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' },
           gap: 2,
-          mb: 4,
+          mb: 2,
         }}
       >
-        {categories.map((category) => {
+        {mainCategories.map((category) => {
           const isActive = activeCategory === category.id;
           return (
             <Box
@@ -127,6 +131,45 @@ export const TicketingSystemSearch = ({
             </Box>
           );
         })}
+      </Box>
+
+      {/* Catch-all Category */}
+      <Box
+        sx={{
+          p: 2,
+          backgroundColor: activeCategory === catchAllCategory.id ? 'rgba(255, 102, 0, 0.1)' : 'rgba(255, 255, 255, 0.02)',
+          border: '1px solid',
+          borderColor: activeCategory === catchAllCategory.id ? '#FF6600' : 'rgba(255, 255, 255, 0.06)',
+          borderRadius: 2,
+          cursor: 'pointer',
+          transition: 'all 0.3s ease',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 1.5,
+          mb: 4,
+          '&:hover': {
+            borderColor: 'rgba(255, 102, 0, 0.4)',
+            backgroundColor: activeCategory === catchAllCategory.id ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255, 255, 255, 0.04)',
+          },
+        }}
+        onClick={() => {
+          onSearchQueryChange('');
+          if (singulRef.current) {
+            singulRef.current.search('');
+          }
+        }}
+      >
+        <catchAllCategory.icon size={18} color={activeCategory === catchAllCategory.id ? '#FF6600' : 'rgba(255, 255, 255, 0.5)'} />
+        <Typography
+          variant="body2"
+          sx={{ 
+            color: activeCategory === catchAllCategory.id ? '#FF6600' : 'rgba(255, 255, 255, 0.5)', 
+            fontWeight: 500,
+          }}
+        >
+          {catchAllCategory.label} — {catchAllCategory.description}
+        </Typography>
       </Box>
 
       <SingulJS
