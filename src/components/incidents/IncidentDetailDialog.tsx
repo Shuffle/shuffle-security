@@ -32,6 +32,7 @@ import {
 import { useUsers } from '@/hooks/useUsers';
 import { useCustomFields, CustomField } from '@/hooks/useCustomFields';
 import { useIOCTypes } from '@/hooks/useIOCTypes';
+import { ObservableTypeSelector } from './ObservableTypeSelector';
 
 interface DisplayIncident {
   id: string;
@@ -91,7 +92,7 @@ export const IncidentDetailDialog = ({ open, incident, onClose, onResolve, onUpd
   const [saving, setSaving] = useState(false);
   const { users, loading: usersLoading } = useUsers();
   const { fields: customFields } = useCustomFields();
-  const { observableTypeNames } = useIOCTypes();
+  const { observableTypeNames, iocTypes } = useIOCTypes();
 
   // Reset form when incident changes
   useEffect(() => {
@@ -559,41 +560,33 @@ export const IncidentDetailDialog = ({ open, incident, onClose, onResolve, onUpd
             <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary' }}>
               Observables (IOCs)
             </Typography>
-            <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
-                <TextField
-                  select
-                  size="small"
-                  value={newObservableType}
-                  onChange={(e) => setNewObservableType(e.target.value)}
-                  sx={{ minWidth: 120, ...inputSx }}
-                >
-                  {observableTypeNames.map((type) => (
-                    <MenuItem key={type} value={type}>
-                      {type}
-                    </MenuItem>
-                  ))}
-                </TextField>
-                <TextField
-                  size="small"
-                  value={newObservableValue}
-                  onChange={(e) => setNewObservableValue(e.target.value)}
-                  placeholder="Value..."
-                  fullWidth
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleAddObservable();
-                    }
-                  }}
-                  sx={inputSx}
-                />
-                <IconButton 
-                  onClick={handleAddObservable} 
-                  size="small" 
-                  sx={{ bgcolor: 'rgba(255,255,255,0.05)', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
-                  disabled={!newObservableValue.trim()}
-                >
-                  <AddIcon />
+            <Box sx={{ display: 'flex', gap: 1, mb: 1, alignItems: 'center' }}>
+              <ObservableTypeSelector
+                value={newObservableType}
+                onChange={setNewObservableType}
+                iocTypes={iocTypes}
+              />
+              <TextField
+                size="small"
+                value={newObservableValue}
+                onChange={(e) => setNewObservableValue(e.target.value)}
+                placeholder="Value..."
+                fullWidth
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddObservable();
+                  }
+                }}
+                sx={inputSx}
+              />
+              <IconButton 
+                onClick={handleAddObservable} 
+                size="small" 
+                sx={{ bgcolor: 'rgba(255,255,255,0.05)', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
+                disabled={!newObservableValue.trim()}
+              >
+                <AddIcon />
               </IconButton>
             </Box>
             {editedObservables.length > 0 ? (

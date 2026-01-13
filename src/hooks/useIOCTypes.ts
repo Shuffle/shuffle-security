@@ -187,6 +187,7 @@ export const useIOCTypes = () => {
     observableTypeNames,
     validateValue,
     initializeDefaults,
+    refetch: fetchItems,
     // Group by category for better UI (OCSF-based categories)
     groupedTypes: IOC_CATEGORIES.reduce((acc, cat) => {
       acc[cat.id] = iocTypes.filter(t => 

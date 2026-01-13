@@ -24,6 +24,7 @@ import { useUsers } from '@/hooks/useUsers';
 import { useCustomFields, CustomField } from '@/hooks/useCustomFields';
 import { useIOCTypes } from '@/hooks/useIOCTypes';
 import { useCaseTemplates, CaseTemplate } from '@/hooks/useCaseTemplates';
+import { ObservableTypeSelector } from './ObservableTypeSelector';
 
 // Generate a 10-character unique ID
 const generateIncidentId = (): string => {
@@ -196,7 +197,7 @@ export const CreateIncidentDialog = ({ open, onClose, onSubmit }: CreateIncident
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { users, loading: usersLoading } = useUsers();
   const { fields: customFields } = useCustomFields();
-  const { observableTypeNames } = useIOCTypes();
+  const { observableTypeNames, iocTypes } = useIOCTypes();
   const { templates, trackUsage } = useCaseTemplates();
 
   // Handle template selection
@@ -651,20 +652,12 @@ export const CreateIncidentDialog = ({ open, onClose, onSubmit }: CreateIncident
             <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary' }}>
               Observables (IOCs)
             </Typography>
-            <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
-              <TextField
-                select
-                size="small"
+            <Box sx={{ display: 'flex', gap: 1, mb: 1, alignItems: 'center' }}>
+              <ObservableTypeSelector
                 value={newObservableType}
-                onChange={(e) => setNewObservableType(e.target.value)}
-                sx={{ minWidth: 120 }}
-              >
-                {observableTypeNames.map((type) => (
-                  <MenuItem key={type} value={type}>
-                    {type}
-                  </MenuItem>
-                ))}
-              </TextField>
+                onChange={setNewObservableType}
+                iocTypes={iocTypes}
+              />
               <TextField
                 size="small"
                 value={newObservableValue}

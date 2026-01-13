@@ -48,6 +48,7 @@ import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { useUsers } from '@/hooks/useUsers';
 import { useCustomFields, CustomField } from '@/hooks/useCustomFields';
 import { useIOCTypes } from '@/hooks/useIOCTypes';
+import { ObservableTypeSelector } from '@/components/incidents/ObservableTypeSelector';
 import { useCaseTemplates, CaseTemplate } from '@/hooks/useCaseTemplates';
 import { 
   OCSFIncidentFinding, 
@@ -315,7 +316,7 @@ const IncidentDetailPage = () => {
   
   const { users, loading: usersLoading } = useUsers();
   const { fields: customFields } = useCustomFields();
-  const { observableTypeNames } = useIOCTypes();
+  const { observableTypeNames, iocTypes, refetch: refetchIOCTypes } = useIOCTypes();
   const { templates: caseTemplates, trackUsage: trackTemplateUsage } = useCaseTemplates();
   const { addItem } = useDatastore({
     category: DATASTORE_CATEGORIES.INCIDENTS,
@@ -1773,25 +1774,13 @@ const IncidentDetailPage = () => {
           p: 2.5,
         }}>
           {/* Add Observable input */}
-          <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-            <FormControl size="small" sx={{ minWidth: 140 }}>
-              <InputLabel>Type</InputLabel>
-              <Select
-                value={newObservableType}
-                label="Type"
-                onChange={(e) => setNewObservableType(e.target.value)}
-                sx={inputSx['& .MuiOutlinedInput-root']}
-                MenuProps={{
-                  PaperProps: {
-                    sx: { bgcolor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }
-                  }
-                }}
-              >
-                {observableTypeNames.map((type) => (
-                  <MenuItem key={type} value={type}>{type}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+          <Box sx={{ display: 'flex', gap: 1, mb: 2, alignItems: 'center' }}>
+            <ObservableTypeSelector
+              value={newObservableType}
+              onChange={setNewObservableType}
+              iocTypes={iocTypes}
+              onTypeCreated={refetchIOCTypes}
+            />
             <TextField
               size="small"
               value={newObservableValue}
