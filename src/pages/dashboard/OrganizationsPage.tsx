@@ -37,7 +37,7 @@ const OrganizationsPage = () => {
   useEffect(() => {
     const fetchOrgs = async () => {
       try {
-        const response = await fetch(getApiUrl('/orgs'), {
+        const response = await fetch(getApiUrl('/api/v1/orgs'), {
           credentials: 'include',
           headers: {
             'Authorization': `Bearer ${sessionToken}`,

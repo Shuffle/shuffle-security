@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchUserInfo = useCallback(async (token?: string | null) => {
     try {
-      const response = await fetch(getApiUrl('/getinfo'), {
+      const response = await fetch(getApiUrl('/api/v1/getinfo'), {
         method: 'GET',
         credentials: 'include',
         headers: {
@@ -129,7 +129,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const setActiveOrg = useCallback(async (orgId: string) => {
     try {
       const token = localStorage.getItem('session_token');
-      const response = await fetch(getApiUrl('/orgs/' + orgId + '/change'), {
+      const response = await fetch(getApiUrl('/api/v1/orgs/' + orgId + '/change'), {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -161,7 +161,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     // Then call the Shuffle logout API
     try {
-      await fetch(getApiUrl('/logout'), {
+      await fetch(getApiUrl('/api/v1/logout'), {
         method: 'POST',
         credentials: 'include',
         headers: {

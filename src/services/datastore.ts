@@ -80,7 +80,7 @@ export const setDatastoreItem = async (
     category,
   };
 
-  const response = await fetch(getApiUrl(`/orgs/${orgId}/set_cache`), {
+  const response = await fetch(getApiUrl(`/api/v1/orgs/${orgId}/set_cache`), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -140,7 +140,7 @@ export const getDatastoreItem = async (
     payload.category = category;
   }
 
-  const response = await fetch(getApiUrl(`/orgs/${orgId}/get_cache`), {
+  const response = await fetch(getApiUrl(`/api/v1/orgs/${orgId}/get_cache`), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -179,7 +179,7 @@ export const getDatastoreByCategory = async (
   }
 
   const response = await fetch(
-    getApiUrl(`/orgs/${orgId}/list_cache?category=${encodeURIComponent(category)}`),
+    getApiUrl(`/api/v1/orgs/${orgId}/list_cache?category=${encodeURIComponent(category)}`),
     {
       method: 'GET',
       headers: {
@@ -222,7 +222,7 @@ export const deleteDatastoreItem = async (
     payload.category = category;
   }
 
-  const response = await fetch(getApiUrl(`/orgs/${orgId}/delete_cache`), {
+  const response = await fetch(getApiUrl(`/api/v1/orgs/${orgId}/delete_cache`), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
