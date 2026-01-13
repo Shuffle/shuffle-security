@@ -21,6 +21,7 @@ import TravelExploreIcon from '@mui/icons-material/TravelExplore';
 import DownloadIcon from '@mui/icons-material/Download';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
+import shuffleLogo from '@/assets/shuffle-logo.png';
 
 interface EnrichmentOption {
   id: string;
@@ -341,7 +342,7 @@ export const EnrichmentConfig = ({
         threatIntelApps.push({
           id: 'shuffle_threat_lists',
           name: 'Shuffle Threat Lists',
-          image: 'https://shuffler.io/images/logos/shuffle_logo.png',
+          image: shuffleLogo,
           isValidated: true,
           isSelected: true,
           hasAuthConfig: true,
