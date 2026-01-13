@@ -67,6 +67,7 @@ export interface ActivityItem {
   timestamp: number;
   content: string;
   details?: Record<string, unknown>;
+  attachments?: FileAttachment[];
 }
 
 // Task categories for organization
