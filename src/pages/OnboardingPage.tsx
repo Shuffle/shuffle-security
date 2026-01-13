@@ -13,7 +13,12 @@ import IntegrationInstructionsIcon from '@mui/icons-material/IntegrationInstruct
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
-import { API_CONFIG } from '@/config/api';
+import { API_CONFIG, getApiUrl } from '@/config/api';
+import { setDatastoreItem, getDatastoreItem } from '@/services/datastore';
+
+// Datastore category for onboarding config
+const ONBOARDING_CONFIG_CATEGORY = 'singul-onboarding-config';
+const SELECTED_TOOLS_KEY = 'selected_tools';
 
 // Type for authenticated apps from API
 interface ApiAuthEntry {
@@ -51,6 +56,29 @@ const OnboardingPage = () => {
     auto_assign: { enabled: true, config: {} },
   });
 
+  // Load saved selected tools from datastore on mount
+  useEffect(() => {
+    const loadSavedTools = async () => {
+      if (!API_CONFIG.apiKey) return;
+      
+      try {
+        const response = await getDatastoreItem(SELECTED_TOOLS_KEY, ONBOARDING_CONFIG_CATEGORY);
+        if (response.success && response.item?.value) {
+          const savedTools = typeof response.item.value === 'string' 
+            ? JSON.parse(response.item.value) 
+            : response.item.value;
+          if (Array.isArray(savedTools) && savedTools.length > 0) {
+            setSelectedApps(savedTools);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load saved tools:', error);
+      }
+    };
+    
+    loadSavedTools();
+  }, []);
+
   // Fetch authenticated apps from API
   useEffect(() => {
     const fetchAuthenticatedApps = async () => {
@@ -77,7 +105,7 @@ const OnboardingPage = () => {
     fetchAuthenticatedApps();
   }, []);
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (activeStep === steps.length - 1) {
       const connectedApps = selectedApps.filter(
         (app) => authStates[app.objectID]?.status === 'connected'
@@ -85,6 +113,35 @@ const OnboardingPage = () => {
       localStorage.setItem('connected_integrations', JSON.stringify(connectedApps));
       navigate('/incidents');
     } else {
+      // When moving from step 0 (Select Tools) to step 1 (Authentication)
+      if (activeStep === 0 && selectedApps.length > 0) {
+        try {
+          // Save selected tools to datastore
+          await setDatastoreItem(SELECTED_TOOLS_KEY, selectedApps, ONBOARDING_CONFIG_CATEGORY);
+          
+          // Generate workflow for ingest
+          const appNames = selectedApps.map(app => app.name).join(',');
+          const generateResponse = await fetch(getApiUrl('/api/v2/workflows/generate'), {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              label: 'Ingest Tickets',
+              app_name: appNames,
+              category: 'cases',
+            }),
+          });
+          
+          if (!generateResponse.ok) {
+            console.error('Failed to generate workflow:', await generateResponse.text());
+          }
+        } catch (error) {
+          console.error('Failed to save tools or generate workflow:', error);
+        }
+      }
+      
       setActiveStep((prev) => prev + 1);
     }
   };
