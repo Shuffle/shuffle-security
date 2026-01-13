@@ -23,6 +23,8 @@ import {
   MenuItem,
   LinearProgress,
   Tooltip,
+  ToggleButton,
+  ToggleButtonGroup,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import AddIcon from '@mui/icons-material/Add';
@@ -30,6 +32,9 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import SearchIcon from '@mui/icons-material/Search';
 import BuildIcon from '@mui/icons-material/Build';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { useDatastore } from '@/hooks/useDatastore';
 import { DEFAULT_IOC_TYPES, IOCType, IOC_CATEGORIES, IOCCategory } from '@/hooks/useIOCTypes';
 import { DATASTORE_CATEGORIES } from '@/services/datastore';
@@ -45,17 +50,21 @@ const IOCTypesPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isInitializing, setIsInitializing] = useState(false);
   const [initProgress, setInitProgress] = useState(0);
+  const [filterMode, setFilterMode] = useState<'all' | 'todo'>('all');
+  
+  // Regex tester state
+  const [testValue, setTestValue] = useState('');
+  const [testResults, setTestResults] = useState<Record<string, boolean | null>>({});
 
   useEffect(() => {
     fetchItems();
   }, [fetchItems]);
 
-  // Auto-initialize defaults if org has no IOC types - use comprehensive list from useIOCTypes
+  // Auto-initialize defaults if org has no IOC types
   useEffect(() => {
     const autoInitialize = async () => {
       if (isLoading) return;
       if (items.length === 0) {
-        // Check sessionStorage to avoid repeated initialization attempts in same session
         const initKey = 'shuffle_ioc_defaults_checked';
         if (sessionStorage.getItem(initKey)) return;
         
@@ -64,7 +73,6 @@ const IOCTypesPage = () => {
         setIsInitializing(true);
         setInitProgress(0);
         
-        // Initialize ALL default IOC types from the comprehensive list
         const total = DEFAULT_IOC_TYPES.length;
         for (let i = 0; i < total; i++) {
           await addItem(DEFAULT_IOC_TYPES[i].name, DEFAULT_IOC_TYPES[i]);
@@ -90,7 +98,6 @@ const IOCTypesPage = () => {
     setIocTypes(parsed);
   }, [items]);
 
-  // Initialize ALL defaults from comprehensive list
   const handleInitDefaults = async () => {
     setIsInitializing(true);
     setInitProgress(0);
@@ -113,6 +120,7 @@ const IOCTypesPage = () => {
       setEditingType(null);
       setFormData({ name: '', regex: '', description: '', category: 'common', needsPattern: false });
     }
+    setTestValue('');
     setDialogOpen(true);
   };
 
@@ -122,7 +130,12 @@ const IOCTypesPage = () => {
     if (editingType && editingType.name !== formData.name) {
       await removeItem(editingType.name);
     }
-    await addItem(formData.name, formData as IOCType);
+    // If regex is provided, auto-clear needsPattern
+    const dataToSave = { ...formData };
+    if (dataToSave.regex && dataToSave.regex.trim()) {
+      dataToSave.needsPattern = false;
+    }
+    await addItem(formData.name, dataToSave as IOCType);
     setDialogOpen(false);
     setFormData({ name: '', regex: '', description: '', category: 'common', needsPattern: false });
   };
@@ -131,14 +144,44 @@ const IOCTypesPage = () => {
     await removeItem(name);
   };
 
+  // Test regex pattern
+  const testRegex = (pattern: string, value: string): boolean | null => {
+    if (!pattern || !value) return null;
+    try {
+      return new RegExp(pattern).test(value);
+    } catch {
+      return null;
+    }
+  };
+
+  // Test all patterns against a value
+  const handleTestAll = () => {
+    if (!testValue.trim()) return;
+    const results: Record<string, boolean | null> = {};
+    for (const type of filteredAndSortedTypes) {
+      if (type.regex) {
+        results[type.name] = testRegex(type.regex, testValue);
+      }
+    }
+    setTestResults(results);
+  };
+
+  // Count TODO items
+  const todoCount = useMemo(() => iocTypes.filter(t => t.needsPattern).length, [iocTypes]);
+
   // Filter and sort IOC types
   const filteredAndSortedTypes = useMemo(() => {
     let filtered = iocTypes;
     
+    // Apply TODO filter
+    if (filterMode === 'todo') {
+      filtered = filtered.filter(t => t.needsPattern);
+    }
+    
     // Apply search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = iocTypes.filter(t => 
+      filtered = filtered.filter(t => 
         t.name.toLowerCase().includes(query) ||
         t.description?.toLowerCase().includes(query) ||
         t.category?.toLowerCase().includes(query)
@@ -156,7 +199,7 @@ const IOCTypesPage = () => {
       if (orderA !== orderB) return orderA - orderB;
       return a.name.localeCompare(b.name);
     });
-  }, [iocTypes, searchQuery]);
+  }, [iocTypes, searchQuery, filterMode]);
 
   // Group by category for section headers
   const groupedTypes = useMemo(() => {
@@ -173,6 +216,12 @@ const IOCTypesPage = () => {
     return IOC_CATEGORIES.find(c => c.id === categoryId) || { id: categoryId, label: categoryId, color: '#6b7280' };
   };
 
+  // Dialog regex test result
+  const dialogTestResult = useMemo(() => {
+    if (!testValue || !formData.regex) return null;
+    return testRegex(formData.regex, testValue);
+  }, [testValue, formData.regex]);
+
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
@@ -182,6 +231,35 @@ const IOCTypesPage = () => {
           <Chip label={`${iocTypes.length} types`} size="small" variant="outlined" />
         </Box>
         <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+          {/* TODO Filter Toggle */}
+          <ToggleButtonGroup
+            value={filterMode}
+            exclusive
+            onChange={(_, val) => val && setFilterMode(val)}
+            size="small"
+            sx={{ height: 32 }}
+          >
+            <ToggleButton value="all" sx={{ px: 2, textTransform: 'none' }}>
+              All
+            </ToggleButton>
+            <ToggleButton 
+              value="todo" 
+              sx={{ 
+                px: 2, 
+                textTransform: 'none',
+                gap: 0.5,
+                '&.Mui-selected': {
+                  bgcolor: 'rgba(245, 158, 11, 0.15)',
+                  color: '#f59e0b',
+                  '&:hover': { bgcolor: 'rgba(245, 158, 11, 0.25)' },
+                },
+              }}
+            >
+              <BuildIcon sx={{ fontSize: 16 }} />
+              TODO ({todoCount})
+            </ToggleButton>
+          </ToggleButtonGroup>
+          
           <TextField
             size="small"
             placeholder="Search IOC types..."
@@ -223,6 +301,51 @@ const IOCTypesPage = () => {
         </Card>
       )}
 
+      {/* Regex Tester Bar */}
+      <Card sx={{ mb: 2, p: 1.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Typography variant="body2" sx={{ color: 'text.secondary', whiteSpace: 'nowrap' }}>
+            Test patterns:
+          </Typography>
+          <TextField
+            size="small"
+            placeholder="Enter a value to test against all patterns..."
+            value={testValue}
+            onChange={(e) => {
+              setTestValue(e.target.value);
+              setTestResults({});
+            }}
+            fullWidth
+            sx={{ 
+              '& .MuiOutlinedInput-root': { 
+                bgcolor: 'rgba(0,0,0,0.2)',
+                fontFamily: 'monospace',
+              } 
+            }}
+          />
+          <Button 
+            variant="outlined" 
+            size="small" 
+            startIcon={<PlayArrowIcon />}
+            onClick={handleTestAll}
+            disabled={!testValue.trim()}
+            sx={{ whiteSpace: 'nowrap' }}
+          >
+            Test All
+          </Button>
+          {Object.keys(testResults).length > 0 && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Chip
+                icon={<CheckCircleIcon sx={{ fontSize: 16 }} />}
+                label={`${Object.values(testResults).filter(v => v === true).length} match`}
+                size="small"
+                sx={{ bgcolor: 'rgba(34, 197, 94, 0.15)', color: '#22c55e' }}
+              />
+            </Box>
+          )}
+        </Box>
+      </Card>
+
       {error && (
         <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>
       )}
@@ -237,6 +360,7 @@ const IOCTypesPage = () => {
                   <TableCell>Category</TableCell>
                   <TableCell>Regex Pattern</TableCell>
                   <TableCell>Description</TableCell>
+                  {Object.keys(testResults).length > 0 && <TableCell>Test</TableCell>}
                   <TableCell align="right">Actions</TableCell>
                 </TableRow>
               </TableHead>
@@ -248,7 +372,7 @@ const IOCTypesPage = () => {
                   return [
                     // Category header row
                     <TableRow key={`header-${category.id}`} sx={{ bgcolor: 'rgba(255,255,255,0.02)' }}>
-                      <TableCell colSpan={5} sx={{ py: 1 }}>
+                      <TableCell colSpan={Object.keys(testResults).length > 0 ? 6 : 5} sx={{ py: 1 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: category.color }} />
                           <Typography variant="subtitle2" sx={{ fontWeight: 600, color: category.color }}>
@@ -293,6 +417,23 @@ const IOCTypesPage = () => {
                             {type.description || '-'}
                           </Typography>
                         </TableCell>
+                        {Object.keys(testResults).length > 0 && (
+                          <TableCell>
+                            {testResults[type.name] === true && (
+                              <Tooltip title="Pattern matches test value" arrow>
+                                <CheckCircleIcon sx={{ fontSize: 20, color: '#22c55e' }} />
+                              </Tooltip>
+                            )}
+                            {testResults[type.name] === false && (
+                              <Tooltip title="Pattern does not match" arrow>
+                                <CancelIcon sx={{ fontSize: 20, color: '#ef4444' }} />
+                              </Tooltip>
+                            )}
+                            {testResults[type.name] === undefined && type.regex && (
+                              <Typography variant="caption" sx={{ color: 'text.disabled' }}>—</Typography>
+                            )}
+                          </TableCell>
+                        )}
                         <TableCell align="right">
                           <IconButton size="small" onClick={() => handleOpenDialog(type)}>
                             <EditIcon fontSize="small" />
@@ -307,9 +448,13 @@ const IOCTypesPage = () => {
                 })}
                 {filteredAndSortedTypes.length === 0 && !isLoading && !isInitializing && (
                   <TableRow>
-                    <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+                    <TableCell colSpan={Object.keys(testResults).length > 0 ? 6 : 5} align="center" sx={{ py: 4 }}>
                       <Typography color="text.secondary">
-                        {searchQuery ? 'No IOC types match your search.' : 'No IOC types configured. Click "Initialize Defaults" to add common indicator types.'}
+                        {filterMode === 'todo' 
+                          ? 'No IOC types need patterns. All done!' 
+                          : searchQuery 
+                            ? 'No IOC types match your search.' 
+                            : 'No IOC types configured. Click "Initialize Defaults" to add common indicator types.'}
                       </Typography>
                     </TableCell>
                   </TableRow>
@@ -353,11 +498,58 @@ const IOCTypesPage = () => {
               onChange={(e) => setFormData({ ...formData, regex: e.target.value })}
               fullWidth
               placeholder="Optional - e.g., ^[a-fA-F0-9]{32}$"
-              helperText="Leave empty if no validation pattern is needed"
+              helperText={formData.regex ? "Adding a pattern will auto-clear the TODO flag" : "Leave empty if no validation pattern is needed"}
               multiline
               rows={2}
               sx={{ '& textarea': { fontFamily: 'monospace', fontSize: '0.875rem' } }}
             />
+            
+            {/* Inline Regex Tester */}
+            {formData.regex && (
+              <Box sx={{ 
+                p: 2, 
+                borderRadius: 1, 
+                bgcolor: 'rgba(0,0,0,0.2)',
+                border: '1px solid',
+                borderColor: dialogTestResult === true ? 'success.main' : dialogTestResult === false ? 'error.main' : 'divider',
+              }}>
+                <Typography variant="caption" sx={{ color: 'text.secondary', mb: 1, display: 'block' }}>
+                  Test your pattern
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                  <TextField
+                    size="small"
+                    placeholder="Enter test value..."
+                    value={testValue}
+                    onChange={(e) => setTestValue(e.target.value)}
+                    fullWidth
+                    sx={{ 
+                      '& .MuiOutlinedInput-root': { 
+                        fontFamily: 'monospace',
+                        fontSize: '0.875rem',
+                      } 
+                    }}
+                  />
+                  {dialogTestResult === true && (
+                    <Chip 
+                      icon={<CheckCircleIcon sx={{ fontSize: 16 }} />} 
+                      label="Match" 
+                      size="small"
+                      sx={{ bgcolor: 'rgba(34, 197, 94, 0.15)', color: '#22c55e' }}
+                    />
+                  )}
+                  {dialogTestResult === false && (
+                    <Chip 
+                      icon={<CancelIcon sx={{ fontSize: 16 }} />} 
+                      label="No match" 
+                      size="small"
+                      sx={{ bgcolor: 'rgba(239, 68, 68, 0.15)', color: '#ef4444' }}
+                    />
+                  )}
+                </Box>
+              </Box>
+            )}
+            
             <TextField
               label="Description"
               value={formData.description}
@@ -371,8 +563,18 @@ const IOCTypesPage = () => {
                 id="needsPattern"
                 checked={formData.needsPattern || false}
                 onChange={(e) => setFormData({ ...formData, needsPattern: e.target.checked })}
+                disabled={!!formData.regex?.trim()}
               />
-              <label htmlFor="needsPattern" style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
+              <label 
+                htmlFor="needsPattern" 
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 4, 
+                  cursor: formData.regex?.trim() ? 'not-allowed' : 'pointer',
+                  opacity: formData.regex?.trim() ? 0.5 : 1,
+                }}
+              >
                 <BuildIcon sx={{ fontSize: 16, color: 'warning.main' }} />
                 <Typography variant="body2">Mark as TODO (needs custom pattern in future)</Typography>
               </label>
