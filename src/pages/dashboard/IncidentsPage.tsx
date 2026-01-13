@@ -305,45 +305,41 @@ const IncidentsPage = () => {
     localStorage.setItem(STORAGE_KEY_COLUMNS, JSON.stringify([...visibleColumns]));
   }, [visibleColumns]);
 
-  // Filter incidents based on explicit filters or smart defaults
+  // Apply smart defaults on initial load only
+  const [smartDefaultApplied, setSmartDefaultApplied] = useState(false);
+
+  // Apply smart default filters on initial load
+  useEffect(() => {
+    if (!smartDefaultApplied && incidents.length > 0) {
+      // Check for user's incidents first
+      const userIncidents = incidents.filter(i => i.assignee === currentUsername && i.status !== 'resolved');
+      if (userIncidents.length > 0) {
+        setFilters(prev => ({ ...prev, assignee: currentUsername }));
+      } else {
+        // Check for new incidents
+        const newIncidents = incidents.filter(i => i.status === 'new');
+        if (newIncidents.length > 0) {
+          setFilters(prev => ({ ...prev, status: 'new' }));
+        }
+        // Otherwise show all non-resolved (no filter needed, handled in filteredIncidents)
+      }
+      setSmartDefaultApplied(true);
+    }
+  }, [incidents, currentUsername, smartDefaultApplied]);
+
+  // Filter incidents based on explicit filters
   const filteredByAssignee = useMemo(() => {
-    // If explicit assignee filter is set
-    if (filters.assignee !== null) {
-      if (filters.assignee === 'all') {
-        return incidents; // Show everything
-      }
-      if (filters.assignee === 'unassigned') {
-        return incidents.filter(i => !i.assignee);
-      }
-      return incidents.filter(i => i.assignee === filters.assignee);
+    if (filters.assignee === null) {
+      return incidents; // No assignee filter
     }
-
-    // Smart defaults when no assignee filter
-    const userIncidents = incidents.filter(i => i.assignee === currentUsername && i.status !== 'resolved');
-    if (userIncidents.length > 0) {
-      return userIncidents;
+    if (filters.assignee === 'all') {
+      return incidents; // Show everything
     }
-
-    const newIncidents = incidents.filter(i => i.status === 'new');
-    if (newIncidents.length > 0) {
-      return newIncidents;
+    if (filters.assignee === 'unassigned') {
+      return incidents.filter(i => !i.assignee);
     }
-
-    return incidents.filter(i => i.status !== 'resolved');
-  }, [incidents, currentUsername, filters.assignee]);
-
-  // Determine what smart default is active (for display)
-  const activeSmartDefault = useMemo(() => {
-    if (filters.assignee !== null) return null; // Explicit filter overrides
-    
-    const userIncidents = incidents.filter(i => i.assignee === currentUsername && i.status !== 'resolved');
-    if (userIncidents.length > 0) return 'my_incidents';
-    
-    const newIncidents = incidents.filter(i => i.status === 'new');
-    if (newIncidents.length > 0) return 'new_only';
-    
-    return 'non_resolved';
-  }, [incidents, currentUsername, filters.assignee]);
+    return incidents.filter(i => i.assignee === filters.assignee);
+  }, [incidents, filters.assignee]);
 
   // Apply additional filters and search
   const filteredIncidents = useMemo(() => {
@@ -511,12 +507,6 @@ const IncidentsPage = () => {
   };
 
   const hasActiveFilters = filters.severity || filters.status || filters.tlp || filters.assignee !== null || searchQuery.trim();
-
-  const smartDefaultLabels: Record<string, string> = {
-    my_incidents: `Showing: My Incidents`,
-    new_only: 'Showing: New Incidents',
-    non_resolved: 'Showing: Non-Resolved',
-  };
 
   const renderCellContent = (incident: DisplayIncident, column: ColumnKey) => {
     switch (column) {
@@ -691,39 +681,9 @@ const IncidentsPage = () => {
               </IconButton>
             </Tooltip>
 
-            {/* Show smart default or active filters */}
+            {/* Active filters */}
             <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
-              {/* Smart default indicator (only when no explicit assignee filter) */}
-              {activeSmartDefault && !filters.assignee && (
-                <Chip
-                  label={smartDefaultLabels[activeSmartDefault]}
-                  size="small"
-                  onDelete={() => setFilters(prev => ({ ...prev, assignee: 'all' }))}
-                  sx={{
-                    backgroundColor: 'rgba(255, 102, 0, 0.15)',
-                    color: '#ff6600',
-                    fontWeight: 500,
-                    '& .MuiChip-deleteIcon': { color: '#ff6600' },
-                  }}
-                />
-              )}
-
-              {/* Show All indicator */}
-              {filters.assignee === 'all' && (
-                <Chip
-                  label="Showing: All Incidents"
-                  size="small"
-                  onDelete={() => setFilters(prev => ({ ...prev, assignee: null }))}
-                  sx={{
-                    backgroundColor: 'rgba(34, 197, 94, 0.15)',
-                    color: '#22c55e',
-                    fontWeight: 500,
-                    '& .MuiChip-deleteIcon': { color: '#22c55e' },
-                  }}
-                />
-              )}
-
-              {/* Explicit assignee filter */}
+              {/* Assignee filter */}
               {filters.assignee && filters.assignee !== 'all' && (
                 <Chip
                   label={`Assignee: ${filters.assignee === 'unassigned' ? 'Unassigned' : filters.assignee}`}
@@ -738,27 +698,50 @@ const IncidentsPage = () => {
                 />
               )}
 
+              {/* Severity filter - uses severity color */}
               {filters.severity && (
                 <Chip
                   label={`Severity: ${filters.severity}`}
                   size="small"
                   onDelete={() => setFilters(prev => ({ ...prev, severity: null }))}
-                  sx={{ textTransform: 'capitalize' }}
+                  sx={{ 
+                    textTransform: 'capitalize',
+                    backgroundColor: `${severityColors[filters.severity] || '#94a3b8'}20`,
+                    color: severityColors[filters.severity] || '#94a3b8',
+                    fontWeight: 500,
+                    '& .MuiChip-deleteIcon': { color: severityColors[filters.severity] || '#94a3b8' },
+                  }}
                 />
               )}
+
+              {/* Status filter - uses status color */}
               {filters.status && (
                 <Chip
                   label={`Status: ${filters.status.replace('_', ' ')}`}
                   size="small"
                   onDelete={() => setFilters(prev => ({ ...prev, status: null }))}
-                  sx={{ textTransform: 'capitalize' }}
+                  sx={{ 
+                    textTransform: 'capitalize',
+                    backgroundColor: statusColors[filters.status]?.bg || 'rgba(148, 163, 184, 0.1)',
+                    color: statusColors[filters.status]?.text || '#94a3b8',
+                    fontWeight: 500,
+                    '& .MuiChip-deleteIcon': { color: statusColors[filters.status]?.text || '#94a3b8' },
+                  }}
                 />
               )}
+
+              {/* TLP filter - uses TLP color */}
               {filters.tlp && (
                 <Chip
                   label={filters.tlp}
                   size="small"
                   onDelete={() => setFilters(prev => ({ ...prev, tlp: null }))}
+                  sx={{
+                    backgroundColor: `${tlpColors[filters.tlp] || '#94a3b8'}20`,
+                    color: tlpColors[filters.tlp] || '#94a3b8',
+                    fontWeight: 500,
+                    '& .MuiChip-deleteIcon': { color: tlpColors[filters.tlp] || '#94a3b8' },
+                  }}
                 />
               )}
 
