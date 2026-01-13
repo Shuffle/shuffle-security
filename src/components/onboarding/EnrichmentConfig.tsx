@@ -19,6 +19,7 @@ import ChatIcon from '@mui/icons-material/Chat';
 import TravelExploreIcon from '@mui/icons-material/TravelExplore';
 import DownloadIcon from '@mui/icons-material/Download';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
 
 interface EnrichmentOption {
   id: string;
@@ -81,25 +82,10 @@ export interface EnrichmentState {
   };
 }
 
-// Type for authenticated apps from API
-interface ApiAuthEntry {
-  app: {
-    id: string;
-    name: string;
-    large_image?: string;
-    categories?: string[];
-  };
-  active?: boolean;
-  validation?: {
-    valid: boolean;
-    error?: string;
-  };
-}
-
 interface EnrichmentConfigProps {
   enrichmentState: EnrichmentState;
   onEnrichmentChange: (state: EnrichmentState) => void;
-  authenticatedApps?: ApiAuthEntry[];
+  authenticatedApps?: AuthAppEntry[];
 }
 
 const containerVariants = {
@@ -122,7 +108,7 @@ const isEmailApp = (appName: string) =>
 
 // Communication app detection
 const COMMUNICATION_CATEGORIES = ['COMMUNICATION', 'communication', 'Communication'];
-const isCommunicationApp = (app: ApiAuthEntry) => {
+const isCommunicationApp = (app: AuthAppEntry) => {
   const categories = app.app.categories || [];
   return categories.some(cat => COMMUNICATION_CATEGORIES.includes(cat)) ||
     ['slack', 'teams', 'discord', 'mattermost', 'telegram', 'webhook'].some(
@@ -137,7 +123,7 @@ const SIEM_PATTERNS = ['splunk', 'elastic', 'qradar', 'sentinel', 'chronicle', '
 
 type IngestionCategory = 'email' | 'cases' | 'edr' | 'siem';
 
-const getIngestionCategory = (app: ApiAuthEntry): IngestionCategory | null => {
+const getIngestionCategory = (app: AuthAppEntry): IngestionCategory | null => {
   const name = app.app.name.toLowerCase();
   const categories = (app.app.categories || []).map(c => c.toLowerCase());
   
@@ -162,50 +148,19 @@ export const EnrichmentConfig = ({
 }: EnrichmentConfigProps) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  // Deduplicate apps by normalized name (same logic as sidebar)
-  const deduplicateApps = (apps: ApiAuthEntry[]): ApiAuthEntry[] => {
-    const appMap = new Map<string, { app: ApiAuthEntry; bestImage: string }>();
-    apps.forEach(auth => {
-      // Normalize: lowercase, trim, replace spaces/underscores/hyphens for deduplication
-      const normalizedName = auth.app.name.toLowerCase().trim().replace(/[\s_\-]+/g, '_');
-      const existing = appMap.get(normalizedName);
-      const isValidated = auth.validation?.valid === true;
-      const entryImage = auth.app.large_image || '';
-      
-      if (!existing) {
-        appMap.set(normalizedName, { app: auth, bestImage: entryImage });
-      } else {
-        // Merge: prioritize validated apps, and collect any available image
-        const isExistingValidated = existing.app.validation?.valid === true;
-        
-        // Update bestImage if we don't have one yet
-        if (!existing.bestImage && entryImage) {
-          existing.bestImage = entryImage;
-        }
-        
-        // Replace the main app entry if new is validated and existing isn't
-        if (isValidated && !isExistingValidated) {
-          appMap.set(normalizedName, { 
-            app: auth, 
-            bestImage: existing.bestImage || entryImage 
-          });
-        }
-      }
-    });
-    
-    // Return with bestImage applied
-    return Array.from(appMap.values()).map(({ app, bestImage }) => ({
-      ...app,
-      app: { ...app.app, large_image: bestImage || app.app.large_image }
-    }));
-  };
-
   // Build dynamic options based on connected apps
   const enrichmentOptions = useMemo(() => {
-    // Get validated/active apps and deduplicate
-    const validatedApps = deduplicateApps(
+    // Get validated/active apps and deduplicate using shared utility
+    const dedupedApps = deduplicateAuthApps(
       authenticatedApps.filter(auth => auth.active || auth.validation?.valid)
     );
+    
+    // Convert back to AuthAppEntry format with bestImage applied
+    const validatedApps: AuthAppEntry[] = dedupedApps.map(({ app, bestImage }) => ({
+      app: { ...app, large_image: bestImage || app.large_image },
+      active: true,
+      validation: { valid: true },
+    }));
     
     // Build ingestion sources by category
     const ingestionByCategory: Record<IngestionCategory, ConnectedApp[]> = {

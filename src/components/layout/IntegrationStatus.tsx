@@ -10,11 +10,7 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import { useNavigate } from 'react-router-dom';
 import { API_CONFIG } from '@/config/api';
-
-interface AuthInstance {
-  label: string;
-  isValidated: boolean;
-}
+import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
 
 interface Integration {
   id: string;
@@ -22,23 +18,7 @@ interface Integration {
   icon: string;
   category: string;
   hasValidAuth: boolean;
-  authInstances: AuthInstance[];
-}
-
-interface ApiAuthEntry {
-  id?: string;
-  label?: string;
-  app: {
-    id: string;
-    name: string;
-    large_image?: string;
-    categories?: string[];
-  };
-  active?: boolean;
-  validation?: {
-    valid: boolean;
-    error?: string;
-  };
+  authInstances: { label: string; isValidated: boolean }[];
 }
 
 interface IntegrationStatusProps {
@@ -70,49 +50,14 @@ export const IntegrationStatus = ({ collapsed }: IntegrationStatusProps) => {
         
         if (response.ok) {
           const result = await response.json();
-          const authData: ApiAuthEntry[] = result.data || result;
+          const authData: AuthAppEntry[] = result.data || result;
           
           if (Array.isArray(authData)) {
-            // Group by app.name to truly deduplicate
-            const appMap = new Map<string, { 
-              app: ApiAuthEntry['app']; 
-              instances: AuthInstance[];
-              hasValidAuth: boolean;
-              bestImage: string;
-            }>();
-            
-            authData.forEach(entry => {
-              if (!entry.active && !entry.validation?.valid) return; // Skip inactive/unvalidated
-              
-              // Normalize: lowercase, trim, replace spaces/underscores for deduplication
-              const appName = entry.app.name.toLowerCase().trim().replace(/[\s_-]+/g, '_');
-              const existing = appMap.get(appName);
-              const isValidated = entry.validation?.valid === true;
-              const entryImage = entry.app.large_image || '';
-              const instance: AuthInstance = {
-                label: entry.label || entry.id || 'Default',
-                isValidated,
-              };
-              
-              if (existing) {
-                existing.instances.push(instance);
-                if (isValidated) existing.hasValidAuth = true;
-                // Keep track of any available image (prefer one that exists)
-                if (!existing.bestImage && entryImage) {
-                  existing.bestImage = entryImage;
-                }
-              } else {
-                appMap.set(appName, { 
-                  app: entry.app, 
-                  instances: [instance],
-                  hasValidAuth: isValidated,
-                  bestImage: entryImage,
-                });
-              }
-            });
+            // Use shared deduplication utility
+            const dedupedApps = deduplicateAuthApps(authData);
             
             // Convert to integration objects and sort by validation status
-            const dedupedIntegrations = Array.from(appMap.values())
+            const dedupedIntegrations = dedupedApps
               .map(({ app, instances, hasValidAuth, bestImage }) => ({
                 id: app.id,
                 name: app.name,
