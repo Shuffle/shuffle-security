@@ -22,7 +22,7 @@ interface UseDatastoreReturn {
   isLoading: boolean;
   error: string | null;
   fetchItems: () => Promise<void>;
-  addItem: (key: string, value: string | object) => Promise<boolean>;
+  addItem: (key: string, value: string | object, skipRefresh?: boolean) => Promise<boolean>;
   addItems: (items: { key: string; value: string | object }[]) => Promise<boolean>;
   getItem: (key: string) => Promise<DatastoreItem | null>;
   removeItem: (key: string) => Promise<boolean>;
@@ -50,12 +50,15 @@ export const useDatastore = ({ category }: UseDatastoreOptions): UseDatastoreRet
     }
   }, [category]);
 
-  const addItem = useCallback(async (key: string, value: string | object): Promise<boolean> => {
+  const addItem = useCallback(async (key: string, value: string | object, skipRefresh = true): Promise<boolean> => {
     setError(null);
     try {
       const response = await setDatastoreItem(key, value, category);
       if (response.success) {
-        await fetchItems(); // Refresh the list
+        // Only refresh if explicitly requested (default: skip for performance)
+        if (!skipRefresh) {
+          await fetchItems();
+        }
         return true;
       } else {
         setError(response.error || 'Failed to add item');

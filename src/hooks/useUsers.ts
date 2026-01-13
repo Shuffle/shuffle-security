@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getApiUrl, getAuthHeader, API_CONFIG } from '@/config/api';
 
 export interface User {
@@ -10,37 +10,88 @@ export interface User {
   created_at?: number;
 }
 
+// Shared cache to prevent multiple fetches across component instances
+let usersCache: User[] | null = null;
+let fetchPromise: Promise<User[]> | null = null;
+
+const fetchUsersOnce = async (): Promise<User[]> => {
+  // Return cached data if available
+  if (usersCache !== null) {
+    return usersCache;
+  }
+
+  // If a fetch is already in progress, wait for it
+  if (fetchPromise) {
+    return fetchPromise;
+  }
+
+  // Start new fetch
+  fetchPromise = (async () => {
+    try {
+      const response = await fetch(getApiUrl('/api/v1/getusers'), {
+        credentials: 'include',
+        headers: {
+          ...getAuthHeader(API_CONFIG.apiKey),
+        },
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.reason || 'Failed to fetch users');
+      }
+
+      const data = await response.json();
+      usersCache = Array.isArray(data) ? data : data.users || [];
+      return usersCache;
+    } catch (err) {
+      fetchPromise = null; // Reset on error to allow retry
+      throw err;
+    }
+  })();
+
+  return fetchPromise;
+};
+
 export const useUsers = () => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState<User[]>(usersCache || []);
+  const [loading, setLoading] = useState(usersCache === null);
   const [error, setError] = useState<string | null>(null);
+  const mounted = useRef(true);
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await fetch(getApiUrl('/api/v1/getusers'), {
-          credentials: 'include',
-          headers: {
-            ...getAuthHeader(API_CONFIG.apiKey),
-          },
-        });
+    mounted.current = true;
+    
+    // If already cached, no need to fetch
+    if (usersCache !== null) {
+      setUsers(usersCache);
+      setLoading(false);
+      return;
+    }
 
-        if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.reason || 'Failed to fetch users');
+    fetchUsersOnce()
+      .then((data) => {
+        if (mounted.current) {
+          setUsers(data);
+          setLoading(false);
         }
+      })
+      .catch((err) => {
+        if (mounted.current) {
+          setError(err instanceof Error ? err.message : 'Failed to fetch users');
+          setLoading(false);
+        }
+      });
 
-        const data = await response.json();
-        setUsers(Array.isArray(data) ? data : data.users || []);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch users');
-      } finally {
-        setLoading(false);
-      }
+    return () => {
+      mounted.current = false;
     };
-
-    fetchUsers();
   }, []);
 
   return { users, loading, error };
+};
+
+// Optional: Function to invalidate cache if users change
+export const invalidateUsersCache = () => {
+  usersCache = null;
+  fetchPromise = null;
 };
