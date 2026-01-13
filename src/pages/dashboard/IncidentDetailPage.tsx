@@ -993,12 +993,7 @@ const IncidentDetailPage = () => {
               />
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5, flexWrap: 'wrap' }}>
-              <Typography variant="caption" sx={{ color: 'text.secondary', fontFamily: 'monospace' }}>
-                {incident.source}
-              </Typography>
-              <Typography variant="caption" sx={{ color: 'text.disabled' }}>•</Typography>
-              
-              {/* Status dropdown */}
+              {/* Status dropdown - no "New" option */}
               <FormControl size="small" variant="standard">
                 <Select
                   value={editedStatus}
@@ -1015,8 +1010,13 @@ const IncidentDetailPage = () => {
                     '& .MuiSelect-select': { py: 0, pr: 2.5 },
                     '& .MuiSvgIcon-root': { color: statusColors[editedStatus]?.text, fontSize: 16 },
                   }}
+                  MenuProps={{
+                    PaperProps: {
+                      sx: { bgcolor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }
+                    }
+                  }}
                 >
-                  <MenuItem value="new">New</MenuItem>
+                  {editedStatus === 'new' && <MenuItem value="new">New</MenuItem>}
                   <MenuItem value="in_progress">In Progress</MenuItem>
                   <MenuItem value="resolved">Resolved</MenuItem>
                 </Select>
@@ -1042,6 +1042,11 @@ const IncidentDetailPage = () => {
                     '& .MuiSelect-select': { py: 0, pr: 2.5 },
                     '& .MuiSvgIcon-root': { color: severityColors[editedSeverity], fontSize: 16 },
                   }}
+                  MenuProps={{
+                    PaperProps: {
+                      sx: { bgcolor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }
+                    }
+                  }}
                 >
                   <MenuItem value="critical">Critical</MenuItem>
                   <MenuItem value="high">High</MenuItem>
@@ -1053,7 +1058,7 @@ const IncidentDetailPage = () => {
               
               <Typography variant="caption" sx={{ color: 'text.disabled' }}>•</Typography>
               
-              {/* Assignee dropdown */}
+              {/* Assignee dropdown - styled like chips */}
               <FormControl size="small" variant="standard">
                 <Select
                   value={editedAssignee || ''}
@@ -1063,10 +1068,19 @@ const IncidentDetailPage = () => {
                   disabled={usersLoading}
                   sx={{
                     fontSize: '0.7rem',
-                    fontWeight: 500,
-                    color: editedAssignee ? 'text.primary' : 'text.secondary',
+                    fontWeight: 600,
+                    bgcolor: editedAssignee ? 'rgba(168, 85, 247, 0.15)' : 'rgba(148, 163, 184, 0.1)',
+                    color: editedAssignee ? '#a855f7' : 'text.secondary',
+                    borderRadius: 1,
+                    px: 1,
+                    py: 0.25,
                     '& .MuiSelect-select': { py: 0, pr: 2.5 },
-                    '& .MuiSvgIcon-root': { fontSize: 16 },
+                    '& .MuiSvgIcon-root': { color: editedAssignee ? '#a855f7' : 'text.secondary', fontSize: 16 },
+                  }}
+                  MenuProps={{
+                    PaperProps: {
+                      sx: { bgcolor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }
+                    }
                   }}
                   renderValue={(value) => value || 'Unassigned'}
                 >
@@ -1149,7 +1163,7 @@ const IncidentDetailPage = () => {
       </Box>
 
       {/* Main content with Activity sidebar */}
-      <Box sx={{ display: 'flex', gap: 3 }}>
+      <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
         {/* Left content area */}
         <Box sx={{ flex: 1, minWidth: 0 }}>
           {/* Modern Pill Tabs */}
@@ -1157,7 +1171,7 @@ const IncidentDetailPage = () => {
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: 'space-between',
-            mb: 3,
+            mb: 2,
           }}>
             <Box sx={{ 
               display: 'flex', 
@@ -1215,46 +1229,6 @@ const IncidentDetailPage = () => {
                   )}
                 </Box>
               ))}
-            </Box>
-
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              {/* Quick metadata chips */}
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <FormControl size="small">
-                  <Select
-                    value={editedSeverity}
-                    onChange={(e) => setEditedSeverity(e.target.value)}
-                    variant="standard"
-                    disableUnderline
-                    sx={{ 
-                      fontSize: '0.8rem',
-                      fontWeight: 500,
-                      color: severityColors[editedSeverity],
-                      textTransform: 'capitalize',
-                    }}
-                  >
-                    {severityOptions.map((opt) => (
-                      <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <Typography variant="caption" sx={{ color: 'text.disabled' }}>|</Typography>
-                <FormControl size="small">
-                  <Select
-                    value={editedAssignee}
-                    onChange={(e) => setEditedAssignee(e.target.value)}
-                    variant="standard"
-                    disableUnderline
-                    displayEmpty
-                    sx={{ fontSize: '0.8rem' }}
-                  >
-                    <MenuItem value=""><em>Unassigned</em></MenuItem>
-                    {users.map((user) => (
-                      <MenuItem key={user.id} value={user.username}>{user.username}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Box>
             </Box>
           </Box>
 
