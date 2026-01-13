@@ -20,8 +20,6 @@ import {
   Skeleton,
   Collapse,
   LinearProgress,
-  Tabs,
-  Tab,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -46,6 +44,7 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import { useDatastore } from '@/hooks/useDatastore';
 import { useAuth } from '@/context/AuthContext';
 import { DATASTORE_CATEGORIES, getDatastoreItem } from '@/services/datastore';
+import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { useUsers } from '@/hooks/useUsers';
 import { useCustomFields, CustomField } from '@/hooks/useCustomFields';
 import { 
@@ -349,7 +348,9 @@ const IncidentDetailPage = () => {
   
   const [isSaving, setIsSaving] = useState(false);
   const [showResolveDialog, setShowResolveDialog] = useState(false);
-  const [activeTab, setActiveTab] = useState(0); // 0=Tasks, 1=Details, 2=Activity
+  const [activeTab, setActiveTab] = useState(0); // 0=Tasks, 1=Details, 2=Correlations, 3=Activity
+  const [correlations, setCorrelations] = useState<Array<{ key: string; value: string; created?: number }>>([]);
+  const [correlationsLoading, setCorrelationsLoading] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pendingSaveRef = useRef(false);
   
@@ -401,6 +402,40 @@ const IncidentDetailPage = () => {
     };
 
     loadIncident();
+  }, [id]);
+
+  // Fetch correlations
+  useEffect(() => {
+    const fetchCorrelations = async () => {
+      if (!id) return;
+      
+      setCorrelationsLoading(true);
+      try {
+        const response = await fetch(getApiUrl('/api/v2/correlations'), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeader(API_CONFIG.apiKey),
+          },
+          body: JSON.stringify({
+            type: 'datastore',
+            key: id,
+            category: DATASTORE_CATEGORIES.INCIDENTS,
+          }),
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setCorrelations(data.correlations || data.data || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch correlations:', error);
+      } finally {
+        setCorrelationsLoading(false);
+      }
+    };
+
+    fetchCorrelations();
   }, [id]);
 
   // Auto-save with debounce
@@ -947,33 +982,70 @@ const IncidentDetailPage = () => {
         </Box>
       </Box>
 
-      {/* Tabs and Search Row */}
+      {/* Modern Pill Tabs */}
       <Box sx={{ 
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'space-between',
-        mb: 2,
+        mb: 3,
       }}>
-        <Tabs 
-          value={activeTab} 
-          onChange={(_, v) => setActiveTab(v)}
-          sx={{
-            minHeight: 36,
-            '& .MuiTabs-indicator': { bgcolor: '#ff6600' },
-            '& .MuiTab-root': {
-              minHeight: 36,
-              py: 0,
-              textTransform: 'none',
-              fontWeight: 500,
-              color: 'text.secondary',
-              '&.Mui-selected': { color: 'white' },
-            },
-          }}
-        >
-          <Tab label={`Tasks ${tasks.length > 0 ? `(${tasks.filter(t => t.completed).length}/${tasks.length})` : ''}`} />
-          <Tab label="Details" />
-          <Tab label={`Activity ${activity.length > 0 ? `(${activity.length})` : ''}`} />
-        </Tabs>
+        <Box sx={{ 
+          display: 'flex', 
+          gap: 0.5, 
+          p: 0.5, 
+          bgcolor: 'rgba(255,255,255,0.03)', 
+          borderRadius: 2,
+          border: '1px solid rgba(255,255,255,0.06)',
+        }}>
+          {[
+            { label: 'Tasks', count: tasks.length > 0 ? `${tasks.filter(t => t.completed).length}/${tasks.length}` : null },
+            { label: 'Details', count: null },
+            { label: 'Correlations', count: correlations.length > 0 ? correlations.length : null, loading: correlationsLoading },
+            { label: 'Activity', count: activity.length > 0 ? activity.length : null },
+          ].map((tab, index) => (
+            <Box
+              key={tab.label}
+              onClick={() => setActiveTab(index)}
+              sx={{
+                px: 2,
+                py: 1,
+                borderRadius: 1.5,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                transition: 'all 0.2s ease',
+                bgcolor: activeTab === index ? 'rgba(255, 102, 0, 0.15)' : 'transparent',
+                color: activeTab === index ? '#ff6600' : 'text.secondary',
+                fontWeight: activeTab === index ? 600 : 400,
+                fontSize: '0.875rem',
+                '&:hover': {
+                  bgcolor: activeTab === index ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255,255,255,0.05)',
+                },
+              }}
+            >
+              {tab.label}
+              {tab.loading ? (
+                <CircularProgress size={12} sx={{ color: 'text.secondary' }} />
+              ) : tab.count !== null && (
+                <Box
+                  component="span"
+                  sx={{
+                    fontSize: '0.7rem',
+                    fontWeight: 600,
+                    px: 0.75,
+                    py: 0.25,
+                    borderRadius: 1,
+                    bgcolor: activeTab === index ? 'rgba(255, 102, 0, 0.3)' : 'rgba(255,255,255,0.08)',
+                    color: activeTab === index ? '#ff6600' : 'text.secondary',
+                  }}
+                >
+                  {tab.count}
+                </Box>
+              )}
+            </Box>
+          ))}
+        </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           {/* Quick metadata chips */}
@@ -1374,6 +1446,87 @@ const IncidentDetailPage = () => {
       )}
 
       {activeTab === 2 && (
+        /* Correlations Tab */
+        <Box sx={{ 
+          bgcolor: 'rgba(255,255,255,0.02)', 
+          borderRadius: 2, 
+          border: '1px solid rgba(255,255,255,0.06)',
+          p: 2.5,
+        }}>
+          {correlationsLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <CircularProgress size={24} />
+            </Box>
+          ) : correlations.length === 0 ? (
+            <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center', py: 4 }}>
+              No correlations found for this incident
+            </Typography>
+          ) : (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+              {correlations.map((corr, idx) => {
+                let parsed: { title?: string; severity?: string; status?: string } = {};
+                try {
+                  parsed = JSON.parse(corr.value);
+                } catch {
+                  // Ignore parse errors
+                }
+                return (
+                  <Box 
+                    key={corr.key || idx} 
+                    onClick={() => navigate(`/incidents/${corr.key}`)}
+                    sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: 2, 
+                      p: 2, 
+                      borderRadius: 1.5, 
+                      bgcolor: 'rgba(0,0,0,0.2)',
+                      border: '1px solid rgba(255,255,255,0.06)',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      '&:hover': { 
+                        bgcolor: 'rgba(255,255,255,0.04)',
+                        borderColor: 'rgba(255,255,255,0.1)',
+                      },
+                    }}
+                  >
+                    <Box sx={{ 
+                      width: 8, 
+                      height: 8, 
+                      borderRadius: '50%', 
+                      bgcolor: severityColors[parsed.severity || 'medium'] || '#eab308',
+                      flexShrink: 0,
+                    }} />
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 500, mb: 0.25 }}>
+                        {parsed.title || corr.key}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: 'text.secondary', fontFamily: 'monospace' }}>
+                        {corr.key}
+                      </Typography>
+                    </Box>
+                    {parsed.status && (
+                      <Chip 
+                        size="small" 
+                        label={parsed.status.replace('_', ' ')} 
+                        sx={{ 
+                          height: 20, 
+                          fontSize: '0.7rem',
+                          textTransform: 'capitalize',
+                          bgcolor: statusColors[parsed.status]?.bg || 'rgba(148, 163, 184, 0.1)',
+                          color: statusColors[parsed.status]?.text || '#94a3b8',
+                        }} 
+                      />
+                    )}
+                  </Box>
+                );
+              })}
+            </Box>
+          )}
+        </Box>
+      )}
+
+      {activeTab === 3 && (
         /* Activity Tab */
         <Box sx={{ 
           bgcolor: 'rgba(255,255,255,0.02)', 
