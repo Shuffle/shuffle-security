@@ -580,17 +580,19 @@ const AppAuthCard = ({
     <motion.div variants={itemVariants}>
       <Card
         sx={{
-          background: 'rgba(33, 33, 33, 0.6)',
-          border: '1px solid',
-          borderColor:
-            authState.status === 'connected'
-              ? 'rgba(34, 197, 94, 0.3)'
-              : authState.status === 'error'
-              ? 'rgba(239, 68, 68, 0.3)'
-              : 'rgba(255, 255, 255, 0.08)',
+          background: isTested 
+            ? 'rgba(34, 197, 94, 0.05)' 
+            : 'rgba(33, 33, 33, 0.6)',
+          border: '2px solid',
+          borderColor: isTested
+            ? 'rgba(34, 197, 94, 0.4)'
+            : authState.status === 'error'
+            ? 'rgba(239, 68, 68, 0.3)'
+            : 'rgba(255, 152, 0, 0.3)',
           borderRadius: 3,
           backdropFilter: 'blur(10px)',
           overflow: 'hidden',
+          transition: 'all 0.3s ease',
         }}
       >
         <CardContent
@@ -1112,14 +1114,33 @@ export const AppAuthConfig = ({
   onSaveAuth,
   onSelectAuth,
 }: AppAuthConfigProps) => {
-  const [expanded, setExpanded] = useState<string | false>(apps[0]?.objectID || false);
-
   // Helper to find ALL API auth entries for an app
   const getApiAuthEntries = (app: AlgoliaSearchApp): ApiAuthEntry[] => {
     return authenticatedApps.filter(
       auth => auth.app?.name?.toLowerCase() === app.name.toLowerCase()
     );
   };
+
+  // Helper to check if app is validated
+  const isAppValidated = (app: AlgoliaSearchApp): boolean => {
+    const entries = getApiAuthEntries(app);
+    return entries.some(e => e.validation?.valid === true);
+  };
+
+  // Sort apps: non-validated first, validated at bottom
+  const sortedApps = [...apps].sort((a, b) => {
+    const aValidated = isAppValidated(a);
+    const bValidated = isAppValidated(b);
+    if (aValidated && !bValidated) return 1;
+    if (!aValidated && bValidated) return -1;
+    return 0;
+  });
+
+  // Find first non-validated app for auto-expand
+  const firstInvalidApp = sortedApps.find(app => !isAppValidated(app));
+  const defaultExpanded = firstInvalidApp?.objectID || sortedApps[0]?.objectID || false;
+
+  const [expanded, setExpanded] = useState<string | false>(defaultExpanded);
 
   if (apps.length === 0) {
     return (
@@ -1137,6 +1158,10 @@ export const AppAuthConfig = ({
     );
   }
 
+  // Count validated vs total
+  const validatedCount = sortedApps.filter(app => isAppValidated(app)).length;
+  const totalCount = sortedApps.length;
+
   return (
     <Box>
       <Typography
@@ -1147,18 +1172,30 @@ export const AppAuthConfig = ({
           mb: 1,
         }}
       >
-        Dynamic Authentication (New)
+        Configure Authentication
       </Typography>
       <Typography
         variant="body1"
-        sx={{ mb: 4, color: 'rgba(255, 255, 255, 0.5)' }}
+        sx={{ mb: 2, color: 'rgba(255, 255, 255, 0.5)' }}
       >
-        Authentication fields are loaded dynamically from the app configuration.
+        Set up credentials for each integration. Apps with orange borders need configuration.
       </Typography>
+      <Chip
+        label={`${validatedCount}/${totalCount} validated`}
+        size="small"
+        sx={{
+          mb: 3,
+          background: validatedCount === totalCount 
+            ? 'rgba(34, 197, 94, 0.15)' 
+            : 'rgba(255, 152, 0, 0.15)',
+          color: validatedCount === totalCount ? '#22c55e' : '#ff9800',
+          fontWeight: 600,
+        }}
+      />
 
       <motion.div variants={containerVariants} initial="hidden" animate="visible">
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {apps.map((app) => {
+          {sortedApps.map((app) => {
             const authState = authStates[app.objectID] || { systemId: app.objectID, status: 'pending' as const, credentials: {} };
             const isExpanded = expanded === app.objectID;
             const apiAuthEntries = getApiAuthEntries(app);
