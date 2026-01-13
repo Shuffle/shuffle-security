@@ -9,10 +9,12 @@ const SIDEBAR_STATE_KEY = 'shuffle-security-sidebar-collapsed';
 
 interface DashboardLayoutProps {
   children?: ReactNode;
+  defaultCollapsed?: boolean;
 }
 
-export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
+export const DashboardLayout = ({ children, defaultCollapsed }: DashboardLayoutProps) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    if (defaultCollapsed !== undefined) return defaultCollapsed;
     const saved = localStorage.getItem(SIDEBAR_STATE_KEY);
     return saved === 'true';
   });

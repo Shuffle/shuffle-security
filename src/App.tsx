@@ -45,14 +45,16 @@ const App = () => (
             <Route path="/register" element={<AuthPage mode="register" />} />
             <Route path="/docs" element={<DocsPage />} />
             <Route path="/docs/:slug" element={<DocsPage />} />
+            {/* Onboarding with sidebar (collapsed by default) */}
             <Route
-              path="/onboarding"
               element={
                 <ProtectedRoute>
-                  <OnboardingPage />
+                  <DashboardLayout defaultCollapsed />
                 </ProtectedRoute>
               }
-            />
+            >
+              <Route path="/onboarding" element={<OnboardingPage />} />
+            </Route>
             
             {/* Product routes with shared layout */}
             <Route
