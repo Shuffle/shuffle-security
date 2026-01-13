@@ -643,7 +643,7 @@ const AppAuthCard = ({
                 🔗
               </Box>
             )}
-            <Box sx={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
+            <Box sx={{ minWidth: 0, flex: 1, overflow: 'hidden', maxWidth: { xs: 'calc(100% - 56px)', sm: 200, md: 280, lg: 350 } }}>
               <Typography 
                 sx={{ 
                   color: 'white', 
@@ -665,6 +665,7 @@ const AppAuthCard = ({
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
+                    maxWidth: '100%',
                   }}
                 >
                   {app.description}
