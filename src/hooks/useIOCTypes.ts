@@ -2,11 +2,28 @@ import { useState, useEffect, useCallback } from 'react';
 import { useDatastore } from './useDatastore';
 import { DATASTORE_CATEGORIES } from '@/services/datastore';
 
+// OCSF-based observable type categories
+export const IOC_CATEGORIES = [
+  { id: 'common', label: 'Most Commonly Used', color: '#f59e0b' },
+  { id: 'hash', label: 'Hash Values', color: '#8b5cf6' },
+  { id: 'network', label: 'Network Artifacts', color: '#3b82f6' },
+  { id: 'file', label: 'File Artifacts', color: '#10b981' },
+  { id: 'user', label: 'User/Identity', color: '#ec4899' },
+  { id: 'device', label: 'Device/Endpoint', color: '#06b6d4' },
+  { id: 'process', label: 'Process', color: '#f97316' },
+  { id: 'registry', label: 'Registry', color: '#a855f7' },
+  { id: 'threat_intel', label: 'Threat Intelligence', color: '#ef4444' },
+  { id: 'other', label: 'Other', color: '#6b7280' },
+] as const;
+
+export type IOCCategory = typeof IOC_CATEGORIES[number]['id'];
+
 export interface IOCType {
   name: string;
   regex?: string; // Optional - not all types need patterns
   description?: string;
-  category?: 'hash' | 'network' | 'file' | 'user' | 'system' | 'tool' | 'ttp' | 'other';
+  category?: IOCCategory;
+  needsPattern?: boolean; // TODO indicator - needs custom pattern in future
 }
 
 // Default IOC types organized by Pyramid of Pain levels
@@ -18,95 +35,95 @@ export interface IOCType {
 // Level 6: TTPs (Tough!) - Tactics, Techniques, Procedures - hardest to change
 
 export const DEFAULT_IOC_TYPES: IOCType[] = [
-  // === LEVEL 1: HASH VALUES (Trivial) ===
-  { name: 'hash_md5', regex: '^[a-fA-F0-9]{32}$', description: 'MD5 hash (32 hex chars)', category: 'hash' },
+  // === MOST COMMONLY USED (at top for easy access) ===
+  { name: 'ip', regex: '^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$', description: 'IPv4 address', category: 'common' },
+  { name: 'domain', regex: '^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\\.)+[a-zA-Z]{2,}$', description: 'Domain name', category: 'common' },
+  { name: 'url', regex: '^https?:\\/\\/[^\\s]+$', description: 'Full URL', category: 'common' },
+  { name: 'email', regex: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$', description: 'Email address', category: 'common' },
+  { name: 'hash_md5', regex: '^[a-fA-F0-9]{32}$', description: 'MD5 hash (32 hex chars)', category: 'common' },
+  { name: 'hash_sha256', regex: '^[a-fA-F0-9]{64}$', description: 'SHA256 hash (64 hex chars)', category: 'common' },
+  { name: 'file_name', description: 'File name', category: 'common', needsPattern: true },
+  { name: 'hostname', description: 'Hostname', category: 'common', needsPattern: true },
+  { name: 'username', description: 'Username', category: 'common', needsPattern: true },
+  
+  // === HASH VALUES ===
   { name: 'hash_sha1', regex: '^[a-fA-F0-9]{40}$', description: 'SHA1 hash (40 hex chars)', category: 'hash' },
-  { name: 'hash_sha256', regex: '^[a-fA-F0-9]{64}$', description: 'SHA256 hash (64 hex chars)', category: 'hash' },
   { name: 'hash_sha512', regex: '^[a-fA-F0-9]{128}$', description: 'SHA512 hash (128 hex chars)', category: 'hash' },
-  { name: 'hash_ssdeep', description: 'SSDeep fuzzy hash', category: 'hash' },
+  { name: 'hash_ssdeep', description: 'SSDeep fuzzy hash', category: 'hash', needsPattern: true },
   { name: 'hash_imphash', regex: '^[a-fA-F0-9]{32}$', description: 'PE Import hash', category: 'hash' },
-  { name: 'hash_tlsh', description: 'TLSH locality-sensitive hash', category: 'hash' },
+  { name: 'hash_tlsh', description: 'TLSH locality-sensitive hash', category: 'hash', needsPattern: true },
   
-  // === LEVEL 2: IP ADDRESSES (Easy) ===
-  { name: 'ip', regex: '^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$', description: 'IPv4 address', category: 'network' },
+  // === NETWORK ARTIFACTS ===
   { name: 'ipv6', regex: '^(?:[A-Fa-f0-9]{1,4}:){7}[A-Fa-f0-9]{1,4}$', description: 'IPv6 address', category: 'network' },
-  { name: 'ip_range', description: 'IP CIDR range (e.g., 192.168.1.0/24)', category: 'network' },
+  { name: 'ip_range', description: 'IP CIDR range (e.g., 192.168.1.0/24)', category: 'network', needsPattern: true },
   { name: 'asn', regex: '^AS\\d+$', description: 'Autonomous System Number', category: 'network' },
-  
-  // === LEVEL 3: DOMAIN NAMES (Simple) ===
-  { name: 'domain', regex: '^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\\.)+[a-zA-Z]{2,}$', description: 'Domain name', category: 'network' },
-  { name: 'subdomain', description: 'Subdomain pattern', category: 'network' },
-  { name: 'url', regex: '^https?:\\/\\/[^\\s]+$', description: 'Full URL', category: 'network' },
-  { name: 'uri_path', description: 'URI path pattern', category: 'network' },
-  { name: 'email', regex: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$', description: 'Email address', category: 'network' },
-  { name: 'email_subject', description: 'Email subject line pattern', category: 'network' },
-  
-  // === LEVEL 4: NETWORK/HOST ARTIFACTS (Annoying) ===
-  // Network artifacts
-  { name: 'user_agent', description: 'HTTP User-Agent string', category: 'network' },
-  { name: 'http_header', description: 'Specific HTTP header pattern', category: 'network' },
-  { name: 'ssl_cert_hash', description: 'SSL/TLS certificate hash', category: 'network' },
-  { name: 'ssl_cert_serial', description: 'SSL certificate serial number', category: 'network' },
+  { name: 'subdomain', description: 'Subdomain pattern', category: 'network', needsPattern: true },
+  { name: 'uri_path', description: 'URI path pattern', category: 'network', needsPattern: true },
+  { name: 'email_subject', description: 'Email subject line pattern', category: 'network', needsPattern: true },
+  { name: 'email_attachment', description: 'Email attachment filename', category: 'network', needsPattern: true },
+  { name: 'user_agent', description: 'HTTP User-Agent string', category: 'network', needsPattern: true },
+  { name: 'http_header', description: 'Specific HTTP header pattern', category: 'network', needsPattern: true },
+  { name: 'ssl_cert_hash', description: 'SSL/TLS certificate hash', category: 'network', needsPattern: true },
+  { name: 'ssl_cert_serial', description: 'SSL certificate serial number', category: 'network', needsPattern: true },
   { name: 'ja3_hash', regex: '^[a-fA-F0-9]{32}$', description: 'JA3 TLS fingerprint', category: 'network' },
   { name: 'ja3s_hash', regex: '^[a-fA-F0-9]{32}$', description: 'JA3S server fingerprint', category: 'network' },
-  { name: 'jarm_hash', description: 'JARM TLS server fingerprint', category: 'network' },
+  { name: 'jarm_hash', description: 'JARM TLS server fingerprint', category: 'network', needsPattern: true },
   { name: 'port', regex: '^([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$', description: 'Port number', category: 'network' },
   
-  // Host/File artifacts
-  { name: 'file_name', description: 'File name', category: 'file' },
-  { name: 'file_path', description: 'Full file path', category: 'file' },
-  { name: 'file_extension', description: 'File extension', category: 'file' },
+  // === FILE ARTIFACTS ===
+  { name: 'file_path', description: 'Full file path', category: 'file', needsPattern: true },
+  { name: 'file_extension', description: 'File extension', category: 'file', needsPattern: true },
   { name: 'file_size', description: 'File size (bytes)', category: 'file' },
   { name: 'file_attachment', description: 'Uploaded file attachment', category: 'file' },
-  { name: 'directory', description: 'Directory path', category: 'file' },
-  
-  // System artifacts
-  { name: 'hostname', description: 'Hostname', category: 'system' },
-  { name: 'mac_address', regex: '^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$', description: 'MAC address', category: 'system' },
-  { name: 'process_name', description: 'Process name', category: 'system' },
-  { name: 'process_path', description: 'Full process path', category: 'system' },
-  { name: 'process_cmdline', description: 'Command line arguments', category: 'system' },
-  { name: 'service_name', description: 'Windows/Linux service name', category: 'system' },
-  { name: 'scheduled_task', description: 'Scheduled task name', category: 'system' },
-  { name: 'registry_key', description: 'Windows registry key', category: 'system' },
-  { name: 'registry_value', description: 'Windows registry value', category: 'system' },
-  { name: 'mutex', description: 'Mutex name', category: 'system' },
-  { name: 'named_pipe', description: 'Named pipe', category: 'system' },
-  { name: 'event_id', description: 'Windows Event ID', category: 'system' },
-  
-  // === LEVEL 5: TOOLS (Challenging) ===
-  { name: 'malware_family', description: 'Malware family name', category: 'tool' },
-  { name: 'malware_variant', description: 'Malware variant identifier', category: 'tool' },
-  { name: 'tool_name', description: 'Attack tool name (e.g., Mimikatz, Cobalt Strike)', category: 'tool' },
-  { name: 'yara_rule', description: 'YARA rule name', category: 'tool' },
-  { name: 'sigma_rule', description: 'Sigma detection rule', category: 'tool' },
-  { name: 'snort_rule', description: 'Snort/Suricata rule', category: 'tool' },
-  
-  // === LEVEL 6: TTPs (Tough!) ===
-  { name: 'mitre_tactic', regex: '^TA\\d{4}$', description: 'MITRE ATT&CK Tactic ID', category: 'ttp' },
-  { name: 'mitre_technique', regex: '^T\\d{4}(\\.\\d{3})?$', description: 'MITRE ATT&CK Technique ID', category: 'ttp' },
-  { name: 'mitre_subtechnique', regex: '^T\\d{4}\\.\\d{3}$', description: 'MITRE ATT&CK Sub-technique', category: 'ttp' },
-  { name: 'attack_pattern', description: 'Attack pattern description', category: 'ttp' },
-  { name: 'kill_chain_phase', description: 'Cyber Kill Chain phase', category: 'ttp' },
+  { name: 'directory', description: 'Directory path', category: 'file', needsPattern: true },
   
   // === USER/IDENTITY ===
-  { name: 'user', description: 'Username or user identifier', category: 'user' },
   { name: 'user_email', description: 'User email address', category: 'user' },
-  { name: 'user_sid', description: 'Windows Security Identifier (SID)', category: 'user' },
-  { name: 'user_guid', description: 'User GUID/UUID', category: 'user' },
-  { name: 'group_name', description: 'User group or role name', category: 'user' },
+  { name: 'user_sid', description: 'Windows Security Identifier (SID)', category: 'user', needsPattern: true },
+  { name: 'user_guid', regex: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$', description: 'User GUID/UUID', category: 'user' },
+  { name: 'group_name', description: 'User group or role name', category: 'user', needsPattern: true },
   
-  // === THREAT INTEL REFERENCES ===
-  { name: 'cve', regex: '^CVE-\\d{4}-\\d{4,}$', description: 'CVE vulnerability ID', category: 'other' },
-  { name: 'cwe', regex: '^CWE-\\d+$', description: 'CWE weakness ID', category: 'other' },
-  { name: 'capec', regex: '^CAPEC-\\d+$', description: 'CAPEC attack pattern ID', category: 'other' },
-  { name: 'threat_actor', description: 'Threat actor/APT group name', category: 'other' },
-  { name: 'campaign', description: 'Attack campaign name', category: 'other' },
+  // === DEVICE/ENDPOINT ===
+  { name: 'mac_address', regex: '^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$', description: 'MAC address', category: 'device' },
+  { name: 'device_id', description: 'Device identifier', category: 'device', needsPattern: true },
+  { name: 'serial_number', description: 'Hardware serial number', category: 'device', needsPattern: true },
+  { name: 'event_id', description: 'Windows Event ID', category: 'device' },
+  
+  // === PROCESS ===
+  { name: 'process_name', description: 'Process name', category: 'process', needsPattern: true },
+  { name: 'process_path', description: 'Full process path', category: 'process', needsPattern: true },
+  { name: 'process_cmdline', description: 'Command line arguments', category: 'process', needsPattern: true },
+  { name: 'service_name', description: 'Windows/Linux service name', category: 'process', needsPattern: true },
+  { name: 'scheduled_task', description: 'Scheduled task name', category: 'process', needsPattern: true },
+  { name: 'mutex', description: 'Mutex name', category: 'process', needsPattern: true },
+  { name: 'named_pipe', description: 'Named pipe', category: 'process', needsPattern: true },
+  
+  // === REGISTRY ===
+  { name: 'registry_key', description: 'Windows registry key', category: 'registry', needsPattern: true },
+  { name: 'registry_value', description: 'Windows registry value', category: 'registry', needsPattern: true },
+  
+  // === THREAT INTELLIGENCE ===
+  { name: 'mitre_tactic', regex: '^TA\\d{4}$', description: 'MITRE ATT&CK Tactic ID', category: 'threat_intel' },
+  { name: 'mitre_technique', regex: '^T\\d{4}(\\.\\d{3})?$', description: 'MITRE ATT&CK Technique ID', category: 'threat_intel' },
+  { name: 'mitre_subtechnique', regex: '^T\\d{4}\\.\\d{3}$', description: 'MITRE ATT&CK Sub-technique', category: 'threat_intel' },
+  { name: 'cve', regex: '^CVE-\\d{4}-\\d{4,}$', description: 'CVE vulnerability ID', category: 'threat_intel' },
+  { name: 'cwe', regex: '^CWE-\\d+$', description: 'CWE weakness ID', category: 'threat_intel' },
+  { name: 'capec', regex: '^CAPEC-\\d+$', description: 'CAPEC attack pattern ID', category: 'threat_intel' },
+  { name: 'malware_family', description: 'Malware family name', category: 'threat_intel', needsPattern: true },
+  { name: 'malware_variant', description: 'Malware variant identifier', category: 'threat_intel', needsPattern: true },
+  { name: 'tool_name', description: 'Attack tool name (e.g., Mimikatz, Cobalt Strike)', category: 'threat_intel', needsPattern: true },
+  { name: 'threat_actor', description: 'Threat actor/APT group name', category: 'threat_intel', needsPattern: true },
+  { name: 'campaign', description: 'Attack campaign name', category: 'threat_intel', needsPattern: true },
+  { name: 'yara_rule', description: 'YARA rule name', category: 'threat_intel', needsPattern: true },
+  { name: 'sigma_rule', description: 'Sigma detection rule', category: 'threat_intel', needsPattern: true },
+  { name: 'snort_rule', description: 'Snort/Suricata rule', category: 'threat_intel', needsPattern: true },
+  { name: 'attack_pattern', description: 'Attack pattern description', category: 'threat_intel', needsPattern: true },
+  { name: 'kill_chain_phase', description: 'Cyber Kill Chain phase', category: 'threat_intel' },
+  
+  // === OTHER ===
   { name: 'bitcoin_address', regex: '^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$', description: 'Bitcoin wallet address', category: 'other' },
   { name: 'ethereum_address', regex: '^0x[a-fA-F0-9]{40}$', description: 'Ethereum wallet address', category: 'other' },
-  { name: 'monero_address', description: 'Monero wallet address', category: 'other' },
-  
-  // === GENERIC ===
+  { name: 'monero_address', description: 'Monero wallet address', category: 'other', needsPattern: true },
   { name: 'other', description: 'Other indicator type', category: 'other' },
 ];
 
@@ -170,17 +187,13 @@ export const useIOCTypes = () => {
     observableTypeNames,
     validateValue,
     initializeDefaults,
-    // Group by category for better UI (Pyramid of Pain levels)
-    groupedTypes: {
-      hash: iocTypes.filter(t => t.category === 'hash'),
-      network: iocTypes.filter(t => t.category === 'network'),
-      file: iocTypes.filter(t => t.category === 'file'),
-      system: iocTypes.filter(t => t.category === 'system'),
-      tool: iocTypes.filter(t => t.category === 'tool'),
-      ttp: iocTypes.filter(t => t.category === 'ttp'),
-      user: iocTypes.filter(t => t.category === 'user'),
-      other: iocTypes.filter(t => t.category === 'other' || !t.category),
-    },
+    // Group by category for better UI (OCSF-based categories)
+    groupedTypes: IOC_CATEGORIES.reduce((acc, cat) => {
+      acc[cat.id] = iocTypes.filter(t => 
+        cat.id === 'other' ? (t.category === 'other' || !t.category) : t.category === cat.id
+      );
+      return acc;
+    }, {} as Record<IOCCategory, IOCType[]>),
   };
 };
 
