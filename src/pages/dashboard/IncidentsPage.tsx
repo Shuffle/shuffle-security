@@ -86,28 +86,8 @@ interface DisplayIncident {
 type SortDirection = 'asc' | 'desc';
 type SortKey = 'title' | 'severity' | 'status' | 'assignee' | 'created' | 'edited';
 
-const severityColors: Record<string, string> = {
-  critical: '#ef4444',
-  high: '#f97316',
-  medium: '#eab308',
-  low: '#22c55e',
-  informational: '#3b82f6',
-};
-
-const severityOrder: Record<string, number> = {
-  critical: 5,
-  high: 4,
-  medium: 3,
-  low: 2,
-  informational: 1,
-};
-
-const statusColors: Record<string, { bg: string; text: string }> = {
-  new: { bg: 'rgba(34, 184, 207, 0.15)', text: '#22b8cf' },
-  in_progress: { bg: 'rgba(249, 115, 22, 0.15)', text: '#f97316' },
-  escalated: { bg: 'rgba(239, 68, 68, 0.15)', text: '#ef4444' },
-  resolved: { bg: 'rgba(34, 197, 94, 0.15)', text: '#22c55e' },
-};
+// Status and severity colors now imported from shared config
+import { statusConfig, severityColors, severityOrder } from '@/config/incidentConfig';
 
 const mapOCSFSeverity = (severityId: number): string => {
   switch (severityId) {
@@ -195,7 +175,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
 
 interface Filters {
   severity: string | null;
-  status: string | null;
+  status: string | string[] | null;  // Can be single value or array for multi-status filter
   tlp: string | null;
   assignee: string | null;
 }
@@ -242,13 +222,13 @@ const IncidentsPage = () => {
     setIncidents(realIncidents);
   }, [datastoreItems]);
 
-  // Apply smart defaults on initial load only - default to "New" status
+  // Apply smart defaults on initial load only - default to "New" OR "In Progress" status
   const [smartDefaultApplied, setSmartDefaultApplied] = useState(false);
 
   useEffect(() => {
     if (!smartDefaultApplied && incidents.length > 0) {
-      // Always default to "New" status filter
-      setFilters(prev => ({ ...prev, status: 'new' }));
+      // Default to "New" OR "In Progress" status filter
+      setFilters(prev => ({ ...prev, status: ['new', 'in_progress'] }));
       setSmartDefaultApplied(true);
     }
   }, [incidents, smartDefaultApplied]);
@@ -271,7 +251,11 @@ const IncidentsPage = () => {
       result = result.filter(i => i.severity === filters.severity);
     }
     if (filters.status) {
-      result = result.filter(i => i.status === filters.status);
+      if (Array.isArray(filters.status)) {
+        result = result.filter(i => filters.status.includes(i.status));
+      } else {
+        result = result.filter(i => i.status === filters.status);
+      }
     }
     if (filters.tlp) {
       result = result.filter(i => i.tlp === filters.tlp);
@@ -464,18 +448,31 @@ const IncidentsPage = () => {
               )}
 
               {filters.status && (
-                <Chip
-                  label={`Status: ${filters.status.replace('_', ' ')}`}
-                  size="small"
-                  onDelete={() => setFilters(prev => ({ ...prev, status: null }))}
-                  sx={{ 
-                    textTransform: 'capitalize',
-                    backgroundColor: statusColors[filters.status]?.bg || 'rgba(148, 163, 184, 0.1)',
-                    color: statusColors[filters.status]?.text || '#94a3b8',
-                    fontWeight: 500,
-                    '& .MuiChip-deleteIcon': { color: statusColors[filters.status]?.text || '#94a3b8' },
-                  }}
-                />
+                Array.isArray(filters.status) ? (
+                  <Chip
+                    label={`Status: ${filters.status.map(s => statusConfig[s]?.label || s).join(' / ')}`}
+                    size="small"
+                    onDelete={() => setFilters(prev => ({ ...prev, status: null }))}
+                    sx={{ 
+                      backgroundColor: 'rgba(99, 102, 241, 0.15)',
+                      color: '#818cf8',
+                      fontWeight: 500,
+                      '& .MuiChip-deleteIcon': { color: '#818cf8' },
+                    }}
+                  />
+                ) : (
+                  <Chip
+                    label={`Status: ${statusConfig[filters.status]?.label || filters.status.replace('_', ' ')}`}
+                    size="small"
+                    onDelete={() => setFilters(prev => ({ ...prev, status: null }))}
+                    sx={{ 
+                      backgroundColor: statusConfig[filters.status]?.bg || 'rgba(148, 163, 184, 0.1)',
+                      color: statusConfig[filters.status]?.color || '#94a3b8',
+                      fontWeight: 500,
+                      '& .MuiChip-deleteIcon': { color: statusConfig[filters.status]?.color || '#94a3b8' },
+                    }}
+                  />
+                )
               )}
 
               {hasActiveFilters && (
