@@ -36,6 +36,8 @@ import { useAuth } from '@/context/AuthContext';
 import { DATASTORE_CATEGORIES, getDatastoreByCategory, setDatastoreItems, CategoryAutomation } from '@/services/datastore';
 import { CreateIncidentDialog, OCSFIncidentFinding, Observable } from '@/components/incidents/CreateIncidentDialog';
 import { CategoryAutomationsDialog } from '@/components/incidents/CategoryAutomationsDialog';
+import { IncidentCardView } from '@/components/incidents/IncidentCardView';
+import { IncidentStatsCards } from '@/components/incidents/IncidentStatsCards';
 
 // Legacy categories for migration
 const LEGACY_ALERTS_CATEGORY = 'shuffle-alerts';
@@ -903,6 +905,31 @@ const IncidentsPage = () => {
         automations={categoryAutomations}
         onAutomationsChange={setCategoryAutomations}
       />
+
+      {/* Modern Card View Section */}
+      <Box sx={{ mt: 4 }}>
+        <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: 'hsl(var(--foreground))' }}>
+          Modern View
+        </Typography>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', lg: '1fr 320px' },
+            gap: 3,
+          }}
+        >
+          {/* Card list */}
+          <IncidentCardView
+            incidents={sortedIncidents.slice(0, 10)}
+            onIncidentClick={handleRowClick}
+          />
+          
+          {/* Stats sidebar */}
+          <Box sx={{ display: { xs: 'none', lg: 'block' } }}>
+            <IncidentStatsCards incidents={incidents} />
+          </Box>
+        </Box>
+      </Box>
     </motion.div>
   );
 };
