@@ -577,7 +577,7 @@ const AppAuthCard = ({
   };
 
   return (
-    <motion.div variants={itemVariants} style={{ width: '100%', maxWidth: '100%' }}>
+    <motion.div variants={itemVariants}>
       <Card
         sx={{
           background: isTested 
@@ -593,8 +593,6 @@ const AppAuthCard = ({
           backdropFilter: 'blur(10px)',
           overflow: 'hidden',
           transition: 'all 0.3s ease',
-          width: '100%',
-          maxWidth: '100%',
         }}
       >
         <CardContent
@@ -610,7 +608,7 @@ const AppAuthCard = ({
             '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.02)' },
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: { xs: '100%', sm: 'auto' }, minWidth: 0, flex: { sm: 1 }, overflow: 'hidden' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, minWidth: 0 }}>
             {app.image_url ? (
               <Box
                 component="img"
@@ -643,7 +641,7 @@ const AppAuthCard = ({
                 🔗
               </Box>
             )}
-            <Box sx={{ minWidth: 0, flex: 1, overflow: 'hidden', maxWidth: { xs: 'calc(100% - 56px)', sm: 200, md: 280, lg: 350 } }}>
+            <Box sx={{ minWidth: 0, flex: 1 }}>
               <Typography 
                 sx={{ 
                   color: 'white', 
@@ -1210,7 +1208,7 @@ export const AppAuthConfig = ({
   const totalCount = sortedApps.length;
 
   return (
-    <Box sx={{ width: '100%', maxWidth: '100%', overflow: 'hidden' }}>
+    <Box>
       <Typography
         variant="h5"
         sx={{
@@ -1242,7 +1240,7 @@ export const AppAuthConfig = ({
       />
 
       <motion.div variants={containerVariants} initial="hidden" animate="visible">
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%', maxWidth: '100%' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {sortedApps.map((app) => {
             const authState = authStates[app.objectID] || { systemId: app.objectID, status: 'pending' as const, credentials: {} };
             const isExpanded = expanded === app.objectID;
