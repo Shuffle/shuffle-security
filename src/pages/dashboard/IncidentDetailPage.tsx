@@ -1998,7 +1998,7 @@ const IncidentDetailPage = () => {
               <Avatar sx={{ width: 28, height: 28, bgcolor: 'rgba(255, 102, 0, 0.2)' }}>
                 <PersonIcon sx={{ fontSize: 16, color: '#ff6600' }} />
               </Avatar>
-              <Box sx={{ flex: 1 }}>
+              <Box sx={{ flex: 1, position: 'relative' }}>
                 <MentionInput
                   value={newComment}
                   onChange={setNewComment}
@@ -2011,6 +2011,7 @@ const IncidentDetailPage = () => {
                     '& .MuiOutlinedInput-root': {
                       bgcolor: 'rgba(0, 0, 0, 0.2)',
                       fontSize: '0.8rem',
+                      pr: 5,
                       '& fieldset': { borderColor: 'rgba(255,255,255,0.08)' },
                       '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.15)' },
                       '&.Mui-focused fieldset': { borderColor: '#FF6600' },
@@ -2023,20 +2024,21 @@ const IncidentDetailPage = () => {
                     }
                   }}
                 />
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
-                  <IconButton 
-                    size="small" 
-                    onClick={handleAddComment}
-                    disabled={!newComment.trim()}
-                    sx={{ 
-                      bgcolor: newComment.trim() ? 'rgba(255, 102, 0, 0.15)' : 'transparent',
-                      color: newComment.trim() ? '#ff6600' : 'text.disabled',
-                      '&:hover': { bgcolor: 'rgba(255, 102, 0, 0.25)' },
-                    }}
-                  >
-                    <SendIcon sx={{ fontSize: 16 }} />
-                  </IconButton>
-                </Box>
+                <IconButton 
+                  size="small" 
+                  onClick={handleAddComment}
+                  disabled={!newComment.trim()}
+                  sx={{ 
+                    position: 'absolute',
+                    right: 8,
+                    bottom: 8,
+                    bgcolor: newComment.trim() ? 'rgba(255, 102, 0, 0.15)' : 'transparent',
+                    color: newComment.trim() ? '#ff6600' : 'text.disabled',
+                    '&:hover': { bgcolor: 'rgba(255, 102, 0, 0.25)' },
+                  }}
+                >
+                  <SendIcon sx={{ fontSize: 16 }} />
+                </IconButton>
               </Box>
             </Box>
           </Box>
