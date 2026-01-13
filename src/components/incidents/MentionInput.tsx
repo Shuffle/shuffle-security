@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect, KeyboardEvent, ChangeEvent } from 'react';
-import { Box, TextField, TextFieldProps, Paper, Typography, Avatar } from '@mui/material';
+import { Box, TextField, TextFieldProps, Typography, Avatar } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import { useUsers, User } from '@/hooks/useUsers';
+import { Popover, PopoverContent, PopoverAnchor } from '@/components/ui/popover';
 
 interface MentionInputProps extends Omit<TextFieldProps, 'onChange'> {
   value: string;
@@ -28,7 +29,6 @@ export const MentionInput = ({ value, onChange, onSubmit, ...props }: MentionInp
   const [mentionQuery, setMentionQuery] = useState('');
   const [mentionStartPos, setMentionStartPos] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // All available users including AI Agent
   const allUsers: MentionSuggestion[] = [
@@ -57,7 +57,7 @@ export const MentionInput = ({ value, onChange, onSubmit, ...props }: MentionInp
         u.username.toLowerCase().includes(query)
       );
       
-      setSuggestions(filtered.slice(0, 6));
+      setSuggestions(filtered.slice(0, 5));
       setShowSuggestions(filtered.length > 0);
       setSelectedIndex(0);
     } else {
@@ -125,120 +125,84 @@ export const MentionInput = ({ value, onChange, onSubmit, ...props }: MentionInp
     }, 0);
   };
 
-  // Click outside to close
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        dropdownRef.current && 
-        !dropdownRef.current.contains(e.target as Node) &&
-        inputRef.current &&
-        !inputRef.current.contains(e.target as Node)
-      ) {
-        setShowSuggestions(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   return (
     <Box sx={{ position: 'relative', flex: 1 }}>
-      <TextField
-        {...props}
-        value={value}
-        onChange={handleChange}
-        onKeyDown={handleKeyDown}
-        inputRef={inputRef}
-      />
-      
-      {showSuggestions && suggestions.length > 0 && (
-        <Paper
-          ref={dropdownRef}
-          elevation={8}
-          sx={{
-            position: 'absolute',
-            bottom: '100%',
-            left: 0,
-            right: 0,
-            mb: 0.5,
-            zIndex: 1400,
-            bgcolor: '#1a1a1a',
-            border: '1px solid rgba(255,255,255,0.15)',
-            borderRadius: 1.5,
-            overflow: 'hidden',
-            maxHeight: 280,
-            overflowY: 'auto',
-          }}
+      <Popover open={showSuggestions} onOpenChange={setShowSuggestions}>
+        <PopoverAnchor asChild>
+          <TextField
+            {...props}
+            value={value}
+            onChange={handleChange}
+            onKeyDown={handleKeyDown}
+            inputRef={inputRef}
+          />
+        </PopoverAnchor>
+        
+        <PopoverContent 
+          side="top"
+          align="start" 
+          sideOffset={4}
+          className="w-52 p-1 bg-neutral-900 border border-white/15 shadow-xl"
+          onOpenAutoFocus={(e) => e.preventDefault()}
         >
-          <Box sx={{ p: 1 }}>
-            <Typography 
-              variant="caption" 
-              sx={{ 
-                color: 'text.secondary', 
-                px: 1, 
-                py: 0.5, 
-                display: 'block',
-                fontWeight: 500,
+          <Typography 
+            variant="caption" 
+            sx={{ 
+              color: 'text.secondary', 
+              px: 1, 
+              py: 0.5, 
+              display: 'block',
+              fontWeight: 500,
+              fontSize: '0.7rem',
+            }}
+          >
+            Mention someone
+          </Typography>
+          
+          {suggestions.map((user, idx) => (
+            <Box
+              key={user.id}
+              onClick={() => insertMention(user)}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                px: 1,
+                py: 0.75,
+                borderRadius: 0.75,
+                cursor: 'pointer',
+                bgcolor: idx === selectedIndex ? 'rgba(255, 102, 0, 0.15)' : 'transparent',
+                '&:hover': {
+                  bgcolor: idx === selectedIndex ? 'rgba(255, 102, 0, 0.2)' : 'rgba(255,255,255,0.05)',
+                },
               }}
             >
-              Mention someone
-            </Typography>
-            
-            {suggestions.map((user, idx) => (
-              <Box
-                key={user.id}
-                onClick={() => insertMention(user)}
+              <Avatar
                 sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1.5,
-                  px: 1.5,
-                  py: 1,
-                  borderRadius: 1,
-                  cursor: 'pointer',
-                  bgcolor: idx === selectedIndex ? 'rgba(255, 102, 0, 0.15)' : 'transparent',
-                  '&:hover': {
-                    bgcolor: idx === selectedIndex ? 'rgba(255, 102, 0, 0.2)' : 'rgba(255,255,255,0.05)',
-                  },
+                  width: 22,
+                  height: 22,
+                  bgcolor: user.isAI ? 'rgba(34, 197, 94, 0.2)' : 'rgba(255, 102, 0, 0.2)',
+                  color: user.isAI ? '#22c55e' : '#ff6600',
                 }}
               >
-                <Avatar
-                  sx={{
-                    width: 28,
-                    height: 28,
-                    bgcolor: user.isAI ? 'rgba(34, 197, 94, 0.2)' : 'rgba(255, 102, 0, 0.2)',
-                    color: user.isAI ? '#22c55e' : '#ff6600',
+                {user.isAI ? <SmartToyIcon sx={{ fontSize: 12 }} /> : <PersonIcon sx={{ fontSize: 12 }} />}
+              </Avatar>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    fontWeight: idx === selectedIndex ? 600 : 400,
+                    color: idx === selectedIndex ? '#ff6600' : 'text.primary',
+                    fontSize: '0.8rem',
                   }}
                 >
-                  {user.isAI ? <SmartToyIcon sx={{ fontSize: 16 }} /> : <PersonIcon sx={{ fontSize: 16 }} />}
-                </Avatar>
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      fontWeight: idx === selectedIndex ? 600 : 400,
-                      color: idx === selectedIndex ? '#ff6600' : 'text.primary',
-                    }}
-                  >
-                    {user.username}
-                  </Typography>
-                  {user.isAI && (
-                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                      Automated assistant
-                    </Typography>
-                  )}
-                </Box>
-                {idx === selectedIndex && (
-                  <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.65rem' }}>
-                    ↵ to select
-                  </Typography>
-                )}
+                  {user.username}
+                </Typography>
               </Box>
-            ))}
-          </Box>
-        </Paper>
-      )}
+            </Box>
+          ))}
+        </PopoverContent>
+      </Popover>
     </Box>
   );
 };
