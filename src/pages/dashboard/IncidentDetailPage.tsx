@@ -58,6 +58,7 @@ import {
 } from '@/components/incidents/CreateIncidentDialog';
 import { ResolveIncidentDialog, ResolutionData, RESOLUTION_REASONS } from '@/components/incidents/ResolveIncidentDialog';
 import { MentionText } from '@/components/incidents/MentionText';
+import { MentionInput } from '@/components/incidents/MentionInput';
 import { TaskDateTimePicker } from '@/components/incidents/TaskDateTimePicker';
 import { toast } from 'sonner';
 
@@ -1393,13 +1394,13 @@ const IncidentDetailPage = () => {
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {/* Description */}
           <Section title="Description" icon={DescriptionIcon} defaultOpen={true}>
-            <TextField
+            <MentionInput
               value={editedMessage}
-              onChange={(e) => setEditedMessage(e.target.value)}
+              onChange={setEditedMessage}
               fullWidth
               multiline
               rows={3}
-              placeholder="Add a description..."
+              placeholder="Add a description... (type @ to mention)"
               size="small"
               sx={inputSx}
             />
@@ -1778,21 +1779,16 @@ const IncidentDetailPage = () => {
           p: 2.5,
         }}>
           {/* Comment input */}
-          <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-            <TextField
+          <Box sx={{ display: 'flex', gap: 1, mb: 2, alignItems: 'flex-start' }}>
+            <MentionInput
               size="small"
               value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              placeholder="Add a comment... (use @username to mention)"
+              onChange={setNewComment}
+              onSubmit={handleAddComment}
+              placeholder="Add a comment... (type @ to mention)"
               fullWidth
               multiline
               maxRows={4}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleAddComment();
-                }
-              }}
               sx={inputSx}
             />
             <IconButton 
