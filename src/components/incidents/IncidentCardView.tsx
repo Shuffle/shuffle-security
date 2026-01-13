@@ -35,7 +35,15 @@ interface DisplayIncident {
 interface IncidentCardViewProps {
   incidents: DisplayIncident[];
   onIncidentClick: (incident: DisplayIncident) => void;
+  onFilterChange?: (type: 'severity' | 'status' | 'assignee', value: string) => void;
 }
+
+const statusColors: Record<string, { bg: string; text: string }> = {
+  new: { bg: 'rgba(34, 184, 207, 0.15)', text: '#22b8cf' },
+  in_progress: { bg: 'rgba(249, 115, 22, 0.15)', text: '#f97316' },
+  escalated: { bg: 'rgba(239, 68, 68, 0.15)', text: '#ef4444' },
+  resolved: { bg: 'rgba(34, 197, 94, 0.15)', text: '#22c55e' },
+};
 
 const severityColors: Record<string, string> = {
   critical: '#ef4444',
@@ -97,7 +105,7 @@ const formatRelativeTime = (timestamp: number): string => {
   return `${days} day${days > 1 ? 's' : ''} ago`;
 };
 
-export const IncidentCardView = ({ incidents, onIncidentClick }: IncidentCardViewProps) => {
+export const IncidentCardView = ({ incidents, onIncidentClick, onFilterChange }: IncidentCardViewProps) => {
   const navigate = useNavigate();
 
   return (
@@ -168,24 +176,21 @@ export const IncidentCardView = ({ incidents, onIncidentClick }: IncidentCardVie
                   </Typography>
                   <StatusIcon size={16} color={statusColor} />
                 </Box>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    color: 'hsl(var(--foreground-muted))',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    mb: 0.5,
-                  }}
-                >
-                  {incident.source || 'Security Alert'}
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                   <Typography
                     variant="caption"
                     sx={{ color: 'hsl(var(--muted-foreground))' }}
                   >
                     {formatRelativeTime(incident.editedTs || incident.createdTs)}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                    •
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    sx={{ color: 'hsl(var(--muted-foreground))' }}
+                  >
+                    {incident.source || 'Unknown'}
                   </Typography>
                   {incident.assignee && (
                     <>
@@ -201,6 +206,46 @@ export const IncidentCardView = ({ incidents, onIncidentClick }: IncidentCardVie
                     </>
                   )}
                 </Box>
+              </Box>
+
+              {/* Chips */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
+                <Chip
+                  label={incident.severity}
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onFilterChange?.('severity', incident.severity);
+                  }}
+                  sx={{
+                    backgroundColor: `${severityColor}20`,
+                    color: severityColor,
+                    fontWeight: 500,
+                    textTransform: 'capitalize',
+                    fontSize: '0.7rem',
+                    height: 24,
+                    cursor: 'pointer',
+                    '&:hover': { backgroundColor: `${severityColor}35` },
+                  }}
+                />
+                <Chip
+                  label={incident.status.replace('_', ' ')}
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onFilterChange?.('status', incident.status);
+                  }}
+                  sx={{
+                    backgroundColor: statusColors[incident.status]?.bg || 'rgba(148, 163, 184, 0.1)',
+                    color: statusColors[incident.status]?.text || '#94a3b8',
+                    fontWeight: 500,
+                    textTransform: 'capitalize',
+                    fontSize: '0.7rem',
+                    height: 24,
+                    cursor: 'pointer',
+                    '&:hover': { opacity: 0.8 },
+                  }}
+                />
               </Box>
 
               {/* Chevron */}

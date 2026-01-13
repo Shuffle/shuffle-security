@@ -922,6 +922,13 @@ const IncidentsPage = () => {
           <IncidentCardView
             incidents={sortedIncidents.slice(0, 10)}
             onIncidentClick={handleRowClick}
+            onFilterChange={(type, value) => {
+              setFilters(prev => ({
+                ...prev,
+                [type]: prev[type] === value ? null : value,
+              }));
+              setPage(0);
+            }}
           />
           
           {/* Stats sidebar */}
