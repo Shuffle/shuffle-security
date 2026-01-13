@@ -599,65 +599,76 @@ const AppAuthCard = ({
           onClick={onToggle}
           sx={{
             display: 'flex',
-            alignItems: 'center',
-            gap: 2,
+            flexDirection: { xs: 'column', sm: 'row' },
+            alignItems: { xs: 'flex-start', sm: 'center' },
+            gap: { xs: 1.5, sm: 2 },
             cursor: 'pointer',
-            p: 3,
-            '&:last-child': { pb: 3 },
+            p: { xs: 2, sm: 3 },
+            '&:last-child': { pb: { xs: 2, sm: 3 } },
             '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.02)' },
           }}
         >
-          {app.image_url ? (
-            <Box
-              component="img"
-              src={app.image_url}
-              alt={app.name}
-              sx={{
-                width: 48,
-                height: 48,
-                borderRadius: 2,
-                objectFit: 'contain',
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                p: 1,
-              }}
-            />
-          ) : (
-            <Box
-              sx={{
-                width: 48,
-                height: 48,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: 'rgba(255, 255, 255, 0.05)',
-                borderRadius: 2,
-                fontSize: '1.5rem',
-              }}
-            >
-              🔗
-            </Box>
-          )}
-          <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-            <Typography sx={{ color: 'white', fontWeight: 600 }}>
-              {app.name.replace(/_/g, ' ')}
-            </Typography>
-            {app.description && (
-              <Typography 
-                variant="caption" 
-                sx={{ 
-                  color: 'rgba(255, 255, 255, 0.4)',
-                  display: 'block',
-                  maxWidth: 300,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: { xs: '100%', sm: 'auto' }, minWidth: 0, flex: { sm: 1 } }}>
+            {app.image_url ? (
+              <Box
+                component="img"
+                src={app.image_url}
+                alt={app.name}
+                sx={{
+                  width: { xs: 40, sm: 48 },
+                  height: { xs: 40, sm: 48 },
+                  borderRadius: 2,
+                  objectFit: 'contain',
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  p: 1,
+                  flexShrink: 0,
+                }}
+              />
+            ) : (
+              <Box
+                sx={{
+                  width: { xs: 40, sm: 48 },
+                  height: { xs: 40, sm: 48 },
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  borderRadius: 2,
+                  fontSize: '1.5rem',
+                  flexShrink: 0,
                 }}
               >
-                {app.description}
-              </Typography>
+                🔗
+              </Box>
             )}
+            <Box sx={{ minWidth: 0, flex: 1 }}>
+              <Typography sx={{ color: 'white', fontWeight: 600, fontSize: { xs: '0.9rem', sm: '1rem' } }}>
+                {app.name.replace(/_/g, ' ')}
+              </Typography>
+              {app.description && (
+                <Typography 
+                  variant="caption" 
+                  sx={{ 
+                    color: 'rgba(255, 255, 255, 0.4)',
+                    display: { xs: 'none', md: 'block' },
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {app.description}
+                </Typography>
+              )}
+            </Box>
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: { xs: 1, sm: 1.5 }, 
+            flexWrap: 'wrap',
+            width: { xs: '100%', sm: 'auto' },
+            justifyContent: { xs: 'flex-start', sm: 'flex-end' },
+          }}>
             {/* Configured status chip */}
             <Chip
               label={isConfigured ? 'Configured' : 'Not configured'}
@@ -666,7 +677,8 @@ const AppAuthCard = ({
                 backgroundColor: isConfigured ? 'rgba(245, 158, 11, 0.15)' : 'rgba(239, 68, 68, 0.15)',
                 color: isConfigured ? '#f59e0b' : '#ef4444',
                 fontWeight: 500,
-                fontSize: '0.65rem',
+                fontSize: { xs: '0.6rem', sm: '0.65rem' },
+                height: { xs: 22, sm: 24 },
               }}
             />
             {/* Tested status chip */}
@@ -677,7 +689,8 @@ const AppAuthCard = ({
                 backgroundColor: isTested ? 'rgba(34, 197, 94, 0.15)' : 'rgba(156, 163, 175, 0.15)',
                 color: isTested ? '#22c55e' : '#9ca3af',
                 fontWeight: 500,
-                fontSize: '0.65rem',
+                fontSize: { xs: '0.6rem', sm: '0.65rem' },
+                height: { xs: 22, sm: 24 },
               }}
             />
             <Tooltip title="View documentation">
@@ -714,8 +727,8 @@ const AppAuthCard = ({
         <Collapse in={isExpanded}>
           <Box
             sx={{
-              px: 3,
-              pb: 3,
+              px: { xs: 2, sm: 3 },
+              pb: { xs: 2, sm: 3 },
               pt: 2,
               borderTop: '1px solid rgba(255, 255, 255, 0.05)',
             }}
@@ -810,21 +823,35 @@ const AppAuthCard = ({
                 {!showAddNewForm && selectedAuth && (
                   <Box sx={{ 
                     mt: 2, 
-                    p: 2, 
+                    p: { xs: 1.5, sm: 2 }, 
                     backgroundColor: 'rgba(34, 197, 94, 0.1)', 
                     borderRadius: 2,
                     border: '1px solid rgba(34, 197, 94, 0.2)',
                   }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <CheckCircleIcon sx={{ color: '#22c55e', fontSize: 20 }} />
-                        <Typography sx={{ color: 'white', fontWeight: 500 }}>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      flexDirection: { xs: 'column', sm: 'row' },
+                      alignItems: { xs: 'flex-start', sm: 'center' }, 
+                      justifyContent: 'space-between', 
+                      gap: { xs: 1.5, sm: 2 },
+                    }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
+                        <CheckCircleIcon sx={{ color: '#22c55e', fontSize: 20, flexShrink: 0 }} />
+                        <Typography sx={{ 
+                          color: 'white', 
+                          fontWeight: 500, 
+                          fontSize: { xs: '0.875rem', sm: '1rem' },
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}>
                           Using: {selectedAuth.label || 'Selected authentication'}
                         </Typography>
                       </Box>
                       <Button
                         variant="contained"
                         size="small"
+                        fullWidth={false}
                         onClick={(e) => {
                           e.stopPropagation();
                           onTestConnection(app.objectID);
@@ -835,6 +862,8 @@ const AppAuthCard = ({
                           boxShadow: '0 4px 14px rgba(255, 102, 0, 0.25)',
                           fontWeight: 600,
                           textTransform: 'none',
+                          flexShrink: 0,
+                          width: { xs: '100%', sm: 'auto' },
                           '&:hover': {
                             background: 'linear-gradient(135deg, #FF8533 0%, #FF9955 100%)',
                           },
@@ -965,7 +994,7 @@ const AppAuthCard = ({
 
                     {/* Save and Test buttons */}
                     {!isOAuth2 && (
-                      <Box sx={{ display: 'flex', gap: 2 }}>
+                      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
                         <Button
                           variant="outlined"
                           onClick={(e) => {
@@ -978,6 +1007,9 @@ const AppAuthCard = ({
                             borderColor: 'rgba(255, 102, 0, 0.4)',
                             color: 'white',
                             fontWeight: 600,
+                            textTransform: 'none',
+                            fontSize: { xs: '0.875rem', sm: '1rem' },
+                            py: { xs: 1.25, sm: 1 },
                             '&:hover': {
                               borderColor: '#FF6600',
                               backgroundColor: 'rgba(255, 102, 0, 0.08)',
@@ -1002,6 +1034,9 @@ const AppAuthCard = ({
                             background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
                             boxShadow: '0 4px 14px rgba(255, 102, 0, 0.25)',
                             fontWeight: 600,
+                            textTransform: 'none',
+                            fontSize: { xs: '0.875rem', sm: '1rem' },
+                            py: { xs: 1.25, sm: 1 },
                             '&:hover': {
                               background: 'linear-gradient(135deg, #FF8533 0%, #FF9955 100%)',
                             },
