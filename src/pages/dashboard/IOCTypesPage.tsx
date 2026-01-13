@@ -25,51 +25,35 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import { useDatastore } from '@/hooks/useDatastore';
-
+import { DEFAULT_IOC_TYPES, IOCType } from '@/hooks/useIOCTypes';
 import { DATASTORE_CATEGORIES } from '@/services/datastore';
 
 const CATEGORY = DATASTORE_CATEGORIES.IOCS;
-
-interface IOCType {
-  name: string;
-  regex: string;
-  description?: string;
-}
-
-const defaultIOCTypes: IOCType[] = [
-  { name: 'IPv4', regex: '^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$', description: 'IPv4 address' },
-  { name: 'IPv6', regex: '^(?:[A-Fa-f0-9]{1,4}:){7}[A-Fa-f0-9]{1,4}$', description: 'IPv6 address' },
-  { name: 'Domain', regex: '^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\\.)+[a-zA-Z]{2,}$', description: 'Domain name' },
-  { name: 'Email', regex: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$', description: 'Email address' },
-  { name: 'MD5', regex: '^[a-fA-F0-9]{32}$', description: 'MD5 hash' },
-  { name: 'SHA256', regex: '^[a-fA-F0-9]{64}$', description: 'SHA256 hash' },
-  { name: 'URL', regex: '^https?:\\/\\/[^\\s]+$', description: 'URL' },
-];
 
 const IOCTypesPage = () => {
   const { items, isLoading, error, fetchItems, addItem, removeItem } = useDatastore({ category: CATEGORY });
   const [iocTypes, setIocTypes] = useState<IOCType[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingType, setEditingType] = useState<IOCType | null>(null);
-  const [formData, setFormData] = useState<IOCType>({ name: '', regex: '', description: '' });
+  const [formData, setFormData] = useState<Partial<IOCType>>({ name: '', regex: '', description: '', category: 'other' });
 
   useEffect(() => {
     fetchItems();
   }, [fetchItems]);
 
-  // Auto-initialize defaults if org has no IOC types
+  // Auto-initialize defaults if org has no IOC types - use comprehensive list from useIOCTypes
   useEffect(() => {
     const autoInitialize = async () => {
       if (isLoading) return;
       if (items.length === 0) {
-        // Check localStorage to avoid repeated initialization attempts in same session
+        // Check sessionStorage to avoid repeated initialization attempts in same session
         const initKey = 'shuffle_ioc_defaults_checked';
         if (sessionStorage.getItem(initKey)) return;
         
         sessionStorage.setItem(initKey, 'true');
         
-        // Initialize default IOC types
-        for (const ioc of defaultIOCTypes) {
+        // Initialize ALL default IOC types from the comprehensive list (50+ types)
+        for (const ioc of DEFAULT_IOC_TYPES) {
           await addItem(ioc.name, ioc);
         }
         await fetchItems();
@@ -90,8 +74,9 @@ const IOCTypesPage = () => {
     setIocTypes(parsed);
   }, [items]);
 
+  // Initialize ALL defaults from comprehensive list (50+ types)
   const handleInitDefaults = async () => {
-    for (const ioc of defaultIOCTypes) {
+    for (const ioc of DEFAULT_IOC_TYPES) {
       await addItem(ioc.name, ioc);
     }
     await fetchItems();
@@ -103,20 +88,20 @@ const IOCTypesPage = () => {
       setFormData(type);
     } else {
       setEditingType(null);
-      setFormData({ name: '', regex: '', description: '' });
+      setFormData({ name: '', regex: '', description: '', category: 'other' });
     }
     setDialogOpen(true);
   };
 
   const handleSave = async () => {
-    if (!formData.name || !formData.regex) return;
+    if (!formData.name) return;  // Only name is required, regex is optional
     
     if (editingType && editingType.name !== formData.name) {
       await removeItem(editingType.name);
     }
-    await addItem(formData.name, formData);
+    await addItem(formData.name, formData as IOCType);
     setDialogOpen(false);
-    setFormData({ name: '', regex: '', description: '' });
+    setFormData({ name: '', regex: '', description: '', category: 'other' });
   };
 
   const handleDelete = async (name: string) => {
@@ -161,6 +146,7 @@ const IOCTypesPage = () => {
               <TableHead>
                 <TableRow>
                   <TableCell>Name</TableCell>
+                  <TableCell>Category</TableCell>
                   <TableCell>Regex Pattern</TableCell>
                   <TableCell>Description</TableCell>
                   <TableCell align="right">Actions</TableCell>
@@ -173,8 +159,19 @@ const IOCTypesPage = () => {
                       <Chip label={type.name} size="small" sx={{ fontWeight: 500 }} />
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.75rem', maxWidth: 400, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {type.regex}
+                      <Chip 
+                        label={type.category || 'other'} 
+                        size="small" 
+                        variant="outlined"
+                        sx={{ 
+                          fontSize: '0.7rem',
+                          textTransform: 'capitalize',
+                        }} 
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.75rem', maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {type.regex || <Typography component="span" sx={{ color: 'text.disabled', fontStyle: 'italic' }}>No pattern</Typography>}
                       </Typography>
                     </TableCell>
                     <TableCell>
@@ -194,8 +191,8 @@ const IOCTypesPage = () => {
                 ))}
                 {iocTypes.length === 0 && !isLoading && (
                   <TableRow>
-                    <TableCell colSpan={4} align="center" sx={{ py: 4 }}>
-                      <Typography color="text.secondary">No IOC types configured. Click "Initialize Defaults" to add common types.</Typography>
+                    <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+                      <Typography color="text.secondary">No IOC types configured. Click "Initialize Defaults" to add 50+ common indicator types.</Typography>
                     </TableCell>
                   </TableRow>
                 )}
@@ -218,10 +215,11 @@ const IOCTypesPage = () => {
             />
             <TextField
               label="Regex Pattern"
-              value={formData.regex}
+              value={formData.regex || ''}
               onChange={(e) => setFormData({ ...formData, regex: e.target.value })}
               fullWidth
-              placeholder="e.g., ^[a-fA-F0-9]{32}$"
+              placeholder="Optional - e.g., ^[a-fA-F0-9]{32}$"
+              helperText="Leave empty if no validation pattern is needed"
               multiline
               rows={2}
               sx={{ '& textarea': { fontFamily: 'monospace', fontSize: '0.875rem' } }}
@@ -237,7 +235,7 @@ const IOCTypesPage = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleSave} variant="contained" disabled={!formData.name || !formData.regex}>
+          <Button onClick={handleSave} variant="contained" disabled={!formData.name}>
             Save
           </Button>
         </DialogActions>

@@ -20,6 +20,7 @@ import PersonSearchIcon from '@mui/icons-material/PersonSearch';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import EmailIcon from '@mui/icons-material/Email';
 import ChatIcon from '@mui/icons-material/Chat';
+import TravelExploreIcon from '@mui/icons-material/TravelExplore';
 
 interface EnrichmentOption {
   id: string;
@@ -32,6 +33,14 @@ interface EnrichmentOption {
 }
 
 const enrichmentOptions: EnrichmentOption[] = [
+  {
+    id: 'integration_search',
+    name: 'Integration Search',
+    description: 'Search across all connected tools simultaneously for IOCs and context',
+    icon: <TravelExploreIcon />,
+    color: '#3b82f6',
+    category: 'enrichment',
+  },
   {
     id: 'threat_list',
     name: 'Threat List Comparisons',
