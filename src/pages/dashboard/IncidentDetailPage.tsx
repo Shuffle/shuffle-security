@@ -359,7 +359,7 @@ const IncidentDetailPage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [showResolveDialog, setShowResolveDialog] = useState(false);
   const [activeTab, setActiveTab] = useState(0); // 0=Tasks, 1=Details, 2=Observables, 3=Correlations
-  const [correlations, setCorrelations] = useState<Array<{ key: string; ref?: Array<{ category: string; key: string }>; matched_key?: string }>>([]);
+  const [correlations, setCorrelations] = useState<Array<{ key: string; value?: string; ref?: Array<{ category: string; key: string }>; matched_key?: string }>>([]);
   const [correlationsLoading, setCorrelationsLoading] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pendingSaveRef = useRef(false);
@@ -1175,7 +1175,7 @@ const IncidentDetailPage = () => {
             </Box>
           </Box>
 
-      {/* Tab Content */}
+          {/* Tab Content */}
       {activeTab === 0 && (
         /* Tasks Tab */
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -1948,72 +1948,9 @@ const IncidentDetailPage = () => {
           )}
         </Box>
       )}
-
-      {activeTab === 3 && (
-        /* Activity Tab */
-        <Box sx={{ 
-          bgcolor: 'rgba(255,255,255,0.02)', 
-          borderRadius: 2, 
-          border: '1px solid rgba(255,255,255,0.06)',
-          p: 2.5,
-        }}>
-          {/* Comment input */}
-          <Box sx={{ display: 'flex', gap: 1, mb: 2, alignItems: 'flex-start' }}>
-            <MentionInput
-              size="small"
-              value={newComment}
-              onChange={setNewComment}
-              onSubmit={handleAddComment}
-              placeholder="Add a comment... (type @ to mention)"
-              fullWidth
-              multiline
-              maxRows={4}
-              sx={inputSx}
-            />
-            <IconButton 
-              onClick={handleAddComment} 
-              disabled={!newComment.trim()} 
-              sx={{ bgcolor: 'rgba(255, 102, 0, 0.15)', color: '#ff6600', '&:hover': { bgcolor: 'rgba(255, 102, 0, 0.25)' } }}
-            >
-              <SendIcon />
-            </IconButton>
-          </Box>
-
-          <Divider sx={{ mb: 2, borderColor: 'rgba(255,255,255,0.06)' }} />
-
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, maxHeight: 500, overflowY: 'auto' }}>
-            {activity.length === 0 ? (
-              <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center', py: 3 }}>
-                No activity yet
-              </Typography>
-            ) : (
-              [...activity].reverse().map((item) => (
-                <Box key={item.id} sx={{ display: 'flex', gap: 1.5, p: 1.5, borderRadius: 1, bgcolor: 'rgba(0,0,0,0.2)' }}>
-                  <Avatar sx={{ width: 28, height: 28, bgcolor: item.type === 'comment' ? 'rgba(255, 102, 0, 0.2)' : 'rgba(148, 163, 184, 0.2)' }}>
-                    {getActivityIcon(item.type)}
-                  </Avatar>
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-                      <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.85rem' }}>
-                        {item.user}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: 'text.secondary', display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <AccessTimeIcon sx={{ fontSize: 12 }} />
-                        {formatRelativeTime(item.timestamp)}
-                      </Typography>
-                    </Box>
-                    <MentionText 
-                      text={item.content} 
-                      variant="body2" 
-                      sx={{ color: item.type === 'comment' ? 'text.primary' : 'text.secondary', fontSize: '0.85rem' }}
-                    />
-                  </Box>
-                </Box>
-              ))
-            )}
-          </Box>
         </Box>
-      )}
+      </Box>
+
 
       <ResolveIncidentDialog
         open={showResolveDialog}
