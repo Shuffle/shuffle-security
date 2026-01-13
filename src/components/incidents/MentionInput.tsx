@@ -52,12 +52,12 @@ export const MentionInput = ({ value, onChange, onSubmit, ...props }: MentionInp
       setMentionQuery(query);
       setMentionStartPos(mentionMatch.index!);
       
-      // Filter suggestions
+      // Filter suggestions - show more results since popup is now scrollable
       const filtered = allUsers.filter(u => 
         u.username.toLowerCase().includes(query)
       );
       
-      setSuggestions(filtered.slice(0, 5));
+      setSuggestions(filtered.slice(0, 15));
       setShowSuggestions(filtered.length > 0);
       setSelectedIndex(0);
     } else {
@@ -142,7 +142,7 @@ export const MentionInput = ({ value, onChange, onSubmit, ...props }: MentionInp
           side="top"
           align="start" 
           sideOffset={4}
-          className="w-52 p-1 bg-neutral-900 border border-white/15 shadow-xl"
+          className="w-52 p-1 bg-neutral-900 border border-white/15 shadow-xl max-h-64 overflow-y-auto"
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
           <Typography 
@@ -154,6 +154,10 @@ export const MentionInput = ({ value, onChange, onSubmit, ...props }: MentionInp
               display: 'block',
               fontWeight: 500,
               fontSize: '0.7rem',
+              position: 'sticky',
+              top: 0,
+              bgcolor: '#171717',
+              zIndex: 1,
             }}
           >
             Mention someone

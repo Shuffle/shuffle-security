@@ -77,6 +77,14 @@ export const taskCategories = [
   { value: 'documentation', label: 'Documentation', color: '#6b7280' },
 ];
 
+// File attachment for tasks and incidents
+export interface FileAttachment {
+  id: string;
+  filename: string;
+  filesize: number;
+  uploadedAt?: number;
+}
+
 // Task item for incident tasks/checklist
 export interface IncidentTask {
   id: string;
@@ -91,6 +99,7 @@ export interface IncidentTask {
   completedAt?: number;
   createdBy?: string;
   aiWorking?: boolean; // True when AI Agent is actively working on this task
+  attachments?: FileAttachment[]; // File attachments
 }
 
 // OCSF Incident Finding format (class_id: 2005)
