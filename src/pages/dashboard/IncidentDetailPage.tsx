@@ -47,11 +47,11 @@ import { DATASTORE_CATEGORIES, getDatastoreItem } from '@/services/datastore';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { useUsers } from '@/hooks/useUsers';
 import { useCustomFields, CustomField } from '@/hooks/useCustomFields';
+import { useIOCTypes } from '@/hooks/useIOCTypes';
 import { 
   OCSFIncidentFinding, 
   Observable, 
   severityOptions, 
-  observableTypes,
   tlpLevels,
   ActivityItem,
   IncidentTask,
@@ -366,6 +366,7 @@ const IncidentDetailPage = () => {
   
   const { users, loading: usersLoading } = useUsers();
   const { fields: customFields } = useCustomFields();
+  const { observableTypeNames } = useIOCTypes();
   const { addItem } = useDatastore({
     category: DATASTORE_CATEGORIES.INCIDENTS,
   });
@@ -1754,7 +1755,7 @@ const IncidentDetailPage = () => {
                 onChange={(e) => setNewObservableType(e.target.value)}
                 sx={{ minWidth: 120, ...inputSx }}
               >
-                {observableTypes.map((type) => (
+                {observableTypeNames.map((type) => (
                   <MenuItem key={type} value={type}>{type}</MenuItem>
                 ))}
               </TextField>
@@ -1880,7 +1881,7 @@ const IncidentDetailPage = () => {
                   }
                 }}
               >
-                {observableTypes.map((type) => (
+                {observableTypeNames.map((type) => (
                   <MenuItem key={type} value={type}>{type}</MenuItem>
                 ))}
               </Select>
