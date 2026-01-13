@@ -172,6 +172,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
             width: 24,
             height: 24,
             zIndex: 1300,
+            display: { xs: 'none', sm: 'flex' },
             '&:hover': {
               backgroundColor: 'hsl(var(--muted))',
             },
@@ -191,7 +192,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
           backgroundColor: 'hsl(var(--card))',
           borderRadius: 2,
           border: '1px solid hsl(var(--border))',
-          display: 'flex',
+          display: { xs: 'none', sm: 'flex' },
           flexDirection: 'column',
           transition: 'width 0.2s ease',
           overflow: 'hidden',
