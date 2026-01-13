@@ -164,35 +164,40 @@ export const EnrichmentConfig = ({
 
   // Deduplicate apps by normalized name (same logic as sidebar)
   const deduplicateApps = (apps: ApiAuthEntry[]): ApiAuthEntry[] => {
-    const appMap = new Map<string, ApiAuthEntry>();
+    const appMap = new Map<string, { app: ApiAuthEntry; bestImage: string }>();
     apps.forEach(auth => {
       // Normalize: lowercase, trim, replace spaces/underscores/hyphens for deduplication
       const normalizedName = auth.app.name.toLowerCase().trim().replace(/[\s_\-]+/g, '_');
       const existing = appMap.get(normalizedName);
+      const isValidated = auth.validation?.valid === true;
+      const entryImage = auth.app.large_image || '';
       
       if (!existing) {
-        appMap.set(normalizedName, auth);
+        appMap.set(normalizedName, { app: auth, bestImage: entryImage });
       } else {
-        // Merge: prioritize validated apps, and keep whichever has an image
-        const isNewValidated = auth.validation?.valid === true;
-        const isExistingValidated = existing.validation?.valid === true;
-        const newHasImage = !!auth.app.large_image;
-        const existingHasImage = !!existing.app.large_image;
+        // Merge: prioritize validated apps, and collect any available image
+        const isExistingValidated = existing.app.validation?.valid === true;
         
-        // Replace if: new is validated and existing isn't, OR same validation but new has image and existing doesn't
-        if ((isNewValidated && !isExistingValidated) || 
-            (isNewValidated === isExistingValidated && newHasImage && !existingHasImage)) {
-          appMap.set(normalizedName, auth);
-        } else if (!existingHasImage && newHasImage) {
-          // Keep existing but copy the image from new
-          appMap.set(normalizedName, {
-            ...existing,
-            app: { ...existing.app, large_image: auth.app.large_image }
+        // Update bestImage if we don't have one yet
+        if (!existing.bestImage && entryImage) {
+          existing.bestImage = entryImage;
+        }
+        
+        // Replace the main app entry if new is validated and existing isn't
+        if (isValidated && !isExistingValidated) {
+          appMap.set(normalizedName, { 
+            app: auth, 
+            bestImage: existing.bestImage || entryImage 
           });
         }
       }
     });
-    return Array.from(appMap.values());
+    
+    // Return with bestImage applied
+    return Array.from(appMap.values()).map(({ app, bestImage }) => ({
+      ...app,
+      app: { ...app.app, large_image: bestImage || app.app.large_image }
+    }));
   };
 
   // Build dynamic options based on connected apps
