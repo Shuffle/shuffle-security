@@ -336,6 +336,17 @@ export const EnrichmentConfig = ({
       if (opt.id === 'threat_intel') {
         // Build Threat Intel sources from authenticated apps
         const threatIntelApps: ConnectedApp[] = [];
+        
+        // Add default "Shuffle Threat Lists" - always available and validated
+        threatIntelApps.push({
+          id: 'shuffle_threat_lists',
+          name: 'Shuffle Threat Lists',
+          image: 'https://shuffler.io/images/logos/shuffle_logo.png',
+          isValidated: true,
+          isSelected: true,
+          hasAuthConfig: true,
+        });
+        
         dedupedApps.forEach(({ app, bestImage, hasValidAuth }) => {
           if (isThreatIntelApp(app.name)) {
             threatIntelApps.push({
@@ -371,9 +382,7 @@ export const EnrichmentConfig = ({
         
         return {
           ...opt,
-          description: tiTotalCount > 0
-            ? `${tiValidatedCount} validated${tiTotalCount > tiValidatedCount ? `, ${tiTotalCount - tiValidatedCount} pending` : ''}`
-            : 'Connect threat intelligence tools to compare indicators',
+          description: `${tiValidatedCount} validated${tiTotalCount > tiValidatedCount ? `, ${tiTotalCount - tiValidatedCount} pending` : ''}`,
           threatIntelSources,
         };
       }
