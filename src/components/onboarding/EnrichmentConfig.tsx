@@ -759,9 +759,9 @@ export const EnrichmentConfig = ({
                             Toggle individual tools:
                           </Typography>
                           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                            {option.ingestionSources ? (
-                              // Group by category for ingestion sources
-                              option.ingestionSources.filter(s => s.apps.length > 0).map((source) => (
+                            {(option.ingestionSources || option.notificationSources || option.threatIntelSources) ? (
+                              // Group by category for all source types
+                              (option.ingestionSources || option.notificationSources || option.threatIntelSources)!.filter(s => s.apps.length > 0).map((source) => (
                                 <Box key={source.category}>
                                   <Typography
                                     variant="caption"
@@ -910,8 +910,8 @@ export const EnrichmentConfig = ({
                                   )})}
                                 </Box>
                               ))
-                            ) : (
-                              // Flat list for connected apps
+                            ) : option.connectedApps ? (
+                              // Flat list for legacy connected apps
                               allTools.map((app) => (
                                 <Box
                                   key={app.id}
@@ -960,7 +960,7 @@ export const EnrichmentConfig = ({
                                   />
                                 </Box>
                               ))
-                            )}
+                            ) : null}
                           </Box>
                         </Box>
                       </Collapse>
