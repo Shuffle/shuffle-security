@@ -66,10 +66,23 @@ export interface ActivityItem {
   details?: Record<string, unknown>;
 }
 
+// Task categories for organization
+export const taskCategories = [
+  { value: 'triage', label: 'Triage', color: '#22b8cf' },
+  { value: 'investigation', label: 'Investigation', color: '#a855f7' },
+  { value: 'containment', label: 'Containment', color: '#f59e0b' },
+  { value: 'eradication', label: 'Eradication', color: '#ef4444' },
+  { value: 'recovery', label: 'Recovery', color: '#22c55e' },
+  { value: 'communication', label: 'Communication', color: '#3b82f6' },
+  { value: 'documentation', label: 'Documentation', color: '#6b7280' },
+];
+
 // Task item for incident tasks/checklist
 export interface IncidentTask {
   id: string;
   title: string;
+  description?: string; // Detailed task description
+  category?: string; // Task category for organization
   completed: boolean;
   assignee?: string;
   dueDate?: string; // ISO date string

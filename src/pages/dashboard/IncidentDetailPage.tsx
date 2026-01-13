@@ -55,6 +55,7 @@ import {
   tlpLevels,
   ActivityItem,
   IncidentTask,
+  taskCategories,
 } from '@/components/incidents/CreateIncidentDialog';
 import { ResolveIncidentDialog, ResolutionData, RESOLUTION_REASONS } from '@/components/incidents/ResolveIncidentDialog';
 import { MentionText } from '@/components/incidents/MentionText';
@@ -348,6 +349,7 @@ const IncidentDetailPage = () => {
   const [tasks, setTasks] = useState<IncidentTask[]>([]);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [showTemplateMenu, setShowTemplateMenu] = useState(false);
+  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
   
   const [isSaving, setIsSaving] = useState(false);
   const [showResolveDialog, setShowResolveDialog] = useState(false);
@@ -729,6 +731,18 @@ const IncidentDetailPage = () => {
   const handleUpdateTaskDueDate = (taskId: string, dueDate: string) => {
     setTasks(tasks.map(task => 
       task.id === taskId ? { ...task, dueDate } : task
+    ));
+  };
+
+  const handleUpdateTaskDescription = (taskId: string, description: string) => {
+    setTasks(tasks.map(task => 
+      task.id === taskId ? { ...task, description } : task
+    ));
+  };
+
+  const handleUpdateTaskCategory = (taskId: string, category: string) => {
+    setTasks(tasks.map(task => 
+      task.id === taskId ? { ...task, category } : task
     ));
   };
 
@@ -1248,134 +1262,239 @@ const IncidentDetailPage = () => {
                 {tasks.map((task) => {
                   const isBlocked = isTaskBlocked(task);
                   const dependencyTask = task.dependsOn ? tasks.find(t => t.title === task.dependsOn) : null;
+                  const isExpanded = expandedTaskId === task.id;
+                  const categoryInfo = taskCategories.find(c => c.value === task.category);
                   
                   return (
-                    <Box 
-                      key={task.id}
-                      sx={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: 1.5,
-                        p: 1.5,
-                        borderRadius: 1,
-                        bgcolor: task.completed ? 'rgba(34, 197, 94, 0.08)' : isBlocked ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.2)',
-                        border: '1px solid',
-                        borderColor: task.completed ? 'rgba(34, 197, 94, 0.2)' : isBlocked ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.08)',
-                        opacity: isBlocked ? 0.6 : 1,
-                      }}
-                    >
-                      <DragIndicatorIcon sx={{ fontSize: 16, color: 'text.disabled', cursor: 'grab' }} />
-                      
-                      <IconButton 
-                        size="small" 
-                        onClick={() => !isBlocked && handleToggleTask(task.id)}
-                        disabled={isBlocked}
+                    <Box key={task.id}>
+                      {/* Task Header Row */}
+                      <Box 
                         sx={{ 
-                          p: 0.5,
-                          color: task.completed ? '#22c55e' : 'text.secondary',
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: 1.5,
+                          p: 1.5,
+                          borderRadius: isExpanded ? '8px 8px 0 0' : 1,
+                          bgcolor: task.completed ? 'rgba(34, 197, 94, 0.08)' : isBlocked ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.2)',
+                          border: '1px solid',
+                          borderColor: task.completed ? 'rgba(34, 197, 94, 0.2)' : isBlocked ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.08)',
+                          borderBottom: isExpanded ? 'none' : undefined,
+                          opacity: isBlocked ? 0.6 : 1,
                         }}
                       >
-                        {task.completed ? (
-                          <CheckCircleIcon fontSize="small" />
-                        ) : (
-                          <Box sx={{ 
-                            width: 18, 
-                            height: 18, 
-                            borderRadius: '50%', 
-                            border: '2px solid currentColor',
-                          }} />
-                        )}
-                      </IconButton>
-                      
-                      <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Typography 
-                            variant="body2" 
-                            sx={{ 
-                              textDecoration: task.completed ? 'line-through' : 'none',
-                              color: task.completed ? 'text.secondary' : 'text.primary',
-                            }}
-                          >
-                            {task.title}
-                          </Typography>
-                          {task.assignee === 'AI Agent' && (
-                            <Chip
-                              size="small"
-                              label={task.aiWorking ? 'AI Working...' : 'AI Agent'}
-                              sx={{
-                                height: 18,
-                                fontSize: '0.65rem',
-                                fontWeight: 600,
-                                bgcolor: task.aiWorking ? 'rgba(34, 197, 94, 0.2)' : 'rgba(34, 197, 94, 0.1)',
-                                color: '#22c55e',
-                                border: task.aiWorking ? '1px solid rgba(34, 197, 94, 0.4)' : 'none',
-                                animation: task.aiWorking ? 'pulse 2s infinite' : 'none',
-                                '@keyframes pulse': {
-                                  '0%, 100%': { opacity: 1 },
-                                  '50%': { opacity: 0.6 },
-                                },
+                        {/* Expand toggle */}
+                        <IconButton 
+                          size="small" 
+                          onClick={() => setExpandedTaskId(isExpanded ? null : task.id)}
+                          sx={{ p: 0.25, color: 'text.secondary' }}
+                        >
+                          {isExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+                        </IconButton>
+                        
+                        <IconButton 
+                          size="small" 
+                          onClick={() => !isBlocked && handleToggleTask(task.id)}
+                          disabled={isBlocked}
+                          sx={{ 
+                            p: 0.5,
+                            color: task.completed ? '#22c55e' : 'text.secondary',
+                          }}
+                        >
+                          {task.completed ? (
+                            <CheckCircleIcon fontSize="small" />
+                          ) : (
+                            <Box sx={{ 
+                              width: 18, 
+                              height: 18, 
+                              borderRadius: '50%', 
+                              border: '2px solid currentColor',
+                            }} />
+                          )}
+                        </IconButton>
+                        
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                            <Typography 
+                              variant="body2" 
+                              sx={{ 
+                                textDecoration: task.completed ? 'line-through' : 'none',
+                                color: task.completed ? 'text.secondary' : 'text.primary',
                               }}
-                            />
+                            >
+                              {task.title}
+                            </Typography>
+                            {categoryInfo && (
+                              <Chip
+                                size="small"
+                                label={categoryInfo.label}
+                                sx={{
+                                  height: 18,
+                                  fontSize: '0.65rem',
+                                  fontWeight: 500,
+                                  bgcolor: `${categoryInfo.color}20`,
+                                  color: categoryInfo.color,
+                                  border: `1px solid ${categoryInfo.color}40`,
+                                }}
+                              />
+                            )}
+                            {task.assignee === 'AI Agent' && (
+                              <Chip
+                                size="small"
+                                label={task.aiWorking ? 'AI Working...' : 'AI Agent'}
+                                sx={{
+                                  height: 18,
+                                  fontSize: '0.65rem',
+                                  fontWeight: 600,
+                                  bgcolor: task.aiWorking ? 'rgba(34, 197, 94, 0.2)' : 'rgba(34, 197, 94, 0.1)',
+                                  color: '#22c55e',
+                                  border: task.aiWorking ? '1px solid rgba(34, 197, 94, 0.4)' : 'none',
+                                  animation: task.aiWorking ? 'pulse 2s infinite' : 'none',
+                                  '@keyframes pulse': {
+                                    '0%, 100%': { opacity: 1 },
+                                    '50%': { opacity: 0.6 },
+                                  },
+                                }}
+                              />
+                            )}
+                          </Box>
+                          {isBlocked && dependencyTask && (
+                            <Typography variant="caption" sx={{ color: 'warning.main', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                              ⏳ Waiting on: {dependencyTask.title}
+                            </Typography>
                           )}
                         </Box>
-                        {isBlocked && dependencyTask && (
-                          <Typography variant="caption" sx={{ color: 'warning.main', display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                            ⏳ Waiting on: {dependencyTask.title}
-                          </Typography>
-                        )}
+                        
+                        <FormControl size="small" sx={{ minWidth: 100 }}>
+                          <Select
+                            value={task.assignee || ''}
+                            onChange={(e) => handleUpdateTaskAssignee(task.id, e.target.value)}
+                            variant="standard"
+                            disableUnderline
+                            displayEmpty
+                            disabled={usersLoading}
+                            sx={{ fontSize: '0.75rem' }}
+                          >
+                            <MenuItem value=""><em>Unassigned</em></MenuItem>
+                            <MenuItem value="AI Agent" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Box component="span" sx={{ 
+                                width: 6, 
+                                height: 6, 
+                                borderRadius: '50%', 
+                                bgcolor: '#22c55e',
+                                display: 'inline-block',
+                              }} />
+                              AI Agent
+                            </MenuItem>
+                            {users.map((user) => (
+                              <MenuItem key={user.id} value={user.username}>{user.username}</MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                        
+                        <TaskDateTimePicker
+                          value={task.dueDate || ''}
+                          onChange={(value) => handleUpdateTaskDueDate(task.id, value)}
+                        />
+                        
+                        <Box sx={{ width: 16 }} />
+                        
+                        <IconButton 
+                          size="small" 
+                          onClick={() => handleDeleteTask(task.id)}
+                          sx={{ 
+                            color: 'text.disabled',
+                            border: '1px solid rgba(255,255,255,0.08)',
+                            borderRadius: 1,
+                            '&:hover': { 
+                              color: '#ef4444',
+                              bgcolor: 'rgba(239, 68, 68, 0.1)',
+                              borderColor: 'rgba(239, 68, 68, 0.3)',
+                            } 
+                          }}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
                       </Box>
                       
-                      <FormControl size="small" sx={{ minWidth: 100 }}>
-                        <Select
-                          value={task.assignee || ''}
-                          onChange={(e) => handleUpdateTaskAssignee(task.id, e.target.value)}
-                          variant="standard"
-                          disableUnderline
-                          displayEmpty
-                          disabled={usersLoading}
-                          sx={{ fontSize: '0.75rem' }}
-                        >
-                          <MenuItem value=""><em>Unassigned</em></MenuItem>
-                          <MenuItem value="AI Agent" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Box component="span" sx={{ 
-                              width: 6, 
-                              height: 6, 
-                              borderRadius: '50%', 
-                              bgcolor: '#22c55e',
-                              display: 'inline-block',
-                            }} />
-                            AI Agent
-                          </MenuItem>
-                          {users.map((user) => (
-                            <MenuItem key={user.id} value={user.username}>{user.username}</MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                      
-                      <TaskDateTimePicker
-                        value={task.dueDate || ''}
-                        onChange={(value) => handleUpdateTaskDueDate(task.id, value)}
-                      />
-                      
-                      {/* Spacer to separate date picker from delete */}
-                      <Box sx={{ width: 16 }} />
-                      
-                      <IconButton 
-                        size="small" 
-                        onClick={() => handleDeleteTask(task.id)}
-                        sx={{ 
-                          color: 'text.disabled',
-                          border: '1px solid rgba(255,255,255,0.08)',
-                          borderRadius: 1,
-                          '&:hover': { 
-                            color: '#ef4444',
-                            bgcolor: 'rgba(239, 68, 68, 0.1)',
-                            borderColor: 'rgba(239, 68, 68, 0.3)',
-                          } 
-                        }}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
+                      {/* Expanded Task Details */}
+                      <Collapse in={isExpanded}>
+                        <Box sx={{
+                          p: 2,
+                          pt: 1.5,
+                          bgcolor: task.completed ? 'rgba(34, 197, 94, 0.04)' : 'rgba(0,0,0,0.15)',
+                          borderRadius: '0 0 8px 8px',
+                          border: '1px solid',
+                          borderColor: task.completed ? 'rgba(34, 197, 94, 0.2)' : 'rgba(255,255,255,0.08)',
+                          borderTop: 'none',
+                        }}>
+                          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 2, mb: 2 }}>
+                            {/* Category selector */}
+                            <FormControl size="small" fullWidth>
+                              <InputLabel>Category</InputLabel>
+                              <Select
+                                value={task.category || ''}
+                                label="Category"
+                                onChange={(e) => handleUpdateTaskCategory(task.id, e.target.value)}
+                                sx={{
+                                  bgcolor: 'rgba(0,0,0,0.2)',
+                                  '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.1)' },
+                                }}
+                              >
+                                <MenuItem value=""><em>No category</em></MenuItem>
+                                {taskCategories.map((cat) => (
+                                  <MenuItem key={cat.value} value={cat.value}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                      <Box sx={{ 
+                                        width: 10, 
+                                        height: 10, 
+                                        borderRadius: '50%', 
+                                        bgcolor: cat.color,
+                                      }} />
+                                      {cat.label}
+                                    </Box>
+                                  </MenuItem>
+                                ))}
+                              </Select>
+                            </FormControl>
+                          </Box>
+                          
+                          {/* Description textarea */}
+                          <TextField
+                            size="small"
+                            fullWidth
+                            multiline
+                            rows={2}
+                            placeholder="Add task details, notes, or instructions..."
+                            value={task.description || ''}
+                            onChange={(e) => handleUpdateTaskDescription(task.id, e.target.value)}
+                            sx={{
+                              '& .MuiOutlinedInput-root': {
+                                bgcolor: 'rgba(0, 0, 0, 0.2)',
+                                '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
+                                '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
+                                '&.Mui-focused fieldset': { borderColor: '#FF6600' },
+                              },
+                            }}
+                          />
+                          
+                          {/* Task metadata */}
+                          <Box sx={{ display: 'flex', gap: 3, mt: 1.5, flexWrap: 'wrap' }}>
+                            <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                              Created: {new Date(task.createdAt).toLocaleDateString()}
+                            </Typography>
+                            {task.createdBy && (
+                              <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                                By: {task.createdBy}
+                              </Typography>
+                            )}
+                            {task.completedAt && (
+                              <Typography variant="caption" sx={{ color: '#22c55e' }}>
+                                Completed: {new Date(task.completedAt).toLocaleDateString()}
+                              </Typography>
+                            )}
+                          </Box>
+                        </Box>
+                      </Collapse>
                     </Box>
                   );
                 })}
