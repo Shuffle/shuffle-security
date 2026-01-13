@@ -11,14 +11,22 @@ import AddIcon from '@mui/icons-material/Add';
 import { useNavigate } from 'react-router-dom';
 import { API_CONFIG } from '@/config/api';
 
+interface AuthInstance {
+  label: string;
+  isValidated: boolean;
+}
+
 interface Integration {
   id: string;
   name: string;
   icon: string;
-  status: 'connected' | 'error' | 'pending';
+  status: 'connected' | 'partial' | 'pending';
+  authInstances: AuthInstance[];
 }
 
 interface ApiAuthEntry {
+  id?: string;
+  label?: string;
   app: {
     id: string;
     name: string;
@@ -63,28 +71,50 @@ export const IntegrationStatus = ({ collapsed }: IntegrationStatusProps) => {
           const authData: ApiAuthEntry[] = result.data || result;
           
           if (Array.isArray(authData)) {
-            // Deduplicate by app.id, prioritizing validated entries
-            const appMap = new Map<string, { entry: ApiAuthEntry; isValidated: boolean }>();
+            // Group by app.name to truly deduplicate
+            const appMap = new Map<string, { 
+              app: ApiAuthEntry['app']; 
+              instances: AuthInstance[];
+            }>();
             
             authData.forEach(entry => {
               if (!entry.active && !entry.validation?.valid) return; // Skip inactive/unvalidated
               
-              const existing = appMap.get(entry.app.id);
-              const isValidated = entry.validation?.valid === true;
+              const appName = entry.app.name.toLowerCase().trim();
+              const existing = appMap.get(appName);
+              const instance: AuthInstance = {
+                label: entry.label || entry.id || 'Default',
+                isValidated: entry.validation?.valid === true,
+              };
               
-              // Keep this entry if: no existing, or this one is validated and existing isn't
-              if (!existing || (isValidated && !existing.isValidated)) {
-                appMap.set(entry.app.id, { entry, isValidated });
+              if (existing) {
+                existing.instances.push(instance);
+              } else {
+                appMap.set(appName, { 
+                  app: entry.app, 
+                  instances: [instance] 
+                });
               }
             });
             
             // Convert to integration objects
-            const dedupedIntegrations = Array.from(appMap.values()).map(({ entry }) => ({
-              id: entry.app.id,
-              name: entry.app.name,
-              icon: entry.app.large_image || '',
-              status: entry.validation?.valid ? 'connected' as const : 'pending' as const,
-            }));
+            const dedupedIntegrations = Array.from(appMap.values()).map(({ app, instances }) => {
+              const validatedCount = instances.filter(i => i.isValidated).length;
+              let status: Integration['status'] = 'pending';
+              if (validatedCount === instances.length) {
+                status = 'connected';
+              } else if (validatedCount > 0) {
+                status = 'partial';
+              }
+              
+              return {
+                id: app.id,
+                name: app.name,
+                icon: app.large_image || '',
+                status,
+                authInstances: instances,
+              };
+            });
             
             setIntegrations(dedupedIntegrations);
           }
@@ -103,21 +133,10 @@ export const IntegrationStatus = ({ collapsed }: IntegrationStatusProps) => {
     switch (status) {
       case 'connected':
         return 'hsl(var(--severity-low))';
-      case 'error':
-        return 'hsl(var(--severity-critical))';
+      case 'partial':
+        return 'hsl(var(--severity-medium))';
       default:
         return 'hsl(var(--muted-foreground))';
-    }
-  };
-
-  const getStatusLabel = (status: Integration['status']) => {
-    switch (status) {
-      case 'connected':
-        return '✓ Connected';
-      case 'error':
-        return '✗ Error';
-      default:
-        return '⏳ Pending';
     }
   };
 
@@ -157,15 +176,32 @@ export const IntegrationStatus = ({ collapsed }: IntegrationStatusProps) => {
               <Tooltip 
                 key={integration.id} 
                 title={
-                  <Box sx={{ textAlign: 'center' }}>
-                    <Typography sx={{ fontWeight: 600, fontSize: '0.8rem' }}>
+                  <Box sx={{ textAlign: 'left', minWidth: 140 }}>
+                    <Typography sx={{ fontWeight: 600, fontSize: '0.8rem', mb: 0.5 }}>
                       {integration.name}
                     </Typography>
-                    <Typography sx={{ fontSize: '0.7rem', color: getStatusColor(integration.status) }}>
-                      {getStatusLabel(integration.status)}
-                    </Typography>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
+                      {integration.authInstances.map((instance, idx) => (
+                        <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Box 
+                            sx={{ 
+                              width: 6, 
+                              height: 6, 
+                              borderRadius: '50%', 
+                              backgroundColor: instance.isValidated 
+                                ? 'hsl(var(--severity-low))' 
+                                : 'hsl(var(--muted-foreground))',
+                              flexShrink: 0,
+                            }} 
+                          />
+                          <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))' }}>
+                            {instance.label}
+                          </Typography>
+                        </Box>
+                      ))}
+                    </Box>
                   </Box>
-                } 
+                }
                 placement="right"
                 arrow
               >
