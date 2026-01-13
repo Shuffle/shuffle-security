@@ -325,6 +325,15 @@ const IncidentsPage = () => {
     setSearchQuery('');
   };
 
+  const isDefaultFilter = !filters.severity && 
+    !filters.tlp && 
+    filters.assignee === null && 
+    !searchQuery.trim() &&
+    Array.isArray(filters.status) && 
+    filters.status.length === 2 && 
+    filters.status.includes('new') && 
+    filters.status.includes('in_progress');
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -473,9 +482,11 @@ const IncidentsPage = () => {
                 )
               )}
 
-              <Button size="small" onClick={resetToDefaults} sx={{ minWidth: 'auto' }}>
-                Reset
-              </Button>
+              {!isDefaultFilter && (
+                <Button size="small" onClick={resetToDefaults} sx={{ minWidth: 'auto' }}>
+                  Reset
+                </Button>
+              )}
             </Box>
 
             <Typography variant="body2" sx={{ ml: 'auto', color: 'text.secondary' }}>
