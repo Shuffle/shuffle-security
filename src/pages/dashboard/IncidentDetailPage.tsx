@@ -359,7 +359,7 @@ const IncidentDetailPage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [showResolveDialog, setShowResolveDialog] = useState(false);
   const [activeTab, setActiveTab] = useState(0); // 0=Tasks, 1=Details, 2=Observables, 3=Correlations
-  const [correlations, setCorrelations] = useState<Array<{ key: string; value?: string; ref?: Array<{ category: string; key: string }>; matched_key?: string }>>([]);
+  const [correlations, setCorrelations] = useState<Array<{ key: string; amount: number; ref: string[] }>>([]);
   const [correlationsLoading, setCorrelationsLoading] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pendingSaveRef = useRef(false);
@@ -454,7 +454,10 @@ const IncidentDetailPage = () => {
         
         if (response.ok) {
           const data = await response.json();
-          setCorrelations(data.correlations || data.data || []);
+          // API returns array directly with { key, amount, ref[] }
+          const correlationData = Array.isArray(data) ? data : (data.correlations || data.data || []);
+          // Filter out the current incident from correlations
+          setCorrelations(correlationData.filter((c: { key: string }) => c.key.toLowerCase() !== id?.toLowerCase()));
         }
       } catch (error) {
         console.error('Failed to fetch correlations:', error);
@@ -1990,106 +1993,85 @@ const IncidentDetailPage = () => {
               </Box>
 
               {/* Correlation list */}
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                 {correlations.map((corr, idx) => {
-                  let parsed: { 
-                    title?: string; 
-                    severity?: string; 
-                    status?: string;
-                    finding_info?: { title?: string };
-                    correlation_score?: number;
-                    correlation_reason?: string;
-                  } = {};
-                  try {
-                    parsed = JSON.parse(corr.value);
-                  } catch {
-                    // Ignore parse errors
-                  }
+                  // Parse refs to extract related incidents from shuffle-security_incidents category
+                  const relatedIncidents = corr.ref
+                    .filter(r => r.startsWith('shuffle-security_incidents|'))
+                    .map(r => r.split('|')[1])
+                    .filter(key => key.toLowerCase() !== id?.toLowerCase());
                   
-                  const title = parsed.finding_info?.title || parsed.title || corr.key;
-                  const score = parsed.correlation_score ?? (idx === 0 ? 0.95 : idx === 1 ? 0.78 : 0.45 + Math.random() * 0.3);
-                  const reason = parsed.correlation_reason || (score > 0.8 ? 'Shared IOCs' : score > 0.6 ? 'Similar pattern' : 'Time proximity');
-                  const isHighConfidence = score >= 0.8;
-                  const isMediumConfidence = score >= 0.5 && score < 0.8;
+                  const otherRefs = corr.ref.filter(r => !r.startsWith('shuffle-security_incidents|'));
+                  const isHighMatch = corr.amount >= 5;
+                  const isMediumMatch = corr.amount >= 3 && corr.amount < 5;
                   
                   return (
                     <Box 
                       key={corr.key || idx} 
-                      onClick={() => navigate(`/incidents/${corr.key}`)}
                       sx={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: 2, 
                         p: 2, 
                         borderRadius: 1.5, 
-                        bgcolor: isHighConfidence ? 'rgba(255, 102, 0, 0.05)' : 'rgba(0,0,0,0.2)',
+                        bgcolor: isHighMatch ? 'rgba(255, 102, 0, 0.05)' : 'rgba(0,0,0,0.2)',
                         border: '1px solid',
-                        borderColor: isHighConfidence ? 'rgba(255, 102, 0, 0.2)' : 'rgba(255,255,255,0.06)',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                        '&:hover': { 
-                          bgcolor: isHighConfidence ? 'rgba(255, 102, 0, 0.1)' : 'rgba(255,255,255,0.04)',
-                          borderColor: isHighConfidence ? 'rgba(255, 102, 0, 0.3)' : 'rgba(255,255,255,0.1)',
-                        },
+                        borderColor: isHighMatch ? 'rgba(255, 102, 0, 0.2)' : 'rgba(255,255,255,0.06)',
                       }}
                     >
-                      {/* Severity indicator */}
-                      <Box sx={{ 
-                        width: 10, 
-                        height: 10, 
-                        borderRadius: '50%', 
-                        bgcolor: severityColors[parsed.severity || 'medium'] || '#eab308',
-                        flexShrink: 0,
-                        boxShadow: `0 0 8px ${severityColors[parsed.severity || 'medium'] || '#eab308'}40`,
-                      }} />
-                      
-                      {/* Content */}
-                      <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Typography variant="body2" sx={{ fontWeight: 500, mb: 0.25 }}>
-                          {title}
-                        </Typography>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Typography variant="caption" sx={{ color: 'text.secondary', fontFamily: 'monospace' }}>
-                            {corr.key}
-                          </Typography>
-                          <Typography variant="caption" sx={{ color: 'text.disabled' }}>•</Typography>
-                          <Typography variant="caption" sx={{ 
-                            color: isHighConfidence ? '#ff6600' : isMediumConfidence ? '#eab308' : 'text.secondary',
-                          }}>
-                            {reason}
-                          </Typography>
-                        </Box>
-                      </Box>
-                      
-                      {/* Confidence score */}
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                        <Box sx={{ textAlign: 'right' }}>
-                          <Typography variant="caption" sx={{ 
-                            color: isHighConfidence ? '#ff6600' : isMediumConfidence ? '#eab308' : 'text.secondary',
+                      {/* Correlation header */}
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: relatedIncidents.length > 0 ? 1.5 : 0 }}>
+                        <Chip 
+                          label={corr.key}
+                          size="small"
+                          sx={{
+                            fontFamily: 'monospace',
+                            fontSize: '0.75rem',
+                            bgcolor: isHighMatch ? 'rgba(255, 102, 0, 0.15)' : isMediumMatch ? 'rgba(234, 179, 8, 0.15)' : 'rgba(148, 163, 184, 0.1)',
+                            color: isHighMatch ? '#ff6600' : isMediumMatch ? '#eab308' : 'text.secondary',
                             fontWeight: 600,
-                            fontSize: '0.8rem',
-                          }}>
-                            {Math.round(score * 100)}%
-                          </Typography>
-                          <Typography variant="caption" sx={{ color: 'text.disabled', display: 'block', fontSize: '0.65rem' }}>
-                            match
+                          }}
+                        />
+                        <Box sx={{ flex: 1 }}>
+                          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                            Found in <strong>{corr.amount}</strong> items across {new Set(corr.ref.map(r => r.split('|')[0])).size} categories
                           </Typography>
                         </Box>
-                        
-                        {parsed.status && (
-                          <Chip 
-                            size="small" 
-                            label={parsed.status.replace('_', ' ')} 
-                            sx={{ 
-                              height: 20, 
-                              fontSize: '0.7rem',
-                              textTransform: 'capitalize',
-                              bgcolor: statusColors[parsed.status]?.bg || 'rgba(148, 163, 184, 0.1)',
-                              color: statusColors[parsed.status]?.text || '#94a3b8',
-                            }} 
-                          />
-                        )}
                       </Box>
+                      
+                      {/* Related incidents */}
+                      {relatedIncidents.length > 0 && (
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
+                          {relatedIncidents.map((incidentKey) => (
+                            <Chip
+                              key={incidentKey}
+                              label={incidentKey}
+                              size="small"
+                              onClick={() => navigate(`/incidents/${incidentKey}`)}
+                              sx={{
+                                height: 24,
+                                fontSize: '0.7rem',
+                                fontFamily: 'monospace',
+                                bgcolor: 'rgba(255,255,255,0.05)',
+                                color: 'text.primary',
+                                cursor: 'pointer',
+                                '&:hover': { bgcolor: 'rgba(255, 102, 0, 0.15)', color: '#ff6600' },
+                              }}
+                            />
+                          ))}
+                          {otherRefs.length > 0 && (
+                            <Tooltip title={otherRefs.join(', ')} arrow>
+                              <Chip
+                                label={`+${otherRefs.length} more`}
+                                size="small"
+                                sx={{
+                                  height: 24,
+                                  fontSize: '0.7rem',
+                                  bgcolor: 'rgba(148, 163, 184, 0.1)',
+                                  color: 'text.secondary',
+                                }}
+                              />
+                            </Tooltip>
+                          )}
+                        </Box>
+                      )}
                     </Box>
                   );
                 })}
