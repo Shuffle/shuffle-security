@@ -30,6 +30,8 @@ interface EnrichmentOption {
   configFields?: { label: string; placeholder: string; type?: string }[];
   // For dynamic options with connected apps
   connectedApps?: ConnectedApp[];
+  // For ingestion sources breakdown
+  ingestionSources?: IngestionSource[];
 }
 
 interface ConnectedApp {
@@ -38,8 +40,8 @@ interface ConnectedApp {
   image?: string;
 }
 
-// Base static options
-const baseEnrichmentOptions: Omit<EnrichmentOption, 'connectedApps'>[] = [
+// Base static options - automatic_ingestion will be built dynamically
+const baseEnrichmentOptions: (Omit<EnrichmentOption, 'connectedApps'> & { isDynamic?: boolean })[] = [
   {
     id: 'automatic_ingestion',
     name: 'Automatic Ingestion',
@@ -47,6 +49,7 @@ const baseEnrichmentOptions: Omit<EnrichmentOption, 'connectedApps'>[] = [
     icon: <DownloadIcon />,
     color: '#22c55e',
     category: 'enrichment',
+    isDynamic: true, // Will be replaced with dynamic version
   },
   {
     id: 'integration_search',
@@ -122,6 +125,31 @@ const isCommunicationApp = (app: ApiAuthEntry) => {
     );
 };
 
+// Ingestion source detection - Email, Cases (ticketing), EDR, SIEM
+const CASES_PATTERNS = ['jira', 'servicenow', 'zendesk', 'freshdesk', 'pagerduty', 'opsgenie', 'ticket', 'itsm', 'salesforce', 'thehive', 'cortex'];
+const EDR_PATTERNS = ['crowdstrike', 'sentinelone', 'carbon black', 'defender', 'cylance', 'sophos', 'trellix', 'vmware', 'tanium', 'falcon', 'edr'];
+const SIEM_PATTERNS = ['splunk', 'elastic', 'qradar', 'sentinel', 'chronicle', 'logrhythm', 'sumo logic', 'graylog', 'wazuh', 'siem', 'arcsight'];
+
+type IngestionCategory = 'email' | 'cases' | 'edr' | 'siem';
+
+const getIngestionCategory = (app: ApiAuthEntry): IngestionCategory | null => {
+  const name = app.app.name.toLowerCase();
+  const categories = (app.app.categories || []).map(c => c.toLowerCase());
+  
+  if (isEmailApp(name)) return 'email';
+  if (CASES_PATTERNS.some(p => name.includes(p)) || categories.includes('cases') || categories.includes('itsm')) return 'cases';
+  if (EDR_PATTERNS.some(p => name.includes(p)) || categories.includes('edr') || categories.includes('endpoint')) return 'edr';
+  if (SIEM_PATTERNS.some(p => name.includes(p)) || categories.includes('siem')) return 'siem';
+  
+  return null;
+};
+
+interface IngestionSource {
+  category: IngestionCategory;
+  label: string;
+  apps: ConnectedApp[];
+}
+
 export const EnrichmentConfig = ({ 
   enrichmentState, 
   onEnrichmentChange,
@@ -131,12 +159,52 @@ export const EnrichmentConfig = ({
 
   // Build dynamic options based on connected apps
   const enrichmentOptions = useMemo(() => {
-    const options: EnrichmentOption[] = [...baseEnrichmentOptions];
-    
     // Get validated/active apps
     const validatedApps = authenticatedApps.filter(
       auth => auth.active || auth.validation?.valid
     );
+    
+    // Build ingestion sources by category
+    const ingestionByCategory: Record<IngestionCategory, ConnectedApp[]> = {
+      email: [],
+      cases: [],
+      edr: [],
+      siem: [],
+    };
+    
+    validatedApps.forEach(auth => {
+      const category = getIngestionCategory(auth);
+      if (category) {
+        ingestionByCategory[category].push({
+          id: auth.app.id,
+          name: auth.app.name,
+          image: auth.app.large_image,
+        });
+      }
+    });
+    
+    const ingestionSources: IngestionSource[] = [
+      { category: 'email', label: 'Email', apps: ingestionByCategory.email },
+      { category: 'cases', label: 'Cases', apps: ingestionByCategory.cases },
+      { category: 'edr', label: 'EDR', apps: ingestionByCategory.edr },
+      { category: 'siem', label: 'SIEM', apps: ingestionByCategory.siem },
+    ];
+    
+    const totalIngestionApps = Object.values(ingestionByCategory).flat().length;
+    
+    // Build options, replacing dynamic ones
+    const options: EnrichmentOption[] = baseEnrichmentOptions.map(opt => {
+      if (opt.id === 'automatic_ingestion') {
+        return {
+          ...opt,
+          description: totalIngestionApps > 0
+            ? `Ingest from ${totalIngestionApps} connected tool${totalIngestionApps > 1 ? 's' : ''}`
+            : 'Connect Email, Cases, EDR, or SIEM tools to enable automatic ingestion',
+          ingestionSources,
+        };
+      }
+      return opt;
+    });
     
     // Email apps for Email Notifications
     const emailApps = validatedApps.filter(auth => isEmailApp(auth.app.name));
@@ -144,7 +212,7 @@ export const EnrichmentConfig = ({
     // Communication apps for Chat Notifications
     const commApps = validatedApps.filter(auth => isCommunicationApp(auth));
     
-    // Add Email Notifications if email apps are connected
+    // Add Email Notifications
     options.push({
       id: 'email_notify',
       name: 'Email Notifications',
@@ -224,6 +292,7 @@ export const EnrichmentConfig = ({
             const isExpanded = expandedId === option.id;
             const hasConfig = option.configFields && option.configFields.length > 0;
             const hasConnectedApps = option.connectedApps && option.connectedApps.length > 0;
+            const hasIngestionSources = option.ingestionSources && option.ingestionSources.some(s => s.apps.length > 0);
 
             return (
               <motion.div key={option.id} variants={itemVariants}>
@@ -243,7 +312,7 @@ export const EnrichmentConfig = ({
                   }}
                 >
                   <CardContent sx={{ p: 3, '&:last-child': { pb: 3 } }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
                       <Box
                         sx={{
                           display: 'flex',
@@ -255,6 +324,7 @@ export const EnrichmentConfig = ({
                           background: `${option.color}15`,
                           color: option.color,
                           flexShrink: 0,
+                          mt: 0.5,
                         }}
                       >
                         {option.icon}
@@ -267,7 +337,7 @@ export const EnrichmentConfig = ({
                           >
                             {option.name}
                           </Typography>
-                          {/* Show connected apps as badges */}
+                          {/* Show connected apps as badges for non-ingestion options */}
                           {hasConnectedApps && (
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                               {option.connectedApps!.slice(0, 3).map((app) => (
@@ -295,15 +365,82 @@ export const EnrichmentConfig = ({
                               <CheckCircleIcon sx={{ fontSize: 14, color: '#22c55e', ml: 0.5 }} />
                             </Box>
                           )}
+                          {/* Show check for ingestion if any sources connected */}
+                          {hasIngestionSources && (
+                            <CheckCircleIcon sx={{ fontSize: 14, color: '#22c55e' }} />
+                          )}
                         </Box>
                         <Typography
                           variant="body2"
-                          sx={{ color: 'rgba(255, 255, 255, 0.5)', lineHeight: 1.4 }}
+                          sx={{ color: 'rgba(255, 255, 255, 0.5)', lineHeight: 1.4, mb: option.ingestionSources ? 1.5 : 0 }}
                         >
                           {option.description}
                         </Typography>
+                        
+                        {/* Ingestion sources breakdown */}
+                        {option.ingestionSources && (
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                            {option.ingestionSources.map((source) => (
+                              <Box
+                                key={source.category}
+                                sx={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 0.75,
+                                  px: 1.5,
+                                  py: 0.75,
+                                  borderRadius: 2,
+                                  background: source.apps.length > 0 
+                                    ? 'rgba(34, 197, 94, 0.1)' 
+                                    : 'rgba(255, 255, 255, 0.05)',
+                                  border: '1px solid',
+                                  borderColor: source.apps.length > 0 
+                                    ? 'rgba(34, 197, 94, 0.3)' 
+                                    : 'rgba(255, 255, 255, 0.1)',
+                                }}
+                              >
+                                <Typography
+                                  variant="caption"
+                                  sx={{
+                                    color: source.apps.length > 0 ? '#22c55e' : 'rgba(255, 255, 255, 0.4)',
+                                    fontWeight: 500,
+                                  }}
+                                >
+                                  {source.label}
+                                </Typography>
+                                {source.apps.length > 0 && (
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                                    {source.apps.slice(0, 2).map((app) => (
+                                      <Avatar
+                                        key={app.id}
+                                        src={app.image}
+                                        alt={app.name}
+                                        sx={{
+                                          width: 16,
+                                          height: 16,
+                                          fontSize: '0.5rem',
+                                          border: '1px solid rgba(255,255,255,0.2)',
+                                        }}
+                                      >
+                                        {app.name[0]}
+                                      </Avatar>
+                                    ))}
+                                    {source.apps.length > 2 && (
+                                      <Typography
+                                        variant="caption"
+                                        sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.6rem', ml: 0.25 }}
+                                      >
+                                        +{source.apps.length - 2}
+                                      </Typography>
+                                    )}
+                                  </Box>
+                                )}
+                              </Box>
+                            ))}
+                          </Box>
+                        )}
                       </Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, pt: 0.5 }}>
                         {hasConfig && state.enabled && (
                           <IconButton
                             size="small"
