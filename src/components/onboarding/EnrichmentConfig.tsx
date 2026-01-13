@@ -42,8 +42,9 @@ interface ConnectedApp {
   id: string;
   name: string;
   image?: string;
-  isValidated?: boolean; // Has valid auth
-  isSelected?: boolean;  // Was selected on "Select Tools" page
+  isValidated?: boolean;  // Has valid/tested auth
+  isSelected?: boolean;   // Was selected on "Select Tools" page
+  hasAuthConfig?: boolean; // Has any auth configured (even if not validated)
 }
 
 // Base static options - automatic_ingestion will be built dynamically
@@ -211,8 +212,9 @@ export const EnrichmentConfig = ({
           id: app.id,
           name: app.name,
           image: bestImage || app.large_image,
-          isValidated: hasValidAuth, // Use actual validation status
+          isValidated: hasValidAuth,
           isSelected: isAppSelected(app.name),
+          hasAuthConfig: true, // Has auth configured (even if not validated)
         });
       }
     });
@@ -234,6 +236,7 @@ export const EnrichmentConfig = ({
           image: app.image_url,
           isValidated: false,
           isSelected: true,
+          hasAuthConfig: false, // No auth configured yet
         });
       }
     });
@@ -557,7 +560,11 @@ export const EnrichmentConfig = ({
                                           <Box>
                                             <Typography variant="caption" sx={{ fontWeight: 600 }}>{app.name}</Typography>
                                             <Typography variant="caption" sx={{ display: 'block', opacity: 0.8 }}>
-                                              {app.isValidated ? 'Validated' : 'Pending'}
+                                              {app.isValidated 
+                                                ? 'Validated' 
+                                                : app.hasAuthConfig 
+                                                  ? 'Pending validation' 
+                                                  : 'Pending auth'}
                                               {app.isSelected ? ' • This setup' : ' • Pre-existing'}
                                             </Typography>
                                           </Box>
@@ -576,7 +583,9 @@ export const EnrichmentConfig = ({
                                               border: '1px solid',
                                               borderColor: app.isValidated 
                                                 ? 'rgba(34, 197, 94, 0.5)' 
-                                                : 'rgba(255, 152, 0, 0.5)',
+                                                : app.hasAuthConfig
+                                                  ? 'rgba(255, 152, 0, 0.5)'
+                                                  : 'rgba(239, 68, 68, 0.5)',
                                               opacity: app.isValidated ? 1 : 0.7,
                                               outline: app.isSelected 
                                                 ? '2px solid rgba(59, 130, 246, 0.5)' 
@@ -718,7 +727,9 @@ export const EnrichmentConfig = ({
                                               border: '2px solid',
                                               borderColor: app.isValidated 
                                                 ? 'rgba(34, 197, 94, 0.6)' 
-                                                : 'rgba(255, 152, 0, 0.6)',
+                                                : app.hasAuthConfig
+                                                  ? 'rgba(255, 152, 0, 0.6)'
+                                                  : 'rgba(239, 68, 68, 0.6)',
                                               opacity: app.isValidated ? 1 : 0.8,
                                             }}
                                           >
@@ -735,7 +746,9 @@ export const EnrichmentConfig = ({
                                               borderRadius: '50%',
                                               backgroundColor: app.isValidated 
                                                 ? '#22c55e' 
-                                                : '#ff9800',
+                                                : app.hasAuthConfig
+                                                  ? '#ff9800'
+                                                  : '#ef4444',
                                               border: '2px solid rgba(33, 33, 33, 0.9)',
                                             }}
                                           />
@@ -764,11 +777,19 @@ export const EnrichmentConfig = ({
                                           <Typography 
                                             variant="caption" 
                                             sx={{ 
-                                              color: app.isValidated ? '#22c55e' : '#ff9800',
+                                              color: app.isValidated 
+                                                ? '#22c55e' 
+                                                : app.hasAuthConfig 
+                                                  ? '#ff9800' 
+                                                  : '#ef4444',
                                               fontSize: '0.65rem',
                                             }}
                                           >
-                                            {app.isValidated ? 'Validated' : 'Pending authentication'}
+                                            {app.isValidated 
+                                              ? 'Validated' 
+                                              : app.hasAuthConfig 
+                                                ? 'Pending validation' 
+                                                : 'Pending auth'}
                                             {!app.isSelected && (
                                               <Box component="span" sx={{ color: 'rgba(255,255,255,0.4)', ml: 0.5 }}>
                                                 • Pre-existing
