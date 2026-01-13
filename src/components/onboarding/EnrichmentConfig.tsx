@@ -561,8 +561,9 @@ export const EnrichmentConfig = ({
               <motion.div key={option.id} variants={itemVariants}>
                 <Card
                   onClick={() => {
-                    if (hasExpandableTools || (hasConfig && state.enabled)) {
-                      setExpandedId(isExpanded ? null : option.id);
+                    // Only expand on card click when collapsed
+                    if (!isExpanded && (hasExpandableTools || (hasConfig && state.enabled))) {
+                      setExpandedId(option.id);
                     }
                   }}
                   sx={{
@@ -573,7 +574,7 @@ export const EnrichmentConfig = ({
                     backdropFilter: 'blur(10px)',
                     transition: 'all 0.3s ease',
                     opacity: isDisabled ? 0.5 : 1,
-                    cursor: (hasExpandableTools || (hasConfig && state.enabled)) ? 'pointer' : 'default',
+                    cursor: (!isExpanded && (hasExpandableTools || (hasConfig && state.enabled))) ? 'pointer' : 'default',
                     '&:hover': {
                       borderColor: isDisabled ? 'rgba(255, 255, 255, 0.08)' : (state.enabled ? option.color : 'rgba(255, 102, 0, 0.3)'),
                       transform: isDisabled ? 'none' : 'translateY(-2px)',
@@ -733,14 +734,32 @@ export const EnrichmentConfig = ({
                       </Box>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, pt: 0.5 }}>
                         {(hasExpandableTools || (hasConfig && state.enabled)) && (
-                          <ExpandMoreIcon
-                            sx={{
-                              color: 'rgba(255, 255, 255, 0.5)',
-                              transform: isExpanded ? 'rotate(180deg)' : 'none',
-                              transition: 'transform 0.3s ease',
-                              fontSize: 20,
+                          <Box
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setExpandedId(isExpanded ? null : option.id);
                             }}
-                          />
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              cursor: 'pointer',
+                              p: 0.5,
+                              borderRadius: 1,
+                              '&:hover': {
+                                background: 'rgba(255, 255, 255, 0.1)',
+                              },
+                            }}
+                          >
+                            <ExpandMoreIcon
+                              sx={{
+                                color: 'rgba(255, 255, 255, 0.5)',
+                                transform: isExpanded ? 'rotate(180deg)' : 'none',
+                                transition: 'transform 0.3s ease',
+                                fontSize: 20,
+                              }}
+                            />
+                          </Box>
                         )}
                         <Switch
                           checked={state.enabled && !isDisabled}
