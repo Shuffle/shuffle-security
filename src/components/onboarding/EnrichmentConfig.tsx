@@ -41,6 +41,8 @@ interface ConnectedApp {
   id: string;
   name: string;
   image?: string;
+  isValidated?: boolean; // Has valid auth
+  isSelected?: boolean;  // Was selected on "Select Tools" page
 }
 
 // Base static options - automatic_ingestion will be built dynamically
@@ -82,10 +84,19 @@ export interface EnrichmentState {
   };
 }
 
+// Type for selected apps from Algolia
+interface SelectedApp {
+  objectID: string;
+  name: string;
+  image_url?: string;
+  categories?: string[];
+}
+
 interface EnrichmentConfigProps {
   enrichmentState: EnrichmentState;
   onEnrichmentChange: (state: EnrichmentState) => void;
   authenticatedApps?: AuthAppEntry[];
+  selectedApps?: SelectedApp[];
 }
 
 const containerVariants = {
@@ -145,8 +156,24 @@ export const EnrichmentConfig = ({
   enrichmentState, 
   onEnrichmentChange,
   authenticatedApps = [],
+  selectedApps = [],
 }: EnrichmentConfigProps) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  // Create a set of selected app names (normalized) for quick lookup
+  const selectedAppNames = useMemo(() => {
+    const names = new Set<string>();
+    selectedApps.forEach(app => {
+      names.add(app.name.toLowerCase().trim().replace(/[\s_\-]+/g, '_'));
+    });
+    return names;
+  }, [selectedApps]);
+
+  // Check if an app was selected on the "Select Tools" page
+  const isAppSelected = (appName: string) => {
+    const normalized = appName.toLowerCase().trim().replace(/[\s_\-]+/g, '_');
+    return selectedAppNames.has(normalized);
+  };
 
   // Build dynamic options based on connected apps
   const enrichmentOptions = useMemo(() => {
@@ -155,6 +182,12 @@ export const EnrichmentConfig = ({
       authenticatedApps.filter(auth => auth.active || auth.validation?.valid)
     );
     
+    // Create a map of validated app names for quick lookup
+    const validatedAppNames = new Set<string>();
+    dedupedApps.forEach(({ app }) => {
+      validatedAppNames.add(app.name.toLowerCase().trim().replace(/[\s_\-]+/g, '_'));
+    });
+    
     // Convert back to AuthAppEntry format with bestImage applied
     const validatedApps: AuthAppEntry[] = dedupedApps.map(({ app, bestImage }) => ({
       app: { ...app, large_image: bestImage || app.large_image },
@@ -162,7 +195,7 @@ export const EnrichmentConfig = ({
       validation: { valid: true },
     }));
     
-    // Build ingestion sources by category
+    // Build ingestion sources by category - include both validated AND selected apps
     const ingestionByCategory: Record<IngestionCategory, ConnectedApp[]> = {
       email: [],
       cases: [],
@@ -170,6 +203,7 @@ export const EnrichmentConfig = ({
       siem: [],
     };
     
+    // First add validated apps
     validatedApps.forEach(auth => {
       const category = getIngestionCategory(auth);
       if (category) {
@@ -177,6 +211,29 @@ export const EnrichmentConfig = ({
           id: auth.app.id,
           name: auth.app.name,
           image: auth.app.large_image,
+          isValidated: true,
+          isSelected: isAppSelected(auth.app.name),
+        });
+      }
+    });
+    
+    // Then add selected apps that aren't validated yet (for each category)
+    selectedApps.forEach(app => {
+      const normalizedName = app.name.toLowerCase().trim().replace(/[\s_\-]+/g, '_');
+      if (validatedAppNames.has(normalizedName)) return; // Already added
+      
+      // Create a mock AuthAppEntry to check category
+      const mockEntry: AuthAppEntry = {
+        app: { id: app.objectID, name: app.name, categories: app.categories },
+      };
+      const category = getIngestionCategory(mockEntry);
+      if (category) {
+        ingestionByCategory[category].push({
+          id: app.objectID,
+          name: app.name,
+          image: app.image_url,
+          isValidated: false,
+          isSelected: true,
         });
       }
     });
@@ -188,15 +245,16 @@ export const EnrichmentConfig = ({
       { category: 'siem', label: 'SIEM', apps: ingestionByCategory.siem },
     ];
     
-    const totalIngestionApps = Object.values(ingestionByCategory).flat().length;
+    const validatedCount = Object.values(ingestionByCategory).flat().filter(a => a.isValidated).length;
+    const totalCount = Object.values(ingestionByCategory).flat().length;
     
     // Build options, replacing dynamic ones
     const options: EnrichmentOption[] = baseEnrichmentOptions.map(opt => {
       if (opt.id === 'automatic_ingestion') {
         return {
           ...opt,
-          description: totalIngestionApps > 0
-            ? `Ingest from ${totalIngestionApps} connected tool${totalIngestionApps > 1 ? 's' : ''}`
+          description: totalCount > 0
+            ? `${validatedCount} validated${totalCount > validatedCount ? `, ${totalCount - validatedCount} pending` : ''}`
             : 'Connect Email, Cases, EDR, or SIEM tools to enable automatic ingestion',
           ingestionSources,
         };
@@ -411,50 +469,75 @@ export const EnrichmentConfig = ({
                         {/* Ingestion sources breakdown */}
                         {option.ingestionSources && (
                           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                            {option.ingestionSources.map((source) => (
-                              <Box
-                                key={source.category}
-                                sx={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: 0.75,
-                                  px: 1.5,
-                                  py: 0.75,
-                                  borderRadius: 2,
-                                  background: source.apps.length > 0 
-                                    ? 'rgba(34, 197, 94, 0.1)' 
-                                    : 'rgba(255, 255, 255, 0.05)',
-                                  border: '1px solid',
-                                  borderColor: source.apps.length > 0 
-                                    ? 'rgba(34, 197, 94, 0.3)' 
-                                    : 'rgba(255, 255, 255, 0.1)',
-                                }}
-                              >
-                                <Typography
-                                  variant="caption"
+                            {option.ingestionSources.map((source) => {
+                              const validatedCount = source.apps.filter(a => a.isValidated).length;
+                              const pendingCount = source.apps.length - validatedCount;
+                              const hasAny = source.apps.length > 0;
+                              const allValidated = hasAny && pendingCount === 0;
+                              const hasPending = pendingCount > 0;
+                              
+                              return (
+                                <Box
+                                  key={source.category}
                                   sx={{
-                                    color: source.apps.length > 0 ? '#22c55e' : 'rgba(255, 255, 255, 0.4)',
-                                    fontWeight: 500,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 0.75,
+                                    px: 1.5,
+                                    py: 0.75,
+                                    borderRadius: 2,
+                                    background: allValidated 
+                                      ? 'rgba(34, 197, 94, 0.1)' 
+                                      : hasPending 
+                                        ? 'rgba(255, 152, 0, 0.1)'
+                                        : 'rgba(255, 255, 255, 0.05)',
+                                    border: '1px solid',
+                                    borderColor: allValidated 
+                                      ? 'rgba(34, 197, 94, 0.3)' 
+                                      : hasPending
+                                        ? 'rgba(255, 152, 0, 0.3)'
+                                        : 'rgba(255, 255, 255, 0.1)',
                                   }}
                                 >
-                                  {source.label}
-                                </Typography>
+                                  <Typography
+                                    variant="caption"
+                                    sx={{
+                                      color: allValidated 
+                                        ? '#22c55e' 
+                                        : hasPending 
+                                          ? '#ff9800'
+                                          : 'rgba(255, 255, 255, 0.4)',
+                                      fontWeight: 500,
+                                    }}
+                                  >
+                                    {source.label}
+                                    {hasAny && (
+                                      <Box component="span" sx={{ ml: 0.5, opacity: 0.8 }}>
+                                        ({validatedCount}{pendingCount > 0 ? `+${pendingCount}` : ''})
+                                      </Box>
+                                    )}
+                                  </Typography>
                                 {source.apps.length > 0 && (
                                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
                                     {source.apps.slice(0, 2).map((app) => (
-                                      <Avatar
-                                        key={app.id}
-                                        src={app.image}
-                                        alt={app.name}
-                                        sx={{
-                                          width: 16,
-                                          height: 16,
-                                          fontSize: '0.5rem',
-                                          border: '1px solid rgba(255,255,255,0.2)',
-                                        }}
-                                      >
-                                        {app.name[0]}
-                                      </Avatar>
+                                      <Box key={app.id} sx={{ position: 'relative' }}>
+                                        <Avatar
+                                          src={app.image}
+                                          alt={app.name}
+                                          sx={{
+                                            width: 16,
+                                            height: 16,
+                                            fontSize: '0.5rem',
+                                            border: '1px solid',
+                                            borderColor: app.isValidated 
+                                              ? 'rgba(34, 197, 94, 0.5)' 
+                                              : 'rgba(255, 152, 0, 0.5)',
+                                            opacity: app.isValidated ? 1 : 0.7,
+                                          }}
+                                        >
+                                          {app.name[0]}
+                                        </Avatar>
+                                      </Box>
                                     ))}
                                     {source.apps.length > 2 && (
                                       <Typography
@@ -467,7 +550,8 @@ export const EnrichmentConfig = ({
                                   </Box>
                                 )}
                               </Box>
-                            ))}
+                              );
+                            })}
                           </Box>
                         )}
                       </Box>
@@ -561,21 +645,53 @@ export const EnrichmentConfig = ({
                                       }}
                                     >
                                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                                        <Avatar
-                                          src={app.image}
-                                          alt={app.name}
-                                          sx={{
-                                            width: 24,
-                                            height: 24,
-                                            fontSize: '0.7rem',
-                                            border: '1px solid rgba(255,255,255,0.2)',
-                                          }}
-                                        >
-                                          {app.name[0]}
-                                        </Avatar>
-                                        <Typography variant="body2" sx={{ color: 'white' }}>
-                                          {app.name}
-                                        </Typography>
+                                        <Box sx={{ position: 'relative' }}>
+                                          <Avatar
+                                            src={app.image}
+                                            alt={app.name}
+                                            sx={{
+                                              width: 24,
+                                              height: 24,
+                                              fontSize: '0.7rem',
+                                              border: '2px solid',
+                                              borderColor: app.isValidated 
+                                                ? 'rgba(34, 197, 94, 0.6)' 
+                                                : 'rgba(255, 152, 0, 0.6)',
+                                              opacity: app.isValidated ? 1 : 0.8,
+                                            }}
+                                          >
+                                            {app.name[0]}
+                                          </Avatar>
+                                          {/* Validation status dot */}
+                                          <Box
+                                            sx={{
+                                              position: 'absolute',
+                                              bottom: -2,
+                                              right: -2,
+                                              width: 10,
+                                              height: 10,
+                                              borderRadius: '50%',
+                                              backgroundColor: app.isValidated 
+                                                ? '#22c55e' 
+                                                : '#ff9800',
+                                              border: '2px solid rgba(33, 33, 33, 0.9)',
+                                            }}
+                                          />
+                                        </Box>
+                                        <Box>
+                                          <Typography variant="body2" sx={{ color: 'white' }}>
+                                            {app.name}
+                                          </Typography>
+                                          <Typography 
+                                            variant="caption" 
+                                            sx={{ 
+                                              color: app.isValidated ? '#22c55e' : '#ff9800',
+                                              fontSize: '0.65rem',
+                                            }}
+                                          >
+                                            {app.isValidated ? 'Validated' : 'Pending authentication'}
+                                          </Typography>
+                                        </Box>
                                       </Box>
                                       <Switch
                                         size="small"

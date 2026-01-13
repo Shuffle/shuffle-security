@@ -505,6 +505,7 @@ const OnboardingPage = () => {
                       enrichmentState={enrichmentState}
                       onEnrichmentChange={setEnrichmentState}
                       authenticatedApps={authenticatedApps}
+                      selectedApps={selectedApps}
                     />
                   )}
 
