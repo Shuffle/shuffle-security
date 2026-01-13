@@ -6,7 +6,6 @@ import {
   Card,
   CardContent,
   Chip,
-  IconButton,
   Collapse,
   TextField,
   Avatar,
@@ -561,6 +560,11 @@ export const EnrichmentConfig = ({
             return (
               <motion.div key={option.id} variants={itemVariants}>
                 <Card
+                  onClick={() => {
+                    if (hasExpandableTools || (hasConfig && state.enabled)) {
+                      setExpandedId(isExpanded ? null : option.id);
+                    }
+                  }}
                   sx={{
                     background: 'rgba(33, 33, 33, 0.6)',
                     border: '1px solid',
@@ -569,6 +573,7 @@ export const EnrichmentConfig = ({
                     backdropFilter: 'blur(10px)',
                     transition: 'all 0.3s ease',
                     opacity: isDisabled ? 0.5 : 1,
+                    cursor: (hasExpandableTools || (hasConfig && state.enabled)) ? 'pointer' : 'default',
                     '&:hover': {
                       borderColor: isDisabled ? 'rgba(255, 255, 255, 0.08)' : (state.enabled ? option.color : 'rgba(255, 102, 0, 0.3)'),
                       transform: isDisabled ? 'none' : 'translateY(-2px)',
@@ -727,35 +732,20 @@ export const EnrichmentConfig = ({
                         )}
                       </Box>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, pt: 0.5 }}>
-                        {hasExpandableTools && (
-                          <IconButton
-                            size="small"
-                            onClick={() => setExpandedId(isExpanded ? null : option.id)}
+                        {(hasExpandableTools || (hasConfig && state.enabled)) && (
+                          <ExpandMoreIcon
                             sx={{
                               color: 'rgba(255, 255, 255, 0.5)',
                               transform: isExpanded ? 'rotate(180deg)' : 'none',
                               transition: 'transform 0.3s ease',
+                              fontSize: 20,
                             }}
-                          >
-                            <ExpandMoreIcon />
-                          </IconButton>
-                        )}
-                        {hasConfig && state.enabled && !hasExpandableTools && (
-                          <IconButton
-                            size="small"
-                            onClick={() => setExpandedId(isExpanded ? null : option.id)}
-                            sx={{
-                              color: 'rgba(255, 255, 255, 0.5)',
-                              transform: isExpanded ? 'rotate(180deg)' : 'none',
-                              transition: 'transform 0.3s ease',
-                            }}
-                          >
-                            <ExpandMoreIcon />
-                          </IconButton>
+                          />
                         )}
                         <Switch
                           checked={state.enabled && !isDisabled}
                           onChange={() => toggleOption(option.id)}
+                          onClick={(e) => e.stopPropagation()}
                           disabled={isDisabled}
                           sx={{
                             '& .MuiSwitch-switchBase.Mui-checked': {
