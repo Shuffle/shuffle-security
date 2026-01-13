@@ -677,7 +677,9 @@ export const EnrichmentConfig = ({
                                   >
                                     {source.label}
                                   </Typography>
-                                  {source.apps.map((app) => (
+                                  {source.apps.map((app) => {
+                                    const enabled = isToolEnabled(option.id, app.id);
+                                    return (
                                     <Box
                                       key={app.id}
                                       sx={{
@@ -687,10 +689,20 @@ export const EnrichmentConfig = ({
                                         py: 0.75,
                                         px: 1.5,
                                         borderRadius: 1.5,
-                                        background: 'rgba(0, 0, 0, 0.2)',
+                                        background: enabled 
+                                          ? 'rgba(255, 102, 0, 0.08)' 
+                                          : 'rgba(0, 0, 0, 0.2)',
+                                        border: '1px solid',
+                                        borderColor: enabled 
+                                          ? 'rgba(255, 102, 0, 0.25)' 
+                                          : 'transparent',
                                         mb: 0.5,
+                                        opacity: enabled ? 1 : 0.6,
+                                        transition: 'all 0.2s ease',
                                         '&:hover': {
-                                          background: 'rgba(0, 0, 0, 0.3)',
+                                          background: enabled 
+                                            ? 'rgba(255, 102, 0, 0.12)' 
+                                            : 'rgba(0, 0, 0, 0.3)',
                                         },
                                       }}
                                     >
@@ -779,7 +791,7 @@ export const EnrichmentConfig = ({
                                         }}
                                       />
                                     </Box>
-                                  ))}
+                                  )})}
                                 </Box>
                               ))
                             ) : (
