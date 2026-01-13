@@ -1984,10 +1984,10 @@ const IncidentDetailPage = () => {
                 </Box>
                 <Box>
                   <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    {correlations.length} Related Incident{correlations.length !== 1 ? 's' : ''} Found
+                    {correlations.length} Shared Attribute{correlations.length !== 1 ? 's' : ''}
                   </Typography>
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                    Based on shared observables, patterns, and metadata
+                    Values found across multiple datastore categories
                   </Typography>
                 </Box>
               </Box>
@@ -1995,15 +1995,23 @@ const IncidentDetailPage = () => {
               {/* Correlation list */}
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                 {correlations.map((corr, idx) => {
-                  // Parse refs to extract related incidents from shuffle-security_incidents category
-                  const relatedIncidents = corr.ref
-                    .filter(r => r.startsWith('shuffle-security_incidents|'))
-                    .map(r => r.split('|')[1])
-                    .filter(key => key.toLowerCase() !== id?.toLowerCase());
+                  // Group refs by category
+                  const refsByCategory: Record<string, string[]> = {};
+                  corr.ref.forEach(r => {
+                    const [category, key] = r.split('|');
+                    if (!refsByCategory[category]) refsByCategory[category] = [];
+                    // Exclude current incident from shuffle-security_incidents
+                    if (!(category === 'shuffle-security_incidents' && key.toLowerCase() === id?.toLowerCase())) {
+                      refsByCategory[category].push(key);
+                    }
+                  });
                   
-                  const otherRefs = corr.ref.filter(r => !r.startsWith('shuffle-security_incidents|'));
+                  const categories = Object.keys(refsByCategory);
                   const isHighMatch = corr.amount >= 5;
                   const isMediumMatch = corr.amount >= 3 && corr.amount < 5;
+                  
+                  // Helper to format category name
+                  const formatCategory = (cat: string) => cat.replace('shuffle-', '').replace(/_/g, ' ');
                   
                   return (
                     <Box 
@@ -2017,7 +2025,7 @@ const IncidentDetailPage = () => {
                       }}
                     >
                       {/* Correlation header */}
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: relatedIncidents.length > 0 ? 1.5 : 0 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: categories.length > 0 ? 1.5 : 0 }}>
                         <Chip 
                           label={corr.key}
                           size="small"
@@ -2031,47 +2039,67 @@ const IncidentDetailPage = () => {
                         />
                         <Box sx={{ flex: 1 }}>
                           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                            Found in <strong>{corr.amount}</strong> items across {new Set(corr.ref.map(r => r.split('|')[0])).size} categories
+                            Found in <strong>{corr.amount}</strong> items across {categories.length} categor{categories.length === 1 ? 'y' : 'ies'}
                           </Typography>
                         </Box>
                       </Box>
                       
-                      {/* Related incidents */}
-                      {relatedIncidents.length > 0 && (
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
-                          {relatedIncidents.map((incidentKey) => (
-                            <Chip
-                              key={incidentKey}
-                              label={incidentKey}
-                              size="small"
-                              onClick={() => navigate(`/incidents/${incidentKey}`)}
-                              sx={{
-                                height: 24,
-                                fontSize: '0.7rem',
-                                fontFamily: 'monospace',
-                                bgcolor: 'rgba(255,255,255,0.05)',
-                                color: 'text.primary',
-                                cursor: 'pointer',
-                                '&:hover': { bgcolor: 'rgba(255, 102, 0, 0.15)', color: '#ff6600' },
-                              }}
-                            />
-                          ))}
-                          {otherRefs.length > 0 && (
-                            <Tooltip title={otherRefs.join(', ')} arrow>
-                              <Chip
-                                label={`+${otherRefs.length} more`}
-                                size="small"
-                                sx={{
-                                  height: 24,
-                                  fontSize: '0.7rem',
-                                  bgcolor: 'rgba(148, 163, 184, 0.1)',
-                                  color: 'text.secondary',
+                      {/* Refs by category */}
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                        {categories.map(category => {
+                          const keys = refsByCategory[category];
+                          const isIncidentCategory = category === 'shuffle-security_incidents';
+                          
+                          return (
+                            <Box key={category} sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                              <Typography 
+                                variant="caption" 
+                                sx={{ 
+                                  color: 'text.disabled', 
+                                  minWidth: 100, 
+                                  textTransform: 'capitalize',
+                                  pt: 0.25,
                                 }}
-                              />
-                            </Tooltip>
-                          )}
-                        </Box>
-                      )}
+                              >
+                                {formatCategory(category)}:
+                              </Typography>
+                              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                {keys.slice(0, 5).map((key) => (
+                                  <Chip
+                                    key={key}
+                                    label={key}
+                                    size="small"
+                                    onClick={isIncidentCategory ? () => navigate(`/incidents/${key}`) : undefined}
+                                    sx={{
+                                      height: 22,
+                                      fontSize: '0.7rem',
+                                      fontFamily: 'monospace',
+                                      bgcolor: isIncidentCategory ? 'rgba(255, 102, 0, 0.1)' : 'rgba(255,255,255,0.05)',
+                                      color: isIncidentCategory ? '#ff6600' : 'text.secondary',
+                                      cursor: isIncidentCategory ? 'pointer' : 'default',
+                                      '&:hover': isIncidentCategory ? { bgcolor: 'rgba(255, 102, 0, 0.2)' } : {},
+                                    }}
+                                  />
+                                ))}
+                                {keys.length > 5 && (
+                                  <Tooltip title={keys.slice(5).join(', ')} arrow>
+                                    <Chip
+                                      label={`+${keys.length - 5}`}
+                                      size="small"
+                                      sx={{
+                                        height: 22,
+                                        fontSize: '0.7rem',
+                                        bgcolor: 'rgba(148, 163, 184, 0.1)',
+                                        color: 'text.disabled',
+                                      }}
+                                    />
+                                  </Tooltip>
+                                )}
+                              </Box>
+                            </Box>
+                          );
+                        })}
+                      </Box>
                     </Box>
                   );
                 })}
