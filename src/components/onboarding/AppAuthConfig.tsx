@@ -577,7 +577,7 @@ const AppAuthCard = ({
   };
 
   return (
-    <motion.div variants={itemVariants}>
+    <motion.div variants={itemVariants} style={{ width: '100%', maxWidth: '100%' }}>
       <Card
         sx={{
           background: isTested 
@@ -593,6 +593,8 @@ const AppAuthCard = ({
           backdropFilter: 'blur(10px)',
           overflow: 'hidden',
           transition: 'all 0.3s ease',
+          width: '100%',
+          maxWidth: '100%',
         }}
       >
         <CardContent
@@ -608,7 +610,7 @@ const AppAuthCard = ({
             '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.02)' },
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: { xs: '100%', sm: 'auto' }, minWidth: 0, flex: { sm: 1 } }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: { xs: '100%', sm: 'auto' }, minWidth: 0, flex: { sm: 1 }, overflow: 'hidden' }}>
             {app.image_url ? (
               <Box
                 component="img"
@@ -641,8 +643,17 @@ const AppAuthCard = ({
                 🔗
               </Box>
             )}
-            <Box sx={{ minWidth: 0, flex: 1 }}>
-              <Typography sx={{ color: 'white', fontWeight: 600, fontSize: { xs: '0.9rem', sm: '1rem' } }}>
+            <Box sx={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
+              <Typography 
+                sx={{ 
+                  color: 'white', 
+                  fontWeight: 600, 
+                  fontSize: { xs: '0.9rem', sm: '1rem' },
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
                 {app.name.replace(/_/g, ' ')}
               </Typography>
               {app.description && (
@@ -1198,20 +1209,21 @@ export const AppAuthConfig = ({
   const totalCount = sortedApps.length;
 
   return (
-    <Box>
+    <Box sx={{ width: '100%', maxWidth: '100%', overflow: 'hidden' }}>
       <Typography
         variant="h5"
         sx={{
           color: 'white',
           fontWeight: 700,
           mb: 1,
+          fontSize: { xs: '1.25rem', sm: '1.5rem' },
         }}
       >
         Configure Authentication
       </Typography>
       <Typography
         variant="body1"
-        sx={{ mb: 2, color: 'rgba(255, 255, 255, 0.5)' }}
+        sx={{ mb: 2, color: 'rgba(255, 255, 255, 0.5)', fontSize: { xs: '0.875rem', sm: '1rem' } }}
       >
         Set up credentials for each integration. Apps with orange borders need configuration.
       </Typography>
@@ -1229,7 +1241,7 @@ export const AppAuthConfig = ({
       />
 
       <motion.div variants={containerVariants} initial="hidden" animate="visible">
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%', maxWidth: '100%' }}>
           {sortedApps.map((app) => {
             const authState = authStates[app.objectID] || { systemId: app.objectID, status: 'pending' as const, credentials: {} };
             const isExpanded = expanded === app.objectID;
