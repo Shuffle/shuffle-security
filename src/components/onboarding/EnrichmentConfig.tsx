@@ -32,6 +32,8 @@ interface EnrichmentOption {
   connectedApps?: ConnectedApp[];
   // For ingestion sources breakdown
   ingestionSources?: IngestionSource[];
+  // For disabled/coming soon options
+  disabled?: boolean;
 }
 
 interface ConnectedApp {
@@ -54,10 +56,11 @@ const baseEnrichmentOptions: (Omit<EnrichmentOption, 'connectedApps'> & { isDyna
   {
     id: 'integration_search',
     name: 'Integration Search',
-    description: 'Search across all connected tools simultaneously for IOCs and context',
+    description: 'Search across all connected tools simultaneously for IOCs and context (coming soon)',
     icon: <TravelExploreIcon />,
     color: '#3b82f6',
     category: 'enrichment',
+    disabled: true,
   },
   {
     id: 'threat_list',
@@ -293,6 +296,7 @@ export const EnrichmentConfig = ({
             const hasConfig = option.configFields && option.configFields.length > 0;
             const hasConnectedApps = option.connectedApps && option.connectedApps.length > 0;
             const hasIngestionSources = option.ingestionSources && option.ingestionSources.some(s => s.apps.length > 0);
+            const isDisabled = option.disabled || (!hasConnectedApps && (option.id === 'email_notify' || option.id === 'chat_notify'));
 
             return (
               <motion.div key={option.id} variants={itemVariants}>
@@ -300,14 +304,14 @@ export const EnrichmentConfig = ({
                   sx={{
                     background: 'rgba(33, 33, 33, 0.6)',
                     border: '1px solid',
-                    borderColor: state.enabled ? `${option.color}50` : 'rgba(255, 255, 255, 0.08)',
+                    borderColor: state.enabled && !isDisabled ? `${option.color}50` : 'rgba(255, 255, 255, 0.08)',
                     borderRadius: 3,
                     backdropFilter: 'blur(10px)',
                     transition: 'all 0.3s ease',
-                    opacity: (!hasConnectedApps && (option.id === 'email_notify' || option.id === 'chat_notify')) ? 0.5 : 1,
+                    opacity: isDisabled ? 0.5 : 1,
                     '&:hover': {
-                      borderColor: state.enabled ? option.color : 'rgba(255, 102, 0, 0.3)',
-                      transform: 'translateY(-2px)',
+                      borderColor: isDisabled ? 'rgba(255, 255, 255, 0.08)' : (state.enabled ? option.color : 'rgba(255, 102, 0, 0.3)'),
+                      transform: isDisabled ? 'none' : 'translateY(-2px)',
                     },
                   }}
                 >
@@ -455,9 +459,9 @@ export const EnrichmentConfig = ({
                           </IconButton>
                         )}
                         <Switch
-                          checked={state.enabled}
+                          checked={state.enabled && !isDisabled}
                           onChange={() => toggleOption(option.id)}
-                          disabled={!hasConnectedApps && (option.id === 'email_notify' || option.id === 'chat_notify')}
+                          disabled={isDisabled}
                           sx={{
                             '& .MuiSwitch-switchBase.Mui-checked': {
                               color: option.color,
