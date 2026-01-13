@@ -320,12 +320,10 @@ const IncidentsPage = () => {
     await fetchItems();
   };
 
-  const clearFilters = () => {
-    setFilters({ severity: null, status: null, tlp: null, assignee: null });
+  const resetToDefaults = () => {
+    setFilters({ severity: null, status: ['new', 'in_progress'], tlp: null, assignee: null });
     setSearchQuery('');
   };
-
-  const hasActiveFilters = filters.severity || filters.status || filters.tlp || filters.assignee !== null || searchQuery.trim();
 
   return (
     <motion.div
@@ -475,11 +473,9 @@ const IncidentsPage = () => {
                 )
               )}
 
-              {hasActiveFilters && (
-                <Button size="small" onClick={clearFilters} sx={{ minWidth: 'auto' }}>
-                  Reset
-                </Button>
-              )}
+              <Button size="small" onClick={resetToDefaults} sx={{ minWidth: 'auto' }}>
+                Reset
+              </Button>
             </Box>
 
             <Typography variant="body2" sx={{ ml: 'auto', color: 'text.secondary' }}>
