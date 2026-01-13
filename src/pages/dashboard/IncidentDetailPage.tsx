@@ -1848,8 +1848,101 @@ const IncidentDetailPage = () => {
       )}
 
       {activeTab === 2 && (
-        /* Correlations Tab */
+        /* Observables Tab */
         <Box sx={{ 
+          bgcolor: 'rgba(255,255,255,0.02)', 
+          borderRadius: 2, 
+          border: '1px solid rgba(255,255,255,0.06)',
+          p: 2.5,
+        }}>
+          {/* Add Observable input */}
+          <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+            <FormControl size="small" sx={{ minWidth: 140 }}>
+              <InputLabel>Type</InputLabel>
+              <Select
+                value={newObservableType}
+                label="Type"
+                onChange={(e) => setNewObservableType(e.target.value)}
+                sx={inputSx['& .MuiOutlinedInput-root']}
+                MenuProps={{
+                  PaperProps: {
+                    sx: { bgcolor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }
+                  }
+                }}
+              >
+                {observableTypes.map((type) => (
+                  <MenuItem key={type} value={type}>{type}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <TextField
+              size="small"
+              value={newObservableValue}
+              onChange={(e) => setNewObservableValue(e.target.value)}
+              placeholder="Enter observable value..."
+              fullWidth
+              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddObservable())}
+              sx={inputSx}
+            />
+            <IconButton onClick={handleAddObservable} disabled={!newObservableValue.trim()} sx={{ bgcolor: 'rgba(255,255,255,0.05)' }}>
+              <AddIcon />
+            </IconButton>
+          </Box>
+          
+          {/* Observables list */}
+          {editedObservables.length > 0 ? (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {editedObservables.map((obs, idx) => (
+                <Box 
+                  key={idx} 
+                  sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 2, 
+                    p: 1.5, 
+                    borderRadius: 1, 
+                    bgcolor: 'rgba(0,0,0,0.2)',
+                    border: '1px solid rgba(255,255,255,0.06)',
+                  }}
+                >
+                  <Chip 
+                    label={obs.type} 
+                    size="small" 
+                    sx={{ 
+                      fontWeight: 600, 
+                      fontSize: '0.7rem',
+                      bgcolor: 'rgba(59, 130, 246, 0.15)',
+                      color: '#3b82f6',
+                    }} 
+                  />
+                  <Typography variant="body2" sx={{ flex: 1, fontFamily: 'monospace', fontSize: '0.8rem' }}>
+                    {obs.value}
+                  </Typography>
+                  <IconButton 
+                    size="small" 
+                    onClick={() => handleRemoveObservable(idx)}
+                    sx={{ 
+                      p: 0.5, 
+                      color: 'text.disabled',
+                      '&:hover': { color: '#ef4444' },
+                    }}
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Box>
+              ))}
+            </Box>
+          ) : (
+            <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic', textAlign: 'center', py: 4 }}>
+              No observables added. Add IOCs, IPs, domains, hashes, or other indicators.
+            </Typography>
+          )}
+        </Box>
+      )}
+
+      {activeTab === 3 && (
+        /* Correlations Tab */
+        <Box sx={{
           bgcolor: 'rgba(255,255,255,0.02)', 
           borderRadius: 2, 
           border: '1px solid rgba(255,255,255,0.06)',

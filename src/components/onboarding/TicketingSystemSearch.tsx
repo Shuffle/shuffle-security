@@ -4,7 +4,7 @@ import {
   Typography,
   Chip,
 } from '@mui/material';
-import { Mail, Shield, Search, Globe } from 'lucide-react';
+import { Mail, Radar, Search, Globe } from 'lucide-react';
 import { SingulJS } from '@/lib/singul-local';
 import type { AlgoliaSearchApp, SingulJSHandle } from '@/lib/singul-local';
 import { API_CONFIG } from '@/config/api';
@@ -26,7 +26,7 @@ export const TicketingSystemSearch = ({
 
   const categories = [
     { id: 'email', label: 'Email', icon: Mail, description: 'Gmail, Outlook, Exchange', searchTerm: 'email' },
-    { id: 'siem', label: 'SIEM', icon: Shield, description: 'Splunk, Sentinel, QRadar', searchTerm: 'siem' },
+    { id: 'siem', label: 'SIEM', icon: Radar, description: 'Splunk, Sentinel, QRadar', searchTerm: 'siem' },
     { id: 'edr', label: 'EDR', icon: Search, description: 'CrowdStrike, Carbon Black', searchTerm: 'edr' },
     { id: 'other', label: 'Anywhere Else', icon: Globe, description: 'Any other source', searchTerm: '' },
   ];
