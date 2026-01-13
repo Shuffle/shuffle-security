@@ -56,11 +56,13 @@ import {
   ActivityItem,
   IncidentTask,
   taskCategories,
+  FileAttachment,
 } from '@/components/incidents/CreateIncidentDialog';
 import { ResolveIncidentDialog, ResolutionData, RESOLUTION_REASONS } from '@/components/incidents/ResolveIncidentDialog';
 import { MentionText } from '@/components/incidents/MentionText';
 import { MentionInput } from '@/components/incidents/MentionInput';
 import { TaskDateTimePicker } from '@/components/incidents/TaskDateTimePicker';
+import { FileAttachments } from '@/components/incidents/FileAttachments';
 import { toast } from 'sonner';
 
 interface TaskTemplate {
@@ -350,6 +352,9 @@ const IncidentDetailPage = () => {
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [showTemplateMenu, setShowTemplateMenu] = useState(false);
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
+  
+  // Incident-level attachments
+  const [incidentAttachments, setIncidentAttachments] = useState<FileAttachment[]>([]);
   
   const [isSaving, setIsSaving] = useState(false);
   const [showResolveDialog, setShowResolveDialog] = useState(false);
@@ -740,9 +745,21 @@ const IncidentDetailPage = () => {
     ));
   };
 
+  const handleUpdateTaskTitle = (taskId: string, title: string) => {
+    setTasks(tasks.map(task => 
+      task.id === taskId ? { ...task, title } : task
+    ));
+  };
+
   const handleUpdateTaskCategory = (taskId: string, category: string) => {
     setTasks(tasks.map(task => 
       task.id === taskId ? { ...task, category } : task
+    ));
+  };
+
+  const handleUpdateTaskAttachments = (taskId: string, attachments: FileAttachment[]) => {
+    setTasks(tasks.map(task => 
+      task.id === taskId ? { ...task, attachments } : task
     ));
   };
 
@@ -1194,13 +1211,13 @@ const IncidentDetailPage = () => {
 
             {/* Add task input + template button */}
             <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-              <TextField
+              <MentionInput
                 size="small"
                 value={newTaskTitle}
-                onChange={(e) => setNewTaskTitle(e.target.value)}
-                placeholder="Add a task..."
+                onChange={setNewTaskTitle}
+                onSubmit={handleAddTask}
+                placeholder="Add a task... (type @ to assign)"
                 fullWidth
-                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTask())}
                 sx={inputSx}
               />
               <IconButton onClick={handleAddTask} disabled={!newTaskTitle.trim()} sx={{ bgcolor: 'rgba(255,255,255,0.05)' }}>
@@ -1314,15 +1331,25 @@ const IncidentDetailPage = () => {
                         
                         <Box sx={{ flex: 1, minWidth: 0 }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                            <Typography 
-                              variant="body2" 
-                              sx={{ 
-                                textDecoration: task.completed ? 'line-through' : 'none',
-                                color: task.completed ? 'text.secondary' : 'text.primary',
+                            <MentionInput
+                              value={task.title}
+                              onChange={(value) => handleUpdateTaskTitle(task.id, value)}
+                              size="small"
+                              variant="standard"
+                              placeholder="Task title..."
+                              InputProps={{
+                                disableUnderline: true,
+                                sx: { 
+                                  fontSize: '0.875rem',
+                                  textDecoration: task.completed ? 'line-through' : 'none',
+                                  color: task.completed ? 'text.secondary' : 'text.primary',
+                                  '&:hover': { bgcolor: 'rgba(255,255,255,0.03)' },
+                                  borderRadius: 0.5,
+                                  px: 0.5,
+                                },
                               }}
-                            >
-                              {task.title}
-                            </Typography>
+                              sx={{ flex: 1, minWidth: 120 }}
+                            />
                             {categoryInfo && (
                               <Chip
                                 size="small"
@@ -1458,15 +1485,15 @@ const IncidentDetailPage = () => {
                             </FormControl>
                           </Box>
                           
-                          {/* Description textarea */}
-                          <TextField
+                          {/* Description textarea with mention support */}
+                          <MentionInput
+                            value={task.description || ''}
+                            onChange={(value) => handleUpdateTaskDescription(task.id, value)}
                             size="small"
                             fullWidth
                             multiline
                             rows={2}
-                            placeholder="Add task details, notes, or instructions..."
-                            value={task.description || ''}
-                            onChange={(e) => handleUpdateTaskDescription(task.id, e.target.value)}
+                            placeholder="Add task details, notes, or instructions... (type @ to mention)"
                             sx={{
                               '& .MuiOutlinedInput-root': {
                                 bgcolor: 'rgba(0, 0, 0, 0.2)',
@@ -1476,6 +1503,20 @@ const IncidentDetailPage = () => {
                               },
                             }}
                           />
+                          
+                          {/* File attachments */}
+                          <Box sx={{ mt: 1.5 }}>
+                            <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.5, display: 'block' }}>
+                              Attachments
+                            </Typography>
+                            <FileAttachments
+                              attachments={task.attachments || []}
+                              onChange={(attachments) => handleUpdateTaskAttachments(task.id, attachments)}
+                              namespace="incidents"
+                              labels={[`task-${task.id}`, incident.id]}
+                              compact
+                            />
+                          </Box>
                           
                           {/* Task metadata */}
                           <Box sx={{ display: 'flex', gap: 3, mt: 1.5, flexWrap: 'wrap' }}>
@@ -1726,6 +1767,21 @@ const IncidentDetailPage = () => {
                 No references added
               </Typography>
             )}
+          </Section>
+
+          {/* File Attachments */}
+          <Section 
+            title="Attachments" 
+            icon={DescriptionIcon} 
+            defaultOpen={incidentAttachments.length > 0}
+            badge={incidentAttachments.length > 0 ? incidentAttachments.length : undefined}
+          >
+            <FileAttachments
+              attachments={incidentAttachments}
+              onChange={setIncidentAttachments}
+              namespace="incidents"
+              labels={[incident.id]}
+            />
           </Section>
         </Box>
       )}
