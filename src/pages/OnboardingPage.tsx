@@ -223,9 +223,10 @@ const OnboardingPage = () => {
 
     try {
       // Build request body with optional authentication_id
-      const requestBody: Record<string, string> = {
+      const requestBody: Record<string, string | boolean> = {
         action: 'test_api',
         app: app.name.toLowerCase(),
+        skip_workflow: true,
       };
       
       if (authenticationId) {
