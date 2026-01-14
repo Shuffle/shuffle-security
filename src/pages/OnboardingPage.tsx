@@ -222,14 +222,15 @@ const OnboardingPage = () => {
     }));
 
     try {
-      // Call Singul API to test the connection
-      const response = await fetch(`${API_CONFIG.singulBaseUrl}/api/test_api`, {
+      // Call API to test the connection
+      const response = await fetch(getApiUrl('/api/v1/apps/categories/run'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${API_CONFIG.apiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          action: 'test_api',
           app: app.name.toLowerCase(),
         }),
       });
