@@ -580,12 +580,10 @@ const AppAuthCard = ({
     <motion.div variants={itemVariants} style={{ width: '100%', maxWidth: '100%' }}>
       <Card
         sx={{
-          background: isTested 
-            ? 'rgba(34, 197, 94, 0.05)' 
-            : 'rgba(33, 33, 33, 0.6)',
+          background: 'rgba(33, 33, 33, 0.6)',
           border: '2px solid',
           borderColor: isTested
-            ? 'rgba(34, 197, 94, 0.4)'
+            ? 'rgba(34, 197, 94, 0.5)'
             : authState.status === 'error'
             ? 'rgba(239, 68, 68, 0.3)'
             : 'rgba(255, 152, 0, 0.3)',
