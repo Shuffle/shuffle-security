@@ -252,6 +252,8 @@ const OnboardingPage = () => {
       let errorMessage = 'Failed to connect. Please check your credentials.';
       let successMessage = '';
       let parsedStatus = '';
+      let workflowId = result.workflow_id || '';
+      let executionId = result.execution_id || '';
       
       if (response.ok && result.action === 'done' && result.success === true) {
         try {
@@ -317,6 +319,8 @@ const OnboardingPage = () => {
           status: isValid ? 'connected' : 'error',
           errorMessage: isValid ? undefined : errorMessage,
           successMessage: isValid ? successMessage : undefined,
+          workflowId: isValid ? undefined : workflowId,
+          executionId: isValid ? undefined : executionId,
         },
       }));
 
