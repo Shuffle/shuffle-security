@@ -987,8 +987,8 @@ const AppAuthCard = ({
                             '& .MuiAlert-icon': { color: '#ef4444' },
                           }}
                         >
-                          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                            <Typography sx={{ fontSize: '0.875rem' }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, width: '100%' }}>
+                            <Typography sx={{ fontSize: '0.875rem', flex: 1 }}>
                               {authState.errorMessage}
                             </Typography>
                             {authState.workflowId && authState.executionId && (
@@ -1005,14 +1005,14 @@ const AppAuthCard = ({
                                   fontSize: '0.75rem',
                                   py: 0.5,
                                   px: 1.5,
-                                  alignSelf: 'flex-start',
+                                  flexShrink: 0,
                                   '&:hover': {
                                     borderColor: '#ef4444',
                                     backgroundColor: 'rgba(239, 68, 68, 0.1)',
                                   },
                                 }}
                               >
-                                View Execution Details
+                                View Execution
                               </Button>
                             )}
                           </Box>
@@ -1091,8 +1091,8 @@ const AppAuthCard = ({
                           borderRadius: 2,
                         }}
                       >
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                          <Typography sx={{ fontSize: '0.875rem' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, width: '100%' }}>
+                          <Typography sx={{ fontSize: '0.875rem', flex: 1 }}>
                             {authState.errorMessage}
                           </Typography>
                           {authState.workflowId && authState.executionId && (
@@ -1109,14 +1109,14 @@ const AppAuthCard = ({
                                 fontSize: '0.75rem',
                                 py: 0.5,
                                 px: 1.5,
-                                alignSelf: 'flex-start',
+                                flexShrink: 0,
                                 '&:hover': {
                                   borderColor: '#ef4444',
                                   backgroundColor: 'rgba(239, 68, 68, 0.1)',
                                 },
                               }}
                             >
-                              View Execution Details
+                              View Execution
                             </Button>
                           )}
                         </Box>
