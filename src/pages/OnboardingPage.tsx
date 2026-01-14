@@ -250,6 +250,8 @@ const OnboardingPage = () => {
       // 3. result contains valid status (parsed from JSON string)
       let isValid = false;
       let errorMessage = 'Failed to connect. Please check your credentials.';
+      let successMessage = '';
+      let parsedStatus = '';
       
       if (response.ok && result.action === 'done' && result.success === true) {
         try {
@@ -257,7 +259,22 @@ const OnboardingPage = () => {
           const resultData = typeof result.result === 'string' ? JSON.parse(result.result) : result.result;
           // Check if status exists in the parsed result
           if (resultData && resultData.status) {
-            isValid = true;
+            parsedStatus = resultData.status;
+            // Consider success if status indicates OK (common patterns: 200, ok, success, healthy, etc.)
+            const statusLower = String(parsedStatus).toLowerCase();
+            const isGoodStatus = statusLower === 'ok' || 
+                                 statusLower === 'success' || 
+                                 statusLower === 'healthy' ||
+                                 statusLower === 'connected' ||
+                                 statusLower === '200' ||
+                                 Number(parsedStatus) === 200;
+            
+            if (isGoodStatus) {
+              isValid = true;
+              successMessage = `Connection verified • Status: ${parsedStatus}`;
+            } else {
+              errorMessage = `Connection failed • Status: ${parsedStatus}`;
+            }
           } else {
             errorMessage = 'Invalid response: missing status in result';
           }
@@ -280,6 +297,7 @@ const OnboardingPage = () => {
           ...prev[systemId],
           status: isValid ? 'connected' : 'error',
           errorMessage: isValid ? undefined : errorMessage,
+          successMessage: isValid ? successMessage : undefined,
         },
       }));
 

@@ -42,6 +42,7 @@ export interface AppAuthState {
   status: AuthStatus;
   credentials: Record<string, string>;
   errorMessage?: string;
+  successMessage?: string;
 }
 
 // Helper to check if auth type is OAuth2 (includes oauth2-app variant)
@@ -988,7 +989,7 @@ const AppAuthCard = ({
                             '& .MuiAlert-icon': { color: '#22c55e' },
                           }}
                         >
-                          Connection verified successfully
+                          {authState.successMessage || 'Connection verified successfully'}
                         </Alert>
                       </Box>
                     )}
