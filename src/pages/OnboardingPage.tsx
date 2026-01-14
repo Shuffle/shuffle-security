@@ -244,20 +244,47 @@ const OnboardingPage = () => {
 
       const result = await response.json();
       
-      // Check if the response indicates success
-      const success = response.ok && result.success !== false;
+      // Validate all three conditions for success:
+      // 1. action === "done"
+      // 2. success === true
+      // 3. result contains valid status (parsed from JSON string)
+      let isValid = false;
+      let errorMessage = 'Failed to connect. Please check your credentials.';
+      
+      if (response.ok && result.action === 'done' && result.success === true) {
+        try {
+          // Parse the result field which is a JSON string
+          const resultData = typeof result.result === 'string' ? JSON.parse(result.result) : result.result;
+          // Check if status exists in the parsed result
+          if (resultData && resultData.status) {
+            isValid = true;
+          } else {
+            errorMessage = 'Invalid response: missing status in result';
+          }
+        } catch (parseError) {
+          console.error('Failed to parse result:', parseError);
+          errorMessage = 'Invalid response format from server';
+        }
+      } else {
+        // Build error message from response
+        if (result.action !== 'done') {
+          errorMessage = `Unexpected action: ${result.action || 'unknown'}`;
+        } else if (result.success !== true) {
+          errorMessage = result.reason || result.error || 'Connection test failed';
+        }
+      }
       
       setAuthStates((prev) => ({
         ...prev,
         [systemId]: {
           ...prev[systemId],
-          status: success ? 'connected' : 'error',
-          errorMessage: success ? undefined : (result.reason || result.error || 'Failed to connect. Please check your credentials.'),
+          status: isValid ? 'connected' : 'error',
+          errorMessage: isValid ? undefined : errorMessage,
         },
       }));
 
       // Refresh authenticated apps list to update validation status
-      if (success) {
+      if (isValid) {
         const authResponse = await fetch(`${API_CONFIG.baseUrl}/api/v1/apps/authentication`, {
           headers: {
             'Authorization': `Bearer ${API_CONFIG.apiKey}`,
