@@ -922,35 +922,50 @@ const AppAuthCard = ({
 
                       {/* Test Connection button */}
                       <Button
-                        variant="outlined"
+                        variant={authState.status === 'testing' ? 'contained' : 'outlined'}
                         size="medium"
                         onClick={(e) => {
                           e.stopPropagation();
                           onTestConnection(app.objectID, selectedAuthId !== ADD_NEW_AUTH ? selectedAuthId : undefined);
                         }}
                         disabled={authState.status === 'testing'}
-                        startIcon={authState.status === 'testing' ? undefined : <CheckCircleIcon sx={{ fontSize: 18 }} />}
+                        startIcon={
+                          authState.status === 'testing' 
+                            ? <CircularProgress size={16} sx={{ color: 'inherit' }} />
+                            : <CheckCircleIcon sx={{ fontSize: 18 }} />
+                        }
                         sx={{
-                          borderColor: 'rgba(255, 102, 0, 0.5)',
-                          color: '#FF6600',
+                          borderColor: authState.status === 'testing' ? 'transparent' : 'rgba(255, 102, 0, 0.5)',
+                          color: authState.status === 'testing' ? 'rgba(255, 255, 255, 0.9)' : '#FF6600',
+                          background: authState.status === 'testing' 
+                            ? 'linear-gradient(90deg, rgba(255, 102, 0, 0.3) 0%, rgba(255, 102, 0, 0.5) 50%, rgba(255, 102, 0, 0.3) 100%)'
+                            : 'transparent',
+                          backgroundSize: authState.status === 'testing' ? '200% 100%' : 'auto',
+                          animation: authState.status === 'testing' ? 'shimmer 1.5s infinite linear' : 'none',
                           fontWeight: 600,
                           textTransform: 'none',
                           px: 3,
                           py: 1,
                           borderRadius: 2,
                           flexShrink: 0,
+                          minWidth: 160,
                           width: { xs: '100%', sm: 'auto' },
+                          transition: 'all 0.3s ease',
+                          '@keyframes shimmer': {
+                            '0%': { backgroundPosition: '200% 0' },
+                            '100%': { backgroundPosition: '-200% 0' },
+                          },
                           '&:hover': {
                             borderColor: '#FF6600',
-                            backgroundColor: 'rgba(255, 102, 0, 0.08)',
+                            backgroundColor: authState.status === 'testing' ? undefined : 'rgba(255, 102, 0, 0.08)',
                           },
                           '&.Mui-disabled': {
-                            borderColor: 'rgba(255, 255, 255, 0.1)',
-                            color: 'rgba(255, 255, 255, 0.3)',
+                            color: authState.status === 'testing' ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.3)',
+                            borderColor: authState.status === 'testing' ? 'transparent' : 'rgba(255, 255, 255, 0.1)',
                           },
                         }}
                       >
-                        {authState.status === 'testing' ? 'Testing...' : 'Test Connection'}
+                        {authState.status === 'testing' ? 'Testing Connection...' : 'Test Connection'}
                       </Button>
                     </Box>
 
