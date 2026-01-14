@@ -273,7 +273,9 @@ const OnboardingPage = () => {
               isValid = true;
               successMessage = `Connection verified • Status: ${parsedStatus}`;
             } else {
-              errorMessage = `Connection failed • Status: ${parsedStatus}`;
+              // Include reason from parsed result if available
+              const reason = resultData.reason ? ` • ${resultData.reason}` : '';
+              errorMessage = `Connection failed • Status: ${parsedStatus}${reason}`;
             }
           } else {
             errorMessage = 'Invalid response: missing status in result';
