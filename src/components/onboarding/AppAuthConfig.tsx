@@ -833,52 +833,118 @@ const AppAuthCard = ({
                 {!showAddNewForm && selectedAuth && (
                   <Box sx={{ 
                     mt: 2, 
-                    p: { xs: 1.5, sm: 2 }, 
-                    backgroundColor: 'rgba(34, 197, 94, 0.1)', 
-                    borderRadius: 2,
-                    border: '1px solid rgba(34, 197, 94, 0.2)',
+                    p: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                    borderRadius: 3,
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    overflow: 'hidden',
                   }}>
+                    {/* Active authentication header */}
+                    <Box sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1.5,
+                      px: { xs: 2, sm: 2.5 },
+                      py: 1.5,
+                      borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+                      backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                    }}>
+                      <Box sx={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        backgroundColor: '#22c55e',
+                        boxShadow: '0 0 8px rgba(34, 197, 94, 0.6)',
+                      }} />
+                      <Typography sx={{ 
+                        color: 'rgba(255, 255, 255, 0.5)', 
+                        fontSize: '0.75rem',
+                        fontWeight: 500,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                      }}>
+                        Active Authentication
+                      </Typography>
+                    </Box>
+
+                    {/* Main content area */}
                     <Box sx={{ 
                       display: 'flex', 
                       flexDirection: { xs: 'column', sm: 'row' },
-                      alignItems: { xs: 'flex-start', sm: 'center' }, 
+                      alignItems: { xs: 'stretch', sm: 'center' }, 
                       justifyContent: 'space-between', 
-                      gap: { xs: 1.5, sm: 2 },
+                      gap: { xs: 2, sm: 3 },
+                      p: { xs: 2, sm: 2.5 },
                     }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
-                        <CheckCircleIcon sx={{ color: '#22c55e', fontSize: 20, flexShrink: 0 }} />
-                        <Typography sx={{ 
-                          color: 'white', 
-                          fontWeight: 500, 
-                          fontSize: { xs: '0.875rem', sm: '1rem' },
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
+                      {/* Auth name with icon */}
+                      <Box sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: 1.5, 
+                        minWidth: 0,
+                        flex: 1,
+                      }}>
+                        <Box sx={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: 2,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                          border: '1px solid rgba(34, 197, 94, 0.2)',
+                          flexShrink: 0,
                         }}>
-                          Using: {selectedAuth.label || 'Selected authentication'}
-                        </Typography>
+                          <CheckCircleIcon sx={{ color: '#22c55e', fontSize: 20 }} />
+                        </Box>
+                        <Box sx={{ minWidth: 0 }}>
+                          <Typography sx={{ 
+                            color: 'white', 
+                            fontWeight: 600, 
+                            fontSize: { xs: '0.9rem', sm: '0.95rem' },
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            lineHeight: 1.3,
+                          }}>
+                            {selectedAuth.label || 'Selected authentication'}
+                          </Typography>
+                          <Typography sx={{ 
+                            color: 'rgba(255, 255, 255, 0.4)', 
+                            fontSize: '0.75rem',
+                            mt: 0.25,
+                          }}>
+                            Ready to test connection
+                          </Typography>
+                        </Box>
                       </Box>
+
+                      {/* Test Connection button */}
                       <Button
-                        variant="contained"
-                        size="small"
-                        fullWidth={false}
+                        variant="outlined"
+                        size="medium"
                         onClick={(e) => {
                           e.stopPropagation();
                           onTestConnection(app.objectID, selectedAuthId !== ADD_NEW_AUTH ? selectedAuthId : undefined);
                         }}
                         disabled={authState.status === 'testing'}
+                        startIcon={authState.status === 'testing' ? undefined : <CheckCircleIcon sx={{ fontSize: 18 }} />}
                         sx={{
-                          background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
-                          boxShadow: '0 4px 14px rgba(255, 102, 0, 0.25)',
+                          borderColor: 'rgba(255, 102, 0, 0.5)',
+                          color: '#FF6600',
                           fontWeight: 600,
                           textTransform: 'none',
+                          px: 3,
+                          py: 1,
+                          borderRadius: 2,
                           flexShrink: 0,
                           width: { xs: '100%', sm: 'auto' },
                           '&:hover': {
-                            background: 'linear-gradient(135deg, #FF8533 0%, #FF9955 100%)',
+                            borderColor: '#FF6600',
+                            backgroundColor: 'rgba(255, 102, 0, 0.08)',
                           },
                           '&.Mui-disabled': {
-                            background: 'rgba(255, 255, 255, 0.1)',
+                            borderColor: 'rgba(255, 255, 255, 0.1)',
                             color: 'rgba(255, 255, 255, 0.3)',
                           },
                         }}
@@ -886,36 +952,45 @@ const AppAuthCard = ({
                         {authState.status === 'testing' ? 'Testing...' : 'Test Connection'}
                       </Button>
                     </Box>
-                    <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.5)', mt: 1 }}>
-                      This authentication is already configured. Select "Add new authentication" to create another one.
-                    </Typography>
+
+                    {/* Status messages */}
                     {authState.status === 'error' && authState.errorMessage && (
-                      <Alert
-                        severity="error"
-                        sx={{
-                          mt: 2,
-                          backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                          color: '#ef4444',
-                          border: '1px solid rgba(239, 68, 68, 0.3)',
-                          borderRadius: 2,
-                        }}
-                      >
-                        {authState.errorMessage}
-                      </Alert>
+                      <Box sx={{ 
+                        px: { xs: 2, sm: 2.5 }, 
+                        pb: { xs: 2, sm: 2.5 },
+                      }}>
+                        <Alert
+                          severity="error"
+                          sx={{
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            color: '#ef4444',
+                            border: '1px solid rgba(239, 68, 68, 0.2)',
+                            borderRadius: 2,
+                            '& .MuiAlert-icon': { color: '#ef4444' },
+                          }}
+                        >
+                          {authState.errorMessage}
+                        </Alert>
+                      </Box>
                     )}
                     {authState.status === 'connected' && (
-                      <Alert
-                        severity="success"
-                        sx={{
-                          mt: 2,
-                          backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                          color: '#22c55e',
-                          border: '1px solid rgba(34, 197, 94, 0.3)',
-                          borderRadius: 2,
-                        }}
-                      >
-                        Connection test successful!
-                      </Alert>
+                      <Box sx={{ 
+                        px: { xs: 2, sm: 2.5 }, 
+                        pb: { xs: 2, sm: 2.5 },
+                      }}>
+                        <Alert
+                          severity="success"
+                          sx={{
+                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                            color: '#22c55e',
+                            border: '1px solid rgba(34, 197, 94, 0.2)',
+                            borderRadius: 2,
+                            '& .MuiAlert-icon': { color: '#22c55e' },
+                          }}
+                        >
+                          Connection verified successfully
+                        </Alert>
+                      </Box>
                     )}
                   </Box>
                 )}
