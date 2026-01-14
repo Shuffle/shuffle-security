@@ -289,7 +289,24 @@ const OnboardingPage = () => {
         if (result.action !== 'done') {
           errorMessage = `Unexpected action: ${result.action || 'unknown'}`;
         } else if (result.success !== true) {
-          errorMessage = result.reason || result.error || 'Connection test failed';
+          // Try to parse the result field for detailed error info
+          let parsedReason = '';
+          try {
+            if (result.result) {
+              const resultData = typeof result.result === 'string' ? JSON.parse(result.result) : result.result;
+              if (resultData.reason) {
+                parsedReason = resultData.reason;
+              } else if (resultData.status) {
+                parsedReason = `Status: ${resultData.status}`;
+              }
+            }
+          } catch (e) {
+            // If parsing fails, use result as-is if it's a string
+            if (typeof result.result === 'string') {
+              parsedReason = result.result;
+            }
+          }
+          errorMessage = parsedReason || result.reason || result.error || 'Connection test failed';
         }
       }
       
