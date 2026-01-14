@@ -43,6 +43,8 @@ export interface AppAuthState {
   credentials: Record<string, string>;
   errorMessage?: string;
   successMessage?: string;
+  workflowId?: string;
+  executionId?: string;
 }
 
 // Helper to check if auth type is OAuth2 (includes oauth2-app variant)
@@ -985,7 +987,35 @@ const AppAuthCard = ({
                             '& .MuiAlert-icon': { color: '#ef4444' },
                           }}
                         >
-                          {authState.errorMessage}
+                          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                            <Typography sx={{ fontSize: '0.875rem' }}>
+                              {authState.errorMessage}
+                            </Typography>
+                            {authState.workflowId && authState.executionId && (
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                href={`https://shuffler.io/workflows/${authState.workflowId}?execution_id=${authState.executionId}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                sx={{
+                                  borderColor: 'rgba(239, 68, 68, 0.5)',
+                                  color: '#ef4444',
+                                  textTransform: 'none',
+                                  fontSize: '0.75rem',
+                                  py: 0.5,
+                                  px: 1.5,
+                                  alignSelf: 'flex-start',
+                                  '&:hover': {
+                                    borderColor: '#ef4444',
+                                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                  },
+                                }}
+                              >
+                                View Execution Details
+                              </Button>
+                            )}
+                          </Box>
                         </Alert>
                       </Box>
                     )}
@@ -1061,7 +1091,35 @@ const AppAuthCard = ({
                           borderRadius: 2,
                         }}
                       >
-                        {authState.errorMessage}
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                          <Typography sx={{ fontSize: '0.875rem' }}>
+                            {authState.errorMessage}
+                          </Typography>
+                          {authState.workflowId && authState.executionId && (
+                            <Button
+                              variant="outlined"
+                              size="small"
+                              href={`https://shuffler.io/workflows/${authState.workflowId}?execution_id=${authState.executionId}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              sx={{
+                                borderColor: 'rgba(239, 68, 68, 0.5)',
+                                color: '#ef4444',
+                                textTransform: 'none',
+                                fontSize: '0.75rem',
+                                py: 0.5,
+                                px: 1.5,
+                                alignSelf: 'flex-start',
+                                '&:hover': {
+                                  borderColor: '#ef4444',
+                                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                },
+                              }}
+                            >
+                              View Execution Details
+                            </Button>
+                          )}
+                        </Box>
                       </Alert>
                     )}
 
