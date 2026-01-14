@@ -256,10 +256,22 @@ const OnboardingPage = () => {
       let workflowId = result.workflow_id || '';
       let executionId = result.execution_id || '';
       
+      // Helper to parse result or raw_response field
+      const parseResultData = (data: any) => {
+        // Try result field first, then fall back to raw_response
+        const rawData = data.result || data.raw_response;
+        if (!rawData) return null;
+        try {
+          return typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
+        } catch {
+          return null;
+        }
+      };
+
       if (response.ok && result.action === 'done' && result.success === true) {
         try {
-          // Parse the result field which is a JSON string
-          const resultData = typeof result.result === 'string' ? JSON.parse(result.result) : result.result;
+          // Parse the result field (or raw_response as fallback)
+          const resultData = parseResultData(result);
           // Check if status exists in the parsed result
           if (resultData && resultData.status) {
             parsedStatus = resultData.status;
@@ -280,6 +292,15 @@ const OnboardingPage = () => {
               const reason = resultData.reason ? ` • ${resultData.reason}` : '';
               errorMessage = `Connection failed • Status: ${parsedStatus}${reason}`;
             }
+          } else if (resultData && resultData.success !== undefined) {
+            // Fallback: check success field in parsed data
+            if (resultData.success === true) {
+              isValid = true;
+              successMessage = 'Connection verified';
+            } else {
+              const reason = resultData.reason ? ` • ${resultData.reason}` : '';
+              errorMessage = `Connection failed${reason}`;
+            }
           } else {
             errorMessage = 'Invalid response: missing status in result';
           }
@@ -292,22 +313,20 @@ const OnboardingPage = () => {
         if (result.action !== 'done') {
           errorMessage = `Unexpected action: ${result.action || 'unknown'}`;
         } else if (result.success !== true) {
-          // Try to parse the result field for detailed error info
+          // Try to parse the result field (or raw_response) for detailed error info
           let parsedReason = '';
-          try {
-            if (result.result) {
-              const resultData = typeof result.result === 'string' ? JSON.parse(result.result) : result.result;
-              if (resultData.reason) {
-                parsedReason = resultData.reason;
-              } else if (resultData.status) {
-                parsedReason = `Status: ${resultData.status}`;
-              }
+          const resultData = parseResultData(result);
+          if (resultData) {
+            if (resultData.reason) {
+              parsedReason = resultData.reason;
+            } else if (resultData.status) {
+              parsedReason = `Status: ${resultData.status}`;
             }
-          } catch (e) {
+          } else if (typeof result.result === 'string') {
             // If parsing fails, use result as-is if it's a string
-            if (typeof result.result === 'string') {
-              parsedReason = result.result;
-            }
+            parsedReason = result.result;
+          } else if (typeof result.raw_response === 'string') {
+            parsedReason = result.raw_response;
           }
           errorMessage = parsedReason || result.reason || result.error || 'Connection test failed';
         }
