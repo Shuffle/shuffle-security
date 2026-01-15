@@ -1402,6 +1402,12 @@ export const AppAuthConfig = ({
     );
   };
 
+  // Helper to check if app is configured (has any auth entry)
+  const isAppConfigured = (app: AlgoliaSearchApp): boolean => {
+    const entries = getApiAuthEntries(app);
+    return entries.some(e => e.active === true);
+  };
+
   // Helper to check if app is validated (must be valid AND validated within last 30 days)
   const isAppValidated = (app: AlgoliaSearchApp): boolean => {
     const entries = getApiAuthEntries(app);
@@ -1416,22 +1422,28 @@ export const AppAuthConfig = ({
   const initialSortRef = useRef<AlgoliaSearchApp[] | null>(null);
   
   if (initialSortRef.current === null && apps.length > 0) {
-    // Capture initial sort based on validation status at mount time
+    // Capture initial sort: Not Configured > Not Tested > Tested
+    // Lower priority number = higher in list
+    const getPriority = (app: AlgoliaSearchApp): number => {
+      const configured = isAppConfigured(app);
+      const validated = isAppValidated(app);
+      if (!configured) return 0; // Not Configured - top
+      if (!validated) return 1;  // Configured but Not Tested - middle
+      return 2;                   // Tested - bottom
+    };
+    
     initialSortRef.current = [...apps].sort((a, b) => {
-      const aValidated = isAppValidated(a);
-      const bValidated = isAppValidated(b);
-      if (aValidated && !bValidated) return 1;
-      if (!aValidated && bValidated) return -1;
-      return 0;
+      return getPriority(a) - getPriority(b);
     });
   }
 
   // Use the stable initial sort, or fall back to apps if not yet initialized
   const sortedApps = initialSortRef.current || apps;
 
-  // Find first non-validated app for auto-expand (based on initial sort)
-  const firstInvalidApp = sortedApps.find(app => !isAppValidated(app));
-  const defaultExpanded = firstInvalidApp?.objectID || sortedApps[0]?.objectID || false;
+  // Find first non-validated app for auto-expand (prefer not configured, then not tested)
+  const firstNotConfigured = sortedApps.find(app => !isAppConfigured(app));
+  const firstNotValidated = sortedApps.find(app => !isAppValidated(app));
+  const defaultExpanded = firstNotConfigured?.objectID || firstNotValidated?.objectID || sortedApps[0]?.objectID || false;
 
   const [expanded, setExpanded] = useState<string | false>(defaultExpanded);
 
