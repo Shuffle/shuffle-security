@@ -24,6 +24,8 @@ const AUTOMATION_CONFIG_KEY = 'automation_config';
 
 // Type for authenticated apps from API
 interface ApiAuthEntry {
+  id?: string;
+  label?: string;
   app: {
     id: string;
     name: string;
@@ -361,20 +363,9 @@ const OnboardingPage = () => {
         }
       }
       
-      setAuthStates((prev) => ({
-        ...prev,
-        [systemId]: {
-          ...prev[systemId],
-          status: isValid ? 'connected' : 'error',
-          errorMessage: isValid ? undefined : errorMessage,
-          successMessage: isValid ? successMessage : undefined,
-          workflowId: isValid ? undefined : workflowId,
-          executionId: isValid ? undefined : executionId,
-        },
-      }));
-
-      // Always refresh authenticated apps list - validation happens in background
-      // so the API response is the source of truth, not the test result
+      // Refresh authenticated apps list before updating UI state
+      // Validation happens in background, so API response is the source of truth
+      let refreshedAuthData: typeof authenticatedApps = [];
       try {
         const authResponse = await fetch(`${API_CONFIG.baseUrl}/api/v1/apps/authentication`, {
           headers: {
@@ -385,24 +376,40 @@ const OnboardingPage = () => {
           const authResult = await authResponse.json();
           const authData = authResult.data || authResult;
           if (Array.isArray(authData)) {
-            setAuthenticatedApps(processAuthData(authData));
+            refreshedAuthData = processAuthData(authData);
+            setAuthenticatedApps(refreshedAuthData);
           }
         }
       } catch (refreshError) {
         console.error('Failed to refresh auth status:', refreshError);
       }
+
+      // Check if the tested auth is now valid in the refreshed data
+      const testedAuthEntry = refreshedAuthData.find(
+        auth => auth.id === authenticationId || auth.app?.name?.toLowerCase() === app.name.toLowerCase()
+      );
+      const isNowValid = testedAuthEntry?.validation?.valid === true;
+
+      // Update UI state based on both test result and refreshed data
+      setAuthStates((prev) => ({
+        ...prev,
+        [systemId]: {
+          ...prev[systemId],
+          status: (isValid || isNowValid) ? 'connected' : 'error',
+          errorMessage: (isValid || isNowValid) ? undefined : errorMessage,
+          successMessage: (isValid || isNowValid) ? (successMessage || 'Connection verified') : undefined,
+          workflowId: (isValid || isNowValid) ? undefined : workflowId,
+          executionId: (isValid || isNowValid) ? undefined : executionId,
+        },
+      }));
     } catch (error) {
       console.error('Test connection failed:', error);
-      setAuthStates((prev) => ({
-        ...prev,
-        [systemId]: {
-          ...prev[systemId],
-          status: 'error',
-          errorMessage: error instanceof Error ? error.message : 'Connection test failed. Please try again.',
-        },
-      }));
       
-      // Still refresh auth list even on error - background validation may have succeeded
+      // Wait a few seconds for background validation to complete
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      // Refresh auth list to check if background validation succeeded
+      let refreshedAuthData: typeof authenticatedApps = [];
       try {
         const authResponse = await fetch(`${API_CONFIG.baseUrl}/api/v1/apps/authentication`, {
           headers: {
@@ -413,12 +420,29 @@ const OnboardingPage = () => {
           const authResult = await authResponse.json();
           const authData = authResult.data || authResult;
           if (Array.isArray(authData)) {
-            setAuthenticatedApps(processAuthData(authData));
+            refreshedAuthData = processAuthData(authData);
+            setAuthenticatedApps(refreshedAuthData);
           }
         }
       } catch (refreshError) {
         console.error('Failed to refresh auth status:', refreshError);
       }
+
+      // Check if the auth is now valid despite the fetch error
+      const testedAuthEntry = refreshedAuthData.find(
+        auth => auth.id === authenticationId || auth.app?.name?.toLowerCase() === app.name.toLowerCase()
+      );
+      const isNowValid = testedAuthEntry?.validation?.valid === true;
+
+      setAuthStates((prev) => ({
+        ...prev,
+        [systemId]: {
+          ...prev[systemId],
+          status: isNowValid ? 'connected' : 'error',
+          errorMessage: isNowValid ? undefined : (error instanceof Error ? error.message : 'Connection test failed. Please try again.'),
+          successMessage: isNowValid ? 'Connection verified (background validation)' : undefined,
+        },
+      }));
     }
   };
 
