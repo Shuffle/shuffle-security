@@ -216,6 +216,9 @@ const AppAuthCard = ({
     errorCode?: number;
   }>>({});
   
+  // Track which auth ID is currently being tested (to avoid updating wrong auth on switch)
+  const [testingAuthId, setTestingAuthId] = useState<string | null>(null);
+  
   // Get current test status for selected auth
   const localTestStatus = testStatusPerAuth[selectedAuthId] || 'untested';
   
@@ -249,13 +252,13 @@ const AppAuthCard = ({
     auth => (auth.id || auth.label || '') === selectedAuthId
   );
   
-  // Helper to update test status for current auth
-  const setLocalTestStatus = (status: TestStatusValue) => {
-    setTestStatusPerAuth(prev => ({ ...prev, [selectedAuthId]: status }));
+  // Helper to update test status for a specific auth
+  const setTestStatusForAuth = (authId: string, status: TestStatusValue) => {
+    setTestStatusPerAuth(prev => ({ ...prev, [authId]: status }));
   };
   
-  // Helper to update test messages for current auth
-  const setLocalTestMessages = (messages: {
+  // Helper to update test messages for a specific auth
+  const setTestMessagesForAuth = (authId: string, messages: {
     errorMessage?: string;
     successMessage?: string;
     warningMessage?: string;
@@ -263,7 +266,7 @@ const AppAuthCard = ({
     executionId?: string;
     errorCode?: number;
   }) => {
-    setTestMessagesPerAuth(prev => ({ ...prev, [selectedAuthId]: messages }));
+    setTestMessagesPerAuth(prev => ({ ...prev, [authId]: messages }));
   };
   
   // Get test messages for current auth
@@ -271,37 +274,51 @@ const AppAuthCard = ({
   const wasPreValidated = wasPreValidatedPerAuth[selectedAuthId] || false;
   
   // Sync test status with authState when test completes, checking backend validation status
+  // IMPORTANT: Only update the auth that was being tested, not the currently selected auth
   useEffect(() => {
+    // Only process if we have a testingAuthId (a test was initiated)
+    if (!testingAuthId) return;
+    
     if (authState.status === 'testing') {
-      setLocalTestStatus('testing');
+      setTestStatusForAuth(testingAuthId, 'testing');
       // Clear previous messages when starting a new test
-      setLocalTestMessages({});
+      setTestMessagesForAuth(testingAuthId, {});
     } else if (authState.status === 'connected') {
+      // Get the auth entry that was being tested
+      const testedAuth = apiAuthEntries.find(
+        auth => (auth.id || auth.label || '') === testingAuthId
+      );
+      const wasTestedAuthPreValidated = wasPreValidatedPerAuth[testingAuthId] || false;
+      
       // If auth was already validated before testing, trust the 200 response
       // (Re-tests don't always update the backend validation status)
-      if (wasPreValidated) {
-        setLocalTestStatus('success');
+      if (wasTestedAuthPreValidated) {
+        setTestStatusForAuth(testingAuthId, 'success');
       } else {
         // For newly tested auths, check if backend has validated
-        const isBackendValidated = selectedAuth?.validation?.valid === true;
-        setLocalTestStatus(isBackendValidated ? 'success' : 'pending_validation');
+        const isBackendValidated = testedAuth?.validation?.valid === true;
+        setTestStatusForAuth(testingAuthId, isBackendValidated ? 'success' : 'pending_validation');
       }
       // Store the success/warning messages for this auth
-      setLocalTestMessages({
+      setTestMessagesForAuth(testingAuthId, {
         successMessage: authState.successMessage,
         warningMessage: authState.warningMessage,
       });
+      // Clear testingAuthId after processing completed status
+      setTestingAuthId(null);
     } else if (authState.status === 'error') {
-      setLocalTestStatus('error');
+      setTestStatusForAuth(testingAuthId, 'error');
       // Store the error details for this auth
-      setLocalTestMessages({
+      setTestMessagesForAuth(testingAuthId, {
         errorMessage: authState.errorMessage,
         workflowId: authState.workflowId,
         executionId: authState.executionId,
         errorCode: authState.errorCode,
       });
+      // Clear testingAuthId after processing completed status
+      setTestingAuthId(null);
     }
-  }, [authState.status, authState.errorMessage, authState.successMessage, authState.warningMessage, selectedAuth?.validation?.valid, wasPreValidated]);
+  }, [authState.status, authState.errorMessage, authState.successMessage, authState.warningMessage, testingAuthId, apiAuthEntries, wasPreValidatedPerAuth]);
   
   // Track credential errors (401/403) to show warning but don't auto-switch
   // User can manually switch back to other auths or add new one
@@ -1188,6 +1205,8 @@ const AppAuthCard = ({
                         size="medium"
                         onClick={(e) => {
                           e.stopPropagation();
+                          // Track which auth is being tested so results go to the right auth
+                          setTestingAuthId(selectedAuthId);
                           onTestConnection(app.objectID, selectedAuthId !== ADD_NEW_AUTH ? selectedAuthId : undefined);
                         }}
                         disabled={authState.status === 'testing'}
