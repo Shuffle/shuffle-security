@@ -20,6 +20,7 @@ import SettingsPage from '@/pages/dashboard/SettingsPage';
 import DocsPage from '@/pages/docs/DocsPage';
 import AppsPage from '@/pages/AppsPage';
 import NotFound from './pages/NotFound';
+import { ScrollToTop } from '@/components/ScrollToTop';
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ const App = () => (
       />
       <AuthProvider>
         <BrowserRouter>
+          <ScrollToTop />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/apps" element={<AppsPage />} />
