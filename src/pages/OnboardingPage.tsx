@@ -17,8 +17,8 @@ import { API_CONFIG, getApiUrl } from '@/config/api';
 import { setDatastoreItem, getDatastoreItem } from '@/services/datastore';
 import { deduplicateAuthApps } from '@/lib/utils';
 
-// Datastore category for onboarding config
-const ONBOARDING_CONFIG_CATEGORY = 'singul-onboarding-config';
+// Datastore category for onboarding config (using shuffle-security_ prefix for consistency)
+const ONBOARDING_CONFIG_CATEGORY = 'shuffle-security_onboarding';
 const SELECTED_TOOLS_KEY = 'selected_tools';
 const AUTOMATION_CONFIG_KEY = 'automation_config';
 
