@@ -201,13 +201,27 @@ const AppAuthCard = ({
   // Track if user has made an explicit selection (to prevent auto-override on refresh)
   const [userHasSelected, setUserHasSelected] = useState(false);
   
-  // Track local test status for the current selection (reset when switching)
-  // 'pending_validation' = test passed but backend validation not yet confirmed
-  const [localTestStatus, setLocalTestStatus] = useState<'untested' | 'testing' | 'success' | 'pending_validation' | 'error'>('untested');
+  // Track test status PER authentication ID for this session
+  // This ensures switching between auths shows each one's test result correctly
+  type TestStatusValue = 'untested' | 'testing' | 'success' | 'pending_validation' | 'error';
+  const [testStatusPerAuth, setTestStatusPerAuth] = useState<Record<string, TestStatusValue>>({});
+  
+  // Track test messages per auth (error message, success message, warning message)
+  const [testMessagesPerAuth, setTestMessagesPerAuth] = useState<Record<string, {
+    errorMessage?: string;
+    successMessage?: string;
+    warningMessage?: string;
+    workflowId?: string;
+    executionId?: string;
+    errorCode?: number;
+  }>>({});
+  
+  // Get current test status for selected auth
+  const localTestStatus = testStatusPerAuth[selectedAuthId] || 'untested';
   
   // Track if the selected auth was already validated BEFORE we started testing
   // This is used to determine if we should trust the 200 response as source of truth
-  const [wasPreValidated, setWasPreValidated] = useState(false);
+  const [wasPreValidatedPerAuth, setWasPreValidatedPerAuth] = useState<Record<string, boolean>>({});
 
   // Update selection when apiAuthEntries changes, but only on initial load (not after user selection)
   useEffect(() => {
@@ -216,14 +230,18 @@ const AppAuthCard = ({
     }
   }, [apiAuthEntries, userHasSelected]);
   
-  // Reset local test status and track pre-validation state when auth selection changes
+  // Track pre-validation state when auth selection changes (for first-time tests)
   useEffect(() => {
-    setLocalTestStatus('untested');
-    // Track if this auth was already validated before we test it
-    const currentAuth = apiAuthEntries.find(
-      auth => (auth.id || auth.label || '') === selectedAuthId
-    );
-    setWasPreValidated(currentAuth?.validation?.valid === true);
+    // Only set pre-validated state if we haven't tracked this auth yet
+    if (wasPreValidatedPerAuth[selectedAuthId] === undefined) {
+      const currentAuth = apiAuthEntries.find(
+        auth => (auth.id || auth.label || '') === selectedAuthId
+      );
+      setWasPreValidatedPerAuth(prev => ({
+        ...prev,
+        [selectedAuthId]: currentAuth?.validation?.valid === true
+      }));
+    }
   }, [selectedAuthId, apiAuthEntries]);
   
   // Get the currently selected auth entry (needed for validation check)
@@ -231,10 +249,33 @@ const AppAuthCard = ({
     auth => (auth.id || auth.label || '') === selectedAuthId
   );
   
-  // Sync local test status with authState, checking backend validation status
+  // Helper to update test status for current auth
+  const setLocalTestStatus = (status: TestStatusValue) => {
+    setTestStatusPerAuth(prev => ({ ...prev, [selectedAuthId]: status }));
+  };
+  
+  // Helper to update test messages for current auth
+  const setLocalTestMessages = (messages: {
+    errorMessage?: string;
+    successMessage?: string;
+    warningMessage?: string;
+    workflowId?: string;
+    executionId?: string;
+    errorCode?: number;
+  }) => {
+    setTestMessagesPerAuth(prev => ({ ...prev, [selectedAuthId]: messages }));
+  };
+  
+  // Get test messages for current auth
+  const localTestMessages = testMessagesPerAuth[selectedAuthId] || {};
+  const wasPreValidated = wasPreValidatedPerAuth[selectedAuthId] || false;
+  
+  // Sync test status with authState when test completes, checking backend validation status
   useEffect(() => {
     if (authState.status === 'testing') {
       setLocalTestStatus('testing');
+      // Clear previous messages when starting a new test
+      setLocalTestMessages({});
     } else if (authState.status === 'connected') {
       // If auth was already validated before testing, trust the 200 response
       // (Re-tests don't always update the backend validation status)
@@ -245,14 +286,26 @@ const AppAuthCard = ({
         const isBackendValidated = selectedAuth?.validation?.valid === true;
         setLocalTestStatus(isBackendValidated ? 'success' : 'pending_validation');
       }
+      // Store the success/warning messages for this auth
+      setLocalTestMessages({
+        successMessage: authState.successMessage,
+        warningMessage: authState.warningMessage,
+      });
     } else if (authState.status === 'error') {
       setLocalTestStatus('error');
+      // Store the error details for this auth
+      setLocalTestMessages({
+        errorMessage: authState.errorMessage,
+        workflowId: authState.workflowId,
+        executionId: authState.executionId,
+        errorCode: authState.errorCode,
+      });
     }
-  }, [authState.status, selectedAuth?.validation?.valid, wasPreValidated]);
+  }, [authState.status, authState.errorMessage, authState.successMessage, authState.warningMessage, selectedAuth?.validation?.valid, wasPreValidated]);
   
   // Track credential errors (401/403) to show warning but don't auto-switch
   // User can manually switch back to other auths or add new one
-  const isCredentialError = authState.errorCode === 401 || authState.errorCode === 403;
+  const isCredentialError = localTestMessages.errorCode === 401 || localTestMessages.errorCode === 403;
 
   const showAddNewForm = selectedAuthId === ADD_NEW_AUTH;
 
@@ -1179,7 +1232,7 @@ const AppAuthCard = ({
                     </Box>
 
                     {/* Status messages - only show for current test session */}
-                    {localTestStatus === 'error' && authState.errorMessage && (
+                    {localTestStatus === 'error' && localTestMessages.errorMessage && (
                       <Box sx={{ 
                         px: { xs: 2, sm: 2.5 }, 
                         pb: { xs: 2, sm: 2.5 },
@@ -1196,13 +1249,13 @@ const AppAuthCard = ({
                         >
                           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, width: '100%' }}>
                             <Typography sx={{ fontSize: '0.875rem', flex: 1 }}>
-                              {authState.errorMessage}
+                              {localTestMessages.errorMessage}
                             </Typography>
-                            {authState.workflowId && authState.executionId && (
+                            {localTestMessages.workflowId && localTestMessages.executionId && (
                               <Button
                                 variant="outlined"
                                 size="small"
-                                href={`https://shuffler.io/workflows/${authState.workflowId}?execution_id=${authState.executionId}`}
+                                href={`https://shuffler.io/workflows/${localTestMessages.workflowId}?execution_id=${localTestMessages.executionId}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 sx={{
@@ -1232,32 +1285,32 @@ const AppAuthCard = ({
                         pb: { xs: 2, sm: 2.5 },
                       }}>
                         <Alert
-                          severity={authState.warningMessage ? "warning" : "success"}
+                          severity={localTestMessages.warningMessage ? "warning" : "success"}
                           sx={{
-                            backgroundColor: authState.warningMessage 
+                            backgroundColor: localTestMessages.warningMessage 
                               ? 'rgba(245, 158, 11, 0.1)' 
                               : 'rgba(34, 197, 94, 0.1)',
-                            color: authState.warningMessage ? '#f59e0b' : '#22c55e',
-                            border: authState.warningMessage 
+                            color: localTestMessages.warningMessage ? '#f59e0b' : '#22c55e',
+                            border: localTestMessages.warningMessage 
                               ? '1px solid rgba(245, 158, 11, 0.2)' 
                               : '1px solid rgba(34, 197, 94, 0.2)',
                             borderRadius: 2,
                             '& .MuiAlert-icon': { 
-                              color: authState.warningMessage ? '#f59e0b' : '#22c55e' 
+                              color: localTestMessages.warningMessage ? '#f59e0b' : '#22c55e' 
                             },
                           }}
                         >
-                          {authState.warningMessage ? (
+                          {localTestMessages.warningMessage ? (
                             <Box>
                               <Typography sx={{ fontWeight: 600, mb: 0.5 }}>
-                                {authState.successMessage || 'Connection probably working'}
+                                {localTestMessages.successMessage || 'Connection probably working'}
                               </Typography>
                               <Typography sx={{ fontSize: '0.85rem', opacity: 0.9 }}>
-                                {authState.warningMessage}
+                                {localTestMessages.warningMessage}
                               </Typography>
                             </Box>
                           ) : (
-                            authState.successMessage || 'Connection verified successfully'
+                            localTestMessages.successMessage || 'Connection verified successfully'
                           )}
                         </Alert>
                       </Box>
@@ -1328,7 +1381,7 @@ const AppAuthCard = ({
                     }}
                   >
                     <Typography sx={{ fontSize: '0.875rem' }}>
-                      {authState.errorCode === 401 
+                      {localTestMessages.errorCode === 401 
                         ? 'Previous credentials were invalid or expired. Please enter new credentials.'
                         : 'Access was denied with the previous credentials. Please re-authenticate with valid permissions.'}
                     </Typography>
