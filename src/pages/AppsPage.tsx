@@ -14,7 +14,6 @@ const categories = [
   { id: 'email', label: 'Email', icon: Mail, description: 'Inboxes & mail', searchTerm: 'email' },
   { id: 'edr', label: 'EDR', icon: Search, description: 'Endpoint detection', searchTerm: 'edr' },
   { id: 'threat', label: 'Threat Intel', icon: Shield, description: 'IOC enrichment', searchTerm: 'threat intel' },
-  { id: 'cases', label: 'ITSM', icon: Ticket, description: 'Ticketing & support', searchTerm: 'itsm' },
 ];
 
 const catchAllCategory = { id: 'other', label: 'Browse All 3,000+ Integrations', icon: Globe, searchTerm: '' };
