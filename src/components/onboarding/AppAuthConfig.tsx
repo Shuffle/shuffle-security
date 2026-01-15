@@ -217,6 +217,26 @@ const AppAuthCard = ({
   // Compute configured/tested status from selected auth entry
   const isConfigured = selectedAuth?.active === true || apiAuthEntries.some(a => a.active === true);
   const isTested = selectedAuth?.validation?.valid === true || apiAuthEntries.some(a => a.validation?.valid === true);
+  
+  // Get last validation timestamp (prefer selected auth, fallback to any validated entry)
+  const getLastValidTimestamp = (): number | undefined => {
+    if (selectedAuth?.validation?.last_valid) return selectedAuth.validation.last_valid;
+    const validEntry = apiAuthEntries.find(a => a.validation?.valid === true && a.validation?.last_valid);
+    return validEntry?.validation?.last_valid;
+  };
+  
+  const formatLastValidDate = (): string => {
+    const timestamp = getLastValidTimestamp();
+    if (!timestamp) return 'Unknown';
+    const date = new Date(timestamp * 1000);
+    return date.toLocaleDateString(undefined, { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
   // Local credentials state for the form
   const [localCredentials, setLocalCredentials] = useState<Record<string, string>>(authState.credentials || {});
@@ -715,17 +735,24 @@ const AppAuthCard = ({
               }}
             />
             {/* Tested status chip */}
-            <Chip
-              label={isTested ? 'Tested' : 'Not tested'}
-              size="small"
-              sx={{
-                backgroundColor: isTested ? 'rgba(34, 197, 94, 0.15)' : 'rgba(156, 163, 175, 0.15)',
-                color: isTested ? '#22c55e' : '#9ca3af',
-                fontWeight: 500,
-                fontSize: { xs: '0.6rem', sm: '0.65rem' },
-                height: { xs: 22, sm: 24 },
-              }}
-            />
+            <Tooltip 
+              title={isTested ? `Last validated: ${formatLastValidDate()}` : ''} 
+              arrow
+              disableHoverListener={!isTested}
+            >
+              <Chip
+                label={isTested ? 'Tested' : 'Not tested'}
+                size="small"
+                sx={{
+                  backgroundColor: isTested ? 'rgba(34, 197, 94, 0.15)' : 'rgba(156, 163, 175, 0.15)',
+                  color: isTested ? '#22c55e' : '#9ca3af',
+                  fontWeight: 500,
+                  fontSize: { xs: '0.6rem', sm: '0.65rem' },
+                  height: { xs: 22, sm: 24 },
+                  cursor: isTested ? 'help' : 'default',
+                }}
+              />
+            </Tooltip>
             <Tooltip title="View documentation">
               <IconButton
                 size="small"
