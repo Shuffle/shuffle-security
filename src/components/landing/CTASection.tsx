@@ -5,91 +5,143 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 export const CTASection = () => {
   return (
-    <Box sx={{ py: 15 }}>
-      <Container maxWidth="md">
+    <Box 
+      sx={{ 
+        py: { xs: 12, md: 20 },
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Background gradients */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: `
+            radial-gradient(ellipse 80% 60% at 50% 100%, rgba(255, 102, 0, 0.12) 0%, transparent 50%),
+            radial-gradient(ellipse 60% 40% at 20% 50%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
+            radial-gradient(ellipse 60% 40% at 80% 50%, rgba(34, 197, 94, 0.05) 0%, transparent 50%)
+          `,
+          pointerEvents: 'none',
+        }}
+      />
+
+      <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1 }}>
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <Box
-            sx={{
-              textAlign: 'center',
-              p: { xs: 4, md: 8 },
-              borderRadius: 4,
-              background: 'linear-gradient(145deg, rgba(255, 102, 0, 0.1) 0%, rgba(255, 133, 51, 0.05) 100%)',
-              border: '1px solid rgba(255, 102, 0, 0.2)',
-              position: 'relative',
-              overflow: 'hidden',
-            }}
-          >
-            {/* Glow effect */}
-            <Box
-              sx={{
-                position: 'absolute',
-                top: '-50%',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                width: '200%',
-                height: '200%',
-                background: 'radial-gradient(ellipse at center, rgba(255, 102, 0, 0.1) 0%, transparent 50%)',
-                pointerEvents: 'none',
-              }}
-            />
+          <Box sx={{ textAlign: 'center' }}>
+            {/* Playful emoji row */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+            >
+              <Stack direction="row" spacing={2} justifyContent="center" sx={{ mb: 4 }}>
+                {['🚀', '🔒', '⚡'].map((emoji, i) => (
+                  <motion.div
+                    key={emoji}
+                    animate={{ y: [0, -8, 0] }}
+                    transition={{ duration: 2, repeat: Infinity, delay: i * 0.3 }}
+                  >
+                    <Box
+                      sx={{
+                        width: 56,
+                        height: 56,
+                        borderRadius: 3,
+                        background: 'rgba(255, 102, 0, 0.1)',
+                        border: '1px solid rgba(255, 102, 0, 0.2)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '1.75rem',
+                      }}
+                    >
+                      {emoji}
+                    </Box>
+                  </motion.div>
+                ))}
+              </Stack>
+            </motion.div>
 
             <Typography
-              variant="h3"
+              variant="h2"
               sx={{
-                mb: 2,
+                mb: 3,
                 fontWeight: 700,
-                fontSize: { xs: '1.75rem', md: '2.5rem' },
-                position: 'relative',
+                fontSize: { xs: '2rem', md: '3.25rem' },
+                lineHeight: 1.15,
               }}
             >
-              Ready for Automatic Security You Can Trust?
+              Ready to stop drowning
+              <br />
+              in{' '}
+              <Box
+                component="span"
+                sx={{
+                  background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}
+              >
+                alerts
+              </Box>
+              ?
             </Typography>
             <Typography
-              variant="h6"
               sx={{
                 color: 'text.secondary',
-                mb: 4,
+                mb: 6,
                 fontWeight: 400,
-                maxWidth: 550,
+                maxWidth: 500,
                 mx: 'auto',
-                position: 'relative',
+                fontSize: { xs: '1.05rem', md: '1.2rem' },
+                lineHeight: 1.7,
               }}
             >
-              Automated incident response that reaches everywhere—cloud, on-prem, or hybrid—with complete control over every action.
+              Get started in minutes. No credit card, no sales call, no 47-page enterprise agreement.
             </Typography>
-            <Stack
-              direction={{ xs: 'column', sm: 'row' }}
-              spacing={2}
-              justifyContent="center"
-              sx={{ position: 'relative' }}
+
+            <Button
+              component={Link}
+              to="/login"
+              variant="contained"
+              size="large"
+              endIcon={<ArrowForwardIcon />}
+              sx={{
+                py: 2,
+                px: 6,
+                fontSize: '1.15rem',
+                fontWeight: 600,
+                borderRadius: 3,
+                background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
+                boxShadow: '0 8px 32px rgba(255, 102, 0, 0.35)',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 12px 40px rgba(255, 102, 0, 0.45)',
+                },
+              }}
             >
-              <Button
-                component={Link}
-                to="/login"
-                variant="contained"
-                size="large"
-                endIcon={<ArrowForwardIcon />}
-                sx={{ py: 1.5, px: 4 }}
-              >
-                Get Started
-              </Button>
-              <Button
-                component="a"
-                href="https://shuffler.io/contact"
-                target="_blank"
-                rel="noopener noreferrer"
-                variant="outlined"
-                size="large"
-                sx={{ py: 1.5, px: 4 }}
-              >
-                Contact Sales
-              </Button>
-            </Stack>
+              Start for Free
+            </Button>
+
+            <Typography
+              sx={{
+                mt: 3,
+                color: 'text.secondary',
+                fontSize: '0.9rem',
+              }}
+            >
+              Free tier available • Setup in 5 minutes • Cancel anytime
+            </Typography>
           </Box>
         </motion.div>
       </Container>
