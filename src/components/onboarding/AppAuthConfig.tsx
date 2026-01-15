@@ -55,6 +55,21 @@ const isOAuth2Type = (type: string | undefined): boolean => {
   return lowerType === 'oauth2' || lowerType === 'oauth2-app';
 };
 
+// Helper to check if auth type indicates no authentication required
+const isNoAuthRequired = (auth: AppAuthentication | undefined): boolean => {
+  if (!auth) return true; // No auth object means no auth required
+  const type = auth.type?.toLowerCase() || '';
+  // Check for explicit "no auth" types
+  if (type === '' || type === 'none' || type === 'no_auth' || type === 'no authentication') return true;
+  // Also check if there are no parameters, no OAuth2, and no other identifiable auth method
+  const hasParameters = auth.parameters && auth.parameters.length > 0;
+  const isOAuth = isOAuth2Type(auth.type);
+  const hasOAuthConfig = auth.client_id || auth.client_secret || auth.token_uri;
+  // If type is empty/generic and there's nothing to configure, no auth needed
+  if (!isOAuth && !hasParameters && !hasOAuthConfig && type === '') return true;
+  return false;
+};
+
 // URL validation helper
 const isValidUrl = (value: string): boolean => {
   if (!value) return false;
@@ -1285,6 +1300,26 @@ const AppAuthCard = ({
                     }}
                   >
                     {error}
+                  </Alert>
+                ) : isNoAuthRequired(auth) ? (
+                  <Alert
+                    severity="info"
+                    sx={{
+                      backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                      color: '#3b82f6',
+                      border: '1px solid rgba(59, 130, 246, 0.2)',
+                      borderRadius: 2,
+                      '& .MuiAlert-icon': { color: '#3b82f6' },
+                    }}
+                  >
+                    <Box>
+                      <Typography sx={{ fontWeight: 600, mb: 0.5 }}>
+                        No authentication required
+                      </Typography>
+                      <Typography sx={{ fontSize: '0.85rem', opacity: 0.9 }}>
+                        This app works without credentials. You can use it directly.
+                      </Typography>
+                    </Box>
                   </Alert>
                 ) : (
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
