@@ -384,10 +384,8 @@ const OnboardingPage = () => {
         console.error('Failed to refresh auth status:', refreshError);
       }
 
-      // Check if the tested auth is now valid in the refreshed data
-      const testedAuthEntry = refreshedAuthData.find(
-        auth => auth.id === authenticationId || auth.app?.name?.toLowerCase() === app.name.toLowerCase()
-      );
+      // Check if the specific tested auth is now valid in the refreshed data
+      const testedAuthEntry = refreshedAuthData.find(auth => auth.id === authenticationId);
       const isNowValid = testedAuthEntry?.validation?.valid === true;
 
       // Update UI state based on both test result and refreshed data
@@ -428,10 +426,8 @@ const OnboardingPage = () => {
         console.error('Failed to refresh auth status:', refreshError);
       }
 
-      // Check if the auth is now valid despite the fetch error
-      const testedAuthEntry = refreshedAuthData.find(
-        auth => auth.id === authenticationId || auth.app?.name?.toLowerCase() === app.name.toLowerCase()
-      );
+      // Check if the specific tested auth is now valid despite the fetch error
+      const testedAuthEntry = refreshedAuthData.find(auth => auth.id === authenticationId);
       const isNowValid = testedAuthEntry?.validation?.valid === true;
 
       setAuthStates((prev) => ({
