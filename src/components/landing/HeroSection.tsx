@@ -318,12 +318,12 @@ export const HeroSection = () => {
                 }}
               >
                 {[
-                  { name: 'Cloud', color: '#4285F4' },
-                  { name: 'SIEM', color: '#65A637' },
-                  { name: 'Email', color: '#EA4335' },
-                  { name: 'EDR', color: '#E01E5A' },
-                  { name: 'ITSM', color: '#81B5A1' },
-                  { name: 'Threat Intel', color: '#8b5cf6' },
+                  { name: 'Cloud', color: '#4285F4', category: 'cloud' },
+                  { name: 'SIEM', color: '#65A637', category: 'siem' },
+                  { name: 'Email', color: '#EA4335', category: 'email' },
+                  { name: 'EDR', color: '#E01E5A', category: 'edr' },
+                  { name: 'ITSM', color: '#81B5A1', category: 'itsm' },
+                  { name: 'Threat Intel', color: '#8b5cf6', category: 'threat intel' },
                 ].map((cat, i) => (
                   <motion.div
                     key={cat.name}
@@ -332,6 +332,8 @@ export const HeroSection = () => {
                     transition={{ delay: 0.7 + i * 0.08 }}
                   >
                     <Box
+                      component={Link}
+                      to={`/apps?category=${encodeURIComponent(cat.category)}`}
                       sx={{
                         py: 1.5,
                         px: 3,
@@ -343,6 +345,8 @@ export const HeroSection = () => {
                         gap: 1.5,
                         transition: 'all 0.2s ease',
                         color: cat.color,
+                        textDecoration: 'none',
+                        cursor: 'pointer',
                         '&:hover': {
                           background: `${cat.color}20`,
                           borderColor: `${cat.color}50`,
@@ -364,6 +368,8 @@ export const HeroSection = () => {
                 transition={{ delay: 1.2 }}
               >
                 <Box
+                  component={Link}
+                  to="/apps"
                   sx={{
                     display: 'inline-flex',
                     py: 1,
@@ -371,6 +377,13 @@ export const HeroSection = () => {
                     borderRadius: 10,
                     background: 'linear-gradient(135deg, rgba(255, 102, 0, 0.15) 0%, rgba(255, 102, 0, 0.05) 100%)',
                     border: '1px solid rgba(255, 102, 0, 0.25)',
+                    textDecoration: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, rgba(255, 102, 0, 0.25) 0%, rgba(255, 102, 0, 0.1) 100%)',
+                      transform: 'translateY(-2px)',
+                    },
                   }}
                 >
                   <Typography sx={{ color: 'primary.main', fontSize: '0.9rem', fontWeight: 600 }}>
