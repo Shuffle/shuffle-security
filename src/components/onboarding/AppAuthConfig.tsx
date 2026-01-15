@@ -960,12 +960,16 @@ const AppAuthCard = ({
                             ? 'rgba(34, 197, 94, 0.1)' 
                             : localTestStatus === 'error'
                             ? 'rgba(239, 68, 68, 0.1)'
+                            : isTested
+                            ? 'rgba(34, 197, 94, 0.1)'
                             : 'rgba(156, 163, 175, 0.1)',
                           border: `1px solid ${
                             localTestStatus === 'success' 
                               ? 'rgba(34, 197, 94, 0.2)' 
                               : localTestStatus === 'error'
                               ? 'rgba(239, 68, 68, 0.2)'
+                              : isTested
+                              ? 'rgba(34, 197, 94, 0.2)'
                               : 'rgba(156, 163, 175, 0.2)'
                           }`,
                           flexShrink: 0,
@@ -975,6 +979,8 @@ const AppAuthCard = ({
                               ? '#22c55e' 
                               : localTestStatus === 'error'
                               ? '#ef4444'
+                              : isTested
+                              ? '#22c55e'
                               : '#9ca3af', 
                             fontSize: 20 
                           }} />
@@ -1009,8 +1015,6 @@ const AppAuthCard = ({
                               ? '✗ Test failed'
                               : localTestStatus === 'testing'
                               ? 'Testing...'
-                              : isTested
-                              ? '✓ Not tested in this session'
                               : 'Not tested in this session'}
                           </Typography>
                         </Box>
