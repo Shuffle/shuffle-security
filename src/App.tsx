@@ -56,6 +56,7 @@ const App = () => (
               }
             >
               <Route path="/onboarding" element={<OnboardingPage />} />
+              <Route path="/onboarding/tool" element={<OnboardingPage />} />
               <Route path="/onboarding/tools" element={<OnboardingPage />} />
               <Route path="/onboarding/authenticate" element={<OnboardingPage />} />
               <Route path="/onboarding/automate" element={<OnboardingPage />} />
