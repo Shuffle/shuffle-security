@@ -243,9 +243,9 @@ const IOCTypesPage = () => {
             exclusive
             onChange={(_, val) => val && setFilterMode(val)}
             size="small"
-            sx={{ height: 32 }}
+            sx={{ height: 36 }}
           >
-            <ToggleButton value="all" sx={{ px: 2, textTransform: 'none' }}>
+            <ToggleButton value="all" sx={{ px: 2, textTransform: 'none', height: 36 }}>
               All
             </ToggleButton>
             <ToggleButton 
@@ -254,6 +254,7 @@ const IOCTypesPage = () => {
                 px: 2, 
                 textTransform: 'none',
                 gap: 0.5,
+                height: 36,
                 '&.Mui-selected': {
                   bgcolor: 'rgba(245, 158, 11, 0.15)',
                   color: '#f59e0b',
@@ -277,15 +278,16 @@ const IOCTypesPage = () => {
                   <SearchIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
                 </InputAdornment>
               ),
+              sx: { height: 36 },
             }}
             sx={{ minWidth: 220 }}
           />
           {iocTypes.length === 0 && !isLoading && !isInitializing && (
-            <Button variant="outlined" onClick={handleInitDefaults} disabled={isInitializing}>
+            <Button variant="outlined" onClick={handleInitDefaults} disabled={isInitializing} sx={{ height: 36 }}>
               Initialize Defaults
             </Button>
           )}
-          <Button variant="outlined" startIcon={<AddIcon />} onClick={() => handleOpenDialog()}>
+          <Button variant="outlined" startIcon={<AddIcon />} onClick={() => handleOpenDialog()} sx={{ height: 36 }}>
             Add IOC Type
           </Button>
         </Box>
@@ -335,7 +337,7 @@ const IOCTypesPage = () => {
             startIcon={<PlayArrowIcon />}
             onClick={handleTestAll}
             disabled={!testValue.trim()}
-            sx={{ whiteSpace: 'nowrap' }}
+            sx={{ whiteSpace: 'nowrap', height: 36 }}
           >
             Test All
           </Button>
