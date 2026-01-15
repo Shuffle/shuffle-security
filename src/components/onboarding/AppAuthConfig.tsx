@@ -1419,17 +1419,10 @@ export const AppAuthConfig = ({
     return entries.some(e => e.active === true);
   };
 
-  // Helper to check if app is validated (must be valid AND validated within last 30 days)
+  // Helper to check if app is validated (data is already pre-processed to invalidate old entries)
   const isAppValidated = (app: AlgoliaSearchApp): boolean => {
     const entries = getApiAuthEntries(app);
-    const thirtyDaysAgoMs = Date.now() - (30 * 24 * 60 * 60 * 1000);
-    return entries.some(e => {
-      if (e.validation?.valid !== true) return false;
-      const lastValid = e.validation?.last_valid ?? 0;
-      // Detect if timestamp is in seconds or milliseconds
-      const lastValidMs = lastValid > 1e12 ? lastValid : lastValid * 1000;
-      return lastValidMs > thirtyDaysAgoMs;
-    });
+    return entries.some(e => e.validation?.valid === true);
   };
 
   // Keep initial sort order stable - only sort once on first render

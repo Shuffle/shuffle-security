@@ -33,8 +33,35 @@ interface ApiAuthEntry {
   validation?: {
     valid: boolean;
     error?: string;
+    last_valid?: number;
   };
 }
+
+// Helper to process auth data and invalidate entries older than 30 days
+const processAuthData = (authData: ApiAuthEntry[]): ApiAuthEntry[] => {
+  const thirtyDaysAgoMs = Date.now() - (30 * 24 * 60 * 60 * 1000);
+  
+  return authData.map(entry => {
+    if (entry.validation?.valid === true && entry.validation?.last_valid) {
+      const lastValidMs = entry.validation.last_valid > 1e12 
+        ? entry.validation.last_valid 
+        : entry.validation.last_valid * 1000;
+      
+      if (lastValidMs < thirtyDaysAgoMs) {
+        // Invalidate entries older than 30 days
+        return {
+          ...entry,
+          validation: {
+            ...entry.validation,
+            valid: false,
+            error: 'Validation expired (older than 30 days)',
+          },
+        };
+      }
+    }
+    return entry;
+  });
+};
 
 const steps = [
   { label: 'Select Tools', icon: <IntegrationInstructionsIcon />, path: '/onboarding/tools' },
@@ -138,7 +165,7 @@ const OnboardingPage = () => {
           const result = await response.json();
           const authData = result.data || result;
           if (Array.isArray(authData)) {
-            setAuthenticatedApps(authData);
+            setAuthenticatedApps(processAuthData(authData));
           }
         }
       } catch (error) {
@@ -358,7 +385,7 @@ const OnboardingPage = () => {
             const authResult = await authResponse.json();
             const authData = authResult.data || authResult;
             if (Array.isArray(authData)) {
-              setAuthenticatedApps(authData);
+              setAuthenticatedApps(processAuthData(authData));
             }
           }
         } catch (refreshError) {
@@ -422,7 +449,7 @@ const OnboardingPage = () => {
         if (authResponse.ok) {
           const authData = await authResponse.json();
           if (authData.data) {
-            setAuthenticatedApps(authData.data);
+            setAuthenticatedApps(processAuthData(authData.data));
           }
         }
         return true;
