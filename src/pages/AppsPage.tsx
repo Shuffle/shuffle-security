@@ -284,8 +284,8 @@ export default function AppsPage() {
                   display: 'grid !important',
                   gridTemplateColumns: {
                     xs: 'repeat(2, 1fr) !important',
-                    sm: 'repeat(3, 1fr) !important',
-                    md: 'repeat(4, 1fr) !important',
+                    sm: 'repeat(2, 1fr) !important',
+                    md: 'repeat(3, 1fr) !important',
                   },
                   gap: { xs: '12px !important', md: '16px !important' },
                 },
@@ -336,7 +336,7 @@ export default function AppsPage() {
                 authToken=""
                 placeholder="Search integrations... (e.g., Splunk, CrowdStrike)"
                 layout="grid"
-                gridColumns={4}
+                gridColumns={3}
                 showDescription
                 inline
                 hitsPerPage={28}
@@ -370,7 +370,7 @@ export default function AppsPage() {
                   mb: 3,
                 }}
               >
-                Can't find what you need? We support any REST API.
+                Can't find what you need? We support any REST API or Python function.
               </Typography>
               <Button
                 component={Link}
