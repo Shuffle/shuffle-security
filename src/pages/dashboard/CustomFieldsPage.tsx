@@ -123,7 +123,7 @@ const CustomFieldsPage = () => {
           <Typography variant="h5" sx={{ fontWeight: 600 }}>Custom Fields</Typography>
           {isLoading && <CircularProgress size={20} />}
         </Box>
-        <Button variant="outlined" startIcon={<AddIcon />} onClick={() => handleOpenDialog()}>
+        <Button variant="outlined" startIcon={<AddIcon />} onClick={() => handleOpenDialog()} sx={{ height: 36 }}>
           Add Custom Field
         </Button>
       </Box>

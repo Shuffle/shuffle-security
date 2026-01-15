@@ -356,6 +356,8 @@ const IncidentsPage = () => {
             <IconButton 
               onClick={() => setAutomationsDialogOpen(true)}
               sx={{ 
+                width: 36,
+                height: 36,
                 color: categoryAutomations?.some(a => a.enabled) ? '#4ade80' : 'text.secondary',
                 border: '1px solid',
                 borderColor: categoryAutomations?.some(a => a.enabled) ? '#4ade80' : 'rgba(255,255,255,0.1)',
@@ -373,6 +375,8 @@ const IncidentsPage = () => {
               onClick={() => fetchItems()} 
               disabled={isLoading}
               sx={{ 
+                width: 36,
+                height: 36,
                 color: 'text.secondary',
                 border: '1px solid',
                 borderColor: 'rgba(255,255,255,0.1)',
@@ -389,6 +393,8 @@ const IncidentsPage = () => {
             <IconButton 
               onClick={() => setCreateDialogOpen(true)}
               sx={{ 
+                width: 36,
+                height: 36,
                 color: 'text.secondary',
                 border: '1px solid',
                 borderColor: 'rgba(255,255,255,0.1)',
@@ -419,6 +425,7 @@ const IncidentsPage = () => {
                     <SearchIcon sx={{ color: 'text.secondary' }} />
                   </InputAdornment>
                 ),
+                sx: { height: 36 },
               }}
               sx={{ width: 280 }}
             />
@@ -483,7 +490,7 @@ const IncidentsPage = () => {
               )}
 
               {!isDefaultFilter && (
-                <Button size="small" onClick={resetToDefaults} sx={{ minWidth: 'auto' }}>
+                <Button size="small" onClick={resetToDefaults} sx={{ minWidth: 'auto', height: 36 }}>
                   Reset
                 </Button>
               )}
