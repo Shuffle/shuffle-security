@@ -95,13 +95,13 @@ export const HeroSection = () => {
   return (
     <Box
       sx={{
-        minHeight: '100vh',
+        minHeight: { xs: 'auto', md: '85vh' },
         display: 'flex',
         alignItems: 'center',
         position: 'relative',
         overflow: 'hidden',
-        pt: 8,
-        pb: 12,
+        pt: { xs: 12, md: 14 },
+        pb: { xs: 8, md: 10 },
       }}
     >
       {/* Vibrant gradient background */}
