@@ -379,11 +379,6 @@ export const HeroSection = () => {
                     border: '1px solid rgba(255, 102, 0, 0.25)',
                     textDecoration: 'none',
                     cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    '&:hover': {
-                      background: 'linear-gradient(135deg, rgba(255, 102, 0, 0.25) 0%, rgba(255, 102, 0, 0.1) 100%)',
-                      transform: 'translateY(-2px)',
-                    },
                   }}
                 >
                   <Typography sx={{ color: 'primary.main', fontSize: '0.9rem', fontWeight: 600 }}>
