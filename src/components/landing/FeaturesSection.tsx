@@ -395,14 +395,14 @@ const IntegrationsVisual = () => (
 const features: Omit<FeatureSectionProps, 'reverse'>[] = [
   {
     icon: null,
-    title: 'AI Agents That Are',
-    highlight: 'Controllable',
-    description: 'Your AI co-pilot handles the grunt work—but always asks permission before acting. You decide when automation runs free and when it pauses for your approval.',
+    title: 'Automatic Security',
+    highlight: 'You Control',
+    description: 'The platform handles the grunt work automatically—but always asks permission before acting. You decide when automation runs free and when it pauses for your approval.',
     bullets: [
       'Automatic triage and threat enrichment in seconds',
       'Suggested response actions you approve with one click',
       'Works with any LLM—cloud APIs or your own models',
-      'Full transparency into why the AI made each decision',
+      'Full transparency into every automated decision',
     ],
     color: '#FF6600',
     visual: <AIAgentVisual />,
