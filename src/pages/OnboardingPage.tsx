@@ -268,7 +268,9 @@ const OnboardingPage = () => {
         }
       };
 
-      if (response.ok && result.action === 'done' && result.success === true) {
+      // Accept both 'done' and 'app_validation' as valid action types
+      const validActions = ['done', 'app_validation'];
+      if (response.ok && validActions.includes(result.action) && result.success === true) {
         try {
           // Parse the result field (or raw_response as fallback)
           const resultData = parseResultData(result);
@@ -310,7 +312,7 @@ const OnboardingPage = () => {
         }
       } else {
         // Build error message from response
-        if (result.action !== 'done') {
+        if (!validActions.includes(result.action)) {
           errorMessage = `Unexpected action: ${result.action || 'unknown'}`;
         } else if (result.success !== true) {
           // Try to parse the result field (or raw_response) for detailed error info
