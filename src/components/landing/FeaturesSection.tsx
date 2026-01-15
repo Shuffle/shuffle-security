@@ -394,10 +394,9 @@ const IntegrationsVisual = () => (
 
 const DetectionLoopVisual = () => {
   const stages = [
-    { label: 'Alert', icon: '⚡', color: '#ef4444', desc: 'New threat detected' },
-    { label: 'Triage', icon: '🔍', color: '#f59e0b', desc: 'Analyst reviews' },
-    { label: 'Action', icon: '🛡️', color: '#22c55e', desc: 'Response executed' },
-    { label: 'Tune', icon: '🎯', color: '#0ea5e9', desc: 'Rules refined' },
+    { label: 'Detect', icon: '⚡', color: '#ef4444', desc: 'New threat detected' },
+    { label: 'Analyze', icon: '🔍', color: '#f59e0b', desc: 'Analyst reviews' },
+    { label: 'Respond', icon: '🛡️', color: '#22c55e', desc: 'Action executed' },
   ];
 
   return (
@@ -497,18 +496,22 @@ const DetectionLoopVisual = () => {
               display: 'flex',
               alignItems: 'center',
               gap: 1.5,
+              pl: 1,
             }}
           >
             <Box
               component={motion.div}
-              animate={{ rotate: [0, 360] }}
-              transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-              sx={{ fontSize: '1rem' }}
+              animate={{ y: [0, -4, 0] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+              sx={{ 
+                fontSize: '1.2rem',
+                color: '#0ea5e9',
+              }}
             >
-              ↻
+              ↺
             </Box>
-            <Typography sx={{ color: 'text.secondary', fontSize: '0.85rem', fontStyle: 'italic' }}>
-              Each cycle sharpens detection, reducing noise
+            <Typography sx={{ color: 'text.secondary', fontSize: '0.85rem' }}>
+              Loop back to <Box component="span" sx={{ color: '#ef4444', fontWeight: 600 }}>Detect</Box> — each cycle refines the rules
             </Typography>
           </Box>
         </motion.div>
