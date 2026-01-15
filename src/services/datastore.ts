@@ -97,7 +97,7 @@ export const setDatastoreItem = async (
 };
 
 /**
- * Set multiple items in the datastore (bulk create)
+ * Set multiple items in the datastore (bulk create) using v2 API
  */
 export const setDatastoreItems = async (
   items: { key: string; value: string | object }[],
@@ -108,12 +108,24 @@ export const setDatastoreItems = async (
     return { success: false, error: 'No organization ID found' };
   }
 
-  // Set items one by one since set_cache doesn't support bulk in v1
-  for (const item of items) {
-    const result = await setDatastoreItem(item.key, item.value, category);
-    if (!result.success) {
-      return result;
-    }
+  // Use v2 API for bulk operations - send as array
+  const payload = items.map(item => ({
+    key: item.key,
+    value: typeof item.value === 'string' ? item.value : JSON.stringify(item.value),
+    category,
+  }));
+
+  const response = await fetch(getApiUrl('/api/v2/datastore'), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeader(API_CONFIG.apiKey),
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    return { success: false, error: `Failed to set datastore items: ${response.statusText}` };
   }
 
   return { success: true };
