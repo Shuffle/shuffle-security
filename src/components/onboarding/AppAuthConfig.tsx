@@ -326,9 +326,9 @@ const AppAuthCard = ({
 
   const showAddNewForm = selectedAuthId === ADD_NEW_AUTH;
 
-  // Compute configured/tested status from selected auth entry
-  const isConfigured = selectedAuth?.active === true || apiAuthEntries.some(a => a.active === true);
-  const isTested = selectedAuth?.validation?.valid === true || apiAuthEntries.some(a => a.validation?.valid === true);
+  // Compute configured/tested status for the SELECTED auth entry only (not any auth)
+  const isConfigured = selectedAuth?.active === true;
+  const isTested = selectedAuth?.validation?.valid === true;
   
   // Get last validation timestamp (prefer selected auth, fallback to any validated entry)
   const getLastValidTimestamp = (): number | undefined => {
