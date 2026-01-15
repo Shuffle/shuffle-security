@@ -71,7 +71,7 @@ export const Footer = () => {
               </Box>
             </Box>
             <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3, maxWidth: 280 }}>
-              Empowering security teams with intelligent case management and collaboration tools.
+              Automatic, Predictable, and Controllable security.
             </Typography>
             <Stack direction="row" spacing={1}>
               <IconButton 
