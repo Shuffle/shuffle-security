@@ -1,4 +1,4 @@
-# Shuffle Cases
+# Shuffle Security
 
 A security operations platform for managing alerts, cases, and incident response workflows. Built to integrate with [Shuffle Automation](https://shuffler.io).
 
