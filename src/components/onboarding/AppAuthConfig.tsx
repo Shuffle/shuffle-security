@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Typography,
@@ -1374,22 +1374,30 @@ export const AppAuthConfig = ({
     );
   };
 
-  // Helper to check if app is validated
+  // Helper to check if app is validated (using current authenticatedApps)
   const isAppValidated = (app: AlgoliaSearchApp): boolean => {
     const entries = getApiAuthEntries(app);
     return entries.some(e => e.validation?.valid === true);
   };
 
-  // Sort apps: non-validated first, validated at bottom
-  const sortedApps = [...apps].sort((a, b) => {
-    const aValidated = isAppValidated(a);
-    const bValidated = isAppValidated(b);
-    if (aValidated && !bValidated) return 1;
-    if (!aValidated && bValidated) return -1;
-    return 0;
-  });
+  // Keep initial sort order stable - only sort once on first render
+  const initialSortRef = useRef<AlgoliaSearchApp[] | null>(null);
+  
+  if (initialSortRef.current === null && apps.length > 0) {
+    // Capture initial sort based on validation status at mount time
+    initialSortRef.current = [...apps].sort((a, b) => {
+      const aValidated = isAppValidated(a);
+      const bValidated = isAppValidated(b);
+      if (aValidated && !bValidated) return 1;
+      if (!aValidated && bValidated) return -1;
+      return 0;
+    });
+  }
 
-  // Find first non-validated app for auto-expand
+  // Use the stable initial sort, or fall back to apps if not yet initialized
+  const sortedApps = initialSortRef.current || apps;
+
+  // Find first non-validated app for auto-expand (based on initial sort)
   const firstInvalidApp = sortedApps.find(app => !isAppValidated(app));
   const defaultExpanded = firstInvalidApp?.objectID || sortedApps[0]?.objectID || false;
 
