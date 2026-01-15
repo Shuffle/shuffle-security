@@ -78,7 +78,7 @@ export const LandingNavbar = () => {
                     color: '#FFFFFF',
                   }}
                 >
-                  Cases
+                  Security
                 </Typography>
               </Box>
             </Box>
