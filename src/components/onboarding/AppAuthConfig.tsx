@@ -46,6 +46,7 @@ export interface AppAuthState {
   warningMessage?: string;
   workflowId?: string;
   executionId?: string;
+  errorCode?: number; // HTTP status code for credential errors (401, 403, etc.)
 }
 
 // Helper to check if auth type is OAuth2 (includes oauth2-app variant)
@@ -242,6 +243,16 @@ const AppAuthCard = ({
       setLocalTestStatus('error');
     }
   }, [authState.status, selectedAuth?.validation?.valid, wasPreValidated]);
+  
+  // Auto-switch to "Add new authentication" on credential errors (401/403)
+  // These errors indicate the credentials are invalid and need to be re-entered
+  const isCredentialError = authState.errorCode === 401 || authState.errorCode === 403;
+  useEffect(() => {
+    if (isCredentialError && selectedAuthId !== ADD_NEW_AUTH) {
+      setSelectedAuthId(ADD_NEW_AUTH);
+      setUserHasSelected(true); // Prevent auto-override
+    }
+  }, [isCredentialError, selectedAuthId]);
 
   const showAddNewForm = selectedAuthId === ADD_NEW_AUTH;
 
@@ -1273,6 +1284,26 @@ const AppAuthCard = ({
                 borderRadius: 2,
                 border: '1px solid rgba(255, 255, 255, 0.08)',
               }}>
+                {/* Show credential error notice if switched due to 401/403 */}
+                {isCredentialError && (
+                  <Alert
+                    severity="warning"
+                    sx={{
+                      backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                      color: '#f59e0b',
+                      border: '1px solid rgba(245, 158, 11, 0.2)',
+                      borderRadius: 2,
+                      mb: 2,
+                      '& .MuiAlert-icon': { color: '#f59e0b' },
+                    }}
+                  >
+                    <Typography sx={{ fontSize: '0.875rem' }}>
+                      {authState.errorCode === 401 
+                        ? 'Previous credentials were invalid or expired. Please enter new credentials.'
+                        : 'Access was denied with the previous credentials. Please re-authenticate with valid permissions.'}
+                    </Typography>
+                  </Alert>
+                )}
                 <Typography variant="subtitle2" sx={{ color: '#FF6600', fontWeight: 600, mb: 2 }}>
                   {apiAuthEntries.length === 0 ? 'Configure Authentication' : 'Add New Authentication'}
                 </Typography>

@@ -285,6 +285,7 @@ const OnboardingPage = () => {
       let successMessage = '';
       let warningMessage = '';
       let parsedStatus = '';
+      let errorCode: number | undefined; // Track 401/403 for credential errors
       let workflowId = result.workflow_id || '';
       let executionId = result.execution_id || '';
       
@@ -356,6 +357,13 @@ const OnboardingPage = () => {
                                   statusLower === 'failed' ||
                                   statusLower === 'unauthorized' ||
                                   statusLower === 'forbidden';
+            
+            // Track credential errors (401/403) for special handling
+            const isCredentialError = statusNum === 401 || statusNum === 403 ||
+                                      statusLower === 'unauthorized' || statusLower === 'forbidden';
+            if (isCredentialError) {
+              errorCode = statusNum || (statusLower === 'unauthorized' ? 401 : 403);
+            }
             
             const isGoodStatus = !isErrorStatus && (
                                  statusLower === 'ok' || 
@@ -461,6 +469,7 @@ const OnboardingPage = () => {
           warningMessage: (isValid || isNowValid) ? warningMessage : undefined,
           workflowId: (isValid || isNowValid) ? undefined : workflowId,
           executionId: (isValid || isNowValid) ? undefined : executionId,
+          errorCode: (isValid || isNowValid) ? undefined : errorCode,
         },
       }));
     } catch (error) {
