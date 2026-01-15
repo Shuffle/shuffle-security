@@ -13,4 +13,5 @@ Allow: /
 User-agent: *
 Allow: /
 
+# Shutdown Security - Open Source Alert & Case Management
 Sitemap: https://shuffle-cases.lovable.app/sitemap.xml
