@@ -121,7 +121,6 @@ export const muiTheme = createTheme({
         root: {
           backgroundColor: 'rgba(26, 26, 26, 0.9)',
           backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
         },
       },
     },
