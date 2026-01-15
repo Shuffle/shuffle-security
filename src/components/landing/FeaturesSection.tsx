@@ -509,16 +509,6 @@ const DetectionLoopVisual = () => {
                     {stage.desc}
                   </Typography>
                 </Box>
-
-                {/* Flow arrow */}
-                <motion.div
-                  animate={{ opacity: [0.4, 1, 0.4] }}
-                  transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.25 }}
-                >
-                  <Typography sx={{ color: stage.color, fontSize: '1rem', mr: 1 }}>
-                    {i < stages.length - 1 ? '↓' : '↩'}
-                  </Typography>
-                </motion.div>
               </Box>
             </motion.div>
           ))}
