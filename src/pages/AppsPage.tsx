@@ -27,7 +27,15 @@ export default function AppsPage() {
   // Initialize from URL query param
   useEffect(() => {
     const categoryParam = searchParams.get('category');
-    if (categoryParam) {
+    const searchParam = searchParams.get('search');
+    
+    if (searchParam) {
+      // Direct search query (e.g., from floating icons)
+      setSearchQuery(searchParam);
+      if (singulRef.current) {
+        singulRef.current.search(searchParam);
+      }
+    } else if (categoryParam) {
       const category = categories.find(c => c.id === categoryParam);
       if (category) {
         setSearchQuery(category.searchTerm);
