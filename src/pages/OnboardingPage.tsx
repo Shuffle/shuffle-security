@@ -373,24 +373,23 @@ const OnboardingPage = () => {
         },
       }));
 
-      // Refresh authenticated apps list to update validation status
-      if (isValid) {
-        try {
-          const authResponse = await fetch(`${API_CONFIG.baseUrl}/api/v1/apps/authentication`, {
-            headers: {
-              'Authorization': `Bearer ${API_CONFIG.apiKey}`,
-            },
-          });
-          if (authResponse.ok) {
-            const authResult = await authResponse.json();
-            const authData = authResult.data || authResult;
-            if (Array.isArray(authData)) {
-              setAuthenticatedApps(processAuthData(authData));
-            }
+      // Always refresh authenticated apps list - validation happens in background
+      // so the API response is the source of truth, not the test result
+      try {
+        const authResponse = await fetch(`${API_CONFIG.baseUrl}/api/v1/apps/authentication`, {
+          headers: {
+            'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+          },
+        });
+        if (authResponse.ok) {
+          const authResult = await authResponse.json();
+          const authData = authResult.data || authResult;
+          if (Array.isArray(authData)) {
+            setAuthenticatedApps(processAuthData(authData));
           }
-        } catch (refreshError) {
-          console.error('Failed to refresh auth status:', refreshError);
         }
+      } catch (refreshError) {
+        console.error('Failed to refresh auth status:', refreshError);
       }
     } catch (error) {
       console.error('Test connection failed:', error);
@@ -402,6 +401,24 @@ const OnboardingPage = () => {
           errorMessage: error instanceof Error ? error.message : 'Connection test failed. Please try again.',
         },
       }));
+      
+      // Still refresh auth list even on error - background validation may have succeeded
+      try {
+        const authResponse = await fetch(`${API_CONFIG.baseUrl}/api/v1/apps/authentication`, {
+          headers: {
+            'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+          },
+        });
+        if (authResponse.ok) {
+          const authResult = await authResponse.json();
+          const authData = authResult.data || authResult;
+          if (Array.isArray(authData)) {
+            setAuthenticatedApps(processAuthData(authData));
+          }
+        }
+      } catch (refreshError) {
+        console.error('Failed to refresh auth status:', refreshError);
+      }
     }
   };
 
