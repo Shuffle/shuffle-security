@@ -47,17 +47,28 @@ export const Footer = () => {
           <Grid size={{ xs: 12, md: 4 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
               <ShutdownLogo />
-              <Typography
-                variant="h6"
-                sx={{
-                  fontWeight: 700,
-                  background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}
-              >
-                Shutdown Security
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5 }}>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: 700,
+                    background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                  }}
+                >
+                  Shutdown
+                </Typography>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: 700,
+                    color: '#FFFFFF',
+                  }}
+                >
+                  Security
+                </Typography>
+              </Box>
             </Box>
             <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3, maxWidth: 280 }}>
               Empowering security teams with intelligent case management and collaboration tools.

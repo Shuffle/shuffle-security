@@ -47,7 +47,7 @@ export const CTASection = () => {
                 position: 'relative',
               }}
             >
-              Ready to Transform Your Security Operations?
+              Ready for Automatic Security You Can Trust?
             </Typography>
             <Typography
               variant="h6"
@@ -55,12 +55,12 @@ export const CTASection = () => {
                 color: 'text.secondary',
                 mb: 4,
                 fontWeight: 400,
-                maxWidth: 500,
+                maxWidth: 550,
                 mx: 'auto',
                 position: 'relative',
               }}
             >
-              Join leading security teams who trust Shutdown Security for their incident response needs.
+              Automated incident response that reaches everywhere—cloud, on-prem, or hybrid—with complete control over every action.
             </Typography>
             <Stack
               direction={{ xs: 'column', sm: 'row' }}

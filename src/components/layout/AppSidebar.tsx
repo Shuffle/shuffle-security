@@ -232,9 +232,20 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
               />
             </svg>
             {!collapsed && (
-              <Typography sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, fontSize: '1rem' }}>
-                Shutdown
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5 }}>
+                <Typography sx={{ 
+                  background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  fontWeight: 600, 
+                  fontSize: '1rem' 
+                }}>
+                  Shutdown
+                </Typography>
+                <Typography sx={{ color: '#FFFFFF', fontWeight: 600, fontSize: '1rem' }}>
+                  Security
+                </Typography>
+              </Box>
             )}
           </Box>
         </Tooltip>

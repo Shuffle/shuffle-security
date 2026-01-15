@@ -2,10 +2,10 @@ import { Box, Container, Typography, Grid } from '@mui/material';
 import { motion } from 'framer-motion';
 
 const stats = [
-  { value: '99.9%', label: 'Uptime SLA' },
-  { value: '50K+', label: 'Alerts Processed Daily' },
-  { value: '85%', label: 'Faster Response Time' },
-  { value: '200+', label: 'Enterprise Customers' },
+  { value: '< 30s', label: 'Average Response Time' },
+  { value: '100%', label: 'Action Auditability' },
+  { value: 'Any', label: 'Environment Supported' },
+  { value: '24/7', label: 'Automated Coverage' },
 ];
 
 export const StatsSection = () => {

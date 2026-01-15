@@ -90,9 +90,19 @@ export const HeroSection = () => {
                   WebkitTextFillColor: 'transparent',
                 }}
               >
-                Configurable
+                Automatic
               </Box>{' '}
-              Alert & Case Management
+              Security,{' '}
+              <Box
+                component="span"
+                sx={{
+                  background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}
+              >
+                Full Control
+              </Box>
             </Typography>
           </motion.div>
 
@@ -105,14 +115,15 @@ export const HeroSection = () => {
               variant="h5"
               sx={{
                 color: 'text.secondary',
-                maxWidth: 650,
+                maxWidth: 700,
                 mx: 'auto',
                 mb: 5,
                 fontWeight: 400,
                 lineHeight: 1.6,
               }}
             >
-              Open-source automation for security, IT, and support operations.
+              Automated incident response that reaches into any environment—cloud, on-prem, or hybrid. 
+              You stay in control of every action.
             </Typography>
           </motion.div>
 
@@ -170,9 +181,9 @@ export const HeroSection = () => {
               justifyContent="center"
             >
               {[
-                { icon: <NotificationsActiveIcon sx={{ fontSize: 32 }} />, label: 'Any ITSM', count: 'Import from anywhere' },
-                { icon: <FolderSpecialIcon sx={{ fontSize: 32 }} />, label: 'Full Control', count: 'Configure everything' },
-                { icon: <BubbleChartIcon sx={{ fontSize: 32 }} />, label: 'AI Agents', count: 'Verbose & controllable' },
+                { icon: <NotificationsActiveIcon sx={{ fontSize: 32 }} />, label: 'Automatic Response', count: 'AI-driven, human-approved' },
+                { icon: <FolderSpecialIcon sx={{ fontSize: 32 }} />, label: 'Universal Reach', count: 'Cloud, on-prem, hybrid' },
+                { icon: <BubbleChartIcon sx={{ fontSize: 32 }} />, label: 'Full Control', count: 'Every action is auditable' },
               ].map((item, index) => (
                 <motion.div
                   key={item.label}

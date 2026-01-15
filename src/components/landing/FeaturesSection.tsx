@@ -1,48 +1,48 @@
 import { Box, Container, Typography, Grid, Card, CardContent } from '@mui/material';
 import { motion } from 'framer-motion';
-import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
-import FolderSpecialIcon from '@mui/icons-material/FolderSpecial';
-import AssignmentIcon from '@mui/icons-material/Assignment';
-import BubbleChartIcon from '@mui/icons-material/BubbleChart';
-import PeopleIcon from '@mui/icons-material/People';
-import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
+import CloudSyncIcon from '@mui/icons-material/CloudSync';
+import TuneIcon from '@mui/icons-material/Tune';
+import SecurityIcon from '@mui/icons-material/Security';
+import SpeedIcon from '@mui/icons-material/Speed';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 
 const features = [
   {
-    icon: <AutoFixHighIcon sx={{ fontSize: 40 }} />,
-    title: 'AI Agents',
-    description: 'Verbose, controllable AI agents assist with triage, escalations, and response—running on cloud APIs or your own local models.',
+    icon: <SmartToyIcon sx={{ fontSize: 40 }} />,
+    title: 'Automatic, But Controllable',
+    description: 'AI agents handle triage, enrichment, and response automatically—but every action requires your approval. You control when automation runs free and when it pauses for human review.',
     color: '#FF6600',
   },
   {
-    icon: <NotificationsActiveIcon sx={{ fontSize: 40 }} />,
-    title: 'Universal ITSM Import',
-    description: "Import alerts and cases from any ITSM system you're currently using. ServiceNow, Jira, PagerDuty, or custom—we connect to all of them.",
-    color: '#ef4444',
-  },
-  {
-    icon: <BubbleChartIcon sx={{ fontSize: 40 }} />,
-    title: 'Cloud & On-Premises',
-    description: 'Built on Shuffle Automation to reach into both cloud and on-premises environments. No data leaves your control unless you want it to.',
+    icon: <CloudSyncIcon sx={{ fontSize: 40 }} />,
+    title: 'Universal Reach',
+    description: 'Connect to any environment: cloud APIs, on-premises systems, air-gapped networks, or hybrid infrastructure. One platform that reaches everywhere your security needs to go.',
     color: '#22c55e',
   },
   {
-    icon: <AssignmentIcon sx={{ fontSize: 40 }} />,
-    title: 'Full Configurability',
-    description: 'Control is a core priority. Customize every workflow, template, and automation rule to match how your team actually works.',
+    icon: <SpeedIcon sx={{ fontSize: 40 }} />,
+    title: 'Instant Response',
+    description: 'Automated playbooks execute in seconds, not hours. Isolate hosts, block IPs, disable accounts, and collect forensics—all triggered automatically when threats are detected.',
+    color: '#ef4444',
+  },
+  {
+    icon: <TuneIcon sx={{ fontSize: 40 }} />,
+    title: 'Deep Configurability',
+    description: 'Every workflow, threshold, and automation rule is fully customizable. Match the platform to how your team works, not the other way around.',
     color: '#f59e0b',
   },
   {
-    icon: <FolderSpecialIcon sx={{ fontSize: 40 }} />,
-    title: 'Case Investigation',
-    description: 'Create comprehensive cases from alerts, track investigation progress, and maintain detailed audit trails.',
-    color: '#FF6600',
+    icon: <VisibilityIcon sx={{ fontSize: 40 }} />,
+    title: 'Complete Visibility',
+    description: 'Every automated action is logged with full context. Review what happened, why it triggered, and what the AI recommended—audit trails you can trust.',
+    color: '#8b5cf6',
   },
   {
-    icon: <PeopleIcon sx={{ fontSize: 40 }} />,
-    title: 'Multi-Tenancy',
-    description: 'Securely manage multiple organizations with isolated data, custom branding, and role-based access.',
-    color: '#8b5cf6',
+    icon: <SecurityIcon sx={{ fontSize: 40 }} />,
+    title: 'Zero Trust by Design',
+    description: 'Your data stays yours. Run entirely on-premises, in your cloud, or hybrid. No external dependencies required—the platform works wherever you deploy it.',
+    color: '#06b6d4',
   },
 ];
 
@@ -89,7 +89,6 @@ export const FeaturesSection = () => {
               fontSize: { xs: '2rem', md: '3rem' },
             }}
           >
-            Everything You Need for{' '}
             <Box
               component="span"
               sx={{
@@ -98,7 +97,18 @@ export const FeaturesSection = () => {
                 WebkitTextFillColor: 'transparent',
               }}
             >
-              Effective Response
+              Automatic
+            </Box>{' '}
+            Security That You{' '}
+            <Box
+              component="span"
+              sx={{
+                background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
+            >
+              Control
             </Box>
           </Typography>
           <Typography
@@ -106,13 +116,13 @@ export const FeaturesSection = () => {
             sx={{
               textAlign: 'center',
               color: 'text.secondary',
-              maxWidth: 600,
+              maxWidth: 700,
               mx: 'auto',
               mb: 8,
               fontWeight: 400,
             }}
           >
-            A comprehensive platform designed by security professionals, for security professionals.
+            Automated incident response that works across every environment—with you in the driver's seat.
           </Typography>
         </motion.div>
 
