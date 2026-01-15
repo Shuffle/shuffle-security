@@ -46,6 +46,8 @@ const FloatingIcon = ({ name, abbr, color, x, y, delay, size }: typeof floatingI
       }}
     >
       <Box
+        component={Link}
+        to={`/apps?search=${encodeURIComponent(name)}`}
         sx={{
           width: size,
           height: size,
@@ -59,6 +61,8 @@ const FloatingIcon = ({ name, abbr, color, x, y, delay, size }: typeof floatingI
           boxShadow: `0 8px 32px ${color}20`,
           overflow: 'hidden',
           transition: 'all 0.3s ease',
+          textDecoration: 'none',
+          cursor: 'pointer',
           '&:hover': {
             transform: 'scale(1.15)',
             borderColor: color,
