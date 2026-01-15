@@ -197,6 +197,8 @@ const TemplatesPage = () => {
                 onClick={handleResetToDefaults}
                 disabled={isSaving}
                 sx={{ 
+                  width: 36,
+                  height: 36,
                   color: 'text.secondary',
                   border: '1px solid rgba(255,255,255,0.1)',
                   borderRadius: 1,
@@ -210,7 +212,7 @@ const TemplatesPage = () => {
             variant="contained" 
             startIcon={<AddIcon />}
             onClick={handleOpenCreate}
-            sx={{ bgcolor: '#ff6600', '&:hover': { bgcolor: '#e55c00' } }}
+            sx={{ height: 36, bgcolor: '#ff6600', '&:hover': { bgcolor: '#e55c00' } }}
           >
             New Template
           </Button>
@@ -237,7 +239,7 @@ const TemplatesPage = () => {
             variant="outlined" 
             startIcon={<RefreshIcon />}
             onClick={handleResetToDefaults}
-            sx={{ mr: 2 }}
+            sx={{ mr: 2, height: 36 }}
           >
             Load Defaults
           </Button>
@@ -245,6 +247,7 @@ const TemplatesPage = () => {
             variant="contained" 
             startIcon={<AddIcon />}
             onClick={handleOpenCreate}
+            sx={{ height: 36 }}
           >
             Create Template
           </Button>

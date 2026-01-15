@@ -487,6 +487,7 @@ const UsersPage = () => {
               startIcon={<CalendarIcon />}
               onClick={() => setTimelineDialogOpen(true)}
               sx={{
+                height: 36,
                 borderColor: 'hsl(var(--border))',
                 color: 'hsl(var(--foreground))',
                 '&:hover': {
