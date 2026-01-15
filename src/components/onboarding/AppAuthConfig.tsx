@@ -186,6 +186,10 @@ const AppAuthCard = ({
   // Track local test status for the current selection (reset when switching)
   // 'pending_validation' = test passed but backend validation not yet confirmed
   const [localTestStatus, setLocalTestStatus] = useState<'untested' | 'testing' | 'success' | 'pending_validation' | 'error'>('untested');
+  
+  // Track if the selected auth was already validated BEFORE we started testing
+  // This is used to determine if we should trust the 200 response as source of truth
+  const [wasPreValidated, setWasPreValidated] = useState(false);
 
   // Update selection when apiAuthEntries changes, but only on initial load (not after user selection)
   useEffect(() => {
@@ -194,10 +198,15 @@ const AppAuthCard = ({
     }
   }, [apiAuthEntries, userHasSelected]);
   
-  // Reset local test status when auth selection changes
+  // Reset local test status and track pre-validation state when auth selection changes
   useEffect(() => {
     setLocalTestStatus('untested');
-  }, [selectedAuthId]);
+    // Track if this auth was already validated before we test it
+    const currentAuth = apiAuthEntries.find(
+      auth => (auth.id || auth.label || '') === selectedAuthId
+    );
+    setWasPreValidated(currentAuth?.validation?.valid === true);
+  }, [selectedAuthId, apiAuthEntries]);
   
   // Get the currently selected auth entry (needed for validation check)
   const selectedAuth = apiAuthEntries.find(
@@ -209,13 +218,19 @@ const AppAuthCard = ({
     if (authState.status === 'testing') {
       setLocalTestStatus('testing');
     } else if (authState.status === 'connected') {
-      // Check if backend has actually validated this auth
-      const isBackendValidated = selectedAuth?.validation?.valid === true;
-      setLocalTestStatus(isBackendValidated ? 'success' : 'pending_validation');
+      // If auth was already validated before testing, trust the 200 response
+      // (Re-tests don't always update the backend validation status)
+      if (wasPreValidated) {
+        setLocalTestStatus('success');
+      } else {
+        // For newly tested auths, check if backend has validated
+        const isBackendValidated = selectedAuth?.validation?.valid === true;
+        setLocalTestStatus(isBackendValidated ? 'success' : 'pending_validation');
+      }
     } else if (authState.status === 'error') {
       setLocalTestStatus('error');
     }
-  }, [authState.status, selectedAuth?.validation?.valid]);
+  }, [authState.status, selectedAuth?.validation?.valid, wasPreValidated]);
 
   const showAddNewForm = selectedAuthId === ADD_NEW_AUTH;
 
