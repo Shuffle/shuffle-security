@@ -543,14 +543,57 @@ const AuthPage = ({ mode }: AuthPageProps) => {
                       <Button
                         fullWidth
                         size="small"
+                        disabled={loading}
                         onClick={async () => {
-                          if (apiKey.trim()) {
+                          if (!apiKey.trim()) return;
+                          
+                          setLoading(true);
+                          setError('');
+                          
+                          try {
+                            // Store API key temporarily to test it
                             API_CONFIG.setApiKey(apiKey.trim());
+                            
+                            // Verify the API key works by calling getinfo
+                            let response: Response;
+                            try {
+                              response = await fetch(getApiUrl('/api/v1/getinfo'), {
+                                method: 'GET',
+                                credentials: 'include',
+                                headers: {
+                                  'Authorization': `Bearer ${apiKey.trim()}`,
+                                  'Content-Type': 'application/json',
+                                },
+                              });
+                            } catch (fetchError) {
+                              // Network error, CORS error, or connection refused
+                              API_CONFIG.setApiKey(null); // Remove invalid key
+                              throw new Error('Network error: Unable to connect to server. Please check your connection.');
+                            }
+                            
+                            let data: any;
+                            try {
+                              data = await response.json();
+                            } catch (parseError) {
+                              API_CONFIG.setApiKey(null);
+                              throw new Error(`Server returned invalid response (status: ${response.status})`);
+                            }
+                            
+                            if (!response.ok || data.success !== true) {
+                              API_CONFIG.setApiKey(null);
+                              throw new Error(data.reason || 'Invalid API key');
+                            }
+                            
+                            // API key is valid
                             setSuccess(true);
                             await refreshUserInfo();
                             setTimeout(() => {
                               window.location.reload();
                             }, 500);
+                          } catch (err) {
+                            setError(err instanceof Error ? err.message : 'Failed to authenticate with API key');
+                          } finally {
+                            setLoading(false);
                           }
                         }}
                         sx={{
@@ -560,7 +603,7 @@ const AuthPage = ({ mode }: AuthPageProps) => {
                           '&:hover': { bgcolor: 'rgba(255,102,0,0.3)' },
                         }}
                       >
-                        Save API Key & Login
+                        {loading ? <CircularProgress size={18} color="inherit" /> : 'Save API Key & Login'}
                       </Button>
                     </Box>
                   )}
