@@ -263,11 +263,13 @@ const OnboardingPage = () => {
       }
 
       // Call API to test the connection
+      // Note: Accept-Encoding: identity helps avoid HTTP/2 compression errors with some proxies
       const response = await fetch(getApiUrl('/api/v1/apps/categories/run'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${API_CONFIG.apiKey}`,
           'Content-Type': 'application/json',
+          'Accept-Encoding': 'identity',
         },
         body: JSON.stringify(requestBody),
       });
