@@ -342,6 +342,34 @@ const AppAuthCard = ({
       setSelectedScopes(auth.scope);
     }
   }, [auth?.scope]);
+  
+  // Auto-populate URL fields with example values when auth config loads
+  useEffect(() => {
+    if (!auth?.parameters || auth.parameters.length === 0) return;
+    
+    const urlDefaults: Record<string, string> = {};
+    auth.parameters.forEach((param, index) => {
+      const fieldKey = param.id || param.name || `param_${index}`;
+      const nameOrId = (param.name || param.id || '').toLowerCase();
+      
+      // Check if this is a URL field and has an example that looks like a URL
+      const isUrlField = nameOrId.includes('url') || nameOrId.includes('endpoint') || nameOrId.includes('host');
+      const hasUrlExample = param.example && (
+        param.example.startsWith('http://') || 
+        param.example.startsWith('https://')
+      );
+      
+      // Only pre-fill if field is empty and has a URL example
+      if (isUrlField && hasUrlExample && !localCredentials[fieldKey]) {
+        urlDefaults[fieldKey] = param.example;
+      }
+    });
+    
+    // Update credentials with URL defaults if any
+    if (Object.keys(urlDefaults).length > 0) {
+      setLocalCredentials(prev => ({ ...urlDefaults, ...prev }));
+    }
+  }, [auth?.parameters]);
 
   const [docsOpen, setDocsOpen] = useState(false);
   const [docsContent, setDocsContent] = useState<string>('');
