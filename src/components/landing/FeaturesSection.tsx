@@ -397,6 +397,7 @@ const DetectionLoopVisual = () => {
     { label: 'Detect', icon: '⚡', color: '#ef4444', desc: 'New threat detected' },
     { label: 'Analyze', icon: '🔍', color: '#f59e0b', desc: 'Analyst reviews' },
     { label: 'Respond', icon: '🛡️', color: '#22c55e', desc: 'Action executed' },
+    { label: 'Tune', icon: '🎯', color: '#0ea5e9', desc: 'Rules refined' },
   ];
 
   return (
@@ -410,112 +411,119 @@ const DetectionLoopVisual = () => {
         overflow: 'hidden',
       }}
     >
-      {/* Flowing loop visualization */}
-      <Stack spacing={0}>
-        {stages.map((stage, i) => (
-          <motion.div
-            key={stage.label}
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: i * 0.12 }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              {/* Vertical connector */}
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 48 }}>
-                <Box
-                  component={motion.div}
-                  animate={{ scale: [1, 1.15, 1] }}
-                  transition={{ duration: 2, repeat: Infinity, delay: i * 0.5 }}
-                  sx={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 2,
-                    background: `linear-gradient(135deg, ${stage.color}20 0%, ${stage.color}10 100%)`,
-                    border: `1px solid ${stage.color}40`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '1.4rem',
-                  }}
-                >
-                  {stage.icon}
-                </Box>
-                {i < stages.length - 1 && (
-                  <Box
-                    component={motion.div}
-                    initial={{ height: 0 }}
-                    whileInView={{ height: 32 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.12 + 0.2, duration: 0.3 }}
-                    sx={{
-                      width: 2,
-                      background: `linear-gradient(to bottom, ${stage.color}60, ${stages[i + 1].color}60)`,
-                    }}
-                  />
-                )}
-              </Box>
-              
-              {/* Content */}
-              <Box sx={{ flex: 1, py: 1.5 }}>
-                <Typography sx={{ fontWeight: 600, fontSize: '0.95rem', color: stage.color }}>
-                  {stage.label}
-                </Typography>
-                <Typography sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>
-                  {stage.desc}
-                </Typography>
-              </Box>
-              
-              {/* Arrow for flow */}
-              {i < stages.length - 1 && (
-                <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
-                  <motion.div
-                    animate={{ opacity: [0.3, 1, 0.3] }}
-                    transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.3 }}
-                  >
-                    <Typography sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>↓</Typography>
-                  </motion.div>
-                </Box>
-              )}
-            </Box>
-          </motion.div>
-        ))}
-        
-        {/* Loop back indicator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.6 }}
+      {/* Loop container with curved return path */}
+      <Box sx={{ display: 'flex', position: 'relative' }}>
+        {/* Left side: curved return arrow */}
+        <Box
+          sx={{
+            position: 'absolute',
+            left: 20,
+            top: 24,
+            bottom: 24,
+            width: 24,
+            display: 'flex',
+            alignItems: 'center',
+          }}
         >
           <Box
+            component={motion.div}
+            initial={{ pathLength: 0 }}
+            whileInView={{ pathLength: 1 }}
+            viewport={{ once: true }}
             sx={{
-              mt: 2,
-              pt: 2,
-              borderTop: '1px dashed rgba(14, 165, 233, 0.3)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1.5,
-              pl: 1,
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: 20,
+              borderLeft: '2px dashed rgba(14, 165, 233, 0.4)',
+              borderTop: '2px dashed rgba(14, 165, 233, 0.4)',
+              borderBottom: '2px dashed rgba(14, 165, 233, 0.4)',
+              borderRadius: '12px 0 0 12px',
+            }}
+          />
+          {/* Animated arrow going up */}
+          <Box
+            component={motion.div}
+            animate={{ y: [60, -60] }}
+            transition={{ duration: 2.5, repeat: Infinity, ease: 'linear' }}
+            sx={{
+              position: 'absolute',
+              left: -6,
+              fontSize: '0.9rem',
+              color: '#0ea5e9',
             }}
           >
-            <Box
-              component={motion.div}
-              animate={{ y: [0, -4, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-              sx={{ 
-                fontSize: '1.2rem',
-                color: '#0ea5e9',
-              }}
-            >
-              ↺
-            </Box>
-            <Typography sx={{ color: 'text.secondary', fontSize: '0.85rem' }}>
-              Loop back to <Box component="span" sx={{ color: '#ef4444', fontWeight: 600 }}>Detect</Box> — each cycle refines the rules
-            </Typography>
+            ▲
           </Box>
-        </motion.div>
-      </Stack>
+        </Box>
+
+        {/* Main flow */}
+        <Stack spacing={0} sx={{ flex: 1, pl: 5 }}>
+          {stages.map((stage, i) => (
+            <motion.div
+              key={stage.label}
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.12 }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                {/* Icon with connector */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 48 }}>
+                  <Box
+                    component={motion.div}
+                    animate={{ scale: [1, 1.1, 1] }}
+                    transition={{ duration: 2, repeat: Infinity, delay: i * 0.5 }}
+                    sx={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: 2,
+                      background: `linear-gradient(135deg, ${stage.color}20 0%, ${stage.color}10 100%)`,
+                      border: `1px solid ${stage.color}40`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '1.4rem',
+                    }}
+                  >
+                    {stage.icon}
+                  </Box>
+                  {i < stages.length - 1 && (
+                    <Box
+                      sx={{
+                        width: 2,
+                        height: 24,
+                        background: `linear-gradient(to bottom, ${stage.color}60, ${stages[i + 1].color}60)`,
+                      }}
+                    />
+                  )}
+                </Box>
+                
+                {/* Content */}
+                <Box sx={{ flex: 1, py: 1 }}>
+                  <Typography sx={{ fontWeight: 600, fontSize: '0.95rem', color: stage.color }}>
+                    {stage.label}
+                  </Typography>
+                  <Typography sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>
+                    {stage.desc}
+                  </Typography>
+                </Box>
+
+                {/* Flow arrow */}
+                <motion.div
+                  animate={{ opacity: [0.4, 1, 0.4] }}
+                  transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.25 }}
+                >
+                  <Typography sx={{ color: stage.color, fontSize: '1rem', mr: 1 }}>
+                    {i < stages.length - 1 ? '↓' : '↩'}
+                  </Typography>
+                </motion.div>
+              </Box>
+            </motion.div>
+          ))}
+        </Stack>
+      </Box>
     </Box>
   );
 };
