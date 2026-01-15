@@ -179,6 +179,9 @@ const AppAuthCard = ({
 
   // Track if user explicitly selected "Add new" to prevent override
   const [userSelectedAddNew, setUserSelectedAddNew] = useState(false);
+  
+  // Track local test status for the current selection (reset when switching)
+  const [localTestStatus, setLocalTestStatus] = useState<'untested' | 'testing' | 'success' | 'error'>('untested');
 
   // Update selection when apiAuthEntries changes, but only if user didn't explicitly choose "Add new"
   useEffect(() => {
@@ -186,6 +189,22 @@ const AppAuthCard = ({
       setSelectedAuthId(getBestDefaultAuth(apiAuthEntries));
     }
   }, [apiAuthEntries, userSelectedAddNew]);
+  
+  // Reset local test status when auth selection changes
+  useEffect(() => {
+    setLocalTestStatus('untested');
+  }, [selectedAuthId]);
+  
+  // Sync local test status with authState
+  useEffect(() => {
+    if (authState.status === 'testing') {
+      setLocalTestStatus('testing');
+    } else if (authState.status === 'connected') {
+      setLocalTestStatus('success');
+    } else if (authState.status === 'error') {
+      setLocalTestStatus('error');
+    }
+  }, [authState.status]);
 
   const showAddNewForm = selectedAuthId === ADD_NEW_AUTH;
   
@@ -856,8 +875,16 @@ const AppAuthCard = ({
                         width: 8,
                         height: 8,
                         borderRadius: '50%',
-                        backgroundColor: '#22c55e',
-                        boxShadow: '0 0 8px rgba(34, 197, 94, 0.6)',
+                        backgroundColor: localTestStatus === 'success' 
+                          ? '#22c55e' 
+                          : localTestStatus === 'error'
+                          ? '#ef4444'
+                          : '#9ca3af',
+                        boxShadow: localTestStatus === 'success' 
+                          ? '0 0 8px rgba(34, 197, 94, 0.6)'
+                          : localTestStatus === 'error'
+                          ? '0 0 8px rgba(239, 68, 68, 0.6)'
+                          : '0 0 8px rgba(156, 163, 175, 0.4)',
                       }} />
                       <Typography sx={{ 
                         color: 'rgba(255, 255, 255, 0.5)', 
@@ -866,7 +893,11 @@ const AppAuthCard = ({
                         textTransform: 'uppercase',
                         letterSpacing: '0.05em',
                       }}>
-                        Active Authentication
+                        {localTestStatus === 'success' 
+                          ? 'Verified Authentication' 
+                          : localTestStatus === 'error'
+                          ? 'Test Failed'
+                          : 'Pending Verification'}
                       </Typography>
                     </Box>
 
@@ -894,11 +925,28 @@ const AppAuthCard = ({
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                          border: '1px solid rgba(34, 197, 94, 0.2)',
+                          backgroundColor: localTestStatus === 'success' 
+                            ? 'rgba(34, 197, 94, 0.1)' 
+                            : localTestStatus === 'error'
+                            ? 'rgba(239, 68, 68, 0.1)'
+                            : 'rgba(156, 163, 175, 0.1)',
+                          border: `1px solid ${
+                            localTestStatus === 'success' 
+                              ? 'rgba(34, 197, 94, 0.2)' 
+                              : localTestStatus === 'error'
+                              ? 'rgba(239, 68, 68, 0.2)'
+                              : 'rgba(156, 163, 175, 0.2)'
+                          }`,
                           flexShrink: 0,
                         }}>
-                          <CheckCircleIcon sx={{ color: '#22c55e', fontSize: 20 }} />
+                          <CheckCircleIcon sx={{ 
+                            color: localTestStatus === 'success' 
+                              ? '#22c55e' 
+                              : localTestStatus === 'error'
+                              ? '#ef4444'
+                              : '#9ca3af', 
+                            fontSize: 20 
+                          }} />
                         </Box>
                         <Box sx={{ minWidth: 0 }}>
                           <Typography sx={{ 
@@ -913,11 +961,22 @@ const AppAuthCard = ({
                             {selectedAuth.label || 'Selected authentication'}
                           </Typography>
                           <Typography sx={{ 
-                            color: 'rgba(255, 255, 255, 0.4)', 
+                            color: localTestStatus === 'success' 
+                              ? '#22c55e' 
+                              : localTestStatus === 'error'
+                              ? '#ef4444'
+                              : 'rgba(255, 255, 255, 0.4)', 
                             fontSize: '0.75rem',
                             mt: 0.25,
+                            fontWeight: localTestStatus !== 'untested' ? 500 : 400,
                           }}>
-                            Ready to test connection
+                            {localTestStatus === 'success' 
+                              ? '✓ Connection verified' 
+                              : localTestStatus === 'error'
+                              ? '✗ Test failed'
+                              : localTestStatus === 'testing'
+                              ? 'Testing...'
+                              : 'Not tested yet'}
                           </Typography>
                         </Box>
                       </Box>
