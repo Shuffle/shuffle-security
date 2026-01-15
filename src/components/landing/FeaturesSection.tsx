@@ -325,14 +325,14 @@ const IntegrationsVisual = () => (
     {/* Integration grid with real icons */}
     <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 2 }}>
       {[
-        { name: 'Splunk', icon: 'https://shuffler.io/images/apps/splunk.png' },
-        { name: 'CrowdStrike', icon: 'https://shuffler.io/images/apps/crowdstrike.png' },
-        { name: 'Sentinel', icon: 'https://shuffler.io/images/apps/microsoft_sentinel.png' },
-        { name: 'ServiceNow', icon: 'https://shuffler.io/images/apps/servicenow.png' },
-        { name: 'VirusTotal', icon: 'https://shuffler.io/images/apps/virustotal.png' },
-        { name: 'TheHive', icon: 'https://shuffler.io/images/apps/thehive.png' },
-        { name: 'Jira', icon: 'https://shuffler.io/images/apps/jira.png' },
-        { name: 'Slack', icon: 'https://shuffler.io/images/apps/slack.png' },
+        { name: 'Splunk', icon: 'https://shuffler.io/images/apps/shuffle/splunk.svg' },
+        { name: 'CrowdStrike', icon: 'https://shuffler.io/images/apps/shuffle/crowdstrike_falcon.svg' },
+        { name: 'Sentinel', icon: 'https://shuffler.io/images/apps/shuffle/microsoft_sentinel.svg' },
+        { name: 'ServiceNow', icon: 'https://shuffler.io/images/apps/shuffle/servicenow.svg' },
+        { name: 'VirusTotal', icon: 'https://shuffler.io/images/apps/shuffle/virustotal.svg' },
+        { name: 'TheHive', icon: 'https://shuffler.io/images/apps/shuffle/thehive.svg' },
+        { name: 'Jira', icon: 'https://shuffler.io/images/apps/shuffle/jira.svg' },
+        { name: 'Slack', icon: 'https://shuffler.io/images/apps/shuffle/slack.svg' },
       ].map((int, i) => (
         <motion.div
           key={int.name}

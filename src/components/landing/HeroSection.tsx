@@ -5,14 +5,14 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 // Floating integration icons with real shuffler.io icons
 const floatingIcons = [
-  { name: 'Splunk', icon: 'https://shuffler.io/images/apps/splunk.png', x: '6%', y: '12%', delay: 0, size: 56 },
-  { name: 'CrowdStrike', icon: 'https://shuffler.io/images/apps/crowdstrike.png', x: '88%', y: '15%', delay: 0.15, size: 52 },
-  { name: 'Microsoft Sentinel', icon: 'https://shuffler.io/images/apps/microsoft_sentinel.png', x: '4%', y: '45%', delay: 0.3, size: 48 },
-  { name: 'ServiceNow', icon: 'https://shuffler.io/images/apps/servicenow.png', x: '92%', y: '40%', delay: 0.45, size: 50 },
-  { name: 'VirusTotal', icon: 'https://shuffler.io/images/apps/virustotal.png', x: '10%', y: '75%', delay: 0.6, size: 46 },
-  { name: 'TheHive', icon: 'https://shuffler.io/images/apps/thehive.png', x: '85%', y: '70%', delay: 0.75, size: 52 },
-  { name: 'Jira', icon: 'https://shuffler.io/images/apps/jira.png', x: '18%', y: '28%', delay: 0.9, size: 44 },
-  { name: 'Slack', icon: 'https://shuffler.io/images/apps/slack.png', x: '80%', y: '85%', delay: 1.05, size: 48 },
+  { name: 'Splunk', icon: 'https://shuffler.io/images/apps/shuffle/splunk.svg', x: '6%', y: '12%', delay: 0, size: 56 },
+  { name: 'CrowdStrike', icon: 'https://shuffler.io/images/apps/shuffle/crowdstrike_falcon.svg', x: '88%', y: '15%', delay: 0.15, size: 52 },
+  { name: 'Sentinel', icon: 'https://shuffler.io/images/apps/shuffle/microsoft_sentinel.svg', x: '4%', y: '45%', delay: 0.3, size: 48 },
+  { name: 'ServiceNow', icon: 'https://shuffler.io/images/apps/shuffle/servicenow.svg', x: '92%', y: '40%', delay: 0.45, size: 50 },
+  { name: 'VirusTotal', icon: 'https://shuffler.io/images/apps/shuffle/virustotal.svg', x: '10%', y: '75%', delay: 0.6, size: 46 },
+  { name: 'TheHive', icon: 'https://shuffler.io/images/apps/shuffle/thehive.svg', x: '85%', y: '70%', delay: 0.75, size: 52 },
+  { name: 'Jira', icon: 'https://shuffler.io/images/apps/shuffle/jira.svg', x: '18%', y: '28%', delay: 0.9, size: 44 },
+  { name: 'Slack', icon: 'https://shuffler.io/images/apps/shuffle/slack.svg', x: '80%', y: '85%', delay: 1.05, size: 48 },
 ];
 
 const FloatingIcon = ({ name, icon, x, y, delay, size }: typeof floatingIcons[0]) => (
@@ -304,12 +304,12 @@ export const HeroSection = () => {
                 }}
               >
                 {[
-                  { name: 'SIEM', icon: 'https://shuffler.io/images/apps/splunk.png' },
-                  { name: 'Email', icon: 'https://shuffler.io/images/apps/gmail.png' },
-                  { name: 'EDR', icon: 'https://shuffler.io/images/apps/crowdstrike.png' },
-                  { name: 'ITSM', icon: 'https://shuffler.io/images/apps/servicenow.png' },
-                  { name: 'Threat Intel', icon: 'https://shuffler.io/images/apps/virustotal.png' },
-                  { name: 'Cloud', icon: 'https://shuffler.io/images/apps/aws.png' },
+                  { name: 'SIEM', icon: 'https://shuffler.io/images/apps/shuffle/splunk.svg' },
+                  { name: 'Email', icon: 'https://shuffler.io/images/apps/shuffle/gmail.svg' },
+                  { name: 'EDR', icon: 'https://shuffler.io/images/apps/shuffle/crowdstrike_falcon.svg' },
+                  { name: 'ITSM', icon: 'https://shuffler.io/images/apps/shuffle/servicenow.svg' },
+                  { name: 'Threat Intel', icon: 'https://shuffler.io/images/apps/shuffle/virustotal.svg' },
+                  { name: 'Cloud', icon: 'https://shuffler.io/images/apps/shuffle/aws.svg' },
                 ].map((cat, i) => (
                   <motion.div
                     key={cat.name}
