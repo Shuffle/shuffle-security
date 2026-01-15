@@ -1176,7 +1176,7 @@ const AppAuthCard = ({
                               The API returned success, but Shuffle hasn't confirmed the validation yet. This could mean credentials are correct but the app needs additional setup.
                             </Typography>
                             <Link 
-                              href="/admin?tab=app_auth" 
+                              href={`${API_CONFIG.baseUrl}/admin?tab=app_auth`}
                               target="_blank"
                               sx={{ 
                                 color: '#f59e0b', 
