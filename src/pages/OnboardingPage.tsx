@@ -348,16 +348,21 @@ const OnboardingPage = () => {
 
       // Refresh authenticated apps list to update validation status
       if (isValid) {
-        const authResponse = await fetch(`${API_CONFIG.baseUrl}/api/v1/apps/authentication`, {
-          headers: {
-            'Authorization': `Bearer ${API_CONFIG.apiKey}`,
-          },
-        });
-        if (authResponse.ok) {
-          const authData = await authResponse.json();
-          if (authData.data) {
-            setAuthenticatedApps(authData.data);
+        try {
+          const authResponse = await fetch(`${API_CONFIG.baseUrl}/api/v1/apps/authentication`, {
+            headers: {
+              'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+            },
+          });
+          if (authResponse.ok) {
+            const authResult = await authResponse.json();
+            const authData = authResult.data || authResult;
+            if (Array.isArray(authData)) {
+              setAuthenticatedApps(authData);
+            }
           }
+        } catch (refreshError) {
+          console.error('Failed to refresh auth status:', refreshError);
         }
       }
     } catch (error) {
