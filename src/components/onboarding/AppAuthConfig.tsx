@@ -327,7 +327,6 @@ const AppAuthCard = ({
 
   const auth = appConfig?.authentication;
   const isOAuth2 = isOAuth2Type(auth?.type);
-  const noAuthRequired = isNoAuthRequired(auth);
 
   const [selectedScopes, setSelectedScopes] = useState<string[]>([]);
 
@@ -665,7 +664,7 @@ const AppAuthCard = ({
         sx={{
           background: 'rgba(33, 33, 33, 0.6)',
           border: '2px solid',
-          borderColor: (isTested || noAuthRequired)
+          borderColor: isTested
             ? 'rgba(34, 197, 94, 0.5)'
             : authState.status === 'error'
             ? 'rgba(239, 68, 68, 0.3)'
@@ -762,54 +761,37 @@ const AppAuthCard = ({
             width: { xs: '100%', sm: 'auto' },
             justifyContent: { xs: 'flex-start', sm: 'flex-end' },
           }}>
-            {noAuthRequired ? (
-              /* No auth required - show single blue chip */
+            {/* Configured status chip */}
+            <Chip
+              label={isConfigured ? 'Configured' : 'Not configured'}
+              size="small"
+              sx={{
+                backgroundColor: isConfigured ? 'rgba(245, 158, 11, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                color: isConfigured ? '#f59e0b' : '#ef4444',
+                fontWeight: 500,
+                fontSize: { xs: '0.6rem', sm: '0.65rem' },
+                height: { xs: 22, sm: 24 },
+              }}
+            />
+            {/* Tested status chip */}
+            <Tooltip 
+              title={isTested ? `Last validated: ${formatLastValidDate()}` : ''} 
+              arrow
+              disableHoverListener={!isTested}
+            >
               <Chip
-                label="No authentication required"
+                label={isTested ? 'Tested' : 'Not tested'}
                 size="small"
                 sx={{
-                  backgroundColor: 'rgba(59, 130, 246, 0.15)',
-                  color: '#3b82f6',
+                  backgroundColor: isTested ? 'rgba(34, 197, 94, 0.15)' : 'rgba(156, 163, 175, 0.15)',
+                  color: isTested ? '#22c55e' : '#9ca3af',
                   fontWeight: 500,
                   fontSize: { xs: '0.6rem', sm: '0.65rem' },
                   height: { xs: 22, sm: 24 },
+                  cursor: isTested ? 'help' : 'default',
                 }}
               />
-            ) : (
-              <>
-                {/* Configured status chip */}
-                <Chip
-                  label={isConfigured ? 'Configured' : 'Not configured'}
-                  size="small"
-                  sx={{
-                    backgroundColor: isConfigured ? 'rgba(245, 158, 11, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                    color: isConfigured ? '#f59e0b' : '#ef4444',
-                    fontWeight: 500,
-                    fontSize: { xs: '0.6rem', sm: '0.65rem' },
-                    height: { xs: 22, sm: 24 },
-                  }}
-                />
-                {/* Tested status chip */}
-                <Tooltip 
-                  title={isTested ? `Last validated: ${formatLastValidDate()}` : ''} 
-                  arrow
-                  disableHoverListener={!isTested}
-                >
-                  <Chip
-                    label={isTested ? 'Tested' : 'Not tested'}
-                    size="small"
-                    sx={{
-                      backgroundColor: isTested ? 'rgba(34, 197, 94, 0.15)' : 'rgba(156, 163, 175, 0.15)',
-                      color: isTested ? '#22c55e' : '#9ca3af',
-                      fontWeight: 500,
-                      fontSize: { xs: '0.6rem', sm: '0.65rem' },
-                      height: { xs: 22, sm: 24 },
-                      cursor: isTested ? 'help' : 'default',
-                    }}
-                  />
-                </Tooltip>
-              </>
-            )}
+            </Tooltip>
             <Tooltip title="View documentation">
               <IconButton
                 size="small"
