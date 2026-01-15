@@ -244,7 +244,7 @@ export const DATASTORE_CATEGORIES = {
   INCIDENTS: 'shuffle-security_incidents',
   TEMPLATES: 'shuffle-security_templates',
   CONFIGURATION: 'shuffle-security_configuration',
-  IOCS: 'shuffle-security_iocs',
+  IOCS: 'shuffle-security_ioc-config',
   CUSTOM_FIELDS: 'shuffle-security_custom-fields',
   // Legacy - for migration purposes
   LEGACY_ALERTS: 'shuffle-security_alerts',
