@@ -3,13 +3,17 @@ import { Box, Container, Typography, Button, Chip, Stack, Tooltip } from '@mui/m
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { TicketingSystemSearch } from '@/components/onboarding/TicketingSystemSearch';
+import { WelcomeStep } from '@/components/onboarding/WelcomeStep';
+import { PrimaryToolStep } from '@/components/onboarding/PrimaryToolStep';
 import type { AlgoliaSearchApp } from '@/lib/singul-local';
 import { AppAuthConfig, AppAuthState, AuthStatus } from '@/components/onboarding/AppAuthConfig';
 import { EnrichmentConfig, EnrichmentState } from '@/components/onboarding/EnrichmentConfig';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import WavingHandIcon from '@mui/icons-material/WavingHand';
 import IntegrationInstructionsIcon from '@mui/icons-material/IntegrationInstructions';
+import AppsIcon from '@mui/icons-material/Apps';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
@@ -66,7 +70,9 @@ const processAuthData = (authData: ApiAuthEntry[]): ApiAuthEntry[] => {
 };
 
 const steps = [
-  { label: 'Select Tools', icon: <IntegrationInstructionsIcon />, path: '/onboarding/tools' },
+  { label: 'Welcome', icon: <WavingHandIcon />, path: '/onboarding' },
+  { label: 'Primary Tool', icon: <IntegrationInstructionsIcon />, path: '/onboarding/tool' },
+  { label: 'More Tools', icon: <AppsIcon />, path: '/onboarding/tools' },
   { label: 'Authentication', icon: <VpnKeyIcon />, path: '/onboarding/authenticate' },
   { label: 'Automate', icon: <AutoFixHighIcon />, path: '/onboarding/automate' },
   { label: 'Complete', icon: <RocketLaunchIcon />, path: '/onboarding/complete' },
@@ -75,10 +81,11 @@ const steps = [
 // Map paths to step indices
 const pathToStep: Record<string, number> = {
   '/onboarding': 0,
-  '/onboarding/tools': 0,
-  '/onboarding/authenticate': 1,
-  '/onboarding/automate': 2,
-  '/onboarding/complete': 3,
+  '/onboarding/tool': 1,
+  '/onboarding/tools': 2,
+  '/onboarding/authenticate': 3,
+  '/onboarding/automate': 4,
+  '/onboarding/complete': 5,
 };
 
 const OnboardingPage = () => {
@@ -89,6 +96,7 @@ const OnboardingPage = () => {
   const getStepFromPath = () => pathToStep[location.pathname] ?? 0;
   
   const [activeStep, setActiveStep] = useState(getStepFromPath);
+  const [selectedChallenge, setSelectedChallenge] = useState<string | null>(null);
   const [selectedApps, setSelectedApps] = useState<AlgoliaSearchApp[]>([]);
   const [searchQuery, setSearchQuery] = useState('email');
   const [authStates, setAuthStates] = useState<Record<string, AppAuthState>>({});
@@ -189,9 +197,9 @@ const OnboardingPage = () => {
       // Navigate immediately (optimistic)
       setActiveStep((prev) => prev + 1);
       
-      // When moving from step 0 (Select Tools) to step 1 (Authentication)
+      // When moving from step 2 (More Tools) to step 3 (Authentication)
       // Run API calls in background
-      if (activeStep === 0 && selectedApps.length > 0) {
+      if (activeStep === 2 && selectedApps.length > 0) {
         // Save selected tools to datastore (fire and forget)
         setDatastoreItem(SELECTED_TOOLS_KEY, selectedApps, ONBOARDING_CONFIG_CATEGORY)
           .catch(error => console.error('Failed to save tools:', error));
@@ -212,9 +220,9 @@ const OnboardingPage = () => {
         }).catch(error => console.error('Failed to generate workflow:', error));
       }
       
-      // When moving from step 2 (Automate) to step 3 (Complete)
+      // When moving from step 4 (Automate) to step 5 (Complete)
       // Save the automation configuration
-      if (activeStep === 2) {
+      if (activeStep === 4) {
         setDatastoreItem(AUTOMATION_CONFIG_KEY, enrichmentState, ONBOARDING_CONFIG_CATEGORY)
           .then(() => console.log('Automation config saved'))
           .catch(error => console.error('Failed to save automation config:', error));
@@ -597,9 +605,14 @@ const OnboardingPage = () => {
   };
 
   const canProceed = () => {
-    if (activeStep === 0) return selectedApps.length > 0;
-    // Step 1: Allow proceeding if any app has a configured auth or is tested/connected
-    if (activeStep === 1) {
+    // Step 0 (Welcome): Need to select a challenge
+    if (activeStep === 0) return selectedChallenge !== null;
+    // Step 1 (Primary Tool): Need at least one app selected
+    if (activeStep === 1) return selectedApps.length > 0;
+    // Step 2 (More Tools): Can always proceed (optional)
+    if (activeStep === 2) return true;
+    // Step 3 (Authentication): Allow proceeding if any app has a configured auth or is tested/connected
+    if (activeStep === 3) {
       return selectedApps.some((app) => {
         const state = authStates[app.objectID];
         // User has tested and connected
@@ -795,6 +808,21 @@ const OnboardingPage = () => {
                   style={{ width: '100%', maxWidth: '100%', overflow: 'hidden' }}
                 >
                   {activeStep === 0 && (
+                    <WelcomeStep
+                      selectedChallenge={selectedChallenge}
+                      onSelect={setSelectedChallenge}
+                    />
+                  )}
+
+                  {activeStep === 1 && (
+                    <PrimaryToolStep
+                      selectedApps={selectedApps}
+                      onAppsChange={setSelectedApps}
+                      challenge={selectedChallenge}
+                    />
+                  )}
+
+                  {activeStep === 2 && (
                     <TicketingSystemSearch
                       selectedApps={selectedApps}
                       onAppsChange={setSelectedApps}
@@ -803,7 +831,7 @@ const OnboardingPage = () => {
                     />
                   )}
 
-                  {activeStep === 1 && (
+                  {activeStep === 3 && (
                     <AppAuthConfig
                       apps={selectedApps}
                       authStates={authStates}
@@ -814,7 +842,7 @@ const OnboardingPage = () => {
                     />
                   )}
 
-                  {activeStep === 2 && (
+                  {activeStep === 4 && (
                     <EnrichmentConfig
                       enrichmentState={enrichmentState}
                       onEnrichmentChange={setEnrichmentState}
@@ -827,7 +855,7 @@ const OnboardingPage = () => {
                     />
                   )}
 
-                  {activeStep === 3 && (() => {
+                  {activeStep === 5 && (() => {
                     // Deduplicate apps using the shared utility
                     const dedupedApps = deduplicateAuthApps(authenticatedApps);
                     const validCount = dedupedApps.filter(a => a.hasValidAuth).length;
