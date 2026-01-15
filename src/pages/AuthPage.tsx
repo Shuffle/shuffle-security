@@ -100,16 +100,27 @@ const AuthPage = ({ mode }: AuthPageProps) => {
         body.mfa_code = mfaCode;
       }
 
-      const response = await fetch(getApiUrl(`/api/v1${endpoint}`), {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      });
+      let response: Response;
+      try {
+        response = await fetch(getApiUrl(`/api/v1${endpoint}`), {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(body),
+        });
+      } catch (fetchError) {
+        // Network error, CORS error, or connection refused
+        throw new Error('Network error: Unable to connect to server. Please check your connection and CORS settings.');
+      }
 
-      const data = await response.json();
+      let data: any;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        throw new Error(`Server returned invalid response (status: ${response.status})`);
+      }
 
       // Handle MFA redirect
       if (data.reason === 'MFA_REDIRECT') {
@@ -119,7 +130,7 @@ const AuthPage = ({ mode }: AuthPageProps) => {
       }
 
       if (!response.ok) {
-        throw new Error(data.reason || data.message || `${isLogin ? 'Login' : 'Registration'} failed`);
+        throw new Error(data.reason || data.message || `${isLogin ? 'Login' : 'Registration'} failed (status: ${response.status})`);
       }
 
       // Extract session token from cookies array or direct field
@@ -127,6 +138,24 @@ const AuthPage = ({ mode }: AuthPageProps) => {
         data.cookies?.find((c: { key: string; value: string }) => c.key === 'session_token')?.value;
 
       if (sessionToken) {
+        // Verify the token works before showing success
+        try {
+          const verifyResponse = await fetch(getApiUrl('/api/v1/getinfo'), {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+              'Authorization': `Bearer ${sessionToken}`,
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          if (!verifyResponse.ok) {
+            throw new Error('Token verification failed');
+          }
+        } catch (verifyError) {
+          throw new Error('Login succeeded but failed to verify session. Please try again.');
+        }
+        
         setSuccess(true);
         setLoading(false);
         await login(sessionToken);
@@ -137,6 +166,8 @@ const AuthPage = ({ mode }: AuthPageProps) => {
       } else if (!isLogin) {
         // Registration successful, redirect to login
         navigate('/login', { state: { message: 'Registration successful. Please log in.' } });
+      } else {
+        throw new Error('Login failed: No session token received');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : `An error occurred during ${isLogin ? 'login' : 'registration'}`);
