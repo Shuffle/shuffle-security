@@ -231,7 +231,7 @@ export const HeroSection = () => {
               variant="h5"
               sx={{
                 color: 'text.secondary',
-                maxWidth: 650,
+                maxWidth: 600,
                 mx: 'auto',
                 mb: 6,
                 fontWeight: 400,
@@ -239,15 +239,11 @@ export const HeroSection = () => {
                 fontSize: { xs: '1.1rem', md: '1.35rem' },
               }}
             >
-              Find{' '}
-              <Box component="span" sx={{ color: '#FF6600', fontWeight: 600 }}>
-                ANY
+              AI-powered incident response that reaches{' '}
+              <Box component="span" sx={{ color: '#22c55e', fontWeight: 600 }}>
+                everywhere
               </Box>
-              {' '}information in{' '}
-              <Box component="span" sx={{ color: '#FF6600', fontWeight: 600 }}>
-                ANY
-              </Box>
-              {' '}of your tools. Use your existing stack, fill in the gaps—3,000+ integrations out of the box.
+              —cloud, on-prem, hybrid. Every action is logged, every decision is yours.
             </Typography>
           </motion.div>
 
