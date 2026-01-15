@@ -996,10 +996,12 @@ const AppAuthCard = ({
                               ? '#22c55e' 
                               : localTestStatus === 'error'
                               ? '#ef4444'
+                              : isTested
+                              ? '#22c55e'
                               : 'rgba(255, 255, 255, 0.4)', 
                             fontSize: '0.75rem',
                             mt: 0.25,
-                            fontWeight: localTestStatus !== 'untested' ? 500 : 400,
+                            fontWeight: (localTestStatus !== 'untested' || isTested) ? 500 : 400,
                           }}>
                             {localTestStatus === 'success' 
                               ? '✓ Connection verified' 
@@ -1007,7 +1009,9 @@ const AppAuthCard = ({
                               ? '✗ Test failed'
                               : localTestStatus === 'testing'
                               ? 'Testing...'
-                              : 'Not tested yet'}
+                              : isTested
+                              ? '✓ Not tested in this session'
+                              : 'Not tested in this session'}
                           </Typography>
                         </Box>
                       </Box>
