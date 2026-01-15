@@ -386,7 +386,7 @@ const IntegrationsVisual = () => (
       }}
     >
       <Typography sx={{ color: '#8b5cf6', fontSize: '0.85rem', textAlign: 'center' }}>
-        3,000+ integrations • REST API • Webhooks • SDK
+        3,000+ integrations • Webhooks • App SDK
       </Typography>
     </Box>
   </Box>
