@@ -1168,7 +1168,27 @@ const AppAuthCard = ({
                             '& .MuiAlert-icon': { color: '#f59e0b' },
                           }}
                         >
-                          Test returned Status 200, but backend validation is still pending. The authentication may take a moment to be fully verified.
+                          <Box>
+                            <Typography sx={{ fontWeight: 600, mb: 0.5 }}>
+                              Test passed (Status 200), but not marked as validated
+                            </Typography>
+                            <Typography sx={{ fontSize: '0.85rem', opacity: 0.9, mb: 1 }}>
+                              The API returned success, but Shuffle hasn't confirmed the validation yet. This could mean credentials are correct but the app needs additional setup.
+                            </Typography>
+                            <Link 
+                              href="/admin?tab=app_auth" 
+                              target="_blank"
+                              sx={{ 
+                                color: '#f59e0b', 
+                                fontWeight: 500,
+                                fontSize: '0.85rem',
+                                textDecoration: 'underline',
+                                '&:hover': { opacity: 0.8 }
+                              }}
+                            >
+                              Check status in Admin → App Authentication
+                            </Link>
+                          </Box>
                         </Alert>
                       </Box>
                     )}
