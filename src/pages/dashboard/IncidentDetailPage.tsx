@@ -41,6 +41,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import { useDatastore } from '@/hooks/useDatastore';
 import { useAuth } from '@/context/AuthContext';
 import { DATASTORE_CATEGORIES, getDatastoreItem } from '@/services/datastore';
@@ -1579,16 +1580,14 @@ const IncidentDetailPage = () => {
               size="small"
               sx={inputSx}
             />
-            {/* MTTD/MTTR Visual Bars */}
+          </Section>
+
+          {/* Metrics Section */}
+          <Section title="Metrics" icon={TrendingUpIcon} defaultOpen={false}>
             <Box sx={{ 
               display: 'grid', 
               gridTemplateColumns: 'repeat(2, 1fr)', 
               gap: 2, 
-              mt: 3,
-              p: 2,
-              bgcolor: 'rgba(0,0,0,0.2)',
-              borderRadius: 1.5,
-              border: '1px solid rgba(255,255,255,0.06)',
             }}>
               {/* MTTD */}
               <Box>
@@ -1659,9 +1658,11 @@ const IncidentDetailPage = () => {
                 </Typography>
               </Box>
             </Box>
+          </Section>
 
-            {/* Metadata row */}
-            <Box sx={{ display: 'flex', gap: 3, mt: 2, flexWrap: 'wrap' }}>
+          {/* Metadata Section */}
+          <Section title="Metadata" icon={DescriptionIcon} defaultOpen={true}>
+            <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
               <Box>
                 <Typography variant="caption" sx={{ color: 'text.secondary' }}>ID</Typography>
                 <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.75rem' }}>{incident.id}</Typography>
