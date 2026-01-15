@@ -55,18 +55,13 @@ const isOAuth2Type = (type: string | undefined): boolean => {
   return lowerType === 'oauth2' || lowerType === 'oauth2-app';
 };
 
-// Helper to check if auth type indicates no authentication required
+// Helper to check if auth type EXPLICITLY indicates no authentication required
+// IMPORTANT: Only return true if there's an explicit "no auth" type, NOT just missing config
 const isNoAuthRequired = (auth: AppAuthentication | undefined): boolean => {
-  if (!auth) return true; // No auth object means no auth required
+  if (!auth) return false; // No auth object = we don't know, show fallback form
   const type = auth.type?.toLowerCase() || '';
-  // Check for explicit "no auth" types
-  if (type === '' || type === 'none' || type === 'no_auth' || type === 'no authentication') return true;
-  // Also check if there are no parameters, no OAuth2, and no other identifiable auth method
-  const hasParameters = auth.parameters && auth.parameters.length > 0;
-  const isOAuth = isOAuth2Type(auth.type);
-  const hasOAuthConfig = auth.client_id || auth.client_secret || auth.token_uri;
-  // If type is empty/generic and there's nothing to configure, no auth needed
-  if (!isOAuth && !hasParameters && !hasOAuthConfig && type === '') return true;
+  // Only explicit "no auth" types should skip the form
+  if (type === 'none' || type === 'no_auth' || type === 'no authentication' || type === 'no_key') return true;
   return false;
 };
 
