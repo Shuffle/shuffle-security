@@ -413,49 +413,44 @@ const DetectionLoopVisual = () => {
     >
       {/* Loop container with curved return path */}
       <Box sx={{ display: 'flex', position: 'relative' }}>
-        {/* Left side: curved return arrow */}
+        {/* Left side: SVG curved return path with animated arrow */}
         <Box
           sx={{
             position: 'absolute',
-            left: 20,
-            top: 24,
-            bottom: 24,
-            width: 24,
-            display: 'flex',
-            alignItems: 'center',
+            left: 8,
+            top: 12,
+            bottom: 12,
+            width: 32,
           }}
         >
-          <Box
-            component={motion.div}
-            initial={{ pathLength: 0 }}
-            whileInView={{ pathLength: 1 }}
-            viewport={{ once: true }}
-            sx={{
-              position: 'absolute',
-              left: 0,
-              top: 0,
-              bottom: 0,
-              width: 20,
-              borderLeft: '2px dashed rgba(14, 165, 233, 0.4)',
-              borderTop: '2px dashed rgba(14, 165, 233, 0.4)',
-              borderBottom: '2px dashed rgba(14, 165, 233, 0.4)',
-              borderRadius: '12px 0 0 12px',
-            }}
-          />
-          {/* Animated arrow going up */}
-          <Box
-            component={motion.div}
-            animate={{ y: [60, -60] }}
-            transition={{ duration: 2.5, repeat: Infinity, ease: 'linear' }}
-            sx={{
-              position: 'absolute',
-              left: -6,
-              fontSize: '0.9rem',
-              color: '#0ea5e9',
-            }}
+          <svg
+            width="32"
+            height="100%"
+            viewBox="0 0 32 200"
+            preserveAspectRatio="none"
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
           >
-            ▲
-          </Box>
+            {/* Dashed path */}
+            <path
+              id="loopPath"
+              d="M 28 195 C 28 195, 8 195, 8 180 L 8 20 C 8 5, 28 5, 28 5"
+              fill="none"
+              stroke="rgba(14, 165, 233, 0.4)"
+              strokeWidth="2"
+              strokeDasharray="6 4"
+            />
+            {/* Animated circle following the path */}
+            <motion.circle
+              r="5"
+              fill="#0ea5e9"
+              initial={{ offsetDistance: '0%' }}
+              animate={{ offsetDistance: '100%' }}
+              transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+              style={{
+                offsetPath: 'path("M 28 195 C 28 195, 8 195, 8 180 L 8 20 C 8 5, 28 5, 28 5")',
+              }}
+            />
+          </svg>
         </Box>
 
         {/* Main flow */}
