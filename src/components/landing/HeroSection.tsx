@@ -12,20 +12,21 @@ import { trackCTA } from '@/lib/analytics';
 
 // Floating integration icons - styled boxes with names
 const floatingIcons = [
-  { name: 'Splunk', abbr: 'SPL', color: '#65A637', x: '6%', y: '12%', delay: 0, size: 56 },
-  { name: 'CrowdStrike', abbr: 'CS', color: '#E01E5A', x: '88%', y: '15%', delay: 0.15, size: 52 },
-  { name: 'AWS', abbr: 'AWS', color: '#FF9900', x: '4%', y: '45%', delay: 0.3, size: 48 },
-  { name: 'ServiceNow', abbr: 'SN', color: '#81B5A1', x: '92%', y: '40%', delay: 0.45, size: 50 },
-  { name: 'Azure', abbr: 'AZ', color: '#0089D6', x: '10%', y: '75%', delay: 0.6, size: 46 },
-  { name: 'GCP', abbr: 'GCP', color: '#4285F4', x: '85%', y: '70%', delay: 0.75, size: 52 },
-  { name: 'Jira', abbr: 'JRA', color: '#0052CC', x: '18%', y: '28%', delay: 0.9, size: 44 },
-  { name: 'Slack', abbr: 'SLK', color: '#4A154B', x: '80%', y: '85%', delay: 1.05, size: 48 },
+  { name: 'Splunk', abbr: 'SPL', color: '#65A637', x: '6%', y: '12%', delay: 0, size: 44 },
+  { name: 'CrowdStrike', abbr: 'CS', color: '#E01E5A', x: '88%', y: '15%', delay: 0.15, size: 40 },
+  { name: 'AWS', abbr: 'AWS', color: '#FF9900', x: '4%', y: '45%', delay: 0.3, size: 38 },
+  { name: 'ServiceNow', abbr: 'SN', color: '#81B5A1', x: '92%', y: '40%', delay: 0.45, size: 40 },
+  { name: 'Azure', abbr: 'AZ', color: '#0089D6', x: '10%', y: '75%', delay: 0.6, size: 36 },
+  { name: 'GCP', abbr: 'GCP', color: '#4285F4', x: '85%', y: '70%', delay: 0.75, size: 42 },
+  { name: 'Jira', abbr: 'JRA', color: '#0052CC', x: '18%', y: '28%', delay: 0.9, size: 34 },
+  { name: 'Slack', abbr: 'SLK', color: '#4A154B', x: '80%', y: '85%', delay: 1.05, size: 38 },
 ];
 
 const FloatingIcon = ({ name, abbr, color, x, y, delay, size }: typeof floatingIcons[0]) => (
   <motion.div
     initial={{ opacity: 0, scale: 0 }}
-    animate={{ opacity: 1, scale: 1 }}
+    animate={{ opacity: 0.6, scale: 1 }}
+    whileHover={{ opacity: 1 }}
     transition={{ duration: 0.6, delay: delay + 0.5 }}
     style={{
       position: 'absolute',
@@ -51,14 +52,14 @@ const FloatingIcon = ({ name, abbr, color, x, y, delay, size }: typeof floatingI
         sx={{
           width: size,
           height: size,
-          borderRadius: 3,
-          background: `linear-gradient(135deg, ${color}20 0%, ${color}10 100%)`,
-          border: `1px solid ${color}40`,
+          borderRadius: 2,
+          background: `linear-gradient(135deg, ${color}12 0%, ${color}06 100%)`,
+          border: `1px solid ${color}20`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          backdropFilter: 'blur(12px)',
-          boxShadow: `0 8px 32px ${color}20`,
+          backdropFilter: 'blur(8px)',
+          boxShadow: `0 4px 16px ${color}10`,
           overflow: 'hidden',
           transition: 'all 0.3s ease',
           textDecoration: 'none',
