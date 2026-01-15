@@ -173,13 +173,16 @@ export const useIOCTypes = () => {
     }
   }, [iocTypes]);
 
-  // Initialize defaults in datastore
+  // Initialize defaults in datastore using bulk API
   const initializeDefaults = useCallback(async () => {
-    for (const ioc of DEFAULT_IOC_TYPES) {
-      await addItem(ioc.name, ioc);
-    }
+    const { setDatastoreItems, DATASTORE_CATEGORIES } = await import('@/services/datastore');
+    const items = DEFAULT_IOC_TYPES.map(ioc => ({
+      key: ioc.name,
+      value: ioc,
+    }));
+    await setDatastoreItems(items, DATASTORE_CATEGORIES.IOCS);
     await fetchItems();
-  }, [addItem, fetchItems]);
+  }, [fetchItems]);
 
   return {
     iocTypes,
