@@ -55,7 +55,7 @@ export const HeroSection = () => {
             transition={{ duration: 0.6 }}
           >
             <Chip
-              label="⚡ Built on Shuffle Automation • Cloud & On-Premises"
+              label="⚡ Open Source • Cloud & On-Premises"
               sx={{
                 mb: 3,
                 py: 2.5,
@@ -112,7 +112,7 @@ export const HeroSection = () => {
                 lineHeight: 1.6,
               }}
             >
-              Open-source automation for security, IT, and support operations—built on Shuffle.
+              Open-source automation for security, IT, and support operations.
             </Typography>
           </motion.div>
 
@@ -142,10 +142,8 @@ export const HeroSection = () => {
                 Get Started
               </Button>
               <Button
-                component="a"
-                href="https://shuffler.io/docs"
-                target="_blank"
-                rel="noopener noreferrer"
+                component={Link}
+                to="/docs"
                 variant="outlined"
                 size="large"
                 sx={{

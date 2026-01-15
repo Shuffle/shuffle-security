@@ -1,6 +1,6 @@
-# Shuffle Security
+# Shutdown Security
 
-A security operations platform for managing alerts, cases, and incident response workflows. Built to integrate with [Shuffle Automation](https://shuffler.io).
+A security operations platform for managing alerts, cases, and incident response workflows.
 
 ## Project Structure
 
@@ -54,16 +54,14 @@ VITE_SHUFFLE_API_URL=https://shuffler.io
 
 See the [Setup Guide](/docs/setup) for detailed configuration instructions.
 
-## Shuffle Integration
+## API Integration
 
-This application connects to Shuffle Automation's API for:
+This application connects to external APIs for:
 
-- **Authentication** - Login via Shuffle credentials
+- **Authentication** - Login via credentials
 - **Alerts** - Fetch and manage security alerts
 - **Cases** - Create and track incident cases
 - **Workflows** - Trigger automated response actions
-
-API documentation: [shuffler.io/docs/API](https://shuffler.io/docs/API)
 
 ## Tech Stack
 

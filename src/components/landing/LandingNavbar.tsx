@@ -24,8 +24,8 @@ const navItems = [
   { label: 'Docs', href: '/docs', internal: true },
 ];
 
-// Shuffle logo SVG component (orange for landing page)
-const ShuffleLogo = () => (
+// Shutdown logo SVG component (orange for landing page)
+const ShutdownLogo = () => (
   <svg width="32" height="32" viewBox="0 0 56 56" fill="none">
     <path
       d="M14 14h28v6H20v16h16v-10h-8v-6h14v22H14V14z"
@@ -58,7 +58,7 @@ export const LandingNavbar = () => {
               to="/"
               sx={{ display: 'flex', alignItems: 'center', gap: 1.5, textDecoration: 'none' }}
             >
-              <ShuffleLogo />
+              <ShutdownLogo />
               <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5 }}>
                 <Typography
                   variant="h6"
@@ -69,7 +69,7 @@ export const LandingNavbar = () => {
                     WebkitTextFillColor: 'transparent',
                   }}
                 >
-                  Shuffle
+                  Shutdown
                 </Typography>
                 <Typography
                   variant="h6"

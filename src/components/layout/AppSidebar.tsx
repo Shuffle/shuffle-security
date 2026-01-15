@@ -233,7 +233,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
             </svg>
             {!collapsed && (
               <Typography sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, fontSize: '1rem' }}>
-                Security
+                Shutdown
               </Typography>
             )}
           </Box>

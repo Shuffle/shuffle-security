@@ -60,7 +60,7 @@ export const CTASection = () => {
                 position: 'relative',
               }}
             >
-              Join leading security teams who trust Shuffle Security for their incident response needs.
+              Join leading security teams who trust Shutdown Security for their incident response needs.
             </Typography>
             <Stack
               direction={{ xs: 'column', sm: 'row' }}
