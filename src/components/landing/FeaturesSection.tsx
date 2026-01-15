@@ -411,65 +411,54 @@ const DetectionLoopVisual = () => {
         overflow: 'hidden',
       }}
     >
-      {/* Full loop SVG overlay */}
+      {/* Left side: SVG curved return path with animated dot going UP */}
       <Box
         sx={{
           position: 'absolute',
-          left: 48,
-          top: 32,
-          width: 48,
-          height: 'calc(100% - 64px)',
+          left: 8,
+          top: 24,
+          bottom: 24,
+          width: 40,
           pointerEvents: 'none',
         }}
       >
         <svg
-          width="100%"
+          width="40"
           height="100%"
-          viewBox="0 0 48 280"
-          preserveAspectRatio="none"
           style={{ position: 'absolute', inset: 0 }}
         >
-          {/* Complete loop path: down through stages, curve left, up, curve right back to start */}
+          {/* Curved return path */}
           <path
-            d="M 24 24 
-               L 24 72 
-               L 24 120 
-               L 24 168 
-               L 24 216 
-               C 24 240, 8 256, 8 256 
-               L 8 256 
-               C 8 256, 8 270, 8 270
-               L 8 270
-               C -8 270, -8 10, 8 10
-               L 8 10
-               C 8 10, 8 24, 24 24"
+            d="M 32 100% C 32 100%, 12 100%, 12 calc(100% - 20px) L 12 20 C 12 8, 32 8, 32 0"
             fill="none"
-            stroke="rgba(14, 165, 233, 0.25)"
+            stroke="rgba(14, 165, 233, 0.35)"
             strokeWidth="2"
             strokeDasharray="6 4"
+            vectorEffect="non-scaling-stroke"
           />
-          {/* Animated dot following the full loop */}
-          <motion.circle
-            r="6"
-            fill="#0ea5e9"
-            filter="url(#glow)"
-            initial={{ offsetDistance: '0%' }}
-            animate={{ offsetDistance: '100%' }}
-            transition={{ duration: 5, repeat: Infinity, ease: 'linear' }}
-            style={{
-              offsetPath: `path("M 24 24 L 24 72 L 24 120 L 24 168 L 24 216 C 24 250, 0 260, 0 260 C -16 260, -16 20, 0 20 C 0 20, 24 20, 24 24")`,
-            }}
-          />
-          <defs>
-            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-              <feMerge>
-                <feMergeNode in="coloredBlur"/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
-          </defs>
         </svg>
+        {/* Animated dot going upward */}
+        <Box
+          component={motion.div}
+          animate={{ 
+            top: ['calc(100% - 8px)', '8px'],
+            left: ['24px', '4px', '4px', '24px'],
+          }}
+          transition={{ 
+            duration: 3, 
+            repeat: Infinity, 
+            ease: 'linear',
+            times: [0, 0.15, 0.85, 1],
+          }}
+          sx={{
+            position: 'absolute',
+            width: 10,
+            height: 10,
+            borderRadius: '50%',
+            background: '#0ea5e9',
+            boxShadow: '0 0 12px 4px rgba(14, 165, 233, 0.5)',
+          }}
+        />
       </Box>
 
       {/* Main flow - stages */}
