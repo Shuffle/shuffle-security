@@ -228,7 +228,10 @@ const AppAuthCard = ({
   const formatLastValidDate = (): string => {
     const timestamp = getLastValidTimestamp();
     if (!timestamp) return 'Unknown';
-    const date = new Date(timestamp * 1000);
+    // Detect if timestamp is in seconds or milliseconds
+    // If > 10^12, it's likely milliseconds; otherwise seconds
+    const ms = timestamp > 1e12 ? timestamp : timestamp * 1000;
+    const date = new Date(ms);
     return date.toLocaleDateString(undefined, { 
       year: 'numeric', 
       month: 'short', 
@@ -1411,11 +1414,14 @@ export const AppAuthConfig = ({
   // Helper to check if app is validated (must be valid AND validated within last 30 days)
   const isAppValidated = (app: AlgoliaSearchApp): boolean => {
     const entries = getApiAuthEntries(app);
-    const thirtyDaysAgo = Math.floor(Date.now() / 1000) - (30 * 24 * 60 * 60);
-    return entries.some(e => 
-      e.validation?.valid === true && 
-      (e.validation?.last_valid ?? 0) > thirtyDaysAgo
-    );
+    const thirtyDaysAgoMs = Date.now() - (30 * 24 * 60 * 60 * 1000);
+    return entries.some(e => {
+      if (e.validation?.valid !== true) return false;
+      const lastValid = e.validation?.last_valid ?? 0;
+      // Detect if timestamp is in seconds or milliseconds
+      const lastValidMs = lastValid > 1e12 ? lastValid : lastValid * 1000;
+      return lastValidMs > thirtyDaysAgoMs;
+    });
   };
 
   // Keep initial sort order stable - only sort once on first render
