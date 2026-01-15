@@ -598,33 +598,7 @@ const AppAuthCard = ({
     );
   };
 
-  // Render generic API key field - for non-OAuth2 apps without parameters
-  const renderApiKeyFields = () => {
-    if (isOAuth2 || (auth?.parameters && auth.parameters.length > 0)) return null;
-
-    return (
-      <TextField
-        label="API Key"
-        type="password"
-        placeholder="Enter your API key"
-        value={localCredentials['api_key'] || ''}
-        onChange={(e) => handleCredentialChange('api_key', e.target.value)}
-        fullWidth
-        size="small"
-        sx={{
-          '& .MuiOutlinedInput-root': {
-            backgroundColor: 'rgba(0, 0, 0, 0.3)',
-            borderRadius: 2,
-            '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.1)' },
-            '&:hover fieldset': { borderColor: 'rgba(255, 255, 255, 0.2)' },
-            '&.Mui-focused fieldset': { borderColor: '#FF6600' },
-          },
-          '& .MuiInputBase-input': { color: 'white' },
-          '& .MuiInputLabel-root': { color: 'rgba(255, 255, 255, 0.5)' },
-        }}
-      />
-    );
-  };
+  // No longer rendering fallback API key field - apps without parameters don't need auth config
 
   // Validate a single field
   const validateField = (key: string, value: string): string | null => {
@@ -660,10 +634,8 @@ const AppAuthCard = ({
         return localCredentials[fieldKey]?.trim();
       });
       if (!hasAnyValue) return false;
-    } else if (!isOAuth2) {
-      // Fallback API key field - must have a value
-      if (!localCredentials['api_key']?.trim()) return false;
     }
+    // Apps without parameters don't need validation - they work without auth
     
     return true;
   };
@@ -1386,7 +1358,6 @@ const AppAuthCard = ({
                     {/* Render dynamic fields based on auth type */}
                     {renderOAuth2Fields()}
                     {renderParameterFields()}
-                    {renderApiKeyFields()}
 
                     {authState.status === 'error' && authState.errorMessage && (
                       <Alert
