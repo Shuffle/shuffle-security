@@ -299,6 +299,28 @@ const OnboardingPage = () => {
         }
       };
 
+      // Helper to get human-readable error descriptions for HTTP status codes
+      const getStatusDescription = (status: number | string): string => {
+        const statusDescriptions: Record<number, string> = {
+          400: 'Bad Request – The request was malformed or missing required parameters',
+          401: 'Unauthorized – Invalid or expired API key/credentials',
+          403: 'Forbidden – Access denied. Check your permissions',
+          404: 'Not Found – The API endpoint or resource doesn\'t exist',
+          405: 'Method Not Allowed – This HTTP method is not supported',
+          408: 'Request Timeout – The server took too long to respond',
+          429: 'Too Many Requests – Rate limit exceeded. Try again later',
+          500: 'Internal Server Error – Something went wrong on the server',
+          502: 'Bad Gateway – The server received an invalid response',
+          503: 'Service Unavailable – The service is temporarily down',
+          504: 'Gateway Timeout – The server didn\'t respond in time',
+        };
+        const num = Number(status);
+        if (statusDescriptions[num]) return statusDescriptions[num];
+        if (num >= 400 && num < 500) return 'Client Error – Check your request parameters';
+        if (num >= 500 && num < 600) return 'Server Error – The remote service may be unavailable';
+        return '';
+      };
+
       // Accept both 'done' and 'app_validation' as valid action types
       const validActions = ['done', 'app_validation'];
       if (response.ok && validActions.includes(result.action) && result.success === true) {
@@ -311,28 +333,6 @@ const OnboardingPage = () => {
             // Consider success if status indicates OK (common patterns: 200, ok, success, healthy, etc.)
             const statusLower = String(parsedStatus).toLowerCase();
             const statusNum = Number(parsedStatus);
-            
-            // Helper to get human-readable error descriptions for HTTP status codes
-            const getStatusDescription = (status: number | string): string => {
-              const statusDescriptions: Record<number, string> = {
-                400: 'Bad Request – The request was malformed or missing required parameters',
-                401: 'Unauthorized – Invalid or expired API key/credentials',
-                403: 'Forbidden – Access denied. Check your permissions',
-                404: 'Not Found – The API endpoint or resource doesn\'t exist',
-                405: 'Method Not Allowed – This HTTP method is not supported',
-                408: 'Request Timeout – The server took too long to respond',
-                429: 'Too Many Requests – Rate limit exceeded. Try again later',
-                500: 'Internal Server Error – Something went wrong on the server',
-                502: 'Bad Gateway – The server received an invalid response',
-                503: 'Service Unavailable – The service is temporarily down',
-                504: 'Gateway Timeout – The server didn\'t respond in time',
-              };
-              const num = Number(status);
-              if (statusDescriptions[num]) return statusDescriptions[num];
-              if (num >= 400 && num < 500) return 'Client Error – Check your request parameters';
-              if (num >= 500 && num < 600) return 'Server Error – The remote service may be unavailable';
-              return '';
-            };
 
             // Check for explicit failure statuses first (4xx, 5xx HTTP codes)
             const isErrorStatus = (statusNum >= 400 && statusNum < 600) ||
@@ -361,8 +361,11 @@ const OnboardingPage = () => {
               successMessage = `Connection verified • Status: ${parsedStatus}`;
             } else {
               // Unknown status - treat as error to be safe
+              const statusDesc = getStatusDescription(parsedStatus);
               const reason = resultData.reason ? ` • ${resultData.reason}` : '';
-              errorMessage = `Connection failed • Status: ${parsedStatus}${reason}`;
+              errorMessage = statusDesc 
+                ? `${statusDesc}${reason}`
+                : `Connection failed • Unexpected status: ${parsedStatus}${reason}`;
             }
           } else if (resultData && resultData.success !== undefined) {
             // Fallback: check success field in parsed data
@@ -371,19 +374,19 @@ const OnboardingPage = () => {
               successMessage = 'Connection verified';
             } else {
               const reason = resultData.reason ? ` • ${resultData.reason}` : '';
-              errorMessage = `Connection failed${reason}`;
+              errorMessage = `Connection failed – The API returned an error${reason}`;
             }
           } else {
-            errorMessage = 'Invalid response: missing status in result';
+            errorMessage = 'Connection failed – The response was missing expected fields. The API may have changed or be misconfigured.';
           }
         } catch (parseError) {
           console.error('Failed to parse result:', parseError);
-          errorMessage = 'Invalid response format from server';
+          errorMessage = 'Connection failed – Unable to parse the server response. The API may be returning an unexpected format.';
         }
       } else {
         // Build error message from response
         if (!validActions.includes(result.action)) {
-          errorMessage = `Unexpected action: ${result.action || 'unknown'}`;
+          errorMessage = `Connection failed – Received unexpected response type "${result.action || 'unknown'}". This may indicate a configuration issue.`;
         } else if (result.success !== true) {
           // Try to parse the result field (or raw_response) for detailed error info
           let parsedReason = '';
@@ -392,7 +395,9 @@ const OnboardingPage = () => {
             if (resultData.reason) {
               parsedReason = resultData.reason;
             } else if (resultData.status) {
-              parsedReason = `Status: ${resultData.status}`;
+              // Apply human-readable description for status codes in error path too
+              const statusDesc = getStatusDescription(resultData.status);
+              parsedReason = statusDesc || `Status: ${resultData.status}`;
             }
           } else if (typeof result.result === 'string') {
             // If parsing fails, use result as-is if it's a string
@@ -400,7 +405,7 @@ const OnboardingPage = () => {
           } else if (typeof result.raw_response === 'string') {
             parsedReason = result.raw_response;
           }
-          errorMessage = parsedReason || result.reason || result.error || 'Connection test failed';
+          errorMessage = parsedReason || result.reason || result.error || 'Connection failed – The test was unsuccessful. Please verify your credentials and try again.';
         }
       }
       
