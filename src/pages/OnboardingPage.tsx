@@ -598,8 +598,18 @@ const OnboardingPage = () => {
 
   const canProceed = () => {
     if (activeStep === 0) return selectedApps.length > 0;
+    // Step 1: Allow proceeding if any app has a configured auth or is tested/connected
     if (activeStep === 1) {
-      return selectedApps.some((app) => authStates[app.objectID]?.status === 'connected');
+      return selectedApps.some((app) => {
+        const state = authStates[app.objectID];
+        // User has tested and connected
+        if (state?.status === 'connected') return true;
+        // Check if there's any configured authentication for this app
+        const hasConfiguredAuth = authenticatedApps.some(
+          auth => auth.app?.name === app.name && auth.active
+        );
+        return hasConfiguredAuth;
+      });
     }
     return true;
   };
@@ -1065,20 +1075,6 @@ const OnboardingPage = () => {
       >
         <Container maxWidth="lg">
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            {activeStep > 0 ? (
-              <Button
-                onClick={handleBack}
-                startIcon={<ArrowBackIcon />}
-                sx={{
-                  color: 'rgba(255, 255, 255, 0.5)',
-                  '&:hover': { color: 'white', backgroundColor: 'rgba(255, 255, 255, 0.05)' },
-                }}
-              >
-                Back
-              </Button>
-            ) : (
-              <Box />
-            )}
             <Stack direction="row" spacing={2}>
               {activeStep < steps.length - 1 && (
                 <Button
@@ -1091,30 +1087,42 @@ const OnboardingPage = () => {
                   Skip for now
                 </Button>
               )}
-              <Button
-                variant="contained"
-                onClick={handleNext}
-                disabled={!canProceed()}
-                endIcon={<ArrowForwardIcon />}
-                sx={{
-                  background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
-                  boxShadow: '0 4px 14px rgba(255, 102, 0, 0.25)',
-                  px: 4,
-                  py: 1.5,
-                  fontWeight: 600,
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #FF8533 0%, #FF9955 100%)',
-                    boxShadow: '0 6px 20px rgba(255, 102, 0, 0.35)',
-                  },
-                  '&.Mui-disabled': {
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    color: 'rgba(255, 255, 255, 0.3)',
-                  },
-                }}
-              >
-                {activeStep === steps.length - 1 ? 'Go to Dashboard' : 'Continue'}
-              </Button>
+              {activeStep > 0 && (
+                <Button
+                  onClick={handleBack}
+                  startIcon={<ArrowBackIcon />}
+                  sx={{
+                    color: 'rgba(255, 255, 255, 0.5)',
+                    '&:hover': { color: 'white', backgroundColor: 'rgba(255, 255, 255, 0.05)' },
+                  }}
+                >
+                  Back
+                </Button>
+              )}
             </Stack>
+            <Button
+              variant="contained"
+              onClick={handleNext}
+              disabled={!canProceed()}
+              endIcon={<ArrowForwardIcon />}
+              sx={{
+                background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
+                boxShadow: '0 4px 14px rgba(255, 102, 0, 0.25)',
+                px: 4,
+                py: 1.5,
+                fontWeight: 600,
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #FF8533 0%, #FF9955 100%)',
+                  boxShadow: '0 6px 20px rgba(255, 102, 0, 0.35)',
+                },
+                '&.Mui-disabled': {
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  color: 'rgba(255, 255, 255, 0.3)',
+                },
+              }}
+            >
+              {activeStep === steps.length - 1 ? 'Go to Dashboard' : 'Continue'}
+            </Button>
           </Box>
         </Container>
       </Box>
