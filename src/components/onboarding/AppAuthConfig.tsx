@@ -178,18 +178,18 @@ const AppAuthCard = ({
     return getBestDefaultAuth(apiAuthEntries);
   });
 
-  // Track if user explicitly selected "Add new" to prevent override
-  const [userSelectedAddNew, setUserSelectedAddNew] = useState(false);
+  // Track if user has made an explicit selection (to prevent auto-override on refresh)
+  const [userHasSelected, setUserHasSelected] = useState(false);
   
   // Track local test status for the current selection (reset when switching)
   const [localTestStatus, setLocalTestStatus] = useState<'untested' | 'testing' | 'success' | 'error'>('untested');
 
-  // Update selection when apiAuthEntries changes, but only if user didn't explicitly choose "Add new"
+  // Update selection when apiAuthEntries changes, but only on initial load (not after user selection)
   useEffect(() => {
-    if (apiAuthEntries.length > 0 && !userSelectedAddNew) {
+    if (apiAuthEntries.length > 0 && !userHasSelected) {
       setSelectedAuthId(getBestDefaultAuth(apiAuthEntries));
     }
-  }, [apiAuthEntries, userSelectedAddNew]);
+  }, [apiAuthEntries, userHasSelected]);
   
   // Reset local test status when auth selection changes
   useEffect(() => {
@@ -599,7 +599,7 @@ const AppAuthCard = ({
     setSaving(false);
     setSaveSuccess(success);
     if (success) {
-      setUserSelectedAddNew(false);
+      setUserHasSelected(false); // Allow auto-selection to pick up new auth
       setLocalCredentials({}); // Clear form after success
       setFieldErrors({}); // Clear errors
     }
@@ -808,8 +808,8 @@ const AppAuthCard = ({
                     onChange={(e) => {
                       const value = e.target.value as string;
                       setSelectedAuthId(value);
-                      // Track if user explicitly selected "Add new"
-                      setUserSelectedAddNew(value === ADD_NEW_AUTH);
+                      // Track that user has made an explicit selection
+                      setUserHasSelected(true);
                       if (value !== ADD_NEW_AUTH && onSelectAuth) {
                         onSelectAuth(app.objectID, value);
                       }
