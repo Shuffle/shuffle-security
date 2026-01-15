@@ -638,9 +638,6 @@ const AppAuthCard = ({
 
   // Check if all required fields are valid for saving
   const isFormValid = (): boolean => {
-    // Must have at least one credential
-    if (Object.keys(localCredentials).length === 0) return false;
-    
     // Check for any field errors
     if (Object.values(fieldErrors).some(err => err)) return false;
     
@@ -651,12 +648,21 @@ const AppAuthCard = ({
     }
     
     // Check required parameters are filled
-    if (auth?.parameters) {
+    if (auth?.parameters && auth.parameters.length > 0) {
       for (let i = 0; i < auth.parameters.length; i++) {
         const param = auth.parameters[i];
         const fieldKey = param.id || param.name || `param_${i}`;
-        if (param.required && !localCredentials[fieldKey]) return false;
+        if (param.required && !localCredentials[fieldKey]?.trim()) return false;
       }
+      // At least one parameter must have a value
+      const hasAnyValue = auth.parameters.some((param, index) => {
+        const fieldKey = param.id || param.name || `param_${index}`;
+        return localCredentials[fieldKey]?.trim();
+      });
+      if (!hasAnyValue) return false;
+    } else if (!isOAuth2) {
+      // Fallback API key field - must have a value
+      if (!localCredentials['api_key']?.trim()) return false;
     }
     
     return true;
@@ -1454,10 +1460,10 @@ const AppAuthCard = ({
 
                     {/* Save button only - Test Connection is available after selecting saved auth */}
                     {!isOAuth2 && (
-                      <Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 1 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 1.5 }}>
                         <Button
                           variant="outlined"
-                          size="small"
+                          size="medium"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleSave();
@@ -1466,12 +1472,12 @@ const AppAuthCard = ({
                           sx={{
                             borderColor: isFormValid() ? 'rgba(255, 102, 0, 0.5)' : 'rgba(255, 255, 255, 0.1)',
                             color: isFormValid() ? '#FF6600' : 'rgba(255, 255, 255, 0.3)',
-                            fontWeight: 500,
+                            fontWeight: 600,
                             textTransform: 'none',
-                            fontSize: '0.85rem',
-                            px: 2.5,
-                            py: 0.75,
-                            borderRadius: 1.5,
+                            fontSize: '0.9rem',
+                            px: 3,
+                            py: 1,
+                            borderRadius: 2,
                             transition: 'all 0.2s ease',
                             '&:hover': {
                               borderColor: '#FF6600',
@@ -1483,7 +1489,7 @@ const AppAuthCard = ({
                             },
                           }}
                         >
-                          {saving ? 'Saving...' : 'Save'}
+                          {saving ? 'Saving...' : 'Save Authentication'}
                         </Button>
                       </Box>
                     )}
