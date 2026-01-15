@@ -1,7 +1,7 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Box, Container, Typography, Button } from '@mui/material';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { Mail, Radar, Search, Globe, Ticket, Cloud, Shield } from 'lucide-react';
 import { LandingNavbar } from '@/components/landing/LandingNavbar';
@@ -21,12 +21,35 @@ const catchAllCategory = { id: 'other', label: 'Browse All 3,000+ Integrations',
 
 export default function AppsPage() {
   const singulRef = useRef<SingulJSHandle>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Initialize from URL query param
+  useEffect(() => {
+    const categoryParam = searchParams.get('category');
+    if (categoryParam) {
+      const category = categories.find(c => c.id === categoryParam);
+      if (category) {
+        setSearchQuery(category.searchTerm);
+        if (singulRef.current) {
+          singulRef.current.search(category.searchTerm);
+        }
+      }
+    }
+  }, []);
 
   const getActiveCategory = () => {
     const lowerQuery = searchQuery.toLowerCase().trim();
     if (lowerQuery === '') return 'other';
     return categories.find(c => c.searchTerm && lowerQuery.includes(c.searchTerm.toLowerCase()))?.id || null;
+  };
+
+  const handleCategoryClick = (categoryId: string, searchTerm: string) => {
+    setSearchQuery(searchTerm);
+    setSearchParams(searchTerm ? { category: categoryId } : {});
+    if (singulRef.current) {
+      singulRef.current.search(searchTerm);
+    }
   };
 
   const activeCategory = getActiveCategory();
@@ -166,13 +189,7 @@ export default function AppsPage() {
                         backgroundColor: isActive ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255, 255, 255, 0.05)',
                       },
                     }}
-                    onClick={() => {
-                      const term = category.searchTerm || '';
-                      setSearchQuery(term);
-                      if (singulRef.current) {
-                        singulRef.current.search(term);
-                      }
-                    }}
+                    onClick={() => handleCategoryClick(category.id, category.searchTerm)}
                   >
                     <Box
                       sx={{
@@ -229,12 +246,7 @@ export default function AppsPage() {
                   backgroundColor: activeCategory === 'other' ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255, 255, 255, 0.04)',
                 },
               }}
-              onClick={() => {
-                setSearchQuery('');
-                if (singulRef.current) {
-                  singulRef.current.search('');
-                }
-              }}
+              onClick={() => handleCategoryClick('other', '')}
             >
               <Globe size={18} color={activeCategory === 'other' ? '#FF6600' : 'rgba(255, 255, 255, 0.5)'} />
               <Typography
