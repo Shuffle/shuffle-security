@@ -101,6 +101,7 @@ interface ApiAuthEntry {
   validation?: {
     valid: boolean;
     error?: string;
+    last_valid?: number;
   };
 }
 
@@ -1374,10 +1375,14 @@ export const AppAuthConfig = ({
     );
   };
 
-  // Helper to check if app is validated (using current authenticatedApps)
+  // Helper to check if app is validated (must be valid AND validated within last 30 days)
   const isAppValidated = (app: AlgoliaSearchApp): boolean => {
     const entries = getApiAuthEntries(app);
-    return entries.some(e => e.validation?.valid === true);
+    const thirtyDaysAgo = Math.floor(Date.now() / 1000) - (30 * 24 * 60 * 60);
+    return entries.some(e => 
+      e.validation?.valid === true && 
+      (e.validation?.last_valid ?? 0) > thirtyDaysAgo
+    );
   };
 
   // Keep initial sort order stable - only sort once on first render
