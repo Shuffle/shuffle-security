@@ -71,21 +71,24 @@ const IOCTypesPage = () => {
         sessionStorage.setItem(initKey, 'true');
         
         setIsInitializing(true);
-        setInitProgress(0);
+        setInitProgress(50); // Show progress immediately
         
-        const total = DEFAULT_IOC_TYPES.length;
-        for (let i = 0; i < total; i++) {
-          await addItem(DEFAULT_IOC_TYPES[i].name, DEFAULT_IOC_TYPES[i]);
-          setInitProgress(((i + 1) / total) * 100);
-        }
+        // Use bulk API for faster initialization
+        const { setDatastoreItems } = await import('@/services/datastore');
+        const bulkItems = DEFAULT_IOC_TYPES.map(ioc => ({
+          key: ioc.name,
+          value: ioc,
+        }));
+        await setDatastoreItems(bulkItems, CATEGORY);
         
+        setInitProgress(100);
         setIsInitializing(false);
         await fetchItems();
       }
     };
     
     autoInitialize();
-  }, [items, isLoading, addItem, fetchItems]);
+  }, [items, isLoading, fetchItems]);
 
   useEffect(() => {
     const parsed: IOCType[] = items.map(item => {
@@ -100,14 +103,17 @@ const IOCTypesPage = () => {
 
   const handleInitDefaults = async () => {
     setIsInitializing(true);
-    setInitProgress(0);
+    setInitProgress(50); // Show progress immediately
     
-    const total = DEFAULT_IOC_TYPES.length;
-    for (let i = 0; i < total; i++) {
-      await addItem(DEFAULT_IOC_TYPES[i].name, DEFAULT_IOC_TYPES[i]);
-      setInitProgress(((i + 1) / total) * 100);
-    }
+    // Use bulk API for faster initialization
+    const { setDatastoreItems } = await import('@/services/datastore');
+    const bulkItems = DEFAULT_IOC_TYPES.map(ioc => ({
+      key: ioc.name,
+      value: ioc,
+    }));
+    await setDatastoreItems(bulkItems, CATEGORY);
     
+    setInitProgress(100);
     setIsInitializing(false);
     await fetchItems();
   };
