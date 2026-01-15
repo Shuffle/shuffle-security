@@ -409,7 +409,27 @@ const OnboardingPage = () => {
         }
       } else {
         // Build error message from response
-        if (!validActions.includes(result.action)) {
+        // FIRST: Check top-level status field (e.g., {"success":false,"status":401,...})
+        if (result.status !== undefined) {
+          const topLevelStatus = result.status;
+          const statusNum = Number(topLevelStatus);
+          const statusLower = String(topLevelStatus).toLowerCase();
+          
+          // Track credential errors (401/403) for special handling
+          const isTopLevelCredentialError = statusNum === 401 || statusNum === 403 ||
+                                            statusLower === 'unauthorized' || statusLower === 'forbidden';
+          if (isTopLevelCredentialError) {
+            errorCode = statusNum || (statusLower === 'unauthorized' ? 401 : 403);
+          }
+          
+          const statusDesc = getStatusDescription(topLevelStatus);
+          // Try to get more details from output.error if present
+          const outputError = result.output?.error?.message || result.output?.error?.code || '';
+          const reason = outputError ? ` • ${outputError}` : '';
+          errorMessage = statusDesc 
+            ? `${statusDesc}${reason}`
+            : `Connection failed • Status: ${topLevelStatus}${reason}`;
+        } else if (!validActions.includes(result.action)) {
           errorMessage = `Connection failed – Received unexpected response type "${result.action || 'unknown'}". This may indicate a configuration issue.`;
         } else if (result.success !== true) {
           // Try to parse the result field (or raw_response) for detailed error info
@@ -422,6 +442,12 @@ const OnboardingPage = () => {
               // Apply human-readable description for status codes in error path too
               const statusDesc = getStatusDescription(resultData.status);
               parsedReason = statusDesc || `Status: ${resultData.status}`;
+              
+              // Also check for credential errors in parsed data
+              const nestedStatusNum = Number(resultData.status);
+              if (nestedStatusNum === 401 || nestedStatusNum === 403) {
+                errorCode = nestedStatusNum;
+              }
             }
           } else if (typeof result.result === 'string') {
             // If parsing fails, use result as-is if it's a string
