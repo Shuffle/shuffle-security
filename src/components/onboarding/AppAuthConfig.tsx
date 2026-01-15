@@ -182,7 +182,8 @@ const AppAuthCard = ({
   const [userHasSelected, setUserHasSelected] = useState(false);
   
   // Track local test status for the current selection (reset when switching)
-  const [localTestStatus, setLocalTestStatus] = useState<'untested' | 'testing' | 'success' | 'error'>('untested');
+  // 'pending_validation' = test passed but backend validation not yet confirmed
+  const [localTestStatus, setLocalTestStatus] = useState<'untested' | 'testing' | 'success' | 'pending_validation' | 'error'>('untested');
 
   // Update selection when apiAuthEntries changes, but only on initial load (not after user selection)
   useEffect(() => {
@@ -196,23 +197,25 @@ const AppAuthCard = ({
     setLocalTestStatus('untested');
   }, [selectedAuthId]);
   
-  // Sync local test status with authState
+  // Get the currently selected auth entry (needed for validation check)
+  const selectedAuth = apiAuthEntries.find(
+    auth => (auth.id || auth.label || '') === selectedAuthId
+  );
+  
+  // Sync local test status with authState, checking backend validation status
   useEffect(() => {
     if (authState.status === 'testing') {
       setLocalTestStatus('testing');
     } else if (authState.status === 'connected') {
-      setLocalTestStatus('success');
+      // Check if backend has actually validated this auth
+      const isBackendValidated = selectedAuth?.validation?.valid === true;
+      setLocalTestStatus(isBackendValidated ? 'success' : 'pending_validation');
     } else if (authState.status === 'error') {
       setLocalTestStatus('error');
     }
-  }, [authState.status]);
+  }, [authState.status, selectedAuth?.validation?.valid]);
 
   const showAddNewForm = selectedAuthId === ADD_NEW_AUTH;
-  
-  // Get the currently selected auth entry
-  const selectedAuth = apiAuthEntries.find(
-    auth => (auth.id || auth.label || '') === selectedAuthId
-  );
 
   // Compute configured/tested status from selected auth entry
   const isConfigured = selectedAuth?.active === true || apiAuthEntries.some(a => a.active === true);
@@ -908,11 +911,15 @@ const AppAuthCard = ({
                         borderRadius: '50%',
                         backgroundColor: localTestStatus === 'success' 
                           ? '#22c55e' 
+                          : localTestStatus === 'pending_validation'
+                          ? '#f59e0b'
                           : localTestStatus === 'error'
                           ? '#ef4444'
                           : '#9ca3af',
                         boxShadow: localTestStatus === 'success' 
                           ? '0 0 8px rgba(34, 197, 94, 0.6)'
+                          : localTestStatus === 'pending_validation'
+                          ? '0 0 8px rgba(245, 158, 11, 0.6)'
                           : localTestStatus === 'error'
                           ? '0 0 8px rgba(239, 68, 68, 0.6)'
                           : '0 0 8px rgba(156, 163, 175, 0.4)',
@@ -926,6 +933,8 @@ const AppAuthCard = ({
                       }}>
                         {localTestStatus === 'success' 
                           ? 'Verified Authentication' 
+                          : localTestStatus === 'pending_validation'
+                          ? 'Awaiting Backend Validation'
                           : localTestStatus === 'error'
                           ? 'Test Failed'
                           : 'Pending Verification'}
@@ -966,6 +975,8 @@ const AppAuthCard = ({
                           border: `1px solid ${
                             localTestStatus === 'success' 
                               ? 'rgba(34, 197, 94, 0.2)' 
+                              : localTestStatus === 'pending_validation'
+                              ? 'rgba(245, 158, 11, 0.2)'
                               : localTestStatus === 'error'
                               ? 'rgba(239, 68, 68, 0.2)'
                               : isTested
@@ -977,6 +988,8 @@ const AppAuthCard = ({
                           <CheckCircleIcon sx={{ 
                             color: localTestStatus === 'success' 
                               ? '#22c55e' 
+                              : localTestStatus === 'pending_validation'
+                              ? '#f59e0b'
                               : localTestStatus === 'error'
                               ? '#ef4444'
                               : isTested
@@ -1000,6 +1013,8 @@ const AppAuthCard = ({
                           <Typography sx={{ 
                             color: localTestStatus === 'success' 
                               ? '#22c55e' 
+                              : localTestStatus === 'pending_validation'
+                              ? '#f59e0b'
                               : localTestStatus === 'error'
                               ? '#ef4444'
                               : isTested
@@ -1011,6 +1026,8 @@ const AppAuthCard = ({
                           }}>
                             {localTestStatus === 'success' 
                               ? '✓ Connection verified' 
+                              : localTestStatus === 'pending_validation'
+                              ? '⏳ Test passed, awaiting backend validation'
                               : localTestStatus === 'error'
                               ? '✗ Test failed'
                               : localTestStatus === 'testing'
@@ -1133,6 +1150,25 @@ const AppAuthCard = ({
                           }}
                         >
                           {authState.successMessage || 'Connection verified successfully'}
+                        </Alert>
+                      </Box>
+                    )}
+                    {localTestStatus === 'pending_validation' && (
+                      <Box sx={{ 
+                        px: { xs: 2, sm: 2.5 }, 
+                        pb: { xs: 2, sm: 2.5 },
+                      }}>
+                        <Alert
+                          severity="warning"
+                          sx={{
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            color: '#f59e0b',
+                            border: '1px solid rgba(245, 158, 11, 0.2)',
+                            borderRadius: 2,
+                            '& .MuiAlert-icon': { color: '#f59e0b' },
+                          }}
+                        >
+                          Test returned Status 200, but backend validation is still pending. The authentication may take a moment to be fully verified.
                         </Alert>
                       </Box>
                     )}
