@@ -392,133 +392,130 @@ const IntegrationsVisual = () => (
   </Box>
 );
 
-const DetectionLoopVisual = () => (
-  <Box
-    sx={{
-      p: 4,
-      borderRadius: 4,
-      background: 'linear-gradient(145deg, rgba(14, 165, 233, 0.06) 0%, rgba(14, 165, 233, 0.01) 100%)',
-      border: '1px solid rgba(14, 165, 233, 0.12)',
-      position: 'relative',
-    }}
-  >
-    {/* Loop visualization */}
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      {/* Loop diagram */}
-      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-        <Box
-          sx={{
-            position: 'relative',
-            width: 200,
-            height: 200,
-          }}
-        >
-          {/* Circular loop arrows */}
-          <Box
-            component={motion.div}
-            animate={{ rotate: 360 }}
-            transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
-            sx={{
-              position: 'absolute',
-              inset: 0,
-              borderRadius: '50%',
-              border: '2px dashed rgba(14, 165, 233, 0.3)',
-            }}
-          />
-          
-          {/* Loop stages */}
-          {[
-            { label: 'Detect', angle: 0, color: '#ef4444' },
-            { label: 'Analyze', angle: 90, color: '#f59e0b' },
-            { label: 'Respond', angle: 180, color: '#22c55e' },
-            { label: 'Learn', angle: 270, color: '#0ea5e9' },
-          ].map((stage, i) => {
-            const radians = (stage.angle - 90) * (Math.PI / 180);
-            const x = 100 + 70 * Math.cos(radians);
-            const y = 100 + 70 * Math.sin(radians);
-            return (
-              <motion.div
-                key={stage.label}
-                initial={{ opacity: 0, scale: 0 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.15 }}
-                style={{
-                  position: 'absolute',
-                  left: x,
-                  top: y,
-                  transform: 'translate(-50%, -50%)',
-                }}
-              >
+const DetectionLoopVisual = () => {
+  const stages = [
+    { label: 'Alert', icon: '⚡', color: '#ef4444', desc: 'New threat detected' },
+    { label: 'Triage', icon: '🔍', color: '#f59e0b', desc: 'Analyst reviews' },
+    { label: 'Action', icon: '🛡️', color: '#22c55e', desc: 'Response executed' },
+    { label: 'Tune', icon: '🎯', color: '#0ea5e9', desc: 'Rules refined' },
+  ];
+
+  return (
+    <Box
+      sx={{
+        p: 4,
+        borderRadius: 4,
+        background: 'linear-gradient(145deg, rgba(14, 165, 233, 0.06) 0%, rgba(14, 165, 233, 0.01) 100%)',
+        border: '1px solid rgba(14, 165, 233, 0.12)',
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Flowing loop visualization */}
+      <Stack spacing={0}>
+        {stages.map((stage, i) => (
+          <motion.div
+            key={stage.label}
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: i * 0.12 }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              {/* Vertical connector */}
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 48 }}>
                 <Box
+                  component={motion.div}
+                  animate={{ scale: [1, 1.15, 1] }}
+                  transition={{ duration: 2, repeat: Infinity, delay: i * 0.5 }}
                   sx={{
-                    py: 1,
-                    px: 2,
+                    width: 48,
+                    height: 48,
                     borderRadius: 2,
-                    background: `${stage.color}15`,
+                    background: `linear-gradient(135deg, ${stage.color}20 0%, ${stage.color}10 100%)`,
                     border: `1px solid ${stage.color}40`,
-                    whiteSpace: 'nowrap',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.4rem',
                   }}
                 >
-                  <Typography sx={{ color: stage.color, fontSize: '0.8rem', fontWeight: 600 }}>
-                    {stage.label}
-                  </Typography>
+                  {stage.icon}
                 </Box>
-              </motion.div>
-            );
-          })}
-
-          {/* Center icon */}
+                {i < stages.length - 1 && (
+                  <Box
+                    component={motion.div}
+                    initial={{ height: 0 }}
+                    whileInView={{ height: 32 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.12 + 0.2, duration: 0.3 }}
+                    sx={{
+                      width: 2,
+                      background: `linear-gradient(to bottom, ${stage.color}60, ${stages[i + 1].color}60)`,
+                    }}
+                  />
+                )}
+              </Box>
+              
+              {/* Content */}
+              <Box sx={{ flex: 1, py: 1.5 }}>
+                <Typography sx={{ fontWeight: 600, fontSize: '0.95rem', color: stage.color }}>
+                  {stage.label}
+                </Typography>
+                <Typography sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>
+                  {stage.desc}
+                </Typography>
+              </Box>
+              
+              {/* Arrow for flow */}
+              {i < stages.length - 1 && (
+                <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+                  <motion.div
+                    animate={{ opacity: [0.3, 1, 0.3] }}
+                    transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.3 }}
+                  >
+                    <Typography sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>↓</Typography>
+                  </motion.div>
+                </Box>
+              )}
+            </Box>
+          </motion.div>
+        ))}
+        
+        {/* Loop back indicator */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.6 }}
+        >
           <Box
             sx={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: 60,
-              height: 60,
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, rgba(14, 165, 233, 0.2) 0%, rgba(14, 165, 233, 0.1) 100%)',
-              border: '1px solid rgba(14, 165, 233, 0.3)',
+              mt: 2,
+              pt: 2,
+              borderTop: '1px dashed rgba(14, 165, 233, 0.3)',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '1.5rem',
+              gap: 1.5,
             }}
           >
-            🔄
-          </Box>
-        </Box>
-      </Box>
-
-      {/* Stats */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2 }}>
-        {[
-          { label: 'False Positives', value: '-73%', color: '#22c55e' },
-          { label: 'Detection Speed', value: '+4x', color: '#0ea5e9' },
-        ].map((stat) => (
-          <Box
-            key={stat.label}
-            sx={{
-              p: 2,
-              borderRadius: 2,
-              background: 'rgba(255, 255, 255, 0.02)',
-              border: '1px solid rgba(255, 255, 255, 0.06)',
-              textAlign: 'center',
-            }}
-          >
-            <Typography sx={{ color: stat.color, fontSize: '1.5rem', fontWeight: 700 }}>
-              {stat.value}
-            </Typography>
-            <Typography sx={{ color: 'text.secondary', fontSize: '0.75rem' }}>
-              {stat.label}
+            <Box
+              component={motion.div}
+              animate={{ rotate: [0, 360] }}
+              transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+              sx={{ fontSize: '1rem' }}
+            >
+              ↻
+            </Box>
+            <Typography sx={{ color: 'text.secondary', fontSize: '0.85rem', fontStyle: 'italic' }}>
+              Each cycle sharpens detection, reducing noise
             </Typography>
           </Box>
-        ))}
-      </Box>
+        </motion.div>
+      </Stack>
     </Box>
-  </Box>
-);
+  );
+};
 
 const features: Omit<FeatureSectionProps, 'reverse'>[] = [
   {
