@@ -1425,10 +1425,17 @@ export const AppAuthConfig = ({
     return entries.some(e => e.validation?.valid === true);
   };
 
-  // Keep initial sort order stable - only sort once on first render
+  // Keep initial sort order stable - only sort once when authenticatedApps is loaded
   const initialSortRef = useRef<AlgoliaSearchApp[] | null>(null);
+  const authAppsLoadedRef = useRef<boolean>(false);
   
-  if (initialSortRef.current === null && apps.length > 0) {
+  // Reset sort ref when authenticatedApps first loads with data
+  if (!authAppsLoadedRef.current && authenticatedApps.length > 0) {
+    authAppsLoadedRef.current = true;
+    initialSortRef.current = null; // Force re-sort
+  }
+  
+  if (initialSortRef.current === null && apps.length > 0 && authenticatedApps.length > 0) {
     // Capture initial sort: Not Configured > Not Tested > Tested
     // Lower priority number = higher in list
     const getPriority = (app: AlgoliaSearchApp): number => {
