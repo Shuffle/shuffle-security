@@ -9,7 +9,7 @@
 
 export const API_CONFIG = {
   // Shuffle backend URL - can be overridden via environment variable
-  baseUrl: import.meta.env.VITE_SHUFFLE_API_URL || 'https://e8d02e3dbebd.ngrok-free.app',
+  baseUrl: import.meta.env.VITE_SHUFFLE_API_URL || 'https://9da458347e29.ngrok-free.app',
   
   // API version
   version: 'v1',
