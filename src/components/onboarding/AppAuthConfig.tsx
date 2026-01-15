@@ -1131,8 +1131,12 @@ const AppAuthCard = ({
                             ? 'rgba(34, 197, 94, 0.1)' 
                             : localTestStatus === 'error'
                             ? 'rgba(239, 68, 68, 0.1)'
+                            : localTestStatus === 'pending_validation'
+                            ? 'rgba(245, 158, 11, 0.1)'
                             : isTested
                             ? 'rgba(34, 197, 94, 0.1)'
+                            : isConfigured
+                            ? 'rgba(245, 158, 11, 0.1)' // Yellow for configured but not tested
                             : 'rgba(156, 163, 175, 0.1)',
                           border: `1px solid ${
                             localTestStatus === 'success' 
@@ -1143,6 +1147,8 @@ const AppAuthCard = ({
                               ? 'rgba(239, 68, 68, 0.2)'
                               : isTested
                               ? 'rgba(34, 197, 94, 0.2)'
+                              : isConfigured
+                              ? 'rgba(245, 158, 11, 0.2)' // Yellow for configured but not tested
                               : 'rgba(156, 163, 175, 0.2)'
                           }`,
                           flexShrink: 0,
@@ -1156,6 +1162,8 @@ const AppAuthCard = ({
                               ? '#ef4444'
                               : isTested
                               ? '#22c55e'
+                              : isConfigured
+                              ? '#f59e0b' // Yellow for configured but not tested
                               : '#9ca3af', 
                             fontSize: 20 
                           }} />
@@ -1181,10 +1189,12 @@ const AppAuthCard = ({
                               ? '#ef4444'
                               : isTested
                               ? '#22c55e'
+                              : isConfigured
+                              ? '#f59e0b' // Yellow for configured but not tested
                               : 'rgba(255, 255, 255, 0.4)', 
                             fontSize: '0.75rem',
                             mt: 0.25,
-                            fontWeight: (localTestStatus !== 'untested' || isTested) ? 500 : 400,
+                            fontWeight: (localTestStatus !== 'untested' || isTested || isConfigured) ? 500 : 400,
                           }}>
                             {localTestStatus === 'success' 
                               ? '✓ Connection verified' 
