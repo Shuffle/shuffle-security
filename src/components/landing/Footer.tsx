@@ -56,7 +56,7 @@ export const Footer = () => {
                   WebkitTextFillColor: 'transparent',
                 }}
               >
-                Shuffle Cases
+                Shuffle Security
               </Typography>
             </Box>
             <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3, maxWidth: 280 }}>
