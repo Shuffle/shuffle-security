@@ -3,19 +3,19 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
-// Floating integration icons data
+// Floating integration icons with real shuffler.io icons
 const floatingIcons = [
-  { name: 'Slack', color: '#E01E5A', x: '8%', y: '15%', delay: 0, size: 48 },
-  { name: 'Jira', color: '#0052CC', x: '85%', y: '20%', delay: 0.2, size: 44 },
-  { name: 'AWS', color: '#FF9900', x: '12%', y: '65%', delay: 0.4, size: 52 },
-  { name: 'Azure', color: '#0089D6', x: '88%', y: '55%', delay: 0.6, size: 46 },
-  { name: 'Splunk', color: '#65A637', x: '5%', y: '40%', delay: 0.8, size: 40 },
-  { name: 'PagerDuty', color: '#06AC38', x: '92%', y: '38%', delay: 1.0, size: 42 },
-  { name: 'ServiceNow', color: '#81B5A1', x: '15%', y: '85%', delay: 1.2, size: 38 },
-  { name: 'GCP', color: '#4285F4', x: '82%', y: '75%', delay: 1.4, size: 44 },
+  { name: 'Splunk', icon: 'https://shuffler.io/images/apps/splunk.png', x: '6%', y: '12%', delay: 0, size: 56 },
+  { name: 'CrowdStrike', icon: 'https://shuffler.io/images/apps/crowdstrike.png', x: '88%', y: '15%', delay: 0.15, size: 52 },
+  { name: 'Microsoft Sentinel', icon: 'https://shuffler.io/images/apps/microsoft_sentinel.png', x: '4%', y: '45%', delay: 0.3, size: 48 },
+  { name: 'ServiceNow', icon: 'https://shuffler.io/images/apps/servicenow.png', x: '92%', y: '40%', delay: 0.45, size: 50 },
+  { name: 'VirusTotal', icon: 'https://shuffler.io/images/apps/virustotal.png', x: '10%', y: '75%', delay: 0.6, size: 46 },
+  { name: 'TheHive', icon: 'https://shuffler.io/images/apps/thehive.png', x: '85%', y: '70%', delay: 0.75, size: 52 },
+  { name: 'Jira', icon: 'https://shuffler.io/images/apps/jira.png', x: '18%', y: '28%', delay: 0.9, size: 44 },
+  { name: 'Slack', icon: 'https://shuffler.io/images/apps/slack.png', x: '80%', y: '85%', delay: 1.05, size: 48 },
 ];
 
-const FloatingIcon = ({ name, color, x, y, delay, size }: typeof floatingIcons[0]) => (
+const FloatingIcon = ({ name, icon, x, y, delay, size }: typeof floatingIcons[0]) => (
   <motion.div
     initial={{ opacity: 0, scale: 0 }}
     animate={{ opacity: 1, scale: 1 }}
@@ -29,11 +29,10 @@ const FloatingIcon = ({ name, color, x, y, delay, size }: typeof floatingIcons[0
   >
     <motion.div
       animate={{ 
-        y: [0, -12, 0],
-        rotate: [0, 5, -5, 0],
+        y: [0, -15, 0],
       }}
       transition={{ 
-        duration: 4 + Math.random() * 2,
+        duration: 5 + Math.random() * 2,
         repeat: Infinity,
         ease: 'easeInOut',
         delay: delay,
@@ -44,23 +43,32 @@ const FloatingIcon = ({ name, color, x, y, delay, size }: typeof floatingIcons[0
           width: size,
           height: size,
           borderRadius: 3,
-          background: `linear-gradient(135deg, ${color}20 0%, ${color}10 100%)`,
-          border: `1px solid ${color}30`,
+          background: 'rgba(255, 255, 255, 0.06)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          backdropFilter: 'blur(8px)',
-          boxShadow: `0 8px 32px ${color}20`,
+          backdropFilter: 'blur(12px)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+          overflow: 'hidden',
           transition: 'all 0.3s ease',
           '&:hover': {
-            transform: 'scale(1.1)',
-            boxShadow: `0 12px 40px ${color}30`,
+            transform: 'scale(1.15)',
+            borderColor: 'rgba(255, 102, 0, 0.4)',
+            boxShadow: '0 12px 40px rgba(255, 102, 0, 0.2)',
           },
         }}
       >
-        <Typography sx={{ fontSize: size * 0.4, fontWeight: 700, color }}>
-          {name.slice(0, 2).toUpperCase()}
-        </Typography>
+        <Box
+          component="img"
+          src={icon}
+          alt={name}
+          sx={{
+            width: size * 0.65,
+            height: size * 0.65,
+            objectFit: 'contain',
+          }}
+        />
       </Box>
     </motion.div>
   </motion.div>
@@ -207,7 +215,7 @@ export const HeroSection = () => {
               variant="h5"
               sx={{
                 color: 'text.secondary',
-                maxWidth: 600,
+                maxWidth: 650,
                 mx: 'auto',
                 mb: 6,
                 fontWeight: 400,
@@ -215,11 +223,15 @@ export const HeroSection = () => {
                 fontSize: { xs: '1.1rem', md: '1.35rem' },
               }}
             >
-              AI-powered incident response that reaches{' '}
-              <Box component="span" sx={{ color: '#22c55e', fontWeight: 600 }}>
-                everywhere
+              Find{' '}
+              <Box component="span" sx={{ color: '#FF6600', fontWeight: 600 }}>
+                ANY
               </Box>
-              —cloud, on-prem, hybrid. Every action is logged, every decision is yours.
+              {' '}information in{' '}
+              <Box component="span" sx={{ color: '#FF6600', fontWeight: 600 }}>
+                ANY
+              </Box>
+              {' '}of your tools. Use your existing stack, fill in the gaps—3,000+ integrations out of the box.
             </Typography>
           </motion.div>
 
@@ -263,7 +275,7 @@ export const HeroSection = () => {
             </Typography>
           </motion.div>
 
-          {/* Integration logos strip */}
+          {/* Tool category badges */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -275,12 +287,12 @@ export const HeroSection = () => {
                   color: 'text.secondary',
                   fontSize: '0.85rem',
                   fontWeight: 500,
-                  mb: 3,
+                  mb: 4,
                   textTransform: 'uppercase',
                   letterSpacing: '0.1em',
                 }}
               >
-                Connects to everything you already use
+                Your existing tools. Your data sources. Connected.
               </Typography>
               <Box
                 sx={{
@@ -288,55 +300,74 @@ export const HeroSection = () => {
                   justifyContent: 'center',
                   flexWrap: 'wrap',
                   gap: 2,
+                  mb: 4,
                 }}
               >
-                {['Slack', 'Jira', 'ServiceNow', 'PagerDuty', 'Splunk', 'AWS', 'Azure', 'GCP'].map((name, i) => (
+                {[
+                  { name: 'SIEM', icon: 'https://shuffler.io/images/apps/splunk.png' },
+                  { name: 'Email', icon: 'https://shuffler.io/images/apps/gmail.png' },
+                  { name: 'EDR', icon: 'https://shuffler.io/images/apps/crowdstrike.png' },
+                  { name: 'ITSM', icon: 'https://shuffler.io/images/apps/servicenow.png' },
+                  { name: 'Threat Intel', icon: 'https://shuffler.io/images/apps/virustotal.png' },
+                  { name: 'Cloud', icon: 'https://shuffler.io/images/apps/aws.png' },
+                ].map((cat, i) => (
                   <motion.div
-                    key={name}
+                    key={cat.name}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.7 + i * 0.05 }}
+                    transition={{ delay: 0.7 + i * 0.08 }}
                   >
                     <Box
                       sx={{
-                        py: 1,
-                        px: 2.5,
-                        borderRadius: 2,
-                        background: 'rgba(255, 255, 255, 0.03)',
-                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        py: 1.5,
+                        px: 3,
+                        borderRadius: 3,
+                        background: 'rgba(255, 255, 255, 0.04)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1.5,
                         transition: 'all 0.2s ease',
                         '&:hover': {
-                          background: 'rgba(255, 255, 255, 0.06)',
+                          background: 'rgba(255, 102, 0, 0.08)',
                           borderColor: 'rgba(255, 102, 0, 0.3)',
+                          transform: 'translateY(-2px)',
                         },
                       }}
                     >
-                      <Typography sx={{ color: 'text.secondary', fontSize: '0.85rem', fontWeight: 500 }}>
-                        {name}
+                      <Box
+                        component="img"
+                        src={cat.icon}
+                        alt={cat.name}
+                        sx={{ width: 24, height: 24, objectFit: 'contain' }}
+                      />
+                      <Typography sx={{ color: 'text.primary', fontSize: '0.9rem', fontWeight: 500 }}>
+                        {cat.name}
                       </Typography>
                     </Box>
                   </motion.div>
                 ))}
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 1.1 }}
-                >
-                  <Box
-                    sx={{
-                      py: 1,
-                      px: 2.5,
-                      borderRadius: 2,
-                      background: 'rgba(255, 102, 0, 0.1)',
-                      border: '1px solid rgba(255, 102, 0, 0.25)',
-                    }}
-                  >
-                    <Typography sx={{ color: 'primary.main', fontSize: '0.85rem', fontWeight: 600 }}>
-                      + 200 more
-                    </Typography>
-                  </Box>
-                </motion.div>
               </Box>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.2 }}
+              >
+                <Box
+                  sx={{
+                    display: 'inline-flex',
+                    py: 1,
+                    px: 3,
+                    borderRadius: 10,
+                    background: 'linear-gradient(135deg, rgba(255, 102, 0, 0.15) 0%, rgba(255, 102, 0, 0.05) 100%)',
+                    border: '1px solid rgba(255, 102, 0, 0.25)',
+                  }}
+                >
+                  <Typography sx={{ color: 'primary.main', fontSize: '0.9rem', fontWeight: 600 }}>
+                    + 3,000 more integrations
+                  </Typography>
+                </Box>
+              </motion.div>
             </Box>
           </motion.div>
         </Box>

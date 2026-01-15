@@ -322,17 +322,17 @@ const IntegrationsVisual = () => (
       border: '1px solid rgba(139, 92, 246, 0.12)',
     }}
   >
-    {/* Integration grid */}
+    {/* Integration grid with real icons */}
     <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 2 }}>
       {[
-        { name: 'Slack', emoji: '💬' },
-        { name: 'Jira', emoji: '📋' },
-        { name: 'Teams', emoji: '👥' },
-        { name: 'Email', emoji: '📧' },
-        { name: 'Splunk', emoji: '📊' },
-        { name: 'S3', emoji: '🪣' },
-        { name: 'Okta', emoji: '🔐' },
-        { name: 'API', emoji: '🔌' },
+        { name: 'Splunk', icon: 'https://shuffler.io/images/apps/splunk.png' },
+        { name: 'CrowdStrike', icon: 'https://shuffler.io/images/apps/crowdstrike.png' },
+        { name: 'Sentinel', icon: 'https://shuffler.io/images/apps/microsoft_sentinel.png' },
+        { name: 'ServiceNow', icon: 'https://shuffler.io/images/apps/servicenow.png' },
+        { name: 'VirusTotal', icon: 'https://shuffler.io/images/apps/virustotal.png' },
+        { name: 'TheHive', icon: 'https://shuffler.io/images/apps/thehive.png' },
+        { name: 'Jira', icon: 'https://shuffler.io/images/apps/jira.png' },
+        { name: 'Slack', icon: 'https://shuffler.io/images/apps/slack.png' },
       ].map((int, i) => (
         <motion.div
           key={int.name}
@@ -354,6 +354,7 @@ const IntegrationsVisual = () => (
               justifyContent: 'center',
               gap: 1,
               cursor: 'pointer',
+              p: 2,
               transition: 'all 0.2s ease',
               '&:hover': {
                 background: 'rgba(139, 92, 246, 0.1)',
@@ -361,7 +362,12 @@ const IntegrationsVisual = () => (
               },
             }}
           >
-            <Typography sx={{ fontSize: '1.5rem' }}>{int.emoji}</Typography>
+            <Box
+              component="img"
+              src={int.icon}
+              alt={int.name}
+              sx={{ width: 32, height: 32, objectFit: 'contain' }}
+            />
             <Typography sx={{ color: 'text.secondary', fontSize: '0.7rem', fontWeight: 500 }}>{int.name}</Typography>
           </Box>
         </motion.div>
@@ -369,7 +375,7 @@ const IntegrationsVisual = () => (
     </Box>
     <Box sx={{ mt: 3, p: 2, borderRadius: 2, background: 'rgba(139, 92, 246, 0.1)', border: '1px solid rgba(139, 92, 246, 0.2)' }}>
       <Typography sx={{ color: '#8b5cf6', fontSize: '0.85rem', textAlign: 'center' }}>
-        200+ integrations • REST API • Webhooks • Custom SDK
+        3,000+ integrations • REST API • Webhooks • SDK
       </Typography>
     </Box>
   </Box>
@@ -406,13 +412,13 @@ const features: Omit<FeatureSectionProps, 'reverse'>[] = [
   },
   {
     icon: null,
-    title: 'Endless',
+    title: '3,000+',
     highlight: 'Integrations',
-    description: 'Connect to everything you already use. Pull alerts from any source, push actions to any system, and build workflows that span your entire stack.',
+    description: 'Use your existing tools, fill in the gaps. SIEM, Email, EDR, ITSM, Threat Intel—connect them all and find ANY information in ANY of your data sources.',
     bullets: [
-      'ServiceNow, Jira, PagerDuty, Splunk, and 200+ more',
+      'Splunk, CrowdStrike, Sentinel, ServiceNow, and 3,000+ more',
+      'Pull from SIEM, Email, EDR, ITSM, Threat Intel sources',
       'Bi-directional sync keeps everything in lockstep',
-      'REST API and webhooks for custom systems',
       'Build new integrations in minutes with our SDK',
     ],
     color: '#8b5cf6',
