@@ -56,13 +56,19 @@ const isOAuth2Type = (type: string | undefined): boolean => {
   return lowerType === 'oauth2' || lowerType === 'oauth2-app';
 };
 
-// Helper to check if auth type EXPLICITLY indicates no authentication required
-// IMPORTANT: Only return true if there's an explicit "no auth" type, NOT just missing config
+// Helper to check if auth type indicates no authentication required
+// Returns true for explicit "no auth" types OR apps with no parameters/OAuth config
 const isNoAuthRequired = (auth: AppAuthentication | undefined): boolean => {
-  if (!auth) return false; // No auth object = we don't know, show fallback form
+  if (!auth) return false; // No auth object loaded yet = unknown
   const type = auth.type?.toLowerCase() || '';
-  // Only explicit "no auth" types should skip the form
+  // Explicit "no auth" types
   if (type === 'none' || type === 'no_auth' || type === 'no authentication' || type === 'no_key') return true;
+  // Check if there's nothing to configure (not OAuth, no parameters)
+  const isOAuth = type === 'oauth2' || type === 'oauth2-app';
+  const hasParameters = auth.parameters && auth.parameters.length > 0;
+  const hasOAuthConfig = auth.client_id || auth.client_secret || auth.token_uri;
+  // If no OAuth and no parameters, auth is not required
+  if (!isOAuth && !hasParameters && !hasOAuthConfig) return true;
   return false;
 };
 
@@ -773,37 +779,54 @@ const AppAuthCard = ({
             width: { xs: '100%', sm: 'auto' },
             justifyContent: { xs: 'flex-start', sm: 'flex-end' },
           }}>
-            {/* Configured status chip */}
-            <Chip
-              label={isConfigured ? 'Configured' : 'Not configured'}
-              size="small"
-              sx={{
-                backgroundColor: isConfigured ? 'rgba(245, 158, 11, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                color: isConfigured ? '#f59e0b' : '#ef4444',
-                fontWeight: 500,
-                fontSize: { xs: '0.6rem', sm: '0.65rem' },
-                height: { xs: 22, sm: 24 },
-              }}
-            />
-            {/* Tested status chip */}
-            <Tooltip 
-              title={isTested ? `Last validated: ${formatLastValidDate()}` : ''} 
-              arrow
-              disableHoverListener={!isTested}
-            >
+            {/* Auth status chip - show "Auth not required" for no-auth apps */}
+            {isNoAuthRequired(auth) ? (
               <Chip
-                label={isTested ? 'Tested' : 'Not tested'}
+                label="Auth not required"
                 size="small"
                 sx={{
-                  backgroundColor: isTested ? 'rgba(34, 197, 94, 0.15)' : 'rgba(156, 163, 175, 0.15)',
-                  color: isTested ? '#22c55e' : '#9ca3af',
+                  backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                  color: '#3b82f6',
                   fontWeight: 500,
                   fontSize: { xs: '0.6rem', sm: '0.65rem' },
                   height: { xs: 22, sm: 24 },
-                  cursor: isTested ? 'help' : 'default',
                 }}
               />
-            </Tooltip>
+            ) : (
+              <>
+                {/* Configured status chip */}
+                <Chip
+                  label={isConfigured ? 'Configured' : 'Not configured'}
+                  size="small"
+                  sx={{
+                    backgroundColor: isConfigured ? 'rgba(245, 158, 11, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                    color: isConfigured ? '#f59e0b' : '#ef4444',
+                    fontWeight: 500,
+                    fontSize: { xs: '0.6rem', sm: '0.65rem' },
+                    height: { xs: 22, sm: 24 },
+                  }}
+                />
+                {/* Tested status chip */}
+                <Tooltip 
+                  title={isTested ? `Last validated: ${formatLastValidDate()}` : ''} 
+                  arrow
+                  disableHoverListener={!isTested}
+                >
+                  <Chip
+                    label={isTested ? 'Tested' : 'Not tested'}
+                    size="small"
+                    sx={{
+                      backgroundColor: isTested ? 'rgba(34, 197, 94, 0.15)' : 'rgba(156, 163, 175, 0.15)',
+                      color: isTested ? '#22c55e' : '#9ca3af',
+                      fontWeight: 500,
+                      fontSize: { xs: '0.6rem', sm: '0.65rem' },
+                      height: { xs: 22, sm: 24 },
+                      cursor: isTested ? 'help' : 'default',
+                    }}
+                  />
+                </Tooltip>
+              </>
+            )}
             <Tooltip title="View documentation">
               <IconButton
                 size="small"
