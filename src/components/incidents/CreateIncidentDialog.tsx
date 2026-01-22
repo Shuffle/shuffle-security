@@ -17,6 +17,7 @@ import {
   CircularProgress,
   FormControlLabel,
   Switch,
+  Slider,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import PlaylistAddCheckIcon from '@mui/icons-material/PlaylistAddCheck';
@@ -25,42 +26,24 @@ import { useCustomFields, CustomField } from '@/hooks/useCustomFields';
 import { useIOCTypes } from '@/hooks/useIOCTypes';
 import { useCaseTemplates, CaseTemplate } from '@/hooks/useCaseTemplates';
 import { ObservableTypeSelector } from './ObservableTypeSelector';
+import {
+  OCSFIncidentFinding,
+  Observable,
+  Comment,
+  IncidentTask,
+  FileAttachment,
+  TLP_LEVELS,
+  TLP_LABELS,
+  severityOptions,
+  taskCategories,
+  generateFindingUid,
+} from '@/config/ocsfIncidentSchema';
 
-// Generate a 10-character unique ID
-const generateIncidentId = (): string => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
-  const array = new Uint8Array(10);
-  crypto.getRandomValues(array);
-  for (let i = 0; i < 10; i++) {
-    result += chars[array[i] % chars.length];
-  }
-  return result;
-};
+// Re-export types for backward compatibility
+export type { OCSFIncidentFinding, Observable, Comment, IncidentTask, FileAttachment };
+export { severityOptions, taskCategories, TLP_LEVELS, TLP_LABELS };
 
-// Observable interface
-export interface Observable {
-  type: string;
-  value: string;
-}
-
-// TLP and PAP levels
-export const tlpLevels = [
-  { value: 'TLP:CLEAR', label: 'TLP:CLEAR', color: '#ffffff' },
-  { value: 'TLP:GREEN', label: 'TLP:GREEN', color: '#22c55e' },
-  { value: 'TLP:AMBER', label: 'TLP:AMBER', color: '#f59e0b' },
-  { value: 'TLP:AMBER+STRICT', label: 'TLP:AMBER+STRICT', color: '#f59e0b' },
-  { value: 'TLP:RED', label: 'TLP:RED', color: '#ef4444' },
-];
-
-export const papLevels = [
-  { value: 'PAP:CLEAR', label: 'PAP:CLEAR', color: '#ffffff' },
-  { value: 'PAP:GREEN', label: 'PAP:GREEN', color: '#22c55e' },
-  { value: 'PAP:AMBER', label: 'PAP:AMBER', color: '#f59e0b' },
-  { value: 'PAP:RED', label: 'PAP:RED', color: '#ef4444' },
-];
-
-// Activity item for collaborative tracking
+// Legacy activity item - kept for backward compatibility during migration
 export interface ActivityItem {
   id: string;
   type: 'comment' | 'change' | 'status' | 'assignment' | 'created';
@@ -71,109 +54,24 @@ export interface ActivityItem {
   attachments?: FileAttachment[];
 }
 
-// Task categories for organization
-export const taskCategories = [
-  { value: 'triage', label: 'Triage', color: '#22b8cf' },
-  { value: 'investigation', label: 'Investigation', color: '#a855f7' },
-  { value: 'containment', label: 'Containment', color: '#f59e0b' },
-  { value: 'eradication', label: 'Eradication', color: '#ef4444' },
-  { value: 'recovery', label: 'Recovery', color: '#22c55e' },
-  { value: 'communication', label: 'Communication', color: '#3b82f6' },
-  { value: 'documentation', label: 'Documentation', color: '#6b7280' },
+// TLP levels for UI display (using new integer-based system)
+export const tlpLevels = [
+  { value: 1, label: 'TLP:CLEAR', color: '#ffffff' },
+  { value: 2, label: 'TLP:GREEN', color: '#22c55e' },
+  { value: 3, label: 'TLP:AMBER', color: '#f59e0b' },
+  { value: 4, label: 'TLP:RED', color: '#ef4444' },
 ];
 
-// File attachment for tasks and incidents
-export interface FileAttachment {
-  id: string;
-  filename: string;
-  filesize: number;
-  uploadedAt?: number;
-}
-
-// Task item for incident tasks/checklist
-export interface IncidentTask {
-  id: string;
-  title: string;
-  description?: string; // Detailed task description
-  category?: string; // Task category for organization
-  completed: boolean;
-  assignee?: string;
-  dueDate?: string; // ISO date string
-  dependsOn?: string; // ID of task this depends on
-  createdAt: number;
-  completedAt?: number;
-  createdBy?: string;
-  aiWorking?: boolean; // True when AI Agent is actively working on this task
-  attachments?: FileAttachment[]; // File attachments
-}
-
-// OCSF Incident Finding format (class_uid: 2005)
-// Finding info structure for the finding_info_list array
-export interface FindingInfo {
-  title: string;
-  uid: string;
-  src_url?: string;
-  types?: string[];
-  references?: string[];
-}
-
-// Custom attributes stored under metadata.extensions
-export interface CustomAttributes {
-  tlp?: string;
-  pap?: string;
-  tasks?: IncidentTask[];
-  activity?: ActivityItem[];
-  customFields?: Record<string, string | number | boolean>;
-}
-
-export interface OCSFIncidentFinding {
-  class_uid: 2005; // Incident Finding
-  class_name: 'Incident Finding';
-  message: string;
-  severity_id: number;
-  severity: string;
-  type_uid: number;
-  type_name: string;
-  activity_id: number;
-  activity_name: string;
-  status_id: number; // 1=New, 2=In Progress, 3=Resolved, 4=On Hold
-  status: string;
-  status_detail?: string; // Resolution reason when status is Resolved
-  time: number;
-  // Finding info as an array (OCSF standard)
-  finding_info_list: FindingInfo[];
-  observables?: Observable[];
-  assignee?: string;
-  // Linked detection findings (for grouping)
-  related_findings?: string[];
-  metadata: {
-    product: {
-      name: string;
-      vendor_name: string;
-    };
-    version: string;
-    extensions?: {
-      custom_attributes?: CustomAttributes;
-    };
-  };
-}
-
-interface CreateIncidentDialogProps {
-  open: boolean;
-  onClose: () => void;
-  onSubmit: (incident: OCSFIncidentFinding) => Promise<void>;
-}
-
-export const severityOptions = [
-  { id: 1, label: 'Informational', value: 'informational' },
-  { id: 2, label: 'Low', value: 'low' },
-  { id: 3, label: 'Medium', value: 'medium' },
-  { id: 4, label: 'High', value: 'high' },
-  { id: 5, label: 'Critical', value: 'critical' },
+// DEPRECATED: PAP levels removed from new OCSF format
+// Kept for backward compatibility parsing only
+export const papLevels = [
+  { value: 'PAP:CLEAR', label: 'PAP:CLEAR', color: '#ffffff' },
+  { value: 'PAP:GREEN', label: 'PAP:GREEN', color: '#22c55e' },
+  { value: 'PAP:AMBER', label: 'PAP:AMBER', color: '#f59e0b' },
+  { value: 'PAP:RED', label: 'PAP:RED', color: '#ef4444' },
 ];
 
 // DEPRECATED: Use useIOCTypes().observableTypeNames instead
-// This is kept for backwards compatibility but components should migrate to the hook
 export const observableTypes = [
   'ip',
   'domain',
@@ -188,13 +86,19 @@ export const observableTypes = [
   'other',
 ];
 
+interface CreateIncidentDialogProps {
+  open: boolean;
+  onClose: () => void;
+  onSubmit: (incident: OCSFIncidentFinding) => Promise<void>;
+}
+
 export const CreateIncidentDialog = ({ open, onClose, onSubmit }: CreateIncidentDialogProps) => {
   const [title, setTitle] = useState('');
-  const [message, setMessage] = useState('');
+  const [description, setDescription] = useState('');
   const [severityId, setSeverityId] = useState(3);
   const [source, setSource] = useState('');
-  const [tlp, setTlp] = useState('TLP:AMBER');
-  const [pap, setPap] = useState('PAP:AMBER');
+  const [tlp, setTlp] = useState<number>(2); // Default to GREEN (2)
+  const [confidence, setConfidence] = useState<number>(50);
   const [assignee, setAssignee] = useState('');
   const [references, setReferences] = useState<string[]>([]);
   const [newReference, setNewReference] = useState('');
@@ -268,42 +172,39 @@ export const CreateIncidentDialog = ({ open, onClose, onSubmit }: CreateIncident
 
     setIsSubmitting(true);
     const severity = severityOptions.find(s => s.id === severityId)?.label || 'Medium';
-    const incidentId = generateIncidentId();
+    const findingUid = generateFindingUid();
+    const now = new Date().toISOString();
 
+    // Build new OCSF format incident
     const incident: OCSFIncidentFinding = {
       class_uid: 2005,
       class_name: 'Incident Finding',
-      message: message || title,
+      finding_uid: findingUid,
+      title: title.trim(),
+      desc: description.trim() || undefined,
       severity_id: severityId,
       severity,
-      type_uid: 200501, // Incident Finding: Create
-      type_name: 'Incident Finding',
-      activity_id: 1,
-      activity_name: 'Create',
-      status_id: 1, // Always start as New
+      status_id: 1, // New
       status: 'New',
-      time: Date.now(),
-      finding_info_list: [{
-        title,
-        uid: incidentId,
-        src_url: references[0] || '',
-        types: [source || 'Manual'],
-        references: references.length > 0 ? references : undefined,
-      }],
-      observables: observables.length > 0 ? observables : undefined,
-      assignee: assignee.trim() || undefined,
+      confidence,
+      created_time: now,
+      first_seen_time: now,
+      types: source ? [source] : ['Manual'],
+      product: {
+        name: source || 'Manual Entry',
+        uid: 'shuffle-security',
+      },
+      references: references.length > 0 ? references : undefined,
       metadata: {
-        product: {
-          name: source || 'Manual Entry',
-          vendor_name: 'Shuffle',
-        },
-        version: '1.0.0',
+        uid: findingUid,
         extensions: {
           custom_attributes: {
             tlp,
-            pap,
-            customFields: Object.keys(customFieldValues).length > 0 ? customFieldValues : undefined,
+            comments: [],
             tasks: tasks.length > 0 ? tasks : undefined,
+            observables: observables.length > 0 ? observables : undefined,
+            customFields: Object.keys(customFieldValues).length > 0 ? customFieldValues : undefined,
+            assignee: assignee.trim() || undefined,
           },
         },
       },
@@ -321,11 +222,11 @@ export const CreateIncidentDialog = ({ open, onClose, onSubmit }: CreateIncident
 
   const handleClose = () => {
     setTitle('');
-    setMessage('');
+    setDescription('');
     setSeverityId(3);
     setSource('');
-    setTlp('TLP:AMBER');
-    setPap('PAP:AMBER');
+    setTlp(2);
+    setConfidence(50);
     setAssignee('');
     setReferences([]);
     setNewReference('');
@@ -337,6 +238,7 @@ export const CreateIncidentDialog = ({ open, onClose, onSubmit }: CreateIncident
     setTasks([]);
     onClose();
   };
+
 
   const handleCustomFieldChange = (field: CustomField, value: string | number | boolean) => {
     setCustomFieldValues(prev => ({
@@ -517,11 +419,11 @@ export const CreateIncidentDialog = ({ open, onClose, onSubmit }: CreateIncident
             placeholder="e.g., Suspicious Login Activity"
           />
 
-          {/* Message */}
+          {/* Description */}
           <TextField
-            label="Message / Description"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            label="Description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
             fullWidth
             multiline
             rows={3}
@@ -552,13 +454,13 @@ export const CreateIncidentDialog = ({ open, onClose, onSubmit }: CreateIncident
             </TextField>
           </Box>
 
-          {/* TLP + PAP */}
+          {/* TLP + Confidence */}
           <Box sx={{ display: 'flex', gap: 2 }}>
             <TextField
               select
               label="TLP"
               value={tlp}
-              onChange={(e) => setTlp(e.target.value)}
+              onChange={(e) => setTlp(Number(e.target.value))}
               fullWidth
             >
               {tlpLevels.map((opt) => (
@@ -570,22 +472,19 @@ export const CreateIncidentDialog = ({ open, onClose, onSubmit }: CreateIncident
                 </MenuItem>
               ))}
             </TextField>
-            <TextField
-              select
-              label="PAP"
-              value={pap}
-              onChange={(e) => setPap(e.target.value)}
-              fullWidth
-            >
-              {papLevels.map((opt) => (
-                <MenuItem key={opt.value} value={opt.value}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: opt.color, border: opt.color === '#ffffff' ? '1px solid #666' : 'none' }} />
-                    {opt.label}
-                  </Box>
-                </MenuItem>
-              ))}
-            </TextField>
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.5, display: 'block' }}>
+                Confidence: {confidence}%
+              </Typography>
+              <Slider
+                value={confidence}
+                onChange={(_, value) => setConfidence(value as number)}
+                min={0}
+                max={100}
+                valueLabelDisplay="auto"
+                sx={{ mt: 1 }}
+              />
+            </Box>
           </Box>
 
           {/* Assignee */}

@@ -52,15 +52,23 @@ import { useIOCTypes } from '@/hooks/useIOCTypes';
 import { ObservableTypeSelector } from '@/components/incidents/ObservableTypeSelector';
 import { useCaseTemplates, CaseTemplate } from '@/hooks/useCaseTemplates';
 import { 
+  ActivityItem,
+  tlpLevels,
+} from '@/components/incidents/CreateIncidentDialog';
+import { 
   OCSFIncidentFinding, 
   Observable, 
-  severityOptions, 
-  tlpLevels,
-  ActivityItem,
-  IncidentTask,
-  taskCategories,
+  IncidentTask, 
   FileAttachment,
-} from '@/components/incidents/CreateIncidentDialog';
+  Comment,
+  severityOptions, 
+  taskCategories,
+  TLP_LABELS,
+  TLP_STRING_TO_INT,
+  mapOCSFSeverity,
+  mapOCSFStatus,
+  convertLegacyTlp,
+} from '@/config/ocsfIncidentSchema';
 import { ResolveIncidentDialog, ResolutionData, RESOLUTION_REASONS } from '@/components/incidents/ResolveIncidentDialog';
 import { MentionText } from '@/components/incidents/MentionText';
 import { MentionInput } from '@/components/incidents/MentionInput';
@@ -89,7 +97,7 @@ interface DisplayIncident {
   relatedFindings?: string[];
   activity?: ActivityItem[];
   tasks?: IncidentTask[];
-  rawOCSF?: OCSFIncidentFinding;
+  rawOCSF?: any; // Use any to support both new and legacy formats
 }
 
 // Status and severity colors now imported from shared config
@@ -134,68 +142,88 @@ const parseTimestamp = (timestamp: number | string | undefined): number => {
   return ts < 10000000000 ? ts * 1000 : ts;
 };
 
-const mapOCSFSeverity = (severityId: number): string => {
-  switch (severityId) {
-    case 1: return 'informational';
-    case 2: return 'low';
-    case 3: return 'medium';
-    case 4: return 'high';
-    case 5: return 'critical';
-    default: return 'medium';
-  }
-};
-
-const mapOCSFStatus = (statusId: number): string => {
-  switch (statusId) {
-    case 1: return 'new';
-    case 2: return 'in_progress';
-    case 3: return 'resolved';
-    case 4: return 'on_hold';
-    default: return 'new';
-  }
-};
 
 const parseIncidentFromDatastore = (item: { key: string; value: string; created?: number; edited?: number }): DisplayIncident | null => {
   try {
     const data = JSON.parse(item.value);
-    // Support both new (finding_info_list) and legacy (finding_info) OCSF formats
-    const isOCSF = data.finding_info_list || data.finding_info || data.severity_id !== undefined;
     
-    if (isOCSF) {
+    // Check if this is new OCSF format (has finding_uid at root)
+    const isNewFormat = 'finding_uid' in data && 'title' in data;
+    // Check if legacy OCSF format
+    const isLegacyOCSF = data.finding_info_list || data.finding_info || data.severity_id !== undefined;
+    
+    if (isNewFormat) {
+      // New OCSF format
       const ocsf = data as OCSFIncidentFinding;
-      // Get finding info from list (new format) or direct property (legacy)
-      const findingInfo = ocsf.finding_info_list?.[0] || (ocsf as any).finding_info;
-      // Get custom attributes from metadata.extensions (new) or root level (legacy)
       const customAttrs = ocsf.metadata?.extensions?.custom_attributes;
-      const tlp = customAttrs?.tlp || (ocsf as any).tlp;
-      const pap = customAttrs?.pap || (ocsf as any).pap;
-      const tasks = customAttrs?.tasks || (ocsf as any).tasks;
-      const activity = customAttrs?.activity || (ocsf as any).activity;
-      const customFields = customAttrs?.customFields || (ocsf as any).customFields;
+      const tlpValue = customAttrs?.tlp;
+      const tlpLabel = typeof tlpValue === 'number' ? TLP_LABELS[tlpValue]?.label : undefined;
+      
+      // Convert comments to activity for display
+      const comments = customAttrs?.comments || [];
+      const activityFromComments: ActivityItem[] = comments.map((c, i) => ({
+        id: `comment-${i}`,
+        type: 'comment' as const,
+        user: c.author,
+        timestamp: new Date(c.timestamp).getTime(),
+        content: c.text,
+      }));
       
       return {
-        id: findingInfo?.uid || item.key,
-        title: findingInfo?.title || ocsf.message || 'Untitled',
-        source: ocsf.metadata?.product?.name || findingInfo?.types?.[0] || 'Unknown',
-        severity: mapOCSFSeverity(ocsf.severity_id),
-        status: mapOCSFStatus(ocsf.status_id),
-        assignee: ocsf.assignee || null,
+        id: ocsf.finding_uid,
+        title: ocsf.title,
+        source: ocsf.product?.name || ocsf.types?.[0] || 'Unknown',
+        severity: mapOCSFSeverity(ocsf.severity_id || 3),
+        status: mapOCSFStatus(ocsf.status_id || 1),
+        assignee: customAttrs?.assignee || null,
         created: formatTimestamp(item.created),
         createdTs: parseTimestamp(item.created),
         edited: item.edited ? formatTimestamp(item.edited) : undefined,
         editedTs: item.edited ? parseTimestamp(item.edited) : undefined,
-        tlp,
+        tlp: tlpLabel,
+        references: ocsf.references,
+        observables: customAttrs?.observables,
+        customFields: customAttrs?.customFields,
+        relatedFindings: ocsf.related_events,
+        activity: activityFromComments,
+        tasks: customAttrs?.tasks,
+        rawOCSF: data, // Store raw data for updates
+      };
+    } else if (isLegacyOCSF) {
+      // Legacy OCSF format
+      const legacyData = data as any;
+      const findingInfo = legacyData.finding_info_list?.[0] || legacyData.finding_info;
+      const customAttrs = legacyData.metadata?.extensions?.custom_attributes;
+      const tlp = customAttrs?.tlp || legacyData.tlp;
+      const pap = customAttrs?.pap || legacyData.pap;
+      const tasks = customAttrs?.tasks || legacyData.tasks;
+      const activity = customAttrs?.activity || legacyData.activity;
+      const customFields = customAttrs?.customFields || legacyData.customFields;
+      
+      return {
+        id: findingInfo?.uid || item.key,
+        title: findingInfo?.title || legacyData.message || 'Untitled',
+        source: legacyData.metadata?.product?.name || findingInfo?.types?.[0] || 'Unknown',
+        severity: mapOCSFSeverity(legacyData.severity_id),
+        status: mapOCSFStatus(legacyData.status_id),
+        assignee: legacyData.assignee || null,
+        created: formatTimestamp(item.created),
+        createdTs: parseTimestamp(item.created),
+        edited: item.edited ? formatTimestamp(item.edited) : undefined,
+        editedTs: item.edited ? parseTimestamp(item.edited) : undefined,
+        tlp: typeof tlp === 'string' ? tlp : (tlp ? TLP_LABELS[tlp]?.label : undefined),
         pap,
         references: findingInfo?.references,
-        observables: ocsf.observables,
+        observables: legacyData.observables,
         customFields,
-        relatedFindings: ocsf.related_findings,
+        relatedFindings: legacyData.related_findings,
         activity: activity || [],
         tasks,
-        rawOCSF: ocsf,
+        rawOCSF: legacyData,
       };
     }
     
+    // Non-OCSF format
     return {
       id: data.id || item.key,
       title: data.title || 'Untitled',

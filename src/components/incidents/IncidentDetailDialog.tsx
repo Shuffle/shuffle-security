@@ -26,6 +26,9 @@ import {
   OCSFIncidentFinding, 
   Observable, 
   severityOptions, 
+  TLP_LABELS,
+} from '@/config/ocsfIncidentSchema';
+import { 
   tlpLevels,
   papLevels,
 } from './CreateIncidentDialog';
@@ -49,7 +52,7 @@ interface DisplayIncident {
   observables?: Observable[];
   customFields?: Record<string, string | number | boolean>;
   relatedFindings?: string[];
-  rawOCSF?: OCSFIncidentFinding;
+  rawOCSF?: any; // Use any for legacy compatibility
 }
 
 interface IncidentDetailDialogProps {
@@ -57,7 +60,7 @@ interface IncidentDetailDialogProps {
   incident: DisplayIncident | null;
   onClose: () => void;
   onResolve: (incidentId: string) => Promise<void>;
-  onUpdate?: (incidentId: string, updates: Partial<OCSFIncidentFinding>) => Promise<void>;
+  onUpdate?: (incidentId: string, updates: any) => Promise<void>;
 }
 
 const severityColors: Record<string, string> = {
@@ -169,26 +172,21 @@ export const IncidentDetailDialog = ({ open, incident, onClose, onResolve, onUpd
     // Get existing finding info from list (new) or direct (legacy)
     const existingFindingInfo = incident.rawOCSF?.finding_info_list?.[0] || (incident.rawOCSF as any)?.finding_info;
     
-    const updates: Partial<OCSFIncidentFinding> = {
-      message: editedMessage || editedTitle,
+    const updates: any = {
+      title: editedTitle,
+      desc: editedMessage || editedTitle,
       severity_id: severityOption?.id || 3,
       severity: severityOption?.label || 'Medium',
-      assignee: editedAssignee.trim() || undefined,
-      observables: editedObservables.length > 0 ? editedObservables : undefined,
-      finding_info_list: [{
-        ...existingFindingInfo,
-        title: editedTitle,
-        references: editedReferences.length > 0 ? editedReferences : undefined,
-        src_url: editedReferences[0] || '',
-      }],
+      references: editedReferences.length > 0 ? editedReferences : undefined,
       metadata: {
-        ...incident.rawOCSF.metadata,
+        ...incident.rawOCSF?.metadata,
         extensions: {
           custom_attributes: {
-            ...incident.rawOCSF.metadata?.extensions?.custom_attributes,
-            tlp: editedTlp,
-            pap: editedPap,
+            ...incident.rawOCSF?.metadata?.extensions?.custom_attributes,
+            tlp: typeof editedTlp === 'string' ? (editedTlp.includes('GREEN') ? 2 : editedTlp.includes('RED') ? 4 : editedTlp.includes('AMBER') ? 3 : 1) : editedTlp,
+            observables: editedObservables.length > 0 ? editedObservables : undefined,
             customFields: Object.keys(editedCustomFields).length > 0 ? editedCustomFields : undefined,
+            assignee: editedAssignee.trim() || undefined,
           },
         },
       },
