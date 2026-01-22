@@ -26,7 +26,7 @@ import { API_CONFIG, getApiUrl } from '@/config/api';
 // Workflow labels for each automation area
 const AUTOMATION_WORKFLOW_LABELS: Record<string, string[]> = {
   automatic_ingestion: ['Ingest Tickets', 'Ingest Tickets_webhook'],
-  threat_intel: ['threat feed'],
+  threat_intel: ['Enable Threat feeds'],
   notifications: ['Notifications'],
 };
 
