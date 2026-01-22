@@ -872,12 +872,45 @@ const OnboardingPage = () => {
                       return a.app.name.localeCompare(b.app.name);
                     });
 
+                    // App detection patterns (same as EnrichmentConfig)
+                    const EMAIL_APP_PATTERNS = ['gmail', 'outlook', 'email', 'microsoft_graph', 'office365', 'exchange', 'imap', 'smtp'];
+                    const isEmailApp = (appName: string) => 
+                      EMAIL_APP_PATTERNS.some(pattern => appName.toLowerCase().includes(pattern));
+                    
+                    const COMMUNICATION_PATTERNS = ['slack', 'teams', 'discord', 'mattermost', 'telegram', 'webhook'];
+                    const isCommunicationApp = (appName: string) => 
+                      COMMUNICATION_PATTERNS.some(pattern => appName.toLowerCase().includes(pattern));
+                    
+                    const CASES_PATTERNS = ['jira', 'servicenow', 'zendesk', 'freshdesk', 'pagerduty', 'opsgenie', 'ticket', 'itsm', 'salesforce', 'thehive', 'cortex'];
+                    const EDR_PATTERNS = ['crowdstrike', 'sentinelone', 'carbon black', 'defender', 'cylance', 'sophos', 'trellix', 'vmware', 'tanium', 'falcon', 'edr'];
+                    const SIEM_PATTERNS = ['splunk', 'elastic', 'qradar', 'sentinel', 'chronicle', 'logrhythm', 'sumo logic', 'graylog', 'wazuh', 'siem', 'arcsight'];
+                    const THREAT_INTEL_PATTERNS = ['virustotal', 'shodan', 'alienvault', 'otx', 'threatcrowd', 'urlscan', 'hybrid-analysis', 'abuseipdb', 'greynoise', 'urlhaus', 'malwarebazaar', 'threatfox', 'misp', 'opencti'];
+                    
+                    const isIngestionApp = (appName: string) => {
+                      const name = appName.toLowerCase();
+                      return isEmailApp(appName) ||
+                        CASES_PATTERNS.some(p => name.includes(p)) ||
+                        EDR_PATTERNS.some(p => name.includes(p)) ||
+                        SIEM_PATTERNS.some(p => name.includes(p));
+                    };
+                    
+                    const isThreatIntelApp = (appName: string) =>
+                      THREAT_INTEL_PATTERNS.some(pattern => appName.toLowerCase().includes(pattern));
+                    
+                    // Count apps with valid auth for each category
+                    const validApps = sortedApps.filter(a => a.hasValidAuth);
+                    const hasIngestionApps = validApps.some(a => isIngestionApp(a.app.name));
+                    const hasThreatIntelApps = validApps.some(a => isThreatIntelApp(a.app.name));
+                    const hasEmailApps = validApps.some(a => isEmailApp(a.app.name));
+                    const hasChatApps = validApps.some(a => isCommunicationApp(a.app.name));
+                    
+                    // Build automation items dynamically based on available apps
                     const automationItems = [
-                      { key: 'automatic_ingestion', label: 'Ingestion', icon: '📥' },
-                      { key: 'threat_intel', label: 'Threat Intel', icon: '🛡️' },
-                      { key: 'email_notify', label: 'Email', icon: '📧' },
-                      { key: 'chat_notify', label: 'Chat', icon: '💬' },
-                    ];
+                      hasIngestionApps && { key: 'automatic_ingestion', label: 'Ingestion', icon: '📥' },
+                      hasThreatIntelApps && { key: 'threat_intel', label: 'Threat Intel', icon: '🛡️' },
+                      hasEmailApps && { key: 'email_notify', label: 'Email', icon: '📧' },
+                      hasChatApps && { key: 'chat_notify', label: 'Chat', icon: '💬' },
+                    ].filter(Boolean) as { key: string; label: string; icon: string }[];
 
                     return (
                       <Box sx={{ py: 4 }}>
@@ -1044,42 +1077,48 @@ const OnboardingPage = () => {
                               Automation
                             </Typography>
                             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                              {automationItems.map(({ key, label, icon }) => {
-                                const isEnabled = enrichmentState[key]?.enabled;
-                                return (
-                                  <Tooltip key={key} title={`${label}: ${isEnabled ? 'Enabled' : 'Disabled'}`} placement="top">
-                                    <Box
-                                      sx={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: 0.75,
-                                        px: 1.5,
-                                        py: 0.75,
-                                        borderRadius: 2,
-                                        backgroundColor: isEnabled 
-                                          ? 'rgba(34, 197, 94, 0.15)' 
-                                          : 'rgba(156, 163, 175, 0.1)',
-                                        border: '1px solid',
-                                        borderColor: isEnabled 
-                                          ? 'rgba(34, 197, 94, 0.3)' 
-                                          : 'rgba(156, 163, 175, 0.2)',
-                                        opacity: isEnabled ? 1 : 0.5,
-                                      }}
-                                    >
-                                      <Typography sx={{ fontSize: '1rem' }}>{icon}</Typography>
-                                      <Typography
+                              {automationItems.length > 0 ? (
+                                automationItems.map(({ key, label, icon }) => {
+                                  const isEnabled = enrichmentState[key]?.enabled !== false;
+                                  return (
+                                    <Tooltip key={key} title={`${label}: ${isEnabled ? 'Enabled' : 'Disabled'}`} placement="top">
+                                      <Box
                                         sx={{
-                                          color: isEnabled ? '#22c55e' : '#9ca3af',
-                                          fontSize: '0.75rem',
-                                          fontWeight: 500,
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          gap: 0.75,
+                                          px: 1.5,
+                                          py: 0.75,
+                                          borderRadius: 2,
+                                          backgroundColor: isEnabled 
+                                            ? 'rgba(34, 197, 94, 0.15)' 
+                                            : 'rgba(156, 163, 175, 0.1)',
+                                          border: '1px solid',
+                                          borderColor: isEnabled 
+                                            ? 'rgba(34, 197, 94, 0.3)' 
+                                            : 'rgba(156, 163, 175, 0.2)',
+                                          opacity: isEnabled ? 1 : 0.5,
                                         }}
                                       >
-                                        {label}
-                                      </Typography>
-                                    </Box>
-                                  </Tooltip>
-                                );
-                              })}
+                                        <Typography sx={{ fontSize: '1rem' }}>{icon}</Typography>
+                                        <Typography
+                                          sx={{
+                                            color: isEnabled ? '#22c55e' : '#9ca3af',
+                                            fontSize: '0.75rem',
+                                            fontWeight: 500,
+                                          }}
+                                        >
+                                          {label}
+                                        </Typography>
+                                      </Box>
+                                    </Tooltip>
+                                  );
+                                })
+                              ) : (
+                                <Typography sx={{ color: 'rgba(255, 255, 255, 0.4)', fontSize: '0.875rem' }}>
+                                  No automation configured
+                                </Typography>
+                              )}
                             </Box>
                           </Box>
                         </Box>
