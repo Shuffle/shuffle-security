@@ -9,7 +9,7 @@
 
 export const API_CONFIG = {
   // Shuffle backend URL - can be overridden via environment variable
-  baseUrl: import.meta.env.VITE_SHUFFLE_API_URL || 'https://shuffler.io',
+  baseUrl: import.meta.env.VITE_SHUFFLE_API_URL || 'https://him-col-deposits-blowing.trycloudflare.com',
   
   // API version
   version: 'v1',
