@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -21,6 +21,45 @@ import DownloadIcon from '@mui/icons-material/Download';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
 import shuffleLogo from '@/assets/shuffle-logo.png';
+import { API_CONFIG, getApiUrl } from '@/config/api';
+
+// Workflow labels for each automation area
+const AUTOMATION_WORKFLOW_LABELS: Record<string, string[]> = {
+  automatic_ingestion: ['Ingest Tickets', 'Ingest Tickets_webhook'],
+  threat_intel: ['Threat Intel'],
+  notifications: ['Notifications'],
+  email_notify: ['Email Notify'],
+  chat_notify: ['Chat Notify'],
+};
+
+// Generate workflow for an automation area
+const generateWorkflow = async (
+  label: string,
+  enabledAppNames: string[],
+  category: string = 'cases'
+): Promise<void> => {
+  if (enabledAppNames.length === 0) return;
+  
+  const appNamesStr = enabledAppNames.join(',');
+  
+  try {
+    await fetch(getApiUrl('/api/v2/workflows/generate'), {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        label,
+        app_name: appNamesStr,
+        category,
+      }),
+    });
+    console.log(`Workflow generated: ${label} with apps: ${appNamesStr}`);
+  } catch (error) {
+    console.error(`Failed to generate workflow ${label}:`, error);
+  }
+};
 
 interface EnrichmentOption {
   id: string;
@@ -465,20 +504,21 @@ export const EnrichmentConfig = ({
     onSave?.(newState);
   };
 
-  const toggleTool = (optionId: string, appId: string) => {
-    const current = enrichmentState[optionId] || { enabled: false, config: {}, tools: {} };
-    const currentTools = current.tools || {};
-    const isCurrentlyEnabled = currentTools[appId] !== false; // Default to true if not set
-    const newState = {
-      ...enrichmentState,
-      [optionId]: {
-        ...current,
-        tools: { ...currentTools, [appId]: !isCurrentlyEnabled },
-      },
-    };
-    onEnrichmentChange(newState);
-    // Optimistically save
-    onSave?.(newState);
+  // Get all tools for an option (from various sources or connected apps)
+  const getAllToolsForOption = (option: EnrichmentOption): ConnectedApp[] => {
+    if (option.ingestionSources) {
+      return option.ingestionSources.flatMap(s => s.apps);
+    }
+    if (option.notificationSources) {
+      return option.notificationSources.flatMap(s => s.apps);
+    }
+    if (option.threatIntelSources) {
+      return option.threatIntelSources.flatMap(s => s.apps);
+    }
+    if (option.connectedApps) {
+      return option.connectedApps;
+    }
+    return [];
   };
 
   // Get app info for checking default enable state
@@ -511,21 +551,54 @@ export const EnrichmentConfig = ({
     return appInfo?.isSelected === true && appInfo?.isValidated === true;
   };
 
-  // Get all tools for an option (from various sources or connected apps)
-  const getAllToolsForOption = (option: EnrichmentOption): ConnectedApp[] => {
-    if (option.ingestionSources) {
-      return option.ingestionSources.flatMap(s => s.apps);
-    }
-    if (option.notificationSources) {
-      return option.notificationSources.flatMap(s => s.apps);
-    }
-    if (option.threatIntelSources) {
-      return option.threatIntelSources.flatMap(s => s.apps);
-    }
-    if (option.connectedApps) {
-      return option.connectedApps;
-    }
-    return [];
+  // Trigger workflow generation for an automation area
+  const triggerWorkflowGeneration = useCallback((optionId: string, state: EnrichmentState) => {
+    const option = enrichmentOptions.find(o => o.id === optionId);
+    if (!option) return;
+    
+    // Get all tools for this option
+    const allTools = getAllToolsForOption(option);
+    
+    // Filter to only enabled tools
+    const enabledTools = allTools.filter(tool => {
+      const current = state[optionId];
+      if (current?.tools && tool.id in current.tools) {
+        return current.tools[tool.id] !== false;
+      }
+      // Default: enabled if selected and validated
+      return tool.isSelected === true && tool.isValidated === true;
+    });
+    
+    const enabledAppNames = enabledTools.map(tool => tool.name);
+    
+    // Get the workflow labels for this automation area
+    const labels = AUTOMATION_WORKFLOW_LABELS[optionId] || [];
+    
+    // Fire and forget API calls for each label
+    labels.forEach(label => {
+      generateWorkflow(label, enabledAppNames, 'cases');
+    });
+  }, [enrichmentOptions]);
+
+  const toggleTool = (optionId: string, appId: string, appName: string) => {
+    const current = enrichmentState[optionId] || { enabled: false, config: {}, tools: {} };
+    const currentTools = current.tools || {};
+    const isCurrentlyEnabled = currentTools[appId] !== false; // Default to true if not set
+    const newToolState = !isCurrentlyEnabled;
+    
+    const newState = {
+      ...enrichmentState,
+      [optionId]: {
+        ...current,
+        tools: { ...currentTools, [appId]: newToolState },
+      },
+    };
+    onEnrichmentChange(newState);
+    // Optimistically save
+    onSave?.(newState);
+    
+    // Trigger workflow generation API for the automation area
+    triggerWorkflowGeneration(optionId, newState);
   };
 
   const enrichmentItems = enrichmentOptions.filter((o) => o.category === 'enrichment');
@@ -915,7 +988,7 @@ export const EnrichmentConfig = ({
                                       <Switch
                                         size="small"
                                         checked={isToolEnabled(option.id, app.id)}
-                                        onChange={() => toggleTool(option.id, app.id)}
+                                        onChange={() => toggleTool(option.id, app.id, app.name)}
                                         disabled={!app.isValidated}
                                         sx={{
                                           '& .MuiSwitch-switchBase.Mui-checked': {
@@ -971,7 +1044,7 @@ export const EnrichmentConfig = ({
                                   <Switch
                                     size="small"
                                     checked={isToolEnabled(option.id, app.id)}
-                                    onChange={() => toggleTool(option.id, app.id)}
+                                    onChange={() => toggleTool(option.id, app.id, app.name)}
                                     sx={{
                                       '& .MuiSwitch-switchBase.Mui-checked': {
                                         color: option.color,
