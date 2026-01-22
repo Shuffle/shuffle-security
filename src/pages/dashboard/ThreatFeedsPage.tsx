@@ -22,6 +22,7 @@ import {
   InputAdornment,
   Switch,
   Tooltip,
+  Alert,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import AddIcon from '@mui/icons-material/Add';
@@ -31,7 +32,14 @@ import SearchIcon from '@mui/icons-material/Search';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import RssFeedIcon from '@mui/icons-material/RssFeed';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { useThreatFeeds, ThreatFeed, DEFAULT_THREAT_FEEDS } from '@/hooks/useThreatFeeds';
+import { getDatastoreItem, DATASTORE_CATEGORIES } from '@/services/datastore';
+
+// Datastore keys for onboarding config
+const ONBOARDING_CONFIG_CATEGORY = 'shuffle-security_onboarding';
+const AUTOMATION_CONFIG_KEY = 'automation_config';
 
 const ThreatFeedsPage = () => {
   const { threatFeeds: feeds, isLoading, saveFeed, deleteFeed, toggleFeed, initializeDefaults, refetch } = useThreatFeeds();
@@ -45,6 +53,25 @@ const ThreatFeedsPage = () => {
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [isInitializing, setIsInitializing] = useState(false);
+  const [automationEnabled, setAutomationEnabled] = useState<boolean | null>(null);
+
+  // Fetch automation status from onboarding config
+  useEffect(() => {
+    const fetchAutomationStatus = async () => {
+      try {
+        const response = await getDatastoreItem(AUTOMATION_CONFIG_KEY, ONBOARDING_CONFIG_CATEGORY);
+        if (response.success && response.item?.value) {
+          const config = typeof response.item.value === 'string'
+            ? JSON.parse(response.item.value)
+            : response.item.value;
+          setAutomationEnabled(config?.threat_intel?.enabled ?? null);
+        }
+      } catch (error) {
+        console.error('Failed to fetch automation status:', error);
+      }
+    };
+    fetchAutomationStatus();
+  }, []);
 
   useEffect(() => {
     refetch();
@@ -192,6 +219,31 @@ const ThreatFeedsPage = () => {
           </Button>
         </Box>
       </Box>
+
+      {/* Automation Status Alert */}
+      {automationEnabled !== null && (
+        <Alert 
+          severity={automationEnabled ? 'success' : 'warning'}
+          icon={automationEnabled ? <CheckCircleIcon /> : <ErrorOutlineIcon />}
+          sx={{ 
+            mb: 2, 
+            '& .MuiAlert-icon': { 
+              color: automationEnabled ? '#22c55e' : undefined 
+            } 
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+              Threat Intel Automation: {automationEnabled ? 'Active' : 'Inactive'}
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              {automationEnabled 
+                ? '— Incidents will be automatically enriched with threat intelligence from enabled feeds.'
+                : '— Enable Threat Intel in the onboarding flow to automatically enrich incidents.'}
+            </Typography>
+          </Box>
+        </Alert>
+      )}
 
       {/* Info Card */}
       <Card sx={{ mb: 2, p: 2, bgcolor: 'rgba(255, 102, 0, 0.05)', border: '1px solid rgba(255, 102, 0, 0.2)' }}>
