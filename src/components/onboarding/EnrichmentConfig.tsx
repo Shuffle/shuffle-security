@@ -28,8 +28,6 @@ const AUTOMATION_WORKFLOW_LABELS: Record<string, string[]> = {
   automatic_ingestion: ['Ingest Tickets', 'Ingest Tickets_webhook'],
   threat_intel: ['Threat Intel'],
   notifications: ['Notifications'],
-  email_notify: ['Email Notify'],
-  chat_notify: ['Chat Notify'],
 };
 
 // Generate workflow for an automation area
