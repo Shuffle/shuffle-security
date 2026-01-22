@@ -258,6 +258,7 @@ export const DATASTORE_CATEGORIES = {
   CONFIGURATION: 'shuffle-security_configuration',
   IOCS: 'shuffle-security_ioc-config',
   CUSTOM_FIELDS: 'shuffle-security_custom-fields',
+  THREAT_FEEDS: 'shuffle-security_threat-feeds',
   // Legacy - for migration purposes
   LEGACY_ALERTS: 'shuffle-security_alerts',
   LEGACY_CASES: 'shuffle-security_cases',

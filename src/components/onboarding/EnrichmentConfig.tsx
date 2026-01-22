@@ -10,6 +10,8 @@ import {
   TextField,
   Avatar,
   Tooltip,
+  IconButton,
+  Button,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -19,9 +21,15 @@ import ChatIcon from '@mui/icons-material/Chat';
 import TravelExploreIcon from '@mui/icons-material/TravelExplore';
 import DownloadIcon from '@mui/icons-material/Download';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+import LinkIcon from '@mui/icons-material/Link';
+import RestoreIcon from '@mui/icons-material/Restore';
 import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
 import shuffleLogo from '@/assets/shuffle-logo.png';
 import { API_CONFIG, getApiUrl } from '@/config/api';
+import { useThreatFeeds, DEFAULT_THREAT_FEEDS, ThreatFeed } from '@/hooks/useThreatFeeds';
 
 // Workflow labels for each automation area
 const AUTOMATION_WORKFLOW_LABELS: Record<string, string[]> = {
@@ -272,6 +280,12 @@ export const EnrichmentConfig = ({
   selectedApps = [],
 }: EnrichmentConfigProps) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  
+  // Threat feeds management
+  const { threatFeeds, saveFeed, deleteFeed, toggleFeed, initializeDefaults: initThreatFeeds } = useThreatFeeds();
+  const [editingFeed, setEditingFeed] = useState<ThreatFeed | null>(null);
+  const [newFeedUrl, setNewFeedUrl] = useState('');
+  const [newFeedName, setNewFeedName] = useState('');
 
   // Create a set of selected app names (normalized) for quick lookup
   const selectedAppNames = useMemo(() => {
@@ -1069,6 +1083,249 @@ export const EnrichmentConfig = ({
                                 </Box>
                               ))
                             ) : null}
+                          </Box>
+                        </Box>
+                      </Collapse>
+                    )}
+
+                    {/* Threat Feed URLs section - only for threat_intel */}
+                    {option.id === 'threat_intel' && (
+                      <Collapse in={isExpanded}>
+                        <Box sx={{ mt: 2, pl: 7 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+                            <Typography
+                              variant="caption"
+                              sx={{ 
+                                color: 'rgba(255, 255, 255, 0.5)', 
+                                fontWeight: 600,
+                                textTransform: 'uppercase',
+                                letterSpacing: 0.5,
+                                fontSize: '0.65rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 0.5,
+                              }}
+                            >
+                              <LinkIcon sx={{ fontSize: 14 }} />
+                              Threat Feed URLs
+                            </Typography>
+                            <Tooltip title="Reset to default feeds" arrow>
+                              <IconButton
+                                size="small"
+                                onClick={() => initThreatFeeds()}
+                                sx={{ 
+                                  color: 'rgba(255, 255, 255, 0.4)',
+                                  '&:hover': { color: '#ff6600' },
+                                }}
+                              >
+                                <RestoreIcon sx={{ fontSize: 16 }} />
+                              </IconButton>
+                            </Tooltip>
+                          </Box>
+                          
+                          {/* Existing feeds */}
+                          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mb: 1.5 }}>
+                            {threatFeeds.map((feed) => (
+                              <Box
+                                key={feed.id}
+                                sx={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                  py: 0.75,
+                                  px: 1.5,
+                                  borderRadius: 1.5,
+                                  background: feed.enabled 
+                                    ? 'rgba(239, 68, 68, 0.08)' 
+                                    : 'rgba(0, 0, 0, 0.2)',
+                                  border: '1px solid',
+                                  borderColor: feed.enabled 
+                                    ? 'rgba(239, 68, 68, 0.25)' 
+                                    : 'transparent',
+                                  opacity: feed.enabled ? 1 : 0.6,
+                                  transition: 'all 0.2s ease',
+                                }}
+                              >
+                                {editingFeed?.id === feed.id ? (
+                                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, flex: 1, mr: 1 }}>
+                                    <TextField
+                                      size="small"
+                                      placeholder="Feed name"
+                                      value={editingFeed.name}
+                                      onChange={(e) => setEditingFeed({ ...editingFeed, name: e.target.value })}
+                                      sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                          bgcolor: 'rgba(0,0,0,0.3)',
+                                          fontSize: '0.85rem',
+                                        },
+                                      }}
+                                    />
+                                    <TextField
+                                      size="small"
+                                      placeholder="Feed URL"
+                                      value={editingFeed.url}
+                                      onChange={(e) => setEditingFeed({ ...editingFeed, url: e.target.value })}
+                                      sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                          bgcolor: 'rgba(0,0,0,0.3)',
+                                          fontFamily: 'monospace',
+                                          fontSize: '0.75rem',
+                                        },
+                                      }}
+                                    />
+                                    <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                      <Button
+                                        size="small"
+                                        variant="contained"
+                                        onClick={async () => {
+                                          await saveFeed(editingFeed);
+                                          setEditingFeed(null);
+                                        }}
+                                        sx={{ fontSize: '0.7rem', py: 0.25, bgcolor: option.color }}
+                                      >
+                                        Save
+                                      </Button>
+                                      <Button
+                                        size="small"
+                                        variant="outlined"
+                                        onClick={() => setEditingFeed(null)}
+                                        sx={{ fontSize: '0.7rem', py: 0.25 }}
+                                      >
+                                        Cancel
+                                      </Button>
+                                    </Box>
+                                  </Box>
+                                ) : (
+                                  <>
+                                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                                      <Typography variant="body2" sx={{ color: 'white', fontWeight: 500 }}>
+                                        {feed.name}
+                                      </Typography>
+                                      <Typography 
+                                        variant="caption" 
+                                        sx={{ 
+                                          color: 'rgba(255, 255, 255, 0.5)', 
+                                          fontFamily: 'monospace',
+                                          fontSize: '0.65rem',
+                                          display: 'block',
+                                          overflow: 'hidden',
+                                          textOverflow: 'ellipsis',
+                                          whiteSpace: 'nowrap',
+                                        }}
+                                      >
+                                        {feed.url}
+                                      </Typography>
+                                    </Box>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                      <Tooltip title="Edit feed" arrow>
+                                        <IconButton
+                                          size="small"
+                                          onClick={() => setEditingFeed(feed)}
+                                          sx={{ color: 'rgba(255,255,255,0.4)', '&:hover': { color: 'white' } }}
+                                        >
+                                          <EditIcon sx={{ fontSize: 16 }} />
+                                        </IconButton>
+                                      </Tooltip>
+                                      <Tooltip title="Delete feed" arrow>
+                                        <IconButton
+                                          size="small"
+                                          onClick={() => deleteFeed(feed.id)}
+                                          sx={{ color: 'rgba(255,255,255,0.4)', '&:hover': { color: '#ef4444' } }}
+                                        >
+                                          <DeleteIcon sx={{ fontSize: 16 }} />
+                                        </IconButton>
+                                      </Tooltip>
+                                      <Switch
+                                        size="small"
+                                        checked={feed.enabled}
+                                        onChange={() => toggleFeed(feed.id)}
+                                        sx={{
+                                          '& .MuiSwitch-switchBase.Mui-checked': {
+                                            color: option.color,
+                                          },
+                                          '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                                            backgroundColor: option.color,
+                                          },
+                                        }}
+                                      />
+                                    </Box>
+                                  </>
+                                )}
+                              </Box>
+                            ))}
+                          </Box>
+                          
+                          {/* Add new feed */}
+                          <Box 
+                            sx={{ 
+                              p: 1.5, 
+                              borderRadius: 1.5, 
+                              border: '1px dashed rgba(255, 255, 255, 0.15)',
+                              background: 'rgba(0, 0, 0, 0.15)',
+                            }}
+                          >
+                            <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.4)', mb: 1, display: 'block' }}>
+                              Add new threat feed URL
+                            </Typography>
+                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                              <TextField
+                                size="small"
+                                placeholder="Feed name"
+                                value={newFeedName}
+                                onChange={(e) => setNewFeedName(e.target.value)}
+                                sx={{
+                                  minWidth: 150,
+                                  '& .MuiOutlinedInput-root': {
+                                    bgcolor: 'rgba(0,0,0,0.3)',
+                                    fontSize: '0.85rem',
+                                  },
+                                }}
+                              />
+                              <TextField
+                                size="small"
+                                placeholder="https://..."
+                                value={newFeedUrl}
+                                onChange={(e) => setNewFeedUrl(e.target.value)}
+                                sx={{
+                                  flex: 1,
+                                  minWidth: 200,
+                                  '& .MuiOutlinedInput-root': {
+                                    bgcolor: 'rgba(0,0,0,0.3)',
+                                    fontFamily: 'monospace',
+                                    fontSize: '0.75rem',
+                                  },
+                                }}
+                              />
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                startIcon={<AddIcon sx={{ fontSize: 16 }} />}
+                                disabled={!newFeedUrl.trim() || !newFeedName.trim()}
+                                onClick={async () => {
+                                  if (newFeedUrl.trim() && newFeedName.trim()) {
+                                    const newFeed: ThreatFeed = {
+                                      id: `custom_${Date.now()}`,
+                                      url: newFeedUrl.trim(),
+                                      name: newFeedName.trim(),
+                                      enabled: true,
+                                    };
+                                    await saveFeed(newFeed);
+                                    setNewFeedUrl('');
+                                    setNewFeedName('');
+                                  }
+                                }}
+                                sx={{ 
+                                  borderColor: 'rgba(255, 255, 255, 0.2)',
+                                  color: 'rgba(255, 255, 255, 0.7)',
+                                  '&:hover': {
+                                    borderColor: option.color,
+                                    color: option.color,
+                                  },
+                                }}
+                              >
+                                Add
+                              </Button>
+                            </Box>
                           </Box>
                         </Box>
                       </Collapse>
