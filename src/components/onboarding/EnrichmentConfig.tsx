@@ -36,26 +36,34 @@ const AUTOMATION_WORKFLOW_LABELS: Record<string, string[]> = {
 const generateWorkflow = async (
   label: string,
   enabledAppNames: string[],
-  category: string = 'cases'
+  category: string = 'cases',
+  actionName?: string
 ): Promise<void> => {
-  if (enabledAppNames.length === 0) return;
+  // For disable action, we still need to send the request even with no apps
+  if (enabledAppNames.length === 0 && actionName !== 'disable') return;
   
   const appNamesStr = enabledAppNames.join(',');
   
   try {
+    const body: Record<string, string> = {
+      label,
+      app_name: appNamesStr,
+      category,
+    };
+    
+    if (actionName) {
+      body.action_name = actionName;
+    }
+    
     await fetch(getApiUrl('/api/v2/workflows/generate'), {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${API_CONFIG.apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        label,
-        app_name: appNamesStr,
-        category,
-      }),
+      body: JSON.stringify(body),
     });
-    console.log(`Workflow generated: ${label} with apps: ${appNamesStr}`);
+    console.log(`Workflow generated: ${label} with apps: ${appNamesStr}${actionName ? ` (action: ${actionName})` : ''}`);
   } catch (error) {
     console.error(`Failed to generate workflow ${label}:`, error);
   }
@@ -481,13 +489,17 @@ export const EnrichmentConfig = ({
 
   const toggleOption = (id: string) => {
     const current = enrichmentState[id] || { enabled: false, config: {} };
+    const isEnabling = !current.enabled;
     const newState = {
       ...enrichmentState,
-      [id]: { ...current, enabled: !current.enabled },
+      [id]: { ...current, enabled: isEnabling },
     };
     onEnrichmentChange(newState);
     // Optimistically save
     onSave?.(newState);
+    
+    // Trigger workflow generation API
+    triggerWorkflowGeneration(id, newState, isEnabling ? undefined : 'disable');
   };
 
   const updateConfig = (id: string, field: string, value: string) => {
@@ -552,22 +564,24 @@ export const EnrichmentConfig = ({
   };
 
   // Trigger workflow generation for an automation area
-  const triggerWorkflowGeneration = useCallback((optionId: string, state: EnrichmentState) => {
+  const triggerWorkflowGeneration = useCallback((optionId: string, state: EnrichmentState, actionName?: string) => {
     const option = enrichmentOptions.find(o => o.id === optionId);
     if (!option) return;
     
     // Get all tools for this option
     const allTools = getAllToolsForOption(option);
     
-    // Filter to only enabled tools
-    const enabledTools = allTools.filter(tool => {
-      const current = state[optionId];
-      if (current?.tools && tool.id in current.tools) {
-        return current.tools[tool.id] !== false;
-      }
-      // Default: enabled if selected and validated
-      return tool.isSelected === true && tool.isValidated === true;
-    });
+    // Filter to only enabled tools (unless disabling the whole area)
+    const enabledTools = actionName === 'disable' 
+      ? allTools // Include all tools when disabling
+      : allTools.filter(tool => {
+          const current = state[optionId];
+          if (current?.tools && tool.id in current.tools) {
+            return current.tools[tool.id] !== false;
+          }
+          // Default: enabled if selected and validated
+          return tool.isSelected === true && tool.isValidated === true;
+        });
     
     const enabledAppNames = enabledTools.map(tool => tool.name);
     
@@ -576,7 +590,7 @@ export const EnrichmentConfig = ({
     
     // Fire and forget API calls for each label
     labels.forEach(label => {
-      generateWorkflow(label, enabledAppNames, 'cases');
+      generateWorkflow(label, enabledAppNames, 'cases', actionName);
     });
   }, [enrichmentOptions]);
 
