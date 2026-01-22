@@ -28,6 +28,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import DescriptionIcon from '@mui/icons-material/Description';
 import FingerprintIcon from '@mui/icons-material/Fingerprint';
 import TuneIcon from '@mui/icons-material/Tune';
+import RssFeedIcon from '@mui/icons-material/RssFeed';
 import { useAuth } from '@/context/AuthContext';
 import { IntegrationStatus } from './IntegrationStatus';
 
@@ -49,6 +50,7 @@ const navItems: NavItem[] = [
     children: [
       { label: 'Templates', path: '/templates', icon: <DescriptionIcon fontSize="small" /> },
       { label: 'IOC Types', path: '/incidents/ioc-types', icon: <FingerprintIcon fontSize="small" /> },
+      { label: 'Threat Feeds', path: '/incidents/threat-feeds', icon: <RssFeedIcon fontSize="small" /> },
       { label: 'Custom Fields', path: '/incidents/custom-fields', icon: <TuneIcon fontSize="small" /> },
     ],
   },

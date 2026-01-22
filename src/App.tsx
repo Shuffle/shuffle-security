@@ -13,6 +13,7 @@ import IncidentsPage from '@/pages/dashboard/IncidentsPage';
 import IncidentDetailPage from '@/pages/dashboard/IncidentDetailPage';
 import TemplatesPage from '@/pages/dashboard/TemplatesPage';
 import IOCTypesPage from '@/pages/dashboard/IOCTypesPage';
+import ThreatFeedsPage from '@/pages/dashboard/ThreatFeedsPage';
 import CustomFieldsPage from '@/pages/dashboard/CustomFieldsPage';
 import UsersPage from '@/pages/dashboard/UsersPage';
 import OrganizationsPage from '@/pages/dashboard/OrganizationsPage';
@@ -77,6 +78,7 @@ const App = () => (
               <Route path="/incidents/:id" element={<IncidentDetailPage />} />
               <Route path="/templates" element={<TemplatesPage />} />
               <Route path="/incidents/ioc-types" element={<IOCTypesPage />} />
+              <Route path="/incidents/threat-feeds" element={<ThreatFeedsPage />} />
               <Route path="/incidents/custom-fields" element={<CustomFieldsPage />} />
               <Route path="/users" element={<UsersPage />} />
               <Route path="/organizations" element={<OrganizationsPage />} />
