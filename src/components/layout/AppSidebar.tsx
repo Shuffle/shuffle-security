@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLocation, Link, useNavigate } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import {
   Box,
   List,
@@ -122,7 +122,6 @@ const sortOrgsWithHierarchy = (orgs: Array<{ id: string; name: string; creator_o
 
 export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
   const location = useLocation();
-  const navigate = useNavigate();
   const { userInfo, setActiveOrg } = useAuth();
   const [expandedItems, setExpandedItems] = useState<string[]>(['Incidents']);
 
@@ -326,12 +325,14 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                 <Tooltip title={collapsed ? item.label : ''} placement="right">
                   <ListItem disablePadding sx={{ mb: 0.5 }}>
                     <ListItemButton
-                      onClick={() => {
+                      component={Link}
+                      to={item.path!}
+                      onClick={(e: React.MouseEvent) => {
+                        // Allow ctrl/cmd+click to open in new tab
+                        if (e.ctrlKey || e.metaKey) return;
+                        
                         if (!collapsed) {
                           handleExpand(item.label);
-                        }
-                        if (item.path) {
-                          navigate(item.path);
                         }
                       }}
                       sx={{
@@ -633,11 +634,14 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
 
         {/* Settings Button (User Section) */}
         <Box
-          onClick={() => navigate('/settings')}
+          component={Link}
+          to="/settings"
           sx={{
             p: 2,
             pt: 0,
             cursor: 'pointer',
+            textDecoration: 'none',
+            display: 'block',
             '&:hover': {
               '& .settings-container': {
                 backgroundColor: 'hsl(var(--muted))',
