@@ -2064,7 +2064,7 @@ const IncidentDetailPage = () => {
 
         {/* Right Activity Sidebar - Shows at bottom on smaller screens */}
         <Box sx={{ 
-          width: { xs: '100%', lg: 320 },
+          width: { xs: '100%', lg: 380 },
           flexShrink: 0,
           display: 'flex',
           flexDirection: 'column',
@@ -2116,11 +2116,16 @@ const IncidentDetailPage = () => {
                   <MentionInput
                     value={newComment}
                     onChange={setNewComment}
+                    onSubmit={() => {
+                      if (newComment.trim() || commentAttachments.length > 0) {
+                        handleAddComment();
+                      }
+                    }}
                     size="small"
                     fullWidth
                     multiline
                     rows={2}
-                    placeholder="Add a comment..."
+                    placeholder="Add a comment... (Enter to send, Shift+Enter for new line)"
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         bgcolor: 'rgba(0, 0, 0, 0.2)',
@@ -2130,12 +2135,6 @@ const IncidentDetailPage = () => {
                         '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.15)' },
                         '&.Mui-focused fieldset': { borderColor: '#FF6600' },
                       },
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey && (newComment.trim() || commentAttachments.length > 0)) {
-                        e.preventDefault();
-                        handleAddComment();
-                      }
                     }}
                   />
                   <IconButton 
