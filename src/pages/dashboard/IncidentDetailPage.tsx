@@ -1179,9 +1179,9 @@ const IncidentDetailPage = () => {
       </Box>
 
       {/* Main content with Activity sidebar */}
-      <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 2, mt: 2 }}>
         {/* Left content area */}
-        <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Box sx={{ flex: 1, minWidth: 0, order: { xs: 1, lg: 0 } }}>
           {/* Modern Pill Tabs */}
           <Box sx={{ 
             display: 'flex', 
@@ -2062,9 +2062,9 @@ const IncidentDetailPage = () => {
       )}
         </Box>
 
-        {/* Right Activity Sidebar */}
+        {/* Right Activity Sidebar - Shows at bottom on smaller screens */}
         <Box sx={{ 
-          width: 320,
+          width: { xs: '100%', lg: 320 },
           flexShrink: 0,
           display: 'flex',
           flexDirection: 'column',
@@ -2072,7 +2072,8 @@ const IncidentDetailPage = () => {
           borderRadius: 2,
           border: '1px solid hsl(var(--border))',
           overflow: 'hidden',
-          maxHeight: 'calc(100vh - 180px)',
+          maxHeight: { xs: 400, lg: 'calc(100vh - 180px)' },
+          order: { xs: 2, lg: 0 },
         }}>
           {/* Activity Header */}
           <Box sx={{ 
@@ -2189,60 +2190,108 @@ const IncidentDetailPage = () => {
                 </Typography>
               </Box>
             ) : (
-              [...activity].reverse().map((item) => (
-                <Box
-                  key={item.id}
-                  sx={{
-                    display: 'flex',
-                    gap: 1.5,
-                    p: 1.5,
-                    borderRadius: 1.5,
-                    bgcolor: item.type === 'comment' ? 'rgba(255, 102, 0, 0.05)' : 'rgba(0,0,0,0.15)',
-                    border: '1px solid',
-                    borderColor: item.type === 'comment' ? 'rgba(255, 102, 0, 0.1)' : 'rgba(255,255,255,0.04)',
-                  }}
-                >
-                  <Avatar sx={{ 
-                    width: 24, 
-                    height: 24, 
-                    bgcolor: item.type === 'comment' ? 'rgba(255, 102, 0, 0.2)' : 'rgba(255,255,255,0.08)',
-                  }}>
-                    {getActivityIcon(item.type)}
-                  </Avatar>
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.25 }}>
-                      <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.75rem' }}>
-                        {item.user}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.65rem' }}>
-                        {formatRelativeTime(item.timestamp)}
-                      </Typography>
-                    </Box>
-                    <MentionText 
-                      text={item.content} 
-                      sx={{ fontSize: '0.8rem', color: 'text.secondary' }}
-                    />
-                    {/* Display attachments if present */}
-                    {item.attachments && item.attachments.length > 0 && (
-                      <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {item.attachments.map((att, i) => (
-                          <Chip
-                            key={i}
-                            label={att.filename}
-                            size="small"
-                            sx={{
-                              height: 20,
-                              fontSize: '0.65rem',
-                              bgcolor: 'rgba(59, 130, 246, 0.1)',
-                              color: '#3b82f6',
-                            }}
-                          />
-                        ))}
+              [...activity].reverse().map((item) => {
+                // Check if user can delete this message (own message within 5 minutes)
+                const isOwnMessage = item.user === currentUsername;
+                const messageAge = Date.now() - item.timestamp;
+                const canDelete = isOwnMessage && item.type === 'comment' && messageAge < 5 * 60 * 1000; // 5 minutes
+                const timeRemaining = Math.max(0, Math.ceil((5 * 60 * 1000 - messageAge) / 60000));
+                
+                return (
+                  <Box
+                    key={item.id}
+                    sx={{
+                      display: 'flex',
+                      gap: 1.5,
+                      p: 1.5,
+                      borderRadius: 1.5,
+                      bgcolor: item.type === 'comment' ? 'rgba(255, 102, 0, 0.05)' : 'rgba(0,0,0,0.15)',
+                      border: '1px solid',
+                      borderColor: item.type === 'comment' ? 'rgba(255, 102, 0, 0.1)' : 'rgba(255,255,255,0.04)',
+                      position: 'relative',
+                      '&:hover .delete-btn': {
+                        opacity: 1,
+                      },
+                    }}
+                  >
+                    <Avatar sx={{ 
+                      width: 24, 
+                      height: 24, 
+                      bgcolor: item.type === 'comment' ? 'rgba(255, 102, 0, 0.2)' : 'rgba(255,255,255,0.08)',
+                    }}>
+                      {getActivityIcon(item.type)}
+                    </Avatar>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.25 }}>
+                        <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.75rem' }}>
+                          {item.user}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.65rem' }}>
+                          {formatRelativeTime(item.timestamp)}
+                        </Typography>
                       </Box>
+                      <MentionText 
+                        text={item.content} 
+                        sx={{ fontSize: '0.8rem', color: 'text.secondary' }}
+                      />
+                      {/* Display attachments if present */}
+                      {item.attachments && item.attachments.length > 0 && (
+                        <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                          {item.attachments.map((att, i) => (
+                            <Chip
+                              key={i}
+                              label={att.filename}
+                              size="small"
+                              sx={{
+                                height: 20,
+                                fontSize: '0.65rem',
+                                bgcolor: 'rgba(59, 130, 246, 0.1)',
+                                color: '#3b82f6',
+                              }}
+                            />
+                          ))}
+                        </Box>
+                      )}
+                    </Box>
+                    {/* Delete button for own messages within 5 minutes */}
+                    {canDelete && (
+                      <Tooltip title={`Delete (${timeRemaining}m left)`} arrow>
+                        <IconButton
+                          className="delete-btn"
+                          size="small"
+                          onClick={() => {
+                            // Remove the message from activity
+                            setActivity(prev => prev.filter(a => a.id !== item.id));
+                            // Trigger save
+                            pendingSaveRef.current = true;
+                            if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+                            saveTimeoutRef.current = setTimeout(() => {
+                              saveToDatastore();
+                            }, 500);
+                            toast.success('Message deleted');
+                          }}
+                          sx={{
+                            position: 'absolute',
+                            top: 4,
+                            right: 4,
+                            width: 20,
+                            height: 20,
+                            opacity: 0,
+                            transition: 'opacity 0.2s',
+                            bgcolor: 'rgba(239, 68, 68, 0.1)',
+                            color: '#ef4444',
+                            '&:hover': {
+                              bgcolor: 'rgba(239, 68, 68, 0.2)',
+                            },
+                          }}
+                        >
+                          <DeleteIcon sx={{ fontSize: 12 }} />
+                        </IconButton>
+                      </Tooltip>
                     )}
                   </Box>
-                </Box>
-              ))
+                );
+              })
             )}
           </Box>
         </Box>
