@@ -386,7 +386,10 @@ const IncidentDetailPage = () => {
       if (parsed) {
         setIncident(parsed);
         setEditedTitle(parsed.title);
-        setEditedMessage(parsed.rawOCSF?.message || '');
+        // Use desc (new OCSF) first, fall back to message (legacy), strip HTML
+        const rawDesc = parsed.rawOCSF?.desc || parsed.rawOCSF?.message || '';
+        const strippedDesc = rawDesc.replace(/<[^>]*>/g, '').trim();
+        setEditedMessage(strippedDesc);
         setEditedSeverity(parsed.severity);
         setEditedAssignee(parsed.assignee || '');
         setEditedStatus(parsed.status);
