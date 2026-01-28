@@ -42,6 +42,7 @@ import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import { useDatastore } from '@/hooks/useDatastore';
 import { useAuth } from '@/context/AuthContext';
 import { DATASTORE_CATEGORIES, getDatastoreItem } from '@/services/datastore';
@@ -1157,6 +1158,42 @@ const IncidentDetailPage = () => {
                 <RefreshIcon fontSize="small" />
               </IconButton>
             </Tooltip>
+
+            <Button 
+              variant="outlined"
+              size="small"
+              startIcon={<SecurityIcon sx={{ fontSize: 16 }} />}
+              onClick={() => toast.info('Enrich functionality coming soon')}
+              disabled={isSaving}
+              sx={{ 
+                borderColor: 'hsl(var(--border))',
+                color: 'hsl(var(--foreground))',
+                height: 32,
+                minWidth: 'auto',
+                px: 1.5,
+                '&:hover': { borderColor: '#22b8cf', bgcolor: 'rgba(34, 184, 207, 0.1)' },
+              }}
+            >
+              Enrich
+            </Button>
+
+            <Button 
+              variant="outlined"
+              size="small"
+              startIcon={<AutoFixHighIcon sx={{ fontSize: 16 }} />}
+              onClick={() => toast.info('AI Agent functionality coming soon')}
+              disabled={isSaving}
+              sx={{ 
+                borderColor: 'hsl(var(--border))',
+                color: 'hsl(var(--foreground))',
+                height: 32,
+                minWidth: 'auto',
+                px: 1.5,
+                '&:hover': { borderColor: '#a855f7', bgcolor: 'rgba(168, 85, 247, 0.1)' },
+              }}
+            >
+              AI Agent
+            </Button>
 
             {!isResolved && (
               <Button 
