@@ -122,7 +122,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
       const tlpLabel = typeof tlpValue === 'number' ? TLP_LABELS[tlpValue]?.label : undefined;
       
       return {
-        id: ocsf.finding_uid,
+        id: item.key, // Always use datastore key as the canonical ID
         title: ocsf.title,
         source: ocsf.product?.name || ocsf.types?.[0] || 'Unknown',
         severity: mapOCSFSeverity(ocsf.severity_id || 3),
@@ -147,7 +147,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
       const pap = customAttrs?.pap || legacyData.pap;
       
       return {
-        id: findingInfo?.uid || item.key,
+        id: item.key, // Always use datastore key as the canonical ID
         title: findingInfo?.title || legacyData.message || 'Untitled',
         source: legacyData.metadata?.product?.name || findingInfo?.types?.[0] || 'Unknown',
         severity: mapOCSFSeverity(legacyData.severity_id),
@@ -167,7 +167,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
     } else {
       // Non-OCSF format
       return {
-        id: data.id || item.key,
+        id: item.key, // Always use datastore key as the canonical ID
         title: data.title || 'Untitled',
         source: data.source || 'Unknown',
         severity: (data.severity || 'medium').toLowerCase(),
