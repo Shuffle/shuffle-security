@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { htmlToPlainText } from '@/lib/utils';
 import {
   Dialog,
   DialogTitle,
@@ -101,7 +102,8 @@ export const IncidentDetailDialog = ({ open, incident, onClose, onResolve, onUpd
   useEffect(() => {
     if (incident) {
       setEditedTitle(incident.title);
-      setEditedMessage(incident.rawOCSF?.message || '');
+      const rawDesc = incident.rawOCSF?.desc || incident.rawOCSF?.message || '';
+      setEditedMessage(htmlToPlainText(rawDesc));
       setEditedSeverity(incident.severity);
       setEditedAssignee(incident.assignee || '');
       setEditedTlp(incident.tlp || 'TLP:AMBER');

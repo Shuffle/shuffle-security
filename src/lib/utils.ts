@@ -5,6 +5,65 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/**
+ * Convert HTML to readable plain text.
+ * - Converts block elements (div, p, br) to newlines
+ * - Decodes HTML entities (&nbsp;, &amp;, etc.)
+ * - Strips remaining HTML tags
+ * - Normalizes whitespace while preserving intentional line breaks
+ */
+export function htmlToPlainText(html: string): string {
+  if (!html) return '';
+  
+  let text = html;
+  
+  // Convert block-level elements to newlines before stripping tags
+  text = text.replace(/<\/(div|p|h[1-6]|li|tr)>/gi, '\n');
+  text = text.replace(/<br\s*\/?>/gi, '\n');
+  text = text.replace(/<\/?(ul|ol|table|tbody|thead)>/gi, '\n');
+  
+  // Strip all remaining HTML tags
+  text = text.replace(/<[^>]*>/g, '');
+  
+  // Decode common HTML entities
+  const entities: Record<string, string> = {
+    '&nbsp;': ' ',
+    '&amp;': '&',
+    '&lt;': '<',
+    '&gt;': '>',
+    '&quot;': '"',
+    '&#39;': "'",
+    '&apos;': "'",
+    '&ndash;': '–',
+    '&mdash;': '—',
+    '&hellip;': '…',
+    '&copy;': '©',
+    '&reg;': '®',
+    '&trade;': '™',
+    '&bull;': '•',
+  };
+  
+  for (const [entity, char] of Object.entries(entities)) {
+    text = text.replace(new RegExp(entity, 'gi'), char);
+  }
+  
+  // Decode numeric entities (&#60; &#x3C; etc.)
+  text = text.replace(/&#(\d+);/g, (_, num) => String.fromCharCode(parseInt(num, 10)));
+  text = text.replace(/&#x([a-fA-F0-9]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+  
+  // Normalize multiple consecutive newlines to max 2
+  text = text.replace(/\n{3,}/g, '\n\n');
+  
+  // Normalize spaces (but not newlines)
+  text = text.replace(/[^\S\n]+/g, ' ');
+  
+  // Trim each line
+  text = text.split('\n').map(line => line.trim()).join('\n');
+  
+  // Trim the whole result
+  return text.trim();
+}
+
 // Shared type for authenticated app entries
 export interface AuthAppEntry {
   app: {
