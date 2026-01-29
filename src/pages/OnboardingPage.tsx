@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Box, Container, Typography, Button, Chip, Stack, Tooltip } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { TicketingSystemSearch } from '@/components/onboarding/TicketingSystemSearch';
 import { WelcomeStep } from '@/components/onboarding/WelcomeStep';
 import { PrimaryToolStep } from '@/components/onboarding/PrimaryToolStep';
@@ -1150,9 +1150,11 @@ const OnboardingPage = () => {
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             {activeStep < steps.length - 1 ? (
               <Button
-                onClick={() => navigate('/incidents')}
+                component={Link}
+                to="/incidents"
                 sx={{
                   color: 'rgba(255, 255, 255, 0.5)',
+                  textDecoration: 'none',
                   '&:hover': { color: 'white', backgroundColor: 'rgba(255, 255, 255, 0.05)' },
                 }}
               >

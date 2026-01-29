@@ -8,7 +8,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { API_CONFIG } from '@/config/api';
 import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
 
@@ -26,7 +26,6 @@ interface IntegrationStatusProps {
 }
 
 export const IntegrationStatus = ({ collapsed }: IntegrationStatusProps) => {
-  const navigate = useNavigate();
   const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -266,7 +265,8 @@ export const IntegrationStatus = ({ collapsed }: IntegrationStatusProps) => {
             <Tooltip title="Add Integration" placement="right">
               <IconButton
                 size="small"
-                onClick={() => navigate('/onboarding')}
+                component={Link}
+                to="/onboarding"
                 sx={{ 
                   width: 26,
                   height: 26,

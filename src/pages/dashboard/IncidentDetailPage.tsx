@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -959,7 +959,12 @@ const IncidentDetailPage = () => {
         <Typography variant="h6" sx={{ color: 'text.secondary', mb: 2 }}>
           Incident not found
         </Typography>
-        <Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={() => navigate('/incidents')}>
+        <Button 
+          component={Link} 
+          to="/incidents" 
+          variant="outlined" 
+          startIcon={<ArrowBackIcon />}
+        >
           Back to Incidents
         </Button>
       </Box>
@@ -978,13 +983,14 @@ const IncidentDetailPage = () => {
       <Box sx={{ mb: 2 }}>
         {/* Back link */}
         <Box 
-          onClick={() => navigate('/incidents')} 
+          component={Link}
+          to="/incidents"
           sx={{ 
             display: 'inline-flex', 
             alignItems: 'center', 
             gap: 0.5, 
             color: '#22b8cf', 
-            cursor: 'pointer',
+            textDecoration: 'none',
             mb: 2,
             '&:hover': { textDecoration: 'underline' },
           }}
@@ -2061,7 +2067,9 @@ const IncidentDetailPage = () => {
                                     key={key}
                                     label={key}
                                     size="small"
-                                    onClick={isIncidentCategory ? () => navigate(`/incidents/${key}`) : undefined}
+                                    component={isIncidentCategory ? Link : 'div'}
+                                    to={isIncidentCategory ? `/incidents/${key}` : undefined}
+                                    clickable={isIncidentCategory}
                                     sx={{
                                       height: 22,
                                       fontSize: '0.7rem',

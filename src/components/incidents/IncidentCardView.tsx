@@ -1,6 +1,6 @@
 import { Box, Typography, Chip } from '@mui/material';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   Fingerprint,
   FileCode,
@@ -31,8 +31,9 @@ interface DisplayIncident {
 
 interface IncidentCardViewProps {
   incidents: DisplayIncident[];
-  onIncidentClick: (incident: DisplayIncident) => void;
+  onIncidentClick?: (incident: DisplayIncident) => void;
   onFilterChange?: (type: 'severity' | 'status' | 'assignee', value: string) => void;
+  getIncidentUrl?: (incident: DisplayIncident) => string;
 }
 
 // Status and severity colors now imported from @/config/incidentConfig
@@ -82,8 +83,7 @@ const formatRelativeTime = (timestamp: number): string => {
   return `${days} day${days > 1 ? 's' : ''} ago`;
 };
 
-export const IncidentCardView = ({ incidents, onIncidentClick, onFilterChange }: IncidentCardViewProps) => {
-  const navigate = useNavigate();
+export const IncidentCardView = ({ incidents, onIncidentClick, onFilterChange, getIncidentUrl }: IncidentCardViewProps) => {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
@@ -101,7 +101,9 @@ export const IncidentCardView = ({ incidents, onIncidentClick, onFilterChange }:
             transition={{ duration: 0.2, delay: index * 0.03 }}
           >
             <Box
-              onClick={() => onIncidentClick(incident)}
+              component={getIncidentUrl ? Link : 'div'}
+              to={getIncidentUrl ? getIncidentUrl(incident) : undefined}
+              onClick={onIncidentClick ? () => onIncidentClick(incident) : undefined}
               sx={{
                 display: 'flex',
                 alignItems: 'center',
@@ -112,6 +114,8 @@ export const IncidentCardView = ({ incidents, onIncidentClick, onFilterChange }:
                 border: '1px solid hsl(var(--border))',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
+                textDecoration: 'none',
+                color: 'inherit',
                 '&:hover': {
                   backgroundColor: 'hsl(var(--background-surface))',
                   borderColor: 'hsl(var(--border-subtle))',

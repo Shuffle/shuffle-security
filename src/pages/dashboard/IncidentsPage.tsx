@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   Box,
   Card,
@@ -197,7 +197,6 @@ interface Filters {
 }
 
 const IncidentsPage = () => {
-  const navigate = useNavigate();
   const { userInfo } = useAuth();
   const currentUsername = userInfo?.username || '';
 
@@ -326,8 +325,8 @@ const IncidentsPage = () => {
     return sorted;
   }, [filteredIncidents, sortBy, sortDirection]);
 
-  const handleRowClick = (incident: DisplayIncident) => {
-    navigate(`/incidents/${incident.id}`);
+  const getIncidentUrl = (incident: DisplayIncident) => {
+    return `/incidents/${incident.id}`;
   };
 
   const handleCreateIncident = async (ocsf: OCSFIncidentFinding) => {
@@ -530,7 +529,7 @@ const IncidentsPage = () => {
         {/* Card list */}
         <IncidentCardView
           incidents={sortedIncidents}
-          onIncidentClick={handleRowClick}
+          getIncidentUrl={getIncidentUrl}
           onFilterChange={(type, value) => {
             setFilters(prev => ({
               ...prev,
