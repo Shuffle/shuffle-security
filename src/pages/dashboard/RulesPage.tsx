@@ -23,11 +23,38 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import SecurityIcon from '@mui/icons-material/Security';
 import DownloadIcon from '@mui/icons-material/Download';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
 import { toast } from 'sonner';
 import { listFiles, deleteFile, getFileDownloadUrl, formatFileSize, ShuffleFile, createAndUploadFile } from '@/services/files';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 
 const SIGMA_NAMESPACE = 'sigma';
+
+const SIGMA_TEMPLATE = `title: New Detection Rule
+id: 
+status: experimental
+level: medium
+description: |
+  Describe what this rule detects
+author: Your Name
+date: ${new Date().toISOString().split('T')[0]}
+references:
+  - https://example.com/reference
+tags:
+  - attack.execution
+  - attack.t1059
+logsource:
+  category: process_creation
+  product: windows
+detection:
+  selection:
+    CommandLine|contains:
+      - 'suspicious_string'
+  condition: selection
+falsepositives:
+  - Legitimate administrative activity
+`;
 
 const RulesPage = () => {
   const [files, setFiles] = useState<ShuffleFile[]>([]);
@@ -38,6 +65,13 @@ const RulesPage = () => {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isContentLoading, setIsContentLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  
+  // Create/Edit dialog state
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [editingFile, setEditingFile] = useState<ShuffleFile | null>(null);
+  const [ruleName, setRuleName] = useState('');
+  const [ruleContent, setRuleContent] = useState(SIGMA_TEMPLATE);
+  const [isSaving, setIsSaving] = useState(false);
 
   const fetchFiles = async () => {
     setIsLoading(true);
@@ -153,6 +187,81 @@ const RulesPage = () => {
     });
   };
 
+  const handleOpenCreateDialog = () => {
+    setEditingFile(null);
+    setRuleName('');
+    setRuleContent(SIGMA_TEMPLATE);
+    setIsCreateDialogOpen(true);
+  };
+
+  const handleEditFile = async (file: ShuffleFile) => {
+    setEditingFile(file);
+    setRuleName(file.filename.replace(/\.(yml|yaml|sigma)$/i, ''));
+    setIsCreateDialogOpen(true);
+    
+    try {
+      const url = getFileDownloadUrl(file.id);
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('shuffle_api_key')}`,
+        },
+      });
+      
+      if (response.ok) {
+        const content = await response.text();
+        setRuleContent(content);
+      } else {
+        toast.error('Failed to load rule content');
+        setRuleContent(SIGMA_TEMPLATE);
+      }
+    } catch (error) {
+      console.error('Failed to fetch file content:', error);
+      toast.error('Failed to load rule content');
+      setRuleContent(SIGMA_TEMPLATE);
+    }
+  };
+
+  const handleSaveRule = async () => {
+    if (!ruleName.trim()) {
+      toast.error('Please enter a rule name');
+      return;
+    }
+
+    if (!ruleContent.trim()) {
+      toast.error('Please enter rule content');
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      // If editing, delete the old file first
+      if (editingFile) {
+        await deleteFile(editingFile.id);
+      }
+
+      // Create a blob from the content
+      const filename = ruleName.endsWith('.yml') ? ruleName : `${ruleName}.yml`;
+      const blob = new Blob([ruleContent], { type: 'text/yaml' });
+      const file = new File([blob], filename, { type: 'text/yaml' });
+
+      const result = await createAndUploadFile(file, SIGMA_NAMESPACE, ['sigma', 'detection']);
+      
+      if (result.success) {
+        toast.success(editingFile ? 'Rule updated successfully' : 'Rule created successfully');
+        setIsCreateDialogOpen(false);
+        fetchFiles();
+      } else {
+        toast.error(result.reason || 'Failed to save rule');
+      }
+    } catch (error) {
+      console.error('Failed to save rule:', error);
+      toast.error('Failed to save rule');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <Box sx={{ p: 4, maxWidth: 1400, mx: 'auto' }}>
       {/* Header */}
@@ -161,11 +270,11 @@ const RulesPage = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
             <SecurityIcon sx={{ color: 'hsl(var(--primary))', fontSize: 28 }} />
             <Typography variant="h4" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-              Sigma Rules
+              Detection Rules
             </Typography>
           </Box>
           <Typography sx={{ color: 'hsl(var(--muted-foreground))' }}>
-            Manage detection rules for threat hunting and alerting
+            Manage Sigma detection rules for threat hunting and alerting
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1.5 }}>
@@ -187,10 +296,33 @@ const RulesPage = () => {
             Refresh
           </Button>
           <Button
-            variant="contained"
+            variant="outlined"
             component="label"
             startIcon={isUploading ? <CircularProgress size={16} color="inherit" /> : <UploadIcon />}
             disabled={isUploading}
+            sx={{
+              height: 36,
+              borderColor: 'hsl(var(--border))',
+              color: 'hsl(var(--foreground))',
+              '&:hover': {
+                borderColor: 'hsl(var(--border))',
+                backgroundColor: 'hsl(var(--muted))',
+              },
+            }}
+          >
+            Upload
+            <input
+              type="file"
+              hidden
+              multiple
+              accept=".yml,.yaml,.sigma"
+              onChange={handleUpload}
+            />
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleOpenCreateDialog}
             sx={{
               height: 36,
               backgroundColor: 'hsl(var(--primary))',
@@ -199,14 +331,7 @@ const RulesPage = () => {
               },
             }}
           >
-            Upload Rules
-            <input
-              type="file"
-              hidden
-              multiple
-              accept=".yml,.yaml,.sigma"
-              onChange={handleUpload}
-            />
+            Create Rule
           </Button>
         </Box>
       </Box>
@@ -346,6 +471,15 @@ const RulesPage = () => {
                           <VisibilityIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
+                      <Tooltip title="Edit">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleEditFile(file)}
+                          sx={{ color: 'hsl(var(--muted-foreground))' }}
+                        >
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
                       <Tooltip title="Download">
                         <IconButton
                           size="small"
@@ -430,6 +564,118 @@ const RulesPage = () => {
             sx={{ color: 'hsl(var(--foreground))' }}
           >
             Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Create/Edit Dialog */}
+      <Dialog
+        open={isCreateDialogOpen}
+        onClose={() => setIsCreateDialogOpen(false)}
+        maxWidth="lg"
+        fullWidth
+        PaperProps={{
+          sx: {
+            backgroundColor: 'hsl(var(--card))',
+            border: '1px solid hsl(var(--border))',
+            borderRadius: 2,
+            maxHeight: '90vh',
+          },
+        }}
+      >
+        <DialogTitle sx={{ 
+          borderBottom: '1px solid hsl(var(--border))',
+          color: 'hsl(var(--foreground))',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.5,
+        }}>
+          <AddIcon sx={{ color: 'hsl(var(--primary))' }} />
+          {editingFile ? 'Edit Sigma Rule' : 'Create Sigma Rule'}
+        </DialogTitle>
+        <DialogContent sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <TextField
+            label="Rule Name"
+            placeholder="e.g., suspicious_powershell_execution"
+            value={ruleName}
+            onChange={(e) => setRuleName(e.target.value)}
+            fullWidth
+            size="small"
+            sx={{
+              mt: 1,
+              '& .MuiOutlinedInput-root': {
+                backgroundColor: 'hsl(var(--muted))',
+                '& fieldset': {
+                  borderColor: 'hsl(var(--border))',
+                },
+                '&:hover fieldset': {
+                  borderColor: 'hsl(var(--border))',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: 'hsl(var(--primary))',
+                },
+              },
+              '& .MuiOutlinedInput-input': {
+                color: 'hsl(var(--foreground))',
+              },
+              '& .MuiInputLabel-root': {
+                color: 'hsl(var(--muted-foreground))',
+              },
+            }}
+          />
+          <Box>
+            <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))', mb: 1 }}>
+              Rule Content (YAML)
+            </Typography>
+            <TextField
+              multiline
+              rows={20}
+              value={ruleContent}
+              onChange={(e) => setRuleContent(e.target.value)}
+              fullWidth
+              placeholder="Enter Sigma rule YAML..."
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  backgroundColor: 'hsl(var(--muted))',
+                  fontFamily: 'monospace',
+                  fontSize: '0.875rem',
+                  '& fieldset': {
+                    borderColor: 'hsl(var(--border))',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: 'hsl(var(--border))',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: 'hsl(var(--primary))',
+                  },
+                },
+                '& .MuiOutlinedInput-input': {
+                  color: 'hsl(var(--foreground))',
+                },
+              }}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ borderTop: '1px solid hsl(var(--border))', px: 3, py: 2, gap: 1 }}>
+          <Button
+            onClick={() => setIsCreateDialogOpen(false)}
+            sx={{ color: 'hsl(var(--muted-foreground))' }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleSaveRule}
+            disabled={isSaving || !ruleName.trim() || !ruleContent.trim()}
+            startIcon={isSaving ? <CircularProgress size={16} color="inherit" /> : null}
+            sx={{
+              backgroundColor: 'hsl(var(--primary))',
+              '&:hover': {
+                backgroundColor: 'hsl(var(--primary) / 0.9)',
+              },
+            }}
+          >
+            {editingFile ? 'Update Rule' : 'Create Rule'}
           </Button>
         </DialogActions>
       </Dialog>
