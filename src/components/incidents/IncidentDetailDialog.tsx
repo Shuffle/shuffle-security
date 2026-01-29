@@ -354,7 +354,7 @@ export const IncidentDetailDialog = ({ open, incident, onClose, onResolve, onUpd
             onChange={(e) => setEditedMessage(e.target.value)}
             fullWidth
             multiline
-            rows={3}
+            rows={6}
             sx={inputSx}
           />
 
