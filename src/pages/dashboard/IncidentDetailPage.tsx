@@ -1682,7 +1682,7 @@ const IncidentDetailPage = () => {
               onChange={setEditedMessage}
               fullWidth
               multiline
-              rows={3}
+              rows={6}
               placeholder="Add a description... (type @ to mention)"
               size="small"
               sx={inputSx}
