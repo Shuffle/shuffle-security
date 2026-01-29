@@ -349,6 +349,9 @@ const IncidentDetailPage = () => {
   // Incident-level attachments
   const [incidentAttachments, setIncidentAttachments] = useState<FileAttachment[]>([]);
   
+  // Description editing state
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  
   const [isSaving, setIsSaving] = useState(false);
   const [showResolveDialog, setShowResolveDialog] = useState(false);
   const [activeTab, setActiveTab] = useState(0); // 0=Tasks, 1=Details, 2=Observables, 3=Correlations
@@ -1675,18 +1678,98 @@ const IncidentDetailPage = () => {
       {activeTab === 1 && (
         /* Details Tab */
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {/* Description */}
-          <Section title="Description" icon={DescriptionIcon} defaultOpen={true}>
-            <MentionInput
-              value={editedMessage}
-              onChange={setEditedMessage}
-              fullWidth
-              multiline
-              rows={6}
-              placeholder="Add a description... (type @ to mention)"
-              size="small"
-              sx={inputSx}
-            />
+          {/* Metadata Section - now includes Description */}
+          <Section title="Metadata" icon={DescriptionIcon} defaultOpen={true}>
+            {/* Description with view/edit toggle */}
+            <Box sx={{ mb: 2 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>Description</Typography>
+                <IconButton 
+                  size="small" 
+                  onClick={() => setIsEditingDescription(!isEditingDescription)}
+                  sx={{ 
+                    color: isEditingDescription ? '#FF6600' : 'text.secondary',
+                    '&:hover': { color: '#FF6600' },
+                  }}
+                >
+                  {isEditingDescription ? <CheckCircleIcon sx={{ fontSize: 16 }} /> : <EditIcon sx={{ fontSize: 16 }} />}
+                </IconButton>
+              </Box>
+              {isEditingDescription ? (
+                <MentionInput
+                  value={editedMessage}
+                  onChange={setEditedMessage}
+                  fullWidth
+                  multiline
+                  rows={6}
+                  placeholder="Add a description... (type @ to mention)"
+                  size="small"
+                  sx={inputSx}
+                />
+              ) : (
+                <Box 
+                  sx={{ 
+                    p: 1.5, 
+                    bgcolor: 'rgba(0, 0, 0, 0.2)', 
+                    borderRadius: 1,
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    minHeight: 80,
+                    whiteSpace: 'pre-wrap',
+                    cursor: 'pointer',
+                    '&:hover': { borderColor: 'rgba(255,255,255,0.2)' },
+                  }}
+                  onClick={() => setIsEditingDescription(true)}
+                >
+                  {editedMessage ? (
+                    <Typography variant="body2" sx={{ color: 'text.primary' }}>
+                      {editedMessage}
+                    </Typography>
+                  ) : (
+                    <Typography variant="body2" sx={{ color: 'text.disabled', fontStyle: 'italic' }}>
+                      No description. Click to add one.
+                    </Typography>
+                  )}
+                </Box>
+              )}
+            </Box>
+
+            <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+              <Box>
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>ID</Typography>
+                <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.75rem' }}>{incident.id}</Typography>
+              </Box>
+              <Box>
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>Source</Typography>
+                <Typography variant="body2">{incident.source}</Typography>
+              </Box>
+              <Box>
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>Created</Typography>
+                <Typography variant="body2">{incident.created}</Typography>
+              </Box>
+              {incident.edited && (
+                <Box>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>Last Updated</Typography>
+                  <Typography variant="body2">{incident.edited}</Typography>
+                </Box>
+              )}
+              <Box>
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>Age</Typography>
+                <Typography variant="body2">{metrics?.age}</Typography>
+              </Box>
+            </Box>
+
+            {/* Attachments - inline like task attachments */}
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 1 }}>
+                Attachments
+              </Typography>
+              <FileAttachments
+                attachments={incidentAttachments}
+                onChange={setIncidentAttachments}
+                namespace="incidents"
+                labels={[incident.id]}
+              />
+            </Box>
           </Section>
 
           {/* Metrics Section */}
@@ -1764,47 +1847,6 @@ const IncidentDetailPage = () => {
                   Target: &lt;24h
                 </Typography>
               </Box>
-            </Box>
-          </Section>
-
-          {/* Metadata Section */}
-          <Section title="Metadata" icon={DescriptionIcon} defaultOpen={true}>
-            <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-              <Box>
-                <Typography variant="caption" sx={{ color: 'text.secondary' }}>ID</Typography>
-                <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.75rem' }}>{incident.id}</Typography>
-              </Box>
-              <Box>
-                <Typography variant="caption" sx={{ color: 'text.secondary' }}>Source</Typography>
-                <Typography variant="body2">{incident.source}</Typography>
-              </Box>
-              <Box>
-                <Typography variant="caption" sx={{ color: 'text.secondary' }}>Created</Typography>
-                <Typography variant="body2">{incident.created}</Typography>
-              </Box>
-              {incident.edited && (
-                <Box>
-                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>Last Updated</Typography>
-                  <Typography variant="body2">{incident.edited}</Typography>
-                </Box>
-              )}
-              <Box>
-                <Typography variant="caption" sx={{ color: 'text.secondary' }}>Age</Typography>
-                <Typography variant="body2">{metrics?.age}</Typography>
-              </Box>
-            </Box>
-
-            {/* Attachments - inline like task attachments */}
-            <Box sx={{ mt: 2 }}>
-              <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 1 }}>
-                Attachments
-              </Typography>
-              <FileAttachments
-                attachments={incidentAttachments}
-                onChange={setIncidentAttachments}
-                namespace="incidents"
-                labels={[incident.id]}
-              />
             </Box>
           </Section>
 
