@@ -387,10 +387,10 @@ const IncidentDetailPage = () => {
       if (parsed) {
         setIncident(parsed);
         setEditedTitle(parsed.title);
-        // Use desc (new OCSF) first, fall back to message (legacy), strip HTML
+        // Use desc (new OCSF) first, fall back to message (legacy), convert HTML to readable text
         const rawDesc = parsed.rawOCSF?.desc || parsed.rawOCSF?.message || '';
-        const strippedDesc = rawDesc.replace(/<[^>]*>/g, '').trim();
-        setEditedMessage(strippedDesc);
+        const { htmlToPlainText } = await import('@/lib/utils');
+        setEditedMessage(htmlToPlainText(rawDesc));
         setEditedSeverity(parsed.severity);
         setEditedAssignee(parsed.assignee || '');
         setEditedStatus(parsed.status);
