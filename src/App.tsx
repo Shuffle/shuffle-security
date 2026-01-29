@@ -78,7 +78,7 @@ const App = () => (
               <Route path="/incidents" element={<IncidentsPage />} />
               <Route path="/incidents/:id" element={<IncidentDetailPage />} />
               <Route path="/templates" element={<TemplatesPage />} />
-              <Route path="/incidents/rules" element={<RulesPage />} />
+              <Route path="/detection" element={<RulesPage />} />
               <Route path="/incidents/ioc-types" element={<IOCTypesPage />} />
               <Route path="/incidents/threat-feeds" element={<ThreatFeedsPage />} />
               <Route path="/incidents/custom-fields" element={<CustomFieldsPage />} />
