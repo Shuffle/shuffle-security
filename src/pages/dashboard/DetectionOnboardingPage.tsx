@@ -112,28 +112,28 @@ const DetectionOnboardingPage = () => {
     provider: DeploymentProvider;
   }>({ open: false, provider: 'self-hosted' });
 
-  // Fetch environments on mount
-  useEffect(() => {
-    const fetchEnvironments = async () => {
-      if (!API_CONFIG.apiKey) {
-        setLoadingEnvs(false);
-        return;
-      }
+  // Fetch environments function (extracted for reuse)
+  const fetchEnvironments = async (isInitialLoad = false) => {
+    if (!API_CONFIG.apiKey) {
+      if (isInitialLoad) setLoadingEnvs(false);
+      return;
+    }
 
-      try {
-        const response = await fetch(getApiUrl('/api/v1/getenvironments'), {
-          headers: {
-            'Authorization': `Bearer ${API_CONFIG.apiKey}`,
-          },
-        });
+    try {
+      const response = await fetch(getApiUrl('/api/v1/getenvironments'), {
+        headers: {
+          'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+        },
+      });
 
-        if (response.ok) {
-          const data: Environment[] = await response.json();
-          // Filter out archived environments
-          const activeEnvs = data.filter(env => !env.archived);
-          setEnvironments(activeEnvs);
+      if (response.ok) {
+        const data: Environment[] = await response.json();
+        // Filter out archived environments
+        const activeEnvs = data.filter(env => !env.archived);
+        setEnvironments(activeEnvs);
 
-          // Restore last selected sensor
+        // On initial load, restore last selected sensor
+        if (isInitialLoad) {
           const lastSensorId = localStorage.getItem(LAST_SENSOR_KEY);
           if (lastSensorId && activeEnvs.some(e => e.id === lastSensorId)) {
             setSelectedEnvId(lastSensorId);
@@ -142,14 +142,26 @@ const DetectionOnboardingPage = () => {
             setSelectedEnvId(activeEnvs[0].id);
           }
         }
-      } catch (error) {
-        console.error('Failed to fetch environments:', error);
-      } finally {
-        setLoadingEnvs(false);
       }
-    };
+    } catch (error) {
+      console.error('Failed to fetch environments:', error);
+    } finally {
+      if (isInitialLoad) setLoadingEnvs(false);
+    }
+  };
 
-    fetchEnvironments();
+  // Fetch environments on mount
+  useEffect(() => {
+    fetchEnvironments(true);
+  }, []);
+
+  // Poll environments every 10 seconds to detect when sensors come online
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      fetchEnvironments(false);
+    }, 10000);
+
+    return () => clearInterval(intervalId);
   }, []);
 
   // Persist selected environment
