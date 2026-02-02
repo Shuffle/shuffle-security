@@ -28,17 +28,11 @@ import AddIcon from '@mui/icons-material/Add';
 import { API_CONFIG, getApiUrl } from '@/config/api';
 import { DeploymentInstructions } from '@/components/detection/DeploymentInstructions';
 import azureLogo from '@/assets/azure-logo.png';
+import gcpLogo from '@/assets/gcp-logo.png';
 
 // Cloud provider icons with forwardRef for MUI compatibility
-const GCPIcon = forwardRef<SVGSVGElement>((props, ref) => (
-  <svg ref={ref} width="20" height="20" viewBox="0 0 24 24" fill="none" {...props}>
-    <path d="M12.19 3.91L14.62 8.2l2.43-1.4-2.43-4.21a1.61 1.61 0 00-1.4-.8H10.1l-1.21 2.1h3.3z" fill="#EA4335"/>
-    <path d="M5.33 13.6l-2.43 4.2a1.6 1.6 0 00.6 2.19l2.42 1.4 2.43-4.21-3.02-3.58z" fill="#4285F4"/>
-    <path d="M21.1 13.6l-2.43-4.2-2.43 4.2 2.43 4.21 2.43-1.4a1.6 1.6 0 00.6-2.19l-.6-1.02-.6.4z" fill="#34A853"/>
-    <path d="M12 8.69L9.57 4.49H5.93l-2.42 4.2L6.52 13l2.43-4.31H12z" fill="#FBBC05"/>
-    <path d="M12 15.31l2.43 4.2h3.64l2.43-4.2-3.02-3.58-2.43 4.18H12z" fill="#EA4335"/>
-    <path d="M8.35 17.18L5.93 13l-2.42 4.21 2.43 4.2h3.64l1.21-2.1-2.44-2.13z" fill="#4285F4"/>
-  </svg>
+const GCPIcon = forwardRef<HTMLImageElement, React.ImgHTMLAttributes<HTMLImageElement>>((props, ref) => (
+  <img ref={ref} src={gcpLogo} alt="GCP" width="20" height="20" style={{ objectFit: 'contain' }} {...props} />
 ));
 GCPIcon.displayName = 'GCPIcon';
 
