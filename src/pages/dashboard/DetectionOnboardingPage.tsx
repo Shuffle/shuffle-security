@@ -27,6 +27,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import AddIcon from '@mui/icons-material/Add';
 import { API_CONFIG, getApiUrl } from '@/config/api';
 import { DeploymentInstructions } from '@/components/detection/DeploymentInstructions';
+import azureLogo from '@/assets/azure-logo.png';
 
 // Cloud provider icons with forwardRef for MUI compatibility
 const GCPIcon = forwardRef<SVGSVGElement>((props, ref) => (
@@ -48,11 +49,9 @@ const AWSIcon = forwardRef<SVGSVGElement>((props, ref) => (
 ));
 AWSIcon.displayName = 'AWSIcon';
 
-const AzureIcon = forwardRef<SVGSVGElement>((props, ref) => (
-  <svg ref={ref} width="20" height="20" viewBox="0 0 24 24" fill="none" {...props}>
-    <path d="M13.05 4.24l-4.79 13.37 7.79-.01-2.65-4.59 6.53-1.91-6.88-6.86z" fill="#0089D6"/>
-    <path d="M7.26 4.24L2 17.61h4.47l2.06-5.74 3.52 5.74h5.5L7.26 4.24z" fill="#0089D6"/>
-  </svg>
+// Azure icon using the uploaded logo
+const AzureIcon = forwardRef<HTMLImageElement, React.ImgHTMLAttributes<HTMLImageElement>>((props, ref) => (
+  <img ref={ref} src={azureLogo} alt="Azure" width="20" height="20" style={{ objectFit: 'contain' }} {...props} />
 ));
 AzureIcon.displayName = 'AzureIcon';
 
