@@ -85,6 +85,7 @@ const DetectionOnboardingPage = () => {
   const [newEnvName, setNewEnvName] = useState('');
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [loadingEnvs, setLoadingEnvs] = useState(true);
+  const [loadingDefaultRules, setLoadingDefaultRules] = useState(false);
   
   const [sensorStatus, setSensorStatus] = useState<StepStatus>({
     loading: false,
@@ -391,7 +392,49 @@ const DetectionOnboardingPage = () => {
     }
   };
 
-  // Check if detection rules are enabled
+  // Load default Sigma rules from GitHub repo
+  const loadDefaultRules = async () => {
+    setLoadingDefaultRules(true);
+    
+    try {
+      const response = await fetch(getApiUrl('/api/v1/files/download_remote'), {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: 'https://github.com/shuffle/security-rules',
+          path: 'sigma',
+          field_3: 'main',
+        }),
+      });
+      
+      if (response.ok) {
+        // After loading, re-check rules status
+        await checkRules();
+      } else {
+        console.error('Failed to load default rules');
+        setRulesStatus({
+          loading: false,
+          checked: true,
+          success: false,
+          message: 'Failed to load default rules',
+        });
+      }
+    } catch (error) {
+      console.error('Error loading default rules:', error);
+      setRulesStatus({
+        loading: false,
+        checked: true,
+        success: false,
+        message: 'Error loading default rules',
+      });
+    } finally {
+      setLoadingDefaultRules(false);
+    }
+  };
+
   const checkRules = async () => {
     setRulesStatus({ loading: true, checked: false, success: false });
     
@@ -1052,21 +1095,54 @@ const DetectionOnboardingPage = () => {
         <Collapse in={expandedStep === 2}>
           <Box sx={{ px: 3, pb: 3, pt: 1 }}>
             <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.875rem', mb: 3 }}>
-              Browse and enable detection rules from our Sigma rule library, or create your own custom rules.
+              Load our default detection rules or browse and enable rules from our Sigma rule library.
             </Typography>
 
-            <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
               <Button
-                component={Link}
-                to="/detection/sigma"
+                onClick={loadDefaultRules}
+                disabled={loadingDefaultRules || rulesStatus.success}
                 variant="contained"
-                endIcon={<ArrowForwardIcon />}
                 sx={{
                   backgroundColor: 'hsl(var(--primary))',
                   color: 'hsl(var(--primary-foreground))',
                   textTransform: 'none',
                   '&:hover': {
                     backgroundColor: 'hsl(var(--primary) / 0.9)',
+                  },
+                  '&.Mui-disabled': {
+                    backgroundColor: rulesStatus.success 
+                      ? 'hsl(var(--severity-low) / 0.2)' 
+                      : 'hsl(var(--muted))',
+                    color: rulesStatus.success 
+                      ? 'hsl(var(--severity-low))' 
+                      : 'hsl(var(--muted-foreground))',
+                  },
+                }}
+              >
+                {loadingDefaultRules ? (
+                  <>
+                    <CircularProgress size={16} sx={{ mr: 1, color: 'inherit' }} />
+                    Loading Rules...
+                  </>
+                ) : rulesStatus.success ? (
+                  'Rules Loaded'
+                ) : (
+                  'Load Default Rules'
+                )}
+              </Button>
+              <Button
+                component={Link}
+                to="/detection/sigma"
+                variant="outlined"
+                endIcon={<ArrowForwardIcon />}
+                sx={{
+                  borderColor: 'hsl(var(--border))',
+                  color: 'hsl(var(--foreground))',
+                  textTransform: 'none',
+                  '&:hover': {
+                    borderColor: 'hsl(var(--primary))',
+                    backgroundColor: 'hsl(var(--primary) / 0.1)',
                   },
                 }}
               >
