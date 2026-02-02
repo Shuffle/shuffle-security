@@ -994,21 +994,35 @@ const DetectionOnboardingPage = () => {
 
       // Step 0: Stop any existing test pipeline with the same name (even if failed)
       try {
-        await fetch(getApiUrl('/api/v1/triggers/pipeline'), {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${API_CONFIG.apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            name: pipelineName,
-            type: 'stop',
-            command: testCommand,
-            environment: selectedEnvironment?.Name || '',
-          }),
+        // First, find the existing pipeline to get its ID
+        const env = environments.find(e => e.id === selectedEnvId);
+        const pipelines = env?.data_lake?.pipelines || [];
+        const pipelineList = Array.isArray(pipelines) ? pipelines : [];
+        
+        const existingPipeline = pipelineList.find((p: any) => {
+          const pipelineStr = typeof p === 'string' ? p : (p?.command || p?.name || JSON.stringify(p));
+          return pipelineStr.includes('notepad.exe') && pipelineStr.includes('parse_syslog');
         });
-        // Wait 2 seconds for the stop to take effect
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        if (existingPipeline && typeof existingPipeline === 'object') {
+          const pipelineId = existingPipeline.pipeline || existingPipeline.id;
+          await fetch(getApiUrl('/api/v1/triggers/pipeline'), {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              name: pipelineName,
+              id: pipelineId,
+              type: 'stop',
+              command: testCommand,
+              environment: selectedEnvironment?.Name || '',
+            }),
+          });
+        }
+        // Wait 4 seconds for the stop to take effect before starting new pipeline
+        await new Promise(resolve => setTimeout(resolve, 4000));
       } catch (stopError) {
         console.warn('Failed to stop existing test pipeline (may not exist):', stopError);
       }
