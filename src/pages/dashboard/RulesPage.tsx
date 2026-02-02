@@ -256,10 +256,12 @@ const RulesPage = () => {
     setIsCreateDialogOpen(true);
     
     try {
-      const url = getFileDownloadUrl(file.id);
-      const response = await fetch(url, {
+      const token = API_CONFIG.apiKey || localStorage.getItem('session_token');
+      const response = await fetch(getApiUrl(`/api/v1/files/${file.id}/content`), {
+        method: 'GET',
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('shuffle_api_key')}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
       
@@ -291,24 +293,46 @@ const RulesPage = () => {
     setIsSaving(true);
 
     try {
-      // If editing, delete the old file first
-      if (editingFile) {
-        await deleteFile(editingFile.id);
-      }
-
-      // Create a blob from the content
-      const filename = ruleName.endsWith('.yml') ? ruleName : `${ruleName}.yml`;
-      const blob = new Blob([ruleContent], { type: 'text/yaml' });
-      const file = new File([blob], filename, { type: 'text/yaml' });
-
-      const result = await createAndUploadFile(file, SIGMA_NAMESPACE, ['sigma', 'detection']);
+      const token = API_CONFIG.apiKey || localStorage.getItem('session_token');
       
-      if (result.success) {
-        toast.success(editingFile ? 'Rule updated successfully' : 'Rule created successfully');
-        setIsCreateDialogOpen(false);
-        fetchDetections();
+      if (editingFile) {
+        // Update existing file using PUT /api/v1/files/{fileid}/edit
+        const response = await fetch(getApiUrl(`/api/v1/files/${editingFile.id}/edit`), {
+          method: 'PUT',
+          credentials: 'include',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            content: ruleContent,
+            filename: ruleName.endsWith('.yml') ? ruleName : `${ruleName}.yml`,
+          }),
+        });
+
+        if (response.ok) {
+          toast.success('Rule updated successfully');
+          setIsCreateDialogOpen(false);
+          fetchDetections();
+        } else {
+          const data = await response.json().catch(() => ({}));
+          toast.error(data.reason || 'Failed to update rule');
+        }
       } else {
-        toast.error(result.reason || 'Failed to save rule');
+        // Create new file
+        const filename = ruleName.endsWith('.yml') ? ruleName : `${ruleName}.yml`;
+        const blob = new Blob([ruleContent], { type: 'text/yaml' });
+        const file = new File([blob], filename, { type: 'text/yaml' });
+
+        const result = await createAndUploadFile(file, SIGMA_NAMESPACE, ['sigma', 'detection']);
+        
+        if (result.success) {
+          toast.success('Rule created successfully');
+          setIsCreateDialogOpen(false);
+          fetchDetections();
+        } else {
+          toast.error(result.reason || 'Failed to save rule');
+        }
       }
     } catch (error) {
       console.error('Failed to save rule:', error);
