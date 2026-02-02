@@ -162,6 +162,24 @@ const DetectionOnboardingPage = () => {
   const selectedEnvironment = environments.find(e => e.id === selectedEnvId);
   const currentEnvName = isCreatingNew ? newEnvName : (selectedEnvironment?.Name || '');
 
+  // Helper to check if sensor is running (checkin within last 300 seconds, or cloud type)
+  const isSensorRunning = (env: Environment): boolean => {
+    if (env.Type === 'cloud') return true;
+    const now = Math.floor(Date.now() / 1000);
+    return env.checkin > 0 && (now - env.checkin) < 300;
+  };
+
+  // Helper to check if sensor is valid (not cloud type)
+  const isSensorValid = (env: Environment): boolean => {
+    return env.Type !== 'cloud';
+  };
+
+  // Helper to get pipeline count
+  const getPipelineCount = (env: Environment): number => {
+    if (!env.data_lake?.pipelines) return 0;
+    return Array.isArray(env.data_lake.pipelines) ? env.data_lake.pipelines.length : 0;
+  };
+
   const openDeploymentDialog = (provider: DeploymentProvider) => {
     setDeploymentDialog({ open: true, provider });
   };
@@ -421,33 +439,53 @@ const DetectionOnboardingPage = () => {
                           '& .MuiSelect-select': { color: 'hsl(var(--foreground))' },
                         }}
                       >
-                        {environments.map((env) => (
-                          <MenuItem key={env.id} value={env.id}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                              <Box
-                                sx={{
-                                  width: 8,
-                                  height: 8,
-                                  borderRadius: '50%',
-                                  backgroundColor: env.Registered 
-                                    ? 'hsl(var(--severity-low))' 
-                                    : 'hsl(var(--muted-foreground))',
-                                }}
-                              />
-                              <span>{env.Name}</span>
-                              <Typography 
-                                component="span" 
-                                sx={{ 
-                                  color: 'hsl(var(--muted-foreground))', 
-                                  fontSize: '0.75rem',
-                                  ml: 'auto',
-                                }}
-                              >
-                                {env.Type}
-                              </Typography>
-                            </Box>
-                          </MenuItem>
-                        ))}
+                        {environments.map((env) => {
+                          const running = isSensorRunning(env);
+                          const valid = isSensorValid(env);
+                          const pipelineCount = getPipelineCount(env);
+                          
+                          return (
+                            <MenuItem key={env.id} value={env.id}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, width: '100%' }}>
+                                <Box
+                                  sx={{
+                                    width: 8,
+                                    height: 8,
+                                    borderRadius: '50%',
+                                    backgroundColor: running 
+                                      ? 'hsl(var(--severity-low))' 
+                                      : 'hsl(var(--severity-high))',
+                                    flexShrink: 0,
+                                  }}
+                                />
+                                <span style={{ flex: 1 }}>{env.Name}</span>
+                                {!valid && (
+                                  <Chip
+                                    size="small"
+                                    label="Cloud"
+                                    sx={{
+                                      height: 18,
+                                      fontSize: '0.65rem',
+                                      backgroundColor: 'hsl(var(--muted))',
+                                      color: 'hsl(var(--muted-foreground))',
+                                    }}
+                                  />
+                                )}
+                                {pipelineCount > 0 && (
+                                  <Typography 
+                                    component="span" 
+                                    sx={{ 
+                                      color: 'hsl(var(--primary))', 
+                                      fontSize: '0.7rem',
+                                    }}
+                                  >
+                                    {pipelineCount} pipeline{pipelineCount !== 1 ? 's' : ''}
+                                  </Typography>
+                                )}
+                              </Box>
+                            </MenuItem>
+                          );
+                        })}
                       </Select>
                     </FormControl>
                   ) : (
@@ -498,37 +536,62 @@ const DetectionOnboardingPage = () => {
                 </Box>
 
                 {selectedEnvironment && !isCreatingNew && (
-                  <Box sx={{ mt: 2, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                    <Chip
-                      size="small"
-                      label={selectedEnvironment.Registered ? 'Connected' : 'Not Connected'}
-                      sx={{
-                        backgroundColor: selectedEnvironment.Registered
-                          ? 'hsl(var(--severity-low) / 0.15)'
-                          : 'hsl(var(--muted))',
-                        color: selectedEnvironment.Registered
-                          ? 'hsl(var(--severity-low))'
-                          : 'hsl(var(--muted-foreground))',
-                      }}
-                    />
-                    <Chip
-                      size="small"
-                      label={`Type: ${selectedEnvironment.run_type || selectedEnvironment.Type}`}
-                      sx={{
-                        backgroundColor: 'hsl(var(--muted))',
-                        color: 'hsl(var(--muted-foreground))',
-                      }}
-                    />
-                    {selectedEnvironment.data_lake?.enabled && (
+                  <Box sx={{ mt: 2 }}>
+                    {/* Cloud warning */}
+                    {!isSensorValid(selectedEnvironment) && (
+                      <Alert 
+                        severity="warning" 
+                        sx={{ 
+                          mb: 2,
+                          backgroundColor: 'hsl(var(--severity-medium) / 0.1)',
+                          border: '1px solid hsl(var(--severity-medium) / 0.3)',
+                          color: 'hsl(var(--foreground))',
+                          '& .MuiAlert-icon': { color: 'hsl(var(--severity-medium))' },
+                        }}
+                      >
+                        Cloud environments cannot be used for detection. Please select or create a self-hosted sensor.
+                      </Alert>
+                    )}
+                    
+                    <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                      {/* Running status */}
                       <Chip
                         size="small"
-                        label="Data Lake Enabled"
+                        label={isSensorRunning(selectedEnvironment) ? 'Running' : 'Not Running'}
                         sx={{
-                          backgroundColor: 'hsl(var(--primary) / 0.15)',
-                          color: 'hsl(var(--primary))',
+                          backgroundColor: isSensorRunning(selectedEnvironment)
+                            ? 'hsl(var(--severity-low) / 0.15)'
+                            : 'hsl(var(--severity-high) / 0.15)',
+                          color: isSensorRunning(selectedEnvironment)
+                            ? 'hsl(var(--severity-low))'
+                            : 'hsl(var(--severity-high))',
                         }}
                       />
-                    )}
+                      
+                      {/* Pipelines count */}
+                      <Chip
+                        size="small"
+                        label={`${getPipelineCount(selectedEnvironment)} Pipeline${getPipelineCount(selectedEnvironment) !== 1 ? 's' : ''}`}
+                        sx={{
+                          backgroundColor: getPipelineCount(selectedEnvironment) > 0
+                            ? 'hsl(var(--primary) / 0.15)'
+                            : 'hsl(var(--muted))',
+                          color: getPipelineCount(selectedEnvironment) > 0
+                            ? 'hsl(var(--primary))'
+                            : 'hsl(var(--muted-foreground))',
+                        }}
+                      />
+                      
+                      {/* Type */}
+                      <Chip
+                        size="small"
+                        label={`Type: ${selectedEnvironment.run_type || selectedEnvironment.Type}`}
+                        sx={{
+                          backgroundColor: 'hsl(var(--muted))',
+                          color: 'hsl(var(--muted-foreground))',
+                        }}
+                      />
+                    </Box>
                   </Box>
                 )}
               </Box>
