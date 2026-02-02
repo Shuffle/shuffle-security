@@ -1,97 +1,100 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Box,
   Typography,
   Button,
   TextField,
   InputAdornment,
-  CircularProgress,
   Card,
   CardContent,
   Chip,
   Tabs,
   Tab,
-  Tooltip,
-  IconButton,
+  LinearProgress,
+  Alert,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import RefreshIcon from '@mui/icons-material/Refresh';
+import SyncIcon from '@mui/icons-material/Sync';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { toast } from 'sonner';
-
-// MITRE ATT&CK Tactics
-const TACTICS = [
-  { id: 'TA0043', name: 'Reconnaissance', description: 'Gathering information to plan future operations' },
-  { id: 'TA0042', name: 'Resource Development', description: 'Establishing resources to support operations' },
-  { id: 'TA0001', name: 'Initial Access', description: 'Trying to get into your network' },
-  { id: 'TA0002', name: 'Execution', description: 'Trying to run malicious code' },
-  { id: 'TA0003', name: 'Persistence', description: 'Trying to maintain their foothold' },
-  { id: 'TA0004', name: 'Privilege Escalation', description: 'Trying to gain higher-level permissions' },
-  { id: 'TA0005', name: 'Defense Evasion', description: 'Trying to avoid being detected' },
-  { id: 'TA0006', name: 'Credential Access', description: 'Trying to steal account names and passwords' },
-  { id: 'TA0007', name: 'Discovery', description: 'Trying to figure out your environment' },
-  { id: 'TA0008', name: 'Lateral Movement', description: 'Trying to move through your environment' },
-  { id: 'TA0009', name: 'Collection', description: 'Trying to gather data of interest' },
-  { id: 'TA0011', name: 'Command and Control', description: 'Trying to communicate with compromised systems' },
-  { id: 'TA0010', name: 'Exfiltration', description: 'Trying to steal data' },
-  { id: 'TA0040', name: 'Impact', description: 'Trying to manipulate, interrupt, or destroy systems and data' },
-];
-
-// Sample techniques for demonstration
-const SAMPLE_TECHNIQUES: Record<string, Array<{ id: string; name: string; description: string }>> = {
-  'TA0001': [
-    { id: 'T1566', name: 'Phishing', description: 'Adversaries may send phishing messages to gain access' },
-    { id: 'T1190', name: 'Exploit Public-Facing Application', description: 'Adversaries may attempt to exploit a weakness in an Internet-facing host' },
-    { id: 'T1133', name: 'External Remote Services', description: 'Adversaries may leverage external-facing remote services' },
-    { id: 'T1078', name: 'Valid Accounts', description: 'Adversaries may obtain and abuse credentials of existing accounts' },
-  ],
-  'TA0002': [
-    { id: 'T1059', name: 'Command and Scripting Interpreter', description: 'Adversaries may abuse command and script interpreters' },
-    { id: 'T1204', name: 'User Execution', description: 'An adversary may rely upon specific actions by a user' },
-    { id: 'T1053', name: 'Scheduled Task/Job', description: 'Adversaries may abuse task scheduling functionality' },
-  ],
-  'TA0003': [
-    { id: 'T1547', name: 'Boot or Logon Autostart Execution', description: 'Adversaries may configure system settings to automatically execute a program' },
-    { id: 'T1136', name: 'Create Account', description: 'Adversaries may create an account to maintain access' },
-    { id: 'T1543', name: 'Create or Modify System Process', description: 'Adversaries may create or modify system-level processes' },
-  ],
-  'TA0004': [
-    { id: 'T1548', name: 'Abuse Elevation Control Mechanism', description: 'Adversaries may circumvent mechanisms designed to control elevated privileges' },
-    { id: 'T1134', name: 'Access Token Manipulation', description: 'Adversaries may modify access tokens' },
-  ],
-  'TA0005': [
-    { id: 'T1070', name: 'Indicator Removal', description: 'Adversaries may delete or modify artifacts generated on a host system' },
-    { id: 'T1036', name: 'Masquerading', description: 'Adversaries may attempt to manipulate features of their artifacts' },
-    { id: 'T1027', name: 'Obfuscated Files or Information', description: 'Adversaries may attempt to make an executable or file difficult to discover' },
-  ],
-  'TA0006': [
-    { id: 'T1110', name: 'Brute Force', description: 'Adversaries may use brute force techniques to gain access to accounts' },
-    { id: 'T1555', name: 'Credentials from Password Stores', description: 'Adversaries may search for common password storage locations' },
-    { id: 'T1003', name: 'OS Credential Dumping', description: 'Adversaries may attempt to dump credentials' },
-  ],
-};
+import { useMitreAttack } from '@/hooks/useMitreAttack';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const MitreAttackPage = () => {
-  const [selectedTactic, setSelectedTactic] = useState<string>('TA0001');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const {
+    tactics,
+    techniques,
+    isLoading,
+    isSyncing,
+    error,
+    lastUpdated,
+    syncFromSource,
+    getTechniquesByTactic,
+    getSubTechniques,
+  } = useMitreAttack();
 
-  const filteredTactics = TACTICS.filter(
+  const [selectedTacticShortName, setSelectedTacticShortName] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [expandedTechniques, setExpandedTechniques] = useState<Set<string>>(new Set());
+
+  // Set initial tactic when data loads
+  if (tactics.length > 0 && !selectedTacticShortName) {
+    setSelectedTacticShortName(tactics[0].shortName);
+  }
+
+  const selectedTactic = tactics.find((t) => t.shortName === selectedTacticShortName);
+  const tacticTechniques = selectedTacticShortName
+    ? getTechniquesByTactic(selectedTacticShortName)
+    : [];
+
+  const filteredTactics = tactics.filter(
     (tactic) =>
       tactic.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      tactic.id.toLowerCase().includes(searchQuery.toLowerCase())
+      tactic.externalId.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const techniques = SAMPLE_TECHNIQUES[selectedTactic] || [];
+  const filteredTechniques = tacticTechniques.filter(
+    (technique) =>
+      technique.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      technique.externalId.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  const handleRefresh = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      toast.success('MITRE ATT&CK data refreshed');
-    }, 500);
+  const handleSync = async () => {
+    const success = await syncFromSource();
+    if (success) {
+      toast.success('MITRE ATT&CK data synced successfully');
+    } else {
+      toast.error('Failed to sync MITRE ATT&CK data');
+    }
   };
+
+  const toggleSubTechniques = (techniqueId: string) => {
+    setExpandedTechniques((prev) => {
+      const next = new Set(prev);
+      if (next.has(techniqueId)) {
+        next.delete(techniqueId);
+      } else {
+        next.add(techniqueId);
+      }
+      return next;
+    });
+  };
+
+  const formatLastUpdated = (timestamp: number | null) => {
+    if (!timestamp) return null;
+    const date = new Date(timestamp);
+    return date.toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const totalTechniques = techniques.filter((t) => !t.isSubtechnique).length;
+  const totalSubTechniques = techniques.filter((t) => t.isSubtechnique).length;
 
   return (
     <Box sx={{ p: 4, maxWidth: 1400, mx: 'auto' }}>
@@ -107,13 +110,18 @@ const MitreAttackPage = () => {
           <Typography sx={{ color: 'hsl(var(--muted-foreground))' }}>
             Browse and map adversary tactics, techniques, and procedures
           </Typography>
+          {lastUpdated && (
+            <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+              Last synced: {formatLastUpdated(lastUpdated)}
+            </Typography>
+          )}
         </Box>
         <Box sx={{ display: 'flex', gap: 1.5 }}>
           <Button
             variant="outlined"
-            startIcon={<RefreshIcon />}
-            onClick={handleRefresh}
-            disabled={isLoading}
+            startIcon={<SyncIcon className={isSyncing ? 'animate-spin' : ''} />}
+            onClick={handleSync}
+            disabled={isSyncing || isLoading}
             sx={{
               height: 36,
               borderColor: 'hsl(var(--border))',
@@ -124,7 +132,7 @@ const MitreAttackPage = () => {
               },
             }}
           >
-            Refresh
+            {isSyncing ? 'Syncing...' : 'Sync from MITRE'}
           </Button>
           <Button
             variant="outlined"
@@ -147,10 +155,27 @@ const MitreAttackPage = () => {
         </Box>
       </Box>
 
+      {/* Error Alert */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
+
+      {/* Loading Progress */}
+      {isLoading && (
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))', mb: 1 }}>
+            Loading MITRE ATT&CK framework...
+          </Typography>
+          <LinearProgress />
+        </Box>
+      )}
+
       {/* Search */}
       <Box sx={{ mb: 3 }}>
         <TextField
-          placeholder="Search tactics..."
+          placeholder="Search tactics and techniques..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           size="small"
@@ -195,9 +220,13 @@ const MitreAttackPage = () => {
           minWidth: 140,
         }}>
           <CardContent sx={{ py: 2, px: 3, '&:last-child': { pb: 2 } }}>
-            <Typography variant="h4" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}>
-              {TACTICS.length}
-            </Typography>
+            {isLoading ? (
+              <Skeleton className="h-8 w-12 mb-1" />
+            ) : (
+              <Typography variant="h4" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}>
+                {tactics.length}
+              </Typography>
+            )}
             <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
               Tactics
             </Typography>
@@ -209,129 +238,276 @@ const MitreAttackPage = () => {
           minWidth: 140,
         }}>
           <CardContent sx={{ py: 2, px: 3, '&:last-child': { pb: 2 } }}>
-            <Typography variant="h4" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}>
-              {Object.values(SAMPLE_TECHNIQUES).flat().length}
-            </Typography>
+            {isLoading ? (
+              <Skeleton className="h-8 w-12 mb-1" />
+            ) : (
+              <Typography variant="h4" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}>
+                {totalTechniques}
+              </Typography>
+            )}
             <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
               Techniques
+            </Typography>
+          </CardContent>
+        </Card>
+        <Card sx={{ 
+          backgroundColor: 'hsl(var(--card))', 
+          border: '1px solid hsl(var(--border))',
+          minWidth: 140,
+        }}>
+          <CardContent sx={{ py: 2, px: 3, '&:last-child': { pb: 2 } }}>
+            {isLoading ? (
+              <Skeleton className="h-8 w-12 mb-1" />
+            ) : (
+              <Typography variant="h4" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}>
+                {totalSubTechniques}
+              </Typography>
+            )}
+            <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+              Sub-techniques
             </Typography>
           </CardContent>
         </Card>
       </Box>
 
       {/* Tactics Tabs */}
-      <Card sx={{ 
-        backgroundColor: 'hsl(var(--card))', 
-        border: '1px solid hsl(var(--border))',
-        borderRadius: 2,
-        mb: 3,
-      }}>
-        <Box sx={{ borderBottom: '1px solid hsl(var(--border))' }}>
-          <Tabs
-            value={selectedTactic}
-            onChange={(_, value) => setSelectedTactic(value)}
-            variant="scrollable"
-            scrollButtons="auto"
-            sx={{
-              '& .MuiTab-root': {
-                color: 'hsl(var(--muted-foreground))',
-                textTransform: 'none',
-                minHeight: 48,
-                '&.Mui-selected': {
-                  color: 'hsl(var(--primary))',
+      {!isLoading && tactics.length > 0 && (
+        <Card sx={{ 
+          backgroundColor: 'hsl(var(--card))', 
+          border: '1px solid hsl(var(--border))',
+          borderRadius: 2,
+          mb: 3,
+        }}>
+          <Box sx={{ borderBottom: '1px solid hsl(var(--border))' }}>
+            <Tabs
+              value={selectedTacticShortName}
+              onChange={(_, value) => setSelectedTacticShortName(value)}
+              variant="scrollable"
+              scrollButtons="auto"
+              sx={{
+                '& .MuiTab-root': {
+                  color: 'hsl(var(--muted-foreground))',
+                  textTransform: 'none',
+                  minHeight: 48,
+                  '&.Mui-selected': {
+                    color: 'hsl(var(--primary))',
+                  },
                 },
-              },
-              '& .MuiTabs-indicator': {
-                backgroundColor: 'hsl(var(--primary))',
-              },
-            }}
-          >
-            {filteredTactics.map((tactic) => (
-              <Tab
-                key={tactic.id}
-                value={tactic.id}
-                label={
-                  <Box sx={{ textAlign: 'left' }}>
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      {tactic.name}
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-                      {tactic.id}
-                    </Typography>
-                  </Box>
-                }
-              />
-            ))}
-          </Tabs>
-        </Box>
-
-        {/* Selected Tactic Details */}
-        <Box sx={{ p: 3 }}>
-          {TACTICS.find((t) => t.id === selectedTactic) && (
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="h6" sx={{ color: 'hsl(var(--foreground))', mb: 1 }}>
-                {TACTICS.find((t) => t.id === selectedTactic)?.name}
-              </Typography>
-              <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-                {TACTICS.find((t) => t.id === selectedTactic)?.description}
-              </Typography>
-            </Box>
-          )}
-
-          {/* Techniques Grid */}
-          <Typography variant="subtitle2" sx={{ color: 'hsl(var(--foreground))', mb: 2 }}>
-            Techniques ({techniques.length})
-          </Typography>
-          
-          {techniques.length === 0 ? (
-            <Box sx={{ textAlign: 'center', py: 4 }}>
-              <Typography sx={{ color: 'hsl(var(--muted-foreground))' }}>
-                No techniques loaded for this tactic
-              </Typography>
-            </Box>
-          ) : (
-            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 2 }}>
-              {techniques.map((technique) => (
-                <Card
-                  key={technique.id}
-                  sx={{
-                    backgroundColor: 'hsl(var(--muted))',
-                    border: '1px solid hsl(var(--border))',
-                    cursor: 'pointer',
-                    transition: 'border-color 0.2s',
-                    '&:hover': {
-                      borderColor: 'hsl(var(--primary))',
-                    },
-                  }}
-                  onClick={() => window.open(`https://attack.mitre.org/techniques/${technique.id}/`, '_blank')}
-                >
-                  <CardContent sx={{ py: 2, px: 3, '&:last-child': { pb: 2 } }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-                      <Typography variant="subtitle2" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}>
-                        {technique.name}
+                '& .MuiTabs-indicator': {
+                  backgroundColor: 'hsl(var(--primary))',
+                },
+              }}
+            >
+              {filteredTactics.map((tactic) => (
+                <Tab
+                  key={tactic.id}
+                  value={tactic.shortName}
+                  label={
+                    <Box sx={{ textAlign: 'left' }}>
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        {tactic.name}
                       </Typography>
-                      <Chip
-                        label={technique.id}
-                        size="small"
-                        sx={{
-                          height: 20,
-                          fontSize: '0.7rem',
-                          backgroundColor: 'hsl(var(--primary) / 0.15)',
-                          color: 'hsl(var(--primary))',
-                          border: 'none',
-                        }}
-                      />
+                      <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                        {tactic.externalId}
+                      </Typography>
                     </Box>
-                    <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.8rem' }}>
-                      {technique.description}
-                    </Typography>
-                  </CardContent>
-                </Card>
+                  }
+                />
+              ))}
+            </Tabs>
+          </Box>
+
+          {/* Selected Tactic Details */}
+          <Box sx={{ p: 3 }}>
+            {selectedTactic && (
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="h6" sx={{ color: 'hsl(var(--foreground))', mb: 1 }}>
+                  {selectedTactic.name}
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                  {selectedTactic.description?.split('\n')[0] || 'No description available'}
+                </Typography>
+              </Box>
+            )}
+
+            {/* Techniques Grid */}
+            <Typography variant="subtitle2" sx={{ color: 'hsl(var(--foreground))', mb: 2 }}>
+              Techniques ({filteredTechniques.length})
+            </Typography>
+            
+            {filteredTechniques.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Typography sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                  {searchQuery ? 'No techniques match your search' : 'No techniques for this tactic'}
+                </Typography>
+              </Box>
+            ) : (
+              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 2 }}>
+                {filteredTechniques.map((technique) => {
+                  const subTechniques = getSubTechniques(technique.externalId);
+                  const isExpanded = expandedTechniques.has(technique.externalId);
+
+                  return (
+                    <Card
+                      key={technique.id}
+                      sx={{
+                        backgroundColor: 'hsl(var(--muted))',
+                        border: '1px solid hsl(var(--border))',
+                        transition: 'border-color 0.2s',
+                        '&:hover': {
+                          borderColor: 'hsl(var(--primary))',
+                        },
+                      }}
+                    >
+                      <CardContent sx={{ py: 2, px: 3, '&:last-child': { pb: 2 } }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                          <Typography
+                            variant="subtitle2"
+                            sx={{
+                              color: 'hsl(var(--foreground))',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              '&:hover': { textDecoration: 'underline' },
+                            }}
+                            onClick={() => window.open(technique.url, '_blank')}
+                          >
+                            {technique.name}
+                          </Typography>
+                          <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
+                            {subTechniques.length > 0 && (
+                              <Chip
+                                label={`${subTechniques.length} sub`}
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleSubTechniques(technique.externalId);
+                                }}
+                                sx={{
+                                  height: 20,
+                                  fontSize: '0.65rem',
+                                  backgroundColor: isExpanded
+                                    ? 'hsl(var(--primary))'
+                                    : 'hsl(var(--secondary))',
+                                  color: isExpanded
+                                    ? 'hsl(var(--primary-foreground))'
+                                    : 'hsl(var(--secondary-foreground))',
+                                  cursor: 'pointer',
+                                  '&:hover': {
+                                    backgroundColor: 'hsl(var(--primary))',
+                                    color: 'hsl(var(--primary-foreground))',
+                                  },
+                                }}
+                              />
+                            )}
+                            <Chip
+                              label={technique.externalId}
+                              size="small"
+                              sx={{
+                                height: 20,
+                                fontSize: '0.7rem',
+                                backgroundColor: 'hsl(var(--primary) / 0.15)',
+                                color: 'hsl(var(--primary))',
+                                border: 'none',
+                              }}
+                            />
+                          </Box>
+                        </Box>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: 'hsl(var(--muted-foreground))',
+                            fontSize: '0.8rem',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden',
+                          }}
+                        >
+                          {technique.description?.split('\n')[0] || 'No description available'}
+                        </Typography>
+
+                        {/* Sub-techniques */}
+                        {isExpanded && subTechniques.length > 0 && (
+                          <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid hsl(var(--border))' }}>
+                            <Typography
+                              variant="caption"
+                              sx={{ color: 'hsl(var(--muted-foreground))', mb: 1, display: 'block' }}
+                            >
+                              Sub-techniques:
+                            </Typography>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                              {subTechniques.map((sub) => (
+                                <Box
+                                  key={sub.id}
+                                  sx={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    cursor: 'pointer',
+                                    py: 0.5,
+                                    '&:hover': {
+                                      '& .sub-name': { textDecoration: 'underline' },
+                                    },
+                                  }}
+                                  onClick={() => window.open(sub.url, '_blank')}
+                                >
+                                  <Typography
+                                    className="sub-name"
+                                    variant="body2"
+                                    sx={{ color: 'hsl(var(--foreground))', fontSize: '0.8rem' }}
+                                  >
+                                    {sub.name}
+                                  </Typography>
+                                  <Chip
+                                    label={sub.externalId}
+                                    size="small"
+                                    sx={{
+                                      height: 18,
+                                      fontSize: '0.65rem',
+                                      backgroundColor: 'hsl(var(--secondary))',
+                                      color: 'hsl(var(--secondary-foreground))',
+                                    }}
+                                  />
+                                </Box>
+                              ))}
+                            </Box>
+                          </Box>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </Box>
+            )}
+          </Box>
+        </Card>
+      )}
+
+      {/* Loading skeleton for tabs */}
+      {isLoading && (
+        <Card sx={{ 
+          backgroundColor: 'hsl(var(--card))', 
+          border: '1px solid hsl(var(--border))',
+          borderRadius: 2,
+        }}>
+          <Box sx={{ p: 2, borderBottom: '1px solid hsl(var(--border))' }}>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              {[1, 2, 3, 4, 5].map((i) => (
+                <Skeleton key={i} className="h-10 w-32" />
               ))}
             </Box>
-          )}
-        </Box>
-      </Card>
+          </Box>
+          <Box sx={{ p: 3 }}>
+            <Skeleton className="h-6 w-48 mb-2" />
+            <Skeleton className="h-4 w-full mb-4" />
+            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 2 }}>
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <Skeleton key={i} className="h-24 w-full" />
+              ))}
+            </Box>
+          </Box>
+        </Card>
+      )}
     </Box>
   );
 };
