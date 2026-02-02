@@ -992,37 +992,47 @@ const DetectionOnboardingPage = () => {
       const testCommand = `from {message: "<165>1 2025-10-06T12:34:56.789Z myhost.example.com myapp 1234 ID47 [huh eventSource=\\"App\\" EventID=\\"4688\\" NewProcessName=\\"notepad.exe\\" Context=\\"Testing\\"] This is a test log message"} | this = message.parse_syslog() | import`;
       const pipelineName = testCommand.replace(/ /g, '-').substring(0, 100);
 
-      // Step 0: Stop any existing test pipeline with the same name (even if failed)
+      // Step 0: Stop ALL existing test pipelines with matching command (not just one)
       try {
-        // First, find the existing pipeline to get its ID
+        // First, find ALL existing pipelines that match the test pattern
         const env = environments.find(e => e.id === selectedEnvId);
         const pipelines = env?.data_lake?.pipelines || [];
         const pipelineList = Array.isArray(pipelines) ? pipelines : [];
         
-        const existingPipeline = pipelineList.find((p: any) => {
+        // Filter to find ALL matching pipelines
+        const matchingPipelines = pipelineList.filter((p: any) => {
           const pipelineStr = typeof p === 'string' ? p : (p?.command || p?.name || JSON.stringify(p));
           return pipelineStr.includes('notepad.exe') && pipelineStr.includes('parse_syslog');
         });
         
-        if (existingPipeline && typeof existingPipeline === 'object') {
-          const pipelineId = existingPipeline.pipeline || existingPipeline.id;
-          await fetch(getApiUrl('/api/v1/triggers/pipeline'), {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${API_CONFIG.apiKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              name: pipelineName,
-              id: pipelineId,
-              type: 'stop',
-              command: testCommand,
-              environment: selectedEnvironment?.Name || '',
-            }),
-          });
+        console.log(`Found ${matchingPipelines.length} existing test pipelines to stop`);
+        
+        // Stop each matching pipeline
+        for (const existingPipeline of matchingPipelines) {
+          if (existingPipeline && typeof existingPipeline === 'object') {
+            const pipelineId = existingPipeline.pipeline || existingPipeline.id;
+            console.log(`Stopping pipeline: ${pipelineId}`);
+            await fetch(getApiUrl('/api/v1/triggers/pipeline'), {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                name: pipelineName,
+                id: pipelineId,
+                type: 'stop',
+                command: testCommand,
+                environment: selectedEnvironment?.Name || '',
+              }),
+            });
+          }
         }
-        // Wait 4 seconds for the stop to take effect before starting new pipeline
-        await new Promise(resolve => setTimeout(resolve, 4000));
+        
+        // Wait 4 seconds for all stops to take effect before starting new pipeline
+        if (matchingPipelines.length > 0) {
+          await new Promise(resolve => setTimeout(resolve, 4000));
+        }
       } catch (stopError) {
         console.warn('Failed to stop existing test pipeline (may not exist):', stopError);
       }
