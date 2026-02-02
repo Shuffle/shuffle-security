@@ -412,15 +412,15 @@ const DetectionOnboardingPage = () => {
               <Typography sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
                 Install a Sensor
               </Typography>
-              {sensorStatus.checked && (
+              {selectedEnvironment && (
                 <Chip
                   size="small"
-                  label={sensorStatus.success ? 'Running' : 'Not Running'}
+                  label={isSensorRunning(selectedEnvironment) ? 'Running' : 'Not Running'}
                   sx={{
-                    backgroundColor: sensorStatus.success
+                    backgroundColor: isSensorRunning(selectedEnvironment)
                       ? 'hsl(var(--severity-low) / 0.15)'
                       : 'hsl(var(--severity-medium) / 0.15)',
-                    color: sensorStatus.success
+                    color: isSensorRunning(selectedEnvironment)
                       ? 'hsl(var(--severity-low))'
                       : 'hsl(var(--severity-medium))',
                     fontWeight: 500,
