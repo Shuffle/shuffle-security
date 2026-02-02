@@ -1096,9 +1096,9 @@ const DetectionOnboardingPage = () => {
               });
               
               if (testPipeline) {
-                // Check if pipeline has failed status
-                const pipelineStatus = typeof testPipeline === 'object' ? (testPipeline.status || '').toLowerCase() : '';
-                const isPipelineFailed = pipelineStatus === 'failed' || pipelineStatus === 'error' || pipelineStatus === 'stopped';
+                // Check if pipeline has failed state
+                const pipelineState = typeof testPipeline === 'object' ? (testPipeline.state || '').toLowerCase() : '';
+                const isPipelineFailed = pipelineState === 'failed' || pipelineState === 'error' || pipelineState === 'stopped';
                 
                 if (isPipelineFailed) {
                   setTestSteps(prev => ({ 
@@ -1109,7 +1109,7 @@ const DetectionOnboardingPage = () => {
                     loading: false,
                     checked: true,
                     success: false,
-                    message: `✗ Pipeline failed to start. Status: ${pipelineStatus}. Please try again or contact support.`,
+                    message: `✗ Pipeline failed to start. State: ${pipelineState}. Please try again or contact support.`,
                   });
                   return; // Stop polling
                 } else {
