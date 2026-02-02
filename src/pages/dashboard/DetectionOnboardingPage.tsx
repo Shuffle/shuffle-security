@@ -212,14 +212,27 @@ const DetectionOnboardingPage = () => {
     fetchEnvironments(true);
   }, []);
 
-  // Poll environments every 10 seconds to detect when sensors come online
+  // Poll environments every 10 seconds only when the selected sensor is not detection-ready
   useEffect(() => {
+    // Check if current sensor is valid and detection-ready
+    const currentEnv = environments.find(e => e.id === selectedEnvId);
+    const isValidAndReady = currentEnv && 
+      currentEnv.Type !== 'cloud' && 
+      currentEnv.data_lake?.enabled === true &&
+      currentEnv.checkin > 0 && 
+      (Math.floor(Date.now() / 1000) - currentEnv.checkin) < 300;
+
+    // Don't poll if we have a valid, running, detection-ready sensor
+    if (isValidAndReady) {
+      return;
+    }
+
     const intervalId = setInterval(() => {
       fetchEnvironments(false);
     }, 10000);
 
     return () => clearInterval(intervalId);
-  }, []);
+  }, [selectedEnvId, environments]);
 
   // Persist selected environment
   useEffect(() => {
