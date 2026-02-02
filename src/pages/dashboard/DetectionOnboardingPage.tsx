@@ -994,10 +994,18 @@ const DetectionOnboardingPage = () => {
 
       // Step 0: Stop ALL existing test pipelines with matching command (not just one)
       try {
-        // First, find ALL existing pipelines that match the test pattern
-        const env = environments.find(e => e.id === selectedEnvId);
-        const pipelines = env?.data_lake?.pipelines || [];
-        const pipelineList = Array.isArray(pipelines) ? pipelines : [];
+        // Fetch FRESH environment data to get current pipelines (don't rely on stale state)
+        const freshEnvResponse = await fetch(getApiUrl('/api/v1/getenvironments'), {
+          headers: { 'Authorization': `Bearer ${API_CONFIG.apiKey}` },
+        });
+        
+        let pipelineList: any[] = [];
+        if (freshEnvResponse.ok) {
+          const freshEnvs: Environment[] = await freshEnvResponse.json();
+          const freshEnv = freshEnvs.find(e => e.id === selectedEnvId);
+          const pipelines = freshEnv?.data_lake?.pipelines || [];
+          pipelineList = Array.isArray(pipelines) ? pipelines : [];
+        }
         
         // Filter to find ALL matching pipelines
         const matchingPipelines = pipelineList.filter((p: any) => {
@@ -1005,7 +1013,7 @@ const DetectionOnboardingPage = () => {
           return pipelineStr.includes('notepad.exe') && pipelineStr.includes('parse_syslog');
         });
         
-        console.log(`Found ${matchingPipelines.length} existing test pipelines to stop`);
+        console.log(`Found ${matchingPipelines.length} existing test pipelines to stop`, matchingPipelines);
         
         // Stop each matching pipeline
         for (const existingPipeline of matchingPipelines) {
