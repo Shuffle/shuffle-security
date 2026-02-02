@@ -129,6 +129,8 @@ const DetectionOnboardingPage = () => {
     syslogUdp: boolean;
     sigmaForwarder: boolean;
     webhook: boolean;
+    sigmaForwarderProgress?: number;
+    sigmaForwarderError?: string;
   }>({ syslogTcp: false, syslogUdp: false, sigmaForwarder: false, webhook: false });
   const [testRuleStatus, setTestRuleStatus] = useState<{
     loading: boolean;
@@ -702,7 +704,12 @@ const DetectionOnboardingPage = () => {
 
   // Deploy a pipeline via POST /api/v1/triggers/pipeline
   const deployPipeline = async (type: 'syslogTcp' | 'syslogUdp' | 'sigmaForwarder', webhookId?: string) => {
-    setDeployingPipeline(prev => ({ ...prev, [type]: true }));
+    setDeployingPipeline(prev => ({ 
+      ...prev, 
+      [type]: true, 
+      sigmaForwarderProgress: type === 'sigmaForwarder' ? 0 : prev.sigmaForwarderProgress,
+      sigmaForwarderError: type === 'sigmaForwarder' ? undefined : prev.sigmaForwarderError,
+    }));
     
     try {
       let command = '';
@@ -716,7 +723,7 @@ const DetectionOnboardingPage = () => {
         const hookId = webhookId || webhookStatus.workflowId;
         if (!hookId) {
           console.error('No webhook ID available for sigma forwarder');
-          setDeployingPipeline(prev => ({ ...prev, [type]: false }));
+          setDeployingPipeline(prev => ({ ...prev, [type]: false, sigmaForwarderError: 'No webhook ID available' }));
           return;
         }
         const baseUrl = API_CONFIG.baseUrl;
@@ -746,6 +753,14 @@ const DetectionOnboardingPage = () => {
         const pollInterval = 2000;
         
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
+          // Update progress for sigmaForwarder
+          if (type === 'sigmaForwarder') {
+            setDeployingPipeline(prev => ({ 
+              ...prev, 
+              sigmaForwarderProgress: Math.round(((attempt + 1) / maxAttempts) * 100),
+            }));
+          }
+          
           await new Promise(resolve => setTimeout(resolve, pollInterval));
           
           // Fetch fresh environment data
@@ -788,21 +803,49 @@ const DetectionOnboardingPage = () => {
               // Update environments state and pipeline status
               setEnvironments(freshEnvs.filter(env => !env.archived));
               await checkPipelineStatus();
+              setDeployingPipeline(prev => ({ ...prev, [type]: false, sigmaForwarderProgress: undefined }));
               return;
             }
           }
         }
         
-        // Timeout - refresh status anyway
+        // Timeout - show error
+        if (type === 'sigmaForwarder') {
+          setDeployingPipeline(prev => ({ 
+            ...prev, 
+            sigmaForwarder: false,
+            sigmaForwarderProgress: undefined,
+            sigmaForwarderError: 'Deployment timed out after 30 seconds. Please try again or contact support.',
+          }));
+        } else {
+          setDeployingPipeline(prev => ({ ...prev, [type]: false }));
+        }
         await fetchEnvironments(false);
         await checkPipelineStatus();
       } else {
-        console.error('Failed to deploy pipeline:', await response.text());
+        const errorText = await response.text();
+        console.error('Failed to deploy pipeline:', errorText);
+        if (type === 'sigmaForwarder') {
+          setDeployingPipeline(prev => ({ 
+            ...prev, 
+            sigmaForwarder: false,
+            sigmaForwarderError: `Deployment failed: ${errorText}`,
+          }));
+        } else {
+          setDeployingPipeline(prev => ({ ...prev, [type]: false }));
+        }
       }
     } catch (error) {
       console.error('Error deploying pipeline:', error);
-    } finally {
-      setDeployingPipeline(prev => ({ ...prev, [type]: false }));
+      if (type === 'sigmaForwarder') {
+        setDeployingPipeline(prev => ({ 
+          ...prev, 
+          sigmaForwarder: false,
+          sigmaForwarderError: 'Network error during deployment. Please try again.',
+        }));
+      } else {
+        setDeployingPipeline(prev => ({ ...prev, [type]: false }));
+      }
     }
   };
 
@@ -1967,7 +2010,7 @@ const DetectionOnboardingPage = () => {
                         </Typography>
                       </Box>
                     </Tooltip>
-                    {(!pipelinesStatus.sigmaForwarder.ready || pipelinesStatus.sigmaForwarder.isLocalhost) && pipelinesStatus.checked && webhookStatus.ready && (
+                    {((!pipelinesStatus.sigmaForwarder.ready || pipelinesStatus.sigmaForwarder.isLocalhost) && pipelinesStatus.checked && webhookStatus.ready) || deployingPipeline.sigmaForwarder ? (
                       <Button
                         onClick={() => deployPipeline('sigmaForwarder')}
                         disabled={deployingPipeline.sigmaForwarder}
@@ -1975,41 +2018,51 @@ const DetectionOnboardingPage = () => {
                         variant="text"
                         sx={{
                           fontSize: '0.7rem',
-                          color: pipelinesStatus.sigmaForwarder.isLocalhost 
-                            ? 'hsl(var(--severity-high, var(--severity-medium)))' 
-                            : 'hsl(var(--primary))',
+                          color: deployingPipeline.sigmaForwarder
+                            ? 'hsl(var(--primary))'
+                            : pipelinesStatus.sigmaForwarder.isLocalhost 
+                              ? 'hsl(var(--severity-high, var(--severity-medium)))' 
+                              : 'hsl(var(--primary))',
                           textTransform: 'none',
                           minWidth: 'auto',
                           py: 0,
                           '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.1)' },
-                          '&.Mui-disabled': {
-                            color: 'hsl(var(--muted-foreground))',
-                          },
                         }}
                       >
                         {deployingPipeline.sigmaForwarder 
-                          ? 'Deploying...' 
+                          ? (
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                              <CircularProgress size={10} sx={{ color: 'hsl(var(--primary))' }} />
+                              <span>Deploying... {deployingPipeline.sigmaForwarderProgress || 0}%</span>
+                            </Box>
+                          )
                           : pipelinesStatus.sigmaForwarder.isLocalhost 
                             ? 'Redeploy' 
                             : 'Deploy'}
                       </Button>
-                    )}
+                    ) : null}
                   </Box>
                   <Typography 
                     sx={{ 
                       fontSize: '0.7rem', 
-                      color: pipelinesStatus.sigmaForwarder.isLocalhost 
-                        ? 'hsl(var(--severity-high, var(--severity-medium)))' 
-                        : 'hsl(var(--muted-foreground))', 
+                      color: deployingPipeline.sigmaForwarderError
+                        ? 'hsl(var(--severity-high, var(--destructive)))'
+                        : pipelinesStatus.sigmaForwarder.isLocalhost 
+                          ? 'hsl(var(--severity-high, var(--severity-medium)))' 
+                          : 'hsl(var(--muted-foreground))', 
                       pl: 2,
-                      fontWeight: pipelinesStatus.sigmaForwarder.isLocalhost ? 500 : 400,
+                      fontWeight: (pipelinesStatus.sigmaForwarder.isLocalhost || deployingPipeline.sigmaForwarderError) ? 500 : 400,
                     }}
                   >
-                    {pipelinesStatus.loading 
-                      ? 'Checking...' 
-                      : !webhookStatus.ready && !pipelinesStatus.sigmaForwarder.ready
-                        ? 'Requires webhook workflow first'
-                        : pipelinesStatus.sigmaForwarder.message}
+                    {deployingPipeline.sigmaForwarder
+                      ? 'Waiting for pipeline to start...'
+                      : deployingPipeline.sigmaForwarderError
+                        ? deployingPipeline.sigmaForwarderError
+                        : pipelinesStatus.loading 
+                          ? 'Checking...' 
+                          : !webhookStatus.ready && !pipelinesStatus.sigmaForwarder.ready
+                            ? 'Requires webhook workflow first'
+                            : pipelinesStatus.sigmaForwarder.message}
                   </Typography>
                 </Box>
 
