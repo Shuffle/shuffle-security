@@ -1841,94 +1841,6 @@ const DetectionOnboardingPage = () => {
                   Manual Test
                 </Typography>
                 
-                {/* Syslog TCP Status */}
-                <Box sx={{ mb: 1.5 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'space-between' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Box
-                        sx={{
-                          width: 8,
-                          height: 8,
-                          borderRadius: '50%',
-                          backgroundColor: pipelinesStatus.loading 
-                            ? 'hsl(var(--muted-foreground))'
-                            : pipelinesStatus.syslogTcp.ready 
-                              ? 'hsl(var(--severity-low))' 
-                              : 'hsl(var(--severity-medium))',
-                        }}
-                      />
-                      <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--foreground))', fontWeight: 500 }}>
-                        Syslog Ingest (TCP)
-                      </Typography>
-                    </Box>
-                    {!pipelinesStatus.syslogTcp.ready && pipelinesStatus.checked && (
-                      <Button
-                        onClick={() => deployPipeline('syslogTcp')}
-                        disabled={deployingPipeline.syslogTcp}
-                        size="small"
-                        variant="text"
-                        sx={{
-                          fontSize: '0.7rem',
-                          color: 'hsl(var(--primary))',
-                          textTransform: 'none',
-                          minWidth: 'auto',
-                          py: 0,
-                          '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.1)' },
-                        }}
-                      >
-                        {deployingPipeline.syslogTcp ? 'Deploying...' : 'Deploy'}
-                      </Button>
-                    )}
-                  </Box>
-                  <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', pl: 2 }}>
-                    {pipelinesStatus.loading ? 'Checking...' : pipelinesStatus.syslogTcp.message}
-                  </Typography>
-                </Box>
-
-                {/* Syslog UDP Status */}
-                <Box sx={{ mb: 1.5 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'space-between' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Box
-                        sx={{
-                          width: 8,
-                          height: 8,
-                          borderRadius: '50%',
-                          backgroundColor: pipelinesStatus.loading 
-                            ? 'hsl(var(--muted-foreground))'
-                            : pipelinesStatus.syslogUdp.ready 
-                              ? 'hsl(var(--severity-low))' 
-                              : 'hsl(var(--severity-medium))',
-                        }}
-                      />
-                      <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--foreground))', fontWeight: 500 }}>
-                        Syslog Ingest (UDP)
-                      </Typography>
-                    </Box>
-                    {!pipelinesStatus.syslogUdp.ready && pipelinesStatus.checked && (
-                      <Button
-                        onClick={() => deployPipeline('syslogUdp')}
-                        disabled={deployingPipeline.syslogUdp}
-                        size="small"
-                        variant="text"
-                        sx={{
-                          fontSize: '0.7rem',
-                          color: 'hsl(var(--primary))',
-                          textTransform: 'none',
-                          minWidth: 'auto',
-                          py: 0,
-                          '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.1)' },
-                        }}
-                      >
-                        {deployingPipeline.syslogUdp ? 'Deploying...' : 'Deploy'}
-                      </Button>
-                    )}
-                  </Box>
-                  <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', pl: 2 }}>
-                    {pipelinesStatus.loading ? 'Checking...' : pipelinesStatus.syslogUdp.message}
-                  </Typography>
-                </Box>
-
                 {/* Sigma Forwarder Status */}
                 <Box sx={{ mb: 1.5 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'space-between' }}>
@@ -2280,15 +2192,104 @@ const DetectionOnboardingPage = () => {
                   borderRadius: 1.5,
                 }}
               >
-                <Typography sx={{ fontWeight: 600, color: 'hsl(var(--foreground))', mb: 1 }}>
+                <Typography sx={{ fontWeight: 600, color: 'hsl(var(--foreground))', mb: 2 }}>
                   Real-World Test
                 </Typography>
                 <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.8rem', mb: 2 }}>
-                  Monitor live events for rule matches
+                  Deploy syslog ingestion pipelines to receive live events
                 </Typography>
+
+                {/* Syslog TCP Status */}
+                <Box sx={{ mb: 1.5 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'space-between' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box
+                        sx={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: '50%',
+                          backgroundColor: pipelinesStatus.loading 
+                            ? 'hsl(var(--muted-foreground))'
+                            : pipelinesStatus.syslogTcp.ready 
+                              ? 'hsl(var(--severity-low))' 
+                              : 'hsl(var(--severity-medium))',
+                        }}
+                      />
+                      <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--foreground))', fontWeight: 500 }}>
+                        Syslog Ingest (TCP)
+                      </Typography>
+                    </Box>
+                    {!pipelinesStatus.syslogTcp.ready && pipelinesStatus.checked && (
+                      <Button
+                        onClick={() => deployPipeline('syslogTcp')}
+                        disabled={deployingPipeline.syslogTcp}
+                        size="small"
+                        variant="text"
+                        sx={{
+                          fontSize: '0.7rem',
+                          color: 'hsl(var(--primary))',
+                          textTransform: 'none',
+                          minWidth: 'auto',
+                          py: 0,
+                          '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.1)' },
+                        }}
+                      >
+                        {deployingPipeline.syslogTcp ? 'Deploying...' : 'Deploy'}
+                      </Button>
+                    )}
+                  </Box>
+                  <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', pl: 2 }}>
+                    {pipelinesStatus.loading ? 'Checking...' : pipelinesStatus.syslogTcp.message}
+                  </Typography>
+                </Box>
+
+                {/* Syslog UDP Status */}
+                <Box sx={{ mb: 2 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'space-between' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box
+                        sx={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: '50%',
+                          backgroundColor: pipelinesStatus.loading 
+                            ? 'hsl(var(--muted-foreground))'
+                            : pipelinesStatus.syslogUdp.ready 
+                              ? 'hsl(var(--severity-low))' 
+                              : 'hsl(var(--severity-medium))',
+                        }}
+                      />
+                      <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--foreground))', fontWeight: 500 }}>
+                        Syslog Ingest (UDP)
+                      </Typography>
+                    </Box>
+                    {!pipelinesStatus.syslogUdp.ready && pipelinesStatus.checked && (
+                      <Button
+                        onClick={() => deployPipeline('syslogUdp')}
+                        disabled={deployingPipeline.syslogUdp}
+                        size="small"
+                        variant="text"
+                        sx={{
+                          fontSize: '0.7rem',
+                          color: 'hsl(var(--primary))',
+                          textTransform: 'none',
+                          minWidth: 'auto',
+                          py: 0,
+                          '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.1)' },
+                        }}
+                      >
+                        {deployingPipeline.syslogUdp ? 'Deploying...' : 'Deploy'}
+                      </Button>
+                    )}
+                  </Box>
+                  <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', pl: 2 }}>
+                    {pipelinesStatus.loading ? 'Checking...' : pipelinesStatus.syslogUdp.message}
+                  </Typography>
+                </Box>
+
                 <Button
                   onClick={() => testRules('realworld')}
-                  disabled={testStatus.loading}
+                  disabled={testStatus.loading || (!pipelinesStatus.syslogTcp.ready && !pipelinesStatus.syslogUdp.ready)}
                   variant="outlined"
                   size="small"
                   sx={{
