@@ -143,8 +143,9 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
   const selectedOrg = userInfo?.active_org || organizations[0];
 
   const handleExpand = (label: string) => {
+    // Only allow one expanded item at a time - toggle off if already open, otherwise switch to new one
     setExpandedItems((prev) =>
-      prev.includes(label) ? prev.filter((item) => item !== label) : [...prev, label]
+      prev.includes(label) ? [] : [label]
     );
   };
 
