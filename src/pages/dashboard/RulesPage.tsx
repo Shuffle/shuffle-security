@@ -34,6 +34,7 @@ const SIGMA_NAMESPACE = 'sigma';
 
 interface DetectionInfo {
   id: string;
+  file_id: string;
   name: string;
   title?: string;
   description?: string;
@@ -114,7 +115,7 @@ const RulesPage = () => {
       
       // Map detection_info to ShuffleFile-like structure for compatibility
       const mappedFiles: ShuffleFile[] = detections.map((d) => ({
-        id: d.id || d.name,
+        id: d.file_id || d.id || d.name,
         filename: d.title || d.name || 'Untitled',
         filesize: 0,
         created_at: d.created_at || Math.floor(Date.now() / 1000),
