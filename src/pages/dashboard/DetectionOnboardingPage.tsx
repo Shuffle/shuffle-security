@@ -196,6 +196,31 @@ const DetectionOnboardingPage = () => {
     return Array.isArray(env.data_lake.pipelines) ? env.data_lake.pipelines.length : 0;
   };
 
+  // Helper to check if detection pipeline is ready (data_lake.enabled = true)
+  const isPipelineReady = (env: Environment): boolean => {
+    return env.data_lake?.enabled === true;
+  };
+
+  // Get sensor status label and color
+  const getSensorStatus = (env: Environment): { label: string; color: 'low' | 'medium' | 'info' } => {
+    const running = isSensorRunning(env);
+    const pipelineReady = isPipelineReady(env);
+    const pipelineCount = getPipelineCount(env);
+
+    if (!running) {
+      return { label: 'Not Running', color: 'medium' };
+    }
+    
+    if (pipelineReady) {
+      return { 
+        label: pipelineCount > 0 ? `${pipelineCount} Pipeline${pipelineCount !== 1 ? 's' : ''}` : 'Detection Ready', 
+        color: 'low' 
+      };
+    }
+    
+    return { label: 'Running', color: 'info' };
+  };
+
   const openDeploymentDialog = (provider: DeploymentProvider) => {
     setDeploymentDialog({ open: true, provider });
   };
@@ -250,17 +275,25 @@ const DetectionOnboardingPage = () => {
       }
       
       const isRunning = isSensorRunning(currentEnv);
+      const pipelineReady = isPipelineReady(currentEnv);
       const pipelineCount = getPipelineCount(currentEnv);
+      
+      let message = '';
+      if (!isRunning) {
+        message = 'Sensor not running. Deploy it using the options above.';
+      } else if (pipelineReady) {
+        message = pipelineCount > 0 
+          ? `Detection ready with ${pipelineCount} pipeline${pipelineCount !== 1 ? 's' : ''} active`
+          : 'Detection pipeline is enabled and ready';
+      } else {
+        message = 'Sensor is running but detection pipeline is not yet configured';
+      }
       
       setSensorStatus({
         loading: false,
         checked: true,
-        success: isRunning,
-        message: isRunning 
-          ? pipelineCount > 0 
-            ? `Sensor running with ${pipelineCount} pipeline${pipelineCount !== 1 ? 's' : ''}`
-            : 'Sensor running, no pipelines configured yet'
-          : 'Sensor not running. Deploy it using the options above.',
+        success: isRunning && pipelineReady,
+        message,
       });
       
       // Auto-expand next step if successful
@@ -415,22 +448,26 @@ const DetectionOnboardingPage = () => {
               <Typography sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
                 Install a Sensor
               </Typography>
-              {selectedEnvironment && (
-                <Chip
-                  size="small"
-                  label={isSensorRunning(selectedEnvironment) ? 'Running' : 'Not Running'}
-                  sx={{
-                    backgroundColor: isSensorRunning(selectedEnvironment)
-                      ? 'hsl(var(--severity-low) / 0.15)'
-                      : 'hsl(var(--severity-medium) / 0.15)',
-                    color: isSensorRunning(selectedEnvironment)
-                      ? 'hsl(var(--severity-low))'
-                      : 'hsl(var(--severity-medium))',
-                    fontWeight: 500,
-                    fontSize: '0.75rem',
-                  }}
-                />
-              )}
+              {selectedEnvironment && (() => {
+                const status = getSensorStatus(selectedEnvironment);
+                const colorMap = {
+                  low: 'hsl(var(--severity-low))',
+                  medium: 'hsl(var(--severity-medium))',
+                  info: 'hsl(var(--severity-info))',
+                };
+                return (
+                  <Chip
+                    size="small"
+                    label={status.label}
+                    sx={{
+                      backgroundColor: `${colorMap[status.color].replace(')', ' / 0.15)')}`,
+                      color: colorMap[status.color],
+                      fontWeight: 500,
+                      fontSize: '0.75rem',
+                    }}
+                  />
+                );
+              })()}
             </Box>
             <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.875rem', mt: 0.5 }}>
               Deploy a detection pipeline to collect and analyze security events
