@@ -1007,10 +1007,10 @@ const DetectionOnboardingPage = () => {
           pipelineList = Array.isArray(pipelines) ? pipelines : [];
         }
         
-        // Filter to find ALL matching pipelines
+        // Filter to find ALL matching pipelines by definition field
         const matchingPipelines = pipelineList.filter((p: any) => {
-          const pipelineStr = typeof p === 'string' ? p : (p?.command || p?.name || JSON.stringify(p));
-          return pipelineStr.includes('notepad.exe') && pipelineStr.includes('parse_syslog');
+          const definition = p?.definition || '';
+          return definition.includes('notepad.exe') && definition.includes('parse_syslog');
         });
         
         console.log(`Found ${matchingPipelines.length} existing test pipelines to stop`, matchingPipelines);
