@@ -885,9 +885,9 @@ const DetectionOnboardingPage = () => {
         body: JSON.stringify({
           name: testCommand.replace(/ /g, '-').substring(0, 100),
           id: crypto.randomUUID(),
-          type: 'stop',
+          type: 'start',
           command: testCommand,
-          environment: selectedEnvId,
+          environment: selectedEnvironment?.Name || '',
         }),
       });
 
