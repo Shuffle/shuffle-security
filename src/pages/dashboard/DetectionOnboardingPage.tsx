@@ -1982,6 +1982,9 @@ const DetectionOnboardingPage = () => {
                           minWidth: 'auto',
                           py: 0,
                           '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.1)' },
+                          '&.Mui-disabled': {
+                            color: 'hsl(var(--muted-foreground))',
+                          },
                         }}
                       >
                         {deployingPipeline.sigmaForwarder 
