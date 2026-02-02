@@ -1092,56 +1092,61 @@ const DetectionOnboardingPage = () => {
         setTestSteps(prev => ({ ...prev, elapsedSeconds }));
         setTestStatus({ loading: true, checked: false, success: false, message: `Waiting... ${elapsedSeconds}s / 60s` });
 
-        // Refresh environment to check if pipeline started
-        if (!pipelineStartConfirmed) {
-          try {
-            const envResponse = await fetch(getApiUrl('/api/v1/getenvironments'), {
-              headers: { 'Authorization': `Bearer ${API_CONFIG.apiKey}` },
+        // Refresh environment to check pipeline status (always check, even if previously confirmed - it might have failed since)
+        try {
+          const envResponse = await fetch(getApiUrl('/api/v1/getenvironments'), {
+            headers: { 'Authorization': `Bearer ${API_CONFIG.apiKey}` },
+          });
+          if (envResponse.ok) {
+            const envData: Environment[] = await envResponse.json();
+            const currentEnv = envData.find(e => e.id === selectedEnvId);
+            const currentPipelines = currentEnv?.data_lake?.pipelines || [];
+            const pipelineList = Array.isArray(currentPipelines) ? currentPipelines : [];
+            
+            // Check if our test pipeline exists and its status
+            const testPipeline = pipelineList.find((p: any) => {
+              const pipelineStr = typeof p === 'string' ? p : (p?.command || p?.name || JSON.stringify(p));
+              return pipelineStr.includes('notepad.exe') && pipelineStr.includes('parse_syslog');
             });
-            if (envResponse.ok) {
-              const envData: Environment[] = await envResponse.json();
-              const currentEnv = envData.find(e => e.id === selectedEnvId);
-              const currentPipelines = currentEnv?.data_lake?.pipelines || [];
-              const pipelineList = Array.isArray(currentPipelines) ? currentPipelines : [];
+            
+            if (testPipeline && typeof testPipeline === 'object') {
+              // Check pipeline state and start_time (must be after we triggered the test)
+              const pipelineState = (testPipeline.state || '').toLowerCase();
+              const startTimeStr = testPipeline.start_time;
+              const isPipelineFailed = pipelineState === 'failed' || pipelineState === 'error' || pipelineState === 'stopped';
               
-              // Check if our test pipeline exists and its status
-              const testPipeline = pipelineList.find((p: any) => {
-                const pipelineStr = typeof p === 'string' ? p : (p?.command || p?.name || JSON.stringify(p));
-                return pipelineStr.includes('notepad.exe') && pipelineStr.includes('parse_syslog');
-              });
+              console.log('Pipeline check:', { pipelineState, startTimeStr, isPipelineFailed, testTriggeredAt: testTriggeredAt.toISOString() });
               
-              if (testPipeline) {
-                // Check pipeline state and start_time (must be after we triggered the test)
-                const pipelineState = typeof testPipeline === 'object' ? (testPipeline.state || '').toLowerCase() : '';
-                const startTimeStr = typeof testPipeline === 'object' ? testPipeline.start_time : null;
-                const isPipelineFailed = pipelineState === 'failed' || pipelineState === 'error' || pipelineState === 'stopped';
-                
-                // Parse start_time and check if it's after we triggered the test
-                let isPipelineRunning = false;
-                if (startTimeStr && !isPipelineFailed) {
-                  try {
-                    const pipelineStartTime = new Date(startTimeStr);
-                    // Pipeline is running if start_time is after we triggered it (with 5s buffer for clock skew)
-                    isPipelineRunning = pipelineStartTime.getTime() >= testTriggeredAt.getTime() - 5000;
-                  } catch {
-                    // If we can't parse the time, just check if it exists
-                    isPipelineRunning = true;
+              // Check for failure FIRST - if failed, stop immediately
+              if (isPipelineFailed) {
+                setTestSteps(prev => ({ 
+                  ...prev, 
+                  pipelineStarted: 'failed',
+                }));
+                setTestStatus({
+                  loading: false,
+                  checked: true,
+                  success: false,
+                  message: `✗ Pipeline failed. State: ${pipelineState}. Please try again or contact support.`,
+                });
+                return; // Stop polling immediately
+              }
+              
+              // Parse start_time and check if it's after we triggered the test
+              if (!pipelineStartConfirmed && startTimeStr) {
+                try {
+                  const pipelineStartTime = new Date(startTimeStr);
+                  // Pipeline is running if start_time is after we triggered it (with 5s buffer for clock skew)
+                  if (pipelineStartTime.getTime() >= testTriggeredAt.getTime() - 5000) {
+                    pipelineStartConfirmed = true;
+                    setTestSteps(prev => ({ 
+                      ...prev, 
+                      pipelineStarted: 'success',
+                      workflowTriggered: 'running',
+                    }));
                   }
-                }
-                
-                if (isPipelineFailed) {
-                  setTestSteps(prev => ({ 
-                    ...prev, 
-                    pipelineStarted: 'failed',
-                  }));
-                  setTestStatus({
-                    loading: false,
-                    checked: true,
-                    success: false,
-                    message: `✗ Pipeline failed to start. State: ${pipelineState}. Please try again or contact support.`,
-                  });
-                  return; // Stop polling
-                } else if (isPipelineRunning) {
+                } catch {
+                  // If we can't parse the time, assume it's running
                   pipelineStartConfirmed = true;
                   setTestSteps(prev => ({ 
                     ...prev, 
@@ -1149,12 +1154,11 @@ const DetectionOnboardingPage = () => {
                     workflowTriggered: 'running',
                   }));
                 }
-                // If start_time is older than when we started or not present, keep polling
               }
             }
-          } catch (envError) {
-            console.warn('Failed to check pipeline status:', envError);
           }
+        } catch (envError) {
+          console.warn('Failed to check pipeline status:', envError);
         }
 
         try {
