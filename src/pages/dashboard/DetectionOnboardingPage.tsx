@@ -2373,17 +2373,37 @@ const DetectionOnboardingPage = () => {
                   backgroundColor: 'hsl(var(--muted) / 0.3)',
                   border: '1px solid hsl(var(--border))',
                   borderRadius: 1.5,
+                  position: 'relative',
+                  opacity: 0.6,
                 }}
               >
+                {/* Coming Soon overlay */}
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: 12,
+                    right: 12,
+                    backgroundColor: 'hsl(var(--primary) / 0.15)',
+                    border: '1px solid hsl(var(--primary) / 0.3)',
+                    borderRadius: 1,
+                    px: 1.5,
+                    py: 0.5,
+                  }}
+                >
+                  <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--primary))' }}>
+                    Coming Soon
+                  </Typography>
+                </Box>
+                
                 <Typography sx={{ fontWeight: 600, color: 'hsl(var(--foreground))', mb: 2 }}>
                   Real-World Test
                 </Typography>
                 <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.8rem', mb: 2 }}>
-                  Deploy syslog ingestion pipelines to receive live events
+                  Configure log forwarding and validate end-to-end detection
                 </Typography>
 
                 {/* Syslog TCP Status */}
-                <Box sx={{ mb: 1.5 }}>
+                <Box sx={{ mb: 1.5, pointerEvents: 'none' }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'space-between' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Box
