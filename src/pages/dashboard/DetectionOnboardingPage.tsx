@@ -2217,8 +2217,9 @@ const DetectionOnboardingPage = () => {
                         color: testSteps.pipelineStarted === 'failed' 
                           ? 'hsl(var(--severity-high, var(--destructive)))' 
                           : 'hsl(var(--foreground))',
+                        fontWeight: testSteps.pipelineStarted === 'failed' ? 600 : 400,
                       }}>
-                        2. Test pipeline started
+                        2. Test pipeline started {testSteps.pipelineStarted === 'failed' && '— FAILED'}
                       </Typography>
                     </Box>
 
@@ -2254,8 +2255,9 @@ const DetectionOnboardingPage = () => {
                         color: testSteps.workflowTriggered === 'failed' 
                           ? 'hsl(var(--severity-high, var(--destructive)))' 
                           : 'hsl(var(--foreground))',
+                        fontWeight: testSteps.workflowTriggered === 'failed' ? 600 : 400,
                       }}>
-                        3. Workflow triggered
+                        3. Workflow triggered {testSteps.workflowTriggered === 'failed' && '— FAILED'}
                       </Typography>
                     </Box>
                   </Box>
@@ -2450,6 +2452,21 @@ const DetectionOnboardingPage = () => {
                   border: '1px solid hsl(var(--severity-low) / 0.3)',
                   color: 'hsl(var(--foreground))',
                   '& .MuiAlert-icon': { color: 'hsl(var(--severity-low))' },
+                }}
+              >
+                {testStatus.message}
+              </Alert>
+            )}
+
+            {testStatus.checked && !testStatus.success && testStatus.message && (
+              <Alert 
+                severity="error" 
+                sx={{ 
+                  mt: 3, 
+                  backgroundColor: 'hsl(var(--severity-high, var(--destructive)) / 0.1)',
+                  border: '1px solid hsl(var(--severity-high, var(--destructive)) / 0.5)',
+                  color: 'hsl(var(--foreground))',
+                  '& .MuiAlert-icon': { color: 'hsl(var(--severity-high, var(--destructive)))' },
                 }}
               >
                 {testStatus.message}
