@@ -60,7 +60,7 @@ const navItems: NavItem[] = [
     icon: <RuleIcon />,
     path: '/detection',
     children: [
-      { label: 'Sigma Rules', path: '/detection', icon: <RuleIcon fontSize="small" /> },
+      { label: 'Sigma Rules', path: '/detection/sigma', icon: <RuleIcon fontSize="small" /> },
       { label: 'MITRE ATT&CK', path: '/detection/mitre', icon: <RuleIcon fontSize="small" /> },
     ],
   },

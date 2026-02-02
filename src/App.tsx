@@ -15,6 +15,7 @@ import TemplatesPage from '@/pages/dashboard/TemplatesPage';
 import IOCTypesPage from '@/pages/dashboard/IOCTypesPage';
 import RulesPage from '@/pages/dashboard/RulesPage';
 import MitreAttackPage from '@/pages/dashboard/MitreAttackPage';
+import DetectionOnboardingPage from '@/pages/dashboard/DetectionOnboardingPage';
 import ThreatFeedsPage from '@/pages/dashboard/ThreatFeedsPage';
 import CustomFieldsPage from '@/pages/dashboard/CustomFieldsPage';
 import UsersPage from '@/pages/dashboard/UsersPage';
@@ -79,7 +80,8 @@ const App = () => (
               <Route path="/incidents" element={<IncidentsPage />} />
               <Route path="/incidents/:id" element={<IncidentDetailPage />} />
               <Route path="/templates" element={<TemplatesPage />} />
-              <Route path="/detection" element={<RulesPage />} />
+              <Route path="/detection" element={<DetectionOnboardingPage />} />
+              <Route path="/detection/sigma" element={<RulesPage />} />
               <Route path="/detection/mitre" element={<MitreAttackPage />} />
               <Route path="/incidents/ioc-types" element={<IOCTypesPage />} />
               <Route path="/incidents/threat-feeds" element={<ThreatFeedsPage />} />
