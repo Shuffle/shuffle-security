@@ -1146,22 +1146,6 @@ const DetectionOnboardingPage = () => {
               >
                 Browse Rules
               </Button>
-              <Button
-                onClick={checkRules}
-                disabled={rulesStatus.loading}
-                variant="outlined"
-                sx={{
-                  borderColor: 'hsl(var(--border))',
-                  color: 'hsl(var(--foreground))',
-                  textTransform: 'none',
-                  '&:hover': {
-                    borderColor: 'hsl(var(--primary))',
-                    backgroundColor: 'hsl(var(--primary) / 0.1)',
-                  },
-                }}
-              >
-                {rulesStatus.loading ? 'Checking...' : 'Check Status'}
-              </Button>
             </Box>
           </Box>
         </Collapse>
