@@ -1967,10 +1967,10 @@ const DetectionOnboardingPage = () => {
                         </Typography>
                       </Box>
                     </Tooltip>
-                    {(!pipelinesStatus.sigmaForwarder.ready || pipelinesStatus.sigmaForwarder.isLocalhost) && pipelinesStatus.checked && (
+                    {(!pipelinesStatus.sigmaForwarder.ready || pipelinesStatus.sigmaForwarder.isLocalhost) && pipelinesStatus.checked && webhookStatus.ready && (
                       <Button
                         onClick={() => deployPipeline('sigmaForwarder')}
-                        disabled={deployingPipeline.sigmaForwarder || !webhookStatus.ready}
+                        disabled={deployingPipeline.sigmaForwarder}
                         size="small"
                         variant="text"
                         sx={{
