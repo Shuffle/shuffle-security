@@ -120,8 +120,15 @@ const DetectionOnboardingPage = () => {
     checked: boolean;
     ready: boolean;
     workflowName?: string;
+    workflowId?: string;
     message?: string;
   }>({ loading: false, checked: false, ready: false });
+  const [deployingPipeline, setDeployingPipeline] = useState<{
+    syslogTcp: boolean;
+    syslogUdp: boolean;
+    sigmaForwarder: boolean;
+    webhook: boolean;
+  }>({ syslogTcp: false, syslogUdp: false, sigmaForwarder: false, webhook: false });
   const [expandedStep, setExpandedStep] = useState<number | null>(1);
   const [deploymentDialog, setDeploymentDialog] = useState<{
     open: boolean;
@@ -583,7 +590,7 @@ const DetectionOnboardingPage = () => {
     }
   };
 
-  // Check workflow status for webhook
+  // Check workflow status for webhook - look for 'Ingestion Webhook' with background_processing
   const checkWebhookWorkflow = async (hookId?: string) => {
     setWebhookStatus({ loading: true, checked: false, ready: false });
     
@@ -606,32 +613,29 @@ const DetectionOnboardingPage = () => {
 
       const workflows = await response.json();
       
-      // Find a workflow that has a webhook trigger matching the hook ID
+      // Find the 'Ingestion Webhook' workflow with background_processing: true
       let matchingWorkflow = null;
       
       for (const workflow of workflows) {
-        // Check if workflow has triggers/actions that match
-        if (workflow.triggers) {
+        // Check for 'Ingestion Webhook' name and background_processing
+        if (workflow.name === 'Ingestion Webhook' && workflow.background_processing === true) {
+          matchingWorkflow = workflow;
+          break;
+        }
+        
+        // Fallback: Check if workflow has triggers/actions that match hook ID
+        if (!matchingWorkflow && workflow.triggers && hookId) {
           for (const trigger of workflow.triggers) {
-            // Check for webhook trigger
             if (trigger.app_name?.toLowerCase().includes('webhook') || 
                 trigger.trigger_type === 'WEBHOOK') {
-              if (hookId) {
-                // If we have a hook ID, check if it matches
-                const triggerStr = JSON.stringify(trigger);
-                if (triggerStr.includes(hookId)) {
-                  matchingWorkflow = workflow;
-                  break;
-                }
-              } else {
-                // Just find any webhook workflow
+              const triggerStr = JSON.stringify(trigger);
+              if (triggerStr.includes(hookId)) {
                 matchingWorkflow = workflow;
                 break;
               }
             }
           }
         }
-        if (matchingWorkflow) break;
       }
 
       if (matchingWorkflow) {
@@ -640,6 +644,7 @@ const DetectionOnboardingPage = () => {
           checked: true,
           ready: true,
           workflowName: matchingWorkflow.name,
+          workflowId: matchingWorkflow.id,
           message: `Workflow: ${matchingWorkflow.name}`,
         });
       } else {
@@ -647,7 +652,7 @@ const DetectionOnboardingPage = () => {
           loading: false,
           checked: true,
           ready: false,
-          message: hookId ? 'No workflow found with matching webhook' : 'No webhook workflow found',
+          message: 'No Ingestion Webhook workflow found',
         });
       }
     } catch (error) {
@@ -658,6 +663,89 @@ const DetectionOnboardingPage = () => {
         ready: false,
         message: 'Error checking workflows',
       });
+    }
+  };
+
+  // Deploy a pipeline via POST /api/v1/triggers/pipeline
+  const deployPipeline = async (type: 'syslogTcp' | 'syslogUdp' | 'sigmaForwarder', webhookId?: string) => {
+    setDeployingPipeline(prev => ({ ...prev, [type]: true }));
+    
+    try {
+      let command = '';
+      
+      if (type === 'syslogTcp') {
+        command = 'listen syslog tcp://0.0.0.0:1514';
+      } else if (type === 'syslogUdp') {
+        command = 'listen syslog udp://0.0.0.0:1514';
+      } else if (type === 'sigmaForwarder') {
+        // Need a webhook ID for sigma forwarder
+        const hookId = webhookId || webhookStatus.workflowId;
+        if (!hookId) {
+          console.error('No webhook ID available for sigma forwarder');
+          setDeployingPipeline(prev => ({ ...prev, [type]: false }));
+          return;
+        }
+        const baseUrl = API_CONFIG.baseUrl;
+        command = `export live=true | sigma "/tmp/sigma_rules" | to "${baseUrl}/api/v1/hooks/webhook_${hookId}"`;
+      }
+      
+      const response = await fetch(getApiUrl('/api/v1/triggers/pipeline'), {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          command,
+          name: command,
+          type: 'create',
+          environment: selectedEnvId,
+          workflow_id: '',
+          trigger_id: '',
+          start_node: '',
+        }),
+      });
+      
+      if (response.ok) {
+        // Refresh pipeline status after deployment
+        await checkPipelineStatus();
+      } else {
+        console.error('Failed to deploy pipeline:', await response.text());
+      }
+    } catch (error) {
+      console.error('Error deploying pipeline:', error);
+    } finally {
+      setDeployingPipeline(prev => ({ ...prev, [type]: false }));
+    }
+  };
+
+  // Deploy webhook workflow via POST /api/v2/workflows/generate
+  const deployWebhookWorkflow = async () => {
+    setDeployingPipeline(prev => ({ ...prev, webhook: true }));
+    
+    try {
+      const response = await fetch(getApiUrl('/api/v2/workflows/generate'), {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          label: 'Ingest Tickets_webhook',
+          category: 'cases',
+        }),
+      });
+      
+      if (response.ok) {
+        // Refresh webhook status after deployment
+        await checkWebhookWorkflow();
+      } else {
+        console.error('Failed to deploy webhook workflow:', await response.text());
+      }
+    } catch (error) {
+      console.error('Error deploying webhook workflow:', error);
+    } finally {
+      setDeployingPipeline(prev => ({ ...prev, webhook: false }));
     }
   };
 
@@ -1419,22 +1507,42 @@ const DetectionOnboardingPage = () => {
                 
                 {/* Syslog TCP Status */}
                 <Box sx={{ mb: 1.5 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Box
-                      sx={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: '50%',
-                        backgroundColor: pipelinesStatus.loading 
-                          ? 'hsl(var(--muted-foreground))'
-                          : pipelinesStatus.syslogTcp.ready 
-                            ? 'hsl(var(--severity-low))' 
-                            : 'hsl(var(--severity-medium))',
-                      }}
-                    />
-                    <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--foreground))', fontWeight: 500 }}>
-                      Syslog Ingest (TCP)
-                    </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'space-between' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box
+                        sx={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: '50%',
+                          backgroundColor: pipelinesStatus.loading 
+                            ? 'hsl(var(--muted-foreground))'
+                            : pipelinesStatus.syslogTcp.ready 
+                              ? 'hsl(var(--severity-low))' 
+                              : 'hsl(var(--severity-medium))',
+                        }}
+                      />
+                      <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--foreground))', fontWeight: 500 }}>
+                        Syslog Ingest (TCP)
+                      </Typography>
+                    </Box>
+                    {!pipelinesStatus.syslogTcp.ready && pipelinesStatus.checked && (
+                      <Button
+                        onClick={() => deployPipeline('syslogTcp')}
+                        disabled={deployingPipeline.syslogTcp}
+                        size="small"
+                        variant="text"
+                        sx={{
+                          fontSize: '0.7rem',
+                          color: 'hsl(var(--primary))',
+                          textTransform: 'none',
+                          minWidth: 'auto',
+                          py: 0,
+                          '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.1)' },
+                        }}
+                      >
+                        {deployingPipeline.syslogTcp ? 'Deploying...' : 'Deploy'}
+                      </Button>
+                    )}
                   </Box>
                   <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', pl: 2 }}>
                     {pipelinesStatus.loading ? 'Checking...' : pipelinesStatus.syslogTcp.message}
@@ -1443,22 +1551,42 @@ const DetectionOnboardingPage = () => {
 
                 {/* Syslog UDP Status */}
                 <Box sx={{ mb: 1.5 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Box
-                      sx={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: '50%',
-                        backgroundColor: pipelinesStatus.loading 
-                          ? 'hsl(var(--muted-foreground))'
-                          : pipelinesStatus.syslogUdp.ready 
-                            ? 'hsl(var(--severity-low))' 
-                            : 'hsl(var(--severity-medium))',
-                      }}
-                    />
-                    <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--foreground))', fontWeight: 500 }}>
-                      Syslog Ingest (UDP)
-                    </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'space-between' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box
+                        sx={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: '50%',
+                          backgroundColor: pipelinesStatus.loading 
+                            ? 'hsl(var(--muted-foreground))'
+                            : pipelinesStatus.syslogUdp.ready 
+                              ? 'hsl(var(--severity-low))' 
+                              : 'hsl(var(--severity-medium))',
+                        }}
+                      />
+                      <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--foreground))', fontWeight: 500 }}>
+                        Syslog Ingest (UDP)
+                      </Typography>
+                    </Box>
+                    {!pipelinesStatus.syslogUdp.ready && pipelinesStatus.checked && (
+                      <Button
+                        onClick={() => deployPipeline('syslogUdp')}
+                        disabled={deployingPipeline.syslogUdp}
+                        size="small"
+                        variant="text"
+                        sx={{
+                          fontSize: '0.7rem',
+                          color: 'hsl(var(--primary))',
+                          textTransform: 'none',
+                          minWidth: 'auto',
+                          py: 0,
+                          '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.1)' },
+                        }}
+                      >
+                        {deployingPipeline.syslogUdp ? 'Deploying...' : 'Deploy'}
+                      </Button>
+                    )}
                   </Box>
                   <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', pl: 2 }}>
                     {pipelinesStatus.loading ? 'Checking...' : pipelinesStatus.syslogUdp.message}
@@ -1467,24 +1595,50 @@ const DetectionOnboardingPage = () => {
 
                 {/* Sigma Forwarder Status */}
                 <Box sx={{ mb: 1.5 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Box
-                      sx={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: '50%',
-                        backgroundColor: pipelinesStatus.loading 
-                          ? 'hsl(var(--muted-foreground))'
-                          : pipelinesStatus.sigmaForwarder.ready 
-                            ? 'hsl(var(--severity-low))' 
-                            : pipelinesStatus.sigmaForwarder.isLocalhost
-                              ? 'hsl(var(--severity-high, var(--severity-medium)))'
-                              : 'hsl(var(--severity-medium))',
-                      }}
-                    />
-                    <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--foreground))', fontWeight: 500 }}>
-                      Sigma Detection Forwarder
-                    </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'space-between' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box
+                        sx={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: '50%',
+                          backgroundColor: pipelinesStatus.loading 
+                            ? 'hsl(var(--muted-foreground))'
+                            : pipelinesStatus.sigmaForwarder.ready 
+                              ? 'hsl(var(--severity-low))' 
+                              : pipelinesStatus.sigmaForwarder.isLocalhost
+                                ? 'hsl(var(--severity-high, var(--severity-medium)))'
+                                : 'hsl(var(--severity-medium))',
+                        }}
+                      />
+                      <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--foreground))', fontWeight: 500 }}>
+                        Sigma Detection Forwarder
+                      </Typography>
+                    </Box>
+                    {(!pipelinesStatus.sigmaForwarder.ready || pipelinesStatus.sigmaForwarder.isLocalhost) && pipelinesStatus.checked && (
+                      <Button
+                        onClick={() => deployPipeline('sigmaForwarder')}
+                        disabled={deployingPipeline.sigmaForwarder || !webhookStatus.ready}
+                        size="small"
+                        variant="text"
+                        sx={{
+                          fontSize: '0.7rem',
+                          color: pipelinesStatus.sigmaForwarder.isLocalhost 
+                            ? 'hsl(var(--severity-high, var(--severity-medium)))' 
+                            : 'hsl(var(--primary))',
+                          textTransform: 'none',
+                          minWidth: 'auto',
+                          py: 0,
+                          '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.1)' },
+                        }}
+                      >
+                        {deployingPipeline.sigmaForwarder 
+                          ? 'Deploying...' 
+                          : pipelinesStatus.sigmaForwarder.isLocalhost 
+                            ? 'Redeploy' 
+                            : 'Deploy'}
+                      </Button>
+                    )}
                   </Box>
                   <Typography 
                     sx={{ 
@@ -1496,30 +1650,54 @@ const DetectionOnboardingPage = () => {
                       fontWeight: pipelinesStatus.sigmaForwarder.isLocalhost ? 500 : 400,
                     }}
                   >
-                    {pipelinesStatus.loading ? 'Checking...' : pipelinesStatus.sigmaForwarder.message}
+                    {pipelinesStatus.loading 
+                      ? 'Checking...' 
+                      : !webhookStatus.ready && !pipelinesStatus.sigmaForwarder.ready
+                        ? 'Requires webhook workflow first'
+                        : pipelinesStatus.sigmaForwarder.message}
                   </Typography>
                 </Box>
 
                 {/* Webhook Workflow Status */}
                 <Box sx={{ mb: 2 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Box
-                      sx={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: '50%',
-                        backgroundColor: webhookStatus.loading 
-                          ? 'hsl(var(--muted-foreground))'
-                          : webhookStatus.ready 
-                            ? 'hsl(var(--severity-low))' 
-                            : 'hsl(var(--severity-medium))',
-                      }}
-                    />
-                    <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--foreground))', fontWeight: 500 }}>
-                      Workflow (Webhook)
-                    </Typography>
-                    {webhookStatus.loading && (
-                      <CircularProgress size={12} sx={{ color: 'hsl(var(--muted-foreground))' }} />
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'space-between' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box
+                        sx={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: '50%',
+                          backgroundColor: webhookStatus.loading 
+                            ? 'hsl(var(--muted-foreground))'
+                            : webhookStatus.ready 
+                              ? 'hsl(var(--severity-low))' 
+                              : 'hsl(var(--severity-medium))',
+                        }}
+                      />
+                      <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--foreground))', fontWeight: 500 }}>
+                        Workflow (Webhook)
+                      </Typography>
+                      {webhookStatus.loading && (
+                        <CircularProgress size={12} sx={{ color: 'hsl(var(--muted-foreground))' }} />
+                      )}
+                    </Box>
+                    {!webhookStatus.ready && webhookStatus.checked && (
+                      <Button
+                        onClick={deployWebhookWorkflow}
+                        disabled={deployingPipeline.webhook}
+                        size="small"
+                        variant="text"
+                        sx={{
+                          fontSize: '0.7rem',
+                          color: 'hsl(var(--primary))',
+                          textTransform: 'none',
+                          minWidth: 'auto',
+                          py: 0,
+                          '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.1)' },
+                        }}
+                      >
+                        {deployingPipeline.webhook ? 'Deploying...' : 'Deploy'}
+                      </Button>
                     )}
                   </Box>
                   <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', pl: 2 }}>
@@ -1527,7 +1705,7 @@ const DetectionOnboardingPage = () => {
                       ? 'Checking...' 
                       : webhookStatus.checked 
                         ? webhookStatus.message 
-                        : 'Requires: workflow with matching webhook'}
+                        : 'Requires: Ingestion Webhook workflow'}
                   </Typography>
                 </Box>
 
