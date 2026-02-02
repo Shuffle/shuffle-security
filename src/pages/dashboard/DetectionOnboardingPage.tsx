@@ -1056,7 +1056,8 @@ const DetectionOnboardingPage = () => {
         return;
       }
 
-      // Pipeline request succeeded
+      // Pipeline request succeeded - capture the time we triggered it
+      const testTriggeredAt = new Date();
       setTestSteps(prev => ({ 
         ...prev, 
         pipelineRequest: 'success',
@@ -1096,11 +1097,23 @@ const DetectionOnboardingPage = () => {
               });
               
               if (testPipeline) {
-                // Check pipeline state and start_time
+                // Check pipeline state and start_time (must be after we triggered the test)
                 const pipelineState = typeof testPipeline === 'object' ? (testPipeline.state || '').toLowerCase() : '';
-                const startTime = typeof testPipeline === 'object' ? testPipeline.start_time : null;
+                const startTimeStr = typeof testPipeline === 'object' ? testPipeline.start_time : null;
                 const isPipelineFailed = pipelineState === 'failed' || pipelineState === 'error' || pipelineState === 'stopped';
-                const isPipelineRunning = startTime && !isPipelineFailed;
+                
+                // Parse start_time and check if it's after we triggered the test
+                let isPipelineRunning = false;
+                if (startTimeStr && !isPipelineFailed) {
+                  try {
+                    const pipelineStartTime = new Date(startTimeStr);
+                    // Pipeline is running if start_time is after we triggered it (with 5s buffer for clock skew)
+                    isPipelineRunning = pipelineStartTime.getTime() >= testTriggeredAt.getTime() - 5000;
+                  } catch {
+                    // If we can't parse the time, just check if it exists
+                    isPipelineRunning = true;
+                  }
+                }
                 
                 if (isPipelineFailed) {
                   setTestSteps(prev => ({ 
@@ -1122,7 +1135,7 @@ const DetectionOnboardingPage = () => {
                     workflowTriggered: 'running',
                   }));
                 }
-                // If no start_time and not failed, keep polling (pipeline exists but not started yet)
+                // If start_time is older than when we started or not present, keep polling
               }
             }
           } catch (envError) {
