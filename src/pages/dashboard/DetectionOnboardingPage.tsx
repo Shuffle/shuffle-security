@@ -944,14 +944,15 @@ const DetectionOnboardingPage = () => {
 
       setTestStatus({ loading: true, checked: false, success: false, message: 'Waiting for detection...' });
 
-      // Step 3: Poll for new execution (max 30 seconds, poll every 2 seconds)
-      const maxAttempts = 15;
+      // Step 3: Poll for new execution (max 60 seconds, poll every 2 seconds)
+      const maxAttempts = 30;
       let attempt = 0;
       let foundNewExecution = false;
 
       while (attempt < maxAttempts && !foundNewExecution) {
         await new Promise(resolve => setTimeout(resolve, 2000));
         attempt++;
+        const elapsedSeconds = attempt * 2;
 
         try {
           const pollResponse = await fetch(getApiUrl(`/api/v2/workflows/${workflowId}/executions`), {
@@ -1018,7 +1019,7 @@ const DetectionOnboardingPage = () => {
           loading: true, 
           checked: false, 
           success: false, 
-          message: `Waiting for detection... (${attempt * 2}s)` 
+          message: `Waiting... ${elapsedSeconds}s / 60s` 
         });
       }
 
@@ -1027,7 +1028,7 @@ const DetectionOnboardingPage = () => {
         loading: false,
         checked: true,
         success: false,
-        message: 'No detection received within 30 seconds. Check pipeline configuration.',
+        message: '✗ Test failed: No detection received within 60 seconds. Check that the Sigma Forwarder pipeline is correctly configured and pointing to the right webhook.',
       });
 
     } catch (error) {
