@@ -136,6 +136,19 @@ const DetectionOnboardingPage = () => {
     message?: string;
     ruleId?: string;
   }>({ loading: false, checked: false, ready: false });
+  const [testSteps, setTestSteps] = useState<{
+    visible: boolean;
+    pipelineRequest: 'pending' | 'running' | 'success' | 'failed';
+    pipelineStarted: 'pending' | 'running' | 'success' | 'failed';
+    workflowTriggered: 'pending' | 'running' | 'success' | 'failed';
+    elapsedSeconds: number;
+  }>({
+    visible: false,
+    pipelineRequest: 'pending',
+    pipelineStarted: 'pending',
+    workflowTriggered: 'pending',
+    elapsedSeconds: 0,
+  });
   const [expandedStep, setExpandedStep] = useState<number | null>(1);
   const [deploymentDialog, setDeploymentDialog] = useState<{
     open: boolean;
@@ -842,11 +855,19 @@ const DetectionOnboardingPage = () => {
       return;
     }
 
-    // Manual test implementation
-    setTestStatus({ loading: true, checked: false, success: false, message: 'Cleaning up...' });
+    // Reset and show test steps
+    setTestSteps({
+      visible: true,
+      pipelineRequest: 'running',
+      pipelineStarted: 'pending',
+      workflowTriggered: 'pending',
+      elapsedSeconds: 0,
+    });
+    setTestStatus({ loading: true, checked: false, success: false, message: 'Starting test...' });
     
     const workflowId = webhookStatus.workflowId;
     if (!workflowId) {
+      setTestSteps(prev => ({ ...prev, pipelineRequest: 'failed' }));
       setTestStatus({
         loading: false,
         checked: true,
@@ -858,19 +879,16 @@ const DetectionOnboardingPage = () => {
 
     try {
       // Step 0: Clean up old test pipelines from environment data
-      setTestStatus({ loading: true, checked: false, success: false, message: 'Cleaning old tests...' });
       try {
         const env = environments.find(e => e.id === selectedEnvId);
         const pipelines = env?.data_lake?.pipelines || [];
         const pipelineList = Array.isArray(pipelines) ? pipelines : [];
         
-        // Find old notepad test pipelines (those containing notepad.exe in command)
         const oldTestPipelines = pipelineList.filter((p: any) => {
           const pipelineStr = typeof p === 'string' ? p : (p?.command || p?.name || JSON.stringify(p));
           return pipelineStr.includes('notepad.exe') && pipelineStr.includes('parse_syslog');
         });
         
-        // Stop old test pipelines
         for (const oldPipeline of oldTestPipelines) {
           try {
             const pipelineStr = typeof oldPipeline === 'string' ? oldPipeline : (oldPipeline?.command || oldPipeline?.name || '');
@@ -897,7 +915,6 @@ const DetectionOnboardingPage = () => {
       }
 
       // Step 1: Get current execution count to compare later
-      setTestStatus({ loading: true, checked: false, success: false, message: 'Preparing...' });
       const initialExecsResponse = await fetch(getApiUrl(`/api/v2/workflows/${workflowId}/executions`), {
         headers: {
           'Authorization': `Bearer ${API_CONFIG.apiKey}`,
@@ -912,7 +929,6 @@ const DetectionOnboardingPage = () => {
       }
 
       // Step 2: Send test event via pipeline trigger
-      setTestStatus({ loading: true, checked: false, success: false, message: 'Sending event...' });
       const testCommand = `from {message: "<165>1 2025-10-06T12:34:56.789Z myhost.example.com myapp 1234 ID47 [huh eventSource=\\"App\\" EventID=\\"4688\\" NewProcessName=\\"notepad.exe\\" Context=\\"Testing\\"] This is a test log message"} | this = message.parse_syslog() | import`;
       
       const triggerResponse = await fetch(getApiUrl('/api/v1/triggers/pipeline'), {
@@ -933,26 +949,68 @@ const DetectionOnboardingPage = () => {
       if (!triggerResponse.ok) {
         const errorText = await triggerResponse.text();
         console.error('Failed to trigger test event:', errorText);
+        setTestSteps(prev => ({ ...prev, pipelineRequest: 'failed' }));
         setTestStatus({
           loading: false,
           checked: true,
           success: false,
-          message: 'Failed to send test event',
+          message: `Failed to send test event: ${errorText.substring(0, 50)}`,
         });
         return;
       }
 
-      setTestStatus({ loading: true, checked: false, success: false, message: 'Waiting for detection...' });
+      // Pipeline request succeeded
+      setTestSteps(prev => ({ 
+        ...prev, 
+        pipelineRequest: 'success',
+        pipelineStarted: 'running',
+      }));
 
       // Step 3: Poll for new execution (max 60 seconds, poll every 2 seconds)
       const maxAttempts = 30;
       let attempt = 0;
       let foundNewExecution = false;
+      let pipelineStartConfirmed = false;
 
       while (attempt < maxAttempts && !foundNewExecution) {
         await new Promise(resolve => setTimeout(resolve, 2000));
         attempt++;
         const elapsedSeconds = attempt * 2;
+        
+        setTestSteps(prev => ({ ...prev, elapsedSeconds }));
+        setTestStatus({ loading: true, checked: false, success: false, message: `Waiting... ${elapsedSeconds}s / 60s` });
+
+        // Refresh environment to check if pipeline started
+        if (!pipelineStartConfirmed) {
+          try {
+            const envResponse = await fetch(getApiUrl('/api/v1/getenvironments'), {
+              headers: { 'Authorization': `Bearer ${API_CONFIG.apiKey}` },
+            });
+            if (envResponse.ok) {
+              const envData: Environment[] = await envResponse.json();
+              const currentEnv = envData.find(e => e.id === selectedEnvId);
+              const currentPipelines = currentEnv?.data_lake?.pipelines || [];
+              const pipelineList = Array.isArray(currentPipelines) ? currentPipelines : [];
+              
+              // Check if our test pipeline exists
+              const testPipelineExists = pipelineList.some((p: any) => {
+                const pipelineStr = typeof p === 'string' ? p : (p?.command || p?.name || JSON.stringify(p));
+                return pipelineStr.includes('notepad.exe') && pipelineStr.includes('parse_syslog');
+              });
+              
+              if (testPipelineExists) {
+                pipelineStartConfirmed = true;
+                setTestSteps(prev => ({ 
+                  ...prev, 
+                  pipelineStarted: 'success',
+                  workflowTriggered: 'running',
+                }));
+              }
+            }
+          } catch (envError) {
+            console.warn('Failed to check pipeline status:', envError);
+          }
+        }
 
         try {
           const pollResponse = await fetch(getApiUrl(`/api/v2/workflows/${workflowId}/executions`), {
@@ -992,6 +1050,7 @@ const DetectionOnboardingPage = () => {
                     message: `Execution started, waiting for result...` 
                   });
                 } else if (isFailed) {
+                  setTestSteps(prev => ({ ...prev, workflowTriggered: 'failed' }));
                   setTestStatus({
                     loading: false,
                     checked: true,
@@ -1000,6 +1059,7 @@ const DetectionOnboardingPage = () => {
                   });
                   return;
                 } else {
+                  setTestSteps(prev => ({ ...prev, workflowTriggered: 'success' }));
                   setTestStatus({
                     loading: false,
                     checked: true,
@@ -1024,6 +1084,11 @@ const DetectionOnboardingPage = () => {
       }
 
       // Timeout - no execution found
+      setTestSteps(prev => ({ 
+        ...prev, 
+        pipelineStarted: prev.pipelineStarted === 'running' ? 'failed' : prev.pipelineStarted,
+        workflowTriggered: 'failed',
+      }));
       setTestStatus({
         loading: false,
         checked: true,
@@ -1033,6 +1098,7 @@ const DetectionOnboardingPage = () => {
 
     } catch (error) {
       console.error('Error running manual test:', error);
+      setTestSteps(prev => ({ ...prev, pipelineRequest: 'failed' }));
       setTestStatus({
         loading: false,
         checked: true,
@@ -2018,6 +2084,134 @@ const DetectionOnboardingPage = () => {
                     <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
                       Checking pipeline status...
                     </Typography>
+                  </Box>
+                )}
+
+                {/* Test Progress Visualization */}
+                {testSteps.visible && (
+                  <Box 
+                    sx={{ 
+                      mb: 2, 
+                      p: 2, 
+                      backgroundColor: 'hsl(var(--background))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: 1,
+                    }}
+                  >
+                    <Typography sx={{ fontSize: '0.75rem', fontWeight: 600, color: 'hsl(var(--foreground))', mb: 1.5 }}>
+                      Test Progress {testSteps.elapsedSeconds > 0 && `(${testSteps.elapsedSeconds}s)`}
+                    </Typography>
+                    
+                    {/* Step 1: Pipeline Request */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                      <Box
+                        sx={{
+                          width: 16,
+                          height: 16,
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: 
+                            testSteps.pipelineRequest === 'success' ? 'hsl(var(--severity-low))' :
+                            testSteps.pipelineRequest === 'failed' ? 'hsl(var(--severity-high, var(--destructive)))' :
+                            testSteps.pipelineRequest === 'running' ? 'hsl(var(--primary))' :
+                            'hsl(var(--muted))',
+                        }}
+                      >
+                        {testSteps.pipelineRequest === 'running' && (
+                          <CircularProgress size={10} sx={{ color: 'white' }} />
+                        )}
+                        {testSteps.pipelineRequest === 'success' && (
+                          <Typography sx={{ fontSize: '0.6rem', color: 'white' }}>✓</Typography>
+                        )}
+                        {testSteps.pipelineRequest === 'failed' && (
+                          <Typography sx={{ fontSize: '0.6rem', color: 'white' }}>✗</Typography>
+                        )}
+                      </Box>
+                      <Typography sx={{ 
+                        fontSize: '0.75rem', 
+                        color: testSteps.pipelineRequest === 'failed' 
+                          ? 'hsl(var(--severity-high, var(--destructive)))' 
+                          : 'hsl(var(--foreground))',
+                      }}>
+                        1. Pipeline request sent
+                      </Typography>
+                    </Box>
+
+                    {/* Step 2: Pipeline Started */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                      <Box
+                        sx={{
+                          width: 16,
+                          height: 16,
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: 
+                            testSteps.pipelineStarted === 'success' ? 'hsl(var(--severity-low))' :
+                            testSteps.pipelineStarted === 'failed' ? 'hsl(var(--severity-high, var(--destructive)))' :
+                            testSteps.pipelineStarted === 'running' ? 'hsl(var(--primary))' :
+                            'hsl(var(--muted))',
+                        }}
+                      >
+                        {testSteps.pipelineStarted === 'running' && (
+                          <CircularProgress size={10} sx={{ color: 'white' }} />
+                        )}
+                        {testSteps.pipelineStarted === 'success' && (
+                          <Typography sx={{ fontSize: '0.6rem', color: 'white' }}>✓</Typography>
+                        )}
+                        {testSteps.pipelineStarted === 'failed' && (
+                          <Typography sx={{ fontSize: '0.6rem', color: 'white' }}>✗</Typography>
+                        )}
+                      </Box>
+                      <Typography sx={{ 
+                        fontSize: '0.75rem', 
+                        color: testSteps.pipelineStarted === 'failed' 
+                          ? 'hsl(var(--severity-high, var(--destructive)))' 
+                          : 'hsl(var(--foreground))',
+                      }}>
+                        2. Test pipeline started
+                      </Typography>
+                    </Box>
+
+                    {/* Step 3: Workflow Triggered */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box
+                        sx={{
+                          width: 16,
+                          height: 16,
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: 
+                            testSteps.workflowTriggered === 'success' ? 'hsl(var(--severity-low))' :
+                            testSteps.workflowTriggered === 'failed' ? 'hsl(var(--severity-high, var(--destructive)))' :
+                            testSteps.workflowTriggered === 'running' ? 'hsl(var(--primary))' :
+                            'hsl(var(--muted))',
+                        }}
+                      >
+                        {testSteps.workflowTriggered === 'running' && (
+                          <CircularProgress size={10} sx={{ color: 'white' }} />
+                        )}
+                        {testSteps.workflowTriggered === 'success' && (
+                          <Typography sx={{ fontSize: '0.6rem', color: 'white' }}>✓</Typography>
+                        )}
+                        {testSteps.workflowTriggered === 'failed' && (
+                          <Typography sx={{ fontSize: '0.6rem', color: 'white' }}>✗</Typography>
+                        )}
+                      </Box>
+                      <Typography sx={{ 
+                        fontSize: '0.75rem', 
+                        color: testSteps.workflowTriggered === 'failed' 
+                          ? 'hsl(var(--severity-high, var(--destructive)))' 
+                          : 'hsl(var(--foreground))',
+                      }}>
+                        3. Workflow triggered
+                      </Typography>
+                    </Box>
                   </Box>
                 )}
 
