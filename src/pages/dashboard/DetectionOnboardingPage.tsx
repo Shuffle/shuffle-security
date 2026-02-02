@@ -138,8 +138,9 @@ const DetectionOnboardingPage = () => {
           if (lastSensorId && activeEnvs.some(e => e.id === lastSensorId)) {
             setSelectedEnvId(lastSensorId);
           } else if (activeEnvs.length > 0) {
-            // Default to first non-archived environment
-            setSelectedEnvId(activeEnvs[0].id);
+            // Default to first non-cloud environment, or cloud if that's all there is
+            const nonCloudEnv = activeEnvs.find(e => e.Type !== 'cloud');
+            setSelectedEnvId(nonCloudEnv ? nonCloudEnv.id : activeEnvs[0].id);
           }
         }
       }
