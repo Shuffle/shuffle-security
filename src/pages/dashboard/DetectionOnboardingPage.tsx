@@ -141,9 +141,20 @@ const DetectionOnboardingPage = () => {
           if (lastSensorId && activeEnvs.some(e => e.id === lastSensorId)) {
             setSelectedEnvId(lastSensorId);
           } else if (activeEnvs.length > 0) {
-            // Default to first non-cloud environment, or cloud if that's all there is
+            // Priority: Detection Ready sensor > Running sensor > non-cloud > any
+            const detectionReadyEnv = activeEnvs.find(e => e.data_lake?.enabled === true && e.Type !== 'cloud');
+            const runningEnv = activeEnvs.find(e => {
+              const now = Math.floor(Date.now() / 1000);
+              return e.Type !== 'cloud' && e.checkin > 0 && (now - e.checkin) < 300;
+            });
             const nonCloudEnv = activeEnvs.find(e => e.Type !== 'cloud');
-            setSelectedEnvId(nonCloudEnv ? nonCloudEnv.id : activeEnvs[0].id);
+            
+            setSelectedEnvId(
+              detectionReadyEnv?.id || 
+              runningEnv?.id || 
+              nonCloudEnv?.id || 
+              activeEnvs[0].id
+            );
           }
         }
       }
@@ -448,7 +459,8 @@ const DetectionOnboardingPage = () => {
               <Typography sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
                 Install a Sensor
               </Typography>
-              {selectedEnvironment && (() => {
+              {/* Only show status chips when step is collapsed */}
+              {expandedStep !== 1 && selectedEnvironment && (() => {
                 const running = isSensorRunning(selectedEnvironment);
                 const pipelineReady = isPipelineReady(selectedEnvironment);
                 const pipelineCount = getPipelineCount(selectedEnvironment);
