@@ -1527,29 +1527,24 @@ const DetectionOnboardingPage = () => {
                     />
                   )}
                   
-                  <Button
-                    onClick={() => {
-                      setIsCreatingNew(!isCreatingNew);
-                      if (!isCreatingNew) {
-                        setNewEnvName('');
-                      }
-                    }}
-                    variant="outlined"
-                    size="small"
-                    startIcon={isCreatingNew ? undefined : <AddIcon />}
-                    sx={{
-                      borderColor: 'hsl(var(--border))',
-                      color: 'hsl(var(--foreground))',
-                      textTransform: 'none',
-                      height: 40,
-                      '&:hover': {
-                        borderColor: 'hsl(var(--primary))',
-                        backgroundColor: 'hsl(var(--primary) / 0.1)',
-                      },
-                    }}
-                  >
-                    {isCreatingNew ? 'Choose Existing' : 'Create New'}
-                  </Button>
+                  <Tooltip title="Coming soon">
+                    <span>
+                      <Button
+                        disabled
+                        variant="outlined"
+                        size="small"
+                        startIcon={<AddIcon />}
+                        sx={{
+                          borderColor: 'hsl(var(--border))',
+                          color: 'hsl(var(--muted-foreground))',
+                          textTransform: 'none',
+                          height: 40,
+                        }}
+                      >
+                        Create New
+                      </Button>
+                    </span>
+                  </Tooltip>
                 </Box>
 
                 {selectedEnvironment && !isCreatingNew && (
