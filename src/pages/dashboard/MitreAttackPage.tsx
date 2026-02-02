@@ -427,6 +427,7 @@ const MitreAttackPage = () => {
                     <Card
                       key={technique.id}
                       ref={(el) => { techniqueRefs.current[technique.externalId] = el; }}
+                      onClick={() => navigateToTechnique(technique.externalId, selectedTacticShortName)}
                       sx={{
                         backgroundColor: isHighlighted 
                           ? 'hsl(var(--primary) / 0.1)' 
@@ -435,8 +436,12 @@ const MitreAttackPage = () => {
                           ? '2px solid hsl(var(--primary))' 
                           : '1px solid hsl(var(--border))',
                         transition: 'border-color 0.2s, background-color 0.3s',
+                        cursor: 'pointer',
                         '&:hover': {
                           borderColor: 'hsl(var(--primary))',
+                          backgroundColor: isHighlighted 
+                            ? 'hsl(var(--primary) / 0.15)' 
+                            : 'hsl(var(--muted) / 0.8)',
                         },
                       }}
                     >
