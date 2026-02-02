@@ -127,27 +127,28 @@ const DetectionOnboardingPage = () => {
         const activeEnvs = data.filter(env => !env.archived);
         setEnvironments(activeEnvs);
 
-        // On initial load, restore last selected sensor
-        if (isInitialLoad) {
+        // On initial load, select the best available sensor
+        if (isInitialLoad && activeEnvs.length > 0) {
+          const now = Math.floor(Date.now() / 1000);
           const lastSensorId = localStorage.getItem(LAST_SENSOR_KEY);
-          if (lastSensorId && activeEnvs.some(e => e.id === lastSensorId)) {
-            setSelectedEnvId(lastSensorId);
-          } else if (activeEnvs.length > 0) {
-            // Priority: Detection Ready sensor > Running sensor > non-cloud > any
-            const detectionReadyEnv = activeEnvs.find(e => e.data_lake?.enabled === true && e.Type !== 'cloud');
-            const runningEnv = activeEnvs.find(e => {
-              const now = Math.floor(Date.now() / 1000);
-              return e.Type !== 'cloud' && e.checkin > 0 && (now - e.checkin) < 300;
-            });
-            const nonCloudEnv = activeEnvs.find(e => e.Type !== 'cloud');
-            
-            setSelectedEnvId(
-              detectionReadyEnv?.id || 
-              runningEnv?.id || 
-              nonCloudEnv?.id || 
-              activeEnvs[0].id
-            );
-          }
+          
+          // Helper to check if a sensor is running
+          const isRunning = (env: Environment) => 
+            env.Type !== 'cloud' && env.checkin > 0 && (now - env.checkin) < 300;
+          
+          // Priority: Detection Ready > Running > Last used (if valid) > non-cloud > any
+          const detectionReadyEnv = activeEnvs.find(e => e.data_lake?.enabled === true && e.Type !== 'cloud' && isRunning(e));
+          const runningEnv = activeEnvs.find(e => isRunning(e));
+          const lastUsedEnv = lastSensorId ? activeEnvs.find(e => e.id === lastSensorId && e.Type !== 'cloud') : null;
+          const nonCloudEnv = activeEnvs.find(e => e.Type !== 'cloud');
+          
+          setSelectedEnvId(
+            detectionReadyEnv?.id || 
+            runningEnv?.id || 
+            lastUsedEnv?.id ||
+            nonCloudEnv?.id || 
+            activeEnvs[0].id
+          );
         }
       }
     } catch (error) {
