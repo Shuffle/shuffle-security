@@ -558,12 +558,13 @@ const DetectionOnboardingPage = () => {
                       >
                         {environments.map((env) => {
                           const running = isSensorRunning(env);
-                          const valid = isSensorValid(env);
+                          const pipelineReady = isPipelineReady(env);
                           const pipelineCount = getPipelineCount(env);
                           
                           return (
                             <MenuItem key={env.id} value={env.id}>
                               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, width: '100%' }}>
+                                {/* Running status dot */}
                                 <Box
                                   sx={{
                                     width: 8,
@@ -571,23 +572,25 @@ const DetectionOnboardingPage = () => {
                                     borderRadius: '50%',
                                     backgroundColor: running 
                                       ? 'hsl(var(--severity-low))' 
-                                      : 'hsl(var(--severity-high))',
+                                      : 'hsl(var(--severity-medium))',
                                     flexShrink: 0,
                                   }}
+                                  title={running ? 'Running' : 'Not Running'}
+                                />
+                                {/* Detection Ready status dot */}
+                                <Box
+                                  sx={{
+                                    width: 8,
+                                    height: 8,
+                                    borderRadius: '50%',
+                                    backgroundColor: pipelineReady 
+                                      ? 'hsl(var(--severity-info))' 
+                                      : 'hsl(var(--muted-foreground) / 0.3)',
+                                    flexShrink: 0,
+                                  }}
+                                  title={pipelineReady ? 'Detection Ready' : 'Detection Not Ready'}
                                 />
                                 <span style={{ flex: 1 }}>{env.Name}</span>
-                                {!valid && (
-                                  <Chip
-                                    size="small"
-                                    label="Cloud"
-                                    sx={{
-                                      height: 18,
-                                      fontSize: '0.65rem',
-                                      backgroundColor: 'hsl(var(--muted))',
-                                      color: 'hsl(var(--muted-foreground))',
-                                    }}
-                                  />
-                                )}
                                 {pipelineCount > 0 && (
                                   <Typography 
                                     component="span" 
@@ -690,44 +693,57 @@ const DetectionOnboardingPage = () => {
                       </Alert>
                     )}
                     
-                    <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                    <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
                       {/* Running status */}
-                      <Chip
-                        size="small"
-                        label={isSensorRunning(selectedEnvironment) ? 'Running' : 'Not Running'}
-                        sx={{
-                          backgroundColor: isSensorRunning(selectedEnvironment)
-                            ? 'hsl(var(--severity-low) / 0.15)'
-                            : 'hsl(var(--severity-high) / 0.15)',
-                          color: isSensorRunning(selectedEnvironment)
-                            ? 'hsl(var(--severity-low))'
-                            : 'hsl(var(--severity-high))',
-                        }}
-                      />
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box
+                          sx={{
+                            width: 10,
+                            height: 10,
+                            borderRadius: '50%',
+                            backgroundColor: isSensorRunning(selectedEnvironment)
+                              ? 'hsl(var(--severity-low))'
+                              : 'hsl(var(--severity-medium))',
+                          }}
+                        />
+                        <Typography sx={{ fontSize: '0.875rem', color: 'hsl(var(--muted-foreground))' }}>
+                          {isSensorRunning(selectedEnvironment) ? 'Running' : 'Not Running'}
+                        </Typography>
+                      </Box>
+                      
+                      {/* Detection Ready status */}
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box
+                          sx={{
+                            width: 10,
+                            height: 10,
+                            borderRadius: '50%',
+                            backgroundColor: isPipelineReady(selectedEnvironment)
+                              ? 'hsl(var(--severity-info))'
+                              : 'hsl(var(--muted-foreground) / 0.3)',
+                          }}
+                        />
+                        <Typography sx={{ fontSize: '0.875rem', color: 'hsl(var(--muted-foreground))' }}>
+                          {isPipelineReady(selectedEnvironment) ? 'Detection Ready' : 'Detection Not Ready'}
+                        </Typography>
+                      </Box>
                       
                       {/* Pipelines count */}
-                      <Chip
-                        size="small"
-                        label={`${getPipelineCount(selectedEnvironment)} Pipeline${getPipelineCount(selectedEnvironment) !== 1 ? 's' : ''}`}
-                        sx={{
-                          backgroundColor: getPipelineCount(selectedEnvironment) > 0
-                            ? 'hsl(var(--primary) / 0.15)'
-                            : 'hsl(var(--muted))',
-                          color: getPipelineCount(selectedEnvironment) > 0
-                            ? 'hsl(var(--primary))'
-                            : 'hsl(var(--muted-foreground))',
-                        }}
-                      />
-                      
-                      {/* Type */}
-                      <Chip
-                        size="small"
-                        label={`Type: ${selectedEnvironment.run_type || selectedEnvironment.Type}`}
-                        sx={{
-                          backgroundColor: 'hsl(var(--muted))',
-                          color: 'hsl(var(--muted-foreground))',
-                        }}
-                      />
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box
+                          sx={{
+                            width: 10,
+                            height: 10,
+                            borderRadius: '50%',
+                            backgroundColor: getPipelineCount(selectedEnvironment) > 0
+                              ? 'hsl(var(--primary))'
+                              : 'hsl(var(--muted-foreground) / 0.3)',
+                          }}
+                        />
+                        <Typography sx={{ fontSize: '0.875rem', color: 'hsl(var(--muted-foreground))' }}>
+                          {getPipelineCount(selectedEnvironment)} Pipeline{getPipelineCount(selectedEnvironment) !== 1 ? 's' : ''}
+                        </Typography>
+                      </Box>
                     </Box>
                   </Box>
                 )}
