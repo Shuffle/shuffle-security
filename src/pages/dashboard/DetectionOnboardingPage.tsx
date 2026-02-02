@@ -449,23 +449,60 @@ const DetectionOnboardingPage = () => {
                 Install a Sensor
               </Typography>
               {selectedEnvironment && (() => {
-                const status = getSensorStatus(selectedEnvironment);
-                const colorMap = {
-                  low: 'hsl(var(--severity-low))',
-                  medium: 'hsl(var(--severity-medium))',
-                  info: 'hsl(var(--severity-info))',
-                };
+                const running = isSensorRunning(selectedEnvironment);
+                const pipelineReady = isPipelineReady(selectedEnvironment);
+                const pipelineCount = getPipelineCount(selectedEnvironment);
+                
                 return (
-                  <Chip
-                    size="small"
-                    label={status.label}
-                    sx={{
-                      backgroundColor: `${colorMap[status.color].replace(')', ' / 0.15)')}`,
-                      color: colorMap[status.color],
-                      fontWeight: 500,
-                      fontSize: '0.75rem',
-                    }}
-                  />
+                  <>
+                    {/* Running status */}
+                    <Chip
+                      size="small"
+                      label={running ? 'Running' : 'Not Running'}
+                      sx={{
+                        backgroundColor: running
+                          ? 'hsl(var(--severity-low) / 0.15)'
+                          : 'hsl(var(--severity-medium) / 0.15)',
+                        color: running
+                          ? 'hsl(var(--severity-low))'
+                          : 'hsl(var(--severity-medium))',
+                        fontWeight: 500,
+                        fontSize: '0.75rem',
+                      }}
+                    />
+                    
+                    {/* Detection Ready status - only show if running */}
+                    {running && (
+                      <Chip
+                        size="small"
+                        label={pipelineReady ? 'Detection Ready' : 'Detection Not Ready'}
+                        sx={{
+                          backgroundColor: pipelineReady
+                            ? 'hsl(var(--severity-info) / 0.15)'
+                            : 'hsl(var(--severity-medium) / 0.15)',
+                          color: pipelineReady
+                            ? 'hsl(var(--severity-info))'
+                            : 'hsl(var(--severity-medium))',
+                          fontWeight: 500,
+                          fontSize: '0.75rem',
+                        }}
+                      />
+                    )}
+                    
+                    {/* Pipeline count - only show if has pipelines */}
+                    {pipelineCount > 0 && (
+                      <Chip
+                        size="small"
+                        label={`${pipelineCount} Pipeline${pipelineCount !== 1 ? 's' : ''}`}
+                        sx={{
+                          backgroundColor: 'hsl(var(--primary) / 0.15)',
+                          color: 'hsl(var(--primary))',
+                          fontWeight: 500,
+                          fontSize: '0.75rem',
+                        }}
+                      />
+                    )}
+                  </>
                 );
               })()}
             </Box>
