@@ -1096,9 +1096,11 @@ const DetectionOnboardingPage = () => {
               });
               
               if (testPipeline) {
-                // Check if pipeline has failed state
+                // Check pipeline state and start_time
                 const pipelineState = typeof testPipeline === 'object' ? (testPipeline.state || '').toLowerCase() : '';
+                const startTime = typeof testPipeline === 'object' ? testPipeline.start_time : null;
                 const isPipelineFailed = pipelineState === 'failed' || pipelineState === 'error' || pipelineState === 'stopped';
+                const isPipelineRunning = startTime && !isPipelineFailed;
                 
                 if (isPipelineFailed) {
                   setTestSteps(prev => ({ 
@@ -1112,7 +1114,7 @@ const DetectionOnboardingPage = () => {
                     message: `✗ Pipeline failed to start. State: ${pipelineState}. Please try again or contact support.`,
                   });
                   return; // Stop polling
-                } else {
+                } else if (isPipelineRunning) {
                   pipelineStartConfirmed = true;
                   setTestSteps(prev => ({ 
                     ...prev, 
@@ -1120,6 +1122,7 @@ const DetectionOnboardingPage = () => {
                     workflowTriggered: 'running',
                   }));
                 }
+                // If no start_time and not failed, keep polling (pipeline exists but not started yet)
               }
             }
           } catch (envError) {
