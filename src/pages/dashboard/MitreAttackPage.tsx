@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -22,6 +23,7 @@ import { useMitreAttack } from '@/hooks/useMitreAttack';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const MitreAttackPage = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const {
     tactics,
     techniques,
@@ -37,11 +39,84 @@ const MitreAttackPage = () => {
   const [selectedTacticShortName, setSelectedTacticShortName] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedTechniques, setExpandedTechniques] = useState<Set<string>>(new Set());
+  const [highlightedTechnique, setHighlightedTechnique] = useState<string | null>(null);
+  const techniqueRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+  const initializedFromUrl = useRef(false);
 
-  // Set initial tactic when data loads
-  if (tactics.length > 0 && !selectedTacticShortName) {
-    setSelectedTacticShortName(tactics[0].shortName);
-  }
+  // Initialize from URL params when data loads
+  useEffect(() => {
+    if (tactics.length === 0 || initializedFromUrl.current) return;
+    
+    const tacticParam = searchParams.get('tactic');
+    const techniqueParam = searchParams.get('technique');
+    
+    if (tacticParam) {
+      // Find tactic by shortName or externalId
+      const tactic = tactics.find(
+        t => t.shortName === tacticParam || t.externalId === tacticParam
+      );
+      if (tactic) {
+        setSelectedTacticShortName(tactic.shortName);
+        initializedFromUrl.current = true;
+        
+        // If technique param exists, expand and scroll to it
+        if (techniqueParam) {
+          // Normalize technique ID (e.g., T1059.001 -> T1059)
+          const parentId = techniqueParam.includes('.') 
+            ? techniqueParam.split('.')[0] 
+            : techniqueParam;
+          
+          setExpandedTechniques(new Set([parentId]));
+          setHighlightedTechnique(techniqueParam);
+          
+          // Scroll after render
+          setTimeout(() => {
+            const ref = techniqueRefs.current[techniqueParam] || techniqueRefs.current[parentId];
+            ref?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, 100);
+        }
+        return;
+      }
+    }
+    
+    // Default to first tactic if no valid URL param
+    if (!selectedTacticShortName && tactics.length > 0) {
+      setSelectedTacticShortName(tactics[0].shortName);
+      initializedFromUrl.current = true;
+    }
+  }, [tactics, searchParams, selectedTacticShortName]);
+
+  // Update URL when tactic changes (after initial load)
+  const handleTacticChange = (newTacticShortName: string) => {
+    setSelectedTacticShortName(newTacticShortName);
+    setHighlightedTechnique(null);
+    
+    const tactic = tactics.find(t => t.shortName === newTacticShortName);
+    if (tactic) {
+      setSearchParams({ tactic: tactic.externalId }, { replace: true });
+    }
+  };
+
+  // Navigate to technique with URL update
+  const navigateToTechnique = (techniqueId: string, tacticShortName?: string) => {
+    if (tacticShortName && tacticShortName !== selectedTacticShortName) {
+      setSelectedTacticShortName(tacticShortName);
+    }
+    
+    const parentId = techniqueId.includes('.') ? techniqueId.split('.')[0] : techniqueId;
+    setExpandedTechniques(prev => new Set([...prev, parentId]));
+    setHighlightedTechnique(techniqueId);
+    
+    const tactic = tactics.find(t => t.shortName === (tacticShortName || selectedTacticShortName));
+    if (tactic) {
+      setSearchParams({ tactic: tactic.externalId, technique: techniqueId }, { replace: true });
+    }
+    
+    setTimeout(() => {
+      const ref = techniqueRefs.current[techniqueId] || techniqueRefs.current[parentId];
+      ref?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+  };
 
   const selectedTactic = tactics.find((t) => t.shortName === selectedTacticShortName);
   const tacticTechniques = selectedTacticShortName
@@ -281,7 +356,7 @@ const MitreAttackPage = () => {
           <Box sx={{ borderBottom: '1px solid hsl(var(--border))' }}>
             <Tabs
               value={selectedTacticShortName}
-              onChange={(_, value) => setSelectedTacticShortName(value)}
+              onChange={(_, value) => handleTacticChange(value)}
               variant="scrollable"
               scrollButtons="auto"
               sx={{
@@ -346,14 +421,20 @@ const MitreAttackPage = () => {
                 {filteredTechniques.map((technique) => {
                   const subTechniques = getSubTechniques(technique.externalId);
                   const isExpanded = expandedTechniques.has(technique.externalId);
+                  const isHighlighted = highlightedTechnique === technique.externalId;
 
                   return (
                     <Card
                       key={technique.id}
+                      ref={(el) => { techniqueRefs.current[technique.externalId] = el; }}
                       sx={{
-                        backgroundColor: 'hsl(var(--muted))',
-                        border: '1px solid hsl(var(--border))',
-                        transition: 'border-color 0.2s',
+                        backgroundColor: isHighlighted 
+                          ? 'hsl(var(--primary) / 0.1)' 
+                          : 'hsl(var(--muted))',
+                        border: isHighlighted 
+                          ? '2px solid hsl(var(--primary))' 
+                          : '1px solid hsl(var(--border))',
+                        transition: 'border-color 0.2s, background-color 0.3s',
                         '&:hover': {
                           borderColor: 'hsl(var(--primary))',
                         },
@@ -436,40 +517,52 @@ const MitreAttackPage = () => {
                               Sub-techniques:
                             </Typography>
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                              {subTechniques.map((sub) => (
-                                <Box
-                                  key={sub.id}
-                                  sx={{
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                    cursor: 'pointer',
-                                    py: 0.5,
-                                    '&:hover': {
-                                      '& .sub-name': { textDecoration: 'underline' },
-                                    },
-                                  }}
-                                  onClick={() => window.open(sub.url, '_blank')}
-                                >
-                                  <Typography
-                                    className="sub-name"
-                                    variant="body2"
-                                    sx={{ color: 'hsl(var(--foreground))', fontSize: '0.8rem' }}
-                                  >
-                                    {sub.name}
-                                  </Typography>
-                                  <Chip
-                                    label={sub.externalId}
-                                    size="small"
+                              {subTechniques.map((sub) => {
+                                const isSubHighlighted = highlightedTechnique === sub.externalId;
+                                return (
+                                  <Box
+                                    key={sub.id}
+                                    ref={(el) => { techniqueRefs.current[sub.externalId] = el as HTMLDivElement; }}
                                     sx={{
-                                      height: 18,
-                                      fontSize: '0.65rem',
-                                      backgroundColor: 'hsl(var(--secondary))',
-                                      color: 'hsl(var(--secondary-foreground))',
+                                      display: 'flex',
+                                      justifyContent: 'space-between',
+                                      alignItems: 'center',
+                                      cursor: 'pointer',
+                                      py: 0.5,
+                                      px: 1,
+                                      borderRadius: 1,
+                                      backgroundColor: isSubHighlighted 
+                                        ? 'hsl(var(--primary) / 0.15)' 
+                                        : 'transparent',
+                                      border: isSubHighlighted 
+                                        ? '1px solid hsl(var(--primary))' 
+                                        : '1px solid transparent',
+                                      '&:hover': {
+                                        '& .sub-name': { textDecoration: 'underline' },
+                                      },
                                     }}
-                                  />
-                                </Box>
-                              ))}
+                                    onClick={() => window.open(sub.url, '_blank')}
+                                  >
+                                    <Typography
+                                      className="sub-name"
+                                      variant="body2"
+                                      sx={{ color: 'hsl(var(--foreground))', fontSize: '0.8rem' }}
+                                    >
+                                      {sub.name}
+                                    </Typography>
+                                    <Chip
+                                      label={sub.externalId}
+                                      size="small"
+                                      sx={{
+                                        height: 18,
+                                        fontSize: '0.65rem',
+                                        backgroundColor: 'hsl(var(--secondary))',
+                                        color: 'hsl(var(--secondary-foreground))',
+                                      }}
+                                    />
+                                  </Box>
+                                );
+                              })}
                             </Box>
                           </Box>
                         )}
