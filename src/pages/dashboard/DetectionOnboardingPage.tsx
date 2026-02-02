@@ -549,7 +549,27 @@ const DetectionOnboardingPage = () => {
                           '& .MuiAlert-icon': { color: 'hsl(var(--severity-medium))' },
                         }}
                       >
-                        Cloud environments cannot be used for detection. Please select or create a self-hosted sensor.
+                        <Typography sx={{ fontSize: '0.875rem', mb: 1 }}>
+                          Cloud environments cannot be used for detection. Please select or create a self-hosted sensor.
+                        </Typography>
+                        <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))' }}>
+                          Need us to host a sensor for you?{' '}
+                          <a 
+                            href="mailto:support@shuffler.io" 
+                            style={{ color: 'hsl(var(--primary))', textDecoration: 'underline' }}
+                          >
+                            Email support@shuffler.io
+                          </a>
+                          {' '}or{' '}
+                          <a 
+                            href="https://shuffler.io/contact?category=cloud_enterprise_plan" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            style={{ color: 'hsl(var(--primary))', textDecoration: 'underline' }}
+                          >
+                            contact us about enterprise hosting
+                          </a>.
+                        </Typography>
                       </Alert>
                     )}
                     
