@@ -597,8 +597,8 @@ const DetectionOnboardingPage = () => {
               </Box>
             )}
 
-            {/* Deployment Options - Hidden for cloud sensors */}
-            {(isCreatingNew || (selectedEnvironment && isSensorValid(selectedEnvironment))) && (
+            {/* Deployment Options - Hidden for cloud sensors or running sensors */}
+            {(isCreatingNew || (selectedEnvironment && isSensorValid(selectedEnvironment) && !isSensorRunning(selectedEnvironment))) && (
               <>
                 <Typography sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, fontSize: '0.9rem', mb: 2 }}>
                   2. Choose Deployment Method
