@@ -15,12 +15,39 @@ import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import SensorsIcon from '@mui/icons-material/Sensors';
 import RuleIcon from '@mui/icons-material/Rule';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import CloudIcon from '@mui/icons-material/Cloud';
 import StorageIcon from '@mui/icons-material/Storage';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { API_CONFIG, getApiUrl } from '@/config/api';
+import { DeploymentInstructions } from '@/components/detection/DeploymentInstructions';
+
+// Cloud provider icons as simple components
+const GCPIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+    <path d="M12.19 3.91L14.62 8.2l2.43-1.4-2.43-4.21a1.61 1.61 0 00-1.4-.8H10.1l-1.21 2.1h3.3z" fill="#EA4335"/>
+    <path d="M5.33 13.6l-2.43 4.2a1.6 1.6 0 00.6 2.19l2.42 1.4 2.43-4.21-3.02-3.58z" fill="#4285F4"/>
+    <path d="M21.1 13.6l-2.43-4.2-2.43 4.2 2.43 4.21 2.43-1.4a1.6 1.6 0 00.6-2.19l-.6-1.02-.6.4z" fill="#34A853"/>
+    <path d="M12 8.69L9.57 4.49H5.93l-2.42 4.2L6.52 13l2.43-4.31H12z" fill="#FBBC05"/>
+    <path d="M12 15.31l2.43 4.2h3.64l2.43-4.2-3.02-3.58-2.43 4.18H12z" fill="#EA4335"/>
+    <path d="M8.35 17.18L5.93 13l-2.42 4.21 2.43 4.2h3.64l1.21-2.1-2.44-2.13z" fill="#4285F4"/>
+  </svg>
+);
+
+const AWSIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+    <path d="M6.76 11.63c0 .26.03.47.08.62.06.15.13.31.23.49.04.06.05.12.05.17 0 .07-.04.15-.13.22l-.44.29c-.06.04-.12.06-.17.06-.07 0-.13-.03-.2-.1a2.06 2.06 0 01-.24-.31 5.2 5.2 0 01-.2-.39c-.52.61-1.17.92-1.95.92-.56 0-1-.16-1.33-.47-.33-.32-.49-.74-.49-1.27 0-.56.2-1.01.6-1.36.4-.35.93-.52 1.6-.52.22 0 .45.02.69.05.24.04.49.09.75.16v-.48c0-.5-.1-.86-.32-1.06-.21-.21-.58-.31-1.1-.31-.24 0-.48.03-.73.09-.25.06-.5.14-.74.24-.11.05-.19.07-.24.09a.43.43 0 01-.12.02c-.1 0-.16-.08-.16-.23v-.34c0-.12.01-.21.05-.27a.53.53 0 01.19-.14c.24-.12.53-.23.86-.31.33-.09.68-.13 1.05-.13.8 0 1.39.18 1.76.54.37.36.55.91.55 1.65v2.18zm-2.7.99c.22 0 .44-.04.68-.12.24-.08.45-.23.64-.44.11-.13.2-.27.25-.44.05-.16.08-.36.08-.59v-.29a5.5 5.5 0 00-.6-.12 4.92 4.92 0 00-.61-.04c-.44 0-.76.08-.97.25-.21.17-.31.41-.31.72 0 .29.08.51.23.65.15.15.37.22.61.22zm5.34.68c-.13 0-.22-.02-.28-.07-.06-.04-.11-.14-.16-.28l-1.77-5.81a1.31 1.31 0 01-.07-.3c0-.11.06-.18.18-.18h.56c.14 0 .23.02.29.07.06.05.11.14.15.28l1.27 4.99 1.18-4.99c.04-.15.08-.24.15-.28a.55.55 0 01.29-.07h.46c.14 0 .23.02.29.07.06.05.12.14.15.28l1.19 5.06 1.31-5.06c.04-.15.1-.24.15-.28a.5.5 0 01.29-.07h.53c.12 0 .18.06.18.18 0 .04-.01.07-.02.12-.01.04-.03.1-.06.18l-1.82 5.81c-.04.15-.1.24-.16.28-.06.05-.15.07-.28.07h-.49c-.14 0-.23-.02-.29-.08-.06-.05-.11-.14-.15-.29l-1.17-4.86-1.16 4.85c-.04.15-.09.24-.15.29-.06.05-.16.08-.29.08h-.49z" fill="#FF9900"/>
+  </svg>
+);
+
+const AzureIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+    <path d="M13.05 4.24l-4.79 13.37 7.79-.01-2.65-4.59 6.53-1.91-6.88-6.86z" fill="#0089D6"/>
+    <path d="M7.26 4.24L2 17.61h4.47l2.06-5.74 3.52 5.74h5.5L7.26 4.24z" fill="#0089D6"/>
+  </svg>
+);
+
+type DeploymentProvider = 'self-hosted' | 'gcp' | 'aws' | 'azure';
 
 interface StepStatus {
   loading: boolean;
@@ -46,6 +73,14 @@ const DetectionOnboardingPage = () => {
     success: false,
   });
   const [expandedStep, setExpandedStep] = useState<number | null>(1);
+  const [deploymentDialog, setDeploymentDialog] = useState<{
+    open: boolean;
+    provider: DeploymentProvider;
+  }>({ open: false, provider: 'self-hosted' });
+
+  const openDeploymentDialog = (provider: DeploymentProvider) => {
+    setDeploymentDialog({ open: true, provider });
+  };
 
   // Check if sensors/pipelines are installed
   const checkSensors = async () => {
@@ -269,11 +304,11 @@ const DetectionOnboardingPage = () => {
               Choose how you want to deploy your detection sensor:
             </Typography>
 
-            <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2, mb: 3 }}>
               {/* Self-hosted option */}
               <Paper
+                onClick={() => openDeploymentDialog('self-hosted')}
                 sx={{
-                  flex: 1,
                   p: 2.5,
                   backgroundColor: 'hsl(var(--muted) / 0.3)',
                   border: '1px solid hsl(var(--border))',
@@ -286,82 +321,96 @@ const DetectionOnboardingPage = () => {
                   },
                 }}
               >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
                   <StorageIcon sx={{ color: 'hsl(var(--primary))' }} />
                   <Typography sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
                     Self-Hosted
                   </Typography>
                 </Box>
-                <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.8rem', mb: 2 }}>
-                  Deploy on your own infrastructure for full control
+                <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.8rem' }}>
+                  Deploy on your own infrastructure
                 </Typography>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  sx={{
-                    borderColor: 'hsl(var(--border))',
-                    color: 'hsl(var(--foreground))',
-                    textTransform: 'none',
-                    '&:hover': {
-                      borderColor: 'hsl(var(--primary))',
-                      backgroundColor: 'hsl(var(--primary) / 0.1)',
-                    },
-                  }}
-                >
-                  View Instructions
-                </Button>
               </Paper>
 
-              {/* Cloud option */}
+              {/* Google Cloud option */}
               <Paper
+                onClick={() => openDeploymentDialog('gcp')}
                 sx={{
-                  flex: 1,
                   p: 2.5,
-                  backgroundColor: 'hsl(var(--primary) / 0.08)',
-                  border: '1px solid hsl(var(--primary) / 0.3)',
+                  backgroundColor: 'hsl(var(--muted) / 0.3)',
+                  border: '1px solid hsl(var(--border))',
                   borderRadius: 1.5,
                   cursor: 'pointer',
                   transition: 'all 0.2s',
                   '&:hover': {
                     borderColor: 'hsl(var(--primary))',
-                    backgroundColor: 'hsl(var(--primary) / 0.12)',
+                    backgroundColor: 'hsl(var(--muted) / 0.5)',
                   },
                 }}
               >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
-                  <CloudIcon sx={{ color: 'hsl(var(--primary))' }} />
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+                  <GCPIcon />
                   <Typography sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-                    Cloud Deploy
+                    Google Cloud
                   </Typography>
-                  <Chip
-                    size="small"
-                    label="Recommended"
-                    sx={{
-                      backgroundColor: 'hsl(var(--primary))',
-                      color: 'hsl(var(--primary-foreground))',
-                      fontWeight: 500,
-                      fontSize: '0.7rem',
-                      height: 20,
-                    }}
-                  />
                 </Box>
-                <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.8rem', mb: 2 }}>
-                  One-click deployment with managed infrastructure
+                <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.8rem' }}>
+                  Deploy on GCP Compute Engine
                 </Typography>
-                <Button
-                  variant="contained"
-                  size="small"
-                  sx={{
-                    backgroundColor: 'hsl(var(--primary))',
-                    color: 'hsl(var(--primary-foreground))',
-                    textTransform: 'none',
-                    '&:hover': {
-                      backgroundColor: 'hsl(var(--primary) / 0.9)',
-                    },
-                  }}
-                >
-                  Deploy Now
-                </Button>
+              </Paper>
+
+              {/* AWS option */}
+              <Paper
+                onClick={() => openDeploymentDialog('aws')}
+                sx={{
+                  p: 2.5,
+                  backgroundColor: 'hsl(var(--muted) / 0.3)',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: 1.5,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    borderColor: 'hsl(var(--primary))',
+                    backgroundColor: 'hsl(var(--muted) / 0.5)',
+                  },
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+                  <AWSIcon />
+                  <Typography sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+                    Amazon Web Services
+                  </Typography>
+                </Box>
+                <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.8rem' }}>
+                  Deploy on AWS EC2
+                </Typography>
+              </Paper>
+
+              {/* Azure option */}
+              <Paper
+                onClick={() => openDeploymentDialog('azure')}
+                sx={{
+                  p: 2.5,
+                  backgroundColor: 'hsl(var(--muted) / 0.3)',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: 1.5,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    borderColor: 'hsl(var(--primary))',
+                    backgroundColor: 'hsl(var(--muted) / 0.5)',
+                  },
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+                  <AzureIcon />
+                  <Typography sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+                    Microsoft Azure
+                  </Typography>
+                </Box>
+                <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.8rem' }}>
+                  Deploy on Azure Virtual Machines
+                </Typography>
               </Paper>
             </Box>
 
@@ -675,10 +724,17 @@ const DetectionOnboardingPage = () => {
             size="small"
             sx={{ color: 'hsl(var(--primary))', textTransform: 'none' }}
           >
-            MITRE ATT&CK →
+          MITRE ATT&CK →
           </Button>
         </Box>
       </Box>
+
+      {/* Deployment Instructions Dialog */}
+      <DeploymentInstructions
+        open={deploymentDialog.open}
+        onClose={() => setDeploymentDialog({ ...deploymentDialog, open: false })}
+        initialProvider={deploymentDialog.provider}
+      />
     </Box>
   );
 };
