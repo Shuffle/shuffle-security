@@ -1044,6 +1044,7 @@ const DetectionOnboardingPage = () => {
         initialProvider={deploymentDialog.provider}
         environmentName={currentEnvName}
         environmentId={isCreatingNew ? '' : selectedEnvId}
+        environmentAuth={isCreatingNew ? '' : (selectedEnvironment?.auth || '')}
       />
     </Box>
   );

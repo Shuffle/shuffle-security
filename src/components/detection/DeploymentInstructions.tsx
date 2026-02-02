@@ -29,6 +29,7 @@ interface DeploymentInstructionsProps {
   initialProvider?: Provider;
   environmentName?: string;
   environmentId?: string;
+  environmentAuth?: string;
 }
 
 interface TabPanelProps {
@@ -49,6 +50,7 @@ export const DeploymentInstructions = ({
   initialProvider = 'self-hosted',
   environmentName = '',
   environmentId = '',
+  environmentAuth = '',
 }: DeploymentInstructionsProps) => {
   const { userInfo } = useAuth();
   const [activeTab, setActiveTab] = useState(
@@ -58,8 +60,9 @@ export const DeploymentInstructions = ({
   );
   const [copied, setCopied] = useState(false);
 
-  // Get user's credentials for the command
-  const authKey = API_CONFIG.apiKey || '';
+  // Get credentials for the command
+  // AUTH comes from the environment's auth field, ORG from the user's active org
+  const authKey = environmentAuth || '';
   const orgId = userInfo?.active_org?.id || '';
   const baseUrl = API_CONFIG.baseUrl || 'https://shuffler.io';
   const envName = environmentName || 'Production';
