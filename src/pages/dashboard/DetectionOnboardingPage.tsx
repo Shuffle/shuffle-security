@@ -1089,19 +1089,37 @@ const DetectionOnboardingPage = () => {
               const currentPipelines = currentEnv?.data_lake?.pipelines || [];
               const pipelineList = Array.isArray(currentPipelines) ? currentPipelines : [];
               
-              // Check if our test pipeline exists
-              const testPipelineExists = pipelineList.some((p: any) => {
+              // Check if our test pipeline exists and its status
+              const testPipeline = pipelineList.find((p: any) => {
                 const pipelineStr = typeof p === 'string' ? p : (p?.command || p?.name || JSON.stringify(p));
                 return pipelineStr.includes('notepad.exe') && pipelineStr.includes('parse_syslog');
               });
               
-              if (testPipelineExists) {
-                pipelineStartConfirmed = true;
-                setTestSteps(prev => ({ 
-                  ...prev, 
-                  pipelineStarted: 'success',
-                  workflowTriggered: 'running',
-                }));
+              if (testPipeline) {
+                // Check if pipeline has failed status
+                const pipelineStatus = typeof testPipeline === 'object' ? (testPipeline.status || '').toLowerCase() : '';
+                const isPipelineFailed = pipelineStatus === 'failed' || pipelineStatus === 'error' || pipelineStatus === 'stopped';
+                
+                if (isPipelineFailed) {
+                  setTestSteps(prev => ({ 
+                    ...prev, 
+                    pipelineStarted: 'failed',
+                  }));
+                  setTestStatus({
+                    loading: false,
+                    checked: true,
+                    success: false,
+                    message: `✗ Pipeline failed to start. Status: ${pipelineStatus}. Please try again or contact support.`,
+                  });
+                  return; // Stop polling
+                } else {
+                  pipelineStartConfirmed = true;
+                  setTestSteps(prev => ({ 
+                    ...prev, 
+                    pipelineStarted: 'success',
+                    workflowTriggered: 'running',
+                  }));
+                }
               }
             }
           } catch (envError) {
