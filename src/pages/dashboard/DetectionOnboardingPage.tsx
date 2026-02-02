@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, forwardRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Box,
@@ -28,9 +28,9 @@ import AddIcon from '@mui/icons-material/Add';
 import { API_CONFIG, getApiUrl } from '@/config/api';
 import { DeploymentInstructions } from '@/components/detection/DeploymentInstructions';
 
-// Cloud provider icons as simple components
-const GCPIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+// Cloud provider icons with forwardRef for MUI compatibility
+const GCPIcon = forwardRef<SVGSVGElement>((props, ref) => (
+  <svg ref={ref} width="20" height="20" viewBox="0 0 24 24" fill="none" {...props}>
     <path d="M12.19 3.91L14.62 8.2l2.43-1.4-2.43-4.21a1.61 1.61 0 00-1.4-.8H10.1l-1.21 2.1h3.3z" fill="#EA4335"/>
     <path d="M5.33 13.6l-2.43 4.2a1.6 1.6 0 00.6 2.19l2.42 1.4 2.43-4.21-3.02-3.58z" fill="#4285F4"/>
     <path d="M21.1 13.6l-2.43-4.2-2.43 4.2 2.43 4.21 2.43-1.4a1.6 1.6 0 00.6-2.19l-.6-1.02-.6.4z" fill="#34A853"/>
@@ -38,20 +38,23 @@ const GCPIcon = () => (
     <path d="M12 15.31l2.43 4.2h3.64l2.43-4.2-3.02-3.58-2.43 4.18H12z" fill="#EA4335"/>
     <path d="M8.35 17.18L5.93 13l-2.42 4.21 2.43 4.2h3.64l1.21-2.1-2.44-2.13z" fill="#4285F4"/>
   </svg>
-);
+));
+GCPIcon.displayName = 'GCPIcon';
 
-const AWSIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+const AWSIcon = forwardRef<SVGSVGElement>((props, ref) => (
+  <svg ref={ref} width="20" height="20" viewBox="0 0 24 24" fill="none" {...props}>
     <path d="M6.76 11.63c0 .26.03.47.08.62.06.15.13.31.23.49.04.06.05.12.05.17 0 .07-.04.15-.13.22l-.44.29c-.06.04-.12.06-.17.06-.07 0-.13-.03-.2-.1a2.06 2.06 0 01-.24-.31 5.2 5.2 0 01-.2-.39c-.52.61-1.17.92-1.95.92-.56 0-1-.16-1.33-.47-.33-.32-.49-.74-.49-1.27 0-.56.2-1.01.6-1.36.4-.35.93-.52 1.6-.52.22 0 .45.02.69.05.24.04.49.09.75.16v-.48c0-.5-.1-.86-.32-1.06-.21-.21-.58-.31-1.1-.31-.24 0-.48.03-.73.09-.25.06-.5.14-.74.24-.11.05-.19.07-.24.09a.43.43 0 01-.12.02c-.1 0-.16-.08-.16-.23v-.34c0-.12.01-.21.05-.27a.53.53 0 01.19-.14c.24-.12.53-.23.86-.31.33-.09.68-.13 1.05-.13.8 0 1.39.18 1.76.54.37.36.55.91.55 1.65v2.18zm-2.7.99c.22 0 .44-.04.68-.12.24-.08.45-.23.64-.44.11-.13.2-.27.25-.44.05-.16.08-.36.08-.59v-.29a5.5 5.5 0 00-.6-.12 4.92 4.92 0 00-.61-.04c-.44 0-.76.08-.97.25-.21.17-.31.41-.31.72 0 .29.08.51.23.65.15.15.37.22.61.22zm5.34.68c-.13 0-.22-.02-.28-.07-.06-.04-.11-.14-.16-.28l-1.77-5.81a1.31 1.31 0 01-.07-.3c0-.11.06-.18.18-.18h.56c.14 0 .23.02.29.07.06.05.11.14.15.28l1.27 4.99 1.18-4.99c.04-.15.08-.24.15-.28a.55.55 0 01.29-.07h.46c.14 0 .23.02.29.07.06.05.12.14.15.28l1.19 5.06 1.31-5.06c.04-.15.1-.24.15-.28a.5.5 0 01.29-.07h.53c.12 0 .18.06.18.18 0 .04-.01.07-.02.12-.01.04-.03.1-.06.18l-1.82 5.81c-.04.15-.1.24-.16.28-.06.05-.15.07-.28.07h-.49c-.14 0-.23-.02-.29-.08-.06-.05-.11-.14-.15-.29l-1.17-4.86-1.16 4.85c-.04.15-.09.24-.15.29-.06.05-.16.08-.29.08h-.49z" fill="#FF9900"/>
   </svg>
-);
+));
+AWSIcon.displayName = 'AWSIcon';
 
-const AzureIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+const AzureIcon = forwardRef<SVGSVGElement>((props, ref) => (
+  <svg ref={ref} width="20" height="20" viewBox="0 0 24 24" fill="none" {...props}>
     <path d="M13.05 4.24l-4.79 13.37 7.79-.01-2.65-4.59 6.53-1.91-6.88-6.86z" fill="#0089D6"/>
     <path d="M7.26 4.24L2 17.61h4.47l2.06-5.74 3.52 5.74h5.5L7.26 4.24z" fill="#0089D6"/>
   </svg>
-);
+));
+AzureIcon.displayName = 'AzureIcon';
 
 type DeploymentProvider = 'self-hosted' | 'gcp' | 'aws' | 'azure';
 
