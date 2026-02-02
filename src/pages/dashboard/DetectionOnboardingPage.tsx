@@ -179,6 +179,31 @@ const DetectionOnboardingPage = () => {
     }
   }, [selectedEnvId]);
 
+  // Auto-expand to step 2 if selected sensor is detection-ready
+  useEffect(() => {
+    if (selectedEnvId && environments.length > 0) {
+      const env = environments.find(e => e.id === selectedEnvId);
+      if (env && isSensorRunning(env) && isPipelineReady(env)) {
+        // Sensor is running and detection-ready, mark step 1 as complete and expand step 2
+        setSensorStatus({
+          loading: false,
+          checked: true,
+          success: true,
+          message: `Detection pipeline is enabled and ready`,
+        });
+        setExpandedStep(2);
+      } else if (env && isSensorRunning(env)) {
+        // Sensor is running but not detection-ready yet
+        setSensorStatus({
+          loading: false,
+          checked: true,
+          success: false,
+          message: 'Sensor is running but detection pipeline is not yet configured',
+        });
+      }
+    }
+  }, [selectedEnvId, environments]);
+
   const selectedEnvironment = environments.find(e => e.id === selectedEnvId);
   const currentEnvName = isCreatingNew ? newEnvName : (selectedEnvironment?.Name || '');
 
