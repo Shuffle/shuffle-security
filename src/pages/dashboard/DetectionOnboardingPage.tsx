@@ -197,52 +197,42 @@ const DetectionOnboardingPage = () => {
     setDeploymentDialog({ open: true, provider });
   };
 
-  // Check if sensors/pipelines are installed
+  // Check if selected sensor is connected (uses already-fetched environment data)
   const checkSensors = async () => {
     setSensorStatus({ loading: true, checked: false, success: false });
     
-    try {
-      // TODO: Replace with actual sensor check API
-      const response = await fetch(getApiUrl('/api/v1/workflows'), {
-        headers: {
-          'Authorization': `Bearer ${API_CONFIG.apiKey}`,
-        },
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        // Check if any detection pipelines exist
-        const hasPipelines = Array.isArray(data) && data.some((w: any) => 
-          w.tags?.includes('detection') || w.usecase === 'detection'
-        );
-        
-        setSensorStatus({
-          loading: false,
-          checked: true,
-          success: hasPipelines,
-          message: hasPipelines 
-            ? 'Detection pipelines are configured' 
-            : 'No detection pipelines found',
-        });
-      } else {
-        setSensorStatus({
-          loading: false,
-          checked: true,
-          success: false,
-          message: 'Failed to check sensor status',
-        });
-      }
-    } catch (error) {
+    // Re-fetch to get latest checkin status
+    await fetchEnvironments(false);
+    
+    // Small delay to ensure state is updated
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    const currentEnv = environments.find(e => e.id === selectedEnvId);
+    
+    if (!currentEnv) {
       setSensorStatus({
         loading: false,
         checked: true,
         success: false,
-        message: 'Error checking sensors',
+        message: 'No sensor selected',
       });
+      return;
     }
     
-    // Auto-expand next step
-    if (!sensorStatus.success) {
+    const isRunning = isSensorRunning(currentEnv);
+    const pipelineCount = getPipelineCount(currentEnv);
+    
+    setSensorStatus({
+      loading: false,
+      checked: true,
+      success: isRunning,
+      message: isRunning 
+        ? `Sensor is running${pipelineCount > 0 ? ` with ${pipelineCount} pipeline${pipelineCount !== 1 ? 's' : ''}` : ''}`
+        : 'Sensor is not running. Deploy it using the options above.',
+    });
+    
+    // Auto-expand next step if successful
+    if (isRunning) {
       setExpandedStep(2);
     }
   };
