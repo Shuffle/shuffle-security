@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Box,
@@ -9,6 +9,11 @@ import {
   Chip,
   Collapse,
   Alert,
+  TextField,
+  FormControl,
+  Select,
+  MenuItem,
+  InputLabel,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
@@ -19,6 +24,7 @@ import StorageIcon from '@mui/icons-material/Storage';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import AddIcon from '@mui/icons-material/Add';
 import { API_CONFIG, getApiUrl } from '@/config/api';
 import { DeploymentInstructions } from '@/components/detection/DeploymentInstructions';
 
@@ -56,7 +62,35 @@ interface StepStatus {
   message?: string;
 }
 
+interface Environment {
+  id: string;
+  Name: string;
+  Type: string;
+  Registered: boolean;
+  default: boolean;
+  archived: boolean;
+  org_id: string;
+  created: number;
+  edited: number;
+  checkin: number;
+  auth: string;
+  queue: number;
+  run_type: string;
+  data_lake?: {
+    enabled: boolean;
+    pipelines: any;
+  };
+}
+
+const LAST_SENSOR_KEY = 'shuffle_last_sensor_id';
+
 const DetectionOnboardingPage = () => {
+  const [environments, setEnvironments] = useState<Environment[]>([]);
+  const [selectedEnvId, setSelectedEnvId] = useState<string>('');
+  const [newEnvName, setNewEnvName] = useState('');
+  const [isCreatingNew, setIsCreatingNew] = useState(false);
+  const [loadingEnvs, setLoadingEnvs] = useState(true);
+  
   const [sensorStatus, setSensorStatus] = useState<StepStatus>({
     loading: false,
     checked: false,
@@ -77,6 +111,56 @@ const DetectionOnboardingPage = () => {
     open: boolean;
     provider: DeploymentProvider;
   }>({ open: false, provider: 'self-hosted' });
+
+  // Fetch environments on mount
+  useEffect(() => {
+    const fetchEnvironments = async () => {
+      if (!API_CONFIG.apiKey) {
+        setLoadingEnvs(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(getApiUrl('/api/v1/getenvironments'), {
+          headers: {
+            'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+          },
+        });
+
+        if (response.ok) {
+          const data: Environment[] = await response.json();
+          // Filter out archived environments
+          const activeEnvs = data.filter(env => !env.archived);
+          setEnvironments(activeEnvs);
+
+          // Restore last selected sensor
+          const lastSensorId = localStorage.getItem(LAST_SENSOR_KEY);
+          if (lastSensorId && activeEnvs.some(e => e.id === lastSensorId)) {
+            setSelectedEnvId(lastSensorId);
+          } else if (activeEnvs.length > 0) {
+            // Default to first non-archived environment
+            setSelectedEnvId(activeEnvs[0].id);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch environments:', error);
+      } finally {
+        setLoadingEnvs(false);
+      }
+    };
+
+    fetchEnvironments();
+  }, []);
+
+  // Persist selected environment
+  useEffect(() => {
+    if (selectedEnvId) {
+      localStorage.setItem(LAST_SENSOR_KEY, selectedEnvId);
+    }
+  }, [selectedEnvId]);
+
+  const selectedEnvironment = environments.find(e => e.id === selectedEnvId);
+  const currentEnvName = isCreatingNew ? newEnvName : (selectedEnvironment?.Name || '');
 
   const openDeploymentDialog = (provider: DeploymentProvider) => {
     setDeploymentDialog({ open: true, provider });
@@ -300,8 +384,165 @@ const DetectionOnboardingPage = () => {
 
         <Collapse in={expandedStep === 1}>
           <Box sx={{ px: 3, pb: 3, pt: 1 }}>
-            <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.875rem', mb: 3 }}>
-              Choose how you want to deploy your detection sensor:
+            {/* Sensor Selection */}
+            <Typography sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, fontSize: '0.9rem', mb: 2 }}>
+              1. Select or Create a Sensor
+            </Typography>
+            
+            {loadingEnvs ? (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                <CircularProgress size={20} sx={{ color: 'hsl(var(--primary))' }} />
+                <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.875rem' }}>
+                  Loading sensors...
+                </Typography>
+              </Box>
+            ) : (
+              <Box sx={{ mb: 4 }}>
+                <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+                  {!isCreatingNew ? (
+                    <FormControl size="small" sx={{ minWidth: 280 }}>
+                      <InputLabel 
+                        sx={{ 
+                          color: 'hsl(var(--muted-foreground))',
+                          '&.Mui-focused': { color: 'hsl(var(--primary))' },
+                        }}
+                      >
+                        Select Sensor
+                      </InputLabel>
+                      <Select
+                        value={selectedEnvId}
+                        onChange={(e) => setSelectedEnvId(e.target.value)}
+                        label="Select Sensor"
+                        sx={{
+                          backgroundColor: 'hsl(var(--muted))',
+                          '& .MuiOutlinedInput-notchedOutline': { borderColor: 'hsl(var(--border))' },
+                          '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'hsl(var(--primary))' },
+                          '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'hsl(var(--primary))' },
+                          '& .MuiSelect-select': { color: 'hsl(var(--foreground))' },
+                        }}
+                      >
+                        {environments.map((env) => (
+                          <MenuItem key={env.id} value={env.id}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                              <Box
+                                sx={{
+                                  width: 8,
+                                  height: 8,
+                                  borderRadius: '50%',
+                                  backgroundColor: env.Registered 
+                                    ? 'hsl(var(--severity-low))' 
+                                    : 'hsl(var(--muted-foreground))',
+                                }}
+                              />
+                              <span>{env.Name}</span>
+                              <Typography 
+                                component="span" 
+                                sx={{ 
+                                  color: 'hsl(var(--muted-foreground))', 
+                                  fontSize: '0.75rem',
+                                  ml: 'auto',
+                                }}
+                              >
+                                {env.Type}
+                              </Typography>
+                            </Box>
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  ) : (
+                    <TextField
+                      value={newEnvName}
+                      onChange={(e) => setNewEnvName(e.target.value)}
+                      placeholder="Enter sensor name..."
+                      size="small"
+                      autoFocus
+                      sx={{
+                        minWidth: 280,
+                        '& .MuiOutlinedInput-root': {
+                          backgroundColor: 'hsl(var(--muted))',
+                          '& fieldset': { borderColor: 'hsl(var(--border))' },
+                          '&:hover fieldset': { borderColor: 'hsl(var(--primary))' },
+                          '&.Mui-focused fieldset': { borderColor: 'hsl(var(--primary))' },
+                        },
+                        '& .MuiInputBase-input': {
+                          color: 'hsl(var(--foreground))',
+                        },
+                      }}
+                    />
+                  )}
+                  
+                  <Button
+                    onClick={() => {
+                      setIsCreatingNew(!isCreatingNew);
+                      if (!isCreatingNew) {
+                        setNewEnvName('');
+                      }
+                    }}
+                    variant="outlined"
+                    size="small"
+                    startIcon={isCreatingNew ? undefined : <AddIcon />}
+                    sx={{
+                      borderColor: 'hsl(var(--border))',
+                      color: 'hsl(var(--foreground))',
+                      textTransform: 'none',
+                      height: 40,
+                      '&:hover': {
+                        borderColor: 'hsl(var(--primary))',
+                        backgroundColor: 'hsl(var(--primary) / 0.1)',
+                      },
+                    }}
+                  >
+                    {isCreatingNew ? 'Choose Existing' : 'Create New'}
+                  </Button>
+                </Box>
+
+                {selectedEnvironment && !isCreatingNew && (
+                  <Box sx={{ mt: 2, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                    <Chip
+                      size="small"
+                      label={selectedEnvironment.Registered ? 'Connected' : 'Not Connected'}
+                      sx={{
+                        backgroundColor: selectedEnvironment.Registered
+                          ? 'hsl(var(--severity-low) / 0.15)'
+                          : 'hsl(var(--muted))',
+                        color: selectedEnvironment.Registered
+                          ? 'hsl(var(--severity-low))'
+                          : 'hsl(var(--muted-foreground))',
+                      }}
+                    />
+                    <Chip
+                      size="small"
+                      label={`Type: ${selectedEnvironment.run_type || selectedEnvironment.Type}`}
+                      sx={{
+                        backgroundColor: 'hsl(var(--muted))',
+                        color: 'hsl(var(--muted-foreground))',
+                      }}
+                    />
+                    {selectedEnvironment.data_lake?.enabled && (
+                      <Chip
+                        size="small"
+                        label="Data Lake Enabled"
+                        sx={{
+                          backgroundColor: 'hsl(var(--primary) / 0.15)',
+                          color: 'hsl(var(--primary))',
+                        }}
+                      />
+                    )}
+                  </Box>
+                )}
+              </Box>
+            )}
+
+            {/* Deployment Options */}
+            <Typography sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, fontSize: '0.9rem', mb: 2 }}>
+              2. Choose Deployment Method
+            </Typography>
+            <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.875rem', mb: 2 }}>
+              {isCreatingNew 
+                ? `Deploy a new sensor named "${newEnvName || 'unnamed'}":`
+                : `Deploy or reconnect "${currentEnvName}":`
+              }
             </Typography>
 
             <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2, mb: 3 }}>
@@ -734,6 +975,8 @@ const DetectionOnboardingPage = () => {
         open={deploymentDialog.open}
         onClose={() => setDeploymentDialog({ ...deploymentDialog, open: false })}
         initialProvider={deploymentDialog.provider}
+        environmentName={currentEnvName}
+        environmentId={isCreatingNew ? '' : selectedEnvId}
       />
     </Box>
   );

@@ -12,6 +12,7 @@ import {
   TextField,
   Alert,
   Tooltip,
+  Chip,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -26,6 +27,8 @@ interface DeploymentInstructionsProps {
   open: boolean;
   onClose: () => void;
   initialProvider?: Provider;
+  environmentName?: string;
+  environmentId?: string;
 }
 
 interface TabPanelProps {
@@ -44,6 +47,8 @@ export const DeploymentInstructions = ({
   open,
   onClose,
   initialProvider = 'self-hosted',
+  environmentName = '',
+  environmentId = '',
 }: DeploymentInstructionsProps) => {
   const { userInfo } = useAuth();
   const [activeTab, setActiveTab] = useState(
@@ -51,13 +56,13 @@ export const DeploymentInstructions = ({
     initialProvider === 'gcp' ? 1 :
     initialProvider === 'aws' ? 2 : 3
   );
-  const [envName, setEnvName] = useState('Production');
   const [copied, setCopied] = useState(false);
 
   // Get user's credentials for the command
   const authKey = API_CONFIG.apiKey || '';
   const orgId = userInfo?.active_org?.id || '';
   const baseUrl = API_CONFIG.baseUrl || 'https://shuffler.io';
+  const envName = environmentName || 'Production';
 
   const dockerCommand = `docker run -d \\
         --restart=always \\
@@ -179,28 +184,17 @@ export const DeploymentInstructions = ({
         </Tabs>
 
         <Box sx={{ p: 3 }}>
-          {/* Environment Name Input */}
-          <Box sx={{ mb: 3 }}>
-            <Typography sx={{ color: 'hsl(var(--foreground))', fontWeight: 500, mb: 1, fontSize: '0.875rem' }}>
-              Environment Name
+          {/* Environment Name Display */}
+          <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.875rem' }}>
+              Sensor:
             </Typography>
-            <TextField
-              value={envName}
-              onChange={(e) => setEnvName(e.target.value)}
-              size="small"
-              placeholder="e.g., Production, Staging, Dev"
+            <Chip
+              label={envName}
               sx={{
-                width: 300,
-                '& .MuiOutlinedInput-root': {
-                  backgroundColor: 'hsl(var(--muted))',
-                  '& fieldset': { borderColor: 'hsl(var(--border))' },
-                  '&:hover fieldset': { borderColor: 'hsl(var(--primary))' },
-                  '&.Mui-focused fieldset': { borderColor: 'hsl(var(--primary))' },
-                },
-                '& .MuiInputBase-input': {
-                  color: 'hsl(var(--foreground))',
-                  fontSize: '0.875rem',
-                },
+                backgroundColor: 'hsl(var(--primary) / 0.15)',
+                color: 'hsl(var(--primary))',
+                fontWeight: 600,
               }}
             />
           </Box>
