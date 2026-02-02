@@ -352,8 +352,8 @@ const DetectionOnboardingPage = () => {
       
       if (response.ok) {
         const data = await response.json();
-        const rules = data.detections || [];
-        const enabledRules = rules.filter((r: any) => r.status === 'enabled' || r.active);
+        const rules = data.detection_info || [];
+        const enabledRules = rules.filter((r: any) => r.is_enabled === true);
         
         setRulesStatus({
           loading: false,
