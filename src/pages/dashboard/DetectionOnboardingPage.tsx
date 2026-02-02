@@ -843,7 +843,7 @@ const DetectionOnboardingPage = () => {
     }
 
     // Manual test implementation
-    setTestStatus({ loading: true, checked: false, success: false, message: 'Sending test event...' });
+    setTestStatus({ loading: true, checked: false, success: false, message: 'Cleaning up...' });
     
     const workflowId = webhookStatus.workflowId;
     if (!workflowId) {
@@ -857,23 +857,66 @@ const DetectionOnboardingPage = () => {
     }
 
     try {
+      // Step 0: Clean up old test pipelines
+      setTestStatus({ loading: true, checked: false, success: false, message: 'Cleaning old tests...' });
+      try {
+        const pipelinesResponse = await fetch(getApiUrl('/api/v1/triggers/pipeline'), {
+          headers: {
+            'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+          },
+        });
+        
+        if (pipelinesResponse.ok) {
+          const allPipelines = await pipelinesResponse.json();
+          const pipelineList = Array.isArray(allPipelines) ? allPipelines : (allPipelines.pipelines || []);
+          
+          // Find old notepad test pipelines (those containing notepad.exe in command)
+          const oldTestPipelines = pipelineList.filter((p: any) => {
+            const cmd = p.command || p.name || '';
+            return cmd.includes('notepad.exe') && cmd.includes('parse_syslog');
+          });
+          
+          // Delete old test pipelines
+          for (const oldPipeline of oldTestPipelines) {
+            try {
+              await fetch(getApiUrl('/api/v1/triggers/pipeline'), {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  id: oldPipeline.id,
+                  type: 'stop',
+                  environment: selectedEnvironment?.Name || '',
+                }),
+              });
+            } catch (deleteError) {
+              console.warn('Failed to delete old test pipeline:', deleteError);
+            }
+          }
+        }
+      } catch (cleanupError) {
+        console.warn('Failed to clean up old test pipelines:', cleanupError);
+      }
+
       // Step 1: Get current execution count to compare later
+      setTestStatus({ loading: true, checked: false, success: false, message: 'Preparing...' });
       const initialExecsResponse = await fetch(getApiUrl(`/api/v2/workflows/${workflowId}/executions`), {
         headers: {
           'Authorization': `Bearer ${API_CONFIG.apiKey}`,
         },
       });
       
-      let initialExecCount = 0;
       let initialExecIds: string[] = [];
       if (initialExecsResponse.ok) {
         const initialData = await initialExecsResponse.json();
         const executions = initialData.executions || initialData || [];
-        initialExecCount = Array.isArray(executions) ? executions.length : 0;
         initialExecIds = Array.isArray(executions) ? executions.map((e: any) => e.execution_id || e.id) : [];
       }
 
       // Step 2: Send test event via pipeline trigger
+      setTestStatus({ loading: true, checked: false, success: false, message: 'Sending event...' });
       const testCommand = `from {message: "<165>1 2025-10-06T12:34:56.789Z myhost.example.com myapp 1234 ID47 [huh eventSource=\\"App\\" EventID=\\"4688\\" NewProcessName=\\"notepad.exe\\" Context=\\"Testing\\"] This is a test log message"} | this = message.parse_syslog() | import`;
       
       const triggerResponse = await fetch(getApiUrl('/api/v1/triggers/pipeline'), {
@@ -934,13 +977,40 @@ const DetectionOnboardingPage = () => {
 
               if (newExecution) {
                 foundNewExecution = true;
-                setTestStatus({
-                  loading: false,
-                  checked: true,
-                  success: true,
-                  message: `✓ Detection triggered! Execution: ${(newExecution.execution_id || newExecution.id || '').substring(0, 8)}...`,
-                });
-                return;
+                const execId = newExecution.execution_id || newExecution.id || '';
+                const execStatus = newExecution.status?.toLowerCase() || '';
+                
+                // Check execution status
+                const isSuccess = execStatus === 'finished' || execStatus === 'success' || execStatus === 'completed';
+                const isFailed = execStatus === 'failed' || execStatus === 'aborted' || execStatus === 'error';
+                const isPending = execStatus === 'executing' || execStatus === 'running' || execStatus === 'pending' || execStatus === '';
+                
+                if (isPending) {
+                  // Still running, keep polling a bit more
+                  foundNewExecution = false;
+                  setTestStatus({ 
+                    loading: true, 
+                    checked: false, 
+                    success: false, 
+                    message: `Execution started, waiting for result...` 
+                  });
+                } else if (isFailed) {
+                  setTestStatus({
+                    loading: false,
+                    checked: true,
+                    success: false,
+                    message: `✗ Detection failed. Execution: ${execId.substring(0, 8)}... Status: ${execStatus}`,
+                  });
+                  return;
+                } else {
+                  setTestStatus({
+                    loading: false,
+                    checked: true,
+                    success: true,
+                    message: `✓ Detection triggered! Execution: ${execId.substring(0, 8)}...`,
+                  });
+                  return;
+                }
               }
             }
           }
@@ -1978,19 +2048,33 @@ const DetectionOnboardingPage = () => {
                     variant="contained"
                     size="small"
                     sx={{
-                      backgroundColor: 'hsl(var(--primary))',
+                      backgroundColor: testStatus.loading 
+                        ? 'hsl(var(--primary))' 
+                        : 'hsl(var(--primary))',
                       color: 'hsl(var(--primary-foreground))',
                       textTransform: 'none',
+                      minWidth: 120,
                       '&:hover': {
                         backgroundColor: 'hsl(var(--primary) / 0.9)',
                       },
                       '&.Mui-disabled': {
-                        backgroundColor: 'hsl(var(--muted))',
-                        color: 'hsl(var(--muted-foreground))',
+                        backgroundColor: testStatus.loading 
+                          ? 'hsl(var(--primary))' 
+                          : 'hsl(var(--muted))',
+                        color: testStatus.loading 
+                          ? 'hsl(var(--primary-foreground))' 
+                          : 'hsl(var(--muted-foreground))',
                       },
                     }}
                   >
-                    Run Test
+                    {testStatus.loading ? (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <CircularProgress size={14} sx={{ color: 'inherit' }} />
+                        <span>{testStatus.message || 'Testing...'}</span>
+                      </Box>
+                    ) : (
+                      'Run Test'
+                    )}
                   </Button>
                 </Box>
               </Paper>
