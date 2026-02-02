@@ -741,7 +741,60 @@ const DetectionOnboardingPage = () => {
       });
       
       if (response.ok) {
-        // Refresh pipeline status after deployment
+        // Poll for pipeline deployment completion (up to 30 seconds)
+        const maxAttempts = 15;
+        const pollInterval = 2000;
+        
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+          await new Promise(resolve => setTimeout(resolve, pollInterval));
+          
+          // Fetch fresh environment data
+          const envResponse = await fetch(getApiUrl('/api/v1/getenvironments'), {
+            headers: {
+              'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+            },
+          });
+          
+          if (envResponse.ok) {
+            const freshEnvs: Environment[] = await envResponse.json();
+            const freshEnv = freshEnvs.find(e => e.id === selectedEnvId);
+            const pipelines = freshEnv?.data_lake?.pipelines || [];
+            const pipelineList = Array.isArray(pipelines) ? pipelines : [];
+            
+            // Check if our pipeline now exists
+            let found = false;
+            for (const p of pipelineList) {
+              const pipelineStr = typeof p === 'string' ? p : (p?.name || p?.command || JSON.stringify(p));
+              
+              if (type === 'syslogTcp' && pipelineStr.toLowerCase().includes('syslog') && pipelineStr.toLowerCase().includes('tcp')) {
+                found = true;
+                break;
+              }
+              if (type === 'syslogUdp' && pipelineStr.toLowerCase().includes('syslog') && pipelineStr.toLowerCase().includes('udp')) {
+                found = true;
+                break;
+              }
+              if (type === 'sigmaForwarder' && pipelineStr.toLowerCase().includes('sigma') && pipelineStr.includes('/api/v1/hooks/')) {
+                // Make sure it's not pointing to localhost
+                const isLocalhost = pipelineStr.includes('localhost') || pipelineStr.includes('127.0.0.1');
+                if (!isLocalhost) {
+                  found = true;
+                  break;
+                }
+              }
+            }
+            
+            if (found) {
+              // Update environments state and pipeline status
+              setEnvironments(freshEnvs.filter(env => !env.archived));
+              await checkPipelineStatus();
+              return;
+            }
+          }
+        }
+        
+        // Timeout - refresh status anyway
+        await fetchEnvironments(false);
         await checkPipelineStatus();
       } else {
         console.error('Failed to deploy pipeline:', await response.text());
