@@ -1102,21 +1102,19 @@ const DetectionOnboardingPage = () => {
               <Button
                 onClick={loadDefaultRules}
                 disabled={loadingDefaultRules || rulesStatus.success}
-                variant="contained"
+                variant={rulesStatus.success ? 'outlined' : 'contained'}
                 sx={{
-                  backgroundColor: 'hsl(var(--primary))',
-                  color: 'hsl(var(--primary-foreground))',
+                  backgroundColor: rulesStatus.success ? 'transparent' : 'hsl(var(--primary))',
+                  color: rulesStatus.success ? 'hsl(var(--muted-foreground))' : 'hsl(var(--primary-foreground))',
+                  borderColor: rulesStatus.success ? 'hsl(var(--border))' : undefined,
                   textTransform: 'none',
                   '&:hover': {
                     backgroundColor: 'hsl(var(--primary) / 0.9)',
                   },
                   '&.Mui-disabled': {
-                    backgroundColor: rulesStatus.success 
-                      ? 'hsl(var(--severity-low) / 0.2)' 
-                      : 'hsl(var(--muted))',
-                    color: rulesStatus.success 
-                      ? 'hsl(var(--severity-low))' 
-                      : 'hsl(var(--muted-foreground))',
+                    backgroundColor: 'transparent',
+                    borderColor: 'hsl(var(--border))',
+                    color: 'hsl(var(--muted-foreground))',
                   },
                 }}
               >
@@ -1126,7 +1124,7 @@ const DetectionOnboardingPage = () => {
                     Loading Rules...
                   </>
                 ) : rulesStatus.success ? (
-                  'Rules Loaded'
+                  '✓ Rules Loaded'
                 ) : (
                   'Load Default Rules'
                 )}
