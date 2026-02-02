@@ -201,39 +201,76 @@ const DetectionOnboardingPage = () => {
   const checkSensors = async () => {
     setSensorStatus({ loading: true, checked: false, success: false });
     
-    // Re-fetch to get latest checkin status
-    await fetchEnvironments(false);
-    
-    // Small delay to ensure state is updated
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
-    const currentEnv = environments.find(e => e.id === selectedEnvId);
-    
-    if (!currentEnv) {
+    // Re-fetch to get latest checkin status and get fresh data directly
+    if (!API_CONFIG.apiKey) {
       setSensorStatus({
         loading: false,
         checked: true,
         success: false,
-        message: 'No sensor selected',
+        message: 'No API key configured',
       });
       return;
     }
-    
-    const isRunning = isSensorRunning(currentEnv);
-    const pipelineCount = getPipelineCount(currentEnv);
-    
-    setSensorStatus({
-      loading: false,
-      checked: true,
-      success: isRunning,
-      message: isRunning 
-        ? `Sensor is running${pipelineCount > 0 ? ` with ${pipelineCount} pipeline${pipelineCount !== 1 ? 's' : ''}` : ''}`
-        : 'Sensor is not running. Deploy it using the options above.',
-    });
-    
-    // Auto-expand next step if successful
-    if (isRunning) {
-      setExpandedStep(2);
+
+    try {
+      const response = await fetch(getApiUrl('/api/v1/getenvironments'), {
+        headers: {
+          'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+        },
+      });
+
+      if (!response.ok) {
+        setSensorStatus({
+          loading: false,
+          checked: true,
+          success: false,
+          message: 'Failed to check sensor status',
+        });
+        return;
+      }
+
+      const data: Environment[] = await response.json();
+      const activeEnvs = data.filter(env => !env.archived);
+      setEnvironments(activeEnvs);
+      
+      // Use fresh data directly instead of stale state
+      const currentEnv = activeEnvs.find(e => e.id === selectedEnvId);
+      
+      if (!currentEnv) {
+        setSensorStatus({
+          loading: false,
+          checked: true,
+          success: false,
+          message: 'No sensor selected',
+        });
+        return;
+      }
+      
+      const isRunning = isSensorRunning(currentEnv);
+      const pipelineCount = getPipelineCount(currentEnv);
+      
+      setSensorStatus({
+        loading: false,
+        checked: true,
+        success: isRunning,
+        message: isRunning 
+          ? pipelineCount > 0 
+            ? `Sensor running with ${pipelineCount} pipeline${pipelineCount !== 1 ? 's' : ''}`
+            : 'Sensor running, no pipelines configured yet'
+          : 'Sensor not running. Deploy it using the options above.',
+      });
+      
+      // Auto-expand next step if successful
+      if (isRunning) {
+        setExpandedStep(2);
+      }
+    } catch (error) {
+      setSensorStatus({
+        loading: false,
+        checked: true,
+        success: false,
+        message: 'Error checking sensor status',
+      });
     }
   };
 
@@ -378,7 +415,7 @@ const DetectionOnboardingPage = () => {
               {sensorStatus.checked && (
                 <Chip
                   size="small"
-                  label={sensorStatus.success ? 'Connected' : 'Not Found'}
+                  label={sensorStatus.success ? 'Running' : 'Not Running'}
                   sx={{
                     backgroundColor: sensorStatus.success
                       ? 'hsl(var(--severity-low) / 0.15)'
