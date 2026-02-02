@@ -733,7 +733,7 @@ const DetectionOnboardingPage = () => {
           command,
           name: command,
           type: 'create',
-          environment: selectedEnvId,
+          environment: currentEnvName,
           workflow_id: '',
           trigger_id: '',
           start_node: '',
