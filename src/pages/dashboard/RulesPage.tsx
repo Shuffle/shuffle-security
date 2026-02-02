@@ -26,10 +26,29 @@ import DownloadIcon from '@mui/icons-material/Download';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import { toast } from 'sonner';
-import { listFiles, deleteFile, getFileDownloadUrl, formatFileSize, ShuffleFile, createAndUploadFile } from '@/services/files';
+import { deleteFile, getFileDownloadUrl, formatFileSize, ShuffleFile, createAndUploadFile } from '@/services/files';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
+import { getApiUrl, API_CONFIG } from '@/config/api';
 
 const SIGMA_NAMESPACE = 'sigma';
+
+interface DetectionInfo {
+  id: string;
+  name: string;
+  title?: string;
+  description?: string;
+  status?: string;
+  level?: string;
+  author?: string;
+  created_at?: number;
+  updated_at?: number;
+  tags?: string[];
+  logsource?: {
+    category?: string;
+    product?: string;
+  };
+  [key: string]: any;
+}
 
 const SIGMA_TEMPLATE = `title: New Detection Rule
 id: 
@@ -73,21 +92,58 @@ const RulesPage = () => {
   const [ruleContent, setRuleContent] = useState(SIGMA_TEMPLATE);
   const [isSaving, setIsSaving] = useState(false);
 
-  const fetchFiles = async () => {
+  const fetchDetections = async () => {
     setIsLoading(true);
     try {
-      const allFiles = await listFiles(SIGMA_NAMESPACE);
-      setFiles(allFiles);
+      const token = API_CONFIG.apiKey || localStorage.getItem('session_token');
+      const response = await fetch(getApiUrl('/api/v1/detections/Sigma'), {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch detections: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const detections: DetectionInfo[] = data.detection_info || [];
+      
+      // Map detection_info to ShuffleFile-like structure for compatibility
+      const mappedFiles: ShuffleFile[] = detections.map((d) => ({
+        id: d.id || d.name,
+        filename: d.title || d.name || 'Untitled',
+        filesize: 0,
+        created_at: d.created_at || Math.floor(Date.now() / 1000),
+        updated_at: d.updated_at || d.created_at || Math.floor(Date.now() / 1000),
+        namespace: SIGMA_NAMESPACE,
+        labels: [
+          ...(d.level ? [d.level] : []),
+          ...(d.status ? [d.status] : []),
+          ...(d.logsource?.product ? [d.logsource.product] : []),
+        ],
+        org_id: '',
+        workflow_id: '',
+        md5_sum: '',
+        status: d.status || '',
+        description: d.description || '',
+        ...d, // Include all original detection fields
+      }));
+
+      setFiles(mappedFiles);
     } catch (error) {
-      console.error('Failed to fetch Sigma rules:', error);
-      toast.error('Failed to load Sigma rules');
+      console.error('Failed to fetch Sigma detections:', error);
+      toast.error('Failed to load Sigma detections');
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchFiles();
+    fetchDetections();
   }, []);
 
   const filteredFiles = files.filter((file) =>
@@ -130,7 +186,7 @@ const RulesPage = () => {
       const result = await deleteFile(file.id);
       if (result.success) {
         toast.success(`Deleted ${file.filename}`);
-        fetchFiles();
+        fetchDetections();
       } else {
         toast.error('Failed to delete file');
       }
@@ -167,7 +223,7 @@ const RulesPage = () => {
     
     if (successCount > 0) {
       toast.success(`Uploaded ${successCount} file${successCount > 1 ? 's' : ''}`);
-      fetchFiles();
+      fetchDetections();
     }
     if (failCount > 0) {
       toast.error(`Failed to upload ${failCount} file${failCount > 1 ? 's' : ''}`);
@@ -250,7 +306,7 @@ const RulesPage = () => {
       if (result.success) {
         toast.success(editingFile ? 'Rule updated successfully' : 'Rule created successfully');
         setIsCreateDialogOpen(false);
-        fetchFiles();
+        fetchDetections();
       } else {
         toast.error(result.reason || 'Failed to save rule');
       }
@@ -281,7 +337,7 @@ const RulesPage = () => {
           <Button
             variant="outlined"
             startIcon={<RefreshIcon />}
-            onClick={fetchFiles}
+            onClick={fetchDetections}
             disabled={isLoading}
             sx={{
               height: 36,
