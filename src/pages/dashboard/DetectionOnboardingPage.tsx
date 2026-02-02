@@ -102,6 +102,20 @@ const DetectionOnboardingPage = () => {
     checked: false,
     success: false,
   });
+  const [pipelineStatus, setPipelineStatus] = useState<{
+    loading: boolean;
+    checked: boolean;
+    ready: boolean;
+    hookId?: string;
+    message?: string;
+  }>({ loading: false, checked: false, ready: false });
+  const [webhookStatus, setWebhookStatus] = useState<{
+    loading: boolean;
+    checked: boolean;
+    ready: boolean;
+    workflowName?: string;
+    message?: string;
+  }>({ loading: false, checked: false, ready: false });
   const [expandedStep, setExpandedStep] = useState<number | null>(1);
   const [deploymentDialog, setDeploymentDialog] = useState<{
     open: boolean;
@@ -256,6 +270,13 @@ const DetectionOnboardingPage = () => {
 
     autoCheckStatus();
   }, [selectedEnvId, environments]);
+
+  // Auto-check pipeline and webhook status when step 3 is expanded
+  useEffect(() => {
+    if (expandedStep === 3 && rulesStatus.success && !pipelineStatus.checked) {
+      checkManualTestReadiness();
+    }
+  }, [expandedStep, rulesStatus.success]);
 
   const selectedEnvironment = environments.find(e => e.id === selectedEnvId);
   const currentEnvName = isCreatingNew ? newEnvName : (selectedEnvironment?.Name || '');
@@ -476,6 +497,150 @@ const DetectionOnboardingPage = () => {
     }
     
     setExpandedStep(3);
+  };
+
+  // Check pipeline status for sigma detection
+  const checkPipelineStatus = async () => {
+    setPipelineStatus({ loading: true, checked: false, ready: false });
+    
+    try {
+      // Check the selected environment's pipelines for sigma configuration
+      const env = environments.find(e => e.id === selectedEnvId);
+      if (!env?.data_lake?.pipelines) {
+        setPipelineStatus({
+          loading: false,
+          checked: true,
+          ready: false,
+          message: 'No pipelines configured',
+        });
+        return null;
+      }
+
+      const pipelines = Array.isArray(env.data_lake.pipelines) ? env.data_lake.pipelines : [];
+      
+      // Look for a pipeline containing sigma and a hook
+      const sigmaPipeline = pipelines.find((p: any) => {
+        const pipelineStr = typeof p === 'string' ? p : JSON.stringify(p);
+        return pipelineStr.includes('sigma') && pipelineStr.includes('/api/v1/hooks/');
+      });
+
+      if (sigmaPipeline) {
+        // Extract hook ID from pipeline
+        const pipelineStr = typeof sigmaPipeline === 'string' ? sigmaPipeline : JSON.stringify(sigmaPipeline);
+        const hookMatch = pipelineStr.match(/\/api\/v1\/hooks\/([a-zA-Z0-9_-]+)/);
+        const hookId = hookMatch ? hookMatch[1] : undefined;
+
+        setPipelineStatus({
+          loading: false,
+          checked: true,
+          ready: true,
+          hookId,
+          message: hookId ? `Pipeline with hook ${hookId.substring(0, 8)}...` : 'Sigma pipeline configured',
+        });
+        return hookId;
+      } else {
+        setPipelineStatus({
+          loading: false,
+          checked: true,
+          ready: false,
+          message: 'No sigma pipeline with webhook found',
+        });
+        return null;
+      }
+    } catch (error) {
+      console.error('Failed to check pipeline status:', error);
+      setPipelineStatus({
+        loading: false,
+        checked: true,
+        ready: false,
+        message: 'Error checking pipeline',
+      });
+      return null;
+    }
+  };
+
+  // Check workflow status for webhook
+  const checkWebhookWorkflow = async (hookId?: string) => {
+    setWebhookStatus({ loading: true, checked: false, ready: false });
+    
+    try {
+      const response = await fetch(getApiUrl('/api/v1/workflows'), {
+        headers: {
+          'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+        },
+      });
+
+      if (!response.ok) {
+        setWebhookStatus({
+          loading: false,
+          checked: true,
+          ready: false,
+          message: 'Failed to fetch workflows',
+        });
+        return;
+      }
+
+      const workflows = await response.json();
+      
+      // Find a workflow that has a webhook trigger matching the hook ID
+      let matchingWorkflow = null;
+      
+      for (const workflow of workflows) {
+        // Check if workflow has triggers/actions that match
+        if (workflow.triggers) {
+          for (const trigger of workflow.triggers) {
+            // Check for webhook trigger
+            if (trigger.app_name?.toLowerCase().includes('webhook') || 
+                trigger.trigger_type === 'WEBHOOK') {
+              if (hookId) {
+                // If we have a hook ID, check if it matches
+                const triggerStr = JSON.stringify(trigger);
+                if (triggerStr.includes(hookId)) {
+                  matchingWorkflow = workflow;
+                  break;
+                }
+              } else {
+                // Just find any webhook workflow
+                matchingWorkflow = workflow;
+                break;
+              }
+            }
+          }
+        }
+        if (matchingWorkflow) break;
+      }
+
+      if (matchingWorkflow) {
+        setWebhookStatus({
+          loading: false,
+          checked: true,
+          ready: true,
+          workflowName: matchingWorkflow.name,
+          message: `Workflow: ${matchingWorkflow.name}`,
+        });
+      } else {
+        setWebhookStatus({
+          loading: false,
+          checked: true,
+          ready: false,
+          message: hookId ? 'No workflow found with matching webhook' : 'No webhook workflow found',
+        });
+      }
+    } catch (error) {
+      console.error('Failed to check webhook workflow:', error);
+      setWebhookStatus({
+        loading: false,
+        checked: true,
+        ready: false,
+        message: 'Error checking workflows',
+      });
+    }
+  };
+
+  // Check both pipeline and webhook status
+  const checkManualTestReadiness = async () => {
+    const hookId = await checkPipelineStatus();
+    await checkWebhookWorkflow(hookId || undefined);
   };
 
   // Test detection rules
@@ -1224,29 +1389,111 @@ const DetectionOnboardingPage = () => {
                   borderRadius: 1.5,
                 }}
               >
-                <Typography sx={{ fontWeight: 600, color: 'hsl(var(--foreground))', mb: 1 }}>
+                <Typography sx={{ fontWeight: 600, color: 'hsl(var(--foreground))', mb: 2 }}>
                   Manual Test
                 </Typography>
-                <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.8rem', mb: 2 }}>
-                  Trigger a test event to verify rule detection
-                </Typography>
-                <Button
-                  onClick={() => testRules('manual')}
-                  disabled={testStatus.loading}
-                  variant="outlined"
-                  size="small"
-                  sx={{
-                    borderColor: 'hsl(var(--border))',
-                    color: 'hsl(var(--foreground))',
-                    textTransform: 'none',
-                    '&:hover': {
-                      borderColor: 'hsl(var(--primary))',
-                      backgroundColor: 'hsl(var(--primary) / 0.1)',
-                    },
-                  }}
-                >
-                  Run Test
-                </Button>
+                
+                {/* Pipeline Status */}
+                <Box sx={{ mb: 2 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                    <Box
+                      sx={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        backgroundColor: pipelineStatus.loading 
+                          ? 'hsl(var(--muted-foreground))'
+                          : pipelineStatus.ready 
+                            ? 'hsl(var(--severity-low))' 
+                            : 'hsl(var(--severity-medium))',
+                      }}
+                    />
+                    <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--foreground))', fontWeight: 500 }}>
+                      Pipeline
+                    </Typography>
+                    {pipelineStatus.loading && (
+                      <CircularProgress size={12} sx={{ color: 'hsl(var(--muted-foreground))' }} />
+                    )}
+                  </Box>
+                  <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', pl: 2 }}>
+                    {pipelineStatus.loading 
+                      ? 'Checking...' 
+                      : pipelineStatus.checked 
+                        ? pipelineStatus.message 
+                        : 'Requires: sigma pipeline with webhook'}
+                  </Typography>
+                </Box>
+
+                {/* Webhook Workflow Status */}
+                <Box sx={{ mb: 2 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                    <Box
+                      sx={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        backgroundColor: webhookStatus.loading 
+                          ? 'hsl(var(--muted-foreground))'
+                          : webhookStatus.ready 
+                            ? 'hsl(var(--severity-low))' 
+                            : 'hsl(var(--severity-medium))',
+                      }}
+                    />
+                    <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--foreground))', fontWeight: 500 }}>
+                      Workflow
+                    </Typography>
+                    {webhookStatus.loading && (
+                      <CircularProgress size={12} sx={{ color: 'hsl(var(--muted-foreground))' }} />
+                    )}
+                  </Box>
+                  <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', pl: 2 }}>
+                    {webhookStatus.loading 
+                      ? 'Checking...' 
+                      : webhookStatus.checked 
+                        ? webhookStatus.message 
+                        : 'Requires: workflow with matching webhook'}
+                  </Typography>
+                </Box>
+
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Button
+                    onClick={checkManualTestReadiness}
+                    disabled={pipelineStatus.loading || webhookStatus.loading}
+                    variant="outlined"
+                    size="small"
+                    sx={{
+                      borderColor: 'hsl(var(--border))',
+                      color: 'hsl(var(--foreground))',
+                      textTransform: 'none',
+                      '&:hover': {
+                        borderColor: 'hsl(var(--primary))',
+                        backgroundColor: 'hsl(var(--primary) / 0.1)',
+                      },
+                    }}
+                  >
+                    {pipelineStatus.loading || webhookStatus.loading ? 'Checking...' : 'Refresh Status'}
+                  </Button>
+                  <Button
+                    onClick={() => testRules('manual')}
+                    disabled={testStatus.loading || !pipelineStatus.ready || !webhookStatus.ready}
+                    variant="contained"
+                    size="small"
+                    sx={{
+                      backgroundColor: 'hsl(var(--primary))',
+                      color: 'hsl(var(--primary-foreground))',
+                      textTransform: 'none',
+                      '&:hover': {
+                        backgroundColor: 'hsl(var(--primary) / 0.9)',
+                      },
+                      '&.Mui-disabled': {
+                        backgroundColor: 'hsl(var(--muted))',
+                        color: 'hsl(var(--muted-foreground))',
+                      },
+                    }}
+                  >
+                    Run Test
+                  </Button>
+                </Box>
               </Paper>
 
               {/* Real-world test */}
