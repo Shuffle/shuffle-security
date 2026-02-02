@@ -102,13 +102,19 @@ const DetectionOnboardingPage = () => {
     checked: false,
     success: false,
   });
-  const [pipelineStatus, setPipelineStatus] = useState<{
+  const [pipelinesStatus, setPipelinesStatus] = useState<{
     loading: boolean;
     checked: boolean;
-    ready: boolean;
-    hookId?: string;
-    message?: string;
-  }>({ loading: false, checked: false, ready: false });
+    syslogTcp: { ready: boolean; message?: string };
+    syslogUdp: { ready: boolean; message?: string };
+    sigmaForwarder: { ready: boolean; hookId?: string; message?: string; isLocalhost?: boolean };
+  }>({
+    loading: false,
+    checked: false,
+    syslogTcp: { ready: false },
+    syslogUdp: { ready: false },
+    sigmaForwarder: { ready: false },
+  });
   const [webhookStatus, setWebhookStatus] = useState<{
     loading: boolean;
     checked: boolean;
@@ -273,7 +279,7 @@ const DetectionOnboardingPage = () => {
 
   // Auto-check pipeline and webhook status when step 3 is expanded
   useEffect(() => {
-    if (expandedStep === 3 && rulesStatus.success && !pipelineStatus.checked) {
+    if (expandedStep === 3 && rulesStatus.success && !pipelinesStatus.checked) {
       checkManualTestReadiness();
     }
   }, [expandedStep, rulesStatus.success]);
@@ -499,61 +505,79 @@ const DetectionOnboardingPage = () => {
     setExpandedStep(3);
   };
 
-  // Check pipeline status for sigma detection
+  // Check pipeline status for all three pipelines
   const checkPipelineStatus = async () => {
-    setPipelineStatus({ loading: true, checked: false, ready: false });
+    setPipelinesStatus(prev => ({ ...prev, loading: true, checked: false }));
     
     try {
-      // Check the selected environment's pipelines for sigma configuration
+      // Check the selected environment's pipelines
       const env = environments.find(e => e.id === selectedEnvId);
-      if (!env?.data_lake?.pipelines) {
-        setPipelineStatus({
-          loading: false,
-          checked: true,
-          ready: false,
-          message: 'No pipelines configured',
-        });
-        return null;
+      const pipelines = env?.data_lake?.pipelines || [];
+      const pipelineList = Array.isArray(pipelines) ? pipelines : [];
+
+      // Initialize statuses
+      let syslogTcp = { ready: false, message: 'Not configured' };
+      let syslogUdp = { ready: false, message: 'Not configured' };
+      let sigmaForwarder: { ready: boolean; hookId?: string; message?: string; isLocalhost?: boolean } = { 
+        ready: false, 
+        message: 'Not configured' 
+      };
+
+      for (const p of pipelineList) {
+        const pipelineStr = typeof p === 'string' ? p : (p?.name || p?.command || JSON.stringify(p));
+        const pipelineLower = pipelineStr.toLowerCase();
+
+        // Check for Syslog TCP
+        if (pipelineLower.includes('syslog') && pipelineLower.includes('tcp')) {
+          syslogTcp = { ready: true, message: 'Running' };
+        }
+
+        // Check for Syslog UDP
+        if (pipelineLower.includes('syslog') && pipelineLower.includes('udp')) {
+          syslogUdp = { ready: true, message: 'Running' };
+        }
+
+        // Check for Sigma forwarder
+        if (pipelineLower.includes('sigma') && pipelineStr.includes('/api/v1/hooks/')) {
+          const hookMatch = pipelineStr.match(/\/api\/v1\/hooks\/([a-zA-Z0-9_-]+)/);
+          const hookId = hookMatch ? hookMatch[1] : undefined;
+          const isLocalhost = pipelineStr.includes('localhost') || pipelineStr.includes('127.0.0.1');
+
+          if (isLocalhost) {
+            sigmaForwarder = {
+              ready: false,
+              hookId,
+              isLocalhost: true,
+              message: '⚠️ Points to localhost - will not work. Redeploy required.',
+            };
+          } else {
+            sigmaForwarder = {
+              ready: true,
+              hookId,
+              isLocalhost: false,
+              message: hookId ? `Hook: ${hookId.substring(0, 12)}...` : 'Running',
+            };
+          }
+        }
       }
 
-      const pipelines = Array.isArray(env.data_lake.pipelines) ? env.data_lake.pipelines : [];
-      
-      // Look for a pipeline containing sigma and a hook
-      const sigmaPipeline = pipelines.find((p: any) => {
-        const pipelineStr = typeof p === 'string' ? p : JSON.stringify(p);
-        return pipelineStr.includes('sigma') && pipelineStr.includes('/api/v1/hooks/');
-      });
-
-      if (sigmaPipeline) {
-        // Extract hook ID from pipeline
-        const pipelineStr = typeof sigmaPipeline === 'string' ? sigmaPipeline : JSON.stringify(sigmaPipeline);
-        const hookMatch = pipelineStr.match(/\/api\/v1\/hooks\/([a-zA-Z0-9_-]+)/);
-        const hookId = hookMatch ? hookMatch[1] : undefined;
-
-        setPipelineStatus({
-          loading: false,
-          checked: true,
-          ready: true,
-          hookId,
-          message: hookId ? `Pipeline with hook ${hookId.substring(0, 8)}...` : 'Sigma pipeline configured',
-        });
-        return hookId;
-      } else {
-        setPipelineStatus({
-          loading: false,
-          checked: true,
-          ready: false,
-          message: 'No sigma pipeline with webhook found',
-        });
-        return null;
-      }
-    } catch (error) {
-      console.error('Failed to check pipeline status:', error);
-      setPipelineStatus({
+      setPipelinesStatus({
         loading: false,
         checked: true,
-        ready: false,
-        message: 'Error checking pipeline',
+        syslogTcp,
+        syslogUdp,
+        sigmaForwarder,
+      });
+
+      return sigmaForwarder.hookId;
+    } catch (error) {
+      console.error('Failed to check pipeline status:', error);
+      setPipelinesStatus({
+        loading: false,
+        checked: true,
+        syslogTcp: { ready: false, message: 'Error checking' },
+        syslogUdp: { ready: false, message: 'Error checking' },
+        sigmaForwarder: { ready: false, message: 'Error checking' },
       });
       return null;
     }
@@ -1393,40 +1417,92 @@ const DetectionOnboardingPage = () => {
                   Manual Test
                 </Typography>
                 
-                {/* Pipeline Status */}
-                <Box sx={{ mb: 2 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                {/* Syslog TCP Status */}
+                <Box sx={{ mb: 1.5 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Box
                       sx={{
                         width: 8,
                         height: 8,
                         borderRadius: '50%',
-                        backgroundColor: pipelineStatus.loading 
+                        backgroundColor: pipelinesStatus.loading 
                           ? 'hsl(var(--muted-foreground))'
-                          : pipelineStatus.ready 
+                          : pipelinesStatus.syslogTcp.ready 
                             ? 'hsl(var(--severity-low))' 
                             : 'hsl(var(--severity-medium))',
                       }}
                     />
                     <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--foreground))', fontWeight: 500 }}>
-                      Pipeline
+                      Syslog Ingest (TCP)
                     </Typography>
-                    {pipelineStatus.loading && (
-                      <CircularProgress size={12} sx={{ color: 'hsl(var(--muted-foreground))' }} />
-                    )}
                   </Box>
-                  <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', pl: 2 }}>
-                    {pipelineStatus.loading 
-                      ? 'Checking...' 
-                      : pipelineStatus.checked 
-                        ? pipelineStatus.message 
-                        : 'Requires: sigma pipeline with webhook'}
+                  <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', pl: 2 }}>
+                    {pipelinesStatus.loading ? 'Checking...' : pipelinesStatus.syslogTcp.message}
+                  </Typography>
+                </Box>
+
+                {/* Syslog UDP Status */}
+                <Box sx={{ mb: 1.5 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box
+                      sx={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        backgroundColor: pipelinesStatus.loading 
+                          ? 'hsl(var(--muted-foreground))'
+                          : pipelinesStatus.syslogUdp.ready 
+                            ? 'hsl(var(--severity-low))' 
+                            : 'hsl(var(--severity-medium))',
+                      }}
+                    />
+                    <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--foreground))', fontWeight: 500 }}>
+                      Syslog Ingest (UDP)
+                    </Typography>
+                  </Box>
+                  <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', pl: 2 }}>
+                    {pipelinesStatus.loading ? 'Checking...' : pipelinesStatus.syslogUdp.message}
+                  </Typography>
+                </Box>
+
+                {/* Sigma Forwarder Status */}
+                <Box sx={{ mb: 1.5 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box
+                      sx={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        backgroundColor: pipelinesStatus.loading 
+                          ? 'hsl(var(--muted-foreground))'
+                          : pipelinesStatus.sigmaForwarder.ready 
+                            ? 'hsl(var(--severity-low))' 
+                            : pipelinesStatus.sigmaForwarder.isLocalhost
+                              ? 'hsl(var(--severity-high, var(--severity-medium)))'
+                              : 'hsl(var(--severity-medium))',
+                      }}
+                    />
+                    <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--foreground))', fontWeight: 500 }}>
+                      Sigma Detection Forwarder
+                    </Typography>
+                  </Box>
+                  <Typography 
+                    sx={{ 
+                      fontSize: '0.7rem', 
+                      color: pipelinesStatus.sigmaForwarder.isLocalhost 
+                        ? 'hsl(var(--severity-high, var(--severity-medium)))' 
+                        : 'hsl(var(--muted-foreground))', 
+                      pl: 2,
+                      fontWeight: pipelinesStatus.sigmaForwarder.isLocalhost ? 500 : 400,
+                    }}
+                  >
+                    {pipelinesStatus.loading ? 'Checking...' : pipelinesStatus.sigmaForwarder.message}
                   </Typography>
                 </Box>
 
                 {/* Webhook Workflow Status */}
                 <Box sx={{ mb: 2 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Box
                       sx={{
                         width: 8,
@@ -1440,13 +1516,13 @@ const DetectionOnboardingPage = () => {
                       }}
                     />
                     <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--foreground))', fontWeight: 500 }}>
-                      Workflow
+                      Workflow (Webhook)
                     </Typography>
                     {webhookStatus.loading && (
                       <CircularProgress size={12} sx={{ color: 'hsl(var(--muted-foreground))' }} />
                     )}
                   </Box>
-                  <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', pl: 2 }}>
+                  <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', pl: 2 }}>
                     {webhookStatus.loading 
                       ? 'Checking...' 
                       : webhookStatus.checked 
@@ -1455,10 +1531,19 @@ const DetectionOnboardingPage = () => {
                   </Typography>
                 </Box>
 
+                {pipelinesStatus.loading && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                    <CircularProgress size={14} sx={{ color: 'hsl(var(--muted-foreground))' }} />
+                    <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
+                      Checking pipeline status...
+                    </Typography>
+                  </Box>
+                )}
+
                 <Box sx={{ display: 'flex', gap: 1 }}>
                   <Button
                     onClick={checkManualTestReadiness}
-                    disabled={pipelineStatus.loading || webhookStatus.loading}
+                    disabled={pipelinesStatus.loading || webhookStatus.loading}
                     variant="outlined"
                     size="small"
                     sx={{
@@ -1471,11 +1556,11 @@ const DetectionOnboardingPage = () => {
                       },
                     }}
                   >
-                    {pipelineStatus.loading || webhookStatus.loading ? 'Checking...' : 'Refresh Status'}
+                    {pipelinesStatus.loading || webhookStatus.loading ? 'Checking...' : 'Refresh Status'}
                   </Button>
                   <Button
                     onClick={() => testRules('manual')}
-                    disabled={testStatus.loading || !pipelineStatus.ready || !webhookStatus.ready}
+                    disabled={testStatus.loading || !pipelinesStatus.sigmaForwarder.ready || !webhookStatus.ready}
                     variant="contained"
                     size="small"
                     sx={{
