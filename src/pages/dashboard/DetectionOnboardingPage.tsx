@@ -597,157 +597,161 @@ const DetectionOnboardingPage = () => {
               </Box>
             )}
 
-            {/* Deployment Options */}
-            <Typography sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, fontSize: '0.9rem', mb: 2 }}>
-              2. Choose Deployment Method
-            </Typography>
-            <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.875rem', mb: 2 }}>
-              {isCreatingNew 
-                ? `Deploy a new sensor named "${newEnvName || 'unnamed'}":`
-                : `Deploy or reconnect "${currentEnvName}":`
-              }
-            </Typography>
-
-            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2, mb: 3 }}>
-              {/* Self-hosted option */}
-              <Paper
-                onClick={() => openDeploymentDialog('self-hosted')}
-                sx={{
-                  p: 2.5,
-                  backgroundColor: 'hsl(var(--muted) / 0.3)',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: 1.5,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  '&:hover': {
-                    borderColor: 'hsl(var(--primary))',
-                    backgroundColor: 'hsl(var(--muted) / 0.5)',
-                  },
-                }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
-                  <StorageIcon sx={{ color: 'hsl(var(--primary))' }} />
-                  <Typography sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-                    Self-Hosted
-                  </Typography>
-                </Box>
-                <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.8rem' }}>
-                  Deploy on your own infrastructure
+            {/* Deployment Options - Hidden for cloud sensors */}
+            {(isCreatingNew || (selectedEnvironment && isSensorValid(selectedEnvironment))) && (
+              <>
+                <Typography sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, fontSize: '0.9rem', mb: 2 }}>
+                  2. Choose Deployment Method
                 </Typography>
-              </Paper>
-
-              {/* Google Cloud option */}
-              <Paper
-                onClick={() => openDeploymentDialog('gcp')}
-                sx={{
-                  p: 2.5,
-                  backgroundColor: 'hsl(var(--muted) / 0.3)',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: 1.5,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  '&:hover': {
-                    borderColor: 'hsl(var(--primary))',
-                    backgroundColor: 'hsl(var(--muted) / 0.5)',
-                  },
-                }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
-                  <GCPIcon />
-                  <Typography sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-                    Google Cloud
-                  </Typography>
-                </Box>
-                <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.8rem' }}>
-                  Deploy on GCP Compute Engine
+                <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.875rem', mb: 2 }}>
+                  {isCreatingNew 
+                    ? `Deploy a new sensor named "${newEnvName || 'unnamed'}":`
+                    : `Deploy or reconnect "${currentEnvName}":`
+                  }
                 </Typography>
-              </Paper>
 
-              {/* AWS option */}
-              <Paper
-                onClick={() => openDeploymentDialog('aws')}
-                sx={{
-                  p: 2.5,
-                  backgroundColor: 'hsl(var(--muted) / 0.3)',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: 1.5,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  '&:hover': {
-                    borderColor: 'hsl(var(--primary))',
-                    backgroundColor: 'hsl(var(--muted) / 0.5)',
-                  },
-                }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
-                  <AWSIcon />
-                  <Typography sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-                    Amazon Web Services
-                  </Typography>
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2, mb: 3 }}>
+                  {/* Self-hosted option */}
+                  <Paper
+                    onClick={() => openDeploymentDialog('self-hosted')}
+                    sx={{
+                      p: 2.5,
+                      backgroundColor: 'hsl(var(--muted) / 0.3)',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: 1.5,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      '&:hover': {
+                        borderColor: 'hsl(var(--primary))',
+                        backgroundColor: 'hsl(var(--muted) / 0.5)',
+                      },
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+                      <StorageIcon sx={{ color: 'hsl(var(--primary))' }} />
+                      <Typography sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+                        Self-Hosted
+                      </Typography>
+                    </Box>
+                    <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.8rem' }}>
+                      Deploy on your own infrastructure
+                    </Typography>
+                  </Paper>
+
+                  {/* Google Cloud option */}
+                  <Paper
+                    onClick={() => openDeploymentDialog('gcp')}
+                    sx={{
+                      p: 2.5,
+                      backgroundColor: 'hsl(var(--muted) / 0.3)',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: 1.5,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      '&:hover': {
+                        borderColor: 'hsl(var(--primary))',
+                        backgroundColor: 'hsl(var(--muted) / 0.5)',
+                      },
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+                      <GCPIcon />
+                      <Typography sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+                        Google Cloud
+                      </Typography>
+                    </Box>
+                    <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.8rem' }}>
+                      Deploy on GCP Compute Engine
+                    </Typography>
+                  </Paper>
+
+                  {/* AWS option */}
+                  <Paper
+                    onClick={() => openDeploymentDialog('aws')}
+                    sx={{
+                      p: 2.5,
+                      backgroundColor: 'hsl(var(--muted) / 0.3)',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: 1.5,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      '&:hover': {
+                        borderColor: 'hsl(var(--primary))',
+                        backgroundColor: 'hsl(var(--muted) / 0.5)',
+                      },
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+                      <AWSIcon />
+                      <Typography sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+                        Amazon Web Services
+                      </Typography>
+                    </Box>
+                    <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.8rem' }}>
+                      Deploy on AWS EC2
+                    </Typography>
+                  </Paper>
+
+                  {/* Azure option */}
+                  <Paper
+                    onClick={() => openDeploymentDialog('azure')}
+                    sx={{
+                      p: 2.5,
+                      backgroundColor: 'hsl(var(--muted) / 0.3)',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: 1.5,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      '&:hover': {
+                        borderColor: 'hsl(var(--primary))',
+                        backgroundColor: 'hsl(var(--muted) / 0.5)',
+                      },
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+                      <AzureIcon />
+                      <Typography sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+                        Microsoft Azure
+                      </Typography>
+                    </Box>
+                    <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.8rem' }}>
+                      Deploy on Azure Virtual Machines
+                    </Typography>
+                  </Paper>
                 </Box>
-                <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.8rem' }}>
-                  Deploy on AWS EC2
-                </Typography>
-              </Paper>
 
-              {/* Azure option */}
-              <Paper
-                onClick={() => openDeploymentDialog('azure')}
-                sx={{
-                  p: 2.5,
-                  backgroundColor: 'hsl(var(--muted) / 0.3)',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: 1.5,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  '&:hover': {
-                    borderColor: 'hsl(var(--primary))',
-                    backgroundColor: 'hsl(var(--muted) / 0.5)',
-                  },
-                }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
-                  <AzureIcon />
-                  <Typography sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-                    Microsoft Azure
-                  </Typography>
-                </Box>
-                <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.8rem' }}>
-                  Deploy on Azure Virtual Machines
-                </Typography>
-              </Paper>
-            </Box>
+                <Button
+                  onClick={checkSensors}
+                  disabled={sensorStatus.loading}
+                  variant="outlined"
+                  sx={{
+                    borderColor: 'hsl(var(--border))',
+                    color: 'hsl(var(--foreground))',
+                    textTransform: 'none',
+                    '&:hover': {
+                      borderColor: 'hsl(var(--primary))',
+                      backgroundColor: 'hsl(var(--primary) / 0.1)',
+                    },
+                  }}
+                >
+                  {sensorStatus.loading ? 'Checking...' : 'Check Connection'}
+                </Button>
 
-            <Button
-              onClick={checkSensors}
-              disabled={sensorStatus.loading}
-              variant="outlined"
-              sx={{
-                borderColor: 'hsl(var(--border))',
-                color: 'hsl(var(--foreground))',
-                textTransform: 'none',
-                '&:hover': {
-                  borderColor: 'hsl(var(--primary))',
-                  backgroundColor: 'hsl(var(--primary) / 0.1)',
-                },
-              }}
-            >
-              {sensorStatus.loading ? 'Checking...' : 'Check Connection'}
-            </Button>
-
-            {sensorStatus.checked && !sensorStatus.success && (
-              <Alert 
-                severity="info" 
-                sx={{ 
-                  mt: 2, 
-                  backgroundColor: 'hsl(var(--muted))',
-                  border: '1px solid hsl(var(--border))',
-                  color: 'hsl(var(--foreground))',
-                  '& .MuiAlert-icon': { color: 'hsl(var(--primary))' },
-                }}
-              >
-                No sensors detected yet. Deploy one using the options above, then check again.
-              </Alert>
+                {sensorStatus.checked && !sensorStatus.success && (
+                  <Alert 
+                    severity="info" 
+                    sx={{ 
+                      mt: 2, 
+                      backgroundColor: 'hsl(var(--muted))',
+                      border: '1px solid hsl(var(--border))',
+                      color: 'hsl(var(--foreground))',
+                      '& .MuiAlert-icon': { color: 'hsl(var(--primary))' },
+                    }}
+                  >
+                    No sensors detected yet. Deploy one using the options above, then check again.
+                  </Alert>
+                )}
+              </>
             )}
           </Box>
         </Collapse>
