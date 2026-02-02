@@ -189,7 +189,7 @@ const DetectionOnboardingPage = () => {
   };
 
   return (
-    <Box sx={{ p: 4, maxWidth: 800, mx: 'auto' }}>
+    <Box sx={{ p: 4, maxWidth: 960, mx: 'auto' }}>
       {/* Header */}
       <Box sx={{ mb: 4 }}>
         <Typography
