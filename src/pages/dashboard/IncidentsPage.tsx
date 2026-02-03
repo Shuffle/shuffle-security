@@ -204,7 +204,6 @@ const IncidentsPage = () => {
   const { userInfo } = useAuth();
   const currentUsername = userInfo?.username || '';
 
-  const [incidents, setIncidents] = useState<DisplayIncident[]>([]);
   const [filters, setFilters] = useState<Filters>({ severity: null, status: null, tlp: null, assignee: null });
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [automationsDialogOpen, setAutomationsDialogOpen] = useState(false);
@@ -238,11 +237,11 @@ const IncidentsPage = () => {
     }
   }, [categoryConfig]);
 
-  useEffect(() => {
-    const realIncidents: DisplayIncident[] = datastoreItems
+  // Derive incidents synchronously from datastoreItems to avoid flash of empty state
+  const incidents = useMemo(() => {
+    return datastoreItems
       .map((item) => parseIncidentFromDatastore(item))
       .filter((a): a is DisplayIncident => a !== null);
-    setIncidents(realIncidents);
   }, [datastoreItems]);
 
   // Apply smart defaults on initial load only - default to "New" OR "In Progress" status
@@ -395,13 +394,9 @@ const IncidentsPage = () => {
       toast.warning(`Resolved ${successCount} of ${selectedIds.size} incidents`);
     }
     
-    // Optimistically update local state instead of refetching (which resets pagination)
-    setIncidents(prev => prev.map(inc => 
-      selectedIds.has(inc.id) 
-        ? { ...inc, status: 'resolved', rawOCSF: inc.rawOCSF ? { ...inc.rawOCSF, status_id: 3 } : undefined }
-        : inc
-    ));
     setSelectedIds(new Set());
+    // Refetch to get updated data
+    await fetchItems();
   }, [selectedIds, incidents]);
 
   const isDefaultFilter = !filters.severity && 
