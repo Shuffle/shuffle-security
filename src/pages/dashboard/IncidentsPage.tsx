@@ -15,6 +15,7 @@ import {
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import SearchIcon from '@mui/icons-material/Search';
+import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
@@ -26,7 +27,7 @@ import { OCSFIncidentFinding, Observable, TLP_LABELS, convertLegacyTlp, mapOCSFS
 import { CategoryAutomationsDialog } from '@/components/incidents/CategoryAutomationsDialog';
 import { IncidentCardView } from '@/components/incidents/IncidentCardView';
 import { IncidentStatsCards } from '@/components/incidents/IncidentStatsCards';
-import { BulkActionBar } from '@/components/incidents/BulkActionBar';
+
 import { toast } from 'sonner';
 
 // Legacy categories for migration
@@ -502,6 +503,66 @@ const IncidentsPage = () => {
               sx={{ width: 280 }}
             />
 
+            {/* Selection count and bulk actions */}
+            {selectedIds.size > 0 && (
+              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    fontWeight: 600, 
+                    color: 'hsl(var(--primary))',
+                    px: 1,
+                  }}
+                >
+                  {selectedIds.size} selected
+                </Typography>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={handleBulkClose}
+                  sx={{
+                    height: 36,
+                    borderColor: 'hsl(var(--border))',
+                    color: '#22c55e',
+                    '&:hover': {
+                      borderColor: '#22c55e',
+                      backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    },
+                  }}
+                >
+                  Resolve
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={handleBulkDelete}
+                  sx={{
+                    height: 36,
+                    borderColor: 'hsl(var(--border))',
+                    color: '#ef4444',
+                    '&:hover': {
+                      borderColor: '#ef4444',
+                      backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    },
+                  }}
+                >
+                  Delete
+                </Button>
+                <IconButton
+                  size="small"
+                  onClick={() => setSelectedIds(new Set())}
+                  sx={{
+                    color: 'hsl(var(--muted-foreground))',
+                    '&:hover': {
+                      color: 'hsl(var(--foreground))',
+                    },
+                  }}
+                >
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              </Box>
+            )}
+
             {/* Active filters */}
             <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
               {filters.assignee && filters.assignee !== 'all' && (
@@ -650,12 +711,6 @@ const IncidentsPage = () => {
         onAutomationsChange={setCategoryAutomations}
       />
 
-      <BulkActionBar
-        selectedCount={selectedIds.size}
-        onDelete={handleBulkDelete}
-        onClose={handleBulkClose}
-        onClear={() => setSelectedIds(new Set())}
-      />
     </motion.div>
   );
 };
