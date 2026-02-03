@@ -259,6 +259,40 @@ export const deleteDatastoreItem = async (
   return { success: true };
 };
 
+/**
+ * Delete multiple items from the datastore (bulk delete)
+ */
+export const deleteDatastoreItems = async (
+  keys: string[],
+  category: string
+): Promise<{ success: boolean; deleted: number; failed: string[]; error?: string }> => {
+  const orgId = getOrgId();
+  if (!orgId) {
+    return { success: false, deleted: 0, failed: keys, error: 'No organization ID found' };
+  }
+
+  const results = await Promise.allSettled(
+    keys.map(key => deleteDatastoreItem(key, category))
+  );
+
+  const failed: string[] = [];
+  let deleted = 0;
+
+  results.forEach((result, index) => {
+    if (result.status === 'fulfilled' && result.value.success) {
+      deleted++;
+    } else {
+      failed.push(keys[index]);
+    }
+  });
+
+  return {
+    success: failed.length === 0,
+    deleted,
+    failed,
+  };
+};
+
 // Category constants for consistency
 export const DATASTORE_CATEGORIES = {
   INCIDENTS: 'shuffle-security_incidents',

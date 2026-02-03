@@ -1,5 +1,5 @@
-import { Box, Typography, Chip } from '@mui/material';
-import { motion } from 'framer-motion';
+import { Box, Typography, Chip, Checkbox } from '@mui/material';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
   Fingerprint,
@@ -14,6 +14,7 @@ import {
   Bug,
 } from 'lucide-react';
 import { statusConfig, severityColors } from '@/config/incidentConfig';
+import { useState } from 'react';
 
 interface DisplayIncident {
   id: string;
@@ -34,9 +35,10 @@ interface IncidentCardViewProps {
   onIncidentClick?: (incident: DisplayIncident) => void;
   onFilterChange?: (type: 'severity' | 'status' | 'assignee', value: string) => void;
   getIncidentUrl?: (incident: DisplayIncident) => string;
+  selectedIds?: Set<string>;
+  onSelectionChange?: (selectedIds: Set<string>) => void;
+  selectionMode?: boolean;
 }
-
-// Status and severity colors now imported from @/config/incidentConfig
 
 // Map incident types/sources to icons - more original choices
 const getIncidentIcon = (source: string, title: string) => {
@@ -83,15 +85,93 @@ const formatRelativeTime = (timestamp: number): string => {
   return `${days} day${days > 1 ? 's' : ''} ago`;
 };
 
-export const IncidentCardView = ({ incidents, onIncidentClick, onFilterChange, getIncidentUrl }: IncidentCardViewProps) => {
+export const IncidentCardView = ({ 
+  incidents, 
+  onIncidentClick, 
+  onFilterChange, 
+  getIncidentUrl,
+  selectedIds = new Set(),
+  onSelectionChange,
+  selectionMode = false,
+}: IncidentCardViewProps) => {
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+
+  const handleCheckboxChange = (id: string, checked: boolean, event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const newSelection = new Set(selectedIds);
+    if (checked) {
+      newSelection.add(id);
+    } else {
+      newSelection.delete(id);
+    }
+    onSelectionChange?.(newSelection);
+  };
+
+  const handleSelectAll = () => {
+    if (selectedIds.size === incidents.length) {
+      onSelectionChange?.(new Set());
+    } else {
+      onSelectionChange?.(new Set(incidents.map(i => i.id)));
+    }
+  };
+
+  const isSelected = (id: string) => selectedIds.has(id);
+  const showCheckbox = (id: string) => selectionMode || selectedIds.size > 0 || hoveredId === id;
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+      {/* Select All row when in selection mode */}
+      <AnimatePresence>
+        {(selectionMode || selectedIds.size > 0) && incidents.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+          >
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                px: 2,
+                py: 1,
+                borderRadius: 1,
+                backgroundColor: 'hsl(var(--muted) / 0.3)',
+              }}
+            >
+              <Checkbox
+                checked={selectedIds.size === incidents.length && incidents.length > 0}
+                indeterminate={selectedIds.size > 0 && selectedIds.size < incidents.length}
+                onChange={handleSelectAll}
+                size="small"
+                sx={{
+                  color: 'hsl(var(--muted-foreground))',
+                  '&.Mui-checked, &.MuiCheckbox-indeterminate': {
+                    color: 'hsl(var(--primary))',
+                  },
+                }}
+              />
+              <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                {selectedIds.size === 0 
+                  ? 'Select all' 
+                  : selectedIds.size === incidents.length 
+                    ? `All ${incidents.length} selected`
+                    : `${selectedIds.size} selected`}
+              </Typography>
+            </Box>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {incidents.map((incident, index) => {
         const IconComponent = getIncidentIcon(incident.source, incident.title);
         const statusInfo = statusConfig[incident.status] || statusConfig.new;
         const StatusIcon = statusInfo.icon;
         const severityColor = severityColors[incident.severity] || '#94a3b8';
+        const selected = isSelected(incident.id);
+        const showCheck = showCheckbox(incident.id);
 
         return (
           <motion.div
@@ -99,31 +179,42 @@ export const IncidentCardView = ({ incidents, onIncidentClick, onFilterChange, g
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2, delay: index * 0.03 }}
+            onMouseEnter={() => setHoveredId(incident.id)}
+            onMouseLeave={() => setHoveredId(null)}
           >
             <Box
-              component={getIncidentUrl ? Link : 'div'}
-              to={getIncidentUrl ? getIncidentUrl(incident) : undefined}
-              onClick={onIncidentClick ? () => onIncidentClick(incident) : undefined}
+              component={!showCheck && getIncidentUrl ? Link : 'div'}
+              to={!showCheck && getIncidentUrl ? getIncidentUrl(incident) : undefined}
+              onClick={showCheck ? undefined : (onIncidentClick ? () => onIncidentClick(incident) : undefined)}
               sx={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: 2,
                 p: 2,
                 borderRadius: 2,
-                backgroundColor: 'hsl(var(--card))',
-                border: '1px solid hsl(var(--border))',
+                backgroundColor: selected 
+                  ? 'hsl(var(--primary) / 0.08)' 
+                  : 'hsl(var(--card))',
+                border: '1px solid',
+                borderColor: selected 
+                  ? 'hsl(var(--primary) / 0.3)' 
+                  : 'hsl(var(--border))',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
                 textDecoration: 'none',
                 color: 'inherit',
                 '&:hover': {
-                  backgroundColor: 'hsl(var(--background-surface))',
-                  borderColor: 'hsl(var(--border-subtle))',
-                  transform: 'translateX(4px)',
+                  backgroundColor: selected 
+                    ? 'hsl(var(--primary) / 0.12)' 
+                    : 'hsl(var(--background-surface))',
+                  borderColor: selected 
+                    ? 'hsl(var(--primary) / 0.4)' 
+                    : 'hsl(var(--border-subtle))',
+                  transform: showCheck ? 'none' : 'translateX(4px)',
                 },
               }}
             >
-              {/* Icon container */}
+              {/* Icon container with checkbox overlay on hover */}
               <Box
                 sx={{
                   width: 48,
@@ -132,16 +223,71 @@ export const IncidentCardView = ({ incidents, onIncidentClick, onFilterChange, g
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  backgroundColor: `${severityColor}15`,
-                  border: `1px solid ${severityColor}30`,
+                  backgroundColor: showCheck 
+                    ? 'transparent' 
+                    : `${severityColor}15`,
+                  border: showCheck 
+                    ? 'none' 
+                    : `1px solid ${severityColor}30`,
                   flexShrink: 0,
+                  position: 'relative',
+                }}
+                onClick={(e) => {
+                  if (showCheck) {
+                    handleCheckboxChange(incident.id, !selected, e);
+                  }
                 }}
               >
-                <IconComponent size={22} color={severityColor} />
+                <AnimatePresence mode="wait">
+                  {showCheck ? (
+                    <motion.div
+                      key="checkbox"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      <Checkbox
+                        checked={selected}
+                        size="medium"
+                        sx={{
+                          color: 'hsl(var(--muted-foreground))',
+                          '&.Mui-checked': {
+                            color: 'hsl(var(--primary))',
+                          },
+                          '& .MuiSvgIcon-root': {
+                            fontSize: 28,
+                          },
+                        }}
+                        onClick={(e) => handleCheckboxChange(incident.id, !selected, e)}
+                      />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="icon"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      <IconComponent size={22} color={severityColor} />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </Box>
 
               {/* Content */}
-              <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Box 
+                sx={{ flex: 1, minWidth: 0 }}
+                component={getIncidentUrl ? Link : 'div'}
+                to={getIncidentUrl ? getIncidentUrl(incident) : undefined}
+                onClick={(e) => {
+                  if (selectedIds.size > 0) {
+                    e.preventDefault();
+                    handleCheckboxChange(incident.id, !selected, e);
+                  }
+                }}
+              >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
                   <Typography
                     variant="body1"
@@ -153,7 +299,7 @@ export const IncidentCardView = ({ incidents, onIncidentClick, onFilterChange, g
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    {incident.title}
+                    {incident.title || 'Untitled Incident'}
                   </Typography>
                   <StatusIcon size={16} color={statusInfo.color} />
                 </Box>
@@ -192,10 +338,11 @@ export const IncidentCardView = ({ incidents, onIncidentClick, onFilterChange, g
               {/* Chips */}
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
                 <Chip
-                  label={incident.severity}
+                  label={incident.severity || 'unknown'}
                   size="small"
                   onClick={(e) => {
                     e.stopPropagation();
+                    e.preventDefault();
                     onFilterChange?.('severity', incident.severity);
                   }}
                   sx={{
@@ -214,6 +361,7 @@ export const IncidentCardView = ({ incidents, onIncidentClick, onFilterChange, g
                   size="small"
                   onClick={(e) => {
                     e.stopPropagation();
+                    e.preventDefault();
                     onFilterChange?.('status', incident.status);
                   }}
                   sx={{
@@ -228,8 +376,10 @@ export const IncidentCardView = ({ incidents, onIncidentClick, onFilterChange, g
                 />
               </Box>
 
-              {/* Chevron */}
-              <ChevronRight size={20} color="hsl(var(--muted-foreground))" />
+              {/* Chevron - hide when in selection mode */}
+              {!showCheck && (
+                <ChevronRight size={20} color="hsl(var(--muted-foreground))" />
+              )}
             </Box>
           </motion.div>
         );
