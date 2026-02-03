@@ -38,7 +38,7 @@ export const DashboardLayout = ({ children, defaultCollapsed }: DashboardLayoutP
   }, [sidebarCollapsed, isOnboarding]);
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', backgroundColor: 'hsl(var(--background))', width: '100%' }}>
+    <Box sx={{ display: 'flex', height: '100vh', backgroundColor: 'hsl(var(--background))', width: '100%' }}>
       <AppSidebar
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -49,7 +49,7 @@ export const DashboardLayout = ({ children, defaultCollapsed }: DashboardLayoutP
           flexGrow: 1,
           display: 'flex',
           flexDirection: 'column',
-          minHeight: '100vh',
+          height: '100vh',
           minWidth: 0,
           width: '100%',
           transition: 'margin 0.2s ease',
@@ -57,10 +57,11 @@ export const DashboardLayout = ({ children, defaultCollapsed }: DashboardLayoutP
             xs: 0, 
             sm: `${(sidebarCollapsed ? collapsedWidth : drawerWidth) + 20}px` 
           },
+          overflowY: 'auto',
           overflowX: 'hidden',
         }}
       >
-        <Box sx={{ flexGrow: 1, p: { xs: 1, sm: 2, md: 3 }, width: '100%', maxWidth: '100%' }}>
+        <Box sx={{ p: { xs: 1, sm: 2, md: 3 }, width: '100%', maxWidth: '100%' }}>
           {children || <Outlet />}
         </Box>
       </Box>
