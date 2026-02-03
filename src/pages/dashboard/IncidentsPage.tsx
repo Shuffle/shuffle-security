@@ -679,6 +679,7 @@ const IncidentsPage = () => {
             getIncidentUrl={getIncidentUrl}
             selectedIds={selectedIds}
             onSelectionChange={setSelectedIds}
+            isLoading={isLoading}
             onFilterChange={(type, value) => {
               setFilters(prev => ({
                 ...prev,
