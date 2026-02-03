@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Box,
@@ -20,12 +20,14 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import { useDatastore } from '@/hooks/useDatastore';
 import { useAuth } from '@/context/AuthContext';
-import { DATASTORE_CATEGORIES, getDatastoreByCategory, setDatastoreItems, CategoryAutomation } from '@/services/datastore';
+import { DATASTORE_CATEGORIES, getDatastoreByCategory, setDatastoreItems, CategoryAutomation, deleteDatastoreItems } from '@/services/datastore';
 import { CreateIncidentDialog, ActivityItem } from '@/components/incidents/CreateIncidentDialog';
 import { OCSFIncidentFinding, Observable, TLP_LABELS, convertLegacyTlp, mapOCSFSeverity, mapOCSFStatus } from '@/config/ocsfIncidentSchema';
 import { CategoryAutomationsDialog } from '@/components/incidents/CategoryAutomationsDialog';
 import { IncidentCardView } from '@/components/incidents/IncidentCardView';
 import { IncidentStatsCards } from '@/components/incidents/IncidentStatsCards';
+import { BulkActionBar } from '@/components/incidents/BulkActionBar';
+import { toast } from 'sonner';
 
 // Legacy categories for migration
 const LEGACY_ALERTS_CATEGORY = 'shuffle-alerts';
@@ -206,6 +208,7 @@ const IncidentsPage = () => {
   const [automationsDialogOpen, setAutomationsDialogOpen] = useState(false);
   const [categoryAutomations, setCategoryAutomations] = useState<CategoryAutomation[] | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // Sorting
   const [sortBy, setSortBy] = useState<SortKey>('edited');
@@ -341,7 +344,58 @@ const IncidentsPage = () => {
   const resetToDefaults = () => {
     setFilters({ severity: null, status: ['new', 'in_progress'], tlp: null, assignee: null });
     setSearchQuery('');
+    setSelectedIds(new Set());
   };
+
+  const handleBulkDelete = useCallback(async () => {
+    if (selectedIds.size === 0) return;
+    
+    const result = await deleteDatastoreItems(
+      Array.from(selectedIds),
+      DATASTORE_CATEGORIES.INCIDENTS
+    );
+    
+    if (result.success) {
+      toast.success(`Deleted ${result.deleted} incident${result.deleted !== 1 ? 's' : ''}`);
+      setSelectedIds(new Set());
+      await fetchItems();
+    } else {
+      toast.error(`Deleted ${result.deleted}, but ${result.failed.length} failed`);
+      setSelectedIds(new Set(result.failed));
+      await fetchItems();
+    }
+  }, [selectedIds, fetchItems]);
+
+  const handleBulkClose = useCallback(async () => {
+    if (selectedIds.size === 0) return;
+    
+    // Update each selected incident to resolved status
+    const updates = incidents
+      .filter(i => selectedIds.has(i.id))
+      .map(async (incident) => {
+        if (incident.rawOCSF) {
+          const updated = {
+            ...incident.rawOCSF,
+            status_id: 3, // Resolved
+          };
+          const { setDatastoreItem } = await import('@/services/datastore');
+          return setDatastoreItem(incident.id, updated, DATASTORE_CATEGORIES.INCIDENTS);
+        }
+        return { success: true };
+      });
+    
+    const results = await Promise.all(updates);
+    const successCount = results.filter(r => r.success).length;
+    
+    if (successCount === selectedIds.size) {
+      toast.success(`Resolved ${successCount} incident${successCount !== 1 ? 's' : ''}`);
+    } else {
+      toast.warning(`Resolved ${successCount} of ${selectedIds.size} incidents`);
+    }
+    
+    setSelectedIds(new Set());
+    await fetchItems();
+  }, [selectedIds, incidents, fetchItems]);
 
   const isDefaultFilter = !filters.severity && 
     !filters.tlp && 
@@ -535,6 +589,8 @@ const IncidentsPage = () => {
           <IncidentCardView
             incidents={sortedIncidents}
             getIncidentUrl={getIncidentUrl}
+            selectedIds={selectedIds}
+            onSelectionChange={setSelectedIds}
             onFilterChange={(type, value) => {
               setFilters(prev => ({
                 ...prev,
@@ -592,6 +648,13 @@ const IncidentsPage = () => {
         category={DATASTORE_CATEGORIES.INCIDENTS}
         automations={categoryAutomations}
         onAutomationsChange={setCategoryAutomations}
+      />
+
+      <BulkActionBar
+        selectedCount={selectedIds.size}
+        onDelete={handleBulkDelete}
+        onClose={handleBulkClose}
+        onClear={() => setSelectedIds(new Set())}
       />
     </motion.div>
   );
