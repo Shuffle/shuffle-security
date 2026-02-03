@@ -14,7 +14,7 @@ import {
   Bug,
 } from 'lucide-react';
 import { statusConfig, severityColors } from '@/config/incidentConfig';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface DisplayIncident {
   id: string;
@@ -164,6 +164,36 @@ export const IncidentCardView = ({
   isLoading = false,
 }: IncidentCardViewProps) => {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [hasRendered, setHasRendered] = useState(false);
+  const renderTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Track when items have actually rendered to the DOM
+  // Use requestAnimationFrame to wait until after paint
+  useEffect(() => {
+    if (incidents.length > 0 && !hasRendered) {
+      // Clear any pending timeout
+      if (renderTimeoutRef.current) {
+        clearTimeout(renderTimeoutRef.current);
+      }
+      // Wait for next frame + a small buffer to ensure DOM has painted
+      renderTimeoutRef.current = setTimeout(() => {
+        requestAnimationFrame(() => {
+          setHasRendered(true);
+        });
+      }, 50);
+    }
+    
+    // Reset hasRendered when incidents become empty (e.g., filter change)
+    if (incidents.length === 0) {
+      setHasRendered(false);
+    }
+
+    return () => {
+      if (renderTimeoutRef.current) {
+        clearTimeout(renderTimeoutRef.current);
+      }
+    };
+  }, [incidents.length, hasRendered]);
 
   const handleCheckboxChange = (id: string, checked: boolean, event: React.MouseEvent) => {
     event.preventDefault();
@@ -181,8 +211,11 @@ export const IncidentCardView = ({
   const isSelected = (id: string) => selectedIds.has(id);
   const showCheckbox = (id: string) => selectedIds.size > 0 || hoveredId === id;
 
-  // Show skeletons while loading and no incidents yet
-  if (isLoading && incidents.length === 0) {
+  // Show skeletons until items have actually rendered to the DOM
+  // This prevents showing "No incidents" while waiting for large lists to render
+  const showSkeleton = isLoading || (incidents.length > 0 && !hasRendered);
+  
+  if (showSkeleton && incidents.length === 0) {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
         {[...Array(8)].map((_, index) => (

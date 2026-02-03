@@ -559,22 +559,6 @@ const IncidentsPage = () => {
                 >
                   Resolve
                 </Button>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={handleBulkDelete}
-                  sx={{
-                    height: 36,
-                    borderColor: 'hsl(var(--border))',
-                    color: '#ef4444',
-                    '&:hover': {
-                      borderColor: '#ef4444',
-                      backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                    },
-                  }}
-                >
-                  Delete
-                </Button>
                 <IconButton
                   size="small"
                   onClick={() => setSelectedIds(new Set())}
