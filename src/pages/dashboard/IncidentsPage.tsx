@@ -395,9 +395,14 @@ const IncidentsPage = () => {
       toast.warning(`Resolved ${successCount} of ${selectedIds.size} incidents`);
     }
     
+    // Optimistically update local state instead of refetching (which resets pagination)
+    setIncidents(prev => prev.map(inc => 
+      selectedIds.has(inc.id) 
+        ? { ...inc, status: 'resolved', rawOCSF: inc.rawOCSF ? { ...inc.rawOCSF, status_id: 3 } : undefined }
+        : inc
+    ));
     setSelectedIds(new Set());
-    await fetchItems();
-  }, [selectedIds, incidents, fetchItems]);
+  }, [selectedIds, incidents]);
 
   const isDefaultFilter = !filters.severity && 
     !filters.tlp && 
