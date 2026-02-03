@@ -37,7 +37,6 @@ interface IncidentCardViewProps {
   getIncidentUrl?: (incident: DisplayIncident) => string;
   selectedIds?: Set<string>;
   onSelectionChange?: (selectedIds: Set<string>) => void;
-  selectionMode?: boolean;
 }
 
 // Map incident types/sources to icons - more original choices
@@ -92,7 +91,6 @@ export const IncidentCardView = ({
   getIncidentUrl,
   selectedIds = new Set(),
   onSelectionChange,
-  selectionMode = false,
 }: IncidentCardViewProps) => {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
@@ -109,61 +107,11 @@ export const IncidentCardView = ({
     onSelectionChange?.(newSelection);
   };
 
-  const handleSelectAll = () => {
-    if (selectedIds.size === incidents.length) {
-      onSelectionChange?.(new Set());
-    } else {
-      onSelectionChange?.(new Set(incidents.map(i => i.id)));
-    }
-  };
-
   const isSelected = (id: string) => selectedIds.has(id);
-  const showCheckbox = (id: string) => selectionMode || selectedIds.size > 0 || hoveredId === id;
+  const showCheckbox = (id: string) => selectedIds.size > 0 || hoveredId === id;
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-      {/* Select All row when in selection mode */}
-      <AnimatePresence>
-        {(selectionMode || selectedIds.size > 0) && incidents.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-          >
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1,
-                px: 2,
-                py: 1,
-                borderRadius: 1,
-                backgroundColor: 'hsl(var(--muted) / 0.3)',
-              }}
-            >
-              <Checkbox
-                checked={selectedIds.size === incidents.length && incidents.length > 0}
-                indeterminate={selectedIds.size > 0 && selectedIds.size < incidents.length}
-                onChange={handleSelectAll}
-                size="small"
-                sx={{
-                  color: 'hsl(var(--muted-foreground))',
-                  '&.Mui-checked, &.MuiCheckbox-indeterminate': {
-                    color: 'hsl(var(--primary))',
-                  },
-                }}
-              />
-              <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-                {selectedIds.size === 0 
-                  ? 'Select all' 
-                  : selectedIds.size === incidents.length 
-                    ? `All ${incidents.length} selected`
-                    : `${selectedIds.size} selected`}
-              </Typography>
-            </Box>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {incidents.map((incident, index) => {
         const IconComponent = getIncidentIcon(incident.source, incident.title);

@@ -12,6 +12,7 @@ import {
   Button,
   CircularProgress,
   Tooltip,
+  Checkbox,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import SearchIcon from '@mui/icons-material/Search';
@@ -487,6 +488,28 @@ const IncidentsPage = () => {
       <Card sx={{ mb: 3, position: 'sticky', top: 0, zIndex: 10, backgroundColor: 'hsl(var(--card))' }}>
         <CardContent sx={{ py: 1.5, px: 2, '&:last-child': { pb: 1.5 } }}>
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+            {/* Select all checkbox - always visible */}
+            <Tooltip title={selectedIds.size === sortedIncidents.length ? 'Deselect all' : 'Select all'}>
+              <Checkbox
+                checked={selectedIds.size === sortedIncidents.length && sortedIncidents.length > 0}
+                indeterminate={selectedIds.size > 0 && selectedIds.size < sortedIncidents.length}
+                onChange={() => {
+                  if (selectedIds.size === sortedIncidents.length) {
+                    setSelectedIds(new Set());
+                  } else {
+                    setSelectedIds(new Set(sortedIncidents.map(i => i.id)));
+                  }
+                }}
+                size="small"
+                sx={{
+                  color: 'hsl(var(--muted-foreground))',
+                  '&.Mui-checked, &.MuiCheckbox-indeterminate': {
+                    color: 'hsl(var(--primary))',
+                  },
+                }}
+              />
+            </Tooltip>
+
             <TextField
               size="small"
               placeholder="Search incidents..."
@@ -511,7 +534,6 @@ const IncidentsPage = () => {
                   sx={{ 
                     fontWeight: 600, 
                     color: 'hsl(var(--primary))',
-                    px: 1,
                   }}
                 >
                   {selectedIds.size} selected
