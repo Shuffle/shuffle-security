@@ -428,8 +428,8 @@ const IncidentsPage = () => {
         </Box>
       </Box>
 
-      {/* Floating Filter Bar */}
-      <Card sx={{ mb: 3 }}>
+      {/* Floating Filter Bar - sticky */}
+      <Card sx={{ mb: 3, position: 'sticky', top: 0, zIndex: 10, backgroundColor: 'hsl(var(--card))' }}>
         <CardContent sx={{ py: 1.5, px: 2, '&:last-child': { pb: 1.5 } }}>
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
             <TextField
@@ -527,6 +527,7 @@ const IncidentsPage = () => {
           display: 'grid',
           gridTemplateColumns: { xs: '1fr', lg: '1fr 320px' },
           gap: 3,
+          alignItems: 'start',
         }}
       >
         {/* Card list */}
@@ -565,7 +566,7 @@ const IncidentsPage = () => {
         </Box>
         
         {/* Stats sidebar - sticky on desktop */}
-        <Box sx={{ display: { xs: 'none', lg: 'block' }, position: 'sticky', top: 24, alignSelf: 'flex-start' }}>
+        <Box sx={{ display: { xs: 'none', lg: 'block' }, position: 'sticky', top: 72, alignSelf: 'start', maxHeight: 'calc(100vh - 96px)', overflowY: 'auto' }}>
           <IncidentStatsCards 
             incidents={incidents}
             currentUsername={currentUsername}
