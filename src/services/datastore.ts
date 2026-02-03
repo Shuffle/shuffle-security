@@ -42,6 +42,7 @@ export interface DatastoreResponse {
   success: boolean;
   data?: DatastoreItem[];
   categoryConfig?: CategoryConfig;
+  cursor?: string;
   error?: string;
 }
 
@@ -180,18 +181,24 @@ export const getDatastoreItem = async (
 };
 
 /**
- * Get all items in a category
+ * Get all items in a category with optional cursor-based pagination
  */
 export const getDatastoreByCategory = async (
-  category: string
+  category: string,
+  cursor?: string
 ): Promise<DatastoreResponse> => {
   const orgId = getOrgId();
   if (!orgId) {
     return { success: false, error: 'No organization ID found' };
   }
 
+  let url = `/api/v1/orgs/${orgId}/list_cache?category=${encodeURIComponent(category)}`;
+  if (cursor) {
+    url += `&cursor=${encodeURIComponent(cursor)}`;
+  }
+
   const response = await fetch(
-    getApiUrl(`/api/v1/orgs/${orgId}/list_cache?category=${encodeURIComponent(category)}`),
+    getApiUrl(url),
     {
       method: 'GET',
       headers: {
@@ -206,11 +213,12 @@ export const getDatastoreByCategory = async (
   }
 
   const data = await response.json();
-  // API returns items in 'keys' array and category config
+  // API returns items in 'keys' array, category config, and cursor for pagination
   return { 
     success: true, 
     data: Array.isArray(data) ? data : data.keys || data.data || [],
     categoryConfig: data.category_config,
+    cursor: data.cursor,
   };
 };
 

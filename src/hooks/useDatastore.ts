@@ -11,6 +11,7 @@ import {
   getDatastoreByCategory,
   deleteDatastoreItem,
   DatastoreItem,
+  CategoryConfig,
 } from '@/services/datastore';
 
 interface UseDatastoreOptions {
@@ -21,7 +22,12 @@ interface UseDatastoreReturn {
   items: DatastoreItem[];
   isLoading: boolean;
   error: string | null;
-  fetchItems: () => Promise<void>;
+  cursor: string | null;
+  hasMore: boolean;
+  categoryConfig: CategoryConfig | null;
+  fetchItems: (cursorParam?: string) => Promise<void>;
+  fetchNextPage: () => Promise<void>;
+  resetPagination: () => void;
   addItem: (key: string, value: string | object, skipRefresh?: boolean) => Promise<boolean>;
   addItems: (items: { key: string; value: string | object }[]) => Promise<boolean>;
   getItem: (key: string) => Promise<DatastoreItem | null>;
@@ -32,14 +38,28 @@ export const useDatastore = ({ category }: UseDatastoreOptions): UseDatastoreRet
   const [items, setItems] = useState<DatastoreItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [cursor, setCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [categoryConfig, setCategoryConfig] = useState<CategoryConfig | null>(null);
 
-  const fetchItems = useCallback(async () => {
+  const fetchItems = useCallback(async (cursorParam?: string) => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await getDatastoreByCategory(category);
+      const response = await getDatastoreByCategory(category, cursorParam);
       if (response.success && response.data) {
-        setItems(response.data);
+        if (cursorParam) {
+          // Appending to existing items (pagination)
+          setItems(prev => [...prev, ...response.data!]);
+        } else {
+          // Fresh fetch
+          setItems(response.data);
+        }
+        setCursor(response.cursor || null);
+        setHasMore(!!response.cursor);
+        if (response.categoryConfig) {
+          setCategoryConfig(response.categoryConfig);
+        }
       } else {
         setError(response.error || 'Failed to fetch items');
       }
@@ -49,6 +69,18 @@ export const useDatastore = ({ category }: UseDatastoreOptions): UseDatastoreRet
       setIsLoading(false);
     }
   }, [category]);
+
+  const fetchNextPage = useCallback(async () => {
+    if (cursor && !isLoading) {
+      await fetchItems(cursor);
+    }
+  }, [cursor, isLoading, fetchItems]);
+
+  const resetPagination = useCallback(() => {
+    setItems([]);
+    setCursor(null);
+    setHasMore(false);
+  }, []);
 
   const addItem = useCallback(async (key: string, value: string | object, skipRefresh = true): Promise<boolean> => {
     setError(null);
@@ -124,7 +156,12 @@ export const useDatastore = ({ category }: UseDatastoreOptions): UseDatastoreRet
     items,
     isLoading,
     error,
+    cursor,
+    hasMore,
+    categoryConfig,
     fetchItems,
+    fetchNextPage,
+    resetPagination,
     addItem,
     addItems,
     getItem,

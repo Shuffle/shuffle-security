@@ -190,7 +190,7 @@ const ThreatFeedsPage = () => {
             sx={{ minWidth: 220 }}
           />
           <Tooltip title="Refresh feeds">
-            <IconButton onClick={refetch} sx={{ height: 36, width: 36 }}>
+            <IconButton onClick={() => refetch()} sx={{ height: 36, width: 36 }}>
               <RefreshIcon fontSize="small" />
             </IconButton>
           </Tooltip>

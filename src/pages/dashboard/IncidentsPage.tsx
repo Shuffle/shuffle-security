@@ -211,7 +211,7 @@ const IncidentsPage = () => {
   const [sortBy, setSortBy] = useState<SortKey>('edited');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
-  const { items: datastoreItems, isLoading, error, fetchItems, addItem } = useDatastore({
+  const { items: datastoreItems, isLoading, error, fetchItems, addItem, hasMore, fetchNextPage, categoryConfig } = useDatastore({
     category: DATASTORE_CATEGORIES.INCIDENTS,
   });
 
@@ -221,14 +221,17 @@ const IncidentsPage = () => {
       if (migratedCount > 0) {
         await new Promise(resolve => setTimeout(resolve, 1500));
       }
-      const result = await getDatastoreByCategory(DATASTORE_CATEGORIES.INCIDENTS);
-      if (result.success && result.categoryConfig?.automations) {
-        setCategoryAutomations(result.categoryConfig.automations);
-      }
       await fetchItems();
     };
     init();
   }, [fetchItems]);
+
+  // Update category automations when categoryConfig changes
+  useEffect(() => {
+    if (categoryConfig?.automations) {
+      setCategoryAutomations(categoryConfig.automations);
+    }
+  }, [categoryConfig]);
 
   useEffect(() => {
     const realIncidents: DisplayIncident[] = datastoreItems
@@ -527,16 +530,39 @@ const IncidentsPage = () => {
         }}
       >
         {/* Card list */}
-        <IncidentCardView
-          incidents={sortedIncidents}
-          getIncidentUrl={getIncidentUrl}
-          onFilterChange={(type, value) => {
-            setFilters(prev => ({
-              ...prev,
-              [type]: prev[type] === value ? null : value,
-            }));
-          }}
-        />
+        <Box>
+          <IncidentCardView
+            incidents={sortedIncidents}
+            getIncidentUrl={getIncidentUrl}
+            onFilterChange={(type, value) => {
+              setFilters(prev => ({
+                ...prev,
+                [type]: prev[type] === value ? null : value,
+              }));
+            }}
+          />
+          
+          {/* Load More button for pagination */}
+          {hasMore && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+              <Button
+                variant="outlined"
+                onClick={fetchNextPage}
+                disabled={isLoading}
+                sx={{ 
+                  height: 36,
+                  minWidth: 140,
+                  borderColor: 'rgba(255,255,255,0.1)',
+                  '&:hover': {
+                    borderColor: 'rgba(255,255,255,0.2)',
+                  },
+                }}
+              >
+                {isLoading ? <CircularProgress size={20} /> : 'Load More'}
+              </Button>
+            </Box>
+          )}
+        </Box>
         
         {/* Stats sidebar */}
         <Box sx={{ display: { xs: 'none', lg: 'block' } }}>
