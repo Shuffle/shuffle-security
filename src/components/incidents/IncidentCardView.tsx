@@ -238,9 +238,9 @@ export const IncidentCardView = ({
         return (
           <motion.div
             key={incident.id}
-            initial={{ opacity: 0, y: 10 }}
+            initial={index < 10 ? { opacity: 0, y: 10 } : false}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2, delay: index * 0.03 }}
+            transition={index < 10 ? { duration: 0.2, delay: index * 0.03 } : { duration: 0 }}
             onMouseEnter={() => setHoveredId(incident.id)}
             onMouseLeave={() => setHoveredId(null)}
           >
