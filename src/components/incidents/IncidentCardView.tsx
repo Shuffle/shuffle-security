@@ -1,4 +1,4 @@
-import { Box, Typography, Chip, Checkbox } from '@mui/material';
+import { Box, Typography, Chip, Checkbox, Skeleton } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
@@ -37,7 +37,77 @@ interface IncidentCardViewProps {
   getIncidentUrl?: (incident: DisplayIncident) => string;
   selectedIds?: Set<string>;
   onSelectionChange?: (selectedIds: Set<string>) => void;
+  isLoading?: boolean;
 }
+
+// Skeleton card component for loading state
+const IncidentCardSkeleton = ({ index }: { index: number }) => (
+  <Box
+    sx={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: 2,
+      p: 2,
+      borderRadius: 2,
+      backgroundColor: 'hsl(var(--card))',
+      border: '1px solid hsl(var(--border))',
+      animation: 'pulse 1.5s ease-in-out infinite',
+      animationDelay: `${index * 0.1}s`,
+      '@keyframes pulse': {
+        '0%, 100%': { opacity: 1 },
+        '50%': { opacity: 0.6 },
+      },
+    }}
+  >
+    {/* Icon skeleton */}
+    <Skeleton 
+      variant="rounded" 
+      width={48} 
+      height={48} 
+      sx={{ bgcolor: 'hsl(var(--muted) / 0.3)', flexShrink: 0 }} 
+    />
+    
+    {/* Content skeleton */}
+    <Box sx={{ flex: 1, minWidth: 0 }}>
+      <Skeleton 
+        variant="text" 
+        width="60%" 
+        height={24} 
+        sx={{ bgcolor: 'hsl(var(--muted) / 0.3)', mb: 0.5 }} 
+      />
+      <Box sx={{ display: 'flex', gap: 1 }}>
+        <Skeleton 
+          variant="rounded" 
+          width={70} 
+          height={24} 
+          sx={{ bgcolor: 'hsl(var(--muted) / 0.2)', borderRadius: 3 }} 
+        />
+        <Skeleton 
+          variant="rounded" 
+          width={85} 
+          height={24} 
+          sx={{ bgcolor: 'hsl(var(--muted) / 0.2)', borderRadius: 3 }} 
+        />
+      </Box>
+    </Box>
+    
+    {/* Right side skeleton */}
+    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.5 }}>
+      <Skeleton 
+        variant="text" 
+        width={100} 
+        height={16} 
+        sx={{ bgcolor: 'hsl(var(--muted) / 0.2)' }} 
+      />
+      <Skeleton 
+        variant="text" 
+        width={80} 
+        height={14} 
+        sx={{ bgcolor: 'hsl(var(--muted) / 0.15)' }} 
+      />
+    </Box>
+  </Box>
+);
 
 // Map incident types/sources to icons - more original choices
 const getIncidentIcon = (source: string, title: string) => {
@@ -91,6 +161,7 @@ export const IncidentCardView = ({
   getIncidentUrl,
   selectedIds = new Set(),
   onSelectionChange,
+  isLoading = false,
 }: IncidentCardViewProps) => {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
@@ -110,9 +181,19 @@ export const IncidentCardView = ({
   const isSelected = (id: string) => selectedIds.has(id);
   const showCheckbox = (id: string) => selectedIds.size > 0 || hoveredId === id;
 
+  // Show skeletons while loading and no incidents yet
+  if (isLoading && incidents.length === 0) {
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+        {[...Array(8)].map((_, index) => (
+          <IncidentCardSkeleton key={index} index={index} />
+        ))}
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-
       {incidents.map((incident, index) => {
         const IconComponent = getIncidentIcon(incident.source, incident.title);
         const statusInfo = statusConfig[incident.status] || statusConfig.new;
