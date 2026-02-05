@@ -182,7 +182,10 @@ export const TaskEditor = ({
                 {!compact && (
                   <IconButton 
                     size="small" 
-                    onClick={() => setExpandedTaskId(isExpanded ? null : task.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setExpandedTaskId(isExpanded ? null : task.id);
+                    }}
                     sx={{ p: 0.25, color: 'text.secondary' }}
                   >
                     {isExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
@@ -191,7 +194,10 @@ export const TaskEditor = ({
                 
                 <IconButton 
                   size="small" 
-                  onClick={() => !isBlocked && handleToggleTask(task.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!isBlocked) handleToggleTask(task.id);
+                  }}
                   disabled={isBlocked}
                   sx={{ 
                     p: 0.5,
@@ -311,7 +317,10 @@ export const TaskEditor = ({
                 
                 <IconButton 
                   size="small" 
-                  onClick={() => handleDeleteTask(task.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteTask(task.id);
+                  }}
                   sx={{ 
                     p: 0.5, 
                     color: 'text.disabled',

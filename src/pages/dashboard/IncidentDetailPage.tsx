@@ -424,7 +424,12 @@ const IncidentDetailPage = () => {
         setEditedCustomFields(loadedCustomFields);
         setActivity(parsed.activity || []);
         const loadedTasks = parsed.tasks || customAttrs?.tasks || (parsed.rawOCSF as any)?.tasks || [];
-        setTasks(loadedTasks);
+        // Ensure all tasks have unique IDs
+        const normalizedTasks = loadedTasks.map((task: IncidentTask, index: number) => ({
+          ...task,
+          id: task.id || `task-${Date.now()}-${index}`,
+        }));
+        setTasks(normalizedTasks);
         // Auto-switch to Details tab if no tasks (only on initial load)
         if (showLoading && loadedTasks.length === 0) {
           setActiveTab(1);
@@ -1454,7 +1459,10 @@ const IncidentDetailPage = () => {
                         {/* Expand toggle */}
                         <IconButton 
                           size="small" 
-                          onClick={() => setExpandedTaskId(isExpanded ? null : task.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExpandedTaskId(isExpanded ? null : task.id);
+                          }}
                           sx={{ p: 0.25, color: 'text.secondary' }}
                         >
                           {isExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
@@ -1462,7 +1470,10 @@ const IncidentDetailPage = () => {
                         
                         <IconButton 
                           size="small" 
-                          onClick={() => !isBlocked && handleToggleTask(task.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!isBlocked) handleToggleTask(task.id);
+                          }}
                           disabled={isBlocked}
                           sx={{ 
                             p: 0.5,
@@ -1579,7 +1590,10 @@ const IncidentDetailPage = () => {
                         
                         <IconButton 
                           size="small" 
-                          onClick={() => handleDeleteTask(task.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteTask(task.id);
+                          }}
                           sx={{ 
                             color: 'text.disabled',
                             border: '1px solid rgba(255,255,255,0.08)',
