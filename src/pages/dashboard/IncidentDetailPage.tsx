@@ -695,6 +695,7 @@ const IncidentDetailPage = () => {
       user: currentUsername,
       timestamp: Date.now(),
       content: newComment.trim() || (commentAttachments.length > 0 ? `Attached ${commentAttachments.length} file(s)` : ''),
+      details: {},
       attachments: commentAttachments.length > 0 ? [...commentAttachments] : [],
     };
     
@@ -736,6 +737,8 @@ const IncidentDetailPage = () => {
       user: currentUsername,
       timestamp: Date.now(),
       content: `Resolved: ${reasonLabel}${resolutionData.notes ? ` - ${resolutionData.notes}` : ''}`,
+      details: {},
+      attachments: [],
     };
     
     const updatedActivity = [...activity, resolveActivity];
@@ -794,9 +797,16 @@ const IncidentDetailPage = () => {
     const newTask: IncidentTask = {
       id: `task-${Date.now()}`,
       title: newTaskTitle.trim(),
+      description: '',
+      category: '',
       completed: false,
+      assignee: '',
+      dueDate: '',
+      dependsOn: '',
       createdAt: Date.now(),
+      completedAt: 0,
       createdBy: currentUsername,
+      attachments: [],
     };
     setTasks([...tasks, newTask]);
     setNewTaskTitle('');
@@ -860,13 +870,16 @@ const IncidentDetailPage = () => {
     const newTasks: IncidentTask[] = template.tasks.map((t, index) => ({
       id: `task-${Date.now()}-${index}`,
       title: t.title,
-      description: t.description,
+      description: t.description || '',
       category: t.category || '',
       completed: false,
+      completedAt: 0,
       assignee: t.assignee || '',
       dependsOn: t.dependsOn || '',
+      dueDate: '',
       createdAt: Date.now(),
       createdBy: currentUsername,
+      attachments: [],
     }));
     setTasks([...tasks, ...newTasks]);
     setShowTemplateMenu(false);

@@ -94,9 +94,10 @@ const CustomFieldsPage = () => {
     
     const fieldToSave: CustomField = {
       ...formData,
+      description: formData.description || '',
       options: formData.type === 'select' && optionsInput 
         ? optionsInput.split(',').map(o => o.trim()).filter(Boolean)
-        : undefined,
+        : [],
     };
     
     if (editingField && editingField.key !== formData.key) {

@@ -124,12 +124,16 @@ export const CreateIncidentDialog = ({ open, onClose, onSubmit }: CreateIncident
         const templateTasks: IncidentTask[] = template.tasks.map((t, index) => ({
           id: `task-${Date.now()}-${index}`,
           title: t.title,
-          description: t.description,
-          category: t.category,
-          assignee: t.assignee,
-          dependsOn: t.dependsOn,
+          description: t.description || '',
+          category: t.category || '',
+          assignee: t.assignee || '',
+          dependsOn: t.dependsOn || '',
+          dueDate: '',
           completed: false,
+          completedAt: 0,
           createdAt: Date.now(),
+          createdBy: '',
+          attachments: [],
         }));
         setTasks(templateTasks);
         // Optionally set severity from template

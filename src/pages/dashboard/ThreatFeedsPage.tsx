@@ -113,7 +113,7 @@ const ThreatFeedsPage = () => {
       id: editingFeed?.id || `feed_${Date.now()}`,
       name: formData.name,
       url: formData.url,
-      description: formData.description,
+      description: formData.description || '',
       enabled: formData.enabled ?? true,
     };
     

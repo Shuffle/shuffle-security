@@ -81,12 +81,15 @@ const TemplatesPage = () => {
     setFormTasks(template.tasks.map((t, idx) => ({
       id: `task-${idx}`,
       title: t.title,
-      description: t.description,
-      category: t.category,
+      description: t.description || '',
+      category: t.category || '',
       assignee: t.assignee || '',
-      dependsOn: t.dependsOn,
+      dependsOn: t.dependsOn || '',
+      dueDate: '',
       completed: false,
+      completedAt: 0,
       createdAt: Date.now(),
+      attachments: [],
     })));
     setEditDialogOpen(true);
     setMenuAnchor(null);
@@ -109,10 +112,10 @@ const TemplatesPage = () => {
       // Convert IncidentTask back to TemplateTask
       const templateTasks: TemplateTask[] = formTasks.map(t => ({
         title: t.title,
-        description: t.description,
-        category: t.category,
-        assignee: t.assignee,
-        dependsOn: t.dependsOn,
+        description: t.description || '',
+        category: t.category || '',
+        assignee: t.assignee || '',
+        dependsOn: t.dependsOn || '',
       }));
 
       if (selectedTemplate) {

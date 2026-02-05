@@ -387,6 +387,8 @@ const IncidentsPage = () => {
           user: currentUsername,
           timestamp: Date.now(),
           content: `Resolved: ${reasonLabel}${resolutionData.notes ? ` - ${resolutionData.notes}` : ''}`,
+          details: {},
+          attachments: [],
         };
         
         // Get existing data or initialize empty structure

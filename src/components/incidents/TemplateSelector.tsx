@@ -40,17 +40,20 @@ export const TemplateSelector = ({ onApplyTemplate, currentUsername = '' }: Temp
   };
 
   const handleApplyTemplate = async (template: CaseTemplate) => {
-    // Convert template tasks to incident tasks
+    // Convert template tasks to incident tasks with all fields initialized
     const newTasks: IncidentTask[] = template.tasks.map((t: TemplateTask, index: number) => ({
       id: `task-${Date.now()}-${index}`,
       title: t.title,
-      description: t.description,
+      description: t.description || '',
       category: t.category || '',
       completed: false,
+      completedAt: 0,
       assignee: t.assignee || '',
       dependsOn: t.dependsOn || '',
+      dueDate: '',
       createdAt: Date.now(),
       createdBy: currentUsername,
+      attachments: [],
     }));
     
     onApplyTemplate(newTasks);
