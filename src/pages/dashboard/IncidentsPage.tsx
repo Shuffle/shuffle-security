@@ -394,7 +394,9 @@ const IncidentsPage = () => {
         const existingMetadata = rawOCSF.metadata || {};
         const existingExtensions = existingMetadata.extensions || {};
         const existingCustomAttrs = (existingExtensions.custom_attributes || {}) as Record<string, unknown>;
-        const existingActivity = (existingCustomAttrs.activity as ActivityItem[] | undefined) || [];
+        // Get existing activity from top level first, then metadata fallback
+        const existingActivity = (rawOCSF as any).activity || 
+          ((existingCustomAttrs.activity as ActivityItem[] | undefined) || []);
         
         const updated = {
           // Ensure required OCSF fields exist
@@ -407,6 +409,8 @@ const IncidentsPage = () => {
           status_id: 3,
           status: 'Resolved',
           status_detail: `${resolutionData.reason}${resolutionData.notes ? `: ${resolutionData.notes}` : ''}`,
+          // Store activity at top level (primary location)
+          activity: [...existingActivity, resolveActivity],
           // Ensure metadata structure exists
           metadata: {
             ...existingMetadata,
@@ -414,11 +418,16 @@ const IncidentsPage = () => {
               ...existingExtensions,
               custom_attributes: {
                 ...existingCustomAttrs,
-                activity: [...existingActivity, resolveActivity],
+                // Remove activity from metadata (migrated to top level)
               },
             },
           },
         };
+        
+        // Remove the old activity key from custom_attributes if it exists
+        if ((updated.metadata.extensions.custom_attributes as Record<string, unknown>).activity) {
+          delete (updated.metadata.extensions.custom_attributes as Record<string, unknown>).activity;
+        }
         
         const { setDatastoreItem } = await import('@/services/datastore');
         return setDatastoreItem(incident.id, updated, DATASTORE_CATEGORIES.INCIDENTS);

@@ -160,7 +160,15 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
       const tlpValue = customAttrs?.tlp;
       const tlpLabel = typeof tlpValue === 'number' ? TLP_LABELS[tlpValue]?.label : undefined;
       
-      // Convert comments to activity for display
+      // Read tasks and activity from top level first, fallback to metadata
+      const topLevelTasks = (data as any).tasks;
+      const topLevelActivity = (data as any).activity;
+      const metadataTasks = customAttrs?.tasks;
+      const metadataActivity = (customAttrs as any)?.activity;
+      const tasks = topLevelTasks || metadataTasks;
+      const activity = topLevelActivity || metadataActivity || [];
+      
+      // Convert comments to activity for display (legacy format support)
       const comments = customAttrs?.comments || [];
       const activityFromComments: ActivityItem[] = comments.map((c, i) => ({
         id: `comment-${i}`,
@@ -170,24 +178,27 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
         content: c.text,
       }));
       
+      // Use top-level/metadata activity if exists, otherwise fallback to comments
+      const mergedActivity = activity.length > 0 ? activity : activityFromComments;
+      
       return {
         id: item.key, // Always use datastore key as the canonical ID
         title: ocsf.title,
         source: ocsf.product?.name || ocsf.types?.[0] || 'Unknown',
         severity: mapOCSFSeverity(ocsf.severity_id || 3),
         status: mapOCSFStatus(ocsf.status_id || 1),
-        assignee: customAttrs?.assignee || null,
+        assignee: customAttrs?.assignee || (data as any).assignee || null,
         created: formatTimestamp(item.created),
         createdTs: parseTimestamp(item.created),
         edited: item.edited ? formatTimestamp(item.edited) : undefined,
         editedTs: item.edited ? parseTimestamp(item.edited) : undefined,
         tlp: tlpLabel,
         references: ocsf.references,
-        observables: customAttrs?.observables,
-        customFields: customAttrs?.customFields,
+        observables: customAttrs?.observables || (data as any).observables,
+        customFields: customAttrs?.customFields || (data as any).customFields,
         relatedFindings: ocsf.related_events,
-        activity: activityFromComments,
-        tasks: customAttrs?.tasks,
+        activity: mergedActivity,
+        tasks,
         rawOCSF: data, // Store raw data for updates
       };
     } else if (isLegacyOCSF) {
@@ -500,6 +511,9 @@ const IncidentDetailPage = () => {
       status: statusLabel,
       assignee: editedAssignee.trim() || undefined,
       observables: editedObservables.length > 0 ? editedObservables : undefined,
+      // Store tasks and activity at top level (primary location)
+      tasks: tasks.length > 0 ? tasks : undefined,
+      activity,
       finding_info_list: [{
         ...existingFindingInfo,
         title: editedTitle,
@@ -512,8 +526,7 @@ const IncidentDetailPage = () => {
           custom_attributes: {
             tlp: editedTlp,
             customFields: Object.keys(editedCustomFields).length > 0 ? editedCustomFields : undefined,
-            activity,
-            tasks: tasks.length > 0 ? tasks : undefined,
+            // tasks and activity moved to top level
           },
         },
       },
@@ -673,14 +686,16 @@ const IncidentDetailPage = () => {
     setNewComment('');
     setCommentAttachments([]);
     
-    const updatedOCSF: OCSFIncidentFinding = {
+    const updatedOCSF = {
       ...incident.rawOCSF!,
+      // Store activity at top level (primary location)
+      activity: updatedActivity,
       metadata: {
         ...incident.rawOCSF!.metadata,
         extensions: {
           custom_attributes: {
             ...incident.rawOCSF!.metadata?.extensions?.custom_attributes,
-            activity: updatedActivity,
+            // Remove activity from metadata (migrated to top level)
           },
         },
       },
@@ -712,12 +727,14 @@ const IncidentDetailPage = () => {
       status_id: 3,
       status: 'Resolved',
       status_detail: `${resolutionData.reason}${resolutionData.notes ? `: ${resolutionData.notes}` : ''}`,
+      // Store activity at top level (primary location)
+      activity: updatedActivity,
       metadata: {
         ...incident.rawOCSF.metadata,
         extensions: {
           custom_attributes: {
             ...incident.rawOCSF.metadata?.extensions?.custom_attributes,
-            activity: updatedActivity,
+            // activity moved to top level
           },
         },
       },
