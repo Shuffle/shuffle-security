@@ -408,7 +408,14 @@ const IncidentDetailPage = () => {
         const { htmlToPlainText } = await import('@/lib/utils');
         setEditedMessage(htmlToPlainText(rawDesc));
         setEditedSeverity(parsed.severity);
-        setEditedAssignee(parsed.assignee || '');
+        // Normalize assignee: must be a valid team member or AI Agent
+        const rawAssignee = parsed.assignee || '';
+        const normalizedAssignee = (() => {
+          if (isAIAssignee(rawAssignee)) return 'AI Agent';
+          // Check if assignee is a valid team member (will be validated after users load)
+          return rawAssignee;
+        })();
+        setEditedAssignee(normalizedAssignee);
         setEditedStatus(parsed.status);
         setEditedTlp(parsed.tlp || 'TLP:AMBER');
         setEditedReferences(parsed.references || []);
@@ -447,6 +454,26 @@ const IncidentDetailPage = () => {
   useEffect(() => {
     loadIncident();
   }, [loadIncident]);
+
+  // Validate assignee against team members once users finish loading
+  useEffect(() => {
+    if (usersLoading || !editedAssignee) return;
+    
+    // AI Agent is always valid
+    if (isAIAssignee(editedAssignee)) {
+      if (editedAssignee !== 'AI Agent') {
+        setEditedAssignee('AI Agent');
+      }
+      return;
+    }
+    
+    // Check if assignee is a valid team member
+    const validUsernames = users.map(u => u.username.toLowerCase());
+    if (!validUsernames.includes(editedAssignee.toLowerCase())) {
+      // Invalid assignee - clear it
+      setEditedAssignee('');
+    }
+  }, [usersLoading, users, editedAssignee]);
 
   // Auto-refresh every 30 seconds to keep incident up-to-date
   useEffect(() => {
