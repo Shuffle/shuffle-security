@@ -7,7 +7,7 @@
  * - Self-hosted: Your own backend URL (e.g., https://shuffle.yourdomain.com)
  */
 
-const DEV_BACKEND = 'https://fish-patent-porcelain-leaving.trycloudflare.com';
+const DEV_BACKEND = 'https://pet-biblical-amino-interference.trycloudflare.com';
 const PROD_BACKEND = 'https://shuffler.io';
 
 // Determine if we're in Lovable preview (dev) or published (prod)
