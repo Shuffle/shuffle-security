@@ -159,9 +159,16 @@ export const TaskEditor = ({
         </Box>
       )}
 
-      {/* Task list */}
+      {/* Task list - visually deduplicate by ID without modifying source data */}
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {tasks.map((task) => {
+        {(() => {
+          const seenIds = new Set<string>();
+          return tasks.filter((task) => {
+            if (seenIds.has(task.id)) return false;
+            seenIds.add(task.id);
+            return true;
+          });
+        })().map((task) => {
           const isBlocked = isTaskBlocked(task);
           const dependencyTask = task.dependsOn ? tasks.find(t => t.title === task.dependsOn) : null;
           const isExpanded = expandedTaskId === task.id;
