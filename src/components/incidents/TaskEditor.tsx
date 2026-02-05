@@ -107,7 +107,10 @@ export const TaskEditor = ({
   };
 
   const handleDeleteTask = (taskId: string) => {
-    onTasksChange(tasks.filter(task => task.id !== taskId));
+    // Soft delete: mark as disabled instead of removing
+    onTasksChange(tasks.map(task => 
+      task.id === taskId ? { ...task, disabled: true } : task
+    ));
   };
 
   const isTaskBlocked = (task: IncidentTask): boolean => {
@@ -159,15 +162,17 @@ export const TaskEditor = ({
         </Box>
       )}
 
-      {/* Task list - visually deduplicate by ID without modifying source data */}
+      {/* Task list - visually deduplicate by ID and hide disabled tasks */}
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {(() => {
           const seenIds = new Set<string>();
-          return tasks.filter((task) => {
-            if (seenIds.has(task.id)) return false;
-            seenIds.add(task.id);
-            return true;
-          });
+          return tasks
+            .filter((task) => !task.disabled) // Hide disabled (soft-deleted) tasks
+            .filter((task) => {
+              if (seenIds.has(task.id)) return false;
+              seenIds.add(task.id);
+              return true;
+            });
         })().map((task) => {
           const isBlocked = isTaskBlocked(task);
           const dependencyTask = task.dependsOn ? tasks.find(t => t.title === task.dependsOn) : null;
