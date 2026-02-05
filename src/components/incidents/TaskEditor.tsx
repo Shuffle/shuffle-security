@@ -169,13 +169,10 @@ export const TaskEditor = ({
           
           return (
             <Box key={task.id}>
-              {/* Task Header Row */}
+              {/* Task Card */}
               <Box 
                 sx={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: compact ? 1.5 : 2.5,
-                  p: compact ? 1.5 : 2.5,
+                  p: compact ? 1.5 : 2,
                   borderRadius: isExpanded ? '12px 12px 0 0' : '12px',
                   bgcolor: isExpanded 
                     ? 'rgba(255, 102, 0, 0.08)' 
@@ -198,176 +195,189 @@ export const TaskEditor = ({
                   boxShadow: isExpanded ? '0 4px 20px rgba(255, 102, 0, 0.15)' : 'none',
                 }}
               >
-                {/* Expand toggle */}
-                {!compact && (
+                {/* Row 1: Checkbox + Title + Delete */}
+                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+                  {/* Expand toggle */}
+                  {!compact && (
+                    <IconButton 
+                      size="small" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setExpandedTaskId(isExpanded ? null : task.id);
+                      }}
+                      sx={{ p: 0.5, color: 'text.secondary', mt: 0.25 }}
+                    >
+                      {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                    </IconButton>
+                  )}
+                  
                   <IconButton 
                     size="small" 
                     onClick={(e) => {
                       e.stopPropagation();
-                      setExpandedTaskId(isExpanded ? null : task.id);
+                      if (!isBlocked) handleToggleTask(task.id);
                     }}
-                    sx={{ p: 0.5, color: 'text.secondary' }}
+                    disabled={isBlocked}
+                    sx={{ 
+                      p: 0.5,
+                      mt: 0.25,
+                      color: task.completed ? '#22c55e' : 'text.secondary',
+                    }}
                   >
-                    {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                    {task.completed ? (
+                      <CheckCircleIcon />
+                    ) : (
+                      <Box sx={{ 
+                        width: 20, 
+                        height: 20, 
+                        borderRadius: '50%', 
+                        border: '2px solid currentColor',
+                      }} />
+                    )}
                   </IconButton>
-                )}
-                
-                <IconButton 
-                  size="small" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (!isBlocked) handleToggleTask(task.id);
-                  }}
-                  disabled={isBlocked}
-                  sx={{ 
-                    p: 0.5,
-                    color: task.completed ? '#22c55e' : 'text.secondary',
-                  }}
-                >
-                  {task.completed ? (
-                    <CheckCircleIcon />
-                  ) : (
-                    <Box sx={{ 
-                      width: 20, 
-                      height: 20, 
-                      borderRadius: '50%', 
-                      border: '2px solid currentColor',
-                    }} />
-                  )}
-                </IconButton>
-                
-                <Box sx={{ flex: '1 1 auto', minWidth: 0, overflow: 'hidden' }}>
-                  <MentionInput
-                    value={task.title}
-                    onChange={(value) => handleUpdateTaskTitle(task.id, value)}
-                    size="small"
-                    variant="standard"
-                    placeholder="Task title..."
-                    multiline
-                    InputProps={{
-                      disableUnderline: true,
-                      sx: { 
-                        fontSize: compact ? '0.95rem' : '1.15rem',
-                        fontWeight: 500,
-                        lineHeight: 1.5,
-                        textDecoration: task.completed ? 'line-through' : 'none',
-                        color: task.completed ? 'text.secondary' : 'text.primary',
-                        '&:hover': { bgcolor: 'rgba(255,255,255,0.03)' },
-                        borderRadius: 0.5,
-                        px: 0.5,
-                        py: 0.5,
-                        whiteSpace: 'pre-wrap',
-                        wordBreak: 'break-word',
-                        overflowWrap: 'break-word',
-                      },
+                  
+                  {/* Title - full width */}
+                  <Box sx={{ flex: 1 }}>
+                    <MentionInput
+                      value={task.title}
+                      onChange={(value) => handleUpdateTaskTitle(task.id, value)}
+                      size="small"
+                      variant="standard"
+                      placeholder="Task title..."
+                      multiline
+                      InputProps={{
+                        disableUnderline: true,
+                        sx: { 
+                          fontSize: compact ? '0.95rem' : '1.1rem',
+                          fontWeight: 500,
+                          lineHeight: 1.5,
+                          textDecoration: task.completed ? 'line-through' : 'none',
+                          color: task.completed ? 'text.secondary' : 'text.primary',
+                          '&:hover': { bgcolor: 'rgba(255,255,255,0.03)' },
+                          borderRadius: 0.5,
+                          px: 0.5,
+                          py: 0.25,
+                        },
+                      }}
+                      sx={{ width: '100%' }}
+                    />
+                    {isBlocked && dependencyTask && (
+                      <Typography variant="caption" sx={{ color: 'warning.main', display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5, pl: 0.5 }}>
+                        ⏳ Waiting on: {dependencyTask.title}
+                      </Typography>
+                    )}
+                  </Box>
+                  
+                  <IconButton 
+                    size="small" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteTask(task.id);
                     }}
-                    sx={{ width: '100%' }}
-                  />
-                  {isBlocked && dependencyTask && (
-                    <Typography variant="caption" sx={{ color: 'warning.main', display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5, pl: 0.5 }}>
-                      ⏳ Waiting on: {dependencyTask.title}
-                    </Typography>
-                  )}
+                    sx={{ 
+                      p: 0.5, 
+                      mt: 0.25,
+                      color: 'text.disabled',
+                      '&:hover': { color: '#ef4444' },
+                    }}
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
                 </Box>
                 
-                {/* Category dropdown as a styled chip */}
-                <ShadcnSelect
-                  value={task.category || ''}
-                  onValueChange={(value) => handleUpdateTaskCategory(task.id, value)}
-                >
-                  <SelectTrigger 
-                    className="h-7 min-w-[120px] max-w-[160px] border-0 px-2.5 text-xs font-medium"
-                    style={{
-                      backgroundColor: categoryInfo ? `${categoryInfo.color}20` : 'rgba(255,255,255,0.1)',
-                      color: categoryInfo?.color || 'hsl(var(--muted-foreground))',
-                      borderRadius: '9999px',
-                    }}
-                    onClick={(e) => e.stopPropagation()}
+                {/* Row 2: Metadata (Category, AI badge, Assignee, Due date) */}
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 1.5, 
+                  mt: 1.5, 
+                  ml: compact ? 4.5 : 7.5,
+                  flexWrap: 'wrap',
+                }}>
+                  {/* Category dropdown */}
+                  <ShadcnSelect
+                    value={task.category || ''}
+                    onValueChange={(value) => handleUpdateTaskCategory(task.id, value)}
                   >
-                    <SelectValue placeholder="Category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {taskCategories.map((cat) => (
-                      <SelectItem key={cat.value} value={cat.value}>
-                        <div className="flex items-center gap-2">
-                          <div 
-                            className="w-2 h-2 rounded-full" 
-                            style={{ backgroundColor: cat.color }} 
-                          />
-                          {cat.label}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </ShadcnSelect>
-                
-                {/* AI Agent badge */}
-                {task.assignee === 'AI Agent' && (
-                  <div 
-                    className="h-7 px-2.5 rounded-full text-xs font-semibold flex items-center gap-1.5"
-                    style={{
-                      backgroundColor: task.aiWorking ? 'rgba(34, 197, 94, 0.2)' : 'rgba(34, 197, 94, 0.1)',
-                      color: '#22c55e',
-                      border: task.aiWorking ? '1px solid rgba(34, 197, 94, 0.4)' : 'none',
-                      animation: task.aiWorking ? 'pulse 2s infinite' : 'none',
-                    }}
-                  >
-                    <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#22c55e' }} />
-                    {task.aiWorking ? 'AI Working...' : 'AI Agent'}
-                  </div>
-                )}
-                
-                {!compact && (
-                  <>
-                    <FormControl size="small" sx={{ minWidth: 100 }}>
-                      <Select
-                        value={task.assignee || ''}
-                        onChange={(e) => handleUpdateTaskAssignee(task.id, e.target.value)}
-                        variant="standard"
-                        disableUnderline
-                        displayEmpty
-                        disabled={usersLoading}
-                        sx={{ fontSize: '0.75rem' }}
-                      >
-                        <MenuItem value=""><em>Unassigned</em></MenuItem>
-                        <MenuItem value="AI Agent" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Box component="span" sx={{ 
-                            width: 6, 
-                            height: 6, 
-                            borderRadius: '50%', 
-                            bgcolor: '#22c55e',
-                            display: 'inline-block',
-                            mr: 0.5,
-                          }} />
-                          AI Agent
-                        </MenuItem>
-                        {users.map((user) => (
-                          <MenuItem key={user.id} value={user.username}>{user.username}</MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                    
-                    <TaskDateTimePicker
-                      value={task.dueDate}
-                      onChange={(date) => handleUpdateTaskDueDate(task.id, date)}
-                    />
-                  </>
-                )}
-                
-                <IconButton 
-                  size="small" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteTask(task.id);
-                  }}
-                  sx={{ 
-                    p: 0.5, 
-                    color: 'text.disabled',
-                    '&:hover': { color: '#ef4444' },
-                  }}
-                >
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
+                    <SelectTrigger 
+                      className="h-7 w-auto min-w-[100px] border-0 px-2.5 text-xs font-medium"
+                      style={{
+                        backgroundColor: categoryInfo ? `${categoryInfo.color}20` : 'rgba(255,255,255,0.1)',
+                        color: categoryInfo?.color || 'hsl(var(--muted-foreground))',
+                        borderRadius: '9999px',
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <SelectValue placeholder="Category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {taskCategories.map((cat) => (
+                        <SelectItem key={cat.value} value={cat.value}>
+                          <div className="flex items-center gap-2">
+                            <div 
+                              className="w-2 h-2 rounded-full" 
+                              style={{ backgroundColor: cat.color }} 
+                            />
+                            {cat.label}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </ShadcnSelect>
+                  
+                  {/* AI Agent badge */}
+                  {task.assignee === 'AI Agent' && (
+                    <div 
+                      className="h-7 px-2.5 rounded-full text-xs font-semibold flex items-center gap-1.5"
+                      style={{
+                        backgroundColor: task.aiWorking ? 'rgba(34, 197, 94, 0.2)' : 'rgba(34, 197, 94, 0.1)',
+                        color: '#22c55e',
+                        border: task.aiWorking ? '1px solid rgba(34, 197, 94, 0.4)' : 'none',
+                        animation: task.aiWorking ? 'pulse 2s infinite' : 'none',
+                      }}
+                    >
+                      <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#22c55e' }} />
+                      {task.aiWorking ? 'AI Working...' : 'AI Agent'}
+                    </div>
+                  )}
+                  
+                  {!compact && (
+                    <>
+                      <FormControl size="small" sx={{ minWidth: 100 }}>
+                        <Select
+                          value={task.assignee || ''}
+                          onChange={(e) => handleUpdateTaskAssignee(task.id, e.target.value)}
+                          variant="standard"
+                          disableUnderline
+                          displayEmpty
+                          disabled={usersLoading}
+                          sx={{ fontSize: '0.75rem' }}
+                        >
+                          <MenuItem value=""><em>Unassigned</em></MenuItem>
+                          <MenuItem value="AI Agent" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Box component="span" sx={{ 
+                              width: 6, 
+                              height: 6, 
+                              borderRadius: '50%', 
+                              bgcolor: '#22c55e',
+                              display: 'inline-block',
+                              mr: 0.5,
+                            }} />
+                            AI Agent
+                          </MenuItem>
+                          {users.map((user) => (
+                            <MenuItem key={user.id} value={user.username}>{user.username}</MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                      
+                      <TaskDateTimePicker
+                        value={task.dueDate}
+                        onChange={(date) => handleUpdateTaskDueDate(task.id, date)}
+                      />
+                    </>
+                  )}
+                </Box>
               </Box>
               
               {/* Expanded Task Details */}
