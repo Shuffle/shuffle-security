@@ -695,7 +695,7 @@ const IncidentDetailPage = () => {
       user: currentUsername,
       timestamp: Date.now(),
       content: newComment.trim() || (commentAttachments.length > 0 ? `Attached ${commentAttachments.length} file(s)` : ''),
-      attachments: commentAttachments.length > 0 ? [...commentAttachments] : undefined,
+      attachments: commentAttachments.length > 0 ? [...commentAttachments] : [],
     };
     
     const updatedActivity = [...activity, commentActivity];
@@ -809,7 +809,7 @@ const IncidentDetailPage = () => {
         ? { 
             ...task, 
             completed: !task.completed, 
-            completedAt: !task.completed ? Date.now() : undefined 
+            completedAt: !task.completed ? Date.now() : 0 
           } 
         : task
     ));
@@ -861,10 +861,10 @@ const IncidentDetailPage = () => {
       id: `task-${Date.now()}-${index}`,
       title: t.title,
       description: t.description,
-      category: t.category,
+      category: t.category || '',
       completed: false,
-      assignee: t.assignee || undefined,
-      dependsOn: t.dependsOn,
+      assignee: t.assignee || '',
+      dependsOn: t.dependsOn || '',
       createdAt: Date.now(),
       createdBy: currentUsername,
     }));

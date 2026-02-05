@@ -179,16 +179,17 @@ export const IncidentDetailDialog = ({ open, incident, onClose, onResolve, onUpd
       desc: editedMessage || editedTitle,
       severity_id: severityOption?.id || 3,
       severity: severityOption?.label || 'Medium',
-      references: editedReferences.length > 0 ? editedReferences : undefined,
+      references: editedReferences, // Always include, even if empty
       metadata: {
         ...incident.rawOCSF?.metadata,
         extensions: {
+          ...incident.rawOCSF?.metadata?.extensions,
           custom_attributes: {
             ...incident.rawOCSF?.metadata?.extensions?.custom_attributes,
             tlp: typeof editedTlp === 'string' ? (editedTlp.includes('GREEN') ? 2 : editedTlp.includes('RED') ? 4 : editedTlp.includes('AMBER') ? 3 : 1) : editedTlp,
-            observables: editedObservables.length > 0 ? editedObservables : undefined,
-            customFields: Object.keys(editedCustomFields).length > 0 ? editedCustomFields : undefined,
-            assignee: editedAssignee.trim() || undefined,
+            observables: editedObservables, // Always include, even if empty
+            customFields: editedCustomFields, // Always include, even if empty
+            assignee: editedAssignee.trim() || '',
           },
         },
       },

@@ -52,7 +52,7 @@ export const TaskEditor = ({
         ? { 
             ...task, 
             completed: !task.completed, 
-            completedAt: !task.completed ? Date.now() : undefined 
+            completedAt: !task.completed ? Date.now() : 0 
           } 
         : task
     ));
@@ -96,7 +96,7 @@ export const TaskEditor = ({
 
   const handleUpdateTaskDependency = (taskId: string, dependsOn: string) => {
     onTasksChange(tasks.map(task => 
-      task.id === taskId ? { ...task, dependsOn: dependsOn || undefined } : task
+      task.id === taskId ? { ...task, dependsOn: dependsOn || '' } : task
     ));
   };
 
