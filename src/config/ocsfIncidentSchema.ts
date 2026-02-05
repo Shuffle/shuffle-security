@@ -68,6 +68,7 @@ export interface IncidentTask {
   createdBy?: string;
   aiWorking?: boolean;
   attachments?: FileAttachment[];
+  disabled?: boolean; // Soft-delete flag - hidden in UI but preserved in data
 }
 
 // Task categories for organization
