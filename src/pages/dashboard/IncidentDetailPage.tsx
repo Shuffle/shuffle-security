@@ -195,7 +195,8 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
         tlp: tlpLabel,
         references: ocsf.references,
         observables: customAttrs?.observables || (data as any).observables,
-        customFields: customAttrs?.customFields || (data as any).customFields,
+        // Support both customFields and custom_fields naming
+        customFields: customAttrs?.customFields || (customAttrs as any)?.custom_fields || (data as any).customFields || (data as any).custom_fields,
         relatedFindings: ocsf.related_events,
         activity: mergedActivity,
         tasks,
@@ -210,7 +211,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
       const pap = customAttrs?.pap || legacyData.pap;
       const tasks = customAttrs?.tasks || legacyData.tasks;
       const activity = customAttrs?.activity || legacyData.activity;
-      const customFields = customAttrs?.customFields || legacyData.customFields;
+      const customFields = customAttrs?.customFields || (customAttrs as any)?.custom_fields || legacyData.customFields || legacyData.custom_fields;
       
       return {
         id: item.key, // Always use datastore key as the canonical ID
@@ -412,7 +413,15 @@ const IncidentDetailPage = () => {
         setEditedReferences(parsed.references || []);
         setEditedObservables(parsed.observables || []);
         const customAttrs = parsed.rawOCSF?.metadata?.extensions?.custom_attributes;
-        setEditedCustomFields(customAttrs?.customFields || (parsed.rawOCSF as any)?.customFields || {});
+        // Support both customFields and custom_fields naming at various levels
+        const loadedCustomFields = 
+          (parsed.rawOCSF as any)?.customFields ||
+          (parsed.rawOCSF as any)?.custom_fields ||
+          customAttrs?.customFields ||
+          (customAttrs as any)?.custom_fields ||
+          parsed.customFields ||
+          {};
+        setEditedCustomFields(loadedCustomFields);
         setActivity(parsed.activity || []);
         const loadedTasks = parsed.tasks || customAttrs?.tasks || (parsed.rawOCSF as any)?.tasks || [];
         setTasks(loadedTasks);
@@ -572,7 +581,7 @@ const IncidentDetailPage = () => {
       editedTlp !== (incident.tlp || 'TLP:AMBER') ||
       JSON.stringify(editedReferences) !== JSON.stringify(incident.references || []) ||
       JSON.stringify(editedObservables) !== JSON.stringify(incident.observables || []) ||
-      JSON.stringify(editedCustomFields) !== JSON.stringify(customAttrs?.customFields || (incident.rawOCSF as any)?.customFields || {}) ||
+      JSON.stringify(editedCustomFields) !== JSON.stringify((incident.rawOCSF as any)?.customFields || (incident.rawOCSF as any)?.custom_fields || customAttrs?.customFields || (customAttrs as any)?.custom_fields || {}) ||
       JSON.stringify(tasks) !== JSON.stringify(incident.tasks || customAttrs?.tasks || (incident.rawOCSF as any)?.tasks || []);
     
     if (hasChanges) {
