@@ -1534,7 +1534,7 @@ const IncidentDetailPage = () => {
                                   px: 0.5,
                                 },
                               }}
-                              sx={{ flex: 1, minWidth: 120 }}
+                              sx={{ flex: 1, minWidth: 200 }}
                             />
                             {categoryInfo && (
                               <Chip
@@ -1709,17 +1709,19 @@ const IncidentDetailPage = () => {
                           
                           {/* Task metadata */}
                           <Box sx={{ display: 'flex', gap: 3, mt: 1.5, flexWrap: 'wrap' }}>
-                            <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                              Created: {new Date(task.createdAt).toLocaleDateString()}
-                            </Typography>
+                            {task.createdAt > 0 && (
+                              <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                                Created: {new Date(task.createdAt).toLocaleString()}
+                              </Typography>
+                            )}
                             {task.createdBy && (
                               <Typography variant="caption" sx={{ color: 'text.disabled' }}>
                                 By: {task.createdBy}
                               </Typography>
                             )}
-                            {task.completedAt && (
+                            {task.completedAt > 0 && (
                               <Typography variant="caption" sx={{ color: '#22c55e' }}>
-                                Completed: {new Date(task.completedAt).toLocaleDateString()}
+                                Completed: {new Date(task.completedAt).toLocaleString()}
                               </Typography>
                             )}
                           </Box>
