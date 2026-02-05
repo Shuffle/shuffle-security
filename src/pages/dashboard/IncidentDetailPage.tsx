@@ -516,6 +516,7 @@ const IncidentDetailPage = () => {
     const existingFindingInfo = incident.rawOCSF?.finding_info_list?.[0] || (incident.rawOCSF as any)?.finding_info;
     const statusLabel = editedStatus === 'new' ? 'New' : editedStatus === 'in_progress' ? 'In Progress' : editedStatus === 'on_hold' ? 'On Hold' : 'Resolved';
     
+    // CRITICAL: Never use undefined - always use empty values to prevent field deletion
     const updatedData = incident.rawOCSF ? {
       ...incident.rawOCSF,
       message: editedMessage || editedTitle,
@@ -523,24 +524,26 @@ const IncidentDetailPage = () => {
       severity: severityOption?.label || 'Medium',
       status_id: statusId,
       status: statusLabel,
-      assignee: editedAssignee.trim() || undefined,
-      observables: editedObservables.length > 0 ? editedObservables : undefined,
+      assignee: editedAssignee.trim() || '',
+      observables: editedObservables, // Always include, even if empty array
       // Store tasks and activity at top level (primary location)
-      tasks: tasks.length > 0 ? tasks : undefined,
-      activity,
+      tasks: tasks, // Always include, even if empty array
+      activity: activity, // Always include, even if empty array
       finding_info_list: [{
         ...existingFindingInfo,
         title: editedTitle,
-        references: editedReferences.length > 0 ? editedReferences : undefined,
+        references: editedReferences, // Always include, even if empty array
         src_url: editedReferences[0] || '',
       }],
       metadata: {
         ...incident.rawOCSF.metadata,
         extensions: {
+          ...incident.rawOCSF.metadata?.extensions,
           custom_attributes: {
+            ...incident.rawOCSF.metadata?.extensions?.custom_attributes,
             tlp: editedTlp,
-            customFields: Object.keys(editedCustomFields).length > 0 ? editedCustomFields : undefined,
-            // tasks and activity moved to top level
+            customFields: editedCustomFields, // Always include, even if empty object
+            // Preserve any other custom attributes that existed
           },
         },
       },
@@ -550,13 +553,13 @@ const IncidentDetailPage = () => {
       source: incident.source,
       severity: editedSeverity,
       status: editedStatus,
-      assignee: editedAssignee.trim() || undefined,
+      assignee: editedAssignee.trim() || '',
       tlp: editedTlp,
       references: editedReferences,
       observables: editedObservables,
       customFields: editedCustomFields,
-      activity,
-      tasks,
+      activity: activity,
+      tasks: tasks,
     };
 
     try {
@@ -700,6 +703,7 @@ const IncidentDetailPage = () => {
     setNewComment('');
     setCommentAttachments([]);
     
+    // CRITICAL: Never delete fields - always preserve existing structure
     const updatedOCSF = {
       ...incident.rawOCSF!,
       // Store activity at top level (primary location)
@@ -707,9 +711,10 @@ const IncidentDetailPage = () => {
       metadata: {
         ...incident.rawOCSF!.metadata,
         extensions: {
+          ...incident.rawOCSF!.metadata?.extensions,
           custom_attributes: {
             ...incident.rawOCSF!.metadata?.extensions?.custom_attributes,
-            // Remove activity from metadata (migrated to top level)
+            // Preserve all existing custom attributes
           },
         },
       },
@@ -736,6 +741,7 @@ const IncidentDetailPage = () => {
     const updatedActivity = [...activity, resolveActivity];
     
     const existingFindingInfo = incident.rawOCSF?.finding_info_list?.[0] || (incident.rawOCSF as any)?.finding_info;
+    // CRITICAL: Never use undefined - always preserve existing structure
     const resolvedData = incident.rawOCSF ? {
       ...incident.rawOCSF,
       status_id: 3,
@@ -746,9 +752,10 @@ const IncidentDetailPage = () => {
       metadata: {
         ...incident.rawOCSF.metadata,
         extensions: {
+          ...incident.rawOCSF.metadata?.extensions,
           custom_attributes: {
             ...incident.rawOCSF.metadata?.extensions?.custom_attributes,
-            // activity moved to top level
+            // Preserve all existing custom attributes
           },
         },
       },
@@ -759,8 +766,11 @@ const IncidentDetailPage = () => {
       severity: editedSeverity,
       status: 'resolved',
       status_detail: `${resolutionData.reason}${resolutionData.notes ? `: ${resolutionData.notes}` : ''}`,
-      assignee: editedAssignee.trim() || undefined,
+      assignee: editedAssignee.trim() || '',
       activity: updatedActivity,
+      tasks: tasks,
+      observables: editedObservables,
+      customFields: editedCustomFields,
     };
 
     await addItem(incident.id, resolvedData);

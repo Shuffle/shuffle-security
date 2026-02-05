@@ -176,12 +176,13 @@ export const CreateIncidentDialog = ({ open, onClose, onSubmit }: CreateIncident
     const now = new Date().toISOString();
 
     // Build new OCSF format incident
+    // CRITICAL: Never use undefined - always use empty values to prevent field deletion on updates
     const incident: OCSFIncidentFinding = {
       class_uid: 2005,
       class_name: 'Incident Finding',
       finding_uid: findingUid,
       title: title.trim(),
-      desc: description.trim() || undefined,
+      desc: description.trim() || '',
       severity_id: severityId,
       severity,
       status_id: 1, // New
@@ -194,17 +195,18 @@ export const CreateIncidentDialog = ({ open, onClose, onSubmit }: CreateIncident
         name: source || 'Manual Entry',
         uid: 'shuffle-security',
       },
-      references: references.length > 0 ? references : undefined,
+      references: references, // Always include, even if empty array
       metadata: {
         uid: findingUid,
         extensions: {
           custom_attributes: {
             tlp,
             comments: [],
-            tasks: tasks.length > 0 ? tasks : undefined,
-            observables: observables.length > 0 ? observables : undefined,
-            customFields: Object.keys(customFieldValues).length > 0 ? customFieldValues : undefined,
-            assignee: assignee.trim() || undefined,
+            tasks: tasks, // Always include, even if empty array
+            observables: observables, // Always include, even if empty array
+            customFields: customFieldValues, // Always include, even if empty object
+            assignee: assignee.trim() || '',
+            attachments: [], // Initialize empty attachments array
           },
         },
       },
