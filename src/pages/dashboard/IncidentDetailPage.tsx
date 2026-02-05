@@ -424,18 +424,11 @@ const IncidentDetailPage = () => {
         setEditedCustomFields(loadedCustomFields);
         setActivity(parsed.activity || []);
         const loadedTasks = parsed.tasks || customAttrs?.tasks || (parsed.rawOCSF as any)?.tasks || [];
-        // Ensure all tasks have unique IDs and deduplicate by ID
-        const seenIds = new Set<string>();
-        const normalizedTasks = loadedTasks
-          .map((task: IncidentTask, index: number) => ({
-            ...task,
-            id: task.id || `task-${Date.now()}-${index}`,
-          }))
-          .filter((task: IncidentTask) => {
-            if (seenIds.has(task.id)) return false;
-            seenIds.add(task.id);
-            return true;
-          });
+        // Ensure all tasks have unique IDs (but don't filter duplicates - just normalize IDs)
+        const normalizedTasks = loadedTasks.map((task: IncidentTask, index: number) => ({
+          ...task,
+          id: task.id || `task-${Date.now()}-${index}`,
+        }));
         setTasks(normalizedTasks);
         // Auto-switch to Details tab if no tasks (only on initial load)
         if (showLoading && loadedTasks.length === 0) {
