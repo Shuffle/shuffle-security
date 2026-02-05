@@ -1787,16 +1787,19 @@ const IncidentDetailPage = () => {
                   </IconButton>
                 </Box>
                 {isEditingDescription ? (
-                  <MentionInput
-                    value={editedMessage}
-                    onChange={setEditedMessage}
-                    fullWidth
-                    multiline
-                    rows={6}
-                    placeholder="Add a description... (type @ to mention)"
-                    size="small"
-                    sx={inputSx}
-                  />
+                  <Box sx={{ maxHeight: 350, overflow: 'auto' }}>
+                    <MentionInput
+                      value={editedMessage}
+                      onChange={setEditedMessage}
+                      fullWidth
+                      multiline
+                      minRows={4}
+                      maxRows={12}
+                      placeholder="Add a description... (type @ to mention)"
+                      size="small"
+                      sx={inputSx}
+                    />
+                  </Box>
                 ) : (
                   <Box 
                     sx={{ 
@@ -1805,6 +1808,8 @@ const IncidentDetailPage = () => {
                       borderRadius: 1,
                       border: '1px solid rgba(255,255,255,0.1)',
                       minHeight: 120,
+                      maxHeight: 350,
+                      overflow: 'auto',
                       whiteSpace: 'pre-wrap',
                       cursor: 'pointer',
                       '&:hover': { borderColor: 'rgba(255,255,255,0.2)' },
