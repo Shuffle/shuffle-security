@@ -12,8 +12,8 @@ export const statusConfig: Record<string, {
 }> = {
   new: { 
     icon: Clock, 
-    color: '#22b8cf', 
-    bg: 'rgba(34, 184, 207, 0.15)',
+    color: '#3b82f6', 
+    bg: 'rgba(59, 130, 246, 0.15)',
     label: 'New',
     id: 1,
   },
