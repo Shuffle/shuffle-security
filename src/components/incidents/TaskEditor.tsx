@@ -236,24 +236,28 @@ export const TaskEditor = ({
                   )}
                 </IconButton>
                 
-                <Box sx={{ flex: 1, minWidth: 200 }}>
+                <Box sx={{ flex: 1, minWidth: 200, overflow: 'visible' }}>
                   <MentionInput
                     value={task.title}
                     onChange={(value) => handleUpdateTaskTitle(task.id, value)}
                     size="small"
                     variant="standard"
                     placeholder="Task title..."
+                    multiline
+                    maxRows={3}
                     InputProps={{
                       disableUnderline: true,
                       sx: { 
                         fontSize: compact ? '0.9rem' : '1.1rem',
                         fontWeight: 500,
+                        lineHeight: 1.4,
                         textDecoration: task.completed ? 'line-through' : 'none',
                         color: task.completed ? 'text.secondary' : 'text.primary',
                         '&:hover': { bgcolor: 'rgba(255,255,255,0.03)' },
                         borderRadius: 0.5,
                         px: 0.5,
                         py: 0.5,
+                        wordBreak: 'break-word',
                       },
                     }}
                     sx={{ width: '100%' }}
