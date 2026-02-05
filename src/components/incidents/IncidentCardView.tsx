@@ -12,6 +12,7 @@ import {
   Globe,
   Terminal,
   Bug,
+  ListTodo,
 } from 'lucide-react';
 import { statusConfig, severityColors } from '@/config/incidentConfig';
 import { useState, useEffect, useRef } from 'react';
@@ -28,6 +29,7 @@ interface DisplayIncident {
   edited?: string;
   editedTs?: number;
   tlp?: string;
+  taskCount?: number;
 }
 
 interface IncidentCardViewProps {
@@ -232,6 +234,8 @@ export const IncidentCardView = ({
         const statusInfo = statusConfig[incident.status] || statusConfig.new;
         const StatusIcon = statusInfo.icon;
         const severityColor = severityColors[incident.severity] || '#94a3b8';
+        // Use green for resolved incidents, otherwise use severity color
+        const iconColor = incident.status === 'resolved' ? '#22c55e' : severityColor;
         const selected = isSelected(incident.id);
         const showCheck = showCheckbox(incident.id);
 
@@ -287,10 +291,10 @@ export const IncidentCardView = ({
                   justifyContent: 'center',
                   backgroundColor: showCheck 
                     ? 'transparent' 
-                    : `${severityColor}15`,
+                    : `${iconColor}15`,
                   border: showCheck 
                     ? 'none' 
-                    : `1px solid ${severityColor}30`,
+                    : `1px solid ${iconColor}30`,
                   flexShrink: 0,
                   position: 'relative',
                 }}
@@ -332,7 +336,7 @@ export const IncidentCardView = ({
                       exit={{ opacity: 0, scale: 0.8 }}
                       transition={{ duration: 0.15 }}
                     >
-                      <IconComponent size={22} color={severityColor} />
+                      <IconComponent size={22} color={iconColor} />
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -392,6 +396,22 @@ export const IncidentCardView = ({
                       >
                         {incident.assignee}
                       </Typography>
+                    </>
+                  )}
+                  {(incident.taskCount ?? 0) > 0 && (
+                    <>
+                      <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                        •
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <ListTodo size={12} color="hsl(var(--muted-foreground))" />
+                        <Typography
+                          variant="caption"
+                          sx={{ color: 'hsl(var(--muted-foreground))' }}
+                        >
+                          {incident.taskCount}
+                        </Typography>
+                      </Box>
                     </>
                   )}
                 </Box>

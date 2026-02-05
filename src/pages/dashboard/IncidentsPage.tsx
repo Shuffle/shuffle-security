@@ -22,6 +22,7 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import { useDatastore } from '@/hooks/useDatastore';
 import { useAuth } from '@/context/AuthContext';
+import { useUsers } from '@/hooks/useUsers';
 import { DATASTORE_CATEGORIES, getDatastoreByCategory, setDatastoreItems, CategoryAutomation, deleteDatastoreItems } from '@/services/datastore';
 import { CreateIncidentDialog, ActivityItem } from '@/components/incidents/CreateIncidentDialog';
 import { OCSFIncidentFinding, Observable, TLP_LABELS, convertLegacyTlp, mapOCSFSeverity, mapOCSFStatus } from '@/config/ocsfIncidentSchema';
@@ -70,6 +71,12 @@ const migrateToIncidents = async (): Promise<number> => {
   }
 };
 
+interface TaskItem {
+  id: string;
+  assignee?: string;
+  completed?: boolean;
+}
+
 interface DisplayIncident {
   id: string;
   title: string;
@@ -87,6 +94,8 @@ interface DisplayIncident {
   observables?: Observable[];
   relatedFindings?: string[];
   rawOCSF?: OCSFIncidentFinding;
+  taskCount?: number;
+  tasks?: TaskItem[];
 }
 
 type SortDirection = 'asc' | 'desc';
@@ -110,6 +119,13 @@ const parseTimestamp = (timestamp: number | string | undefined): number => {
   return ts < 10000000000 ? ts * 1000 : ts;
 };
 
+// Helper to check if an assignee is the AI Agent
+const isAIAssignee = (assignee: string | null | undefined): boolean => {
+  if (!assignee) return false;
+  const lower = assignee.toLowerCase();
+  return lower.includes('agent') || lower === 'ai' || lower === 'ai agent';
+};
+
 const parseIncidentFromDatastore = (item: { key: string; value: string; created?: number; edited?: number }): DisplayIncident | null => {
   try {
     const data = JSON.parse(item.value);
@@ -119,12 +135,24 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
     // Check if legacy OCSF format (has finding_info_list or finding_info)
     const isLegacyOCSF = data.finding_info_list || data.finding_info || data.severity_id !== undefined;
     
+    // Extract tasks from various possible locations
+    const getTasks = (ocsf: any): TaskItem[] => {
+      const tasks = ocsf?.tasks || 
+        ocsf?.metadata?.extensions?.custom_attributes?.tasks ||
+        [];
+      return Array.isArray(tasks) ? tasks : [];
+    };
+    
     if (isNewFormat) {
       // New OCSF format
       const ocsf = data as OCSFIncidentFinding;
       const customAttrs = ocsf.metadata?.extensions?.custom_attributes;
       const tlpValue = customAttrs?.tlp;
       const tlpLabel = typeof tlpValue === 'number' ? TLP_LABELS[tlpValue]?.label : undefined;
+      const tasks = getTasks(data);
+      
+      // Get raw assignee
+      const rawAssignee = customAttrs?.assignee || null;
       
       return {
         id: item.key, // Always use datastore key as the canonical ID
@@ -132,7 +160,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
         source: ocsf.product?.name || ocsf.types?.[0] || 'Unknown',
         severity: mapOCSFSeverity(ocsf.severity_id || 3),
         status: mapOCSFStatus(ocsf.status_id || 1),
-        assignee: customAttrs?.assignee || null,
+        assignee: rawAssignee,
         created: formatTimestamp(item.created),
         createdTs: parseTimestamp(item.created),
         edited: item.edited ? formatTimestamp(item.edited) : undefined,
@@ -142,6 +170,8 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
         observables: customAttrs?.observables,
         relatedFindings: ocsf.related_events,
         rawOCSF: ocsf,
+        taskCount: tasks.length,
+        tasks,
       };
     } else if (isLegacyOCSF) {
       // Legacy OCSF format with finding_info_list
@@ -150,6 +180,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
       const customAttrs = legacyData.metadata?.extensions?.custom_attributes;
       const tlp = customAttrs?.tlp || legacyData.tlp;
       const pap = customAttrs?.pap || legacyData.pap;
+      const tasks = getTasks(legacyData);
       
       return {
         id: item.key, // Always use datastore key as the canonical ID
@@ -168,9 +199,12 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
         observables: legacyData.observables,
         relatedFindings: legacyData.related_findings,
         rawOCSF: legacyData,
+        taskCount: tasks.length,
+        tasks,
       };
     } else {
       // Non-OCSF format
+      const tasks = data.tasks || [];
       return {
         id: item.key, // Always use datastore key as the canonical ID
         title: data.title || 'Untitled',
@@ -187,6 +221,8 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
         references: data.references,
         observables: data.observables,
         rawOCSF: undefined,
+        taskCount: Array.isArray(tasks) ? tasks.length : 0,
+        tasks: Array.isArray(tasks) ? tasks : [],
       };
     }
   } catch {
@@ -204,6 +240,7 @@ interface Filters {
 const IncidentsPage = () => {
   const { userInfo } = useAuth();
   const currentUsername = userInfo?.username || '';
+  const { users, loading: usersLoading } = useUsers();
 
   const [filters, setFilters] = useState<Filters>({ severity: null, status: null, tlp: null, assignee: null });
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -221,6 +258,11 @@ const IncidentsPage = () => {
   const { items: datastoreItems, isLoading, error, fetchItems, addItem, hasMore, fetchNextPage, categoryConfig } = useDatastore({
     category: DATASTORE_CATEGORIES.INCIDENTS,
   });
+
+  // Get valid usernames for assignee validation
+  const validUsernames = useMemo(() => {
+    return new Set(users.map(u => u.username.toLowerCase()));
+  }, [users]);
 
   useEffect(() => {
     const init = async () => {
@@ -241,11 +283,25 @@ const IncidentsPage = () => {
   }, [categoryConfig]);
 
   // Derive incidents synchronously from datastoreItems to avoid flash of empty state
+  // Also validate assignees - only show if they're a valid user or AI Agent
   const incidents = useMemo(() => {
     return datastoreItems
       .map((item) => parseIncidentFromDatastore(item))
-      .filter((a): a is DisplayIncident => a !== null);
-  }, [datastoreItems]);
+      .filter((a): a is DisplayIncident => a !== null)
+      .map((incident) => {
+        // Validate assignee
+        if (incident.assignee) {
+          if (isAIAssignee(incident.assignee)) {
+            // Normalize AI Agent
+            return { ...incident, assignee: 'AI Agent' };
+          } else if (!validUsernames.has(incident.assignee.toLowerCase())) {
+            // Invalid assignee - hide it
+            return { ...incident, assignee: null };
+          }
+        }
+        return incident;
+      });
+  }, [datastoreItems, validUsernames]);
 
   // Apply smart defaults on initial load only - default to "New" OR "In Progress" status
   const [smartDefaultApplied, setSmartDefaultApplied] = useState(false);
@@ -266,7 +322,18 @@ const IncidentsPage = () => {
     if (filters.assignee === 'unassigned') {
       return incidents.filter(i => !i.assignee);
     }
-    return incidents.filter(i => i.assignee === filters.assignee);
+    // For specific user filter (e.g., "Yours"), also include incidents where a task is assigned to them
+    return incidents.filter(i => {
+      // Check incident assignee
+      if (i.assignee === filters.assignee) return true;
+      // Check if any task is assigned to this user
+      if (i.tasks && i.tasks.length > 0) {
+        return i.tasks.some(task => 
+          task.assignee?.toLowerCase() === filters.assignee?.toLowerCase()
+        );
+      }
+      return false;
+    });
   }, [incidents, filters.assignee]);
 
   const filteredIncidents = useMemo(() => {
