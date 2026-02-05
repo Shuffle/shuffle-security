@@ -25,6 +25,7 @@ import { useAuth } from '@/context/AuthContext';
 import { DATASTORE_CATEGORIES, getDatastoreByCategory, setDatastoreItems, CategoryAutomation, deleteDatastoreItems } from '@/services/datastore';
 import { CreateIncidentDialog, ActivityItem } from '@/components/incidents/CreateIncidentDialog';
 import { OCSFIncidentFinding, Observable, TLP_LABELS, convertLegacyTlp, mapOCSFSeverity, mapOCSFStatus } from '@/config/ocsfIncidentSchema';
+import { ResolveIncidentDialog, ResolutionData, RESOLUTION_REASONS } from '@/components/incidents/ResolveIncidentDialog';
 import { CategoryAutomationsDialog } from '@/components/incidents/CategoryAutomationsDialog';
 import { IncidentCardView } from '@/components/incidents/IncidentCardView';
 import { IncidentStatsCards } from '@/components/incidents/IncidentStatsCards';
@@ -210,6 +211,8 @@ const IncidentsPage = () => {
   const [categoryAutomations, setCategoryAutomations] = useState<CategoryAutomation[] | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkResolveDialogOpen, setBulkResolveDialogOpen] = useState(false);
+  const [isBulkResolving, setIsBulkResolving] = useState(false);
 
   // Sorting
   const [sortBy, setSortBy] = useState<SortKey>('edited');
@@ -367,17 +370,43 @@ const IncidentsPage = () => {
     }
   }, [selectedIds, fetchItems]);
 
-  const handleBulkClose = useCallback(async () => {
+  const handleBulkResolve = useCallback(async (resolutionData: ResolutionData) => {
     if (selectedIds.size === 0) return;
     
-    // Update each selected incident to resolved status
+    setIsBulkResolving(true);
+    
+    const reasonLabel = RESOLUTION_REASONS.find(r => r.value === resolutionData.reason)?.label || resolutionData.reason;
+    
+    // Update each selected incident to resolved status with proper resolution data
     const updates = incidents
       .filter(i => selectedIds.has(i.id))
       .map(async (incident) => {
         if (incident.rawOCSF) {
+          const resolveActivity: ActivityItem = {
+            id: `status-${Date.now()}-${incident.id}`,
+            type: 'status',
+            user: currentUsername,
+            timestamp: Date.now(),
+            content: `Resolved: ${reasonLabel}${resolutionData.notes ? ` - ${resolutionData.notes}` : ''}`,
+          };
+          
+          const customAttrs = incident.rawOCSF.metadata?.extensions?.custom_attributes as Record<string, unknown> | undefined;
+          const existingActivity = (customAttrs?.activity as ActivityItem[] | undefined) || [];
+          
           const updated = {
             ...incident.rawOCSF,
             status_id: 3, // Resolved
+            status: 'Resolved',
+            status_detail: `${resolutionData.reason}${resolutionData.notes ? `: ${resolutionData.notes}` : ''}`,
+            metadata: {
+              ...incident.rawOCSF.metadata,
+              extensions: {
+                custom_attributes: {
+                  ...incident.rawOCSF.metadata?.extensions?.custom_attributes,
+                  activity: [...(existingActivity as ActivityItem[]), resolveActivity],
+                },
+              },
+            },
           };
           const { setDatastoreItem } = await import('@/services/datastore');
           return setDatastoreItem(incident.id, updated, DATASTORE_CATEGORIES.INCIDENTS);
@@ -388,6 +417,9 @@ const IncidentsPage = () => {
     const results = await Promise.all(updates);
     const successCount = results.filter(r => r.success).length;
     
+    setIsBulkResolving(false);
+    setBulkResolveDialogOpen(false);
+    
     if (successCount === selectedIds.size) {
       toast.success(`Resolved ${successCount} incident${successCount !== 1 ? 's' : ''}`);
     } else {
@@ -397,7 +429,7 @@ const IncidentsPage = () => {
     setSelectedIds(new Set());
     // Refetch to get updated data
     await fetchItems();
-  }, [selectedIds, incidents]);
+  }, [selectedIds, incidents, currentUsername, fetchItems]);
 
   const isDefaultFilter = !filters.severity && 
     !filters.tlp && 
@@ -541,7 +573,7 @@ const IncidentsPage = () => {
                 <Button
                   size="small"
                   variant="outlined"
-                  onClick={handleBulkClose}
+                  onClick={() => setBulkResolveDialogOpen(true)}
                   sx={{
                     height: 36,
                     borderColor: 'hsl(var(--border))',
@@ -716,6 +748,14 @@ const IncidentsPage = () => {
         category={DATASTORE_CATEGORIES.INCIDENTS}
         automations={categoryAutomations}
         onAutomationsChange={setCategoryAutomations}
+      />
+
+      <ResolveIncidentDialog
+        open={bulkResolveDialogOpen}
+        onClose={() => setBulkResolveDialogOpen(false)}
+        onResolve={handleBulkResolve}
+        incidentTitle={`${selectedIds.size} selected incident${selectedIds.size !== 1 ? 's' : ''}`}
+        isLoading={isBulkResolving}
       />
 
     </motion.div>
