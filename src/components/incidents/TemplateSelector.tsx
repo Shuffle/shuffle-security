@@ -45,10 +45,10 @@ export const TemplateSelector = ({ onApplyTemplate, currentUsername = '' }: Temp
       id: `task-${Date.now()}-${index}`,
       title: t.title,
       description: t.description,
-      category: t.category,
+      category: t.category || '',
       completed: false,
-      assignee: t.assignee || undefined,
-      dependsOn: t.dependsOn,
+      assignee: t.assignee || '',
+      dependsOn: t.dependsOn || '',
       createdAt: Date.now(),
       createdBy: currentUsername,
     }));
