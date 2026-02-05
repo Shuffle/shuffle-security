@@ -15,8 +15,10 @@ const getBaseUrl = (): string => {
   if (import.meta.env.VITE_SHUFFLE_API_URL) {
     return import.meta.env.VITE_SHUFFLE_API_URL;
   }
-  const isLovablePreview = typeof window !== 'undefined' && window.location.hostname.includes('preview');
-  return isLovablePreview ? DEV_BACKEND : PROD_BACKEND;
+  // lovableproject.com = editor preview, id-preview--*.lovable.app = standalone preview
+  const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+  const isLovableDev = hostname.includes('lovableproject.com') || hostname.includes('id-preview--');
+  return isLovableDev ? DEV_BACKEND : PROD_BACKEND;
 };
 
 export const API_CONFIG = {
