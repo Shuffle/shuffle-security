@@ -126,11 +126,12 @@ export const MentionInput = ({ value, onChange, onSubmit, ...props }: MentionInp
   };
 
   return (
-    <Box sx={{ position: 'relative', flex: 1 }}>
+    <Box sx={{ position: 'relative', width: '100%' }}>
       <Popover open={showSuggestions} onOpenChange={setShowSuggestions}>
         <PopoverAnchor asChild>
           <TextField
             {...props}
+            fullWidth
             value={value}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
