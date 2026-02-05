@@ -76,6 +76,7 @@ import { MentionInput } from '@/components/incidents/MentionInput';
 import { TaskDateTimePicker } from '@/components/incidents/TaskDateTimePicker';
 import { FileAttachments } from '@/components/incidents/FileAttachments';
 import { toast } from 'sonner';
+import { isAIAssignee } from '@/lib/utils';
 
 // TaskTemplate interface is now imported from useCaseTemplates
 
@@ -1165,26 +1166,50 @@ const IncidentDetailPage = () => {
                   sx={{
                     fontSize: '0.7rem',
                     fontWeight: 600,
-                    bgcolor: editedAssignee ? 'rgba(168, 85, 247, 0.15)' : 'rgba(148, 163, 184, 0.1)',
-                    color: editedAssignee ? '#a855f7' : 'text.secondary',
+                    bgcolor: isAIAssignee(editedAssignee) 
+                      ? 'rgba(34, 197, 94, 0.15)' 
+                      : editedAssignee 
+                        ? 'rgba(168, 85, 247, 0.15)' 
+                        : 'rgba(148, 163, 184, 0.1)',
+                    color: isAIAssignee(editedAssignee) 
+                      ? '#22c55e' 
+                      : editedAssignee 
+                        ? '#a855f7' 
+                        : 'text.secondary',
                     borderRadius: 1,
                     px: 1,
                     py: 0.25,
                     '& .MuiSelect-select': { py: 0, pr: 2.5 },
-                    '& .MuiSvgIcon-root': { color: editedAssignee ? '#a855f7' : 'text.secondary', fontSize: 16 },
+                    '& .MuiSvgIcon-root': { 
+                      color: isAIAssignee(editedAssignee) 
+                        ? '#22c55e' 
+                        : editedAssignee 
+                          ? '#a855f7' 
+                          : 'text.secondary', 
+                      fontSize: 16 
+                    },
                   }}
                   MenuProps={{
                     PaperProps: {
                       sx: { bgcolor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }
                     }
                   }}
-                  renderValue={(value) => value || 'Unassigned'}
+                  renderValue={(value) => {
+                    if (isAIAssignee(value as string)) {
+                      return (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          🤖 AI Agent
+                        </Box>
+                      );
+                    }
+                    return value || 'Unassigned';
+                  }}
                 >
                   <MenuItem value="">Unassigned</MenuItem>
                   <MenuItem value="AI Agent">
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                       <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#22c55e' }} />
-                      AI Agent
+                      🤖 AI Agent
                     </Box>
                   </MenuItem>
                   {users.map((user) => (
