@@ -160,7 +160,7 @@ export const TaskEditor = ({
       )}
 
       {/* Task list */}
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {tasks.map((task) => {
           const isBlocked = isTaskBlocked(task);
           const dependencyTask = task.dependsOn ? tasks.find(t => t.title === task.dependsOn) : null;
@@ -174,14 +174,28 @@ export const TaskEditor = ({
                 sx={{ 
                   display: 'flex', 
                   alignItems: 'center', 
-                  gap: compact ? 1.5 : 2,
-                  p: compact ? 1.5 : 2,
-                  borderRadius: isExpanded ? '8px 8px 0 0' : 1,
-                  bgcolor: task.completed ? 'rgba(34, 197, 94, 0.08)' : isBlocked ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.2)',
-                  border: '1px solid',
-                  borderColor: task.completed ? 'rgba(34, 197, 94, 0.2)' : isBlocked ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.08)',
+                  gap: compact ? 1.5 : 2.5,
+                  p: compact ? 1.5 : 2.5,
+                  borderRadius: isExpanded ? '12px 12px 0 0' : '12px',
+                  bgcolor: isExpanded 
+                    ? 'rgba(255, 102, 0, 0.08)' 
+                    : task.completed 
+                      ? 'rgba(34, 197, 94, 0.08)' 
+                      : isBlocked 
+                        ? 'rgba(255,255,255,0.02)' 
+                        : 'rgba(0,0,0,0.2)',
+                  border: '2px solid',
+                  borderColor: isExpanded 
+                    ? 'rgba(255, 102, 0, 0.4)' 
+                    : task.completed 
+                      ? 'rgba(34, 197, 94, 0.2)' 
+                      : isBlocked 
+                        ? 'rgba(255,255,255,0.05)' 
+                        : 'rgba(255,255,255,0.08)',
                   borderBottom: isExpanded ? 'none' : undefined,
                   opacity: isBlocked ? 0.6 : 1,
+                  transition: 'all 0.2s ease',
+                  boxShadow: isExpanded ? '0 4px 20px rgba(255, 102, 0, 0.15)' : 'none',
                 }}
               >
                 {/* Expand toggle */}
@@ -232,13 +246,14 @@ export const TaskEditor = ({
                     InputProps={{
                       disableUnderline: true,
                       sx: { 
-                        fontSize: compact ? '0.875rem' : '0.95rem',
+                        fontSize: compact ? '0.9rem' : '1.1rem',
+                        fontWeight: 500,
                         textDecoration: task.completed ? 'line-through' : 'none',
                         color: task.completed ? 'text.secondary' : 'text.primary',
                         '&:hover': { bgcolor: 'rgba(255,255,255,0.03)' },
                         borderRadius: 0.5,
                         px: 0.5,
-                        py: 0.25,
+                        py: 0.5,
                       },
                     }}
                     sx={{ width: '100%' }}
