@@ -381,37 +381,47 @@ const IncidentsPage = () => {
     const updates = incidents
       .filter(i => selectedIds.has(i.id))
       .map(async (incident) => {
-        if (incident.rawOCSF) {
-          const resolveActivity: ActivityItem = {
-            id: `status-${Date.now()}-${incident.id}`,
-            type: 'status',
-            user: currentUsername,
-            timestamp: Date.now(),
-            content: `Resolved: ${reasonLabel}${resolutionData.notes ? ` - ${resolutionData.notes}` : ''}`,
-          };
-          
-          const customAttrs = incident.rawOCSF.metadata?.extensions?.custom_attributes as Record<string, unknown> | undefined;
-          const existingActivity = (customAttrs?.activity as ActivityItem[] | undefined) || [];
-          
-          const updated = {
-            ...incident.rawOCSF,
-            status_id: 3, // Resolved
-            status: 'Resolved',
-            status_detail: `${resolutionData.reason}${resolutionData.notes ? `: ${resolutionData.notes}` : ''}`,
-            metadata: {
-              ...incident.rawOCSF.metadata,
-              extensions: {
-                custom_attributes: {
-                  ...incident.rawOCSF.metadata?.extensions?.custom_attributes,
-                  activity: [...(existingActivity as ActivityItem[]), resolveActivity],
-                },
+        const resolveActivity: ActivityItem = {
+          id: `status-${Date.now()}-${incident.id}`,
+          type: 'status',
+          user: currentUsername,
+          timestamp: Date.now(),
+          content: `Resolved: ${reasonLabel}${resolutionData.notes ? ` - ${resolutionData.notes}` : ''}`,
+        };
+        
+        // Get existing data or initialize empty structure
+        const rawOCSF = incident.rawOCSF || {} as OCSFIncidentFinding;
+        const existingMetadata = rawOCSF.metadata || {};
+        const existingExtensions = existingMetadata.extensions || {};
+        const existingCustomAttrs = (existingExtensions.custom_attributes || {}) as Record<string, unknown>;
+        const existingActivity = (existingCustomAttrs.activity as ActivityItem[] | undefined) || [];
+        
+        const updated = {
+          // Ensure required OCSF fields exist
+          class_uid: 2005 as const,
+          class_name: 'Incident Finding' as const,
+          finding_uid: rawOCSF.finding_uid || incident.id,
+          title: rawOCSF.title || incident.title,
+          ...rawOCSF,
+          // Set resolved status
+          status_id: 3,
+          status: 'Resolved',
+          status_detail: `${resolutionData.reason}${resolutionData.notes ? `: ${resolutionData.notes}` : ''}`,
+          // Ensure metadata structure exists
+          metadata: {
+            ...existingMetadata,
+            extensions: {
+              ...existingExtensions,
+              custom_attributes: {
+                ...existingCustomAttrs,
+                activity: [...existingActivity, resolveActivity],
               },
             },
-          };
-          const { setDatastoreItem } = await import('@/services/datastore');
-          return setDatastoreItem(incident.id, updated, DATASTORE_CATEGORIES.INCIDENTS);
-        }
-        return { success: true };
+          },
+        };
+        
+        const { setDatastoreItem } = await import('@/services/datastore');
+        return setDatastoreItem(incident.id, updated, DATASTORE_CATEGORIES.INCIDENTS);
       });
     
     const results = await Promise.all(updates);
