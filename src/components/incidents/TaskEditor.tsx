@@ -3,7 +3,6 @@ import {
   Box,
   Typography,
   IconButton,
-  Chip,
   FormControl,
   InputLabel,
   Select,
@@ -20,6 +19,13 @@ import { MentionInput } from './MentionInput';
 import { TaskDateTimePicker } from './TaskDateTimePicker';
 import { FileAttachments } from './FileAttachments';
 import { taskCategories, IncidentTask, FileAttachment } from './CreateIncidentDialog';
+import {
+  Select as ShadcnSelect,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface TaskEditorProps {
   tasks: IncidentTask[];
@@ -168,8 +174,8 @@ export const TaskEditor = ({
                 sx={{ 
                   display: 'flex', 
                   alignItems: 'center', 
-                  gap: compact ? 1 : 1.5,
-                  p: compact ? 1 : 1.5,
+                  gap: compact ? 1.5 : 2,
+                  p: compact ? 1.5 : 2,
                   borderRadius: isExpanded ? '8px 8px 0 0' : 1,
                   bgcolor: task.completed ? 'rgba(34, 197, 94, 0.08)' : isBlocked ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.2)',
                   border: '1px solid',
@@ -186,9 +192,9 @@ export const TaskEditor = ({
                       e.stopPropagation();
                       setExpandedTaskId(isExpanded ? null : task.id);
                     }}
-                    sx={{ p: 0.25, color: 'text.secondary' }}
+                    sx={{ p: 0.5, color: 'text.secondary' }}
                   >
-                    {isExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+                    {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                   </IconButton>
                 )}
                 
@@ -205,11 +211,11 @@ export const TaskEditor = ({
                   }}
                 >
                   {task.completed ? (
-                    <CheckCircleIcon fontSize="small" />
+                    <CheckCircleIcon />
                   ) : (
                     <Box sx={{ 
-                      width: 18, 
-                      height: 18, 
+                      width: 20, 
+                      height: 20, 
                       borderRadius: '50%', 
                       border: '2px solid currentColor',
                     }} />
@@ -217,66 +223,79 @@ export const TaskEditor = ({
                 </IconButton>
                 
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                    <MentionInput
-                      value={task.title}
-                      onChange={(value) => handleUpdateTaskTitle(task.id, value)}
-                      size="small"
-                      variant="standard"
-                      placeholder="Task title..."
-                      InputProps={{
-                        disableUnderline: true,
-                        sx: { 
-                          fontSize: compact ? '0.8rem' : '0.875rem',
-                          textDecoration: task.completed ? 'line-through' : 'none',
-                          color: task.completed ? 'text.secondary' : 'text.primary',
-                          '&:hover': { bgcolor: 'rgba(255,255,255,0.03)' },
-                          borderRadius: 0.5,
-                          px: 0.5,
-                        },
-                      }}
-                      sx={{ flex: 1, minWidth: 200 }}
-                    />
-                    {categoryInfo && (
-                      <Chip
-                        size="small"
-                        label={categoryInfo.label}
-                        sx={{
-                          height: 18,
-                          fontSize: '0.65rem',
-                          fontWeight: 500,
-                          bgcolor: `${categoryInfo.color}20`,
-                          color: categoryInfo.color,
-                          border: `1px solid ${categoryInfo.color}40`,
-                        }}
-                      />
-                    )}
-                    {task.assignee === 'AI Agent' && (
-                      <Chip
-                        size="small"
-                        label={task.aiWorking ? 'AI Working...' : 'AI Agent'}
-                        sx={{
-                          height: 18,
-                          fontSize: '0.65rem',
-                          fontWeight: 600,
-                          bgcolor: task.aiWorking ? 'rgba(34, 197, 94, 0.2)' : 'rgba(34, 197, 94, 0.1)',
-                          color: '#22c55e',
-                          border: task.aiWorking ? '1px solid rgba(34, 197, 94, 0.4)' : 'none',
-                          animation: task.aiWorking ? 'pulse 2s infinite' : 'none',
-                          '@keyframes pulse': {
-                            '0%, 100%': { opacity: 1 },
-                            '50%': { opacity: 0.6 },
-                          },
-                        }}
-                      />
-                    )}
-                  </Box>
+                  <MentionInput
+                    value={task.title}
+                    onChange={(value) => handleUpdateTaskTitle(task.id, value)}
+                    size="small"
+                    variant="standard"
+                    placeholder="Task title..."
+                    InputProps={{
+                      disableUnderline: true,
+                      sx: { 
+                        fontSize: compact ? '0.875rem' : '0.95rem',
+                        textDecoration: task.completed ? 'line-through' : 'none',
+                        color: task.completed ? 'text.secondary' : 'text.primary',
+                        '&:hover': { bgcolor: 'rgba(255,255,255,0.03)' },
+                        borderRadius: 0.5,
+                        px: 0.5,
+                        py: 0.25,
+                      },
+                    }}
+                    sx={{ width: '100%' }}
+                  />
                   {isBlocked && dependencyTask && (
-                    <Typography variant="caption" sx={{ color: 'warning.main', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <Typography variant="caption" sx={{ color: 'warning.main', display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5, pl: 0.5 }}>
                       ⏳ Waiting on: {dependencyTask.title}
                     </Typography>
                   )}
                 </Box>
+                
+                {/* Category dropdown as a styled chip */}
+                <ShadcnSelect
+                  value={task.category || ''}
+                  onValueChange={(value) => handleUpdateTaskCategory(task.id, value)}
+                >
+                  <SelectTrigger 
+                    className="h-7 min-w-[120px] max-w-[160px] border-0 px-2.5 text-xs font-medium"
+                    style={{
+                      backgroundColor: categoryInfo ? `${categoryInfo.color}20` : 'rgba(255,255,255,0.1)',
+                      color: categoryInfo?.color || 'hsl(var(--muted-foreground))',
+                      borderRadius: '9999px',
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {taskCategories.map((cat) => (
+                      <SelectItem key={cat.value} value={cat.value}>
+                        <div className="flex items-center gap-2">
+                          <div 
+                            className="w-2 h-2 rounded-full" 
+                            style={{ backgroundColor: cat.color }} 
+                          />
+                          {cat.label}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </ShadcnSelect>
+                
+                {/* AI Agent badge */}
+                {task.assignee === 'AI Agent' && (
+                  <div 
+                    className="h-7 px-2.5 rounded-full text-xs font-semibold flex items-center gap-1.5"
+                    style={{
+                      backgroundColor: task.aiWorking ? 'rgba(34, 197, 94, 0.2)' : 'rgba(34, 197, 94, 0.1)',
+                      color: '#22c55e',
+                      border: task.aiWorking ? '1px solid rgba(34, 197, 94, 0.4)' : 'none',
+                      animation: task.aiWorking ? 'pulse 2s infinite' : 'none',
+                    }}
+                  >
+                    <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#22c55e' }} />
+                    {task.aiWorking ? 'AI Working...' : 'AI Agent'}
+                  </div>
+                )}
                 
                 {!compact && (
                   <>
@@ -342,26 +361,6 @@ export const TaskEditor = ({
                     borderRadius: '0 0 8px 8px',
                   }}>
                     <Box sx={{ display: 'flex', gap: 2, mb: 1.5 }}>
-                      <FormControl size="small" sx={{ minWidth: 140 }}>
-                        <InputLabel sx={{ fontSize: '0.75rem' }}>Category</InputLabel>
-                        <Select
-                          value={task.category || ''}
-                          label="Category"
-                          onChange={(e) => handleUpdateTaskCategory(task.id, e.target.value)}
-                          sx={{ fontSize: '0.8rem' }}
-                        >
-                          <MenuItem value=""><em>None</em></MenuItem>
-                          {taskCategories.map((cat) => (
-                            <MenuItem key={cat.value} value={cat.value}>
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: cat.color }} />
-                                {cat.label}
-                              </Box>
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                      
                       <FormControl size="small" sx={{ minWidth: 140 }}>
                         <InputLabel sx={{ fontSize: '0.75rem' }}>Depends On</InputLabel>
                         <Select
