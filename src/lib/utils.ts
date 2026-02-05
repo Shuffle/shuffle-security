@@ -139,3 +139,13 @@ export function deduplicateAuthApps(apps: AuthAppEntry[]): DeduplicatedApp[] {
   
   return Array.from(appMap.values());
 }
+
+/**
+ * Check if an assignee refers to the AI Agent.
+ * Matches variations like "agent", "ai agent", "aiagent", "AI Agent", etc.
+ */
+export function isAIAssignee(assignee?: string): boolean {
+  if (!assignee) return false;
+  const normalized = assignee.toLowerCase().replace(/\s+/g, '');
+  return normalized === 'agent' || normalized === 'aiagent' || normalized.includes('aiagent');
+}

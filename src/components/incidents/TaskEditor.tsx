@@ -19,6 +19,7 @@ import { MentionInput } from './MentionInput';
 import { TaskDateTimePicker } from './TaskDateTimePicker';
 import { FileAttachments } from './FileAttachments';
 import { taskCategories, IncidentTask, FileAttachment } from './CreateIncidentDialog';
+import { isAIAssignee } from '@/lib/utils';
 import {
   Select as ShadcnSelect,
   SelectContent,
@@ -112,6 +113,7 @@ export const TaskEditor = ({
       task.id === taskId ? { ...task, disabled: true } : task
     ));
   };
+
 
   const isTaskBlocked = (task: IncidentTask): boolean => {
     if (!task.dependsOn) return false;
@@ -337,8 +339,8 @@ export const TaskEditor = ({
                     </SelectContent>
                   </ShadcnSelect>
                   
-                  {/* AI Agent badge */}
-                  {task.assignee === 'AI Agent' && (
+                  {/* AI Agent badge - shows for any AI/agent assignee variation */}
+                  {isAIAssignee(task.assignee) && (
                     <div 
                       className="h-7 px-2.5 rounded-full text-xs font-semibold flex items-center gap-1.5"
                       style={{
@@ -349,7 +351,7 @@ export const TaskEditor = ({
                       }}
                     >
                       <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#22c55e' }} />
-                      {task.aiWorking ? 'AI Working...' : 'AI Agent'}
+                      {task.aiWorking ? 'AI Working...' : '🤖 AI Agent'}
                     </div>
                   )}
                   
