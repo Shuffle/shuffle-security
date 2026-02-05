@@ -7,14 +7,23 @@
  * - Self-hosted: Your own backend URL (e.g., https://shuffle.yourdomain.com)
  */
 
-// Determine if we're in Lovable preview (dev) or published (prod)
-const isLovablePreview = typeof window !== 'undefined' && window.location.hostname.includes('preview');
 const DEV_BACKEND = 'https://fish-patent-porcelain-leaving.trycloudflare.com';
 const PROD_BACKEND = 'https://shuffler.io';
 
+// Determine if we're in Lovable preview (dev) or published (prod)
+const getBaseUrl = (): string => {
+  if (import.meta.env.VITE_SHUFFLE_API_URL) {
+    return import.meta.env.VITE_SHUFFLE_API_URL;
+  }
+  const isLovablePreview = typeof window !== 'undefined' && window.location.hostname.includes('preview');
+  return isLovablePreview ? DEV_BACKEND : PROD_BACKEND;
+};
+
 export const API_CONFIG = {
   // Shuffle backend URL - uses dev backend in Lovable preview, prod otherwise
-  baseUrl: import.meta.env.VITE_SHUFFLE_API_URL || (isLovablePreview ? DEV_BACKEND : PROD_BACKEND),
+  get baseUrl(): string {
+    return getBaseUrl();
+  },
   
   // API version
   version: 'v1',
