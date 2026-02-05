@@ -234,8 +234,8 @@ export const IncidentCardView = ({
         const statusInfo = statusConfig[incident.status] || statusConfig.new;
         const StatusIcon = statusInfo.icon;
         const severityColor = severityColors[incident.severity] || '#94a3b8';
-        // Use green for resolved incidents, otherwise use severity color
-        const iconColor = incident.status === 'resolved' ? '#22c55e' : severityColor;
+        // Use status color for the icon (blue for new, orange for in_progress, green for resolved, etc.)
+        const iconColor = statusInfo.color;
         const selected = isSelected(incident.id);
         const showCheck = showCheckbox(incident.id);
 
