@@ -7,6 +7,12 @@ import {
 } from 'lucide-react';
 import { statusConfig } from '@/config/incidentConfig';
 
+interface TaskItem {
+  id: string;
+  assignee?: string;
+  completed?: boolean;
+}
+
 interface DisplayIncident {
   id: string;
   status: string;
@@ -14,6 +20,7 @@ interface DisplayIncident {
   assignee?: string | null;
   createdTs: number;
   editedTs?: number;
+  tasks?: TaskItem[];
 }
 
 interface IncidentStatsCardsProps {
@@ -112,7 +119,19 @@ export const IncidentStatsCards = ({ incidents, onFilterChange, currentUsername 
   const criticalCount = incidents.filter(i => i.severity === 'critical' || i.severity === 'high').length;
   const newCount = incidents.filter(i => i.status === 'new').length;
   const inProgressCount = incidents.filter(i => i.status === 'in_progress').length;
-  const yourCount = currentUsername ? incidents.filter(i => i.assignee === currentUsername && i.status !== 'resolved').length : 0;
+  // "Yours" includes incidents assigned to user OR where a task is assigned to user
+  const yourCount = currentUsername ? incidents.filter(i => {
+    if (i.status === 'resolved') return false;
+    // Check incident assignee
+    if (i.assignee === currentUsername) return true;
+    // Check if any task is assigned to this user
+    if (i.tasks && i.tasks.length > 0) {
+      return i.tasks.some(task => 
+        task.assignee?.toLowerCase() === currentUsername.toLowerCase()
+      );
+    }
+    return false;
+  }).length : 0;
 
   // Calculate average response time (time from created to first update)
   const incidentsWithUpdates = incidents.filter(i => i.editedTs && i.editedTs !== i.createdTs);
