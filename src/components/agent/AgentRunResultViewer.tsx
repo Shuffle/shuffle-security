@@ -1,10 +1,12 @@
 /**
  * Expandable result viewer for an agent execution run.
- * Parses and renders JSON from results[0].result using react18-json-view.
+ * Renders output as Markdown + JSON from results[0].result using react18-json-view.
  */
 
 import { Box, Typography } from '@mui/material';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, HelpCircle } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import JsonView from 'react18-json-view';
 import 'react18-json-view/src/style.css';
 import 'react18-json-view/src/dark.css';
@@ -39,11 +41,26 @@ export const getFailureInfo = (run: AgentRun): { reason: string } | null => {
   return null;
 };
 
+/** Detect if the output content hints at an error/failure even if the run status is "finished" */
+export const hasOutputWarning = (run: AgentRun): boolean => {
+  const { parsed } = parseRunResult(run);
+  if (!parsed || typeof parsed !== 'object') return false;
+
+  // Explicit success: false
+  if (parsed.success === false) return true;
+
+  // Check the output string for error keywords
+  const output = typeof parsed.output === 'string' ? parsed.output.toLowerCase() : '';
+  if (!output) return false;
+
+  const errorPatterns = ['error', 'failed', 'failure', 'exception', 'timed out', 'timeout', 'unauthorized', 'forbidden', 'not found', 'could not'];
+  return errorPatterns.some(p => output.includes(p));
+};
+
 /** Check if a run's result matches a search query */
 export const runMatchesSearch = (run: AgentRun, query: string): boolean => {
   const q = query.toLowerCase();
 
-  // Search basic fields
   if (
     run.execution_id?.toLowerCase().includes(q) ||
     run.status?.toLowerCase().includes(q) ||
@@ -52,7 +69,6 @@ export const runMatchesSearch = (run: AgentRun, query: string): boolean => {
     run.workflow?.name?.toLowerCase().includes(q)
   ) return true;
 
-  // Search through results
   if (run.results) {
     for (const r of run.results) {
       if (r.result?.toLowerCase().includes(q)) return true;
@@ -64,6 +80,14 @@ export const runMatchesSearch = (run: AgentRun, query: string): boolean => {
   return false;
 };
 
+/** Extract the output/description text from a run result */
+const getOutputText = (parsed: any): string | null => {
+  if (!parsed || typeof parsed !== 'object') return null;
+  if (typeof parsed.output === 'string' && parsed.output.trim()) return parsed.output;
+  if (typeof parsed.message === 'string' && parsed.message.trim()) return parsed.message;
+  return null;
+};
+
 interface AgentRunResultViewerProps {
   run: AgentRun;
 }
@@ -72,6 +96,8 @@ const AgentRunResultViewer = ({ run }: AgentRunResultViewerProps) => {
   const { raw, parsed } = parseRunResult(run);
   const isFailed = run.status?.toUpperCase() === 'FAILED' || run.status?.toUpperCase() === 'ABORTED';
   const failureInfo = getFailureInfo(run);
+  const outputWarning = !isFailed && hasOutputWarning(run);
+  const outputText = getOutputText(parsed);
 
   if (!raw) {
     return (
@@ -107,6 +133,93 @@ const AgentRunResultViewer = ({ run }: AgentRunResultViewerProps) => {
           }}>
             {failureInfo.reason}
           </Typography>
+        </Box>
+      )}
+
+      {/* Output warning banner (unsure / needs review) */}
+      {outputWarning && (
+        <Box sx={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: 1,
+          px: 1.5,
+          py: 1,
+          mb: 1.5,
+          borderRadius: 1,
+          bgcolor: 'hsla(var(--severity-medium) / 0.08)',
+          border: '1px solid hsla(var(--severity-medium) / 0.2)',
+        }}>
+          <HelpCircle size={14} style={{ color: 'hsl(var(--severity-medium))', marginTop: 2, flexShrink: 0 }} />
+          <Typography sx={{
+            fontSize: '0.78rem',
+            color: 'hsl(var(--severity-medium))',
+            lineHeight: 1.5,
+          }}>
+            This result may need review — the output contains error indicators
+          </Typography>
+        </Box>
+      )}
+
+      {/* Output as rendered Markdown */}
+      {outputText && (
+        <Box sx={{
+          mb: 1.5,
+          px: 0.5,
+          '& p': {
+            fontSize: '0.82rem',
+            color: 'hsl(var(--foreground))',
+            lineHeight: 1.65,
+            m: 0,
+            mb: 0.5,
+          },
+          '& p:last-child': { mb: 0 },
+          '& a': {
+            color: 'hsl(var(--primary))',
+            textDecoration: 'none',
+            '&:hover': { textDecoration: 'underline' },
+          },
+          '& code': {
+            fontSize: '0.75rem',
+            bgcolor: 'hsl(var(--muted))',
+            px: 0.75,
+            py: 0.25,
+            borderRadius: 0.5,
+            fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace',
+          },
+          '& pre': {
+            bgcolor: 'hsl(var(--muted))',
+            border: '1px solid hsl(var(--border))',
+            borderRadius: 1,
+            p: 1.5,
+            overflow: 'auto',
+            '& code': { bgcolor: 'transparent', p: 0 },
+          },
+          '& ul, & ol': {
+            fontSize: '0.82rem',
+            color: 'hsl(var(--foreground))',
+            pl: 2.5,
+            m: 0,
+            mb: 0.5,
+          },
+          '& li': { mb: 0.25 },
+          '& blockquote': {
+            borderLeft: '3px solid hsl(var(--border))',
+            pl: 1.5,
+            ml: 0,
+            color: 'hsl(var(--muted-foreground))',
+            fontStyle: 'italic',
+          },
+          '& h1, & h2, & h3, & h4': {
+            fontSize: '0.85rem',
+            fontWeight: 600,
+            color: 'hsl(var(--foreground))',
+            mt: 1,
+            mb: 0.5,
+          },
+        }}>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {outputText}
+          </ReactMarkdown>
         </Box>
       )}
 
