@@ -16,10 +16,9 @@ import {
   Button,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import FilterListIcon from '@mui/icons-material/FilterList';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { motion } from 'framer-motion';
-import { Bot, Activity, Pause, Settings } from 'lucide-react';
+import { Bot, Settings } from 'lucide-react';
 import { useAgentActivity } from '@/hooks/useAgentActivity';
 import AgentActivityFeed from '@/components/agent/AgentActivityFeed';
 import AgentActivityStatsPanel from '@/components/agent/AgentActivityStats';
@@ -50,7 +49,6 @@ const AgentActivityPage = () => {
 
   const { enabledPermissions, totalPermissions } = useAgentPermissions();
   const [permissionsOpen, setPermissionsOpen] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
 
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
@@ -152,9 +150,9 @@ const AgentActivityPage = () => {
           {/* Left: Feed */}
           <Box sx={{ flex: 1, minWidth: 0 }}>
             {/* Search & Filter bar */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2, flexWrap: 'wrap' }}>
               <TextField
-                placeholder="Search agent activity..."
+                placeholder="Search results..."
                 size="small"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -169,11 +167,13 @@ const AgentActivityPage = () => {
                 }}
                 sx={{
                   flex: 1,
-                  maxWidth: 360,
+                  maxWidth: 280,
+                  minWidth: 160,
                   '& .MuiOutlinedInput-root': {
                     bgcolor: 'hsl(var(--card))',
                     borderRadius: 1.5,
                     fontSize: '0.85rem',
+                    height: 36,
                     '& fieldset': { borderColor: 'hsl(var(--border))' },
                     '&:hover fieldset': { borderColor: 'hsl(var(--muted-foreground) / 0.3)' },
                     '&.Mui-focused fieldset': { borderColor: 'hsl(var(--primary))' },
@@ -181,43 +181,26 @@ const AgentActivityPage = () => {
                   '& .MuiInputBase-input': { color: 'hsl(var(--foreground))' },
                 }}
               />
-              <Tooltip title="Toggle filters">
-                <IconButton
+
+              {/* Status filter chips — always visible */}
+              {STATUS_FILTERS.map((f) => (
+                <Chip
+                  key={f.value}
+                  label={f.label}
                   size="small"
-                  onClick={() => setShowFilters(!showFilters)}
+                  variant={statusFilter === f.value ? 'filled' : 'outlined'}
+                  onClick={() => setStatusFilter(f.value)}
                   sx={{
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: 1.5,
-                    color: showFilters ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
+                    fontSize: '0.75rem',
+                    height: 28,
+                    borderColor: statusFilter === f.value ? 'hsl(var(--primary))' : 'hsl(var(--border))',
+                    bgcolor: statusFilter === f.value ? 'hsla(var(--primary) / 0.15)' : 'transparent',
+                    color: statusFilter === f.value ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
                     '&:hover': { bgcolor: 'hsl(var(--muted))' },
                   }}
-                >
-                  <FilterListIcon sx={{ fontSize: 18 }} />
-                </IconButton>
-              </Tooltip>
+                />
+              ))}
             </Box>
-
-            {/* Status filter chips */}
-            {showFilters && (
-              <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
-                {STATUS_FILTERS.map((f) => (
-                  <Chip
-                    key={f.value}
-                    label={f.label}
-                    size="small"
-                    variant={statusFilter === f.value ? 'filled' : 'outlined'}
-                    onClick={() => setStatusFilter(f.value)}
-                    sx={{
-                      fontSize: '0.75rem',
-                      borderColor: statusFilter === f.value ? 'hsl(var(--primary))' : 'hsl(var(--border))',
-                      bgcolor: statusFilter === f.value ? 'hsla(var(--primary) / 0.15)' : 'transparent',
-                      color: statusFilter === f.value ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
-                      '&:hover': { bgcolor: 'hsl(var(--muted))' },
-                    }}
-                  />
-                ))}
-              </Box>
-            )}
 
             {/* Loading */}
             {isLoading && runs.length === 0 ? (

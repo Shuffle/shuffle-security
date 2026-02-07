@@ -2,8 +2,9 @@
  * Hook for fetching and managing agent activity data
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { searchAgentActivity, AgentRun, AgentActivityParams } from '@/services/agentActivity';
+import { runMatchesSearch } from '@/components/agent/AgentRunResultViewer';
 
 export interface AgentActivityStats {
   totalRuns: number;
@@ -22,6 +23,24 @@ export const useAgentActivity = (autoFetch = true) => {
   const [hasMore, setHasMore] = useState(false);
   const [statusFilter, setStatusFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+  // Debounce search query (350ms delay)
+  const updateSearchQuery = useCallback((query: string) => {
+    setSearchQuery(query);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setDebouncedQuery(query);
+    }, 350);
+  }, []);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
 
   const fetchActivity = useCallback(async (params: AgentActivityParams = {}, append = false) => {
     setIsLoading(true);
@@ -77,19 +96,11 @@ export const useAgentActivity = (autoFetch = true) => {
       : 0,
   };
 
-  // Filter runs by search query
-  const filteredRuns = searchQuery
-    ? runs.filter(r => {
-        const q = searchQuery.toLowerCase();
-        return (
-          r.execution_id?.toLowerCase().includes(q) ||
-          r.status?.toLowerCase().includes(q) ||
-          r.execution_argument?.toLowerCase().includes(q) ||
-          r.execution_source?.toLowerCase().includes(q) ||
-          r.workflow?.name?.toLowerCase().includes(q)
-        );
-      })
-    : runs;
+  // Filter runs by debounced search query (searches through results too)
+  const filteredRuns = useMemo(() => {
+    if (!debouncedQuery) return runs;
+    return runs.filter(r => runMatchesSearch(r, debouncedQuery));
+  }, [runs, debouncedQuery]);
 
   useEffect(() => {
     if (autoFetch) {
@@ -107,7 +118,7 @@ export const useAgentActivity = (autoFetch = true) => {
     statusFilter,
     searchQuery,
     setStatusFilter,
-    setSearchQuery,
+    setSearchQuery: updateSearchQuery,
     loadMore,
     refresh,
     fetchActivity,
