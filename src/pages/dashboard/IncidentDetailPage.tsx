@@ -78,7 +78,7 @@ import { FileAttachments } from '@/components/incidents/FileAttachments';
 import { toast } from 'sonner';
 import { isAIAssignee, deduplicateTasks } from '@/lib/utils';
 import { useIncidentAgentRuns } from '@/hooks/useIncidentAgentRuns';
-import { getAgentRunOutput } from '@/lib/agentParsers';
+import AgentActivityFeed from '@/components/agent/AgentActivityFeed';
 
 // TaskTemplate interface is now imported from useCaseTemplates
 
@@ -1103,35 +1103,7 @@ const IncidentDetailPage = () => {
     }
   };
 
-  // Merge real activity with agent runs (without modifying the actual activity array)
-  const mergedActivity = useMemo(() => {
-    // Convert agent runs to activity-like items
-    const agentItems: (ActivityItem & { isAgent?: boolean })[] = agentRuns.map((run) => {
-      const startedMs = (() => {
-        const s = Number(run.started_at);
-        if (isNaN(s)) return Date.now();
-        return s < 10000000000 ? s * 1000 : s;
-      })();
-
-      const output = getAgentRunOutput(run);
-      const statusLabel = run.status === 'FINISHED' || run.status === 'SUCCESS' ? 'completed' : run.status?.toLowerCase() || 'ran';
-      const summary = output
-        ? output.length > 200 ? output.slice(0, 200) + '…' : output
-        : `Agent execution ${statusLabel}`;
-
-      return {
-        id: `agent-${run.execution_id}`,
-        type: 'agent' as any,
-        user: 'AI Agent',
-        timestamp: startedMs,
-        content: summary,
-        isAgent: true,
-      };
-    });
-
-    // Combine and sort by timestamp (newest first for the reverse() below)
-    return [...activity, ...agentItems].sort((a, b) => a.timestamp - b.timestamp);
-  }, [activity, agentRuns]);
+  // Agent runs are rendered separately using AgentActivityFeed component
 
   if (loading) {
     return (
@@ -2562,7 +2534,14 @@ const IncidentDetailPage = () => {
             flexDirection: 'column',
             gap: 1,
           }}>
-            {mergedActivity.length === 0 ? (
+            {/* Agent runs rendered with the same component as /agent page */}
+            {agentRuns.length > 0 && (
+              <Box sx={{ mb: 1 }}>
+                <AgentActivityFeed runs={agentRuns} />
+              </Box>
+            )}
+
+            {activity.length === 0 && agentRuns.length === 0 ? (
               <Box sx={{ 
                 display: 'flex', 
                 flexDirection: 'column', 
@@ -2577,39 +2556,25 @@ const IncidentDetailPage = () => {
                 </Typography>
               </Box>
             ) : (
-              [...mergedActivity].reverse().map((item) => {
-                const isAgent = (item as any).isAgent === true;
+              [...activity].reverse().map((item) => {
                 // Check if user can delete this message (own message within 5 minutes)
                 const isOwnMessage = item.user === currentUsername;
                 const messageAge = Date.now() - item.timestamp;
-                const canDelete = !isAgent && isOwnMessage && item.type === 'comment' && messageAge < 5 * 60 * 1000; // 5 minutes
+                const canDelete = isOwnMessage && item.type === 'comment' && messageAge < 5 * 60 * 1000; // 5 minutes
                 const timeRemaining = Math.max(0, Math.ceil((5 * 60 * 1000 - messageAge) / 60000));
                 
                 return (
                   <Box
                     key={item.id}
-                    component={isAgent ? Link : 'div'}
-                    {...(isAgent ? { to: '/agent' } : {})}
                     sx={{
                       display: 'flex',
                       gap: 1.5,
                       p: 1.5,
                       borderRadius: 1.5,
-                      bgcolor: isAgent
-                        ? 'rgba(139, 92, 246, 0.06)'
-                        : item.type === 'comment' ? 'rgba(255, 102, 0, 0.05)' : 'rgba(0,0,0,0.15)',
+                      bgcolor: item.type === 'comment' ? 'rgba(255, 102, 0, 0.05)' : 'rgba(0,0,0,0.15)',
                       border: '1px solid',
-                      borderColor: isAgent
-                        ? 'rgba(139, 92, 246, 0.15)'
-                        : item.type === 'comment' ? 'rgba(255, 102, 0, 0.1)' : 'rgba(255,255,255,0.04)',
+                      borderColor: item.type === 'comment' ? 'rgba(255, 102, 0, 0.1)' : 'rgba(255,255,255,0.04)',
                       position: 'relative',
-                      textDecoration: 'none',
-                      color: 'inherit',
-                      transition: 'background-color 0.15s',
-                      ...(isAgent ? {
-                        cursor: 'pointer',
-                        '&:hover': { bgcolor: 'rgba(139, 92, 246, 0.1)' },
-                      } : {}),
                       '&:hover .delete-btn': {
                         opacity: 1,
                       },
@@ -2618,9 +2583,7 @@ const IncidentDetailPage = () => {
                     <Avatar sx={{ 
                       width: 24, 
                       height: 24, 
-                      bgcolor: isAgent
-                        ? 'rgba(139, 92, 246, 0.2)'
-                        : item.type === 'comment' ? 'rgba(255, 102, 0, 0.2)' : 'rgba(255,255,255,0.08)',
+                      bgcolor: item.type === 'comment' ? 'rgba(255, 102, 0, 0.2)' : 'rgba(255,255,255,0.08)',
                     }}>
                       {getActivityIcon(item.type)}
                     </Avatar>
@@ -2629,24 +2592,9 @@ const IncidentDetailPage = () => {
                         <Typography variant="caption" sx={{ 
                           fontWeight: 600, 
                           fontSize: '0.75rem',
-                          color: isAgent ? 'rgba(139, 92, 246, 0.9)' : undefined,
                         }}>
                           {item.user}
                         </Typography>
-                        {isAgent && (
-                          <Chip
-                            label="Agent"
-                            size="small"
-                            sx={{
-                              height: 16,
-                              fontSize: '0.6rem',
-                              fontWeight: 600,
-                              bgcolor: 'rgba(139, 92, 246, 0.15)',
-                              color: 'rgba(139, 92, 246, 0.9)',
-                              '& .MuiChip-label': { px: 0.75 },
-                            }}
-                          />
-                        )}
                         <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.65rem' }}>
                           {formatRelativeTime(item.timestamp)}
                         </Typography>
