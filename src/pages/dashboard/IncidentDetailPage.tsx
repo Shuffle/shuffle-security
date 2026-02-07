@@ -166,7 +166,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
       const topLevelActivity = (data as any).activity;
       const metadataTasks = customAttrs?.tasks;
       const metadataActivity = (customAttrs as any)?.activity;
-      const tasks = deduplicateTasks<IncidentTask>(topLevelTasks || metadataTasks || []);
+      const tasks = topLevelTasks || metadataTasks || [];
       const activity = topLevelActivity || metadataActivity || [];
       
       // Convert comments to activity for display (legacy format support)
@@ -210,7 +210,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
       const customAttrs = legacyData.metadata?.extensions?.custom_attributes;
       const tlp = customAttrs?.tlp || legacyData.tlp;
       const pap = customAttrs?.pap || legacyData.pap;
-      const tasks = deduplicateTasks<IncidentTask>(customAttrs?.tasks || legacyData.tasks || []);
+      const tasks = customAttrs?.tasks || legacyData.tasks;
       const activity = customAttrs?.activity || legacyData.activity;
       const customFields = customAttrs?.customFields || (customAttrs as any)?.custom_fields || legacyData.customFields || legacyData.custom_fields;
       
@@ -256,7 +256,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
       customFields: data.customFields || {},
       relatedFindings: data.relatedFindings || [],
       activity: data.activity || [],
-      tasks: deduplicateTasks(data.tasks || []),
+      tasks: data.tasks || [],
       rawOCSF: data,
     };
   } catch {
@@ -989,11 +989,14 @@ const IncidentDetailPage = () => {
     return dependencyTask ? !dependencyTask.completed : false;
   }, [taskDependencyMap]);
 
+  // Deduplicate tasks for display only — full list is preserved for API persistence
+  const visibleTasks = useMemo(() => deduplicateTasks(tasks), [tasks]);
+
   const taskProgress = useMemo(() => {
-    if (tasks.length === 0) return 0;
-    const completedCount = tasks.filter(t => t.completed).length;
-    return Math.round((completedCount / tasks.length) * 100);
-  }, [tasks]);
+    if (visibleTasks.length === 0) return 0;
+    const completedCount = visibleTasks.filter(t => t.completed).length;
+    return Math.round((completedCount / visibleTasks.length) * 100);
+  }, [visibleTasks]);
 
   const inputSx = {
     '& .MuiOutlinedInput-root': {
@@ -1421,7 +1424,7 @@ const IncidentDetailPage = () => {
               border: '1px solid rgba(255,255,255,0.06)',
             }}>
               {[
-                { label: 'Tasks', count: tasks.length > 0 ? `${tasks.filter(t => t.completed).length}/${tasks.length}` : null },
+                { label: 'Tasks', count: visibleTasks.length > 0 ? `${visibleTasks.filter(t => t.completed).length}/${visibleTasks.length}` : null },
                 { label: 'Details', count: null },
                 { label: 'Observables', count: editedObservables.length > 0 ? editedObservables.length : null },
                 { label: 'Correlations', count: correlations.length > 0 ? correlations.length : null, loading: correlationsLoading },
@@ -1483,7 +1486,7 @@ const IncidentDetailPage = () => {
             p: 2.5,
           }}>
             {/* Progress bar */}
-            {tasks.length > 0 && (
+            {visibleTasks.length > 0 && (
               <Box sx={{ mb: 2 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>
@@ -1574,9 +1577,9 @@ const IncidentDetailPage = () => {
             </Box>
 
             {/* Task list - paginated for performance */}
-            {tasks.length > 0 ? (
+            {visibleTasks.length > 0 ? (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                {tasks.slice(0, visibleTaskCount).map((task) => {
+                {visibleTasks.slice(0, visibleTaskCount).map((task) => {
                   const isBlocked = isTaskBlocked(task);
                   const dependencyTask = task.dependsOn ? taskDependencyMap.get(task.dependsOn) : null;
                   const isExpanded = expandedTaskId === task.id;
@@ -1873,7 +1876,7 @@ const IncidentDetailPage = () => {
                 })}
 
                 {/* Show more button for pagination */}
-                {tasks.length > visibleTaskCount && (
+                {visibleTasks.length > visibleTaskCount && (
                   <Box sx={{ display: 'flex', justifyContent: 'center', pt: 1 }}>
                     <Box
                       component="button"
@@ -1895,7 +1898,7 @@ const IncidentDetailPage = () => {
                         },
                       }}
                     >
-                      Show more ({tasks.length - visibleTaskCount} remaining)
+                      Show more ({visibleTasks.length - visibleTaskCount} remaining)
                     </Box>
                   </Box>
                 )}
