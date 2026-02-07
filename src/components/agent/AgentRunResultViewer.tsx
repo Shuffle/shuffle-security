@@ -286,7 +286,6 @@ const AgentRunResultViewer = ({ run }: AgentRunResultViewerProps) => {
         borderRadius: 1,
         bgcolor: 'hsl(var(--muted))',
         border: '1px solid hsl(var(--border))',
-        maxHeight: 400,
         overflow: 'auto',
         '&::-webkit-scrollbar': { width: 6 },
         '&::-webkit-scrollbar-thumb': {
