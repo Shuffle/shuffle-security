@@ -1,8 +1,9 @@
 /**
- * React hook for fetching custom fields
+ * React hook for fetching custom fields with React Query caching.
+ * Data is cached for 5 minutes and shared across all components.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getDatastoreByCategory, DATASTORE_CATEGORIES } from '@/services/datastore';
 
 type FieldType = 'text' | 'number' | 'select' | 'date' | 'boolean';
@@ -16,38 +17,38 @@ export interface CustomField {
   description?: string;
 }
 
-export const useCustomFields = () => {
-  const [fields, setFields] = useState<CustomField[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+const QUERY_KEY = ['customFields'];
+const STALE_TIME = 5 * 60 * 1000; // 5 minutes
 
-  const fetchFields = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await getDatastoreByCategory(DATASTORE_CATEGORIES.CUSTOM_FIELDS);
-      if (response.success && response.data) {
-        const parsed: CustomField[] = response.data.map(item => {
-          try {
-            return JSON.parse(item.value) as CustomField;
-          } catch {
-            return { name: item.key, key: item.key, type: 'text' as FieldType, required: false };
-          }
-        });
-        setFields(parsed);
-      } else {
-        setError(response.error || 'Failed to fetch custom fields');
+const fetchCustomFields = async (): Promise<CustomField[]> => {
+  const response = await getDatastoreByCategory(DATASTORE_CATEGORIES.CUSTOM_FIELDS);
+  if (response.success && response.data) {
+    return response.data.map(item => {
+      try {
+        return JSON.parse(item.value) as CustomField;
+      } catch {
+        return { name: item.key, key: item.key, type: 'text' as FieldType, required: false };
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    });
+  }
+  throw new Error(response.error || 'Failed to fetch custom fields');
+};
 
-  useEffect(() => {
-    fetchFields();
-  }, [fetchFields]);
+export const useCustomFields = () => {
+  const queryClient = useQueryClient();
 
-  return { fields, loading, error, refetch: fetchFields };
+  const { data: fields = [], isLoading: loading, error } = useQuery({
+    queryKey: QUERY_KEY,
+    queryFn: fetchCustomFields,
+    staleTime: STALE_TIME,
+  });
+
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+
+  return {
+    fields,
+    loading,
+    error: error?.message ?? null,
+    refetch: invalidate,
+  };
 };
