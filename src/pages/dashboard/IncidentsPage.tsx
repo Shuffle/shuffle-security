@@ -141,7 +141,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
       const tasks = ocsf?.tasks || 
         ocsf?.metadata?.extensions?.custom_attributes?.tasks ||
         [];
-      return deduplicateTasks(Array.isArray(tasks) ? tasks : []);
+      return Array.isArray(tasks) ? tasks : [];
     };
     
     if (isNewFormat) {
@@ -171,7 +171,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
         observables: customAttrs?.observables,
         relatedFindings: ocsf.related_events,
         rawOCSF: ocsf,
-        taskCount: tasks.length,
+        taskCount: deduplicateTasks(tasks).length,
         tasks,
       };
     } else if (isLegacyOCSF) {
@@ -200,7 +200,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
         observables: legacyData.observables,
         relatedFindings: legacyData.related_findings,
         rawOCSF: legacyData,
-        taskCount: tasks.length,
+        taskCount: deduplicateTasks(tasks).length,
         tasks,
       };
     } else {
@@ -222,7 +222,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
         references: data.references,
         observables: data.observables,
         rawOCSF: undefined,
-        taskCount: Array.isArray(tasks) ? tasks.length : 0,
+        taskCount: Array.isArray(tasks) ? deduplicateTasks(tasks).length : 0,
         tasks: Array.isArray(tasks) ? tasks : [],
       };
     }
