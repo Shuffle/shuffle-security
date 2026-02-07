@@ -87,9 +87,11 @@ export const useAgentActivity = (autoFetch = true) => {
     avgDuration: runs.length > 0
       ? runs.reduce((sum, r) => {
           if (r.started_at && r.completed_at) {
-            const start = new Date(r.started_at).getTime();
-            const end = new Date(r.completed_at).getTime();
-            return sum + (end - start) / 1000;
+            const startSec = Number(r.started_at);
+            const endSec = Number(r.completed_at);
+            if (!isNaN(startSec) && !isNaN(endSec)) {
+              return sum + (endSec - startSec);
+            }
           }
           return sum + (r.duration || 0);
         }, 0) / runs.length

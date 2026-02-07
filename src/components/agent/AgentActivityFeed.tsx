@@ -58,10 +58,15 @@ const getRunIconColor = (run: AgentRun): string => {
 
 const formatDuration = (run: AgentRun): string => {
   if (run.started_at && run.completed_at) {
-    const ms = new Date(run.completed_at).getTime() - new Date(run.started_at).getTime();
-    if (ms < 1000) return `${ms}ms`;
-    if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
-    return `${Math.floor(ms / 60000)}m ${Math.floor((ms % 60000) / 1000)}s`;
+    // started_at and completed_at are unix timestamps in seconds
+    const startSec = Number(run.started_at);
+    const endSec = Number(run.completed_at);
+    if (!isNaN(startSec) && !isNaN(endSec)) {
+      const ms = (endSec - startSec) * 1000;
+      if (ms < 1000) return `${Math.round(ms)}ms`;
+      if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
+      return `${Math.floor(ms / 60000)}m ${Math.floor((ms % 60000) / 1000)}s`;
+    }
   }
   if (run.duration) return `${run.duration.toFixed(1)}s`;
   return '';
@@ -226,16 +231,15 @@ const AgentActivityFeed = ({ runs }: AgentActivityFeedProps) => {
                     }}>
                       {getRunTitle(run)}
                     </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    {isUnsure ? (
+                      <Box sx={{ display: 'flex', alignItems: 'center', color: 'hsl(var(--severity-medium))' }}>
+                        <HelpCircle size={16} />
+                      </Box>
+                    ) : (
                       <Box sx={{ display: 'flex', alignItems: 'center', color: statusCfg.color }}>
                         {statusCfg.icon}
                       </Box>
-                      {isUnsure && (
-                        <Box sx={{ display: 'flex', alignItems: 'center', color: 'hsl(var(--severity-medium))' }}>
-                          <HelpCircle size={14} />
-                        </Box>
-                      )}
-                    </Box>
+                    )}
                   </Box>
 
                   {/* Show failure reason inline if failed */}
