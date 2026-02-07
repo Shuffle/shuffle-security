@@ -1,6 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useDatastore } from './useDatastore';
-import { DATASTORE_CATEGORIES } from '@/services/datastore';
+import { useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { 
+  getDatastoreByCategory, 
+  setDatastoreItem, 
+  deleteDatastoreItem, 
+  DATASTORE_CATEGORIES 
+} from '@/services/datastore';
 
 export interface TemplateTask {
   title: string;
@@ -112,39 +117,60 @@ export const DEFAULT_CASE_TEMPLATES: CaseTemplate[] = [
   },
 ];
 
-const CATEGORY = DATASTORE_CATEGORIES.TEMPLATES || 'shuffle-case_templates';
+const CATEGORY = DATASTORE_CATEGORIES.TEMPLATES;
+const QUERY_KEY = ['caseTemplates'];
+
+/**
+ * Fetch templates from datastore and parse them
+ */
+const fetchTemplates = async (): Promise<CaseTemplate[]> => {
+  const response = await getDatastoreByCategory(CATEGORY);
+  if (!response.success || !response.data || response.data.length === 0) {
+    // Return defaults when no custom templates exist
+    return DEFAULT_CASE_TEMPLATES;
+  }
+
+  const parsed: CaseTemplate[] = response.data
+    .map(item => {
+      try {
+        return JSON.parse(item.value) as CaseTemplate;
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean) as CaseTemplate[];
+
+  return parsed.length > 0 ? parsed : DEFAULT_CASE_TEMPLATES;
+};
+
+/**
+ * Helper to get org ID for datastore writes
+ */
+const getOrgId = (): string | null => {
+  try {
+    const userInfo = localStorage.getItem('shuffle_user_info');
+    if (userInfo) {
+      const parsed = JSON.parse(userInfo);
+      return parsed.active_org?.id || null;
+    }
+  } catch {
+    // Ignore
+  }
+  return null;
+};
 
 export const useCaseTemplates = () => {
-  const { items, isLoading, fetchItems, addItem, removeItem } = useDatastore({ 
-    category: CATEGORY 
+  const queryClient = useQueryClient();
+
+  const { data: templates = [], isLoading } = useQuery({
+    queryKey: QUERY_KEY,
+    queryFn: fetchTemplates,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
-  const [templates, setTemplates] = useState<CaseTemplate[]>([]);
-  const [initialized, setInitialized] = useState(false);
 
-  useEffect(() => {
-    fetchItems();
-  }, [fetchItems]);
-
-  // Parse templates from datastore
-  useEffect(() => {
-    if (isLoading) return;
-    
-    if (items.length > 0) {
-      const parsed: CaseTemplate[] = items.map(item => {
-        try {
-          return JSON.parse(item.value) as CaseTemplate;
-        } catch {
-          return null;
-        }
-      }).filter(Boolean) as CaseTemplate[];
-      setTemplates(parsed);
-      setInitialized(true);
-    } else if (!initialized) {
-      // If no items and not yet initialized, use defaults
-      setTemplates(DEFAULT_CASE_TEMPLATES);
-      setInitialized(true);
-    }
-  }, [items, isLoading, initialized]);
+  const invalidate = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+  }, [queryClient]);
 
   // Get template by ID
   const getTemplate = useCallback((id: string): CaseTemplate | undefined => {
@@ -158,44 +184,44 @@ export const useCaseTemplates = () => {
       id: `template-${Date.now()}`,
       createdAt: Date.now(),
     };
-    await addItem(newTemplate.id, newTemplate);
-    await fetchItems();
+    await setDatastoreItem(newTemplate.id, JSON.stringify(newTemplate), CATEGORY);
+    invalidate();
     return newTemplate;
-  }, [addItem, fetchItems]);
+  }, [invalidate]);
 
   // Update an existing template
   const updateTemplate = useCallback(async (id: string, updates: Partial<CaseTemplate>) => {
     const existing = templates.find(t => t.id === id);
     if (!existing) return;
     const updated = { ...existing, ...updates };
-    await addItem(id, updated);
-    await fetchItems();
-  }, [templates, addItem, fetchItems]);
+    await setDatastoreItem(id, JSON.stringify(updated), CATEGORY);
+    invalidate();
+  }, [templates, invalidate]);
 
   // Delete a template
   const deleteTemplate = useCallback(async (id: string) => {
-    await removeItem(id);
-    await fetchItems();
-  }, [removeItem, fetchItems]);
+    await deleteDatastoreItem(id, CATEGORY);
+    invalidate();
+  }, [invalidate]);
 
   // Initialize defaults in datastore
   const initializeDefaults = useCallback(async () => {
     for (const template of DEFAULT_CASE_TEMPLATES) {
-      await addItem(template.id, template);
+      await setDatastoreItem(template.id, JSON.stringify(template), CATEGORY);
     }
-    await fetchItems();
-  }, [addItem, fetchItems]);
+    invalidate();
+  }, [invalidate]);
 
-  // Track template usage
+  // Track template usage (silent update, no need to invalidate aggressively)
   const trackUsage = useCallback(async (id: string) => {
     const template = templates.find(t => t.id === id);
     if (template) {
-      await addItem(id, { 
+      await setDatastoreItem(id, JSON.stringify({ 
         ...template, 
         usageCount: (template.usageCount || 0) + 1 
-      });
+      }), CATEGORY);
     }
-  }, [templates, addItem]);
+  }, [templates]);
 
   return {
     templates,
