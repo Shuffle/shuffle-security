@@ -176,13 +176,17 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
           if (response.ok) {
             const data = await response.json();
             const authApps = Array.isArray(data) ? data : [];
+            console.log('[Automations] Auth apps total:', authApps.length, 'Sample:', authApps.slice(0, 3).map((a: any) => ({ name: a.app?.name, active: a.active, valid: a.validation?.valid })));
             // Filter to ingestion-relevant apps with active auth
             const seen = new Set<string>();
             const apps: IngestionApp[] = [];
             for (const auth of authApps) {
               if (!auth.app?.name) continue;
-              if (!auth.active && !auth.validation?.valid) continue;
-              if (!isIngestionApp(auth.app.name)) continue;
+              const matchesIngestion = isIngestionApp(auth.app.name);
+              if (matchesIngestion) {
+                console.log('[Automations] Ingestion match:', auth.app.name, 'active:', auth.active, 'valid:', auth.validation?.valid);
+              }
+              if (!matchesIngestion) continue;
               const normalized = auth.app.name.toLowerCase().trim().replace(/[\s_\-]+/g, '_');
               if (seen.has(normalized)) continue;
               seen.add(normalized);
@@ -192,6 +196,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
                 validated: auth.validation?.valid === true,
               });
             }
+            console.log('[Automations] Final ingestion apps:', apps.map(a => a.name));
             setIngestionApps(apps);
           }
         } catch (error) {
