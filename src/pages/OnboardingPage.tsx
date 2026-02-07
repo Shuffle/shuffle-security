@@ -20,6 +20,10 @@ import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import { API_CONFIG, getApiUrl } from '@/config/api';
 import { setDatastoreItem, getDatastoreItem } from '@/services/datastore';
 import { deduplicateAuthApps } from '@/lib/utils';
+import {
+  isEmailApp, isIngestionApp, isThreatIntelApp,
+  COMMUNICATION_PATTERNS_NAMES,
+} from '@/lib/ingestionDetection';
 import { trackOnboardingStep, trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
 
 // Datastore category for onboarding config (using shuffle-security_ prefix for consistency)
@@ -872,30 +876,8 @@ const OnboardingPage = () => {
                       return a.app.name.localeCompare(b.app.name);
                     });
 
-                    // App detection patterns (same as EnrichmentConfig)
-                    const EMAIL_APP_PATTERNS = ['gmail', 'outlook', 'email', 'microsoft_graph', 'office365', 'exchange', 'imap', 'smtp'];
-                    const isEmailApp = (appName: string) => 
-                      EMAIL_APP_PATTERNS.some(pattern => appName.toLowerCase().includes(pattern));
-                    
-                    const COMMUNICATION_PATTERNS = ['slack', 'teams', 'discord', 'mattermost', 'telegram', 'webhook'];
                     const isCommunicationApp = (appName: string) => 
-                      COMMUNICATION_PATTERNS.some(pattern => appName.toLowerCase().includes(pattern));
-                    
-                    const CASES_PATTERNS = ['jira', 'servicenow', 'zendesk', 'freshdesk', 'pagerduty', 'opsgenie', 'ticket', 'itsm', 'salesforce', 'thehive', 'cortex'];
-                    const EDR_PATTERNS = ['crowdstrike', 'sentinelone', 'carbon black', 'defender', 'cylance', 'sophos', 'trellix', 'vmware', 'tanium', 'falcon', 'edr'];
-                    const SIEM_PATTERNS = ['splunk', 'elastic', 'qradar', 'sentinel', 'chronicle', 'logrhythm', 'sumo logic', 'graylog', 'wazuh', 'siem', 'arcsight'];
-                    const THREAT_INTEL_PATTERNS = ['virustotal', 'shodan', 'alienvault', 'otx', 'threatcrowd', 'urlscan', 'hybrid-analysis', 'abuseipdb', 'greynoise', 'urlhaus', 'malwarebazaar', 'threatfox', 'misp', 'opencti'];
-                    
-                    const isIngestionApp = (appName: string) => {
-                      const name = appName.toLowerCase();
-                      return isEmailApp(appName) ||
-                        CASES_PATTERNS.some(p => name.includes(p)) ||
-                        EDR_PATTERNS.some(p => name.includes(p)) ||
-                        SIEM_PATTERNS.some(p => name.includes(p));
-                    };
-                    
-                    const isThreatIntelApp = (appName: string) =>
-                      THREAT_INTEL_PATTERNS.some(pattern => appName.toLowerCase().includes(pattern));
+                      COMMUNICATION_PATTERNS_NAMES.some(pattern => appName.toLowerCase().includes(pattern));
                     
                     // Count apps with valid auth for each category
                     const validApps = sortedApps.filter(a => a.hasValidAuth);

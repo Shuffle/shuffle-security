@@ -27,6 +27,12 @@ import EditIcon from '@mui/icons-material/Edit';
 import LinkIcon from '@mui/icons-material/Link';
 import RestoreIcon from '@mui/icons-material/Restore';
 import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
+import {
+  EMAIL_APP_PATTERNS, CASES_PATTERNS, EDR_PATTERNS, SIEM_PATTERNS,
+  THREAT_INTEL_PATTERNS, COMMUNICATION_PATTERNS_NAMES,
+  isEmailApp, isThreatIntelApp, getIngestionCategory,
+  type IngestionCategory,
+} from '@/lib/ingestionDetection';
 import shuffleLogo from '@/assets/shuffle-logo.png';
 import { API_CONFIG, getApiUrl } from '@/config/api';
 import { useThreatFeeds, DEFAULT_THREAT_FEEDS, ThreatFeed } from '@/hooks/useThreatFeeds';
@@ -173,46 +179,18 @@ const itemVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
 };
 
-// Email app detection
-const EMAIL_APP_PATTERNS = ['gmail', 'outlook', 'email', 'microsoft_graph', 'office365', 'exchange', 'imap', 'smtp'];
-const isEmailApp = (appName: string) => 
-  EMAIL_APP_PATTERNS.some(pattern => appName.toLowerCase().includes(pattern));
-
 // Communication app detection
 const COMMUNICATION_CATEGORIES = ['COMMUNICATION', 'communication', 'Communication'];
 const isCommunicationApp = (app: AuthAppEntry) => {
   const categories = app.app.categories || [];
   return categories.some(cat => COMMUNICATION_CATEGORIES.includes(cat)) ||
-    ['slack', 'teams', 'discord', 'mattermost', 'telegram', 'webhook'].some(
+    COMMUNICATION_PATTERNS_NAMES.some(
       pattern => app.app.name.toLowerCase().includes(pattern)
     );
 };
 
-// Ingestion source detection - Email, Cases (ticketing), EDR, SIEM
-const CASES_PATTERNS = ['jira', 'servicenow', 'zendesk', 'freshdesk', 'pagerduty', 'opsgenie', 'ticket', 'itsm', 'salesforce', 'thehive', 'cortex'];
-const EDR_PATTERNS = ['crowdstrike', 'sentinelone', 'carbon black', 'defender', 'cylance', 'sophos', 'trellix', 'vmware', 'tanium', 'falcon', 'edr'];
-const SIEM_PATTERNS = ['splunk', 'elastic', 'qradar', 'sentinel', 'chronicle', 'logrhythm', 'sumo logic', 'graylog', 'wazuh', 'siem', 'arcsight'];
-
-// Threat Intel source detection
-const THREAT_INTEL_PATTERNS = ['virustotal', 'shodan', 'alienvault', 'otx', 'threatcrowd', 'urlscan', 'hybrid-analysis', 'abuseipdb', 'greynoise', 'urlhaus', 'malwarebazaar', 'threatfox', 'misp', 'opencti', 'recorded future', 'mandiant', 'crowdstrike intel', 'intel471', 'flashpoint', 'domaintools'];
-const isThreatIntelApp = (appName: string) =>
-  THREAT_INTEL_PATTERNS.some(pattern => appName.toLowerCase().includes(pattern));
-
-type IngestionCategory = 'email' | 'cases' | 'edr' | 'siem';
 type NotificationCategory = 'chat' | 'email';
 type ThreatIntelCategory = 'threat_intel';
-
-const getIngestionCategory = (app: AuthAppEntry): IngestionCategory | null => {
-  const name = app.app.name.toLowerCase();
-  const categories = (app.app.categories || []).map(c => c.toLowerCase());
-  
-  if (isEmailApp(name)) return 'email';
-  if (CASES_PATTERNS.some(p => name.includes(p)) || categories.includes('cases') || categories.includes('itsm')) return 'cases';
-  if (EDR_PATTERNS.some(p => name.includes(p)) || categories.includes('edr') || categories.includes('endpoint')) return 'edr';
-  if (SIEM_PATTERNS.some(p => name.includes(p)) || categories.includes('siem')) return 'siem';
-  
-  return null;
-};
 
 interface IngestionSource {
   category: IngestionCategory;
@@ -326,12 +304,7 @@ export const EnrichmentConfig = ({
     
     // First add authenticated apps (validated or just active)
     dedupedApps.forEach(({ app, bestImage, hasValidAuth }) => {
-      const mockEntry: AuthAppEntry = {
-        app: { ...app, large_image: bestImage || app.large_image },
-        active: true,
-        validation: { valid: hasValidAuth },
-      };
-      const category = getIngestionCategory(mockEntry);
+      const category = getIngestionCategory(app.name, app.categories);
       if (category) {
         ingestionByCategory[category].push({
           id: app.id,
@@ -347,13 +320,9 @@ export const EnrichmentConfig = ({
     // Then add selected apps that aren't already in the list (for each category)
     selectedApps.forEach(app => {
       const normalizedName = app.name.toLowerCase().trim().replace(/[\s_\-]+/g, '_');
-      if (appValidationMap.has(normalizedName)) return; // Already added from authenticated apps
+      if (appValidationMap.has(normalizedName)) return;
       
-      // Create a mock AuthAppEntry to check category
-      const mockEntry: AuthAppEntry = {
-        app: { id: app.objectID, name: app.name, categories: app.categories },
-      };
-      const category = getIngestionCategory(mockEntry);
+      const category = getIngestionCategory(app.name, app.categories);
       if (category) {
         ingestionByCategory[category].push({
           id: app.objectID,

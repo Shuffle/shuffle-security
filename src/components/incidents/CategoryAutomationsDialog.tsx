@@ -26,26 +26,7 @@ import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import DownloadIcon from '@mui/icons-material/Download';
 
 import { CategoryAutomation } from '@/services/datastore';
-
-// Ingestion category patterns (shared with onboarding)
-const EMAIL_PATTERNS = ['gmail', 'outlook', 'email', 'microsoft_graph', 'office365', 'exchange', 'imap', 'smtp'];
-const CASES_PATTERNS = ['jira', 'servicenow', 'zendesk', 'freshdesk', 'pagerduty', 'opsgenie', 'ticket', 'itsm', 'salesforce', 'thehive', 'cortex'];
-const EDR_PATTERNS = ['crowdstrike', 'sentinelone', 'carbon black', 'defender', 'cylance', 'sophos', 'trellix', 'vmware', 'tanium', 'falcon', 'edr'];
-const SIEM_PATTERNS = ['splunk', 'elastic', 'qradar', 'sentinel', 'chronicle', 'logrhythm', 'sumo logic', 'graylog', 'wazuh', 'siem', 'arcsight'];
-
-const isIngestionApp = (appName: string): boolean => {
-  const name = appName.toLowerCase();
-  return EMAIL_PATTERNS.some(p => name.includes(p)) ||
-    CASES_PATTERNS.some(p => name.includes(p)) ||
-    EDR_PATTERNS.some(p => name.includes(p)) ||
-    SIEM_PATTERNS.some(p => name.includes(p));
-};
-
-interface IngestionApp {
-  name: string;
-  image?: string;
-  validated: boolean;
-}
+import { extractValidatedIngestionApps, ValidatedIngestionApp } from '@/lib/ingestionDetection';
 
 // API format for automations
 interface AutomationApiFormat {
@@ -141,7 +122,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
   const [loadingWorkflows, setLoadingWorkflows] = useState(false);
   const [selectedWorkflows, setSelectedWorkflows] = useState<Workflow[]>([]);
   const [webhookUrl, setWebhookUrl] = useState('');
-  const [ingestionApps, setIngestionApps] = useState<IngestionApp[]>([]);
+  const [ingestionApps, setIngestionApps] = useState<ValidatedIngestionApp[]>([]);
 
   // Fetch workflows and ingestion config when dialog opens
   useEffect(() => {
@@ -176,28 +157,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
           if (response.ok) {
             const result = await response.json();
             const authApps = Array.isArray(result) ? result : (result.data || []);
-            console.log('[Automations] Auth apps total:', authApps.length, 'Sample:', authApps.slice(0, 3).map((a: any) => ({ name: a.app?.name, active: a.active, valid: a.validation?.valid })));
-            // Filter to ingestion-relevant apps with active auth
-            const seen = new Set<string>();
-            const apps: IngestionApp[] = [];
-            for (const auth of authApps) {
-              if (!auth.app?.name) continue;
-              const matchesIngestion = isIngestionApp(auth.app.name);
-              if (matchesIngestion) {
-                console.log('[Automations] Ingestion match:', auth.app.name, 'active:', auth.active, 'valid:', auth.validation?.valid);
-              }
-              if (!matchesIngestion) continue;
-              const normalized = auth.app.name.toLowerCase().trim().replace(/[\s_\-]+/g, '_');
-              if (seen.has(normalized)) continue;
-              seen.add(normalized);
-              apps.push({
-                name: auth.app.name,
-                image: auth.app.large_image,
-                validated: auth.validation?.valid === true,
-              });
-            }
-            console.log('[Automations] Final ingestion apps:', apps.map(a => a.name));
-            setIngestionApps(apps);
+            setIngestionApps(extractValidatedIngestionApps(authApps));
           }
         } catch (error) {
           console.error('Failed to fetch ingestion apps:', error);
