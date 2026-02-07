@@ -358,6 +358,8 @@ const IncidentDetailPage = () => {
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [showTemplateMenu, setShowTemplateMenu] = useState(false);
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
+  const TASKS_PER_PAGE = 25;
+  const [visibleTaskCount, setVisibleTaskCount] = useState(TASKS_PER_PAGE);
   
   // Incident-level attachments
   const [incidentAttachments, setIncidentAttachments] = useState<FileAttachment[]>([]);
@@ -646,6 +648,12 @@ const IncidentDetailPage = () => {
     }
   }, [incident, editedTitle, editedMessage, editedSeverity, editedAssignee, editedStatus, editedTlp, editedReferences, editedObservables, editedCustomFields, activity, tasks, addItem]);
 
+  // Cache stringified tasks to avoid re-serializing 325+ tasks on every render
+  const tasksJsonRef = useRef('');
+  useEffect(() => {
+    tasksJsonRef.current = JSON.stringify(tasks);
+  }, [tasks]);
+
   // Debounced auto-save
   useEffect(() => {
     if (!incident || !initialValuesRef.current) return;
@@ -666,7 +674,7 @@ const IncidentDetailPage = () => {
     if (JSON.stringify(editedReferences) !== init.references) changedFields.push('references');
     if (JSON.stringify(editedObservables) !== init.observables) changedFields.push('observables');
     if (JSON.stringify(editedCustomFields) !== init.customFields) changedFields.push(`customFields: ${JSON.stringify(editedCustomFields).slice(0, 80)} vs ${init.customFields.slice(0, 80)}`);
-    if (JSON.stringify(tasks) !== init.tasks) changedFields.push('tasks');
+    if (tasksJsonRef.current !== init.tasks) changedFields.push('tasks');
     const hasChanges = changedFields.length > 0;
     
     if (hasChanges) {
@@ -965,17 +973,26 @@ const IncidentDetailPage = () => {
     toast.success(`Applied "${template.name}" template`);
   };
 
-  const isTaskBlocked = (task: IncidentTask): boolean => {
-    if (!task.dependsOn) return false;
-    const dependencyTask = tasks.find(t => t.title === task.dependsOn);
-    return dependencyTask ? !dependencyTask.completed : false;
-  };
+  // Pre-build dependency lookup map to avoid O(n²) searches
+  const taskDependencyMap = useMemo(() => {
+    const map = new Map<string, IncidentTask>();
+    for (const t of tasks) {
+      map.set(t.title, t);
+    }
+    return map;
+  }, [tasks]);
 
-  const getTaskProgress = () => {
+  const isTaskBlocked = useCallback((task: IncidentTask): boolean => {
+    if (!task.dependsOn) return false;
+    const dependencyTask = taskDependencyMap.get(task.dependsOn);
+    return dependencyTask ? !dependencyTask.completed : false;
+  }, [taskDependencyMap]);
+
+  const taskProgress = useMemo(() => {
     if (tasks.length === 0) return 0;
     const completedCount = tasks.filter(t => t.completed).length;
     return Math.round((completedCount / tasks.length) * 100);
-  };
+  }, [tasks]);
 
   const inputSx = {
     '& .MuiOutlinedInput-root': {
@@ -1471,19 +1488,19 @@ const IncidentDetailPage = () => {
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                     Progress
                   </Typography>
-                  <Typography variant="caption" sx={{ color: getTaskProgress() === 100 ? '#22c55e' : 'text.secondary' }}>
-                    {getTaskProgress()}%
+                  <Typography variant="caption" sx={{ color: taskProgress === 100 ? '#22c55e' : 'text.secondary' }}>
+                    {taskProgress}%
                   </Typography>
                 </Box>
                 <LinearProgress 
                   variant="determinate" 
-                  value={getTaskProgress()} 
+                  value={taskProgress} 
                   sx={{ 
                     height: 4, 
                     borderRadius: 2,
                     bgcolor: 'rgba(255,255,255,0.1)',
                     '& .MuiLinearProgress-bar': {
-                      bgcolor: getTaskProgress() === 100 ? '#22c55e' : '#ff6600',
+                      bgcolor: taskProgress === 100 ? '#22c55e' : '#ff6600',
                       borderRadius: 2,
                     },
                   }} 
@@ -1555,12 +1572,12 @@ const IncidentDetailPage = () => {
               </Box>
             </Box>
 
-            {/* Task list */}
+            {/* Task list - paginated for performance */}
             {tasks.length > 0 ? (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                {tasks.map((task) => {
+                {tasks.slice(0, visibleTaskCount).map((task) => {
                   const isBlocked = isTaskBlocked(task);
-                  const dependencyTask = task.dependsOn ? tasks.find(t => t.title === task.dependsOn) : null;
+                  const dependencyTask = task.dependsOn ? taskDependencyMap.get(task.dependsOn) : null;
                   const isExpanded = expandedTaskId === task.id;
                   const categoryInfo = taskCategories.find(c => c.value === task.category);
                   
@@ -1619,25 +1636,46 @@ const IncidentDetailPage = () => {
                         
                         <Box sx={{ flex: 1, minWidth: 0 }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                            <MentionInput
-                              value={task.title}
-                              onChange={(value) => handleUpdateTaskTitle(task.id, value)}
-                              size="small"
-                              variant="standard"
-                              placeholder="Task title..."
-                              InputProps={{
-                                disableUnderline: true,
-                                sx: { 
+                            {/* Use lightweight MentionText for collapsed tasks, MentionInput only when expanded */}
+                            {isExpanded ? (
+                              <MentionInput
+                                value={task.title}
+                                onChange={(value) => handleUpdateTaskTitle(task.id, value)}
+                                size="small"
+                                variant="standard"
+                                placeholder="Task title..."
+                                InputProps={{
+                                  disableUnderline: true,
+                                  sx: { 
+                                    fontSize: '0.875rem',
+                                    textDecoration: task.completed ? 'line-through' : 'none',
+                                    color: task.completed ? 'text.secondary' : 'text.primary',
+                                    '&:hover': { bgcolor: 'rgba(255,255,255,0.03)' },
+                                    borderRadius: 0.5,
+                                    px: 0.5,
+                                  },
+                                }}
+                                sx={{ flex: 1, minWidth: 200 }}
+                              />
+                            ) : (
+                              <Box 
+                                onClick={() => setExpandedTaskId(task.id)}
+                                sx={{ 
+                                  flex: 1, 
+                                  minWidth: 200, 
+                                  cursor: 'pointer',
                                   fontSize: '0.875rem',
                                   textDecoration: task.completed ? 'line-through' : 'none',
                                   color: task.completed ? 'text.secondary' : 'text.primary',
                                   '&:hover': { bgcolor: 'rgba(255,255,255,0.03)' },
                                   borderRadius: 0.5,
                                   px: 0.5,
-                                },
-                              }}
-                              sx={{ flex: 1, minWidth: 200 }}
-                            />
+                                  py: 0.25,
+                                }}
+                              >
+                                <MentionText text={task.title} />
+                              </Box>
+                            )}
                             {categoryInfo && (
                               <Chip
                                 size="small"
@@ -1832,6 +1870,34 @@ const IncidentDetailPage = () => {
                     </Box>
                   );
                 })}
+
+                {/* Show more button for pagination */}
+                {tasks.length > visibleTaskCount && (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', pt: 1 }}>
+                    <Box
+                      component="button"
+                      onClick={() => setVisibleTaskCount(prev => prev + TASKS_PER_PAGE)}
+                      sx={{
+                        px: 3,
+                        py: 1,
+                        borderRadius: '8px',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        bgcolor: 'rgba(255,255,255,0.05)',
+                        color: 'text.secondary',
+                        fontSize: '0.85rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        '&:hover': {
+                          bgcolor: 'rgba(255, 102, 0, 0.1)',
+                          borderColor: 'rgba(255, 102, 0, 0.3)',
+                          color: '#ff6600',
+                        },
+                      }}
+                    >
+                      Show more ({tasks.length - visibleTaskCount} remaining)
+                    </Box>
+                  </Box>
+                )}
               </Box>
             ) : (
               <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic', textAlign: 'center', py: 2 }}>
