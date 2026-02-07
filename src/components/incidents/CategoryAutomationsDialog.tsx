@@ -26,7 +26,26 @@ import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import DownloadIcon from '@mui/icons-material/Download';
 
 import { CategoryAutomation } from '@/services/datastore';
-import { getDatastoreItem } from '@/services/datastore';
+
+// Ingestion category patterns (shared with onboarding)
+const EMAIL_PATTERNS = ['gmail', 'outlook', 'email', 'microsoft_graph', 'office365', 'exchange', 'imap', 'smtp'];
+const CASES_PATTERNS = ['jira', 'servicenow', 'zendesk', 'freshdesk', 'pagerduty', 'opsgenie', 'ticket', 'itsm', 'salesforce', 'thehive', 'cortex'];
+const EDR_PATTERNS = ['crowdstrike', 'sentinelone', 'carbon black', 'defender', 'cylance', 'sophos', 'trellix', 'vmware', 'tanium', 'falcon', 'edr'];
+const SIEM_PATTERNS = ['splunk', 'elastic', 'qradar', 'sentinel', 'chronicle', 'logrhythm', 'sumo logic', 'graylog', 'wazuh', 'siem', 'arcsight'];
+
+const isIngestionApp = (appName: string): boolean => {
+  const name = appName.toLowerCase();
+  return EMAIL_PATTERNS.some(p => name.includes(p)) ||
+    CASES_PATTERNS.some(p => name.includes(p)) ||
+    EDR_PATTERNS.some(p => name.includes(p)) ||
+    SIEM_PATTERNS.some(p => name.includes(p));
+};
+
+interface IngestionApp {
+  name: string;
+  image?: string;
+  validated: boolean;
+}
 
 // API format for automations
 interface AutomationApiFormat {
@@ -122,7 +141,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
   const [loadingWorkflows, setLoadingWorkflows] = useState(false);
   const [selectedWorkflows, setSelectedWorkflows] = useState<Workflow[]>([]);
   const [webhookUrl, setWebhookUrl] = useState('');
-  const [ingestionTools, setIngestionTools] = useState<{ name: string; enabled: boolean }[]>([]);
+  const [ingestionApps, setIngestionApps] = useState<IngestionApp[]>([]);
 
   // Fetch workflows and ingestion config when dialog opens
   useEffect(() => {
@@ -147,27 +166,41 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
         }
       };
 
-      const fetchIngestionConfig = async () => {
+      const fetchIngestionApps = async () => {
         try {
-          const response = await getDatastoreItem('automation_config', 'shuffle-security_onboarding');
-          if (response.success && response.item?.value) {
-            const config = typeof response.item.value === 'string'
-              ? JSON.parse(response.item.value)
-              : response.item.value;
-            const ingestion = config?.automatic_ingestion;
-            if (ingestion?.tools && typeof ingestion.tools === 'object') {
-              const tools = Object.entries(ingestion.tools)
-                .map(([name, enabled]) => ({ name, enabled: enabled as boolean }));
-              setIngestionTools(tools);
+          const response = await fetch(getApiUrl('/api/v1/apps/authentication'), {
+            headers: {
+              ...getAuthHeader(API_CONFIG.apiKey),
+            },
+          });
+          if (response.ok) {
+            const data = await response.json();
+            const authApps = Array.isArray(data) ? data : [];
+            // Filter to ingestion-relevant apps with active auth
+            const seen = new Set<string>();
+            const apps: IngestionApp[] = [];
+            for (const auth of authApps) {
+              if (!auth.app?.name) continue;
+              if (!auth.active && !auth.validation?.valid) continue;
+              if (!isIngestionApp(auth.app.name)) continue;
+              const normalized = auth.app.name.toLowerCase().trim().replace(/[\s_\-]+/g, '_');
+              if (seen.has(normalized)) continue;
+              seen.add(normalized);
+              apps.push({
+                name: auth.app.name,
+                image: auth.app.large_image,
+                validated: auth.validation?.valid === true,
+              });
             }
+            setIngestionApps(apps);
           }
         } catch (error) {
-          console.error('Failed to fetch ingestion config:', error);
+          console.error('Failed to fetch ingestion apps:', error);
         }
       };
 
       fetchWorkflows();
-      fetchIngestionConfig();
+      fetchIngestionApps();
     }
   }, [open]);
 
@@ -349,7 +382,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
 
       <DialogContent sx={{ px: 4, pb: 3 }}>
         {/* Ingestion Sources */}
-        {ingestionTools.length > 0 && (
+        {ingestionApps.length > 0 && (
           <Box sx={{ mb: 3 }}>
             <Typography 
               variant="body2" 
@@ -368,17 +401,26 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
               </Box>
             </Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-              {ingestionTools.map(tool => (
+              {ingestionApps.map(app => (
                 <Chip
-                  key={tool.name}
-                  label={tool.name}
+                  key={app.name}
+                  label={app.name}
                   size="small"
+                  avatar={app.image ? (
+                    <Box
+                      component="img"
+                      src={app.image}
+                      alt=""
+                      sx={{ width: 18, height: 18, borderRadius: '50%', objectFit: 'contain', bgcolor: 'rgba(255,255,255,0.1)' }}
+                    />
+                  ) : undefined}
                   sx={{
-                    bgcolor: tool.enabled ? 'rgba(34, 197, 94, 0.12)' : 'rgba(255,255,255,0.05)',
-                    color: tool.enabled ? '#4ade80' : 'rgba(255,255,255,0.4)',
+                    bgcolor: app.validated ? 'rgba(34, 197, 94, 0.12)' : 'rgba(255,255,255,0.05)',
+                    color: app.validated ? '#4ade80' : 'rgba(255,255,255,0.4)',
                     border: '1px solid',
-                    borderColor: tool.enabled ? 'rgba(34, 197, 94, 0.25)' : 'rgba(255,255,255,0.08)',
+                    borderColor: app.validated ? 'rgba(34, 197, 94, 0.25)' : 'rgba(255,255,255,0.08)',
                     fontSize: '0.8rem',
+                    '& .MuiChip-avatar': { ml: 0.5 },
                   }}
                 />
               ))}
