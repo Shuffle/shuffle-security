@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { getApiUrl, API_CONFIG, getAuthHeader } from '@/config/api';
+import { getApiUrl, API_CONFIG, getAuthHeader, setRegionUrl, resetRegionUrl, getTrackedOrgId } from '@/config/api';
 
 interface Organization {
   name: string;
@@ -50,6 +50,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.log('getinfo response:', response.status, data);
 
       if (response.ok && data.success === true) {
+        // Update region URL based on getinfo response
+        const newOrgId = data.active_org?.id || null;
+        const previousOrgId = getTrackedOrgId();
+
+        // If org changed, reset region URL first so subsequent calls use default
+        if (previousOrgId && newOrgId && previousOrgId !== newOrgId) {
+          resetRegionUrl();
+        }
+
+        // Set region URL from response (will validate it's a shuffler.io subdomain)
+        setRegionUrl(data.region_url, newOrgId);
+
         const info = {
           username: data.username,
           id: data.id,
@@ -128,6 +140,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const setActiveOrg = useCallback(async (orgId: string) => {
     try {
+      // Reset region URL immediately — the new org may have a different region
+      resetRegionUrl();
+
       const token = localStorage.getItem('session_token');
       const response = await fetch(getApiUrl('/api/v1/orgs/' + orgId + '/change'), {
         method: 'POST',
@@ -139,7 +154,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (response.ok) {
-        // Refresh user info to get updated active_org
+        // Refresh user info to get updated active_org and region_url
         await fetchUserInfo(token);
       } else {
         console.warn('Org change failed - this endpoint may require session auth instead of API key');
@@ -155,6 +170,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem('session_token');
     localStorage.removeItem('shuffle_user_info');
     API_CONFIG.setApiKey(null);
+    resetRegionUrl();
     setSessionToken(null);
     setIsAuthenticated(false);
     setUserInfo(null);
