@@ -177,25 +177,9 @@ const AgentPermissionsDrawer = ({ open, onClose }: AgentPermissionsDrawerProps) 
           <ShieldCheck size={22} />
         </Box>
         <Box sx={{ flex: 1 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography sx={{ fontWeight: 600, fontSize: '1.1rem', color: 'hsl(var(--foreground))' }}>
-              Agent Permissions
-            </Typography>
-            <Tooltip title="View Agent Activity">
-              <IconButton
-                size="small"
-                onClick={() => { onClose(); navigate('/agent'); }}
-                sx={{
-                  color: 'hsl(var(--muted-foreground))',
-                  width: 24,
-                  height: 24,
-                  '&:hover': { color: 'hsl(var(--primary))' },
-                }}
-              >
-                <Activity size={14} />
-              </IconButton>
-            </Tooltip>
-          </Box>
+          <Typography sx={{ fontWeight: 600, fontSize: '1.1rem', color: 'hsl(var(--foreground))' }}>
+            Agent Permissions
+          </Typography>
           <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))' }}>
             Control what actions your agent can perform
           </Typography>
@@ -232,21 +216,44 @@ const AgentPermissionsDrawer = ({ open, onClose }: AgentPermissionsDrawerProps) 
                   {enabledPermissions}/{totalPermissions}
                 </Typography>
               </Box>
-              <Tooltip title="Reset all to defaults">
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Button
                   size="small"
-                  startIcon={<RestoreIcon sx={{ fontSize: 14 }} />}
-                  onClick={resetToDefaults}
+                  variant="outlined"
+                  startIcon={<Activity size={14} />}
+                  onClick={() => { onClose(); navigate('/agent'); }}
                   sx={{
-                    color: 'hsl(var(--muted-foreground))',
+                    borderColor: 'hsl(var(--border))',
+                    color: 'hsl(var(--foreground))',
                     textTransform: 'none',
                     fontSize: '0.75rem',
-                    '&:hover': { color: 'hsl(var(--primary))' },
+                    borderRadius: 1.5,
+                    px: 1.5,
+                    '&:hover': { 
+                      borderColor: 'hsl(var(--primary))',
+                      color: 'hsl(var(--primary))',
+                      bgcolor: 'hsla(var(--primary) / 0.08)',
+                    },
                   }}
                 >
-                  Reset
+                  Activity
                 </Button>
-              </Tooltip>
+                <Tooltip title="Reset all to defaults">
+                  <Button
+                    size="small"
+                    startIcon={<RestoreIcon sx={{ fontSize: 14 }} />}
+                    onClick={resetToDefaults}
+                    sx={{
+                      color: 'hsl(var(--muted-foreground))',
+                      textTransform: 'none',
+                      fontSize: '0.75rem',
+                      '&:hover': { color: 'hsl(var(--primary))' },
+                    }}
+                  >
+                    Reset
+                  </Button>
+                </Tooltip>
+              </Box>
             </Box>
 
             {error && (
