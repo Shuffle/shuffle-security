@@ -12,6 +12,8 @@ import JsonView from 'react18-json-view';
 import 'react18-json-view/src/style.css';
 import 'react18-json-view/src/dark.css';
 import { AgentRun } from '@/services/agentActivity';
+import { parseDatastoreReference, DatastoreReference } from '@/lib/agentParsers';
+export type { DatastoreReference };
 
 /** Try to parse the result JSON from results[0].result */
 export const parseRunResult = (run: AgentRun): { raw: string | null; parsed: any | null } => {
@@ -89,25 +91,8 @@ const getOutputText = (parsed: any): string | null => {
   return null;
 };
 
-/** Parse original_input for datastore Key and Category */
-export interface DatastoreReference {
-  key: string;
-  category: string;
-}
-
-export const parseDatastoreReference = (run: AgentRun): DatastoreReference | null => {
-  const { parsed } = parseRunResult(run);
-  const input = parsed?.original_input;
-  if (!input || typeof input !== 'string') return null;
-
-  const keyMatch = input.match(/Key:\s*([a-f0-9]+)/i);
-  const categoryMatch = input.match(/Category:\s*([\w-]+)/i);
-
-  if (keyMatch && categoryMatch) {
-    return { key: keyMatch[1], category: categoryMatch[1] };
-  }
-  return null;
-};
+// parseDatastoreReference and DatastoreReference are now imported from @/lib/agentParsers
+export { parseDatastoreReference };
 
 /** Get a link path if the reference is to a known entity */
 const getReferencePath = (ref: DatastoreReference): string | null => {
