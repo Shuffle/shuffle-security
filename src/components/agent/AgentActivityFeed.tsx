@@ -18,10 +18,11 @@ import {
   Globe,
   Server,
   AlertTriangle,
+  HelpCircle,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { AgentRun } from '@/services/agentActivity';
-import AgentRunResultViewer, { getFailureInfo, parseRunResult } from '@/components/agent/AgentRunResultViewer';
+import AgentRunResultViewer, { getFailureInfo, parseRunResult, hasOutputWarning } from '@/components/agent/AgentRunResultViewer';
 
 // Map status to icon and color
 const STATUS_CONFIG: Record<string, { icon: React.ReactNode; color: string; label: string }> = {
@@ -162,6 +163,7 @@ const AgentActivityFeed = ({ runs }: AgentActivityFeedProps) => {
         const isExpanded = expandedId === run.execution_id;
         const isFailed = run.status?.toUpperCase() === 'FAILED' || run.status?.toUpperCase() === 'ABORTED';
         const failureInfo = isFailed ? getFailureInfo(run) : null;
+        const isUnsure = !isFailed && hasOutputWarning(run);
 
         return (
           <motion.div
@@ -224,8 +226,15 @@ const AgentActivityFeed = ({ runs }: AgentActivityFeedProps) => {
                     }}>
                       {getRunTitle(run)}
                     </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', color: statusCfg.color }}>
-                      {statusCfg.icon}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', color: statusCfg.color }}>
+                        {statusCfg.icon}
+                      </Box>
+                      {isUnsure && (
+                        <Box sx={{ display: 'flex', alignItems: 'center', color: 'hsl(var(--severity-medium))' }}>
+                          <HelpCircle size={14} />
+                        </Box>
+                      )}
                     </Box>
                   </Box>
 
