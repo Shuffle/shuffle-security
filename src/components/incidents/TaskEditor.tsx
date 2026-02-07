@@ -50,8 +50,10 @@ export const TaskEditor = ({
   incidentId = 'new',
   compact = false,
 }: TaskEditorProps) => {
+  const TASKS_PER_PAGE = 25;
   const { users, loading: usersLoading } = useUsers();
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(TASKS_PER_PAGE);
 
   const handleToggleTask = (taskId: string) => {
     onTasksChange(tasks.map(task => 
@@ -168,14 +170,20 @@ export const TaskEditor = ({
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {(() => {
           const seenIds = new Set<string>();
-          return tasks
+          const filteredTasks = tasks
             .filter((task) => !task.disabled) // Hide disabled (soft-deleted) tasks
             .filter((task) => {
               if (seenIds.has(task.id)) return false;
               seenIds.add(task.id);
               return true;
             });
-        })().map((task) => {
+          const visibleTasks = filteredTasks.slice(0, visibleCount);
+          const hasMore = filteredTasks.length > visibleCount;
+          const remaining = filteredTasks.length - visibleCount;
+
+          return (
+            <>
+              {visibleTasks.map((task) => {
           const isBlocked = isTaskBlocked(task);
           const dependencyTask = task.dependsOn ? tasks.find(t => t.title === task.dependsOn) : null;
           const isExpanded = expandedTaskId === task.id;
@@ -470,6 +478,43 @@ export const TaskEditor = ({
             </Box>
           );
         })}
+
+              {/* Show more button */}
+              {hasMore && (
+                <Box 
+                  sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'center', 
+                    pt: 1,
+                  }}
+                >
+                  <Box
+                    component="button"
+                    onClick={() => setVisibleCount(prev => prev + TASKS_PER_PAGE)}
+                    sx={{
+                      px: 3,
+                      py: 1,
+                      borderRadius: '8px',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      bgcolor: 'rgba(255,255,255,0.05)',
+                      color: 'text.secondary',
+                      fontSize: '0.85rem',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        bgcolor: 'rgba(255, 102, 0, 0.1)',
+                        borderColor: 'rgba(255, 102, 0, 0.3)',
+                        color: '#ff6600',
+                      },
+                    }}
+                  >
+                    Show more ({remaining} remaining)
+                  </Box>
+                </Box>
+              )}
+            </>
+          );
+        })()}
       </Box>
     </Box>
   );
