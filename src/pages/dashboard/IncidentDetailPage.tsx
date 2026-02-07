@@ -76,7 +76,7 @@ import { MentionInput } from '@/components/incidents/MentionInput';
 import { TaskDateTimePicker } from '@/components/incidents/TaskDateTimePicker';
 import { FileAttachments } from '@/components/incidents/FileAttachments';
 import { toast } from 'sonner';
-import { isAIAssignee } from '@/lib/utils';
+import { isAIAssignee, deduplicateTasks } from '@/lib/utils';
 
 // TaskTemplate interface is now imported from useCaseTemplates
 
@@ -166,7 +166,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
       const topLevelActivity = (data as any).activity;
       const metadataTasks = customAttrs?.tasks;
       const metadataActivity = (customAttrs as any)?.activity;
-      const tasks = topLevelTasks || metadataTasks;
+      const tasks = deduplicateTasks<IncidentTask>(topLevelTasks || metadataTasks || []);
       const activity = topLevelActivity || metadataActivity || [];
       
       // Convert comments to activity for display (legacy format support)
@@ -210,7 +210,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
       const customAttrs = legacyData.metadata?.extensions?.custom_attributes;
       const tlp = customAttrs?.tlp || legacyData.tlp;
       const pap = customAttrs?.pap || legacyData.pap;
-      const tasks = customAttrs?.tasks || legacyData.tasks;
+      const tasks = deduplicateTasks<IncidentTask>(customAttrs?.tasks || legacyData.tasks || []);
       const activity = customAttrs?.activity || legacyData.activity;
       const customFields = customAttrs?.customFields || (customAttrs as any)?.custom_fields || legacyData.customFields || legacyData.custom_fields;
       
@@ -256,6 +256,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
       customFields: data.customFields || {},
       relatedFindings: data.relatedFindings || [],
       activity: data.activity || [],
+      tasks: deduplicateTasks(data.tasks || []),
       rawOCSF: data,
     };
   } catch {

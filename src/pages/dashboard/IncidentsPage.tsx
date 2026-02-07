@@ -26,6 +26,7 @@ import { useUsers } from '@/hooks/useUsers';
 import { DATASTORE_CATEGORIES, getDatastoreByCategory, setDatastoreItems, CategoryAutomation, deleteDatastoreItems } from '@/services/datastore';
 import { CreateIncidentDialog, ActivityItem } from '@/components/incidents/CreateIncidentDialog';
 import { OCSFIncidentFinding, Observable, TLP_LABELS, convertLegacyTlp, mapOCSFSeverity, mapOCSFStatus } from '@/config/ocsfIncidentSchema';
+import { deduplicateTasks } from '@/lib/utils';
 import { ResolveIncidentDialog, ResolutionData, RESOLUTION_REASONS } from '@/components/incidents/ResolveIncidentDialog';
 import { CategoryAutomationsDialog } from '@/components/incidents/CategoryAutomationsDialog';
 import { IncidentCardView } from '@/components/incidents/IncidentCardView';
@@ -140,7 +141,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
       const tasks = ocsf?.tasks || 
         ocsf?.metadata?.extensions?.custom_attributes?.tasks ||
         [];
-      return Array.isArray(tasks) ? tasks : [];
+      return deduplicateTasks(Array.isArray(tasks) ? tasks : []);
     };
     
     if (isNewFormat) {

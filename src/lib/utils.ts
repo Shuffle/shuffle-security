@@ -141,6 +141,22 @@ export function deduplicateAuthApps(apps: AuthAppEntry[]): DeduplicatedApp[] {
 }
 
 /**
+ * Deduplicate tasks by exact match on title + category + description.
+ * Keeps the first occurrence (preserving order and IDs).
+ */
+export function deduplicateTasks<T>(tasks: T[]): T[] {
+  if (!tasks || tasks.length === 0) return tasks;
+  const seen = new Set<string>();
+  return tasks.filter(task => {
+    const t = task as any;
+    const key = `${t.title ?? ''}\0${t.category ?? ''}\0${t.description ?? ''}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+/**
  * Check if an assignee refers to the AI Agent.
  * Matches variations like "agent", "ai agent", "aiagent", "AI Agent", etc.
  */
