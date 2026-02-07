@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { AgentRun } from '@/services/agentActivity';
-import AgentRunResultViewer, { getFailureInfo } from '@/components/agent/AgentRunResultViewer';
+import AgentRunResultViewer, { getFailureInfo, parseRunResult } from '@/components/agent/AgentRunResultViewer';
 
 // Map status to icon and color
 const STATUS_CONFIG: Record<string, { icon: React.ReactNode; color: string; label: string }> = {
@@ -92,13 +92,39 @@ const getRunTitle = (run: AgentRun): string => {
   return `Execution ${run.execution_id?.slice(0, 8) || '—'}`;
 };
 
+/** Truncate a value, collapsing JSON-like structures */
+const truncateValue = (val: unknown, maxLen = 80): string => {
+  if (val === null || val === undefined) return '';
+  if (typeof val === 'object') {
+    const s = JSON.stringify(val);
+    return s.length > maxLen ? s.slice(0, maxLen) + '…' : s;
+  }
+  const s = String(val);
+  // If it looks like JSON or a long structure, truncate
+  if ((s.startsWith('{') || s.startsWith('[')) && s.length > maxLen) {
+    return s.slice(0, maxLen) + '…';
+  }
+  return s.length > maxLen ? s.slice(0, maxLen) + '…' : s;
+};
+
 const getRunSubtitle = (run: AgentRun): string => {
+  // Try to extract from results[0].result parsed JSON
+  const { parsed } = parseRunResult(run);
+  if (parsed && typeof parsed === 'object') {
+    // Prefer "output" field
+    if (parsed.output) return truncateValue(parsed.output);
+    // Fall back to "original_input"
+    if (parsed.original_input) return truncateValue(parsed.original_input);
+  }
+
   const parts: string[] = [];
   if (run.execution_source) parts.push(run.execution_source);
   if (run.result) {
     try {
-      const parsed = JSON.parse(run.result);
-      if (parsed.message) parts.push(parsed.message);
+      const p = JSON.parse(run.result);
+      if (p.output) return truncateValue(p.output);
+      if (p.original_input) return truncateValue(p.original_input);
+      if (p.message) parts.push(p.message);
     } catch {
       if (run.result.length < 100) parts.push(run.result);
     }
