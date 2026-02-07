@@ -30,7 +30,7 @@ const STATUS_FILTERS = [
   { label: 'All', value: '' },
   { label: 'Completed', value: 'FINISHED' },
   { label: 'Running', value: 'EXECUTING' },
-  { label: 'Failed', value: 'FAILED' },
+  { label: 'Failed', value: 'ABORTED' },
 ];
 
 const AgentActivityPage = () => {

@@ -5,6 +5,16 @@
 
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 
+export interface AgentRunResult {
+  action?: {
+    app_name?: string;
+    label?: string;
+    id?: string;
+  };
+  result?: string; // JSON string containing the action result
+  status?: string;
+}
+
 export interface AgentRun {
   execution_id: string;
   workflow_id: string;
@@ -12,6 +22,7 @@ export interface AgentRun {
   started_at: string;
   completed_at?: string;
   result?: string;
+  results?: AgentRunResult[];
   execution_argument?: string;
   execution_source?: string;
   workflow?: {
