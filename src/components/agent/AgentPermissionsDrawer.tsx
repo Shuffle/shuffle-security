@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -108,6 +109,7 @@ interface AgentPermissionsDrawerProps {
 }
 
 const AgentPermissionsDrawer = ({ open, onClose }: AgentPermissionsDrawerProps) => {
+  const navigate = useNavigate();
   const {
     categories,
     isLoading,
@@ -175,9 +177,25 @@ const AgentPermissionsDrawer = ({ open, onClose }: AgentPermissionsDrawerProps) 
           <ShieldCheck size={22} />
         </Box>
         <Box sx={{ flex: 1 }}>
-          <Typography sx={{ fontWeight: 600, fontSize: '1.1rem', color: 'hsl(var(--foreground))' }}>
-            Agent Permissions
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography sx={{ fontWeight: 600, fontSize: '1.1rem', color: 'hsl(var(--foreground))' }}>
+              Agent Permissions
+            </Typography>
+            <Tooltip title="View Agent Activity">
+              <IconButton
+                size="small"
+                onClick={() => { onClose(); navigate('/agent'); }}
+                sx={{
+                  color: 'hsl(var(--muted-foreground))',
+                  width: 24,
+                  height: 24,
+                  '&:hover': { color: 'hsl(var(--primary))' },
+                }}
+              >
+                <Activity size={14} />
+              </IconButton>
+            </Tooltip>
+          </Box>
           <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))' }}>
             Control what actions your agent can perform
           </Typography>
