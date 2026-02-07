@@ -489,6 +489,10 @@ const IncidentDetailPage = () => {
     if (isAIAssignee(editedAssignee)) {
       if (editedAssignee !== 'AI Agent') {
         setEditedAssignee('AI Agent');
+        // Update snapshot so this normalization isn't treated as a user change
+        if (initialValuesRef.current) {
+          initialValuesRef.current.assignee = 'AI Agent';
+        }
       }
       return;
     }
@@ -498,6 +502,10 @@ const IncidentDetailPage = () => {
     if (!validUsernames.includes(editedAssignee.toLowerCase())) {
       // Invalid assignee - clear it
       setEditedAssignee('');
+      // Update snapshot so this normalization isn't treated as a user change
+      if (initialValuesRef.current) {
+        initialValuesRef.current.assignee = '';
+      }
     }
   }, [usersLoading, users, editedAssignee]);
 
