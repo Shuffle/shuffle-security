@@ -39,13 +39,13 @@ interface ResolveIncidentDialogProps {
   isLoading?: boolean;
 }
 
-export const ResolveIncidentDialog: React.FC<ResolveIncidentDialogProps> = ({
+export const ResolveIncidentDialog = React.forwardRef<HTMLDivElement, ResolveIncidentDialogProps>(({
   open,
   onClose,
   onResolve,
   incidentTitle,
   isLoading = false,
-}) => {
+}, _ref) => {
   const [reason, setReason] = useState('');
   const [notes, setNotes] = useState('');
 
@@ -139,6 +139,6 @@ export const ResolveIncidentDialog: React.FC<ResolveIncidentDialogProps> = ({
       </DialogActions>
     </Dialog>
   );
-};
+});
 
 export { RESOLUTION_REASONS };
