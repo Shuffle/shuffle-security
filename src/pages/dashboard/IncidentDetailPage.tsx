@@ -400,7 +400,7 @@ const IncidentDetailPage = () => {
   });
 
   // Fetch agent runs for this incident (cached, max once per 60s)
-  const { runsForIncident: agentRuns } = useIncidentAgentRuns(id);
+  const { runsForIncident: agentRuns, isLoading: agentRunsLoading } = useIncidentAgentRuns(id);
 
   // Load incident function (reusable for refresh)
   const loadIncident = useCallback(async (showLoading = true) => {
@@ -2433,6 +2433,14 @@ const IncidentDetailPage = () => {
           border: '1px solid hsl(var(--border))',
           order: { xs: 2, lg: 0 },
         }}>
+          {/* Agent runs loading indicator */}
+          {agentRunsLoading && (
+            <LinearProgress sx={{ 
+              height: 2, 
+              bgcolor: 'transparent',
+              '& .MuiLinearProgress-bar': { bgcolor: 'hsl(var(--primary))' },
+            }} />
+          )}
           {/* Activity Header */}
           <Box sx={{ 
             px: 2, 
