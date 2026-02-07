@@ -30,9 +30,10 @@ import FingerprintIcon from '@mui/icons-material/Fingerprint';
 import TuneIcon from '@mui/icons-material/Tune';
 import RssFeedIcon from '@mui/icons-material/RssFeed';
 import RadarIcon from '@mui/icons-material/Radar';
-import { Braces, Waypoints, ShieldCheck } from 'lucide-react';
+import { Braces, Waypoints, Bot } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { IntegrationStatus } from './IntegrationStatus';
+import AgentPermissionsDrawer from '@/components/agent/AgentPermissionsDrawer';
 
 const drawerWidth = 260;
 const collapsedWidth = 64;
@@ -65,7 +66,6 @@ const navItems: NavItem[] = [
       { label: 'MITRE ATT&CK', path: '/detection/mitre', icon: <Waypoints size={16} /> },
     ],
   },
-  { label: 'Agent', icon: <ShieldCheck size={22} />, path: '/agent-permissions' },
   { label: 'Users', icon: <PeopleIcon />, path: '/users' },
 ];
 
@@ -138,6 +138,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
   const location = useLocation();
   const { userInfo, setActiveOrg } = useAuth();
   const [expandedItems, setExpandedItems] = useState<string[]>(['Incidents']);
+  const [agentDrawerOpen, setAgentDrawerOpen] = useState(false);
 
   const organizations = userInfo?.orgs || [];
   const sortedOrgs = sortOrgsWithHierarchy(organizations);
@@ -521,7 +522,42 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
       <Box sx={{ mt: 2 }}>
         <Divider sx={{ borderColor: 'hsl(var(--border))', mx: collapsed ? 1 : 2, mb: 1 }} />
         <IntegrationStatus collapsed={collapsed} />
+        
+        {/* Agent Permissions Button */}
+        <Box sx={{ px: collapsed ? 0 : 1, py: 0.5 }}>
+          <Tooltip title={collapsed ? 'Agent Permissions' : ''} placement="right">
+            <Box
+              onClick={() => setAgentDrawerOpen(true)}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1.5,
+                px: collapsed ? 0 : 1.5,
+                py: 0.75,
+                borderRadius: 1,
+                cursor: 'pointer',
+                justifyContent: collapsed ? 'center' : 'flex-start',
+                color: 'hsl(var(--muted-foreground))',
+                transition: 'all 0.15s ease',
+                '&:hover': {
+                  backgroundColor: 'hsl(var(--muted))',
+                  color: 'hsl(var(--primary))',
+                },
+              }}
+            >
+              <Bot size={16} />
+              {!collapsed && (
+                <Typography sx={{ fontSize: '0.75rem', fontWeight: 500 }}>
+                  Agent Permissions
+                </Typography>
+              )}
+            </Box>
+          </Tooltip>
+        </Box>
       </Box>
+
+      {/* Agent Permissions Drawer */}
+      <AgentPermissionsDrawer open={agentDrawerOpen} onClose={() => setAgentDrawerOpen(false)} />
 
       {/* Bottom Section */}
       <Box sx={{ mt: 'auto' }}>
