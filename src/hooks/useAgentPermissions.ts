@@ -1,0 +1,283 @@
+/**
+ * Hook for managing AI Agent permissions
+ * Stores permission config in the Shuffle datastore
+ */
+
+import { useState, useEffect, useCallback } from 'react';
+import { setDatastoreItem, getDatastoreItem, DATASTORE_CATEGORIES } from '@/services/datastore';
+
+export type RiskLevel = 'low' | 'medium' | 'high';
+
+export interface AgentPermission {
+  id: string;
+  name: string;
+  description: string;
+  risk: RiskLevel;
+  enabled: boolean;
+  category: string;
+}
+
+export interface AgentPermissionCategory {
+  id: string;
+  label: string;
+  icon: string; // lucide icon name
+  permissions: AgentPermission[];
+}
+
+const DATASTORE_KEY = 'agent_permissions';
+
+export const DEFAULT_AGENT_PERMISSIONS: AgentPermissionCategory[] = [
+  {
+    id: 'threat_detection',
+    label: 'Threat Detection',
+    icon: 'Radar',
+    permissions: [
+      {
+        id: 'monitor_network',
+        name: 'Monitor Network Traffic',
+        description: 'Analyze incoming and outgoing network packets for threats',
+        risk: 'low',
+        enabled: true,
+        category: 'threat_detection',
+      },
+      {
+        id: 'scan_vulnerabilities',
+        name: 'Scan for Vulnerabilities',
+        description: 'Run automated vulnerability scans on systems',
+        risk: 'low',
+        enabled: true,
+        category: 'threat_detection',
+      },
+      {
+        id: 'analyze_logs',
+        name: 'Analyze Security Logs',
+        description: 'Parse and analyze security event logs from SIEM',
+        risk: 'low',
+        enabled: true,
+        category: 'threat_detection',
+      },
+      {
+        id: 'threat_intel_lookup',
+        name: 'Threat Intelligence Lookup',
+        description: 'Query external threat intelligence feeds',
+        risk: 'low',
+        enabled: true,
+        category: 'threat_detection',
+      },
+    ],
+  },
+  {
+    id: 'incident_response',
+    label: 'Incident Response',
+    icon: 'Zap',
+    permissions: [
+      {
+        id: 'block_ips',
+        name: 'Block IP Addresses',
+        description: 'Add IPs to firewall blocklists automatically',
+        risk: 'medium',
+        enabled: true,
+        category: 'incident_response',
+      },
+      {
+        id: 'isolate_systems',
+        name: 'Isolate Systems',
+        description: 'Quarantine compromised systems from the network',
+        risk: 'high',
+        enabled: false,
+        category: 'incident_response',
+      },
+      {
+        id: 'disable_accounts',
+        name: 'Disable User Accounts',
+        description: 'Suspend compromised or suspicious user accounts via IAM',
+        risk: 'high',
+        enabled: false,
+        category: 'incident_response',
+      },
+      {
+        id: 'force_password_reset',
+        name: 'Force Password Reset',
+        description: 'Trigger password reset for affected accounts',
+        risk: 'medium',
+        enabled: true,
+        category: 'incident_response',
+      },
+    ],
+  },
+  {
+    id: 'monitoring_alerts',
+    label: 'Monitoring & Alerts',
+    icon: 'Bell',
+    permissions: [
+      {
+        id: 'send_alerts',
+        name: 'Send Security Alerts',
+        description: 'Notify security team of detected threats',
+        risk: 'low',
+        enabled: true,
+        category: 'monitoring_alerts',
+      },
+      {
+        id: 'escalate_incidents',
+        name: 'Escalate Incidents',
+        description: 'Automatically escalate critical security incidents',
+        risk: 'medium',
+        enabled: true,
+        category: 'monitoring_alerts',
+      },
+      {
+        id: 'email_reports',
+        name: 'Email Security Reports',
+        description: 'Send automated security reports to stakeholders',
+        risk: 'low',
+        enabled: true,
+        category: 'monitoring_alerts',
+      },
+    ],
+  },
+  {
+    id: 'system_access',
+    label: 'System Access',
+    icon: 'Server',
+    permissions: [
+      {
+        id: 'read_configs',
+        name: 'Read System Configs',
+        description: 'Access firewall rules and security configurations',
+        risk: 'low',
+        enabled: true,
+        category: 'system_access',
+      },
+      {
+        id: 'modify_firewall',
+        name: 'Modify Firewall Rules',
+        description: 'Add or update firewall rules and policies',
+        risk: 'high',
+        enabled: false,
+        category: 'system_access',
+      },
+      {
+        id: 'query_security_db',
+        name: 'Query Security Database',
+        description: 'Access security event and asset databases',
+        risk: 'medium',
+        enabled: true,
+        category: 'system_access',
+      },
+      {
+        id: 'endpoint_control',
+        name: 'Endpoint Control',
+        description: 'Execute commands on managed endpoints via EDR',
+        risk: 'high',
+        enabled: false,
+        category: 'system_access',
+      },
+    ],
+  },
+];
+
+export const useAgentPermissions = () => {
+  const [categories, setCategories] = useState<AgentPermissionCategory[]>(DEFAULT_AGENT_PERMISSIONS);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Load permissions from datastore
+  const loadPermissions = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await getDatastoreItem(DATASTORE_KEY, DATASTORE_CATEGORIES.CONFIGURATION);
+      if (response.success && response.item?.value) {
+        const data = typeof response.item.value === 'string'
+          ? JSON.parse(response.item.value)
+          : response.item.value;
+        if (Array.isArray(data) && data.length > 0) {
+          setCategories(data);
+        }
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load permissions');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Save permissions to datastore
+  const savePermissions = useCallback(async (updatedCategories: AgentPermissionCategory[]) => {
+    setIsSaving(true);
+    setError(null);
+    try {
+      const response = await setDatastoreItem(DATASTORE_KEY, updatedCategories, DATASTORE_CATEGORIES.CONFIGURATION);
+      if (!response.success) {
+        setError(response.error || 'Failed to save permissions');
+        return false;
+      }
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save permissions');
+      return false;
+    } finally {
+      setIsSaving(false);
+    }
+  }, []);
+
+  // Toggle a single permission
+  const togglePermission = useCallback(async (categoryId: string, permissionId: string) => {
+    const updated = categories.map(cat => {
+      if (cat.id !== categoryId) return cat;
+      return {
+        ...cat,
+        permissions: cat.permissions.map(p =>
+          p.id === permissionId ? { ...p, enabled: !p.enabled } : p
+        ),
+      };
+    });
+    setCategories(updated);
+    await savePermissions(updated);
+  }, [categories, savePermissions]);
+
+  // Toggle all permissions in a category
+  const toggleCategory = useCallback(async (categoryId: string, enabled: boolean) => {
+    const updated = categories.map(cat => {
+      if (cat.id !== categoryId) return cat;
+      return {
+        ...cat,
+        permissions: cat.permissions.map(p => ({ ...p, enabled })),
+      };
+    });
+    setCategories(updated);
+    await savePermissions(updated);
+  }, [categories, savePermissions]);
+
+  // Reset to defaults
+  const resetToDefaults = useCallback(async () => {
+    setCategories(DEFAULT_AGENT_PERMISSIONS);
+    await savePermissions(DEFAULT_AGENT_PERMISSIONS);
+  }, [savePermissions]);
+
+  // Computed stats
+  const totalPermissions = categories.reduce((sum, cat) => sum + cat.permissions.length, 0);
+  const enabledPermissions = categories.reduce(
+    (sum, cat) => sum + cat.permissions.filter(p => p.enabled).length,
+    0
+  );
+
+  useEffect(() => {
+    loadPermissions();
+  }, [loadPermissions]);
+
+  return {
+    categories,
+    isLoading,
+    isSaving,
+    error,
+    totalPermissions,
+    enabledPermissions,
+    togglePermission,
+    toggleCategory,
+    resetToDefaults,
+    loadPermissions,
+  };
+};

@@ -21,6 +21,7 @@ import CustomFieldsPage from '@/pages/dashboard/CustomFieldsPage';
 import UsersPage from '@/pages/dashboard/UsersPage';
 import OrganizationsPage from '@/pages/dashboard/OrganizationsPage';
 import SettingsPage from '@/pages/dashboard/SettingsPage';
+import AgentPermissionsPage from '@/pages/dashboard/AgentPermissionsPage';
 import DocsPage from '@/pages/docs/DocsPage';
 import AppsPage from '@/pages/AppsPage';
 import NotFound from './pages/NotFound';
@@ -86,6 +87,7 @@ const App = () => (
               <Route path="/incidents/ioc-types" element={<IOCTypesPage />} />
               <Route path="/incidents/threat-feeds" element={<ThreatFeedsPage />} />
               <Route path="/incidents/custom-fields" element={<CustomFieldsPage />} />
+              <Route path="/agent-permissions" element={<AgentPermissionsPage />} />
               <Route path="/users" element={<UsersPage />} />
               <Route path="/organizations" element={<OrganizationsPage />} />
               <Route path="/settings" element={<SettingsPage />} />
