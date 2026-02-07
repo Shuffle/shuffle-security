@@ -174,8 +174,8 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
             },
           });
           if (response.ok) {
-            const data = await response.json();
-            const authApps = Array.isArray(data) ? data : [];
+            const result = await response.json();
+            const authApps = Array.isArray(result) ? result : (result.data || []);
             console.log('[Automations] Auth apps total:', authApps.length, 'Sample:', authApps.slice(0, 3).map((a: any) => ({ name: a.app?.name, active: a.active, valid: a.validation?.valid })));
             // Filter to ingestion-relevant apps with active auth
             const seen = new Set<string>();
