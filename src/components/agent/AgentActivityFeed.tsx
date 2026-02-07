@@ -1,23 +1,27 @@
 /**
- * Agent Activity Feed - shows individual execution cards
+ * Agent Activity Feed - shows individual execution cards with expandable results
  */
 
-import { Box, Typography, Chip, IconButton } from '@mui/material';
-import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { Box, Typography } from '@mui/material';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   CheckCircle,
   XCircle,
   Clock,
   Loader2,
+  ChevronDown,
   ChevronRight,
   Activity,
   Zap,
   FileText,
   Globe,
   Server,
+  AlertTriangle,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { AgentRun } from '@/services/agentActivity';
+import AgentRunResultViewer, { getFailureInfo } from '@/components/agent/AgentRunResultViewer';
 
 // Map status to icon and color
 const STATUS_CONFIG: Record<string, { icon: React.ReactNode; color: string; label: string }> = {
@@ -64,7 +68,6 @@ const formatDuration = (run: AgentRun): string => {
 
 const getTimeAgo = (dateStr: string): string => {
   try {
-    // Handle both ISO strings and Unix timestamps
     const date = isNaN(Number(dateStr)) ? new Date(dateStr) : new Date(Number(dateStr) * 1000);
     if (isNaN(date.getTime())) return dateStr;
     return formatDistanceToNow(date, { addSuffix: true });
@@ -73,11 +76,8 @@ const getTimeAgo = (dateStr: string): string => {
   }
 };
 
-// Try to extract a meaningful title from the run
 const getRunTitle = (run: AgentRun): string => {
   if (run.workflow?.name) return run.workflow.name;
-  
-  // Try to parse execution_argument for a title
   if (run.execution_argument) {
     try {
       const parsed = JSON.parse(run.execution_argument);
@@ -85,12 +85,10 @@ const getRunTitle = (run: AgentRun): string => {
       if (parsed.action) return parsed.action;
       if (parsed.name) return parsed.name;
     } catch {
-      // Not JSON, use first ~60 chars
       const clean = run.execution_argument.replace(/[{}"]/g, '').trim();
       if (clean.length > 0 && clean.length < 80) return clean;
     }
   }
-  
   return `Execution ${run.execution_id?.slice(0, 8) || '—'}`;
 };
 
@@ -110,10 +108,11 @@ const getRunSubtitle = (run: AgentRun): string => {
 
 interface AgentActivityFeedProps {
   runs: AgentRun[];
-  onRunClick?: (run: AgentRun) => void;
 }
 
-const AgentActivityFeed = ({ runs, onRunClick }: AgentActivityFeedProps) => {
+const AgentActivityFeed = ({ runs }: AgentActivityFeedProps) => {
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
   if (runs.length === 0) {
     return (
       <Box sx={{ textAlign: 'center', py: 8 }}>
@@ -134,7 +133,10 @@ const AgentActivityFeed = ({ runs, onRunClick }: AgentActivityFeedProps) => {
         const statusCfg = STATUS_CONFIG[run.status?.toUpperCase() || ''] || STATUS_CONFIG.WAITING;
         const iconColor = getRunIconColor(run);
         const duration = formatDuration(run);
-        
+        const isExpanded = expandedId === run.execution_id;
+        const isFailed = run.status?.toUpperCase() === 'FAILED' || run.status?.toUpperCase() === 'ABORTED';
+        const failureInfo = isFailed ? getFailureInfo(run) : null;
+
         return (
           <motion.div
             key={run.execution_id || idx}
@@ -142,86 +144,132 @@ const AgentActivityFeed = ({ runs, onRunClick }: AgentActivityFeedProps) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2, delay: Math.min(idx * 0.03, 0.3) }}
           >
-            <Box
-              onClick={() => onRunClick?.(run)}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2,
-                px: 2.5,
-                py: 2,
-                borderRadius: 2,
-                border: '1px solid hsl(var(--border))',
-                bgcolor: 'hsl(var(--card))',
-                cursor: onRunClick ? 'pointer' : 'default',
-                transition: 'all 0.15s ease',
-                '&:hover': {
-                  borderColor: 'hsl(var(--muted-foreground) / 0.3)',
-                  bgcolor: 'hsla(var(--card) / 0.9)',
-                },
-              }}
-            >
-              {/* Icon */}
-              <Box sx={{
-                width: 40,
-                height: 40,
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                bgcolor: `${iconColor}15`,
-                color: iconColor,
-                flexShrink: 0,
-              }}>
-                {getRunIcon(run)}
-              </Box>
+            <Box sx={{
+              borderRadius: 2,
+              border: '1px solid hsl(var(--border))',
+              bgcolor: 'hsl(var(--card))',
+              overflow: 'hidden',
+              transition: 'border-color 0.15s ease',
+              ...(isExpanded && {
+                borderColor: 'hsl(var(--muted-foreground) / 0.3)',
+              }),
+            }}>
+              {/* Header row - clickable */}
+              <Box
+                onClick={() => setExpandedId(isExpanded ? null : run.execution_id)}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 2,
+                  px: 2.5,
+                  py: 2,
+                  cursor: 'pointer',
+                  transition: 'background 0.15s ease',
+                  '&:hover': {
+                    bgcolor: 'hsla(var(--muted) / 0.5)',
+                  },
+                }}
+              >
+                {/* Icon */}
+                <Box sx={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  bgcolor: `${iconColor}15`,
+                  color: iconColor,
+                  flexShrink: 0,
+                }}>
+                  {getRunIcon(run)}
+                </Box>
 
-              {/* Content */}
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.25 }}>
-                  <Typography sx={{
-                    fontSize: '0.9rem',
-                    fontWeight: 500,
-                    color: 'hsl(var(--foreground))',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}>
-                    {getRunTitle(run)}
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', color: statusCfg.color }}>
-                    {statusCfg.icon}
+                {/* Content */}
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.25 }}>
+                    <Typography sx={{
+                      fontSize: '0.9rem',
+                      fontWeight: 500,
+                      color: 'hsl(var(--foreground))',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}>
+                      {getRunTitle(run)}
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', color: statusCfg.color }}>
+                      {statusCfg.icon}
+                    </Box>
+                  </Box>
+
+                  {/* Show failure reason inline if failed */}
+                  {isFailed && failureInfo ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.25 }}>
+                      <AlertTriangle size={12} style={{ color: 'hsl(var(--severity-critical))', flexShrink: 0 }} />
+                      <Typography sx={{
+                        fontSize: '0.78rem',
+                        color: 'hsl(var(--severity-critical))',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        maxWidth: 400,
+                      }}>
+                        {failureInfo.reason}
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Typography sx={{
+                        fontSize: '0.78rem',
+                        color: 'hsl(var(--muted-foreground))',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        maxWidth: 300,
+                      }}>
+                        {getRunSubtitle(run)}
+                      </Typography>
+                    </Box>
+                  )}
+
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                    <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--muted-foreground))', opacity: 0.7 }}>
+                      {run.started_at ? getTimeAgo(run.started_at) : '—'}
+                    </Typography>
+                    {duration && (
+                      <>
+                        <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--muted-foreground))', opacity: 0.4 }}>·</Typography>
+                        <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--muted-foreground))', opacity: 0.7 }}>
+                          {duration}
+                        </Typography>
+                      </>
+                    )}
                   </Box>
                 </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Typography sx={{
-                    fontSize: '0.78rem',
-                    color: 'hsl(var(--muted-foreground))',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    maxWidth: 300,
-                  }}>
-                    {getRunSubtitle(run)}
-                  </Typography>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                  <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--muted-foreground))', opacity: 0.7 }}>
-                    {run.started_at ? getTimeAgo(run.started_at) : '—'}
-                  </Typography>
-                  {duration && (
-                    <>
-                      <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--muted-foreground))', opacity: 0.4 }}>·</Typography>
-                      <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--muted-foreground))', opacity: 0.7 }}>
-                        {duration}
-                      </Typography>
-                    </>
-                  )}
+
+                {/* Expand/collapse arrow */}
+                <Box sx={{ color: 'hsl(var(--muted-foreground))', opacity: 0.5, flexShrink: 0, transition: 'transform 0.2s ease' }}>
+                  {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
                 </Box>
               </Box>
 
-              {/* Arrow */}
-              <ChevronRight size={18} style={{ color: 'hsl(var(--muted-foreground))', opacity: 0.5, flexShrink: 0 }} />
+              {/* Expandable result viewer */}
+              <AnimatePresence>
+                {isExpanded && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    style={{ overflow: 'hidden' }}
+                  >
+                    <Box sx={{ borderTop: '1px solid hsl(var(--border))' }}>
+                      <AgentRunResultViewer run={run} />
+                    </Box>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </Box>
           </motion.div>
         );
