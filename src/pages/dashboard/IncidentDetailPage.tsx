@@ -648,19 +648,21 @@ const IncidentDetailPage = () => {
     
     // Compare against the initial normalized values, not raw data
     const init = initialValuesRef.current;
-    const hasChanges = 
-      editedTitle !== init.title ||
-      editedMessage !== init.message ||
-      editedSeverity !== init.severity ||
-      editedAssignee !== init.assignee ||
-      editedStatus !== init.status ||
-      editedTlp !== init.tlp ||
-      JSON.stringify(editedReferences) !== init.references ||
-      JSON.stringify(editedObservables) !== init.observables ||
-      JSON.stringify(editedCustomFields) !== init.customFields ||
-      JSON.stringify(tasks) !== init.tasks;
+    const changedFields: string[] = [];
+    if (editedTitle !== init.title) changedFields.push(`title: "${editedTitle}" vs "${init.title}"`);
+    if (editedMessage !== init.message) changedFields.push(`message: "${editedMessage.slice(0, 60)}..." vs "${init.message.slice(0, 60)}..."`);
+    if (editedSeverity !== init.severity) changedFields.push(`severity: "${editedSeverity}" vs "${init.severity}"`);
+    if (editedAssignee !== init.assignee) changedFields.push(`assignee: "${editedAssignee}" vs "${init.assignee}"`);
+    if (editedStatus !== init.status) changedFields.push(`status: "${editedStatus}" vs "${init.status}"`);
+    if (editedTlp !== init.tlp) changedFields.push(`tlp: "${editedTlp}" vs "${init.tlp}"`);
+    if (JSON.stringify(editedReferences) !== init.references) changedFields.push('references');
+    if (JSON.stringify(editedObservables) !== init.observables) changedFields.push('observables');
+    if (JSON.stringify(editedCustomFields) !== init.customFields) changedFields.push(`customFields: ${JSON.stringify(editedCustomFields).slice(0, 80)} vs ${init.customFields.slice(0, 80)}`);
+    if (JSON.stringify(tasks) !== init.tasks) changedFields.push('tasks');
+    const hasChanges = changedFields.length > 0;
     
     if (hasChanges) {
+      console.log('[AutoSave] Changes detected:', changedFields);
       pendingSaveRef.current = true;
       saveTimeoutRef.current = setTimeout(() => {
         saveToDatastore();
