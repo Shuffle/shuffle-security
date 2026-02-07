@@ -4,7 +4,8 @@
  */
 
 import { Box, Typography } from '@mui/material';
-import { AlertTriangle, HelpCircle } from 'lucide-react';
+import { AlertTriangle, HelpCircle, ExternalLink } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import JsonView from 'react18-json-view';
@@ -88,6 +89,34 @@ const getOutputText = (parsed: any): string | null => {
   return null;
 };
 
+/** Parse original_input for datastore Key and Category */
+export interface DatastoreReference {
+  key: string;
+  category: string;
+}
+
+export const parseDatastoreReference = (run: AgentRun): DatastoreReference | null => {
+  const { parsed } = parseRunResult(run);
+  const input = parsed?.original_input;
+  if (!input || typeof input !== 'string') return null;
+
+  const keyMatch = input.match(/Key:\s*([a-f0-9]+)/i);
+  const categoryMatch = input.match(/Category:\s*([\w-]+)/i);
+
+  if (keyMatch && categoryMatch) {
+    return { key: keyMatch[1], category: categoryMatch[1] };
+  }
+  return null;
+};
+
+/** Get a link path if the reference is to a known entity */
+const getReferencePath = (ref: DatastoreReference): string | null => {
+  if (ref.category === 'shuffle-security_incidents') {
+    return `/incidents/${ref.key}`;
+  }
+  return null;
+};
+
 interface AgentRunResultViewerProps {
   run: AgentRun;
 }
@@ -98,6 +127,8 @@ const AgentRunResultViewer = ({ run }: AgentRunResultViewerProps) => {
   const failureInfo = getFailureInfo(run);
   const outputWarning = !isFailed && hasOutputWarning(run);
   const outputText = getOutputText(parsed);
+  const datastoreRef = parseDatastoreReference(run);
+  const refPath = datastoreRef ? getReferencePath(datastoreRef) : null;
 
   if (!raw) {
     return (
@@ -157,6 +188,47 @@ const AgentRunResultViewer = ({ run }: AgentRunResultViewerProps) => {
           }}>
             This result may need review — the output contains error indicators
           </Typography>
+        </Box>
+      )}
+
+      {/* Datastore reference link */}
+      {datastoreRef && (
+        <Box sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          px: 1.5,
+          py: 1,
+          mb: 1.5,
+          borderRadius: 1,
+          bgcolor: 'hsla(var(--primary) / 0.06)',
+          border: '1px solid hsla(var(--primary) / 0.15)',
+        }}>
+          {refPath ? (
+            <Link
+              to={refPath}
+              style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}
+            >
+              <ExternalLink size={13} style={{ color: 'hsl(var(--primary))', flexShrink: 0 }} />
+              <Typography sx={{
+                fontSize: '0.78rem',
+                color: 'hsl(var(--primary))',
+                fontWeight: 500,
+                '&:hover': { textDecoration: 'underline' },
+              }}>
+                Incident {datastoreRef.key.slice(0, 12)}…
+              </Typography>
+            </Link>
+          ) : (
+            <>
+              <Typography sx={{ fontSize: '0.78rem', color: 'hsl(var(--muted-foreground))' }}>
+                {datastoreRef.category}
+              </Typography>
+              <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--muted-foreground))', opacity: 0.7, fontFamily: 'monospace' }}>
+                {datastoreRef.key.slice(0, 16)}…
+              </Typography>
+            </>
+          )}
         </Box>
       )}
 
