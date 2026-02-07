@@ -1,6 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useDatastore } from './useDatastore';
-import { DATASTORE_CATEGORIES } from '@/services/datastore';
+/**
+ * React hook for IOC types with React Query caching.
+ * Data is cached for 5 minutes and shared across all components.
+ */
+
+import { useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { getDatastoreByCategory, DATASTORE_CATEGORIES } from '@/services/datastore';
 
 // OCSF-based observable type categories
 export const IOC_CATEGORIES = [
@@ -20,22 +25,15 @@ export type IOCCategory = typeof IOC_CATEGORIES[number]['id'];
 
 export interface IOCType {
   name: string;
-  regex?: string; // Optional - not all types need patterns
+  regex?: string;
   description?: string;
   category?: IOCCategory;
-  needsPattern?: boolean; // TODO indicator - needs custom pattern in future
+  needsPattern?: boolean;
 }
 
 // Default IOC types organized by Pyramid of Pain levels
-// Level 1: Hash Values (Trivial) - Easy to change, but useful for exact matching
-// Level 2: IP Addresses (Easy) - Can be changed, but often tied to infrastructure
-// Level 3: Domain Names (Simple) - Slightly harder to change than IPs
-// Level 4: Network/Host Artifacts (Annoying) - Behavioral patterns that require effort to modify
-// Level 5: Tools (Challenging) - Specific malware/tools that require development to change
-// Level 6: TTPs (Tough!) - Tactics, Techniques, Procedures - hardest to change
-
 export const DEFAULT_IOC_TYPES: IOCType[] = [
-  // === MOST COMMONLY USED (at top for easy access) ===
+  // === MOST COMMONLY USED ===
   { name: 'ip', regex: '^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$', description: 'IPv4 address', category: 'common' },
   { name: 'domain', regex: '^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\\.)+[a-zA-Z]{2,}$', description: 'Domain name', category: 'common' },
   { name: 'url', regex: '^https?:\\/\\/[^\\s]+$', description: 'Full URL', category: 'common' },
@@ -45,14 +43,12 @@ export const DEFAULT_IOC_TYPES: IOCType[] = [
   { name: 'file_name', description: 'File name', category: 'common', needsPattern: true },
   { name: 'hostname', description: 'Hostname', category: 'common', needsPattern: true },
   { name: 'username', description: 'Username', category: 'common', needsPattern: true },
-  
   // === HASH VALUES ===
   { name: 'hash_sha1', regex: '^[a-fA-F0-9]{40}$', description: 'SHA1 hash (40 hex chars)', category: 'hash' },
   { name: 'hash_sha512', regex: '^[a-fA-F0-9]{128}$', description: 'SHA512 hash (128 hex chars)', category: 'hash' },
   { name: 'hash_ssdeep', description: 'SSDeep fuzzy hash', category: 'hash', needsPattern: true },
   { name: 'hash_imphash', regex: '^[a-fA-F0-9]{32}$', description: 'PE Import hash', category: 'hash' },
   { name: 'hash_tlsh', description: 'TLSH locality-sensitive hash', category: 'hash', needsPattern: true },
-  
   // === NETWORK ARTIFACTS ===
   { name: 'ipv6', regex: '^(?:[A-Fa-f0-9]{1,4}:){7}[A-Fa-f0-9]{1,4}$', description: 'IPv6 address', category: 'network' },
   { name: 'ip_range', regex: '^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\/(?:[0-9]|[1-2][0-9]|3[0-2])$', description: 'IP CIDR range (e.g., 192.168.1.0/24)', category: 'network' },
@@ -69,26 +65,22 @@ export const DEFAULT_IOC_TYPES: IOCType[] = [
   { name: 'ja3s_hash', regex: '^[a-fA-F0-9]{32}$', description: 'JA3S server fingerprint', category: 'network' },
   { name: 'jarm_hash', regex: '^[a-fA-F0-9]{62}$', description: 'JARM TLS server fingerprint', category: 'network' },
   { name: 'port', regex: '^([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$', description: 'Port number', category: 'network' },
-  
   // === FILE ARTIFACTS ===
   { name: 'file_path', description: 'Full file path', category: 'file' },
   { name: 'file_extension', regex: '^\\.?[a-zA-Z0-9]{1,10}$', description: 'File extension', category: 'file' },
   { name: 'file_size', description: 'File size (bytes)', category: 'file' },
   { name: 'file_attachment', description: 'Uploaded file attachment', category: 'file' },
   { name: 'directory', description: 'Directory path', category: 'file' },
-  
   // === USER/IDENTITY ===
   { name: 'user_email', regex: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$', description: 'User email address', category: 'user' },
   { name: 'user_sid', regex: '^S-1-[0-9-]+$', description: 'Windows Security Identifier (SID)', category: 'user' },
   { name: 'user_guid', regex: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$', description: 'User GUID/UUID', category: 'user' },
   { name: 'group_name', description: 'User group or role name', category: 'user' },
-  
   // === DEVICE/ENDPOINT ===
   { name: 'mac_address', regex: '^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$', description: 'MAC address', category: 'device' },
   { name: 'device_id', description: 'Device identifier', category: 'device' },
   { name: 'serial_number', description: 'Hardware serial number', category: 'device' },
   { name: 'event_id', regex: '^\\d+$', description: 'Windows Event ID', category: 'device' },
-  
   // === PROCESS ===
   { name: 'process_name', description: 'Process name', category: 'process' },
   { name: 'process_path', description: 'Full process path', category: 'process' },
@@ -97,11 +89,9 @@ export const DEFAULT_IOC_TYPES: IOCType[] = [
   { name: 'scheduled_task', description: 'Scheduled task name', category: 'process' },
   { name: 'mutex', description: 'Mutex name', category: 'process' },
   { name: 'named_pipe', description: 'Named pipe', category: 'process' },
-  
   // === REGISTRY ===
   { name: 'registry_key', description: 'Windows registry key', category: 'registry' },
   { name: 'registry_value', description: 'Windows registry value', category: 'registry' },
-  
   // === THREAT INTELLIGENCE ===
   { name: 'mitre_tactic', regex: '^TA\\d{4}$', description: 'MITRE ATT&CK Tactic ID', category: 'threat_intel' },
   { name: 'mitre_technique', regex: '^T\\d{4}(\\.\\d{3})?$', description: 'MITRE ATT&CK Technique ID', category: 'threat_intel' },
@@ -119,7 +109,6 @@ export const DEFAULT_IOC_TYPES: IOCType[] = [
   { name: 'snort_rule', description: 'Snort/Suricata rule', category: 'threat_intel' },
   { name: 'attack_pattern', description: 'Attack pattern description', category: 'threat_intel' },
   { name: 'kill_chain_phase', description: 'Cyber Kill Chain phase', category: 'threat_intel' },
-  
   // === OTHER ===
   { name: 'bitcoin_address', regex: '^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$', description: 'Bitcoin wallet address', category: 'other' },
   { name: 'ethereum_address', regex: '^0x[a-fA-F0-9]{40}$', description: 'Ethereum wallet address', category: 'other' },
@@ -127,45 +116,41 @@ export const DEFAULT_IOC_TYPES: IOCType[] = [
   { name: 'other', description: 'Other indicator type', category: 'other' },
 ];
 
+const QUERY_KEY = ['iocTypes'];
+const STALE_TIME = 5 * 60 * 1000; // 5 minutes
+
+const fetchIOCTypes = async (): Promise<IOCType[]> => {
+  const response = await getDatastoreByCategory(DATASTORE_CATEGORIES.IOCS);
+  if (response.success && response.data && response.data.length > 0) {
+    return response.data.map(item => {
+      try {
+        return JSON.parse(item.value) as IOCType;
+      } catch {
+        return { name: item.key, regex: item.value, description: '' } as IOCType;
+      }
+    });
+  }
+  // No items in datastore — use built-in defaults
+  return DEFAULT_IOC_TYPES;
+};
+
 export const useIOCTypes = () => {
-  const { items, isLoading, fetchItems, addItem } = useDatastore({ 
-    category: DATASTORE_CATEGORIES.IOCS 
+  const queryClient = useQueryClient();
+
+  const { data: iocTypes = DEFAULT_IOC_TYPES, isLoading } = useQuery({
+    queryKey: QUERY_KEY,
+    queryFn: fetchIOCTypes,
+    staleTime: STALE_TIME,
   });
-  const [iocTypes, setIocTypes] = useState<IOCType[]>([]);
-  const [initialized, setInitialized] = useState(false);
 
-  useEffect(() => {
-    fetchItems();
-  }, [fetchItems]);
-
-  // Parse IOC types from datastore
-  useEffect(() => {
-    if (isLoading) return;
-    
-    if (items.length > 0) {
-      const parsed: IOCType[] = items.map(item => {
-        try {
-          return JSON.parse(item.value) as IOCType;
-        } catch {
-          return { name: item.key, regex: item.value, description: '' };
-        }
-      });
-      setIocTypes(parsed);
-      setInitialized(true);
-    } else if (!initialized) {
-      // If no items and not yet initialized, use defaults
-      setIocTypes(DEFAULT_IOC_TYPES);
-      setInitialized(true);
-    }
-  }, [items, isLoading, initialized]);
-
-  // Get observable type names for dropdowns
-  const observableTypeNames = iocTypes.map(t => t.name);
+  const invalidate = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+  }, [queryClient]);
 
   // Validate a value against an IOC type's regex
   const validateValue = useCallback((typeName: string, value: string): boolean => {
     const iocType = iocTypes.find(t => t.name === typeName);
-    if (!iocType?.regex) return true; // No regex means any value is valid
+    if (!iocType?.regex) return true;
     try {
       return new RegExp(iocType.regex).test(value);
     } catch {
@@ -176,13 +161,16 @@ export const useIOCTypes = () => {
   // Initialize defaults in datastore using bulk API
   const initializeDefaults = useCallback(async () => {
     const { setDatastoreItems, DATASTORE_CATEGORIES } = await import('@/services/datastore');
-    const items = DEFAULT_IOC_TYPES.map(ioc => ({
+    const dsItems = DEFAULT_IOC_TYPES.map(ioc => ({
       key: ioc.name,
       value: ioc,
     }));
-    await setDatastoreItems(items, DATASTORE_CATEGORIES.IOCS);
-    await fetchItems();
-  }, [fetchItems]);
+    await setDatastoreItems(dsItems, DATASTORE_CATEGORIES.IOCS);
+    invalidate();
+  }, [invalidate]);
+
+  // Get observable type names for dropdowns
+  const observableTypeNames = iocTypes.map(t => t.name);
 
   return {
     iocTypes,
@@ -190,10 +178,9 @@ export const useIOCTypes = () => {
     observableTypeNames,
     validateValue,
     initializeDefaults,
-    refetch: fetchItems,
-    // Group by category for better UI (OCSF-based categories)
+    refetch: invalidate,
     groupedTypes: IOC_CATEGORIES.reduce((acc, cat) => {
-      acc[cat.id] = iocTypes.filter(t => 
+      acc[cat.id] = iocTypes.filter(t =>
         cat.id === 'other' ? (t.category === 'other' || !t.category) : t.category === cat.id
       );
       return acc;
