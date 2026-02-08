@@ -340,7 +340,7 @@ const AppDetailPage = () => {
             <AppAuthCard
               app={algoliaApp}
               authState={authState}
-              isExpanded={true}
+              isExpanded={!hasValidAuth}
               onToggle={() => {}}
               onAuthChange={handleAuthChange}
               onTestConnection={(appId, authId) => handleTestConnection(appname || appId, authId)}
@@ -369,7 +369,7 @@ const AppDetailPage = () => {
           >
             Agent
           </Typography>
-          <AppMcpChat appName={appname || ''} appIcon={appInfo?.large_image} />
+          <AppMcpChat appName={appname || ''} appIcon={appInfo?.large_image} appId={matchingEntries[0]?.app?.id || matchingEntries[0]?.id || appname || ''} />
         </Box>
       </motion.div>
 
