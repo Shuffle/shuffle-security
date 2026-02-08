@@ -86,6 +86,8 @@ const AppMcpChat = ({ appName, appIcon }: AppMcpChatProps) => {
             id: crypto.randomUUID(),
             method: 'tools/call',
             params: {
+              tool_name: appName,
+              tool_id: crypto.randomUUID(),
               input: {
                 query: trimmed,
               },
