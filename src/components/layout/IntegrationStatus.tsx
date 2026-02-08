@@ -160,13 +160,16 @@ export const IntegrationStatus = ({ collapsed }: IntegrationStatusProps) => {
                 placement="right"
                 arrow
               >
-                <Box
+              <Box
+                  component={Link}
+                  to={`/apps/${encodeURIComponent(integration.name)}`}
                   sx={{
                     position: 'relative',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     cursor: 'pointer',
+                    textDecoration: 'none',
                     '&:hover': {
                       transform: 'scale(1.1)',
                       transition: 'transform 0.15s ease',
