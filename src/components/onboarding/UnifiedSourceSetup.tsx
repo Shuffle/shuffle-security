@@ -143,6 +143,7 @@ const CategorySection = ({
 }: CategorySectionProps) => {
   const singulRef = useRef<SingulJSHandle>(null);
   const [expandedAuth, setExpandedAuth] = useState<string | false>(false);
+  const [singulKey, setSingulKey] = useState(0);
 
   // Filter authenticated apps relevant to this category's selected apps
   const getApiAuthEntries = (app: AlgoliaSearchApp): ApiAuthEntry[] => {
@@ -176,7 +177,13 @@ const CategorySection = ({
     >
       {/* Category Header - always visible */}
       <Box
-        onClick={onToggleOpen}
+        onClick={() => {
+          if (isOpen) {
+            // When closing, bump key so SingulJS remounts with default search on reopen
+            setSingulKey(k => k + 1);
+          }
+          onToggleOpen();
+        }}
         sx={{
           display: 'flex',
           alignItems: 'center',
@@ -301,6 +308,7 @@ const CategorySection = ({
         <Box sx={{ px: 2.5, pb: 2.5 }}>
           {/* Search */}
           <SingulJS
+            key={singulKey}
             ref={singulRef}
             authToken="demo-token"
             apiKey={API_CONFIG.apiKey || undefined}

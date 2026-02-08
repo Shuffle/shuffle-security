@@ -75,12 +75,10 @@ const processAuthData = (authData: ApiAuthEntry[]): ApiAuthEntry[] => {
   });
 };
 
-// All possible steps (Welcome is conditional, Primary Tool removed)
+// All possible steps (Welcome is conditional)
 const ALL_STEPS = [
   { key: 'welcome', label: 'Welcome', icon: <WavingHandIcon />, path: '/onboarding' },
   { key: 'sources', label: 'Sources', icon: <LinkIcon />, path: '/onboarding/sources' },
-  { key: 'tools', label: 'More Tools', icon: <AppsIcon />, path: '/onboarding/tools' },
-  { key: 'authenticate', label: 'Authentication', icon: <VpnKeyIcon />, path: '/onboarding/authenticate' },
   { key: 'automate', label: 'Automate', icon: <AutoFixHighIcon />, path: '/onboarding/automate' },
   { key: 'summary', label: 'Summary', icon: <RocketLaunchIcon />, path: '/onboarding/complete' },
 ];
