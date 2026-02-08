@@ -22,6 +22,7 @@ import type { AlgoliaSearchApp } from '@/lib/singul-local';
 import { useAppAuth } from '@/hooks/useAppAuth';
 import { API_CONFIG } from '@/config/api';
 import { deduplicateAuthApps } from '@/lib/utils';
+import AppMcpChat from '@/components/app/AppMcpChat';
 
 interface AppInfo {
   name: string;
@@ -350,11 +351,33 @@ const AppDetailPage = () => {
         </Box>
       </motion.div>
 
+      {/* Agent Chat */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.15 }}
+      >
+        <Box sx={{ mb: 4 }}>
+          <Typography
+            variant="h6"
+            sx={{
+              color: 'hsl(var(--foreground))',
+              fontWeight: 600,
+              fontSize: '1.1rem',
+              mb: 2,
+            }}
+          >
+            Agent
+          </Typography>
+          <AppMcpChat appName={appname || ''} appIcon={appInfo?.large_image} />
+        </Box>
+      </motion.div>
+
       {/* Quick info */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.2 }}
+        transition={{ duration: 0.4, delay: 0.25 }}
       >
         <Divider sx={{ borderColor: 'hsl(var(--border))', my: 3 }} />
         <Box
