@@ -17,6 +17,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import TimelineIcon from '@mui/icons-material/Timeline';
 import { AppAuthCard } from '@/components/onboarding/AppAuthConfig';
 import type { AlgoliaSearchApp } from '@/lib/singul-local';
 import { useAppAuth } from '@/hooks/useAppAuth';
@@ -294,6 +295,18 @@ const AppDetailPage = () => {
                 }}
               >
                 <RefreshIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="View agent activity" arrow>
+              <IconButton
+                component={Link}
+                to={`/agent?search=${encodeURIComponent(appname || '')}`}
+                sx={{
+                  color: 'hsl(var(--muted-foreground))',
+                  '&:hover': { color: 'hsl(var(--primary))' },
+                }}
+              >
+                <TimelineIcon />
               </IconButton>
             </Tooltip>
             <Tooltip title="View in catalog" arrow>

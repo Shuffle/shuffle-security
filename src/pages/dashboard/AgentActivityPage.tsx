@@ -3,7 +3,8 @@
  * Shows real-time agent execution feed, stats, and activity overview
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -33,6 +34,7 @@ const STATUS_FILTERS = [
 ];
 
 const AgentActivityPage = () => {
+  const [searchParams] = useSearchParams();
   const {
     runs,
     isLoading,
@@ -49,6 +51,14 @@ const AgentActivityPage = () => {
 
   const { enabledPermissions, totalPermissions } = useAgentPermissions();
   const [permissionsOpen, setPermissionsOpen] = useState(false);
+
+  // Pre-fill search from URL query param (e.g. /agent?search=AbuseIPDB)
+  useEffect(() => {
+    const q = searchParams.get('search');
+    if (q && !searchQuery) {
+      setSearchQuery(q);
+    }
+  }, [searchParams]);
 
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
