@@ -401,12 +401,18 @@ export const UnifiedSourceSetup = ({
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const scrollToSection = useCallback((id: string) => {
-    // Wait for Collapse animation to settle, then gently scroll with offset
     setTimeout(() => {
       const el = sectionRefs.current[id];
       if (!el) return;
-      const y = el.getBoundingClientRect().top + window.scrollY - 80;
-      window.scrollTo({ top: y, behavior: 'smooth' });
+      // The scroll container is the dashboard main area, not window
+      const scrollParent = el.closest('main') || el.closest('[style*="overflow"]') || el.parentElement?.closest('div[class*="MuiBox"]');
+      if (scrollParent) {
+        const elTop = el.getBoundingClientRect().top - scrollParent.getBoundingClientRect().top + scrollParent.scrollTop;
+        scrollParent.scrollTo({ top: elTop - 80, behavior: 'smooth' });
+      } else {
+        // Fallback
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
     }, 200);
   }, []);
 
