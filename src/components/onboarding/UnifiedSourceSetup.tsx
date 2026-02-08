@@ -11,6 +11,7 @@ import {
   Radar,
   Search,
   Ticket,
+  LayoutGrid,
   ChevronDown,
   CheckCircle2,
 } from 'lucide-react';
@@ -19,9 +20,12 @@ import type { AlgoliaSearchApp, SingulJSHandle } from '@/lib/singul-local';
 import { API_CONFIG } from '@/config/api';
 import { getIngestionCategory, type IngestionCategory } from '@/lib/ingestionDetection';
 
+// Extended category type for the Sources page (includes 'other')
+type SourceCategory = IngestionCategory | 'other';
+
 // Category definitions
 const CATEGORIES: {
-  id: IngestionCategory;
+  id: SourceCategory;
   label: string;
   description: string;
   searchTerm: string;
@@ -31,6 +35,7 @@ const CATEGORIES: {
   { id: 'siem', label: 'SIEM', description: 'Log aggregation & analytics', searchTerm: 'siem', icon: Radar },
   { id: 'edr', label: 'EDR', description: 'Endpoint detection & response', searchTerm: 'edr', icon: Search },
   { id: 'cases', label: 'Cases', description: 'Ticketing & case management', searchTerm: 'cases', icon: Ticket },
+  { id: 'other', label: 'Other', description: 'Any other tools & integrations', searchTerm: '', icon: LayoutGrid },
 ];
 
 // Shared Singul custom styles
@@ -402,17 +407,20 @@ export const UnifiedSourceSetup = ({
 
   // Categorize selected apps
   const categorizedApps = useMemo(() => {
-    const result: Record<IngestionCategory, AlgoliaSearchApp[]> = {
+    const result: Record<SourceCategory, AlgoliaSearchApp[]> = {
       email: [],
       siem: [],
       edr: [],
       cases: [],
+      other: [],
     };
 
     selectedApps.forEach(app => {
       const category = getIngestionCategory(app.name, app.categories);
       if (category) {
         result[category].push(app);
+      } else {
+        result.other.push(app);
       }
     });
 
