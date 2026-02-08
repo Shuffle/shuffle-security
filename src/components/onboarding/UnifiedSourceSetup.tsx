@@ -391,16 +391,11 @@ export const UnifiedSourceSetup = ({
   onTestConnection,
   onSaveAuth,
 }: UnifiedSourceSetupProps) => {
-  // Track which categories are open (all open by default)
-  const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({
-    email: true,
-    siem: true,
-    edr: true,
-    cases: true,
-  });
+  // Only one category open at a time (accordion)
+  const [openCategory, setOpenCategory] = useState<string | null>('email');
 
   const toggleCategory = (id: string) => {
-    setOpenCategories(prev => ({ ...prev, [id]: !prev[id] }));
+    setOpenCategory(prev => (prev === id ? null : id));
   };
 
   // Categorize selected apps
@@ -422,6 +417,22 @@ export const UnifiedSourceSetup = ({
     return result;
   }, [selectedApps]);
 
+  // Per-category validation counts
+  const categoryStatus = useMemo(() => {
+    const status: Record<string, { selected: number; validated: number }> = {};
+    CATEGORIES.forEach(cat => {
+      const apps = categorizedApps[cat.id];
+      const validated = apps.filter(app =>
+        authenticatedApps.some(
+          auth => auth.app?.name?.toLowerCase() === app.name.toLowerCase() &&
+            auth.validation?.valid === true
+        )
+      ).length;
+      status[cat.id] = { selected: apps.length, validated };
+    });
+    return status;
+  }, [categorizedApps, authenticatedApps]);
+
   // Overall progress
   const totalSelected = selectedApps.length;
   const totalValidated = selectedApps.filter(app => {
@@ -434,7 +445,7 @@ export const UnifiedSourceSetup = ({
   return (
     <Box>
       {/* Header */}
-      <Box sx={{ mb: 4 }}>
+      <Box sx={{ mb: 3 }}>
         <Typography
           variant="h5"
           sx={{ color: 'white', fontWeight: 700, mb: 1 }}
@@ -443,23 +454,117 @@ export const UnifiedSourceSetup = ({
         </Typography>
         <Typography
           variant="body1"
-          sx={{ color: 'rgba(255, 255, 255, 0.5)', mb: 2 }}
+          sx={{ color: 'rgba(255, 255, 255, 0.5)', mb: 0 }}
         >
-          Search for integrations in each category, then configure authentication — all in one place.
+          Search for integrations in each category, then configure authentication.
         </Typography>
-        {totalSelected > 0 && (
-          <Chip
-            label={`${totalValidated}/${totalSelected} authenticated`}
-            size="small"
-            sx={{
-              background: totalValidated === totalSelected
-                ? 'rgba(34, 197, 94, 0.15)'
-                : 'rgba(255, 152, 0, 0.15)',
-              color: totalValidated === totalSelected ? '#22c55e' : '#ff9800',
-              fontWeight: 600,
-            }}
-          />
-        )}
+      </Box>
+
+      {/* ── Category progress bar ── */}
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: 1,
+          mb: 3,
+        }}
+      >
+        {CATEGORIES.map((cat, idx) => {
+          const Icon = cat.icon;
+          const isActive = openCategory === cat.id;
+          const { selected, validated } = categoryStatus[cat.id];
+          const isComplete = selected > 0 && validated === selected;
+
+          return (
+            <Box
+              key={cat.id}
+              onClick={() => toggleCategory(cat.id)}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1.25,
+                p: 1.5,
+                borderRadius: 2.5,
+                cursor: 'pointer',
+                border: '1px solid',
+                borderColor: isActive
+                  ? 'rgba(255, 102, 0, 0.5)'
+                  : isComplete
+                    ? 'rgba(34, 197, 94, 0.3)'
+                    : 'rgba(255, 255, 255, 0.08)',
+                backgroundColor: isActive
+                  ? 'rgba(255, 102, 0, 0.08)'
+                  : isComplete
+                    ? 'rgba(34, 197, 94, 0.05)'
+                    : 'rgba(255, 255, 255, 0.02)',
+                transition: 'all 0.2s ease',
+                '&:hover': {
+                  borderColor: isActive
+                    ? 'rgba(255, 102, 0, 0.6)'
+                    : 'rgba(255, 255, 255, 0.2)',
+                  backgroundColor: isActive
+                    ? 'rgba(255, 102, 0, 0.1)'
+                    : 'rgba(255, 255, 255, 0.04)',
+                },
+              }}
+            >
+              <Box
+                sx={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  backgroundColor: isActive
+                    ? 'rgba(255, 102, 0, 0.15)'
+                    : isComplete
+                      ? 'rgba(34, 197, 94, 0.15)'
+                      : 'rgba(255, 255, 255, 0.06)',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                {isComplete ? (
+                  <CheckCircle2 size={16} color="#22c55e" />
+                ) : (
+                  <Icon
+                    size={16}
+                    color={isActive ? '#FF6600' : 'rgba(255, 255, 255, 0.4)'}
+                  />
+                )}
+              </Box>
+              <Box sx={{ minWidth: 0, flex: 1 }}>
+                <Typography
+                  sx={{
+                    fontSize: '0.78rem',
+                    fontWeight: 600,
+                    color: isActive
+                      ? '#FF6600'
+                      : isComplete
+                        ? '#22c55e'
+                        : 'rgba(255, 255, 255, 0.8)',
+                    lineHeight: 1.2,
+                  }}
+                >
+                  {cat.label}
+                </Typography>
+                <Typography
+                  sx={{
+                    fontSize: '0.65rem',
+                    color: 'rgba(255, 255, 255, 0.35)',
+                    lineHeight: 1.3,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
+                  {selected > 0 ? `${validated}/${selected} ready` : cat.description}
+                </Typography>
+              </Box>
+            </Box>
+          );
+        })}
       </Box>
 
       {/* Category Sections */}
@@ -476,7 +581,7 @@ export const UnifiedSourceSetup = ({
             onAuthChange={onAuthChange}
             onTestConnection={onTestConnection}
             onSaveAuth={onSaveAuth}
-            isOpen={openCategories[category.id] ?? false}
+            isOpen={openCategory === category.id}
             onToggleOpen={() => toggleCategory(category.id)}
           />
         ))}
