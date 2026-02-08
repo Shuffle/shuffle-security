@@ -310,7 +310,7 @@ const CategorySection = ({
             gridColumns={3}
             inline={true}
             initialQuery={category.searchTerm}
-            hitsPerPage={12}
+            hitsPerPage={6}
             showDescription={true}
             showCategories={true}
             showCheckbox={true}
@@ -386,9 +386,9 @@ export const UnifiedSourceSetup = ({
   // Track which categories are open (all open by default)
   const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({
     email: true,
-    siem: false,
-    edr: false,
-    cases: false,
+    siem: true,
+    edr: true,
+    cases: true,
   });
 
   const toggleCategory = (id: string) => {
