@@ -148,30 +148,62 @@ const AppMcpChat = ({ appName, appIcon, appId, categories }: AppMcpChatProps) =>
         }
       );
 
-      let content = '';
-      if (response.ok) {
-        const data = await response.json();
+      // Read raw text first to handle non-JSON responses safely
+      const rawText = await response.text();
+      const contentType = response.headers.get('content-type');
+
+      if (!response.ok) {
+        setIsError(true);
+        setResult(`Error ${response.status}: ${rawText || response.statusText}`);
+      } else if (!contentType?.includes('application/json')) {
+        // Got HTML or other non-JSON back
+        if (rawText.trim().startsWith('<!') || rawText.includes('<html')) {
+          setIsError(true);
+          setResult(`Received an unexpected HTML response (status ${response.status}). This may indicate an auth redirect or server issue.`);
+        } else {
+          setResult(rawText);
+        }
+      } else {
+        const data = JSON.parse(rawText);
+        let content = '';
+
         if (typeof data === 'string') {
           content = data;
         } else if (data?.result) {
-          content = typeof data.result === 'string' ? data.result : JSON.stringify(data.result, null, 2);
+          // Extract message if result is an object with a message field
+          if (typeof data.result === 'object' && data.result !== null) {
+            if (data.result.message) {
+              content = data.result.message;
+            }
+            // Append remaining fields as context if there's more than just message
+            const rest = { ...data.result };
+            delete rest.message;
+            if (Object.keys(rest).length > 0) {
+              const extra = JSON.stringify(rest, null, 2);
+              content = content
+                ? `${content}\n\n\`\`\`json\n${extra}\n\`\`\``
+                : `\`\`\`json\n${extra}\n\`\`\``;
+            }
+          } else {
+            content = String(data.result);
+          }
         } else if (data?.response) {
           content = typeof data.response === 'string' ? data.response : JSON.stringify(data.response, null, 2);
         } else if (data?.message) {
           content = data.message;
         } else {
-          content = JSON.stringify(data, null, 2);
+          content = `\`\`\`json\n${JSON.stringify(data, null, 2)}\n\`\`\``;
         }
-      } else {
-        const errText = await response.text().catch(() => '');
-        content = `Error ${response.status}: ${errText || response.statusText}`;
-        setIsError(true);
-      }
 
-      setResult(content);
+        if (content) {
+          setResult(content);
+        } else {
+          setResult('No output returned.');
+        }
+      }
     } catch (err) {
-      setResult(`Failed to reach the API. ${err instanceof Error ? err.message : 'Unknown error'}`);
       setIsError(true);
+      setResult(`Could not connect. ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setRunState('done');
     }
