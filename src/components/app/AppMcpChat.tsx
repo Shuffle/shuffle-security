@@ -1,16 +1,17 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import {
   Box,
   Typography,
-  IconButton,
   Avatar,
   CircularProgress,
   Chip,
+  InputBase,
 } from '@mui/material';
-import SendIcon from '@mui/icons-material/Send';
 import SmartToyOutlinedIcon from '@mui/icons-material/SmartToyOutlined';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -30,16 +31,7 @@ const AppMcpChat = ({ appName, appIcon, appId }: AppMcpChatProps) => {
   const [query, setQuery] = useState('');
   const [result, setResult] = useState('');
   const [isError, setIsError] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  // Auto-resize textarea
-  useEffect(() => {
-    const textarea = textareaRef.current;
-    if (textarea) {
-      textarea.style.height = 'auto';
-      textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
-    }
-  }, [input]);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const runAction = async () => {
     const trimmed = input.trim();
@@ -50,10 +42,6 @@ const AppMcpChat = ({ appName, appIcon, appId }: AppMcpChatProps) => {
     setRunState('running');
     setResult('');
     setIsError(false);
-
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-    }
 
     try {
       const response = await fetch(
@@ -112,11 +100,11 @@ const AppMcpChat = ({ appName, appIcon, appId }: AppMcpChatProps) => {
     setResult('');
     setIsError(false);
     setInput('');
-    textareaRef.current?.focus();
+    setTimeout(() => inputRef.current?.focus(), 50);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter') {
       e.preventDefault();
       runAction();
     }
@@ -125,61 +113,22 @@ const AppMcpChat = ({ appName, appIcon, appId }: AppMcpChatProps) => {
   const displayName = appName.replace(/_/g, ' ');
 
   const suggestions = [
-    `Check an IP address`,
-    `Run a blacklist lookup`,
-    `Report abuse for an IP`,
+    'Check an IP address',
+    'Run a blacklist lookup',
+    'Report abuse for an IP',
   ];
 
   return (
     <Box
       sx={{
-        display: 'flex',
-        flexDirection: 'column',
         borderRadius: 3,
         border: '1px solid hsl(var(--border))',
         backgroundColor: 'hsl(var(--background))',
         overflow: 'hidden',
       }}
     >
-      {/* Header */}
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1.5,
-          px: 2.5,
-          py: 1.5,
-          borderBottom: '1px solid hsl(var(--border))',
-          backgroundColor: 'hsl(var(--card))',
-        }}
-      >
-        <AutoAwesomeIcon sx={{ fontSize: 18, color: 'hsl(var(--primary))' }} />
-        <Typography
-          sx={{
-            fontSize: '0.85rem',
-            fontWeight: 600,
-            color: 'hsl(var(--foreground))',
-            flex: 1,
-          }}
-        >
-          Run actions with {displayName}
-        </Typography>
-        <Chip
-          label="MCP"
-          size="small"
-          sx={{
-            height: 22,
-            fontSize: '0.65rem',
-            fontWeight: 600,
-            backgroundColor: 'hsl(var(--primary) / 0.12)',
-            color: 'hsl(var(--primary))',
-            letterSpacing: '0.05em',
-          }}
-        />
-      </Box>
-
-      {/* Content */}
       <AnimatePresence mode="wait">
+        {/* ── IDLE ── */}
         {runState === 'idle' && (
           <motion.div
             key="idle"
@@ -188,40 +137,114 @@ const AppMcpChat = ({ appName, appIcon, appId }: AppMcpChatProps) => {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
           >
-            <Box sx={{ px: 2.5, py: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+              {/* Label */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box
+                  sx={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'hsl(var(--primary) / 0.1)',
+                    border: '1px solid hsl(var(--primary) / 0.2)',
+                    flexShrink: 0,
+                  }}
+                >
+                  {appIcon ? (
+                    <Avatar
+                      src={appIcon}
+                      sx={{ width: 18, height: 18, '& img': { objectFit: 'contain' } }}
+                    />
+                  ) : (
+                    <SmartToyOutlinedIcon sx={{ fontSize: 16, color: 'hsl(var(--primary))' }} />
+                  )}
+                </Box>
+                <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+                  Run action
+                </Typography>
+                <Chip
+                  label="MCP"
+                  size="small"
+                  sx={{
+                    height: 20,
+                    fontSize: '0.6rem',
+                    fontWeight: 700,
+                    backgroundColor: 'hsl(var(--primary) / 0.12)',
+                    color: 'hsl(var(--primary))',
+                    letterSpacing: '0.06em',
+                    ml: 'auto',
+                  }}
+                />
+              </Box>
+
+              {/* Command input */}
               <Box
                 sx={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  background: 'hsl(var(--primary) / 0.1)',
-                  border: '1px solid hsl(var(--primary) / 0.2)',
+                  gap: 1,
+                  borderRadius: 2,
+                  border: '1px solid hsl(var(--border))',
+                  backgroundColor: 'hsl(var(--card))',
+                  px: 1.5,
+                  py: 0.75,
+                  transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
+                  '&:focus-within': {
+                    borderColor: 'hsl(var(--primary) / 0.5)',
+                    boxShadow: '0 0 0 3px hsl(var(--primary) / 0.08)',
+                  },
                 }}
               >
-                {appIcon ? (
-                  <Avatar
-                    src={appIcon}
-                    sx={{ width: 28, height: 28, '& img': { objectFit: 'contain' } }}
-                  />
-                ) : (
-                  <SmartToyOutlinedIcon sx={{ fontSize: 24, color: 'hsl(var(--primary))' }} />
-                )}
+                <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--primary))', fontWeight: 600, userSelect: 'none', fontFamily: "'JetBrains Mono', monospace" }}>
+                  ›
+                </Typography>
+                <InputBase
+                  inputRef={inputRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder={`What do you want ${displayName} to do?`}
+                  fullWidth
+                  sx={{
+                    fontSize: '0.82rem',
+                    color: 'hsl(var(--foreground))',
+                    '& input::placeholder': {
+                      color: 'hsl(var(--muted-foreground))',
+                      opacity: 0.7,
+                    },
+                  }}
+                />
+                <Box
+                  component="button"
+                  onClick={runAction}
+                  disabled={!input.trim()}
+                  sx={{
+                    all: 'unset',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 30,
+                    height: 30,
+                    borderRadius: '8px',
+                    flexShrink: 0,
+                    cursor: input.trim() ? 'pointer' : 'default',
+                    backgroundColor: input.trim() ? 'hsl(var(--primary))' : 'hsl(var(--muted))',
+                    color: input.trim() ? 'hsl(var(--primary-foreground))' : 'hsl(var(--muted-foreground))',
+                    transition: 'all 0.15s ease',
+                    '&:hover': input.trim() ? {
+                      filter: 'brightness(1.1)',
+                    } : {},
+                  }}
+                >
+                  <PlayArrowRoundedIcon sx={{ fontSize: 18 }} />
+                </Box>
               </Box>
-              <Typography
-                sx={{
-                  fontSize: '0.78rem',
-                  color: 'hsl(var(--muted-foreground))',
-                  textAlign: 'center',
-                  maxWidth: 280,
-                  lineHeight: 1.5,
-                }}
-              >
-                Execute an action, look up data, or automate a task.
-              </Typography>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, justifyContent: 'center' }}>
+
+              {/* Quick actions */}
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
                 {suggestions.map((s) => (
                   <Chip
                     key={s}
@@ -229,20 +252,21 @@ const AppMcpChat = ({ appName, appIcon, appId }: AppMcpChatProps) => {
                     size="small"
                     onClick={() => {
                       setInput(s);
-                      textareaRef.current?.focus();
+                      inputRef.current?.focus();
                     }}
                     sx={{
-                      height: 28,
-                      fontSize: '0.72rem',
+                      height: 26,
+                      fontSize: '0.7rem',
                       fontWeight: 500,
                       cursor: 'pointer',
-                      backgroundColor: 'hsl(var(--muted))',
+                      backgroundColor: 'transparent',
                       color: 'hsl(var(--muted-foreground))',
-                      border: '1px solid hsl(var(--border))',
+                      border: '1px dashed hsl(var(--border))',
                       transition: 'all 0.15s ease',
                       '&:hover': {
-                        backgroundColor: 'hsl(var(--secondary))',
+                        backgroundColor: 'hsl(var(--muted))',
                         color: 'hsl(var(--foreground))',
+                        borderStyle: 'solid',
                         borderColor: 'hsl(var(--primary) / 0.3)',
                       },
                     }}
@@ -253,6 +277,7 @@ const AppMcpChat = ({ appName, appIcon, appId }: AppMcpChatProps) => {
           </motion.div>
         )}
 
+        {/* ── RUNNING ── */}
         {runState === 'running' && (
           <motion.div
             key="running"
@@ -261,60 +286,96 @@ const AppMcpChat = ({ appName, appIcon, appId }: AppMcpChatProps) => {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
           >
-            <Box sx={{ px: 2.5, py: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-              <CircularProgress size={28} sx={{ color: 'hsl(var(--primary))' }} />
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography sx={{ fontSize: '0.82rem', fontWeight: 500, color: 'hsl(var(--foreground))', mb: 0.5 }}>
-                  Running action…
+            <Box sx={{ p: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
+              <CircularProgress size={20} thickness={5} sx={{ color: 'hsl(var(--primary))' }} />
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography sx={{ fontSize: '0.78rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+                  Executing…
                 </Typography>
                 <Typography
                   sx={{
-                    fontSize: '0.75rem',
+                    fontSize: '0.72rem',
                     color: 'hsl(var(--muted-foreground))',
-                    fontStyle: 'italic',
-                    maxWidth: 300,
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
+                    fontFamily: "'JetBrains Mono', monospace",
                   }}
                 >
-                  "{query}"
+                  › {query}
                 </Typography>
               </Box>
             </Box>
           </motion.div>
         )}
 
+        {/* ── DONE ── */}
         {runState === 'done' && (
           <motion.div
             key="done"
-            initial={{ opacity: 0, y: 6 }}
+            initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
-            <Box sx={{ px: 2.5, py: 2 }}>
-              {/* Query label */}
+            <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {/* Status bar */}
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  {isError ? (
+                    <ErrorOutlineIcon sx={{ fontSize: 18, color: 'hsl(0 70% 55%)' }} />
+                  ) : (
+                    <CheckCircleOutlineIcon sx={{ fontSize: 18, color: 'hsl(145 60% 45%)' }} />
+                  )}
+                  <Typography sx={{ fontSize: '0.78rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+                    {isError ? 'Failed' : 'Completed'}
+                  </Typography>
+                </Box>
+                <Chip
+                  icon={<RestartAltIcon sx={{ fontSize: 14 }} />}
+                  label="Run again"
+                  size="small"
+                  onClick={reset}
+                  sx={{
+                    height: 26,
+                    fontSize: '0.7rem',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    backgroundColor: 'transparent',
+                    color: 'hsl(var(--muted-foreground))',
+                    border: '1px solid hsl(var(--border))',
+                    transition: 'all 0.15s ease',
+                    '&:hover': {
+                      backgroundColor: 'hsl(var(--muted))',
+                      color: 'hsl(var(--foreground))',
+                    },
+                  }}
+                />
+              </Box>
+
+              {/* Query echo */}
               <Typography
                 sx={{
                   fontSize: '0.72rem',
                   color: 'hsl(var(--muted-foreground))',
-                  mb: 1,
-                  fontStyle: 'italic',
+                  fontFamily: "'JetBrains Mono', monospace",
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
                 }}
               >
-                "{query}"
+                › {query}
               </Typography>
 
-              {/* Result */}
+              {/* Output */}
               <Box
                 sx={{
                   p: 2,
                   borderRadius: 2,
-                  backgroundColor: isError ? 'hsl(0 60% 50% / 0.08)' : 'hsl(var(--card))',
+                  backgroundColor: 'hsl(var(--card))',
                   border: '1px solid',
-                  borderColor: isError ? 'hsl(0 60% 50% / 0.2)' : 'hsl(var(--border))',
-                  maxHeight: 360,
+                  borderColor: isError ? 'hsl(0 60% 50% / 0.25)' : 'hsl(var(--border))',
+                  maxHeight: 340,
                   overflowY: 'auto',
                   '&::-webkit-scrollbar': { width: 4 },
                   '&::-webkit-scrollbar-track': { background: 'transparent' },
@@ -323,8 +384,8 @@ const AppMcpChat = ({ appName, appIcon, appId }: AppMcpChatProps) => {
                     borderRadius: 2,
                   },
                   '& p': {
-                    fontSize: '0.82rem',
-                    lineHeight: 1.6,
+                    fontSize: '0.8rem',
+                    lineHeight: 1.65,
                     color: 'hsl(var(--foreground))',
                     m: 0,
                     '&:not(:last-child)': { mb: 1 },
@@ -335,24 +396,21 @@ const AppMcpChat = ({ appName, appIcon, appId }: AppMcpChatProps) => {
                     borderRadius: 1,
                     p: 1.5,
                     overflow: 'auto',
-                    fontSize: '0.75rem',
+                    fontSize: '0.72rem',
                     fontFamily: "'JetBrains Mono', monospace",
                     my: 1,
                   },
                   '& code': {
                     fontFamily: "'JetBrains Mono', monospace",
-                    fontSize: '0.75rem',
+                    fontSize: '0.72rem',
                     backgroundColor: 'hsl(var(--muted))',
                     px: 0.5,
                     borderRadius: 0.5,
                   },
-                  '& pre code': {
-                    backgroundColor: 'transparent',
-                    p: 0,
-                  },
+                  '& pre code': { backgroundColor: 'transparent', p: 0 },
                   '& ul, & ol': {
                     pl: 2,
-                    fontSize: '0.82rem',
+                    fontSize: '0.8rem',
                     color: 'hsl(var(--foreground))',
                   },
                   '& a': {
@@ -365,113 +423,10 @@ const AppMcpChat = ({ appName, appIcon, appId }: AppMcpChatProps) => {
                   {result}
                 </ReactMarkdown>
               </Box>
-
-              {/* Reset button */}
-              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, mb: 0.5 }}>
-                <Chip
-                  icon={<RestartAltIcon sx={{ fontSize: 16 }} />}
-                  label="Run another"
-                  size="small"
-                  onClick={reset}
-                  sx={{
-                    height: 30,
-                    fontSize: '0.75rem',
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                    backgroundColor: 'hsl(var(--muted))',
-                    color: 'hsl(var(--muted-foreground))',
-                    border: '1px solid hsl(var(--border))',
-                    transition: 'all 0.15s ease',
-                    '&:hover': {
-                      backgroundColor: 'hsl(var(--secondary))',
-                      color: 'hsl(var(--foreground))',
-                    },
-                  }}
-                />
-              </Box>
             </Box>
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Input area — hidden when running or showing result */}
-      {runState === 'idle' && (
-        <Box
-          sx={{
-            px: 2,
-            py: 1.5,
-            borderTop: '1px solid hsl(var(--border))',
-            backgroundColor: 'hsl(var(--card))',
-          }}
-        >
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'flex-end',
-              gap: 1,
-              borderRadius: 2,
-              border: '1px solid hsl(var(--border))',
-              backgroundColor: 'hsl(var(--background))',
-              px: 1.5,
-              py: 0.5,
-              transition: 'border-color 0.15s ease',
-              '&:focus-within': {
-                borderColor: 'hsl(var(--primary) / 0.5)',
-              },
-            }}
-          >
-            <textarea
-              ref={textareaRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={`What do you want to do with ${displayName}?`}
-              rows={1}
-              style={{
-                flex: 1,
-                background: 'transparent',
-                border: 'none',
-                outline: 'none',
-                resize: 'none',
-                color: 'hsl(0, 0%, 100%)',
-                fontSize: '0.85rem',
-                lineHeight: 1.5,
-                padding: '8px 0',
-                fontFamily: "'Inter', system-ui, sans-serif",
-                maxHeight: 120,
-              }}
-            />
-            <IconButton
-              onClick={runAction}
-              disabled={!input.trim() || runState !== 'idle'}
-              size="small"
-              sx={{
-                mb: 0.5,
-                color: input.trim() ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
-                transition: 'all 0.15s ease',
-                '&:hover': {
-                  backgroundColor: 'hsl(var(--primary) / 0.1)',
-                },
-                '&.Mui-disabled': {
-                  color: 'hsl(var(--muted-foreground) / 0.4)',
-                },
-              }}
-            >
-              <SendIcon sx={{ fontSize: 18 }} />
-            </IconButton>
-          </Box>
-          <Typography
-            sx={{
-              fontSize: '0.65rem',
-              color: 'hsl(var(--muted-foreground) / 0.6)',
-              mt: 0.75,
-              textAlign: 'center',
-            }}
-          >
-            Powered by Shuffle MCP · Press Enter to send
-          </Typography>
-        </Box>
-      )}
     </Box>
   );
 };
