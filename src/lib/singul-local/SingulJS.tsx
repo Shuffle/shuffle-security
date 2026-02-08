@@ -439,8 +439,14 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
             {results.length > 0 ? (
               <>
                 {results.map((app, index) => renderAppItem(app, index))}
-                <div className="singul-end-of-results" style={customStyles.emptyState}>
-                  Can't find what you're looking for? Try a different search term or browse our full integration catalog.
+                <div className="singul-end-of-results" style={{
+                  padding: '10px 16px',
+                  color: 'rgba(255, 255, 255, 0.3)',
+                  textAlign: 'center' as const,
+                  fontSize: '11px',
+                  gridColumn: '1 / -1',
+                }}>
+                  Can't find what you're looking for? Try a different search term.
                 </div>
               </>
             ) : query.trim() ? (
