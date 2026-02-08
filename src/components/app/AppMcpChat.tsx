@@ -26,9 +26,10 @@ interface Message {
 interface AppMcpChatProps {
   appName: string;
   appIcon?: string;
+  appId?: string;
 }
 
-const AppMcpChat = ({ appName, appIcon }: AppMcpChatProps) => {
+const AppMcpChat = ({ appName, appIcon, appId }: AppMcpChatProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -87,7 +88,7 @@ const AppMcpChat = ({ appName, appIcon }: AppMcpChatProps) => {
             method: 'tools/call',
             params: {
               tool_name: appName,
-              tool_id: crypto.randomUUID(),
+              tool_id: appId || appName,
               input: {
                 text: trimmed,
               },
