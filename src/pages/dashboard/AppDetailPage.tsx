@@ -386,9 +386,9 @@ const AppDetailPage = () => {
               mb: 2,
             }}
           >
-            Agent
+          Try it out
           </Typography>
-          <AppMcpChat appName={appname || ''} appIcon={resolvedImage} appId={matchingEntries[0]?.app?.id || matchingEntries[0]?.id || appname || ''} />
+          <AppMcpChat appName={appname || ''} appIcon={resolvedImage} appId={matchingEntries[0]?.app?.id || matchingEntries[0]?.id || appname || ''} categories={appInfo?.categories} />
         </Box>
       </motion.div>
 
