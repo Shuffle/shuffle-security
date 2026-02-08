@@ -32,6 +32,7 @@ import MenuBookIcon from '@mui/icons-material/MenuBook';
 import CloseIcon from '@mui/icons-material/Close';
 import type { AlgoliaSearchApp } from '@/lib/singul-local';
 import { API_CONFIG, getApiUrl } from '@/config/api';
+import { getIngestionCategory } from '@/lib/ingestionDetection';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -1689,14 +1690,19 @@ export const AppAuthConfig = ({
   }
   
   if (initialSortRef.current === null && apps.length > 0 && authenticatedApps.length > 0) {
-    // Capture initial sort: Not Configured > Not Tested > Tested
-    // Lower priority number = higher in list
+    // Sort priority: 
+    // 1. Category-matched apps (email, siem, edr, cases) first
+    // 2. Within each group: Not Configured > Not Tested > Tested
     const getPriority = (app: AlgoliaSearchApp): number => {
+      const isSourceCategory = getIngestionCategory(app.name, app.categories) !== null;
       const configured = isAppConfigured(app);
       const validated = isAppValidated(app);
-      if (!configured) return 0; // Not Configured - top
-      if (!validated) return 1;  // Configured but Not Tested - middle
-      return 2;                   // Tested - bottom
+      
+      // Category apps get priority 0-2, non-category apps get 3-5
+      const base = isSourceCategory ? 0 : 3;
+      if (!configured) return base;      // Not Configured - top of group
+      if (!validated) return base + 1;    // Configured but Not Tested - middle
+      return base + 2;                     // Tested - bottom of group
     };
     
     initialSortRef.current = [...apps].sort((a, b) => {
