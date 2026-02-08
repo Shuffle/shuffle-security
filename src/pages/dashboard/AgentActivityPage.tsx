@@ -53,15 +53,26 @@ const AgentActivityPage = () => {
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
       <Box sx={{ p: { xs: 2, sm: 3, md: 4 }, maxWidth: 1400 }}>
+        {/* Sticky top section */}
+        <Box sx={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 10,
+          bgcolor: 'hsl(var(--background))',
+          pb: 2,
+          mx: { xs: -2, sm: -3, md: -4 },
+          px: { xs: 2, sm: 3, md: 4 },
+          pt: { xs: 0, sm: 0, md: 0 },
+        }}>
         {/* Page header */}
         <Box sx={{
           display: 'flex',
           alignItems: { xs: 'flex-start', sm: 'center' },
           flexDirection: { xs: 'column', sm: 'row' },
           gap: 2,
-          mb: 4,
+          mb: 2,
           px: 3,
-          py: 2.5,
+          py: 2,
           borderRadius: 2,
           bgcolor: 'hsl(var(--card))',
           border: '1px solid hsl(var(--border))',
@@ -145,12 +156,8 @@ const AgentActivityPage = () => {
           </Box>
         </Box>
 
-        {/* Content layout */}
-        <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', lg: 'row' } }}>
-          {/* Left: Feed */}
-          <Box sx={{ flex: 1, minWidth: 0 }}>
             {/* Search & Filter bar */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2, flexWrap: 'wrap' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
               <TextField
                 placeholder="Search results..."
                 size="small"
@@ -206,7 +213,12 @@ const AgentActivityPage = () => {
                 <CircularProgress size={16} sx={{ color: 'hsl(var(--primary))', ml: 0.5 }} />
               )}
             </Box>
+        </Box>
 
+        {/* Content layout */}
+        <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', lg: 'row' } }}>
+          {/* Left: Feed */}
+          <Box sx={{ flex: 1, minWidth: 0 }}>
             {/* Loading */}
             {isLoading && runs.length === 0 ? (
               <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
