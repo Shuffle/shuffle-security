@@ -116,6 +116,8 @@ const singulStyles = {
 
 interface CategorySectionProps {
   category: typeof CATEGORIES[number];
+  stepIndex: number;
+  totalSteps: number;
   selectedApps: AlgoliaSearchApp[];
   onAppsChange: (apps: AlgoliaSearchApp[]) => void;
   allSelectedApps: AlgoliaSearchApp[];
@@ -131,6 +133,8 @@ interface CategorySectionProps {
 
 const CategorySection = ({
   category,
+  stepIndex,
+  totalSteps,
   selectedApps,
   onAppsChange,
   allSelectedApps,
@@ -161,216 +165,270 @@ const CategorySection = ({
   }).length;
 
   const Icon = category.icon;
+  const isComplete = selectedApps.length > 0 && validatedCount === selectedApps.length;
+  const isLast = stepIndex === totalSteps - 1;
 
   return (
     <Box
       ref={sectionRef}
-      sx={{
-        borderRadius: 3,
-        border: '1px solid',
-        borderColor: selectedApps.length > 0
-          ? validatedCount === selectedApps.length && selectedApps.length > 0
-            ? 'rgba(34, 197, 94, 0.3)'
-            : 'rgba(255, 102, 0, 0.3)'
-          : 'rgba(255, 255, 255, 0.08)',
-        backgroundColor: 'rgba(255, 255, 255, 0.02)',
-        overflow: 'hidden',
-        transition: 'border-color 0.3s ease',
-      }}
+      sx={{ display: 'flex', gap: 0 }}
     >
-      {/* Category Header - always visible */}
+      {/* ── Vertical stepper rail ── */}
       <Box
-        onClick={() => {
-          if (isOpen) {
-            // When closing, bump key so SingulJS remounts with default search on reopen
-            setSingulKey(k => k + 1);
-          }
-          onToggleOpen();
-        }}
         sx={{
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
-          gap: 2,
-          p: 2.5,
-          cursor: 'pointer',
-          transition: 'background-color 0.2s ease',
-          '&:hover': {
-            backgroundColor: 'rgba(255, 255, 255, 0.03)',
-          },
+          width: 44,
+          flexShrink: 0,
+          pt: 0.25,
         }}
       >
+        {/* Step circle */}
         <Box
           sx={{
-            width: 44,
-            height: 44,
+            width: 36,
+            height: 36,
             borderRadius: '50%',
-            backgroundColor: isOpen ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255, 255, 255, 0.06)',
-            border: '2px solid',
-            borderColor: isOpen ? 'rgba(255, 102, 0, 0.4)' : 'rgba(255, 255, 255, 0.12)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             flexShrink: 0,
+            backgroundColor: isOpen
+              ? 'rgba(255, 102, 0, 0.15)'
+              : isComplete
+                ? 'rgba(34, 197, 94, 0.15)'
+                : 'rgba(255, 255, 255, 0.06)',
+            border: '2px solid',
+            borderColor: isOpen
+              ? 'rgba(255, 102, 0, 0.5)'
+              : isComplete
+                ? 'rgba(34, 197, 94, 0.4)'
+                : 'rgba(255, 255, 255, 0.12)',
             transition: 'all 0.3s ease',
+            zIndex: 1,
           }}
         >
-          <Icon size={20} color={isOpen ? '#FF6600' : 'rgba(255, 255, 255, 0.5)'} />
-        </Box>
-
-        <Box sx={{ flex: 1 }}>
-          <Typography
-            variant="subtitle1"
-            sx={{ color: 'white', fontWeight: 600, lineHeight: 1.3 }}
-          >
-            {category.label}
-          </Typography>
-          <Typography
-            variant="caption"
-            sx={{ color: 'rgba(255, 255, 255, 0.4)', display: 'block' }}
-          >
-            {category.description}
-          </Typography>
-        </Box>
-
-        {/* Status indicators */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexShrink: 0 }}>
-          {selectedApps.length > 0 && (
-            <Chip
-              icon={validatedCount === selectedApps.length ? <CheckCircle2 size={14} /> : undefined}
-              label={`${validatedCount}/${selectedApps.length}`}
-              size="small"
-              sx={{
-                height: 26,
-                backgroundColor: validatedCount === selectedApps.length
-                  ? 'rgba(34, 197, 94, 0.15)'
-                  : 'rgba(255, 152, 0, 0.15)',
-                color: validatedCount === selectedApps.length ? '#22c55e' : '#ff9800',
-                fontWeight: 600,
-                fontSize: '0.75rem',
-                '& .MuiChip-icon': {
-                  color: '#22c55e',
-                },
-              }}
-            />
+          {isComplete ? (
+            <CheckCircle2 size={18} color="#22c55e" />
+          ) : (
+            <Icon size={18} color={isOpen ? '#FF6600' : 'rgba(255, 255, 255, 0.45)'} />
           )}
-
-          {/* Selected app avatars (collapsed preview) */}
-          {!isOpen && selectedApps.length > 0 && (
-            <Box sx={{ display: 'flex', ml: 0.5 }}>
-              {selectedApps.slice(0, 4).map((app, idx) => (
-                <Box
-                  key={app.objectID}
-                  component="img"
-                  src={app.image_url}
-                  alt={app.name}
-                  sx={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: '50%',
-                    objectFit: 'contain',
-                    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                    border: '2px solid rgba(33, 33, 33, 0.9)',
-                    ml: idx > 0 ? -1 : 0,
-                    p: 0.25,
-                  }}
-                />
-              ))}
-              {selectedApps.length > 4 && (
-                <Box
-                  sx={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: '50%',
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                    border: '2px solid rgba(33, 33, 33, 0.9)',
-                    ml: -1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Typography sx={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.6)' }}>
-                    +{selectedApps.length - 4}
-                  </Typography>
-                </Box>
-              )}
-            </Box>
-          )}
-
-          <motion.div
-            animate={{ rotate: isOpen ? 180 : 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <ChevronDown size={20} color="rgba(255, 255, 255, 0.4)" />
-          </motion.div>
         </Box>
+        {/* Connector line */}
+        {!isLast && (
+          <Box
+            sx={{
+              width: 2,
+              flex: 1,
+              minHeight: 16,
+              backgroundColor: isComplete
+                ? 'rgba(34, 197, 94, 0.3)'
+                : 'rgba(255, 255, 255, 0.08)',
+              transition: 'background-color 0.3s ease',
+            }}
+          />
+        )}
       </Box>
 
-      {/* Expandable Content */}
-      <Collapse in={isOpen}>
-        <Box sx={{ px: 2.5, pb: 2.5 }}>
-          {/* Search */}
-          <SingulJS
-            key={singulKey}
-            ref={singulRef}
-            authToken="demo-token"
-            apiKey={API_CONFIG.apiKey || undefined}
-            apiBaseUrl={API_CONFIG.baseUrl}
-            placeholder={`Search ${category.label.toLowerCase()} integrations...`}
-            layout="grid"
-            gridColumns={3}
-            inline={true}
-            initialQuery={category.searchTerm}
-            hitsPerPage={6}
-            showDescription={true}
-            showCategories={true}
-            showCheckbox={true}
-            multiSelect={true}
-            preventDefault={true}
-            selectedApps={allSelectedApps}
-            onSelectionChange={onAppsChange}
-            customStyles={singulStyles}
-          />
+      {/* ── Content area ── */}
+      <Box sx={{ flex: 1, minWidth: 0, pb: isLast ? 0 : 2 }}>
+        {/* Clickable header */}
+        <Box
+          onClick={() => {
+            if (isOpen) setSingulKey(k => k + 1);
+            onToggleOpen();
+          }}
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+            py: 0.75,
+            px: 1.5,
+            ml: 1,
+            cursor: 'pointer',
+            borderRadius: 2,
+            transition: 'background-color 0.2s ease',
+            '&:hover': {
+              backgroundColor: 'rgba(255, 255, 255, 0.03)',
+            },
+          }}
+        >
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography
+              sx={{
+                color: isOpen ? '#FF6600' : isComplete ? '#22c55e' : 'white',
+                fontWeight: 600,
+                fontSize: '0.95rem',
+                lineHeight: 1.3,
+                transition: 'color 0.2s ease',
+              }}
+            >
+              {category.label}
+            </Typography>
+            <Typography
+              sx={{
+                color: 'rgba(255, 255, 255, 0.4)',
+                fontSize: '0.75rem',
+                lineHeight: 1.3,
+              }}
+            >
+              {category.description}
+            </Typography>
+          </Box>
 
-          {/* Auth cards for selected apps in this category */}
-          {selectedApps.length > 0 && (
-            <Box sx={{ mt: 3, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-              <Typography
-                variant="body2"
+          {/* Status chip + avatars */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexShrink: 0 }}>
+            {selectedApps.length > 0 && (
+              <Chip
+                icon={isComplete ? <CheckCircle2 size={14} /> : undefined}
+                label={`${validatedCount}/${selectedApps.length}`}
+                size="small"
                 sx={{
-                  color: 'rgba(255, 255, 255, 0.5)',
-                  fontWeight: 500,
-                  fontSize: '0.8rem',
+                  height: 24,
+                  backgroundColor: isComplete
+                    ? 'rgba(34, 197, 94, 0.15)'
+                    : 'rgba(255, 152, 0, 0.15)',
+                  color: isComplete ? '#22c55e' : '#ff9800',
+                  fontWeight: 600,
+                  fontSize: '0.72rem',
+                  '& .MuiChip-icon': { color: '#22c55e' },
                 }}
-              >
-                Authentication ({selectedApps.length})
-              </Typography>
-              {selectedApps.map(app => {
-                const authState = authStates[app.objectID] || {
-                  systemId: app.objectID,
-                  status: 'pending' as const,
-                  credentials: {},
-                };
-                const apiAuthEntries = getApiAuthEntries(app);
+              />
+            )}
 
-                return (
-                  <AppAuthCard
+            {!isOpen && selectedApps.length > 0 && (
+              <Box sx={{ display: 'flex' }}>
+                {selectedApps.slice(0, 3).map((app, idx) => (
+                  <Box
                     key={app.objectID}
-                    app={app}
-                    authState={authState}
-                    isExpanded={expandedAuth === app.objectID}
-                    onToggle={() => setExpandedAuth(expandedAuth === app.objectID ? false : app.objectID)}
-                    onAuthChange={onAuthChange}
-                    onTestConnection={onTestConnection}
-                    onSaveAuth={onSaveAuth}
-                    apiAuthEntries={apiAuthEntries}
+                    component="img"
+                    src={app.image_url}
+                    alt={app.name}
+                    sx={{
+                      width: 24,
+                      height: 24,
+                      borderRadius: '50%',
+                      objectFit: 'contain',
+                      backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                      border: '2px solid rgba(33, 33, 33, 0.9)',
+                      ml: idx > 0 ? -0.75 : 0,
+                      p: 0.25,
+                    }}
                   />
-                );
-              })}
-            </Box>
-          )}
+                ))}
+                {selectedApps.length > 3 && (
+                  <Box
+                    sx={{
+                      width: 24,
+                      height: 24,
+                      borderRadius: '50%',
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      border: '2px solid rgba(33, 33, 33, 0.9)',
+                      ml: -0.75,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Typography sx={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.6)' }}>
+                      +{selectedApps.length - 3}
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
+            )}
+
+            <motion.div
+              animate={{ rotate: isOpen ? 180 : 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ChevronDown size={18} color="rgba(255, 255, 255, 0.35)" />
+            </motion.div>
+          </Box>
         </Box>
-      </Collapse>
+
+        {/* Expandable content */}
+        <Collapse in={isOpen}>
+          <Box
+            sx={{
+              ml: 1,
+              mt: 1.5,
+              p: 2.5,
+              borderRadius: 3,
+              border: '1px solid',
+              borderColor: selectedApps.length > 0
+                ? isComplete
+                  ? 'rgba(34, 197, 94, 0.25)'
+                  : 'rgba(255, 102, 0, 0.25)'
+                : 'rgba(255, 255, 255, 0.08)',
+              backgroundColor: 'rgba(255, 255, 255, 0.02)',
+              transition: 'border-color 0.3s ease',
+            }}
+          >
+            {/* Search */}
+            <SingulJS
+              key={singulKey}
+              ref={singulRef}
+              authToken="demo-token"
+              apiKey={API_CONFIG.apiKey || undefined}
+              apiBaseUrl={API_CONFIG.baseUrl}
+              placeholder={`Search ${category.label.toLowerCase()} integrations...`}
+              layout="grid"
+              gridColumns={3}
+              inline={true}
+              initialQuery={category.searchTerm}
+              hitsPerPage={6}
+              showDescription={true}
+              showCategories={true}
+              showCheckbox={true}
+              multiSelect={true}
+              preventDefault={true}
+              selectedApps={allSelectedApps}
+              onSelectionChange={onAppsChange}
+              customStyles={singulStyles}
+            />
+
+            {/* Auth cards for selected apps in this category */}
+            {selectedApps.length > 0 && (
+              <Box sx={{ mt: 3, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: 'rgba(255, 255, 255, 0.5)',
+                    fontWeight: 500,
+                    fontSize: '0.8rem',
+                  }}
+                >
+                  Authentication ({selectedApps.length})
+                </Typography>
+                {selectedApps.map(app => {
+                  const authState = authStates[app.objectID] || {
+                    systemId: app.objectID,
+                    status: 'pending' as const,
+                    credentials: {},
+                  };
+                  const apiAuthEntries = getApiAuthEntries(app);
+
+                  return (
+                    <AppAuthCard
+                      key={app.objectID}
+                      app={app}
+                      authState={authState}
+                      isExpanded={expandedAuth === app.objectID}
+                      onToggle={() => setExpandedAuth(expandedAuth === app.objectID ? false : app.objectID)}
+                      onAuthChange={onAuthChange}
+                      onTestConnection={onTestConnection}
+                      onSaveAuth={onSaveAuth}
+                      apiAuthEntries={apiAuthEntries}
+                    />
+                  );
+                })}
+              </Box>
+            )}
+          </Box>
+        </Collapse>
+      </Box>
     </Box>
   );
 };
@@ -441,30 +499,7 @@ export const UnifiedSourceSetup = ({
     return result;
   }, [selectedApps]);
 
-  // Per-category validation counts
-  const categoryStatus = useMemo(() => {
-    const status: Record<string, { selected: number; validated: number }> = {};
-    CATEGORIES.forEach(cat => {
-      const apps = categorizedApps[cat.id];
-      const validated = apps.filter(app =>
-        authenticatedApps.some(
-          auth => auth.app?.name?.toLowerCase() === app.name.toLowerCase() &&
-            auth.validation?.valid === true
-        )
-      ).length;
-      status[cat.id] = { selected: apps.length, validated };
-    });
-    return status;
-  }, [categorizedApps, authenticatedApps]);
 
-  // Overall progress
-  const totalSelected = selectedApps.length;
-  const totalValidated = selectedApps.filter(app => {
-    return authenticatedApps.some(
-      auth => auth.app?.name?.toLowerCase() === app.name.toLowerCase() &&
-        auth.validation?.valid === true
-    );
-  }).length;
 
   return (
     <Box>
@@ -484,119 +519,14 @@ export const UnifiedSourceSetup = ({
         </Typography>
       </Box>
 
-      {/* ── Category progress bar ── */}
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: 1,
-          mb: 3,
-        }}
-      >
-        {CATEGORIES.map((cat, idx) => {
-          const Icon = cat.icon;
-          const isActive = openCategory === cat.id;
-          const { selected, validated } = categoryStatus[cat.id];
-          const isComplete = selected > 0 && validated === selected;
-
-          return (
-            <Box
-              key={cat.id}
-              onClick={() => toggleCategory(cat.id)}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1.25,
-                p: 1.5,
-                borderRadius: 2.5,
-                cursor: 'pointer',
-                border: '1px solid',
-                borderColor: isActive
-                  ? 'rgba(255, 102, 0, 0.5)'
-                  : isComplete
-                    ? 'rgba(34, 197, 94, 0.3)'
-                    : 'rgba(255, 255, 255, 0.08)',
-                backgroundColor: isActive
-                  ? 'rgba(255, 102, 0, 0.08)'
-                  : isComplete
-                    ? 'rgba(34, 197, 94, 0.05)'
-                    : 'rgba(255, 255, 255, 0.02)',
-                transition: 'all 0.2s ease',
-                '&:hover': {
-                  borderColor: isActive
-                    ? 'rgba(255, 102, 0, 0.6)'
-                    : 'rgba(255, 255, 255, 0.2)',
-                  backgroundColor: isActive
-                    ? 'rgba(255, 102, 0, 0.1)'
-                    : 'rgba(255, 255, 255, 0.04)',
-                },
-              }}
-            >
-              <Box
-                sx={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                  backgroundColor: isActive
-                    ? 'rgba(255, 102, 0, 0.15)'
-                    : isComplete
-                      ? 'rgba(34, 197, 94, 0.15)'
-                      : 'rgba(255, 255, 255, 0.06)',
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                {isComplete ? (
-                  <CheckCircle2 size={16} color="#22c55e" />
-                ) : (
-                  <Icon
-                    size={16}
-                    color={isActive ? '#FF6600' : 'rgba(255, 255, 255, 0.4)'}
-                  />
-                )}
-              </Box>
-              <Box sx={{ minWidth: 0, flex: 1 }}>
-                <Typography
-                  sx={{
-                    fontSize: '0.78rem',
-                    fontWeight: 600,
-                    color: isActive
-                      ? '#FF6600'
-                      : isComplete
-                        ? '#22c55e'
-                        : 'rgba(255, 255, 255, 0.8)',
-                    lineHeight: 1.2,
-                  }}
-                >
-                  {cat.label}
-                </Typography>
-                <Typography
-                  sx={{
-                    fontSize: '0.65rem',
-                    color: 'rgba(255, 255, 255, 0.35)',
-                    lineHeight: 1.3,
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}
-                >
-                  {selected > 0 ? `${validated}/${selected} ready` : cat.description}
-                </Typography>
-              </Box>
-            </Box>
-          );
-        })}
-      </Box>
-
-      {/* Category Sections */}
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {CATEGORIES.map(category => (
+      {/* Category Sections — vertical stepper */}
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+        {CATEGORIES.map((category, idx) => (
           <CategorySection
             key={category.id}
             category={category}
+            stepIndex={idx}
+            totalSteps={CATEGORIES.length}
             selectedApps={categorizedApps[category.id]}
             allSelectedApps={selectedApps}
             onAppsChange={onAppsChange}
