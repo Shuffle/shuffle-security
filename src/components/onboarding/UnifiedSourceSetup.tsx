@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -126,6 +126,7 @@ interface CategorySectionProps {
   onSaveAuth: (appId: string, credentials: Record<string, string>) => Promise<boolean>;
   isOpen: boolean;
   onToggleOpen: () => void;
+  sectionRef?: React.Ref<HTMLDivElement>;
 }
 
 const CategorySection = ({
@@ -140,6 +141,7 @@ const CategorySection = ({
   onSaveAuth,
   isOpen,
   onToggleOpen,
+  sectionRef,
 }: CategorySectionProps) => {
   const singulRef = useRef<SingulJSHandle>(null);
   const [expandedAuth, setExpandedAuth] = useState<string | false>(false);
@@ -162,6 +164,7 @@ const CategorySection = ({
 
   return (
     <Box
+      ref={sectionRef}
       sx={{
         borderRadius: 3,
         border: '1px solid',
@@ -394,8 +397,20 @@ export const UnifiedSourceSetup = ({
   // Only one category open at a time (accordion)
   const [openCategory, setOpenCategory] = useState<string | null>('email');
 
+  // Refs for scrolling to sections
+  const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  const scrollToSection = useCallback((id: string) => {
+    // Small delay to let Collapse animation start
+    setTimeout(() => {
+      sectionRefs.current[id]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  }, []);
+
   const toggleCategory = (id: string) => {
+    const willOpen = openCategory !== id;
     setOpenCategory(prev => (prev === id ? null : id));
+    if (willOpen) scrollToSection(id);
   };
 
   // Categorize selected apps
@@ -583,6 +598,7 @@ export const UnifiedSourceSetup = ({
             onSaveAuth={onSaveAuth}
             isOpen={openCategory === category.id}
             onToggleOpen={() => toggleCategory(category.id)}
+            sectionRef={(el) => { sectionRefs.current[category.id] = el; }}
           />
         ))}
       </Box>
