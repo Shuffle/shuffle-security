@@ -21,7 +21,7 @@ import { AppAuthCard } from '@/components/onboarding/AppAuthConfig';
 import type { AlgoliaSearchApp } from '@/lib/singul-local';
 import { useAppAuth } from '@/hooks/useAppAuth';
 import { API_CONFIG } from '@/config/api';
-import { deduplicateAuthApps } from '@/lib/utils';
+
 import AppMcpChat from '@/components/app/AppMcpChat';
 
 interface AppInfo {
@@ -82,30 +82,35 @@ const AppDetailPage = () => {
     fetchAppInfo();
   }, [appname]);
 
+  // Get matching auth entries for this app
+  const matchingEntries = useMemo(() => {
+    if (!appname) return [];
+    return authenticatedApps.filter(
+      auth => auth.app?.name?.toLowerCase().replace(/[\s_\-]+/g, '_') === appname.toLowerCase().replace(/[\s_\-]+/g, '_')
+    );
+  }, [appname, authenticatedApps]);
+
+  // Resolve the best image: config API > auth entries > empty
+  const resolvedImage = useMemo(() => {
+    if (appInfo?.large_image) return appInfo.large_image;
+    for (const entry of matchingEntries) {
+      const img = (entry as any).app?.large_image || (entry as any).large_image;
+      if (img) return img;
+    }
+    return '';
+  }, [appInfo, matchingEntries]);
+
   // Build AlgoliaSearchApp-compatible object
   const algoliaApp: AlgoliaSearchApp | null = useMemo(() => {
     if (!appname) return null;
     return {
       objectID: appname,
       name: appname,
-      image_url: appInfo?.large_image || '',
+      image_url: resolvedImage,
       description: appInfo?.description || '',
       categories: appInfo?.categories || [],
     } as AlgoliaSearchApp;
-  }, [appname, appInfo]);
-
-  // Get matching auth entries for this app
-  const matchingEntries = useMemo(() => {
-    if (!appname) return [];
-    const dedupedApps = deduplicateAuthApps(authenticatedApps as any[]);
-    const matchingDedupedApp = dedupedApps.find(
-      ({ app }) => app.name.toLowerCase().replace(/[\s_\-]+/g, '_') === appname.toLowerCase().replace(/[\s_\-]+/g, '_')
-    );
-    
-    return authenticatedApps.filter(
-      auth => auth.app?.name?.toLowerCase().replace(/[\s_\-]+/g, '_') === appname.toLowerCase().replace(/[\s_\-]+/g, '_')
-    );
-  }, [appname, authenticatedApps]);
+  }, [appname, appInfo, resolvedImage]);
 
   // Auth state for this app
   const authState = authStates[appname || ''] || {
@@ -176,7 +181,7 @@ const AppDetailPage = () => {
           }}
         >
           <Avatar
-            src={appInfo?.large_image}
+            src={resolvedImage}
             alt={displayName}
             sx={{
               width: 72,
@@ -369,7 +374,7 @@ const AppDetailPage = () => {
           >
             Agent
           </Typography>
-          <AppMcpChat appName={appname || ''} appIcon={appInfo?.large_image} appId={matchingEntries[0]?.app?.id || matchingEntries[0]?.id || appname || ''} />
+          <AppMcpChat appName={appname || ''} appIcon={resolvedImage} appId={matchingEntries[0]?.app?.id || matchingEntries[0]?.id || appname || ''} />
         </Box>
       </motion.div>
 
