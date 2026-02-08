@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Box, Container, Typography, Button, Chip, Stack, Tooltip } from '@mui/material';
+import { Box, Container, Typography, Button, Stack } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { TicketingSystemSearch } from '@/components/onboarding/TicketingSystemSearch';
@@ -13,17 +13,13 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import WavingHandIcon from '@mui/icons-material/WavingHand';
 
-import AppsIcon from '@mui/icons-material/Apps';
 import LinkIcon from '@mui/icons-material/Link';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
-import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import { API_CONFIG, getApiUrl } from '@/config/api';
 import { setDatastoreItem, getDatastoreItem } from '@/services/datastore';
-import { deduplicateAuthApps } from '@/lib/utils';
 import {
   isEmailApp, isIngestionApp, isThreatIntelApp,
-  COMMUNICATION_PATTERNS_NAMES,
 } from '@/lib/ingestionDetection';
 import { trackOnboardingStep, trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
 
@@ -80,8 +76,7 @@ const ALL_STEPS = [
   { key: 'welcome', label: 'Welcome', icon: <WavingHandIcon />, path: '/onboarding' },
   { key: 'sources', label: 'Sources', icon: <LinkIcon />, path: '/onboarding/sources' },
   { key: 'authenticate', label: 'Authenticate', icon: <VpnKeyIcon />, path: '/onboarding/authenticate' },
-  { key: 'automate', label: 'Automate', icon: <AutoFixHighIcon />, path: '/onboarding/automate' },
-  { key: 'summary', label: 'Summary', icon: <RocketLaunchIcon />, path: '/onboarding/complete' },
+  { key: 'automate', label: 'Automate', icon: <RocketLaunchIcon />, path: '/onboarding/automate' },
 ];
 
 const OnboardingPage = () => {
@@ -821,13 +816,13 @@ const OnboardingPage = () => {
                 overflow: 'hidden',
               }}
             >
-              <AnimatePresence mode="wait">
+              <AnimatePresence mode="wait" initial={false}>
                 <motion.div
                   key={activeStep}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.3 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15 }}
                   style={{ width: '100%', maxWidth: '100%', overflow: 'hidden' }}
                 >
                   {steps[activeStep]?.key === 'welcome' && (
@@ -881,249 +876,6 @@ const OnboardingPage = () => {
                       onSaveAuth={handleSaveAuth}
                     />
                   )}
-
-                  {steps[activeStep]?.key === 'summary' && (() => {
-                    // Deduplicate apps using the shared utility
-                    const dedupedApps = deduplicateAuthApps(authenticatedApps);
-                    const validCount = dedupedApps.filter(a => a.hasValidAuth).length;
-                    // Sort: valid first, then alphabetically
-                    const sortedApps = [...dedupedApps].sort((a, b) => {
-                      if (a.hasValidAuth && !b.hasValidAuth) return -1;
-                      if (!a.hasValidAuth && b.hasValidAuth) return 1;
-                      return a.app.name.localeCompare(b.app.name);
-                    });
-
-                    const isCommunicationApp = (appName: string) => 
-                      COMMUNICATION_PATTERNS_NAMES.some(pattern => appName.toLowerCase().includes(pattern));
-                    
-                    // Count apps with valid auth for each category
-                    const validApps = sortedApps.filter(a => a.hasValidAuth);
-                    const hasIngestionApps = validApps.some(a => isIngestionApp(a.app.name));
-                    const hasThreatIntelApps = validApps.some(a => isThreatIntelApp(a.app.name));
-                    const hasEmailApps = validApps.some(a => isEmailApp(a.app.name));
-                    const hasChatApps = validApps.some(a => isCommunicationApp(a.app.name));
-                    
-                    // Build automation items dynamically based on available apps
-                    const automationItems = [
-                      hasIngestionApps && { key: 'automatic_ingestion', label: 'Ingestion', icon: '📥' },
-                      hasThreatIntelApps && { key: 'threat_intel', label: 'Threat Intel', icon: '🛡️' },
-                      hasEmailApps && { key: 'email_notify', label: 'Email', icon: '📧' },
-                      hasChatApps && { key: 'chat_notify', label: 'Chat', icon: '💬' },
-                    ].filter(Boolean) as { key: string; label: string; icon: string }[];
-
-                    return (
-                      <Box sx={{ py: 4 }}>
-                        {/* Success Header */}
-                        <Box sx={{ textAlign: 'center', mb: 5 }}>
-                          <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-                          >
-                            <Box
-                              sx={{
-                                width: 80,
-                                height: 80,
-                                borderRadius: '50%',
-                                background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                mx: 'auto',
-                                mb: 3,
-                                boxShadow: '0 0 40px rgba(34, 197, 94, 0.4)',
-                              }}
-                            >
-                              <CheckCircleOutlineIcon sx={{ fontSize: 44, color: 'white' }} />
-                            </Box>
-                          </motion.div>
-                          <Typography
-                            variant="h4"
-                            sx={{ color: 'white', fontWeight: 700, mb: 1, fontSize: { xs: '1.5rem', sm: '2rem' } }}
-                          >
-                            Summary
-                          </Typography>
-                          <Typography
-                            variant="body1"
-                            sx={{ color: 'rgba(255, 255, 255, 0.6)', maxWidth: 400, mx: 'auto' }}
-                          >
-                            Your security automation is configured and ready to go.
-                          </Typography>
-                        </Box>
-
-                        {/* Two Column Layout */}
-                        <Box sx={{ 
-                          display: 'grid', 
-                          gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, 
-                          gap: 3,
-                        }}>
-                          {/* Connected Apps Section */}
-                          <Box
-                            sx={{
-                              background: 'rgba(0, 0, 0, 0.2)',
-                              borderRadius: 3,
-                              border: '1px solid rgba(255, 255, 255, 0.08)',
-                              p: 3,
-                            }}
-                          >
-                            <Typography
-                              sx={{ color: 'white', fontWeight: 600, mb: 2, fontSize: '1rem' }}
-                            >
-                              Connected Apps ({validCount}/{sortedApps.length})
-                            </Typography>
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
-                              {sortedApps.length > 0 ? (
-                                sortedApps.map((dedupedApp) => (
-                                  <Tooltip 
-                                    key={dedupedApp.app.id} 
-                                    title={
-                                      <Box sx={{ textAlign: 'left', p: 0.5, minWidth: 140 }}>
-                                        <Typography sx={{ fontWeight: 600, fontSize: '0.85rem' }}>
-                                          {dedupedApp.app.name.replace(/_/g, ' ')}
-                                        </Typography>
-                                        <Box sx={{ mt: 0.5 }}>
-                                          {dedupedApp.instances.map((inst, idx) => (
-                                            <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.25 }}>
-                                              <Box sx={{ 
-                                                width: 6, height: 6, borderRadius: '50%',
-                                                backgroundColor: inst.isValidated ? '#22c55e' : '#f59e0b',
-                                              }} />
-                                              <Typography sx={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.8)' }}>
-                                                {inst.label}
-                                              </Typography>
-                                            </Box>
-                                          ))}
-                                        </Box>
-                                      </Box>
-                                    }
-                                    placement="top"
-                                  >
-                                    <Box
-                                      sx={{
-                                        position: 'relative',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                      }}
-                                    >
-                                      {dedupedApp.bestImage ? (
-                                        <Box
-                                          component="img"
-                                          src={dedupedApp.bestImage}
-                                          alt={dedupedApp.app.name}
-                                          sx={{
-                                            width: 36,
-                                            height: 36,
-                                            borderRadius: '50%',
-                                            objectFit: 'contain',
-                                            backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                                            p: 0.5,
-                                          }}
-                                        />
-                                      ) : (
-                                        <Box
-                                          sx={{
-                                            width: 36,
-                                            height: 36,
-                                            borderRadius: '50%',
-                                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            fontSize: '0.875rem',
-                                            color: 'white',
-                                            fontWeight: 600,
-                                          }}
-                                        >
-                                          {dedupedApp.app.name.charAt(0).toUpperCase()}
-                                        </Box>
-                                      )}
-                                      <Box
-                                        sx={{
-                                          position: 'absolute',
-                                          bottom: -2,
-                                          right: -2,
-                                          width: 12,
-                                          height: 12,
-                                          borderRadius: '50%',
-                                          backgroundColor: dedupedApp.hasValidAuth ? '#22c55e' : '#f59e0b',
-                                          border: '2px solid rgba(33, 33, 33, 0.9)',
-                                        }}
-                                      />
-                                    </Box>
-                                  </Tooltip>
-                                ))
-                              ) : (
-                                <Typography sx={{ color: 'rgba(255, 255, 255, 0.4)', fontSize: '0.875rem' }}>
-                                  No apps connected yet
-                                </Typography>
-                              )}
-                            </Box>
-                          </Box>
-
-                          {/* Automation Status Section - Mini visualization */}
-                          <Box
-                            sx={{
-                              background: 'rgba(0, 0, 0, 0.2)',
-                              borderRadius: 3,
-                              border: '1px solid rgba(255, 255, 255, 0.08)',
-                              p: 3,
-                            }}
-                          >
-                            <Typography
-                              sx={{ color: 'white', fontWeight: 600, mb: 2, fontSize: '1rem' }}
-                            >
-                              Automation
-                            </Typography>
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                              {automationItems.length > 0 ? (
-                                automationItems.map(({ key, label, icon }) => {
-                                  const isEnabled = enrichmentState[key]?.enabled !== false;
-                                  return (
-                                    <Tooltip key={key} title={`${label}: ${isEnabled ? 'Enabled' : 'Disabled'}`} placement="top">
-                                      <Box
-                                        sx={{
-                                          display: 'flex',
-                                          alignItems: 'center',
-                                          gap: 0.75,
-                                          px: 1.5,
-                                          py: 0.75,
-                                          borderRadius: 2,
-                                          backgroundColor: isEnabled 
-                                            ? 'rgba(34, 197, 94, 0.15)' 
-                                            : 'rgba(156, 163, 175, 0.1)',
-                                          border: '1px solid',
-                                          borderColor: isEnabled 
-                                            ? 'rgba(34, 197, 94, 0.3)' 
-                                            : 'rgba(156, 163, 175, 0.2)',
-                                          opacity: isEnabled ? 1 : 0.5,
-                                        }}
-                                      >
-                                        <Typography sx={{ fontSize: '1rem' }}>{icon}</Typography>
-                                        <Typography
-                                          sx={{
-                                            color: isEnabled ? '#22c55e' : '#9ca3af',
-                                            fontSize: '0.75rem',
-                                            fontWeight: 500,
-                                          }}
-                                        >
-                                          {label}
-                                        </Typography>
-                                      </Box>
-                                    </Tooltip>
-                                  );
-                                })
-                              ) : (
-                                <Typography sx={{ color: 'rgba(255, 255, 255, 0.4)', fontSize: '0.875rem' }}>
-                                  No automation configured
-                                </Typography>
-                              )}
-                            </Box>
-                          </Box>
-                        </Box>
-                      </Box>
-                    );
-                  })()}
                 </motion.div>
               </AnimatePresence>
             </Box>
@@ -1196,7 +948,7 @@ const OnboardingPage = () => {
                   },
                 }}
               >
-                {activeStep === steps.length - 1 ? 'Go to Dashboard' : 'Continue'}
+                {activeStep === steps.length - 1 ? 'Finish Setup' : 'Continue'}
               </Button>
             </Stack>
           </Box>
