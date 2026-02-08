@@ -107,7 +107,7 @@ interface AppAuthentication {
 }
 
 // API authentication entry (from /api/v1/apps/authentication)
-interface ApiAuthEntry {
+export interface ApiAuthEntry {
   id?: string;
   label?: string;
   app: {
@@ -142,6 +142,18 @@ interface AppAuthConfigProps {
   onSelectAuth?: (appId: string, authId: string) => void;
 }
 
+export interface AppAuthCardProps {
+  app: AlgoliaSearchApp;
+  authState: AppAuthState;
+  isExpanded: boolean;
+  onToggle: () => void;
+  onAuthChange: (appId: string, credentials: Record<string, string>) => void;
+  onTestConnection: (appId: string, authenticationId?: string) => void;
+  onSaveAuth: (appId: string, credentials: Record<string, string>) => Promise<boolean>;
+  apiAuthEntries: ApiAuthEntry[];
+  onSelectAuth?: (appId: string, authId: string) => void;
+}
+
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -157,7 +169,7 @@ const itemVariants = {
 
 const ADD_NEW_AUTH = '__add_new__';
 
-const AppAuthCard = ({
+export const AppAuthCard = ({
   app,
   authState,
   isExpanded,
@@ -167,17 +179,7 @@ const AppAuthCard = ({
   onSaveAuth,
   apiAuthEntries,
   onSelectAuth,
-}: {
-  app: AlgoliaSearchApp;
-  authState: AppAuthState;
-  isExpanded: boolean;
-  onToggle: () => void;
-  onAuthChange: (appId: string, credentials: Record<string, string>) => void;
-  onTestConnection: (appId: string, authenticationId?: string) => void;
-  onSaveAuth: (appId: string, credentials: Record<string, string>) => Promise<boolean>;
-  apiAuthEntries: ApiAuthEntry[];
-  onSelectAuth?: (appId: string, authId: string) => void;
-}) => {
+}: AppAuthCardProps) => {
   // Helper to get best default auth: prioritize validated, otherwise last entry
   const getBestDefaultAuth = (entries: ApiAuthEntry[]): string => {
     if (entries.length === 0) return ADD_NEW_AUTH;

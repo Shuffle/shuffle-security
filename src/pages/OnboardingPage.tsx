@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { TicketingSystemSearch } from '@/components/onboarding/TicketingSystemSearch';
 import { WelcomeStep } from '@/components/onboarding/WelcomeStep';
+import { UnifiedSourceSetup } from '@/components/onboarding/UnifiedSourceSetup';
 import type { AlgoliaSearchApp } from '@/lib/singul-local';
 import { AppAuthConfig, AppAuthState, AuthStatus } from '@/components/onboarding/AppAuthConfig';
 import { EnrichmentConfig, EnrichmentState } from '@/components/onboarding/EnrichmentConfig';
@@ -13,6 +14,7 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import WavingHandIcon from '@mui/icons-material/WavingHand';
 
 import AppsIcon from '@mui/icons-material/Apps';
+import LinkIcon from '@mui/icons-material/Link';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
@@ -76,6 +78,7 @@ const processAuthData = (authData: ApiAuthEntry[]): ApiAuthEntry[] => {
 // All possible steps (Welcome is conditional, Primary Tool removed)
 const ALL_STEPS = [
   { key: 'welcome', label: 'Welcome', icon: <WavingHandIcon />, path: '/onboarding' },
+  { key: 'sources', label: 'Sources', icon: <LinkIcon />, path: '/onboarding/sources' },
   { key: 'tools', label: 'More Tools', icon: <AppsIcon />, path: '/onboarding/tools' },
   { key: 'authenticate', label: 'Authentication', icon: <VpnKeyIcon />, path: '/onboarding/authenticate' },
   { key: 'automate', label: 'Automate', icon: <AutoFixHighIcon />, path: '/onboarding/automate' },
@@ -832,6 +835,18 @@ const OnboardingPage = () => {
                     <WelcomeStep
                       selectedChallenge={selectedChallenge}
                       onSelect={setSelectedChallenge}
+                    />
+                  )}
+
+                  {steps[activeStep]?.key === 'sources' && (
+                    <UnifiedSourceSetup
+                      selectedApps={selectedApps}
+                      onAppsChange={setSelectedApps}
+                      authStates={authStates}
+                      authenticatedApps={authenticatedApps}
+                      onAuthChange={handleAuthChange}
+                      onTestConnection={handleTestConnection}
+                      onSaveAuth={handleSaveAuth}
                     />
                   )}
 
