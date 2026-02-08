@@ -81,7 +81,16 @@ const AppMcpChat = ({ appName, appIcon }: AppMcpChatProps) => {
             Authorization: `Bearer ${API_CONFIG.apiKey}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ query: trimmed }),
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            id: crypto.randomUUID(),
+            method: 'tools/call',
+            params: {
+              input: {
+                query: trimmed,
+              },
+            },
+          }),
         }
       );
 
