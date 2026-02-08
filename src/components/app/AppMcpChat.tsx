@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -21,17 +21,100 @@ interface AppMcpChatProps {
   appName: string;
   appIcon?: string;
   appId?: string;
+  categories?: string[];
 }
 
 type RunState = 'idle' | 'running' | 'done';
 
-const AppMcpChat = ({ appName, appIcon, appId }: AppMcpChatProps) => {
+/** Category-based suggestion prompts — natural, actionable questions */
+const CATEGORY_SUGGESTIONS: Record<string, string[]> = {
+  'Threat Intel': [
+    'Is 1.2.3.4 a known bad actor?',
+    'Check if this domain is malicious',
+    'Look up threat indicators for a hash',
+  ],
+  'SIEM': [
+    'Show me the latest critical alerts',
+    'Any unusual login attempts today?',
+    'Summarize recent security events',
+  ],
+  'Email': [
+    'Did I get a message from my team yesterday?',
+    'Find emails with attachments from last week',
+    'Check for any phishing reports',
+  ],
+  'Communication': [
+    'Did I get a message from my team yesterday?',
+    'Send a status update to the channel',
+    'Check for unread notifications',
+  ],
+  'EDR': [
+    'Is this endpoint compromised?',
+    'Show recent detections on workstations',
+    'Isolate a suspicious host',
+  ],
+  'Cloud': [
+    'List my running instances',
+    'Any public S3 buckets detected?',
+    'Check IAM policy changes today',
+  ],
+  'Ticketing': [
+    'What tickets are assigned to me?',
+    'Create a new incident ticket',
+    'Show open high-priority issues',
+  ],
+  'Vulnerability': [
+    'Any new critical CVEs this week?',
+    'Check vulnerability status for this asset',
+    'Show unpatched systems',
+  ],
+  'Network': [
+    'Any unusual outbound connections?',
+    'Check firewall rule changes',
+    'Show top talkers in the last hour',
+  ],
+  'Identity': [
+    'Show recent failed login attempts',
+    'Is this user account locked out?',
+    'List users with admin privileges',
+  ],
+};
+
+const DEFAULT_SUGGESTIONS = [
+  'What can you do?',
+  'Show me recent activity',
+  'Run a quick check',
+];
+
+function getSuggestions(categories?: string[]): string[] {
+  if (!categories || categories.length === 0) return DEFAULT_SUGGESTIONS;
+
+  const matched: string[] = [];
+  for (const cat of categories) {
+    const normalized = cat.toLowerCase();
+    for (const [key, prompts] of Object.entries(CATEGORY_SUGGESTIONS)) {
+      if (normalized.includes(key.toLowerCase()) || key.toLowerCase().includes(normalized)) {
+        matched.push(...prompts);
+      }
+    }
+  }
+
+  if (matched.length === 0) return DEFAULT_SUGGESTIONS;
+
+  // Dedupe and take up to 4
+  const unique = [...new Set(matched)];
+  return unique.slice(0, 4);
+}
+
+const AppMcpChat = ({ appName, appIcon, appId, categories }: AppMcpChatProps) => {
   const [input, setInput] = useState('');
   const [runState, setRunState] = useState<RunState>('idle');
   const [query, setQuery] = useState('');
   const [result, setResult] = useState('');
   const [isError, setIsError] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const suggestions = useMemo(() => getSuggestions(categories), [categories]);
 
   const runAction = async () => {
     const trimmed = input.trim();
@@ -112,12 +195,6 @@ const AppMcpChat = ({ appName, appIcon, appId }: AppMcpChatProps) => {
 
   const displayName = appName.replace(/_/g, ' ');
 
-  const suggestions = [
-    'Check an IP address',
-    'Run a blacklist lookup',
-    'Report abuse for an IP',
-  ];
-
   return (
     <Box
       sx={{
@@ -163,7 +240,7 @@ const AppMcpChat = ({ appName, appIcon, appId }: AppMcpChatProps) => {
                   )}
                 </Box>
                 <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-                  Run action
+                  Try it out
                 </Typography>
                 <Chip
                   label="MCP"
@@ -206,7 +283,7 @@ const AppMcpChat = ({ appName, appIcon, appId }: AppMcpChatProps) => {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder={`What do you want ${displayName} to do?`}
+                  placeholder={`Ask ${displayName} something…`}
                   fullWidth
                   sx={{
                     fontSize: '0.82rem',
