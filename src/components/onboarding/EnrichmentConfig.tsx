@@ -1466,30 +1466,157 @@ export const EnrichmentConfig = ({
 
   const enabledCount = Object.values(enrichmentState).filter((s) => s.enabled).length;
 
+  // Build connected apps summary from authenticatedApps
+  const dedupedSummaryApps = useMemo(() => {
+    return deduplicateAuthApps(
+      authenticatedApps.filter(auth => auth.active || auth.validation?.valid)
+    );
+  }, [authenticatedApps]);
+
+  const validatedSummaryCount = dedupedSummaryApps.filter(a => a.hasValidAuth).length;
+  const totalSummaryCount = dedupedSummaryApps.length;
+
+  // Sort: validated first, then alphabetically
+  const sortedSummaryApps = useMemo(() => {
+    return [...dedupedSummaryApps].sort((a, b) => {
+      if (a.hasValidAuth && !b.hasValidAuth) return -1;
+      if (!a.hasValidAuth && b.hasValidAuth) return 1;
+      return a.app.name.localeCompare(b.app.name);
+    });
+  }, [dedupedSummaryApps]);
+
   return (
     <Box>
-      <Box sx={{ mb: 4 }}>
+      {/* Header */}
+      <Box sx={{ mb: 3 }}>
         <Typography
           variant="h5"
           sx={{
             color: 'white',
             fontWeight: 700,
-            mb: 1,
+            mb: 0.5,
           }}
         >
-          Enrichment & Response
+          Automate & Finish
         </Typography>
         <Typography
           variant="body1"
-          sx={{ color: 'rgba(255, 255, 255, 0.5)', mb: 2 }}
+          sx={{ color: 'rgba(255, 255, 255, 0.5)' }}
         >
-          Configure automatic data enrichment and response actions. You can always change these later.
+          Review your connected tools, configure automation, and you're all set.
         </Typography>
+      </Box>
+
+      {/* Connected Apps Summary Strip */}
+      {totalSummaryCount > 0 && (
+        <Box
+          sx={{
+            mb: 4,
+            p: 2.5,
+            borderRadius: 3,
+            background: 'rgba(0, 0, 0, 0.25)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+            <Typography
+              variant="overline"
+              sx={{
+                color: 'rgba(255, 255, 255, 0.5)',
+                fontWeight: 600,
+                letterSpacing: 1.5,
+                fontSize: '0.65rem',
+              }}
+            >
+              Connected Apps
+            </Typography>
+            <Chip
+              label={`${validatedSummaryCount}/${totalSummaryCount} validated`}
+              size="small"
+              sx={{
+                height: 22,
+                background: validatedSummaryCount === totalSummaryCount
+                  ? 'rgba(34, 197, 94, 0.15)'
+                  : 'rgba(255, 152, 0, 0.15)',
+                color: validatedSummaryCount === totalSummaryCount ? '#22c55e' : '#ff9800',
+                fontWeight: 600,
+                fontSize: '0.7rem',
+              }}
+            />
+          </Box>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            {sortedSummaryApps.map((dedupedApp) => (
+              <Tooltip
+                key={dedupedApp.app.id}
+                title={
+                  <Box sx={{ p: 0.5 }}>
+                    <Typography sx={{ fontWeight: 600, fontSize: '0.8rem' }}>
+                      {dedupedApp.app.name.replace(/_/g, ' ')}
+                    </Typography>
+                    <Typography sx={{ fontSize: '0.7rem', opacity: 0.8, mt: 0.25 }}>
+                      {dedupedApp.hasValidAuth ? '✓ Validated' : '⏳ Pending validation'}
+                    </Typography>
+                  </Box>
+                }
+                arrow
+                placement="top"
+              >
+                <Box sx={{ position: 'relative' }}>
+                  {dedupedApp.bestImage ? (
+                    <Avatar
+                      src={dedupedApp.bestImage}
+                      alt={dedupedApp.app.name}
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        border: '2px solid',
+                        borderColor: dedupedApp.hasValidAuth ? 'rgba(34, 197, 94, 0.5)' : 'rgba(255, 152, 0, 0.5)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                        '& img': { objectFit: 'contain', p: 0.25 },
+                      }}
+                    />
+                  ) : (
+                    <Avatar
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        border: '2px solid',
+                        borderColor: dedupedApp.hasValidAuth ? 'rgba(34, 197, 94, 0.5)' : 'rgba(255, 152, 0, 0.5)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                      }}
+                    >
+                      {dedupedApp.app.name.charAt(0).toUpperCase()}
+                    </Avatar>
+                  )}
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      bottom: -1,
+                      right: -1,
+                      width: 10,
+                      height: 10,
+                      borderRadius: '50%',
+                      backgroundColor: dedupedApp.hasValidAuth ? '#22c55e' : '#ff9800',
+                      border: '2px solid rgba(0, 0, 0, 0.5)',
+                    }}
+                  />
+                </Box>
+              </Tooltip>
+            ))}
+          </Box>
+        </Box>
+      )}
+
+      {/* Automation Sections */}
+      <Box sx={{ mb: 1 }}>
         {enabledCount > 0 && (
           <Chip
-            label={`${enabledCount} feature${enabledCount > 1 ? 's' : ''} enabled`}
+            label={`${enabledCount} automation${enabledCount > 1 ? 's' : ''} enabled`}
             size="small"
             sx={{
+              mb: 2,
               background: 'rgba(255, 102, 0, 0.1)',
               border: '1px solid rgba(255, 102, 0, 0.3)',
               color: '#FF6600',
