@@ -194,21 +194,24 @@ type NotificationCategory = 'chat' | 'email';
 type ThreatIntelCategory = 'threat_intel';
 
 interface IngestionSource {
-  category: IngestionCategory;
+  category: IngestionCategory | 'other';
   label: string;
   apps: ConnectedApp[];
+  isOther?: boolean;
 }
 
 interface NotificationSource {
-  category: NotificationCategory;
+  category: NotificationCategory | 'other';
   label: string;
   apps: ConnectedApp[];
+  isOther?: boolean;
 }
 
 interface ThreatIntelSource {
-  category: ThreatIntelCategory;
+  category: ThreatIntelCategory | 'other';
   label: string;
   apps: ConnectedApp[];
+  isOther?: boolean;
 }
 
 // Helper component for rendering source category chips
@@ -264,6 +267,7 @@ export const EnrichmentConfig = ({
 }: EnrichmentConfigProps) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [configuringAppId, setConfiguringAppId] = useState<string | null>(null);
+  const [otherExpanded, setOtherExpanded] = useState<Record<string, boolean>>({});
   
   // Threat feeds management
   const { threatFeeds, saveFeed, deleteFeed, toggleFeed, initializeDefaults: initThreatFeeds } = useThreatFeeds();
@@ -297,12 +301,16 @@ export const EnrichmentConfig = ({
       appValidationMap.set(normalized, hasValidAuth);
     });
     
-    const ingestionByCategory: Record<IngestionCategory, ConnectedApp[]> = {
+    const ingestionByCategory: Record<IngestionCategory | 'other', ConnectedApp[]> = {
       email: [],
       cases: [],
       edr: [],
       siem: [],
+      other: [],
     };
+    
+    // Track which app IDs have been categorized
+    const categorizedIngestionIds = new Set<string>();
     
     dedupedApps.forEach(({ app, bestImage, hasValidAuth }) => {
       const category = getIngestionCategory(app.name, app.categories);
@@ -315,6 +323,7 @@ export const EnrichmentConfig = ({
           isSelected: isAppSelected(app.name),
           hasAuthConfig: true,
         });
+        categorizedIngestionIds.add(app.id);
       }
     });
     
@@ -332,7 +341,25 @@ export const EnrichmentConfig = ({
           isSelected: true,
           hasAuthConfig: false,
         });
+        categorizedIngestionIds.add(app.objectID);
       }
+    });
+    
+    // Collect "Other" apps: authenticated but not categorized as ingestion, threat intel, or communication
+    dedupedApps.forEach(({ app, bestImage, hasValidAuth }) => {
+      if (categorizedIngestionIds.has(app.id)) return;
+      if (isThreatIntelApp(app.name)) return;
+      if (isEmailApp(app.name)) return; // Already in email category
+      if (isCommunicationApp({ app, active: true, validation: { valid: true } })) return;
+      
+      ingestionByCategory.other.push({
+        id: app.id,
+        name: app.name,
+        image: bestImage || app.large_image,
+        isValidated: hasValidAuth,
+        isSelected: isAppSelected(app.name),
+        hasAuthConfig: true,
+      });
     });
     
     const sortApps = (apps: ConnectedApp[]): ConnectedApp[] => {
@@ -349,6 +376,11 @@ export const EnrichmentConfig = ({
       { category: 'edr', label: 'EDR', apps: sortApps(ingestionByCategory.edr) },
       { category: 'siem', label: 'SIEM', apps: sortApps(ingestionByCategory.siem) },
     ];
+    
+    // Only add "Other" if there are uncategorized apps
+    if (ingestionByCategory.other.length > 0) {
+      ingestionSources.push({ category: 'other', label: 'Other', apps: sortApps(ingestionByCategory.other), isOther: true });
+    }
     
     const validatedCount = Object.values(ingestionByCategory).flat().filter(a => a.isValidated).length;
     const totalCount = Object.values(ingestionByCategory).flat().length;
@@ -992,21 +1024,107 @@ export const EnrichmentConfig = ({
                             {(option.ingestionSources || option.notificationSources || option.threatIntelSources) ? (
                               (option.ingestionSources || option.notificationSources || option.threatIntelSources)!.filter(s => s.apps.length > 0).map((source) => (
                                 <Box key={source.category}>
-                                  <Typography
-                                    variant="caption"
-                                    sx={{ 
-                                      color: 'rgba(255, 255, 255, 0.5)', 
-                                      fontWeight: 600,
-                                      textTransform: 'uppercase',
-                                      letterSpacing: 0.5,
-                                      fontSize: '0.65rem',
-                                      mb: 0.5,
-                                      display: 'block',
-                                    }}
-                                  >
-                                    {source.label}
-                                  </Typography>
-                                  {source.apps.map((app) => renderToolRow(app, option.id, option.color))}
+                                  {source.isOther ? (
+                                    // "Other" section: collapsed by default with icon preview
+                                    <Box>
+                                      <Box
+                                        onClick={() => setOtherExpanded(prev => ({ ...prev, [option.id]: !prev[option.id] }))}
+                                        sx={{
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          gap: 1,
+                                          cursor: 'pointer',
+                                          py: 0.75,
+                                          px: 1,
+                                          borderRadius: 1.5,
+                                          border: '1px dashed rgba(255, 255, 255, 0.12)',
+                                          background: 'rgba(255, 255, 255, 0.02)',
+                                          transition: 'all 0.2s ease',
+                                          '&:hover': {
+                                            background: 'rgba(255, 255, 255, 0.05)',
+                                            borderColor: 'rgba(255, 255, 255, 0.2)',
+                                          },
+                                        }}
+                                      >
+                                        <Typography
+                                          variant="caption"
+                                          sx={{ 
+                                            color: 'rgba(255, 255, 255, 0.4)', 
+                                            fontWeight: 600,
+                                            textTransform: 'uppercase',
+                                            letterSpacing: 0.5,
+                                            fontSize: '0.65rem',
+                                          }}
+                                        >
+                                          Other
+                                        </Typography>
+                                        {/* App icon preview when collapsed */}
+                                        <Box sx={{ display: 'flex', alignItems: 'center', ml: 0.5, flex: 1 }}>
+                                          {source.apps.slice(0, 6).map((app, idx) => (
+                                            <Tooltip key={app.id} title={app.name} arrow placement="top">
+                                              <Avatar
+                                                src={app.image}
+                                                alt={app.name}
+                                                sx={{
+                                                  width: 20,
+                                                  height: 20,
+                                                  fontSize: '0.5rem',
+                                                  border: '2px solid',
+                                                  borderColor: app.isValidated 
+                                                    ? 'rgba(34, 197, 94, 0.4)' 
+                                                    : 'rgba(255, 152, 0, 0.4)',
+                                                  backgroundColor: 'rgba(33, 33, 33, 0.9)',
+                                                  ml: idx > 0 ? -0.5 : 0,
+                                                }}
+                                              >
+                                                {app.name[0]}
+                                              </Avatar>
+                                            </Tooltip>
+                                          ))}
+                                          {source.apps.length > 6 && (
+                                            <Typography
+                                              variant="caption"
+                                              sx={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.6rem', ml: 0.5 }}
+                                            >
+                                              +{source.apps.length - 6}
+                                            </Typography>
+                                          )}
+                                        </Box>
+                                        <ExpandMoreIcon
+                                          sx={{
+                                            color: 'rgba(255, 255, 255, 0.3)',
+                                            transform: otherExpanded[option.id] ? 'rotate(180deg)' : 'none',
+                                            transition: 'transform 0.2s ease',
+                                            fontSize: 16,
+                                          }}
+                                        />
+                                      </Box>
+                                      <Collapse in={otherExpanded[option.id] || false}>
+                                        <Box sx={{ mt: 0.5 }}>
+                                          {source.apps.map((app) => renderToolRow(app, option.id, option.color))}
+                                        </Box>
+                                      </Collapse>
+                                    </Box>
+                                  ) : (
+                                    // Standard categorized section
+                                    <>
+                                      <Typography
+                                        variant="caption"
+                                        sx={{ 
+                                          color: 'rgba(255, 255, 255, 0.5)', 
+                                          fontWeight: 600,
+                                          textTransform: 'uppercase',
+                                          letterSpacing: 0.5,
+                                          fontSize: '0.65rem',
+                                          mb: 0.5,
+                                          display: 'block',
+                                        }}
+                                      >
+                                        {source.label}
+                                      </Typography>
+                                      {source.apps.map((app) => renderToolRow(app, option.id, option.color))}
+                                    </>
+                                  )}
                                 </Box>
                               ))
                             ) : option.connectedApps ? (
