@@ -401,10 +401,13 @@ export const UnifiedSourceSetup = ({
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const scrollToSection = useCallback((id: string) => {
-    // Small delay to let Collapse animation start
+    // Wait for Collapse animation to settle, then gently scroll with offset
     setTimeout(() => {
-      sectionRefs.current[id]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
+      const el = sectionRefs.current[id];
+      if (!el) return;
+      const y = el.getBoundingClientRect().top + window.scrollY - 80;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }, 200);
   }, []);
 
   const toggleCategory = (id: string) => {
