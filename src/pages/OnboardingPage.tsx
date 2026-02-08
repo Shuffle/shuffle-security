@@ -79,6 +79,7 @@ const processAuthData = (authData: ApiAuthEntry[]): ApiAuthEntry[] => {
 const ALL_STEPS = [
   { key: 'welcome', label: 'Welcome', icon: <WavingHandIcon />, path: '/onboarding' },
   { key: 'sources', label: 'Sources', icon: <LinkIcon />, path: '/onboarding/sources' },
+  { key: 'authenticate', label: 'Authenticate', icon: <VpnKeyIcon />, path: '/onboarding/authenticate' },
   { key: 'automate', label: 'Automate', icon: <AutoFixHighIcon />, path: '/onboarding/automate' },
   { key: 'summary', label: 'Summary', icon: <RocketLaunchIcon />, path: '/onboarding/complete' },
 ];
@@ -840,11 +841,6 @@ const OnboardingPage = () => {
                     <UnifiedSourceSetup
                       selectedApps={selectedApps}
                       onAppsChange={setSelectedApps}
-                      authStates={authStates}
-                      authenticatedApps={authenticatedApps}
-                      onAuthChange={handleAuthChange}
-                      onTestConnection={handleTestConnection}
-                      onSaveAuth={handleSaveAuth}
                     />
                   )}
 
