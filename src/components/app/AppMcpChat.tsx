@@ -26,57 +26,78 @@ interface AppMcpChatProps {
 
 type RunState = 'idle' | 'running' | 'done';
 
-/** Category-based suggestion prompts — natural, actionable questions */
+/** Category-based suggestion prompts — natural, actionable questions.
+ *  Keys are lowercase fragments that we match against app category strings. */
 const CATEGORY_SUGGESTIONS: Record<string, string[]> = {
-  'Threat Intel': [
+  'threat': [
     'Is 1.2.3.4 a known bad actor?',
     'Check if this domain is malicious',
     'Look up threat indicators for a hash',
   ],
-  'SIEM': [
+  'siem': [
     'Show me the latest critical alerts',
     'Any unusual login attempts today?',
     'Summarize recent security events',
   ],
-  'Email': [
+  'email': [
     'Did I get a message from my team yesterday?',
     'Find emails with attachments from last week',
     'Check for any phishing reports',
   ],
-  'Communication': [
+  'communication': [
     'Did I get a message from my team yesterday?',
     'Send a status update to the channel',
     'Check for unread notifications',
   ],
-  'EDR': [
+  'edr': [
     'Is this endpoint compromised?',
     'Show recent detections on workstations',
     'Isolate a suspicious host',
   ],
-  'Cloud': [
+  'endpoint': [
+    'Is this endpoint compromised?',
+    'Show recent detections on workstations',
+    'Isolate a suspicious host',
+  ],
+  'cloud': [
     'List my running instances',
     'Any public S3 buckets detected?',
     'Check IAM policy changes today',
   ],
-  'Ticketing': [
+  'ticket': [
     'What tickets are assigned to me?',
     'Create a new incident ticket',
     'Show open high-priority issues',
   ],
-  'Vulnerability': [
+  'itsm': [
+    'What tickets are assigned to me?',
+    'Create a new incident ticket',
+    'Show open high-priority issues',
+  ],
+  'case': [
+    'What cases are assigned to me?',
+    'Create a new incident case',
+    'Show open high-priority cases',
+  ],
+  'vulnerab': [
     'Any new critical CVEs this week?',
     'Check vulnerability status for this asset',
     'Show unpatched systems',
   ],
-  'Network': [
+  'network': [
     'Any unusual outbound connections?',
     'Check firewall rule changes',
     'Show top talkers in the last hour',
   ],
-  'Identity': [
+  'identity': [
     'Show recent failed login attempts',
     'Is this user account locked out?',
     'List users with admin privileges',
+  ],
+  'intel': [
+    'Is 1.2.3.4 a known bad actor?',
+    'Check if this domain is malicious',
+    'Look up threat indicators for a hash',
   ],
 };
 
@@ -93,7 +114,8 @@ function getSuggestions(categories?: string[]): string[] {
   for (const cat of categories) {
     const normalized = cat.toLowerCase();
     for (const [key, prompts] of Object.entries(CATEGORY_SUGGESTIONS)) {
-      if (normalized.includes(key.toLowerCase()) || key.toLowerCase().includes(normalized)) {
+      // Match if the category contains the key OR vice versa
+      if (normalized.includes(key) || key.includes(normalized)) {
         matched.push(...prompts);
       }
     }
@@ -101,9 +123,17 @@ function getSuggestions(categories?: string[]): string[] {
 
   if (matched.length === 0) return DEFAULT_SUGGESTIONS;
 
-  // Dedupe and take up to 4
   const unique = [...new Set(matched)];
   return unique.slice(0, 4);
+}
+
+/** Pick a short display label from categories */
+function getPrimaryCategory(categories?: string[]): string | null {
+  if (!categories || categories.length === 0) return null;
+  // Prefer the most specific non-generic category
+  const skip = ['other', 'general', 'integration'];
+  const filtered = categories.filter(c => !skip.includes(c.toLowerCase()));
+  return filtered[0] || categories[0] || null;
 }
 
 const AppMcpChat = ({ appName, appIcon, appId, categories }: AppMcpChatProps) => {
@@ -115,7 +145,7 @@ const AppMcpChat = ({ appName, appIcon, appId, categories }: AppMcpChatProps) =>
   const inputRef = useRef<HTMLInputElement>(null);
 
   const suggestions = useMemo(() => getSuggestions(categories), [categories]);
-
+  const primaryCategory = useMemo(() => getPrimaryCategory(categories), [categories]);
   const runAction = async () => {
     const trimmed = input.trim();
     if (!trimmed || runState === 'running' || !API_CONFIG.apiKey) return;
@@ -274,6 +304,20 @@ const AppMcpChat = ({ appName, appIcon, appId, categories }: AppMcpChatProps) =>
                 <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
                   Try it out
                 </Typography>
+                {primaryCategory && (
+                  <Chip
+                    label={primaryCategory}
+                    size="small"
+                    sx={{
+                      height: 20,
+                      fontSize: '0.6rem',
+                      fontWeight: 600,
+                      backgroundColor: 'hsl(var(--muted))',
+                      color: 'hsl(var(--muted-foreground))',
+                      textTransform: 'capitalize',
+                    }}
+                  />
+                )}
                 <Chip
                   label="MCP"
                   size="small"
