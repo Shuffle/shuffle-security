@@ -197,6 +197,7 @@ const AppDetailPage = () => {
               p: 0.5,
               '& img': {
                 objectFit: 'contain',
+                borderRadius: '12px',
               },
             }}
           >
