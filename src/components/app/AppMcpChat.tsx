@@ -137,9 +137,9 @@ const AppMcpChat = ({ appName, appIcon }: AppMcpChatProps) => {
   const displayName = appName.replace(/_/g, ' ');
 
   const suggestions = [
-    `What actions are available?`,
-    `List all endpoints`,
-    `How do I authenticate?`,
+    `Check an IP address`,
+    `Run a blacklist lookup`,
+    `Report abuse for an IP`,
   ];
 
   return (
@@ -175,7 +175,7 @@ const AppMcpChat = ({ appName, appIcon }: AppMcpChatProps) => {
             flex: 1,
           }}
         >
-          Ask anything about {displayName}
+          Run actions with {displayName}
         </Typography>
         <Chip
           label="MCP"
@@ -261,7 +261,7 @@ const AppMcpChat = ({ appName, appIcon }: AppMcpChatProps) => {
                   lineHeight: 1.5,
                 }}
               >
-                Ask questions, explore actions, or run operations using the MCP interface.
+                Execute actions, look up data, or automate tasks directly.
               </Typography>
             </Box>
 
@@ -492,7 +492,7 @@ const AppMcpChat = ({ appName, appIcon }: AppMcpChatProps) => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={`Ask about ${displayName}...`}
+            placeholder={`What do you want to do with ${displayName}?`}
             rows={1}
             style={{
               flex: 1,
