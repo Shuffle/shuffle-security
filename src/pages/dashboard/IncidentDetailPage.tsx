@@ -954,7 +954,10 @@ const IncidentDetailPage = () => {
   };
 
   const handleDeleteTask = (taskId: string) => {
-    setTasks(tasks.filter(task => task.id !== taskId));
+    // Soft delete: mark as disabled instead of removing (preserved for backend persistence)
+    setTasks(tasks.map(task => 
+      task.id === taskId ? { ...task, disabled: true } : task
+    ));
   };
 
   const handleApplyTemplate = async (template: CaseTemplate) => {

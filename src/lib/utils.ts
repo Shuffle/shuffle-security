@@ -149,6 +149,7 @@ export function deduplicateTasks<T>(tasks: T[]): T[] {
   const seen = new Set<string>();
   return tasks.filter(task => {
     const t = task as any;
+    if (t.disabled) return false; // Hide soft-deleted tasks
     const key = `${t.title ?? ''}\0${t.category ?? ''}\0${t.description ?? ''}`;
     if (seen.has(key)) return false;
     seen.add(key);
