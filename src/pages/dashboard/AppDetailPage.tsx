@@ -125,6 +125,9 @@ const AppDetailPage = () => {
   const hasAnyAuth = matchingEntries.length > 0;
   const authCount = matchingEntries.length;
 
+  // Auth card expand/collapse — default open if not yet verified
+  const [authExpanded, setAuthExpanded] = useState(!hasValidAuth);
+
   const displayName = (appInfo?.name || appname || '').replace(/_/g, ' ');
 
   if (appLoading || authLoading) {
@@ -359,8 +362,8 @@ const AppDetailPage = () => {
             <AppAuthCard
               app={algoliaApp}
               authState={authState}
-              isExpanded={!hasValidAuth}
-              onToggle={() => {}}
+              isExpanded={authExpanded}
+              onToggle={() => setAuthExpanded(prev => !prev)}
               onAuthChange={handleAuthChange}
               onTestConnection={(appId, authId) => handleTestConnection(appname || appId, authId)}
               onSaveAuth={(appId, creds) => handleSaveAuth(appname || appId, creds)}
