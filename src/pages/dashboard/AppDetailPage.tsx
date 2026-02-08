@@ -186,7 +186,7 @@ const AppDetailPage = () => {
             sx={{
               width: 72,
               height: 72,
-              borderRadius: 3,
+              borderRadius: '16px',
               backgroundColor: 'hsl(var(--muted))',
               border: '2px solid',
               borderColor: hasValidAuth
