@@ -4,7 +4,6 @@ import {
   Typography,
   Chip,
   Collapse,
-  IconButton,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import {
@@ -18,7 +17,6 @@ import {
 import { SingulJS } from '@/lib/singul-local';
 import type { AlgoliaSearchApp, SingulJSHandle } from '@/lib/singul-local';
 import { API_CONFIG } from '@/config/api';
-import { AppAuthCard, type AppAuthState, type ApiAuthEntry } from '@/components/onboarding/AppAuthConfig';
 import { getIngestionCategory, type IngestionCategory } from '@/lib/ingestionDetection';
 
 // Category definitions
@@ -114,6 +112,8 @@ const singulStyles = {
   },
 };
 
+// ─── CategorySection ────────────────────────────────────────────────────────
+
 interface CategorySectionProps {
   category: typeof CATEGORIES[number];
   stepIndex: number;
@@ -121,11 +121,6 @@ interface CategorySectionProps {
   selectedApps: AlgoliaSearchApp[];
   onAppsChange: (apps: AlgoliaSearchApp[]) => void;
   allSelectedApps: AlgoliaSearchApp[];
-  authStates: Record<string, AppAuthState>;
-  authenticatedApps: ApiAuthEntry[];
-  onAuthChange: (appId: string, credentials: Record<string, string>) => void;
-  onTestConnection: (appId: string, authenticationId?: string) => void;
-  onSaveAuth: (appId: string, credentials: Record<string, string>) => Promise<boolean>;
   isOpen: boolean;
   onToggleOpen: () => void;
   sectionRef?: React.Ref<HTMLDivElement>;
@@ -138,34 +133,15 @@ const CategorySection = ({
   selectedApps,
   onAppsChange,
   allSelectedApps,
-  authStates,
-  authenticatedApps,
-  onAuthChange,
-  onTestConnection,
-  onSaveAuth,
   isOpen,
   onToggleOpen,
   sectionRef,
 }: CategorySectionProps) => {
   const singulRef = useRef<SingulJSHandle>(null);
-  const [expandedAuth, setExpandedAuth] = useState<string | false>(false);
   const [singulKey, setSingulKey] = useState(0);
 
-  // Filter authenticated apps relevant to this category's selected apps
-  const getApiAuthEntries = (app: AlgoliaSearchApp): ApiAuthEntry[] => {
-    return authenticatedApps.filter(
-      auth => auth.app?.name?.toLowerCase() === app.name.toLowerCase()
-    );
-  };
-
-  // Count validated apps in this category
-  const validatedCount = selectedApps.filter(app => {
-    const entries = getApiAuthEntries(app);
-    return entries.some(e => e.validation?.valid === true);
-  }).length;
-
   const Icon = category.icon;
-  const isComplete = selectedApps.length > 0 && validatedCount === selectedApps.length;
+  const hasSelections = selectedApps.length > 0;
   const isLast = stepIndex === totalSteps - 1;
 
   return (
@@ -196,20 +172,20 @@ const CategorySection = ({
             flexShrink: 0,
             backgroundColor: isOpen
               ? 'rgba(255, 102, 0, 0.15)'
-              : isComplete
+              : hasSelections
                 ? 'rgba(34, 197, 94, 0.15)'
                 : 'rgba(255, 255, 255, 0.06)',
             border: '2px solid',
             borderColor: isOpen
               ? 'rgba(255, 102, 0, 0.5)'
-              : isComplete
+              : hasSelections
                 ? 'rgba(34, 197, 94, 0.4)'
                 : 'rgba(255, 255, 255, 0.12)',
             transition: 'all 0.3s ease',
             zIndex: 1,
           }}
         >
-          {isComplete ? (
+          {hasSelections && !isOpen ? (
             <CheckCircle2 size={18} color="#22c55e" />
           ) : (
             <Icon size={18} color={isOpen ? '#FF6600' : 'rgba(255, 255, 255, 0.45)'} />
@@ -222,7 +198,7 @@ const CategorySection = ({
               width: 2,
               flex: 1,
               minHeight: 16,
-              backgroundColor: isComplete
+              backgroundColor: hasSelections
                 ? 'rgba(34, 197, 94, 0.3)'
                 : 'rgba(255, 255, 255, 0.08)',
               transition: 'background-color 0.3s ease',
@@ -257,7 +233,7 @@ const CategorySection = ({
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography
               sx={{
-                color: isOpen ? '#FF6600' : isComplete ? '#22c55e' : 'white',
+                color: isOpen ? '#FF6600' : hasSelections ? '#22c55e' : 'white',
                 fontWeight: 600,
                 fontSize: '0.95rem',
                 lineHeight: 1.3,
@@ -279,17 +255,15 @@ const CategorySection = ({
 
           {/* Status chip + avatars */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexShrink: 0 }}>
-            {selectedApps.length > 0 && (
+            {hasSelections && (
               <Chip
-                icon={isComplete ? <CheckCircle2 size={14} /> : undefined}
-                label={`${validatedCount}/${selectedApps.length}`}
+                icon={<CheckCircle2 size={14} />}
+                label={`${selectedApps.length} selected`}
                 size="small"
                 sx={{
                   height: 24,
-                  backgroundColor: isComplete
-                    ? 'rgba(34, 197, 94, 0.15)'
-                    : 'rgba(255, 152, 0, 0.15)',
-                  color: isComplete ? '#22c55e' : '#ff9800',
+                  backgroundColor: 'rgba(34, 197, 94, 0.15)',
+                  color: '#22c55e',
                   fontWeight: 600,
                   fontSize: '0.72rem',
                   '& .MuiChip-icon': { color: '#22c55e' },
@@ -297,7 +271,7 @@ const CategorySection = ({
               />
             )}
 
-            {!isOpen && selectedApps.length > 0 && (
+            {!isOpen && hasSelections && (
               <Box sx={{ display: 'flex' }}>
                 {selectedApps.slice(0, 3).map((app, idx) => (
                   <Box
@@ -356,17 +330,11 @@ const CategorySection = ({
               mt: 1.5,
               p: 2.5,
               borderRadius: 3,
-              border: '1px solid',
-              borderColor: selectedApps.length > 0
-                ? isComplete
-                  ? 'rgba(34, 197, 94, 0.25)'
-                  : 'rgba(255, 102, 0, 0.25)'
-                : 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
               backgroundColor: 'rgba(255, 255, 255, 0.02)',
               transition: 'border-color 0.3s ease',
             }}
           >
-            {/* Search */}
             <SingulJS
               key={singulKey}
               ref={singulRef}
@@ -388,44 +356,6 @@ const CategorySection = ({
               onSelectionChange={onAppsChange}
               customStyles={singulStyles}
             />
-
-            {/* Auth cards for selected apps in this category */}
-            {selectedApps.length > 0 && (
-              <Box sx={{ mt: 3, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    color: 'rgba(255, 255, 255, 0.5)',
-                    fontWeight: 500,
-                    fontSize: '0.8rem',
-                  }}
-                >
-                  Authentication ({selectedApps.length})
-                </Typography>
-                {selectedApps.map(app => {
-                  const authState = authStates[app.objectID] || {
-                    systemId: app.objectID,
-                    status: 'pending' as const,
-                    credentials: {},
-                  };
-                  const apiAuthEntries = getApiAuthEntries(app);
-
-                  return (
-                    <AppAuthCard
-                      key={app.objectID}
-                      app={app}
-                      authState={authState}
-                      isExpanded={expandedAuth === app.objectID}
-                      onToggle={() => setExpandedAuth(expandedAuth === app.objectID ? false : app.objectID)}
-                      onAuthChange={onAuthChange}
-                      onTestConnection={onTestConnection}
-                      onSaveAuth={onSaveAuth}
-                      apiAuthEntries={apiAuthEntries}
-                    />
-                  );
-                })}
-              </Box>
-            )}
           </Box>
         </Collapse>
       </Box>
@@ -433,24 +363,16 @@ const CategorySection = ({
   );
 };
 
+// ─── UnifiedSourceSetup ─────────────────────────────────────────────────────
+
 interface UnifiedSourceSetupProps {
   selectedApps: AlgoliaSearchApp[];
   onAppsChange: (apps: AlgoliaSearchApp[]) => void;
-  authStates: Record<string, AppAuthState>;
-  authenticatedApps: ApiAuthEntry[];
-  onAuthChange: (appId: string, credentials: Record<string, string>) => void;
-  onTestConnection: (appId: string, authenticationId?: string) => void;
-  onSaveAuth: (appId: string, credentials: Record<string, string>) => Promise<boolean>;
 }
 
 export const UnifiedSourceSetup = ({
   selectedApps,
   onAppsChange,
-  authStates,
-  authenticatedApps,
-  onAuthChange,
-  onTestConnection,
-  onSaveAuth,
 }: UnifiedSourceSetupProps) => {
   // Only one category open at a time (accordion)
   const [openCategory, setOpenCategory] = useState<string | null>('email');
@@ -462,13 +384,11 @@ export const UnifiedSourceSetup = ({
     setTimeout(() => {
       const el = sectionRefs.current[id];
       if (!el) return;
-      // The scroll container is the dashboard main area, not window
       const scrollParent = el.closest('main') || el.closest('[style*="overflow"]') || el.parentElement?.closest('div[class*="MuiBox"]');
       if (scrollParent) {
         const elTop = el.getBoundingClientRect().top - scrollParent.getBoundingClientRect().top + scrollParent.scrollTop;
         scrollParent.scrollTo({ top: elTop - 80, behavior: 'smooth' });
       } else {
-        // Fallback
         el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }
     }, 200);
@@ -499,8 +419,6 @@ export const UnifiedSourceSetup = ({
     return result;
   }, [selectedApps]);
 
-
-
   return (
     <Box>
       {/* Header */}
@@ -509,13 +427,13 @@ export const UnifiedSourceSetup = ({
           variant="h5"
           sx={{ color: 'white', fontWeight: 700, mb: 1 }}
         >
-          Connect & Configure Sources
+          Select Your Sources
         </Typography>
         <Typography
           variant="body1"
           sx={{ color: 'rgba(255, 255, 255, 0.5)', mb: 0 }}
         >
-          Search for integrations in each category, then configure authentication.
+          Choose the tools you use in each category. You'll configure credentials in the next step.
         </Typography>
       </Box>
 
@@ -530,11 +448,6 @@ export const UnifiedSourceSetup = ({
             selectedApps={categorizedApps[category.id]}
             allSelectedApps={selectedApps}
             onAppsChange={onAppsChange}
-            authStates={authStates}
-            authenticatedApps={authenticatedApps}
-            onAuthChange={onAuthChange}
-            onTestConnection={onTestConnection}
-            onSaveAuth={onSaveAuth}
             isOpen={openCategory === category.id}
             onToggleOpen={() => toggleCategory(category.id)}
             sectionRef={(el) => { sectionRefs.current[category.id] = el; }}
