@@ -16,6 +16,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { API_CONFIG } from '@/config/api';
+import {
+  THREAT_INTEL_PATTERNS,
+  EMAIL_APP_PATTERNS,
+  EDR_PATTERNS,
+  SIEM_PATTERNS,
+  CASES_PATTERNS,
+  COMMUNICATION_PATTERNS_NAMES,
+} from '@/lib/ingestionDetection';
 
 interface AppMcpChatProps {
   appName: string;
@@ -107,17 +115,40 @@ const DEFAULT_SUGGESTIONS = [
   'Run a quick check',
 ];
 
-function getSuggestions(categories?: string[]): string[] {
-  if (!categories || categories.length === 0) return DEFAULT_SUGGESTIONS;
+/** Infer category keys from the app name using known patterns */
+function inferCategoryKeysFromName(appName: string): string[] {
+  const name = appName.toLowerCase();
+  const keys: string[] = [];
+  if (THREAT_INTEL_PATTERNS.some(p => name.includes(p))) keys.push('threat', 'intel');
+  if (EMAIL_APP_PATTERNS.some(p => name.includes(p))) keys.push('email');
+  if (EDR_PATTERNS.some(p => name.includes(p))) keys.push('edr', 'endpoint');
+  if (SIEM_PATTERNS.some(p => name.includes(p))) keys.push('siem');
+  if (CASES_PATTERNS.some(p => name.includes(p))) keys.push('ticket', 'case');
+  if (COMMUNICATION_PATTERNS_NAMES.some(p => name.includes(p))) keys.push('communication');
+  return keys;
+}
 
+function getSuggestions(appName: string, categories?: string[]): string[] {
   const matched: string[] = [];
-  for (const cat of categories) {
-    const normalized = cat.toLowerCase();
-    for (const [key, prompts] of Object.entries(CATEGORY_SUGGESTIONS)) {
-      // Match if the category contains the key OR vice versa
-      if (normalized.includes(key) || key.includes(normalized)) {
-        matched.push(...prompts);
+
+  // 1. Match from explicit categories
+  if (categories && categories.length > 0) {
+    for (const cat of categories) {
+      const normalized = cat.toLowerCase();
+      for (const [key, prompts] of Object.entries(CATEGORY_SUGGESTIONS)) {
+        if (normalized.includes(key) || key.includes(normalized)) {
+          matched.push(...prompts);
+        }
       }
+    }
+  }
+
+  // 2. Fallback: infer from the app name itself
+  if (matched.length === 0) {
+    const inferred = inferCategoryKeysFromName(appName);
+    for (const inferredKey of inferred) {
+      const prompts = CATEGORY_SUGGESTIONS[inferredKey];
+      if (prompts) matched.push(...prompts);
     }
   }
 
@@ -127,13 +158,23 @@ function getSuggestions(categories?: string[]): string[] {
   return unique.slice(0, 4);
 }
 
-/** Pick a short display label from categories */
-function getPrimaryCategory(categories?: string[]): string | null {
-  if (!categories || categories.length === 0) return null;
-  // Prefer the most specific non-generic category
-  const skip = ['other', 'general', 'integration'];
-  const filtered = categories.filter(c => !skip.includes(c.toLowerCase()));
-  return filtered[0] || categories[0] || null;
+/** Pick a short display label from categories, or infer from app name */
+function getPrimaryCategory(appName: string, categories?: string[]): string | null {
+  if (categories && categories.length > 0) {
+    const skip = ['other', 'general', 'integration'];
+    const filtered = categories.filter(c => !skip.includes(c.toLowerCase()));
+    if (filtered.length > 0) return filtered[0];
+    return categories[0];
+  }
+  // Infer from name
+  const name = appName.toLowerCase();
+  if (THREAT_INTEL_PATTERNS.some(p => name.includes(p))) return 'Threat Intel';
+  if (EMAIL_APP_PATTERNS.some(p => name.includes(p))) return 'Email';
+  if (EDR_PATTERNS.some(p => name.includes(p))) return 'EDR';
+  if (SIEM_PATTERNS.some(p => name.includes(p))) return 'SIEM';
+  if (CASES_PATTERNS.some(p => name.includes(p))) return 'Ticketing';
+  if (COMMUNICATION_PATTERNS_NAMES.some(p => name.includes(p))) return 'Communication';
+  return null;
 }
 
 const AppMcpChat = ({ appName, appIcon, appId, categories }: AppMcpChatProps) => {
@@ -144,8 +185,8 @@ const AppMcpChat = ({ appName, appIcon, appId, categories }: AppMcpChatProps) =>
   const [isError, setIsError] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const suggestions = useMemo(() => getSuggestions(categories), [categories]);
-  const primaryCategory = useMemo(() => getPrimaryCategory(categories), [categories]);
+  const suggestions = useMemo(() => getSuggestions(appName, categories), [appName, categories]);
+  const primaryCategory = useMemo(() => getPrimaryCategory(appName, categories), [appName, categories]);
   const runAction = async () => {
     const trimmed = input.trim();
     if (!trimmed || runState === 'running' || !API_CONFIG.apiKey) return;
