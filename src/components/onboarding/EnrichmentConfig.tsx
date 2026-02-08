@@ -1,4 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
+import { AppAuthCard, type AppAuthState, type ApiAuthEntry as AppAuthApiEntry } from '@/components/onboarding/AppAuthConfig';
+import type { AlgoliaSearchApp } from '@/lib/singul-local';
 import {
   Box,
   Typography,
@@ -89,15 +91,10 @@ interface EnrichmentOption {
   color: string;
   category: 'enrichment' | 'response';
   configFields?: { label: string; placeholder: string; type?: string }[];
-  // For dynamic options with connected apps
   connectedApps?: ConnectedApp[];
-  // For ingestion sources breakdown
   ingestionSources?: IngestionSource[];
-  // For notification sources breakdown (chat, email)
   notificationSources?: NotificationSource[];
-  // For threat intel sources
   threatIntelSources?: ThreatIntelSource[];
-  // For disabled/coming soon options
   disabled?: boolean;
 }
 
@@ -105,9 +102,9 @@ interface ConnectedApp {
   id: string;
   name: string;
   image?: string;
-  isValidated?: boolean;  // Has valid/tested auth
-  isSelected?: boolean;   // Was selected on "Select Tools" page
-  hasAuthConfig?: boolean; // Has any auth configured (even if not validated)
+  isValidated?: boolean;
+  isSelected?: boolean;
+  hasAuthConfig?: boolean;
 }
 
 // Base static options - automatic_ingestion will be built dynamically
@@ -119,7 +116,7 @@ const baseEnrichmentOptions: (Omit<EnrichmentOption, 'connectedApps'> & { isDyna
     icon: <DownloadIcon />,
     color: '#22c55e',
     category: 'enrichment',
-    isDynamic: true, // Will be replaced with dynamic version
+    isDynamic: true,
   },
   {
     id: 'integration_search',
@@ -137,7 +134,7 @@ const baseEnrichmentOptions: (Omit<EnrichmentOption, 'connectedApps'> & { isDyna
     icon: <SecurityIcon />,
     color: '#ef4444',
     category: 'enrichment',
-    isDynamic: true, // Will be built with Threat Intel sources
+    isDynamic: true,
   },
 ];
 
@@ -145,12 +142,10 @@ export interface EnrichmentState {
   [key: string]: {
     enabled: boolean;
     config: Record<string, string>;
-    // Individual tool toggles (keyed by app id)
     tools?: Record<string, boolean>;
   };
 }
 
-// Type for selected apps from Algolia
 interface SelectedApp {
   objectID: string;
   name: string;
@@ -164,6 +159,12 @@ interface EnrichmentConfigProps {
   onSave?: (state: EnrichmentState) => void;
   authenticatedApps?: AuthAppEntry[];
   selectedApps?: SelectedApp[];
+  // Auth callbacks for inline configuration of pending apps
+  authStates?: Record<string, AppAuthState>;
+  apiAuthEntries?: AppAuthApiEntry[];
+  onAuthChange?: (appId: string, credentials: Record<string, string>) => void;
+  onTestConnection?: (appId: string, authenticationId?: string) => void;
+  onSaveAuth?: (appId: string, credentials: Record<string, string>) => Promise<boolean>;
 }
 
 const containerVariants = {
@@ -223,7 +224,6 @@ interface SourceChipProps {
 
 const SourceChip = ({ label, apps, activeCount, totalCount, hasAnyActive, optionId, isToolEnabled }: SourceChipProps) => {
   const hasAny = apps.length > 0;
-  // Filter to only show active (enabled) apps
   const activeApps = apps.filter(app => isToolEnabled(optionId, app.id));
   
   return (
@@ -256,8 +256,14 @@ export const EnrichmentConfig = ({
   onSave,
   authenticatedApps = [],
   selectedApps = [],
+  authStates = {},
+  apiAuthEntries = [],
+  onAuthChange,
+  onTestConnection,
+  onSaveAuth,
 }: EnrichmentConfigProps) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [configuringAppId, setConfiguringAppId] = useState<string | null>(null);
   
   // Threat feeds management
   const { threatFeeds, saveFeed, deleteFeed, toggleFeed, initializeDefaults: initThreatFeeds } = useThreatFeeds();
@@ -274,7 +280,6 @@ export const EnrichmentConfig = ({
     return names;
   }, [selectedApps]);
 
-  // Check if an app was selected on the "Select Tools" page
   const isAppSelected = (appName: string) => {
     const normalized = appName.toLowerCase().trim().replace(/[\s_\-]+/g, '_');
     return selectedAppNames.has(normalized);
@@ -282,19 +287,16 @@ export const EnrichmentConfig = ({
 
   // Build dynamic options based on connected apps
   const enrichmentOptions = useMemo(() => {
-    // Get active apps and deduplicate using shared utility
     const dedupedApps = deduplicateAuthApps(
       authenticatedApps.filter(auth => auth.active || auth.validation?.valid)
     );
     
-    // Create a map of app names to their validation status for quick lookup
     const appValidationMap = new Map<string, boolean>();
     dedupedApps.forEach(({ app, hasValidAuth }) => {
       const normalized = app.name.toLowerCase().trim().replace(/[\s_\-]+/g, '_');
       appValidationMap.set(normalized, hasValidAuth);
     });
     
-    // Build ingestion sources by category - include both validated AND selected apps
     const ingestionByCategory: Record<IngestionCategory, ConnectedApp[]> = {
       email: [],
       cases: [],
@@ -302,7 +304,6 @@ export const EnrichmentConfig = ({
       siem: [],
     };
     
-    // First add authenticated apps (validated or just active)
     dedupedApps.forEach(({ app, bestImage, hasValidAuth }) => {
       const category = getIngestionCategory(app.name, app.categories);
       if (category) {
@@ -312,12 +313,11 @@ export const EnrichmentConfig = ({
           image: bestImage || app.large_image,
           isValidated: hasValidAuth,
           isSelected: isAppSelected(app.name),
-          hasAuthConfig: true, // Has auth configured (even if not validated)
+          hasAuthConfig: true,
         });
       }
     });
     
-    // Then add selected apps that aren't already in the list (for each category)
     selectedApps.forEach(app => {
       const normalizedName = app.name.toLowerCase().trim().replace(/[\s_\-]+/g, '_');
       if (appValidationMap.has(normalizedName)) return;
@@ -330,17 +330,16 @@ export const EnrichmentConfig = ({
           image: app.image_url,
           isValidated: false,
           isSelected: true,
-          hasAuthConfig: false, // No auth configured yet
+          hasAuthConfig: false,
         });
       }
     });
     
-    // Sort apps: 1) Selected + Validated, 2) Selected + Pending, 3) Pre-existing + Validated, 4) Pre-existing + Pending
     const sortApps = (apps: ConnectedApp[]): ConnectedApp[] => {
       return [...apps].sort((a, b) => {
         const scoreA = (a.isSelected ? 2 : 0) + (a.isValidated ? 1 : 0);
         const scoreB = (b.isSelected ? 2 : 0) + (b.isValidated ? 1 : 0);
-        return scoreB - scoreA; // Higher score first
+        return scoreB - scoreA;
       });
     };
     
@@ -354,7 +353,6 @@ export const EnrichmentConfig = ({
     const validatedCount = Object.values(ingestionByCategory).flat().filter(a => a.isValidated).length;
     const totalCount = Object.values(ingestionByCategory).flat().length;
     
-    // Build options, replacing dynamic ones
     const options: EnrichmentOption[] = baseEnrichmentOptions.map(opt => {
       if (opt.id === 'automatic_ingestion') {
         return {
@@ -366,10 +364,8 @@ export const EnrichmentConfig = ({
         };
       }
       if (opt.id === 'threat_intel') {
-        // Build Threat Intel sources from authenticated apps
         const threatIntelApps: ConnectedApp[] = [];
         
-        // Add default "Shuffle Threat Lists" - always available and validated
         threatIntelApps.push({
           id: 'shuffle_threat_lists',
           name: 'Shuffle Threat Lists',
@@ -391,7 +387,6 @@ export const EnrichmentConfig = ({
             });
           }
         });
-        // Also add selected threat intel apps that aren't authenticated yet
         selectedApps.forEach(selApp => {
           const normalizedName = selApp.name.toLowerCase().trim().replace(/[\s_\-]+/g, '_');
           if (!appValidationMap.has(normalizedName) && isThreatIntelApp(selApp.name)) {
@@ -421,7 +416,6 @@ export const EnrichmentConfig = ({
       return opt;
     });
     
-    // Email apps for Notifications - filter from deduplicated apps with valid auth
     const emailNotifyApps: ConnectedApp[] = dedupedApps
       .filter(({ app, hasValidAuth }) => hasValidAuth && isEmailApp(app.name))
       .map(({ app, bestImage, hasValidAuth }) => ({
@@ -433,7 +427,6 @@ export const EnrichmentConfig = ({
         hasAuthConfig: true,
       }));
     
-    // Communication apps for Notifications - filter from deduplicated apps with valid auth
     const chatNotifyApps: ConnectedApp[] = dedupedApps
       .filter(({ app, hasValidAuth }) => hasValidAuth && isCommunicationApp({ app, active: true, validation: { valid: true } }))
       .map(({ app, bestImage, hasValidAuth }) => ({
@@ -452,7 +445,6 @@ export const EnrichmentConfig = ({
     
     const notifyTotal = emailNotifyApps.length + chatNotifyApps.length;
     
-    // Add combined Notifications option
     options.push({
       id: 'notifications',
       name: 'Notifications',
@@ -476,10 +468,8 @@ export const EnrichmentConfig = ({
       [id]: { ...current, enabled: isEnabling },
     };
     onEnrichmentChange(newState);
-    // Optimistically save
     onSave?.(newState);
     
-    // Trigger workflow generation API
     triggerWorkflowGeneration(id, newState, isEnabling ? undefined : 'disable');
   };
 
@@ -493,11 +483,9 @@ export const EnrichmentConfig = ({
       },
     };
     onEnrichmentChange(newState);
-    // Optimistically save
     onSave?.(newState);
   };
 
-  // Get all tools for an option (from various sources or connected apps)
   const getAllToolsForOption = (option: EnrichmentOption): ConnectedApp[] => {
     if (option.ingestionSources) {
       return option.ingestionSources.flatMap(s => s.apps);
@@ -514,7 +502,6 @@ export const EnrichmentConfig = ({
     return [];
   };
 
-  // Get app info for checking default enable state
   const getAppInfo = (optionId: string, appId: string): ConnectedApp | undefined => {
     const option = enrichmentOptions.find(o => o.id === optionId);
     if (!option) return undefined;
@@ -535,41 +522,33 @@ export const EnrichmentConfig = ({
 
   const isToolEnabled = (optionId: string, appId: string): boolean => {
     const current = enrichmentState[optionId];
-    // If explicitly set, use that value
     if (current?.tools && appId in current.tools) {
       return current.tools[appId] !== false;
     }
-    // Default: only enable if both selected in this setup AND validated
     const appInfo = getAppInfo(optionId, appId);
     return appInfo?.isSelected === true && appInfo?.isValidated === true;
   };
 
-  // Trigger workflow generation for an automation area
   const triggerWorkflowGeneration = useCallback((optionId: string, state: EnrichmentState, actionName?: string) => {
     const option = enrichmentOptions.find(o => o.id === optionId);
     if (!option) return;
     
-    // Get all tools for this option
     const allTools = getAllToolsForOption(option);
     
-    // Filter to only enabled tools (unless disabling the whole area)
     const enabledTools = actionName === 'disable' 
-      ? allTools // Include all tools when disabling
+      ? allTools
       : allTools.filter(tool => {
           const current = state[optionId];
           if (current?.tools && tool.id in current.tools) {
             return current.tools[tool.id] !== false;
           }
-          // Default: enabled if selected and validated
           return tool.isSelected === true && tool.isValidated === true;
         });
     
     const enabledAppNames = enabledTools.map(tool => tool.name);
     
-    // Get the workflow labels for this automation area
     const labels = AUTOMATION_WORKFLOW_LABELS[optionId] || [];
     
-    // Fire and forget API calls for each label
     labels.forEach(label => {
       generateWorkflow(label, enabledAppNames, 'cases', actionName);
     });
@@ -578,7 +557,7 @@ export const EnrichmentConfig = ({
   const toggleTool = (optionId: string, appId: string, appName: string) => {
     const current = enrichmentState[optionId] || { enabled: false, config: {}, tools: {} };
     const currentTools = current.tools || {};
-    const isCurrentlyEnabled = currentTools[appId] !== false; // Default to true if not set
+    const isCurrentlyEnabled = currentTools[appId] !== false;
     const newToolState = !isCurrentlyEnabled;
     
     const newState = {
@@ -589,15 +568,213 @@ export const EnrichmentConfig = ({
       },
     };
     onEnrichmentChange(newState);
-    // Optimistically save
     onSave?.(newState);
     
-    // Trigger workflow generation API for the automation area
     triggerWorkflowGeneration(optionId, newState);
   };
 
   const enrichmentItems = enrichmentOptions.filter((o) => o.category === 'enrichment');
   const responseItems = enrichmentOptions.filter((o) => o.category === 'response');
+
+  // Helper to render inline auth card for a pending app
+  const renderInlineAuth = (app: ConnectedApp) => {
+    if (!onAuthChange || !onTestConnection || !onSaveAuth) return null;
+    
+    const algoliaApp = {
+      objectID: app.id,
+      name: app.name,
+      image_url: app.image || '',
+      description: '',
+      categories: [],
+    } as AlgoliaSearchApp;
+    const curAuthState = authStates[app.id] || {
+      systemId: app.id,
+      status: 'pending' as const,
+      credentials: {},
+    };
+    const matchingEntries = apiAuthEntries.filter(
+      auth => auth.app?.name?.toLowerCase() === app.name.toLowerCase()
+    );
+    return (
+      <Box sx={{ mt: 1 }}>
+        <AppAuthCard
+          app={algoliaApp}
+          authState={curAuthState}
+          isExpanded={true}
+          onToggle={() => {}}
+          onAuthChange={onAuthChange}
+          onTestConnection={onTestConnection}
+          onSaveAuth={onSaveAuth}
+          apiAuthEntries={matchingEntries}
+        />
+      </Box>
+    );
+  };
+
+  // Render a single tool row with optional inline auth
+  const renderToolRow = (app: ConnectedApp, optionId: string, optionColor: string) => {
+    const enabled = isToolEnabled(optionId, app.id);
+    const isConfiguring = configuringAppId === app.id;
+    
+    return (
+      <Box key={app.id} sx={{ mb: 0.5 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            py: 0.75,
+            px: 1.5,
+            borderRadius: 1.5,
+            background: enabled 
+              ? 'rgba(255, 102, 0, 0.08)' 
+              : 'rgba(0, 0, 0, 0.2)',
+            border: '1px solid',
+            borderColor: enabled 
+              ? 'rgba(255, 102, 0, 0.25)' 
+              : isConfiguring
+                ? 'rgba(255, 102, 0, 0.4)'
+                : 'transparent',
+            opacity: enabled ? 1 : 0.6,
+            transition: 'all 0.2s ease',
+            '&:hover': {
+              background: enabled 
+                ? 'rgba(255, 102, 0, 0.12)' 
+                : 'rgba(0, 0, 0, 0.3)',
+            },
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Box sx={{ position: 'relative' }}>
+              <Avatar
+                src={app.image}
+                alt={app.name}
+                sx={{
+                  width: 24,
+                  height: 24,
+                  fontSize: '0.7rem',
+                  border: '2px solid',
+                  borderColor: app.isValidated 
+                    ? 'rgba(34, 197, 94, 0.6)' 
+                    : app.hasAuthConfig
+                      ? 'rgba(255, 152, 0, 0.6)'
+                      : 'rgba(239, 68, 68, 0.6)',
+                  opacity: app.isValidated ? 1 : 0.8,
+                }}
+              >
+                {app.name[0]}
+              </Avatar>
+              <Box
+                sx={{
+                  position: 'absolute',
+                  bottom: -2,
+                  right: -2,
+                  width: 10,
+                  height: 10,
+                  borderRadius: '50%',
+                  backgroundColor: app.isValidated 
+                    ? '#22c55e' 
+                    : app.hasAuthConfig
+                      ? '#ff9800'
+                      : '#ef4444',
+                  border: '2px solid rgba(33, 33, 33, 0.9)',
+                }}
+              />
+            </Box>
+            <Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                <Typography variant="body2" sx={{ color: 'white' }}>
+                  {app.name}
+                </Typography>
+                {app.isSelected && (
+                  <Chip
+                    label="This setup"
+                    size="small"
+                    sx={{
+                      height: 16,
+                      fontSize: '0.55rem',
+                      fontWeight: 600,
+                      background: 'rgba(59, 130, 246, 0.2)',
+                      color: '#60a5fa',
+                      border: '1px solid rgba(59, 130, 246, 0.3)',
+                      '& .MuiChip-label': { px: 0.75 },
+                    }}
+                  />
+                )}
+              </Box>
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  color: app.isValidated 
+                    ? '#22c55e' 
+                    : app.hasAuthConfig 
+                      ? '#ff9800' 
+                      : '#ef4444',
+                  fontSize: '0.65rem',
+                }}
+              >
+                {app.isValidated 
+                  ? 'Validated' 
+                  : app.hasAuthConfig 
+                    ? 'Pending validation' 
+                    : 'Pending auth'}
+                {!app.isSelected && (
+                  <Box component="span" sx={{ color: 'rgba(255,255,255,0.4)', ml: 0.5 }}>
+                    • Pre-existing
+                  </Box>
+                )}
+              </Typography>
+            </Box>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {!app.isValidated && onAuthChange && onTestConnection && onSaveAuth && (
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setConfiguringAppId(isConfiguring ? null : app.id);
+                }}
+                sx={{
+                  fontSize: '0.65rem',
+                  fontWeight: 600,
+                  py: 0.25,
+                  px: 1,
+                  minWidth: 'auto',
+                  borderColor: isConfiguring ? '#FF6600' : 'rgba(255, 152, 0, 0.4)',
+                  color: isConfiguring ? '#FF6600' : '#ff9800',
+                  '&:hover': {
+                    borderColor: '#FF6600',
+                    background: 'rgba(255, 102, 0, 0.1)',
+                  },
+                }}
+              >
+                {isConfiguring ? 'Close' : 'Configure'}
+              </Button>
+            )}
+            <Switch
+              size="small"
+              checked={isToolEnabled(optionId, app.id)}
+              onChange={() => toggleTool(optionId, app.id, app.name)}
+              disabled={!app.isValidated}
+              sx={{
+                '& .MuiSwitch-switchBase.Mui-checked': {
+                  color: optionColor,
+                },
+                '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                  backgroundColor: optionColor,
+                },
+                '&.Mui-disabled': {
+                  opacity: 0.4,
+                },
+              }}
+            />
+          </Box>
+        </Box>
+        {isConfiguring && renderInlineAuth(app)}
+      </Box>
+    );
+  };
 
   const renderSection = (title: string, items: EnrichmentOption[]) => (
     <Box sx={{ mb: 4 }}>
@@ -631,7 +808,6 @@ export const EnrichmentConfig = ({
               <motion.div key={option.id} variants={itemVariants}>
                 <Card
                   onClick={() => {
-                    // Only expand on card click when collapsed
                     if (!isExpanded && (hasExpandableTools || (hasConfig && state.enabled))) {
                       setExpandedId(option.id);
                     }
@@ -677,7 +853,6 @@ export const EnrichmentConfig = ({
                           >
                             {option.name}
                           </Typography>
-                          {/* Show connected apps as badges for non-ingestion options */}
                           {hasConnectedApps && (
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                               {option.connectedApps!.slice(0, 3).map((app) => (
@@ -705,7 +880,6 @@ export const EnrichmentConfig = ({
                               <CheckCircleIcon sx={{ fontSize: 14, color: '#22c55e', ml: 0.5 }} />
                             </Box>
                           )}
-                          {/* Show check for ingestion if any sources connected */}
                           {hasIngestionSources && (
                             <CheckCircleIcon sx={{ fontSize: 14, color: '#22c55e' }} />
                           )}
@@ -721,73 +895,38 @@ export const EnrichmentConfig = ({
                           {option.description}
                         </Typography>
                         
-                        {/* Ingestion sources breakdown */}
+                        {/* Source breakdowns */}
                         {option.ingestionSources && (
                           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                             {option.ingestionSources.map((source) => {
                               const activeCount = source.apps.filter(a => isToolEnabled(option.id, a.id)).length;
                               const totalCount = source.apps.length;
-                              const hasAnyActive = activeCount > 0;
-                              
                               return (
-                                <SourceChip
-                                  key={source.category}
-                                  label={source.label}
-                                  apps={source.apps}
-                                  activeCount={activeCount}
-                                  totalCount={totalCount}
-                                  hasAnyActive={hasAnyActive}
-                                  optionId={option.id}
-                                  isToolEnabled={isToolEnabled}
-                                />
+                                <SourceChip key={source.category} label={source.label} apps={source.apps} activeCount={activeCount} totalCount={totalCount} hasAnyActive={activeCount > 0} optionId={option.id} isToolEnabled={isToolEnabled} />
                               );
                             })}
                           </Box>
                         )}
                         
-                        {/* Notification sources breakdown */}
                         {option.notificationSources && (
                           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                             {option.notificationSources.map((source) => {
                               const activeCount = source.apps.filter(a => isToolEnabled(option.id, a.id)).length;
                               const totalCount = source.apps.length;
-                              const hasAnyActive = activeCount > 0;
-                              
                               return (
-                                <SourceChip
-                                  key={source.category}
-                                  label={source.label}
-                                  apps={source.apps}
-                                  activeCount={activeCount}
-                                  totalCount={totalCount}
-                                  hasAnyActive={hasAnyActive}
-                                  optionId={option.id}
-                                  isToolEnabled={isToolEnabled}
-                                />
+                                <SourceChip key={source.category} label={source.label} apps={source.apps} activeCount={activeCount} totalCount={totalCount} hasAnyActive={activeCount > 0} optionId={option.id} isToolEnabled={isToolEnabled} />
                               );
                             })}
                           </Box>
                         )}
                         
-                        {/* Threat Intel sources breakdown */}
                         {option.threatIntelSources && (
                           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                             {option.threatIntelSources.map((source) => {
                               const activeCount = source.apps.filter(a => isToolEnabled(option.id, a.id)).length;
                               const totalCount = source.apps.length;
-                              const hasAnyActive = activeCount > 0;
-                              
                               return (
-                                <SourceChip
-                                  key={source.category}
-                                  label={source.label}
-                                  apps={source.apps}
-                                  activeCount={activeCount}
-                                  totalCount={totalCount}
-                                  hasAnyActive={hasAnyActive}
-                                  optionId={option.id}
-                                  isToolEnabled={isToolEnabled}
-                                />
+                                <SourceChip key={source.category} label={source.label} apps={source.apps} activeCount={activeCount} totalCount={totalCount} hasAnyActive={activeCount > 0} optionId={option.id} isToolEnabled={isToolEnabled} />
                               );
                             })}
                           </Box>
@@ -851,7 +990,6 @@ export const EnrichmentConfig = ({
                           </Typography>
                           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                             {(option.ingestionSources || option.notificationSources || option.threatIntelSources) ? (
-                              // Group by category for all source types
                               (option.ingestionSources || option.notificationSources || option.threatIntelSources)!.filter(s => s.apps.length > 0).map((source) => (
                                 <Box key={source.category}>
                                   <Typography
@@ -868,141 +1006,10 @@ export const EnrichmentConfig = ({
                                   >
                                     {source.label}
                                   </Typography>
-                                  {source.apps.map((app) => {
-                                    const enabled = isToolEnabled(option.id, app.id);
-                                    return (
-                                    <Box
-                                      key={app.id}
-                                      sx={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between',
-                                        py: 0.75,
-                                        px: 1.5,
-                                        borderRadius: 1.5,
-                                        background: enabled 
-                                          ? 'rgba(255, 102, 0, 0.08)' 
-                                          : 'rgba(0, 0, 0, 0.2)',
-                                        border: '1px solid',
-                                        borderColor: enabled 
-                                          ? 'rgba(255, 102, 0, 0.25)' 
-                                          : 'transparent',
-                                        mb: 0.5,
-                                        opacity: enabled ? 1 : 0.6,
-                                        transition: 'all 0.2s ease',
-                                        '&:hover': {
-                                          background: enabled 
-                                            ? 'rgba(255, 102, 0, 0.12)' 
-                                            : 'rgba(0, 0, 0, 0.3)',
-                                        },
-                                      }}
-                                    >
-                                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                                        <Box sx={{ position: 'relative' }}>
-                                          <Avatar
-                                            src={app.image}
-                                            alt={app.name}
-                                            sx={{
-                                              width: 24,
-                                              height: 24,
-                                              fontSize: '0.7rem',
-                                              border: '2px solid',
-                                              borderColor: app.isValidated 
-                                                ? 'rgba(34, 197, 94, 0.6)' 
-                                                : app.hasAuthConfig
-                                                  ? 'rgba(255, 152, 0, 0.6)'
-                                                  : 'rgba(239, 68, 68, 0.6)',
-                                              opacity: app.isValidated ? 1 : 0.8,
-                                            }}
-                                          >
-                                            {app.name[0]}
-                                          </Avatar>
-                                          {/* Validation status dot */}
-                                          <Box
-                                            sx={{
-                                              position: 'absolute',
-                                              bottom: -2,
-                                              right: -2,
-                                              width: 10,
-                                              height: 10,
-                                              borderRadius: '50%',
-                                              backgroundColor: app.isValidated 
-                                                ? '#22c55e' 
-                                                : app.hasAuthConfig
-                                                  ? '#ff9800'
-                                                  : '#ef4444',
-                                              border: '2px solid rgba(33, 33, 33, 0.9)',
-                                            }}
-                                          />
-                                        </Box>
-                                        <Box>
-                                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                                            <Typography variant="body2" sx={{ color: 'white' }}>
-                                              {app.name}
-                                            </Typography>
-                                            {app.isSelected && (
-                                              <Chip
-                                                label="This setup"
-                                                size="small"
-                                                sx={{
-                                                  height: 16,
-                                                  fontSize: '0.55rem',
-                                                  fontWeight: 600,
-                                                  background: 'rgba(59, 130, 246, 0.2)',
-                                                  color: '#60a5fa',
-                                                  border: '1px solid rgba(59, 130, 246, 0.3)',
-                                                  '& .MuiChip-label': { px: 0.75 },
-                                                }}
-                                              />
-                                            )}
-                                          </Box>
-                                          <Typography 
-                                            variant="caption" 
-                                            sx={{ 
-                                              color: app.isValidated 
-                                                ? '#22c55e' 
-                                                : app.hasAuthConfig 
-                                                  ? '#ff9800' 
-                                                  : '#ef4444',
-                                              fontSize: '0.65rem',
-                                            }}
-                                          >
-                                            {app.isValidated 
-                                              ? 'Validated' 
-                                              : app.hasAuthConfig 
-                                                ? 'Pending validation' 
-                                                : 'Pending auth'}
-                                            {!app.isSelected && (
-                                              <Box component="span" sx={{ color: 'rgba(255,255,255,0.4)', ml: 0.5 }}>
-                                                • Pre-existing
-                                              </Box>
-                                            )}
-                                          </Typography>
-                                        </Box>
-                                      </Box>
-                                      <Switch
-                                        size="small"
-                                        checked={isToolEnabled(option.id, app.id)}
-                                        onChange={() => toggleTool(option.id, app.id, app.name)}
-                                        disabled={!app.isValidated}
-                                        sx={{
-                                          '& .MuiSwitch-switchBase.Mui-checked': {
-                                            color: option.color,
-                                          },
-                                          '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                                            backgroundColor: option.color,
-                                          },
-                                          '&.Mui-disabled': {
-                                            opacity: 0.4,
-                                          },
-                                        }}
-                                      />
-                                    </Box>
-                                  )})}
+                                  {source.apps.map((app) => renderToolRow(app, option.id, option.color))}
                                 </Box>
                               ))
                             ) : option.connectedApps ? (
-                              // Flat list for legacy connected apps
                               allTools.map((app) => (
                                 <Box
                                   key={app.id}

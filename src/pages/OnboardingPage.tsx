@@ -878,6 +878,11 @@ const OnboardingPage = () => {
                       }}
                       authenticatedApps={authenticatedApps}
                       selectedApps={selectedApps}
+                      authStates={authStates}
+                      apiAuthEntries={authenticatedApps}
+                      onAuthChange={handleAuthChange}
+                      onTestConnection={handleTestConnection}
+                      onSaveAuth={handleSaveAuth}
                     />
                   )}
 
