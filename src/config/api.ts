@@ -14,7 +14,7 @@ const DEV_BACKEND = 'https://mineral-parents-front-zen.trycloudflare.com';
 const PROD_BACKEND = 'https://shuffler.io';
 
 // Determine if we're in Lovable preview (dev) or published (prod)
-const isDevEnvironment = (): boolean => {
+export const isDevEnvironment = (): boolean => {
   if (import.meta.env.VITE_SHUFFLE_API_URL) return false;
   const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
   return hostname.includes('lovableproject.com') || hostname.includes('id-preview--');

@@ -15,7 +15,7 @@ import {
 import { motion } from 'framer-motion';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import { getApiUrl, API_ENDPOINTS, API_CONFIG } from '@/config/api';
+import { getApiUrl, API_ENDPOINTS, API_CONFIG, isDevEnvironment } from '@/config/api';
 import { LandingNavbar } from '@/components/landing/LandingNavbar';
 import { useAuth } from '@/context/AuthContext';
 import { trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
@@ -514,8 +514,8 @@ const AuthPage = ({ mode }: AuthPageProps) => {
                 </Link>
               </Typography>
 
-              {/* Developer API Key Section */}
-              {isLogin && (
+              {/* Developer API Key Section — only in dev/preview environments */}
+              {isLogin && isDevEnvironment() && (
                 <Box sx={{ mt: 4, pt: 3, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
                   <Typography
                     variant="body2"
