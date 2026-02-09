@@ -1,4 +1,4 @@
-import { Box, Container, Typography, Button, Stack } from '@mui/material';
+import { Box, Container, Typography, Button } from '@mui/material';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
@@ -38,39 +38,8 @@ export const CTASection = () => {
           transition={{ duration: 0.6 }}
         >
           <Box sx={{ textAlign: 'center' }}>
-            {/* Playful emoji row */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-            >
-              <Stack direction="row" spacing={2} justifyContent="center" sx={{ mb: 4 }}>
-                {['🚀', '🔒', '⚡'].map((emoji, i) => (
-                  <motion.div
-                    key={emoji}
-                    animate={{ y: [0, -8, 0] }}
-                    transition={{ duration: 2, repeat: Infinity, delay: i * 0.3 }}
-                  >
-                    <Box
-                      sx={{
-                        width: 56,
-                        height: 56,
-                        borderRadius: 3,
-                        background: 'rgba(255, 102, 0, 0.1)',
-                        border: '1px solid rgba(255, 102, 0, 0.2)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '1.75rem',
-                      }}
-                    >
-                      {emoji}
-                    </Box>
-                  </motion.div>
-                ))}
-              </Stack>
-            </motion.div>
+
+
 
             <Typography
               variant="h2"

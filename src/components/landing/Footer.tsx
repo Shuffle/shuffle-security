@@ -8,7 +8,7 @@ const footerLinks = {
   Product: [
     { label: 'Features', href: '#features' },
     { label: 'Pricing', href: 'https://shuffler.io/pricing' },
-    { label: 'Integrations', href: 'https://shuffler.io/apps' },
+    { label: 'Integrations', href: '/apps' },
   ],
   Resources: [
     { label: 'Documentation', href: 'https://shuffler.io/docs' },
@@ -16,8 +16,8 @@ const footerLinks = {
     { label: 'Community', href: 'https://discord.com/invite/B2CBzUm' },
   ],
   Company: [
-    { label: 'About', href: 'https://shuffler.io/about' },
-    { label: 'Blog', href: 'https://shuffler.io/blog' },
+    { label: 'About', href: '/docs/about' },
+    { label: 'Blog', href: '/articles' },
     { label: 'Contact', href: 'https://shuffler.io/contact' },
   ],
 };
