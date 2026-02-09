@@ -639,6 +639,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                 const level = sortedItem?.level || 0;
                 const region = getRegionFlag(option.region_url);
                 const { key, ...restProps } = props;
+                const isCurrentOrg = option.id === selectedOrg?.id;
                 
                 return (
                   <Box
@@ -647,15 +648,20 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                     {...restProps}
                     sx={{
                       fontSize: '0.875rem',
-                      color: 'hsl(var(--foreground))',
-                      backgroundColor: 'hsl(var(--card))',
+                      color: isCurrentOrg ? 'hsl(var(--primary))' : 'hsl(var(--foreground))',
+                      backgroundColor: isCurrentOrg ? 'rgba(255, 102, 0, 0.1)' : 'hsl(var(--card))',
                       pl: `${16 + level * 16}px !important`,
                       py: 1,
+                      borderLeft: isCurrentOrg ? '2px solid hsl(var(--primary))' : '2px solid transparent',
                       '&:hover': {
-                        backgroundColor: 'hsl(var(--muted)) !important',
+                        backgroundColor: isCurrentOrg 
+                          ? 'rgba(255, 102, 0, 0.15) !important' 
+                          : 'hsl(var(--muted)) !important',
                       },
                       '&.Mui-focused': {
-                        backgroundColor: 'hsl(var(--muted)) !important',
+                        backgroundColor: isCurrentOrg 
+                          ? 'rgba(255, 102, 0, 0.15) !important' 
+                          : 'hsl(var(--muted)) !important',
                       },
                     }}
                   >
@@ -664,7 +670,11 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                       <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', minWidth: 28 }}>
                         {region.code}
                       </Typography>
-                      <Typography sx={{ fontSize: '0.875rem' }}>
+                      <Typography sx={{ 
+                        fontSize: '0.875rem', 
+                        fontWeight: isCurrentOrg ? 600 : 400,
+                        color: isCurrentOrg ? 'hsl(var(--primary))' : 'inherit',
+                      }}>
                         {option.name}
                       </Typography>
                     </Box>
