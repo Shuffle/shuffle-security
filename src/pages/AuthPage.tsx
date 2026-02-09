@@ -514,8 +514,8 @@ const AuthPage = ({ mode }: AuthPageProps) => {
                 </Link>
               </Typography>
 
-              {/* Developer API Key Section — only in dev/preview environments */}
-              {isLogin && isDevEnvironment() && (
+              {/* Developer API Key Section */}
+              {isLogin && (
                 <Box sx={{ mt: 4, pt: 3, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
                   <Typography
                     variant="body2"
