@@ -826,6 +826,8 @@ const IncidentDetailPage = () => {
   const handleResolve = async (resolutionData: ResolutionData) => {
     if (!incident) return;
     
+    // Immediately update local status so auto-save won't revert it
+    setEditedStatus('resolved');
     setIsSaving(true);
     
     const reasonLabel = RESOLUTION_REASONS.find(r => r.value === resolutionData.reason)?.label || resolutionData.reason;
