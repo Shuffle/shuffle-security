@@ -112,9 +112,9 @@ const IncidentCardSkeleton = ({ index }: { index: number }) => (
 );
 
 // Map incident types/sources to icons - more original choices
-const getIncidentIcon = (source: string, title: string) => {
-  const lowerTitle = title.toLowerCase();
-  const lowerSource = source.toLowerCase();
+const getIncidentIcon = (source?: string, title?: string) => {
+  const lowerTitle = (title || '').toLowerCase();
+  const lowerSource = (source || '').toLowerCase();
   
   if (lowerTitle.includes('login') || lowerTitle.includes('auth') || lowerTitle.includes('block')) {
     return Fingerprint;
