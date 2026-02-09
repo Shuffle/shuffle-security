@@ -97,71 +97,72 @@ const AppDetailPage = () => {
     refreshAuth,
   } = useAppAuth();
 
-  // Fetch app info — try authenticated first, fall back to search for guests
+  // Fetch app info — Algolia first (public, always works), then config API for auth details
   useEffect(() => {
     const fetchAppInfo = async () => {
       if (!appname) return;
       setAppLoading(true);
       setAppNotFound(false);
 
-      // Try the config endpoint (works for authenticated users)
+      const normalizedName = appname.toLowerCase().replace(/[\s_\-]+/g, '_');
+      const searchName = appname.replace(/_/g, ' ');
+
+      // Step 1: Always try Algolia first (public, no auth needed)
+      let algoliaMatch: any = null;
       try {
-        const headers: Record<string, string> = {};
-        if (API_CONFIG.apiKey) {
-          headers['Authorization'] = `Bearer ${API_CONFIG.apiKey}`;
-        }
-        const response = await fetch(`${API_CONFIG.baseUrl}/api/v1/apps/${encodeURIComponent(appname)}/config`, { headers });
-        if (response.ok) {
-          const data = await response.json();
-          if (data && data.name) {
-            setAppInfo(data);
-            setAppLoading(false);
-            return;
-          }
-        }
-      } catch {
-        // Continue to fallback
+        const { algoliasearch } = await import('algoliasearch');
+        const client = algoliasearch('JNSS5CFDZZ', 'c8f882473ff42d41158430be09ec2b4e');
+        const res = await client.search({
+          requests: [{ indexName: 'appsearch', query: searchName, hitsPerPage: 10 }],
+        });
+        const hits = (res as any)?.results?.[0]?.hits || [];
+        algoliaMatch = hits.find((h: any) =>
+          h.name?.toLowerCase().replace(/[\s_\-]+/g, '_') === normalizedName
+        ) || (hits.length > 0 ? hits[0] : null);
+      } catch (e) {
+        console.warn('Algolia search failed:', e);
       }
 
-      // Fallback: try Algolia search to get basic app info for public view
-      try {
-        const searchName = appname.replace(/_/g, ' ');
-        const algoliaRes = await fetch(
-          `https://appsearch.shuffler.io/api/v1/apps/search`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ search: searchName }),
-          }
-        );
-        if (algoliaRes.ok) {
-          const results = await algoliaRes.json();
-          const apps = Array.isArray(results) ? results : results?.hits || [];
-          const match = apps.find((a: any) =>
-            a.name?.toLowerCase().replace(/[\s_\-]+/g, '_') === appname.toLowerCase().replace(/[\s_\-]+/g, '_')
+      if (algoliaMatch) {
+        setAppInfo({
+          name: algoliaMatch.name || searchName,
+          description: algoliaMatch.description || '',
+          large_image: algoliaMatch.image_url || '',
+          categories: algoliaMatch.categories || [],
+        });
+      }
+
+      // Step 2: Try the config API for richer data (auth type, parameters)
+      if (API_CONFIG.apiKey) {
+        try {
+          const response = await fetch(
+            `${API_CONFIG.baseUrl}/api/v1/apps/${encodeURIComponent(appname)}/config`,
+            { headers: { 'Authorization': `Bearer ${API_CONFIG.apiKey}` } }
           );
-          if (match) {
-            setAppInfo({
-              name: match.name || searchName,
-              description: match.description || '',
-              large_image: match.large_image || match.image_url || '',
-              categories: match.categories || [],
-            });
-            setAppLoading(false);
-            return;
+          if (response.ok) {
+            const data = await response.json();
+            if (data && data.name) {
+              setAppInfo(prev => ({
+                ...prev,
+                ...data,
+                large_image: data.large_image || prev?.large_image || '',
+              }));
+            }
           }
+        } catch {
+          // Config API failed, Algolia data is enough
         }
-      } catch {
-        // Continue to basic fallback
       }
 
-      // Final fallback: use the URL param as the name
-      const formattedName = appname.replace(/_/g, ' ');
-      if (formattedName.length > 1) {
-        setAppInfo({ name: formattedName, description: '' });
-      } else {
-        setAppNotFound(true);
+      // If neither source found anything
+      if (!algoliaMatch && !appInfo) {
+        if (searchName.length > 1) {
+          setAppInfo({ name: searchName, description: '' });
+        } else {
+          setAppNotFound(true);
+        }
       }
+
       setAppLoading(false);
     };
     fetchAppInfo();
