@@ -80,8 +80,8 @@ interface TaskItem {
 
 interface DisplayIncident {
   id: string;
-  title: string;
-  source: string;
+  title?: string;
+  source?: string;
   severity: string;
   status: string;
   assignee: string | null;
@@ -127,6 +127,13 @@ const isAIAssignee = (assignee: string | null | undefined): boolean => {
   return lower.includes('agent') || lower === 'ai' || lower === 'ai agent';
 };
 
+// Strict check: only return string if it has meaningful non-whitespace content
+const meaningfulString = (val: unknown): string | undefined => {
+  if (typeof val !== 'string') return undefined;
+  const trimmed = val.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+};
+
 const parseIncidentFromDatastore = (item: { key: string; value: string; created?: number; edited?: number }): DisplayIncident | null => {
   try {
     const data = JSON.parse(item.value);
@@ -157,8 +164,8 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
       
       return {
         id: item.key, // Always use datastore key as the canonical ID
-        title: ocsf.title,
-        source: ocsf.product?.name || ocsf.types?.[0] || 'Unknown',
+        title: meaningfulString(ocsf.title),
+        source: meaningfulString(ocsf.product?.name) || meaningfulString(ocsf.types?.[0]),
         severity: mapOCSFSeverity(ocsf.severity_id || 3),
         status: mapOCSFStatus(ocsf.status_id || 1),
         assignee: rawAssignee,
@@ -185,8 +192,8 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
       
       return {
         id: item.key, // Always use datastore key as the canonical ID
-        title: findingInfo?.title || legacyData.message || 'Untitled',
-        source: legacyData.metadata?.product?.name || findingInfo?.types?.[0] || 'Unknown',
+        title: meaningfulString(findingInfo?.title) || meaningfulString(legacyData.message),
+        source: meaningfulString(legacyData.metadata?.product?.name) || meaningfulString(findingInfo?.types?.[0]),
         severity: mapOCSFSeverity(legacyData.severity_id),
         status: mapOCSFStatus(legacyData.status_id),
         assignee: legacyData.assignee || null,
@@ -208,8 +215,8 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
       const tasks = data.tasks || [];
       return {
         id: item.key, // Always use datastore key as the canonical ID
-        title: data.title || 'Untitled',
-        source: data.source || 'Unknown',
+        title: meaningfulString(data.title),
+        source: meaningfulString(data.source),
         severity: (data.severity || 'medium').toLowerCase(),
         status: (data.status || 'new').toLowerCase().replace('_', ''),
         assignee: data.assignee || null,

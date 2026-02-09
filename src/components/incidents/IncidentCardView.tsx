@@ -19,8 +19,8 @@ import { useState, useEffect, useRef } from 'react';
 
 interface DisplayIncident {
   id: string;
-  title: string;
-  source: string;
+  title?: string;
+  source?: string;
   severity: string;
   status: string;
   assignee: string | null;
