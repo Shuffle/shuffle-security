@@ -21,6 +21,7 @@ interface UseDatastoreOptions {
 interface UseDatastoreReturn {
   items: DatastoreItem[];
   isLoading: boolean;
+  hasFetched: boolean;
   error: string | null;
   cursor: string | null;
   hasMore: boolean;
@@ -37,6 +38,7 @@ interface UseDatastoreReturn {
 export const useDatastore = ({ category }: UseDatastoreOptions): UseDatastoreReturn => {
   const [items, setItems] = useState<DatastoreItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasFetched, setHasFetched] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cursor, setCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
@@ -67,6 +69,7 @@ export const useDatastore = ({ category }: UseDatastoreOptions): UseDatastoreRet
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setIsLoading(false);
+      setHasFetched(true);
     }
   }, [category]);
 
@@ -155,6 +158,7 @@ export const useDatastore = ({ category }: UseDatastoreOptions): UseDatastoreRet
   return {
     items,
     isLoading,
+    hasFetched,
     error,
     cursor,
     hasMore,

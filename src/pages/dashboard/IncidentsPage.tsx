@@ -265,7 +265,7 @@ const IncidentsPage = () => {
   const [sortBy, setSortBy] = useState<SortKey>('edited');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
-  const { items: datastoreItems, isLoading, error, fetchItems, addItem, hasMore, fetchNextPage, categoryConfig } = useDatastore({
+  const { items: datastoreItems, isLoading, hasFetched, error, fetchItems, addItem, hasMore, fetchNextPage, categoryConfig } = useDatastore({
     category: DATASTORE_CATEGORIES.INCIDENTS,
   });
 
@@ -566,8 +566,8 @@ const IncidentsPage = () => {
     filters.status.includes('new') && 
     filters.status.includes('in_progress');
 
-  // Show empty state when no incidents exist at all (after loading)
-  if (!isLoading && incidents.length === 0) {
+  // Show empty state when no relevant incidents exist (after loading completes)
+  if (hasFetched && !isLoading && relevantIncidents.length === 0 && irrelevantCount === 0) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
