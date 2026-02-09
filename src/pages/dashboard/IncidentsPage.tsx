@@ -20,6 +20,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { useDatastore } from '@/hooks/useDatastore';
 import { useAuth } from '@/context/AuthContext';
 import { useUsers } from '@/hooks/useUsers';
@@ -290,34 +291,54 @@ const IncidentsPage = () => {
     }
   }, [categoryConfig]);
 
+  // Helper: check if an incident has meaningful content (title or description)
+  const hasContent = (incident: DisplayIncident): boolean => {
+    const hasTitle = !!incident.title;
+    const raw = incident.rawOCSF as any;
+    const hasDesc = !!(raw?.desc || raw?.message || raw?.finding_info?.title || raw?.finding_info_list?.[0]?.title);
+    return hasTitle || hasDesc;
+  };
+
   // Derive incidents synchronously from datastoreItems to avoid flash of empty state
   // Also validate assignees - only show if they're a valid user or AI Agent
-  // Filter out incidents with no meaningful content (no title AND no description)
   const incidents = useMemo(() => {
     return datastoreItems
       .map((item) => parseIncidentFromDatastore(item))
-      .filter((a): a is DisplayIncident => {
-        if (a === null) return false;
-        // Strict: must have at least a title or a description to be shown
-        const hasTitle = !!a.title;
-        const raw = a.rawOCSF as any;
-        const hasDesc = !!(raw?.desc || raw?.message || raw?.finding_info?.title || raw?.finding_info_list?.[0]?.title);
-        return hasTitle || hasDesc;
-      })
+      .filter((a): a is DisplayIncident => a !== null)
       .map((incident) => {
         // Validate assignee
         if (incident.assignee) {
           if (isAIAssignee(incident.assignee)) {
-            // Normalize AI Agent
             return { ...incident, assignee: 'AI Agent' };
           } else if (!validUsernames.has(incident.assignee.toLowerCase())) {
-            // Invalid assignee - hide it
             return { ...incident, assignee: null };
           }
         }
         return incident;
       });
   }, [datastoreItems, validUsernames]);
+
+  // Split into relevant and irrelevant
+  const [relevantIncidents, irrelevantCount] = useMemo(() => {
+    const relevant: DisplayIncident[] = [];
+    let irrelevant = 0;
+    for (const inc of incidents) {
+      if (hasContent(inc)) {
+        relevant.push(inc);
+      } else {
+        irrelevant++;
+      }
+    }
+    return [relevant, irrelevant] as const;
+  }, [incidents]);
+
+  const [showIrrelevant, setShowIrrelevant] = useState(false);
+
+  // Active incident list based on irrelevant toggle
+  const activeIncidents = useMemo(() => {
+    if (showIrrelevant) return incidents;
+    return relevantIncidents;
+  }, [showIrrelevant, incidents, relevantIncidents]);
 
   // Apply smart defaults on initial load only - default to "New" OR "In Progress" status
   const [smartDefaultApplied, setSmartDefaultApplied] = useState(false);
@@ -333,13 +354,13 @@ const IncidentsPage = () => {
   // Filter incidents
   const filteredByAssignee = useMemo(() => {
     if (filters.assignee === null || filters.assignee === 'all') {
-      return incidents;
+      return activeIncidents;
     }
     if (filters.assignee === 'unassigned') {
-      return incidents.filter(i => !i.assignee);
+      return activeIncidents.filter(i => !i.assignee);
     }
     // For specific user filter (e.g., "Yours"), also include incidents where a task is assigned to them
-    return incidents.filter(i => {
+    return activeIncidents.filter(i => {
       // Check incident assignee
       if (i.assignee === filters.assignee) return true;
       // Check if any task is assigned to this user
@@ -350,7 +371,7 @@ const IncidentsPage = () => {
       }
       return false;
     });
-  }, [incidents, filters.assignee]);
+  }, [activeIncidents, filters.assignee]);
 
   const filteredIncidents = useMemo(() => {
     let result = filteredByAssignee;
@@ -372,9 +393,9 @@ const IncidentsPage = () => {
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(i => 
-        i.title.toLowerCase().includes(q) ||
+        (i.title || '').toLowerCase().includes(q) ||
         i.id.toLowerCase().includes(q) ||
-        i.source.toLowerCase().includes(q) ||
+        (i.source || '').toLowerCase().includes(q) ||
         (i.assignee && i.assignee.toLowerCase().includes(q))
       );
     }
@@ -391,7 +412,7 @@ const IncidentsPage = () => {
       
       switch (sortBy) {
         case 'title':
-          comparison = a.title.localeCompare(b.title);
+          comparison = (a.title || '').localeCompare(b.title || '');
           break;
         case 'severity':
           comparison = (severityOrder[a.severity] || 0) - (severityOrder[b.severity] || 0);
@@ -828,7 +849,7 @@ const IncidentsPage = () => {
         {/* Stats sidebar - sticky on desktop */}
         <Box sx={{ display: { xs: 'none', lg: 'block' }, position: 'sticky', top: 72, alignSelf: 'start', maxHeight: 'calc(100vh - 96px)', overflowY: 'auto' }}>
           <IncidentStatsCards 
-            incidents={incidents}
+            incidents={activeIncidents}
             currentUsername={currentUsername}
             onFilterChange={(type, value) => {
               setFilters(prev => ({
@@ -837,6 +858,40 @@ const IncidentsPage = () => {
               }));
             }}
           />
+          {/* Irrelevant incidents bar */}
+          {irrelevantCount > 0 && (
+            <Box
+              onClick={() => setShowIrrelevant(prev => !prev)}
+              sx={{
+                mt: 2,
+                px: 2,
+                py: 1.5,
+                borderRadius: 2,
+                backgroundColor: showIrrelevant ? 'rgba(107, 114, 128, 0.15)' : 'hsl(var(--card))',
+                border: '1px solid',
+                borderColor: showIrrelevant ? 'rgba(107, 114, 128, 0.4)' : 'hsl(var(--border))',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                transition: 'all 0.2s ease',
+                '&:hover': {
+                  borderColor: 'rgba(107, 114, 128, 0.5)',
+                  bgcolor: 'rgba(107, 114, 128, 0.1)',
+                },
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <VisibilityOffIcon sx={{ fontSize: 14, color: '#6b7280' }} />
+                <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.8rem' }}>
+                  {irrelevantCount} irrelevant
+                </Typography>
+              </Box>
+              <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', opacity: 0.7, fontSize: '0.7rem' }}>
+                {showIrrelevant ? 'Showing' : 'Hidden'}
+              </Typography>
+            </Box>
+          )}
         </Box>
       </Box>
 
