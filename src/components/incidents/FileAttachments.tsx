@@ -263,28 +263,41 @@ export const FileAttachments = ({
     }
   };
 
-  const handleDownload = (attachment: FileAttachment) => {
-    const url = getFileDownloadUrl(attachment.id);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = attachment.filename;
-    link.target = '_blank';
-    // Add auth header via fetch and blob
-    fetch(url, {
-      headers: {
-        'Authorization': `Bearer ${API_CONFIG.apiKey}`,
-      },
-    })
-      .then(res => res.blob())
-      .then(blob => {
-        const blobUrl = URL.createObjectURL(blob);
-        link.href = blobUrl;
-        link.click();
-        URL.revokeObjectURL(blobUrl);
-      })
-      .catch(() => {
-        toast.error('Failed to download file');
+  const handleDownload = async (attachment: FileAttachment) => {
+    try {
+      const url = getFileDownloadUrl(attachment.id);
+      const res = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${API_CONFIG.apiKey}` },
       });
+      if (!res.ok) throw new Error('Download failed');
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = attachment.filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+    } catch {
+      toast.error('Failed to download file');
+    }
+  };
+
+  const handleOpen = async (attachment: FileAttachment) => {
+    try {
+      const url = getFileDownloadUrl(attachment.id);
+      const res = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${API_CONFIG.apiKey}` },
+      });
+      if (!res.ok) throw new Error('Open failed');
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank');
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+    } catch {
+      toast.error('Failed to open file');
+    }
   };
 
   if (compact) {
@@ -305,7 +318,7 @@ export const FileAttachments = ({
             label={attachment.filename}
             size="small"
             onDelete={() => handleDelete(attachment)}
-            onClick={() => handleDownload(attachment)}
+            onClick={() => handleOpen(attachment)}
             sx={{
               bgcolor: 'rgba(255,255,255,0.05)',
               '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' },
@@ -373,6 +386,7 @@ export const FileAttachments = ({
               .map((attachment) => (
                 <Box
                   key={attachment.id}
+                  onClick={() => handleOpen(attachment)}
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
@@ -381,6 +395,8 @@ export const FileAttachments = ({
                     borderRadius: 1,
                     bgcolor: 'rgba(255,255,255,0.03)',
                     border: '1px solid rgba(255,255,255,0.08)',
+                    cursor: 'pointer',
+                    '&:hover': { bgcolor: 'rgba(255,255,255,0.06)' },
                   }}
                 >
                   <Box sx={{ color: 'text.secondary' }}>
@@ -407,7 +423,7 @@ export const FileAttachments = ({
                   <Tooltip title="Download">
                     <IconButton 
                       size="small" 
-                      onClick={() => handleDownload(attachment)}
+                      onClick={(e) => { e.stopPropagation(); handleDownload(attachment); }}
                       sx={{ color: 'text.secondary' }}
                     >
                       <DownloadIcon sx={{ fontSize: 16 }} />
@@ -417,7 +433,7 @@ export const FileAttachments = ({
                   <Tooltip title="Delete">
                     <IconButton 
                       size="small" 
-                      onClick={() => handleDelete(attachment)}
+                      onClick={(e) => { e.stopPropagation(); handleDelete(attachment); }}
                       sx={{ 
                         color: 'text.disabled',
                         '&:hover': { color: '#ef4444' },
