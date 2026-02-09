@@ -1,6 +1,7 @@
 import { Box, Container, Typography, Grid, Stack } from '@mui/material';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import shuffleIcon from '@/assets/shuffle-icon.png';
 
 interface FeatureSectionProps {
   icon: React.ReactNode;
@@ -169,7 +170,7 @@ const AIAgentVisual = () => (
             flexShrink: 0,
           }}
         >
-          🤖
+          <img src={shuffleIcon} alt="Shuffle" style={{ width: 24, height: 24, borderRadius: 4 }} />
         </Box>
         <Box
           sx={{
@@ -394,10 +395,10 @@ const IntegrationsVisual = () => (
 
 const DetectionLoopVisual = () => {
   const stages = [
-    { label: 'Detect', icon: '⚡', color: '#ef4444', desc: 'New threat detected' },
-    { label: 'Analyze', icon: '🔍', color: '#f59e0b', desc: 'Analyst reviews' },
-    { label: 'Respond', icon: '🛡️', color: '#22c55e', desc: 'Action executed' },
-    { label: 'Tune', icon: '🎯', color: '#0ea5e9', desc: 'Rules refined' },
+    { label: 'Detect', icon: 'D', color: '#ef4444', desc: 'New threat detected' },
+    { label: 'Analyze', icon: 'A', color: '#f59e0b', desc: 'Analyst reviews' },
+    { label: 'Respond', icon: 'R', color: '#22c55e', desc: 'Action executed' },
+    { label: 'Tune', icon: 'T', color: '#0ea5e9', desc: 'Rules refined' },
   ];
 
   return (
@@ -480,7 +481,10 @@ const DetectionLoopVisual = () => {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: '1.4rem',
+                      fontSize: '1.1rem',
+                      fontWeight: 800,
+                      color: stage.color,
+                      letterSpacing: '-0.02em',
                     }}
                   >
                     {stage.icon}
