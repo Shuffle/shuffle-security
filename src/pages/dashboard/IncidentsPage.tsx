@@ -32,6 +32,7 @@ import { ResolveIncidentDialog, ResolutionData, RESOLUTION_REASONS } from '@/com
 import { CategoryAutomationsDialog } from '@/components/incidents/CategoryAutomationsDialog';
 import { IncidentCardView } from '@/components/incidents/IncidentCardView';
 import { IncidentStatsCards } from '@/components/incidents/IncidentStatsCards';
+import { IncidentsEmptyState } from '@/components/incidents/IncidentsEmptyState';
 
 import { toast } from 'sonner';
 
@@ -565,13 +566,65 @@ const IncidentsPage = () => {
     filters.status.includes('new') && 
     filters.status.includes('in_progress');
 
+  // Show empty state when no incidents exist at all (after loading)
+  if (!isLoading && incidents.length === 0) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
+        {/* Header */}
+        <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="h5" sx={{ fontWeight: 600 }}>
+            Incidents
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Tooltip title="Refresh">
+              <IconButton 
+                onClick={() => fetchItems()} 
+                disabled={isLoading}
+                sx={{ 
+                  width: 36, height: 36, color: 'text.secondary',
+                  border: '1px solid', borderColor: 'rgba(255,255,255,0.1)', borderRadius: 1,
+                  '&:hover': { borderColor: 'rgba(255,255,255,0.2)' },
+                }}
+              >
+                <RefreshIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Create Incident">
+              <IconButton 
+                onClick={() => setCreateDialogOpen(true)}
+                sx={{ 
+                  width: 36, height: 36, color: 'text.secondary',
+                  border: '1px solid', borderColor: 'rgba(255,255,255,0.1)', borderRadius: 1,
+                  '&:hover': { borderColor: 'rgba(255,255,255,0.2)' },
+                }}
+              >
+                <AddIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        </Box>
+
+        <IncidentsEmptyState />
+
+        <CreateIncidentDialog
+          open={createDialogOpen}
+          onClose={() => setCreateDialogOpen(false)}
+          onSubmit={handleCreateIncident}
+        />
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      {/* Header */}
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Typography variant="h5" sx={{ fontWeight: 600 }}>
