@@ -335,11 +335,7 @@ export default function AppsPage() {
                 }}
                 onAppSelected={({ app }) => {
                   trackPredefinedEvent(GA_EVENTS.APP_VIEWED, app.name);
-                  if (isAuthenticated) {
-                    navigate(`/apps/${encodeURIComponent(app.name.toLowerCase())}`);
-                  } else {
-                    window.location.href = `/register?app=${encodeURIComponent(app.name)}`;
-                  }
+                  navigate(`/apps/${encodeURIComponent(app.name.toLowerCase().replace(/[\s]+/g, '_'))}`);
                 }}
               />
             </Box>
