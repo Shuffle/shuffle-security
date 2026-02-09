@@ -48,7 +48,7 @@ export const LandingNavbar = () => {
   return (
     <>
       <AppBar position="fixed" elevation={0}>
-        <Toolbar sx={{ justifyContent: 'space-between', py: 1 }}>
+        <Toolbar sx={{ justifyContent: 'space-between', py: 1, position: 'relative' }}>
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -86,7 +86,7 @@ export const LandingNavbar = () => {
           </motion.div>
 
           {!isMobile && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Box sx={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 4 }}>
               {navItems.map((item, index) => (
                 <motion.div
                   key={item.label}
