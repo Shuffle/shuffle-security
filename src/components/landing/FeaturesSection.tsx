@@ -551,11 +551,11 @@ const features: Omit<FeatureSectionProps, 'reverse'>[] = [
   {
     icon: null,
     title: '3,000+',
-    highlight: 'Integrations',
-    description: 'Use your existing tools, fill in the gaps. SIEM, Email, EDR, ITSM, Threat Intel—connect them all and find ANY information in ANY of your data sources.',
+    highlight: 'MCP-Ready Integrations',
+    description: 'Use your existing tools, fill in the gaps. SIEM, Email, EDR, ITSM, Threat Intel—connect them all via MCP and find ANY information in ANY of your data sources.',
     bullets: [
       'Splunk, CrowdStrike, Sentinel, ServiceNow, and 3,000+ more',
-      'Pull from SIEM, Email, EDR, ITSM, Threat Intel sources',
+      'All integrations are MCP-compatible out of the box',
       'Bi-directional sync keeps everything in lockstep',
       'Build new integrations in minutes with our SDK',
     ],

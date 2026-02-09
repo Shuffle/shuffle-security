@@ -354,7 +354,7 @@ export const HeroSection = () => {
                   }}
                 >
                   <Typography sx={{ color: 'primary.main', fontSize: '0.9rem', fontWeight: 600 }}>
-                    + 3,000 more integrations
+                    + 3,000 MCP-ready integrations
                   </Typography>
                 </Box>
               </motion.div>
