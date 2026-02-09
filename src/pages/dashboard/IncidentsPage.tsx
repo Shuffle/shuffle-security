@@ -292,10 +292,18 @@ const IncidentsPage = () => {
 
   // Derive incidents synchronously from datastoreItems to avoid flash of empty state
   // Also validate assignees - only show if they're a valid user or AI Agent
+  // Filter out incidents with no meaningful content (no title AND no description)
   const incidents = useMemo(() => {
     return datastoreItems
       .map((item) => parseIncidentFromDatastore(item))
-      .filter((a): a is DisplayIncident => a !== null)
+      .filter((a): a is DisplayIncident => {
+        if (a === null) return false;
+        // Strict: must have at least a title or a description to be shown
+        const hasTitle = !!a.title;
+        const raw = a.rawOCSF as any;
+        const hasDesc = !!(raw?.desc || raw?.message || raw?.finding_info?.title || raw?.finding_info_list?.[0]?.title);
+        return hasTitle || hasDesc;
+      })
       .map((incident) => {
         // Validate assignee
         if (incident.assignee) {
