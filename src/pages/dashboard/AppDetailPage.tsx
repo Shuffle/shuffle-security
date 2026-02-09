@@ -84,6 +84,7 @@ const AppDetailPage = () => {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
   const [appLoading, setAppLoading] = useState(true);
+  const [appNotFound, setAppNotFound] = useState(false);
 
   const {
     authStates,
@@ -95,11 +96,14 @@ const AppDetailPage = () => {
     refreshAuth,
   } = useAppAuth();
 
-  // Fetch app info (public endpoint — works without auth too, falls back gracefully)
+  // Fetch app info — try authenticated first, fall back to search for guests
   useEffect(() => {
     const fetchAppInfo = async () => {
       if (!appname) return;
       setAppLoading(true);
+      setAppNotFound(false);
+
+      // Try the config endpoint (works for authenticated users)
       try {
         const headers: Record<string, string> = {};
         if (API_CONFIG.apiKey) {
@@ -108,15 +112,56 @@ const AppDetailPage = () => {
         const response = await fetch(`${API_CONFIG.baseUrl}/api/v1/apps/${encodeURIComponent(appname)}/config`, { headers });
         if (response.ok) {
           const data = await response.json();
-          setAppInfo(data);
-        } else {
-          setAppInfo({ name: appname.replace(/_/g, ' '), description: '' });
+          if (data && data.name) {
+            setAppInfo(data);
+            setAppLoading(false);
+            return;
+          }
         }
       } catch {
-        setAppInfo({ name: appname.replace(/_/g, ' '), description: '' });
-      } finally {
-        setAppLoading(false);
+        // Continue to fallback
       }
+
+      // Fallback: try Algolia search to get basic app info for public view
+      try {
+        const searchName = appname.replace(/_/g, ' ');
+        const algoliaRes = await fetch(
+          `https://appsearch.shuffler.io/api/v1/apps/search`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ search: searchName }),
+          }
+        );
+        if (algoliaRes.ok) {
+          const results = await algoliaRes.json();
+          const apps = Array.isArray(results) ? results : results?.hits || [];
+          const match = apps.find((a: any) =>
+            a.name?.toLowerCase().replace(/[\s_\-]+/g, '_') === appname.toLowerCase().replace(/[\s_\-]+/g, '_')
+          );
+          if (match) {
+            setAppInfo({
+              name: match.name || searchName,
+              description: match.description || '',
+              large_image: match.large_image || match.image_url || '',
+              categories: match.categories || [],
+            });
+            setAppLoading(false);
+            return;
+          }
+        }
+      } catch {
+        // Continue to basic fallback
+      }
+
+      // Final fallback: use the URL param as the name
+      const formattedName = appname.replace(/_/g, ' ');
+      if (formattedName.length > 1) {
+        setAppInfo({ name: formattedName, description: '' });
+      } else {
+        setAppNotFound(true);
+      }
+      setAppLoading(false);
     };
     fetchAppInfo();
   }, [appname]);
@@ -181,6 +226,39 @@ const AppDetailPage = () => {
             </Box>
           </Box>
           <Skeleton variant="rectangular" height={200} sx={{ borderRadius: 2 }} />
+        </Box>
+      </Box>
+    );
+  }
+
+  if (appNotFound) {
+    return (
+      <Box>
+        {!isAuthenticated && <LandingNavbar />}
+        <Box sx={{ p: 4, maxWidth: 800, mx: 'auto', pt: !isAuthenticated ? 14 : 4, textAlign: 'center' }}>
+          <ErrorOutlineIcon sx={{ fontSize: 56, color: 'hsl(var(--muted-foreground))', mb: 2, opacity: 0.5 }} />
+          <Typography variant="h5" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, mb: 1.5 }}>
+            App not found
+          </Typography>
+          <Typography variant="body1" sx={{ color: 'hsl(var(--muted-foreground))', mb: 4, maxWidth: 400, mx: 'auto' }}>
+            The integration "{appname}" doesn't exist or may have been renamed. Browse our catalog to find what you're looking for.
+          </Typography>
+          <Button
+            component={Link}
+            to="/apps"
+            variant="contained"
+            sx={{
+              px: 4,
+              py: 1.25,
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              backgroundColor: '#FF6600',
+              '&:hover': { backgroundColor: '#e55c00' },
+            }}
+          >
+            Browse Integrations
+          </Button>
         </Box>
       </Box>
     );
