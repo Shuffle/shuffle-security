@@ -5,10 +5,18 @@ import MenuIcon from '@mui/icons-material/Menu';
 import { LandingNavbar } from '@/components/landing/LandingNavbar';
 import { DocsSidebar } from '@/components/docs/DocsSidebar';
 import { MarkdownRenderer } from '@/components/docs/MarkdownRenderer';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 const DocsPage = () => {
   const { slug = 'index' } = useParams<{ slug: string }>();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const docTitle = slug === 'index' ? 'Documentation' : slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  usePageMeta({
+    title: docTitle,
+    description: `Shutdown Security documentation — ${docTitle}. Learn how to set up and use the platform.`,
+    url: `/docs/${slug}`,
+  });
 
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>

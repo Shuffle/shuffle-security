@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { usePageMeta } from '@/hooks/usePageMeta';
 import {
   Box,
   Typography,
@@ -209,6 +210,15 @@ const AppDetailPage = () => {
 
   const [authExpanded, setAuthExpanded] = useState(!hasValidAuth);
   const displayName = (appInfo?.name || appname || '').replace(/_/g, ' ');
+
+  usePageMeta({
+    title: displayName ? `${displayName} Integration` : 'App Integration',
+    description: appInfo?.description
+      ? `${displayName} — ${appInfo.description}. Connect and automate with Shutdown Security.`
+      : `Connect ${displayName} to Shutdown Security. Automate workflows, run AI-powered actions, and integrate with 3,000+ tools.`,
+    image: resolvedImage || undefined,
+    url: `/apps/${appname}`,
+  });
 
   const isLoadingAll = appLoading || (isAuthenticated && appAuthLoading) || authLoading;
 
