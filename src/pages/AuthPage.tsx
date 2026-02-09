@@ -45,7 +45,10 @@ const AuthPage = ({ mode }: AuthPageProps) => {
   // Get return URL from state (set by ProtectedRoute) or from URL param (persists on refresh)
   const searchParams = new URLSearchParams(location.search);
   const returnUrl = searchParams.get('returnUrl');
-  const from = location.state?.from?.pathname || returnUrl || '/incidents';
+  // First login detection: if no explicit returnUrl and user has never logged in, go to onboarding
+  const hasLoggedInBefore = localStorage.getItem('shuffle_has_logged_in') === 'true';
+  const defaultDestination = hasLoggedInBefore ? '/incidents' : '/onboarding';
+  const from = location.state?.from?.pathname || returnUrl || defaultDestination;
 
   // Redirect if already authenticated (e.g., via API key)
   useEffect(() => {
@@ -167,6 +170,7 @@ const AuthPage = ({ mode }: AuthPageProps) => {
         setSuccess(true);
         setLoading(false);
         trackPredefinedEvent(GA_EVENTS.LOGIN_SUCCESS);
+        localStorage.setItem('shuffle_has_logged_in', 'true');
         await login(sessionToken);
         setTimeout(() => {
           navigate(from, { replace: true });
@@ -598,6 +602,7 @@ const AuthPage = ({ mode }: AuthPageProps) => {
                             
                             // API key is valid
                             setSuccess(true);
+                            localStorage.setItem('shuffle_has_logged_in', 'true');
                             await refreshUserInfo();
                             setTimeout(() => {
                               window.location.reload();
