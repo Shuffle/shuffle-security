@@ -197,8 +197,59 @@ const AgentPermissionsDrawer = ({ open, onClose }: AgentPermissionsDrawerProps) 
           </Box>
         ) : (
           <>
+            {/* Coming Soon banner */}
+            <Box sx={{
+              mb: 3,
+              px: 2.5,
+              py: 2,
+              borderRadius: 2,
+              border: '1px solid hsla(var(--primary) / 0.3)',
+              bgcolor: 'hsla(var(--primary) / 0.06)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.5,
+            }}>
+              <Box sx={{
+                width: 32,
+                height: 32,
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                bgcolor: 'hsla(var(--primary) / 0.15)',
+                color: 'hsl(var(--primary))',
+                flexShrink: 0,
+              }}>
+                <Settings2 size={16} />
+              </Box>
+              <Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.25 }}>
+                  <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+                    Coming Soon
+                  </Typography>
+                  <Chip
+                    label="PREVIEW"
+                    size="small"
+                    sx={{
+                      height: 18,
+                      fontSize: '0.55rem',
+                      fontWeight: 700,
+                      letterSpacing: '0.04em',
+                      bgcolor: 'hsla(var(--primary) / 0.15)',
+                      color: 'hsl(var(--primary))',
+                      borderRadius: 1,
+                      '& .MuiChip-label': { px: 0.75 },
+                    }}
+                  />
+                </Box>
+                <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.4 }}>
+                  Granular agent permissions are under development. All controls are currently view-only.
+                </Typography>
+              </Box>
+            </Box>
+
             {/* Summary chip + reset */}
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, opacity: 0.5, pointerEvents: 'none' }}>
               <Box sx={{
                 display: 'inline-flex',
                 flexDirection: 'column',
@@ -221,7 +272,7 @@ const AgentPermissionsDrawer = ({ open, onClose }: AgentPermissionsDrawerProps) 
                   size="small"
                   variant="outlined"
                   startIcon={<Activity size={14} />}
-                  onClick={() => { onClose(); navigate('/agent'); }}
+                  disabled
                   sx={{
                     borderColor: 'hsl(var(--border))',
                     color: 'hsl(var(--foreground))',
@@ -229,30 +280,22 @@ const AgentPermissionsDrawer = ({ open, onClose }: AgentPermissionsDrawerProps) 
                     fontSize: '0.75rem',
                     borderRadius: 1.5,
                     px: 1.5,
-                    '&:hover': { 
-                      borderColor: 'hsl(var(--primary))',
-                      color: 'hsl(var(--primary))',
-                      bgcolor: 'hsla(var(--primary) / 0.08)',
-                    },
                   }}
                 >
                   Activity
                 </Button>
-                <Tooltip title="Reset all to defaults">
-                  <Button
-                    size="small"
-                    startIcon={<RestoreIcon sx={{ fontSize: 14 }} />}
-                    onClick={resetToDefaults}
-                    sx={{
-                      color: 'hsl(var(--muted-foreground))',
-                      textTransform: 'none',
-                      fontSize: '0.75rem',
-                      '&:hover': { color: 'hsl(var(--primary))' },
-                    }}
-                  >
-                    Reset
-                  </Button>
-                </Tooltip>
+                <Button
+                  size="small"
+                  startIcon={<RestoreIcon sx={{ fontSize: 14 }} />}
+                  disabled
+                  sx={{
+                    color: 'hsl(var(--muted-foreground))',
+                    textTransform: 'none',
+                    fontSize: '0.75rem',
+                  }}
+                >
+                  Reset
+                </Button>
               </Box>
             </Box>
 
@@ -260,8 +303,8 @@ const AgentPermissionsDrawer = ({ open, onClose }: AgentPermissionsDrawerProps) 
               <Alert severity="error" sx={{ mb: 2, fontSize: '0.8rem' }}>{error}</Alert>
             )}
 
-            {/* Categories */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {/* Categories — all disabled */}
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, opacity: 0.5, pointerEvents: 'none' }}>
               {categories.map((cat) => {
                 const stats = getCategoryStats(cat);
                 const isExpanded = expandedCategories.includes(cat.id);
@@ -275,9 +318,7 @@ const AgentPermissionsDrawer = ({ open, onClose }: AgentPermissionsDrawerProps) 
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         mb: 1.5,
-                        cursor: 'pointer',
                       }}
-                      onClick={() => toggleExpand(cat.id)}
                     >
                       <Typography sx={{
                         fontSize: '0.7rem',
@@ -289,29 +330,23 @@ const AgentPermissionsDrawer = ({ open, onClose }: AgentPermissionsDrawerProps) 
                         {cat.label}
                       </Typography>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Tooltip title={stats.allEnabled ? 'Disable all' : 'Enable all'}>
-                          <Switch
-                            size="small"
-                            checked={stats.allEnabled}
-                            onChange={(e) => {
-                              e.stopPropagation();
-                              toggleCategory(cat.id, !stats.allEnabled);
-                            }}
-                            onClick={(e) => e.stopPropagation()}
-                            sx={{
-                              '& .MuiSwitch-switchBase.Mui-checked': {
-                                color: 'hsl(var(--primary))',
-                              },
-                              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                                bgcolor: 'hsl(var(--primary))',
-                              },
-                            }}
-                          />
-                        </Tooltip>
+                        <Switch
+                          size="small"
+                          checked={stats.allEnabled}
+                          disabled
+                          sx={{
+                            '& .MuiSwitch-switchBase.Mui-checked': {
+                              color: 'hsl(var(--primary))',
+                            },
+                            '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                              bgcolor: 'hsl(var(--primary))',
+                            },
+                          }}
+                        />
                         <IconButton
                           size="small"
+                          disabled
                           sx={{ color: 'hsl(var(--muted-foreground))', width: 24, height: 24 }}
-                          onClick={(e) => { e.stopPropagation(); toggleExpand(cat.id); }}
                         >
                           {isExpanded ? <ExpandLessIcon sx={{ fontSize: 16 }} /> : <ExpandMoreIcon sx={{ fontSize: 16 }} />}
                         </IconButton>
@@ -345,10 +380,6 @@ const AgentPermissionsDrawer = ({ open, onClose }: AgentPermissionsDrawerProps) 
                                     bgcolor: perm.enabled ? 'hsla(var(--card) / 0.6)' : 'transparent',
                                     opacity: perm.enabled ? 1 : 0.55,
                                     transition: 'all 0.2s ease',
-                                    '&:hover': {
-                                      borderColor: 'hsl(var(--muted-foreground) / 0.3)',
-                                      bgcolor: 'hsla(var(--card) / 0.8)',
-                                    },
                                   }}
                                 >
                                   {/* Icon */}
@@ -400,19 +431,13 @@ const AgentPermissionsDrawer = ({ open, onClose }: AgentPermissionsDrawerProps) 
                                     </Typography>
                                   </Box>
 
-                                  {/* Toggle */}
+                                  {/* Toggle — disabled */}
                                   <Switch
                                     size="small"
                                     checked={perm.enabled}
-                                    onChange={() => togglePermission(cat.id, perm.id)}
+                                    disabled
                                     sx={{
                                       flexShrink: 0,
-                                      '& .MuiSwitch-switchBase.Mui-checked': {
-                                        color: perm.risk === 'high' ? riskCfg.color : 'hsl(var(--primary))',
-                                      },
-                                      '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                                        bgcolor: perm.risk === 'high' ? riskCfg.color : 'hsl(var(--primary))',
-                                      },
                                     }}
                                   />
                                 </Box>
@@ -426,14 +451,6 @@ const AgentPermissionsDrawer = ({ open, onClose }: AgentPermissionsDrawerProps) 
                 );
               })}
             </Box>
-
-            {/* Saving indicator */}
-            {isSaving && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2, justifyContent: 'center' }}>
-                <CircularProgress size={14} sx={{ color: 'hsl(var(--primary))' }} />
-                <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>Saving...</Typography>
-              </Box>
-            )}
           </>
         )}
       </Box>
