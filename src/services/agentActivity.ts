@@ -81,7 +81,7 @@ export const searchAgentActivity = async (
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      ...getAuthHeader(API_CONFIG.apiKey),
+      ...getAuthHeader(),
     },
     body: JSON.stringify(payload),
   });

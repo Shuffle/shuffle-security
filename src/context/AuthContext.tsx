@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         method: 'GET',
         credentials: 'include',
         headers: {
-          ...getAuthHeader(token),
+          ...getAuthHeader(),
           'Content-Type': 'application/json',
         },
       });
@@ -150,7 +150,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         method: 'POST',
         credentials: 'include',
         headers: {
-          ...getAuthHeader(token),
+          ...getAuthHeader(),
           'Content-Type': 'application/json',
         },
       });
@@ -183,7 +183,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         method: 'POST',
         credentials: 'include',
         headers: {
-          ...getAuthHeader(currentToken),
+          ...getAuthHeader(),
           'Content-Type': 'application/json',
         },
       });

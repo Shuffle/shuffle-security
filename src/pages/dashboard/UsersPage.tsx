@@ -174,7 +174,7 @@ const UsersPage = () => {
         const response = await fetch(getApiUrl('/api/v1/getusers'), {
           credentials: 'include',
           headers: {
-            ...getAuthHeader(sessionToken),
+            ...getAuthHeader(),
           },
         });
 

@@ -38,7 +38,7 @@ const SettingsPage = () => {
         const response = await fetch(getApiUrl('/api/v1/getsettings'), {
           credentials: 'include',
           headers: {
-            ...getAuthHeader(sessionToken),
+            ...getAuthHeader(),
           },
         });
 

@@ -31,7 +31,7 @@ const fetchUsersOnce = async (): Promise<User[]> => {
       const response = await fetch(getApiUrl('/api/v1/getusers'), {
         credentials: 'include',
         headers: {
-          ...getAuthHeader(API_CONFIG.apiKey),
+          ...getAuthHeader(),
         },
       });
 

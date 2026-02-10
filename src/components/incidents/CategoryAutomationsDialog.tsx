@@ -134,7 +134,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
         try {
           const response = await fetch(getApiUrl('/api/v1/workflows'), {
             headers: {
-              ...getAuthHeader(API_CONFIG.apiKey),
+              ...getAuthHeader(),
             },
           });
           if (response.ok) {
@@ -153,7 +153,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
         try {
           const response = await fetch(getApiUrl('/api/v1/apps/authentication'), {
             headers: {
-              ...getAuthHeader(API_CONFIG.apiKey),
+              ...getAuthHeader(),
             },
           });
           if (response.ok) {
@@ -291,7 +291,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...getAuthHeader(API_CONFIG.apiKey),
+          ...getAuthHeader(),
         },
         body: JSON.stringify(payload),
       });

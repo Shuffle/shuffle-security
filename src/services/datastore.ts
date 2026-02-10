@@ -85,7 +85,7 @@ export const setDatastoreItem = async (
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      ...getAuthHeader(API_CONFIG.apiKey),
+      ...getAuthHeader(),
     },
     body: JSON.stringify(payload),
   });
@@ -120,7 +120,7 @@ export const setDatastoreItems = async (
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      ...getAuthHeader(API_CONFIG.apiKey),
+      ...getAuthHeader(),
     },
     body: JSON.stringify(payload),
   });
@@ -157,7 +157,7 @@ export const getDatastoreItem = async (
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      ...getAuthHeader(API_CONFIG.apiKey),
+      ...getAuthHeader(),
     },
     body: JSON.stringify(payload),
   });
@@ -205,7 +205,7 @@ export const getDatastoreByCategory = async (
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        ...getAuthHeader(API_CONFIG.apiKey),
+        ...getAuthHeader(),
       },
     }
   );
@@ -249,7 +249,7 @@ export const deleteDatastoreItem = async (
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      ...getAuthHeader(API_CONFIG.apiKey),
+      ...getAuthHeader(),
     },
     body: JSON.stringify(payload),
   });
