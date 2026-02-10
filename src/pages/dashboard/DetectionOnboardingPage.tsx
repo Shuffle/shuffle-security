@@ -1307,19 +1307,68 @@ const DetectionOnboardingPage = () => {
     <Box sx={{ p: 4, maxWidth: 960, mx: 'auto' }}>
       {/* Header */}
       <Box sx={{ mb: 4 }}>
-        <Typography
-          variant="h4"
-          sx={{
-            fontWeight: 600,
-            color: 'hsl(var(--foreground))',
-            mb: 1,
-          }}
-        >
-          Detection Setup
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 600,
+              color: 'hsl(var(--foreground))',
+            }}
+          >
+            Detection Setup
+          </Typography>
+          <Chip
+            label="PUBLIC PREVIEW"
+            size="small"
+            sx={{
+              height: 22,
+              fontSize: '0.6rem',
+              fontWeight: 700,
+              letterSpacing: '0.05em',
+              bgcolor: 'hsla(var(--primary) / 0.15)',
+              color: 'hsl(var(--primary))',
+              borderRadius: 1,
+            }}
+          />
+        </Box>
         <Typography sx={{ color: 'hsl(var(--muted-foreground))' }}>
           Get your detection pipelines running in three simple steps
         </Typography>
+      </Box>
+
+      {/* Coming Soon banner */}
+      <Box sx={{
+        mb: 3,
+        px: 2.5,
+        py: 2,
+        borderRadius: 2,
+        border: '1px solid hsla(var(--primary) / 0.3)',
+        bgcolor: 'hsla(var(--primary) / 0.06)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1.5,
+      }}>
+        <Box sx={{
+          width: 32,
+          height: 32,
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          bgcolor: 'hsla(var(--primary) / 0.15)',
+          color: 'hsl(var(--primary))',
+          flexShrink: 0,
+        }}>
+          <SensorsIcon sx={{ fontSize: 16 }} />
+        </Box>
+        <Box>
+          <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+            Coming Soon — Public Preview
+          </Typography>
+          <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.4 }}>
+            Detection pipelines are in public preview. Features may change and some functionality is limited.
+          </Typography>
+        </Box>
       </Box>
 
       {/* Step 1: Check Sensors */}
