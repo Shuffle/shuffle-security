@@ -24,7 +24,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { AppAuthCard } from '@/components/onboarding/AppAuthConfig';
 import type { AlgoliaSearchApp } from '@/lib/singul-local';
 import { useAppAuth } from '@/hooks/useAppAuth';
-import { API_CONFIG } from '@/config/api';
+import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { useAuth } from '@/context/AuthContext';
 import { LandingNavbar } from '@/components/landing/LandingNavbar';
 
@@ -136,8 +136,8 @@ const AppDetailPage = () => {
       if (API_CONFIG.apiKey) {
         try {
           const response = await fetch(
-            `${API_CONFIG.baseUrl}/api/v1/apps/${encodeURIComponent(appname)}/config`,
-            { headers: { 'Authorization': `Bearer ${API_CONFIG.apiKey}` } }
+            getApiUrl(`/api/v1/apps/${encodeURIComponent(appname)}/config`),
+            { credentials: 'include', headers: { ...getAuthHeader() } }
           );
           if (response.ok) {
             const data = await response.json();

@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { Link } from 'react-router-dom';
-import { API_CONFIG } from '@/config/api';
+import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
 
 interface Integration {
@@ -41,9 +41,10 @@ export const IntegrationStatus = ({ collapsed }: IntegrationStatusProps) => {
       
       setLoading(true);
       try {
-        const response = await fetch(`${API_CONFIG.baseUrl}/api/v1/apps/authentication`, {
+        const response = await fetch(getApiUrl('/api/v1/apps/authentication'), {
+          credentials: 'include',
           headers: {
-            'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+            ...getAuthHeader(),
           },
         });
         

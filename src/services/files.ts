@@ -1,4 +1,4 @@
-import { API_CONFIG, getAuthHeader } from '@/config/api';
+import { getApiUrl, getAuthHeader } from '@/config/api';
 
 export interface ShuffleFile {
   id: string;
@@ -54,8 +54,9 @@ export const createFile = async (
 ): Promise<CreateFileResponse> => {
   try {
     const orgId = getOrgId();
-    const response = await fetch(`${API_CONFIG.baseUrl}/api/v1/files/create`, {
+    const response = await fetch(getApiUrl('/api/v1/files/create'), {
       method: 'POST',
+      credentials: 'include',
       headers: {
         ...getAuthHeader(),
         'Content-Type': 'application/json',
@@ -87,8 +88,9 @@ export const uploadFile = async (
     const formData = new FormData();
     formData.append('shuffle_file', file);
 
-    const response = await fetch(`${API_CONFIG.baseUrl}/api/v1/files/${fileId}/upload`, {
+    const response = await fetch(getApiUrl(`/api/v1/files/${fileId}/upload`), {
       method: 'POST',
+      credentials: 'include',
       headers: getAuthHeader(),
       body: formData,
     });
@@ -143,12 +145,13 @@ export const createAndUploadFile = async (
  */
 export const listFiles = async (namespace?: string): Promise<ShuffleFile[]> => {
   try {
-    let url = `${API_CONFIG.baseUrl}/api/v1/files`;
+    let url = '/api/v1/files';
     if (namespace) {
       url += `?namespace=${encodeURIComponent(namespace)}`;
     }
 
-    const response = await fetch(url, {
+    const response = await fetch(getApiUrl(url), {
+      credentials: 'include',
       headers: getAuthHeader(),
     });
 
@@ -169,7 +172,8 @@ export const listFiles = async (namespace?: string): Promise<ShuffleFile[]> => {
  */
 export const getFileMeta = async (fileId: string): Promise<ShuffleFile | null> => {
   try {
-    const response = await fetch(`${API_CONFIG.baseUrl}/api/v1/files/${fileId}`, {
+    const response = await fetch(getApiUrl(`/api/v1/files/${fileId}`), {
+      credentials: 'include',
       headers: getAuthHeader(),
     });
 
@@ -188,7 +192,7 @@ export const getFileMeta = async (fileId: string): Promise<ShuffleFile | null> =
  * Get file download URL
  */
 export const getFileDownloadUrl = (fileId: string): string => {
-  return `${API_CONFIG.baseUrl}/api/v1/files/${fileId}/content`;
+  return getApiUrl(`/api/v1/files/${fileId}/content`);
 };
 
 /**
@@ -196,8 +200,9 @@ export const getFileDownloadUrl = (fileId: string): string => {
  */
 export const deleteFile = async (fileId: string): Promise<{ success: boolean }> => {
   try {
-    const response = await fetch(`${API_CONFIG.baseUrl}/api/v1/files/${fileId}`, {
+    const response = await fetch(getApiUrl(`/api/v1/files/${fileId}`), {
       method: 'DELETE',
+      credentials: 'include',
       headers: getAuthHeader(),
     });
 

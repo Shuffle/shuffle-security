@@ -83,6 +83,7 @@ export const setDatastoreItem = async (
 
   const response = await fetch(getApiUrl(`/api/v1/orgs/${orgId}/set_cache`), {
     method: 'POST',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       ...getAuthHeader(),
@@ -118,6 +119,7 @@ export const setDatastoreItems = async (
 
   const response = await fetch(getApiUrl('/api/v2/datastore'), {
     method: 'POST',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       ...getAuthHeader(),
@@ -155,6 +157,7 @@ export const getDatastoreItem = async (
 
   const response = await fetch(getApiUrl(`/api/v1/orgs/${orgId}/get_cache`), {
     method: 'POST',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       ...getAuthHeader(),
@@ -203,6 +206,7 @@ export const getDatastoreByCategory = async (
     getApiUrl(url),
     {
       method: 'GET',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         ...getAuthHeader(),
@@ -247,6 +251,7 @@ export const deleteDatastoreItem = async (
 
   const response = await fetch(getApiUrl(`/api/v1/orgs/${orgId}/delete_cache`), {
     method: 'POST',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       ...getAuthHeader(),

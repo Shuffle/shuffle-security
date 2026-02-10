@@ -28,7 +28,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import { toast } from 'sonner';
 import { deleteFile, getFileDownloadUrl, formatFileSize, ShuffleFile, createAndUploadFile } from '@/services/files';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
-import { getApiUrl, API_CONFIG } from '@/config/api';
+import { getApiUrl, getAuthHeader } from '@/config/api';
 
 const SIGMA_NAMESPACE = 'sigma';
 
@@ -96,12 +96,11 @@ const RulesPage = () => {
   const fetchDetections = async () => {
     setIsLoading(true);
     try {
-      const token = API_CONFIG.apiKey || localStorage.getItem('session_token');
       const response = await fetch(getApiUrl('/api/v1/detections/Sigma'), {
         method: 'GET',
         credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          ...getAuthHeader(),
           'Content-Type': 'application/json',
         },
       });
@@ -159,9 +158,8 @@ const RulesPage = () => {
     try {
       const url = getFileDownloadUrl(file.id);
       const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('shuffle_api_key')}`,
-        },
+        credentials: 'include',
+        headers: { ...getAuthHeader() },
       });
       
       if (response.ok) {
@@ -257,12 +255,11 @@ const RulesPage = () => {
     setIsCreateDialogOpen(true);
     
     try {
-      const token = API_CONFIG.apiKey || localStorage.getItem('session_token');
       const response = await fetch(getApiUrl(`/api/v1/files/${file.id}/content`), {
         method: 'GET',
         credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          ...getAuthHeader(),
         },
       });
       
@@ -294,15 +291,13 @@ const RulesPage = () => {
     setIsSaving(true);
 
     try {
-      const token = API_CONFIG.apiKey || localStorage.getItem('session_token');
-      
       if (editingFile) {
         // Update existing file using PUT /api/v1/files/{fileid}/edit
         const response = await fetch(getApiUrl(`/api/v1/files/${editingFile.id}/edit`), {
           method: 'PUT',
           credentials: 'include',
           headers: {
-            'Authorization': `Bearer ${token}`,
+            ...getAuthHeader(),
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({

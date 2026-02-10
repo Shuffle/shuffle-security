@@ -22,7 +22,7 @@ import {
   getFileDownloadUrl, 
   formatFileSize 
 } from '@/services/files';
-import { API_CONFIG } from '@/config/api';
+import { getAuthHeader } from '@/config/api';
 import { toast } from 'sonner';
 
 interface FileAttachment {
@@ -67,7 +67,8 @@ const useImagePreview = (fileId: string, isImage: boolean) => {
     
     const url = getFileDownloadUrl(fileId);
     fetch(url, {
-      headers: { 'Authorization': `Bearer ${API_CONFIG.apiKey}` },
+      credentials: 'include',
+      headers: { ...getAuthHeader() },
     })
       .then(res => res.blob())
       .then(blob => {
@@ -267,7 +268,8 @@ export const FileAttachments = ({
     try {
       const url = getFileDownloadUrl(attachment.id);
       const res = await fetch(url, {
-        headers: { 'Authorization': `Bearer ${API_CONFIG.apiKey}` },
+        credentials: 'include',
+        headers: { ...getAuthHeader() },
       });
       if (!res.ok) throw new Error('Download failed');
       const blob = await res.blob();
@@ -288,7 +290,8 @@ export const FileAttachments = ({
     try {
       const url = getFileDownloadUrl(attachment.id);
       const res = await fetch(url, {
-        headers: { 'Authorization': `Bearer ${API_CONFIG.apiKey}` },
+        credentials: 'include',
+        headers: { ...getAuthHeader() },
       });
       if (!res.ok) throw new Error('Open failed');
       const blob = await res.blob();

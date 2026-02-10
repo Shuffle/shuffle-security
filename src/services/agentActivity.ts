@@ -79,6 +79,7 @@ export const searchAgentActivity = async (
 
   const response = await fetch(getApiUrl('/api/v1/workflows/search'), {
     method: 'POST',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       ...getAuthHeader(),

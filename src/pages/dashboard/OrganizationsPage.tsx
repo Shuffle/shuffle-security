@@ -14,7 +14,7 @@ import {
   CircularProgress,
   Alert,
 } from '@mui/material';
-import { getApiUrl } from '@/config/api';
+import { getApiUrl, getAuthHeader } from '@/config/api';
 import { useAuth } from '@/context/AuthContext';
 
 interface Organization {
@@ -40,7 +40,7 @@ const OrganizationsPage = () => {
         const response = await fetch(getApiUrl('/api/v1/orgs'), {
           credentials: 'include',
           headers: {
-            'Authorization': `Bearer ${sessionToken}`,
+            ...getAuthHeader(),
           },
         });
 

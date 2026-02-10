@@ -16,7 +16,7 @@ import WavingHandIcon from '@mui/icons-material/WavingHand';
 import LinkIcon from '@mui/icons-material/Link';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
-import { API_CONFIG, getApiUrl } from '@/config/api';
+import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { setDatastoreItem, getDatastoreItem } from '@/services/datastore';
 import {
   isEmailApp, isIngestionApp, isThreatIntelApp,
@@ -188,10 +188,9 @@ const OnboardingPage = () => {
       if (!API_CONFIG.apiKey) return;
       
       try {
-        const response = await fetch(`${API_CONFIG.baseUrl}/api/v1/apps/authentication`, {
-          headers: {
-            'Authorization': `Bearer ${API_CONFIG.apiKey}`,
-          },
+        const response = await fetch(getApiUrl('/api/v1/apps/authentication'), {
+          credentials: 'include',
+          headers: { ...getAuthHeader() },
         });
         if (response.ok) {
           const result = await response.json();
@@ -233,8 +232,9 @@ const OnboardingPage = () => {
         const appNames = selectedApps.map(app => app.name).join(',');
         fetch(getApiUrl('/api/v2/workflows/generate'), {
           method: 'POST',
+          credentials: 'include',
           headers: {
-            'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+            ...getAuthHeader(),
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
@@ -298,8 +298,9 @@ const OnboardingPage = () => {
       // Note: Accept-Encoding: identity helps avoid HTTP/2 compression errors with some proxies
       const response = await fetch(getApiUrl('/api/v1/apps/categories/run'), {
         method: 'POST',
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+          ...getAuthHeader(),
           'Content-Type': 'application/json',
           'Accept-Encoding': 'identity',
         },
@@ -495,10 +496,9 @@ const OnboardingPage = () => {
       // Validation happens in background, so API response is the source of truth
       let refreshedAuthData: typeof authenticatedApps = [];
       try {
-        const authResponse = await fetch(`${API_CONFIG.baseUrl}/api/v1/apps/authentication`, {
-          headers: {
-            'Authorization': `Bearer ${API_CONFIG.apiKey}`,
-          },
+        const authResponse = await fetch(getApiUrl('/api/v1/apps/authentication'), {
+          credentials: 'include',
+          headers: { ...getAuthHeader() },
         });
         if (authResponse.ok) {
           const authResult = await authResponse.json();
@@ -539,10 +539,9 @@ const OnboardingPage = () => {
       // Refresh auth list to check if background validation succeeded
       let refreshedAuthData: typeof authenticatedApps = [];
       try {
-        const authResponse = await fetch(`${API_CONFIG.baseUrl}/api/v1/apps/authentication`, {
-          headers: {
-            'Authorization': `Bearer ${API_CONFIG.apiKey}`,
-          },
+        const authResponse = await fetch(getApiUrl('/api/v1/apps/authentication'), {
+          credentials: 'include',
+          headers: { ...getAuthHeader() },
         });
         if (authResponse.ok) {
           const authResult = await authResponse.json();
@@ -597,10 +596,11 @@ const OnboardingPage = () => {
     };
 
     try {
-      const response = await fetch(`${API_CONFIG.baseUrl}/api/v1/apps/authentication`, {
+      const response = await fetch(getApiUrl('/api/v1/apps/authentication'), {
         method: 'PUT',
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+          ...getAuthHeader(),
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
@@ -608,10 +608,9 @@ const OnboardingPage = () => {
 
       if (response.ok) {
         // Refresh authenticated apps list
-        const authResponse = await fetch(`${API_CONFIG.baseUrl}/api/v1/apps/authentication`, {
-          headers: {
-            'Authorization': `Bearer ${API_CONFIG.apiKey}`,
-          },
+        const authResponse = await fetch(getApiUrl('/api/v1/apps/authentication'), {
+          credentials: 'include',
+          headers: { ...getAuthHeader() },
         });
         if (authResponse.ok) {
           const authData = await authResponse.json();

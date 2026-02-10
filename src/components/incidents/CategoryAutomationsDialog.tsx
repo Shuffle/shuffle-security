@@ -133,6 +133,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
         setLoadingWorkflows(true);
         try {
           const response = await fetch(getApiUrl('/api/v1/workflows'), {
+            credentials: 'include',
             headers: {
               ...getAuthHeader(),
             },
@@ -152,6 +153,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
       const fetchIngestionApps = async () => {
         try {
           const response = await fetch(getApiUrl('/api/v1/apps/authentication'), {
+            credentials: 'include',
             headers: {
               ...getAuthHeader(),
             },
@@ -289,6 +291,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
       
       const response = await fetch(getApiUrl('/api/v2/datastore/automate'), {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
           ...getAuthHeader(),
