@@ -249,7 +249,7 @@ const AgentPermissionsDrawer = ({ open, onClose }: AgentPermissionsDrawerProps) 
             </Box>
 
             {/* Summary chip + reset */}
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, opacity: 0.5, pointerEvents: 'none' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
               <Box sx={{
                 display: 'inline-flex',
                 flexDirection: 'column',
@@ -259,6 +259,7 @@ const AgentPermissionsDrawer = ({ open, onClose }: AgentPermissionsDrawerProps) 
                 borderRadius: 2,
                 border: '1px solid hsl(var(--border))',
                 bgcolor: 'hsl(var(--background))',
+                opacity: 0.5,
               }}>
                 <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 500 }}>
                   Enabled
@@ -272,7 +273,7 @@ const AgentPermissionsDrawer = ({ open, onClose }: AgentPermissionsDrawerProps) 
                   size="small"
                   variant="outlined"
                   startIcon={<Activity size={14} />}
-                  disabled
+                  onClick={() => { onClose(); navigate('/agent'); }}
                   sx={{
                     borderColor: 'hsl(var(--border))',
                     color: 'hsl(var(--foreground))',
@@ -280,6 +281,11 @@ const AgentPermissionsDrawer = ({ open, onClose }: AgentPermissionsDrawerProps) 
                     fontSize: '0.75rem',
                     borderRadius: 1.5,
                     px: 1.5,
+                    '&:hover': { 
+                      borderColor: 'hsl(var(--primary))',
+                      color: 'hsl(var(--primary))',
+                      bgcolor: 'hsla(var(--primary) / 0.08)',
+                    },
                   }}
                 >
                   Activity
@@ -292,6 +298,7 @@ const AgentPermissionsDrawer = ({ open, onClose }: AgentPermissionsDrawerProps) 
                     color: 'hsl(var(--muted-foreground))',
                     textTransform: 'none',
                     fontSize: '0.75rem',
+                    opacity: 0.5,
                   }}
                 >
                   Reset
