@@ -10,8 +10,8 @@
  * If the user switches orgs, it resets to the default until getinfo is called again.
  */
 
-const DEV_BACKEND = 'https://months-offering-hobby-johnson.trycloudflare.com';
-const PROD_BACKEND = 'https://months-offering-hobby-johnson.trycloudflare.com';
+const DEV_BACKEND = 'https://sociology-lending-divisions-eating.trycloudflare.com';
+const PROD_BACKEND = 'https://sociology-lending-divisions-eating.trycloudflare.com';
 
 // Determine if we're in Lovable preview (dev) or published (prod)
 export const isDevEnvironment = (): boolean => {
