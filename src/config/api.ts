@@ -11,7 +11,7 @@
  */
 
 const DEV_BACKEND = 'https://sociology-lending-divisions-eating.trycloudflare.com';
-const PROD_BACKEND = 'https://sociology-lending-divisions-eating.trycloudflare.com';
+const PROD_BACKEND = 'https://shuffler.io';
 
 // Determine if we're in Lovable preview (dev) or published (prod)
 export const isDevEnvironment = (): boolean => {
@@ -124,11 +124,11 @@ export const API_ENDPOINTS = {
 
 // Get authorization header - uses API key if available, otherwise session token
 export const getAuthHeader = (_sessionToken?: string | null): Record<string, string> => {
-  // API key takes priority; otherwise use stored session token.
-  // Cookies won't work cross-domain, so we always need Bearer for non-same-domain setups.
-  const token = API_CONFIG.apiKey || localStorage.getItem('session_token');
-  if (token) {
-    return { 'Authorization': `Bearer ${token}` };
+  // Only send Authorization header for API key auth.
+  // Session-based (cookie) auth is handled by credentials: 'include' — never both.
+  const apiKey = API_CONFIG.apiKey;
+  if (apiKey) {
+    return { 'Authorization': `Bearer ${apiKey}` };
   }
   return {};
 };
