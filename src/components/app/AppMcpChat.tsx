@@ -15,7 +15,7 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { API_CONFIG } from '@/config/api';
+import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import {
   THREAT_INTEL_PATTERNS,
   EMAIL_APP_PATTERNS,
@@ -199,11 +199,12 @@ const AppMcpChat = ({ appName, appIcon, appId, categories }: AppMcpChatProps) =>
 
     try {
       const response = await fetch(
-        `${API_CONFIG.baseUrl}/api/v1/apps/${encodeURIComponent(appName)}/mcp`,
+        getApiUrl(`/api/v1/apps/${encodeURIComponent(appName)}/mcp`),
         {
           method: 'POST',
+          credentials: 'include',
           headers: {
-            Authorization: `Bearer ${API_CONFIG.apiKey}`,
+            ...getAuthHeader(),
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({

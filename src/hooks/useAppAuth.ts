@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { API_CONFIG, getApiUrl } from '@/config/api';
+import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import type { AppAuthState, AuthStatus, ApiAuthEntry } from '@/components/onboarding/AppAuthConfig';
 
 // Helper to process auth data and invalidate entries older than 30 days
@@ -69,8 +69,9 @@ export function useAppAuth() {
     }
     
     try {
-      const response = await fetch(`${API_CONFIG.baseUrl}/api/v1/apps/authentication`, {
-        headers: { 'Authorization': `Bearer ${API_CONFIG.apiKey}` },
+      const response = await fetch(getApiUrl('/api/v1/apps/authentication'), {
+        credentials: 'include',
+        headers: { ...getAuthHeader() },
       });
       if (response.ok) {
         const result = await response.json();
@@ -125,8 +126,9 @@ export function useAppAuth() {
 
       const response = await fetch(getApiUrl('/api/v1/apps/categories/run'), {
         method: 'POST',
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+          ...getAuthHeader(),
           'Content-Type': 'application/json',
           'Accept-Encoding': 'identity',
         },
@@ -257,10 +259,11 @@ export function useAppAuth() {
     };
 
     try {
-      const response = await fetch(`${API_CONFIG.baseUrl}/api/v1/apps/authentication`, {
+      const response = await fetch(getApiUrl('/api/v1/apps/authentication'), {
         method: 'PUT',
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+          ...getAuthHeader(),
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),

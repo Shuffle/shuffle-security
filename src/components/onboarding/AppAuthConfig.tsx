@@ -31,7 +31,7 @@ import LockIcon from '@mui/icons-material/Lock';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import CloseIcon from '@mui/icons-material/Close';
 import type { AlgoliaSearchApp } from '@/lib/singul-local';
-import { API_CONFIG, getApiUrl } from '@/config/api';
+import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { getIngestionCategory } from '@/lib/ingestionDetection';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -376,8 +376,9 @@ export const AppAuthCard = ({
       
       try {
         const response = await fetch(getApiUrl(`/api/v1/apps/${app.objectID}/config`), {
+          credentials: 'include',
           headers: {
-            'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+            ...getAuthHeader(),
           },
         });
         
@@ -453,8 +454,9 @@ export const AppAuthCard = ({
     try {
       const encodedName = encodeURIComponent(app.name);
       const response = await fetch(getApiUrl(`/api/v1/docs/${encodedName}?location=openapi`), {
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+          ...getAuthHeader(),
         },
       });
       if (response.ok) {

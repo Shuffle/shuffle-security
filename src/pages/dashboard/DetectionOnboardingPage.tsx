@@ -26,7 +26,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import AddIcon from '@mui/icons-material/Add';
-import { API_CONFIG, getApiUrl } from '@/config/api';
+import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { DeploymentInstructions } from '@/components/detection/DeploymentInstructions';
 import azureLogo from '@/assets/azure-logo.png';
 import gcpLogo from '@/assets/gcp-logo.png';
@@ -167,9 +167,8 @@ const DetectionOnboardingPage = () => {
 
     try {
       const response = await fetch(getApiUrl('/api/v1/getenvironments'), {
-        headers: {
-          'Authorization': `Bearer ${API_CONFIG.apiKey}`,
-        },
+        credentials: 'include',
+        headers: { ...getAuthHeader() },
       });
 
       if (response.ok) {
@@ -275,9 +274,8 @@ const DetectionOnboardingPage = () => {
       if (sensorRunning && pipelineReady) {
         try {
           const response = await fetch(getApiUrl('/api/v1/detections/Sigma'), {
-            headers: {
-              'Authorization': `Bearer ${API_CONFIG.apiKey}`,
-            },
+            credentials: 'include',
+            headers: { ...getAuthHeader() },
           });
           
           if (response.ok) {
@@ -394,9 +392,8 @@ const DetectionOnboardingPage = () => {
 
     try {
       const response = await fetch(getApiUrl('/api/v1/getenvironments'), {
-        headers: {
-          'Authorization': `Bearer ${API_CONFIG.apiKey}`,
-        },
+        credentials: 'include',
+        headers: { ...getAuthHeader() },
       });
 
       if (!response.ok) {
@@ -469,8 +466,9 @@ const DetectionOnboardingPage = () => {
     try {
       const response = await fetch(getApiUrl('/api/v1/files/download_remote'), {
         method: 'POST',
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+          ...getAuthHeader(),
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -510,9 +508,8 @@ const DetectionOnboardingPage = () => {
     
     try {
       const response = await fetch(getApiUrl('/api/v1/detections/Sigma'), {
-        headers: {
-          'Authorization': `Bearer ${API_CONFIG.apiKey}`,
-        },
+        credentials: 'include',
+        headers: { ...getAuthHeader() },
       });
       
       if (response.ok) {
@@ -632,9 +629,8 @@ const DetectionOnboardingPage = () => {
     
     try {
       const response = await fetch(getApiUrl('/api/v1/workflows'), {
-        headers: {
-          'Authorization': `Bearer ${API_CONFIG.apiKey}`,
-        },
+        credentials: 'include',
+        headers: { ...getAuthHeader() },
       });
 
       if (!response.ok) {
@@ -732,8 +728,9 @@ const DetectionOnboardingPage = () => {
       
       const response = await fetch(getApiUrl('/api/v1/triggers/pipeline'), {
         method: 'POST',
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+          ...getAuthHeader(),
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -765,9 +762,8 @@ const DetectionOnboardingPage = () => {
           
           // Fetch fresh environment data
           const envResponse = await fetch(getApiUrl('/api/v1/getenvironments'), {
-            headers: {
-              'Authorization': `Bearer ${API_CONFIG.apiKey}`,
-            },
+            credentials: 'include',
+            headers: { ...getAuthHeader() },
           });
           
           if (envResponse.ok) {
@@ -856,8 +852,9 @@ const DetectionOnboardingPage = () => {
     try {
       const response = await fetch(getApiUrl('/api/v2/workflows/generate'), {
         method: 'POST',
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+          ...getAuthHeader(),
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -885,9 +882,8 @@ const DetectionOnboardingPage = () => {
     
     try {
       const response = await fetch(getApiUrl('/api/v1/detections/Sigma'), {
-        headers: {
-          'Authorization': `Bearer ${API_CONFIG.apiKey}`,
-        },
+        credentials: 'include',
+        headers: { ...getAuthHeader() },
       });
 
       if (!response.ok) {
@@ -996,7 +992,8 @@ const DetectionOnboardingPage = () => {
       try {
         // Fetch FRESH environment data to get current pipelines (don't rely on stale state)
         const freshEnvResponse = await fetch(getApiUrl('/api/v1/getenvironments'), {
-          headers: { 'Authorization': `Bearer ${API_CONFIG.apiKey}` },
+          credentials: 'include',
+          headers: { ...getAuthHeader() },
         });
         
         let pipelineList: any[] = [];
@@ -1022,8 +1019,9 @@ const DetectionOnboardingPage = () => {
             console.log(`Stopping pipeline: ${pipelineId}`);
             await fetch(getApiUrl('/api/v1/triggers/pipeline'), {
               method: 'POST',
+              credentials: 'include',
               headers: {
-                'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+                ...getAuthHeader(),
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({
@@ -1047,9 +1045,8 @@ const DetectionOnboardingPage = () => {
 
       // Step 1: Get current execution count to compare later
       const initialExecsResponse = await fetch(getApiUrl(`/api/v2/workflows/${workflowId}/executions`), {
-        headers: {
-          'Authorization': `Bearer ${API_CONFIG.apiKey}`,
-        },
+        credentials: 'include',
+        headers: { ...getAuthHeader() },
       });
       
       let initialExecIds: string[] = [];
@@ -1062,8 +1059,9 @@ const DetectionOnboardingPage = () => {
       // Step 2: Send test event via pipeline trigger
       const triggerResponse = await fetch(getApiUrl('/api/v1/triggers/pipeline'), {
         method: 'POST',
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+          ...getAuthHeader(),
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -1113,7 +1111,8 @@ const DetectionOnboardingPage = () => {
         // Refresh environment to check pipeline status (always check, even if previously confirmed - it might have failed since)
         try {
           const envResponse = await fetch(getApiUrl('/api/v1/getenvironments'), {
-            headers: { 'Authorization': `Bearer ${API_CONFIG.apiKey}` },
+            credentials: 'include',
+            headers: { ...getAuthHeader() },
           });
           if (envResponse.ok) {
             const envData: Environment[] = await envResponse.json();
@@ -1181,9 +1180,8 @@ const DetectionOnboardingPage = () => {
 
         try {
           const pollResponse = await fetch(getApiUrl(`/api/v2/workflows/${workflowId}/executions`), {
-            headers: {
-              'Authorization': `Bearer ${API_CONFIG.apiKey}`,
-            },
+            credentials: 'include',
+            headers: { ...getAuthHeader() },
           });
 
           if (pollResponse.ok) {

@@ -545,6 +545,7 @@ const IncidentDetailPage = () => {
       try {
         const response = await fetch(getApiUrl('/api/v2/correlations'), {
           method: 'POST',
+          credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
             ...getAuthHeader(),

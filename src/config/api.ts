@@ -110,6 +110,22 @@ export const getApiUrl = (endpoint: string): string => {
   return `${API_CONFIG.baseUrl}${endpoint}`;
 };
 
+/**
+ * Central fetch wrapper that ALWAYS includes credentials and auth headers.
+ * Use this instead of raw fetch() for all Shuffle API calls.
+ */
+export const shuffleFetch = (url: string, init?: RequestInit): Promise<Response> => {
+  const { headers: extraHeaders, ...rest } = init || {};
+  return fetch(url, {
+    credentials: 'include',
+    ...rest,
+    headers: {
+      ...getAuthHeader(),
+      ...extraHeaders,
+    },
+  });
+};
+
 // Common endpoints
 export const API_ENDPOINTS = {
   login: '/login',

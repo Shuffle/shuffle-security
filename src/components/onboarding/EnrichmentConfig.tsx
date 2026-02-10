@@ -37,7 +37,7 @@ import {
   type IngestionCategory,
 } from '@/lib/ingestionDetection';
 import shuffleLogo from '@/assets/shuffle-logo.png';
-import { API_CONFIG, getApiUrl } from '@/config/api';
+import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { useThreatFeeds, DEFAULT_THREAT_FEEDS, ThreatFeed } from '@/hooks/useThreatFeeds';
 
 // Workflow labels for each automation area
@@ -72,8 +72,9 @@ const generateWorkflow = async (
     
     await fetch(getApiUrl('/api/v2/workflows/generate'), {
       method: 'POST',
+      credentials: 'include',
       headers: {
-        'Authorization': `Bearer ${API_CONFIG.apiKey}`,
+        ...getAuthHeader(),
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(body),
