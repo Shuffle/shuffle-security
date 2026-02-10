@@ -127,6 +127,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [fetchUserInfo]);
 
   const login = useCallback(async (token: string) => {
+    // Clear any existing API key — session login and API key auth are mutually exclusive
+    API_CONFIG.setApiKey(null);
     localStorage.setItem('session_token', token);
     setSessionToken(token);
     setIsAuthenticated(true);
