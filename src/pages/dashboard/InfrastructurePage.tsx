@@ -308,14 +308,14 @@ interface MatchedApp {
 // ── Orthogonal path builder (only H/V segments with rounded corners) ────────
 
 function expandToOrthogonal(points: Array<{ x: number; y: number }>): Array<{ x: number; y: number }> {
-  if (points.length < 2) return points;
-  const expanded: Array<{ x: number; y: number }> = [points[0]];
-  for (let i = 1; i < points.length; i++) {
+  // Filter out any null/undefined entries
+  const valid = points.filter((p): p is { x: number; y: number } => p != null && typeof p.x === 'number' && typeof p.y === 'number');
+  if (valid.length < 2) return valid;
+  const expanded: Array<{ x: number; y: number }> = [valid[0]];
+  for (let i = 1; i < valid.length; i++) {
     const prev = expanded[expanded.length - 1];
-    const curr = points[i];
-    // If not aligned horizontally or vertically, insert an L-bend corner
+    const curr = valid[i];
     if (Math.abs(prev.x - curr.x) > 1 && Math.abs(prev.y - curr.y) > 1) {
-      // Choose direction: horizontal first then vertical
       expanded.push({ x: curr.x, y: prev.y });
     }
     expanded.push(curr);
