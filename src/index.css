@@ -167,7 +167,7 @@
   }
 }
 
-/* ReactFlow: Show handles when connecting/reconnecting edges */
+/* ReactFlow: Show handles when connecting/updating edges */
 .react-flow__node.connecting .infra-handle,
 .react-flow__node .infra-handle:hover {
   opacity: 1 !important;
@@ -176,19 +176,48 @@
   opacity: 1 !important;
 }
 
-/* ReactFlow: Style the live connection line while dragging */
+/* Always show all handles while an edge is being dragged */
+.react-flow__edgeupdater {
+  cursor: grab !important;
+}
+.react-flow__edgeupdater:active {
+  cursor: grabbing !important;
+}
+
+/* Make handles clearly visible during edge update */
+.react-flow__node .infra-handle {
+  transition: all 0.15s ease;
+}
+
+/* When edge updater is active, show all handles globally via parent class */
+.react-flow.connecting .react-flow__node .infra-handle {
+  opacity: 1 !important;
+  width: 14px !important;
+  height: 14px !important;
+  border-width: 2px !important;
+}
+
+/* Style the live connection line while dragging */
 .react-flow__connection-path {
   stroke: hsl(var(--primary)) !important;
   stroke-width: 2.5 !important;
   stroke-dasharray: 6 3 !important;
+  animation: dash-flow 0.5s linear infinite;
 }
 
-/* Highlight valid handles while reconnecting */
-.react-flow__handle.connectingto,
-.react-flow__handle.connectingfrom {
-  background: hsl(var(--primary)) !important;
-  opacity: 1 !important;
-  width: 14px !important;
-  height: 14px !important;
-  box-shadow: 0 0 8px hsla(var(--primary) / 0.5);
+@keyframes dash-flow {
+  to {
+    stroke-dashoffset: -9;
+  }
+}
+
+/* Make the edge updater handle bigger and more visible */
+.react-flow__edgeupdater {
+  width: 20px !important;
+  height: 20px !important;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.react-flow__edge:hover .react-flow__edgeupdater {
+  opacity: 1;
 }

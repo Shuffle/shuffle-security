@@ -1216,15 +1216,15 @@ const InfrastructureContent = () => {
   }, [reactFlowInstance, persistPositions]);
 
   // Track reconnection state for visual feedback
-  const edgeReconnectSuccessful = useRef(true);
+  const edgeUpdateSuccessful = useRef(true);
 
-  const onReconnectStart = useCallback(() => {
-    edgeReconnectSuccessful.current = false;
+  const onEdgeUpdateStart = useCallback(() => {
+    edgeUpdateSuccessful.current = false;
   }, []);
 
   // Handle edge reconnection — only allow reconnecting to same source/target nodes (different handles)
-  const onReconnect = useCallback((oldEdge: Edge, newConnection: Connection) => {
-    edgeReconnectSuccessful.current = true;
+  const onEdgeUpdate = useCallback((oldEdge: Edge, newConnection: Connection) => {
+    edgeUpdateSuccessful.current = true;
     // Only allow if source and target remain the same
     if (newConnection.source !== oldEdge.source || newConnection.target !== oldEdge.target) return;
     setEdges((els) => reconnectEdge(oldEdge, newConnection, els));
@@ -1241,8 +1241,8 @@ const InfrastructureContent = () => {
     });
   }, [setEdges, persistHandles]);
 
-  const onReconnectEnd = useCallback((_: any, edge: Edge) => {
-    if (!edgeReconnectSuccessful.current) {
+  const onEdgeUpdateEnd = useCallback((_: MouseEvent | TouchEvent, edge: Edge) => {
+    if (!edgeUpdateSuccessful.current) {
       // Snap back — do nothing, edge stays as-is
     }
   }, []);
@@ -1327,11 +1327,11 @@ const InfrastructureContent = () => {
             setSelectedId(null);
           }}
           edgesUpdatable
-          reconnectRadius={25}
-          onReconnectStart={onReconnectStart}
-          onReconnect={onReconnect}
-          onReconnectEnd={onReconnectEnd}
-          connectionLineStyle={{ stroke: 'hsl(var(--primary))', strokeWidth: 2, strokeDasharray: '6 3' }}
+          edgeUpdaterRadius={25}
+          onEdgeUpdateStart={onEdgeUpdateStart}
+          onEdgeUpdate={onEdgeUpdate}
+          onEdgeUpdateEnd={onEdgeUpdateEnd}
+          connectionLineStyle={{ stroke: 'hsl(var(--primary))', strokeWidth: 2.5, strokeDasharray: '6 3' }}
         >
           <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="hsla(var(--muted-foreground) / 0.1)" />
           <Controls showInteractive={false} />
