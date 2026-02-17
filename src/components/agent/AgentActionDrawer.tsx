@@ -29,7 +29,7 @@ import { getApiUrl, getAuthHeader } from '@/config/api';
 import { SingulJS } from '@/lib/singul-local';
 import type { AlgoliaSearchApp, SingulJSHandle } from '@/lib/singul-local';
 import type { AgentRun, AgentDecision } from '@/services/agentActivity';
-import AgentRunResultViewer from '@/components/agent/AgentRunResultViewer';
+import AgentRunResultViewer, { parseRunResult } from '@/components/agent/AgentRunResultViewer';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -437,17 +437,24 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
       <Box sx={{ flex: 1, overflowY: 'auto', px: 3, py: 2.5 }}>
         {isViewMode ? (
           /* ── View Mode: decisions timeline + result ── */
-          <Box>
-            {run!.decisions && run!.decisions.length > 0 && (
-              <DecisionsTimeline decisions={run!.decisions} />
-            )}
-            <Box sx={{ mt: run!.decisions?.length ? 2.5 : 0 }}>
-              <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>
-                Result
-              </Typography>
-              <AgentRunResultViewer run={run!} />
-            </Box>
-          </Box>
+          (() => {
+            const { parsed } = parseRunResult(run!);
+            const decisions: AgentDecision[] = Array.isArray(parsed?.decisions) ? parsed.decisions
+              : Array.isArray(run!.decisions) ? run!.decisions : [];
+            return (
+              <Box>
+                {decisions.length > 0 && (
+                  <DecisionsTimeline decisions={decisions} />
+                )}
+                <Box sx={{ mt: decisions.length ? 2.5 : 0 }}>
+                  <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>
+                    Result
+                  </Typography>
+                  <AgentRunResultViewer run={run!} />
+                </Box>
+              </Box>
+            );
+          })()
         ) : (
           /* ── Action Mode: app selector + prompt ── */
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
