@@ -1006,7 +1006,7 @@ const InfrastructureContent = () => {
   const [selectedEdgeIdx, setSelectedEdgeIdx] = useState<number | null>(null);
   const [categoryApps, setCategoryApps] = useState<Record<string, MatchedApp[]>>({});
   const [savedHandles, setSavedHandles] = useState<HandleOverrides>({});
-  const [updatingEdgeNodes, setUpdatingEdgeNodes] = useState<{ source: string; target: string } | null>(null);
+  const [updatingEdgeNodes, setUpdatingEdgeNodes] = useState<{ source: string; target: string; draggedEnd: 'source' | 'target' } | null>(null);
   const [savedPositions, setSavedPositions] = useState<Record<string, { x: number; y: number }> | null>(null);
   const [positionsLoaded, setPositionsLoaded] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -1261,7 +1261,9 @@ const InfrastructureContent = () => {
         isSelected: selectedId === node.id,
         isHovered: hoveredId === node.id,
         isEdgeUpdating: updatingEdgeNodes
-          ? (node.id === updatingEdgeNodes.source || node.id === updatingEdgeNodes.target)
+          ? (updatingEdgeNodes.draggedEnd === 'source'
+              ? node.id === updatingEdgeNodes.source
+              : node.id === updatingEdgeNodes.target)
           : false,
         matchedApps: categoryApps[node.id] || [],
       },
@@ -1324,9 +1326,9 @@ const InfrastructureContent = () => {
   // Track reconnection state for visual feedback
   const edgeUpdateSuccessful = useRef(true);
 
-  const onEdgeUpdateStart = useCallback((_: any, edge: Edge) => {
+  const onEdgeUpdateStart = useCallback((_: any, edge: Edge, handleType: 'source' | 'target') => {
     edgeUpdateSuccessful.current = false;
-    setUpdatingEdgeNodes({ source: edge.source, target: edge.target });
+    setUpdatingEdgeNodes({ source: edge.source, target: edge.target, draggedEnd: handleType });
   }, []);
 
   // Handle edge reconnection — only allow reconnecting to same source/target nodes (different handles)
