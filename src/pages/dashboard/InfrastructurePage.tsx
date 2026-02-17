@@ -1462,9 +1462,12 @@ const InfrastructureContent = () => {
   const edgeUpdateSuccessful = useRef(true);
 
   const onEdgeUpdateStart = useCallback((_: any, edge: Edge, handleType: 'source' | 'target') => {
-    console.log('[EdgeUpdateStart] edge:', edge.id, 'handleType:', handleType, 'source:', edge.source, 'target:', edge.target);
+    // ReactFlow's handleType is the handle it's looking for, not the end being dragged
+    // So handleType 'target' means we're dragging the source end, and vice versa
+    const actualDraggedEnd = handleType === 'source' ? 'target' : 'source';
+    console.log('[EdgeUpdateStart] edge:', edge.id, 'draggedEnd:', actualDraggedEnd, 'source:', edge.source, 'target:', edge.target);
     edgeUpdateSuccessful.current = false;
-    setUpdatingEdgeNodes({ source: edge.source, target: edge.target, draggedEnd: handleType });
+    setUpdatingEdgeNodes({ source: edge.source, target: edge.target, draggedEnd: actualDraggedEnd });
   }, []);
 
   // Allow all connections during edge update — our onEdgeUpdate normalizes direction
