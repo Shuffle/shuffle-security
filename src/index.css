@@ -166,3 +166,12 @@
     }
   }
 }
+
+/* ReactFlow: Show handles when connecting/reconnecting edges */
+.react-flow__node.connecting .infra-handle,
+.react-flow__node .infra-handle:hover {
+  opacity: 1 !important;
+}
+.react-flow .connecting .infra-handle {
+  opacity: 1 !important;
+}

@@ -3,7 +3,7 @@
  * Uses @xyflow/react for an interactive node-based diagram.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
 import { setDatastoreItem, getDatastoreItem, DATASTORE_CATEGORIES } from '@/services/datastore';
@@ -23,6 +23,10 @@ import ReactFlow, {
   BackgroundVariant,
   MarkerType,
   reconnectEdge,
+  getSmoothStepPath,
+  BaseEdge,
+  EdgeLabelRenderer,
+  type EdgeProps,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { useNavigate } from 'react-router-dom';
@@ -293,6 +297,80 @@ interface MatchedApp {
   image: string;
 }
 
+// ── Custom Gradient Edge ───────────────────────────────────────────────────────
+
+const GradientEdge = ({
+  id,
+  sourceX,
+  sourceY,
+  targetX,
+  targetY,
+  sourcePosition,
+  targetPosition,
+  label,
+  data,
+  style = {},
+  markerEnd,
+  labelStyle,
+  labelBgStyle,
+}: EdgeProps) => {
+  const [edgePath, labelX, labelY] = getSmoothStepPath({
+    sourceX,
+    sourceY,
+    targetX,
+    targetY,
+    sourcePosition,
+    targetPosition,
+  });
+
+  const sourceColor = data?.sourceColor || 'hsl(var(--primary))';
+  const targetColor = data?.targetColor || 'hsl(var(--primary))';
+  const gradientId = `gradient-${id}`;
+
+  return (
+    <>
+      <defs>
+        <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor={sourceColor} />
+          <stop offset="100%" stopColor={targetColor} />
+        </linearGradient>
+      </defs>
+      <BaseEdge
+        id={id}
+        path={edgePath}
+        style={{
+          ...style,
+          stroke: `url(#${gradientId})`,
+        }}
+        markerEnd={markerEnd}
+      />
+      {label && (
+        <EdgeLabelRenderer>
+          <div
+            style={{
+              position: 'absolute',
+              transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+              pointerEvents: 'all',
+              ...labelStyle as any,
+              background: (labelBgStyle as any)?.fill || 'hsl(var(--background))',
+              opacity: (labelBgStyle as any)?.fillOpacity ?? 0.85,
+              padding: '2px 6px',
+              borderRadius: 4,
+              fontSize: (labelStyle as any)?.fontSize || 10,
+              fontWeight: (labelStyle as any)?.fontWeight || 500,
+              color: (labelStyle as any)?.fill || 'hsl(var(--muted-foreground))',
+            }}
+          >
+            {label}
+          </div>
+        </EdgeLabelRenderer>
+      )}
+    </>
+  );
+};
+
+const edgeTypes = { gradient: GradientEdge };
+
 // ── Custom Node Component ──────────────────────────────────────────────────────
 
 interface CategoryNodeData {
@@ -314,14 +392,38 @@ const CategoryNode = ({ data }: { data: CategoryNodeData }) => {
   return (
     <>
       {/* Each side has both source and target handles for flexible reconnection */}
-      <Handle type="target" position={Position.Top} id="top-target" style={{ background: 'transparent', border: 'none', width: 8, height: 8 }} />
-      <Handle type="source" position={Position.Top} id="top-source" style={{ background: 'transparent', border: 'none', width: 8, height: 8 }} />
-      <Handle type="target" position={Position.Bottom} id="bottom-target" style={{ background: 'transparent', border: 'none', width: 8, height: 8 }} />
-      <Handle type="source" position={Position.Bottom} id="bottom-source" style={{ background: 'transparent', border: 'none', width: 8, height: 8 }} />
-      <Handle type="target" position={Position.Left} id="left-target" style={{ background: 'transparent', border: 'none', width: 8, height: 8 }} />
-      <Handle type="source" position={Position.Left} id="left-source" style={{ background: 'transparent', border: 'none', width: 8, height: 8 }} />
-      <Handle type="target" position={Position.Right} id="right-target" style={{ background: 'transparent', border: 'none', width: 8, height: 8 }} />
-      <Handle type="source" position={Position.Right} id="right-source" style={{ background: 'transparent', border: 'none', width: 8, height: 8 }} />
+      {(['Top', 'Bottom', 'Left', 'Right'] as const).map(side => (
+        <React.Fragment key={side}>
+          <Handle
+            type="target"
+            position={Position[side]}
+            id={`${side.toLowerCase()}-target`}
+            className="infra-handle"
+            style={{
+              width: 10,
+              height: 10,
+              background: `hsl(var(${colorVar}))`,
+              border: '2px solid hsl(var(--background))',
+              opacity: 0,
+              transition: 'opacity 0.15s',
+            }}
+          />
+          <Handle
+            type="source"
+            position={Position[side]}
+            id={`${side.toLowerCase()}-source`}
+            className="infra-handle"
+            style={{
+              width: 10,
+              height: 10,
+              background: `hsl(var(${colorVar}))`,
+              border: '2px solid hsl(var(--background))',
+              opacity: 0,
+              transition: 'opacity 0.15s',
+            }}
+          />
+        </React.Fragment>
+      ))}
 
       <Box
         onClick={() => onSelect(category.id)}
@@ -980,22 +1082,30 @@ const InfrastructureContent = () => {
 
       const hasAnyFocus = activeId || hoveredEdgeId;
 
-      // Determine stroke color
+      // Get category colors for gradient
+      const srcCat = TOOL_CATEGORIES.find(c => c.id === flow.source);
+      const tgtCat = TOOL_CATEGORIES.find(c => c.id === flow.target);
+      const srcColor = srcCat ? `hsl(var(${srcCat.color}))` : 'hsl(var(--primary))';
+      const tgtColor = tgtCat ? `hsl(var(${tgtCat.color}))` : 'hsl(var(--primary))';
+
+      // Determine stroke color (used for non-gradient fallback states)
       let stroke: string;
+      let useGradient = false;
       if (isEdgeHovered && bothActive) {
-        const srcCat = TOOL_CATEGORIES.find(c => c.id === flow.source);
-        stroke = srcCat ? `hsl(var(${srcCat.color}))` : 'hsl(var(--primary))';
+        useGradient = true;
+        stroke = srcColor; // fallback
       } else if (isFullyHighlighted) {
+        useGradient = true;
         stroke = activeColor;
       } else if (isGreyHighlighted) {
-        // Connected but missing — visible grey, stands out from non-connected
         stroke = 'hsla(var(--muted-foreground) / 0.5)';
       } else if (hasAnyFocus) {
         stroke = 'hsla(var(--muted-foreground) / 0.06)';
       } else if (eitherMissing) {
         stroke = 'hsla(var(--muted-foreground) / 0.35)';
       } else if (bothActive) {
-        stroke = 'hsl(var(--primary))';
+        useGradient = true;
+        stroke = srcColor;
       } else {
         stroke = 'hsla(var(--muted-foreground) / 0.3)';
       }
@@ -1015,7 +1125,8 @@ const InfrastructureContent = () => {
         animated: !!isFullyHighlighted,
         reconnectable: true,
         zIndex: isConnected ? 10 : 0,
-        type: 'smoothstep',
+        type: useGradient ? 'gradient' : 'smoothstep',
+        data: useGradient ? { sourceColor: srcColor, targetColor: tgtColor } : undefined,
         style: {
           stroke,
           strokeWidth: isFullyHighlighted ? 2.5 : (isGreyHighlighted ? 2 : (bothActive ? 1.5 : 1)),
@@ -1040,7 +1151,7 @@ const InfrastructureContent = () => {
           type: MarkerType.ArrowClosed,
           width: 14,
           height: 14,
-          color: stroke,
+          color: useGradient ? tgtColor : stroke,
         },
       };
     }),
@@ -1091,10 +1202,11 @@ const InfrastructureContent = () => {
     persistPositions(positions);
   }, [reactFlowInstance, persistPositions]);
 
-  // Handle edge reconnection — user drags edge endpoint to a different handle
+  // Handle edge reconnection — only allow reconnecting to same source/target nodes (different handles)
   const onReconnect = useCallback((oldEdge: Edge, newConnection: Connection) => {
+    // Only allow if source and target remain the same
+    if (newConnection.source !== oldEdge.source || newConnection.target !== oldEdge.target) return;
     setEdges((els) => reconnectEdge(oldEdge, newConnection, els));
-    // Save the new handle assignment
     setSavedHandles(prev => {
       const updated = {
         ...prev,
@@ -1108,17 +1220,24 @@ const InfrastructureContent = () => {
     });
   }, [setEdges, persistHandles]);
 
-  // Reset positions and handles: clear saved, revert to defaults
+  // Reset everything to defaults: positions, handles
   const handleResetPositions = useCallback(() => {
+    // Reset positions state
     setSavedPositions(null);
     setSavedHandles({});
+    // Move nodes back to default positions
+    setNodes(prev => prev.map(node => ({
+      ...node,
+      position: NODE_POSITIONS[node.id] || node.position,
+    })));
+    // Persist defaults
     Promise.all([
       setDatastoreItem(POSITION_CACHE_KEY, JSON.stringify(NODE_POSITIONS), DATASTORE_CATEGORIES.INFRASTRUCTURE),
       setDatastoreItem(HANDLE_CACHE_KEY, JSON.stringify({}), DATASTORE_CATEGORIES.INFRASTRUCTURE),
     ]).catch(e => console.warn('Failed to reset:', e));
     // Refit after nodes update
     setTimeout(() => reactFlowInstance.fitView({ padding: 0.25, duration: 300 }), 50);
-  }, [reactFlowInstance]);
+  }, [reactFlowInstance, setNodes]);
 
   const selectedCategory = selectedId
     ? TOOL_CATEGORIES.find(c => c.id === selectedId) || null
@@ -1166,6 +1285,7 @@ const InfrastructureContent = () => {
           onNodeDragStop={handleNodeDragStop}
           onEdgesChange={onEdgesChange}
           nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
           fitView
           fitViewOptions={{ padding: 0.25 }}
           minZoom={0.3}
