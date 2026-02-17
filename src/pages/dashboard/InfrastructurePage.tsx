@@ -305,22 +305,39 @@ interface MatchedApp {
   image: string;
 }
 
-// ── Waypoint path builder (straight segments with rounded corners) ──────────
+// ── Orthogonal path builder (only H/V segments with rounded corners) ────────
 
-function buildWaypointPath(
+function expandToOrthogonal(points: Array<{ x: number; y: number }>): Array<{ x: number; y: number }> {
+  if (points.length < 2) return points;
+  const expanded: Array<{ x: number; y: number }> = [points[0]];
+  for (let i = 1; i < points.length; i++) {
+    const prev = expanded[expanded.length - 1];
+    const curr = points[i];
+    // If not aligned horizontally or vertically, insert an L-bend corner
+    if (Math.abs(prev.x - curr.x) > 1 && Math.abs(prev.y - curr.y) > 1) {
+      // Choose direction: horizontal first then vertical
+      expanded.push({ x: curr.x, y: prev.y });
+    }
+    expanded.push(curr);
+  }
+  return expanded;
+}
+
+function buildOrthogonalPath(
   points: Array<{ x: number; y: number }>,
   borderRadius: number = 12,
 ): string {
-  if (points.length < 2) return '';
-  if (points.length === 2) {
-    return `M ${points[0].x} ${points[0].y} L ${points[1].x} ${points[1].y}`;
+  const expanded = expandToOrthogonal(points);
+  if (expanded.length < 2) return '';
+  if (expanded.length === 2) {
+    return `M ${expanded[0].x} ${expanded[0].y} L ${expanded[1].x} ${expanded[1].y}`;
   }
 
-  let path = `M ${points[0].x} ${points[0].y}`;
-  for (let i = 1; i < points.length - 1; i++) {
-    const prev = points[i - 1];
-    const curr = points[i];
-    const next = points[i + 1];
+  let path = `M ${expanded[0].x} ${expanded[0].y}`;
+  for (let i = 1; i < expanded.length - 1; i++) {
+    const prev = expanded[i - 1];
+    const curr = expanded[i];
+    const next = expanded[i + 1];
     const dx1 = curr.x - prev.x, dy1 = curr.y - prev.y;
     const dx2 = next.x - curr.x, dy2 = next.y - curr.y;
     const len1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
@@ -331,7 +348,7 @@ function buildWaypointPath(
     const ax = curr.x + (dx2 / len2) * r, ay = curr.y + (dy2 / len2) * r;
     path += ` L ${bx} ${by} Q ${curr.x} ${curr.y} ${ax} ${ay}`;
   }
-  path += ` L ${points[points.length - 1].x} ${points[points.length - 1].y}`;
+  path += ` L ${expanded[expanded.length - 1].x} ${expanded[expanded.length - 1].y}`;
   return path;
 }
 
@@ -352,7 +369,7 @@ const GradientEdge = ({
 }: EdgeProps) => {
   const reactFlowInstance = useReactFlow();
   const [hovered, setHovered] = useState(false);
-  const [draggingIdx, setDraggingIdx] = useState<{ type: 'waypoint' | 'midpoint'; index: number } | null>(null);
+  const [draggingIdx, setDraggingIdx] = useState<{ type: 'waypoint' | 'midpoint' | 'hpair' | 'vpair'; index: number } | null>(null);
   const isVisible = hovered || !!data?.isEdgeHovered;
   const isSelected = !!data?.isEdgeSelected;
   const waypoints: Array<{ x: number; y: number }> = data?.waypoints || [];
@@ -372,7 +389,7 @@ const GradientEdge = ({
     sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition,
   });
 
-  const edgePath = hasWaypoints ? buildWaypointPath(allPoints) : defaultPath;
+  const edgePath = hasWaypoints ? buildOrthogonalPath(allPoints) : defaultPath;
 
   // Label position: midpoint of all points
   const labelX = hasWaypoints
@@ -382,11 +399,19 @@ const GradientEdge = ({
     ? allPoints.reduce((s, p) => s + p.y, 0) / allPoints.length
     : defaultLabelY;
 
-  // Compute segment midpoints for "add waypoint" handles
-  const segmentMidpoints = allPoints.slice(0, -1).map((p, i) => ({
-    x: (p.x + allPoints[i + 1].x) / 2,
-    y: (p.y + allPoints[i + 1].y) / 2,
-  }));
+  // Compute segment midpoints on the expanded orthogonal path for drag handles
+  const expandedPoints = expandToOrthogonal(allPoints);
+  const segmentMidpoints = expandedPoints.slice(0, -1).map((p, i) => {
+    const next = expandedPoints[i + 1];
+    const isHorizontal = Math.abs(p.y - next.y) < 1;
+    return {
+      x: (p.x + next.x) / 2,
+      y: (p.y + next.y) / 2,
+      isHorizontal,
+      segStart: p,
+      segEnd: next,
+    };
+  });
 
   const sourceColor = data?.sourceColor || 'hsl(var(--primary))';
   const targetColor = data?.targetColor || 'hsl(var(--primary))';
@@ -402,13 +427,43 @@ const GradientEdge = ({
         newWp[draggingIdx.index] = { x: Math.round(pos.x / 10) * 10, y: Math.round(pos.y / 10) * 10 };
         onWaypointsChange?.(newWp);
       } else if (draggingIdx.type === 'midpoint') {
-        // Insert a new waypoint at segment midpoint position
-        const wpIndex = draggingIdx.index; // segment index maps to insertion point
-        const newWp = [...waypoints];
+        // Insert two corner waypoints to create an orthogonal detour
+        const seg = segmentMidpoints[draggingIdx.index];
         const snapped = { x: Math.round(pos.x / 10) * 10, y: Math.round(pos.y / 10) * 10 };
-        newWp.splice(wpIndex, 0, snapped);
+        const newWp = [...waypoints];
+        // Find insertion index in waypoints array based on segment position
+        const wpInsertIdx = draggingIdx.index;
+        if (seg.isHorizontal) {
+          // Horizontal segment: drag vertically → insert 2 corners for vertical detour
+          const corner1 = { x: seg.segStart.x, y: snapped.y };
+          const corner2 = { x: seg.segEnd.x, y: snapped.y };
+          newWp.splice(wpInsertIdx, 0, corner1, corner2);
+          onWaypointsChange?.(newWp);
+          // Continue dragging as moving both corners' Y together
+          setDraggingIdx({ type: 'hpair', index: wpInsertIdx } as any);
+        } else {
+          // Vertical segment: drag horizontally → insert 2 corners for horizontal detour
+          const corner1 = { x: snapped.x, y: seg.segStart.y };
+          const corner2 = { x: snapped.x, y: seg.segEnd.y };
+          newWp.splice(wpInsertIdx, 0, corner1, corner2);
+          onWaypointsChange?.(newWp);
+          // Continue dragging as moving both corners' X together
+          setDraggingIdx({ type: 'vpair', index: wpInsertIdx } as any);
+        }
+      } else if (draggingIdx.type === 'hpair') {
+        // Moving a horizontal pair: both corners share Y, constrain to vertical movement
+        const snappedY = Math.round(pos.y / 10) * 10;
+        const newWp = [...waypoints];
+        newWp[draggingIdx.index] = { ...newWp[draggingIdx.index], y: snappedY };
+        newWp[draggingIdx.index + 1] = { ...newWp[draggingIdx.index + 1], y: snappedY };
         onWaypointsChange?.(newWp);
-        setDraggingIdx({ type: 'waypoint', index: wpIndex });
+      } else if (draggingIdx.type === 'vpair') {
+        // Moving a vertical pair: both corners share X, constrain to horizontal movement
+        const snappedX = Math.round(pos.x / 10) * 10;
+        const newWp = [...waypoints];
+        newWp[draggingIdx.index] = { ...newWp[draggingIdx.index], x: snappedX };
+        newWp[draggingIdx.index + 1] = { ...newWp[draggingIdx.index + 1], x: snappedX };
+        onWaypointsChange?.(newWp);
       }
     };
     const onMouseUp = () => setDraggingIdx(null);
@@ -418,7 +473,7 @@ const GradientEdge = ({
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
     };
-  }, [draggingIdx, waypoints, onWaypointsChange, reactFlowInstance]);
+  }, [draggingIdx, waypoints, onWaypointsChange, reactFlowInstance, segmentMidpoints]);
 
   // Double-click waypoint to remove it
   const handleWaypointDoubleClick = (wpIdx: number) => {
