@@ -22,6 +22,7 @@ import UsersPage from '@/pages/dashboard/UsersPage';
 import OrganizationsPage from '@/pages/dashboard/OrganizationsPage';
 import SettingsPage from '@/pages/dashboard/SettingsPage';
 import AgentActivityPage from '@/pages/dashboard/AgentActivityPage';
+import InfrastructurePage from '@/pages/dashboard/InfrastructurePage';
 import AppDetailPage from '@/pages/dashboard/AppDetailPage';
 import DocsPage from '@/pages/docs/DocsPage';
 
@@ -89,6 +90,7 @@ const App = () => (
               <Route path="/incidents/threat-feeds" element={<ThreatFeedsPage />} />
               <Route path="/incidents/custom-fields" element={<CustomFieldsPage />} />
               <Route path="/agent" element={<AgentActivityPage />} />
+              <Route path="/infrastructure" element={<InfrastructurePage />} />
               
               <Route path="/users" element={<UsersPage />} />
               <Route path="/organizations" element={<OrganizationsPage />} />

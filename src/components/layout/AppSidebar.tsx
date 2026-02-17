@@ -30,7 +30,7 @@ import FingerprintIcon from '@mui/icons-material/Fingerprint';
 import TuneIcon from '@mui/icons-material/Tune';
 import RssFeedIcon from '@mui/icons-material/RssFeed';
 import RadarIcon from '@mui/icons-material/Radar';
-import { Braces, Waypoints, Bot } from 'lucide-react';
+import { Braces, Waypoints, Bot, Network } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { IntegrationStatus } from './IntegrationStatus';
 import AgentPermissionsDrawer from '@/components/agent/AgentPermissionsDrawer';
@@ -66,6 +66,7 @@ const navItems: NavItem[] = [
       { label: 'MITRE ATT&CK', path: '/detection/mitre', icon: <Waypoints size={16} /> },
     ],
   },
+  { label: 'Infrastructure', icon: <Network size={20} />, path: '/infrastructure' },
   { label: 'Users', icon: <PeopleIcon />, path: '/users' },
 ];
 
