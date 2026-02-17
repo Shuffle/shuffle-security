@@ -23,7 +23,7 @@ import ReactFlow, {
   BackgroundVariant,
   MarkerType,
   reconnectEdge,
-  getSmoothStepPath,
+  
   BaseEdge,
   EdgeLabelRenderer,
   useViewport,
@@ -382,88 +382,117 @@ const GradientEdge = ({
     { x: targetX, y: targetY },
   ].filter((p): p is { x: number; y: number } => p != null && typeof p?.x === 'number' && typeof p?.y === 'number');
 
-  const hasWaypoints = waypoints.length > 0;
-
-  // Use smooth step when no waypoints, custom path when waypoints exist
-  const [defaultPath, defaultLabelX, defaultLabelY] = getSmoothStepPath({
-    sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition,
-  });
-
-  const edgePath = hasWaypoints ? buildOrthogonalPath(allPoints) : defaultPath;
+  // Always use orthogonal path for consistency between rendered edge and handles
+  const edgePath = buildOrthogonalPath(allPoints);
 
   // Label position: midpoint of all points
-  const labelX = hasWaypoints
-    ? allPoints.reduce((s, p) => s + p.x, 0) / allPoints.length
-    : defaultLabelX;
-  const labelY = hasWaypoints
-    ? allPoints.reduce((s, p) => s + p.y, 0) / allPoints.length
-    : defaultLabelY;
+  const labelX = allPoints.reduce((s, p) => s + p.x, 0) / allPoints.length;
+  const labelY = allPoints.reduce((s, p) => s + p.y, 0) / allPoints.length;
 
   // Compute segment midpoints on the expanded orthogonal path for drag handles
+  // Also track which waypoint insertion index each segment maps to
   const expandedPoints = expandToOrthogonal(allPoints);
-  const segmentMidpoints = expandedPoints.slice(0, -1).map((p, i) => {
-    const next = expandedPoints[i + 1];
-    const isHorizontal = Math.abs(p.y - next.y) < 1;
-    return {
-      x: (p.x + next.x) / 2,
-      y: (p.y + next.y) / 2,
-      isHorizontal,
-      segStart: p,
-      segEnd: next,
-    };
-  });
+  const segmentMidpoints = useMemo(() => {
+    const mids: Array<{
+      x: number; y: number;
+      isHorizontal: boolean;
+      segStart: { x: number; y: number };
+      segEnd: { x: number; y: number };
+      wpInsertIdx: number; // index in waypoints array where new points should be inserted
+    }> = [];
+
+    // Map expanded points back to allPoints indices to determine waypoint insertion index
+    // allPoints = [source, ...waypoints, target]
+    // Waypoint insertion index = allPoints index - 1 (since allPoints[0] is source)
+    let allPointsIdx = 0;
+    for (let i = 0; i < expandedPoints.length - 1; i++) {
+      const p = expandedPoints[i];
+      const next = expandedPoints[i + 1];
+
+      // Advance allPointsIdx when we reach the next original point
+      if (allPointsIdx < allPoints.length - 1) {
+        const ap = allPoints[allPointsIdx + 1];
+        if (ap && Math.abs(p.x - ap.x) < 1 && Math.abs(p.y - ap.y) < 1) {
+          allPointsIdx++;
+        }
+      }
+
+      const isHorizontal = Math.abs(p.y - next.y) < 1;
+      // wpInsertIdx: insert after allPointsIdx in the waypoints array
+      // allPoints index 0 = source, so waypoints insertion = allPointsIdx
+      const wpInsertIdx = Math.max(0, allPointsIdx);
+
+      mids.push({
+        x: (p.x + next.x) / 2,
+        y: (p.y + next.y) / 2,
+        isHorizontal,
+        segStart: p,
+        segEnd: next,
+        wpInsertIdx,
+      });
+    }
+    return mids;
+  }, [expandedPoints, allPoints]);
 
   const sourceColor = data?.sourceColor || 'hsl(var(--primary))';
   const targetColor = data?.targetColor || 'hsl(var(--primary))';
   const gradientId = `gradient-${id}`;
+
+  // Use refs for drag handler to avoid stale closures
+  const waypointsRef = useRef(waypoints);
+  waypointsRef.current = waypoints;
+  const segmentMidpointsRef = useRef(segmentMidpoints);
+  segmentMidpointsRef.current = segmentMidpoints;
+  const onWaypointsChangeRef = useRef(onWaypointsChange);
+  onWaypointsChangeRef.current = onWaypointsChange;
 
   // Drag handling
   useEffect(() => {
     if (!draggingIdx) return;
     const onMouseMove = (e: MouseEvent) => {
       const pos = reactFlowInstance.screenToFlowPosition({ x: e.clientX, y: e.clientY });
+      const currentWp = waypointsRef.current;
+      const onChange = onWaypointsChangeRef.current;
+
       if (draggingIdx.type === 'waypoint') {
-        const newWp = [...waypoints];
+        const newWp = [...currentWp];
         newWp[draggingIdx.index] = { x: Math.round(pos.x / 10) * 10, y: Math.round(pos.y / 10) * 10 };
-        onWaypointsChange?.(newWp);
+        onChange?.(newWp);
       } else if (draggingIdx.type === 'midpoint') {
-        // Insert two corner waypoints to create an orthogonal detour
-        const seg = segmentMidpoints[draggingIdx.index];
+        const seg = segmentMidpointsRef.current[draggingIdx.index];
+        if (!seg) return;
         const snapped = { x: Math.round(pos.x / 10) * 10, y: Math.round(pos.y / 10) * 10 };
-        const newWp = [...waypoints];
-        // Find insertion index in waypoints array based on segment position
-        const wpInsertIdx = draggingIdx.index;
+        const newWp = [...currentWp];
+        const wpInsertIdx = seg.wpInsertIdx;
         if (seg.isHorizontal) {
-          // Horizontal segment: drag vertically → insert 2 corners for vertical detour
           const corner1 = { x: seg.segStart.x, y: snapped.y };
           const corner2 = { x: seg.segEnd.x, y: snapped.y };
           newWp.splice(wpInsertIdx, 0, corner1, corner2);
-          onWaypointsChange?.(newWp);
-          // Continue dragging as moving both corners' Y together
-          setDraggingIdx({ type: 'hpair', index: wpInsertIdx } as any);
+          onChange?.(newWp);
+          setDraggingIdx({ type: 'hpair', index: wpInsertIdx });
         } else {
-          // Vertical segment: drag horizontally → insert 2 corners for horizontal detour
           const corner1 = { x: snapped.x, y: seg.segStart.y };
           const corner2 = { x: snapped.x, y: seg.segEnd.y };
           newWp.splice(wpInsertIdx, 0, corner1, corner2);
-          onWaypointsChange?.(newWp);
-          // Continue dragging as moving both corners' X together
-          setDraggingIdx({ type: 'vpair', index: wpInsertIdx } as any);
+          onChange?.(newWp);
+          setDraggingIdx({ type: 'vpair', index: wpInsertIdx });
         }
       } else if (draggingIdx.type === 'hpair') {
-        // Moving a horizontal pair: both corners share Y, constrain to vertical movement
         const snappedY = Math.round(pos.y / 10) * 10;
-        const newWp = [...waypoints];
-        newWp[draggingIdx.index] = { ...newWp[draggingIdx.index], y: snappedY };
-        newWp[draggingIdx.index + 1] = { ...newWp[draggingIdx.index + 1], y: snappedY };
-        onWaypointsChange?.(newWp);
+        const newWp = [...currentWp];
+        if (newWp[draggingIdx.index] && newWp[draggingIdx.index + 1]) {
+          newWp[draggingIdx.index] = { ...newWp[draggingIdx.index], y: snappedY };
+          newWp[draggingIdx.index + 1] = { ...newWp[draggingIdx.index + 1], y: snappedY };
+          onChange?.(newWp);
+        }
       } else if (draggingIdx.type === 'vpair') {
-        // Moving a vertical pair: both corners share X, constrain to horizontal movement
         const snappedX = Math.round(pos.x / 10) * 10;
-        const newWp = [...waypoints];
-        newWp[draggingIdx.index] = { ...newWp[draggingIdx.index], x: snappedX };
-        newWp[draggingIdx.index + 1] = { ...newWp[draggingIdx.index + 1], x: snappedX };
-        onWaypointsChange?.(newWp);
+        const newWp = [...currentWp];
+        if (newWp[draggingIdx.index] && newWp[draggingIdx.index + 1]) {
+          newWp[draggingIdx.index] = { ...newWp[draggingIdx.index], x: snappedX };
+          newWp[draggingIdx.index + 1] = { ...newWp[draggingIdx.index + 1], x: snappedX };
+          onChange?.(newWp);
+        }
       }
     };
     const onMouseUp = () => setDraggingIdx(null);
@@ -473,7 +502,7 @@ const GradientEdge = ({
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
     };
-  }, [draggingIdx, waypoints, onWaypointsChange, reactFlowInstance, segmentMidpoints]);
+  }, [draggingIdx, reactFlowInstance]);
 
   // Double-click waypoint to remove it
   const handleWaypointDoubleClick = (wpIdx: number) => {
