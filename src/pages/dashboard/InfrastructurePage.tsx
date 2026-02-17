@@ -372,7 +372,7 @@ const GradientEdge = ({
   const [draggingIdx, setDraggingIdx] = useState<{ type: 'waypoint' | 'midpoint' | 'hpair' | 'vpair'; index: number } | null>(null);
   const isVisible = hovered || !!data?.isEdgeHovered;
   const isSelected = !!data?.isEdgeSelected;
-  const waypoints: Array<{ x: number; y: number }> = data?.waypoints || [];
+  const waypoints: Array<{ x: number; y: number }> = (data?.waypoints || []).filter((p: any) => p != null && typeof p?.x === 'number' && typeof p?.y === 'number');
   const onWaypointsChange: ((wp: Array<{ x: number; y: number }>) => void) | undefined = data?.onWaypointsChange;
 
   // Build path through waypoints (filter out any null/undefined entries)
