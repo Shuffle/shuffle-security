@@ -749,6 +749,7 @@ const InfrastructureContent = () => {
         target: flow.target,
         label: flow.label,
         animated: !!isFullyHighlighted,
+        zIndex: isConnected ? 10 : 0,
         type: 'smoothstep',
         style: {
           stroke,
