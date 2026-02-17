@@ -1453,9 +1453,22 @@ const InfrastructureContent = () => {
   const edgeUpdateSuccessful = useRef(true);
 
   const onEdgeUpdateStart = useCallback((_: any, edge: Edge, handleType: 'source' | 'target') => {
+    console.log('[EdgeUpdateStart] edge:', edge.id, 'handleType:', handleType, 'source:', edge.source, 'target:', edge.target);
     edgeUpdateSuccessful.current = false;
     setUpdatingEdgeNodes({ source: edge.source, target: edge.target, draggedEnd: handleType });
   }, []);
+
+  // Allow all connections during edge update — our onEdgeUpdate normalizes direction
+  const isValidConnection = useCallback((connection: Connection) => {
+    if (!updatingEdgeNodes) return true;
+    const { source, target } = updatingEdgeNodes;
+    const valid = (
+      connection.source === source || connection.source === target ||
+      connection.target === source || connection.target === target
+    );
+    console.log('[isValidConnection]', JSON.parse(JSON.stringify(connection)), 'valid:', valid);
+    return valid;
+  }, [updatingEdgeNodes]);
 
   // Handle edge reconnection — only allow reconnecting to same source/target nodes (different handles)
   const onEdgeUpdate = useCallback((oldEdge: Edge, newConnection: Connection) => {
@@ -1636,6 +1649,7 @@ const InfrastructureContent = () => {
           onEdgeUpdateStart={onEdgeUpdateStart}
           onEdgeUpdate={onEdgeUpdate}
           onEdgeUpdateEnd={onEdgeUpdateEnd}
+          isValidConnection={isValidConnection}
           connectionLineStyle={{ stroke: 'hsl(var(--primary))', strokeWidth: 2.5, strokeDasharray: '6 3' }}
         >
           <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="hsla(var(--muted-foreground) / 0.1)" />
