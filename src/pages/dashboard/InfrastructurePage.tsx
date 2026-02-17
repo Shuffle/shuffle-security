@@ -315,6 +315,7 @@ const GradientEdge = ({
   labelBgStyle,
 }: EdgeProps) => {
   const [hovered, setHovered] = useState(false);
+  const isVisible = hovered || !!data?.isEdgeHovered;
   const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
     sourceY,
@@ -352,12 +353,12 @@ const GradientEdge = ({
         style={{
           ...style,
           stroke: `url(#${gradientId})`,
-          strokeWidth: hovered ? 3 : (style.strokeWidth || 2),
+          strokeWidth: isVisible ? 3 : (style.strokeWidth || 2),
           transition: 'stroke-width 0.15s ease',
         }}
         markerEnd={markerEnd}
       />
-      {label && hovered && (
+      {label && isVisible && (
         <EdgeLabelRenderer>
           <div
             onMouseEnter={() => setHovered(true)}
@@ -1138,7 +1139,7 @@ const InfrastructureContent = () => {
         reconnectable: true,
         zIndex: isConnected ? 10 : 0,
         type: 'gradient',
-        data: { sourceColor: useGradient ? srcColor : stroke, targetColor: useGradient ? tgtColor : stroke },
+        data: { sourceColor: useGradient ? srcColor : stroke, targetColor: useGradient ? tgtColor : stroke, isEdgeHovered },
         style: {
           stroke,
           strokeWidth: isFullyHighlighted ? 2.5 : (isGreyHighlighted ? 2 : (bothActive ? 1.5 : 1)),
