@@ -314,6 +314,7 @@ const GradientEdge = ({
   labelStyle,
   labelBgStyle,
 }: EdgeProps) => {
+  const [hovered, setHovered] = useState(false);
   const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
     sourceY,
@@ -335,30 +336,45 @@ const GradientEdge = ({
           <stop offset="100%" stopColor={targetColor} />
         </linearGradient>
       </defs>
+      {/* Invisible wider path for easier hover target */}
+      <path
+        d={edgePath}
+        fill="none"
+        stroke="transparent"
+        strokeWidth={20}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{ pointerEvents: 'stroke' }}
+      />
       <BaseEdge
         id={id}
         path={edgePath}
         style={{
           ...style,
           stroke: `url(#${gradientId})`,
+          strokeWidth: hovered ? 3 : (style.strokeWidth || 2),
+          transition: 'stroke-width 0.15s ease',
         }}
         markerEnd={markerEnd}
       />
-      {label && (
+      {label && hovered && (
         <EdgeLabelRenderer>
           <div
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
             style={{
               position: 'absolute',
               transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
               pointerEvents: 'all',
-              ...labelStyle as any,
-              background: (labelBgStyle as any)?.fill || 'hsl(var(--background))',
-              opacity: (labelBgStyle as any)?.fillOpacity ?? 0.85,
-              padding: '2px 6px',
+              background: 'hsl(var(--background))',
+              opacity: 0.95,
+              padding: '3px 8px',
               borderRadius: 4,
-              fontSize: (labelStyle as any)?.fontSize || 10,
-              fontWeight: (labelStyle as any)?.fontWeight || 500,
-              color: (labelStyle as any)?.fill || 'hsl(var(--muted-foreground))',
+              fontSize: 11,
+              fontWeight: 600,
+              color: 'hsl(var(--foreground))',
+              border: '1px solid hsl(var(--border))',
+              whiteSpace: 'nowrap',
             }}
           >
             {label}
@@ -475,18 +491,6 @@ const CategoryNode = ({ data }: { data: CategoryNodeData }) => {
             {category.label}
           </Typography>
         </Box>
-        <Typography sx={{
-          fontSize: '0.62rem',
-          color: 'hsl(var(--muted-foreground))',
-          lineHeight: 1.4,
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical',
-          overflow: 'hidden',
-          mb: hasApps ? 1 : 0,
-        }}>
-          {category.description}
-        </Typography>
 
         {/* Matched app icons */}
         {hasApps && (
