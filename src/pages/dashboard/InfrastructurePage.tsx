@@ -815,25 +815,16 @@ const InfrastructureContent = () => {
 
   useEffect(() => { setEdges(initialEdges); }, [initialEdges, setEdges]);
 
-  // Persist positions when nodes are dragged
-  const handleNodesChange = useCallback((changes: any) => {
-    onNodesChange(changes);
-
-    // Check if any node was dragged (position change)
-    const hasDrag = changes.some((c: any) => c.type === 'position' && c.dragging === false && c.position);
-    if (hasDrag) {
-      // Build current positions from the react flow instance
-      setTimeout(() => {
-        const currentNodes = reactFlowInstance.getNodes();
-        const positions: Record<string, { x: number; y: number }> = {};
-        currentNodes.forEach(n => {
-          positions[n.id] = { x: Math.round(n.position.x), y: Math.round(n.position.y) };
-        });
-        setSavedPositions(positions);
-        persistPositions(positions);
-      }, 0);
-    }
-  }, [onNodesChange, reactFlowInstance, persistPositions]);
+  // Persist positions when a node drag ends
+  const handleNodeDragStop = useCallback((_event: any, _node: any) => {
+    const currentNodes = reactFlowInstance.getNodes();
+    const positions: Record<string, { x: number; y: number }> = {};
+    currentNodes.forEach(n => {
+      positions[n.id] = { x: Math.round(n.position.x), y: Math.round(n.position.y) };
+    });
+    setSavedPositions(positions);
+    persistPositions(positions);
+  }, [reactFlowInstance, persistPositions]);
 
   // Reset positions: clear saved, revert to defaults
   const handleResetPositions = useCallback(() => {
@@ -886,7 +877,8 @@ const InfrastructureContent = () => {
         <ReactFlow
           nodes={nodes}
           edges={edges}
-          onNodesChange={handleNodesChange}
+          onNodesChange={onNodesChange}
+          onNodeDragStop={handleNodeDragStop}
           onEdgesChange={onEdgesChange}
           nodeTypes={nodeTypes}
           fitView
