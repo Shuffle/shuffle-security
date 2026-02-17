@@ -420,8 +420,9 @@ const CategoryNode = ({ data }: { data: CategoryNodeData }) => {
     <>
       {/* Each side has both source and target handles — visually highlight only the relevant type during edge update */}
       {(['Top', 'Bottom', 'Left', 'Right'] as const).map(side => {
-        const showTarget = isEdgeUpdating && edgeUpdateHandleType === 'target';
-        const showSource = isEdgeUpdating && edgeUpdateHandleType === 'source';
+        // When dragging source end, RF needs a target handle to drop on (and vice versa)
+        const showTarget = isEdgeUpdating && edgeUpdateHandleType === 'source';
+        const showSource = isEdgeUpdating && edgeUpdateHandleType === 'target';
         return (
           <React.Fragment key={side}>
             <Handle
