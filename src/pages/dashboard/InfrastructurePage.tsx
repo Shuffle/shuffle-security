@@ -931,6 +931,7 @@ const DataFlowCard = ({
   flow,
   edgeId,
   enabled,
+  highlighted = false,
   variant = 'full',
   onClick,
   onMouseEnter,
@@ -939,6 +940,7 @@ const DataFlowCard = ({
   flow: (typeof DATA_FLOWS)[number];
   edgeId: string;
   enabled: boolean;
+  highlighted?: boolean;
   variant?: 'full' | 'compact';
   onClick?: () => void;
   onMouseEnter?: () => void;
@@ -963,13 +965,14 @@ const DataFlowCard = ({
           ml: 1,
           mb: 0.5,
           borderRadius: 1.5,
-          border: '1px solid transparent',
+          border: highlighted ? `1px solid hsla(var(${flowColor}) / 0.4)` : '1px solid transparent',
+          bgcolor: highlighted ? `hsla(var(${flowColor}) / 0.08)` : 'transparent',
           cursor: 'pointer',
           opacity: enabled ? 1 : 0.45,
           transition: 'all 0.15s ease',
           '&:hover': {
-            bgcolor: 'hsla(var(--muted-foreground) / 0.06)',
-            borderColor: 'hsl(var(--border))',
+            bgcolor: highlighted ? `hsla(var(${flowColor}) / 0.12)` : 'hsla(var(--muted-foreground) / 0.06)',
+            borderColor: highlighted ? `hsla(var(${flowColor}) / 0.5)` : 'hsl(var(--border))',
             opacity: enabled ? 1 : 0.7,
           },
         }}
@@ -1104,12 +1107,14 @@ const AllDataFlowsDrawer = ({
   onSelectFlow,
   onSelectCategory,
   activeCategories,
+  highlightEdgeIdx,
 }: {
   open: boolean;
   onClose: () => void;
   onSelectFlow: (edgeIdx: number) => void;
   onSelectCategory: (categoryId: string) => void;
   activeCategories: Set<string>;
+  highlightEdgeIdx: number | null;
 }) => {
   // Group flows by source category
   const groupedFlows = useMemo(() => {
@@ -1214,6 +1219,7 @@ const AllDataFlowsDrawer = ({
                   flow={flow}
                   edgeId={`e-${idx}`}
                   enabled={activeCategories.has(flow.source) && activeCategories.has(flow.target)}
+                  highlighted={highlightEdgeIdx === idx}
                   variant="compact"
                   onClick={() => { onClose(); onSelectFlow(idx); }}
                 />
@@ -1230,14 +1236,18 @@ const AllDataFlowsDrawer = ({
 
 const EdgeDetailDrawer = ({
   flow,
+  edgeIdx,
   open,
   onClose,
   onSelectCategory,
+  onViewAllFlows,
 }: {
   flow: (typeof DATA_FLOWS)[number] | null;
+  edgeIdx: number | null;
   open: boolean;
   onClose: () => void;
   onSelectCategory: (categoryId: string) => void;
+  onViewAllFlows: (fromEdgeIdx: number) => void;
 }) => {
   if (!flow) return null;
   const sourceCat = getToolCategoryMeta(flow.source);
@@ -1259,6 +1269,27 @@ const EdgeDetailDrawer = ({
         },
       }}
     >
+      {/* Back to All Data Flows */}
+      <Box
+        onClick={() => edgeIdx !== null && onViewAllFlows(edgeIdx)}
+        sx={{
+          px: 3,
+          py: 1,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 0.75,
+          cursor: 'pointer',
+          borderBottom: '1px solid hsl(var(--border))',
+          transition: 'background 0.15s ease',
+          '&:hover': { bgcolor: 'hsla(var(--primary) / 0.06)' },
+        }}
+      >
+        <ChevronRight size={14} style={{ color: 'hsl(var(--primary))', transform: 'rotate(180deg)' }} />
+        <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--primary))', fontWeight: 600 }}>
+          All Data Flows
+        </Typography>
+      </Box>
+
       {/* Header */}
       <Box sx={{
         px: 3,
@@ -1634,6 +1665,7 @@ const InfrastructureContent = () => {
   const [hoveredEdgeId, setHoveredEdgeId] = useState<string | null>(null);
   const [selectedEdgeIdx, setSelectedEdgeIdx] = useState<number | null>(null);
   const [showAllFlows, setShowAllFlows] = useState(false);
+  const [lastViewedEdgeIdx, setLastViewedEdgeIdx] = useState<number | null>(null);
   const [categoryApps, setCategoryApps] = useState<Record<string, MatchedApp[]>>({});
   const [savedHandles, setSavedHandles] = useState<HandleOverrides>({});
   const [savedWaypoints, setSavedWaypoints] = useState<WaypointOverrides>({});
@@ -2305,6 +2337,7 @@ const InfrastructureContent = () => {
         }}
         onViewAllFlows={() => {
           setSelectedId(null);
+          setLastViewedEdgeIdx(null);
           setShowAllFlows(true);
         }}
         activeCategories={activeCategories}
@@ -2321,14 +2354,21 @@ const InfrastructureContent = () => {
           setSelectedId(catId);
         }}
         activeCategories={activeCategories}
+        highlightEdgeIdx={lastViewedEdgeIdx}
       />
       <EdgeDetailDrawer
         flow={selectedEdgeIdx !== null ? DATA_FLOWS[selectedEdgeIdx] || null : null}
+        edgeIdx={selectedEdgeIdx}
         open={selectedEdgeIdx !== null}
         onClose={() => setSelectedEdgeIdx(null)}
         onSelectCategory={(catId) => {
           setSelectedEdgeIdx(null);
           setSelectedId(catId);
+        }}
+        onViewAllFlows={(fromEdgeIdx) => {
+          setLastViewedEdgeIdx(fromEdgeIdx);
+          setSelectedEdgeIdx(null);
+          setShowAllFlows(true);
         }}
       />
     </Box>
