@@ -35,6 +35,7 @@ import {
   ArrowRight,
   ChevronRight,
   Activity,
+  Cloud,
 } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { IntegrationStatus } from '@/components/layout/IntegrationStatus';
@@ -214,6 +215,22 @@ const TOOL_CATEGORIES: ToolCategory[] = [
       'Analyze malware behavior from sandbox reports',
     ],
   },
+  {
+    id: 'cloud',
+    label: 'Cloud',
+    description: 'Cloud providers with bundled security services — logging, IAM, networking, and compute.',
+    icon: <Cloud size={22} />,
+    color: '--severity-info',
+    examples: ['AWS', 'Microsoft Azure', 'Google Cloud', 'Oracle Cloud'],
+    dataIn: ['Detection rules from SIEM', 'IOC feeds from Threat Intel', 'Policy updates from IAM'],
+    dataOut: ['CloudTrail/audit logs to SIEM', 'Resource inventory to Asset Management', 'Identity events to IAM'],
+    useCases: [
+      'Stream cloud audit logs to SIEM for correlation',
+      'Auto-remediate misconfigured resources (e.g. open S3 buckets)',
+      'Sync cloud IAM roles and policies with central identity provider',
+      'Inventory cloud assets for vulnerability management',
+    ],
+  },
 ];
 
 // ── Data flow edge definitions ─────────────────────────────────────────────────
@@ -235,6 +252,10 @@ const DATA_FLOWS: { source: string; target: string; label: string; animated?: bo
   { source: 'ai_llm', target: 'case_management', label: 'Triage & summaries', animated: true },
   { source: 'siem', target: 'ai_llm', label: 'Log analysis' },
   { source: 'edr', target: 'ai_llm', label: 'Process trees' },
+  { source: 'cloud', target: 'siem', label: 'Audit logs', animated: true },
+  { source: 'cloud', target: 'asset_management', label: 'Resource inventory' },
+  { source: 'cloud', target: 'iam', label: 'Identity events' },
+  { source: 'threat_intel', target: 'cloud', label: 'IOC feeds' },
 ];
 
 // ── Custom Node Component ──────────────────────────────────────────────────────
@@ -356,6 +377,7 @@ const NODE_POSITIONS: Record<string, { x: number; y: number }> = {
   edr:              { x: 260, y: 0 },
   email:            { x: 520, y: 0 },
   iam:              { x: 780, y: 0 },
+  cloud:            { x: 1040, y: 0 },
   // Row 2: Processing layer
   siem:             { x: 60,  y: 220 },
   threat_intel:     { x: 380, y: 220 },
@@ -617,6 +639,7 @@ const InfrastructurePage = () => {
       {/* Flow canvas */}
       <Box sx={{
         flex: 1,
+        minHeight: 500,
         mx: 2,
         mb: 2,
         borderRadius: 3,
