@@ -396,12 +396,13 @@ interface CategoryNodeData {
   onHover: (id: string | null) => void;
   isSelected: boolean;
   isHovered: boolean;
+  isEdgeUpdating: boolean;
   matchedApps: MatchedApp[];
   [key: string]: unknown;
 }
 
 const CategoryNode = ({ data }: { data: CategoryNodeData }) => {
-  const { category, onSelect, onHover, isSelected, isHovered, matchedApps } = data;
+  const { category, onSelect, onHover, isSelected, isHovered, isEdgeUpdating, matchedApps } = data;
   const colorVar = category.color;
   const highlighted = isSelected || isHovered;
   const hasApps = matchedApps.length > 0;
@@ -411,34 +412,38 @@ const CategoryNode = ({ data }: { data: CategoryNodeData }) => {
       {/* Each side has both source and target handles for flexible reconnection */}
       {(['Top', 'Bottom', 'Left', 'Right'] as const).map(side => (
         <React.Fragment key={side}>
-          <Handle
-            type="target"
-            position={Position[side]}
-            id={`${side.toLowerCase()}-target`}
-            className="infra-handle"
-            style={{
-              width: 10,
-              height: 10,
-              background: `hsl(var(${colorVar}))`,
-              border: '2px solid hsl(var(--background))',
-              opacity: 0,
-              transition: 'opacity 0.15s',
-            }}
-          />
-          <Handle
-            type="source"
-            position={Position[side]}
-            id={`${side.toLowerCase()}-source`}
-            className="infra-handle"
-            style={{
-              width: 10,
-              height: 10,
-              background: `hsl(var(${colorVar}))`,
-              border: '2px solid hsl(var(--background))',
-              opacity: 0,
-              transition: 'opacity 0.15s',
-            }}
-          />
+            <Handle
+              type="target"
+              position={Position[side]}
+              id={`${side.toLowerCase()}-target`}
+              className="infra-handle"
+              style={{
+                width: isEdgeUpdating ? 16 : 10,
+                height: isEdgeUpdating ? 16 : 10,
+                background: isEdgeUpdating ? `hsl(var(${colorVar}))` : `hsl(var(${colorVar}))`,
+                border: isEdgeUpdating ? `3px solid hsl(var(${colorVar}))` : '2px solid hsl(var(--background))',
+                opacity: isEdgeUpdating ? 1 : 0,
+                transition: 'all 0.15s ease',
+                boxShadow: isEdgeUpdating ? `0 0 8px hsla(var(${colorVar}) / 0.5)` : 'none',
+                zIndex: isEdgeUpdating ? 10 : 0,
+              }}
+            />
+            <Handle
+              type="source"
+              position={Position[side]}
+              id={`${side.toLowerCase()}-source`}
+              className="infra-handle"
+              style={{
+                width: isEdgeUpdating ? 16 : 10,
+                height: isEdgeUpdating ? 16 : 10,
+                background: isEdgeUpdating ? `hsl(var(${colorVar}))` : `hsl(var(${colorVar}))`,
+                border: isEdgeUpdating ? `3px solid hsl(var(${colorVar}))` : '2px solid hsl(var(--background))',
+                opacity: isEdgeUpdating ? 1 : 0,
+                transition: 'all 0.15s ease',
+                boxShadow: isEdgeUpdating ? `0 0 8px hsla(var(${colorVar}) / 0.5)` : 'none',
+                zIndex: isEdgeUpdating ? 10 : 0,
+              }}
+            />
         </React.Fragment>
       ))}
 
@@ -947,6 +952,7 @@ const InfrastructureContent = () => {
   const [selectedEdgeIdx, setSelectedEdgeIdx] = useState<number | null>(null);
   const [categoryApps, setCategoryApps] = useState<Record<string, MatchedApp[]>>({});
   const [savedHandles, setSavedHandles] = useState<HandleOverrides>({});
+  const [isEdgeUpdating, setIsEdgeUpdating] = useState(false);
   const [savedPositions, setSavedPositions] = useState<Record<string, { x: number; y: number }> | null>(null);
   const [positionsLoaded, setPositionsLoaded] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -1197,10 +1203,11 @@ const InfrastructureContent = () => {
         onHover: handleHover,
         isSelected: selectedId === node.id,
         isHovered: hoveredId === node.id,
+        isEdgeUpdating,
         matchedApps: categoryApps[node.id] || [],
       },
     })));
-  }, [selectedId, hoveredId, categoryApps, handleSelect, handleHover, setNodes]);
+  }, [selectedId, hoveredId, categoryApps, isEdgeUpdating, handleSelect, handleHover, setNodes]);
 
   useEffect(() => { setEdges(initialEdges); }, [initialEdges, setEdges]);
 
@@ -1220,6 +1227,7 @@ const InfrastructureContent = () => {
 
   const onEdgeUpdateStart = useCallback(() => {
     edgeUpdateSuccessful.current = false;
+    setIsEdgeUpdating(true);
   }, []);
 
   // Handle edge reconnection — only allow reconnecting to same source/target nodes (different handles)
@@ -1242,6 +1250,7 @@ const InfrastructureContent = () => {
   }, [setEdges, persistHandles]);
 
   const onEdgeUpdateEnd = useCallback((_: MouseEvent | TouchEvent, edge: Edge) => {
+    setIsEdgeUpdating(false);
     if (!edgeUpdateSuccessful.current) {
       // Snap back — do nothing, edge stays as-is
     }
