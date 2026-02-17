@@ -20,6 +20,7 @@ export interface AgentDecision {
   description?: string;
   status?: string;
   timestamp?: string | number;
+  duration?: number; // seconds
   action?: string;
   result?: string;
   tool?: string;

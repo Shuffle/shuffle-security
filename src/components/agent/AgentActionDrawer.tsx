@@ -24,7 +24,8 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
-import { Activity, Bot, CheckCircle2, Circle, AlertCircle, Clock, Wrench, MessageCircleQuestion, Flag, Play } from 'lucide-react';
+import { Activity, Bot, CheckCircle2, Circle, AlertCircle, Clock, Wrench, MessageCircleQuestion, Flag, Play, CheckCircle, XCircle, Loader2, Zap, FileText, Globe, Server, Brain } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 import { SingulJS } from '@/lib/singul-local';
 import type { AlgoliaSearchApp, SingulJSHandle } from '@/lib/singul-local';
@@ -41,6 +42,101 @@ export interface AgentActionDrawerProps {
   /** Optional initial app to target. */
   initialApp?: AlgoliaSearchApp | null;
 }
+
+// ── Run header helpers (matching activity feed style) ──────────────────────────
+
+const STATUS_CONFIG: Record<string, { icon: React.ReactNode; color: string; label: string }> = {
+  FINISHED: { icon: <CheckCircle size={16} />, color: 'hsl(var(--severity-low))', label: 'Completed' },
+  SUCCESS: { icon: <CheckCircle size={16} />, color: 'hsl(var(--severity-low))', label: 'Completed' },
+  FAILED: { icon: <XCircle size={16} />, color: 'hsl(var(--severity-critical))', label: 'Failed' },
+  ABORTED: { icon: <XCircle size={16} />, color: 'hsl(var(--severity-critical))', label: 'Aborted' },
+  EXECUTING: { icon: <Loader2 size={16} />, color: 'hsl(var(--severity-medium))', label: 'Running' },
+  RUNNING: { icon: <Loader2 size={16} />, color: 'hsl(var(--severity-medium))', label: 'Running' },
+  WAITING: { icon: <Clock size={16} />, color: 'hsl(var(--severity-info))', label: 'Waiting' },
+};
+
+const getRunIcon = (run: AgentRun): React.ReactNode => {
+  const src = (run.execution_source || '').toLowerCase();
+  const arg = (run.execution_argument || '').toLowerCase();
+  if (src.includes('schedule') || src.includes('cron')) return <Clock size={20} />;
+  if (src.includes('webhook') || src.includes('http')) return <Globe size={20} />;
+  if (arg.includes('alert') || arg.includes('detect')) return <Activity size={20} />;
+  if (arg.includes('report') || arg.includes('email')) return <FileText size={20} />;
+  if (arg.includes('endpoint') || arg.includes('server')) return <Server size={20} />;
+  return <Zap size={20} />;
+};
+
+const getRunIconColor = (run: AgentRun): string => {
+  const status = run.status?.toUpperCase() || '';
+  if (status === 'FINISHED' || status === 'SUCCESS') return 'hsl(var(--severity-low))';
+  if (status === 'FAILED' || status === 'ABORTED') return 'hsl(var(--severity-critical))';
+  if (status === 'EXECUTING' || status === 'RUNNING') return 'hsl(var(--severity-medium))';
+  return 'hsl(var(--primary))';
+};
+
+const formatDuration = (run: AgentRun): string => {
+  if (run.started_at && run.completed_at) {
+    const startSec = Number(run.started_at);
+    const endSec = Number(run.completed_at);
+    if (!isNaN(startSec) && !isNaN(endSec)) {
+      const ms = (endSec - startSec) * 1000;
+      if (ms < 1000) return `${Math.round(ms)}ms`;
+      if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
+      return `${Math.floor(ms / 60000)}m ${Math.floor((ms % 60000) / 1000)}s`;
+    }
+  }
+  if (run.duration) return `${run.duration.toFixed(1)}s`;
+  return '';
+};
+
+const getTimeAgo = (dateStr: string): string => {
+  try {
+    const date = isNaN(Number(dateStr)) ? new Date(dateStr) : new Date(Number(dateStr) * 1000);
+    if (isNaN(date.getTime())) return dateStr;
+    return formatDistanceToNow(date, { addSuffix: true });
+  } catch {
+    return dateStr;
+  }
+};
+
+const getRunTitle = (run: AgentRun): string => {
+  if (run.workflow?.name) return run.workflow.name;
+  if (run.execution_argument) {
+    try {
+      const parsed = JSON.parse(run.execution_argument);
+      if (parsed.title) return parsed.title;
+      if (parsed.action) return parsed.action;
+      if (parsed.name) return parsed.name;
+    } catch {
+      const clean = run.execution_argument.replace(/[{}"]/g, '').trim();
+      if (clean.length > 0 && clean.length < 80) return clean;
+    }
+  }
+  return `Execution ${run.execution_id?.slice(0, 8) || '—'}`;
+};
+
+const getRunSubtitle = (run: AgentRun): string => {
+  const { parsed } = parseRunResult(run);
+  if (parsed && typeof parsed === 'object') {
+    if (parsed.output) {
+      const s = String(parsed.output);
+      return s.length > 80 ? s.slice(0, 80) + '…' : s;
+    }
+    if (parsed.original_input) {
+      const s = String(parsed.original_input);
+      return s.length > 80 ? s.slice(0, 80) + '…' : s;
+    }
+  }
+  if (run.execution_source) return run.execution_source;
+  return 'Agent execution';
+};
+
+// ── Decision helpers ──────────────────────────────────────────────────────────
+
+const formatDecisionDuration = (ms: number): string => {
+  if (ms < 1000) return `${Math.round(ms)}ms`;
+  return `${(ms / 1000).toFixed(1)}s`;
+};
 
 // ── Decision type classification ───────────────────────────────────────────────
 
@@ -145,135 +241,206 @@ const DecisionsTimeline = ({ decisions }: { decisions: AgentDecision[] }) => {
           const isLast = idx === decisions.length - 1;
           const label = decision.title || decision.action?.replace(/_/g, ' ') || cfg.label;
 
+          // Calculate thinking time (gap between previous decision's end and this one's start)
+          let thinkingMs = 0;
+          if (idx > 0 && decision.timestamp) {
+            const prev = decisions[idx - 1];
+            const prevEnd = prev.timestamp
+              ? (typeof prev.timestamp === 'number' ? prev.timestamp * 1000 : new Date(prev.timestamp).getTime())
+                + (typeof prev.duration === 'number' ? prev.duration * 1000 : 0)
+              : 0;
+            const thisStart = typeof decision.timestamp === 'number'
+              ? decision.timestamp * 1000
+              : new Date(decision.timestamp).getTime();
+            if (prevEnd && thisStart && thisStart > prevEnd) {
+              thinkingMs = thisStart - prevEnd;
+            }
+          }
+
+          // Decision duration
+          const durationMs = typeof decision.duration === 'number' ? decision.duration * 1000 : 0;
+
           return (
-            <Box key={idx} sx={{ position: 'relative', mb: isLast ? 0 : 1.5 }}>
-              {/* Node dot */}
-              <Box sx={{
-                position: 'absolute',
-                left: -24,
-                top: 10,
-                width: 18,
-                height: 18,
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                bgcolor: cfg.bg,
-                border: `1.5px solid ${cfg.borderColor}`,
-                color: cfg.color,
-                zIndex: 1,
-              }}>
-                {cfg.icon}
-              </Box>
-
-              {/* Card */}
-              <Box sx={{
-                borderRadius: 2,
-                border: `1px solid ${cfg.borderColor}`,
-                borderLeft: `3px solid ${cfg.color}`,
-                bgcolor: cfg.bg,
-                overflow: 'hidden',
-              }}>
-                {/* Card header */}
-                <Box sx={{ px: 1.5, py: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Typography sx={{
-                    fontSize: '0.78rem',
-                    fontWeight: 600,
-                    color: 'hsl(var(--foreground))',
-                    flex: 1,
-                    textTransform: 'capitalize',
+            <Box key={idx}>
+              {/* Thinking gap indicator */}
+              {thinkingMs > 200 && (
+                <Box sx={{
+                  position: 'relative',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  my: 0.75,
+                }}>
+                  <Box sx={{
+                    position: 'absolute',
+                    left: -22,
+                    width: 14,
+                    height: 14,
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    bgcolor: 'hsl(var(--background))',
+                    color: 'hsl(var(--muted-foreground))',
+                    zIndex: 1,
                   }}>
-                    {label}
-                  </Typography>
-                  <Chip
-                    label={cfg.label}
-                    size="small"
-                    sx={{
-                      height: 16,
-                      fontSize: '0.58rem',
-                      fontWeight: 700,
-                      bgcolor: 'transparent',
-                      color: cfg.color,
-                      border: `1px solid ${cfg.borderColor}`,
-                      '& .MuiChip-label': { px: 0.5 },
-                    }}
-                  />
-                </Box>
-
-                {/* Description */}
-                {decision.description && (
-                  <Box sx={{ px: 1.5, pb: 1 }}>
-                    <Typography sx={{ fontSize: '0.74rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.55 }}>
-                      {decision.description}
+                    <Brain size={10} />
+                  </Box>
+                  <Box sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.5,
+                    px: 1,
+                    py: 0.25,
+                    borderRadius: 1,
+                    bgcolor: 'hsla(var(--muted-foreground) / 0.06)',
+                    border: '1px dashed hsla(var(--muted-foreground) / 0.2)',
+                  }}>
+                    <Brain size={9} style={{ color: 'hsl(var(--muted-foreground))', opacity: 0.5 }} />
+                    <Typography sx={{ fontSize: '0.58rem', color: 'hsl(var(--muted-foreground))', opacity: 0.6, fontWeight: 500 }}>
+                      Thinking · {formatDecisionDuration(thinkingMs)}
                     </Typography>
                   </Box>
-                )}
+                </Box>
+              )}
 
-                {/* Tool badge */}
-                {decision.tool && (
-                  <Box sx={{ px: 1.5, pb: 1 }}>
+              <Box sx={{ position: 'relative', mb: isLast ? 0 : 1.5 }}>
+                {/* Node dot */}
+                <Box sx={{
+                  position: 'absolute',
+                  left: -24,
+                  top: 10,
+                  width: 18,
+                  height: 18,
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  bgcolor: cfg.bg,
+                  border: `1.5px solid ${cfg.borderColor}`,
+                  color: cfg.color,
+                  zIndex: 1,
+                }}>
+                  {cfg.icon}
+                </Box>
+
+                {/* Card */}
+                <Box sx={{
+                  borderRadius: 2,
+                  border: `1px solid ${cfg.borderColor}`,
+                  borderLeft: `3px solid ${cfg.color}`,
+                  bgcolor: cfg.bg,
+                  overflow: 'hidden',
+                }}>
+                  {/* Card header */}
+                  <Box sx={{ px: 1.5, py: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography sx={{
+                      fontSize: '0.78rem',
+                      fontWeight: 600,
+                      color: 'hsl(var(--foreground))',
+                      flex: 1,
+                      textTransform: 'capitalize',
+                    }}>
+                      {label}
+                    </Typography>
+                    {durationMs > 0 && (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3, color: 'hsl(var(--muted-foreground))', opacity: 0.7 }}>
+                        <Clock size={10} />
+                        <Typography sx={{ fontSize: '0.6rem', fontWeight: 500 }}>
+                          {formatDecisionDuration(durationMs)}
+                        </Typography>
+                      </Box>
+                    )}
                     <Chip
-                      icon={<Wrench size={10} />}
-                      label={decision.tool}
+                      label={cfg.label}
                       size="small"
                       sx={{
-                        height: 20,
-                        fontSize: '0.65rem',
-                        bgcolor: 'hsla(var(--primary) / 0.08)',
-                        color: 'hsl(var(--primary))',
-                        '& .MuiChip-icon': { color: 'inherit', ml: 0.5 },
+                        height: 16,
+                        fontSize: '0.58rem',
+                        fontWeight: 700,
+                        bgcolor: 'transparent',
+                        color: cfg.color,
+                        border: `1px solid ${cfg.borderColor}`,
+                        '& .MuiChip-label': { px: 0.5 },
                       }}
                     />
                   </Box>
-                )}
 
-                {/* Result snippet (actions only) */}
-                {type === 'action' && decision.result && (
-                  <Box sx={{
-                    mx: 1.5, mb: 1, p: 1,
-                    borderRadius: 1,
-                    bgcolor: 'hsl(var(--background))',
-                    border: '1px solid hsl(var(--border))',
-                    maxHeight: 72,
-                    overflow: 'auto',
-                  }}>
-                    <Typography sx={{
-                      fontSize: '0.68rem',
-                      fontFamily: "'JetBrains Mono', monospace",
-                      color: 'hsl(var(--muted-foreground))',
-                      whiteSpace: 'pre-wrap',
-                      wordBreak: 'break-word',
-                      m: 0,
+                  {/* Description */}
+                  {decision.description && (
+                    <Box sx={{ px: 1.5, pb: 1 }}>
+                      <Typography sx={{ fontSize: '0.74rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.55 }}>
+                        {decision.description}
+                      </Typography>
+                    </Box>
+                  )}
+
+                  {/* Tool badge */}
+                  {decision.tool && (
+                    <Box sx={{ px: 1.5, pb: 1 }}>
+                      <Chip
+                        icon={<Wrench size={10} />}
+                        label={decision.tool}
+                        size="small"
+                        sx={{
+                          height: 20,
+                          fontSize: '0.65rem',
+                          bgcolor: 'hsla(var(--primary) / 0.08)',
+                          color: 'hsl(var(--primary))',
+                          '& .MuiChip-icon': { color: 'inherit', ml: 0.5 },
+                        }}
+                      />
+                    </Box>
+                  )}
+
+                  {/* Result snippet (actions only) */}
+                  {type === 'action' && decision.result && (
+                    <Box sx={{
+                      mx: 1.5, mb: 1, p: 1,
+                      borderRadius: 1,
+                      bgcolor: 'hsl(var(--background))',
+                      border: '1px solid hsl(var(--border))',
+                      maxHeight: 72,
+                      overflow: 'auto',
                     }}>
-                      {decision.result}
-                    </Typography>
-                  </Box>
-                )}
+                      <Typography sx={{
+                        fontSize: '0.68rem',
+                        fontFamily: "'JetBrains Mono', monospace",
+                        color: 'hsl(var(--muted-foreground))',
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word',
+                        m: 0,
+                      }}>
+                        {decision.result}
+                      </Typography>
+                    </Box>
+                  )}
 
-                {/* Footer */}
-                {(decision.status || decision.timestamp) && (
-                  <Box sx={{
-                    px: 1.5, py: 0.75,
-                    borderTop: `1px solid ${cfg.borderColor}`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1,
-                  }}>
-                    {decision.status && (
-                      <Typography sx={{ fontSize: '0.6rem', fontWeight: 600, color: cfg.color, textTransform: 'uppercase' }}>
-                        {decision.status}
-                      </Typography>
-                    )}
-                    {decision.timestamp && (
-                      <Typography sx={{ fontSize: '0.6rem', color: 'hsl(var(--muted-foreground))', opacity: 0.6, display: 'flex', alignItems: 'center', gap: 0.3, ml: 'auto' }}>
-                        <Clock size={9} />
-                        {typeof decision.timestamp === 'number'
-                          ? new Date(decision.timestamp * 1000).toLocaleTimeString()
-                          : decision.timestamp}
-                      </Typography>
-                    )}
-                  </Box>
-                )}
+                  {/* Footer */}
+                  {(decision.status || decision.timestamp) && (
+                    <Box sx={{
+                      px: 1.5, py: 0.75,
+                      borderTop: `1px solid ${cfg.borderColor}`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                    }}>
+                      {decision.status && (
+                        <Typography sx={{ fontSize: '0.6rem', fontWeight: 600, color: cfg.color, textTransform: 'uppercase' }}>
+                          {decision.status}
+                        </Typography>
+                      )}
+                      {decision.timestamp && (
+                        <Typography sx={{ fontSize: '0.6rem', color: 'hsl(var(--muted-foreground))', opacity: 0.6, display: 'flex', alignItems: 'center', gap: 0.3, ml: 'auto' }}>
+                          <Clock size={9} />
+                          {typeof decision.timestamp === 'number'
+                            ? new Date(decision.timestamp * 1000).toLocaleTimeString()
+                            : decision.timestamp}
+                        </Typography>
+                      )}
+                    </Box>
+                  )}
+                </Box>
               </Box>
             </Box>
           );
@@ -400,35 +567,95 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
         px: 3,
         py: 2.5,
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         gap: 2,
         borderBottom: '1px solid hsl(var(--border))',
         flexShrink: 0,
       }}>
-        <Box sx={{
-          width: 40,
-          height: 40,
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: 'hsla(var(--primary) / 0.12)',
-          color: 'hsl(var(--primary))',
-          flexShrink: 0,
-        }}>
-          <Bot size={22} />
-        </Box>
-        <Box sx={{ flex: 1 }}>
-          <Typography sx={{ fontWeight: 600, fontSize: '1.05rem', color: 'hsl(var(--foreground))' }}>
-            {isViewMode ? 'Execution Detail' : 'Agent Action'}
-          </Typography>
-          <Typography sx={{ fontSize: '0.78rem', color: 'hsl(var(--muted-foreground))' }}>
-            {isViewMode
-              ? `Run ${run!.execution_id?.slice(0, 12) || '—'}`
-              : 'Run an action via JSON-RPC'}
-          </Typography>
-        </Box>
-        <IconButton onClick={onClose} size="small" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+        {isViewMode && run ? (
+          <>
+            {/* Status-colored icon matching activity feed */}
+            <Box sx={{
+              width: 40,
+              height: 40,
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: `${getRunIconColor(run)}18`,
+              color: getRunIconColor(run),
+              flexShrink: 0,
+              mt: 0.25,
+            }}>
+              {getRunIcon(run)}
+            </Box>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Typography sx={{ fontWeight: 600, fontSize: '0.92rem', color: 'hsl(var(--foreground))', lineHeight: 1.3 }}>
+                {getRunTitle(run)}
+              </Typography>
+              <Typography sx={{
+                fontSize: '0.74rem',
+                color: 'hsl(var(--muted-foreground))',
+                mt: 0.25,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}>
+                {getRunSubtitle(run)}
+              </Typography>
+              {/* Sub-info row: status, duration, time ago */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.75, flexWrap: 'wrap' }}>
+                {(() => {
+                  const cfg = STATUS_CONFIG[run.status?.toUpperCase() || ''] || STATUS_CONFIG.FINISHED;
+                  return (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4, color: cfg.color }}>
+                      {cfg.icon}
+                      <Typography sx={{ fontSize: '0.68rem', fontWeight: 600, textTransform: 'uppercase' }}>
+                        {cfg.label}
+                      </Typography>
+                    </Box>
+                  );
+                })()}
+                {formatDuration(run) && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3, color: 'hsl(var(--muted-foreground))' }}>
+                    <Clock size={11} />
+                    <Typography sx={{ fontSize: '0.68rem' }}>{formatDuration(run)}</Typography>
+                  </Box>
+                )}
+                {run.started_at && (
+                  <Typography sx={{ fontSize: '0.68rem', color: 'hsl(var(--muted-foreground))', opacity: 0.6 }}>
+                    {getTimeAgo(run.started_at)}
+                  </Typography>
+                )}
+              </Box>
+            </Box>
+          </>
+        ) : (
+          <>
+            <Box sx={{
+              width: 40,
+              height: 40,
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'hsla(var(--primary) / 0.12)',
+              color: 'hsl(var(--primary))',
+              flexShrink: 0,
+            }}>
+              <Bot size={22} />
+            </Box>
+            <Box sx={{ flex: 1 }}>
+              <Typography sx={{ fontWeight: 600, fontSize: '1.05rem', color: 'hsl(var(--foreground))' }}>
+                Agent Action
+              </Typography>
+              <Typography sx={{ fontSize: '0.78rem', color: 'hsl(var(--muted-foreground))' }}>
+                Run an action via JSON-RPC
+              </Typography>
+            </Box>
+          </>
+        )}
+        <IconButton onClick={onClose} size="small" sx={{ color: 'hsl(var(--muted-foreground))', mt: 0.25 }}>
           <CloseIcon fontSize="small" />
         </IconButton>
       </Box>
