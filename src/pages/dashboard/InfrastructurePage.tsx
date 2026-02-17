@@ -62,6 +62,7 @@ interface ToolCategory {
   icon: React.ReactNode;
   color: string; // HSL var
   examples: string[];
+  subcategories: { label: string; description: string }[];
   dataIn: string[];
   dataOut: string[];
   useCases: string[];
@@ -75,6 +76,11 @@ const TOOL_CATEGORIES: ToolCategory[] = [
     icon: <LayoutGrid size={22} />,
     color: '--infra-case-mgmt',
     examples: ['Shuffle Cases', 'TheHive', 'ServiceNow', 'Jira', 'PagerDuty', 'Cortex XSOAR'],
+    subcategories: [
+      { label: 'Incident Management', description: 'Tracking, triage, and lifecycle of security incidents' },
+      { label: 'Task Orchestration', description: 'Automated task assignment and SLA tracking' },
+      { label: 'Playbook Execution', description: 'Standardized response workflows and runbooks' },
+    ],
     dataIn: ['Alerts from SIEM', 'Enrichment from Threat Intel', 'User context from IAM'],
     dataOut: ['Tasks to Communication', 'Status to SIEM', 'Metrics to reporting'],
     useCases: [
@@ -91,6 +97,11 @@ const TOOL_CATEGORIES: ToolCategory[] = [
     icon: <Server size={22} />,
     color: '--infra-siem',
     examples: ['Splunk', 'Microsoft Sentinel', 'Elastic SIEM', 'QRadar', 'Wazuh', 'Chronicle'],
+    subcategories: [
+      { label: 'Log Management', description: 'Centralized log collection, parsing, and retention' },
+      { label: 'Correlation Engine', description: 'Cross-source event correlation and alert generation' },
+      { label: 'UEBA', description: 'User & Entity Behavior Analytics for anomaly detection' },
+    ],
     dataIn: ['Logs from Network', 'Events from EDR', 'Auth logs from IAM'],
     dataOut: ['Alerts to Case Management', 'Logs to Threat Intel', 'Events to AI/LLM'],
     useCases: [
@@ -107,6 +118,12 @@ const TOOL_CATEGORIES: ToolCategory[] = [
     icon: <Network size={22} />,
     color: '--infra-network',
     examples: ['Palo Alto', 'Fortinet', 'Suricata', 'Zeek', 'Cisco ASA', 'pfSense'],
+    subcategories: [
+      { label: 'Firewall', description: 'Perimeter and internal traffic filtering and policy enforcement' },
+      { label: 'IDS/IPS', description: 'Intrusion detection and prevention systems' },
+      { label: 'NDR', description: 'Network Detection & Response for traffic analysis' },
+      { label: 'WAF', description: 'Web Application Firewall for application-layer protection' },
+    ],
     dataIn: ['IOC watchlists from Threat Intel', 'Block rules from Case Management'],
     dataOut: ['Flow logs to SIEM', 'Alerts to Case Management', 'Packet data to EDR'],
     useCases: [
@@ -123,6 +140,11 @@ const TOOL_CATEGORIES: ToolCategory[] = [
     icon: <Shield size={22} />,
     color: '--infra-edr',
     examples: ['CrowdStrike', 'SentinelOne', 'Microsoft Defender', 'Carbon Black', 'Cortex XDR', 'Trellix'],
+    subcategories: [
+      { label: 'Antivirus / EPP', description: 'Endpoint protection platforms and malware prevention' },
+      { label: 'XDR', description: 'Extended Detection & Response across endpoints, cloud, and network' },
+      { label: 'MDM', description: 'Mobile Device Management for endpoint compliance' },
+    ],
     dataIn: ['IOC hashes from Threat Intel', 'Containment orders from Case Management'],
     dataOut: ['Endpoint telemetry to SIEM', 'Alerts to Case Management', 'Process trees to AI/LLM'],
     useCases: [
@@ -139,6 +161,11 @@ const TOOL_CATEGORIES: ToolCategory[] = [
     icon: <MessageSquare size={22} />,
     color: '--infra-communication',
     examples: ['Slack', 'Microsoft Teams', 'PagerDuty', 'Opsgenie', 'Discord', 'Webex'],
+    subcategories: [
+      { label: 'ChatOps', description: 'Incident coordination via team messaging platforms' },
+      { label: 'On-Call / Paging', description: 'Escalation and on-call rotation management' },
+      { label: 'Notifications', description: 'Multi-channel alerting (SMS, email, push)' },
+    ],
     dataIn: ['Alerts from Case Management', 'Status updates from SIEM'],
     dataOut: ['Acknowledgements to Case Management', 'Escalations to IAM'],
     useCases: [
@@ -155,6 +182,11 @@ const TOOL_CATEGORIES: ToolCategory[] = [
     icon: <Mail size={22} />,
     color: '--infra-email',
     examples: ['Microsoft 365', 'Google Workspace', 'Sublime Security', 'Abnormal Security', 'Proofpoint', 'Mimecast'],
+    subcategories: [
+      { label: 'Email Gateway', description: 'Inbound/outbound filtering, spam, and malware blocking' },
+      { label: 'Phishing Protection', description: 'AI-driven phishing detection and user reporting' },
+      { label: 'DLP', description: 'Data Loss Prevention for email-borne sensitive data' },
+    ],
     dataIn: ['Threat signatures from Threat Intel', 'User reports from Communication'],
     dataOut: ['Phishing IOCs to Threat Intel', 'Suspicious emails to Case Management', 'Headers to AI/LLM'],
     useCases: [
@@ -171,6 +203,11 @@ const TOOL_CATEGORIES: ToolCategory[] = [
     icon: <Crosshair size={22} />,
     color: '--infra-threat-intel',
     examples: ['MISP', 'VirusTotal', 'AlienVault OTX', 'Recorded Future', 'Mandiant', 'AbuseIPDB'],
+    subcategories: [
+      { label: 'IOC Enrichment', description: 'Automated lookups for IPs, domains, hashes, and URLs' },
+      { label: 'Feed Management', description: 'Curation and distribution of threat intelligence feeds' },
+      { label: 'Adversary Tracking', description: 'Campaign and threat actor attribution (MITRE ATT&CK)' },
+    ],
     dataIn: ['IOCs from Email', 'Observables from Case Management', 'Hashes from EDR'],
     dataOut: ['Enrichment to Case Management', 'IOC feeds to Network/EDR', 'Context to AI/LLM'],
     useCases: [
@@ -187,6 +224,11 @@ const TOOL_CATEGORIES: ToolCategory[] = [
     icon: <HardDrive size={22} />,
     color: '--infra-asset-mgmt',
     examples: ['ServiceNow CMDB', 'Qualys', 'Tenable', 'Snipe-IT', 'Rapid7', 'Lansweeper'],
+    subcategories: [
+      { label: 'CMDB', description: 'Configuration Management Database for asset inventory' },
+      { label: 'Vulnerability Management', description: 'Scanning, prioritization, and remediation tracking' },
+      { label: 'Software Inventory', description: 'Tracking installed software and license compliance' },
+    ],
     dataIn: ['Scan results from EDR', 'Vulnerability feeds from Threat Intel'],
     dataOut: ['Asset context to Case Management', 'Owner info to IAM', 'Risk scores to SIEM'],
     useCases: [
@@ -203,6 +245,12 @@ const TOOL_CATEGORIES: ToolCategory[] = [
     icon: <KeyRound size={22} />,
     color: '--infra-iam',
     examples: ['Okta', 'Azure AD', 'CyberArk', 'JumpCloud', 'Duo', 'OneLogin'],
+    subcategories: [
+      { label: 'SSO / Federation', description: 'Single Sign-On and identity federation across services' },
+      { label: 'PAM', description: 'Privileged Access Management for elevated credentials and sessions' },
+      { label: 'MFA', description: 'Multi-Factor Authentication enforcement and management' },
+      { label: 'GRC', description: 'Governance, Risk & Compliance — policy and audit management' },
+    ],
     dataIn: ['Disable requests from Case Management', 'Risk signals from SIEM'],
     dataOut: ['Auth logs to SIEM', 'User context to Case Management', 'Session data to AI/LLM'],
     useCases: [
@@ -219,6 +267,12 @@ const TOOL_CATEGORIES: ToolCategory[] = [
     icon: <Cloud size={22} />,
     color: '--infra-cloud',
     examples: ['AWS', 'Microsoft Azure', 'Google Cloud', 'Oracle Cloud', 'DigitalOcean', 'Linode'],
+    subcategories: [
+      { label: 'CSPM', description: 'Cloud Security Posture Management — misconfig detection' },
+      { label: 'CWPP', description: 'Cloud Workload Protection for containers and serverless' },
+      { label: 'Cloud IAM', description: 'Cloud-native identity, roles, and permission policies' },
+      { label: 'DevSecOps', description: 'CI/CD security scanning, IaC checks, and code analysis' },
+    ],
     dataIn: ['Detection rules from SIEM', 'IOC feeds from Threat Intel', 'Policy updates from IAM'],
     dataOut: ['CloudTrail/audit logs to SIEM', 'Resource inventory to Asset Management', 'Identity events to IAM'],
     useCases: [
@@ -1106,7 +1160,36 @@ const CategoryDetailDrawer = ({
           </Box>
         </Box>
 
-        {/* Your Apps - only if authenticated apps exist */}
+        {/* Sub-categories */}
+        {category.subcategories.length > 0 && (
+          <Box sx={{ mb: 3 }}>
+            <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>
+              Sub-categories
+            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+              {category.subcategories.map(sub => (
+                <Box
+                  key={sub.label}
+                  sx={{
+                    px: 1.5,
+                    py: 1,
+                    borderRadius: 1.5,
+                    bgcolor: `hsla(var(${colorVar}) / 0.06)`,
+                    border: `1px solid hsla(var(${colorVar}) / 0.15)`,
+                  }}
+                >
+                  <Typography sx={{ fontSize: '0.78rem', fontWeight: 600, color: `hsl(var(${colorVar}))` }}>
+                    {sub.label}
+                  </Typography>
+                  <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', mt: 0.25 }}>
+                    {sub.description}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        )}
+
         {matchedApps.length > 0 && (
           <Box sx={{ mb: 3 }}>
             <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>
