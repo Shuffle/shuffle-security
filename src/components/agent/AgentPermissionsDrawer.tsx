@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -135,6 +135,18 @@ const AgentPermissionsDrawer = ({ open, onClose }: AgentPermissionsDrawerProps) 
   );
   const [activeTab, setActiveTab] = useState(0);
   const [actionDrawerOpen, setActionDrawerOpen] = useState(false);
+
+  // Always reset to Permissions tab when the drawer opens
+  useState(() => {
+    // This runs on mount only — for re-opens we use the effect below
+  });
+  // Reset tab to Permissions (0) every time drawer opens
+  const prevOpenRef = useRef(open);
+  if (open && !prevOpenRef.current) {
+    // Drawer just opened
+    setActiveTab(0);
+  }
+  prevOpenRef.current = open;
 
   const toggleExpand = (categoryId: string) => {
     setExpandedCategories(prev =>

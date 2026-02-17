@@ -15,6 +15,17 @@ export interface AgentRunResult {
   status?: string;
 }
 
+export interface AgentDecision {
+  title?: string;
+  description?: string;
+  status?: string;
+  timestamp?: string | number;
+  action?: string;
+  result?: string;
+  tool?: string;
+  [key: string]: unknown;
+}
+
 export interface AgentRun {
   execution_id: string;
   workflow_id: string;
@@ -23,6 +34,7 @@ export interface AgentRun {
   completed_at?: string;
   result?: string;
   results?: AgentRunResult[];
+  decisions?: AgentDecision[];
   execution_argument?: string;
   execution_source?: string;
   workflow?: {
