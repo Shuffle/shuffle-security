@@ -3,7 +3,7 @@
  * Uses @xyflow/react for an interactive node-based diagram.
  */
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -37,6 +37,7 @@ import {
   Activity,
 } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
+import { IntegrationStatus } from '@/components/layout/IntegrationStatus';
 
 // ── Tool Category Definitions ──────────────────────────────────────────────────
 
@@ -585,8 +586,12 @@ const InfrastructurePage = () => {
     [selectedId]
   );
 
-  const [nodes, , onNodesChange] = useNodesState(initialNodes);
-  const [edges, , onEdgesChange] = useEdgesState(initialEdges);
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  // Keep nodes/edges in sync when selection changes
+  useEffect(() => { setNodes(initialNodes); }, [initialNodes, setNodes]);
+  useEffect(() => { setEdges(initialEdges); }, [initialEdges, setEdges]);
 
   const selectedCategory = selectedId
     ? TOOL_CATEGORIES.find(c => c.id === selectedId) || null
@@ -602,10 +607,11 @@ const InfrastructurePage = () => {
             Infrastructure
           </Typography>
         </Box>
-        <Typography sx={{ fontSize: '0.82rem', color: 'hsl(var(--muted-foreground))', maxWidth: 600 }}>
+        <Typography sx={{ fontSize: '0.82rem', color: 'hsl(var(--muted-foreground))', maxWidth: 600, mb: 2 }}>
           Visual map of security tool categories and how data flows between them.
           Click any node to see details, data sources, and automation use cases.
         </Typography>
+        <IntegrationStatus collapsed={false} />
       </Box>
 
       {/* Flow canvas */}
