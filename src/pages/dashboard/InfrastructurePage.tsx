@@ -683,6 +683,7 @@ const InfrastructureContent = () => {
     return NODE_POSITIONS[catId] || { x: 0, y: 0 };
   }, [savedPositions]);
 
+  // Build initial nodes only once (when positions or categoryApps change)
   const initialNodes: Node[] = useMemo(() =>
     TOOL_CATEGORIES.map(cat => ({
       id: cat.id,
@@ -693,12 +694,12 @@ const InfrastructureContent = () => {
         category: cat,
         onSelect: handleSelect,
         onHover: handleHover,
-        isSelected: selectedId === cat.id,
-        isHovered: hoveredId === cat.id,
+        isSelected: false,
+        isHovered: false,
         matchedApps: categoryApps[cat.id] || [],
       },
     })),
-    [handleSelect, handleHover, selectedId, hoveredId, categoryApps, getNodePosition]
+    [handleSelect, handleHover, categoryApps, getNodePosition]
   );
 
   const initialEdges: Edge[] = useMemo(() =>
@@ -764,7 +765,21 @@ const InfrastructureContent = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
+  // Sync initial nodes only for structural changes (apps loaded, positions loaded)
   useEffect(() => { setNodes(initialNodes); }, [initialNodes, setNodes]);
+
+  // Update node data (hover/select state) WITHOUT resetting positions
+  useEffect(() => {
+    setNodes(prev => prev.map(node => ({
+      ...node,
+      data: {
+        ...node.data,
+        isSelected: selectedId === node.id,
+        isHovered: hoveredId === node.id,
+      },
+    })));
+  }, [selectedId, hoveredId, setNodes]);
+
   useEffect(() => { setEdges(initialEdges); }, [initialEdges, setEdges]);
 
   // Persist positions when nodes are dragged
