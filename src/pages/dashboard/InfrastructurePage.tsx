@@ -16,11 +16,13 @@ import ReactFlow, {
   Handle,
   useNodesState,
   useEdgesState,
+  useReactFlow,
+  ReactFlowProvider,
   BackgroundVariant,
   MarkerType,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Box, Typography, Chip, Avatar, IconButton, Drawer, Tooltip } from '@mui/material';
+import { Box, Typography, Chip, Avatar, IconButton, Drawer, Tooltip, Button } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import {
   LayoutGrid,
@@ -32,7 +34,6 @@ import {
   Crosshair,
   HardDrive,
   KeyRound,
-  Brain,
   Zap,
   ArrowRight,
   ChevronRight,
@@ -202,22 +203,6 @@ const TOOL_CATEGORIES: ToolCategory[] = [
     ],
   },
   {
-    id: 'ai_llm',
-    label: 'AI / LLM',
-    description: 'AI-powered analysis, automated triage, and natural language investigation assistance.',
-    icon: <Brain size={22} />,
-    color: '--primary',
-    examples: ['OpenAI', 'Anthropic', 'Google Gemini', 'Shuffle AI'],
-    dataIn: ['Logs from SIEM', 'Process trees from EDR', 'Email headers from Email'],
-    dataOut: ['Triage recommendations to Case Management', 'Summaries to Communication', 'Detection suggestions to SIEM'],
-    useCases: [
-      'Auto-triage alerts with severity and confidence scoring',
-      'Generate natural language incident summaries',
-      'Suggest remediation steps based on similar past incidents',
-      'Analyze malware behavior from sandbox reports',
-    ],
-  },
-  {
     id: 'cloud',
     label: 'Cloud',
     description: 'Cloud providers with bundled security services — logging, IAM, networking, and compute.',
@@ -251,9 +236,6 @@ const DATA_FLOWS: { source: string; target: string; label: string; animated?: bo
   { source: 'case_management', target: 'edr', label: 'Containment' },
   { source: 'asset_management', target: 'case_management', label: 'Asset context' },
   { source: 'email', target: 'threat_intel', label: 'Phishing IOCs' },
-  { source: 'ai_llm', target: 'case_management', label: 'Triage & summaries', animated: true },
-  { source: 'siem', target: 'ai_llm', label: 'Log analysis' },
-  { source: 'edr', target: 'ai_llm', label: 'Process trees' },
   { source: 'cloud', target: 'siem', label: 'Audit logs', animated: true },
   { source: 'cloud', target: 'asset_management', label: 'Resource inventory' },
   { source: 'cloud', target: 'iam', label: 'Identity events' },
@@ -272,7 +254,7 @@ const CATEGORY_KEYWORDS: Record<string, string[]> = {
   threat_intel: ['threat intel', 'intelligence', 'misp', 'virustotal', 'otx', 'recorded future', 'ioc', 'abuse'],
   asset_management: ['asset', 'cmdb', 'inventory', 'qualys', 'tenable', 'vulnerability', 'snipe'],
   iam: ['iam', 'identity', 'access', 'okta', 'azure ad', 'cyberark', 'jumpcloud', 'ldap', 'active directory'],
-  ai_llm: ['ai', 'llm', 'openai', 'anthropic', 'gemini', 'gpt', 'machine learning', 'chatgpt'],
+  
   cloud: ['cloud', 'aws', 'azure', 'gcp', 'google cloud', 'oracle cloud', 'digitalocean', 'cloud provider'],
 };
 
@@ -435,7 +417,7 @@ const NODE_POSITIONS: Record<string, { x: number; y: number }> = {
   asset_management: { x: 80,   y: 260 },
   siem:             { x: 400,  y: 260 },
   threat_intel:     { x: 720,  y: 260 },
-  ai_llm:           { x: 1020, y: 260 },
+  
   // Row 3 — Response & coordination
   case_management:  { x: 400,  y: 520 },
   communication:    { x: 720,  y: 520 },
@@ -598,8 +580,9 @@ const CategoryDetailDrawer = ({
 
 // ── Page Component ─────────────────────────────────────────────────────────────
 
-const InfrastructurePage = () => {
+const InfrastructureContent = () => {
   usePageMeta({ title: 'Infrastructure', description: 'Security tool integrations and data flow visualization' });
+  const reactFlowInstance = useReactFlow();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [categoryApps, setCategoryApps] = useState<Record<string, MatchedApp[]>>({});
@@ -756,6 +739,32 @@ const InfrastructurePage = () => {
         >
           <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="hsla(var(--muted-foreground) / 0.1)" />
           <Controls showInteractive={false} />
+          {/* Reset position button */}
+          <Box sx={{
+            position: 'absolute',
+            bottom: 10,
+            left: 60,
+            zIndex: 5,
+          }}>
+            <Button
+              size="small"
+              onClick={() => reactFlowInstance.fitView({ padding: 0.25, duration: 300 })}
+              sx={{
+                minWidth: 'auto',
+                px: 1.5,
+                py: 0.5,
+                fontSize: '0.7rem',
+                bgcolor: 'hsl(var(--card))',
+                color: 'hsl(var(--foreground))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: 2,
+                boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                '&:hover': { bgcolor: 'hsl(var(--muted))' },
+              }}
+            >
+              Reset View
+            </Button>
+          </Box>
           <MiniMap
             nodeColor={() => 'hsl(var(--primary))'}
             maskColor="hsla(var(--background) / 0.8)"
@@ -804,5 +813,11 @@ const InfrastructurePage = () => {
     </Box>
   );
 };
+
+const InfrastructurePage = () => (
+  <ReactFlowProvider>
+    <InfrastructureContent />
+  </ReactFlowProvider>
+);
 
 export default InfrastructurePage;
