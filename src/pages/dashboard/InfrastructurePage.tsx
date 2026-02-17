@@ -389,25 +389,55 @@ const GradientEdge = ({
   const labelX = allPoints.reduce((s, p) => s + p.x, 0) / allPoints.length;
   const labelY = allPoints.reduce((s, p) => s + p.y, 0) / allPoints.length;
 
-  // Compute midpoint handles on LOGICAL segments (between consecutive allPoints)
-  // Each logical segment gets exactly one handle at its halfway point
+  // Compute midpoint handles: one per logical segment, positioned on the longest
+  // rendered sub-segment of the orthogonal path for that segment
+  const expandedPoints = expandToOrthogonal(allPoints);
   const segmentMidpoints = useMemo(() => {
-    return allPoints.slice(0, -1).map((p, i) => {
-      const next = allPoints[i + 1];
-      // Determine primary direction of this logical segment
-      const dx = Math.abs(next.x - p.x);
-      const dy = Math.abs(next.y - p.y);
-      const isHorizontal = dx >= dy;
-      return {
-        x: (p.x + next.x) / 2,
-        y: (p.y + next.y) / 2,
-        isHorizontal,
-        segStart: p,
-        segEnd: next,
-        wpInsertIdx: i, // insert at this index in the waypoints array (allPoints[0] is source, so wp index = allPoints index - 1 + 1 = i)
-      };
-    });
-  }, [allPoints]);
+    // Group expanded segments by which logical segment they belong to
+    // Build a map: for each logical segment (allPoints[i] → allPoints[i+1]),
+    // find all expanded sub-segments and pick the longest one's midpoint
+    const results: Array<{
+      x: number; y: number;
+      isHorizontal: boolean;
+      segStart: { x: number; y: number };
+      segEnd: { x: number; y: number };
+      wpInsertIdx: number;
+    }> = [];
+
+    let expIdx = 0;
+    for (let logIdx = 0; logIdx < allPoints.length - 1; logIdx++) {
+      const logStart = allPoints[logIdx];
+      const logEnd = allPoints[logIdx + 1];
+
+      // Collect expanded sub-segments for this logical segment
+      const subSegments: Array<{ start: { x: number; y: number }; end: { x: number; y: number }; len: number }> = [];
+
+      while (expIdx < expandedPoints.length - 1) {
+        const s = expandedPoints[expIdx];
+        const e = expandedPoints[expIdx + 1];
+        const len = Math.abs(e.x - s.x) + Math.abs(e.y - s.y);
+        subSegments.push({ start: s, end: e, len });
+        expIdx++;
+        // Stop when we reach the logical end point
+        if (Math.abs(e.x - logEnd.x) < 1 && Math.abs(e.y - logEnd.y) < 1) break;
+      }
+
+      // Pick the longest sub-segment for the handle position
+      if (subSegments.length > 0) {
+        const longest = subSegments.reduce((a, b) => b.len > a.len ? b : a);
+        const isHorizontal = Math.abs(longest.start.y - longest.end.y) < 1;
+        results.push({
+          x: (longest.start.x + longest.end.x) / 2,
+          y: (longest.start.y + longest.end.y) / 2,
+          isHorizontal,
+          segStart: longest.start,
+          segEnd: longest.end,
+          wpInsertIdx: logIdx,
+        });
+      }
+    }
+    return results;
+  }, [allPoints, expandedPoints]);
 
   const sourceColor = data?.sourceColor || 'hsl(var(--primary))';
   const targetColor = data?.targetColor || 'hsl(var(--primary))';
