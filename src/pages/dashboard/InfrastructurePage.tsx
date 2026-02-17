@@ -375,12 +375,12 @@ const GradientEdge = ({
   const waypoints: Array<{ x: number; y: number }> = data?.waypoints || [];
   const onWaypointsChange: ((wp: Array<{ x: number; y: number }>) => void) | undefined = data?.onWaypointsChange;
 
-  // Build path through waypoints
+  // Build path through waypoints (filter out any null/undefined entries)
   const allPoints = [
     { x: sourceX, y: sourceY },
     ...waypoints,
     { x: targetX, y: targetY },
-  ];
+  ].filter((p): p is { x: number; y: number } => p != null && typeof p?.x === 'number' && typeof p?.y === 'number');
 
   const hasWaypoints = waypoints.length > 0;
 
