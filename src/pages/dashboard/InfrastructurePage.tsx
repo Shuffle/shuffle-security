@@ -589,6 +589,7 @@ const InfrastructureContent = () => {
   const reactFlowInstance = useReactFlow();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [hoveredEdgeId, setHoveredEdgeId] = useState<string | null>(null);
   const [categoryApps, setCategoryApps] = useState<Record<string, MatchedApp[]>>({});
   const [savedPositions, setSavedPositions] = useState<Record<string, { x: number; y: number }> | null>(null);
   const [positionsLoaded, setPositionsLoaded] = useState(false);
@@ -710,11 +711,19 @@ const InfrastructureContent = () => {
       const bothActive = sourceActive && targetActive;
       const eitherMissing = !sourceActive || !targetActive;
 
-      const isHighlighted = activeId && (flow.source === activeId || flow.target === activeId);
+      const edgeId = `e-${idx}`;
+      const isEdgeHovered = hoveredEdgeId === edgeId;
+      const isHighlighted = isEdgeHovered || (activeId && (flow.source === activeId || flow.target === activeId));
+
+      const hasAnyFocus = activeId || hoveredEdgeId;
 
       // Determine stroke color
       let stroke: string;
-      if (activeId) {
+      if (isEdgeHovered) {
+        // Find source category color for the hovered edge
+        const srcCat = TOOL_CATEGORIES.find(c => c.id === flow.source);
+        stroke = srcCat ? `hsl(var(${srcCat.color}))` : 'hsl(var(--primary))';
+      } else if (hasAnyFocus) {
         stroke = isHighlighted ? activeColor : 'hsla(var(--muted-foreground) / 0.06)';
       } else if (bothActive) {
         stroke = 'hsl(var(--primary))';
@@ -737,16 +746,17 @@ const InfrastructureContent = () => {
           strokeDasharray: eitherMissing && !isHighlighted ? '6 4' : undefined,
           opacity: eitherMissing && !isHighlighted ? 0.5 : 1,
           transition: 'stroke 0.2s, stroke-width 0.2s, opacity 0.2s',
+          cursor: 'pointer',
         },
         labelStyle: {
-          fontSize: 10,
+          fontSize: isEdgeHovered ? 12 : 10,
           fontWeight: isHighlighted ? 600 : 500,
           fill: isHighlighted
             ? 'hsl(var(--foreground))'
             : eitherMissing
               ? 'hsla(var(--muted-foreground) / 0.4)'
               : 'hsl(var(--muted-foreground))',
-          opacity: activeId && !isHighlighted ? 0.15 : eitherMissing ? 0.6 : 0.8,
+          opacity: hasAnyFocus && !isHighlighted ? 0.15 : eitherMissing ? 0.6 : 0.8,
         },
         labelBgStyle: {
           fill: 'hsl(var(--background))',
@@ -756,11 +766,11 @@ const InfrastructureContent = () => {
           type: MarkerType.ArrowClosed,
           width: 14,
           height: 14,
-          color: isHighlighted ? activeColor : eitherMissing ? 'hsla(var(--muted-foreground) / 0.15)' : stroke,
+          color: isHighlighted ? (isEdgeHovered ? stroke : activeColor) : eitherMissing ? 'hsla(var(--muted-foreground) / 0.15)' : stroke,
         },
       };
     }),
-    [activeId, activeColor, activeCategories]
+    [activeId, activeColor, activeCategories, hoveredEdgeId]
   );
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
@@ -862,6 +872,8 @@ const InfrastructureContent = () => {
           minZoom={0.3}
           maxZoom={1.5}
           proOptions={{ hideAttribution: true }}
+          onEdgeMouseEnter={(_, edge) => setHoveredEdgeId(edge.id)}
+          onEdgeMouseLeave={() => setHoveredEdgeId(null)}
         >
           <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="hsla(var(--muted-foreground) / 0.1)" />
           <Controls showInteractive={false} />
