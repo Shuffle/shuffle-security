@@ -45,6 +45,7 @@ import {
   Terminal,
   Bot,
   Play,
+  Lightbulb,
 } from 'lucide-react';
 import { useAgentPermissions, RiskLevel, AgentPermissionCategory } from '@/hooks/useAgentPermissions';
 import AgentActionDrawer from '@/components/agent/AgentActionDrawer';
@@ -53,10 +54,15 @@ import AgentActionDrawer from '@/components/agent/AgentActionDrawer';
 const PERMISSION_ICONS: Record<string, React.ReactNode> = {
   scan_vulnerabilities: <Search size={18} />,
   analyze_logs: <FileText size={18} />,
+  enrich_observables: <Globe size={18} />,
+  tune_detection_rules: <Settings2 size={18} />,
   block_ips: <Ban size={18} />,
   isolate_systems: <MonitorOff size={18} />,
   disable_accounts: <UserX size={18} />,
   force_password_reset: <KeyRound size={18} />,
+  update_case_status: <FileText size={18} />,
+  suggest_remediation: <Lightbulb size={18} />,
+  manage_ioc_watchlists: <Database size={18} />,
   send_alerts: <Megaphone size={18} />,
   escalate_incidents: <AlertTriangle size={18} />,
   email_reports: <Mail size={18} />,
