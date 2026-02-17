@@ -1141,6 +1141,7 @@ const InfrastructureContent = () => {
   const [categoryApps, setCategoryApps] = useState<Record<string, MatchedApp[]>>({});
   const [savedHandles, setSavedHandles] = useState<HandleOverrides>({});
   const [updatingEdgeNodes, setUpdatingEdgeNodes] = useState<{ source: string; target: string; draggedEnd: 'source' | 'target' } | null>(null);
+  const updatingEdgeNodesRef = useRef<{ source: string; target: string; draggedEnd: 'source' | 'target' } | null>(null);
   const [savedPositions, setSavedPositions] = useState<Record<string, { x: number; y: number }> | null>(null);
   const [positionsLoaded, setPositionsLoaded] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -1464,7 +1465,9 @@ const InfrastructureContent = () => {
   const onEdgeUpdateStart = useCallback((_: any, edge: Edge, handleType: 'source' | 'target') => {
     console.log('[EdgeUpdateStart] edge:', edge.id, 'handleType:', handleType, 'source:', edge.source, 'target:', edge.target);
     edgeUpdateSuccessful.current = false;
-    setUpdatingEdgeNodes({ source: edge.source, target: edge.target, draggedEnd: handleType });
+    const info = { source: edge.source, target: edge.target, draggedEnd: handleType };
+    updatingEdgeNodesRef.current = info;
+    setUpdatingEdgeNodes(info);
   }, []);
 
   // Allow all connections during edge update — our onEdgeUpdate normalizes direction
@@ -1483,11 +1486,11 @@ const InfrastructureContent = () => {
   const onEdgeUpdate = useCallback((oldEdge: Edge, newConnection: Connection) => {
     console.log('[EdgeUpdate] oldEdge:', { id: oldEdge.id, source: oldEdge.source, target: oldEdge.target, sourceHandle: oldEdge.sourceHandle, targetHandle: oldEdge.targetHandle });
     console.log('[EdgeUpdate] newConnection:', JSON.parse(JSON.stringify(newConnection)));
-    console.log('[EdgeUpdate] draggedEnd:', (updatingEdgeNodes as any)?.draggedEnd);
+    console.log('[EdgeUpdate] draggedEnd:', updatingEdgeNodesRef.current?.draggedEnd);
     edgeUpdateSuccessful.current = true;
 
-    // Determine which end was being dragged
-    const draggedEnd = (updatingEdgeNodes as any)?.draggedEnd as 'source' | 'target' | undefined;
+    // Determine which end was being dragged (use ref for synchronous access)
+    const draggedEnd = updatingEdgeNodesRef.current?.draggedEnd as 'source' | 'target' | undefined;
 
     // Normalize: ensure source and target nodes stay the same, only handles change
     let sourceNode = oldEdge.source;
@@ -1545,11 +1548,12 @@ const InfrastructureContent = () => {
       persistHandles(updated);
       return updated;
     });
-  }, [setEdges, persistHandles, updatingEdgeNodes]);
+  }, [setEdges, persistHandles]);
 
   const onEdgeUpdateEnd = useCallback((_: MouseEvent | TouchEvent, edge: Edge) => {
     console.log('[EdgeUpdateEnd] edgeUpdateSuccessful:', edgeUpdateSuccessful.current, 'edge:', edge.id);
     setUpdatingEdgeNodes(null);
+    updatingEdgeNodesRef.current = null;
     if (!edgeUpdateSuccessful.current) {
       console.log('[EdgeUpdateEnd] Update failed — snapping back');
     }
