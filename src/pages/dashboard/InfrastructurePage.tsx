@@ -685,7 +685,7 @@ const InfrastructureContent = () => {
     return NODE_POSITIONS[catId] || { x: 0, y: 0 };
   }, [savedPositions]);
 
-  // Build initial nodes only once (when positions or categoryApps change)
+  // Build initial nodes only on first load (positions + initial categoryApps)
   const initialNodes: Node[] = useMemo(() =>
     TOOL_CATEGORIES.map(cat => ({
       id: cat.id,
@@ -701,7 +701,8 @@ const InfrastructureContent = () => {
         matchedApps: categoryApps[cat.id] || [],
       },
     })),
-    [handleSelect, handleHover, categoryApps, getNodePosition]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [positionsLoaded]
   );
 
   const initialEdges: Edge[] = useMemo(() =>
@@ -776,20 +777,33 @@ const InfrastructureContent = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
-  // Sync initial nodes only for structural changes (apps loaded, positions loaded)
+  // Sync initial nodes on first load only
   useEffect(() => { setNodes(initialNodes); }, [initialNodes, setNodes]);
 
-  // Update node data (hover/select state) WITHOUT resetting positions
+  // When saved positions change (reset or loaded), update positions without resetting data
+  useEffect(() => {
+    if (savedPositions) {
+      setNodes(prev => prev.map(node => ({
+        ...node,
+        position: savedPositions[node.id] || NODE_POSITIONS[node.id] || node.position,
+      })));
+    }
+  }, [savedPositions, setNodes]);
+
+  // Update node data (hover/select/apps) WITHOUT resetting positions
   useEffect(() => {
     setNodes(prev => prev.map(node => ({
       ...node,
       data: {
         ...node.data,
+        onSelect: handleSelect,
+        onHover: handleHover,
         isSelected: selectedId === node.id,
         isHovered: hoveredId === node.id,
+        matchedApps: categoryApps[node.id] || [],
       },
     })));
-  }, [selectedId, hoveredId, setNodes]);
+  }, [selectedId, hoveredId, categoryApps, handleSelect, handleHover, setNodes]);
 
   useEffect(() => { setEdges(initialEdges); }, [initialEdges, setEdges]);
 
@@ -939,6 +953,7 @@ const InfrastructureContent = () => {
           Click any node to see details and data flows
         </Typography>
         <Box sx={{ flex: 1 }} />
+        <IntegrationStatus collapsed={false} />
         <Tooltip title="Export positions & connections as JSON" arrow>
           <IconButton
             size="small"
@@ -974,7 +989,6 @@ const InfrastructureContent = () => {
             <Download size={18} />
           </IconButton>
         </Tooltip>
-        <IntegrationStatus collapsed={false} />
       </Box>
 
       {/* Detail drawer */}
