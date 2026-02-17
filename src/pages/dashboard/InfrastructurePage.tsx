@@ -3,9 +3,10 @@
  * Uses @xyflow/react for an interactive node-based diagram.
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
+import { setDatastoreItem, getDatastoreItem, DATASTORE_CATEGORIES } from '@/services/datastore';
 import ReactFlow, {
   Background,
   Controls,
@@ -580,12 +581,46 @@ const CategoryDetailDrawer = ({
 
 // ── Page Component ─────────────────────────────────────────────────────────────
 
+const POSITION_CACHE_KEY = 'infrastructure_node_positions';
+
 const InfrastructureContent = () => {
   usePageMeta({ title: 'Infrastructure', description: 'Security tool integrations and data flow visualization' });
   const reactFlowInstance = useReactFlow();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [categoryApps, setCategoryApps] = useState<Record<string, MatchedApp[]>>({});
+  const [savedPositions, setSavedPositions] = useState<Record<string, { x: number; y: number }> | null>(null);
+  const [positionsLoaded, setPositionsLoaded] = useState(false);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Load saved positions from datastore on mount
+  useEffect(() => {
+    const loadPositions = async () => {
+      try {
+        const result = await getDatastoreItem(POSITION_CACHE_KEY, DATASTORE_CATEGORIES.INFRASTRUCTURE);
+        if (result.success && result.item?.value) {
+          const parsed = typeof result.item.value === 'string' ? JSON.parse(result.item.value) : result.item.value;
+          if (parsed && typeof parsed === 'object') {
+            setSavedPositions(parsed);
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to load infrastructure positions:', e);
+      } finally {
+        setPositionsLoaded(true);
+      }
+    };
+    loadPositions();
+  }, []);
+
+  // Save positions to datastore (debounced)
+  const persistPositions = useCallback((positions: Record<string, { x: number; y: number }>) => {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      setDatastoreItem(POSITION_CACHE_KEY, positions, DATASTORE_CATEGORIES.INFRASTRUCTURE)
+        .catch(e => console.warn('Failed to save positions:', e));
+    }, 1000);
+  }, []);
 
   // Fetch authenticated apps and map to categories
   useEffect(() => {
@@ -625,6 +660,15 @@ const InfrastructureContent = () => {
   const activeCat = activeId ? TOOL_CATEGORIES.find(c => c.id === activeId) : null;
   const activeColor = activeCat ? `hsl(var(${activeCat.color}))` : 'hsl(var(--primary))';
 
+  // Set of category IDs that have matched apps (are "active")
+  const activeCategories = useMemo(() => {
+    const set = new Set<string>();
+    for (const [catId, apps] of Object.entries(categoryApps)) {
+      if (apps.length > 0) set.add(catId);
+    }
+    return set;
+  }, [categoryApps]);
+
   const handleSelect = useCallback((id: string) => {
     setSelectedId(prev => prev === id ? null : id);
   }, []);
@@ -633,11 +677,18 @@ const InfrastructureContent = () => {
     setHoveredId(id);
   }, []);
 
+  // Use saved positions if available, else default
+  const getNodePosition = useCallback((catId: string) => {
+    if (savedPositions && savedPositions[catId]) return savedPositions[catId];
+    return NODE_POSITIONS[catId] || { x: 0, y: 0 };
+  }, [savedPositions]);
+
   const initialNodes: Node[] = useMemo(() =>
     TOOL_CATEGORIES.map(cat => ({
       id: cat.id,
       type: 'category',
-      position: NODE_POSITIONS[cat.id] || { x: 0, y: 0 },
+      position: getNodePosition(cat.id),
+      draggable: true,
       data: {
         category: cat,
         onSelect: handleSelect,
@@ -647,31 +698,53 @@ const InfrastructureContent = () => {
         matchedApps: categoryApps[cat.id] || [],
       },
     })),
-    [handleSelect, handleHover, selectedId, hoveredId, categoryApps]
+    [handleSelect, handleHover, selectedId, hoveredId, categoryApps, getNodePosition]
   );
 
   const initialEdges: Edge[] = useMemo(() =>
     DATA_FLOWS.map((flow, idx) => {
-      const isConnected = activeId && (flow.source === activeId || flow.target === activeId);
+      const sourceActive = activeCategories.has(flow.source);
+      const targetActive = activeCategories.has(flow.target);
+      const bothActive = sourceActive && targetActive;
+      const eitherMissing = !sourceActive || !targetActive;
+
+      const isHighlighted = activeId && (flow.source === activeId || flow.target === activeId);
+
+      // Determine stroke color
+      let stroke: string;
+      if (activeId) {
+        stroke = isHighlighted ? activeColor : 'hsla(var(--muted-foreground) / 0.06)';
+      } else if (bothActive) {
+        stroke = 'hsl(var(--primary))';
+      } else if (eitherMissing) {
+        stroke = 'hsla(var(--muted-foreground) / 0.15)';
+      } else {
+        stroke = 'hsla(var(--muted-foreground) / 0.3)';
+      }
+
       return {
         id: `e-${idx}`,
         source: flow.source,
         target: flow.target,
         label: flow.label,
-        animated: isConnected ? true : (flow.animated || false),
+        animated: isHighlighted ? true : bothActive,
         type: 'smoothstep',
         style: {
-          stroke: activeId
-            ? (isConnected ? activeColor : 'hsla(var(--muted-foreground) / 0.1)')
-            : 'hsla(var(--muted-foreground) / 0.3)',
-          strokeWidth: isConnected ? 2.5 : 1,
-          transition: 'stroke 0.2s, stroke-width 0.2s',
+          stroke,
+          strokeWidth: isHighlighted ? 2.5 : bothActive ? 1.5 : 1,
+          strokeDasharray: eitherMissing && !isHighlighted ? '6 4' : undefined,
+          opacity: eitherMissing && !isHighlighted ? 0.5 : 1,
+          transition: 'stroke 0.2s, stroke-width 0.2s, opacity 0.2s',
         },
         labelStyle: {
           fontSize: 10,
-          fontWeight: isConnected ? 600 : 500,
-          fill: isConnected ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))',
-          opacity: activeId && !isConnected ? 0.2 : 0.8,
+          fontWeight: isHighlighted ? 600 : 500,
+          fill: isHighlighted
+            ? 'hsl(var(--foreground))'
+            : eitherMissing
+              ? 'hsla(var(--muted-foreground) / 0.4)'
+              : 'hsl(var(--muted-foreground))',
+          opacity: activeId && !isHighlighted ? 0.15 : eitherMissing ? 0.6 : 0.8,
         },
         labelBgStyle: {
           fill: 'hsl(var(--background))',
@@ -681,11 +754,11 @@ const InfrastructureContent = () => {
           type: MarkerType.ArrowClosed,
           width: 14,
           height: 14,
-          color: isConnected ? activeColor : 'hsla(var(--muted-foreground) / 0.3)',
+          color: isHighlighted ? activeColor : eitherMissing ? 'hsla(var(--muted-foreground) / 0.15)' : stroke,
         },
       };
     }),
-    [activeId, activeColor]
+    [activeId, activeColor, activeCategories]
   );
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
@@ -694,9 +767,46 @@ const InfrastructureContent = () => {
   useEffect(() => { setNodes(initialNodes); }, [initialNodes, setNodes]);
   useEffect(() => { setEdges(initialEdges); }, [initialEdges, setEdges]);
 
+  // Persist positions when nodes are dragged
+  const handleNodesChange = useCallback((changes: any) => {
+    onNodesChange(changes);
+
+    // Check if any node was dragged (position change)
+    const hasDrag = changes.some((c: any) => c.type === 'position' && c.dragging === false && c.position);
+    if (hasDrag) {
+      // Build current positions from the react flow instance
+      setTimeout(() => {
+        const currentNodes = reactFlowInstance.getNodes();
+        const positions: Record<string, { x: number; y: number }> = {};
+        currentNodes.forEach(n => {
+          positions[n.id] = { x: Math.round(n.position.x), y: Math.round(n.position.y) };
+        });
+        setSavedPositions(positions);
+        persistPositions(positions);
+      }, 0);
+    }
+  }, [onNodesChange, reactFlowInstance, persistPositions]);
+
+  // Reset positions: clear saved, revert to defaults
+  const handleResetPositions = useCallback(() => {
+    setSavedPositions(null);
+    setDatastoreItem(POSITION_CACHE_KEY, JSON.stringify(NODE_POSITIONS), DATASTORE_CATEGORIES.INFRASTRUCTURE)
+      .catch(e => console.warn('Failed to reset positions:', e));
+    // Refit after nodes update
+    setTimeout(() => reactFlowInstance.fitView({ padding: 0.25, duration: 300 }), 50);
+  }, [reactFlowInstance]);
+
   const selectedCategory = selectedId
     ? TOOL_CATEGORIES.find(c => c.id === selectedId) || null
     : null;
+
+  if (!positionsLoaded) {
+    return (
+      <Box sx={{ height: 'calc(100vh - 48px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.85rem' }}>Loading infrastructure…</Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ height: 'calc(100vh - 48px)', position: 'relative' }}>
@@ -728,7 +838,7 @@ const InfrastructureContent = () => {
         <ReactFlow
           nodes={nodes}
           edges={edges}
-          onNodesChange={onNodesChange}
+          onNodesChange={handleNodesChange}
           onEdgesChange={onEdgesChange}
           nodeTypes={nodeTypes}
           fitView
@@ -748,7 +858,7 @@ const InfrastructureContent = () => {
           }}>
             <Button
               size="small"
-              onClick={() => reactFlowInstance.fitView({ padding: 0.25, duration: 300 })}
+              onClick={handleResetPositions}
               sx={{
                 minWidth: 'auto',
                 px: 1.5,
