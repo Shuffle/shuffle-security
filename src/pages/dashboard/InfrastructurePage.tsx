@@ -331,7 +331,7 @@ const GradientEdge = ({
   return (
     <>
       <defs>
-        <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
+        <linearGradient id={gradientId} gradientUnits="userSpaceOnUse" x1={sourceX} y1={sourceY} x2={targetX} y2={targetY}>
           <stop offset="0%" stopColor={sourceColor} />
           <stop offset="100%" stopColor={targetColor} />
         </linearGradient>
