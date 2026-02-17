@@ -177,7 +177,7 @@ const TOOL_CATEGORIES: ToolCategory[] = [
     label: 'Asset Management',
     description: 'IT asset inventory, CMDB, and vulnerability management for contextualized response.',
     icon: <HardDrive size={22} />,
-    color: '--muted-foreground',
+    color: '--severity-high',
     examples: ['ServiceNow CMDB', 'Qualys', 'Tenable', 'Snipe-IT'],
     dataIn: ['Scan results from EDR', 'Vulnerability feeds from Threat Intel'],
     dataOut: ['Asset context to Case Management', 'Owner info to IAM', 'Risk scores to SIEM'],
@@ -714,23 +714,28 @@ const InfrastructureContent = () => {
 
       const edgeId = `e-${idx}`;
       const isEdgeHovered = hoveredEdgeId === edgeId;
-      // Highlight on hover/select — always, even if missing
-      const isHighlighted = isEdgeHovered || (activeId && (flow.source === activeId || flow.target === activeId));
+      // Highlight on hover/select
+      const isConnected = isEdgeHovered || (activeId && (flow.source === activeId || flow.target === activeId));
+      // Only fully highlight (color + animate) if both sides have apps
+      const isFullyHighlighted = isConnected && bothActive;
+      // Connected but missing one side — show as grey highlight (stands out but not colored)
+      const isGreyHighlighted = isConnected && eitherMissing;
 
       const hasAnyFocus = activeId || hoveredEdgeId;
 
       // Determine stroke color
       let stroke: string;
-      if (isEdgeHovered) {
-        // Direct edge hover always gets full source color
+      if (isEdgeHovered && bothActive) {
         const srcCat = TOOL_CATEGORIES.find(c => c.id === flow.source);
         stroke = srcCat ? `hsl(var(${srcCat.color}))` : 'hsl(var(--primary))';
-      } else if (isHighlighted) {
+      } else if (isFullyHighlighted) {
         stroke = activeColor;
+      } else if (isGreyHighlighted) {
+        // Connected but missing — visible grey, stands out from non-connected
+        stroke = 'hsla(var(--muted-foreground) / 0.5)';
       } else if (hasAnyFocus) {
         stroke = 'hsla(var(--muted-foreground) / 0.06)';
       } else if (eitherMissing) {
-        // Visible grey — not faded out, just neutral
         stroke = 'hsla(var(--muted-foreground) / 0.35)';
       } else if (bothActive) {
         stroke = 'hsl(var(--primary))';
@@ -743,25 +748,23 @@ const InfrastructureContent = () => {
         source: flow.source,
         target: flow.target,
         label: flow.label,
-        animated: !!isHighlighted,
+        animated: !!isFullyHighlighted,
         type: 'smoothstep',
         style: {
           stroke,
-          strokeWidth: isHighlighted ? 2.5 : bothActive ? 1.5 : 1,
-          strokeDasharray: eitherMissing && !isHighlighted ? '6 4' : undefined,
+          strokeWidth: isFullyHighlighted ? 2.5 : (isGreyHighlighted ? 2 : (bothActive ? 1.5 : 1)),
+          strokeDasharray: eitherMissing ? '6 4' : undefined,
           opacity: 1,
           transition: 'stroke 0.2s, stroke-width 0.2s',
           cursor: 'pointer',
         },
         labelStyle: {
           fontSize: isEdgeHovered ? 12 : 10,
-          fontWeight: isHighlighted ? 600 : 500,
-          fill: isHighlighted
+          fontWeight: (isFullyHighlighted || isGreyHighlighted) ? 600 : 500,
+          fill: (isFullyHighlighted || isGreyHighlighted)
             ? 'hsl(var(--foreground))'
-            : eitherMissing
-              ? 'hsl(var(--muted-foreground))'
-              : 'hsl(var(--muted-foreground))',
-          opacity: hasAnyFocus && !isHighlighted ? 0.15 : 0.8,
+            : 'hsl(var(--muted-foreground))',
+          opacity: hasAnyFocus && !isConnected ? 0.15 : 0.8,
         },
         labelBgStyle: {
           fill: 'hsl(var(--background))',
@@ -771,7 +774,7 @@ const InfrastructureContent = () => {
           type: MarkerType.ArrowClosed,
           width: 14,
           height: 14,
-          color: isHighlighted ? stroke : eitherMissing ? 'hsla(var(--muted-foreground) / 0.35)' : stroke,
+          color: stroke,
         },
       };
     }),
