@@ -24,7 +24,7 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
-import { Activity, Bot, CheckCircle2, Circle, AlertCircle, Clock, Wrench } from 'lucide-react';
+import { Activity, Bot, CheckCircle2, Circle, AlertCircle, Clock, Wrench, MessageCircleQuestion, Flag, Play } from 'lucide-react';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 import { SingulJS } from '@/lib/singul-local';
 import type { AlgoliaSearchApp, SingulJSHandle } from '@/lib/singul-local';
@@ -42,95 +42,242 @@ export interface AgentActionDrawerProps {
   initialApp?: AlgoliaSearchApp | null;
 }
 
-// ── Decisions Timeline ─────────────────────────────────────────────────────────
+// ── Decision type classification ───────────────────────────────────────────────
 
-const getDecisionIcon = (decision: AgentDecision) => {
+type DecisionType = 'action' | 'question' | 'finish';
+
+const classifyDecision = (decision: AgentDecision): DecisionType => {
+  const a = (decision.action || decision.title || '').toLowerCase();
   const s = (decision.status || '').toLowerCase();
-  if (s === 'success' || s === 'completed' || s === 'done') return <CheckCircle2 size={14} style={{ color: 'hsl(var(--severity-low))' }} />;
-  if (s === 'error' || s === 'failed') return <AlertCircle size={14} style={{ color: 'hsl(var(--severity-critical))' }} />;
-  if (decision.tool) return <Wrench size={14} style={{ color: 'hsl(var(--primary))' }} />;
-  return <Circle size={14} style={{ color: 'hsl(var(--muted-foreground))' }} />;
+  if (['finish', 'finalise', 'finalize', 'done', 'complete', 'completed'].some(k => a.includes(k) || s.includes(k))) return 'finish';
+  if (['question', 'ask', 'prompt', 'confirm', 'approval', 'input_needed'].some(k => a.includes(k) || s.includes(k))) return 'question';
+  return 'action';
 };
+
+const DECISION_TYPE_CONFIG: Record<DecisionType, {
+  label: string;
+  color: string;
+  bg: string;
+  borderColor: string;
+  icon: React.ReactNode;
+}> = {
+  action: {
+    label: 'Action',
+    color: 'hsl(var(--primary))',
+    bg: 'hsla(var(--primary) / 0.06)',
+    borderColor: 'hsla(var(--primary) / 0.25)',
+    icon: <Play size={13} />,
+  },
+  question: {
+    label: 'Question',
+    color: 'hsl(var(--severity-medium))',
+    bg: 'hsla(var(--severity-medium) / 0.06)',
+    borderColor: 'hsla(var(--severity-medium) / 0.25)',
+    icon: <MessageCircleQuestion size={13} />,
+  },
+  finish: {
+    label: 'Finish',
+    color: 'hsl(var(--severity-low))',
+    bg: 'hsla(var(--severity-low) / 0.06)',
+    borderColor: 'hsla(var(--severity-low) / 0.25)',
+    icon: <Flag size={13} />,
+  },
+};
+
+// ── Decisions Timeline ─────────────────────────────────────────────────────────
 
 const DecisionsTimeline = ({ decisions }: { decisions: AgentDecision[] }) => {
   if (!decisions.length) return null;
+
+  const counts = decisions.reduce((acc, d) => {
+    const t = classifyDecision(d);
+    acc[t] = (acc[t] || 0) + 1;
+    return acc;
+  }, {} as Record<DecisionType, number>);
+
   return (
     <Box sx={{ mt: 2 }}>
-      <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1.5 }}>
-        Decisions
-      </Typography>
-      <Box sx={{ position: 'relative', pl: 2.5 }}>
-        {/* Vertical line */}
+      {/* Header with type summary */}
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+        <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          Decisions · {decisions.length}
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 0.5 }}>
+          {(['action', 'question', 'finish'] as DecisionType[]).map(type => {
+            const count = counts[type];
+            if (!count) return null;
+            const cfg = DECISION_TYPE_CONFIG[type];
+            return (
+              <Chip
+                key={type}
+                label={`${count} ${cfg.label}`}
+                size="small"
+                sx={{
+                  height: 18,
+                  fontSize: '0.6rem',
+                  fontWeight: 600,
+                  bgcolor: cfg.bg,
+                  color: cfg.color,
+                  border: `1px solid ${cfg.borderColor}`,
+                  '& .MuiChip-label': { px: 0.75 },
+                }}
+              />
+            );
+          })}
+        </Box>
+      </Box>
+
+      {/* Timeline */}
+      <Box sx={{ position: 'relative', pl: 3 }}>
+        {/* Vertical spine */}
         <Box sx={{
           position: 'absolute',
-          left: 6,
-          top: 4,
-          bottom: 4,
-          width: '1.5px',
-          bgcolor: 'hsl(var(--border))',
+          left: 8,
+          top: 0,
+          bottom: 0,
+          width: '2px',
+          background: 'linear-gradient(180deg, hsl(var(--border)) 0%, transparent 100%)',
         }} />
-        {decisions.map((decision, idx) => (
-          <Box key={idx} sx={{ position: 'relative', mb: idx < decisions.length - 1 ? 2 : 0 }}>
-            {/* Dot */}
-            <Box sx={{
-              position: 'absolute',
-              left: -20,
-              top: 2,
-              zIndex: 1,
-              bgcolor: 'hsl(var(--card))',
-              display: 'flex',
-              alignItems: 'center',
-            }}>
-              {getDecisionIcon(decision)}
-            </Box>
-            {/* Content */}
-            <Box sx={{
-              p: 1.5,
-              borderRadius: 1.5,
-              border: '1px solid hsl(var(--border))',
-              bgcolor: 'hsl(var(--card))',
-            }}>
-              {decision.title && (
-                <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: 'hsl(var(--foreground))', mb: 0.25 }}>
-                  {decision.title}
-                </Typography>
-              )}
-              {decision.action && !decision.title && (
-                <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: 'hsl(var(--foreground))', mb: 0.25, textTransform: 'capitalize' }}>
-                  {decision.action.replace(/_/g, ' ')}
-                </Typography>
-              )}
-              {decision.description && (
-                <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.5 }}>
-                  {decision.description}
-                </Typography>
-              )}
-              {decision.tool && (
-                <Chip label={decision.tool} size="small" sx={{ mt: 0.75, height: 20, fontSize: '0.65rem', bgcolor: 'hsla(var(--primary) / 0.1)', color: 'hsl(var(--primary))' }} />
-              )}
-              {decision.result && (
-                <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--muted-foreground))', mt: 0.5, fontFamily: "'JetBrains Mono', monospace", whiteSpace: 'pre-wrap', wordBreak: 'break-word', maxHeight: 80, overflow: 'auto' }}>
-                  {decision.result}
-                </Typography>
-              )}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.75 }}>
-                {decision.status && (
-                  <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', opacity: 0.7, textTransform: 'uppercase', fontWeight: 500 }}>
-                    {decision.status}
+
+        {decisions.map((decision, idx) => {
+          const type = classifyDecision(decision);
+          const cfg = DECISION_TYPE_CONFIG[type];
+          const isLast = idx === decisions.length - 1;
+          const label = decision.title || decision.action?.replace(/_/g, ' ') || cfg.label;
+
+          return (
+            <Box key={idx} sx={{ position: 'relative', mb: isLast ? 0 : 1.5 }}>
+              {/* Node dot */}
+              <Box sx={{
+                position: 'absolute',
+                left: -24,
+                top: 10,
+                width: 18,
+                height: 18,
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                bgcolor: cfg.bg,
+                border: `1.5px solid ${cfg.borderColor}`,
+                color: cfg.color,
+                zIndex: 1,
+              }}>
+                {cfg.icon}
+              </Box>
+
+              {/* Card */}
+              <Box sx={{
+                borderRadius: 2,
+                border: `1px solid ${cfg.borderColor}`,
+                borderLeft: `3px solid ${cfg.color}`,
+                bgcolor: cfg.bg,
+                overflow: 'hidden',
+              }}>
+                {/* Card header */}
+                <Box sx={{ px: 1.5, py: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Typography sx={{
+                    fontSize: '0.78rem',
+                    fontWeight: 600,
+                    color: 'hsl(var(--foreground))',
+                    flex: 1,
+                    textTransform: 'capitalize',
+                  }}>
+                    {label}
                   </Typography>
+                  <Chip
+                    label={cfg.label}
+                    size="small"
+                    sx={{
+                      height: 16,
+                      fontSize: '0.58rem',
+                      fontWeight: 700,
+                      bgcolor: 'transparent',
+                      color: cfg.color,
+                      border: `1px solid ${cfg.borderColor}`,
+                      '& .MuiChip-label': { px: 0.5 },
+                    }}
+                  />
+                </Box>
+
+                {/* Description */}
+                {decision.description && (
+                  <Box sx={{ px: 1.5, pb: 1 }}>
+                    <Typography sx={{ fontSize: '0.74rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.55 }}>
+                      {decision.description}
+                    </Typography>
+                  </Box>
                 )}
-                {decision.timestamp && (
-                  <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', opacity: 0.5, display: 'flex', alignItems: 'center', gap: 0.3 }}>
-                    <Clock size={10} />
-                    {typeof decision.timestamp === 'number'
-                      ? new Date(decision.timestamp * 1000).toLocaleTimeString()
-                      : decision.timestamp}
-                  </Typography>
+
+                {/* Tool badge */}
+                {decision.tool && (
+                  <Box sx={{ px: 1.5, pb: 1 }}>
+                    <Chip
+                      icon={<Wrench size={10} />}
+                      label={decision.tool}
+                      size="small"
+                      sx={{
+                        height: 20,
+                        fontSize: '0.65rem',
+                        bgcolor: 'hsla(var(--primary) / 0.08)',
+                        color: 'hsl(var(--primary))',
+                        '& .MuiChip-icon': { color: 'inherit', ml: 0.5 },
+                      }}
+                    />
+                  </Box>
+                )}
+
+                {/* Result snippet (actions only) */}
+                {type === 'action' && decision.result && (
+                  <Box sx={{
+                    mx: 1.5, mb: 1, p: 1,
+                    borderRadius: 1,
+                    bgcolor: 'hsl(var(--background))',
+                    border: '1px solid hsl(var(--border))',
+                    maxHeight: 72,
+                    overflow: 'auto',
+                  }}>
+                    <Typography sx={{
+                      fontSize: '0.68rem',
+                      fontFamily: "'JetBrains Mono', monospace",
+                      color: 'hsl(var(--muted-foreground))',
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-word',
+                      m: 0,
+                    }}>
+                      {decision.result}
+                    </Typography>
+                  </Box>
+                )}
+
+                {/* Footer */}
+                {(decision.status || decision.timestamp) && (
+                  <Box sx={{
+                    px: 1.5, py: 0.75,
+                    borderTop: `1px solid ${cfg.borderColor}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                  }}>
+                    {decision.status && (
+                      <Typography sx={{ fontSize: '0.6rem', fontWeight: 600, color: cfg.color, textTransform: 'uppercase' }}>
+                        {decision.status}
+                      </Typography>
+                    )}
+                    {decision.timestamp && (
+                      <Typography sx={{ fontSize: '0.6rem', color: 'hsl(var(--muted-foreground))', opacity: 0.6, display: 'flex', alignItems: 'center', gap: 0.3, ml: 'auto' }}>
+                        <Clock size={9} />
+                        {typeof decision.timestamp === 'number'
+                          ? new Date(decision.timestamp * 1000).toLocaleTimeString()
+                          : decision.timestamp}
+                      </Typography>
+                    )}
+                  </Box>
                 )}
               </Box>
             </Box>
-          </Box>
-        ))}
+          );
+        })}
       </Box>
     </Box>
   );
