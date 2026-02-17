@@ -1129,8 +1129,8 @@ const InfrastructureContent = () => {
         animated: !!isFullyHighlighted,
         reconnectable: true,
         zIndex: isConnected ? 10 : 0,
-        type: useGradient ? 'gradient' : 'smoothstep',
-        data: useGradient ? { sourceColor: srcColor, targetColor: tgtColor } : undefined,
+        type: 'gradient',
+        data: { sourceColor: useGradient ? srcColor : stroke, targetColor: useGradient ? tgtColor : stroke },
         style: {
           stroke,
           strokeWidth: isFullyHighlighted ? 2.5 : (isGreyHighlighted ? 2 : (bothActive ? 1.5 : 1)),
