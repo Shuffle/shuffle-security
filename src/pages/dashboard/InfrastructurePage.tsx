@@ -305,7 +305,37 @@ interface MatchedApp {
   image: string;
 }
 
-// ── Custom Gradient Edge ───────────────────────────────────────────────────────
+// ── Waypoint path builder (straight segments with rounded corners) ──────────
+
+function buildWaypointPath(
+  points: Array<{ x: number; y: number }>,
+  borderRadius: number = 12,
+): string {
+  if (points.length < 2) return '';
+  if (points.length === 2) {
+    return `M ${points[0].x} ${points[0].y} L ${points[1].x} ${points[1].y}`;
+  }
+
+  let path = `M ${points[0].x} ${points[0].y}`;
+  for (let i = 1; i < points.length - 1; i++) {
+    const prev = points[i - 1];
+    const curr = points[i];
+    const next = points[i + 1];
+    const dx1 = curr.x - prev.x, dy1 = curr.y - prev.y;
+    const dx2 = next.x - curr.x, dy2 = next.y - curr.y;
+    const len1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+    const len2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+    if (len1 === 0 || len2 === 0) { path += ` L ${curr.x} ${curr.y}`; continue; }
+    const r = Math.min(borderRadius, len1 / 2, len2 / 2);
+    const bx = curr.x - (dx1 / len1) * r, by = curr.y - (dy1 / len1) * r;
+    const ax = curr.x + (dx2 / len2) * r, ay = curr.y + (dy2 / len2) * r;
+    path += ` L ${bx} ${by} Q ${curr.x} ${curr.y} ${ax} ${ay}`;
+  }
+  path += ` L ${points[points.length - 1].x} ${points[points.length - 1].y}`;
+  return path;
+}
+
+// ── Custom Gradient Edge with waypoint support ─────────────────────────────────
 
 const GradientEdge = ({
   id,
@@ -319,23 +349,82 @@ const GradientEdge = ({
   data,
   style = {},
   markerEnd,
-  labelStyle,
-  labelBgStyle,
 }: EdgeProps) => {
+  const reactFlowInstance = useReactFlow();
   const [hovered, setHovered] = useState(false);
+  const [draggingIdx, setDraggingIdx] = useState<{ type: 'waypoint' | 'midpoint'; index: number } | null>(null);
   const isVisible = hovered || !!data?.isEdgeHovered;
-  const [edgePath, labelX, labelY] = getSmoothStepPath({
-    sourceX,
-    sourceY,
-    targetX,
-    targetY,
-    sourcePosition,
-    targetPosition,
+  const isSelected = !!data?.isEdgeSelected;
+  const waypoints: Array<{ x: number; y: number }> = data?.waypoints || [];
+  const onWaypointsChange: ((wp: Array<{ x: number; y: number }>) => void) | undefined = data?.onWaypointsChange;
+
+  // Build path through waypoints
+  const allPoints = [
+    { x: sourceX, y: sourceY },
+    ...waypoints,
+    { x: targetX, y: targetY },
+  ];
+
+  const hasWaypoints = waypoints.length > 0;
+
+  // Use smooth step when no waypoints, custom path when waypoints exist
+  const [defaultPath, defaultLabelX, defaultLabelY] = getSmoothStepPath({
+    sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition,
   });
+
+  const edgePath = hasWaypoints ? buildWaypointPath(allPoints) : defaultPath;
+
+  // Label position: midpoint of all points
+  const labelX = hasWaypoints
+    ? allPoints.reduce((s, p) => s + p.x, 0) / allPoints.length
+    : defaultLabelX;
+  const labelY = hasWaypoints
+    ? allPoints.reduce((s, p) => s + p.y, 0) / allPoints.length
+    : defaultLabelY;
+
+  // Compute segment midpoints for "add waypoint" handles
+  const segmentMidpoints = allPoints.slice(0, -1).map((p, i) => ({
+    x: (p.x + allPoints[i + 1].x) / 2,
+    y: (p.y + allPoints[i + 1].y) / 2,
+  }));
 
   const sourceColor = data?.sourceColor || 'hsl(var(--primary))';
   const targetColor = data?.targetColor || 'hsl(var(--primary))';
   const gradientId = `gradient-${id}`;
+
+  // Drag handling
+  useEffect(() => {
+    if (!draggingIdx) return;
+    const onMouseMove = (e: MouseEvent) => {
+      const pos = reactFlowInstance.screenToFlowPosition({ x: e.clientX, y: e.clientY });
+      if (draggingIdx.type === 'waypoint') {
+        const newWp = [...waypoints];
+        newWp[draggingIdx.index] = { x: Math.round(pos.x / 10) * 10, y: Math.round(pos.y / 10) * 10 };
+        onWaypointsChange?.(newWp);
+      } else if (draggingIdx.type === 'midpoint') {
+        // Insert a new waypoint at segment midpoint position
+        const wpIndex = draggingIdx.index; // segment index maps to insertion point
+        const newWp = [...waypoints];
+        const snapped = { x: Math.round(pos.x / 10) * 10, y: Math.round(pos.y / 10) * 10 };
+        newWp.splice(wpIndex, 0, snapped);
+        onWaypointsChange?.(newWp);
+        setDraggingIdx({ type: 'waypoint', index: wpIndex });
+      }
+    };
+    const onMouseUp = () => setDraggingIdx(null);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+  }, [draggingIdx, waypoints, onWaypointsChange, reactFlowInstance]);
+
+  // Double-click waypoint to remove it
+  const handleWaypointDoubleClick = (wpIdx: number) => {
+    const newWp = waypoints.filter((_, i) => i !== wpIdx);
+    onWaypointsChange?.(newWp);
+  };
 
   return (
     <>
@@ -345,7 +434,7 @@ const GradientEdge = ({
           <stop offset="100%" stopColor={targetColor} />
         </linearGradient>
       </defs>
-      {/* Invisible wider path for easier hover target */}
+      {/* Invisible wider path for easier hover/click target */}
       <path
         d={edgePath}
         fill="none"
@@ -366,6 +455,7 @@ const GradientEdge = ({
         }}
         markerEnd={markerEnd}
       />
+      {/* Label on hover */}
       {label && isVisible && (
         <EdgeLabelRenderer>
           <div
@@ -388,6 +478,66 @@ const GradientEdge = ({
           >
             {label}
           </div>
+        </EdgeLabelRenderer>
+      )}
+      {/* Waypoint drag handles (visible only when edge is selected) */}
+      {isSelected && (
+        <EdgeLabelRenderer>
+          {/* Existing waypoint handles — drag to move, double-click to remove */}
+          {waypoints.map((wp, i) => (
+            <div
+              key={`wp-${i}`}
+              onMouseDown={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                setDraggingIdx({ type: 'waypoint', index: i });
+              }}
+              onDoubleClick={(e) => {
+                e.stopPropagation();
+                handleWaypointDoubleClick(i);
+              }}
+              style={{
+                position: 'absolute',
+                transform: `translate(-50%, -50%) translate(${wp.x}px,${wp.y}px)`,
+                width: 12,
+                height: 12,
+                borderRadius: '50%',
+                background: 'hsl(var(--primary))',
+                border: '2px solid hsl(var(--background))',
+                cursor: 'grab',
+                pointerEvents: 'all',
+                zIndex: 20,
+                boxShadow: '0 0 6px hsla(var(--primary) / 0.5)',
+              }}
+            />
+          ))}
+          {/* Segment midpoint handles — drag to insert a new waypoint */}
+          {segmentMidpoints.map((mp, i) => (
+            <div
+              key={`mid-${i}`}
+              onMouseDown={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                setDraggingIdx({ type: 'midpoint', index: i });
+              }}
+              style={{
+                position: 'absolute',
+                transform: `translate(-50%, -50%) translate(${mp.x}px,${mp.y}px)`,
+                width: 10,
+                height: 10,
+                borderRadius: '50%',
+                background: 'hsla(var(--primary) / 0.5)',
+                border: '2px solid hsl(var(--primary))',
+                cursor: 'grab',
+                pointerEvents: 'all',
+                zIndex: 19,
+                opacity: 0.7,
+                transition: 'opacity 0.15s',
+              }}
+              onMouseEnter={(e) => { (e.target as HTMLDivElement).style.opacity = '1'; }}
+              onMouseLeave={(e) => { (e.target as HTMLDivElement).style.opacity = '0.7'; }}
+            />
+          ))}
         </EdgeLabelRenderer>
       )}
     </>
@@ -1128,7 +1278,9 @@ const HelperLinesRenderer = ({ horizontal, vertical }: { horizontal?: number; ve
 
 const POSITION_CACHE_KEY = 'infrastructure_node_positions';
 const HANDLE_CACHE_KEY = 'infrastructure_edge_handles';
+const WAYPOINT_CACHE_KEY = 'infrastructure_edge_waypoints';
 
+type WaypointOverrides = Record<string, Array<{ x: number; y: number }>>;
 type HandleOverrides = Record<string, { sourceHandle?: string; targetHandle?: string }>;
 
 const InfrastructureContent = () => {
@@ -1140,6 +1292,7 @@ const InfrastructureContent = () => {
   const [selectedEdgeIdx, setSelectedEdgeIdx] = useState<number | null>(null);
   const [categoryApps, setCategoryApps] = useState<Record<string, MatchedApp[]>>({});
   const [savedHandles, setSavedHandles] = useState<HandleOverrides>({});
+  const [savedWaypoints, setSavedWaypoints] = useState<WaypointOverrides>({});
   const [updatingEdgeNodes, setUpdatingEdgeNodes] = useState<{ source: string; target: string; draggedEnd: 'source' | 'target' } | null>(null);
   const updatingEdgeNodesRef = useRef<{ source: string; target: string; draggedEnd: 'source' | 'target' } | null>(null);
   const [savedPositions, setSavedPositions] = useState<Record<string, { x: number; y: number }> | null>(null);
@@ -1151,18 +1304,23 @@ const InfrastructureContent = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [posResult, handleResult] = await Promise.all([
-          getDatastoreItem(POSITION_CACHE_KEY, DATASTORE_CATEGORIES.INFRASTRUCTURE),
-          getDatastoreItem(HANDLE_CACHE_KEY, DATASTORE_CATEGORIES.INFRASTRUCTURE),
-        ]);
-        if (posResult.success && posResult.item?.value) {
-          const parsed = typeof posResult.item.value === 'string' ? JSON.parse(posResult.item.value) : posResult.item.value;
-          if (parsed && typeof parsed === 'object') setSavedPositions(parsed);
-        }
-        if (handleResult.success && handleResult.item?.value) {
-          const parsed = typeof handleResult.item.value === 'string' ? JSON.parse(handleResult.item.value) : handleResult.item.value;
-          if (parsed && typeof parsed === 'object') setSavedHandles(parsed);
-        }
+      const [posResult, handleResult, waypointResult] = await Promise.all([
+        getDatastoreItem(POSITION_CACHE_KEY, DATASTORE_CATEGORIES.INFRASTRUCTURE),
+        getDatastoreItem(HANDLE_CACHE_KEY, DATASTORE_CATEGORIES.INFRASTRUCTURE),
+        getDatastoreItem(WAYPOINT_CACHE_KEY, DATASTORE_CATEGORIES.INFRASTRUCTURE),
+      ]);
+      if (posResult.success && posResult.item?.value) {
+        const parsed = typeof posResult.item.value === 'string' ? JSON.parse(posResult.item.value) : posResult.item.value;
+        if (parsed && typeof parsed === 'object') setSavedPositions(parsed);
+      }
+      if (handleResult.success && handleResult.item?.value) {
+        const parsed = typeof handleResult.item.value === 'string' ? JSON.parse(handleResult.item.value) : handleResult.item.value;
+        if (parsed && typeof parsed === 'object') setSavedHandles(parsed);
+      }
+      if (waypointResult.success && waypointResult.item?.value) {
+        const parsed = typeof waypointResult.item.value === 'string' ? JSON.parse(waypointResult.item.value) : waypointResult.item.value;
+        if (parsed && typeof parsed === 'object') setSavedWaypoints(parsed);
+      }
       } catch (e) {
         console.warn('Failed to load infrastructure config:', e);
       } finally {
@@ -1188,6 +1346,16 @@ const InfrastructureContent = () => {
     handleSaveTimer.current = setTimeout(() => {
       setDatastoreItem(HANDLE_CACHE_KEY, handles, DATASTORE_CATEGORIES.INFRASTRUCTURE)
         .catch(e => console.warn('Failed to save handle overrides:', e));
+    }, 500);
+  }, []);
+
+  // Save waypoint overrides to datastore
+  const waypointSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const persistWaypoints = useCallback((waypoints: WaypointOverrides) => {
+    if (waypointSaveTimer.current) clearTimeout(waypointSaveTimer.current);
+    waypointSaveTimer.current = setTimeout(() => {
+      setDatastoreItem(WAYPOINT_CACHE_KEY, waypoints, DATASTORE_CATEGORIES.INFRASTRUCTURE)
+        .catch(e => console.warn('Failed to save waypoints:', e));
     }, 500);
   }, []);
 
@@ -1337,7 +1505,21 @@ const InfrastructureContent = () => {
         reconnectable: true,
         zIndex: isConnected ? 10 : 0,
         type: 'gradient',
-        data: { sourceColor: useGradient ? srcColor : stroke, targetColor: useGradient ? tgtColor : stroke, isEdgeHovered },
+        data: {
+          sourceColor: useGradient ? srcColor : stroke,
+          targetColor: useGradient ? tgtColor : stroke,
+          isEdgeHovered,
+          isEdgeSelected: isSelected,
+          waypoints: savedWaypoints[edgeId] || [],
+          onWaypointsChange: (newWaypoints: Array<{ x: number; y: number }>) => {
+            setSavedWaypoints(prev => {
+              const updated = { ...prev, [edgeId]: newWaypoints };
+              if (newWaypoints.length === 0) delete updated[edgeId];
+              persistWaypoints(updated);
+              return updated;
+            });
+          },
+        },
         style: {
           stroke,
           strokeWidth: isFullyHighlighted ? 2.5 : (isGreyHighlighted ? 2 : (bothActive ? 1.5 : 1)),
@@ -1366,7 +1548,7 @@ const InfrastructureContent = () => {
         },
       };
     }),
-    [activeId, activeColor, activeCategories, hoveredEdgeId, selectedEdgeIdx, savedHandles]
+    [activeId, activeColor, activeCategories, hoveredEdgeId, selectedEdgeIdx, savedHandles, savedWaypoints, persistWaypoints]
   );
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
@@ -1564,6 +1746,7 @@ const InfrastructureContent = () => {
     const { positions, handles } = computeAutoLayout();
     setSavedPositions(positions);
     setSavedHandles(handles);
+    setSavedWaypoints({});
     setNodes(prev => prev.map(node => ({
       ...node,
       position: positions[node.id] || node.position,
@@ -1572,6 +1755,7 @@ const InfrastructureContent = () => {
     Promise.all([
       setDatastoreItem(POSITION_CACHE_KEY, JSON.stringify(positions), DATASTORE_CATEGORIES.INFRASTRUCTURE),
       setDatastoreItem(HANDLE_CACHE_KEY, JSON.stringify(handles), DATASTORE_CATEGORIES.INFRASTRUCTURE),
+      setDatastoreItem(WAYPOINT_CACHE_KEY, JSON.stringify({}), DATASTORE_CATEGORIES.INFRASTRUCTURE),
     ]).catch(e => console.warn('Failed to save auto-layout:', e));
     setTimeout(() => reactFlowInstance.fitView({ padding: 0.25, duration: 300 }), 50);
   }, [reactFlowInstance, setNodes, persistHandles]);
@@ -1581,6 +1765,7 @@ const InfrastructureContent = () => {
     // Reset positions state
     setSavedPositions(null);
     setSavedHandles({});
+    setSavedWaypoints({});
     // Move nodes back to default positions
     setNodes(prev => prev.map(node => ({
       ...node,
@@ -1590,6 +1775,7 @@ const InfrastructureContent = () => {
     Promise.all([
       setDatastoreItem(POSITION_CACHE_KEY, JSON.stringify(NODE_POSITIONS), DATASTORE_CATEGORIES.INFRASTRUCTURE),
       setDatastoreItem(HANDLE_CACHE_KEY, JSON.stringify({}), DATASTORE_CATEGORIES.INFRASTRUCTURE),
+      setDatastoreItem(WAYPOINT_CACHE_KEY, JSON.stringify({}), DATASTORE_CATEGORIES.INFRASTRUCTURE),
     ]).catch(e => console.warn('Failed to reset:', e));
     // Refit after nodes update
     setTimeout(() => reactFlowInstance.fitView({ padding: 0.25, duration: 300 }), 50);
