@@ -953,7 +953,7 @@ const InfrastructureContent = () => {
   const [selectedEdgeIdx, setSelectedEdgeIdx] = useState<number | null>(null);
   const [categoryApps, setCategoryApps] = useState<Record<string, MatchedApp[]>>({});
   const [savedHandles, setSavedHandles] = useState<HandleOverrides>({});
-  const [isEdgeUpdating, setIsEdgeUpdating] = useState(false);
+  const [updatingEdgeNodes, setUpdatingEdgeNodes] = useState<{ source: string; target: string } | null>(null);
   const [savedPositions, setSavedPositions] = useState<Record<string, { x: number; y: number }> | null>(null);
   const [positionsLoaded, setPositionsLoaded] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -1204,11 +1204,13 @@ const InfrastructureContent = () => {
         onHover: handleHover,
         isSelected: selectedId === node.id,
         isHovered: hoveredId === node.id,
-        isEdgeUpdating,
+        isEdgeUpdating: updatingEdgeNodes
+          ? (node.id === updatingEdgeNodes.source || node.id === updatingEdgeNodes.target)
+          : false,
         matchedApps: categoryApps[node.id] || [],
       },
     })));
-  }, [selectedId, hoveredId, categoryApps, isEdgeUpdating, handleSelect, handleHover, setNodes]);
+  }, [selectedId, hoveredId, categoryApps, updatingEdgeNodes, handleSelect, handleHover, setNodes]);
 
   useEffect(() => { setEdges(initialEdges); }, [initialEdges, setEdges]);
 
@@ -1226,9 +1228,9 @@ const InfrastructureContent = () => {
   // Track reconnection state for visual feedback
   const edgeUpdateSuccessful = useRef(true);
 
-  const onEdgeUpdateStart = useCallback(() => {
+  const onEdgeUpdateStart = useCallback((_: any, edge: Edge) => {
     edgeUpdateSuccessful.current = false;
-    setIsEdgeUpdating(true);
+    setUpdatingEdgeNodes({ source: edge.source, target: edge.target });
   }, []);
 
   // Handle edge reconnection — only allow reconnecting to same source/target nodes (different handles)
@@ -1251,7 +1253,7 @@ const InfrastructureContent = () => {
   }, [setEdges, persistHandles]);
 
   const onEdgeUpdateEnd = useCallback((_: MouseEvent | TouchEvent, edge: Edge) => {
-    setIsEdgeUpdating(false);
+    setUpdatingEdgeNodes(null);
     if (!edgeUpdateSuccessful.current) {
       // Snap back — do nothing, edge stays as-is
     }
