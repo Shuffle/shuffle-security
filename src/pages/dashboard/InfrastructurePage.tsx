@@ -405,55 +405,66 @@ interface CategoryNodeData {
   isSelected: boolean;
   isHovered: boolean;
   isEdgeUpdating: boolean;
+  edgeUpdateHandleType: 'source' | 'target' | null;
   matchedApps: MatchedApp[];
   [key: string]: unknown;
 }
 
 const CategoryNode = ({ data }: { data: CategoryNodeData }) => {
-  const { category, onSelect, onHover, isSelected, isHovered, isEdgeUpdating, matchedApps } = data;
+  const { category, onSelect, onHover, isSelected, isHovered, isEdgeUpdating, edgeUpdateHandleType, matchedApps } = data;
   const colorVar = category.color;
   const highlighted = isSelected || isHovered;
   const hasApps = matchedApps.length > 0;
 
   return (
     <>
-      {/* Each side has both source and target handles for flexible reconnection */}
-      {(['Top', 'Bottom', 'Left', 'Right'] as const).map(side => (
-        <React.Fragment key={side}>
-            <Handle
-              type="target"
-              position={Position[side]}
-              id={`${side.toLowerCase()}-target`}
-              className="infra-handle"
-              style={{
-                width: isEdgeUpdating ? 16 : 10,
-                height: isEdgeUpdating ? 16 : 10,
-                background: isEdgeUpdating ? `hsl(var(${colorVar}))` : `hsl(var(${colorVar}))`,
-                border: isEdgeUpdating ? `3px solid hsl(var(${colorVar}))` : '2px solid hsl(var(--background))',
-                opacity: isEdgeUpdating ? 1 : 0,
-                transition: 'all 0.15s ease',
-                boxShadow: isEdgeUpdating ? `0 0 8px hsla(var(${colorVar}) / 0.5)` : 'none',
-                zIndex: isEdgeUpdating ? 10 : 0,
-              }}
-            />
-            <Handle
-              type="source"
-              position={Position[side]}
-              id={`${side.toLowerCase()}-source`}
-              className="infra-handle"
-              style={{
-                width: isEdgeUpdating ? 16 : 10,
-                height: isEdgeUpdating ? 16 : 10,
-                background: isEdgeUpdating ? `hsl(var(${colorVar}))` : `hsl(var(${colorVar}))`,
-                border: isEdgeUpdating ? `3px solid hsl(var(${colorVar}))` : '2px solid hsl(var(--background))',
-                opacity: isEdgeUpdating ? 1 : 0,
-                transition: 'all 0.15s ease',
-                boxShadow: isEdgeUpdating ? `0 0 8px hsla(var(${colorVar}) / 0.5)` : 'none',
-                zIndex: isEdgeUpdating ? 10 : 0,
-              }}
-            />
-        </React.Fragment>
-      ))}
+      {/* Each side has both source and target handles — only show the relevant type during edge update */}
+      {(['Top', 'Bottom', 'Left', 'Right'] as const).map(side => {
+        // During edge update, only show the handle type that ReactFlow needs:
+        // dragging source end → needs source handles, dragging target end → needs target handles
+        const showTarget = !isEdgeUpdating || edgeUpdateHandleType === 'target';
+        const showSource = !isEdgeUpdating || edgeUpdateHandleType === 'source';
+        return (
+          <React.Fragment key={side}>
+            {showTarget && (
+              <Handle
+                type="target"
+                position={Position[side]}
+                id={`${side.toLowerCase()}-target`}
+                className="infra-handle"
+                style={{
+                  width: isEdgeUpdating ? 16 : 10,
+                  height: isEdgeUpdating ? 16 : 10,
+                  background: `hsl(var(${colorVar}))`,
+                  border: isEdgeUpdating ? `3px solid hsl(var(${colorVar}))` : '2px solid hsl(var(--background))',
+                  opacity: isEdgeUpdating ? 1 : 0,
+                  transition: 'all 0.15s ease',
+                  boxShadow: isEdgeUpdating ? `0 0 8px hsla(var(${colorVar}) / 0.5)` : 'none',
+                  zIndex: isEdgeUpdating ? 10 : 0,
+                }}
+              />
+            )}
+            {showSource && (
+              <Handle
+                type="source"
+                position={Position[side]}
+                id={`${side.toLowerCase()}-source`}
+                className="infra-handle"
+                style={{
+                  width: isEdgeUpdating ? 16 : 10,
+                  height: isEdgeUpdating ? 16 : 10,
+                  background: `hsl(var(${colorVar}))`,
+                  border: isEdgeUpdating ? `3px solid hsl(var(${colorVar}))` : '2px solid hsl(var(--background))',
+                  opacity: isEdgeUpdating ? 1 : 0,
+                  transition: 'all 0.15s ease',
+                  boxShadow: isEdgeUpdating ? `0 0 8px hsla(var(${colorVar}) / 0.5)` : 'none',
+                  zIndex: isEdgeUpdating ? 10 : 0,
+                }}
+              />
+            )}
+          </React.Fragment>
+        );
+      })}
 
       <Box
         onClick={() => onSelect(category.id)}
@@ -1387,8 +1398,11 @@ const InfrastructureContent = () => {
         isSelected: selectedId === node.id,
         isHovered: hoveredId === node.id,
         isEdgeUpdating: updatingEdgeNodes
-          ? (node.id === updatingEdgeNodes.source || node.id === updatingEdgeNodes.target)
+          ? (updatingEdgeNodes.draggedEnd === 'source'
+              ? node.id === updatingEdgeNodes.source
+              : node.id === updatingEdgeNodes.target)
           : false,
+        edgeUpdateHandleType: updatingEdgeNodes?.draggedEnd || null,
         matchedApps: categoryApps[node.id] || [],
       },
     })));
