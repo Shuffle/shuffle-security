@@ -51,10 +51,8 @@ import AgentActionDrawer from '@/components/agent/AgentActionDrawer';
 
 // Per-permission icons for a more modern look
 const PERMISSION_ICONS: Record<string, React.ReactNode> = {
-  monitor_network: <Activity size={18} />,
   scan_vulnerabilities: <Search size={18} />,
   analyze_logs: <FileText size={18} />,
-  threat_intel_lookup: <Globe size={18} />,
   block_ips: <Ban size={18} />,
   isolate_systems: <MonitorOff size={18} />,
   disable_accounts: <UserX size={18} />,
@@ -64,7 +62,6 @@ const PERMISSION_ICONS: Record<string, React.ReactNode> = {
   email_reports: <Mail size={18} />,
   read_configs: <Settings2 size={18} />,
   modify_firewall: <Flame size={18} />,
-  query_security_db: <Database size={18} />,
   endpoint_control: <Terminal size={18} />,
 };
 

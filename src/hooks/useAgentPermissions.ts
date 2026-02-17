@@ -33,14 +33,6 @@ export const DEFAULT_AGENT_PERMISSIONS: AgentPermissionCategory[] = [
     icon: 'Radar',
     permissions: [
       {
-        id: 'monitor_network',
-        name: 'Monitor Network Traffic',
-        description: 'Analyze incoming and outgoing network packets for threats',
-        risk: 'low',
-        enabled: true,
-        category: 'threat_detection',
-      },
-      {
         id: 'scan_vulnerabilities',
         name: 'Scan for Vulnerabilities',
         description: 'Run automated vulnerability scans on systems',
@@ -52,14 +44,6 @@ export const DEFAULT_AGENT_PERMISSIONS: AgentPermissionCategory[] = [
         id: 'analyze_logs',
         name: 'Analyze Security Logs',
         description: 'Parse and analyze security event logs from SIEM',
-        risk: 'low',
-        enabled: true,
-        category: 'threat_detection',
-      },
-      {
-        id: 'threat_intel_lookup',
-        name: 'Threat Intelligence Lookup',
-        description: 'Query external threat intelligence feeds',
         risk: 'low',
         enabled: true,
         category: 'threat_detection',
@@ -155,14 +139,6 @@ export const DEFAULT_AGENT_PERMISSIONS: AgentPermissionCategory[] = [
         description: 'Add or update firewall rules and policies',
         risk: 'high',
         enabled: false,
-        category: 'system_access',
-      },
-      {
-        id: 'query_security_db',
-        name: 'Query Security Database',
-        description: 'Access security event and asset databases',
-        risk: 'medium',
-        enabled: true,
         category: 'system_access',
       },
       {
