@@ -1954,6 +1954,7 @@ const InfrastructureContent = () => {
           minZoom={0.3}
           maxZoom={1.5}
           proOptions={{ hideAttribution: true }}
+          onPaneClick={() => { setSelectedId(null); setSelectedEdgeIdx(null); }}
           nodesConnectable={false}
           onEdgeMouseEnter={(_, edge) => setHoveredEdgeId(edge.id)}
           onEdgeMouseLeave={() => setHoveredEdgeId(null)}
