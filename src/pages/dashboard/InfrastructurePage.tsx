@@ -1459,6 +1459,9 @@ const InfrastructureContent = () => {
 
   // Handle edge reconnection — only allow reconnecting to same source/target nodes (different handles)
   const onEdgeUpdate = useCallback((oldEdge: Edge, newConnection: Connection) => {
+    console.log('[EdgeUpdate] oldEdge:', { id: oldEdge.id, source: oldEdge.source, target: oldEdge.target, sourceHandle: oldEdge.sourceHandle, targetHandle: oldEdge.targetHandle });
+    console.log('[EdgeUpdate] newConnection:', JSON.parse(JSON.stringify(newConnection)));
+    console.log('[EdgeUpdate] draggedEnd:', (updatingEdgeNodes as any)?.draggedEnd);
     edgeUpdateSuccessful.current = true;
 
     // Determine which end was being dragged
@@ -1471,29 +1474,34 @@ const InfrastructureContent = () => {
     let newTargetHandle = oldEdge.targetHandle || 'top-target';
 
     if (draggedEnd === 'source') {
-      // User dragged the source end — the new connection's source or target should be oldEdge.source
       if (newConnection.source === sourceNode) {
-        // Extract handle side from whatever handle they dropped on
         const handleSide = (newConnection.sourceHandle || '').replace(/-source|-target/, '');
         newSourceHandle = `${handleSide}-source`;
+        console.log('[EdgeUpdate] source match via newConnection.source, handleSide:', handleSide);
       } else if (newConnection.target === sourceNode) {
         const handleSide = (newConnection.targetHandle || '').replace(/-source|-target/, '');
         newSourceHandle = `${handleSide}-source`;
+        console.log('[EdgeUpdate] source match via newConnection.target, handleSide:', handleSide);
       } else {
-        return; // Dropped on wrong node
+        console.log('[EdgeUpdate] REJECTED: dragged source end but neither newConnection.source nor .target matches sourceNode', sourceNode);
+        return;
       }
     } else {
-      // User dragged the target end
       if (newConnection.target === targetNode) {
         const handleSide = (newConnection.targetHandle || '').replace(/-source|-target/, '');
         newTargetHandle = `${handleSide}-target`;
+        console.log('[EdgeUpdate] target match via newConnection.target, handleSide:', handleSide);
       } else if (newConnection.source === targetNode) {
         const handleSide = (newConnection.sourceHandle || '').replace(/-source|-target/, '');
         newTargetHandle = `${handleSide}-target`;
+        console.log('[EdgeUpdate] target match via newConnection.source, handleSide:', handleSide);
       } else {
-        return; // Dropped on wrong node
+        console.log('[EdgeUpdate] REJECTED: dragged target end but neither newConnection.source nor .target matches targetNode', targetNode);
+        return;
       }
     }
+
+    console.log('[EdgeUpdate] ACCEPTED:', { sourceNode, targetNode, newSourceHandle, newTargetHandle });
 
     const normalizedConnection: Connection = {
       source: sourceNode,
@@ -1517,9 +1525,10 @@ const InfrastructureContent = () => {
   }, [setEdges, persistHandles, updatingEdgeNodes]);
 
   const onEdgeUpdateEnd = useCallback((_: MouseEvent | TouchEvent, edge: Edge) => {
+    console.log('[EdgeUpdateEnd] edgeUpdateSuccessful:', edgeUpdateSuccessful.current, 'edge:', edge.id);
     setUpdatingEdgeNodes(null);
     if (!edgeUpdateSuccessful.current) {
-      // Snap back — do nothing, edge stays as-is
+      console.log('[EdgeUpdateEnd] Update failed — snapping back');
     }
   }, []);
 
