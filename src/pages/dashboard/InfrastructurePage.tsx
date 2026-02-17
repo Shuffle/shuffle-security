@@ -15,12 +15,14 @@ import ReactFlow, {
   Edge,
   Position,
   Handle,
+  Connection,
   useNodesState,
   useEdgesState,
   useReactFlow,
   ReactFlowProvider,
   BackgroundVariant,
   MarkerType,
+  reconnectEdge,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { Box, Typography, Chip, Avatar, IconButton, Drawer, Tooltip, Button } from '@mui/material';
@@ -293,10 +295,15 @@ const CategoryNode = ({ data }: { data: CategoryNodeData }) => {
 
   return (
     <>
-      <Handle type="target" position={Position.Top} style={{ background: 'transparent', border: 'none', width: 8, height: 8 }} />
-      <Handle type="target" position={Position.Left} id="left" style={{ background: 'transparent', border: 'none', width: 8, height: 8 }} />
-      <Handle type="source" position={Position.Bottom} style={{ background: 'transparent', border: 'none', width: 8, height: 8 }} />
-      <Handle type="source" position={Position.Right} id="right" style={{ background: 'transparent', border: 'none', width: 8, height: 8 }} />
+      {/* Each side has both source and target handles for flexible reconnection */}
+      <Handle type="target" position={Position.Top} id="top-target" style={{ background: 'transparent', border: 'none', width: 8, height: 8 }} />
+      <Handle type="source" position={Position.Top} id="top-source" style={{ background: 'transparent', border: 'none', width: 8, height: 8 }} />
+      <Handle type="target" position={Position.Bottom} id="bottom-target" style={{ background: 'transparent', border: 'none', width: 8, height: 8 }} />
+      <Handle type="source" position={Position.Bottom} id="bottom-source" style={{ background: 'transparent', border: 'none', width: 8, height: 8 }} />
+      <Handle type="target" position={Position.Left} id="left-target" style={{ background: 'transparent', border: 'none', width: 8, height: 8 }} />
+      <Handle type="source" position={Position.Left} id="left-source" style={{ background: 'transparent', border: 'none', width: 8, height: 8 }} />
+      <Handle type="target" position={Position.Right} id="right-target" style={{ background: 'transparent', border: 'none', width: 8, height: 8 }} />
+      <Handle type="source" position={Position.Right} id="right-source" style={{ background: 'transparent', border: 'none', width: 8, height: 8 }} />
 
       <Box
         onClick={() => onSelect(category.id)}
@@ -583,6 +590,9 @@ const CategoryDetailDrawer = ({
 // ── Page Component ─────────────────────────────────────────────────────────────
 
 const POSITION_CACHE_KEY = 'infrastructure_node_positions';
+const HANDLE_CACHE_KEY = 'infrastructure_edge_handles';
+
+type HandleOverrides = Record<string, { sourceHandle?: string; targetHandle?: string }>;
 
 const InfrastructureContent = () => {
   usePageMeta({ title: 'Infrastructure', description: 'Security tool integrations and data flow visualization' });
@@ -591,28 +601,34 @@ const InfrastructureContent = () => {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [hoveredEdgeId, setHoveredEdgeId] = useState<string | null>(null);
   const [categoryApps, setCategoryApps] = useState<Record<string, MatchedApp[]>>({});
+  const [savedHandles, setSavedHandles] = useState<HandleOverrides>({});
   const [savedPositions, setSavedPositions] = useState<Record<string, { x: number; y: number }> | null>(null);
   const [positionsLoaded, setPositionsLoaded] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Load saved positions from datastore on mount
+  // Load saved positions and handle overrides from datastore on mount
   useEffect(() => {
-    const loadPositions = async () => {
+    const loadData = async () => {
       try {
-        const result = await getDatastoreItem(POSITION_CACHE_KEY, DATASTORE_CATEGORIES.INFRASTRUCTURE);
-        if (result.success && result.item?.value) {
-          const parsed = typeof result.item.value === 'string' ? JSON.parse(result.item.value) : result.item.value;
-          if (parsed && typeof parsed === 'object') {
-            setSavedPositions(parsed);
-          }
+        const [posResult, handleResult] = await Promise.all([
+          getDatastoreItem(POSITION_CACHE_KEY, DATASTORE_CATEGORIES.INFRASTRUCTURE),
+          getDatastoreItem(HANDLE_CACHE_KEY, DATASTORE_CATEGORIES.INFRASTRUCTURE),
+        ]);
+        if (posResult.success && posResult.item?.value) {
+          const parsed = typeof posResult.item.value === 'string' ? JSON.parse(posResult.item.value) : posResult.item.value;
+          if (parsed && typeof parsed === 'object') setSavedPositions(parsed);
+        }
+        if (handleResult.success && handleResult.item?.value) {
+          const parsed = typeof handleResult.item.value === 'string' ? JSON.parse(handleResult.item.value) : handleResult.item.value;
+          if (parsed && typeof parsed === 'object') setSavedHandles(parsed);
         }
       } catch (e) {
-        console.warn('Failed to load infrastructure positions:', e);
+        console.warn('Failed to load infrastructure config:', e);
       } finally {
         setPositionsLoaded(true);
       }
     };
-    loadPositions();
+    loadData();
   }, []);
 
   // Save positions to datastore (debounced)
@@ -622,6 +638,16 @@ const InfrastructureContent = () => {
       setDatastoreItem(POSITION_CACHE_KEY, positions, DATASTORE_CATEGORIES.INFRASTRUCTURE)
         .catch(e => console.warn('Failed to save positions:', e));
     }, 1000);
+  }, []);
+
+  // Save handle overrides to datastore
+  const handleSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const persistHandles = useCallback((handles: HandleOverrides) => {
+    if (handleSaveTimer.current) clearTimeout(handleSaveTimer.current);
+    handleSaveTimer.current = setTimeout(() => {
+      setDatastoreItem(HANDLE_CACHE_KEY, handles, DATASTORE_CATEGORIES.INFRASTRUCTURE)
+        .catch(e => console.warn('Failed to save handle overrides:', e));
+    }, 500);
   }, []);
 
   // Fetch authenticated apps and map to categories
@@ -743,12 +769,20 @@ const InfrastructureContent = () => {
         stroke = 'hsla(var(--muted-foreground) / 0.3)';
       }
 
+      // Apply saved handle overrides or use defaults
+      const handleOverride = savedHandles[edgeId];
+      const sourceHandle = handleOverride?.sourceHandle || 'bottom-source';
+      const targetHandle = handleOverride?.targetHandle || 'top-target';
+
       return {
         id: edgeId,
         source: flow.source,
         target: flow.target,
+        sourceHandle,
+        targetHandle,
         label: flow.label,
         animated: !!isFullyHighlighted,
+        reconnectable: true,
         zIndex: isConnected ? 10 : 0,
         type: 'smoothstep',
         style: {
@@ -779,7 +813,7 @@ const InfrastructureContent = () => {
         },
       };
     }),
-    [activeId, activeColor, activeCategories, hoveredEdgeId]
+    [activeId, activeColor, activeCategories, hoveredEdgeId, savedHandles]
   );
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
@@ -826,11 +860,31 @@ const InfrastructureContent = () => {
     persistPositions(positions);
   }, [reactFlowInstance, persistPositions]);
 
-  // Reset positions: clear saved, revert to defaults
+  // Handle edge reconnection — user drags edge endpoint to a different handle
+  const onReconnect = useCallback((oldEdge: Edge, newConnection: Connection) => {
+    setEdges((els) => reconnectEdge(oldEdge, newConnection, els));
+    // Save the new handle assignment
+    setSavedHandles(prev => {
+      const updated = {
+        ...prev,
+        [oldEdge.id]: {
+          sourceHandle: newConnection.sourceHandle || prev[oldEdge.id]?.sourceHandle || 'bottom-source',
+          targetHandle: newConnection.targetHandle || prev[oldEdge.id]?.targetHandle || 'top-target',
+        },
+      };
+      persistHandles(updated);
+      return updated;
+    });
+  }, [setEdges, persistHandles]);
+
+  // Reset positions and handles: clear saved, revert to defaults
   const handleResetPositions = useCallback(() => {
     setSavedPositions(null);
-    setDatastoreItem(POSITION_CACHE_KEY, JSON.stringify(NODE_POSITIONS), DATASTORE_CATEGORIES.INFRASTRUCTURE)
-      .catch(e => console.warn('Failed to reset positions:', e));
+    setSavedHandles({});
+    Promise.all([
+      setDatastoreItem(POSITION_CACHE_KEY, JSON.stringify(NODE_POSITIONS), DATASTORE_CATEGORIES.INFRASTRUCTURE),
+      setDatastoreItem(HANDLE_CACHE_KEY, JSON.stringify({}), DATASTORE_CATEGORIES.INFRASTRUCTURE),
+    ]).catch(e => console.warn('Failed to reset:', e));
     // Refit after nodes update
     setTimeout(() => reactFlowInstance.fitView({ padding: 0.25, duration: 300 }), 50);
   }, [reactFlowInstance]);
@@ -888,6 +942,8 @@ const InfrastructureContent = () => {
           proOptions={{ hideAttribution: true }}
           onEdgeMouseEnter={(_, edge) => setHoveredEdgeId(edge.id)}
           onEdgeMouseLeave={() => setHoveredEdgeId(null)}
+          edgesUpdatable
+          onReconnect={onReconnect}
         >
           <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="hsla(var(--muted-foreground) / 0.1)" />
           <Controls showInteractive={false} />
