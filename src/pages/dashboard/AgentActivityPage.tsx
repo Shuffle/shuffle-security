@@ -24,7 +24,9 @@ import { useAgentActivity } from '@/hooks/useAgentActivity';
 import AgentActivityFeed from '@/components/agent/AgentActivityFeed';
 import AgentActivityStatsPanel from '@/components/agent/AgentActivityStats';
 import AgentPermissionsDrawer from '@/components/agent/AgentPermissionsDrawer';
+import AgentActionDrawer from '@/components/agent/AgentActionDrawer';
 import { useAgentPermissions } from '@/hooks/useAgentPermissions';
+import type { AgentRun } from '@/services/agentActivity';
 
 const STATUS_FILTERS = [
   { label: 'All', value: '' },
@@ -51,6 +53,7 @@ const AgentActivityPage = () => {
 
   const { enabledPermissions, totalPermissions } = useAgentPermissions();
   const [permissionsOpen, setPermissionsOpen] = useState(false);
+  const [selectedRun, setSelectedRun] = useState<AgentRun | null>(null);
 
   // Pre-fill search from URL query param (e.g. /agent?search=AbuseIPDB)
   useEffect(() => {
@@ -245,7 +248,7 @@ const AgentActivityPage = () => {
               </Box>
             ) : (
               <>
-                <AgentActivityFeed runs={runs} />
+                <AgentActivityFeed runs={runs} onRunClick={(run) => setSelectedRun(run)} />
                 
                 {/* Load more */}
                 {hasMore && (
@@ -278,6 +281,13 @@ const AgentActivityPage = () => {
 
       {/* Permissions drawer */}
       <AgentPermissionsDrawer open={permissionsOpen} onClose={() => setPermissionsOpen(false)} />
+
+      {/* Action/view drawer for selected run */}
+      <AgentActionDrawer
+        open={!!selectedRun}
+        onClose={() => setSelectedRun(null)}
+        run={selectedRun}
+      />
     </motion.div>
   );
 };

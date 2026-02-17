@@ -140,9 +140,10 @@ const getRunSubtitle = (run: AgentRun): string => {
 
 interface AgentActivityFeedProps {
   runs: AgentRun[];
+  onRunClick?: (run: AgentRun) => void;
 }
 
-const AgentActivityFeed = ({ runs }: AgentActivityFeedProps) => {
+const AgentActivityFeed = ({ runs, onRunClick }: AgentActivityFeedProps) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   if (runs.length === 0) {
@@ -189,7 +190,7 @@ const AgentActivityFeed = ({ runs }: AgentActivityFeedProps) => {
             }}>
               {/* Header row - clickable */}
               <Box
-                onClick={() => setExpandedId(isExpanded ? null : run.execution_id)}
+                onClick={() => onRunClick ? onRunClick(run) : setExpandedId(isExpanded ? null : run.execution_id)}
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
