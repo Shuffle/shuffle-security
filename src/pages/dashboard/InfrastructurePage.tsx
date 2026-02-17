@@ -1396,8 +1396,8 @@ const InfrastructureContent = () => {
         isHovered: hoveredId === node.id,
         isEdgeUpdating: updatingEdgeNodes
           ? (updatingEdgeNodes.draggedEnd === 'source'
-              ? node.id === updatingEdgeNodes.source
-              : node.id === updatingEdgeNodes.target)
+              ? node.id === updatingEdgeNodes.target
+              : node.id === updatingEdgeNodes.source)
           : false,
         edgeUpdateHandleType: updatingEdgeNodes?.draggedEnd || null,
         matchedApps: categoryApps[node.id] || [],
