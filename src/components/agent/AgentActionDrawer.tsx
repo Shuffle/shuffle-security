@@ -24,13 +24,13 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
-import { Activity, Bot, CheckCircle2, Circle, AlertCircle, Clock, Wrench, MessageCircleQuestion, Flag, Play, CheckCircle, XCircle, Loader2, Zap, FileText, Globe, Server, Brain } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { Activity, Bot, CheckCircle2, Circle, AlertCircle, Clock, Wrench, MessageCircleQuestion, Flag, Play, Brain } from 'lucide-react';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 import { SingulJS } from '@/lib/singul-local';
 import type { AlgoliaSearchApp, SingulJSHandle } from '@/lib/singul-local';
 import type { AgentRun, AgentDecision } from '@/services/agentActivity';
 import AgentRunResultViewer, { parseRunResult } from '@/components/agent/AgentRunResultViewer';
+import AgentRunHeader from '@/components/agent/AgentRunHeader';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -42,94 +42,6 @@ export interface AgentActionDrawerProps {
   /** Optional initial app to target. */
   initialApp?: AlgoliaSearchApp | null;
 }
-
-// ── Run header helpers (matching activity feed style) ──────────────────────────
-
-const STATUS_CONFIG: Record<string, { icon: React.ReactNode; color: string; label: string }> = {
-  FINISHED: { icon: <CheckCircle size={16} />, color: 'hsl(var(--severity-low))', label: 'Completed' },
-  SUCCESS: { icon: <CheckCircle size={16} />, color: 'hsl(var(--severity-low))', label: 'Completed' },
-  FAILED: { icon: <XCircle size={16} />, color: 'hsl(var(--severity-critical))', label: 'Failed' },
-  ABORTED: { icon: <XCircle size={16} />, color: 'hsl(var(--severity-critical))', label: 'Aborted' },
-  EXECUTING: { icon: <Loader2 size={16} />, color: 'hsl(var(--severity-medium))', label: 'Running' },
-  RUNNING: { icon: <Loader2 size={16} />, color: 'hsl(var(--severity-medium))', label: 'Running' },
-  WAITING: { icon: <Clock size={16} />, color: 'hsl(var(--severity-info))', label: 'Waiting' },
-};
-
-const getRunIcon = (run: AgentRun): React.ReactNode => {
-  const src = (run.execution_source || '').toLowerCase();
-  const arg = (run.execution_argument || '').toLowerCase();
-  if (src.includes('schedule') || src.includes('cron')) return <Clock size={20} />;
-  if (src.includes('webhook') || src.includes('http')) return <Globe size={20} />;
-  if (arg.includes('alert') || arg.includes('detect')) return <Activity size={20} />;
-  if (arg.includes('report') || arg.includes('email')) return <FileText size={20} />;
-  if (arg.includes('endpoint') || arg.includes('server')) return <Server size={20} />;
-  return <Zap size={20} />;
-};
-
-const getRunIconColor = (run: AgentRun): string => {
-  const status = run.status?.toUpperCase() || '';
-  if (status === 'FINISHED' || status === 'SUCCESS') return 'hsl(var(--severity-low))';
-  if (status === 'FAILED' || status === 'ABORTED') return 'hsl(var(--severity-critical))';
-  if (status === 'EXECUTING' || status === 'RUNNING') return 'hsl(var(--severity-medium))';
-  return 'hsl(var(--primary))';
-};
-
-const formatDuration = (run: AgentRun): string => {
-  if (run.started_at && run.completed_at) {
-    const startSec = Number(run.started_at);
-    const endSec = Number(run.completed_at);
-    if (!isNaN(startSec) && !isNaN(endSec)) {
-      const ms = (endSec - startSec) * 1000;
-      if (ms < 1000) return `${Math.round(ms)}ms`;
-      if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
-      return `${Math.floor(ms / 60000)}m ${Math.floor((ms % 60000) / 1000)}s`;
-    }
-  }
-  if (run.duration) return `${run.duration.toFixed(1)}s`;
-  return '';
-};
-
-const getTimeAgo = (dateStr: string): string => {
-  try {
-    const date = isNaN(Number(dateStr)) ? new Date(dateStr) : new Date(Number(dateStr) * 1000);
-    if (isNaN(date.getTime())) return dateStr;
-    return formatDistanceToNow(date, { addSuffix: true });
-  } catch {
-    return dateStr;
-  }
-};
-
-const getRunTitle = (run: AgentRun): string => {
-  if (run.workflow?.name) return run.workflow.name;
-  if (run.execution_argument) {
-    try {
-      const parsed = JSON.parse(run.execution_argument);
-      if (parsed.title) return parsed.title;
-      if (parsed.action) return parsed.action;
-      if (parsed.name) return parsed.name;
-    } catch {
-      const clean = run.execution_argument.replace(/[{}"]/g, '').trim();
-      if (clean.length > 0 && clean.length < 80) return clean;
-    }
-  }
-  return `Execution ${run.execution_id?.slice(0, 8) || '—'}`;
-};
-
-const getRunSubtitle = (run: AgentRun): string => {
-  const { parsed } = parseRunResult(run);
-  if (parsed && typeof parsed === 'object') {
-    if (parsed.output) {
-      const s = String(parsed.output);
-      return s.length > 80 ? s.slice(0, 80) + '…' : s;
-    }
-    if (parsed.original_input) {
-      const s = String(parsed.original_input);
-      return s.length > 80 ? s.slice(0, 80) + '…' : s;
-    }
-  }
-  if (run.execution_source) return run.execution_source;
-  return 'Agent execution';
-};
 
 // ── Decision helpers ──────────────────────────────────────────────────────────
 
@@ -564,74 +476,17 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
     >
       {/* ── Header ── */}
       <Box sx={{
-        px: 3,
-        py: 2.5,
-        display: 'flex',
-        alignItems: 'flex-start',
-        gap: 2,
         borderBottom: '1px solid hsl(var(--border))',
         flexShrink: 0,
+        display: 'flex',
+        alignItems: 'center',
       }}>
         {isViewMode && run ? (
-          <>
-            {/* Status-colored icon matching activity feed */}
-            <Box sx={{
-              width: 40,
-              height: 40,
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: `${getRunIconColor(run)}18`,
-              color: getRunIconColor(run),
-              flexShrink: 0,
-              mt: 0.25,
-            }}>
-              {getRunIcon(run)}
-            </Box>
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography sx={{ fontWeight: 600, fontSize: '0.92rem', color: 'hsl(var(--foreground))', lineHeight: 1.3 }}>
-                {getRunTitle(run)}
-              </Typography>
-              <Typography sx={{
-                fontSize: '0.74rem',
-                color: 'hsl(var(--muted-foreground))',
-                mt: 0.25,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-              }}>
-                {getRunSubtitle(run)}
-              </Typography>
-              {/* Sub-info row: status, duration, time ago */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.75, flexWrap: 'wrap' }}>
-                {(() => {
-                  const cfg = STATUS_CONFIG[run.status?.toUpperCase() || ''] || STATUS_CONFIG.FINISHED;
-                  return (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4, color: cfg.color }}>
-                      {cfg.icon}
-                      <Typography sx={{ fontSize: '0.68rem', fontWeight: 600, textTransform: 'uppercase' }}>
-                        {cfg.label}
-                      </Typography>
-                    </Box>
-                  );
-                })()}
-                {formatDuration(run) && (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3, color: 'hsl(var(--muted-foreground))' }}>
-                    <Clock size={11} />
-                    <Typography sx={{ fontSize: '0.68rem' }}>{formatDuration(run)}</Typography>
-                  </Box>
-                )}
-                {run.started_at && (
-                  <Typography sx={{ fontSize: '0.68rem', color: 'hsl(var(--muted-foreground))', opacity: 0.6 }}>
-                    {getTimeAgo(run.started_at)}
-                  </Typography>
-                )}
-              </Box>
-            </Box>
-          </>
+          <Box sx={{ flex: 1 }}>
+            <AgentRunHeader run={run} />
+          </Box>
         ) : (
-          <>
+          <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 2, px: 2.5, py: 2 }}>
             <Box sx={{
               width: 40,
               height: 40,
@@ -653,9 +508,9 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
                 Run an action via JSON-RPC
               </Typography>
             </Box>
-          </>
+          </Box>
         )}
-        <IconButton onClick={onClose} size="small" sx={{ color: 'hsl(var(--muted-foreground))', mt: 0.25 }}>
+        <IconButton onClick={onClose} size="small" sx={{ color: 'hsl(var(--muted-foreground))', mr: 2 }}>
           <CloseIcon fontSize="small" />
         </IconButton>
       </Box>
