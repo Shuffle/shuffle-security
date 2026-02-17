@@ -1092,7 +1092,9 @@ const InfrastructureContent = () => {
       const eitherMissing = !sourceActive || !targetActive;
 
       const edgeId = `e-${idx}`;
-      const isEdgeHovered = hoveredEdgeId === edgeId;
+      const isSelected = selectedEdgeIdx === idx;
+      // When a branch is selected, ignore hover on other edges
+      const isEdgeHovered = selectedEdgeIdx !== null ? isSelected : hoveredEdgeId === edgeId;
       // Highlight on hover/select
       const isConnected = isEdgeHovered || (activeId && (flow.source === activeId || flow.target === activeId));
       // Only fully highlight (color + animate) if both sides have apps
@@ -1100,7 +1102,7 @@ const InfrastructureContent = () => {
       // Connected but missing one side — show as grey highlight (stands out but not colored)
       const isGreyHighlighted = isConnected && eitherMissing;
 
-      const hasAnyFocus = activeId || hoveredEdgeId;
+      const hasAnyFocus = selectedEdgeIdx !== null || activeId || hoveredEdgeId;
 
       // Get category colors for gradient
       const srcCat = TOOL_CATEGORIES.find(c => c.id === flow.source);
@@ -1175,7 +1177,7 @@ const InfrastructureContent = () => {
         },
       };
     }),
-    [activeId, activeColor, activeCategories, hoveredEdgeId, savedHandles]
+    [activeId, activeColor, activeCategories, hoveredEdgeId, selectedEdgeIdx, savedHandles]
   );
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
