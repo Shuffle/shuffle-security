@@ -926,6 +926,166 @@ export const getToolCategoryMeta = (categoryId: string): { color: string; icon: 
 };
 
 
+// ── All Data Flows Drawer ──────────────────────────────────────────────────────
+
+const AllDataFlowsDrawer = ({
+  open,
+  onClose,
+  onSelectFlow,
+  onSelectCategory,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onSelectFlow: (edgeIdx: number) => void;
+  onSelectCategory: (categoryId: string) => void;
+}) => {
+  // Group flows by source category
+  const groupedFlows = useMemo(() => {
+    const groups: Record<string, { flow: (typeof DATA_FLOWS)[number]; idx: number }[]> = {};
+    DATA_FLOWS.forEach((flow, idx) => {
+      if (!groups[flow.source]) groups[flow.source] = [];
+      groups[flow.source].push({ flow, idx });
+    });
+    return groups;
+  }, []);
+
+  const sourceIds = Object.keys(groupedFlows);
+
+  return (
+    <Drawer
+      anchor="right"
+      variant="persistent"
+      open={open}
+      onClose={onClose}
+      PaperProps={{
+        sx: {
+          width: { xs: '100%', sm: 440 },
+          background: 'linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%)',
+          borderLeft: '1px solid hsl(var(--border))',
+          boxShadow: '-8px 0 32px rgba(0,0,0,0.4)',
+        },
+      }}
+    >
+      {/* Header */}
+      <Box sx={{
+        px: 3,
+        py: 2.5,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 2,
+        borderBottom: '1px solid hsl(var(--border))',
+      }}>
+        <Box sx={{
+          width: 44,
+          height: 44,
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          bgcolor: 'hsla(var(--primary) / 0.12)',
+          color: 'hsl(var(--primary))',
+        }}>
+          <Activity size={22} />
+        </Box>
+        <Box sx={{ flex: 1 }}>
+          <Typography sx={{ fontWeight: 600, fontSize: '1.1rem', color: 'hsl(var(--foreground))' }}>
+            All Data Flows
+          </Typography>
+          <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
+            {DATA_FLOWS.length} connections across your infrastructure
+          </Typography>
+        </Box>
+        <IconButton onClick={onClose} size="small" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+          <CloseIcon fontSize="small" />
+        </IconButton>
+      </Box>
+
+      {/* Flow list grouped by source */}
+      <Box sx={{ p: 2, overflowY: 'auto', flex: 1 }}>
+        {sourceIds.map(sourceId => {
+          const sourceCat = TOOL_CATEGORIES.find(c => c.id === sourceId);
+          if (!sourceCat) return null;
+          const flows = groupedFlows[sourceId];
+
+          return (
+            <Box key={sourceId} sx={{ mb: 2.5 }}>
+              {/* Source category header */}
+              <Box
+                onClick={() => { onClose(); onSelectCategory(sourceId); }}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  mb: 1,
+                  px: 1,
+                  py: 0.5,
+                  borderRadius: 1,
+                  cursor: 'pointer',
+                  '&:hover': { bgcolor: `hsla(var(${sourceCat.color}) / 0.08)` },
+                }}
+              >
+                <Box sx={{ color: `hsl(var(${sourceCat.color}))`, display: 'flex', '& svg': { width: 16, height: 16 } }}>
+                  {sourceCat.icon}
+                </Box>
+                <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: `hsl(var(${sourceCat.color}))`, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  {sourceCat.label}
+                </Typography>
+                <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', ml: 'auto' }}>
+                  {flows.length} flow{flows.length !== 1 ? 's' : ''}
+                </Typography>
+              </Box>
+
+              {/* Individual flows */}
+              {flows.map(({ flow, idx }) => {
+                const targetCat = TOOL_CATEGORIES.find(c => c.id === flow.target);
+                return (
+                  <Box
+                    key={idx}
+                    onClick={() => { onClose(); onSelectFlow(idx); }}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      px: 1.5,
+                      py: 1,
+                      ml: 1,
+                      mb: 0.5,
+                      borderRadius: 1.5,
+                      border: '1px solid transparent',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                      '&:hover': {
+                        bgcolor: 'hsla(var(--muted-foreground) / 0.06)',
+                        borderColor: 'hsl(var(--border))',
+                      },
+                    }}
+                  >
+                    <ArrowRight size={12} style={{ color: 'hsl(var(--muted-foreground))', flexShrink: 0 }} />
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+                        {flow.label}
+                      </Typography>
+                      <Typography sx={{ fontSize: '0.68rem', color: 'hsl(var(--muted-foreground))', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        → {targetCat?.label || flow.target}
+                      </Typography>
+                    </Box>
+                    {targetCat && (
+                      <Box sx={{ color: `hsl(var(${targetCat.color}))`, display: 'flex', '& svg': { width: 14, height: 14 }, opacity: 0.6 }}>
+                        {targetCat.icon}
+                      </Box>
+                    )}
+                  </Box>
+                );
+              })}
+            </Box>
+          );
+        })}
+      </Box>
+    </Drawer>
+  );
+};
+
+
 
 const EdgeDetailDrawer = ({
   flow,
@@ -1058,6 +1218,7 @@ const CategoryDetailDrawer = ({
   onClose,
   onEdgeHover,
   onEdgeClick,
+  onViewAllFlows,
 }: {
   category: ToolCategory | null;
   matchedApps: MatchedApp[];
@@ -1065,6 +1226,7 @@ const CategoryDetailDrawer = ({
   onClose: () => void;
   onEdgeHover: (edgeId: string | null) => void;
   onEdgeClick: (edgeIdx: number) => void;
+  onViewAllFlows: () => void;
 }) => {
   const navigate = useNavigate();
   if (!category) return null;
@@ -1223,9 +1385,27 @@ const CategoryDetailDrawer = ({
 
         {/* Data Flows — branch-based "How to use" */}
         <Box>
-          <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1.5 }}>
-            Data Flows
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+            <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Data Flows
+            </Typography>
+            <Chip
+              label="View All"
+              size="small"
+              icon={<Activity size={11} />}
+              onClick={onViewAllFlows}
+              sx={{
+                height: 22,
+                fontSize: '0.65rem',
+                bgcolor: 'hsla(var(--primary) / 0.08)',
+                color: 'hsl(var(--primary))',
+                border: '1px solid hsla(var(--primary) / 0.2)',
+                cursor: 'pointer',
+                '& .MuiChip-icon': { color: 'hsl(var(--primary))' },
+                '&:hover': { bgcolor: 'hsla(var(--primary) / 0.16)' },
+              }}
+            />
+          </Box>
           {connectedFlows.map(({ flow, idx, isSource, otherCat }) => {
             const edgeId = `e-${idx}`;
             const sourceCat = TOOL_CATEGORIES.find(c => c.id === flow.source);
@@ -1384,6 +1564,7 @@ const InfrastructureContent = () => {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [hoveredEdgeId, setHoveredEdgeId] = useState<string | null>(null);
   const [selectedEdgeIdx, setSelectedEdgeIdx] = useState<number | null>(null);
+  const [showAllFlows, setShowAllFlows] = useState(false);
   const [categoryApps, setCategoryApps] = useState<Record<string, MatchedApp[]>>({});
   const [savedHandles, setSavedHandles] = useState<HandleOverrides>({});
   const [savedWaypoints, setSavedWaypoints] = useState<WaypointOverrides>({});
@@ -2052,6 +2233,22 @@ const InfrastructureContent = () => {
         onEdgeClick={(edgeIdx) => {
           setSelectedId(null);
           setSelectedEdgeIdx(edgeIdx);
+        }}
+        onViewAllFlows={() => {
+          setSelectedId(null);
+          setShowAllFlows(true);
+        }}
+      />
+      <AllDataFlowsDrawer
+        open={showAllFlows}
+        onClose={() => setShowAllFlows(false)}
+        onSelectFlow={(edgeIdx) => {
+          setShowAllFlows(false);
+          setSelectedEdgeIdx(edgeIdx);
+        }}
+        onSelectCategory={(catId) => {
+          setShowAllFlows(false);
+          setSelectedId(catId);
         }}
       />
       <EdgeDetailDrawer
