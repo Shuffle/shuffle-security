@@ -389,50 +389,25 @@ const GradientEdge = ({
   const labelX = allPoints.reduce((s, p) => s + p.x, 0) / allPoints.length;
   const labelY = allPoints.reduce((s, p) => s + p.y, 0) / allPoints.length;
 
-  // Compute segment midpoints on the expanded orthogonal path for drag handles
-  // Also track which waypoint insertion index each segment maps to
-  const expandedPoints = expandToOrthogonal(allPoints);
+  // Compute midpoint handles on LOGICAL segments (between consecutive allPoints)
+  // Each logical segment gets exactly one handle at its halfway point
   const segmentMidpoints = useMemo(() => {
-    const mids: Array<{
-      x: number; y: number;
-      isHorizontal: boolean;
-      segStart: { x: number; y: number };
-      segEnd: { x: number; y: number };
-      wpInsertIdx: number; // index in waypoints array where new points should be inserted
-    }> = [];
-
-    // Map expanded points back to allPoints indices to determine waypoint insertion index
-    // allPoints = [source, ...waypoints, target]
-    // Waypoint insertion index = allPoints index - 1 (since allPoints[0] is source)
-    let allPointsIdx = 0;
-    for (let i = 0; i < expandedPoints.length - 1; i++) {
-      const p = expandedPoints[i];
-      const next = expandedPoints[i + 1];
-
-      // Advance allPointsIdx when we reach the next original point
-      if (allPointsIdx < allPoints.length - 1) {
-        const ap = allPoints[allPointsIdx + 1];
-        if (ap && Math.abs(p.x - ap.x) < 1 && Math.abs(p.y - ap.y) < 1) {
-          allPointsIdx++;
-        }
-      }
-
-      const isHorizontal = Math.abs(p.y - next.y) < 1;
-      // wpInsertIdx: insert after allPointsIdx in the waypoints array
-      // allPoints index 0 = source, so waypoints insertion = allPointsIdx
-      const wpInsertIdx = Math.max(0, allPointsIdx);
-
-      mids.push({
+    return allPoints.slice(0, -1).map((p, i) => {
+      const next = allPoints[i + 1];
+      // Determine primary direction of this logical segment
+      const dx = Math.abs(next.x - p.x);
+      const dy = Math.abs(next.y - p.y);
+      const isHorizontal = dx >= dy;
+      return {
         x: (p.x + next.x) / 2,
         y: (p.y + next.y) / 2,
         isHorizontal,
         segStart: p,
         segEnd: next,
-        wpInsertIdx,
-      });
-    }
-    return mids;
-  }, [expandedPoints, allPoints]);
+        wpInsertIdx: i, // insert at this index in the waypoints array (allPoints[0] is source, so wp index = allPoints index - 1 + 1 = i)
+      };
+    });
+  }, [allPoints]);
 
   const sourceColor = data?.sourceColor || 'hsl(var(--primary))';
   const targetColor = data?.targetColor || 'hsl(var(--primary))';
@@ -495,7 +470,36 @@ const GradientEdge = ({
         }
       }
     };
-    const onMouseUp = () => setDraggingIdx(null);
+    const onMouseUp = () => {
+      setDraggingIdx(null);
+      // Clean up redundant waypoints: remove collinear points and near-duplicates
+      const wp = waypointsRef.current;
+      if (wp.length > 0) {
+        const source = { x: sourceX, y: sourceY };
+        const target = { x: targetX, y: targetY };
+        const all = [source, ...wp, target];
+        const cleaned: Array<{ x: number; y: number }> = [];
+        for (let i = 0; i < wp.length; i++) {
+          const prev = i === 0 ? source : cleaned[cleaned.length - 1] || source;
+          const curr = wp[i];
+          const next = i < wp.length - 1 ? wp[i + 1] : target;
+          if (!curr) continue;
+          // Skip if collinear horizontally (all share same y)
+          if (Math.abs(prev.y - curr.y) < 2 && Math.abs(curr.y - next.y) < 2) continue;
+          // Skip if collinear vertically (all share same x)
+          if (Math.abs(prev.x - curr.x) < 2 && Math.abs(curr.x - next.x) < 2) continue;
+          // Skip near-duplicate of previous
+          if (cleaned.length > 0) {
+            const last = cleaned[cleaned.length - 1];
+            if (Math.abs(last.x - curr.x) < 2 && Math.abs(last.y - curr.y) < 2) continue;
+          }
+          cleaned.push(curr);
+        }
+        if (cleaned.length !== wp.length) {
+          onWaypointsChangeRef.current?.(cleaned);
+        }
+      }
+    };
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
     return () => {
