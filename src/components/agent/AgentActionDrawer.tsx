@@ -24,11 +24,11 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
-import { Activity, Bot } from 'lucide-react';
+import { Activity, Bot, CheckCircle2, Circle, AlertCircle, Clock, Wrench } from 'lucide-react';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 import { SingulJS } from '@/lib/singul-local';
 import type { AlgoliaSearchApp, SingulJSHandle } from '@/lib/singul-local';
-import type { AgentRun } from '@/services/agentActivity';
+import type { AgentRun, AgentDecision } from '@/services/agentActivity';
 import AgentRunResultViewer from '@/components/agent/AgentRunResultViewer';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -41,6 +41,100 @@ export interface AgentActionDrawerProps {
   /** Optional initial app to target. */
   initialApp?: AlgoliaSearchApp | null;
 }
+
+// ── Decisions Timeline ─────────────────────────────────────────────────────────
+
+const getDecisionIcon = (decision: AgentDecision) => {
+  const s = (decision.status || '').toLowerCase();
+  if (s === 'success' || s === 'completed' || s === 'done') return <CheckCircle2 size={14} style={{ color: 'hsl(var(--severity-low))' }} />;
+  if (s === 'error' || s === 'failed') return <AlertCircle size={14} style={{ color: 'hsl(var(--severity-critical))' }} />;
+  if (decision.tool) return <Wrench size={14} style={{ color: 'hsl(var(--primary))' }} />;
+  return <Circle size={14} style={{ color: 'hsl(var(--muted-foreground))' }} />;
+};
+
+const DecisionsTimeline = ({ decisions }: { decisions: AgentDecision[] }) => {
+  if (!decisions.length) return null;
+  return (
+    <Box sx={{ mt: 2 }}>
+      <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1.5 }}>
+        Decisions
+      </Typography>
+      <Box sx={{ position: 'relative', pl: 2.5 }}>
+        {/* Vertical line */}
+        <Box sx={{
+          position: 'absolute',
+          left: 6,
+          top: 4,
+          bottom: 4,
+          width: '1.5px',
+          bgcolor: 'hsl(var(--border))',
+        }} />
+        {decisions.map((decision, idx) => (
+          <Box key={idx} sx={{ position: 'relative', mb: idx < decisions.length - 1 ? 2 : 0 }}>
+            {/* Dot */}
+            <Box sx={{
+              position: 'absolute',
+              left: -20,
+              top: 2,
+              zIndex: 1,
+              bgcolor: 'hsl(var(--card))',
+              display: 'flex',
+              alignItems: 'center',
+            }}>
+              {getDecisionIcon(decision)}
+            </Box>
+            {/* Content */}
+            <Box sx={{
+              p: 1.5,
+              borderRadius: 1.5,
+              border: '1px solid hsl(var(--border))',
+              bgcolor: 'hsl(var(--card))',
+            }}>
+              {decision.title && (
+                <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: 'hsl(var(--foreground))', mb: 0.25 }}>
+                  {decision.title}
+                </Typography>
+              )}
+              {decision.action && !decision.title && (
+                <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: 'hsl(var(--foreground))', mb: 0.25, textTransform: 'capitalize' }}>
+                  {decision.action.replace(/_/g, ' ')}
+                </Typography>
+              )}
+              {decision.description && (
+                <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.5 }}>
+                  {decision.description}
+                </Typography>
+              )}
+              {decision.tool && (
+                <Chip label={decision.tool} size="small" sx={{ mt: 0.75, height: 20, fontSize: '0.65rem', bgcolor: 'hsla(var(--primary) / 0.1)', color: 'hsl(var(--primary))' }} />
+              )}
+              {decision.result && (
+                <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--muted-foreground))', mt: 0.5, fontFamily: "'JetBrains Mono', monospace", whiteSpace: 'pre-wrap', wordBreak: 'break-word', maxHeight: 80, overflow: 'auto' }}>
+                  {decision.result}
+                </Typography>
+              )}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.75 }}>
+                {decision.status && (
+                  <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', opacity: 0.7, textTransform: 'uppercase', fontWeight: 500 }}>
+                    {decision.status}
+                  </Typography>
+                )}
+                {decision.timestamp && (
+                  <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', opacity: 0.5, display: 'flex', alignItems: 'center', gap: 0.3 }}>
+                    <Clock size={10} />
+                    {typeof decision.timestamp === 'number'
+                      ? new Date(decision.timestamp * 1000).toLocaleTimeString()
+                      : decision.timestamp}
+                  </Typography>
+                )}
+              </Box>
+            </Box>
+          </Box>
+        ))}
+      </Box>
+    </Box>
+  );
+};
 
 // ── Component ──────────────────────────────────────────────────────────────────
 
@@ -195,8 +289,18 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
       {/* ── Content ── */}
       <Box sx={{ flex: 1, overflowY: 'auto', px: 3, py: 2.5 }}>
         {isViewMode ? (
-          /* ── View Mode: show the run result ── */
-          <AgentRunResultViewer run={run!} />
+          /* ── View Mode: decisions timeline + result ── */
+          <Box>
+            {run!.decisions && run!.decisions.length > 0 && (
+              <DecisionsTimeline decisions={run!.decisions} />
+            )}
+            <Box sx={{ mt: run!.decisions?.length ? 2.5 : 0 }}>
+              <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>
+                Result
+              </Typography>
+              <AgentRunResultViewer run={run!} />
+            </Box>
+          </Box>
         ) : (
           /* ── Action Mode: app selector + prompt ── */
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
