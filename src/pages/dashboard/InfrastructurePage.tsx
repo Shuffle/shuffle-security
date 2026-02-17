@@ -4,6 +4,8 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
+import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
 import ReactFlow, {
   Background,
   Controls,
@@ -18,7 +20,7 @@ import ReactFlow, {
   MarkerType,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Box, Typography, Chip, Avatar, IconButton, Drawer } from '@mui/material';
+import { Box, Typography, Chip, Avatar, IconButton, Drawer, Tooltip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import {
   LayoutGrid,
@@ -258,18 +260,51 @@ const DATA_FLOWS: { source: string; target: string; label: string; animated?: bo
   { source: 'threat_intel', target: 'cloud', label: 'IOC feeds' },
 ];
 
+// ── Category-to-app mapping ────────────────────────────────────────────────────
+
+const CATEGORY_KEYWORDS: Record<string, string[]> = {
+  case_management: ['cases', 'case management', 'ticketing', 'itsm', 'service desk', 'thehive', 'servicenow', 'jira'],
+  siem: ['siem', 'splunk', 'sentinel', 'elastic', 'qradar', 'log management', 'wazuh', 'chronicle'],
+  network: ['network', 'firewall', 'palo alto', 'fortinet', 'suricata', 'zeek', 'ids', 'ips', 'ndr'],
+  edr: ['edr', 'endpoint', 'crowdstrike', 'sentinelone', 'defender', 'carbon black', 'xdr'],
+  communication: ['communication', 'chat', 'messaging', 'slack', 'teams', 'pagerduty', 'opsgenie', 'notification'],
+  email: ['email', 'mail', 'phishing', 'microsoft 365', 'google workspace', 'exchange', 'gmail', 'smtp'],
+  threat_intel: ['threat intel', 'intelligence', 'misp', 'virustotal', 'otx', 'recorded future', 'ioc', 'abuse'],
+  asset_management: ['asset', 'cmdb', 'inventory', 'qualys', 'tenable', 'vulnerability', 'snipe'],
+  iam: ['iam', 'identity', 'access', 'okta', 'azure ad', 'cyberark', 'jumpcloud', 'ldap', 'active directory'],
+  ai_llm: ['ai', 'llm', 'openai', 'anthropic', 'gemini', 'gpt', 'machine learning', 'chatgpt'],
+  cloud: ['cloud', 'aws', 'azure', 'gcp', 'google cloud', 'oracle cloud', 'digitalocean', 'cloud provider'],
+};
+
+function matchAppToCategory(appName: string, appCategories: string[]): string | null {
+  const searchText = [appName, ...appCategories].join(' ').toLowerCase();
+  for (const [catId, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
+    if (keywords.some(kw => searchText.includes(kw))) return catId;
+  }
+  return null;
+}
+
+interface MatchedApp {
+  name: string;
+  image: string;
+}
+
 // ── Custom Node Component ──────────────────────────────────────────────────────
 
 interface CategoryNodeData {
   category: ToolCategory;
   onSelect: (id: string) => void;
+  onHover: (id: string | null) => void;
   isSelected: boolean;
+  isHovered: boolean;
+  matchedApps: MatchedApp[];
   [key: string]: unknown;
 }
 
 const CategoryNode = ({ data }: { data: CategoryNodeData }) => {
-  const { category, onSelect, isSelected } = data;
+  const { category, onSelect, onHover, isSelected, isHovered, matchedApps } = data;
   const colorVar = category.color;
+  const highlighted = isSelected || isHovered;
 
   return (
     <>
@@ -280,88 +315,99 @@ const CategoryNode = ({ data }: { data: CategoryNodeData }) => {
 
       <Box
         onClick={() => onSelect(category.id)}
+        onMouseEnter={() => onHover(category.id)}
+        onMouseLeave={() => onHover(null)}
         sx={{
-          width: 180,
+          width: 200,
           p: 2,
           borderRadius: 3,
-          border: isSelected
+          border: highlighted
             ? `2px solid hsl(var(${colorVar}))`
             : '1px solid hsl(var(--border))',
-          bgcolor: isSelected
+          bgcolor: highlighted
             ? `hsla(var(${colorVar}) / 0.08)`
             : 'hsl(var(--card))',
           cursor: 'pointer',
           transition: 'all 0.2s ease',
           '&:hover': {
-            borderColor: `hsl(var(${colorVar}))`,
-            bgcolor: `hsla(var(${colorVar}) / 0.06)`,
             transform: 'translateY(-2px)',
             boxShadow: `0 8px 24px hsla(var(${colorVar}) / 0.15)`,
           },
         }}
       >
-        <Box sx={{
-          width: 36,
-          height: 36,
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          bgcolor: `hsla(var(${colorVar}) / 0.12)`,
-          color: `hsl(var(${colorVar}))`,
-          mb: 1.25,
-        }}>
-          {category.icon}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+          <Box sx={{
+            width: 32,
+            height: 32,
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            bgcolor: `hsla(var(${colorVar}) / 0.12)`,
+            color: `hsl(var(${colorVar}))`,
+            flexShrink: 0,
+          }}>
+            {category.icon}
+          </Box>
+          <Typography sx={{
+            fontSize: '0.82rem',
+            fontWeight: 600,
+            color: 'hsl(var(--foreground))',
+          }}>
+            {category.label}
+          </Typography>
         </Box>
         <Typography sx={{
-          fontSize: '0.82rem',
-          fontWeight: 600,
-          color: 'hsl(var(--foreground))',
-          mb: 0.25,
-        }}>
-          {category.label}
-        </Typography>
-        <Typography sx={{
-          fontSize: '0.65rem',
+          fontSize: '0.62rem',
           color: 'hsl(var(--muted-foreground))',
           lineHeight: 1.4,
           display: '-webkit-box',
           WebkitLineClamp: 2,
           WebkitBoxOrient: 'vertical',
           overflow: 'hidden',
+          mb: matchedApps.length > 0 ? 1 : 0,
         }}>
           {category.description}
         </Typography>
-        <Box sx={{ display: 'flex', gap: 0.5, mt: 1, flexWrap: 'wrap' }}>
-          {category.examples.slice(0, 2).map(ex => (
-            <Chip
-              key={ex}
-              label={ex}
-              size="small"
-              sx={{
-                height: 18,
-                fontSize: '0.55rem',
-                bgcolor: `hsla(var(${colorVar}) / 0.08)`,
-                color: `hsl(var(${colorVar}))`,
-                border: `1px solid hsla(var(${colorVar}) / 0.2)`,
-                '& .MuiChip-label': { px: 0.5 },
-              }}
-            />
-          ))}
-          {category.examples.length > 2 && (
-            <Chip
-              label={`+${category.examples.length - 2}`}
-              size="small"
-              sx={{
-                height: 18,
+
+        {/* Matched app icons */}
+        {matchedApps.length > 0 && (
+          <Box sx={{
+            display: 'flex',
+            gap: 0.5,
+            flexWrap: 'wrap',
+            pt: 1,
+            borderTop: '1px solid hsl(var(--border))',
+          }}>
+            {matchedApps.slice(0, 5).map(app => (
+              <Tooltip key={app.name} title={app.name} placement="top" arrow>
+                <Avatar
+                  src={app.image}
+                  sx={{
+                    width: 22,
+                    height: 22,
+                    fontSize: '0.6rem',
+                    bgcolor: 'hsl(var(--muted))',
+                    '& img': { objectFit: 'contain', p: 0.25 },
+                  }}
+                >
+                  {app.name.charAt(0).toUpperCase()}
+                </Avatar>
+              </Tooltip>
+            ))}
+            {matchedApps.length > 5 && (
+              <Avatar sx={{
+                width: 22,
+                height: 22,
                 fontSize: '0.55rem',
                 bgcolor: 'hsl(var(--muted))',
                 color: 'hsl(var(--muted-foreground))',
-                '& .MuiChip-label': { px: 0.5 },
-              }}
-            />
-          )}
-        </Box>
+              }}>
+                +{matchedApps.length - 5}
+              </Avatar>
+            )}
+          </Box>
+        )}
       </Box>
     </>
   );
@@ -549,9 +595,53 @@ const CategoryDetailDrawer = ({
 const InfrastructurePage = () => {
   usePageMeta({ title: 'Infrastructure', description: 'Security tool integrations and data flow visualization' });
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [categoryApps, setCategoryApps] = useState<Record<string, MatchedApp[]>>({});
+
+  // Fetch authenticated apps and map to categories
+  useEffect(() => {
+    const fetchApps = async () => {
+      if (!API_CONFIG.apiKey) return;
+      try {
+        const response = await fetch(getApiUrl('/api/v1/apps/authentication'), {
+          credentials: 'include',
+          headers: { ...getAuthHeader() },
+        });
+        if (!response.ok) return;
+        const result = await response.json();
+        const authData: AuthAppEntry[] = result.data || result;
+        if (!Array.isArray(authData)) return;
+
+        const dedupedApps = deduplicateAuthApps(authData);
+        const mapped: Record<string, MatchedApp[]> = {};
+
+        dedupedApps.forEach(({ app, bestImage }) => {
+          const catId = matchAppToCategory(app.name, app.categories || []);
+          if (!catId) return;
+          if (!mapped[catId]) mapped[catId] = [];
+          mapped[catId].push({ name: app.name, image: bestImage || app.large_image || '' });
+        });
+
+        setCategoryApps(mapped);
+      } catch (e) {
+        console.error('Failed to fetch apps for infrastructure:', e);
+      }
+    };
+    fetchApps();
+  }, []);
+
+  const activeId = selectedId || hoveredId;
+
+  // Find the color var for the active category
+  const activeCat = activeId ? TOOL_CATEGORIES.find(c => c.id === activeId) : null;
+  const activeColor = activeCat ? `hsl(var(${activeCat.color}))` : 'hsl(var(--primary))';
 
   const handleSelect = useCallback((id: string) => {
     setSelectedId(prev => prev === id ? null : id);
+  }, []);
+
+  const handleHover = useCallback((id: string | null) => {
+    setHoveredId(id);
   }, []);
 
   const initialNodes: Node[] = useMemo(() =>
@@ -562,56 +652,56 @@ const InfrastructurePage = () => {
       data: {
         category: cat,
         onSelect: handleSelect,
+        onHover: handleHover,
         isSelected: selectedId === cat.id,
+        isHovered: hoveredId === cat.id,
+        matchedApps: categoryApps[cat.id] || [],
       },
     })),
-    [handleSelect, selectedId]
+    [handleSelect, handleHover, selectedId, hoveredId, categoryApps]
   );
 
   const initialEdges: Edge[] = useMemo(() =>
-    DATA_FLOWS.map((flow, idx) => ({
-      id: `e-${idx}`,
-      source: flow.source,
-      target: flow.target,
-      label: flow.label,
-      animated: flow.animated || false,
-      type: 'smoothstep',
-      style: {
-        stroke: selectedId
-          ? (flow.source === selectedId || flow.target === selectedId
-            ? 'hsl(var(--primary))'
-            : 'hsla(var(--muted-foreground) / 0.15)')
-          : 'hsla(var(--muted-foreground) / 0.35)',
-        strokeWidth: selectedId && (flow.source === selectedId || flow.target === selectedId) ? 2 : 1,
-      },
-      labelStyle: {
-        fontSize: 10,
-        fontWeight: 500,
-        fill: selectedId && (flow.source === selectedId || flow.target === selectedId)
-          ? 'hsl(var(--foreground))'
-          : 'hsl(var(--muted-foreground))',
-        opacity: selectedId && !(flow.source === selectedId || flow.target === selectedId) ? 0.3 : 0.8,
-      },
-      labelBgStyle: {
-        fill: 'hsl(var(--background))',
-        fillOpacity: 0.85,
-      },
-      markerEnd: {
-        type: MarkerType.ArrowClosed,
-        width: 14,
-        height: 14,
-        color: selectedId && (flow.source === selectedId || flow.target === selectedId)
-          ? 'hsl(var(--primary))'
-          : 'hsla(var(--muted-foreground) / 0.35)',
-      },
-    })),
-    [selectedId]
+    DATA_FLOWS.map((flow, idx) => {
+      const isConnected = activeId && (flow.source === activeId || flow.target === activeId);
+      return {
+        id: `e-${idx}`,
+        source: flow.source,
+        target: flow.target,
+        label: flow.label,
+        animated: isConnected ? true : (flow.animated || false),
+        type: 'smoothstep',
+        style: {
+          stroke: activeId
+            ? (isConnected ? activeColor : 'hsla(var(--muted-foreground) / 0.1)')
+            : 'hsla(var(--muted-foreground) / 0.3)',
+          strokeWidth: isConnected ? 2.5 : 1,
+          transition: 'stroke 0.2s, stroke-width 0.2s',
+        },
+        labelStyle: {
+          fontSize: 10,
+          fontWeight: isConnected ? 600 : 500,
+          fill: isConnected ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))',
+          opacity: activeId && !isConnected ? 0.2 : 0.8,
+        },
+        labelBgStyle: {
+          fill: 'hsl(var(--background))',
+          fillOpacity: 0.85,
+        },
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          width: 14,
+          height: 14,
+          color: isConnected ? activeColor : 'hsla(var(--muted-foreground) / 0.3)',
+        },
+      };
+    }),
+    [activeId, activeColor]
   );
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
-  // Keep nodes/edges in sync when selection changes
   useEffect(() => { setNodes(initialNodes); }, [initialNodes, setNodes]);
   useEffect(() => { setEdges(initialEdges); }, [initialEdges, setEdges]);
 
