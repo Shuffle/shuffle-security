@@ -10,7 +10,7 @@
  * If the user switches orgs, it resets to the default until getinfo is called again.
  */
 
-const DEV_BACKEND = 'https://sociology-lending-divisions-eating.trycloudflare.com';
+const DEV_BACKEND = 'https://a3cf-2a01-799-49e-ce00-1ed-13fd-6c73-c34d.ngrok-free.app';
 const PROD_BACKEND = 'https://shuffler.io';
 
 // Determine if we're in Lovable preview (dev) or published (prod)
