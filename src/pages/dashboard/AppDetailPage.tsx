@@ -13,6 +13,8 @@ import {
   Tooltip,
 } from '@mui/material';
 import { motion } from 'framer-motion';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
@@ -29,7 +31,7 @@ import { useAuth } from '@/context/AuthContext';
 import { LandingNavbar } from '@/components/landing/LandingNavbar';
 
 import AppMcpChat from '@/components/app/AppMcpChat';
-
+import ApiCallViewer from '@/components/shared/ApiCallViewer';
 interface AppInfo {
   name: string;
   description: string;
@@ -40,6 +42,66 @@ interface AppInfo {
     parameters?: { id: string; name: string; description: string; example: string; required: boolean }[];
   };
 }
+
+/** Collapsible markdown description — shows 5 lines by default */
+const CollapsibleDescription = ({ description }: { description: string }) => {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <Box
+      onClick={() => setExpanded(prev => !prev)}
+      sx={{
+        maxWidth: 520,
+        cursor: 'pointer',
+        position: 'relative',
+        ...(!expanded && {
+          maxHeight: '7.5em', // ~5 lines at 1.5 line-height
+          overflow: 'hidden',
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 40,
+            background: 'linear-gradient(transparent, hsl(var(--background)))',
+            pointerEvents: 'none',
+          },
+        }),
+        '& p': {
+          fontSize: '0.8rem',
+          lineHeight: 1.5,
+          color: 'hsl(var(--muted-foreground))',
+          m: 0,
+          '&:not(:last-child)': { mb: 1 },
+        },
+        '& a': { color: 'hsl(var(--primary))', textDecoration: 'underline' },
+        '& code': {
+          fontSize: '0.72rem',
+          fontFamily: "'JetBrains Mono', monospace",
+          bgcolor: 'hsl(var(--muted))',
+          px: 0.5,
+          borderRadius: 0.5,
+        },
+        '& ul, & ol': { pl: 2, fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))' },
+        '& h1, & h2, & h3, & h4, & h5, & h6': {
+          fontSize: '0.85rem',
+          fontWeight: 600,
+          color: 'hsl(var(--foreground))',
+          mt: 1,
+          mb: 0.5,
+        },
+      }}
+    >
+      <ReactMarkdown remarkPlugins={[remarkGfm]}>{description}</ReactMarkdown>
+      {!expanded && (
+        <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--primary))', mt: 0.5, fontWeight: 500 }}>
+          Show more…
+        </Typography>
+      )}
+    </Box>
+  );
+};
 
 /** Locked section placeholder for guests */
 const GuestLockedSection = ({ title, description, appname }: { title: string; description: string; appname: string }) => (
@@ -388,16 +450,7 @@ const AppDetailPage = () => {
               </Box>
 
               {appInfo?.description && (
-                <Typography
-                  variant="body2"
-                  sx={{
-                    color: 'hsl(var(--muted-foreground))',
-                    lineHeight: 1.5,
-                    maxWidth: 500,
-                  }}
-                >
-                  {appInfo.description}
-                </Typography>
+                <CollapsibleDescription description={appInfo.description} />
               )}
 
               {appInfo?.categories && appInfo.categories.length > 0 && (
@@ -525,12 +578,36 @@ const AppDetailPage = () => {
             </Typography>
 
             {isAuthenticated ? (
-              <AppMcpChat
-                appName={appname || ''}
-                appIcon={resolvedImage}
-                appId={matchingEntries[0]?.app?.id || matchingEntries[0]?.id || appname || ''}
-                categories={appInfo?.categories}
-              />
+              <>
+                <AppMcpChat
+                  appName={appname || ''}
+                  appIcon={resolvedImage}
+                  appId={matchingEntries[0]?.app?.id || matchingEntries[0]?.id || appname || ''}
+                  categories={appInfo?.categories}
+                />
+                <Box sx={{ mt: 2 }}>
+                  <ApiCallViewer
+                    config={{
+                      method: 'POST',
+                      url: `${getApiUrl(`/api/v1/apps/${encodeURIComponent(appname || '')}/mcp`)}`,
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${API_CONFIG.apiKey || '<your-api-key>'}`,
+                      },
+                      body: {
+                        jsonrpc: '2.0',
+                        id: '<request-id>',
+                        method: 'tools/call',
+                        params: {
+                          tool_name: appname || '',
+                          tool_id: matchingEntries[0]?.app?.id || appname || '',
+                          input: { text: '<your-prompt>' },
+                        },
+                      },
+                    }}
+                  />
+                </Box>
+              </>
             ) : (
               <GuestLockedSection
                 title="AI-Powered Actions"
