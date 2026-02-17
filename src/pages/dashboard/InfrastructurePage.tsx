@@ -48,6 +48,7 @@ import {
   ChevronRight,
   Activity,
   Download,
+  Wand2,
   Cloud,
 } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
@@ -568,6 +569,131 @@ const NODE_POSITIONS: Record<string, { x: number; y: number }> = {
   case_management:  { x: 400,  y: 520 },
   communication:    { x: 720,  y: 520 },
 };
+
+// ── Auto-layout: minimize edge crossings ───────────────────────────────────────
+
+const ROWS: string[][] = [
+  ['cloud', 'network', 'edr', 'email', 'iam'],
+  ['asset_management', 'siem', 'threat_intel'],
+  ['case_management', 'communication'],
+];
+
+const ROW_Y = [0, 260, 520];
+const ROW_X_START = [0, 80, 400];
+const ROW_X_GAP = [280, 320, 320];
+
+/** Generate all permutations of an array */
+function permutations<T>(arr: T[]): T[][] {
+  if (arr.length <= 1) return [arr];
+  const result: T[][] = [];
+  for (let i = 0; i < arr.length; i++) {
+    const rest = [...arr.slice(0, i), ...arr.slice(i + 1)];
+    for (const perm of permutations(rest)) {
+      result.push([arr[i], ...perm]);
+    }
+  }
+  return result;
+}
+
+/** Get x position for a node given its index in its row */
+function rowNodeX(rowIdx: number, nodeIdx: number): number {
+  return ROW_X_START[rowIdx] + nodeIdx * ROW_X_GAP[rowIdx];
+}
+
+/** Count edge crossings given a position mapping */
+function countCrossings(positions: Record<string, { x: number }>, flows: { source: string; target: string }[]): number {
+  let crossings = 0;
+  for (let i = 0; i < flows.length; i++) {
+    for (let j = i + 1; j < flows.length; j++) {
+      const a = flows[i], b = flows[j];
+      const ax1 = positions[a.source]?.x ?? 0, ax2 = positions[a.target]?.x ?? 0;
+      const bx1 = positions[b.source]?.x ?? 0, bx2 = positions[b.target]?.x ?? 0;
+      // Two edges cross if their source order is opposite to their target order
+      if ((ax1 - bx1) * (ax2 - bx2) < 0) crossings++;
+    }
+  }
+  return crossings;
+}
+
+/** Compute optimal handle assignment for an edge based on relative positions */
+function computeOptimalHandles(
+  sourcePos: { x: number; y: number },
+  targetPos: { x: number; y: number },
+  nodeW: number,
+): { sourceHandle: string; targetHandle: string } {
+  const dx = targetPos.x - sourcePos.x;
+  const dy = targetPos.y - sourcePos.y;
+  const absDx = Math.abs(dx);
+  const absDy = Math.abs(dy);
+
+  // Same row — use left/right handles
+  if (absDy < 100) {
+    if (dx > 0) return { sourceHandle: 'right-source', targetHandle: 'left-target' };
+    return { sourceHandle: 'left-source', targetHandle: 'right-target' };
+  }
+
+  // Different rows — primarily vertical, pick bottom→top
+  // But offset horizontally if nodes are far apart to reduce overlaps
+  if (dy > 0) {
+    // source is above target
+    if (absDx > nodeW * 1.5) {
+      return {
+        sourceHandle: dx > 0 ? 'right-source' : 'left-source',
+        targetHandle: 'top-target',
+      };
+    }
+    return { sourceHandle: 'bottom-source', targetHandle: 'top-target' };
+  } else {
+    // source is below target (response edges going back up)
+    if (absDx > nodeW * 1.5) {
+      return {
+        sourceHandle: dx > 0 ? 'right-source' : 'left-source',
+        targetHandle: 'bottom-target',
+      };
+    }
+    return { sourceHandle: 'top-source', targetHandle: 'bottom-target' };
+  }
+}
+
+/** Compute optimal positions and handles to minimize edge crossings */
+function computeAutoLayout(): { positions: Record<string, { x: number; y: number }>; handles: Record<string, { sourceHandle: string; targetHandle: string }> } {
+  const rowPerms = ROWS.map(row => permutations(row));
+  
+  let bestScore = Infinity;
+  let bestPositions: Record<string, { x: number; y: number }> = {};
+
+  // Brute force all row permutation combinations (max ~1440)
+  for (const r0 of rowPerms[0]) {
+    for (const r1 of rowPerms[1]) {
+      for (const r2 of rowPerms[2]) {
+        const positions: Record<string, { x: number; y: number }> = {};
+        [r0, r1, r2].forEach((row, ri) => {
+          row.forEach((nodeId, ni) => {
+            positions[nodeId] = { x: rowNodeX(ri, ni), y: ROW_Y[ri] };
+          });
+        });
+        const score = countCrossings(positions, DATA_FLOWS);
+        if (score < bestScore) {
+          bestScore = score;
+          bestPositions = positions;
+        }
+      }
+    }
+  }
+
+  // Compute optimal handles for each edge
+  const handles: Record<string, { sourceHandle: string; targetHandle: string }> = {};
+  DATA_FLOWS.forEach((flow, idx) => {
+    const edgeId = `e-${idx}`;
+    const sp = bestPositions[flow.source];
+    const tp = bestPositions[flow.target];
+    if (sp && tp) {
+      handles[edgeId] = computeOptimalHandles(sp, tp, 160);
+    }
+  });
+
+  return { positions: bestPositions, handles };
+}
 
 /** Look up a tool category's color CSS variable and icon by ID. Reusable across the app. */
 export const getToolCategoryMeta = (categoryId: string): { color: string; icon: React.ReactNode; label: string } | null => {
@@ -1357,6 +1483,23 @@ const InfrastructureContent = () => {
     }
   }, []);
 
+  // Auto-layout: compute optimal node ordering and handle assignment
+  const handleAutoLayout = useCallback(() => {
+    const { positions, handles } = computeAutoLayout();
+    setSavedPositions(positions);
+    setSavedHandles(handles);
+    setNodes(prev => prev.map(node => ({
+      ...node,
+      position: positions[node.id] || node.position,
+    })));
+    // Persist
+    Promise.all([
+      setDatastoreItem(POSITION_CACHE_KEY, JSON.stringify(positions), DATASTORE_CATEGORIES.INFRASTRUCTURE),
+      setDatastoreItem(HANDLE_CACHE_KEY, JSON.stringify(handles), DATASTORE_CATEGORIES.INFRASTRUCTURE),
+    ]).catch(e => console.warn('Failed to save auto-layout:', e));
+    setTimeout(() => reactFlowInstance.fitView({ padding: 0.25, duration: 300 }), 50);
+  }, [reactFlowInstance, setNodes, persistHandles]);
+
   // Reset everything to defaults: positions, handles
   const handleResetPositions = useCallback(() => {
     // Reset positions state
@@ -1450,13 +1593,34 @@ const InfrastructureContent = () => {
           {/* Alignment helper lines rendered in flow-space via viewport transform */}
           <HelperLinesRenderer horizontal={helperLines.horizontal} vertical={helperLines.vertical} />
           <Controls showInteractive={false} />
-          {/* Reset position button */}
+          {/* Layout buttons */}
           <Box sx={{
             position: 'absolute',
             bottom: 10,
             left: 60,
             zIndex: 5,
+            display: 'flex',
+            gap: 0.75,
           }}>
+            <Button
+              size="small"
+              onClick={handleAutoLayout}
+              startIcon={<Wand2 size={13} />}
+              sx={{
+                minWidth: 'auto',
+                px: 1.5,
+                py: 0.5,
+                fontSize: '0.7rem',
+                bgcolor: 'hsl(var(--card))',
+                color: 'hsl(var(--primary))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: 2,
+                boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                '&:hover': { bgcolor: 'hsl(var(--muted))' },
+              }}
+            >
+              Auto-layout
+            </Button>
             <Button
               size="small"
               onClick={handleResetPositions}
