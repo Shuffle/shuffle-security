@@ -729,7 +729,7 @@ const InfrastructureContent = () => {
         source: flow.source,
         target: flow.target,
         label: flow.label,
-        animated: isHighlighted ? true : bothActive,
+        animated: !!isHighlighted,
         type: 'smoothstep',
         style: {
           stroke,
