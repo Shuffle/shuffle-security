@@ -1275,6 +1275,11 @@ const InfrastructureContent = () => {
   const NODE_W = 160; // approx node width for center calc
   const NODE_H = 80;  // approx node height for center calc
 
+  // Max distance (in the perpendicular axis) for two nodes to be considered
+  // "in the same row" or "in the same column". Keeps snapping scoped so that
+  // dragging horizontally only highlights row-mates, not nodes in other rows.
+  const ROW_COL_PROXIMITY = 200;
+
   const handleNodeDrag = useCallback((_event: any, draggedNode: any) => {
     const allNodes = reactFlowInstance.getNodes();
     const lines: { horizontal?: number; vertical?: number } = {};
@@ -1285,13 +1290,18 @@ const InfrastructureContent = () => {
       if (n.id === draggedNode.id) continue;
       const cx = n.position.x + NODE_W / 2;
       const cy = n.position.y + NODE_H / 2;
-      // Horizontal alignment (same Y center)
-      if (Math.abs(dragCY - cy) < SNAP_THRESHOLD) {
+
+      // Horizontal alignment — only snap to nodes roughly in the same row
+      // (their X distance doesn't matter, but Y must already be close)
+      const yDiff = Math.abs(dragCY - cy);
+      if (yDiff < SNAP_THRESHOLD && Math.abs(dragCY - cy) < ROW_COL_PROXIMITY) {
         lines.horizontal = cy;
         draggedNode.position.y = cy - NODE_H / 2;
       }
-      // Vertical alignment (same X center)
-      if (Math.abs(dragCX - cx) < SNAP_THRESHOLD) {
+
+      // Vertical alignment — only snap to nodes roughly in the same column
+      const xDiff = Math.abs(dragCX - cx);
+      if (xDiff < SNAP_THRESHOLD && Math.abs(dragCX - cx) < ROW_COL_PROXIMITY) {
         lines.vertical = cx;
         draggedNode.position.x = cx - NODE_W / 2;
       }
