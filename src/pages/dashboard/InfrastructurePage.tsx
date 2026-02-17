@@ -305,6 +305,7 @@ const CategoryNode = ({ data }: { data: CategoryNodeData }) => {
   const { category, onSelect, onHover, isSelected, isHovered, matchedApps } = data;
   const colorVar = category.color;
   const highlighted = isSelected || isHovered;
+  const hasApps = matchedApps.length > 0;
 
   return (
     <>
@@ -323,13 +324,19 @@ const CategoryNode = ({ data }: { data: CategoryNodeData }) => {
           borderRadius: 3,
           border: highlighted
             ? `2px solid hsl(var(${colorVar}))`
-            : '1px solid hsl(var(--border))',
+            : hasApps
+              ? `1px solid hsla(var(${colorVar}) / 0.4)`
+              : '1px solid hsl(var(--border))',
           bgcolor: highlighted
             ? `hsla(var(${colorVar}) / 0.08)`
-            : 'hsl(var(--card))',
+            : hasApps
+              ? `hsla(var(${colorVar}) / 0.04)`
+              : 'hsl(var(--card))',
+          opacity: hasApps ? 1 : 0.45,
           cursor: 'pointer',
           transition: 'all 0.2s ease',
           '&:hover': {
+            opacity: 1,
             transform: 'translateY(-2px)',
             boxShadow: `0 8px 24px hsla(var(${colorVar}) / 0.15)`,
           },
@@ -352,7 +359,7 @@ const CategoryNode = ({ data }: { data: CategoryNodeData }) => {
           <Typography sx={{
             fontSize: '0.82rem',
             fontWeight: 600,
-            color: 'hsl(var(--foreground))',
+            color: hasApps ? `hsl(var(${colorVar}))` : 'hsl(var(--muted-foreground))',
           }}>
             {category.label}
           </Typography>
@@ -365,19 +372,19 @@ const CategoryNode = ({ data }: { data: CategoryNodeData }) => {
           WebkitLineClamp: 2,
           WebkitBoxOrient: 'vertical',
           overflow: 'hidden',
-          mb: matchedApps.length > 0 ? 1 : 0,
+          mb: hasApps ? 1 : 0,
         }}>
           {category.description}
         </Typography>
 
         {/* Matched app icons */}
-        {matchedApps.length > 0 && (
+        {hasApps && (
           <Box sx={{
             display: 'flex',
             gap: 0.5,
             flexWrap: 'wrap',
             pt: 1,
-            borderTop: '1px solid hsl(var(--border))',
+            borderTop: `1px solid hsla(var(${colorVar}) / 0.15)`,
           }}>
             {matchedApps.slice(0, 5).map(app => (
               <Tooltip key={app.name} title={app.name} placement="top" arrow>
@@ -710,7 +717,7 @@ const InfrastructurePage = () => {
     : null;
 
   return (
-    <Box sx={{ height: '100%', position: 'relative' }}>
+    <Box sx={{ height: 'calc(100vh - 48px)', position: 'relative' }}>
       {/* Fullscreen flow canvas */}
       <Box sx={{
         position: 'absolute',
