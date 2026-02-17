@@ -414,8 +414,8 @@ const GradientEdge = ({
           segLen,
         };
       })
-      // Only show handles on segments long enough to be meaningful (not corner connectors)
-      .filter(seg => seg.segLen > 30);
+      // Skip only zero-length segments (degenerate points), show handles on all real segments
+      .filter(seg => seg.segLen > 2);
   }, [allPoints, expandedPoints]);
 
   const sourceColor = data?.sourceColor || 'hsl(var(--primary))';
