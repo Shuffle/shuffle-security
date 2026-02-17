@@ -569,10 +569,12 @@ const EdgeDetailDrawer = ({
   flow,
   open,
   onClose,
+  onSelectCategory,
 }: {
   flow: (typeof DATA_FLOWS)[number] | null;
   open: boolean;
   onClose: () => void;
+  onSelectCategory: (categoryId: string) => void;
 }) => {
   if (!flow) return null;
   const sourceCat = getToolCategoryMeta(flow.source);
@@ -638,12 +640,15 @@ const EdgeDetailDrawer = ({
               icon={<Box sx={{ display: 'flex', color: `hsl(var(${sourceCat.color}))` }}>{sourceCat.icon}</Box>}
               label={sourceCat.label}
               size="small"
+              onClick={() => onSelectCategory(flow.source)}
               sx={{
                 bgcolor: `hsla(var(${sourceCat.color}) / 0.1)`,
                 color: `hsl(var(${sourceCat.color}))`,
                 fontWeight: 600,
                 fontSize: '0.8rem',
                 border: `1px solid hsla(var(${sourceCat.color}) / 0.25)`,
+                cursor: 'pointer',
+                '&:hover': { bgcolor: `hsla(var(${sourceCat.color}) / 0.2)` },
               }}
             />
           )}
@@ -653,12 +658,15 @@ const EdgeDetailDrawer = ({
               icon={<Box sx={{ display: 'flex', color: `hsl(var(${targetCat.color}))` }}>{targetCat.icon}</Box>}
               label={targetCat.label}
               size="small"
+              onClick={() => onSelectCategory(flow.target)}
               sx={{
                 bgcolor: `hsla(var(${targetCat.color}) / 0.1)`,
                 color: `hsl(var(${targetCat.color}))`,
                 fontWeight: 600,
                 fontSize: '0.8rem',
                 border: `1px solid hsla(var(${targetCat.color}) / 0.25)`,
+                cursor: 'pointer',
+                '&:hover': { bgcolor: `hsla(var(${targetCat.color}) / 0.2)` },
               }}
             />
           )}
@@ -1424,6 +1432,10 @@ const InfrastructureContent = () => {
         flow={selectedEdgeIdx !== null ? DATA_FLOWS[selectedEdgeIdx] || null : null}
         open={selectedEdgeIdx !== null}
         onClose={() => setSelectedEdgeIdx(null)}
+        onSelectCategory={(catId) => {
+          setSelectedEdgeIdx(null);
+          setSelectedId(catId);
+        }}
       />
     </Box>
   );
