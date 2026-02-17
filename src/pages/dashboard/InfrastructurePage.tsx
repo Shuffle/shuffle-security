@@ -25,6 +25,7 @@ import ReactFlow, {
   reconnectEdge,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
+import { useNavigate } from 'react-router-dom';
 import { Box, Typography, Chip, Avatar, IconButton, Drawer, Tooltip, Button } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import {
@@ -68,7 +69,7 @@ const TOOL_CATEGORIES: ToolCategory[] = [
     description: 'Central hub for incident tracking, task assignment, and case lifecycle management.',
     icon: <LayoutGrid size={22} />,
     color: '--infra-case-mgmt',
-    examples: ['Shuffle Cases', 'TheHive', 'ServiceNow', 'Jira'],
+    examples: ['Shuffle Cases', 'TheHive', 'ServiceNow', 'Jira', 'PagerDuty', 'Cortex XSOAR'],
     dataIn: ['Alerts from SIEM', 'Enrichment from Threat Intel', 'User context from IAM'],
     dataOut: ['Tasks to Communication', 'Status to SIEM', 'Metrics to reporting'],
     useCases: [
@@ -84,7 +85,7 @@ const TOOL_CATEGORIES: ToolCategory[] = [
     description: 'Security Information & Event Management — log aggregation, correlation, and alert generation.',
     icon: <Server size={22} />,
     color: '--infra-siem',
-    examples: ['Splunk', 'Microsoft Sentinel', 'Elastic SIEM', 'QRadar'],
+    examples: ['Splunk', 'Microsoft Sentinel', 'Elastic SIEM', 'QRadar', 'Wazuh', 'Chronicle'],
     dataIn: ['Logs from Network', 'Events from EDR', 'Auth logs from IAM'],
     dataOut: ['Alerts to Case Management', 'Logs to Threat Intel', 'Events to AI/LLM'],
     useCases: [
@@ -100,7 +101,7 @@ const TOOL_CATEGORIES: ToolCategory[] = [
     description: 'Network monitoring, traffic analysis, and firewall management.',
     icon: <Network size={22} />,
     color: '--infra-network',
-    examples: ['Palo Alto', 'Fortinet', 'Suricata', 'Zeek'],
+    examples: ['Palo Alto', 'Fortinet', 'Suricata', 'Zeek', 'Cisco ASA', 'pfSense'],
     dataIn: ['IOC watchlists from Threat Intel', 'Block rules from Case Management'],
     dataOut: ['Flow logs to SIEM', 'Alerts to Case Management', 'Packet data to EDR'],
     useCases: [
@@ -116,7 +117,7 @@ const TOOL_CATEGORIES: ToolCategory[] = [
     description: 'Endpoint Detection & Response — real-time endpoint monitoring and automated containment.',
     icon: <Shield size={22} />,
     color: '--infra-edr',
-    examples: ['CrowdStrike', 'SentinelOne', 'Microsoft Defender', 'Carbon Black'],
+    examples: ['CrowdStrike', 'SentinelOne', 'Microsoft Defender', 'Carbon Black', 'Cortex XDR', 'Trellix'],
     dataIn: ['IOC hashes from Threat Intel', 'Containment orders from Case Management'],
     dataOut: ['Endpoint telemetry to SIEM', 'Alerts to Case Management', 'Process trees to AI/LLM'],
     useCases: [
@@ -132,7 +133,7 @@ const TOOL_CATEGORIES: ToolCategory[] = [
     description: 'Team messaging and notification channels for real-time incident coordination.',
     icon: <MessageSquare size={22} />,
     color: '--infra-communication',
-    examples: ['Slack', 'Microsoft Teams', 'PagerDuty', 'Opsgenie'],
+    examples: ['Slack', 'Microsoft Teams', 'PagerDuty', 'Opsgenie', 'Discord', 'Webex'],
     dataIn: ['Alerts from Case Management', 'Status updates from SIEM'],
     dataOut: ['Acknowledgements to Case Management', 'Escalations to IAM'],
     useCases: [
@@ -148,7 +149,7 @@ const TOOL_CATEGORIES: ToolCategory[] = [
     description: 'Email security, phishing analysis, and automated mailbox triage.',
     icon: <Mail size={22} />,
     color: '--infra-email',
-    examples: ['Microsoft 365', 'Google Workspace', 'Sublime Security', 'Abnormal Security'],
+    examples: ['Microsoft 365', 'Google Workspace', 'Sublime Security', 'Abnormal Security', 'Proofpoint', 'Mimecast'],
     dataIn: ['Threat signatures from Threat Intel', 'User reports from Communication'],
     dataOut: ['Phishing IOCs to Threat Intel', 'Suspicious emails to Case Management', 'Headers to AI/LLM'],
     useCases: [
@@ -164,7 +165,7 @@ const TOOL_CATEGORIES: ToolCategory[] = [
     description: 'Threat intelligence platforms for IOC enrichment, feed management, and adversary tracking.',
     icon: <Crosshair size={22} />,
     color: '--infra-threat-intel',
-    examples: ['MISP', 'VirusTotal', 'AlienVault OTX', 'Recorded Future'],
+    examples: ['MISP', 'VirusTotal', 'AlienVault OTX', 'Recorded Future', 'Mandiant', 'AbuseIPDB'],
     dataIn: ['IOCs from Email', 'Observables from Case Management', 'Hashes from EDR'],
     dataOut: ['Enrichment to Case Management', 'IOC feeds to Network/EDR', 'Context to AI/LLM'],
     useCases: [
@@ -180,7 +181,7 @@ const TOOL_CATEGORIES: ToolCategory[] = [
     description: 'IT asset inventory, CMDB, and vulnerability management for contextualized response.',
     icon: <HardDrive size={22} />,
     color: '--infra-asset-mgmt',
-    examples: ['ServiceNow CMDB', 'Qualys', 'Tenable', 'Snipe-IT'],
+    examples: ['ServiceNow CMDB', 'Qualys', 'Tenable', 'Snipe-IT', 'Rapid7', 'Lansweeper'],
     dataIn: ['Scan results from EDR', 'Vulnerability feeds from Threat Intel'],
     dataOut: ['Asset context to Case Management', 'Owner info to IAM', 'Risk scores to SIEM'],
     useCases: [
@@ -196,7 +197,7 @@ const TOOL_CATEGORIES: ToolCategory[] = [
     description: 'Identity & Access Management — user lifecycle, authentication, and privilege control.',
     icon: <KeyRound size={22} />,
     color: '--infra-iam',
-    examples: ['Okta', 'Azure AD', 'CyberArk', 'JumpCloud'],
+    examples: ['Okta', 'Azure AD', 'CyberArk', 'JumpCloud', 'Duo', 'OneLogin'],
     dataIn: ['Disable requests from Case Management', 'Risk signals from SIEM'],
     dataOut: ['Auth logs to SIEM', 'User context to Case Management', 'Session data to AI/LLM'],
     useCases: [
@@ -212,7 +213,7 @@ const TOOL_CATEGORIES: ToolCategory[] = [
     description: 'Cloud providers with bundled security services — logging, IAM, networking, and compute.',
     icon: <Cloud size={22} />,
     color: '--infra-cloud',
-    examples: ['AWS', 'Microsoft Azure', 'Google Cloud', 'Oracle Cloud'],
+    examples: ['AWS', 'Microsoft Azure', 'Google Cloud', 'Oracle Cloud', 'DigitalOcean', 'Linode'],
     dataIn: ['Detection rules from SIEM', 'IOC feeds from Threat Intel', 'Policy updates from IAM'],
     dataOut: ['CloudTrail/audit logs to SIEM', 'Resource inventory to Asset Management', 'Identity events to IAM'],
     useCases: [
@@ -567,15 +568,32 @@ const EdgeDetailDrawer = ({
 
 const CategoryDetailDrawer = ({
   category,
+  matchedApps,
   open,
   onClose,
+  onEdgeHover,
+  onEdgeClick,
 }: {
   category: ToolCategory | null;
+  matchedApps: MatchedApp[];
   open: boolean;
   onClose: () => void;
+  onEdgeHover: (edgeId: string | null) => void;
+  onEdgeClick: (edgeIdx: number) => void;
 }) => {
+  const navigate = useNavigate();
   if (!category) return null;
   const colorVar = category.color;
+
+  // Find all branches connected to this category
+  const connectedFlows = DATA_FLOWS.map((flow, idx) => {
+    const isSource = flow.source === category.id;
+    const isTarget = flow.target === category.id;
+    if (!isSource && !isTarget) return null;
+    const otherCatId = isSource ? flow.target : flow.source;
+    const otherCat = TOOL_CATEGORIES.find(c => c.id === otherCatId);
+    return { flow, idx, isSource, otherCat };
+  }).filter(Boolean) as { flow: (typeof DATA_FLOWS)[number]; idx: number; isSource: boolean; otherCat: ToolCategory | undefined }[];
 
   return (
     <Drawer
@@ -625,93 +643,165 @@ const CategoryDetailDrawer = ({
         </IconButton>
       </Box>
 
-      <Box sx={{ p: 3, overflowY: 'auto' }}>
-        {/* Examples */}
+      <Box sx={{ p: 3, overflowY: 'auto', flex: 1 }}>
+        {/* Common Tools */}
         <Box sx={{ mb: 3 }}>
           <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>
             Common Tools
           </Typography>
           <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
-            {category.examples.map(ex => (
+            {category.examples.slice(0, 6).map(ex => (
               <Chip
                 key={ex}
                 avatar={<Avatar src={`https://shuffler.io/images/apps/${ex.toLowerCase().replace(/\s+/g, '_')}.png`} sx={{ width: 18, height: 18, '& img': { objectFit: 'contain' } }} />}
                 label={ex}
                 size="small"
+                clickable
+                onClick={() => navigate(`/apps/${ex.toLowerCase().replace(/\s+/g, '_')}`)}
                 sx={{
                   height: 26,
                   fontSize: '0.72rem',
                   bgcolor: `hsla(var(${colorVar}) / 0.08)`,
                   color: 'hsl(var(--foreground))',
                   border: `1px solid hsla(var(${colorVar}) / 0.2)`,
+                  cursor: 'pointer',
+                  '&:hover': {
+                    bgcolor: `hsla(var(${colorVar}) / 0.18)`,
+                    borderColor: `hsla(var(${colorVar}) / 0.4)`,
+                  },
                 }}
               />
             ))}
           </Box>
         </Box>
 
-        {/* Data In */}
-        <Box sx={{ mb: 3 }}>
-          <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>
-            Data In
-          </Typography>
-          {category.dataIn.map((d, i) => (
-            <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.75 }}>
-              <ArrowRight size={12} style={{ color: `hsl(var(${colorVar}))`, flexShrink: 0 }} />
-              <Typography sx={{ fontSize: '0.78rem', color: 'hsl(var(--foreground))' }}>{d}</Typography>
+        {/* Your Apps - only if authenticated apps exist */}
+        {matchedApps.length > 0 && (
+          <Box sx={{ mb: 3 }}>
+            <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>
+              Your Apps
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
+              {matchedApps.map(app => (
+                <Chip
+                  key={app.name}
+                  avatar={<Avatar src={app.image} sx={{ width: 18, height: 18, '& img': { objectFit: 'contain' } }} />}
+                  label={app.name}
+                  size="small"
+                  clickable
+                  onClick={() => navigate(`/apps/${app.name.toLowerCase().replace(/\s+/g, '_')}`)}
+                  sx={{
+                    height: 26,
+                    fontSize: '0.72rem',
+                    bgcolor: 'hsla(var(--primary) / 0.1)',
+                    color: 'hsl(var(--foreground))',
+                    border: '1px solid hsla(var(--primary) / 0.25)',
+                    cursor: 'pointer',
+                    '&:hover': {
+                      bgcolor: 'hsla(var(--primary) / 0.2)',
+                    },
+                  }}
+                />
+              ))}
             </Box>
-          ))}
-        </Box>
+          </Box>
+        )}
 
-        {/* Data Out */}
-        <Box sx={{ mb: 3 }}>
-          <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>
-            Data Out
-          </Typography>
-          {category.dataOut.map((d, i) => (
-            <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.75 }}>
-              <ChevronRight size={12} style={{ color: 'hsl(var(--muted-foreground))', flexShrink: 0 }} />
-              <Typography sx={{ fontSize: '0.78rem', color: 'hsl(var(--foreground))' }}>{d}</Typography>
-            </Box>
-          ))}
-        </Box>
-
-        {/* Use Cases */}
+        {/* Data Flows — branch-based "How to use" */}
         <Box>
           <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1.5 }}>
-            How We Use It
+            Data Flows
           </Typography>
-          {category.useCases.map((uc, i) => (
-            <Box key={i} sx={{
-              display: 'flex',
-              gap: 1.5,
-              mb: 1.5,
-              p: 1.5,
-              borderRadius: 2,
-              border: '1px solid hsl(var(--border))',
-              bgcolor: 'hsl(var(--card))',
-            }}>
-              <Box sx={{
-                width: 22,
-                height: 22,
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                bgcolor: `hsla(var(${colorVar}) / 0.1)`,
-                color: `hsl(var(${colorVar}))`,
-                flexShrink: 0,
-                fontSize: '0.65rem',
-                fontWeight: 700,
-                mt: 0.1,
-              }}>
-                {i + 1}
+          {connectedFlows.map(({ flow, idx, isSource, otherCat }) => {
+            const edgeId = `e-${idx}`;
+            const sourceCat = TOOL_CATEGORIES.find(c => c.id === flow.source);
+            const targetCat = TOOL_CATEGORIES.find(c => c.id === flow.target);
+            const hasOtherCat = !!otherCat;
+            const flowColor = hasOtherCat ? (sourceCat?.color || colorVar) : undefined;
+
+            return (
+              <Box
+                key={edgeId}
+                onMouseEnter={() => onEdgeHover(edgeId)}
+                onMouseLeave={() => onEdgeHover(null)}
+                onClick={() => onEdgeClick(idx)}
+                sx={{
+                  mb: 1.5,
+                  p: 2,
+                  borderRadius: 2,
+                  border: hasOtherCat
+                    ? `1px solid hsla(var(${flowColor}) / 0.2)`
+                    : '1px solid hsl(var(--border))',
+                  bgcolor: 'hsl(var(--card))',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                  '&:hover': hasOtherCat ? {
+                    bgcolor: `hsla(var(${flowColor}) / 0.06)`,
+                    borderColor: `hsla(var(${flowColor}) / 0.4)`,
+                  } : {
+                    bgcolor: 'hsla(var(--muted-foreground) / 0.06)',
+                  },
+                  opacity: hasOtherCat ? 1 : 0.5,
+                }}
+              >
+                {/* Title */}
+                <Typography sx={{
+                  fontSize: '0.82rem',
+                  fontWeight: 600,
+                  color: hasOtherCat ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))',
+                  mb: 0.5,
+                }}>
+                  {flow.label}
+                </Typography>
+
+                {/* Source → Target chips */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 1 }}>
+                  {sourceCat && (
+                    <Chip
+                      icon={<Box sx={{ display: 'flex', color: `hsl(var(${sourceCat.color}))`, '& svg': { width: 12, height: 12 } }}>{sourceCat.icon}</Box>}
+                      label={sourceCat.label}
+                      size="small"
+                      sx={{
+                        height: 22,
+                        fontSize: '0.65rem',
+                        bgcolor: `hsla(var(${sourceCat.color}) / 0.08)`,
+                        color: `hsl(var(${sourceCat.color}))`,
+                        border: `1px solid hsla(var(${sourceCat.color}) / 0.2)`,
+                        fontWeight: 600,
+                        '& .MuiChip-icon': { ml: 0.5 },
+                      }}
+                    />
+                  )}
+                  <ArrowRight size={12} style={{ color: 'hsl(var(--muted-foreground))', flexShrink: 0 }} />
+                  {targetCat && (
+                    <Chip
+                      icon={<Box sx={{ display: 'flex', color: `hsl(var(${targetCat.color}))`, '& svg': { width: 12, height: 12 } }}>{targetCat.icon}</Box>}
+                      label={targetCat.label}
+                      size="small"
+                      sx={{
+                        height: 22,
+                        fontSize: '0.65rem',
+                        bgcolor: `hsla(var(${targetCat.color}) / 0.08)`,
+                        color: `hsl(var(${targetCat.color}))`,
+                        border: `1px solid hsla(var(${targetCat.color}) / 0.2)`,
+                        fontWeight: 600,
+                        '& .MuiChip-icon': { ml: 0.5 },
+                      }}
+                    />
+                  )}
+                </Box>
+
+                {/* Description */}
+                <Typography sx={{
+                  fontSize: '0.73rem',
+                  color: hasOtherCat ? 'hsl(var(--muted-foreground))' : 'hsla(var(--muted-foreground) / 0.6)',
+                  lineHeight: 1.55,
+                }}>
+                  {flow.description}
+                </Typography>
               </Box>
-              <Typography sx={{ fontSize: '0.78rem', color: 'hsl(var(--foreground))', lineHeight: 1.55 }}>
-                {uc}
-              </Typography>
-            </Box>
-          ))}
+            );
+          })}
         </Box>
       </Box>
     </Drawer>
@@ -1189,8 +1279,14 @@ const InfrastructureContent = () => {
       {/* Detail drawers */}
       <CategoryDetailDrawer
         category={selectedCategory}
+        matchedApps={selectedCategory ? (categoryApps[selectedCategory.id] || []) : []}
         open={!!selectedCategory}
         onClose={() => setSelectedId(null)}
+        onEdgeHover={(edgeId) => setHoveredEdgeId(edgeId)}
+        onEdgeClick={(edgeIdx) => {
+          setSelectedId(null);
+          setSelectedEdgeIdx(edgeIdx);
+        }}
       />
       <EdgeDetailDrawer
         flow={selectedEdgeIdx !== null ? DATA_FLOWS[selectedEdgeIdx] || null : null}
