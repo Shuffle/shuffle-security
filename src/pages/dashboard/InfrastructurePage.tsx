@@ -26,6 +26,7 @@ import ReactFlow, {
   getSmoothStepPath,
   BaseEdge,
   EdgeLabelRenderer,
+  useViewport,
   type EdgeProps,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
@@ -943,6 +944,52 @@ const CategoryDetailDrawer = ({
   );
 };
 
+// ── Helper Lines Renderer ──────────────────────────────────────────────────────
+
+const HelperLinesRenderer = ({ horizontal, vertical }: { horizontal?: number; vertical?: number }) => {
+  const { x, y, zoom } = useViewport();
+  if (horizontal === undefined && vertical === undefined) return null;
+
+  return (
+    <svg
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        pointerEvents: 'none',
+        zIndex: 1000,
+      }}
+    >
+      {horizontal !== undefined && (
+        <line
+          x1="0"
+          x2="100%"
+          y1={horizontal * zoom + y}
+          y2={horizontal * zoom + y}
+          stroke="hsl(var(--primary))"
+          strokeWidth={1}
+          strokeDasharray="6 3"
+          opacity={0.7}
+        />
+      )}
+      {vertical !== undefined && (
+        <line
+          x1={vertical * zoom + x}
+          x2={vertical * zoom + x}
+          y1="0"
+          y2="100%"
+          stroke="hsl(var(--primary))"
+          strokeWidth={1}
+          strokeDasharray="6 3"
+          opacity={0.7}
+        />
+      )}
+    </svg>
+  );
+};
+
 // ── Page Component ─────────────────────────────────────────────────────────────
 
 const POSITION_CACHE_KEY = 'infrastructure_node_positions';
@@ -963,6 +1010,7 @@ const InfrastructureContent = () => {
   const [savedPositions, setSavedPositions] = useState<Record<string, { x: number; y: number }> | null>(null);
   const [positionsLoaded, setPositionsLoaded] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [helperLines, setHelperLines] = useState<{ horizontal?: number; vertical?: number }>({});
 
   // Load saved positions and handle overrides from datastore on mount
   useEffect(() => {
@@ -1222,8 +1270,38 @@ const InfrastructureContent = () => {
 
   useEffect(() => { setEdges(initialEdges); }, [initialEdges, setEdges]);
 
+  // Alignment snap threshold (px in flow coordinates)
+  const SNAP_THRESHOLD = 5;
+  const NODE_W = 160; // approx node width for center calc
+  const NODE_H = 80;  // approx node height for center calc
+
+  const handleNodeDrag = useCallback((_event: any, draggedNode: any) => {
+    const allNodes = reactFlowInstance.getNodes();
+    const lines: { horizontal?: number; vertical?: number } = {};
+    const dragCX = draggedNode.position.x + NODE_W / 2;
+    const dragCY = draggedNode.position.y + NODE_H / 2;
+
+    for (const n of allNodes) {
+      if (n.id === draggedNode.id) continue;
+      const cx = n.position.x + NODE_W / 2;
+      const cy = n.position.y + NODE_H / 2;
+      // Horizontal alignment (same Y center)
+      if (Math.abs(dragCY - cy) < SNAP_THRESHOLD) {
+        lines.horizontal = cy;
+        draggedNode.position.y = cy - NODE_H / 2;
+      }
+      // Vertical alignment (same X center)
+      if (Math.abs(dragCX - cx) < SNAP_THRESHOLD) {
+        lines.vertical = cx;
+        draggedNode.position.x = cx - NODE_W / 2;
+      }
+    }
+    setHelperLines(lines);
+  }, [reactFlowInstance]);
+
   // Persist positions when a node drag ends
   const handleNodeDragStop = useCallback((_event: any, _node: any) => {
+    setHelperLines({});
     const currentNodes = reactFlowInstance.getNodes();
     const positions: Record<string, { x: number; y: number }> = {};
     currentNodes.forEach(n => {
@@ -1329,8 +1407,11 @@ const InfrastructureContent = () => {
           nodes={nodes}
           edges={edges}
           onNodesChange={onNodesChange}
+          onNodeDrag={handleNodeDrag}
           onNodeDragStop={handleNodeDragStop}
           onEdgesChange={onEdgesChange}
+          snapToGrid
+          snapGrid={[10, 10]}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           fitView
@@ -1354,6 +1435,8 @@ const InfrastructureContent = () => {
           connectionLineStyle={{ stroke: 'hsl(var(--primary))', strokeWidth: 2.5, strokeDasharray: '6 3' }}
         >
           <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="hsla(var(--muted-foreground) / 0.1)" />
+          {/* Alignment helper lines rendered in flow-space via viewport transform */}
+          <HelperLinesRenderer horizontal={helperLines.horizontal} vertical={helperLines.vertical} />
           <Controls showInteractive={false} />
           {/* Reset position button */}
           <Box sx={{
