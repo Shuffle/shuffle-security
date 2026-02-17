@@ -392,27 +392,30 @@ const GradientEdge = ({
   // Compute midpoint handles: one on EVERY rendered H/V segment of the orthogonal path
   const expandedPoints = expandToOrthogonal(allPoints);
   const segmentMidpoints = useMemo(() => {
-    // Map each expanded segment back to a waypoint insertion index
     let logIdx = 0;
-    return expandedPoints.slice(0, -1).map((p, i) => {
-      const next = expandedPoints[i + 1];
-      // Advance logIdx when we pass a logical allPoint
-      if (logIdx < allPoints.length - 1) {
-        const ap = allPoints[logIdx + 1];
-        if (ap && Math.abs(p.x - ap.x) < 1 && Math.abs(p.y - ap.y) < 1) {
-          logIdx++;
+    return expandedPoints.slice(0, -1)
+      .map((p, i) => {
+        const next = expandedPoints[i + 1];
+        if (logIdx < allPoints.length - 1) {
+          const ap = allPoints[logIdx + 1];
+          if (ap && Math.abs(p.x - ap.x) < 1 && Math.abs(p.y - ap.y) < 1) {
+            logIdx++;
+          }
         }
-      }
-      const isHorizontal = Math.abs(p.y - next.y) < 1;
-      return {
-        x: (p.x + next.x) / 2,
-        y: (p.y + next.y) / 2,
-        isHorizontal,
-        segStart: p,
-        segEnd: next,
-        wpInsertIdx: logIdx,
-      };
-    });
+        const isHorizontal = Math.abs(p.y - next.y) < 1;
+        const segLen = Math.abs(next.x - p.x) + Math.abs(next.y - p.y);
+        return {
+          x: (p.x + next.x) / 2,
+          y: (p.y + next.y) / 2,
+          isHorizontal,
+          segStart: p,
+          segEnd: next,
+          wpInsertIdx: logIdx,
+          segLen,
+        };
+      })
+      // Only show handles on segments long enough to be meaningful (not corner connectors)
+      .filter(seg => seg.segLen > 30);
   }, [allPoints, expandedPoints]);
 
   const sourceColor = data?.sourceColor || 'hsl(var(--primary))';
