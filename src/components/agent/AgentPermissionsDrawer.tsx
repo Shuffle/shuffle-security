@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -14,16 +14,12 @@ import {
   Drawer,
   Tab,
   Tabs,
-  TextField,
-  InputBase,
-  Avatar,
 } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import RestoreIcon from '@mui/icons-material/Restore';
 import CloseIcon from '@mui/icons-material/Close';
-import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import {
   Radar,
   Zap,
@@ -51,9 +47,7 @@ import {
   Play,
 } from 'lucide-react';
 import { useAgentPermissions, RiskLevel, AgentPermissionCategory } from '@/hooks/useAgentPermissions';
-import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
-import { SingulJS } from '@/lib/singul-local';
-import type { AlgoliaSearchApp, SingulJSHandle } from '@/lib/singul-local';
+import AgentActionDrawer from '@/components/agent/AgentActionDrawer';
 
 // Per-permission icons for a more modern look
 const PERMISSION_ICONS: Record<string, React.ReactNode> = {
@@ -137,13 +131,7 @@ const AgentPermissionsDrawer = ({ open, onClose }: AgentPermissionsDrawerProps) 
     () => categories.map(c => c.id)
   );
   const [activeTab, setActiveTab] = useState(0);
-  const [agentInput, setAgentInput] = useState('');
-  const [isRunning, setIsRunning] = useState(false);
-  const [runResult, setRunResult] = useState<string | null>(null);
-  const [runError, setRunError] = useState<string | null>(null);
-  const [selectedApp, setSelectedApp] = useState<AlgoliaSearchApp | null>(null);
-  const singulRef = useRef<SingulJSHandle>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [actionDrawerOpen, setActionDrawerOpen] = useState(false);
 
   const toggleExpand = (categoryId: string) => {
     setExpandedCategories(prev =>
@@ -159,78 +147,8 @@ const AgentPermissionsDrawer = ({ open, onClose }: AgentPermissionsDrawerProps) 
     return { enabled, total, allEnabled: enabled === total, noneEnabled: enabled === 0 };
   };
 
-  const handleRunAgent = async () => {
-    if (!agentInput.trim() || isRunning) return;
-    setIsRunning(true);
-    setRunResult(null);
-    setRunError(null);
-
-    try {
-      const payload: Record<string, unknown> = {
-        jsonrpc: '2.0',
-        id: crypto.randomUUID(),
-        method: 'tools/call',
-        params: {
-          input: { text: agentInput.trim() },
-          ...(selectedApp ? {
-            tool_name: selectedApp.name,
-            tool_id: selectedApp.objectID || selectedApp.name,
-          } : {}),
-        },
-      };
-
-      const response = await fetch(getApiUrl('/api/v1/agent'), {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeader(),
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const rawText = await response.text();
-      const contentType = response.headers.get('content-type');
-
-      if (!response.ok) {
-        setRunError(`Error ${response.status}: ${rawText || response.statusText}`);
-      } else if (!contentType?.includes('application/json')) {
-        if (rawText.trim().startsWith('<!') || rawText.includes('<html')) {
-          setRunError('Received an unexpected HTML response. This may indicate an auth redirect or server issue.');
-        } else {
-          setRunResult(rawText);
-        }
-      } else {
-        const data = JSON.parse(rawText);
-        let content = '';
-
-        if (typeof data === 'string') {
-          content = data;
-        } else if (data?.result) {
-          if (typeof data.result === 'object' && data.result !== null) {
-            if (data.result.message) content = data.result.message;
-            const rest = { ...data.result };
-            delete rest.message;
-            if (Object.keys(rest).length > 0) {
-              const extra = JSON.stringify(rest, null, 2);
-              content = content ? `${content}\n\n${extra}` : extra;
-            }
-          } else {
-            content = String(data.result);
-          }
-        } else if (data?.message) {
-          content = data.message;
-        } else {
-          content = JSON.stringify(data, null, 2);
-        }
-
-        setRunResult(content || 'No output returned.');
-      }
-    } catch (err) {
-      setRunError(`Network error — could not reach the agent. ${err instanceof Error ? err.message : ''}`);
-    } finally {
-      setIsRunning(false);
-    }
+  const handleOpenAction = () => {
+    setActionDrawerOpen(true);
   };
 
   return (
@@ -591,209 +509,45 @@ const AgentPermissionsDrawer = ({ open, onClose }: AgentPermissionsDrawerProps) 
         )}
 
         {activeTab === 1 && (
-          /* ── Action Tab ── */
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-            {/* App selector */}
-            <Box>
-              <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>
-                Target App (optional)
-              </Typography>
-
-              {selectedApp ? (
-                <Box sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1.5,
-                  p: 1.5,
-                  borderRadius: 2,
-                  border: '1px solid hsl(var(--border))',
-                  bgcolor: 'hsl(var(--card))',
-                }}>
-                  <Avatar
-                    src={selectedApp.image_url || `https://shuffler.io/images/apps/${selectedApp.name}.png`}
-                    sx={{ width: 28, height: 28, '& img': { objectFit: 'contain' } }}
-                  />
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: 'hsl(var(--foreground))', textTransform: 'capitalize' }}>
-                      {selectedApp.name?.replace(/_/g, ' ')}
-                    </Typography>
-                    {selectedApp.categories && selectedApp.categories.length > 0 && (
-                      <Typography sx={{ fontSize: '0.68rem', color: 'hsl(var(--muted-foreground))' }}>
-                        {selectedApp.categories.slice(0, 2).join(' · ')}
-                      </Typography>
-                    )}
-                  </Box>
-                  <IconButton
-                    size="small"
-                    onClick={() => setSelectedApp(null)}
-                    sx={{ color: 'hsl(var(--muted-foreground))', width: 24, height: 24 }}
-                  >
-                    <CloseIcon sx={{ fontSize: 14 }} />
-                  </IconButton>
-                </Box>
-              ) : (
-                <Box sx={{
-                  borderRadius: 2,
-                  border: '1px solid hsl(var(--border))',
-                  bgcolor: 'hsl(var(--background))',
-                  overflow: 'hidden',
-                  '& .singul-container': {
-                    background: 'transparent !important',
-                  },
-                  '& .singul-input': {
-                    background: 'transparent !important',
-                    color: 'hsl(var(--foreground)) !important',
-                    fontSize: '0.82rem !important',
-                    border: 'none !important',
-                    padding: '8px 12px !important',
-                  },
-                  '& .singul-results': {
-                    background: 'hsl(var(--card)) !important',
-                    border: '1px solid hsl(var(--border)) !important',
-                    maxHeight: '200px !important',
-                  },
-                  '& .singul-result-item': {
-                    color: 'hsl(var(--foreground)) !important',
-                    fontSize: '0.8rem !important',
-                  },
-                  '& .singul-result-item:hover': {
-                    background: 'hsla(var(--primary) / 0.08) !important',
-                  },
-                }}>
-                  <SingulJS
-                    ref={singulRef}
-                    authToken=""
-                    placeholder="Search integrations…"
-                    layout="list"
-                    hitsPerPage={8}
-                    inline={true}
-                    showDescription={false}
-                    showCategories={false}
-                    hideAuthStatus={true}
-                    preventDefault={true}
-                    onAppSelected={(e) => {
-                      if (e?.app) {
-                        setSelectedApp(e.app);
-                      }
-                    }}
-                  />
-                </Box>
-              )}
+          /* ── Action Tab — opens the standalone AgentActionDrawer ── */
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, py: 6 }}>
+            <Box sx={{
+              width: 56,
+              height: 56,
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              bgcolor: 'hsla(var(--primary) / 0.12)',
+              color: 'hsl(var(--primary))',
+            }}>
+              <Play size={24} />
             </Box>
-
-            {/* Agent input */}
-            <Box>
-              <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>
-                Prompt
-              </Typography>
-              <Box sx={{
-                display: 'flex',
-                alignItems: 'flex-end',
-                gap: 1,
-                borderRadius: 2,
-                border: '1px solid hsl(var(--border))',
-                bgcolor: 'hsl(var(--card))',
-                px: 1.5,
-                py: 1,
-                transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
-                '&:focus-within': {
-                  borderColor: 'hsla(var(--primary) / 0.5)',
-                  boxShadow: '0 0 0 3px hsla(var(--primary) / 0.08)',
-                },
-              }}>
-                <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--primary))', fontWeight: 600, userSelect: 'none', fontFamily: "'JetBrains Mono', monospace", lineHeight: '24px' }}>
-                  ›
-                </Typography>
-                <InputBase
-                  inputRef={inputRef}
-                  multiline
-                  maxRows={6}
-                  value={agentInput}
-                  onChange={(e) => setAgentInput(e.target.value)}
-                  placeholder={selectedApp ? `Ask ${selectedApp.name.replace(/_/g, ' ')} something…` : 'Describe what you want the agent to do…'}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                      e.preventDefault();
-                      handleRunAgent();
-                    }
-                  }}
-                  fullWidth
-                  sx={{
-                    fontSize: '0.82rem',
-                    color: 'hsl(var(--foreground))',
-                    '& textarea::placeholder': {
-                      color: 'hsl(var(--muted-foreground))',
-                      opacity: 0.7,
-                    },
-                  }}
-                />
-                <Box
-                  component="button"
-                  onClick={handleRunAgent}
-                  disabled={!agentInput.trim() || isRunning}
-                  sx={{
-                    all: 'unset',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: 30,
-                    height: 30,
-                    borderRadius: '8px',
-                    flexShrink: 0,
-                    cursor: agentInput.trim() && !isRunning ? 'pointer' : 'default',
-                    bgcolor: agentInput.trim() && !isRunning ? 'hsl(var(--primary))' : 'hsl(var(--muted))',
-                    color: agentInput.trim() && !isRunning ? 'hsl(var(--primary-foreground))' : 'hsl(var(--muted-foreground))',
-                    transition: 'all 0.15s ease',
-                    '&:hover': agentInput.trim() && !isRunning ? { filter: 'brightness(1.1)' } : {},
-                  }}
-                >
-                  {isRunning ? (
-                    <CircularProgress size={14} sx={{ color: 'inherit' }} />
-                  ) : (
-                    <PlayArrowRoundedIcon sx={{ fontSize: 18 }} />
-                  )}
-                </Box>
-              </Box>
-              <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', mt: 0.75 }}>
-                ⌘+Enter to send · JSON-RPC
-              </Typography>
-            </Box>
-
-            {runError && (
-              <Alert severity="error" sx={{ fontSize: '0.8rem', borderRadius: 2 }}>
-                {runError}
-              </Alert>
-            )}
-
-            {runResult && (
-              <Box sx={{
-                p: 2,
-                borderRadius: 2,
-                border: '1px solid hsl(var(--border))',
-                bgcolor: 'hsl(var(--background))',
-              }}>
-                <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>
-                  Result
-                </Typography>
-                <Typography
-                  component="pre"
-                  sx={{
-                    fontSize: '0.78rem',
-                    color: 'hsl(var(--foreground))',
-                    whiteSpace: 'pre-wrap',
-                    wordBreak: 'break-word',
-                    fontFamily: "'JetBrains Mono', monospace",
-                    m: 0,
-                    maxHeight: 300,
-                    overflowY: 'auto',
-                  }}
-                >
-                  {runResult}
-                </Typography>
-              </Box>
-            )}
-
-            {/* Link to full activity page */}
+            <Typography sx={{ fontSize: '0.9rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+              Run an Agent Action
+            </Typography>
+            <Typography sx={{ fontSize: '0.78rem', color: 'hsl(var(--muted-foreground))', textAlign: 'center', maxWidth: 280, lineHeight: 1.5 }}>
+              Search integrations, describe your task, and let the agent execute it via JSON-RPC.
+            </Typography>
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<Play size={14} />}
+              onClick={handleOpenAction}
+              sx={{
+                mt: 1,
+                textTransform: 'none',
+                fontSize: '0.82rem',
+                fontWeight: 600,
+                borderRadius: 1.5,
+                px: 3,
+                bgcolor: 'hsl(var(--primary))',
+                color: 'hsl(var(--primary-foreground))',
+                '&:hover': { bgcolor: 'hsl(var(--primary))', opacity: 0.9 },
+              }}
+            >
+              Open Action Panel
+            </Button>
             <Button
               size="small"
               variant="outlined"
@@ -805,8 +559,7 @@ const AgentPermissionsDrawer = ({ open, onClose }: AgentPermissionsDrawerProps) 
                 textTransform: 'none',
                 fontSize: '0.75rem',
                 borderRadius: 1.5,
-                alignSelf: 'flex-start',
-                '&:hover': { 
+                '&:hover': {
                   borderColor: 'hsl(var(--primary))',
                   color: 'hsl(var(--primary))',
                   bgcolor: 'hsla(var(--primary) / 0.08)',
@@ -818,6 +571,9 @@ const AgentPermissionsDrawer = ({ open, onClose }: AgentPermissionsDrawerProps) 
           </Box>
         )}
       </Box>
+
+      {/* Standalone Action Drawer */}
+      <AgentActionDrawer open={actionDrawerOpen} onClose={() => setActionDrawerOpen(false)} />
     </Drawer>
   );
 };
