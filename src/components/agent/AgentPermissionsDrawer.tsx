@@ -12,12 +12,17 @@ import {
   Collapse,
   Alert,
   Drawer,
+  Tab,
+  Tabs,
+  TextField,
+  InputAdornment,
 } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import RestoreIcon from '@mui/icons-material/Restore';
 import CloseIcon from '@mui/icons-material/Close';
+import SendIcon from '@mui/icons-material/Send';
 import {
   Radar,
   Zap,
@@ -41,8 +46,11 @@ import {
   Flame,
   Database,
   Terminal,
+  Bot,
+  Play,
 } from 'lucide-react';
 import { useAgentPermissions, RiskLevel, AgentPermissionCategory } from '@/hooks/useAgentPermissions';
+import { getApiUrl, getAuthHeader } from '@/config/api';
 
 // Per-permission icons for a more modern look
 const PERMISSION_ICONS: Record<string, React.ReactNode> = {
@@ -125,6 +133,11 @@ const AgentPermissionsDrawer = ({ open, onClose }: AgentPermissionsDrawerProps) 
   const [expandedCategories, setExpandedCategories] = useState<string[]>(
     () => categories.map(c => c.id)
   );
+  const [activeTab, setActiveTab] = useState(0);
+  const [agentInput, setAgentInput] = useState('');
+  const [isRunning, setIsRunning] = useState(false);
+  const [runResult, setRunResult] = useState<string | null>(null);
+  const [runError, setRunError] = useState<string | null>(null);
 
   const toggleExpand = (categoryId: string) => {
     setExpandedCategories(prev =>
@@ -140,6 +153,37 @@ const AgentPermissionsDrawer = ({ open, onClose }: AgentPermissionsDrawerProps) 
     return { enabled, total, allEnabled: enabled === total, noneEnabled: enabled === 0 };
   };
 
+  const handleRunAgent = async () => {
+    if (!agentInput.trim() || isRunning) return;
+    setIsRunning(true);
+    setRunResult(null);
+    setRunError(null);
+
+    try {
+      const response = await fetch(getApiUrl('/api/v1/conversation'), {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeader(),
+        },
+        body: JSON.stringify({ message: agentInput.trim() }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        setRunResult(typeof data === 'string' ? data : JSON.stringify(data, null, 2));
+        setAgentInput('');
+      } else {
+        setRunError(data.reason || data.message || 'Agent request failed');
+      }
+    } catch (err) {
+      setRunError('Network error — could not reach the agent');
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
   return (
     <Drawer
       anchor="right"
@@ -151,6 +195,8 @@ const AgentPermissionsDrawer = ({ open, onClose }: AgentPermissionsDrawerProps) 
           background: 'linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%)',
           borderLeft: '1px solid hsl(var(--border))',
           boxShadow: '-8px 0 32px rgba(0,0,0,0.4)',
+          display: 'flex',
+          flexDirection: 'column',
         },
       }}
     >
@@ -162,6 +208,7 @@ const AgentPermissionsDrawer = ({ open, onClose }: AgentPermissionsDrawerProps) 
         alignItems: 'center', 
         gap: 2,
         borderBottom: '1px solid hsl(var(--border))',
+        flexShrink: 0,
       }}>
         <Box sx={{
           width: 40,
@@ -174,14 +221,14 @@ const AgentPermissionsDrawer = ({ open, onClose }: AgentPermissionsDrawerProps) 
           color: 'hsl(var(--primary))',
           flexShrink: 0,
         }}>
-          <ShieldCheck size={22} />
+          <Bot size={22} />
         </Box>
         <Box sx={{ flex: 1 }}>
           <Typography sx={{ fontWeight: 600, fontSize: '1.1rem', color: 'hsl(var(--foreground))' }}>
-            Agent Permissions
+            Agent
           </Typography>
           <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))' }}>
-            Control what actions your agent can perform
+            Run actions and manage permissions
           </Typography>
         </Box>
         <IconButton onClick={onClose} size="small" sx={{ color: 'hsl(var(--muted-foreground))' }}>
@@ -189,276 +236,441 @@ const AgentPermissionsDrawer = ({ open, onClose }: AgentPermissionsDrawerProps) 
         </IconButton>
       </Box>
 
-      {/* Scrollable content */}
-      <Box sx={{ flex: 1, overflowY: 'auto', px: 3, py: 2.5 }}>
-        {isLoading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-            <CircularProgress size={28} sx={{ color: 'hsl(var(--primary))' }} />
-          </Box>
-        ) : (
-          <>
-            {/* Coming Soon banner */}
-            <Box sx={{
-              mb: 3,
-              px: 2.5,
-              py: 2,
-              borderRadius: 2,
-              border: '1px solid hsla(var(--primary) / 0.3)',
-              bgcolor: 'hsla(var(--primary) / 0.06)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1.5,
-            }}>
-              <Box sx={{
-                width: 32,
-                height: 32,
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                bgcolor: 'hsla(var(--primary) / 0.15)',
+      {/* Tabs */}
+      <Box sx={{ borderBottom: '1px solid hsl(var(--border))', flexShrink: 0 }}>
+        <Tabs
+          value={activeTab}
+          onChange={(_, v) => setActiveTab(v)}
+          sx={{
+            minHeight: 42,
+            px: 3,
+            '& .MuiTab-root': {
+              minHeight: 42,
+              textTransform: 'none',
+              fontSize: '0.85rem',
+              fontWeight: 500,
+              color: 'hsl(var(--muted-foreground))',
+              '&.Mui-selected': {
                 color: 'hsl(var(--primary))',
-                flexShrink: 0,
-              }}>
-                <Settings2 size={16} />
+              },
+            },
+            '& .MuiTabs-indicator': {
+              bgcolor: 'hsl(var(--primary))',
+            },
+          }}
+        >
+          <Tab label="Permissions" icon={<ShieldCheck size={14} />} iconPosition="start" sx={{ gap: 0.75 }} />
+          <Tab label="Action" icon={<Play size={14} />} iconPosition="start" sx={{ gap: 0.75 }} />
+        </Tabs>
+      </Box>
+
+      {/* Tab content */}
+      <Box sx={{ flex: 1, overflowY: 'auto', px: 3, py: 2.5 }}>
+        {activeTab === 0 && (
+          /* ── Permissions Tab ── */
+          <>
+            {isLoading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+                <CircularProgress size={28} sx={{ color: 'hsl(var(--primary))' }} />
               </Box>
-              <Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.25 }}>
-                  <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-                    Coming Soon
-                  </Typography>
-                  <Chip
-                    label="PREVIEW"
-                    size="small"
-                    sx={{
-                      height: 18,
-                      fontSize: '0.55rem',
-                      fontWeight: 700,
-                      letterSpacing: '0.04em',
-                      bgcolor: 'hsla(var(--primary) / 0.15)',
-                      color: 'hsl(var(--primary))',
-                      borderRadius: 1,
-                      '& .MuiChip-label': { px: 0.75 },
-                    }}
-                  />
+            ) : (
+              <>
+                {/* Coming Soon banner */}
+                <Box sx={{
+                  mb: 3,
+                  px: 2.5,
+                  py: 2,
+                  borderRadius: 2,
+                  border: '1px solid hsla(var(--primary) / 0.3)',
+                  bgcolor: 'hsla(var(--primary) / 0.06)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1.5,
+                }}>
+                  <Box sx={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    bgcolor: 'hsla(var(--primary) / 0.15)',
+                    color: 'hsl(var(--primary))',
+                    flexShrink: 0,
+                  }}>
+                    <Settings2 size={16} />
+                  </Box>
+                  <Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.25 }}>
+                      <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+                        Coming Soon
+                      </Typography>
+                      <Chip
+                        label="PREVIEW"
+                        size="small"
+                        sx={{
+                          height: 18,
+                          fontSize: '0.55rem',
+                          fontWeight: 700,
+                          letterSpacing: '0.04em',
+                          bgcolor: 'hsla(var(--primary) / 0.15)',
+                          color: 'hsl(var(--primary))',
+                          borderRadius: 1,
+                          '& .MuiChip-label': { px: 0.75 },
+                        }}
+                      />
+                    </Box>
+                    <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.4 }}>
+                      Granular agent permissions are under development. All controls are currently view-only.
+                    </Typography>
+                  </Box>
                 </Box>
-                <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.4 }}>
-                  Granular agent permissions are under development. All controls are currently view-only.
-                </Typography>
-              </Box>
-            </Box>
 
-            {/* Summary chip + reset */}
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-              <Box sx={{
-                display: 'inline-flex',
-                flexDirection: 'column',
-                alignItems: 'flex-start',
-                px: 2,
-                py: 1,
-                borderRadius: 2,
-                border: '1px solid hsl(var(--border))',
-                bgcolor: 'hsl(var(--background))',
-                opacity: 0.5,
-              }}>
-                <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 500 }}>
-                  Enabled
-                </Typography>
-                <Typography sx={{ fontSize: '1.2rem', fontWeight: 700, color: 'hsl(var(--foreground))' }}>
-                  {enabledPermissions}/{totalPermissions}
-                </Typography>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  startIcon={<Activity size={14} />}
-                  onClick={() => { onClose(); navigate('/agent'); }}
-                  sx={{
-                    borderColor: 'hsl(var(--border))',
-                    color: 'hsl(var(--foreground))',
-                    textTransform: 'none',
-                    fontSize: '0.75rem',
-                    borderRadius: 1.5,
-                    px: 1.5,
-                    '&:hover': { 
-                      borderColor: 'hsl(var(--primary))',
-                      color: 'hsl(var(--primary))',
-                      bgcolor: 'hsla(var(--primary) / 0.08)',
-                    },
-                  }}
-                >
-                  Activity
-                </Button>
-                <Button
-                  size="small"
-                  startIcon={<RestoreIcon sx={{ fontSize: 14 }} />}
-                  disabled
-                  sx={{
-                    color: 'hsl(var(--muted-foreground))',
-                    textTransform: 'none',
-                    fontSize: '0.75rem',
+                {/* Summary chip + reset */}
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+                  <Box sx={{
+                    display: 'inline-flex',
+                    flexDirection: 'column',
+                    alignItems: 'flex-start',
+                    px: 2,
+                    py: 1,
+                    borderRadius: 2,
+                    border: '1px solid hsl(var(--border))',
+                    bgcolor: 'hsl(var(--background))',
                     opacity: 0.5,
-                  }}
-                >
-                  Reset
-                </Button>
-              </Box>
-            </Box>
-
-            {error && (
-              <Alert severity="error" sx={{ mb: 2, fontSize: '0.8rem' }}>{error}</Alert>
-            )}
-
-            {/* Categories — all disabled */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, opacity: 0.5, pointerEvents: 'none' }}>
-              {categories.map((cat) => {
-                const stats = getCategoryStats(cat);
-                const isExpanded = expandedCategories.includes(cat.id);
-
-                return (
-                  <Box key={cat.id}>
-                    {/* Category header */}
-                    <Box
+                  }}>
+                    <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 500 }}>
+                      Enabled
+                    </Typography>
+                    <Typography sx={{ fontSize: '1.2rem', fontWeight: 700, color: 'hsl(var(--foreground))' }}>
+                      {enabledPermissions}/{totalPermissions}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      startIcon={<Activity size={14} />}
+                      onClick={() => { onClose(); navigate('/agent'); }}
                       sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        mb: 1.5,
+                        borderColor: 'hsl(var(--border))',
+                        color: 'hsl(var(--foreground))',
+                        textTransform: 'none',
+                        fontSize: '0.75rem',
+                        borderRadius: 1.5,
+                        px: 1.5,
+                        '&:hover': { 
+                          borderColor: 'hsl(var(--primary))',
+                          color: 'hsl(var(--primary))',
+                          bgcolor: 'hsla(var(--primary) / 0.08)',
+                        },
                       }}
                     >
-                      <Typography sx={{
-                        fontSize: '0.7rem',
-                        fontWeight: 600,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.08em',
+                      Activity
+                    </Button>
+                    <Button
+                      size="small"
+                      startIcon={<RestoreIcon sx={{ fontSize: 14 }} />}
+                      disabled
+                      sx={{
                         color: 'hsl(var(--muted-foreground))',
-                      }}>
-                        {cat.label}
-                      </Typography>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Switch
-                          size="small"
-                          checked={stats.allEnabled}
-                          disabled
+                        textTransform: 'none',
+                        fontSize: '0.75rem',
+                        opacity: 0.5,
+                      }}
+                    >
+                      Reset
+                    </Button>
+                  </Box>
+                </Box>
+
+                {error && (
+                  <Alert severity="error" sx={{ mb: 2, fontSize: '0.8rem' }}>{error}</Alert>
+                )}
+
+                {/* Categories — all disabled */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, opacity: 0.5, pointerEvents: 'none' }}>
+                  {categories.map((cat) => {
+                    const stats = getCategoryStats(cat);
+                    const isExpanded = expandedCategories.includes(cat.id);
+
+                    return (
+                      <Box key={cat.id}>
+                        {/* Category header */}
+                        <Box
                           sx={{
-                            '& .MuiSwitch-switchBase.Mui-checked': {
-                              color: 'hsl(var(--primary))',
-                            },
-                            '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                              bgcolor: 'hsl(var(--primary))',
-                            },
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            mb: 1.5,
                           }}
-                        />
-                        <IconButton
-                          size="small"
-                          disabled
-                          sx={{ color: 'hsl(var(--muted-foreground))', width: 24, height: 24 }}
                         >
-                          {isExpanded ? <ExpandLessIcon sx={{ fontSize: 16 }} /> : <ExpandMoreIcon sx={{ fontSize: 16 }} />}
-                        </IconButton>
-                      </Box>
-                    </Box>
+                          <Typography sx={{
+                            fontSize: '0.7rem',
+                            fontWeight: 600,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.08em',
+                            color: 'hsl(var(--muted-foreground))',
+                          }}>
+                            {cat.label}
+                          </Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Switch
+                              size="small"
+                              checked={stats.allEnabled}
+                              disabled
+                              sx={{
+                                '& .MuiSwitch-switchBase.Mui-checked': {
+                                  color: 'hsl(var(--primary))',
+                                },
+                                '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                                  bgcolor: 'hsl(var(--primary))',
+                                },
+                              }}
+                            />
+                            <IconButton
+                              size="small"
+                              disabled
+                              sx={{ color: 'hsl(var(--muted-foreground))', width: 24, height: 24 }}
+                            >
+                              {isExpanded ? <ExpandLessIcon sx={{ fontSize: 16 }} /> : <ExpandMoreIcon sx={{ fontSize: 16 }} />}
+                            </IconButton>
+                          </Box>
+                        </Box>
 
-                    {/* Permission cards */}
-                    <Collapse in={isExpanded}>
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                        <AnimatePresence>
-                          {cat.permissions.map((perm) => {
-                            const riskCfg = RISK_CONFIG[perm.risk];
-                            return (
-                              <motion.div
-                                key={perm.id}
-                                layout
-                                initial={{ opacity: 0, y: 6 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.15 }}
-                              >
-                                <Box
-                                  sx={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 1.5,
-                                    px: 2,
-                                    py: 1.5,
-                                    borderRadius: 2,
-                                    border: '1px solid',
-                                    borderColor: perm.enabled ? 'hsl(var(--border))' : 'hsla(var(--border) / 0.5)',
-                                    bgcolor: perm.enabled ? 'hsla(var(--card) / 0.6)' : 'transparent',
-                                    opacity: perm.enabled ? 1 : 0.55,
-                                    transition: 'all 0.2s ease',
-                                  }}
-                                >
-                                  {/* Icon */}
-                                  <Box sx={{
-                                    width: 36,
-                                    height: 36,
-                                    borderRadius: '50%',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    bgcolor: RISK_ICON_BG[perm.risk],
-                                    color: RISK_ICON_COLOR[perm.risk],
-                                    flexShrink: 0,
-                                  }}>
-                                    {PERMISSION_ICONS[perm.id] || <Server size={18} />}
-                                  </Box>
-
-                                  {/* Text */}
-                                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.25 }}>
-                                      <Typography sx={{
-                                        fontSize: '0.85rem',
-                                        fontWeight: 500,
-                                        color: 'hsl(var(--foreground))',
+                        {/* Permission cards */}
+                        <Collapse in={isExpanded}>
+                          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                            <AnimatePresence>
+                              {cat.permissions.map((perm) => {
+                                const riskCfg = RISK_CONFIG[perm.risk];
+                                return (
+                                  <motion.div
+                                    key={perm.id}
+                                    layout
+                                    initial={{ opacity: 0, y: 6 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.15 }}
+                                  >
+                                    <Box
+                                      sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 1.5,
+                                        px: 2,
+                                        py: 1.5,
+                                        borderRadius: 2,
+                                        border: '1px solid',
+                                        borderColor: perm.enabled ? 'hsl(var(--border))' : 'hsla(var(--border) / 0.5)',
+                                        bgcolor: perm.enabled ? 'hsla(var(--card) / 0.6)' : 'transparent',
+                                        opacity: perm.enabled ? 1 : 0.55,
+                                        transition: 'all 0.2s ease',
+                                      }}
+                                    >
+                                      {/* Icon */}
+                                      <Box sx={{
+                                        width: 36,
+                                        height: 36,
+                                        borderRadius: '50%',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        bgcolor: RISK_ICON_BG[perm.risk],
+                                        color: RISK_ICON_COLOR[perm.risk],
+                                        flexShrink: 0,
                                       }}>
-                                        {perm.name}
-                                      </Typography>
-                                      <Chip
-                                        label={riskCfg.label}
+                                        {PERMISSION_ICONS[perm.id] || <Server size={18} />}
+                                      </Box>
+
+                                      {/* Text */}
+                                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.25 }}>
+                                          <Typography sx={{
+                                            fontSize: '0.85rem',
+                                            fontWeight: 500,
+                                            color: 'hsl(var(--foreground))',
+                                          }}>
+                                            {perm.name}
+                                          </Typography>
+                                          <Chip
+                                            label={riskCfg.label}
+                                            size="small"
+                                            sx={{
+                                              height: 18,
+                                              fontSize: '0.55rem',
+                                              fontWeight: 700,
+                                              letterSpacing: '0.04em',
+                                              bgcolor: riskCfg.bg,
+                                              color: riskCfg.color,
+                                              borderRadius: 1,
+                                              '& .MuiChip-label': { px: 0.75 },
+                                            }}
+                                          />
+                                        </Box>
+                                        <Typography sx={{
+                                          fontSize: '0.75rem',
+                                          color: 'hsl(var(--muted-foreground))',
+                                          lineHeight: 1.3,
+                                        }}>
+                                          {perm.description}
+                                        </Typography>
+                                      </Box>
+
+                                      {/* Toggle — disabled */}
+                                      <Switch
                                         size="small"
+                                        checked={perm.enabled}
+                                        disabled
                                         sx={{
-                                          height: 18,
-                                          fontSize: '0.55rem',
-                                          fontWeight: 700,
-                                          letterSpacing: '0.04em',
-                                          bgcolor: riskCfg.bg,
-                                          color: riskCfg.color,
-                                          borderRadius: 1,
-                                          '& .MuiChip-label': { px: 0.75 },
+                                          flexShrink: 0,
                                         }}
                                       />
                                     </Box>
-                                    <Typography sx={{
-                                      fontSize: '0.75rem',
-                                      color: 'hsl(var(--muted-foreground))',
-                                      lineHeight: 1.3,
-                                    }}>
-                                      {perm.description}
-                                    </Typography>
-                                  </Box>
-
-                                  {/* Toggle — disabled */}
-                                  <Switch
-                                    size="small"
-                                    checked={perm.enabled}
-                                    disabled
-                                    sx={{
-                                      flexShrink: 0,
-                                    }}
-                                  />
-                                </Box>
-                              </motion.div>
-                            );
-                          })}
-                        </AnimatePresence>
+                                  </motion.div>
+                                );
+                              })}
+                            </AnimatePresence>
+                          </Box>
+                        </Collapse>
                       </Box>
-                    </Collapse>
-                  </Box>
-                );
-              })}
-            </Box>
+                    );
+                  })}
+                </Box>
+              </>
+            )}
           </>
+        )}
+
+        {activeTab === 1 && (
+          /* ── Action Tab ── */
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+            <Box>
+              <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: 'hsl(var(--foreground))', mb: 0.5 }}>
+                Run Agent
+              </Typography>
+              <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.4 }}>
+                Start an agent interaction by describing what you want it to do.
+              </Typography>
+            </Box>
+
+            <TextField
+              multiline
+              minRows={3}
+              maxRows={8}
+              value={agentInput}
+              onChange={(e) => setAgentInput(e.target.value)}
+              placeholder="e.g. Investigate the latest critical alert and summarize findings..."
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                  handleRunAgent();
+                }
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  fontSize: '0.85rem',
+                  color: 'hsl(var(--foreground))',
+                  bgcolor: 'hsl(var(--background))',
+                  borderRadius: 2,
+                  '& fieldset': {
+                    borderColor: 'hsl(var(--border))',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: 'hsl(var(--primary))',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: 'hsl(var(--primary))',
+                  },
+                },
+              }}
+            />
+
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))' }}>
+                ⌘+Enter to send
+              </Typography>
+              <Button
+                variant="contained"
+                size="small"
+                disabled={!agentInput.trim() || isRunning}
+                onClick={handleRunAgent}
+                startIcon={isRunning ? <CircularProgress size={14} sx={{ color: 'inherit' }} /> : <SendIcon sx={{ fontSize: 14 }} />}
+                sx={{
+                  textTransform: 'none',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  borderRadius: 1.5,
+                  px: 2.5,
+                  bgcolor: 'hsl(var(--primary))',
+                  color: 'hsl(var(--primary-foreground))',
+                  '&:hover': {
+                    bgcolor: 'hsl(var(--primary))',
+                    opacity: 0.9,
+                  },
+                  '&.Mui-disabled': {
+                    bgcolor: 'hsla(var(--primary) / 0.3)',
+                    color: 'hsla(var(--primary-foreground) / 0.5)',
+                  },
+                }}
+              >
+                {isRunning ? 'Running…' : 'Run'}
+              </Button>
+            </Box>
+
+            {runError && (
+              <Alert severity="error" sx={{ fontSize: '0.8rem', borderRadius: 2 }}>
+                {runError}
+              </Alert>
+            )}
+
+            {runResult && (
+              <Box sx={{
+                p: 2,
+                borderRadius: 2,
+                border: '1px solid hsl(var(--border))',
+                bgcolor: 'hsl(var(--background))',
+              }}>
+                <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>
+                  Result
+                </Typography>
+                <Typography
+                  component="pre"
+                  sx={{
+                    fontSize: '0.8rem',
+                    color: 'hsl(var(--foreground))',
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                    fontFamily: 'monospace',
+                    m: 0,
+                  }}
+                >
+                  {runResult}
+                </Typography>
+              </Box>
+            )}
+
+            {/* Link to full activity page */}
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<Activity size={14} />}
+              onClick={() => { onClose(); navigate('/agent'); }}
+              sx={{
+                borderColor: 'hsl(var(--border))',
+                color: 'hsl(var(--foreground))',
+                textTransform: 'none',
+                fontSize: '0.75rem',
+                borderRadius: 1.5,
+                alignSelf: 'flex-start',
+                '&:hover': { 
+                  borderColor: 'hsl(var(--primary))',
+                  color: 'hsl(var(--primary))',
+                  bgcolor: 'hsla(var(--primary) / 0.08)',
+                },
+              }}
+            >
+              View all activity
+            </Button>
+          </Box>
         )}
       </Box>
     </Drawer>
