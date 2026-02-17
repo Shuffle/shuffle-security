@@ -1495,7 +1495,8 @@ const InfrastructureContent = () => {
     let newSourceHandle = oldEdge.sourceHandle || 'bottom-source';
     let newTargetHandle = oldEdge.targetHandle || 'top-target';
 
-    if (draggedEnd === 'source') {
+    if (draggedEnd === 'target') {
+      // RF reports handleType 'target' when the source end is being dragged
       if (newConnection.source === sourceNode) {
         const handleSide = (newConnection.sourceHandle || '').replace(/-source|-target/, '');
         newSourceHandle = `${handleSide}-source`;
