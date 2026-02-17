@@ -713,28 +713,28 @@ const InfrastructureContent = () => {
 
       const edgeId = `e-${idx}`;
       const isEdgeHovered = hoveredEdgeId === edgeId;
-      const isHighlighted = isEdgeHovered || (activeId && (flow.source === activeId || flow.target === activeId));
+      // Even when hovering/selecting, if either side is missing keep it greyed out
+      const isHighlighted = !eitherMissing && (isEdgeHovered || (activeId && (flow.source === activeId || flow.target === activeId)));
 
       const hasAnyFocus = activeId || hoveredEdgeId;
 
       // Determine stroke color
       let stroke: string;
-      if (isEdgeHovered) {
-        // Find source category color for the hovered edge
+      if (eitherMissing) {
+        stroke = 'hsla(var(--muted-foreground) / 0.15)';
+      } else if (isEdgeHovered) {
         const srcCat = TOOL_CATEGORIES.find(c => c.id === flow.source);
         stroke = srcCat ? `hsl(var(${srcCat.color}))` : 'hsl(var(--primary))';
       } else if (hasAnyFocus) {
         stroke = isHighlighted ? activeColor : 'hsla(var(--muted-foreground) / 0.06)';
       } else if (bothActive) {
         stroke = 'hsl(var(--primary))';
-      } else if (eitherMissing) {
-        stroke = 'hsla(var(--muted-foreground) / 0.15)';
       } else {
         stroke = 'hsla(var(--muted-foreground) / 0.3)';
       }
 
       return {
-        id: `e-${idx}`,
+        id: edgeId,
         source: flow.source,
         target: flow.target,
         label: flow.label,
