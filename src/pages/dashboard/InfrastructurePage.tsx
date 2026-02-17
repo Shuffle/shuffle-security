@@ -425,21 +425,20 @@ const nodeTypes = { category: CategoryNode };
 // ── Layout positions ───────────────────────────────────────────────────────────
 
 const NODE_POSITIONS: Record<string, { x: number; y: number }> = {
-  // Row 1: Data sources
-  network:          { x: 0,   y: 0 },
-  edr:              { x: 260, y: 0 },
-  email:            { x: 520, y: 0 },
-  iam:              { x: 780, y: 0 },
-  cloud:            { x: 1040, y: 0 },
-  // Row 2: Processing layer
-  siem:             { x: 60,  y: 220 },
-  threat_intel:     { x: 380, y: 220 },
-  asset_management: { x: 700, y: 220 },
-  // Row 3: Action & orchestration
-  case_management:  { x: 220, y: 440 },
-  ai_llm:           { x: 540, y: 440 },
-  // Row 4: Output
-  communication:    { x: 380, y: 640 },
+  // Row 1 — Data sources (spread wide, even spacing)
+  cloud:            { x: 0,    y: 0 },
+  network:          { x: 280,  y: 0 },
+  edr:              { x: 560,  y: 0 },
+  email:            { x: 840,  y: 0 },
+  iam:              { x: 1120, y: 0 },
+  // Row 2 — Analysis & enrichment
+  asset_management: { x: 80,   y: 260 },
+  siem:             { x: 400,  y: 260 },
+  threat_intel:     { x: 720,  y: 260 },
+  ai_llm:           { x: 1020, y: 260 },
+  // Row 3 — Response & coordination
+  case_management:  { x: 400,  y: 520 },
+  communication:    { x: 720,  y: 520 },
 };
 
 // ── Detail Drawer ──────────────────────────────────────────────────────────────
