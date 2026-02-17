@@ -620,32 +620,11 @@ const InfrastructurePage = () => {
     : null;
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      {/* Page header */}
-      <Box sx={{ px: 3, pt: 3, pb: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
-          <Activity size={22} style={{ color: 'hsl(var(--primary))' }} />
-          <Typography sx={{ fontSize: '1.35rem', fontWeight: 700, color: 'hsl(var(--foreground))' }}>
-            Infrastructure
-          </Typography>
-        </Box>
-        <Typography sx={{ fontSize: '0.82rem', color: 'hsl(var(--muted-foreground))', maxWidth: 600, mb: 2 }}>
-          Visual map of security tool categories and how data flows between them.
-          Click any node to see details, data sources, and automation use cases.
-        </Typography>
-        <IntegrationStatus collapsed={false} />
-      </Box>
-
-      {/* Flow canvas */}
+    <Box sx={{ height: '100%', position: 'relative' }}>
+      {/* Fullscreen flow canvas */}
       <Box sx={{
-        flex: 1,
-        minHeight: 500,
-        mx: 2,
-        mb: 2,
-        borderRadius: 3,
-        border: '1px solid hsl(var(--border))',
-        bgcolor: 'hsl(var(--background))',
-        overflow: 'hidden',
+        position: 'absolute',
+        inset: 0,
         '& .react-flow__attribution': { display: 'none' },
         '& .react-flow__controls': {
           border: '1px solid hsl(var(--border))',
@@ -687,6 +666,37 @@ const InfrastructurePage = () => {
             style={{ width: 120, height: 80 }}
           />
         </ReactFlow>
+      </Box>
+
+      {/* Floating header bar */}
+      <Box sx={{
+        position: 'absolute',
+        top: 16,
+        left: 16,
+        right: 16,
+        zIndex: 10,
+        px: 3,
+        py: 2,
+        borderRadius: 3,
+        bgcolor: 'hsla(var(--card) / 0.92)',
+        backdropFilter: 'blur(12px)',
+        border: '1px solid hsl(var(--border))',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 3,
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexShrink: 0 }}>
+          <Activity size={20} style={{ color: 'hsl(var(--primary))' }} />
+          <Typography sx={{ fontSize: '1rem', fontWeight: 700, color: 'hsl(var(--foreground))' }}>
+            Infrastructure
+          </Typography>
+        </Box>
+        <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', flexShrink: 0, display: { xs: 'none', md: 'block' } }}>
+          Click any node to see details and data flows
+        </Typography>
+        <Box sx={{ flex: 1 }} />
+        <IntegrationStatus collapsed={false} />
       </Box>
 
       {/* Detail drawer */}

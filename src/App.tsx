@@ -1,9 +1,9 @@
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { muiTheme } from '@/theme/muiTheme';
-import { AuthProvider } from '@/context/AuthContext';
+import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import Index from './pages/Index';
 import AuthPage from './pages/AuthPage';
@@ -30,6 +30,14 @@ import AppsPage from '@/pages/AppsPage';
 import NotFound from './pages/NotFound';
 import { ScrollToTop } from '@/components/ScrollToTop';
 
+/** Layout that conditionally shows sidebar for authenticated users, bare page for guests */
+const ConditionalDashboardLayout = () => {
+  const { isAuthenticated, isLoading } = useAuth();
+  if (isLoading) return <Outlet />;
+  if (isAuthenticated) return <DashboardLayout />;
+  return <Outlet />;
+};
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -53,7 +61,6 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/apps" element={<AppsPage />} />
-            <Route path="/apps/:appname" element={<AppDetailPage />} />
             <Route path="/login" element={<AuthPage mode="login" />} />
             <Route path="/register" element={<AuthPage mode="register" />} />
             <Route path="/docs" element={<DocsPage />} />
@@ -95,6 +102,11 @@ const App = () => (
               <Route path="/users" element={<UsersPage />} />
               <Route path="/organizations" element={<OrganizationsPage />} />
               <Route path="/settings" element={<SettingsPage />} />
+            </Route>
+
+            {/* App detail: uses sidebar when authenticated, standalone when guest */}
+            <Route element={<ConditionalDashboardLayout />}>
+              <Route path="/apps/:appname" element={<AppDetailPage />} />
             </Route>
             
             <Route path="*" element={<NotFound />} />
