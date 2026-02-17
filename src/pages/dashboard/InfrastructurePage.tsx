@@ -2059,7 +2059,13 @@ const InfrastructureContent = () => {
                 source_label: TOOL_CATEGORIES.find(c => c.id === f.source)?.label || f.source,
                 target_label: TOOL_CATEGORIES.find(c => c.id === f.target)?.label || f.target,
               }));
-              const exportData = { positions, connections, exported_at: new Date().toISOString() };
+              const exportData = {
+                positions,
+                handles: savedHandles,
+                waypoints: savedWaypoints,
+                connections,
+                exported_at: new Date().toISOString(),
+              };
               const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
               const url = URL.createObjectURL(blob);
               const a = document.createElement('a');
