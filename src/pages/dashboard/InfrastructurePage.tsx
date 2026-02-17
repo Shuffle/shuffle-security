@@ -418,50 +418,46 @@ const CategoryNode = ({ data }: { data: CategoryNodeData }) => {
 
   return (
     <>
-      {/* Each side has both source and target handles — only show the relevant type during edge update */}
+      {/* Each side has both source and target handles — visually highlight only the relevant type during edge update */}
       {(['Top', 'Bottom', 'Left', 'Right'] as const).map(side => {
-        // During edge update, only show the handle type that ReactFlow needs:
-        // dragging source end → needs source handles, dragging target end → needs target handles
-        const showTarget = !isEdgeUpdating || edgeUpdateHandleType === 'target';
-        const showSource = !isEdgeUpdating || edgeUpdateHandleType === 'source';
+        const showTarget = isEdgeUpdating && edgeUpdateHandleType === 'target';
+        const showSource = isEdgeUpdating && edgeUpdateHandleType === 'source';
         return (
           <React.Fragment key={side}>
-            {showTarget && (
-              <Handle
-                type="target"
-                position={Position[side]}
-                id={`${side.toLowerCase()}-target`}
-                className="infra-handle"
-                style={{
-                  width: isEdgeUpdating ? 16 : 10,
-                  height: isEdgeUpdating ? 16 : 10,
-                  background: `hsl(var(${colorVar}))`,
-                  border: isEdgeUpdating ? `3px solid hsl(var(${colorVar}))` : '2px solid hsl(var(--background))',
-                  opacity: isEdgeUpdating ? 1 : 0,
-                  transition: 'all 0.15s ease',
-                  boxShadow: isEdgeUpdating ? `0 0 8px hsla(var(${colorVar}) / 0.5)` : 'none',
-                  zIndex: isEdgeUpdating ? 10 : 0,
-                }}
-              />
-            )}
-            {showSource && (
-              <Handle
-                type="source"
-                position={Position[side]}
-                id={`${side.toLowerCase()}-source`}
-                className="infra-handle"
-                style={{
-                  width: isEdgeUpdating ? 16 : 10,
-                  height: isEdgeUpdating ? 16 : 10,
-                  background: `hsl(var(${colorVar}))`,
-                  border: isEdgeUpdating ? `3px solid hsl(var(${colorVar}))` : '2px solid hsl(var(--background))',
-                  opacity: isEdgeUpdating ? 1 : 0,
-                  transition: 'all 0.15s ease',
-                  boxShadow: isEdgeUpdating ? `0 0 8px hsla(var(${colorVar}) / 0.5)` : 'none',
-                  zIndex: isEdgeUpdating ? 10 : 0,
-                }}
-              />
-            )}
+            <Handle
+              type="target"
+              position={Position[side]}
+              id={`${side.toLowerCase()}-target`}
+              className="infra-handle"
+              style={{
+                width: showTarget ? 16 : 10,
+                height: showTarget ? 16 : 10,
+                background: `hsl(var(${colorVar}))`,
+                border: showTarget ? `3px solid hsl(var(${colorVar}))` : '2px solid hsl(var(--background))',
+                opacity: showTarget ? 1 : 0,
+                transition: 'all 0.15s ease',
+                boxShadow: showTarget ? `0 0 8px hsla(var(${colorVar}) / 0.5)` : 'none',
+                zIndex: showTarget ? 10 : 0,
+                pointerEvents: showTarget ? 'auto' : 'none',
+              }}
+            />
+            <Handle
+              type="source"
+              position={Position[side]}
+              id={`${side.toLowerCase()}-source`}
+              className="infra-handle"
+              style={{
+                width: showSource ? 16 : 10,
+                height: showSource ? 16 : 10,
+                background: `hsl(var(${colorVar}))`,
+                border: showSource ? `3px solid hsl(var(${colorVar}))` : '2px solid hsl(var(--background))',
+                opacity: showSource ? 1 : 0,
+                transition: 'all 0.15s ease',
+                boxShadow: showSource ? `0 0 8px hsla(var(${colorVar}) / 0.5)` : 'none',
+                zIndex: showSource ? 10 : 0,
+                pointerEvents: showSource ? 'auto' : 'none',
+              }}
+            />
           </React.Fragment>
         );
       })}
