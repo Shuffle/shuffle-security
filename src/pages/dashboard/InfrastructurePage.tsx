@@ -1460,21 +1460,61 @@ const InfrastructureContent = () => {
   // Handle edge reconnection — only allow reconnecting to same source/target nodes (different handles)
   const onEdgeUpdate = useCallback((oldEdge: Edge, newConnection: Connection) => {
     edgeUpdateSuccessful.current = true;
-    // Only allow if source and target remain the same
-    if (newConnection.source !== oldEdge.source || newConnection.target !== oldEdge.target) return;
-    setEdges((els) => reconnectEdge(oldEdge, newConnection, els));
+
+    // Determine which end was being dragged
+    const draggedEnd = (updatingEdgeNodes as any)?.draggedEnd as 'source' | 'target' | undefined;
+
+    // Normalize: ensure source and target nodes stay the same, only handles change
+    let sourceNode = oldEdge.source;
+    let targetNode = oldEdge.target;
+    let newSourceHandle = oldEdge.sourceHandle || 'bottom-source';
+    let newTargetHandle = oldEdge.targetHandle || 'top-target';
+
+    if (draggedEnd === 'source') {
+      // User dragged the source end — the new connection's source or target should be oldEdge.source
+      if (newConnection.source === sourceNode) {
+        // Extract handle side from whatever handle they dropped on
+        const handleSide = (newConnection.sourceHandle || '').replace(/-source|-target/, '');
+        newSourceHandle = `${handleSide}-source`;
+      } else if (newConnection.target === sourceNode) {
+        const handleSide = (newConnection.targetHandle || '').replace(/-source|-target/, '');
+        newSourceHandle = `${handleSide}-source`;
+      } else {
+        return; // Dropped on wrong node
+      }
+    } else {
+      // User dragged the target end
+      if (newConnection.target === targetNode) {
+        const handleSide = (newConnection.targetHandle || '').replace(/-source|-target/, '');
+        newTargetHandle = `${handleSide}-target`;
+      } else if (newConnection.source === targetNode) {
+        const handleSide = (newConnection.sourceHandle || '').replace(/-source|-target/, '');
+        newTargetHandle = `${handleSide}-target`;
+      } else {
+        return; // Dropped on wrong node
+      }
+    }
+
+    const normalizedConnection: Connection = {
+      source: sourceNode,
+      target: targetNode,
+      sourceHandle: newSourceHandle,
+      targetHandle: newTargetHandle,
+    };
+
+    setEdges((els) => reconnectEdge(oldEdge, normalizedConnection, els));
     setSavedHandles(prev => {
       const updated = {
         ...prev,
         [oldEdge.id]: {
-          sourceHandle: newConnection.sourceHandle || prev[oldEdge.id]?.sourceHandle || 'bottom-source',
-          targetHandle: newConnection.targetHandle || prev[oldEdge.id]?.targetHandle || 'top-target',
+          sourceHandle: newSourceHandle,
+          targetHandle: newTargetHandle,
         },
       };
       persistHandles(updated);
       return updated;
     });
-  }, [setEdges, persistHandles]);
+  }, [setEdges, persistHandles, updatingEdgeNodes]);
 
   const onEdgeUpdateEnd = useCallback((_: MouseEvent | TouchEvent, edge: Edge) => {
     setUpdatingEdgeNodes(null);
