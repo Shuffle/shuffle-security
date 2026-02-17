@@ -175,3 +175,20 @@
 .react-flow .connecting .infra-handle {
   opacity: 1 !important;
 }
+
+/* ReactFlow: Style the live connection line while dragging */
+.react-flow__connection-path {
+  stroke: hsl(var(--primary)) !important;
+  stroke-width: 2.5 !important;
+  stroke-dasharray: 6 3 !important;
+}
+
+/* Highlight valid handles while reconnecting */
+.react-flow__handle.connectingto,
+.react-flow__handle.connectingfrom {
+  background: hsl(var(--primary)) !important;
+  opacity: 1 !important;
+  width: 14px !important;
+  height: 14px !important;
+  box-shadow: 0 0 8px hsla(var(--primary) / 0.5);
+}

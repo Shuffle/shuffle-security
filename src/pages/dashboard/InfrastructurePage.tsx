@@ -1215,8 +1215,16 @@ const InfrastructureContent = () => {
     persistPositions(positions);
   }, [reactFlowInstance, persistPositions]);
 
+  // Track reconnection state for visual feedback
+  const edgeReconnectSuccessful = useRef(true);
+
+  const onReconnectStart = useCallback(() => {
+    edgeReconnectSuccessful.current = false;
+  }, []);
+
   // Handle edge reconnection — only allow reconnecting to same source/target nodes (different handles)
   const onReconnect = useCallback((oldEdge: Edge, newConnection: Connection) => {
+    edgeReconnectSuccessful.current = true;
     // Only allow if source and target remain the same
     if (newConnection.source !== oldEdge.source || newConnection.target !== oldEdge.target) return;
     setEdges((els) => reconnectEdge(oldEdge, newConnection, els));
@@ -1232,6 +1240,12 @@ const InfrastructureContent = () => {
       return updated;
     });
   }, [setEdges, persistHandles]);
+
+  const onReconnectEnd = useCallback((_: any, edge: Edge) => {
+    if (!edgeReconnectSuccessful.current) {
+      // Snap back — do nothing, edge stays as-is
+    }
+  }, []);
 
   // Reset everything to defaults: positions, handles
   const handleResetPositions = useCallback(() => {
@@ -1313,7 +1327,11 @@ const InfrastructureContent = () => {
             setSelectedId(null);
           }}
           edgesUpdatable
+          reconnectRadius={25}
+          onReconnectStart={onReconnectStart}
           onReconnect={onReconnect}
+          onReconnectEnd={onReconnectEnd}
+          connectionLineStyle={{ stroke: 'hsl(var(--primary))', strokeWidth: 2, strokeDasharray: '6 3' }}
         >
           <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="hsla(var(--muted-foreground) / 0.1)" />
           <Controls showInteractive={false} />
