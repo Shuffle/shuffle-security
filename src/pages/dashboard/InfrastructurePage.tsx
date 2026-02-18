@@ -2425,13 +2425,13 @@ const InfrastructureContent = () => {
           onNodeDragStop={handleNodeDragStop}
           onEdgesChange={onEdgesChange}
           snapToGrid
-          snapGrid={[10, 10]}
+          snapGrid={[5, 5]}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           fitView
           fitViewOptions={{ padding: 0.25 }}
           minZoom={0.3}
-          maxZoom={1.5}
+          maxZoom={4}
           proOptions={{ hideAttribution: true }}
           onPaneClick={() => { setSelectedId(null); setSelectedEdgeIdx(null); }}
           nodesConnectable={false}
