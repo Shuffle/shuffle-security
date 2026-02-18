@@ -315,70 +315,91 @@ export const FLOW_PHASES: { id: FlowPhase; label: string; subtitle: string; step
   },
 ];
 
-const DATA_FLOWS: { source: string; target: string; label: string; animated?: boolean; description: string; phase: FlowPhase }[] = [
+const DATA_FLOWS: { source: string; target: string; label: string; animated?: boolean; description: string; phase: FlowPhase; agenticDescription: string }[] = [
   // e-0
   { phase: 'ingest', source: 'siem', target: 'case_management', label: 'Alerts', animated: true,
-    description: 'SIEM-generated alerts are the primary trigger for new cases. Automating this flow ensures no critical detection goes uninvestigated and reduces mean time to respond (MTTR).' },
+    description: 'SIEM-generated alerts are the primary trigger for new cases. Automating this flow ensures no critical detection goes uninvestigated and reduces mean time to respond (MTTR).',
+    agenticDescription: 'An agent triages incoming alerts, deduplicates them against open cases, scores severity using threat intel context, and auto-assigns to the right analyst based on type and on-call schedule.' },
   // e-1
   { phase: 'ingest', source: 'network', target: 'siem', label: 'Flow logs',
-    description: 'Network flow logs (NetFlow, DNS, proxy) give the SIEM east-west and north-south visibility. Without them, lateral movement and C2 traffic go undetected.' },
+    description: 'Network flow logs (NetFlow, DNS, proxy) give the SIEM east-west and north-south visibility. Without them, lateral movement and C2 traffic go undetected.',
+    agenticDescription: 'An agent monitors ingested flow logs for anomalous patterns (beaconing, port scans, unusual data volumes), generates hypotheses, and creates enriched SIEM alerts with analyst-ready summaries.' },
   // e-2
   { phase: 'ingest', source: 'edr', target: 'siem', label: 'Telemetry',
-    description: 'Endpoint telemetry (process trees, file hashes, registry changes) enriches SIEM detections with host-level context, enabling accurate correlation rules.' },
+    description: 'Endpoint telemetry (process trees, file hashes, registry changes) enriches SIEM detections with host-level context, enabling accurate correlation rules.',
+    agenticDescription: 'An agent cross-references endpoint telemetry with known attack patterns, surfaces hidden process chains, and annotates SIEM events with host risk scores before they reach an analyst.' },
   // e-3
   { phase: 'ingest', source: 'iam', target: 'siem', label: 'Auth logs',
-    description: 'Authentication and authorization logs reveal credential abuse, impossible travel, privilege escalation, and brute-force attempts across the identity layer.' },
+    description: 'Authentication and authorization logs reveal credential abuse, impossible travel, privilege escalation, and brute-force attempts across the identity layer.',
+    agenticDescription: 'An agent detects impossible travel, credential stuffing patterns, and privilege escalation attempts in auth logs, then creates SIEM alerts with user risk context and recommended actions.' },
   // e-4
   { phase: 'ingest', source: 'email', target: 'case_management', label: 'Phishing reports',
-    description: 'User-reported phishing emails create cases for triage. Automating intake with deduplication and auto-enrichment drastically cuts analyst workload.' },
+    description: 'User-reported phishing emails create cases for triage. Automating intake with deduplication and auto-enrichment drastically cuts analyst workload.',
+    agenticDescription: 'An agent parses reported emails, extracts and enriches all IOCs, determines phishing verdict using threat intel, and auto-closes low-risk reports while escalating confirmed campaigns.' },
   // e-5
   { phase: 'correlation', source: 'threat_intel', target: 'case_management', label: 'Enrichment', animated: true,
-    description: 'Threat intelligence enriches cases with reputation scores, malware families, threat actor attribution, and related IOCs — giving analysts immediate context.' },
+    description: 'Threat intelligence enriches cases with reputation scores, malware families, threat actor attribution, and related IOCs — giving analysts immediate context.',
+    agenticDescription: 'An agent autonomously enriches all observables in a case, maps findings to MITRE ATT&CK, identifies related campaigns, and updates case severity and recommended playbook based on findings.' },
   // e-6
   { phase: 'response', source: 'threat_intel', target: 'network', label: 'IOC feeds',
-    description: 'Pushing IOC feeds (malicious IPs, domains) to network tools enables proactive blocking at the perimeter before threats reach endpoints.' },
+    description: 'Pushing IOC feeds (malicious IPs, domains) to network tools enables proactive blocking at the perimeter before threats reach endpoints.',
+    agenticDescription: 'An agent curates and validates IOC feeds before pushing, deduplicates against existing block rules, and removes expired indicators — ensuring network policy stays accurate without manual review.' },
   // e-7
   { phase: 'response', source: 'threat_intel', target: 'edr', label: 'Hash feeds',
-    description: 'File hash feeds allow EDR solutions to block or quarantine known-malicious binaries on endpoints in real time, preventing execution.' },
+    description: 'File hash feeds allow EDR solutions to block or quarantine known-malicious binaries on endpoints in real time, preventing execution.',
+    agenticDescription: 'An agent validates hash feed accuracy against multiple intel sources before pushing to EDR, prioritizes by threat severity, and generates a blocking report with rollback instructions.' },
   // e-8
   { phase: 'response', source: 'case_management', target: 'communication', label: 'Notifications', animated: true,
-    description: 'Automated notifications keep stakeholders informed of incident status, escalations, and required actions — critical for SLA compliance and coordination.' },
+    description: 'Automated notifications keep stakeholders informed of incident status, escalations, and required actions — critical for SLA compliance and coordination.',
+    agenticDescription: 'An agent drafts context-aware incident summaries, determines the right audience and channel for each update, and adapts tone (technical vs. executive) based on the recipient.' },
   // e-9
   { phase: 'response', source: 'case_management', target: 'iam', label: 'Disable accounts',
-    description: 'When a compromised account is identified, automated disablement through IAM stops the attacker from maintaining access while the investigation continues.' },
+    description: 'When a compromised account is identified, automated disablement through IAM stops the attacker from maintaining access while the investigation continues.',
+    agenticDescription: 'An agent validates the compromise signal, checks the user\'s business criticality, executes targeted disablement or session revocation, and documents the action with rollback steps in the case.' },
   // e-10
   { phase: 'response', source: 'case_management', target: 'edr', label: 'Containment',
-    description: 'Network isolation or process killing on compromised endpoints contains the threat, preventing lateral movement while preserving forensic evidence.' },
+    description: 'Network isolation or process killing on compromised endpoints contains the threat, preventing lateral movement while preserving forensic evidence.',
+    agenticDescription: 'An agent determines the right containment scope (process, network, host), triggers isolation, collects forensic artifacts autonomously, and creates a detailed timeline for the investigation.' },
   // e-11
   { phase: 'correlation', source: 'asset_management', target: 'case_management', label: 'Asset context',
-    description: 'Asset context (owner, criticality, business unit, OS) helps analysts prioritize cases and understand blast radius during an incident.' },
+    description: 'Asset context (owner, criticality, business unit, OS) helps analysts prioritize cases and understand blast radius during an incident.',
+    agenticDescription: 'An agent automatically fetches asset owner, business criticality, and known vulnerabilities for every observable in a case, recalculates impact score, and suggests prioritization.' },
   // e-12
   { phase: 'correlation', source: 'email', target: 'threat_intel', label: 'Phishing IOCs',
-    description: 'Extracting IOCs from phishing emails (sender domains, URLs, attachments) and feeding them into threat intel platforms helps detect broader campaigns.' },
+    description: 'Extracting IOCs from phishing emails (sender domains, URLs, attachments) and feeding them into threat intel platforms helps detect broader campaigns.',
+    agenticDescription: 'An agent detonates suspicious attachments and URLs in a sandbox, extracts all IOCs, correlates with known campaigns, and auto-publishes confirmed indicators to the threat intel platform.' },
   // e-13
   { phase: 'ingest', source: 'cloud', target: 'siem', label: 'Audit logs', animated: true,
-    description: 'Cloud audit logs (CloudTrail, Activity Log, Audit Logs) provide visibility into API calls, configuration changes, and access patterns across cloud environments.' },
+    description: 'Cloud audit logs (CloudTrail, Activity Log, Audit Logs) provide visibility into API calls, configuration changes, and access patterns across cloud environments.',
+    agenticDescription: 'An agent detects anomalous API call patterns, privilege escalation, and misconfiguration events in cloud audit logs, then generates prioritized SIEM alerts with remediation context.' },
   // e-14
   { phase: 'ingest', source: 'cloud', target: 'asset_management', label: 'Resource inventory',
-    description: 'Auto-syncing cloud resources into asset management ensures the CMDB stays current, preventing blind spots in vulnerability management and incident response.' },
+    description: 'Auto-syncing cloud resources into asset management ensures the CMDB stays current, preventing blind spots in vulnerability management and incident response.',
+    agenticDescription: 'An agent continuously reconciles cloud inventory with the CMDB, flags newly exposed resources, identifies shadow IT, and marks assets with missing security controls for immediate action.' },
   // e-15
   { phase: 'correlation', source: 'cloud', target: 'iam', label: 'Identity events',
-    description: 'Cloud identity events (role changes, permission grants, federation configs) feed IAM monitoring to detect privilege escalation in cloud environments.' },
+    description: 'Cloud identity events (role changes, permission grants, federation configs) feed IAM monitoring to detect privilege escalation in cloud environments.',
+    agenticDescription: 'An agent tracks excessive permission grants, detects role assumption chains indicating privilege escalation, and triggers automated least-privilege review recommendations in IAM.' },
   // e-16
   { phase: 'correlation', source: 'threat_intel', target: 'cloud', label: 'IOC feeds',
-    description: 'Pushing IOC feeds to cloud-native security tools (GuardDuty, Sentinel, SCC) enables detection of known-malicious activity within cloud workloads.' },
+    description: 'Pushing IOC feeds to cloud-native security tools (GuardDuty, Sentinel, SCC) enables detection of known-malicious activity within cloud workloads.',
+    agenticDescription: 'An agent maps threat intel IOCs to active cloud workloads, identifies which resources are communicating with known-malicious infrastructure, and auto-creates remediation tasks in cloud security tools.' },
   // e-17
   { phase: 'response', source: 'case_management', target: 'cloud', label: 'Cloud response',
-    description: 'Automated response actions in cloud environments — revoking keys, isolating instances, modifying security groups — contain threats before they spread across cloud infrastructure.' },
+    description: 'Automated response actions in cloud environments — revoking keys, isolating instances, modifying security groups — contain threats before they spread across cloud infrastructure.',
+    agenticDescription: 'An agent validates cloud response actions against blast radius, executes targeted remediation (revoke key, modify SG, snapshot + terminate instance), and logs all changes with rollback instructions.' },
   // e-18
   { phase: 'response', source: 'case_management', target: 'network', label: 'Block rules',
-    description: 'Pushing firewall block rules from cases to network devices enables immediate perimeter-level containment of malicious IPs, domains, and traffic patterns.' },
+    description: 'Pushing firewall block rules from cases to network devices enables immediate perimeter-level containment of malicious IPs, domains, and traffic patterns.',
+    agenticDescription: 'An agent validates block rule candidates against allowlists and business-critical services, pushes rules to the right network segments, and auto-expires them with case closure.' },
   // e-19
   { phase: 'response', source: 'case_management', target: 'email', label: 'Quarantine',
-    description: 'Quarantining or purging malicious emails from mailboxes during an active investigation prevents additional users from falling victim to the same campaign.' },
-  // e-20 — NEW: EDR → Case Management (direct alert path)
+    description: 'Quarantining or purging malicious emails from mailboxes during an active investigation prevents additional users from falling victim to the same campaign.',
+    agenticDescription: 'An agent searches all mailboxes for campaign variants, bulk-quarantines matching emails, notifies impacted users with safe-messaging guidance, and reports scope to the case.' },
+  // e-20 — EDR → Case Management (direct alert path)
   { phase: 'ingest', source: 'edr', target: 'case_management', label: 'EDR alerts', animated: true,
-    description: 'EDR-generated alerts (malware detections, suspicious process executions, ransomware behavior) are forwarded directly to Case Management to open or update incidents, bypassing the SIEM for faster response on high-confidence endpoint detections.' },
+    description: 'EDR-generated alerts (malware detections, suspicious process executions, ransomware behavior) are forwarded directly to Case Management to open or update incidents, bypassing the SIEM for faster response on high-confidence endpoint detections.',
+    agenticDescription: 'An agent evaluates EDR alert confidence, correlates with related endpoint events, determines if it belongs to an existing case, and either updates the case or creates a new one with a pre-filled investigation timeline.' },
 ];
 
 // ── Category-to-app mapping ────────────────────────────────────────────────────
@@ -1044,6 +1065,7 @@ const DataFlowCard = ({
   flowState = 'disabled',
   highlighted = false,
   variant = 'full',
+  isAgentic = false,
   onClick,
   onMouseEnter,
   onMouseLeave,
@@ -1054,6 +1076,7 @@ const DataFlowCard = ({
   flowState?: FlowState;
   highlighted?: boolean;
   variant?: 'full' | 'compact';
+  isAgentic?: boolean;
   onClick?: () => void;
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
@@ -1104,6 +1127,13 @@ const DataFlowCard = ({
             → {targetCat?.label || flow.target}
           </Typography>
         </Box>
+        {isAgentic && (
+          <Tooltip title="Agentic mode enabled" arrow>
+            <Typography sx={{ fontSize: '0.6rem', px: 0.75, py: 0.25, borderRadius: 0.75, flexShrink: 0, bgcolor: 'hsla(var(--primary) / 0.12)', border: '1px solid hsla(var(--primary) / 0.3)', color: 'hsl(var(--primary))' }}>
+              🤖
+            </Typography>
+          </Tooltip>
+        )}
         {flowState !== 'enabled' && (
           <Typography sx={{ fontSize: '0.6rem', color: FLOW_STATE_BADGE[flowState].color, bgcolor: FLOW_STATE_BADGE[flowState].bg, border: `1px solid ${FLOW_STATE_BADGE[flowState].border}`, px: 0.75, py: 0.25, borderRadius: 0.75, flexShrink: 0 }}>
             {FLOW_STATE_BADGE[flowState].label}
@@ -1228,6 +1258,7 @@ const AllDataFlowsDrawer = ({
   configuredCategories,
   highlightEdgeIdx,
   enabledFlows,
+  agenticFlows,
   initialFilter,
 }: {
   open: boolean;
@@ -1238,6 +1269,7 @@ const AllDataFlowsDrawer = ({
   configuredCategories: Set<string>;
   highlightEdgeIdx: number | null;
   enabledFlows: Set<string>;
+  agenticFlows: Set<string>;
   initialFilter?: FlowState | null;
 }) => {
   const [activeFilter, setActiveFilter] = useState<FlowState | null>(null);
@@ -1438,6 +1470,7 @@ const AllDataFlowsDrawer = ({
                     enabled={activeCategories.has(flow.source) && activeCategories.has(flow.target)}
                     flowState={state}
                     highlighted={highlightEdgeIdx === idx}
+                    isAgentic={agenticFlows.has(`e-${idx}`)}
                     variant="compact"
                     onClick={() => { onClose(); onSelectFlow(idx); }}
                   />
@@ -1470,6 +1503,8 @@ const EdgeDetailDrawer = ({
   categoryApps,
   enabledFlows,
   onToggleEnabled,
+  agenticFlows,
+  onToggleAgentic,
 }: {
   flow: (typeof DATA_FLOWS)[number] | null;
   edgeIdx: number | null;
@@ -1482,6 +1517,8 @@ const EdgeDetailDrawer = ({
   categoryApps: Record<string, MatchedApp[]>;
   enabledFlows: Set<string>;
   onToggleEnabled: (edgeId: string) => void;
+  agenticFlows: Set<string>;
+  onToggleAgentic: (edgeId: string) => void;
 }) => {
   if (!flow) return null;
   const edgeId = edgeIdx !== null ? `e-${edgeIdx}` : '';
@@ -1702,7 +1739,7 @@ const EdgeDetailDrawer = ({
       </Box>
 
       {/* Description */}
-      <Box sx={{ px: 3, py: 2.5 }}>
+      <Box sx={{ px: 3, py: 2.5, borderBottom: '1px solid hsl(var(--border))' }}>
         <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1.5 }}>
           Why This Matters
         </Typography>
@@ -1710,6 +1747,54 @@ const EdgeDetailDrawer = ({
           {flow.description}
         </Typography>
       </Box>
+
+      {/* Agentic section */}
+      {(() => {
+        const edgeId = edgeIdx !== null ? `e-${edgeIdx}` : '';
+        const isAgenticEnabled = agenticFlows.has(edgeId);
+        return (
+          <Box sx={{ px: 3, py: 2.5, bgcolor: isAgenticEnabled ? 'hsla(var(--primary) / 0.04)' : 'transparent', transition: 'background 0.2s' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+              <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, color: isAgenticEnabled ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', flex: 1 }}>
+                🤖 Agentic Mode
+              </Typography>
+              <Button
+                size="small"
+                onClick={() => onToggleAgentic(edgeId)}
+                sx={{
+                  fontSize: '0.7rem',
+                  fontWeight: 700,
+                  px: 1.5,
+                  py: 0.25,
+                  borderRadius: 1,
+                  textTransform: 'none',
+                  ...(isAgenticEnabled ? {
+                    bgcolor: 'hsla(var(--primary) / 0.15)',
+                    color: 'hsl(var(--primary))',
+                    border: '1px solid hsla(var(--primary) / 0.35)',
+                    '&:hover': { bgcolor: 'hsla(var(--primary) / 0.25)' },
+                  } : {
+                    bgcolor: 'transparent',
+                    color: 'hsl(var(--muted-foreground))',
+                    border: '1px solid hsla(var(--muted-foreground) / 0.25)',
+                    '&:hover': { bgcolor: 'hsla(var(--muted-foreground) / 0.08)', borderColor: 'hsl(var(--muted-foreground))' },
+                  }),
+                }}
+              >
+                {isAgenticEnabled ? 'Enabled — Disable' : 'Enable Agentic'}
+              </Button>
+            </Box>
+            {!isAgenticEnabled && (
+              <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.6, mb: 1 }}>
+                Disabled by default. Enable to allow an AI agent to actively interact with this data flow beyond simple automation.
+              </Typography>
+            )}
+            <Typography sx={{ fontSize: '0.82rem', color: isAgenticEnabled ? 'hsl(var(--foreground))' : 'hsla(var(--muted-foreground) / 0.7)', lineHeight: 1.7, fontStyle: isAgenticEnabled ? 'normal' : 'italic', transition: 'color 0.2s' }}>
+              {flow.agenticDescription}
+            </Typography>
+          </Box>
+        );
+      })()}
     </Drawer>
   );
 };
@@ -2057,6 +2142,7 @@ const POSITION_CACHE_KEY = 'infrastructure_node_positions';
 const HANDLE_CACHE_KEY = 'infrastructure_edge_handles';
 const WAYPOINT_CACHE_KEY = 'infrastructure_edge_waypoints';
 const ENABLED_FLOWS_CACHE_KEY = 'infrastructure_enabled_flows';
+const AGENTIC_FLOWS_CACHE_KEY = 'infrastructure_agentic_flows';
 
 type WaypointOverrides = Record<string, Array<{ x: number; y: number }>>;
 type HandleOverrides = Record<string, { sourceHandle?: string; targetHandle?: string }>;
@@ -2075,6 +2161,7 @@ const InfrastructureContent = () => {
   const [savedHandles, setSavedHandles] = useState<HandleOverrides>({});
   const [savedWaypoints, setSavedWaypoints] = useState<WaypointOverrides>({});
   const [enabledFlows, setEnabledFlows] = useState<Set<string>>(new Set());
+  const [agenticFlows, setAgenticFlows] = useState<Set<string>>(new Set());
   const [updatingEdgeNodes, setUpdatingEdgeNodes] = useState<{ source: string; target: string; draggedEnd: 'source' | 'target' } | null>(null);
   const updatingEdgeNodesRef = useRef<{ source: string; target: string; draggedEnd: 'source' | 'target' } | null>(null);
   const [savedPositions, setSavedPositions] = useState<Record<string, { x: number; y: number }> | null>(null);
@@ -2086,11 +2173,12 @@ const InfrastructureContent = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-      const [posResult, handleResult, waypointResult, enabledResult] = await Promise.all([
+      const [posResult, handleResult, waypointResult, enabledResult, agenticResult] = await Promise.all([
         getDatastoreItem(POSITION_CACHE_KEY, DATASTORE_CATEGORIES.INFRASTRUCTURE),
         getDatastoreItem(HANDLE_CACHE_KEY, DATASTORE_CATEGORIES.INFRASTRUCTURE),
         getDatastoreItem(WAYPOINT_CACHE_KEY, DATASTORE_CATEGORIES.INFRASTRUCTURE),
         getDatastoreItem(ENABLED_FLOWS_CACHE_KEY, DATASTORE_CATEGORIES.INFRASTRUCTURE),
+        getDatastoreItem(AGENTIC_FLOWS_CACHE_KEY, DATASTORE_CATEGORIES.INFRASTRUCTURE),
       ]);
       if (posResult.success && posResult.item?.value) {
         const parsed = typeof posResult.item.value === 'string' ? JSON.parse(posResult.item.value) : posResult.item.value;
@@ -2108,6 +2196,10 @@ const InfrastructureContent = () => {
         const parsed = typeof enabledResult.item.value === 'string' ? JSON.parse(enabledResult.item.value) : enabledResult.item.value;
         if (Array.isArray(parsed)) setEnabledFlows(new Set(parsed));
       }
+      if (agenticResult.success && agenticResult.item?.value) {
+        const parsed = typeof agenticResult.item.value === 'string' ? JSON.parse(agenticResult.item.value) : agenticResult.item.value;
+        if (Array.isArray(parsed)) setAgenticFlows(new Set(parsed));
+      }
       } catch (e) {
         console.warn('Failed to load infrastructure config:', e);
       } finally {
@@ -2121,13 +2213,22 @@ const InfrastructureContent = () => {
   const toggleFlowEnabled = useCallback((edgeId: string) => {
     setEnabledFlows(prev => {
       const next = new Set(prev);
-      if (next.has(edgeId)) {
-        next.delete(edgeId);
-      } else {
-        next.add(edgeId);
-      }
+      if (next.has(edgeId)) next.delete(edgeId);
+      else next.add(edgeId);
       setDatastoreItem(ENABLED_FLOWS_CACHE_KEY, Array.from(next), DATASTORE_CATEGORIES.INFRASTRUCTURE)
         .catch(e => console.warn('Failed to save enabled flows:', e));
+      return next;
+    });
+  }, []);
+
+  // Toggle agentic mode for a flow, persisted to datastore
+  const toggleAgenticFlow = useCallback((edgeId: string) => {
+    setAgenticFlows(prev => {
+      const next = new Set(prev);
+      if (next.has(edgeId)) next.delete(edgeId);
+      else next.add(edgeId);
+      setDatastoreItem(AGENTIC_FLOWS_CACHE_KEY, Array.from(next), DATASTORE_CATEGORIES.INFRASTRUCTURE)
+        .catch(e => console.warn('Failed to save agentic flows:', e));
       return next;
     });
   }, []);
@@ -2880,6 +2981,7 @@ const InfrastructureContent = () => {
         configuredCategories={activeCategories}
         highlightEdgeIdx={lastViewedEdgeIdx}
         enabledFlows={enabledFlows}
+        agenticFlows={agenticFlows}
         initialFilter={allFlowsFilter}
       />
       <EdgeDetailDrawer
@@ -2892,6 +2994,8 @@ const InfrastructureContent = () => {
         categoryApps={categoryApps}
         enabledFlows={enabledFlows}
         onToggleEnabled={toggleFlowEnabled}
+        agenticFlows={agenticFlows}
+        onToggleAgentic={toggleAgenticFlow}
         onSelectCategory={(catId) => {
           setSelectedEdgeIdx(null);
           setSelectedId(catId);
