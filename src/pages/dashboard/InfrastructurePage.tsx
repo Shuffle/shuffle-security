@@ -749,7 +749,9 @@ const CategoryNode = ({ data }: { data: CategoryNodeData }) => {
               className="infra-handle"
               style={{
                 ...targetCenterStyle,
+                width: showTarget ? 16 : 10,
                 height: showTarget ? 16 : 10,
+                borderRadius: '50%',
                 background: `hsl(var(${colorVar}))`,
                 border: showTarget ? `3px solid hsl(var(${colorVar}))` : '2px solid hsl(var(--background))',
                 opacity: showTarget ? 1 : 0,
@@ -766,7 +768,9 @@ const CategoryNode = ({ data }: { data: CategoryNodeData }) => {
               className="infra-handle"
               style={{
                 ...sourceCenterStyle,
+                width: showSource ? 16 : 10,
                 height: showSource ? 16 : 10,
+                borderRadius: '50%',
                 background: `hsl(var(${colorVar}))`,
                 border: showSource ? `3px solid hsl(var(${colorVar}))` : '2px solid hsl(var(--background))',
                 opacity: showSource ? 1 : 0,
