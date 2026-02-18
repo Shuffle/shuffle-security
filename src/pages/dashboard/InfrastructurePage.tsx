@@ -725,11 +725,18 @@ const CategoryNode = ({ data }: { data: CategoryNodeData }) => {
         const showTarget = isEdgeUpdating && edgeUpdateHandleType === 'source';
         const showSource = isEdgeUpdating && edgeUpdateHandleType === 'target';
 
-        // Force handles to the exact geometric center of each side so edges always align cleanly
+        // Force handles to the exact geometric center of each side.
+        // Compute size-aware margin offsets so ReactFlow's bounding-rect
+        // edge-attachment calculation always lands on the true center.
+        const targetSize = showTarget ? 16 : 10;
+        const sourceSize = showSource ? 16 : 10;
         const isVerticalSide = side === 'Top' || side === 'Bottom';
-        const centerStyle: React.CSSProperties = isVerticalSide
-          ? { left: '50%', transform: 'translateX(-50%)' }
-          : { top: '50%', transform: 'translateY(-50%)' };
+        const targetCenterStyle: React.CSSProperties = isVerticalSide
+          ? { left: '50%', marginLeft: -targetSize / 2 }
+          : { top: '50%', marginTop: -targetSize / 2 };
+        const sourceCenterStyle: React.CSSProperties = isVerticalSide
+          ? { left: '50%', marginLeft: -sourceSize / 2 }
+          : { top: '50%', marginTop: -sourceSize / 2 };
 
         return (
           <React.Fragment key={side}>
@@ -739,8 +746,7 @@ const CategoryNode = ({ data }: { data: CategoryNodeData }) => {
               id={`${side.toLowerCase()}-target`}
               className="infra-handle"
               style={{
-                ...centerStyle,
-                width: showTarget ? 16 : 10,
+                ...targetCenterStyle,
                 height: showTarget ? 16 : 10,
                 background: `hsl(var(${colorVar}))`,
                 border: showTarget ? `3px solid hsl(var(${colorVar}))` : '2px solid hsl(var(--background))',
@@ -757,8 +763,7 @@ const CategoryNode = ({ data }: { data: CategoryNodeData }) => {
               id={`${side.toLowerCase()}-source`}
               className="infra-handle"
               style={{
-                ...centerStyle,
-                width: showSource ? 16 : 10,
+                ...sourceCenterStyle,
                 height: showSource ? 16 : 10,
                 background: `hsl(var(${colorVar}))`,
                 border: showSource ? `3px solid hsl(var(${colorVar}))` : '2px solid hsl(var(--background))',
