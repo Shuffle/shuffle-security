@@ -222,8 +222,8 @@ const TOOL_CATEGORIES: ToolCategory[] = [
   },
   {
     id: 'asset_management',
-    label: 'Asset Management',
-    description: 'IT asset inventory, CMDB, and vulnerability management for contextualized response.',
+    label: 'Assets',
+    description: 'Endpoints, cloud resources, and CMDB inventory with vulnerability and configuration context for incident response.',
     icon: <HardDrive size={22} />,
     color: '--infra-asset-mgmt',
     examples: ['ServiceNow CMDB', 'Qualys', 'Tenable', 'Snipe-IT', 'Rapid7', 'Lansweeper'],
@@ -277,7 +277,7 @@ const TOOL_CATEGORIES: ToolCategory[] = [
       { label: 'DevSecOps', description: 'CI/CD security scanning, IaC checks, and code analysis' },
     ],
     dataIn: ['Detection rules from SIEM', 'IOC feeds from Threat Intel', 'Policy updates from IAM'],
-    dataOut: ['CloudTrail/audit logs to SIEM', 'Resource inventory to Asset Management', 'Identity events to IAM'],
+    dataOut: ['CloudTrail/audit logs to SIEM', 'Resource inventory to Assets', 'Identity events to IAM'],
     useCases: [
       'Stream cloud audit logs to SIEM for correlation',
       'Auto-remediate misconfigured resources (e.g. open S3 buckets)',
@@ -389,7 +389,7 @@ const DATA_FLOWS: { source: string; target: string; label: string; animated?: bo
   // e-14
   { phase: 'ingest', source: 'cloud', target: 'asset_management', label: 'Resource inventory',
     tags: ['Logs', 'Context'],
-    description: 'Auto-syncing cloud resources into asset management ensures the CMDB stays current, preventing blind spots in vulnerability management and incident response.',
+    description: 'Auto-syncing cloud resources into the asset inventory ensures the CMDB stays current, preventing blind spots in vulnerability management and incident response.',
     agenticDescription: 'An agent continuously reconciles cloud inventory with the CMDB, flags newly exposed resources, identifies shadow IT, and marks assets with missing security controls for immediate action.' },
   // e-15
   { phase: 'correlation', source: 'cloud', target: 'iam', label: 'Identity events',
@@ -421,6 +421,11 @@ const DATA_FLOWS: { source: string; target: string; label: string; animated?: bo
     tags: ['Alert', 'Detection'],
     description: 'EDR-generated alerts (malware detections, suspicious process executions, ransomware behavior) are forwarded directly to Case Management to open or update incidents, bypassing the SIEM for faster response on high-confidence endpoint detections.',
     agenticDescription: 'An agent evaluates EDR alert confidence, correlates with related endpoint events, determines if it belongs to an existing case, and either updates the case or creates a new one with a pre-filled investigation timeline.' },
+  // e-21 — Assets → SIEM (endpoint & asset logs)
+  { phase: 'ingest', source: 'asset_management', target: 'siem', label: 'Endpoint logs', animated: true,
+    tags: ['Logs', 'Detection', 'Alert'],
+    description: 'Forwarding endpoint telemetry and asset logs (process events, file changes, network connections, vulnerability scan results) to the SIEM enriches correlation and enables asset-aware detections.',
+    agenticDescription: 'An agent normalises endpoint telemetry from diverse agents, tags each event with asset criticality and owner from the CMDB, and forwards structured logs to the SIEM with context that tunes alert priority.' },
 ];
 
 // ── Category-to-app mapping ────────────────────────────────────────────────────
