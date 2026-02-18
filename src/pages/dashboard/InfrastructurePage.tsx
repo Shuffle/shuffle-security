@@ -2172,6 +2172,38 @@ const InfrastructureContent = () => {
   const [positionsLoaded, setPositionsLoaded] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [helperLines, setHelperLines] = useState<{ horizontal?: number; vertical?: number }>({});
+  const [simulatedPhases, setSimulatedPhases] = useState<Set<FlowPhase>>(new Set());
+
+  const toggleSimulatedPhase = useCallback((phase: FlowPhase) => {
+    setSimulatedPhases(prev => {
+      const next = new Set(prev);
+      if (next.has(phase)) next.delete(phase);
+      else next.add(phase);
+      return next;
+    });
+  }, []);
+
+  // All edge indices and category IDs covered by currently simulated phases
+  const simulatedEdgeIds = useMemo(() => {
+    if (simulatedPhases.size === 0) return new Set<string>();
+    const ids = new Set<string>();
+    DATA_FLOWS.forEach((flow, idx) => {
+      if (simulatedPhases.has(flow.phase)) ids.add(`e-${idx}`);
+    });
+    return ids;
+  }, [simulatedPhases]);
+
+  const simulatedCategoryIds = useMemo(() => {
+    if (simulatedPhases.size === 0) return new Set<string>();
+    const ids = new Set<string>();
+    DATA_FLOWS.forEach(flow => {
+      if (simulatedPhases.has(flow.phase)) {
+        ids.add(flow.source);
+        ids.add(flow.target);
+      }
+    });
+    return ids;
+  }, [simulatedPhases]);
 
   // Load saved positions and handle overrides from datastore on mount
   useEffect(() => {
@@ -2353,19 +2385,24 @@ const InfrastructureContent = () => {
       const targetActive = activeCategories.has(flow.target);
       const edgeId = `e-${idx}`;
       const isManuallyEnabled = enabledFlows.has(edgeId);
+      const isSimulated = simulatedEdgeIds.has(edgeId);
+
       // Effective state: manually enabled overrides missing_config → enabled
       const baseFlowState = getFlowState(sourceActive, targetActive);
-      const flowState: FlowState = isManuallyEnabled && baseFlowState === 'missing_config' ? 'enabled' : baseFlowState;
-      const bothActive = flowState === 'enabled';
+      const flowState: FlowState = (isManuallyEnabled && baseFlowState === 'missing_config') ? 'enabled' : baseFlowState;
+      // Simulated edges are treated as if fully enabled
+      const bothActive = flowState === 'enabled' || isSimulated;
 
       const isSelected = selectedEdgeIdx === idx;
       // When a branch is selected, ignore hover on other edges
       const isEdgeHovered = selectedEdgeIdx !== null ? isSelected : hoveredEdgeId === edgeId;
       // Highlight on hover/select
-      const isConnected = isEdgeHovered || (activeId && (flow.source === activeId || flow.target === activeId));
+      const isConnected = isEdgeHovered || isSimulated || (activeId && (flow.source === activeId || flow.target === activeId));
       const isFullyHighlighted = isConnected && bothActive;
 
-      const hasAnyFocus = selectedEdgeIdx !== null || activeId || hoveredEdgeId;
+      const hasAnyFocus = selectedEdgeIdx !== null || activeId || hoveredEdgeId || simulatedPhases.size > 0;
+      // Don't dim edges that are in simulated phases even if focus is elsewhere
+      const isDimmed = hasAnyFocus && !isConnected && !isSimulated;
 
       // Get category colors for gradient
       const srcCat = TOOL_CATEGORIES.find(c => c.id === flow.source);
@@ -2373,26 +2410,27 @@ const InfrastructureContent = () => {
       const srcColor = srcCat ? `hsl(var(${srcCat.color}))` : 'hsl(var(--primary))';
       const tgtColor = tgtCat ? `hsl(var(${tgtCat.color}))` : 'hsl(var(--primary))';
 
-      // Determine stroke color — enabled edges always show gradient, hover also shows gradient
-      const isEnabled = flowState === 'enabled' && bothActive;
+      // Determine stroke color — simulated/enabled edges show gradient, hover always shows gradient
+      const isEnabled = flowState === 'enabled' && !isSimulated;
       let stroke: string;
       let useGradient = false;
       if (isEdgeHovered) {
-        // Always show gradient on hover regardless of state
+        useGradient = true;
+        stroke = srcColor;
+      } else if (isSimulated) {
+        // Simulation: always show full gradient
         useGradient = true;
         stroke = srcColor;
       } else if (isFullyHighlighted) {
         useGradient = true;
         stroke = activeColor;
-      } else if (hasAnyFocus && !isConnected) {
+      } else if (isDimmed) {
         // Something else is focused — dim this edge regardless of enabled state
         stroke = 'hsla(var(--muted-foreground) / 0.06)';
       } else if (isEnabled) {
-        // Enabled edges show their real gradient color when nothing else is focused
         useGradient = true;
         stroke = srcColor;
       } else if (isConnected && !bothActive) {
-        // Dimmed highlight for non-enabled connected edges
         stroke = flowState === 'missing_config' ? 'hsl(45 93% 47%)' : 'hsla(var(--muted-foreground) / 0.4)';
       } else if (bothActive) {
         useGradient = true;
@@ -2403,8 +2441,8 @@ const InfrastructureContent = () => {
         stroke = 'hsla(var(--muted-foreground) / 0.38)';
       }
 
-      // Stroke dash pattern: enabled and hovered edges are solid; others get dashes
-      const strokeDasharray: string | undefined = (isEnabled || isEdgeHovered) ? undefined : '3 5';
+      // Stroke dash pattern: simulated, enabled and hovered edges are solid; others get dashes
+      const strokeDasharray: string | undefined = (isEnabled || isEdgeHovered || isSimulated) ? undefined : '3 5';
 
       // Apply saved handle overrides or use defaults
       const handleOverride = savedHandles[edgeId];
@@ -2418,7 +2456,7 @@ const InfrastructureContent = () => {
         sourceHandle,
         targetHandle,
         label: flow.label,
-        animated: !!isConnected || isEnabled,
+        animated: !!isConnected || isEnabled || isSimulated,
         reconnectable: true,
         zIndex: isConnected ? 10 : 0,
         type: 'gradient',
@@ -2440,7 +2478,7 @@ const InfrastructureContent = () => {
         },
         style: {
           stroke,
-          strokeWidth: isFullyHighlighted ? 2.5 : (bothActive ? 1.5 : 1),
+          strokeWidth: isSimulated ? 2.5 : (isFullyHighlighted ? 2.5 : (bothActive ? 1.5 : 1)),
           strokeDasharray,
           opacity: 1,
           transition: 'stroke 0.2s, stroke-width 0.2s',
@@ -2448,11 +2486,11 @@ const InfrastructureContent = () => {
         },
         labelStyle: {
           fontSize: isEdgeHovered ? 12 : 10,
-          fontWeight: isFullyHighlighted ? 600 : 500,
-          fill: isFullyHighlighted
+          fontWeight: (isFullyHighlighted || isSimulated) ? 600 : 500,
+          fill: (isFullyHighlighted || isSimulated)
             ? 'hsl(var(--foreground))'
             : 'hsl(var(--muted-foreground))',
-          opacity: hasAnyFocus && !isConnected ? 0.15 : 0.8,
+          opacity: isDimmed ? 0.15 : 0.8,
         },
         labelBgStyle: {
           fill: 'hsl(var(--background))',
@@ -2466,7 +2504,7 @@ const InfrastructureContent = () => {
         },
       };
     }),
-    [activeId, activeColor, activeCategories, enabledFlows, hoveredEdgeId, selectedEdgeIdx, savedHandles, savedWaypoints, persistWaypoints]
+    [activeId, activeColor, activeCategories, enabledFlows, hoveredEdgeId, selectedEdgeIdx, savedHandles, savedWaypoints, persistWaypoints, simulatedEdgeIds, simulatedPhases]
   );
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
@@ -2493,7 +2531,7 @@ const InfrastructureContent = () => {
         ...node.data,
         onSelect: handleSelect,
         onHover: handleHover,
-        isSelected: selectedId === node.id,
+        isSelected: selectedId === node.id || simulatedCategoryIds.has(node.id),
         isHovered: hoveredId === node.id,
         isEdgeUpdating: updatingEdgeNodes
           ? (updatingEdgeNodes.draggedEnd === 'source'
@@ -2504,7 +2542,7 @@ const InfrastructureContent = () => {
         matchedApps: categoryApps[node.id] || [],
       },
     })));
-  }, [selectedId, hoveredId, categoryApps, updatingEdgeNodes, handleSelect, handleHover, setNodes]);
+  }, [selectedId, hoveredId, categoryApps, updatingEdgeNodes, handleSelect, handleHover, setNodes, simulatedCategoryIds]);
 
   useEffect(() => { setEdges(initialEdges); }, [initialEdges, setEdges]);
 
@@ -2822,6 +2860,72 @@ const InfrastructureContent = () => {
           Click any node to see details and data flows
         </Typography>
         <Box sx={{ flex: 1 }} />
+
+        {/* Simulate phase buttons */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexShrink: 0 }}>
+          <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.06em', mr: 0.5 }}>
+            Simulate
+          </Typography>
+          {FLOW_PHASES.map((phase) => {
+            const isActive = simulatedPhases.has(phase.id);
+            const flowsInPhase = DATA_FLOWS.filter(f => f.phase === phase.id);
+            const categoryIds = new Set(flowsInPhase.flatMap(f => [f.source, f.target]));
+            const tooltipLines = [
+              `Phase ${phase.step}: ${phase.label}`,
+              phase.subtitle,
+              '',
+              `Highlights ${flowsInPhase.length} flows across ${categoryIds.size} categories.`,
+            ].join('\n');
+            return (
+              <Tooltip
+                key={phase.id}
+                title={
+                  <Box>
+                    <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: `hsl(var(${phase.color}))` }}>
+                      Phase {phase.step}: {phase.label}
+                    </Typography>
+                    <Typography sx={{ fontSize: '0.68rem', color: 'hsl(var(--muted-foreground))', mt: 0.25 }}>
+                      {phase.subtitle}
+                    </Typography>
+                    <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', mt: 0.5, opacity: 0.7 }}>
+                      {flowsInPhase.length} flows · {categoryIds.size} categories
+                    </Typography>
+                  </Box>
+                }
+                arrow
+                placement="bottom"
+              >
+                <Box
+                  onClick={() => toggleSimulatedPhase(phase.id)}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 28,
+                    height: 28,
+                    borderRadius: 1.5,
+                    border: `1px solid ${isActive ? `hsl(var(${phase.color}))` : 'hsl(var(--border))'}`,
+                    bgcolor: isActive ? `hsla(var(${phase.color}) / 0.15)` : 'transparent',
+                    color: isActive ? `hsl(var(${phase.color}))` : 'hsl(var(--muted-foreground))',
+                    cursor: 'pointer',
+                    fontWeight: 700,
+                    fontSize: '0.75rem',
+                    transition: 'all 0.15s ease',
+                    userSelect: 'none',
+                    '&:hover': {
+                      borderColor: `hsl(var(${phase.color}))`,
+                      bgcolor: `hsla(var(${phase.color}) / 0.1)`,
+                      color: `hsl(var(${phase.color}))`,
+                    },
+                  }}
+                >
+                  {phase.step}
+                </Box>
+              </Tooltip>
+            );
+          })}
+        </Box>
+
         <IntegrationStatus collapsed={false} />
         <Tooltip title="Export positions & connections as JSON" arrow>
           <IconButton
