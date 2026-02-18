@@ -7,16 +7,16 @@
     },
     "siem": {
       "x": 430,
-      "y": 270,
+      "y": 268,
       "label": "SIEM"
     },
     "network": {
-      "x": 860,
-      "y": 20,
+      "x": 862,
+      "y": 18,
       "label": "Network"
     },
     "edr": {
-      "x": 570,
+      "x": 574,
       "y": 0,
       "label": "EDR"
     },
@@ -26,115 +26,123 @@
       "label": "Communication"
     },
     "email": {
-      "x": 1120,
+      "x": 1124,
       "y": 0,
       "label": "Email"
     },
     "threat_intel": {
-      "x": 840,
-      "y": 270,
+      "x": 844,
+      "y": 268,
       "label": "Threat Intel"
     },
     "asset_management": {
-      "x": 0,
-      "y": 270,
-      "label": "Asset Management"
+      "x": 6,
+      "y": 284,
+      "label": "Assets"
     },
     "iam": {
-      "x": 290,
+      "x": 282,
       "y": 0,
       "label": "IAM"
     },
     "cloud": {
-      "x": 0,
+      "x": 6,
       "y": 0,
       "label": "Cloud"
     }
   },
   "handles": {
-    "e-0": {
+    "siem_case_management_1": {
       "sourceHandle": "right-source",
       "targetHandle": "top-target"
     },
-    "e-1": {
+    "network_siem_1": {
       "sourceHandle": "bottom-source",
       "targetHandle": "top-target"
     },
-    "e-2": {
+    "edr_siem_1": {
       "sourceHandle": "bottom-source",
       "targetHandle": "top-target"
     },
-    "e-3": {
+    "iam_siem_1": {
       "sourceHandle": "bottom-source",
       "targetHandle": "top-target"
     },
-    "e-4": {
+    "email_case_management_1": {
       "sourceHandle": "bottom-source",
       "targetHandle": "right-target"
     },
-    "e-5": {
+    "threat_intel_case_management_1": {
       "sourceHandle": "left-source",
       "targetHandle": "top-target"
     },
-    "e-6": {
+    "threat_intel_network_1": {
       "sourceHandle": "top-source",
       "targetHandle": "left-target"
     },
-    "e-7": {
+    "threat_intel_edr_1": {
       "sourceHandle": "top-source",
       "targetHandle": "right-target"
     },
-    "e-8": {
+    "case_management_communication_1": {
       "sourceHandle": "bottom-source",
       "targetHandle": "top-target"
     },
-    "e-9": {
+    "case_management_iam_1": {
       "sourceHandle": "left-source",
       "targetHandle": "top-target"
     },
-    "e-10": {
+    "case_management_edr_1": {
       "sourceHandle": "left-source",
       "targetHandle": "top-target"
     },
-    "e-11": {
+    "asset_management_case_management_1": {
       "sourceHandle": "bottom-source",
       "targetHandle": "top-target"
     },
-    "e-12": {
+    "email_threat_intel_1": {
       "sourceHandle": "bottom-source",
       "targetHandle": "right-target"
     },
-    "e-13": {
+    "cloud_siem_1": {
       "sourceHandle": "right-source",
       "targetHandle": "top-target"
     },
-    "e-14": {
-      "sourceHandle": "bottom-source",
-      "targetHandle": "top-target"
-    },
-    "e-15": {
+    "cloud_iam_1": {
       "sourceHandle": "right-source",
       "targetHandle": "left-target"
     },
-    "e-16": {
+    "threat_intel_cloud_1": {
       "sourceHandle": "top-source",
-      "targetHandle": "top-target"
+      "targetHandle": "left-target"
     },
-    "e-17": {
+    "case_management_cloud_1": {
       "sourceHandle": "left-source",
       "targetHandle": "top-target"
     },
-    "e-18": {
+    "case_management_network_1": {
       "sourceHandle": "left-source",
       "targetHandle": "top-target"
     },
-    "e-19": {
+    "case_management_email_1": {
+      "sourceHandle": "left-source",
+      "targetHandle": "top-target"
+    },
+    "edr_case_management_1": {
       "sourceHandle": "bottom-source",
-      "targetHandle": "right-target"
+      "targetHandle": "top-target"
+    },
+    "cloud_asset_management_1": {
+      "sourceHandle": "bottom-source",
+      "targetHandle": "top-target"
+    },
+    "asset_management_siem_1": {
+      "sourceHandle": "right-source",
+      "targetHandle": "left-target"
     }
   },
   "waypoints": {
-    "e-17": [
+    "case_management_network_1": [
       {
         "x": 620,
         "y": 572.500007395668
@@ -156,7 +164,7 @@
         "y": -80
       }
     ],
-    "e-9": [
+    "case_management_iam_1": [
       {
         "x": -90,
         "y": 572.500007395668
@@ -170,30 +178,34 @@
         "y": -80
       }
     ],
-    "e-16": [
+    "case_management_cloud_1": [
       {
-        "x": 940,
-        "y": 230
+        "x": -90,
+        "y": 280
       },
       {
-        "x": 1080,
-        "y": -200
+        "x": -90,
+        "y": -80
+      },
+      {
+        "x": 20,
+        "y": -80
       }
     ],
-    "e-3": [
+    "iam_siem_1": [
       {
         "x": 390,
         "y": 170
       },
       {
-        "x": 530.0002648259205,
+        "x": 524.9999180976944,
         "y": 170
       }
     ],
-    "e-13": [
+    "cloud_siem_1": [
       {
         "x": 240,
-        "y": 36.999984443380555
+        "y": 120
       },
       {
         "x": 240,
@@ -204,16 +216,16 @@
         "y": 170
       }
     ],
-    "e-1": [
+    "network_siem_1": [
       {
         "x": 960,
         "y": 170
       }
     ],
-    "e-18": [
+    "case_management_email_1": [
       {
         "x": -90,
-        "y": 572.500125916264
+        "y": 520
       },
       {
         "x": -90,
@@ -224,7 +236,7 @@
         "y": -80
       }
     ],
-    "e-10": [
+    "case_management_edr_1": [
       {
         "x": -90,
         "y": 572.4999966397886
@@ -238,41 +250,37 @@
         "y": -80
       }
     ],
-    "e-12": [
+    "email_threat_intel_1": [
       {
         "x": 1220,
-        "y": 320
+        "y": 310
       },
       {
-        "x": 1044,
-        "y": 320
+        "x": 1047.9948242907149,
+        "y": 310
       }
     ],
-    "e-19": [
+    "edr_case_management_1": [
+      {
+        "x": 670,
+        "y": 260
+      },
       {
         "x": 740,
-        "y": 720
+        "y": 260
       },
       {
-        "x": 1380,
-        "y": 720
-      },
-      {
-        "x": 1380,
-        "y": 52.499932276342
+        "x": 740,
+        "y": 516.0054254288797
       }
     ],
-    "e-4": [
+    "email_case_management_1": [
       {
         "x": 1220,
         "y": 570
-      },
-      {
-        "x": 924.0000879335148,
-        "y": 570
       }
     ],
-    "e-11": [
+    "asset_management_case_management_1": [
       {
         "x": 100,
         "y": 430
@@ -282,7 +290,7 @@
         "y": 430
       }
     ],
-    "e-6": [
+    "threat_intel_network_1": [
       {
         "x": 940,
         "y": 230
@@ -302,23 +310,19 @@
       {
         "x": 810,
         "y": 50
-      },
-      {
-        "x": 846,
-        "y": 50
       }
     ],
-    "e-2": [
+    "edr_siem_1": [
       {
         "x": 670.0002400192376,
         "y": 170
       },
       {
-        "x": 530,
+        "x": 600,
         "y": 170
       }
     ],
-    "e-7": [
+    "threat_intel_edr_1": [
       {
         "x": 940.0001620468963,
         "y": 230
@@ -338,6 +342,24 @@
       {
         "x": 810,
         "y": 52.500120009618776
+      }
+    ],
+    "threat_intel_cloud_1": [
+      {
+        "x": 939.0000547527465,
+        "y": 230
+      },
+      {
+        "x": 1080,
+        "y": 230
+      },
+      {
+        "x": 1080,
+        "y": -200
+      },
+      {
+        "x": -40,
+        "y": 31.847918394263008
       }
     ]
   },
@@ -394,7 +416,7 @@
     {
       "source": "threat_intel",
       "target": "edr",
-      "label": "Hash feeds",
+      "label": "IOC feeds",
       "source_label": "Threat Intel",
       "target_label": "EDR"
     },
@@ -423,7 +445,7 @@
       "source": "asset_management",
       "target": "case_management",
       "label": "Asset context",
-      "source_label": "Asset Management",
+      "source_label": "Assets",
       "target_label": "Case Management"
     },
     {
@@ -439,13 +461,6 @@
       "label": "Audit logs",
       "source_label": "Cloud",
       "target_label": "SIEM"
-    },
-    {
-      "source": "cloud",
-      "target": "asset_management",
-      "label": "Resource inventory",
-      "source_label": "Cloud",
-      "target_label": "Asset Management"
     },
     {
       "source": "cloud",
@@ -481,7 +496,28 @@
       "label": "Quarantine",
       "source_label": "Case Management",
       "target_label": "Email"
+    },
+    {
+      "source": "edr",
+      "target": "case_management",
+      "label": "EDR alerts",
+      "source_label": "EDR",
+      "target_label": "Case Management"
+    },
+    {
+      "source": "cloud",
+      "target": "asset_management",
+      "label": "Resource inventory",
+      "source_label": "Cloud",
+      "target_label": "Assets"
+    },
+    {
+      "source": "asset_management",
+      "target": "siem",
+      "label": "Endpoint logs",
+      "source_label": "Assets",
+      "target_label": "SIEM"
     }
   ],
-  "exported_at": "2026-02-17T19:04:43.463Z"
+  "exported_at": "2026-02-18T18:36:18.973Z"
 }
