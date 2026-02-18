@@ -53,7 +53,7 @@ import {
 } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { IntegrationStatus } from '@/components/layout/IntegrationStatus';
-import { SingulJS } from '@/lib/singul-local';
+import { AddAppModal } from '@/components/infrastructure/AddAppModal';
 
 // ── Tool Category Definitions ──────────────────────────────────────────────────
 
@@ -1652,34 +1652,56 @@ const CategoryDetailDrawer = ({
           </Box>
         )}
 
-        {/* Inline App Search — shown when Plus is clicked or no apps yet */}
-        {(showSearch || !hasApps) && (
-          <Box sx={{ mb: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-              <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                {hasApps ? 'Add App' : 'Find & Add Apps'}
+        {/* Add App Modal — shown when Plus is clicked or no apps yet */}
+        {!hasApps && (
+          <Box sx={{ mb: 2 }}>
+            <Typography
+              sx={{
+                fontSize: '0.7rem',
+                fontWeight: 600,
+                color: 'hsl(var(--muted-foreground))',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                mb: 1,
+              }}
+            >
+              Find & Add Apps
+            </Typography>
+            <Box
+              onClick={() => setShowSearch(true)}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1.5,
+                px: 2,
+                py: 1.5,
+                borderRadius: 2,
+                border: '1px dashed hsl(var(--border))',
+                cursor: 'pointer',
+                color: 'hsl(var(--muted-foreground))',
+                transition: 'all 0.15s ease',
+                '&:hover': {
+                  borderColor: 'hsl(var(--primary))',
+                  color: 'hsl(var(--foreground))',
+                  bgcolor: 'hsl(var(--accent))',
+                },
+              }}
+            >
+              <X size={14} style={{ transform: 'rotate(45deg)' }} />
+              <Typography sx={{ fontSize: '0.82rem' }}>
+                Search for {category.label} tools...
               </Typography>
-              {showSearch && hasApps && (
-                <IconButton size="small" onClick={() => setShowSearch(false)} sx={{ color: 'hsl(var(--muted-foreground))', p: 0.25 }}>
-                  <X size={14} />
-                </IconButton>
-              )}
             </Box>
-            <SingulJS
-              authToken={API_CONFIG.apiKey || ''}
-              apiKey={API_CONFIG.apiKey || undefined}
-              apiBaseUrl={API_CONFIG.baseUrl}
-              inline={true}
-              initialQuery={category.label}
-              layout="grid"
-              gridColumns={3}
-              showDescription={false}
-              showCategories={false}
-              hitsPerPage={9}
-              onAppSelected={() => setShowSearch(false)}
-            />
           </Box>
         )}
+
+        {/* Add App Modal */}
+        <AddAppModal
+          open={showSearch}
+          onClose={() => setShowSearch(false)}
+          initialQuery={category.label}
+          categoryLabel={category.label}
+        />
 
 
         {!hasApps && <Box sx={{ mb: 3, border: '1px solid hsl(var(--border))', borderRadius: 2, overflow: 'hidden' }}>
