@@ -2251,8 +2251,12 @@ const InfrastructureContent = () => {
       const next = new Set(prev);
       if (next.has(edgeId)) next.delete(edgeId);
       else next.add(edgeId);
-      setDatastoreItem(ENABLED_FLOWS_CACHE_KEY, Array.from(next), DATASTORE_CATEGORIES.INFRASTRUCTURE)
-        .catch(e => console.warn('Failed to save enabled flows:', e));
+      // Persist outside updater to avoid duplicate saves in strict mode
+      const arr = Array.from(next);
+      setTimeout(() => {
+        setDatastoreItem(ENABLED_FLOWS_CACHE_KEY, arr, DATASTORE_CATEGORIES.INFRASTRUCTURE)
+          .catch(e => console.warn('Failed to save enabled flows:', e));
+      }, 0);
       return next;
     });
   }, []);
@@ -2263,8 +2267,11 @@ const InfrastructureContent = () => {
       const next = new Set(prev);
       if (next.has(edgeId)) next.delete(edgeId);
       else next.add(edgeId);
-      setDatastoreItem(AGENTIC_FLOWS_CACHE_KEY, Array.from(next), DATASTORE_CATEGORIES.INFRASTRUCTURE)
-        .catch(e => console.warn('Failed to save agentic flows:', e));
+      const arr = Array.from(next);
+      setTimeout(() => {
+        setDatastoreItem(AGENTIC_FLOWS_CACHE_KEY, arr, DATASTORE_CATEGORIES.INFRASTRUCTURE)
+          .catch(e => console.warn('Failed to save agentic flows:', e));
+      }, 0);
       return next;
     });
   }, []);
@@ -2862,10 +2869,11 @@ const InfrastructureContent = () => {
         <Box sx={{ flex: 1 }} />
 
         {/* Simulate phase buttons */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexShrink: 0 }}>
-          <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.06em', mr: 0.5 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 0.5, flexShrink: 0, px: 1 }}>
+          <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             Simulate
           </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           {FLOW_PHASES.map((phase) => {
             const isActive = simulatedPhases.has(phase.id);
             const flowsInPhase = DATA_FLOWS.filter(f => f.phase === phase.id);
@@ -2924,6 +2932,7 @@ const InfrastructureContent = () => {
               </Tooltip>
             );
           })}
+          </Box>
         </Box>
 
         <IntegrationStatus collapsed={false} />
