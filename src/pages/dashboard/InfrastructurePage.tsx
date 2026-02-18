@@ -396,7 +396,7 @@ const DATA_FLOWS: { id: string; source: string; target: string; label: string; a
     tags: ['Alert', 'Detection'],
     description: 'EDR-generated alerts (malware detections, suspicious process executions, ransomware behavior) are forwarded directly to Case Management to open or update incidents, bypassing the SIEM for faster response on high-confidence endpoint detections.',
     agenticDescription: 'An agent evaluates EDR alert confidence, correlates with related endpoint events, determines if it belongs to an existing case, and either updates the case or creates a new one with a pre-filled investigation timeline.' },
-  { id: 'cloud_asset_management_1', phase: 'ingest', source: 'cloud', target: 'asset_management', label: 'Resource inventory',
+  { id: 'cloud_asset_management_1', phase: 'correlation', source: 'cloud', target: 'asset_management', label: 'Resource inventory',
     tags: ['Logs', 'Context'],
     description: 'Auto-syncing cloud resources into the asset inventory ensures the CMDB stays current, preventing blind spots in vulnerability management and incident response.',
     agenticDescription: 'An agent continuously reconciles cloud inventory with the CMDB, flags newly exposed resources, identifies shadow IT, and marks assets with missing security controls for immediate action.' },
