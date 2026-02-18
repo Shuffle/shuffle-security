@@ -956,15 +956,15 @@ const nodeTypes = { category: CategoryNode };
 // ── Layout positions ───────────────────────────────────────────────────────────
 
 const NODE_POSITIONS: Record<string, { x: number; y: number }> = {
-  case_management:  { x: 640,  y: 520 },
-  siem:             { x: 430,  y: 268 },
-  network:          { x: 862,  y: 18  },
+  case_management:  { x: 640,  y: 518 },
+  siem:             { x: 432,  y: 284 },
+  network:          { x: 862,  y: 0   },
   edr:              { x: 574,  y: 0   },
-  communication:    { x: 640,  y: 830 },
+  communication:    { x: 640,  y: 768 },
   email:            { x: 1124, y: 0   },
-  threat_intel:     { x: 844,  y: 268 },
+  threat_intel:     { x: 844,  y: 284 },
   asset_management: { x: 6,    y: 284 },
-  iam:              { x: 282,  y: 0   },
+  iam:              { x: 296,  y: 0   },
   cloud:            { x: 6,    y: 0   },
 };
 
@@ -979,7 +979,7 @@ const DEFAULT_HANDLES: Record<string, { sourceHandle: string; targetHandle: stri
   'threat_intel_edr_1':                 { sourceHandle: 'top-source',    targetHandle: 'right-target'  },
   'case_management_communication_1':    { sourceHandle: 'bottom-source', targetHandle: 'top-target'    },
   'case_management_iam_1':              { sourceHandle: 'left-source',   targetHandle: 'top-target'    },
-  'case_management_edr_1':              { sourceHandle: 'left-source',   targetHandle: 'top-target'    },
+  'case_management_edr_1':             { sourceHandle: 'left-source',   targetHandle: 'top-target'    },
   'asset_management_case_management_1': { sourceHandle: 'bottom-source', targetHandle: 'top-target'    },
   'email_threat_intel_1':               { sourceHandle: 'bottom-source', targetHandle: 'right-target'  },
   'cloud_siem_1':                       { sourceHandle: 'right-source',  targetHandle: 'top-target'    },
@@ -994,22 +994,22 @@ const DEFAULT_HANDLES: Record<string, { sourceHandle: string; targetHandle: stri
 };
 
 const DEFAULT_WAYPOINTS: Record<string, Array<{ x: number; y: number }>> = {
-  'case_management_network_1':       [{ x: 620, y: 572.500007395668 }, { x: 620, y: 570 }, { x: -90, y: 570 }, { x: -90, y: -80 }, { x: 99.99993724079836, y: -80 }],
-  'case_management_iam_1':           [{ x: -90, y: 572.500007395668 }, { x: -90, y: -80 }, { x: 379.9999514722607, y: -80 }],
-  'case_management_cloud_1':         [{ x: -90, y: 280 }, { x: -90, y: -80 }, { x: 20, y: -80 }],
-  'iam_siem_1':                      [{ x: 390, y: 170 }, { x: 524.9999180976944, y: 170 }],
-  'cloud_siem_1':                    [{ x: 240, y: 120 }, { x: 240, y: 170 }, { x: 379.99998791616144, y: 170 }],
-  'network_siem_1':                  [{ x: 960, y: 170 }],
-  'case_management_email_1':         [{ x: -90, y: 520 }, { x: -90, y: -80 }, { x: 660.0000874212913, y: -80 }],
-  'case_management_edr_1':           [{ x: -90, y: 572.4999966397886 }, { x: -90, y: -80 }, { x: 670, y: -80 }],
-  'email_threat_intel_1':            [{ x: 1220, y: 310 }, { x: 1047.9948242907149, y: 310 }],
-  'edr_case_management_1':           [{ x: 670, y: 260 }, { x: 740, y: 260 }, { x: 740, y: 516.0054254288797 }],
-  'email_case_management_1':         [{ x: 1220, y: 570 }],
+  'case_management_network_1':          [{ x: 620, y: 572.500007395668 }, { x: 620, y: 550 }, { x: -90, y: 550 }, { x: -90, y: -80 }, { x: 957.0001131550472, y: -80 }],
+  'case_management_iam_1':              [{ x: -90, y: 510 }, { x: -90, y: -80 }, { x: 379.9999514722607, y: -80 }],
+  'case_management_cloud_1':            [{ x: -90, y: 280 }, { x: -90, y: -80 }, { x: 20, y: -80 }],
+  'iam_siem_1':                         [{ x: 390, y: 170 }, { x: 524.9999180976944, y: 170 }],
+  'cloud_siem_1':                       [{ x: 240, y: 120 }, { x: 240, y: 170 }, { x: 379.99998791616144, y: 170 }],
+  'network_siem_1':                     [{ x: 960, y: 170 }],
+  'case_management_email_1':            [{ x: -90, y: 520 }, { x: -90, y: -80 }, { x: 660.0000874212913, y: -80 }],
+  'case_management_edr_1':              [{ x: -90, y: 490 }, { x: -90, y: -80 }, { x: 670, y: -80 }],
+  'email_threat_intel_1':               [{ x: 1220, y: 320 }, { x: 1047.9948242907149, y: 320 }],
+  'edr_case_management_1':              [{ x: 670, y: 230 }, { x: 710, y: 230 }],
+  'email_case_management_1':            [{ x: 1220, y: 550 }],
   'asset_management_case_management_1': [{ x: 100, y: 430 }, { x: 730, y: 430 }],
-  'threat_intel_network_1':          [{ x: 940, y: 230 }, { x: 1080, y: 50 }, { x: 1080, y: -200 }, { x: 810, y: -200 }, { x: 810, y: 50 }],
-  'edr_siem_1':                      [{ x: 670.0002400192376, y: 170 }, { x: 600, y: 170 }],
-  'threat_intel_edr_1':              [{ x: 940.0001620468963, y: 230 }, { x: 1080, y: 230 }, { x: 1080, y: -200 }, { x: 810, y: -200 }, { x: 810, y: 52.500120009618776 }],
-  'threat_intel_cloud_1':            [{ x: 939.0000547527465, y: 230 }, { x: 1080, y: 230 }, { x: 1080, y: -200 }, { x: -40, y: 31.847918394263008 }],
+  'threat_intel_network_1':             [{ x: 940, y: 230 }, { x: 1090, y: 50 }, { x: 1090, y: -200 }, { x: 810, y: -200 }, { x: 810, y: 30 }],
+  'edr_siem_1':                         [{ x: 670.0002400192376, y: 170 }, { x: 600, y: 170 }],
+  'threat_intel_edr_1':                 [{ x: 940.0001620468963, y: 230 }, { x: 1090, y: 230 }, { x: 1090, y: -200 }, { x: 810, y: -200 }, { x: 810, y: 30 }],
+  'threat_intel_cloud_1':               [{ x: 939.0000547527465, y: 230 }, { x: 1080, y: 230 }, { x: 1090, y: -200 }, { x: -40, y: 31.847815166393243 }],
 };
 
 
