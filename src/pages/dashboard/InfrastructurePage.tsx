@@ -1558,6 +1558,8 @@ const EdgeDetailDrawer = ({
   onToggleEnabled,
   agenticFlows,
   onToggleAgentic,
+  disabledAppsPerFlow,
+  onToggleAppDisabled,
 }: {
   flow: (typeof DATA_FLOWS)[number] | null;
   edgeIdx: number | null;
@@ -1572,6 +1574,8 @@ const EdgeDetailDrawer = ({
   onToggleEnabled: (edgeId: string) => void;
   agenticFlows: Set<string>;
   onToggleAgentic: (edgeId: string) => void;
+  disabledAppsPerFlow: Record<string, Set<string>>;
+  onToggleAppDisabled: (edgeId: string, appName: string) => void;
 }) => {
   if (!flow) return null;
   const edgeId = edgeIdx !== null ? `e-${edgeIdx}` : '';
@@ -1790,6 +1794,80 @@ const EdgeDetailDrawer = ({
           )}
         </Box>
       </Box>
+
+      {/* Apps in this flow */}
+      {(() => {
+        const edgeId = edgeIdx !== null ? `e-${edgeIdx}` : '';
+        const disabledForThisFlow = disabledAppsPerFlow[edgeId] || new Set<string>();
+        const allApps: { app: MatchedApp; side: 'source' | 'target'; catId: string }[] = [
+          ...(categoryApps[flow.source] || []).map(app => ({ app, side: 'source' as const, catId: flow.source })),
+          ...(categoryApps[flow.target] || []).map(app => ({ app, side: 'target' as const, catId: flow.target })),
+        ];
+        if (allApps.length === 0) return null;
+        return (
+          <Box sx={{ px: 3, py: 2.5, borderBottom: '1px solid hsl(var(--border))' }}>
+            <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1.5 }}>
+              Apps in this Flow
+            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+              {allApps.map(({ app, side, catId }) => {
+                const cat = TOOL_CATEGORIES.find(c => c.id === catId);
+                const isDisabled = disabledForThisFlow.has(app.name);
+                return (
+                  <Box key={`${side}-${app.name}`} sx={{
+                    display: 'flex', alignItems: 'center', gap: 1.5, px: 1.5, py: 1,
+                    borderRadius: 1.5,
+                    border: isDisabled ? '1px solid hsl(var(--border))' : `1px solid hsla(var(${cat?.color || '--primary'}) / 0.2)`,
+                    bgcolor: isDisabled ? 'transparent' : `hsla(var(${cat?.color || '--primary'}) / 0.04)`,
+                    opacity: isDisabled ? 0.5 : 1,
+                    transition: 'all 0.15s ease',
+                  }}>
+                    <Avatar
+                      src={app.image}
+                      sx={{ width: 26, height: 26, '& img': { objectFit: 'contain' }, bgcolor: 'hsl(var(--muted))', fontSize: '0.65rem', filter: isDisabled ? 'grayscale(1)' : 'none' }}
+                    >
+                      {app.name.charAt(0)}
+                    </Avatar>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography sx={{ fontSize: '0.78rem', fontWeight: 600, color: isDisabled ? 'hsl(var(--muted-foreground))' : 'hsl(var(--foreground))', lineHeight: 1.2 }}>
+                        {app.name}
+                      </Typography>
+                      <Typography sx={{ fontSize: '0.63rem', color: 'hsl(var(--muted-foreground))' }}>
+                        {side === 'source' ? sourceCat?.label : targetCat?.label} · {app.hasValidAuth ? 'Authenticated' : 'No auth'}
+                      </Typography>
+                    </Box>
+                    <Tooltip title={isDisabled ? 'Enable for this flow' : 'Disable for this flow'} arrow>
+                      <Button
+                        size="small"
+                        onClick={() => onToggleAppDisabled(edgeId, app.name)}
+                        sx={{
+                          minWidth: 0,
+                          fontSize: '0.65rem',
+                          px: 1,
+                          py: 0.4,
+                          borderRadius: 1,
+                          textTransform: 'none',
+                          color: isDisabled ? 'hsl(var(--muted-foreground))' : 'hsl(var(--primary))',
+                          border: isDisabled ? '1px solid hsl(var(--border))' : '1px solid hsla(var(--primary) / 0.3)',
+                          bgcolor: isDisabled ? 'transparent' : 'hsla(var(--primary) / 0.08)',
+                          '&:hover': { bgcolor: isDisabled ? 'hsla(var(--muted-foreground) / 0.1)' : 'hsla(var(--primary) / 0.15)' },
+                        }}
+                      >
+                        {isDisabled ? 'Enable' : 'Disable'}
+                      </Button>
+                    </Tooltip>
+                  </Box>
+                );
+              })}
+            </Box>
+            {disabledForThisFlow.size > 0 && (
+              <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', mt: 1, fontStyle: 'italic' }}>
+                {disabledForThisFlow.size} app{disabledForThisFlow.size > 1 ? 's' : ''} disabled for this flow — still shown here but excluded from flow state.
+              </Typography>
+            )}
+          </Box>
+        );
+      })()}
 
       {/* Description */}
       <Box sx={{ px: 3, py: 2.5, borderBottom: '1px solid hsl(var(--border))' }}>
@@ -2208,6 +2286,7 @@ const HANDLE_CACHE_KEY = 'infrastructure_edge_handles';
 const WAYPOINT_CACHE_KEY = 'infrastructure_edge_waypoints';
 const ENABLED_FLOWS_CACHE_KEY = 'infrastructure_enabled_flows';
 const AGENTIC_FLOWS_CACHE_KEY = 'infrastructure_agentic_flows';
+const DISABLED_APPS_CACHE_KEY = 'infrastructure_disabled_apps_per_flow';
 
 type WaypointOverrides = Record<string, Array<{ x: number; y: number }>>;
 type HandleOverrides = Record<string, { sourceHandle?: string; targetHandle?: string }>;
@@ -2227,6 +2306,8 @@ const InfrastructureContent = () => {
   const [savedWaypoints, setSavedWaypoints] = useState<WaypointOverrides>({});
   const [enabledFlows, setEnabledFlows] = useState<Set<string>>(new Set());
   const [agenticFlows, setAgenticFlows] = useState<Set<string>>(new Set());
+  // disabledAppsPerFlow: maps edgeId → set of app names disabled for that flow
+  const [disabledAppsPerFlow, setDisabledAppsPerFlow] = useState<Record<string, Set<string>>>({});
   const [updatingEdgeNodes, setUpdatingEdgeNodes] = useState<{ source: string; target: string; draggedEnd: 'source' | 'target' } | null>(null);
   const updatingEdgeNodesRef = useRef<{ source: string; target: string; draggedEnd: 'source' | 'target' } | null>(null);
   const [savedPositions, setSavedPositions] = useState<Record<string, { x: number; y: number }> | null>(null);
@@ -2270,12 +2351,13 @@ const InfrastructureContent = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-      const [posResult, handleResult, waypointResult, enabledResult, agenticResult] = await Promise.all([
+      const [posResult, handleResult, waypointResult, enabledResult, agenticResult, disabledAppsResult] = await Promise.all([
         getDatastoreItem(POSITION_CACHE_KEY, DATASTORE_CATEGORIES.INFRASTRUCTURE),
         getDatastoreItem(HANDLE_CACHE_KEY, DATASTORE_CATEGORIES.INFRASTRUCTURE),
         getDatastoreItem(WAYPOINT_CACHE_KEY, DATASTORE_CATEGORIES.INFRASTRUCTURE),
         getDatastoreItem(ENABLED_FLOWS_CACHE_KEY, DATASTORE_CATEGORIES.INFRASTRUCTURE),
         getDatastoreItem(AGENTIC_FLOWS_CACHE_KEY, DATASTORE_CATEGORIES.INFRASTRUCTURE),
+        getDatastoreItem(DISABLED_APPS_CACHE_KEY, DATASTORE_CATEGORIES.INFRASTRUCTURE),
       ]);
       if (posResult.success && posResult.item?.value) {
         const parsed = typeof posResult.item.value === 'string' ? JSON.parse(posResult.item.value) : posResult.item.value;
@@ -2296,6 +2378,16 @@ const InfrastructureContent = () => {
       if (agenticResult.success && agenticResult.item?.value) {
         const parsed = typeof agenticResult.item.value === 'string' ? JSON.parse(agenticResult.item.value) : agenticResult.item.value;
         if (Array.isArray(parsed)) setAgenticFlows(new Set(parsed));
+      }
+      if (disabledAppsResult.success && disabledAppsResult.item?.value) {
+        const parsed = typeof disabledAppsResult.item.value === 'string' ? JSON.parse(disabledAppsResult.item.value) : disabledAppsResult.item.value;
+        if (parsed && typeof parsed === 'object') {
+          const restored: Record<string, Set<string>> = {};
+          for (const [k, v] of Object.entries(parsed)) {
+            if (Array.isArray(v)) restored[k] = new Set(v as string[]);
+          }
+          setDisabledAppsPerFlow(restored);
+        }
       }
       } catch (e) {
         console.warn('Failed to load infrastructure config:', e);
@@ -2332,6 +2424,24 @@ const InfrastructureContent = () => {
       setTimeout(() => {
         setDatastoreItem(AGENTIC_FLOWS_CACHE_KEY, arr, DATASTORE_CATEGORIES.INFRASTRUCTURE)
           .catch(e => console.warn('Failed to save agentic flows:', e));
+      }, 0);
+      return next;
+    });
+  }, []);
+
+  // Toggle a specific app as disabled/enabled for a specific flow, persisted to datastore
+  const toggleAppDisabledForFlow = useCallback((edgeId: string, appName: string) => {
+    setDisabledAppsPerFlow(prev => {
+      const next = { ...prev };
+      const current = new Set(next[edgeId] || []);
+      if (current.has(appName)) current.delete(appName);
+      else current.add(appName);
+      next[edgeId] = current;
+      const serializable: Record<string, string[]> = {};
+      for (const [k, v] of Object.entries(next)) serializable[k] = Array.from(v);
+      setTimeout(() => {
+        setDatastoreItem(DISABLED_APPS_CACHE_KEY, serializable, DATASTORE_CATEGORIES.INFRASTRUCTURE)
+          .catch(e => console.warn('Failed to save disabled apps:', e));
       }, 0);
       return next;
     });
@@ -2402,7 +2512,7 @@ const InfrastructureContent = () => {
   const activeCat = activeId ? TOOL_CATEGORIES.find(c => c.id === activeId) : null;
   const activeColor = activeCat ? `hsl(var(${activeCat.color}))` : 'hsl(var(--primary))';
 
-  // Categories that have apps configured (any auth entry)
+  // Categories that have apps configured (any auth entry) — global view
   const activeCategories = useMemo(() => {
     const set = new Set<string>();
     for (const [catId, apps] of Object.entries(categoryApps)) {
@@ -2410,6 +2520,13 @@ const InfrastructureContent = () => {
     }
     return set;
   }, [categoryApps]);
+
+  // Per-edge helper: does this category have at least one non-disabled app for the given edge?
+  const isCategoryActiveForEdge = useCallback((catId: string, edgeId: string) => {
+    const apps = categoryApps[catId] || [];
+    const disabled = disabledAppsPerFlow[edgeId] || new Set<string>();
+    return apps.some(a => !disabled.has(a.name));
+  }, [categoryApps, disabledAppsPerFlow]);
 
 
   const handleSelect = useCallback((id: string) => {
@@ -2449,9 +2566,10 @@ const InfrastructureContent = () => {
 
   const initialEdges: Edge[] = useMemo(() =>
     DATA_FLOWS.map((flow, idx) => {
-      const sourceActive = activeCategories.has(flow.source);
-      const targetActive = activeCategories.has(flow.target);
       const edgeId = `e-${idx}`;
+      // Use per-edge active check — respects disabled apps for this flow
+      const sourceActive = isCategoryActiveForEdge(flow.source, edgeId);
+      const targetActive = isCategoryActiveForEdge(flow.target, edgeId);
       const isManuallyEnabled = enabledFlows.has(edgeId);
       const isSimulated = simulatedEdgeIds.has(edgeId);
 
@@ -2572,7 +2690,7 @@ const InfrastructureContent = () => {
         },
       };
     }),
-    [activeId, activeColor, activeCategories, enabledFlows, hoveredEdgeId, selectedEdgeIdx, savedHandles, savedWaypoints, persistWaypoints, simulatedEdgeIds, simulatedPhases]
+    [activeId, activeColor, activeCategories, isCategoryActiveForEdge, enabledFlows, hoveredEdgeId, selectedEdgeIdx, savedHandles, savedWaypoints, persistWaypoints, simulatedEdgeIds, simulatedPhases]
   );
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
@@ -3175,6 +3293,8 @@ const InfrastructureContent = () => {
         onToggleEnabled={toggleFlowEnabled}
         agenticFlows={agenticFlows}
         onToggleAgentic={toggleAgenticFlow}
+        disabledAppsPerFlow={disabledAppsPerFlow}
+        onToggleAppDisabled={toggleAppDisabledForFlow}
         onSelectCategory={(catId) => {
           setSelectedEdgeIdx(null);
           setSelectedId(catId);
