@@ -944,9 +944,9 @@ const FLOW_STATE_BADGE: Record<FlowState, { label: string; color: string; bg: st
   },
   missing_config: {
     label: 'Missing configuration',
-    color: 'hsl(38 95% 55%)',
-    bg: 'hsla(38 95% 55% / 0.1)',
-    border: 'hsla(38 95% 55% / 0.3)',
+    color: 'hsl(0 84% 60%)',
+    bg: 'hsla(0 84% 60% / 0.1)',
+    border: 'hsla(0 84% 60% / 0.3)',
   },
   enabled: {
     label: 'Enabled',
@@ -1054,7 +1054,7 @@ const DataFlowCard = ({
         border: flowState === 'enabled'
           ? `1px solid hsla(var(${flowColor}) / 0.2)`
           : flowState === 'missing_config'
-          ? `1px solid hsla(38 95% 55% / 0.2)`
+          ? `1px solid hsla(0 84% 60% / 0.2)`
           : '1px solid hsl(var(--border))',
         bgcolor: 'hsl(var(--card))',
         cursor: 'pointer',
@@ -1064,7 +1064,7 @@ const DataFlowCard = ({
           bgcolor: `hsla(var(${flowColor}) / 0.06)`,
           borderColor: `hsla(var(${flowColor}) / 0.4)`,
         } : flowState === 'missing_config' ? {
-          bgcolor: 'hsla(38 95% 55% / 0.06)',
+          bgcolor: 'hsla(0 84% 60% / 0.06)',
           opacity: 1,
         } : {
           bgcolor: 'hsla(var(--muted-foreground) / 0.06)',
@@ -1442,6 +1442,9 @@ const CategoryDetailDrawer = ({
   activeCategories: Set<string>;
 }) => {
   const navigate = useNavigate();
+  const hasApps = matchedApps.length > 0;
+  const [expanded, setExpanded] = React.useState(!hasApps);
+
   if (!category) return null;
   const colorVar = category.color;
 
@@ -1505,11 +1508,7 @@ const CategoryDetailDrawer = ({
 
       <Box sx={{ p: 3, overflowY: 'auto', flex: 1 }}>
         {/* Common Tools + Sub-categories — collapsible */}
-        {(() => {
-          const hasApps = matchedApps.length > 0;
-          const [expanded, setExpanded] = React.useState(!hasApps);
-          return (
-            <Box sx={{ mb: 3, border: '1px solid hsl(var(--border))', borderRadius: 2, overflow: 'hidden' }}>
+        <Box sx={{ mb: 3, border: '1px solid hsl(var(--border))', borderRadius: 2, overflow: 'hidden' }}>
               {/* Collapsible header */}
               <Box
                 onClick={() => setExpanded(v => !v)}
@@ -1598,8 +1597,6 @@ const CategoryDetailDrawer = ({
                 </Box>
               )}
             </Box>
-          );
-        })()}
 
         {matchedApps.length > 0 && (
           <Box sx={{ mb: 3 }}>
@@ -1923,8 +1920,8 @@ const InfrastructureContent = () => {
       const srcColor = srcCat ? `hsl(var(${srcCat.color}))` : 'hsl(var(--primary))';
       const tgtColor = tgtCat ? `hsl(var(${tgtCat.color}))` : 'hsl(var(--primary))';
 
-      // Amber color for missing_config state
-      const amberColor = 'hsl(38 95% 55%)';
+      // Red color for missing_config state
+      const redColor = 'hsl(0 84% 60%)';
 
       // Determine stroke color
       let stroke: string;
@@ -1936,7 +1933,7 @@ const InfrastructureContent = () => {
         useGradient = true;
         stroke = activeColor;
       } else if (isAmberHighlighted) {
-        stroke = amberColor;
+        stroke = redColor;
       } else if (isDisabledHighlighted) {
         stroke = 'hsla(var(--muted-foreground) / 0.4)';
       } else if (hasAnyFocus) {
@@ -1945,7 +1942,7 @@ const InfrastructureContent = () => {
         useGradient = true;
         stroke = srcColor;
       } else if (flowState === 'missing_config') {
-        stroke = 'hsla(38 95% 55% / 0.45)';
+        stroke = 'hsla(0 84% 60% / 0.55)';
       } else {
         // disabled — very faint
         stroke = 'hsla(var(--muted-foreground) / 0.18)';
@@ -2470,8 +2467,8 @@ const InfrastructureContent = () => {
         {/* Missing config */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <svg width="28" height="8" style={{ flexShrink: 0 }}>
-            <line x1="0" y1="4" x2="28" y2="4" stroke="hsl(38 95% 55%)" strokeWidth="2" strokeDasharray="5 3" />
-            <polygon points="22,1 28,4 22,7" fill="hsl(38 95% 55%)" />
+            <line x1="0" y1="4" x2="28" y2="4" stroke="hsl(0 84% 60%)" strokeWidth="2" strokeDasharray="5 3" />
+            <polygon points="22,1 28,4 22,7" fill="hsl(0 84% 60%)" />
           </svg>
           <Typography sx={{ fontSize: '0.68rem', color: 'hsl(var(--foreground))' }}>Missing configuration</Typography>
         </Box>
