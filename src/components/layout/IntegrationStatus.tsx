@@ -180,7 +180,7 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
                     </Box>
                   </Box>
                 )}
-                placement="right"
+                placement="bottom"
                 arrow
               >
               <Box
@@ -296,7 +296,7 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
             })}
             
             {hasMore && !expanded && (
-              <Tooltip title={`Show all ${integrations.length} integrations`} placement="right">
+              <Tooltip title={`Show all ${integrations.length} integrations`} placement="bottom">
                 <Avatar
                   onClick={() => setExpanded(true)}
                   sx={{
@@ -317,7 +317,7 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
             )}
             
             {expanded && hasMore && (
-              <Tooltip title="Show less" placement="right">
+              <Tooltip title="Show less" placement="bottom">
                 <Avatar
                   onClick={() => setExpanded(false)}
                   sx={{
@@ -338,7 +338,7 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
             )}
             
             {/* Add button */}
-            <Tooltip title="Add Integration" placement="right">
+            <Tooltip title="Add Integration" placement="bottom">
               {onAddClick ? (
                 <IconButton
                   size="small"
