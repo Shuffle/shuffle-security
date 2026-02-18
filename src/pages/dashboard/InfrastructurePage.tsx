@@ -1013,8 +1013,6 @@ const DEFAULT_HANDLES: Record<string, { sourceHandle: string; targetHandle: stri
   'e-17': { sourceHandle: 'left-source',   targetHandle: 'top-target'   },
   'e-18': { sourceHandle: 'left-source',   targetHandle: 'top-target'   },
   'e-19': { sourceHandle: 'bottom-source', targetHandle: 'right-target' },
-  'e-20': { sourceHandle: 'bottom-source', targetHandle: 'top-target'   },
-  'e-21': { sourceHandle: 'bottom-source', targetHandle: 'top-target'   },
 };
 
 const DEFAULT_WAYPOINTS: Record<string, Array<{ x: number; y: number }>> = {
