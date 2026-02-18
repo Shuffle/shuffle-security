@@ -356,6 +356,7 @@ function matchAppToCategory(appName: string, appCategories: string[]): string | 
 interface MatchedApp {
   name: string;
   image: string;
+  hasValidAuth?: boolean;
 }
 
 // ── Orthogonal path builder (only H/V segments with rounded corners) ────────
@@ -1866,11 +1867,11 @@ const InfrastructureContent = () => {
         const dedupedApps = deduplicateAuthApps(authData);
         const mapped: Record<string, MatchedApp[]> = {};
 
-        dedupedApps.forEach(({ app, bestImage }) => {
+        dedupedApps.forEach(({ app, bestImage, hasValidAuth }) => {
           const catId = matchAppToCategory(app.name, app.categories || []);
           if (!catId) return;
           if (!mapped[catId]) mapped[catId] = [];
-          mapped[catId].push({ name: app.name, image: bestImage || app.large_image || '' });
+          mapped[catId].push({ name: app.name, image: bestImage || app.large_image || '', hasValidAuth });
         });
 
         setCategoryApps(mapped);
@@ -1887,11 +1888,20 @@ const InfrastructureContent = () => {
   const activeCat = activeId ? TOOL_CATEGORIES.find(c => c.id === activeId) : null;
   const activeColor = activeCat ? `hsl(var(${activeCat.color}))` : 'hsl(var(--primary))';
 
-  // Set of category IDs that have matched apps (are "active")
+  // Categories that have apps configured (any auth entry)
   const activeCategories = useMemo(() => {
     const set = new Set<string>();
     for (const [catId, apps] of Object.entries(categoryApps)) {
       if (apps.length > 0) set.add(catId);
+    }
+    return set;
+  }, [categoryApps]);
+
+  // Categories that have at least one validated (tested) app
+  const validatedCategories = useMemo(() => {
+    const set = new Set<string>();
+    for (const [catId, apps] of Object.entries(categoryApps)) {
+      if (apps.some(a => a.hasValidAuth)) set.add(catId);
     }
     return set;
   }, [categoryApps]);
@@ -1935,7 +1945,10 @@ const InfrastructureContent = () => {
     DATA_FLOWS.map((flow, idx) => {
       const sourceActive = activeCategories.has(flow.source);
       const targetActive = activeCategories.has(flow.target);
-      const flowState = getFlowState(sourceActive, targetActive);
+      // "Enabled" requires both sides to have validated (tested) auth
+      const sourceValidated = validatedCategories.has(flow.source);
+      const targetValidated = validatedCategories.has(flow.target);
+      const flowState = getFlowState(sourceValidated, targetValidated);
       const bothActive = flowState === 'enabled';
       const eitherMissing = flowState !== 'enabled';
 
@@ -2042,7 +2055,7 @@ const InfrastructureContent = () => {
         },
       };
     }),
-    [activeId, activeColor, activeCategories, hoveredEdgeId, selectedEdgeIdx, savedHandles, savedWaypoints, persistWaypoints]
+    [activeId, activeColor, activeCategories, validatedCategories, hoveredEdgeId, selectedEdgeIdx, savedHandles, savedWaypoints, persistWaypoints]
   );
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
@@ -2458,7 +2471,7 @@ const InfrastructureContent = () => {
           setLastViewedEdgeIdx(null);
           setShowAllFlows(true);
         }}
-        activeCategories={activeCategories}
+        activeCategories={validatedCategories}
       />
 
       {/* Edge state legend — bottom-left overlay */}
@@ -2509,7 +2522,7 @@ const InfrastructureContent = () => {
           setShowAllFlows(false);
           setSelectedId(catId);
         }}
-        activeCategories={activeCategories}
+        activeCategories={validatedCategories}
         highlightEdgeIdx={lastViewedEdgeIdx}
       />
       <EdgeDetailDrawer
@@ -2517,7 +2530,7 @@ const InfrastructureContent = () => {
         edgeIdx={selectedEdgeIdx}
         open={selectedEdgeIdx !== null}
         onClose={() => setSelectedEdgeIdx(null)}
-        activeCategories={activeCategories}
+        activeCategories={validatedCategories}
         onSelectCategory={(catId) => {
           setSelectedEdgeIdx(null);
           setSelectedId(catId);
