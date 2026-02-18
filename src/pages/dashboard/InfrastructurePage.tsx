@@ -932,16 +932,13 @@ type FlowState = 'disabled' | 'missing_config' | 'enabled';
 
 /**
  * disabled      — one or both categories have no apps configured at all
- * missing_config — both categories have apps, but neither/one is validated (tested)
- * enabled       — both categories have at least one validated (tested) app
+ * missing_config — both categories have apps configured (Enabled requires an explicit per-flow test)
+ * enabled       — reserved for future explicit per-flow test verification
  */
 const getFlowState = (
   sourceConfigured: boolean,
   targetConfigured: boolean,
-  sourceValidated: boolean,
-  targetValidated: boolean,
 ): FlowState => {
-  if (sourceValidated && targetValidated) return 'enabled';
   if (sourceConfigured && targetConfigured) return 'missing_config';
   return 'disabled';
 };
@@ -1265,7 +1262,7 @@ const AllDataFlowsDrawer = ({
                   flow={flow}
                   edgeId={`e-${idx}`}
                   enabled={activeCategories.has(flow.source) && activeCategories.has(flow.target)}
-                  flowState={getFlowState(configuredCategories.has(flow.source), configuredCategories.has(flow.target), activeCategories.has(flow.source), activeCategories.has(flow.target))}
+                  flowState={getFlowState(configuredCategories.has(flow.source), configuredCategories.has(flow.target))}
                   highlighted={highlightEdgeIdx === idx}
                   variant="compact"
                   onClick={() => { onClose(); onSelectFlow(idx); }}
@@ -1309,7 +1306,7 @@ const EdgeDetailDrawer = ({
   const targetConfigured = configuredCategories.has(flow.target);
   const sourceActive = activeCategories.has(flow.source);
   const targetActive = activeCategories.has(flow.target);
-  const flowState = getFlowState(sourceConfigured, targetConfigured, sourceActive, targetActive);
+  const flowState = getFlowState(sourceConfigured, targetConfigured);
   const badge = FLOW_STATE_BADGE[flowState];
 
   return (
@@ -1714,7 +1711,7 @@ const CategoryDetailDrawer = ({
           {connectedFlows.map(({ flow, idx }) => {
             const edgeId = `e-${idx}`;
             const isEnabled = activeCategories.has(flow.source) && activeCategories.has(flow.target);
-            const flowState = getFlowState(configuredCategories.has(flow.source), configuredCategories.has(flow.target), activeCategories.has(flow.source), activeCategories.has(flow.target));
+            const flowState = getFlowState(configuredCategories.has(flow.source), configuredCategories.has(flow.target));
             return (
               <DataFlowCard
                 key={edgeId}
@@ -1915,14 +1912,6 @@ const InfrastructureContent = () => {
     return set;
   }, [categoryApps]);
 
-  // Categories that have at least one validated (tested) app
-  const validatedCategories = useMemo(() => {
-    const set = new Set<string>();
-    for (const [catId, apps] of Object.entries(categoryApps)) {
-      if (apps.some(a => a.hasValidAuth)) set.add(catId);
-    }
-    return set;
-  }, [categoryApps]);
 
   const handleSelect = useCallback((id: string) => {
     setSelectedId(prev => prev === id ? null : id);
@@ -1963,10 +1952,7 @@ const InfrastructureContent = () => {
     DATA_FLOWS.map((flow, idx) => {
       const sourceActive = activeCategories.has(flow.source);
       const targetActive = activeCategories.has(flow.target);
-      // "Enabled" requires both sides to have validated (tested) auth
-      const sourceValidated = validatedCategories.has(flow.source);
-      const targetValidated = validatedCategories.has(flow.target);
-      const flowState = getFlowState(sourceActive, targetActive, sourceValidated, targetValidated);
+      const flowState = getFlowState(sourceActive, targetActive);
       const bothActive = flowState === 'enabled';
       const eitherMissing = flowState !== 'enabled';
 
@@ -2076,7 +2062,7 @@ const InfrastructureContent = () => {
         },
       };
     }),
-    [activeId, activeColor, activeCategories, validatedCategories, hoveredEdgeId, selectedEdgeIdx, savedHandles, savedWaypoints, persistWaypoints]
+    [activeId, activeColor, activeCategories, hoveredEdgeId, selectedEdgeIdx, savedHandles, savedWaypoints, persistWaypoints]
   );
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
@@ -2492,7 +2478,7 @@ const InfrastructureContent = () => {
           setLastViewedEdgeIdx(null);
           setShowAllFlows(true);
         }}
-        activeCategories={validatedCategories}
+        activeCategories={activeCategories}
         configuredCategories={activeCategories}
       />
 
@@ -2552,7 +2538,7 @@ const InfrastructureContent = () => {
           setShowAllFlows(false);
           setSelectedId(catId);
         }}
-        activeCategories={validatedCategories}
+        activeCategories={activeCategories}
         configuredCategories={activeCategories}
         highlightEdgeIdx={lastViewedEdgeIdx}
       />
@@ -2561,7 +2547,7 @@ const InfrastructureContent = () => {
         edgeIdx={selectedEdgeIdx}
         open={selectedEdgeIdx !== null}
         onClose={() => setSelectedEdgeIdx(null)}
-        activeCategories={validatedCategories}
+        activeCategories={activeCategories}
         configuredCategories={activeCategories}
         onSelectCategory={(catId) => {
           setSelectedEdgeIdx(null);
