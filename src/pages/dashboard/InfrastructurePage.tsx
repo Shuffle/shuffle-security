@@ -666,26 +666,17 @@ const GradientEdge = ({
     onWaypointsChange?.(newWp);
   };
 
-  // Compute arrowhead direction from the last expanded segment, snapped to the
-  // nearest cardinal axis so a 1-px rounding error never flips the orientation.
-  const expandedForArrow = expandToOrthogonal(allPoints);
+  // Arrow angle is derived purely from which side of the target node the handle is on.
+  // This is always correct regardless of how the path routes to get there.
+  const arrowAngleMap: Partial<Record<Position, number>> = {
+    [Position.Left]:   0,    // handle on left side  → arrow points right (→) into node
+    [Position.Right]:  180,  // handle on right side → arrow points left  (←) into node
+    [Position.Top]:    90,   // handle on top side   → arrow points down  (↓) into node
+    [Position.Bottom]: -90,  // handle on bottom     → arrow points up    (↑) into node
+  };
+  const arrowAngle = arrowAngleMap[targetPosition] ?? 0;
   const arrowColor = data?.useGradient ? targetColor : (style.stroke as string || 'hsl(var(--muted-foreground))');
-  let arrowAngle = 0;
-  if (expandedForArrow.length >= 2) {
-    const prev = expandedForArrow[expandedForArrow.length - 2];
-    const last = expandedForArrow[expandedForArrow.length - 1];
-    const dx = last.x - prev.x;
-    const dy = last.y - prev.y;
-    // Snap to nearest 90° so a sub-pixel orthogonal stub never points the wrong way
-    if (Math.abs(dx) >= Math.abs(dy)) {
-      arrowAngle = dx >= 0 ? 0 : 180;
-    } else {
-      arrowAngle = dy >= 0 ? 90 : -90;
-    }
-  }
   const arrowSize = 12;
-  const ax = expandedForArrow[expandedForArrow.length - 1]?.x ?? targetX;
-  const ay = expandedForArrow[expandedForArrow.length - 1]?.y ?? targetY;
 
   return (
     <>
@@ -719,7 +710,7 @@ const GradientEdge = ({
       <polygon
         points={`0,${-arrowSize * 0.5} ${arrowSize},0 0,${arrowSize * 0.5}`}
         fill={arrowColor}
-        transform={`translate(${ax},${ay}) rotate(${arrowAngle})`}
+        transform={`translate(${targetX},${targetY}) rotate(${arrowAngle})`}
         style={{ pointerEvents: 'none', transition: 'fill 0.2s' }}
       />
       {/* Label on hover */}
