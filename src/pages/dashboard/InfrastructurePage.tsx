@@ -676,7 +676,9 @@ const GradientEdge = ({
   };
   const arrowAngle = arrowAngleMap[targetPosition] ?? 0;
   const arrowColor = data?.useGradient ? targetColor : (style.stroke as string || 'hsl(var(--muted-foreground))');
-  const arrowSize = 12;
+  // Arrow size: tip at (0,0) pointing right, body extends LEFT — so tip is always exactly at targetX,targetY
+  const S = 8;  // half-height
+  const L = 10; // length
 
   return (
     <>
@@ -706,9 +708,9 @@ const GradientEdge = ({
           transition: 'stroke-width 0.15s ease',
         }}
       />
-      {/* Custom arrowhead rotated to match the actual last path segment */}
+      {/* Tip is at (0,0); body extends to (-L, ±S). Translate to targetX,targetY so tip sits exactly on the handle. */}
       <polygon
-        points={`0,${-arrowSize * 0.5} ${arrowSize},0 0,${arrowSize * 0.5}`}
+        points={`0,0 ${-L},${-S} ${-L},${S}`}
         fill={arrowColor}
         transform={`translate(${targetX},${targetY}) rotate(${arrowAngle})`}
         style={{ pointerEvents: 'none', transition: 'fill 0.2s' }}
