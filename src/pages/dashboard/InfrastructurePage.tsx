@@ -1465,66 +1465,102 @@ const CategoryDetailDrawer = ({
       </Box>
 
       <Box sx={{ p: 3, overflowY: 'auto', flex: 1 }}>
-        {/* Common Tools */}
-        <Box sx={{ mb: 3 }}>
-          <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>
-            Common Tools
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
-            {category.examples.slice(0, 6).map(ex => (
-              <Chip
-                key={ex}
-                avatar={<Avatar src={`https://shuffler.io/images/apps/${ex.toLowerCase().replace(/\s+/g, '_')}.png`} sx={{ width: 18, height: 18, '& img': { objectFit: 'contain' } }} />}
-                label={ex}
-                size="small"
-                clickable
-                onClick={() => navigate(`/apps/${ex.toLowerCase().replace(/\s+/g, '_')}`)}
+        {/* Common Tools + Sub-categories — collapsible */}
+        {(() => {
+          const hasApps = matchedApps.length > 0;
+          const [expanded, setExpanded] = React.useState(!hasApps);
+          return (
+            <Box sx={{ mb: 3, border: '1px solid hsl(var(--border))', borderRadius: 2, overflow: 'hidden' }}>
+              {/* Collapsible header */}
+              <Box
+                onClick={() => setExpanded(v => !v)}
                 sx={{
-                  height: 26,
-                  fontSize: '0.72rem',
-                  bgcolor: `hsla(var(${colorVar}) / 0.08)`,
-                  color: 'hsl(var(--foreground))',
-                  border: `1px solid hsla(var(${colorVar}) / 0.2)`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  px: 2,
+                  py: 1.5,
                   cursor: 'pointer',
-                  '&:hover': {
-                    bgcolor: `hsla(var(${colorVar}) / 0.18)`,
-                    borderColor: `hsla(var(${colorVar}) / 0.4)`,
-                  },
+                  bgcolor: expanded ? `hsla(var(${colorVar}) / 0.06)` : 'transparent',
+                  transition: 'background 0.15s',
+                  '&:hover': { bgcolor: `hsla(var(${colorVar}) / 0.08)` },
                 }}
-              />
-            ))}
-          </Box>
-        </Box>
-
-        {/* Sub-categories */}
-        {category.subcategories.length > 0 && (
-          <Box sx={{ mb: 3 }}>
-            <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>
-              Sub-categories
-            </Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
-              {category.subcategories.map(sub => (
-                <Box
-                  key={sub.label}
-                  sx={{
-                    px: 1.5,
-                    py: 1,
-                    borderRadius: 1.5,
-                    bgcolor: `hsla(var(${colorVar}) / 0.06)`,
-                    border: `1px solid hsla(var(${colorVar}) / 0.15)`,
-                  }}
-                >
-                  <Typography sx={{ fontSize: '0.78rem', fontWeight: 600, color: `hsl(var(${colorVar}))` }}>
-                    {sub.label}
-                  </Typography>
-                  <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', mt: 0.25 }}>
-                    {sub.description}
-                  </Typography>
+              >
+                <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+                  Common Tools &amp; Sub-categories
+                </Typography>
+                <Box sx={{ color: 'hsl(var(--muted-foreground))', display: 'flex', alignItems: 'center', transition: 'transform 0.2s', transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
                 </Box>
-              ))}
+              </Box>
+              {/* Collapsible content */}
+              {expanded && (
+                <Box sx={{ px: 2, pt: 2, pb: 2, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                  {/* Common Tools */}
+                  <Box>
+                    <Typography sx={{ fontSize: '0.68rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>
+                      Common Tools
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
+                      {category.examples.slice(0, 6).map(ex => (
+                        <Chip
+                          key={ex}
+                          avatar={<Avatar src={`https://shuffler.io/images/apps/${ex.toLowerCase().replace(/\s+/g, '_')}.png`} sx={{ width: 18, height: 18, '& img': { objectFit: 'contain' } }} />}
+                          label={ex}
+                          size="small"
+                          clickable
+                          onClick={() => navigate(`/apps/${ex.toLowerCase().replace(/\s+/g, '_')}`)}
+                          sx={{
+                            height: 26,
+                            fontSize: '0.72rem',
+                            bgcolor: `hsla(var(${colorVar}) / 0.08)`,
+                            color: 'hsl(var(--foreground))',
+                            border: `1px solid hsla(var(${colorVar}) / 0.2)`,
+                            cursor: 'pointer',
+                            '&:hover': {
+                              bgcolor: `hsla(var(${colorVar}) / 0.18)`,
+                              borderColor: `hsla(var(${colorVar}) / 0.4)`,
+                            },
+                          }}
+                        />
+                      ))}
+                    </Box>
+                  </Box>
+
+                  {/* Sub-categories */}
+                  {category.subcategories.length > 0 && (
+                    <Box>
+                      <Typography sx={{ fontSize: '0.68rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>
+                        Sub-categories
+                      </Typography>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+                        {category.subcategories.map(sub => (
+                          <Box
+                            key={sub.label}
+                            sx={{
+                              px: 1.5,
+                              py: 1,
+                              borderRadius: 1.5,
+                              bgcolor: `hsla(var(${colorVar}) / 0.06)`,
+                              border: `1px solid hsla(var(${colorVar}) / 0.15)`,
+                            }}
+                          >
+                            <Typography sx={{ fontSize: '0.78rem', fontWeight: 600, color: `hsl(var(${colorVar}))` }}>
+                              {sub.label}
+                            </Typography>
+                            <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', mt: 0.25 }}>
+                              {sub.description}
+                            </Typography>
+                          </Box>
+                        ))}
+                      </Box>
+                    </Box>
+                  )}
+                </Box>
+              )}
             </Box>
-          </Box>
-        )}
+          );
+        })()}
 
         {matchedApps.length > 0 && (
           <Box sx={{ mb: 3 }}>
