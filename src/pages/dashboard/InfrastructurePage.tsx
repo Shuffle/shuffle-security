@@ -2080,15 +2080,16 @@ const InfrastructureContent = () => {
       } else if (isFullyHighlighted) {
         useGradient = true;
         stroke = activeColor;
+      } else if (hasAnyFocus && !isConnected) {
+        // Something else is focused — dim this edge regardless of enabled state
+        stroke = 'hsla(var(--muted-foreground) / 0.06)';
       } else if (isEnabled) {
-        // Enabled edges always show their real gradient color
+        // Enabled edges show their real gradient color when nothing else is focused
         useGradient = true;
         stroke = srcColor;
       } else if (isConnected && !bothActive) {
         // Dimmed highlight for non-enabled connected edges
         stroke = flowState === 'missing_config' ? 'hsl(45 93% 47%)' : 'hsla(var(--muted-foreground) / 0.4)';
-      } else if (hasAnyFocus) {
-        stroke = 'hsla(var(--muted-foreground) / 0.06)';
       } else if (bothActive) {
         useGradient = true;
         stroke = srcColor;
