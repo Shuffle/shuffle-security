@@ -501,6 +501,7 @@ const GradientEdge = ({
   const reactFlowInstance = useReactFlow();
   const [hovered, setHovered] = useState(false);
   const [draggingIdx, setDraggingIdx] = useState<{ type: 'waypoint' | 'midpoint' | 'hpair' | 'vpair'; index: number } | null>(null);
+  const draggingIdxRef = useRef<{ type: 'waypoint' | 'midpoint' | 'hpair' | 'vpair'; index: number } | null>(null);
   const isVisible = hovered || !!data?.isEdgeHovered;
   const isSelected = !!data?.isEdgeSelected;
   const waypoints: Array<{ x: number; y: number }> = (data?.waypoints || []).filter((p: any) => p != null && typeof p?.x === 'number' && typeof p?.y === 'number');
@@ -561,20 +562,25 @@ const GradientEdge = ({
   const onWaypointsChangeRef = useRef(onWaypointsChange);
   onWaypointsChangeRef.current = onWaypointsChange;
 
-  // Drag handling
+  // Keep ref in sync so the mousemove handler always reads the latest value
+  // without needing to re-register listeners on every state change (which caused the double-step bug)
+  draggingIdxRef.current = draggingIdx;
+
+  // Drag handling — registered once, reads draggingIdxRef to avoid stale closure
   useEffect(() => {
-    if (!draggingIdx) return;
     const onMouseMove = (e: MouseEvent) => {
+      const current = draggingIdxRef.current;
+      if (!current) return;
       const pos = reactFlowInstance.screenToFlowPosition({ x: e.clientX, y: e.clientY });
       const currentWp = waypointsRef.current;
       const onChange = onWaypointsChangeRef.current;
 
-      if (draggingIdx.type === 'waypoint') {
+      if (current.type === 'waypoint') {
         const newWp = [...currentWp];
-        newWp[draggingIdx.index] = { x: Math.round(pos.x / 10) * 10, y: Math.round(pos.y / 10) * 10 };
+        newWp[current.index] = { x: Math.round(pos.x / 10) * 10, y: Math.round(pos.y / 10) * 10 };
         onChange?.(newWp);
-      } else if (draggingIdx.type === 'midpoint') {
-        const seg = segmentMidpointsRef.current[draggingIdx.index];
+      } else if (current.type === 'midpoint') {
+        const seg = segmentMidpointsRef.current[current.index];
         if (!seg) return;
         const snapped = { x: Math.round(pos.x / 10) * 10, y: Math.round(pos.y / 10) * 10 };
         const newWp = [...currentWp];
@@ -584,40 +590,46 @@ const GradientEdge = ({
           const corner2 = { x: seg.segEnd.x, y: snapped.y };
           newWp.splice(wpInsertIdx, 0, corner1, corner2);
           onChange?.(newWp);
-          setDraggingIdx({ type: 'hpair', index: wpInsertIdx });
+          // Update ref immediately so the very next mousemove event uses 'hpair' logic
+          const next = { type: 'hpair' as const, index: wpInsertIdx };
+          draggingIdxRef.current = next;
+          setDraggingIdx(next);
         } else {
           const corner1 = { x: snapped.x, y: seg.segStart.y };
           const corner2 = { x: snapped.x, y: seg.segEnd.y };
           newWp.splice(wpInsertIdx, 0, corner1, corner2);
           onChange?.(newWp);
-          setDraggingIdx({ type: 'vpair', index: wpInsertIdx });
+          // Update ref immediately so the very next mousemove event uses 'vpair' logic
+          const next = { type: 'vpair' as const, index: wpInsertIdx };
+          draggingIdxRef.current = next;
+          setDraggingIdx(next);
         }
-      } else if (draggingIdx.type === 'hpair') {
+      } else if (current.type === 'hpair') {
         const snappedY = Math.round(pos.y / 10) * 10;
         const newWp = [...currentWp];
-        if (newWp[draggingIdx.index] && newWp[draggingIdx.index + 1]) {
-          newWp[draggingIdx.index] = { ...newWp[draggingIdx.index], y: snappedY };
-          newWp[draggingIdx.index + 1] = { ...newWp[draggingIdx.index + 1], y: snappedY };
+        if (newWp[current.index] && newWp[current.index + 1]) {
+          newWp[current.index] = { ...newWp[current.index], y: snappedY };
+          newWp[current.index + 1] = { ...newWp[current.index + 1], y: snappedY };
           onChange?.(newWp);
         }
-      } else if (draggingIdx.type === 'vpair') {
+      } else if (current.type === 'vpair') {
         const snappedX = Math.round(pos.x / 10) * 10;
         const newWp = [...currentWp];
-        if (newWp[draggingIdx.index] && newWp[draggingIdx.index + 1]) {
-          newWp[draggingIdx.index] = { ...newWp[draggingIdx.index], x: snappedX };
-          newWp[draggingIdx.index + 1] = { ...newWp[draggingIdx.index + 1], x: snappedX };
+        if (newWp[current.index] && newWp[current.index + 1]) {
+          newWp[current.index] = { ...newWp[current.index], x: snappedX };
+          newWp[current.index + 1] = { ...newWp[current.index + 1], x: snappedX };
           onChange?.(newWp);
         }
       }
     };
     const onMouseUp = () => {
+      draggingIdxRef.current = null;
       setDraggingIdx(null);
       // Clean up redundant waypoints: remove collinear points and near-duplicates
       const wp = waypointsRef.current;
       if (wp.length > 0) {
         const source = { x: sourceX, y: sourceY };
         const target = { x: targetX, y: targetY };
-        const all = [source, ...wp, target];
         const cleaned: Array<{ x: number; y: number }> = [];
         for (let i = 0; i < wp.length; i++) {
           const prev = i === 0 ? source : cleaned[cleaned.length - 1] || source;
@@ -646,7 +658,8 @@ const GradientEdge = ({
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
     };
-  }, [draggingIdx, reactFlowInstance]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reactFlowInstance]);
 
   // Double-click waypoint to remove it
   const handleWaypointDoubleClick = (wpIdx: number) => {
