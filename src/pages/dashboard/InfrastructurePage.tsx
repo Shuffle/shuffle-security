@@ -2326,6 +2326,7 @@ const InfrastructureContent = () => {
   const [savedPositions, setSavedPositions] = useState<Record<string, { x: number; y: number }> | null>(null);
   const [positionsLoaded, setPositionsLoaded] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isResettingRef = useRef(false);
   const [helperLines, setHelperLines] = useState<{ horizontal?: number; vertical?: number }>({});
   const [simulatedPhases, setSimulatedPhases] = useState<Set<FlowPhase>>(new Set());
 
@@ -2779,6 +2780,8 @@ const InfrastructureContent = () => {
   // Persist positions when a node drag ends
   const handleNodeDragStop = useCallback((_event: any, _node: any) => {
     setHelperLines({});
+    // Skip saving if a reset just happened — don't overwrite defaults
+    if (isResettingRef.current) return;
     const currentNodes = reactFlowInstance.getNodes();
     const positions: Record<string, { x: number; y: number }> = {};
     currentNodes.forEach(n => {
@@ -2893,20 +2896,31 @@ const InfrastructureContent = () => {
 
   // Reset everything to defaults: positions, handles, waypoints
   const handleResetPositions = useCallback(() => {
+    // Guard so drag-stop events fired right after reset don't overwrite defaults
+    isResettingRef.current = true;
+    setTimeout(() => { isResettingRef.current = false; }, 500);
+
     setSavedPositions({ ...NODE_POSITIONS });
     setSavedHandles({ ...DEFAULT_HANDLES });
     setSavedWaypoints({ ...DEFAULT_WAYPOINTS });
-    // Move nodes back to default positions
+
+    // Immediately update ReactFlow's internal node state so getNodes() returns defaults
     setNodes(prev => prev.map(node => ({
       ...node,
       position: NODE_POSITIONS[node.id] || node.position,
     })));
+    reactFlowInstance.setNodes(prev => prev.map(node => ({
+      ...node,
+      position: NODE_POSITIONS[node.id] || node.position,
+    })));
+
     // Persist defaults
     Promise.all([
       setDatastoreItem(POSITION_CACHE_KEY, JSON.stringify(NODE_POSITIONS), DATASTORE_CATEGORIES.INFRASTRUCTURE),
       setDatastoreItem(HANDLE_CACHE_KEY, JSON.stringify(DEFAULT_HANDLES), DATASTORE_CATEGORIES.INFRASTRUCTURE),
       setDatastoreItem(WAYPOINT_CACHE_KEY, JSON.stringify(DEFAULT_WAYPOINTS), DATASTORE_CATEGORIES.INFRASTRUCTURE),
     ]).catch(e => console.warn('Failed to reset:', e));
+
     // Refit after nodes update
     setTimeout(() => reactFlowInstance.fitView({ padding: 0.25, duration: 300 }), 50);
   }, [reactFlowInstance, setNodes]);
