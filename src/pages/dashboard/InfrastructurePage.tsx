@@ -1227,6 +1227,8 @@ const AllDataFlowsDrawer = ({
   activeCategories,
   configuredCategories,
   highlightEdgeIdx,
+  enabledFlows,
+  initialFilter,
 }: {
   open: boolean;
   onClose: () => void;
@@ -1235,19 +1237,72 @@ const AllDataFlowsDrawer = ({
   activeCategories: Set<string>;
   configuredCategories: Set<string>;
   highlightEdgeIdx: number | null;
+  enabledFlows: Set<string>;
+  initialFilter?: FlowState | null;
 }) => {
-  // Group flows by phase
+  const [activeFilter, setActiveFilter] = useState<FlowState | null>(null);
+
+  // Sync filter when drawer opens with a pre-selected filter
+  useEffect(() => {
+    if (open) setActiveFilter(initialFilter ?? null);
+  }, [open, initialFilter]);
+
+  // Compute flow state for each flow
+  const flowsWithState = useMemo(() => DATA_FLOWS.map((flow, idx) => {
+    const edgeId = `e-${idx}`;
+    const isManuallyEnabled = enabledFlows.has(edgeId);
+    const base = getFlowState(configuredCategories.has(flow.source), configuredCategories.has(flow.target));
+    const state: FlowState = isManuallyEnabled && base === 'missing_config' ? 'enabled' : base;
+    return { flow, idx, state };
+  }), [configuredCategories, enabledFlows]);
+
+  // Group flows by phase, applying filter
   const groupedByPhase = useMemo(() => {
-    const groups: Record<FlowPhase, { flow: (typeof DATA_FLOWS)[number]; idx: number }[]> = {
+    const groups: Record<FlowPhase, { flow: (typeof DATA_FLOWS)[number]; idx: number; state: FlowState }[]> = {
       ingest: [],
       response: [],
       correlation: [],
     };
-    DATA_FLOWS.forEach((flow, idx) => {
-      groups[flow.phase].push({ flow, idx });
+    flowsWithState.forEach(({ flow, idx, state }) => {
+      if (activeFilter && state !== activeFilter) return;
+      groups[flow.phase].push({ flow, idx, state });
     });
     return groups;
-  }, []);
+  }, [flowsWithState, activeFilter]);
+
+  const filteredTotal = useMemo(() => flowsWithState.filter(f => !activeFilter || f.state === activeFilter).length, [flowsWithState, activeFilter]);
+
+  // Filter pill button
+  const FilterPill = ({ state, label, color }: { state: FlowState; label: string; color: string }) => {
+    const count = flowsWithState.filter(f => f.state === state).length;
+    const isActive = activeFilter === state;
+    return (
+      <Box
+        onClick={() => setActiveFilter(isActive ? null : state)}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 0.5,
+          px: 1,
+          py: 0.4,
+          borderRadius: 1.5,
+          border: `1px solid ${isActive ? color : 'hsl(var(--border))'}`,
+          bgcolor: isActive ? `${color}22` : 'transparent',
+          cursor: 'pointer',
+          transition: 'all 0.15s ease',
+          '&:hover': { borderColor: color, bgcolor: `${color}14` },
+        }}
+      >
+        <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: color, flexShrink: 0 }} />
+        <Typography sx={{ fontSize: '0.68rem', color: isActive ? color : 'hsl(var(--muted-foreground))', fontWeight: isActive ? 700 : 500 }}>
+          {label}
+        </Typography>
+        <Typography sx={{ fontSize: '0.65rem', color: isActive ? color : 'hsl(var(--muted-foreground))', fontWeight: 700, ml: 0.25 }}>
+          {count}
+        </Typography>
+      </Box>
+    );
+  };
 
   return (
     <Drawer
@@ -1290,7 +1345,7 @@ const AllDataFlowsDrawer = ({
             All Data Flows
           </Typography>
           <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
-            {DATA_FLOWS.length} connections across your infrastructure
+            {activeFilter ? `${filteredTotal} of ${DATA_FLOWS.length}` : DATA_FLOWS.length} connections
           </Typography>
         </Box>
         <IconButton onClick={onClose} size="small" sx={{ color: 'hsl(var(--muted-foreground))' }}>
@@ -1298,16 +1353,31 @@ const AllDataFlowsDrawer = ({
         </IconButton>
       </Box>
 
-      {/* Phase guide intro */}
-      <Box sx={{ px: 3, py: 2, borderBottom: '1px solid hsl(var(--border))', bgcolor: 'hsla(var(--muted) / 0.3)' }}>
-        <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.6 }}>
+      {/* Phase guide intro + filter pills */}
+      <Box sx={{ px: 2.5, py: 1.5, borderBottom: '1px solid hsl(var(--border))', bgcolor: 'hsla(var(--muted) / 0.3)' }}>
+        <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.6, mb: 1.25 }}>
           Data flows are organised into <strong style={{ color: 'hsl(var(--foreground))' }}>3 phases</strong> — work through them in order to build a fully automated security stack.
         </Typography>
+        {/* Filter pills */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexWrap: 'wrap' }}>
+          <Typography sx={{ fontSize: '0.6rem', color: 'hsl(var(--muted-foreground))', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', mr: 0.25 }}>Filter:</Typography>
+          <FilterPill state="enabled" label="Enabled" color="hsl(142 71% 45%)" />
+          <FilterPill state="missing_config" label="Misconfigured" color="hsl(45 93% 47%)" />
+          <FilterPill state="disabled" label="Disabled" color="hsla(var(--muted-foreground) / 0.6)" />
+          {activeFilter && (
+            <Box
+              onClick={() => setActiveFilter(null)}
+              sx={{ ml: 'auto', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 0.25 }}
+            >
+              <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--primary))' }}>Clear</Typography>
+            </Box>
+          )}
+        </Box>
       </Box>
 
       {/* Flow list grouped by phase */}
       <Box sx={{ p: 2, overflowY: 'auto', flex: 1 }}>
-        {FLOW_PHASES.map((phase, phaseIndex) => {
+        {FLOW_PHASES.map((phase) => {
           const flows = groupedByPhase[phase.id];
           if (!flows.length) return null;
 
@@ -1359,40 +1429,28 @@ const AllDataFlowsDrawer = ({
                 </Box>
               </Box>
 
-              {/* Connector line between phases */}
-              {phaseIndex < FLOW_PHASES.length - 1 && (
-                <Box sx={{ position: 'relative', ml: 2.5 }}>
-                  {flows.map(({ flow, idx }) => (
-                    <DataFlowCard
-                      key={idx}
-                      flow={flow}
-                      edgeId={`e-${idx}`}
-                      enabled={activeCategories.has(flow.source) && activeCategories.has(flow.target)}
-                      flowState={getFlowState(configuredCategories.has(flow.source), configuredCategories.has(flow.target))}
-                      highlighted={highlightEdgeIdx === idx}
-                      variant="compact"
-                      onClick={() => { onClose(); onSelectFlow(idx); }}
-                    />
-                  ))}
-                </Box>
-              )}
-
-              {/* Last phase — no connector needed */}
-              {phaseIndex === FLOW_PHASES.length - 1 && flows.map(({ flow, idx }) => (
-                <DataFlowCard
-                  key={idx}
-                  flow={flow}
-                  edgeId={`e-${idx}`}
-                  enabled={activeCategories.has(flow.source) && activeCategories.has(flow.target)}
-                  flowState={getFlowState(configuredCategories.has(flow.source), configuredCategories.has(flow.target))}
-                  highlighted={highlightEdgeIdx === idx}
-                  variant="compact"
-                  onClick={() => { onClose(); onSelectFlow(idx); }}
-                />
-              ))}
+              <Box sx={{ ml: 0.5 }}>
+                {flows.map(({ flow, idx, state }) => (
+                  <DataFlowCard
+                    key={idx}
+                    flow={flow}
+                    edgeId={`e-${idx}`}
+                    enabled={activeCategories.has(flow.source) && activeCategories.has(flow.target)}
+                    flowState={state}
+                    highlighted={highlightEdgeIdx === idx}
+                    variant="compact"
+                    onClick={() => { onClose(); onSelectFlow(idx); }}
+                  />
+                ))}
+              </Box>
             </Box>
           );
         })}
+        {filteredTotal === 0 && (
+          <Box sx={{ textAlign: 'center', py: 6 }}>
+            <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))' }}>No flows match this filter.</Typography>
+          </Box>
+        )}
       </Box>
     </Drawer>
   );
@@ -2011,6 +2069,7 @@ const InfrastructureContent = () => {
   const [hoveredEdgeId, setHoveredEdgeId] = useState<string | null>(null);
   const [selectedEdgeIdx, setSelectedEdgeIdx] = useState<number | null>(null);
   const [showAllFlows, setShowAllFlows] = useState(false);
+  const [allFlowsFilter, setAllFlowsFilter] = useState<FlowState | null>(null);
   const [lastViewedEdgeIdx, setLastViewedEdgeIdx] = useState<number | null>(null);
   const [categoryApps, setCategoryApps] = useState<Record<string, MatchedApp[]>>({});
   const [savedHandles, setSavedHandles] = useState<HandleOverrides>({});
@@ -2743,50 +2802,85 @@ const InfrastructureContent = () => {
           Connection State
         </Typography>
         {/* Enabled */}
-        <Tooltip title="Both categories have apps configured and the data flow has been explicitly tested and verified end-to-end." placement="right" arrow>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'help' }}>
-            <svg width="28" height="8" style={{ flexShrink: 0 }}>
-              <line x1="0" y1="4" x2="28" y2="4" stroke="hsl(142 71% 45%)" strokeWidth="2" />
-              <polygon points="22,1 28,4 22,7" fill="hsl(142 71% 45%)" />
-            </svg>
-            <Typography sx={{ fontSize: '0.68rem', color: 'hsl(var(--foreground))' }}>Enabled</Typography>
-          </Box>
-        </Tooltip>
+        {(() => {
+          const count = DATA_FLOWS.filter((_, i) => {
+            const edgeId = `e-${i}`;
+            const base = getFlowState(activeCategories.has(DATA_FLOWS[i].source), activeCategories.has(DATA_FLOWS[i].target));
+            return (enabledFlows.has(edgeId) && base === 'missing_config') ? true : base === 'enabled';
+          }).length + DATA_FLOWS.filter((_, i) => enabledFlows.has(`e-${i}`) && getFlowState(activeCategories.has(DATA_FLOWS[i].source), activeCategories.has(DATA_FLOWS[i].target)) === 'missing_config').length;
+          const enabledCount = DATA_FLOWS.filter((_, i) => {
+            const edgeId = `e-${i}`;
+            const base = getFlowState(activeCategories.has(DATA_FLOWS[i].source), activeCategories.has(DATA_FLOWS[i].target));
+            return enabledFlows.has(edgeId) && base === 'missing_config';
+          }).length;
+          return (
+            <Tooltip title="Both categories have apps configured and the data flow has been explicitly verified. Click to filter." placement="right" arrow>
+              <Box onClick={() => { setAllFlowsFilter('enabled'); setShowAllFlows(true); }} sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer', borderRadius: 1, px: 0.5, py: 0.25, transition: 'background 0.15s', '&:hover': { bgcolor: 'hsla(142 71% 45% / 0.08)' } }}>
+                <svg width="28" height="8" style={{ flexShrink: 0 }}>
+                  <line x1="0" y1="4" x2="28" y2="4" stroke="hsl(142 71% 45%)" strokeWidth="2" />
+                  <polygon points="22,1 28,4 22,7" fill="hsl(142 71% 45%)" />
+                </svg>
+                <Typography sx={{ fontSize: '0.68rem', color: 'hsl(var(--foreground))' }}>Enabled</Typography>
+                <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, color: 'hsl(142 71% 45%)', ml: 'auto', minWidth: 16, textAlign: 'right' }}>{enabledCount}</Typography>
+              </Box>
+            </Tooltip>
+          );
+        })()}
         {/* Misconfigured */}
-        <Tooltip title="Both categories have apps configured, but the data flow has not been explicitly tested yet. Click a line to enable it." placement="right" arrow>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'help' }}>
-            <svg width="28" height="8" style={{ flexShrink: 0 }}>
-              <line x1="0" y1="4" x2="28" y2="4" stroke="hsl(45 93% 47%)" strokeWidth="1.5" strokeDasharray="3 5" />
-              <polygon points="22,1 28,4 22,7" fill="hsl(45 93% 47%)" />
-            </svg>
-            <Typography sx={{ fontSize: '0.68rem', color: 'hsl(45 93% 47%)' }}>Misconfigured</Typography>
-          </Box>
-        </Tooltip>
+        {(() => {
+          const count = DATA_FLOWS.filter((_, i) => {
+            const edgeId = `e-${i}`;
+            const base = getFlowState(activeCategories.has(DATA_FLOWS[i].source), activeCategories.has(DATA_FLOWS[i].target));
+            return base === 'missing_config' && !enabledFlows.has(edgeId);
+          }).length;
+          return (
+            <Tooltip title="Both categories have apps configured, but the flow has not been verified yet. Click to filter." placement="right" arrow>
+              <Box onClick={() => { setAllFlowsFilter('missing_config'); setShowAllFlows(true); }} sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer', borderRadius: 1, px: 0.5, py: 0.25, transition: 'background 0.15s', '&:hover': { bgcolor: 'hsla(45 93% 47% / 0.08)' } }}>
+                <svg width="28" height="8" style={{ flexShrink: 0 }}>
+                  <line x1="0" y1="4" x2="28" y2="4" stroke="hsl(45 93% 47%)" strokeWidth="1.5" strokeDasharray="3 5" />
+                  <polygon points="22,1 28,4 22,7" fill="hsl(45 93% 47%)" />
+                </svg>
+                <Typography sx={{ fontSize: '0.68rem', color: 'hsl(45 93% 47%)' }}>Misconfigured</Typography>
+                <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, color: 'hsl(45 93% 47%)', ml: 'auto', minWidth: 16, textAlign: 'right' }}>{count}</Typography>
+              </Box>
+            </Tooltip>
+          );
+        })()}
         {/* Disabled */}
-        <Tooltip title="One or both categories have no apps configured at all. Add and authenticate an app in each category to get started." placement="right" arrow>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'help' }}>
-            <svg width="28" height="8" style={{ flexShrink: 0 }}>
-              <line x1="0" y1="4" x2="28" y2="4" stroke="hsla(var(--muted-foreground) / 0.5)" strokeWidth="1.5" strokeDasharray="3 5" />
-              <polygon points="22,1 28,4 22,7" fill="hsla(var(--muted-foreground) / 0.5)" />
-            </svg>
-            <Typography sx={{ fontSize: '0.68rem', color: 'hsl(var(--muted-foreground))' }}>Disabled</Typography>
-          </Box>
-        </Tooltip>
+        {(() => {
+          const count = DATA_FLOWS.filter((_, i) => getFlowState(activeCategories.has(DATA_FLOWS[i].source), activeCategories.has(DATA_FLOWS[i].target)) === 'disabled').length;
+          return (
+            <Tooltip title="One or both categories have no apps configured. Click to filter." placement="right" arrow>
+              <Box onClick={() => { setAllFlowsFilter('disabled'); setShowAllFlows(true); }} sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer', borderRadius: 1, px: 0.5, py: 0.25, transition: 'background 0.15s', '&:hover': { bgcolor: 'hsla(var(--muted-foreground) / 0.08)' } }}>
+                <svg width="28" height="8" style={{ flexShrink: 0 }}>
+                  <line x1="0" y1="4" x2="28" y2="4" stroke="hsla(var(--muted-foreground) / 0.5)" strokeWidth="1.5" strokeDasharray="3 5" />
+                  <polygon points="22,1 28,4 22,7" fill="hsla(var(--muted-foreground) / 0.5)" />
+                </svg>
+                <Typography sx={{ fontSize: '0.68rem', color: 'hsl(var(--muted-foreground))' }}>Disabled</Typography>
+                <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, color: 'hsl(var(--muted-foreground))', ml: 'auto', minWidth: 16, textAlign: 'right' }}>{count}</Typography>
+              </Box>
+            </Tooltip>
+          );
+        })()}
       </Box>
       <AllDataFlowsDrawer
         open={showAllFlows}
-        onClose={() => setShowAllFlows(false)}
+        onClose={() => { setShowAllFlows(false); setAllFlowsFilter(null); }}
         onSelectFlow={(edgeIdx) => {
           setShowAllFlows(false);
+          setAllFlowsFilter(null);
           setSelectedEdgeIdx(edgeIdx);
         }}
         onSelectCategory={(catId) => {
           setShowAllFlows(false);
+          setAllFlowsFilter(null);
           setSelectedId(catId);
         }}
         activeCategories={activeCategories}
         configuredCategories={activeCategories}
         highlightEdgeIdx={lastViewedEdgeIdx}
+        enabledFlows={enabledFlows}
+        initialFilter={allFlowsFilter}
       />
       <EdgeDetailDrawer
         flow={selectedEdgeIdx !== null ? DATA_FLOWS[selectedEdgeIdx] || null : null}
