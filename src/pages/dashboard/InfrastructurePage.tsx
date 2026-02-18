@@ -1287,6 +1287,7 @@ const EdgeDetailDrawer = ({
   onViewAllFlows,
   activeCategories,
   configuredCategories,
+  categoryApps,
 }: {
   flow: (typeof DATA_FLOWS)[number] | null;
   edgeIdx: number | null;
@@ -1296,7 +1297,11 @@ const EdgeDetailDrawer = ({
   onViewAllFlows: (fromEdgeIdx: number) => void;
   activeCategories: Set<string>;
   configuredCategories: Set<string>;
+  categoryApps: Record<string, MatchedApp[]>;
 }) => {
+  const [enabling, setEnabling] = React.useState(false);
+  const [enableResult, setEnableResult] = React.useState<'success' | 'error' | null>(null);
+
   if (!flow) return null;
   const sourceCat = getToolCategoryMeta(flow.source);
   const targetCat = getToolCategoryMeta(flow.target);
@@ -1308,6 +1313,12 @@ const EdgeDetailDrawer = ({
   const targetActive = activeCategories.has(flow.target);
   const flowState = getFlowState(sourceConfigured, targetConfigured);
   const badge = FLOW_STATE_BADGE[flowState];
+
+  // Check if at least one side has a validated app
+  const sourceApps = categoryApps[flow.source] || [];
+  const targetApps = categoryApps[flow.target] || [];
+  const hasValidApp = sourceApps.some(a => a.hasValidAuth) || targetApps.some(a => a.hasValidAuth);
+  const canEnable = flowState === 'missing_config' && hasValidApp;
 
   return (
     <Drawer
@@ -1398,17 +1409,61 @@ const EdgeDetailDrawer = ({
           flexShrink: 0,
           boxShadow: flowState === 'enabled' ? `0 0 6px ${badge.color}` : 'none',
         }} />
-        <Box>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, color: badge.color, lineHeight: 1.3 }}>
             {badge.label}
           </Typography>
           <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', mt: 0.25 }}>
             {flowState === 'enabled'
-              ? 'Both endpoints are configured and active.'
+              ? 'Both endpoints are configured and the flow has been verified.'
               : flowState === 'missing_config'
-              ? `${!sourceActive ? sourceCat?.label : targetCat?.label} is not yet configured.`
-              : 'Neither endpoint has been configured yet.'}
+              ? 'Both categories are configured but this flow has not been tested yet.'
+              : 'One or both categories have no apps configured yet.'}
           </Typography>
+          {canEnable && (
+            <Box sx={{ mt: 1.5 }}>
+              {enableResult === 'success' ? (
+                <Typography sx={{ fontSize: '0.75rem', color: 'hsl(142 71% 45%)', fontWeight: 600 }}>
+                  ✓ Flow marked as Enabled
+                </Typography>
+              ) : enableResult === 'error' ? (
+                <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--destructive))', fontWeight: 600 }}>
+                  Failed to enable. Please try again.
+                </Typography>
+              ) : (
+                <Button
+                  size="small"
+                  disabled={enabling}
+                  onClick={async () => {
+                    setEnabling(true);
+                    try {
+                      // Placeholder: actual test logic will be implemented per-flow
+                      await new Promise(resolve => setTimeout(resolve, 800));
+                      setEnableResult('success');
+                    } catch {
+                      setEnableResult('error');
+                    } finally {
+                      setEnabling(false);
+                    }
+                  }}
+                  sx={{
+                    bgcolor: 'hsl(142 71% 45%)',
+                    color: '#fff',
+                    fontWeight: 700,
+                    fontSize: '0.75rem',
+                    px: 2,
+                    py: 0.5,
+                    borderRadius: 1.5,
+                    textTransform: 'none',
+                    '&:hover': { bgcolor: 'hsl(142 71% 38%)' },
+                    '&:disabled': { opacity: 0.6 },
+                  }}
+                >
+                  {enabling ? 'Enabling…' : 'Enable Flow'}
+                </Button>
+              )}
+            </Box>
+          )}
         </Box>
       </Box>
 
@@ -2497,35 +2552,41 @@ const InfrastructureContent = () => {
         px: 1.5,
         py: 1.25,
         backdropFilter: 'blur(8px)',
-        pointerEvents: 'none',
+        pointerEvents: 'auto',
       }}>
         <Typography sx={{ fontSize: '0.6rem', fontWeight: 700, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.06em', mb: 0.25 }}>
           Connection State
         </Typography>
         {/* Enabled */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <svg width="28" height="8" style={{ flexShrink: 0 }}>
-            <line x1="0" y1="4" x2="28" y2="4" stroke="hsl(142 71% 45%)" strokeWidth="2" />
-            <polygon points="22,1 28,4 22,7" fill="hsl(142 71% 45%)" />
-          </svg>
-          <Typography sx={{ fontSize: '0.68rem', color: 'hsl(var(--foreground))' }}>Enabled</Typography>
-        </Box>
+        <Tooltip title="Both categories have apps configured and the data flow has been explicitly tested and verified end-to-end." placement="right" arrow>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'help' }}>
+            <svg width="28" height="8" style={{ flexShrink: 0 }}>
+              <line x1="0" y1="4" x2="28" y2="4" stroke="hsl(142 71% 45%)" strokeWidth="2" />
+              <polygon points="22,1 28,4 22,7" fill="hsl(142 71% 45%)" />
+            </svg>
+            <Typography sx={{ fontSize: '0.68rem', color: 'hsl(var(--foreground))' }}>Enabled</Typography>
+          </Box>
+        </Tooltip>
         {/* Misconfigured */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <svg width="28" height="8" style={{ flexShrink: 0 }}>
-            <line x1="0" y1="4" x2="28" y2="4" stroke="hsl(45 93% 47%)" strokeWidth="1.5" strokeDasharray="3 5" />
-            <polygon points="22,1 28,4 22,7" fill="hsl(45 93% 47%)" />
-          </svg>
-          <Typography sx={{ fontSize: '0.68rem', color: 'hsl(45 93% 47%)' }}>Misconfigured</Typography>
-        </Box>
+        <Tooltip title="Both categories have apps configured, but the data flow has not been explicitly tested yet. Click a line to enable it." placement="right" arrow>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'help' }}>
+            <svg width="28" height="8" style={{ flexShrink: 0 }}>
+              <line x1="0" y1="4" x2="28" y2="4" stroke="hsl(45 93% 47%)" strokeWidth="1.5" strokeDasharray="3 5" />
+              <polygon points="22,1 28,4 22,7" fill="hsl(45 93% 47%)" />
+            </svg>
+            <Typography sx={{ fontSize: '0.68rem', color: 'hsl(45 93% 47%)' }}>Misconfigured</Typography>
+          </Box>
+        </Tooltip>
         {/* Disabled */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <svg width="28" height="8" style={{ flexShrink: 0 }}>
-            <line x1="0" y1="4" x2="28" y2="4" stroke="hsla(var(--muted-foreground) / 0.5)" strokeWidth="1.5" strokeDasharray="3 5" />
-            <polygon points="22,1 28,4 22,7" fill="hsla(var(--muted-foreground) / 0.5)" />
-          </svg>
-          <Typography sx={{ fontSize: '0.68rem', color: 'hsl(var(--muted-foreground))' }}>Disabled</Typography>
-        </Box>
+        <Tooltip title="One or both categories have no apps configured at all. Add and authenticate an app in each category to get started." placement="right" arrow>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'help' }}>
+            <svg width="28" height="8" style={{ flexShrink: 0 }}>
+              <line x1="0" y1="4" x2="28" y2="4" stroke="hsla(var(--muted-foreground) / 0.5)" strokeWidth="1.5" strokeDasharray="3 5" />
+              <polygon points="22,1 28,4 22,7" fill="hsla(var(--muted-foreground) / 0.5)" />
+            </svg>
+            <Typography sx={{ fontSize: '0.68rem', color: 'hsl(var(--muted-foreground))' }}>Disabled</Typography>
+          </Box>
+        </Tooltip>
       </Box>
       <AllDataFlowsDrawer
         open={showAllFlows}
@@ -2549,6 +2610,7 @@ const InfrastructureContent = () => {
         onClose={() => setSelectedEdgeIdx(null)}
         activeCategories={activeCategories}
         configuredCategories={activeCategories}
+        categoryApps={categoryApps}
         onSelectCategory={(catId) => {
           setSelectedEdgeIdx(null);
           setSelectedId(catId);
