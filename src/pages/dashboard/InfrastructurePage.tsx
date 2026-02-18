@@ -2064,23 +2064,24 @@ const CategoryDetailDrawer = ({
               sx={{
                 display: 'flex',
                 alignItems: 'center',
+                justifyContent: 'center',
                 gap: 1.5,
                 px: 2,
-                py: 1.5,
+                py: 1.75,
                 borderRadius: 2,
-                border: '1px dashed hsl(var(--border))',
+                border: '1.5px solid hsl(var(--primary))',
                 cursor: 'pointer',
-                color: 'hsl(var(--muted-foreground))',
+                color: 'hsl(var(--primary))',
+                bgcolor: 'hsla(var(--primary) / 0.06)',
                 transition: 'all 0.15s ease',
                 '&:hover': {
-                  borderColor: 'hsl(var(--primary))',
-                  color: 'hsl(var(--foreground))',
-                  bgcolor: 'hsl(var(--accent))',
+                  bgcolor: 'hsla(var(--primary) / 0.12)',
+                  boxShadow: '0 0 0 1px hsl(var(--primary) / 0.3)',
                 },
               }}
             >
-              <X size={14} style={{ transform: 'rotate(45deg)' }} />
-              <Typography sx={{ fontSize: '0.82rem' }}>
+              <X size={15} style={{ transform: 'rotate(45deg)' }} />
+              <Typography sx={{ fontSize: '0.85rem', fontWeight: 600 }}>
                 Search for {category.label} tools...
               </Typography>
             </Box>
