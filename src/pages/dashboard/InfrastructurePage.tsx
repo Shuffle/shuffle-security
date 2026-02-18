@@ -719,11 +719,18 @@ const CategoryNode = ({ data }: { data: CategoryNodeData }) => {
 
   return (
     <>
-      {/* Each side has both source and target handles — visually highlight only the relevant type during edge update */}
+      {/* Each side has both source and target handles, both pinned to the exact center of their side */}
       {(['Top', 'Bottom', 'Left', 'Right'] as const).map(side => {
         // When dragging source end, RF needs a target handle to drop on (and vice versa)
         const showTarget = isEdgeUpdating && edgeUpdateHandleType === 'source';
         const showSource = isEdgeUpdating && edgeUpdateHandleType === 'target';
+
+        // Force handles to the exact geometric center of each side so edges always align cleanly
+        const isVerticalSide = side === 'Top' || side === 'Bottom';
+        const centerStyle: React.CSSProperties = isVerticalSide
+          ? { left: '50%', transform: 'translateX(-50%)' }
+          : { top: '50%', transform: 'translateY(-50%)' };
+
         return (
           <React.Fragment key={side}>
             <Handle
@@ -732,6 +739,7 @@ const CategoryNode = ({ data }: { data: CategoryNodeData }) => {
               id={`${side.toLowerCase()}-target`}
               className="infra-handle"
               style={{
+                ...centerStyle,
                 width: showTarget ? 16 : 10,
                 height: showTarget ? 16 : 10,
                 background: `hsl(var(${colorVar}))`,
@@ -749,6 +757,7 @@ const CategoryNode = ({ data }: { data: CategoryNodeData }) => {
               id={`${side.toLowerCase()}-source`}
               className="infra-handle"
               style={{
+                ...centerStyle,
                 width: showSource ? 16 : 10,
                 height: showSource ? 16 : 10,
                 background: `hsl(var(${colorVar}))`,
