@@ -2582,11 +2582,11 @@ const InfrastructureContent = () => {
         configuredCategories={activeCategories}
       />
 
-      {/* Edge state legend — bottom-left overlay */}
-      <Box sx={{
-        position: 'absolute',
-        bottom: 16,
-        left: 16,
+      {/* Edge state legend — bottom-right overlay */}
+        <Box sx={{
+          position: 'absolute',
+          bottom: 16,
+          right: 16,
         zIndex: 10,
         display: 'flex',
         flexDirection: 'column',
