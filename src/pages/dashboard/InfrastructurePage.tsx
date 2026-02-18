@@ -2064,7 +2064,8 @@ const InfrastructureContent = () => {
       const srcColor = srcCat ? `hsl(var(${srcCat.color}))` : 'hsl(var(--primary))';
       const tgtColor = tgtCat ? `hsl(var(${tgtCat.color}))` : 'hsl(var(--primary))';
 
-      // Determine stroke color — on hover always show the real gradient
+      // Determine stroke color — enabled edges always show gradient, hover also shows gradient
+      const isEnabled = flowState === 'enabled' && bothActive;
       let stroke: string;
       let useGradient = false;
       if (isEdgeHovered) {
@@ -2074,6 +2075,10 @@ const InfrastructureContent = () => {
       } else if (isFullyHighlighted) {
         useGradient = true;
         stroke = activeColor;
+      } else if (isEnabled) {
+        // Enabled edges always show their real gradient color
+        useGradient = true;
+        stroke = srcColor;
       } else if (isConnected && !bothActive) {
         // Dimmed highlight for non-enabled connected edges
         stroke = flowState === 'missing_config' ? 'hsl(45 93% 47%)' : 'hsla(var(--muted-foreground) / 0.4)';
@@ -2088,8 +2093,8 @@ const InfrastructureContent = () => {
         stroke = 'hsla(var(--muted-foreground) / 0.18)';
       }
 
-      // Stroke dash pattern: only non-enabled gets dashes (but clear when hovered)
-      const strokeDasharray: string | undefined = (bothActive || isEdgeHovered) ? undefined : '3 5';
+      // Stroke dash pattern: enabled and hovered edges are solid; others get dashes
+      const strokeDasharray: string | undefined = (isEnabled || isEdgeHovered) ? undefined : '3 5';
 
       // Apply saved handle overrides or use defaults
       const handleOverride = savedHandles[edgeId];
@@ -2103,7 +2108,7 @@ const InfrastructureContent = () => {
         sourceHandle,
         targetHandle,
         label: flow.label,
-        animated: !!isConnected,
+        animated: !!isConnected || isEnabled,
         reconnectable: true,
         zIndex: isConnected ? 10 : 0,
         type: 'gradient',
