@@ -25,9 +25,11 @@ interface IntegrationStatusProps {
   collapsed: boolean;
   /** When provided, only show integrations whose name is in this list */
   filterApps?: string[];
+  /** When provided, the Add button calls this instead of navigating to /onboarding */
+  onAddClick?: () => void;
 }
 
-export const IntegrationStatus = ({ collapsed, filterApps }: IntegrationStatusProps) => {
+export const IntegrationStatus = ({ collapsed, filterApps, onAddClick }: IntegrationStatusProps) => {
   const [allIntegrations, setAllIntegrations] = useState<Integration[]>([]);
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -275,24 +277,44 @@ export const IntegrationStatus = ({ collapsed, filterApps }: IntegrationStatusPr
             
             {/* Add button */}
             <Tooltip title="Add Integration" placement="right">
-              <IconButton
-                size="small"
-                component={Link}
-                to="/onboarding"
-                sx={{ 
-                  width: 26,
-                  height: 26,
-                  color: 'hsl(var(--muted-foreground))',
-                  border: '1px dashed hsl(var(--border))',
-                  borderRadius: '50%',
-                  '&:hover': {
-                    backgroundColor: 'hsl(var(--muted))',
-                    borderStyle: 'solid',
-                  },
-                }}
-              >
-                <AddIcon sx={{ fontSize: 14 }} />
-              </IconButton>
+              {onAddClick ? (
+                <IconButton
+                  size="small"
+                  onClick={onAddClick}
+                  sx={{ 
+                    width: 26,
+                    height: 26,
+                    color: 'hsl(var(--muted-foreground))',
+                    border: '1px dashed hsl(var(--border))',
+                    borderRadius: '50%',
+                    '&:hover': {
+                      backgroundColor: 'hsl(var(--muted))',
+                      borderStyle: 'solid',
+                    },
+                  }}
+                >
+                  <AddIcon sx={{ fontSize: 14 }} />
+                </IconButton>
+              ) : (
+                <IconButton
+                  size="small"
+                  component={Link}
+                  to="/onboarding"
+                  sx={{ 
+                    width: 26,
+                    height: 26,
+                    color: 'hsl(var(--muted-foreground))',
+                    border: '1px dashed hsl(var(--border))',
+                    borderRadius: '50%',
+                    '&:hover': {
+                      backgroundColor: 'hsl(var(--muted))',
+                      borderStyle: 'solid',
+                    },
+                  }}
+                >
+                  <AddIcon sx={{ fontSize: 14 }} />
+                </IconButton>
+              )}
             </Tooltip>
           </>
         )}

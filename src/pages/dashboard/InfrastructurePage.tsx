@@ -49,9 +49,11 @@ import {
   Activity,
   Download,
   Cloud,
+  X,
 } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { IntegrationStatus } from '@/components/layout/IntegrationStatus';
+import { SingulJS } from '@/lib/singul-local';
 
 // ── Tool Category Definitions ──────────────────────────────────────────────────
 
@@ -1575,6 +1577,7 @@ const CategoryDetailDrawer = ({
   const navigate = useNavigate();
   const hasApps = matchedApps.length > 0;
   const [expanded, setExpanded] = React.useState(!hasApps);
+  const [showSearch, setShowSearch] = React.useState(false);
 
   if (!category) return null;
   const colorVar = category.color;
@@ -1644,11 +1647,41 @@ const CategoryDetailDrawer = ({
             <IntegrationStatus
               collapsed={false}
               filterApps={matchedApps.map(a => a.name)}
+              onAddClick={() => setShowSearch(true)}
             />
           </Box>
         )}
 
-        {/* Common Tools + Sub-categories — collapsible, hidden when apps are configured */}
+        {/* Inline App Search — shown when Plus is clicked or no apps yet */}
+        {(showSearch || !hasApps) && (
+          <Box sx={{ mb: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+              <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                {hasApps ? 'Add App' : 'Find & Add Apps'}
+              </Typography>
+              {showSearch && hasApps && (
+                <IconButton size="small" onClick={() => setShowSearch(false)} sx={{ color: 'hsl(var(--muted-foreground))', p: 0.25 }}>
+                  <X size={14} />
+                </IconButton>
+              )}
+            </Box>
+            <SingulJS
+              authToken={API_CONFIG.apiKey || ''}
+              apiKey={API_CONFIG.apiKey || undefined}
+              apiBaseUrl={API_CONFIG.baseUrl}
+              inline={true}
+              initialQuery={category.label}
+              layout="grid"
+              gridColumns={3}
+              showDescription={false}
+              showCategories={false}
+              hitsPerPage={9}
+              onAppSelected={() => setShowSearch(false)}
+            />
+          </Box>
+        )}
+
+
         {!hasApps && <Box sx={{ mb: 3, border: '1px solid hsl(var(--border))', borderRadius: 2, overflow: 'hidden' }}>
               {/* Collapsible header */}
               <Box
