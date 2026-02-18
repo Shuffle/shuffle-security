@@ -1084,7 +1084,6 @@ const DataFlowCard = ({
   enabled,
   flowState = 'disabled',
   highlighted = false,
-  variant = 'full',
   isAgentic = false,
   onClick,
   onMouseEnter,
@@ -1095,7 +1094,6 @@ const DataFlowCard = ({
   enabled: boolean;
   flowState?: FlowState;
   highlighted?: boolean;
-  variant?: 'full' | 'compact';
   isAgentic?: boolean;
   onClick?: () => void;
   onMouseEnter?: () => void;
@@ -1105,167 +1103,62 @@ const DataFlowCard = ({
   const targetCat = TOOL_CATEGORIES.find(c => c.id === flow.target);
   const flowColor = sourceCat?.color || '--primary';
 
-  if (variant === 'compact') {
-    return (
-      <Box
-        onClick={onClick}
-        onMouseEnter={onMouseEnter}
-        onMouseLeave={onMouseLeave}
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1,
-          px: 1.5,
-          py: 1,
-          ml: 1,
-          mb: 0.5,
-          borderRadius: 1.5,
-          border: highlighted ? `1px solid hsla(var(${flowColor}) / 0.4)` : '1px solid transparent',
-          bgcolor: highlighted ? `hsla(var(${flowColor}) / 0.08)` : 'transparent',
-          cursor: 'pointer',
-          opacity: flowState === 'disabled' ? 0.4 : 1,
-          transition: 'all 0.15s ease',
-          '&:hover': {
-            bgcolor: highlighted ? `hsla(var(${flowColor}) / 0.12)` : 'hsla(var(--muted-foreground) / 0.06)',
-            borderColor: highlighted ? `hsla(var(${flowColor}) / 0.5)` : 'hsl(var(--border))',
-            opacity: flowState === 'disabled' ? 0.65 : 1,
-          },
-        }}
-      >
-        <Box sx={{
-          width: 6,
-          height: 6,
-          borderRadius: '50%',
-          bgcolor: flowState === 'enabled' ? `hsl(var(${flowColor}))` : FLOW_STATE_BADGE[flowState].color,
-          flexShrink: 0,
-        }} />
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: flowState === 'enabled' ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))' }}>
-            {flow.label}
-          </Typography>
-          <Typography sx={{ fontSize: '0.68rem', color: 'hsl(var(--muted-foreground))', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            → {targetCat?.label || flow.target}
-          </Typography>
-        </Box>
-        {isAgentic && (
-          <Tooltip title="Agentic mode enabled" arrow>
-            <Typography sx={{ fontSize: '0.6rem', px: 0.75, py: 0.25, borderRadius: 0.75, flexShrink: 0, bgcolor: 'hsla(var(--primary) / 0.12)', border: '1px solid hsla(var(--primary) / 0.3)', color: 'hsl(var(--primary))', fontWeight: 700, letterSpacing: '0.04em' }}>
-              AI
-            </Typography>
-          </Tooltip>
-        )}
-        {flowState !== 'enabled' && (
-          <Typography sx={{ fontSize: '0.6rem', color: FLOW_STATE_BADGE[flowState].color, bgcolor: FLOW_STATE_BADGE[flowState].bg, border: `1px solid ${FLOW_STATE_BADGE[flowState].border}`, px: 0.75, py: 0.25, borderRadius: 0.75, flexShrink: 0 }}>
-            {FLOW_STATE_BADGE[flowState].label}
-          </Typography>
-        )}
-        {targetCat && (
-          <Box sx={{ color: flowState === 'enabled' ? `hsl(var(${targetCat.color}))` : 'hsl(var(--muted-foreground))', display: 'flex', '& svg': { width: 14, height: 14 }, opacity: 0.6 }}>
-            {targetCat.icon}
-          </Box>
-        )}
-      </Box>
-    );
-  }
-
-  const badge = FLOW_STATE_BADGE[flowState];
-
-  // Full variant
   return (
     <Box
       onClick={onClick}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       sx={{
-        mb: 1.5,
-        p: 2,
-        borderRadius: 2,
-        border: flowState === 'enabled'
-          ? `1px solid hsla(var(${flowColor}) / 0.2)`
-          : '1px solid hsl(var(--border))',
-        bgcolor: 'hsl(var(--card))',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1,
+        px: 1.5,
+        py: 1,
+        ml: 1,
+        mb: 0.5,
+        borderRadius: 1.5,
+        border: highlighted ? `1px solid hsla(var(${flowColor}) / 0.4)` : '1px solid transparent',
+        bgcolor: highlighted ? `hsla(var(${flowColor}) / 0.08)` : 'transparent',
         cursor: 'pointer',
+        opacity: flowState === 'disabled' ? 0.4 : 1,
         transition: 'all 0.15s ease',
-        opacity: flowState === 'disabled' ? 0.45 : 1,
-        '&:hover': flowState === 'enabled' ? {
-          bgcolor: `hsla(var(${flowColor}) / 0.06)`,
-          borderColor: `hsla(var(${flowColor}) / 0.4)`,
-        } : {
-          bgcolor: 'hsla(var(--muted-foreground) / 0.06)',
-          opacity: 0.7,
+        '&:hover': {
+          bgcolor: highlighted ? `hsla(var(${flowColor}) / 0.12)` : 'hsla(var(--muted-foreground) / 0.06)',
+          borderColor: highlighted ? `hsla(var(${flowColor}) / 0.5)` : 'hsl(var(--border))',
+          opacity: flowState === 'disabled' ? 0.65 : 1,
         },
       }}
     >
-      {/* Title row */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-        <Typography sx={{
-          fontSize: '0.82rem',
-          fontWeight: 600,
-          color: flowState === 'enabled' ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))',
-          flex: 1,
-        }}>
+      <Box sx={{
+        width: 6,
+        height: 6,
+        borderRadius: '50%',
+        bgcolor: flowState === 'enabled' ? `hsl(var(${flowColor}))` : FLOW_STATE_BADGE[flowState].color,
+        flexShrink: 0,
+      }} />
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: flowState === 'enabled' ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))' }}>
           {flow.label}
         </Typography>
-        <Typography sx={{ fontSize: '0.6rem', color: badge.color, bgcolor: badge.bg, border: `1px solid ${badge.border}`, px: 0.75, py: 0.25, borderRadius: 0.75, flexShrink: 0, fontWeight: 600 }}>
-          {badge.label}
+        <Typography sx={{ fontSize: '0.68rem', color: 'hsl(var(--muted-foreground))', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          → {targetCat?.label || flow.target}
         </Typography>
       </Box>
-
-      {/* Source → Target chips */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 1 }}>
-        {sourceCat && (
-          <Chip
-            icon={<Box sx={{ display: 'flex', color: flowState === 'enabled' ? `hsl(var(${sourceCat.color}))` : 'hsl(var(--muted-foreground))', '& svg': { width: 12, height: 12 } }}>{sourceCat.icon}</Box>}
-            label={sourceCat.label}
-            size="small"
-            sx={{
-              height: 22,
-              fontSize: '0.65rem',
-              bgcolor: flowState === 'enabled' ? `hsla(var(${sourceCat.color}) / 0.08)` : 'hsla(var(--muted-foreground) / 0.06)',
-              color: flowState === 'enabled' ? `hsl(var(${sourceCat.color}))` : 'hsl(var(--muted-foreground))',
-              border: flowState === 'enabled' ? `1px solid hsla(var(${sourceCat.color}) / 0.2)` : '1px solid hsl(var(--border))',
-              fontWeight: 600,
-              '& .MuiChip-icon': { ml: 0.5 },
-            }}
-          />
-        )}
-        <ArrowRight size={12} style={{ color: 'hsl(var(--muted-foreground))', flexShrink: 0 }} />
-        {targetCat && (
-          <Chip
-            icon={<Box sx={{ display: 'flex', color: flowState === 'enabled' ? `hsl(var(${targetCat.color}))` : 'hsl(var(--muted-foreground))', '& svg': { width: 12, height: 12 } }}>{targetCat.icon}</Box>}
-            label={targetCat.label}
-            size="small"
-            sx={{
-              height: 22,
-              fontSize: '0.65rem',
-              bgcolor: flowState === 'enabled' ? `hsla(var(${targetCat.color}) / 0.08)` : 'hsla(var(--muted-foreground) / 0.06)',
-              color: flowState === 'enabled' ? `hsl(var(${targetCat.color}))` : 'hsl(var(--muted-foreground))',
-              border: flowState === 'enabled' ? `1px solid hsla(var(${targetCat.color}) / 0.2)` : '1px solid hsl(var(--border))',
-              fontWeight: 600,
-              '& .MuiChip-icon': { ml: 0.5 },
-            }}
-          />
-        )}
-      </Box>
-
-      {/* Description */}
-      <Typography sx={{
-        fontSize: '0.73rem',
-        color: flowState === 'enabled' ? 'hsl(var(--muted-foreground))' : 'hsla(var(--muted-foreground) / 0.6)',
-        lineHeight: 1.55,
-      }}>
-        {flow.description}
-      </Typography>
-      {flow.tags && flow.tags.length > 0 && (
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1 }}>
-          {flow.tags.map(tag => {
-            const tc = TAG_COLORS[tag] ?? DEFAULT_TAG_COLOR;
-            return (
-              <Typography key={tag} sx={{ fontSize: '0.58rem', px: 0.75, py: 0.2, borderRadius: 0.75, fontWeight: 600, letterSpacing: '0.04em', color: tc.color, bgcolor: tc.bg, border: `1px solid ${tc.border}` }}>
-                {tag}
-              </Typography>
-            );
-          })}
+      {isAgentic && (
+        <Tooltip title="Agentic mode enabled" arrow>
+          <Typography sx={{ fontSize: '0.6rem', px: 0.75, py: 0.25, borderRadius: 0.75, flexShrink: 0, bgcolor: 'hsla(var(--primary) / 0.12)', border: '1px solid hsla(var(--primary) / 0.3)', color: 'hsl(var(--primary))', fontWeight: 700, letterSpacing: '0.04em' }}>
+            AI
+          </Typography>
+        </Tooltip>
+      )}
+      {flowState !== 'enabled' && (
+        <Typography sx={{ fontSize: '0.6rem', color: FLOW_STATE_BADGE[flowState].color, bgcolor: FLOW_STATE_BADGE[flowState].bg, border: `1px solid ${FLOW_STATE_BADGE[flowState].border}`, px: 0.75, py: 0.25, borderRadius: 0.75, flexShrink: 0 }}>
+          {FLOW_STATE_BADGE[flowState].label}
+        </Typography>
+      )}
+      {targetCat && (
+        <Box sx={{ color: flowState === 'enabled' ? `hsl(var(${targetCat.color}))` : 'hsl(var(--muted-foreground))', display: 'flex', '& svg': { width: 14, height: 14 }, opacity: 0.6 }}>
+          {targetCat.icon}
         </Box>
       )}
     </Box>
@@ -1504,7 +1397,6 @@ const AllDataFlowsDrawer = ({
                     flowState={state}
                     highlighted={highlightEdgeIdx === idx}
                     isAgentic={agenticFlows.has(flow.id)}
-                    variant="compact"
                     onClick={() => { onClose(); onSelectFlow(idx); }}
                     onMouseEnter={() => onEdgeHover(flow.id)}
                     onMouseLeave={() => onEdgeHover(null)}
@@ -2208,7 +2100,6 @@ const CategoryDetailDrawer = ({
                 edgeId={flow.id}
                 enabled={isEnabled}
                 flowState={flowState}
-                variant="full"
                 onClick={() => onEdgeClick(idx)}
                 onMouseEnter={() => onEdgeHover(flow.id)}
                 onMouseLeave={() => onEdgeHover(null)}
