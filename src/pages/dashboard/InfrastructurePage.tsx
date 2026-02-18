@@ -943,10 +943,10 @@ const FLOW_STATE_BADGE: Record<FlowState, { label: string; color: string; bg: st
     border: 'hsla(var(--muted-foreground) / 0.2)',
   },
   missing_config: {
-    label: 'Missing configuration',
-    color: 'hsl(0 84% 60%)',
-    bg: 'hsla(0 84% 60% / 0.1)',
-    border: 'hsla(0 84% 60% / 0.3)',
+    label: 'Disabled',
+    color: 'hsla(var(--muted-foreground) / 0.7)',
+    bg: 'hsla(var(--muted-foreground) / 0.08)',
+    border: 'hsla(var(--muted-foreground) / 0.2)',
   },
   enabled: {
     label: 'Enabled',
@@ -1053,8 +1053,6 @@ const DataFlowCard = ({
         borderRadius: 2,
         border: flowState === 'enabled'
           ? `1px solid hsla(var(${flowColor}) / 0.2)`
-          : flowState === 'missing_config'
-          ? `1px solid hsla(0 84% 60% / 0.2)`
           : '1px solid hsl(var(--border))',
         bgcolor: 'hsl(var(--card))',
         cursor: 'pointer',
@@ -1063,9 +1061,6 @@ const DataFlowCard = ({
         '&:hover': flowState === 'enabled' ? {
           bgcolor: `hsla(var(${flowColor}) / 0.06)`,
           borderColor: `hsla(var(${flowColor}) / 0.4)`,
-        } : flowState === 'missing_config' ? {
-          bgcolor: 'hsla(0 84% 60% / 0.06)',
-          opacity: 1,
         } : {
           bgcolor: 'hsla(var(--muted-foreground) / 0.06)',
           opacity: 0.7,
@@ -1952,10 +1947,8 @@ const InfrastructureContent = () => {
       const isConnected = isEdgeHovered || (activeId && (flow.source === activeId || flow.target === activeId));
       // Only fully highlight (color + animate) if both sides have apps
       const isFullyHighlighted = isConnected && bothActive;
-      // Connected but missing one side — show as amber highlight
-      const isAmberHighlighted = isConnected && flowState === 'missing_config';
-      // Disabled — both missing
-      const isDisabledHighlighted = isConnected && flowState === 'disabled';
+      // Highlighted but not enabled — show as grey highlight
+      const isDisabledHighlighted = isConnected && !bothActive;
 
       const hasAnyFocus = selectedEdgeIdx !== null || activeId || hoveredEdgeId;
 
@@ -1964,9 +1957,6 @@ const InfrastructureContent = () => {
       const tgtCat = TOOL_CATEGORIES.find(c => c.id === flow.target);
       const srcColor = srcCat ? `hsl(var(${srcCat.color}))` : 'hsl(var(--primary))';
       const tgtColor = tgtCat ? `hsl(var(${tgtCat.color}))` : 'hsl(var(--primary))';
-
-      // Red color for missing_config state
-      const redColor = 'hsl(0 84% 60%)';
 
       // Determine stroke color
       let stroke: string;
@@ -1977,8 +1967,6 @@ const InfrastructureContent = () => {
       } else if (isFullyHighlighted) {
         useGradient = true;
         stroke = activeColor;
-      } else if (isAmberHighlighted) {
-        stroke = redColor;
       } else if (isDisabledHighlighted) {
         stroke = 'hsla(var(--muted-foreground) / 0.4)';
       } else if (hasAnyFocus) {
@@ -1986,22 +1974,13 @@ const InfrastructureContent = () => {
       } else if (bothActive) {
         useGradient = true;
         stroke = srcColor;
-      } else if (flowState === 'missing_config') {
-        stroke = 'hsla(0 84% 60% / 0.55)';
       } else {
-        // disabled — very faint
+        // disabled or missing_config — grey
         stroke = 'hsla(var(--muted-foreground) / 0.18)';
       }
 
-      // Stroke dash pattern by state
-      let strokeDasharray: string | undefined;
-      if (flowState === 'disabled') {
-        strokeDasharray = '3 5';
-      } else if (flowState === 'missing_config') {
-        strokeDasharray = '6 4';
-      } else {
-        strokeDasharray = undefined;
-      }
+      // Stroke dash pattern: any non-enabled state gets dashes
+      const strokeDasharray: string | undefined = bothActive ? undefined : '3 5';
 
       // Apply saved handle overrides or use defaults
       const handleOverride = savedHandles[edgeId];
@@ -2037,7 +2016,7 @@ const InfrastructureContent = () => {
         },
         style: {
           stroke,
-          strokeWidth: isFullyHighlighted ? 2.5 : (isAmberHighlighted ? 2 : (bothActive ? 1.5 : 1)),
+          strokeWidth: isFullyHighlighted ? 2.5 : (bothActive ? 1.5 : 1),
           strokeDasharray,
           opacity: 1,
           transition: 'stroke 0.2s, stroke-width 0.2s',
@@ -2045,8 +2024,8 @@ const InfrastructureContent = () => {
         },
         labelStyle: {
           fontSize: isEdgeHovered ? 12 : 10,
-          fontWeight: (isFullyHighlighted || isAmberHighlighted) ? 600 : 500,
-          fill: (isFullyHighlighted || isAmberHighlighted)
+          fontWeight: isFullyHighlighted ? 600 : 500,
+          fill: isFullyHighlighted
             ? 'hsl(var(--foreground))'
             : 'hsl(var(--muted-foreground))',
           opacity: hasAnyFocus && !isConnected ? 0.15 : 0.8,
@@ -2510,18 +2489,10 @@ const InfrastructureContent = () => {
           </svg>
           <Typography sx={{ fontSize: '0.68rem', color: 'hsl(var(--foreground))' }}>Enabled</Typography>
         </Box>
-        {/* Missing config */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <svg width="28" height="8" style={{ flexShrink: 0 }}>
-            <line x1="0" y1="4" x2="28" y2="4" stroke="hsl(0 84% 60%)" strokeWidth="2" strokeDasharray="5 3" />
-            <polygon points="22,1 28,4 22,7" fill="hsl(0 84% 60%)" />
-          </svg>
-          <Typography sx={{ fontSize: '0.68rem', color: 'hsl(var(--foreground))' }}>Missing configuration</Typography>
-        </Box>
         {/* Disabled */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <svg width="28" height="8" style={{ flexShrink: 0 }}>
-            <line x1="0" y1="4" x2="28" y2="4" stroke="hsla(var(--muted-foreground) / 0.5)" strokeWidth="1.5" strokeDasharray="3 4" />
+            <line x1="0" y1="4" x2="28" y2="4" stroke="hsla(var(--muted-foreground) / 0.5)" strokeWidth="1.5" strokeDasharray="3 5" />
             <polygon points="22,1 28,4 22,7" fill="hsla(var(--muted-foreground) / 0.5)" />
           </svg>
           <Typography sx={{ fontSize: '0.68rem', color: 'hsl(var(--muted-foreground))' }}>Disabled</Typography>
