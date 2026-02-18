@@ -2236,7 +2236,7 @@ const InfrastructureContent = () => {
       } else if (flowState === 'missing_config') {
         stroke = 'hsl(45 93% 47%)';
       } else {
-        stroke = 'hsla(var(--muted-foreground) / 0.18)';
+        stroke = 'hsla(var(--muted-foreground) / 0.38)';
       }
 
       // Stroke dash pattern: enabled and hovered edges are solid; others get dashes
