@@ -289,49 +289,80 @@ const TOOL_CATEGORIES: ToolCategory[] = [
 
 // ── Data flow edge definitions ─────────────────────────────────────────────────
 
-const DATA_FLOWS: { source: string; target: string; label: string; animated?: boolean; description: string }[] = [
-  { source: 'siem', target: 'case_management', label: 'Alerts', animated: true,
+export type FlowPhase = 'ingest' | 'response' | 'correlation';
+
+export const FLOW_PHASES: { id: FlowPhase; label: string; subtitle: string; step: number; color: string }[] = [
+  {
+    id: 'ingest',
+    step: 1,
+    label: 'Ingest & Tool Setup',
+    subtitle: 'Connect your tools and get data flowing in. Start here.',
+    color: '--infra-siem',
+  },
+  {
+    id: 'response',
+    step: 2,
+    label: 'Agents & Response Actions',
+    subtitle: 'Automate containment, notifications, and remediation.',
+    color: '--infra-edr',
+  },
+  {
+    id: 'correlation',
+    step: 3,
+    label: 'Context & Correlation',
+    subtitle: 'Enrich alerts with intelligence, assets, and identity data.',
+    color: '--infra-threat-intel',
+  },
+];
+
+const DATA_FLOWS: { source: string; target: string; label: string; animated?: boolean; description: string; phase: FlowPhase }[] = [
+  // ── Phase 1: Ingest & Tool Setup ──
+  { phase: 'ingest', source: 'siem', target: 'case_management', label: 'Alerts', animated: true,
     description: 'SIEM-generated alerts are the primary trigger for new cases. Automating this flow ensures no critical detection goes uninvestigated and reduces mean time to respond (MTTR).' },
-  { source: 'network', target: 'siem', label: 'Flow logs',
+  { phase: 'ingest', source: 'network', target: 'siem', label: 'Flow logs',
     description: 'Network flow logs (NetFlow, DNS, proxy) give the SIEM east-west and north-south visibility. Without them, lateral movement and C2 traffic go undetected.' },
-  { source: 'edr', target: 'siem', label: 'Telemetry',
+  { phase: 'ingest', source: 'edr', target: 'siem', label: 'Telemetry',
     description: 'Endpoint telemetry (process trees, file hashes, registry changes) enriches SIEM detections with host-level context, enabling accurate correlation rules.' },
-  { source: 'iam', target: 'siem', label: 'Auth logs',
+  { phase: 'ingest', source: 'iam', target: 'siem', label: 'Auth logs',
     description: 'Authentication and authorization logs reveal credential abuse, impossible travel, privilege escalation, and brute-force attempts across the identity layer.' },
-  { source: 'email', target: 'case_management', label: 'Phishing reports',
+  { phase: 'ingest', source: 'email', target: 'case_management', label: 'Phishing reports',
     description: 'User-reported phishing emails create cases for triage. Automating intake with deduplication and auto-enrichment drastically cuts analyst workload.' },
-  { source: 'threat_intel', target: 'case_management', label: 'Enrichment', animated: true,
-    description: 'Threat intelligence enriches cases with reputation scores, malware families, threat actor attribution, and related IOCs — giving analysts immediate context.' },
-  { source: 'threat_intel', target: 'network', label: 'IOC feeds',
-    description: 'Pushing IOC feeds (malicious IPs, domains) to network tools enables proactive blocking at the perimeter before threats reach endpoints.' },
-  { source: 'threat_intel', target: 'edr', label: 'Hash feeds',
-    description: 'File hash feeds allow EDR solutions to block or quarantine known-malicious binaries on endpoints in real time, preventing execution.' },
-  { source: 'case_management', target: 'communication', label: 'Notifications', animated: true,
-    description: 'Automated notifications keep stakeholders informed of incident status, escalations, and required actions — critical for SLA compliance and coordination.' },
-  { source: 'case_management', target: 'iam', label: 'Disable accounts',
-    description: 'When a compromised account is identified, automated disablement through IAM stops the attacker from maintaining access while the investigation continues.' },
-  { source: 'case_management', target: 'edr', label: 'Containment',
-    description: 'Network isolation or process killing on compromised endpoints contains the threat, preventing lateral movement while preserving forensic evidence.' },
-  { source: 'asset_management', target: 'case_management', label: 'Asset context',
-    description: 'Asset context (owner, criticality, business unit, OS) helps analysts prioritize cases and understand blast radius during an incident.' },
-  { source: 'email', target: 'threat_intel', label: 'Phishing IOCs',
-    description: 'Extracting IOCs from phishing emails (sender domains, URLs, attachments) and feeding them into threat intel platforms helps detect broader campaigns.' },
-  { source: 'cloud', target: 'siem', label: 'Audit logs', animated: true,
-    description: 'Cloud audit logs (CloudTrail, Activity Log, Audit Logs) provide visibility into API calls, configuration changes, and access patterns across cloud environments.' },
-  { source: 'cloud', target: 'asset_management', label: 'Resource inventory',
-    description: 'Auto-syncing cloud resources into asset management ensures the CMDB stays current, preventing blind spots in vulnerability management and incident response.' },
-  { source: 'cloud', target: 'iam', label: 'Identity events',
-    description: 'Cloud identity events (role changes, permission grants, federation configs) feed IAM monitoring to detect privilege escalation in cloud environments.' },
-  { source: 'threat_intel', target: 'cloud', label: 'IOC feeds',
-    description: 'Pushing IOC feeds to cloud-native security tools (GuardDuty, Sentinel, SCC) enables detection of known-malicious activity within cloud workloads.' },
-  { source: 'case_management', target: 'cloud', label: 'Cloud response',
-    description: 'Automated response actions in cloud environments — revoking keys, isolating instances, modifying security groups — contain threats before they spread across cloud infrastructure.' },
-  { source: 'case_management', target: 'network', label: 'Block rules',
-    description: 'Pushing firewall block rules from cases to network devices enables immediate perimeter-level containment of malicious IPs, domains, and traffic patterns.' },
-  { source: 'case_management', target: 'email', label: 'Quarantine',
-    description: 'Quarantining or purging malicious emails from mailboxes during an active investigation prevents additional users from falling victim to the same campaign.' },
-  { source: 'edr', target: 'case_management', label: 'EDR alerts', animated: true,
+  { phase: 'ingest', source: 'edr', target: 'case_management', label: 'EDR alerts', animated: true,
     description: 'EDR-generated alerts (malware detections, suspicious process executions, ransomware behavior) are forwarded directly to Case Management to open or update incidents, bypassing the SIEM for faster response on high-confidence endpoint detections.' },
+  { phase: 'ingest', source: 'cloud', target: 'siem', label: 'Audit logs', animated: true,
+    description: 'Cloud audit logs (CloudTrail, Activity Log, Audit Logs) provide visibility into API calls, configuration changes, and access patterns across cloud environments.' },
+  { phase: 'ingest', source: 'cloud', target: 'asset_management', label: 'Resource inventory',
+    description: 'Auto-syncing cloud resources into asset management ensures the CMDB stays current, preventing blind spots in vulnerability management and incident response.' },
+
+  // ── Phase 2: Agents & Response Actions ──
+  { phase: 'response', source: 'case_management', target: 'communication', label: 'Notifications', animated: true,
+    description: 'Automated notifications keep stakeholders informed of incident status, escalations, and required actions — critical for SLA compliance and coordination.' },
+  { phase: 'response', source: 'case_management', target: 'iam', label: 'Disable accounts',
+    description: 'When a compromised account is identified, automated disablement through IAM stops the attacker from maintaining access while the investigation continues.' },
+  { phase: 'response', source: 'case_management', target: 'edr', label: 'Containment',
+    description: 'Network isolation or process killing on compromised endpoints contains the threat, preventing lateral movement while preserving forensic evidence.' },
+  { phase: 'response', source: 'case_management', target: 'network', label: 'Block rules',
+    description: 'Pushing firewall block rules from cases to network devices enables immediate perimeter-level containment of malicious IPs, domains, and traffic patterns.' },
+  { phase: 'response', source: 'case_management', target: 'email', label: 'Quarantine',
+    description: 'Quarantining or purging malicious emails from mailboxes during an active investigation prevents additional users from falling victim to the same campaign.' },
+  { phase: 'response', source: 'case_management', target: 'cloud', label: 'Cloud response',
+    description: 'Automated response actions in cloud environments — revoking keys, isolating instances, modifying security groups — contain threats before they spread across cloud infrastructure.' },
+  { phase: 'response', source: 'threat_intel', target: 'network', label: 'IOC feeds',
+    description: 'Pushing IOC feeds (malicious IPs, domains) to network tools enables proactive blocking at the perimeter before threats reach endpoints.' },
+  { phase: 'response', source: 'threat_intel', target: 'edr', label: 'Hash feeds',
+    description: 'File hash feeds allow EDR solutions to block or quarantine known-malicious binaries on endpoints in real time, preventing execution.' },
+
+  // ── Phase 3: Context & Correlation ──
+  { phase: 'correlation', source: 'threat_intel', target: 'case_management', label: 'Enrichment', animated: true,
+    description: 'Threat intelligence enriches cases with reputation scores, malware families, threat actor attribution, and related IOCs — giving analysts immediate context.' },
+  { phase: 'correlation', source: 'asset_management', target: 'case_management', label: 'Asset context',
+    description: 'Asset context (owner, criticality, business unit, OS) helps analysts prioritize cases and understand blast radius during an incident.' },
+  { phase: 'correlation', source: 'email', target: 'threat_intel', label: 'Phishing IOCs',
+    description: 'Extracting IOCs from phishing emails (sender domains, URLs, attachments) and feeding them into threat intel platforms helps detect broader campaigns.' },
+  { phase: 'correlation', source: 'cloud', target: 'iam', label: 'Identity events',
+    description: 'Cloud identity events (role changes, permission grants, federation configs) feed IAM monitoring to detect privilege escalation in cloud environments.' },
+  { phase: 'correlation', source: 'threat_intel', target: 'cloud', label: 'IOC feeds',
+    description: 'Pushing IOC feeds to cloud-native security tools (GuardDuty, Sentinel, SCC) enables detection of known-malicious activity within cloud workloads.' },
 ];
 
 // ── Category-to-app mapping ────────────────────────────────────────────────────
@@ -1165,6 +1196,12 @@ const DataFlowCard = ({
 
 // ── All Data Flows Drawer ──────────────────────────────────────────────────────
 
+const PHASE_ICONS: Record<FlowPhase, React.ReactNode> = {
+  ingest: <Download size={16} />,
+  response: <Zap size={16} />,
+  correlation: <Activity size={16} />,
+};
+
 const AllDataFlowsDrawer = ({
   open,
   onClose,
@@ -1182,17 +1219,18 @@ const AllDataFlowsDrawer = ({
   configuredCategories: Set<string>;
   highlightEdgeIdx: number | null;
 }) => {
-  // Group flows by source category
-  const groupedFlows = useMemo(() => {
-    const groups: Record<string, { flow: (typeof DATA_FLOWS)[number]; idx: number }[]> = {};
+  // Group flows by phase
+  const groupedByPhase = useMemo(() => {
+    const groups: Record<FlowPhase, { flow: (typeof DATA_FLOWS)[number]; idx: number }[]> = {
+      ingest: [],
+      response: [],
+      correlation: [],
+    };
     DATA_FLOWS.forEach((flow, idx) => {
-      if (!groups[flow.source]) groups[flow.source] = [];
-      groups[flow.source].push({ flow, idx });
+      groups[flow.phase].push({ flow, idx });
     });
     return groups;
   }, []);
-
-  const sourceIds = Object.keys(groupedFlows);
 
   return (
     <Drawer
@@ -1243,43 +1281,87 @@ const AllDataFlowsDrawer = ({
         </IconButton>
       </Box>
 
-      {/* Flow list grouped by source */}
+      {/* Phase guide intro */}
+      <Box sx={{ px: 3, py: 2, borderBottom: '1px solid hsl(var(--border))', bgcolor: 'hsla(var(--muted) / 0.3)' }}>
+        <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.6 }}>
+          Data flows are organised into <strong style={{ color: 'hsl(var(--foreground))' }}>3 phases</strong> — work through them in order to build a fully automated security stack.
+        </Typography>
+      </Box>
+
+      {/* Flow list grouped by phase */}
       <Box sx={{ p: 2, overflowY: 'auto', flex: 1 }}>
-        {sourceIds.map(sourceId => {
-          const sourceCat = TOOL_CATEGORIES.find(c => c.id === sourceId);
-          if (!sourceCat) return null;
-          const flows = groupedFlows[sourceId];
+        {FLOW_PHASES.map((phase, phaseIndex) => {
+          const flows = groupedByPhase[phase.id];
+          if (!flows.length) return null;
 
           return (
-            <Box key={sourceId} sx={{ mb: 2.5 }}>
-              {/* Source category header */}
-              <Box
-                onClick={() => { onClose(); onSelectCategory(sourceId); }}
-                sx={{
+            <Box key={phase.id} sx={{ mb: 3 }}>
+              {/* Phase header */}
+              <Box sx={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 1.5,
+                mb: 1.5,
+                p: 1.5,
+                borderRadius: 2,
+                border: `1px solid hsla(var(${phase.color}) / 0.25)`,
+                bgcolor: `hsla(var(${phase.color}) / 0.06)`,
+              }}>
+                {/* Step badge */}
+                <Box sx={{
+                  minWidth: 28,
+                  height: 28,
+                  borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 1,
-                  mb: 1,
-                  px: 1,
-                  py: 0.5,
-                  borderRadius: 1,
-                  cursor: 'pointer',
-                  '&:hover': { bgcolor: `hsla(var(${sourceCat.color}) / 0.08)` },
-                }}
-              >
-                <Box sx={{ color: `hsl(var(${sourceCat.color}))`, display: 'flex', '& svg': { width: 16, height: 16 } }}>
-                  {sourceCat.icon}
+                  justifyContent: 'center',
+                  bgcolor: `hsl(var(${phase.color}))`,
+                  color: 'hsl(var(--background))',
+                  fontWeight: 700,
+                  fontSize: '0.75rem',
+                  flexShrink: 0,
+                  mt: 0.1,
+                }}>
+                  {phase.step}
                 </Box>
-                <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: `hsl(var(${sourceCat.color}))`, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  {sourceCat.label}
-                </Typography>
-                <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', ml: 'auto' }}>
-                  {flows.length} flow{flows.length !== 1 ? 's' : ''}
-                </Typography>
+                <Box sx={{ flex: 1 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.25 }}>
+                    <Box sx={{ color: `hsl(var(${phase.color}))`, display: 'flex' }}>
+                      {PHASE_ICONS[phase.id]}
+                    </Box>
+                    <Typography sx={{ fontWeight: 700, fontSize: '0.85rem', color: `hsl(var(${phase.color}))` }}>
+                      {phase.label}
+                    </Typography>
+                    <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', ml: 'auto', flexShrink: 0 }}>
+                      {flows.length} flow{flows.length !== 1 ? 's' : ''}
+                    </Typography>
+                  </Box>
+                  <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.5 }}>
+                    {phase.subtitle}
+                  </Typography>
+                </Box>
               </Box>
 
-              {/* Individual flows */}
-              {flows.map(({ flow, idx }) => (
+              {/* Connector line between phases */}
+              {phaseIndex < FLOW_PHASES.length - 1 && (
+                <Box sx={{ position: 'relative', ml: 2.5 }}>
+                  {flows.map(({ flow, idx }) => (
+                    <DataFlowCard
+                      key={idx}
+                      flow={flow}
+                      edgeId={`e-${idx}`}
+                      enabled={activeCategories.has(flow.source) && activeCategories.has(flow.target)}
+                      flowState={getFlowState(configuredCategories.has(flow.source), configuredCategories.has(flow.target))}
+                      highlighted={highlightEdgeIdx === idx}
+                      variant="compact"
+                      onClick={() => { onClose(); onSelectFlow(idx); }}
+                    />
+                  ))}
+                </Box>
+              )}
+
+              {/* Last phase — no connector needed */}
+              {phaseIndex === FLOW_PHASES.length - 1 && flows.map(({ flow, idx }) => (
                 <DataFlowCard
                   key={idx}
                   flow={flow}
