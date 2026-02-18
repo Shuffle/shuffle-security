@@ -342,12 +342,12 @@ const DATA_FLOWS: { source: string; target: string; label: string; animated?: bo
     agenticDescription: 'An agent autonomously enriches all observables in a case, maps findings to MITRE ATT&CK, identifies related campaigns, and updates case severity and recommended playbook based on findings.' },
   // e-6
   { phase: 'response', source: 'threat_intel', target: 'network', label: 'IOC feeds',
-    description: 'Pushing IOC feeds (malicious IPs, domains) to network tools enables proactive blocking at the perimeter before threats reach endpoints.',
-    agenticDescription: 'An agent curates and validates IOC feeds before pushing, deduplicates against existing block rules, and removes expired indicators — ensuring network policy stays accurate without manual review.' },
+    description: 'Threat intel feeds pushed to network devices include IPs, domains, URLs, and ASNs for perimeter blocking, as well as MITRE ATT&CK techniques used to inform detection rule tuning on IDS/IPS and NDR sensors. Network controls act at layer 3–7, so indicator types must be network-observable.',
+    agenticDescription: 'An agent curates and validates IOC feeds before pushing, deduplicates against existing block rules, removes expired indicators, and maps active techniques to IDS/IPS signatures — ensuring network policy stays accurate without manual review.' },
   // e-7
-  { phase: 'response', source: 'threat_intel', target: 'edr', label: 'Hash feeds',
-    description: 'File hash feeds allow EDR solutions to block or quarantine known-malicious binaries on endpoints in real time, preventing execution.',
-    agenticDescription: 'An agent validates hash feed accuracy against multiple intel sources before pushing to EDR, prioritizes by threat severity, and generates a blocking report with rollback instructions.' },
+  { phase: 'response', source: 'threat_intel', target: 'edr', label: 'IOC feeds',
+    description: 'Endpoint-targeted IOC feeds include file hashes (MD5/SHA256), process names, registry keys, certificate thumbprints, and parent-child process trees for behavioral blocking. MITRE ATT&CK technique mappings inform custom detection rules. Unlike network devices, EDR can act on host-observable artifacts invisible to the perimeter.',
+    agenticDescription: 'An agent validates hash and behavioral indicator accuracy against multiple intel sources, maps techniques to EDR rule coverage gaps, prioritizes by threat severity, and generates a blocking report with rollback instructions.' },
   // e-8
   { phase: 'response', source: 'case_management', target: 'communication', label: 'Notifications', animated: true,
     description: 'Automated notifications keep stakeholders informed of incident status, escalations, and required actions — critical for SLA compliance and coordination.',
