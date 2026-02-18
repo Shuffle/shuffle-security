@@ -1638,8 +1638,36 @@ const CategoryDetailDrawer = ({
       </Box>
 
       <Box sx={{ p: 3, overflowY: 'auto', flex: 1 }}>
-        {/* Common Tools + Sub-categories — collapsible */}
-        <Box sx={{ mb: 3, border: '1px solid hsl(var(--border))', borderRadius: 2, overflow: 'hidden' }}>
+        {/* Your Apps — shown above Common Tools when apps exist */}
+        {matchedApps.length > 0 && (
+          <Box sx={{ mb: 3 }}>
+            <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>
+              Your Apps
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
+              {matchedApps.map(app => (
+                <Chip
+                  key={app.name}
+                  label={app.name}
+                  size="small"
+                  clickable
+                  onClick={() => navigate(`/apps/${app.name.toLowerCase().replace(/\s+/g, '_')}`)}
+                  sx={{
+                    height: 26,
+                    fontSize: '0.72rem',
+                    bgcolor: 'hsl(var(--background))',
+                    color: 'hsl(var(--foreground))',
+                    border: '1px solid hsl(var(--border))',
+                    '&:hover': { bgcolor: 'hsl(var(--muted))' },
+                  }}
+                />
+              ))}
+            </Box>
+          </Box>
+        )}
+
+        {/* Common Tools + Sub-categories — collapsible, hidden when apps are configured */}
+        {!hasApps && <Box sx={{ mb: 3, border: '1px solid hsl(var(--border))', borderRadius: 2, overflow: 'hidden' }}>
               {/* Collapsible header */}
               <Box
                 onClick={() => setExpanded(v => !v)}
@@ -1727,38 +1755,7 @@ const CategoryDetailDrawer = ({
                   )}
                 </Box>
               )}
-            </Box>
-
-        {matchedApps.length > 0 && (
-          <Box sx={{ mb: 3 }}>
-            <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>
-              Your Apps
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
-              {matchedApps.map(app => (
-                <Chip
-                  key={app.name}
-                  avatar={<Avatar src={app.image} sx={{ width: 18, height: 18, '& img': { objectFit: 'contain' } }} />}
-                  label={app.name}
-                  size="small"
-                  clickable
-                  onClick={() => navigate(`/apps/${app.name.toLowerCase().replace(/\s+/g, '_')}`)}
-                  sx={{
-                    height: 26,
-                    fontSize: '0.72rem',
-                    bgcolor: 'hsla(var(--primary) / 0.1)',
-                    color: 'hsl(var(--foreground))',
-                    border: '1px solid hsla(var(--primary) / 0.25)',
-                    cursor: 'pointer',
-                    '&:hover': {
-                      bgcolor: 'hsla(var(--primary) / 0.2)',
-                    },
-                  }}
-                />
-              ))}
-            </Box>
-          </Box>
-        )}
+            </Box>}
 
         {/* Data Flows — branch-based "How to use" */}
         <Box>
