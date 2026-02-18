@@ -1260,6 +1260,7 @@ const AllDataFlowsDrawer = ({
   enabledFlows,
   agenticFlows,
   initialFilter,
+  onEdgeHover,
 }: {
   open: boolean;
   onClose: () => void;
@@ -1271,6 +1272,7 @@ const AllDataFlowsDrawer = ({
   enabledFlows: Set<string>;
   agenticFlows: Set<string>;
   initialFilter?: FlowState | null;
+  onEdgeHover: (edgeId: string | null) => void;
 }) => {
   const [activeFilter, setActiveFilter] = useState<FlowState | null>(null);
 
@@ -1473,6 +1475,8 @@ const AllDataFlowsDrawer = ({
                     isAgentic={agenticFlows.has(`e-${idx}`)}
                     variant="compact"
                     onClick={() => { onClose(); onSelectFlow(idx); }}
+                    onMouseEnter={() => onEdgeHover(`e-${idx}`)}
+                    onMouseLeave={() => onEdgeHover(null)}
                   />
                 ))}
               </Box>
@@ -2983,6 +2987,7 @@ const InfrastructureContent = () => {
         enabledFlows={enabledFlows}
         agenticFlows={agenticFlows}
         initialFilter={allFlowsFilter}
+        onEdgeHover={(edgeId) => setHoveredEdgeId(edgeId)}
       />
       <EdgeDetailDrawer
         flow={selectedEdgeIdx !== null ? DATA_FLOWS[selectedEdgeIdx] || null : null}
