@@ -946,44 +946,6 @@ const CategoryNode = ({ data }: { data: CategoryNodeData }) => {
           </Typography>
         </Box>
 
-        {/* Matched app icons */}
-        {hasApps && (
-          <Box sx={{
-            display: 'flex',
-            gap: 0.5,
-            flexWrap: 'wrap',
-            pt: 1,
-            borderTop: `1px solid hsla(var(${colorVar}) / 0.15)`,
-          }}>
-            {matchedApps.slice(0, 5).map(app => (
-              <Tooltip key={app.name} title={app.name} placement="top" arrow>
-                <Avatar
-                  src={app.image}
-                  sx={{
-                    width: 22,
-                    height: 22,
-                    fontSize: '0.6rem',
-                    bgcolor: 'hsl(var(--muted))',
-                    '& img': { objectFit: 'contain', p: 0.25 },
-                  }}
-                >
-                  {app.name.charAt(0).toUpperCase()}
-                </Avatar>
-              </Tooltip>
-            ))}
-            {matchedApps.length > 5 && (
-              <Avatar sx={{
-                width: 22,
-                height: 22,
-                fontSize: '0.55rem',
-                bgcolor: 'hsl(var(--muted))',
-                color: 'hsl(var(--muted-foreground))',
-              }}>
-                +{matchedApps.length - 5}
-              </Avatar>
-            )}
-          </Box>
-        )}
       </Box>
     </>
   );
