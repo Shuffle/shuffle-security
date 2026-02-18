@@ -925,12 +925,44 @@ export const getToolCategoryMeta = (categoryId: string): { color: string; icon: 
   return { color: cat.color, icon: cat.icon, label: cat.label };
 };
 
+// ── Flow state helpers ─────────────────────────────────────────────────────────
+
+type FlowState = 'disabled' | 'missing_config' | 'enabled';
+
+const getFlowState = (sourceActive: boolean, targetActive: boolean): FlowState => {
+  if (sourceActive && targetActive) return 'enabled';
+  if (sourceActive || targetActive) return 'missing_config';
+  return 'disabled';
+};
+
+const FLOW_STATE_BADGE: Record<FlowState, { label: string; color: string; bg: string; border: string }> = {
+  disabled: {
+    label: 'Disabled',
+    color: 'hsla(var(--muted-foreground) / 0.7)',
+    bg: 'hsla(var(--muted-foreground) / 0.08)',
+    border: 'hsla(var(--muted-foreground) / 0.2)',
+  },
+  missing_config: {
+    label: 'Missing configuration',
+    color: 'hsl(38 95% 55%)',
+    bg: 'hsla(38 95% 55% / 0.1)',
+    border: 'hsla(38 95% 55% / 0.3)',
+  },
+  enabled: {
+    label: 'Enabled',
+    color: 'hsl(142 71% 45%)',
+    bg: 'hsla(142 71% 45% / 0.1)',
+    border: 'hsla(142 71% 45% / 0.3)',
+  },
+};
+
 // ── Shared Data Flow Card ──────────────────────────────────────────────────────
 
 const DataFlowCard = ({
   flow,
   edgeId,
   enabled,
+  flowState = 'disabled',
   highlighted = false,
   variant = 'full',
   onClick,
@@ -940,6 +972,7 @@ const DataFlowCard = ({
   flow: (typeof DATA_FLOWS)[number];
   edgeId: string;
   enabled: boolean;
+  flowState?: FlowState;
   highlighted?: boolean;
   variant?: 'full' | 'compact';
   onClick?: () => void;
@@ -968,12 +1001,12 @@ const DataFlowCard = ({
           border: highlighted ? `1px solid hsla(var(${flowColor}) / 0.4)` : '1px solid transparent',
           bgcolor: highlighted ? `hsla(var(${flowColor}) / 0.08)` : 'transparent',
           cursor: 'pointer',
-          opacity: enabled ? 1 : 0.45,
+          opacity: flowState === 'disabled' ? 0.4 : 1,
           transition: 'all 0.15s ease',
           '&:hover': {
             bgcolor: highlighted ? `hsla(var(${flowColor}) / 0.12)` : 'hsla(var(--muted-foreground) / 0.06)',
             borderColor: highlighted ? `hsla(var(${flowColor}) / 0.5)` : 'hsl(var(--border))',
-            opacity: enabled ? 1 : 0.7,
+            opacity: flowState === 'disabled' ? 0.65 : 1,
           },
         }}
       >
@@ -981,30 +1014,32 @@ const DataFlowCard = ({
           width: 6,
           height: 6,
           borderRadius: '50%',
-          bgcolor: enabled ? `hsl(var(${flowColor}))` : 'hsl(var(--muted-foreground))',
+          bgcolor: flowState === 'enabled' ? `hsl(var(${flowColor}))` : FLOW_STATE_BADGE[flowState].color,
           flexShrink: 0,
         }} />
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: enabled ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))' }}>
+          <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: flowState === 'enabled' ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))' }}>
             {flow.label}
           </Typography>
           <Typography sx={{ fontSize: '0.68rem', color: 'hsl(var(--muted-foreground))', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             → {targetCat?.label || flow.target}
           </Typography>
         </Box>
-        {!enabled && (
-          <Typography sx={{ fontSize: '0.6rem', color: 'hsl(var(--muted-foreground))', bgcolor: 'hsla(var(--muted-foreground) / 0.1)', px: 0.75, py: 0.25, borderRadius: 0.75, flexShrink: 0 }}>
-            Not configured
+        {flowState !== 'enabled' && (
+          <Typography sx={{ fontSize: '0.6rem', color: FLOW_STATE_BADGE[flowState].color, bgcolor: FLOW_STATE_BADGE[flowState].bg, border: `1px solid ${FLOW_STATE_BADGE[flowState].border}`, px: 0.75, py: 0.25, borderRadius: 0.75, flexShrink: 0 }}>
+            {FLOW_STATE_BADGE[flowState].label}
           </Typography>
         )}
         {targetCat && (
-          <Box sx={{ color: enabled ? `hsl(var(${targetCat.color}))` : 'hsl(var(--muted-foreground))', display: 'flex', '& svg': { width: 14, height: 14 }, opacity: 0.6 }}>
+          <Box sx={{ color: flowState === 'enabled' ? `hsl(var(${targetCat.color}))` : 'hsl(var(--muted-foreground))', display: 'flex', '& svg': { width: 14, height: 14 }, opacity: 0.6 }}>
             {targetCat.icon}
           </Box>
         )}
       </Box>
     );
   }
+
+  const badge = FLOW_STATE_BADGE[flowState];
 
   // Full variant
   return (
@@ -1016,16 +1051,21 @@ const DataFlowCard = ({
         mb: 1.5,
         p: 2,
         borderRadius: 2,
-        border: enabled
+        border: flowState === 'enabled'
           ? `1px solid hsla(var(${flowColor}) / 0.2)`
+          : flowState === 'missing_config'
+          ? `1px solid hsla(38 95% 55% / 0.2)`
           : '1px solid hsl(var(--border))',
         bgcolor: 'hsl(var(--card))',
         cursor: 'pointer',
         transition: 'all 0.15s ease',
-        opacity: enabled ? 1 : 0.45,
-        '&:hover': enabled ? {
+        opacity: flowState === 'disabled' ? 0.45 : 1,
+        '&:hover': flowState === 'enabled' ? {
           bgcolor: `hsla(var(${flowColor}) / 0.06)`,
           borderColor: `hsla(var(${flowColor}) / 0.4)`,
+        } : flowState === 'missing_config' ? {
+          bgcolor: 'hsla(38 95% 55% / 0.06)',
+          opacity: 1,
         } : {
           bgcolor: 'hsla(var(--muted-foreground) / 0.06)',
           opacity: 0.7,
@@ -1037,31 +1077,29 @@ const DataFlowCard = ({
         <Typography sx={{
           fontSize: '0.82rem',
           fontWeight: 600,
-          color: enabled ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))',
+          color: flowState === 'enabled' ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))',
           flex: 1,
         }}>
           {flow.label}
         </Typography>
-        {!enabled && (
-          <Typography sx={{ fontSize: '0.6rem', color: 'hsl(var(--muted-foreground))', bgcolor: 'hsla(var(--muted-foreground) / 0.1)', px: 0.75, py: 0.25, borderRadius: 0.75, flexShrink: 0 }}>
-            Not configured
-          </Typography>
-        )}
+        <Typography sx={{ fontSize: '0.6rem', color: badge.color, bgcolor: badge.bg, border: `1px solid ${badge.border}`, px: 0.75, py: 0.25, borderRadius: 0.75, flexShrink: 0, fontWeight: 600 }}>
+          {badge.label}
+        </Typography>
       </Box>
 
       {/* Source → Target chips */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 1 }}>
         {sourceCat && (
           <Chip
-            icon={<Box sx={{ display: 'flex', color: enabled ? `hsl(var(${sourceCat.color}))` : 'hsl(var(--muted-foreground))', '& svg': { width: 12, height: 12 } }}>{sourceCat.icon}</Box>}
+            icon={<Box sx={{ display: 'flex', color: flowState === 'enabled' ? `hsl(var(${sourceCat.color}))` : 'hsl(var(--muted-foreground))', '& svg': { width: 12, height: 12 } }}>{sourceCat.icon}</Box>}
             label={sourceCat.label}
             size="small"
             sx={{
               height: 22,
               fontSize: '0.65rem',
-              bgcolor: enabled ? `hsla(var(${sourceCat.color}) / 0.08)` : 'hsla(var(--muted-foreground) / 0.06)',
-              color: enabled ? `hsl(var(${sourceCat.color}))` : 'hsl(var(--muted-foreground))',
-              border: enabled ? `1px solid hsla(var(${sourceCat.color}) / 0.2)` : '1px solid hsl(var(--border))',
+              bgcolor: flowState === 'enabled' ? `hsla(var(${sourceCat.color}) / 0.08)` : 'hsla(var(--muted-foreground) / 0.06)',
+              color: flowState === 'enabled' ? `hsl(var(${sourceCat.color}))` : 'hsl(var(--muted-foreground))',
+              border: flowState === 'enabled' ? `1px solid hsla(var(${sourceCat.color}) / 0.2)` : '1px solid hsl(var(--border))',
               fontWeight: 600,
               '& .MuiChip-icon': { ml: 0.5 },
             }}
@@ -1070,15 +1108,15 @@ const DataFlowCard = ({
         <ArrowRight size={12} style={{ color: 'hsl(var(--muted-foreground))', flexShrink: 0 }} />
         {targetCat && (
           <Chip
-            icon={<Box sx={{ display: 'flex', color: enabled ? `hsl(var(${targetCat.color}))` : 'hsl(var(--muted-foreground))', '& svg': { width: 12, height: 12 } }}>{targetCat.icon}</Box>}
+            icon={<Box sx={{ display: 'flex', color: flowState === 'enabled' ? `hsl(var(${targetCat.color}))` : 'hsl(var(--muted-foreground))', '& svg': { width: 12, height: 12 } }}>{targetCat.icon}</Box>}
             label={targetCat.label}
             size="small"
             sx={{
               height: 22,
               fontSize: '0.65rem',
-              bgcolor: enabled ? `hsla(var(${targetCat.color}) / 0.08)` : 'hsla(var(--muted-foreground) / 0.06)',
-              color: enabled ? `hsl(var(${targetCat.color}))` : 'hsl(var(--muted-foreground))',
-              border: enabled ? `1px solid hsla(var(${targetCat.color}) / 0.2)` : '1px solid hsl(var(--border))',
+              bgcolor: flowState === 'enabled' ? `hsla(var(${targetCat.color}) / 0.08)` : 'hsla(var(--muted-foreground) / 0.06)',
+              color: flowState === 'enabled' ? `hsl(var(${targetCat.color}))` : 'hsl(var(--muted-foreground))',
+              border: flowState === 'enabled' ? `1px solid hsla(var(${targetCat.color}) / 0.2)` : '1px solid hsl(var(--border))',
               fontWeight: 600,
               '& .MuiChip-icon': { ml: 0.5 },
             }}
@@ -1089,7 +1127,7 @@ const DataFlowCard = ({
       {/* Description */}
       <Typography sx={{
         fontSize: '0.73rem',
-        color: enabled ? 'hsl(var(--muted-foreground))' : 'hsla(var(--muted-foreground) / 0.6)',
+        color: flowState === 'enabled' ? 'hsl(var(--muted-foreground))' : 'hsla(var(--muted-foreground) / 0.6)',
         lineHeight: 1.55,
       }}>
         {flow.description}
@@ -1219,6 +1257,7 @@ const AllDataFlowsDrawer = ({
                   flow={flow}
                   edgeId={`e-${idx}`}
                   enabled={activeCategories.has(flow.source) && activeCategories.has(flow.target)}
+                  flowState={getFlowState(activeCategories.has(flow.source), activeCategories.has(flow.target))}
                   highlighted={highlightEdgeIdx === idx}
                   variant="compact"
                   onClick={() => { onClose(); onSelectFlow(idx); }}
@@ -1619,12 +1658,14 @@ const CategoryDetailDrawer = ({
           {connectedFlows.map(({ flow, idx }) => {
             const edgeId = `e-${idx}`;
             const isEnabled = activeCategories.has(flow.source) && activeCategories.has(flow.target);
+            const flowState = getFlowState(activeCategories.has(flow.source), activeCategories.has(flow.target));
             return (
               <DataFlowCard
                 key={edgeId}
                 flow={flow}
                 edgeId={edgeId}
                 enabled={isEnabled}
+                flowState={flowState}
                 variant="full"
                 onClick={() => onEdgeClick(idx)}
                 onMouseEnter={() => onEdgeHover(edgeId)}
@@ -1857,8 +1898,9 @@ const InfrastructureContent = () => {
     DATA_FLOWS.map((flow, idx) => {
       const sourceActive = activeCategories.has(flow.source);
       const targetActive = activeCategories.has(flow.target);
-      const bothActive = sourceActive && targetActive;
-      const eitherMissing = !sourceActive || !targetActive;
+      const flowState = getFlowState(sourceActive, targetActive);
+      const bothActive = flowState === 'enabled';
+      const eitherMissing = flowState !== 'enabled';
 
       const edgeId = `e-${idx}`;
       const isSelected = selectedEdgeIdx === idx;
@@ -1868,8 +1910,10 @@ const InfrastructureContent = () => {
       const isConnected = isEdgeHovered || (activeId && (flow.source === activeId || flow.target === activeId));
       // Only fully highlight (color + animate) if both sides have apps
       const isFullyHighlighted = isConnected && bothActive;
-      // Connected but missing one side — show as grey highlight (stands out but not colored)
-      const isGreyHighlighted = isConnected && eitherMissing;
+      // Connected but missing one side — show as amber highlight
+      const isAmberHighlighted = isConnected && flowState === 'missing_config';
+      // Disabled — both missing
+      const isDisabledHighlighted = isConnected && flowState === 'disabled';
 
       const hasAnyFocus = selectedEdgeIdx !== null || activeId || hoveredEdgeId;
 
@@ -1879,26 +1923,42 @@ const InfrastructureContent = () => {
       const srcColor = srcCat ? `hsl(var(${srcCat.color}))` : 'hsl(var(--primary))';
       const tgtColor = tgtCat ? `hsl(var(${tgtCat.color}))` : 'hsl(var(--primary))';
 
-      // Determine stroke color (used for non-gradient fallback states)
+      // Amber color for missing_config state
+      const amberColor = 'hsl(38 95% 55%)';
+
+      // Determine stroke color
       let stroke: string;
       let useGradient = false;
       if (isEdgeHovered && bothActive) {
         useGradient = true;
-        stroke = srcColor; // fallback
+        stroke = srcColor;
       } else if (isFullyHighlighted) {
         useGradient = true;
         stroke = activeColor;
-      } else if (isGreyHighlighted) {
-        stroke = 'hsla(var(--muted-foreground) / 0.5)';
+      } else if (isAmberHighlighted) {
+        stroke = amberColor;
+      } else if (isDisabledHighlighted) {
+        stroke = 'hsla(var(--muted-foreground) / 0.4)';
       } else if (hasAnyFocus) {
         stroke = 'hsla(var(--muted-foreground) / 0.06)';
-      } else if (eitherMissing) {
-        stroke = 'hsla(var(--muted-foreground) / 0.35)';
       } else if (bothActive) {
         useGradient = true;
         stroke = srcColor;
+      } else if (flowState === 'missing_config') {
+        stroke = 'hsla(38 95% 55% / 0.45)';
       } else {
-        stroke = 'hsla(var(--muted-foreground) / 0.3)';
+        // disabled — very faint
+        stroke = 'hsla(var(--muted-foreground) / 0.18)';
+      }
+
+      // Stroke dash pattern by state
+      let strokeDasharray: string | undefined;
+      if (flowState === 'disabled') {
+        strokeDasharray = '3 5';
+      } else if (flowState === 'missing_config') {
+        strokeDasharray = '6 4';
+      } else {
+        strokeDasharray = undefined;
       }
 
       // Apply saved handle overrides or use defaults
@@ -1934,16 +1994,16 @@ const InfrastructureContent = () => {
         },
         style: {
           stroke,
-          strokeWidth: isFullyHighlighted ? 2.5 : (isGreyHighlighted ? 2 : (bothActive ? 1.5 : 1)),
-          strokeDasharray: eitherMissing ? '6 4' : undefined,
+          strokeWidth: isFullyHighlighted ? 2.5 : (isAmberHighlighted ? 2 : (bothActive ? 1.5 : 1)),
+          strokeDasharray,
           opacity: 1,
           transition: 'stroke 0.2s, stroke-width 0.2s',
           cursor: 'pointer',
         },
         labelStyle: {
           fontSize: isEdgeHovered ? 12 : 10,
-          fontWeight: (isFullyHighlighted || isGreyHighlighted) ? 600 : 500,
-          fill: (isFullyHighlighted || isGreyHighlighted)
+          fontWeight: (isFullyHighlighted || isAmberHighlighted) ? 600 : 500,
+          fill: (isFullyHighlighted || isAmberHighlighted)
             ? 'hsl(var(--foreground))'
             : 'hsl(var(--muted-foreground))',
           opacity: hasAnyFocus && !isConnected ? 0.15 : 0.8,
@@ -2378,6 +2438,52 @@ const InfrastructureContent = () => {
         }}
         activeCategories={activeCategories}
       />
+
+      {/* Edge state legend — bottom-left overlay */}
+      <Box sx={{
+        position: 'absolute',
+        bottom: 16,
+        left: 16,
+        zIndex: 10,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 0.75,
+        bgcolor: 'hsla(var(--card) / 0.92)',
+        border: '1px solid hsl(var(--border))',
+        borderRadius: 2,
+        px: 1.5,
+        py: 1.25,
+        backdropFilter: 'blur(8px)',
+        pointerEvents: 'none',
+      }}>
+        <Typography sx={{ fontSize: '0.6rem', fontWeight: 700, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.06em', mb: 0.25 }}>
+          Connection State
+        </Typography>
+        {/* Enabled */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <svg width="28" height="8" style={{ flexShrink: 0 }}>
+            <line x1="0" y1="4" x2="28" y2="4" stroke="hsl(142 71% 45%)" strokeWidth="2" />
+            <polygon points="22,1 28,4 22,7" fill="hsl(142 71% 45%)" />
+          </svg>
+          <Typography sx={{ fontSize: '0.68rem', color: 'hsl(var(--foreground))' }}>Enabled</Typography>
+        </Box>
+        {/* Missing config */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <svg width="28" height="8" style={{ flexShrink: 0 }}>
+            <line x1="0" y1="4" x2="28" y2="4" stroke="hsl(38 95% 55%)" strokeWidth="2" strokeDasharray="5 3" />
+            <polygon points="22,1 28,4 22,7" fill="hsl(38 95% 55%)" />
+          </svg>
+          <Typography sx={{ fontSize: '0.68rem', color: 'hsl(var(--foreground))' }}>Missing configuration</Typography>
+        </Box>
+        {/* Disabled */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <svg width="28" height="8" style={{ flexShrink: 0 }}>
+            <line x1="0" y1="4" x2="28" y2="4" stroke="hsla(var(--muted-foreground) / 0.5)" strokeWidth="1.5" strokeDasharray="3 4" />
+            <polygon points="22,1 28,4 22,7" fill="hsla(var(--muted-foreground) / 0.5)" />
+          </svg>
+          <Typography sx={{ fontSize: '0.68rem', color: 'hsl(var(--muted-foreground))' }}>Disabled</Typography>
+        </Box>
+      </Box>
       <AllDataFlowsDrawer
         open={showAllFlows}
         onClose={() => setShowAllFlows(false)}
