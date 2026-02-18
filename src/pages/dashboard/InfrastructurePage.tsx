@@ -2578,8 +2578,10 @@ const InfrastructureContent = () => {
       const isSelected = selectedEdgeIdx === idx;
       // When a branch is selected, ignore hover on other edges
       const isEdgeHovered = selectedEdgeIdx !== null ? isSelected : hoveredEdgeId === edgeId;
+      // Node hover: connected edges should highlight just like edge-hover
+      const isNodeHovered = !isEdgeHovered && !!hoveredId && (flow.source === hoveredId || flow.target === hoveredId);
       // Highlight on hover/select
-      const isConnected = isEdgeHovered || isSimulated || (activeId && (flow.source === activeId || flow.target === activeId));
+      const isConnected = isEdgeHovered || isNodeHovered || isSimulated || (activeId && (flow.source === activeId || flow.target === activeId));
       const isFullyHighlighted = isConnected && bothActive;
 
       const hasAnyFocus = selectedEdgeIdx !== null || activeId || hoveredEdgeId || simulatedPhases.size > 0;
@@ -2596,7 +2598,7 @@ const InfrastructureContent = () => {
       const isEnabled = flowState === 'enabled' && !isSimulated;
       let stroke: string;
       let useGradient = false;
-      if (isEdgeHovered) {
+      if (isEdgeHovered || isNodeHovered) {
         useGradient = true;
         stroke = srcColor;
       } else if (isSimulated) {
@@ -2624,7 +2626,7 @@ const InfrastructureContent = () => {
       }
 
       // Stroke dash pattern: simulated, enabled and hovered edges are solid; others get dashes
-      const strokeDasharray: string | undefined = (isEnabled || isEdgeHovered || isSimulated) ? undefined : '3 5';
+      const strokeDasharray: string | undefined = (isEnabled || isEdgeHovered || isNodeHovered || isSimulated) ? undefined : '3 5';
 
       // Apply saved handle overrides or use defaults
       const handleOverride = savedHandles[edgeId];
@@ -2646,7 +2648,7 @@ const InfrastructureContent = () => {
           useGradient,
           sourceColor: useGradient ? srcColor : stroke,
           targetColor: useGradient ? tgtColor : stroke,
-          isEdgeHovered,
+          isEdgeHovered: isEdgeHovered || isNodeHovered,
           isEdgeSelected: isSelected,
           waypoints: savedWaypoints[edgeId] || [],
           onWaypointsChange: (newWaypoints: Array<{ x: number; y: number }>) => {
@@ -2667,7 +2669,7 @@ const InfrastructureContent = () => {
           cursor: 'pointer',
         },
         labelStyle: {
-          fontSize: isEdgeHovered ? 12 : 10,
+          fontSize: (isEdgeHovered || isNodeHovered) ? 12 : 10,
           fontWeight: (isFullyHighlighted || isSimulated) ? 600 : 500,
           fill: (isFullyHighlighted || isSimulated)
             ? 'hsl(var(--foreground))'
@@ -2686,7 +2688,7 @@ const InfrastructureContent = () => {
         },
       };
     }),
-    [activeId, activeColor, activeCategories, isCategoryActiveForEdge, enabledFlows, hoveredEdgeId, selectedEdgeIdx, savedHandles, savedWaypoints, persistWaypoints, simulatedEdgeIds, simulatedPhases]
+    [activeId, hoveredId, activeColor, activeCategories, isCategoryActiveForEdge, enabledFlows, hoveredEdgeId, selectedEdgeIdx, savedHandles, savedWaypoints, persistWaypoints, simulatedEdgeIds, simulatedPhases]
   );
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
