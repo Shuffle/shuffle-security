@@ -23,13 +23,21 @@ interface Integration {
 
 interface IntegrationStatusProps {
   collapsed: boolean;
+  /** When provided, only show integrations whose name is in this list */
+  filterApps?: string[];
 }
 
-export const IntegrationStatus = ({ collapsed }: IntegrationStatusProps) => {
-  const [integrations, setIntegrations] = useState<Integration[]>([]);
+export const IntegrationStatus = ({ collapsed, filterApps }: IntegrationStatusProps) => {
+  const [allIntegrations, setAllIntegrations] = useState<Integration[]>([]);
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
+
+  // Apply filter if provided (case-insensitive name match)
+  const integrations = filterApps
+    ? allIntegrations.filter(i => filterApps.some(f => f.toLowerCase() === i.name.toLowerCase()))
+    : allIntegrations;
+
   const defaultLimit = collapsed ? 4 : 8;
   const displayLimit = expanded ? integrations.length : defaultLimit;
   const hasMore = integrations.length > defaultLimit;
@@ -73,7 +81,7 @@ export const IntegrationStatus = ({ collapsed }: IntegrationStatusProps) => {
                 return a.name.localeCompare(b.name);
               });
             
-            setIntegrations(dedupedIntegrations);
+            setAllIntegrations(dedupedIntegrations);
           }
         }
       } catch (error) {

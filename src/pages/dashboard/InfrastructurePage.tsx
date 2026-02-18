@@ -1638,31 +1638,13 @@ const CategoryDetailDrawer = ({
       </Box>
 
       <Box sx={{ p: 3, overflowY: 'auto', flex: 1 }}>
-        {/* Your Apps — shown above Common Tools when apps exist */}
+        {/* Your Apps — filtered IntegrationStatus for this category */}
         {matchedApps.length > 0 && (
           <Box sx={{ mb: 3 }}>
-            <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>
-              Your Apps
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
-              {matchedApps.map(app => (
-                <Chip
-                  key={app.name}
-                  label={app.name}
-                  size="small"
-                  clickable
-                  onClick={() => navigate(`/apps/${app.name.toLowerCase().replace(/\s+/g, '_')}`)}
-                  sx={{
-                    height: 26,
-                    fontSize: '0.72rem',
-                    bgcolor: 'hsl(var(--background))',
-                    color: 'hsl(var(--foreground))',
-                    border: '1px solid hsl(var(--border))',
-                    '&:hover': { bgcolor: 'hsl(var(--muted))' },
-                  }}
-                />
-              ))}
-            </Box>
+            <IntegrationStatus
+              collapsed={false}
+              filterApps={matchedApps.map(a => a.name)}
+            />
           </Box>
         )}
 
