@@ -1280,6 +1280,7 @@ const EdgeDetailDrawer = ({
   onClose,
   onSelectCategory,
   onViewAllFlows,
+  activeCategories,
 }: {
   flow: (typeof DATA_FLOWS)[number] | null;
   edgeIdx: number | null;
@@ -1287,11 +1288,17 @@ const EdgeDetailDrawer = ({
   onClose: () => void;
   onSelectCategory: (categoryId: string) => void;
   onViewAllFlows: (fromEdgeIdx: number) => void;
+  activeCategories: Set<string>;
 }) => {
   if (!flow) return null;
   const sourceCat = getToolCategoryMeta(flow.source);
   const targetCat = getToolCategoryMeta(flow.target);
   const headerColor = sourceCat?.color || '--primary';
+
+  const sourceActive = activeCategories.has(flow.source);
+  const targetActive = activeCategories.has(flow.target);
+  const flowState = getFlowState(sourceActive, targetActive);
+  const badge = FLOW_STATE_BADGE[flowState];
 
   return (
     <Drawer
@@ -1363,6 +1370,39 @@ const EdgeDetailDrawer = ({
         </IconButton>
       </Box>
 
+      {/* Status */}
+      <Box sx={{
+        px: 3,
+        py: 2,
+        borderBottom: '1px solid hsl(var(--border))',
+        bgcolor: `${badge.bg}`,
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: 1.5,
+      }}>
+        <Box sx={{
+          width: 8,
+          height: 8,
+          borderRadius: '50%',
+          bgcolor: badge.color,
+          mt: '5px',
+          flexShrink: 0,
+          boxShadow: flowState === 'enabled' ? `0 0 6px ${badge.color}` : 'none',
+        }} />
+        <Box>
+          <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, color: badge.color, lineHeight: 1.3 }}>
+            {badge.label}
+          </Typography>
+          <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', mt: 0.25 }}>
+            {flowState === 'enabled'
+              ? 'Both endpoints are configured and active.'
+              : flowState === 'missing_config'
+              ? `${!sourceActive ? sourceCat?.label : targetCat?.label} is not yet configured.`
+              : 'Neither endpoint has been configured yet.'}
+          </Typography>
+        </Box>
+      </Box>
+
       {/* Flow direction */}
       <Box sx={{ px: 3, py: 2.5, borderBottom: '1px solid hsl(var(--border))' }}>
         <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1.5 }}>
@@ -1371,36 +1411,40 @@ const EdgeDetailDrawer = ({
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
           {sourceCat && (
             <Chip
-              icon={<Box sx={{ display: 'flex', color: `hsl(var(${sourceCat.color}))` }}>{sourceCat.icon}</Box>}
+              icon={<Box sx={{ display: 'flex', color: sourceActive ? `hsl(var(${sourceCat.color}))` : 'hsl(var(--muted-foreground))' }}>{sourceCat.icon}</Box>}
               label={sourceCat.label}
               size="small"
               onClick={() => onSelectCategory(flow.source)}
               sx={{
-                bgcolor: `hsla(var(${sourceCat.color}) / 0.1)`,
-                color: `hsl(var(${sourceCat.color}))`,
+                bgcolor: sourceActive ? `hsla(var(${sourceCat.color}) / 0.1)` : 'hsla(var(--muted-foreground) / 0.08)',
+                color: sourceActive ? `hsl(var(${sourceCat.color}))` : 'hsl(var(--muted-foreground))',
                 fontWeight: 600,
                 fontSize: '0.8rem',
-                border: `1px solid hsla(var(${sourceCat.color}) / 0.25)`,
+                border: sourceActive
+                  ? `1px solid hsla(var(${sourceCat.color}) / 0.25)`
+                  : '1px solid hsla(var(--muted-foreground) / 0.2)',
                 cursor: 'pointer',
-                '&:hover': { bgcolor: `hsla(var(${sourceCat.color}) / 0.2)` },
+                '&:hover': { bgcolor: sourceActive ? `hsla(var(${sourceCat.color}) / 0.2)` : 'hsla(var(--muted-foreground) / 0.15)' },
               }}
             />
           )}
           <ArrowRight size={16} style={{ color: 'hsl(var(--muted-foreground))', flexShrink: 0 }} />
           {targetCat && (
             <Chip
-              icon={<Box sx={{ display: 'flex', color: `hsl(var(${targetCat.color}))` }}>{targetCat.icon}</Box>}
+              icon={<Box sx={{ display: 'flex', color: targetActive ? `hsl(var(${targetCat.color}))` : 'hsl(var(--muted-foreground))' }}>{targetCat.icon}</Box>}
               label={targetCat.label}
               size="small"
               onClick={() => onSelectCategory(flow.target)}
               sx={{
-                bgcolor: `hsla(var(${targetCat.color}) / 0.1)`,
-                color: `hsl(var(${targetCat.color}))`,
+                bgcolor: targetActive ? `hsla(var(${targetCat.color}) / 0.1)` : 'hsla(var(--muted-foreground) / 0.08)',
+                color: targetActive ? `hsl(var(${targetCat.color}))` : 'hsl(var(--muted-foreground))',
                 fontWeight: 600,
                 fontSize: '0.8rem',
-                border: `1px solid hsla(var(${targetCat.color}) / 0.25)`,
+                border: targetActive
+                  ? `1px solid hsla(var(${targetCat.color}) / 0.25)`
+                  : '1px solid hsla(var(--muted-foreground) / 0.2)',
                 cursor: 'pointer',
-                '&:hover': { bgcolor: `hsla(var(${targetCat.color}) / 0.2)` },
+                '&:hover': { bgcolor: targetActive ? `hsla(var(${targetCat.color}) / 0.2)` : 'hsla(var(--muted-foreground) / 0.15)' },
               }}
             />
           )}
@@ -1419,6 +1463,7 @@ const EdgeDetailDrawer = ({
     </Drawer>
   );
 };
+
 
 // ── Detail Drawer ──────────────────────────────────────────────────────────────
 
@@ -2501,6 +2546,7 @@ const InfrastructureContent = () => {
         edgeIdx={selectedEdgeIdx}
         open={selectedEdgeIdx !== null}
         onClose={() => setSelectedEdgeIdx(null)}
+        activeCategories={activeCategories}
         onSelectCategory={(catId) => {
           setSelectedEdgeIdx(null);
           setSelectedId(catId);
