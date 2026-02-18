@@ -2067,7 +2067,7 @@ const CategoryDetailDrawer = ({
               )}
             </Box>}
 
-        {/* Data Flows — branch-based "How to use" */}
+        {/* Data Flows — grouped by phase */}
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
             <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -2090,20 +2090,74 @@ const CategoryDetailDrawer = ({
               }}
             />
           </Box>
-          {connectedFlows.map(({ flow, idx }) => {
-            const isEnabled = activeCategories.has(flow.source) && activeCategories.has(flow.target);
-            const flowState = getFlowState(configuredCategories.has(flow.source), configuredCategories.has(flow.target));
+          {FLOW_PHASES.map((phase) => {
+            const phaseFlows = connectedFlows.filter(({ flow }) => flow.phase === phase.id);
+            if (!phaseFlows.length) return null;
             return (
-              <DataFlowCard
-                key={flow.id}
-                flow={flow}
-                edgeId={flow.id}
-                enabled={isEnabled}
-                flowState={flowState}
-                onClick={() => onEdgeClick(idx)}
-                onMouseEnter={() => onEdgeHover(flow.id)}
-                onMouseLeave={() => onEdgeHover(null)}
-              />
+              <Box key={phase.id} sx={{ mb: 2.5 }}>
+                {/* Phase header */}
+                <Box sx={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 1.5,
+                  mb: 1.5,
+                  p: 1.5,
+                  borderRadius: 2,
+                  border: `1px solid hsla(var(${phase.color}) / 0.25)`,
+                  bgcolor: `hsla(var(${phase.color}) / 0.06)`,
+                }}>
+                  <Box sx={{
+                    minWidth: 28,
+                    height: 28,
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    bgcolor: `hsl(var(${phase.color}))`,
+                    color: 'hsl(var(--background))',
+                    fontWeight: 700,
+                    fontSize: '0.75rem',
+                    flexShrink: 0,
+                    mt: 0.1,
+                  }}>
+                    {phase.step}
+                  </Box>
+                  <Box sx={{ flex: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.25 }}>
+                      <Box sx={{ color: `hsl(var(${phase.color}))`, display: 'flex' }}>
+                        {PHASE_ICONS[phase.id]}
+                      </Box>
+                      <Typography sx={{ fontWeight: 700, fontSize: '0.85rem', color: `hsl(var(${phase.color}))` }}>
+                        {phase.label}
+                      </Typography>
+                      <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', ml: 'auto', flexShrink: 0 }}>
+                        {phaseFlows.length} flow{phaseFlows.length !== 1 ? 's' : ''}
+                      </Typography>
+                    </Box>
+                    <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.5 }}>
+                      {phase.subtitle}
+                    </Typography>
+                  </Box>
+                </Box>
+                <Box sx={{ ml: 0.5 }}>
+                  {phaseFlows.map(({ flow, idx }) => {
+                    const isEnabled = activeCategories.has(flow.source) && activeCategories.has(flow.target);
+                    const flowState = getFlowState(configuredCategories.has(flow.source), configuredCategories.has(flow.target));
+                    return (
+                      <DataFlowCard
+                        key={flow.id}
+                        flow={flow}
+                        edgeId={flow.id}
+                        enabled={isEnabled}
+                        flowState={flowState}
+                        onClick={() => onEdgeClick(idx)}
+                        onMouseEnter={() => onEdgeHover(flow.id)}
+                        onMouseLeave={() => onEdgeHover(null)}
+                      />
+                    );
+                  })}
+                </Box>
+              </Box>
             );
           })}
         </Box>
