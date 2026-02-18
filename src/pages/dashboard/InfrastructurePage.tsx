@@ -315,114 +315,92 @@ export const FLOW_PHASES: { id: FlowPhase; label: string; subtitle: string; step
   },
 ];
 
-const DATA_FLOWS: { source: string; target: string; label: string; animated?: boolean; description: string; phase: FlowPhase; agenticDescription: string; tags: string[] }[] = [
-  // e-0
-  { phase: 'ingest', source: 'siem', target: 'case_management', label: 'Alerts', animated: true,
+const DATA_FLOWS: { id: string; source: string; target: string; label: string; animated?: boolean; description: string; phase: FlowPhase; agenticDescription: string; tags: string[] }[] = [
+  { id: 'siem_case_management', phase: 'ingest', source: 'siem', target: 'case_management', label: 'Alerts', animated: true,
     tags: ['Alert', 'Detection', 'Logs'],
     description: 'SIEM-generated alerts are the primary trigger for new cases. Automating this flow ensures no critical detection goes uninvestigated and reduces mean time to respond (MTTR).',
     agenticDescription: 'An agent triages incoming alerts, deduplicates them against open cases, scores severity using threat intel context, and auto-assigns to the right analyst based on type and on-call schedule.' },
-  // e-1
-  { phase: 'ingest', source: 'network', target: 'siem', label: 'Flow logs',
+  { id: 'network_siem', phase: 'ingest', source: 'network', target: 'siem', label: 'Flow logs',
     tags: ['Logs', 'Detection'],
     description: 'Network flow logs (NetFlow, DNS, proxy) give the SIEM east-west and north-south visibility. Without them, lateral movement and C2 traffic go undetected.',
     agenticDescription: 'An agent monitors ingested flow logs for anomalous patterns (beaconing, port scans, unusual data volumes), generates hypotheses, and creates enriched SIEM alerts with analyst-ready summaries.' },
-  // e-2
-  { phase: 'correlation', source: 'edr', target: 'siem', label: 'Telemetry',
+  { id: 'edr_siem', phase: 'correlation', source: 'edr', target: 'siem', label: 'Telemetry',
     tags: ['Logs', 'Detection', 'Correlation'],
     description: 'Endpoint telemetry (process trees, file hashes, registry changes) enriches SIEM detections with host-level context, enabling accurate correlation rules.',
     agenticDescription: 'An agent cross-references endpoint telemetry with known attack patterns, surfaces hidden process chains, and annotates SIEM events with host risk scores before they reach an analyst.' },
-  // e-3
-  { phase: 'correlation', source: 'iam', target: 'siem', label: 'Auth logs',
+  { id: 'iam_siem', phase: 'correlation', source: 'iam', target: 'siem', label: 'Auth logs',
     tags: ['Logs', 'Detection', 'Correlation'],
     description: 'Authentication and authorization logs reveal credential abuse, impossible travel, privilege escalation, and brute-force attempts across the identity layer.',
     agenticDescription: 'An agent detects impossible travel, credential stuffing patterns, and privilege escalation attempts in auth logs, then creates SIEM alerts with user risk context and recommended actions.' },
-  // e-4
-  { phase: 'ingest', source: 'email', target: 'case_management', label: 'Phishing reports',
+  { id: 'email_case_management', phase: 'ingest', source: 'email', target: 'case_management', label: 'Phishing reports',
     tags: ['Alert', 'Logs'],
     description: 'User-reported phishing emails create cases for triage. Automating intake with deduplication and auto-enrichment drastically cuts analyst workload.',
     agenticDescription: 'An agent parses reported emails, extracts and enriches all IOCs, determines phishing verdict using threat intel, and auto-closes low-risk reports while escalating confirmed campaigns.' },
-  // e-5
-  { phase: 'correlation', source: 'threat_intel', target: 'case_management', label: 'Enrichment', animated: true,
+  { id: 'threat_intel_case_management', phase: 'correlation', source: 'threat_intel', target: 'case_management', label: 'Enrichment', animated: true,
     tags: ['Intel', 'Correlation', 'Context'],
     description: 'Threat intelligence enriches cases with reputation scores, malware families, threat actor attribution, and related IOCs — giving analysts immediate context.',
     agenticDescription: 'An agent autonomously enriches all observables in a case, maps findings to MITRE ATT&CK, identifies related campaigns, and updates case severity and recommended playbook based on findings.' },
-  // e-6
-  { phase: 'response', source: 'threat_intel', target: 'network', label: 'IOC feeds',
+  { id: 'threat_intel_network', phase: 'response', source: 'threat_intel', target: 'network', label: 'IOC feeds',
     tags: ['Intel', 'Response', 'Prevention'],
     description: 'Threat intel feeds pushed to network devices include IPs, domains, URLs, and ASNs for perimeter blocking, as well as MITRE ATT&CK techniques used to inform detection rule tuning on IDS/IPS and NDR sensors. Network controls act at layer 3–7, so indicator types must be network-observable.',
     agenticDescription: 'An agent curates and validates IOC feeds before pushing, deduplicates against existing block rules, removes expired indicators, and maps active techniques to IDS/IPS signatures — ensuring network policy stays accurate without manual review.' },
-  // e-7
-  { phase: 'response', source: 'threat_intel', target: 'edr', label: 'IOC feeds',
+  { id: 'threat_intel_edr', phase: 'response', source: 'threat_intel', target: 'edr', label: 'IOC feeds',
     tags: ['Intel', 'Response', 'Prevention', 'Detection'],
     description: 'Endpoint-targeted IOC feeds include file hashes (MD5/SHA256), process names, registry keys, certificate thumbprints, and parent-child process trees for behavioral blocking. MITRE ATT&CK technique mappings inform custom detection rules. Unlike network devices, EDR can act on host-observable artifacts invisible to the perimeter.',
     agenticDescription: 'An agent validates hash and behavioral indicator accuracy against multiple intel sources, maps techniques to EDR rule coverage gaps, prioritizes by threat severity, and generates a blocking report with rollback instructions.' },
-  // e-8
-  { phase: 'response', source: 'case_management', target: 'communication', label: 'Notifications', animated: true,
+  { id: 'case_management_communication', phase: 'response', source: 'case_management', target: 'communication', label: 'Notifications', animated: true,
     tags: ['Response', 'Alert'],
     description: 'Automated notifications keep stakeholders informed of incident status, escalations, and required actions — critical for SLA compliance and coordination.',
     agenticDescription: 'An agent drafts context-aware incident summaries, determines the right audience and channel for each update, and adapts tone (technical vs. executive) based on the recipient.' },
-  // e-9
-  { phase: 'response', source: 'case_management', target: 'iam', label: 'Disable accounts',
+  { id: 'case_management_iam', phase: 'response', source: 'case_management', target: 'iam', label: 'Disable accounts',
     tags: ['Response', 'Containment'],
     description: 'When a compromised account is identified, automated disablement through IAM stops the attacker from maintaining access while the investigation continues.',
     agenticDescription: 'An agent validates the compromise signal, checks the user\'s business criticality, executes targeted disablement or session revocation, and documents the action with rollback steps in the case.' },
-  // e-10
-  { phase: 'response', source: 'case_management', target: 'edr', label: 'Containment',
+  { id: 'case_management_edr', phase: 'response', source: 'case_management', target: 'edr', label: 'Containment',
     tags: ['Response', 'Containment'],
     description: 'Network isolation or process killing on compromised endpoints contains the threat, preventing lateral movement while preserving forensic evidence.',
     agenticDescription: 'An agent determines the right containment scope (process, network, host), triggers isolation, collects forensic artifacts autonomously, and creates a detailed timeline for the investigation.' },
-  // e-11
-  { phase: 'correlation', source: 'asset_management', target: 'case_management', label: 'Asset context',
+  { id: 'asset_management_case_management', phase: 'correlation', source: 'asset_management', target: 'case_management', label: 'Asset context',
     tags: ['Context', 'Correlation'],
     description: 'Asset context (owner, criticality, business unit, OS) helps analysts prioritize cases and understand blast radius during an incident.',
     agenticDescription: 'An agent automatically fetches asset owner, business criticality, and known vulnerabilities for every observable in a case, recalculates impact score, and suggests prioritization.' },
-  // e-12
-  { phase: 'correlation', source: 'email', target: 'threat_intel', label: 'Phishing IOCs',
+  { id: 'email_threat_intel', phase: 'correlation', source: 'email', target: 'threat_intel', label: 'Phishing IOCs',
     tags: ['Intel', 'Correlation', 'Logs'],
     description: 'Extracting IOCs from phishing emails (sender domains, URLs, attachments) and feeding them into threat intel platforms helps detect broader campaigns.',
     agenticDescription: 'An agent detonates suspicious attachments and URLs in a sandbox, extracts all IOCs, correlates with known campaigns, and auto-publishes confirmed indicators to the threat intel platform.' },
-  // e-13
-  { phase: 'ingest', source: 'cloud', target: 'siem', label: 'Audit logs', animated: true,
+  { id: 'cloud_siem', phase: 'ingest', source: 'cloud', target: 'siem', label: 'Audit logs', animated: true,
     tags: ['Logs', 'Detection'],
     description: 'Cloud audit logs (CloudTrail, Activity Log, Audit Logs) provide visibility into API calls, configuration changes, and access patterns across cloud environments.',
     agenticDescription: 'An agent detects anomalous API call patterns, privilege escalation, and misconfiguration events in cloud audit logs, then generates prioritized SIEM alerts with remediation context.' },
-  // e-14
-  { phase: 'correlation', source: 'cloud', target: 'iam', label: 'Identity events',
+  { id: 'cloud_iam', phase: 'correlation', source: 'cloud', target: 'iam', label: 'Identity events',
     tags: ['Logs', 'Correlation', 'Detection'],
     description: 'Cloud identity events (role changes, permission grants, federation configs) feed IAM monitoring to detect privilege escalation in cloud environments.',
     agenticDescription: 'An agent tracks excessive permission grants, detects role assumption chains indicating privilege escalation, and triggers automated least-privilege review recommendations in IAM.' },
-  // e-15
-  { phase: 'correlation', source: 'threat_intel', target: 'cloud', label: 'IOC feeds',
+  { id: 'threat_intel_cloud', phase: 'correlation', source: 'threat_intel', target: 'cloud', label: 'IOC feeds',
     tags: ['Intel', 'Correlation', 'Detection'],
     description: 'Pushing IOC feeds to cloud-native security tools (GuardDuty, Sentinel, SCC) enables detection of known-malicious activity within cloud workloads.',
     agenticDescription: 'An agent maps threat intel IOCs to active cloud workloads, identifies which resources are communicating with known-malicious infrastructure, and auto-creates remediation tasks in cloud security tools.' },
-  // e-16
-  { phase: 'response', source: 'case_management', target: 'cloud', label: 'Cloud response',
+  { id: 'case_management_cloud', phase: 'response', source: 'case_management', target: 'cloud', label: 'Cloud response',
     tags: ['Response', 'Containment'],
     description: 'Automated response actions in cloud environments — revoking keys, isolating instances, modifying security groups — contain threats before they spread across cloud infrastructure.',
     agenticDescription: 'An agent validates cloud response actions against blast radius, executes targeted remediation (revoke key, modify SG, snapshot + terminate instance), and logs all changes with rollback instructions.' },
-  // e-17
-  { phase: 'response', source: 'case_management', target: 'network', label: 'Block rules',
+  { id: 'case_management_network', phase: 'response', source: 'case_management', target: 'network', label: 'Block rules',
     tags: ['Response', 'Prevention', 'Containment'],
     description: 'Pushing firewall block rules from cases to network devices enables immediate perimeter-level containment of malicious IPs, domains, and traffic patterns.',
     agenticDescription: 'An agent validates block rule candidates against allowlists and business-critical services, pushes rules to the right network segments, and auto-expires them with case closure.' },
-  // e-18
-  { phase: 'response', source: 'case_management', target: 'email', label: 'Quarantine',
+  { id: 'case_management_email', phase: 'response', source: 'case_management', target: 'email', label: 'Quarantine',
     tags: ['Response', 'Containment'],
     description: 'Quarantining or purging malicious emails from mailboxes during an active investigation prevents additional users from falling victim to the same campaign.',
     agenticDescription: 'An agent searches all mailboxes for campaign variants, bulk-quarantines matching emails, notifies impacted users with safe-messaging guidance, and reports scope to the case.' },
-  // e-19
-  { phase: 'ingest', source: 'edr', target: 'case_management', label: 'EDR alerts', animated: true,
+  { id: 'edr_case_management', phase: 'ingest', source: 'edr', target: 'case_management', label: 'EDR alerts', animated: true,
     tags: ['Alert', 'Detection'],
     description: 'EDR-generated alerts (malware detections, suspicious process executions, ransomware behavior) are forwarded directly to Case Management to open or update incidents, bypassing the SIEM for faster response on high-confidence endpoint detections.',
     agenticDescription: 'An agent evaluates EDR alert confidence, correlates with related endpoint events, determines if it belongs to an existing case, and either updates the case or creates a new one with a pre-filled investigation timeline.' },
-  // e-20 — Cloud → Assets (resource inventory)
-  { phase: 'ingest', source: 'cloud', target: 'asset_management', label: 'Resource inventory',
+  { id: 'cloud_asset_management', phase: 'ingest', source: 'cloud', target: 'asset_management', label: 'Resource inventory',
     tags: ['Logs', 'Context'],
     description: 'Auto-syncing cloud resources into the asset inventory ensures the CMDB stays current, preventing blind spots in vulnerability management and incident response.',
     agenticDescription: 'An agent continuously reconciles cloud inventory with the CMDB, flags newly exposed resources, identifies shadow IT, and marks assets with missing security controls for immediate action.' },
-  // e-21 — Assets → SIEM (endpoint & asset logs)
-  { phase: 'ingest', source: 'asset_management', target: 'siem', label: 'Endpoint logs', animated: true,
+  { id: 'asset_management_siem', phase: 'ingest', source: 'asset_management', target: 'siem', label: 'Endpoint logs', animated: true,
     tags: ['Logs', 'Detection', 'Alert'],
     description: 'Forwarding endpoint telemetry and asset logs (process events, file changes, network connections, vulnerability scan results) to the SIEM enriches correlation and enables asset-aware detections.',
     agenticDescription: 'An agent normalises endpoint telemetry from diverse agents, tags each event with asset criticality and owner from the CMDB, and forwards structured logs to the SIEM with context that tunes alert priority.' },
@@ -993,46 +971,46 @@ const NODE_POSITIONS: Record<string, { x: number; y: number }> = {
 };
 
 const DEFAULT_HANDLES: Record<string, { sourceHandle: string; targetHandle: string }> = {
-  'e-0':  { sourceHandle: 'right-source',  targetHandle: 'top-target'   },
-  'e-1':  { sourceHandle: 'bottom-source', targetHandle: 'top-target'   },
-  'e-2':  { sourceHandle: 'bottom-source', targetHandle: 'top-target'   },
-  'e-3':  { sourceHandle: 'bottom-source', targetHandle: 'top-target'   },
-  'e-4':  { sourceHandle: 'bottom-source', targetHandle: 'right-target' },
-  'e-5':  { sourceHandle: 'left-source',   targetHandle: 'top-target'   },
-  'e-6':  { sourceHandle: 'top-source',    targetHandle: 'left-target'  },
-  'e-7':  { sourceHandle: 'top-source',    targetHandle: 'right-target' },
-  'e-8':  { sourceHandle: 'bottom-source', targetHandle: 'top-target'   },
-  'e-9':  { sourceHandle: 'left-source',   targetHandle: 'top-target'   },
-  'e-10': { sourceHandle: 'left-source',   targetHandle: 'top-target'   },
-  'e-11': { sourceHandle: 'bottom-source', targetHandle: 'top-target'   },
-  'e-12': { sourceHandle: 'bottom-source', targetHandle: 'right-target' },
-  'e-13': { sourceHandle: 'right-source',  targetHandle: 'top-target'   },
-  'e-14': { sourceHandle: 'bottom-source', targetHandle: 'top-target'   },
-  'e-15': { sourceHandle: 'right-source',  targetHandle: 'left-target'  },
-  'e-16': { sourceHandle: 'top-source',    targetHandle: 'top-target'   },
-  'e-17': { sourceHandle: 'left-source',   targetHandle: 'top-target'   },
-  'e-18': { sourceHandle: 'left-source',   targetHandle: 'top-target'   },
-  'e-19': { sourceHandle: 'bottom-source', targetHandle: 'right-target' },
-  'e-20': { sourceHandle: 'bottom-source', targetHandle: 'top-target'   },
-  'e-21': { sourceHandle: 'right-source',  targetHandle: 'left-target'  },
+  'siem_case_management':          { sourceHandle: 'right-source',  targetHandle: 'top-target'   },
+  'network_siem':                  { sourceHandle: 'bottom-source', targetHandle: 'top-target'   },
+  'edr_siem':                      { sourceHandle: 'bottom-source', targetHandle: 'top-target'   },
+  'iam_siem':                      { sourceHandle: 'bottom-source', targetHandle: 'top-target'   },
+  'email_case_management':         { sourceHandle: 'bottom-source', targetHandle: 'right-target' },
+  'threat_intel_case_management':  { sourceHandle: 'left-source',   targetHandle: 'top-target'   },
+  'threat_intel_network':          { sourceHandle: 'top-source',    targetHandle: 'left-target'  },
+  'threat_intel_edr':              { sourceHandle: 'top-source',    targetHandle: 'right-target' },
+  'case_management_communication': { sourceHandle: 'bottom-source', targetHandle: 'top-target'   },
+  'case_management_iam':           { sourceHandle: 'left-source',   targetHandle: 'top-target'   },
+  'case_management_edr':           { sourceHandle: 'left-source',   targetHandle: 'top-target'   },
+  'asset_management_case_management': { sourceHandle: 'bottom-source', targetHandle: 'top-target'   },
+  'email_threat_intel':            { sourceHandle: 'bottom-source', targetHandle: 'right-target' },
+  'cloud_siem':                    { sourceHandle: 'right-source',  targetHandle: 'top-target'   },
+  'cloud_iam':                     { sourceHandle: 'bottom-source', targetHandle: 'top-target'   },
+  'threat_intel_cloud':            { sourceHandle: 'right-source',  targetHandle: 'left-target'  },
+  'case_management_cloud':         { sourceHandle: 'top-source',    targetHandle: 'top-target'   },
+  'case_management_network':       { sourceHandle: 'left-source',   targetHandle: 'top-target'   },
+  'case_management_email':         { sourceHandle: 'left-source',   targetHandle: 'top-target'   },
+  'edr_case_management':           { sourceHandle: 'bottom-source', targetHandle: 'right-target' },
+  'cloud_asset_management':        { sourceHandle: 'bottom-source', targetHandle: 'top-target'   },
+  'asset_management_siem':         { sourceHandle: 'right-source',  targetHandle: 'left-target'  },
 };
 
 const DEFAULT_WAYPOINTS: Record<string, Array<{ x: number; y: number }>> = {
-  'e-17': [{ x: 620, y: 572.500007395668 }, { x: 620, y: 570 }, { x: -90, y: 570 }, { x: -90, y: -80 }, { x: 99.99993724079836, y: -80 }],
-  'e-9':  [{ x: -90, y: 572.500007395668 }, { x: -90, y: -80 }, { x: 379.9999514722607, y: -80 }],
-  'e-16': [{ x: 940, y: 230 }, { x: 1080, y: -200 }],
-  'e-3':  [{ x: 390, y: 170 }, { x: 530.0002648259205, y: 170 }],
-  'e-13': [{ x: 240, y: 36.999984443380555 }, { x: 240, y: 170 }, { x: 379.99998791616144, y: 170 }],
-  'e-1':  [{ x: 960, y: 170 }],
-  'e-18': [{ x: -90, y: 572.500125916264 }, { x: -90, y: -80 }, { x: 660.0000874212913, y: -80 }],
-  'e-10': [{ x: -90, y: 572.4999966397886 }, { x: -90, y: -80 }, { x: 670, y: -80 }],
-  'e-12': [{ x: 1220, y: 320 }, { x: 1044, y: 320 }],
-  'e-19': [{ x: 740, y: 720 }, { x: 1380, y: 720 }, { x: 1380, y: 52.499932276342 }],
-  'e-4':  [{ x: 1220, y: 570 }, { x: 924.0000879335148, y: 570 }],
-  'e-11': [{ x: 100, y: 430 }, { x: 730, y: 430 }],
-  'e-6':  [{ x: 940, y: 230 }, { x: 1080, y: 50 }, { x: 1080, y: -200 }, { x: 810, y: -200 }, { x: 810, y: 50 }, { x: 846, y: 50 }],
-  'e-2':  [{ x: 670.0002400192376, y: 170 }, { x: 530, y: 170 }],
-  'e-7':  [{ x: 940.0001620468963, y: 230 }, { x: 1080, y: 230 }, { x: 1080, y: -200 }, { x: 810, y: -200 }, { x: 810, y: 52.500120009618776 }],
+  'case_management_network':       [{ x: 620, y: 572.500007395668 }, { x: 620, y: 570 }, { x: -90, y: 570 }, { x: -90, y: -80 }, { x: 99.99993724079836, y: -80 }],
+  'case_management_iam':           [{ x: -90, y: 572.500007395668 }, { x: -90, y: -80 }, { x: 379.9999514722607, y: -80 }],
+  'case_management_cloud':         [{ x: 940, y: 230 }, { x: 1080, y: -200 }],
+  'iam_siem':                      [{ x: 390, y: 170 }, { x: 530.0002648259205, y: 170 }],
+  'cloud_siem':                    [{ x: 240, y: 36.999984443380555 }, { x: 240, y: 170 }, { x: 379.99998791616144, y: 170 }],
+  'network_siem':                  [{ x: 960, y: 170 }],
+  'case_management_email':         [{ x: -90, y: 572.500125916264 }, { x: -90, y: -80 }, { x: 660.0000874212913, y: -80 }],
+  'case_management_edr':           [{ x: -90, y: 572.4999966397886 }, { x: -90, y: -80 }, { x: 670, y: -80 }],
+  'email_threat_intel':            [{ x: 1220, y: 320 }, { x: 1044, y: 320 }],
+  'edr_case_management':           [{ x: 740, y: 720 }, { x: 1380, y: 720 }, { x: 1380, y: 52.499932276342 }],
+  'email_case_management':         [{ x: 1220, y: 570 }, { x: 924.0000879335148, y: 570 }],
+  'asset_management_case_management': [{ x: 100, y: 430 }, { x: 730, y: 430 }],
+  'threat_intel_network':          [{ x: 940, y: 230 }, { x: 1080, y: 50 }, { x: 1080, y: -200 }, { x: 810, y: -200 }, { x: 810, y: 50 }, { x: 846, y: 50 }],
+  'edr_siem':                      [{ x: 670.0002400192376, y: 170 }, { x: 530, y: 170 }],
+  'threat_intel_edr':              [{ x: 940.0001620468963, y: 230 }, { x: 1080, y: 230 }, { x: 1080, y: -200 }, { x: 810, y: -200 }, { x: 810, y: 52.500120009618776 }],
 };
 
 
@@ -1338,8 +1316,7 @@ const AllDataFlowsDrawer = ({
 
   // Compute flow state for each flow
   const flowsWithState = useMemo(() => DATA_FLOWS.map((flow, idx) => {
-    const edgeId = `e-${idx}`;
-    const isManuallyEnabled = enabledFlows.has(edgeId);
+    const isManuallyEnabled = enabledFlows.has(flow.id);
     const base = getFlowState(configuredCategories.has(flow.source), configuredCategories.has(flow.target));
     const state: FlowState = isManuallyEnabled && base === 'missing_config' ? 'enabled' : base;
     return { flow, idx, state };
@@ -1521,16 +1498,16 @@ const AllDataFlowsDrawer = ({
               <Box sx={{ ml: 0.5 }}>
                 {flows.map(({ flow, idx, state }) => (
                   <DataFlowCard
-                    key={idx}
+                    key={flow.id}
                     flow={flow}
-                    edgeId={`e-${idx}`}
+                    edgeId={flow.id}
                     enabled={activeCategories.has(flow.source) && activeCategories.has(flow.target)}
                     flowState={state}
                     highlighted={highlightEdgeIdx === idx}
-                    isAgentic={agenticFlows.has(`e-${idx}`)}
+                    isAgentic={agenticFlows.has(flow.id)}
                     variant="compact"
                     onClick={() => { onClose(); onSelectFlow(idx); }}
-                    onMouseEnter={() => onEdgeHover(`e-${idx}`)}
+                    onMouseEnter={() => onEdgeHover(flow.id)}
                     onMouseLeave={() => onEdgeHover(null)}
                   />
                 ))}
@@ -1584,7 +1561,7 @@ const EdgeDetailDrawer = ({
   onToggleAppDisabled: (appName: string) => void;
 }) => {
   if (!flow) return null;
-  const edgeId = edgeIdx !== null ? `e-${edgeIdx}` : '';
+  const edgeId = edgeIdx !== null ? (DATA_FLOWS[edgeIdx]?.id ?? '') : '';
   const isManuallyEnabled = enabledFlows.has(edgeId);
 
   const sourceCat = getToolCategoryMeta(flow.source);
@@ -1898,7 +1875,7 @@ const EdgeDetailDrawer = ({
 
       {/* Agentic section */}
       {(() => {
-        const edgeId = edgeIdx !== null ? `e-${edgeIdx}` : '';
+        const edgeId = edgeIdx !== null ? (DATA_FLOWS[edgeIdx]?.id ?? '') : '';
         const isAgenticEnabled = agenticFlows.has(edgeId);
         return (
           <Box sx={{ px: 3, py: 2.5, bgcolor: isAgenticEnabled ? 'hsla(var(--primary) / 0.04)' : 'transparent', transition: 'background 0.2s' }}>
@@ -2223,19 +2200,18 @@ const CategoryDetailDrawer = ({
             />
           </Box>
           {connectedFlows.map(({ flow, idx }) => {
-            const edgeId = `e-${idx}`;
             const isEnabled = activeCategories.has(flow.source) && activeCategories.has(flow.target);
             const flowState = getFlowState(configuredCategories.has(flow.source), configuredCategories.has(flow.target));
             return (
               <DataFlowCard
-                key={edgeId}
+                key={flow.id}
                 flow={flow}
-                edgeId={edgeId}
+                edgeId={flow.id}
                 enabled={isEnabled}
                 flowState={flowState}
                 variant="full"
                 onClick={() => onEdgeClick(idx)}
-                onMouseEnter={() => onEdgeHover(edgeId)}
+                onMouseEnter={() => onEdgeHover(flow.id)}
                 onMouseLeave={() => onEdgeHover(null)}
               />
             );
@@ -2343,8 +2319,8 @@ const InfrastructureContent = () => {
   const simulatedEdgeIds = useMemo(() => {
     if (simulatedPhases.size === 0) return new Set<string>();
     const ids = new Set<string>();
-    DATA_FLOWS.forEach((flow, idx) => {
-      if (simulatedPhases.has(flow.phase)) ids.add(`e-${idx}`);
+    DATA_FLOWS.forEach((flow) => {
+      if (simulatedPhases.has(flow.phase)) ids.add(flow.id);
     });
     return ids;
   }, [simulatedPhases]);
@@ -2572,7 +2548,7 @@ const InfrastructureContent = () => {
 
   const initialEdges: Edge[] = useMemo(() =>
     DATA_FLOWS.map((flow, idx) => {
-      const edgeId = `e-${idx}`;
+      const edgeId = flow.id;
       // Use global disabled apps check
       const sourceActive = isCategoryActiveForEdge(flow.source);
       const targetActive = isCategoryActiveForEdge(flow.target);
@@ -2985,7 +2961,7 @@ const InfrastructureContent = () => {
           onEdgeMouseEnter={(_, edge) => setHoveredEdgeId(edge.id)}
           onEdgeMouseLeave={() => setHoveredEdgeId(null)}
           onEdgeClick={(_, edge) => {
-            const idx = parseInt(edge.id.replace('e-', ''), 10);
+            const idx = DATA_FLOWS.findIndex(f => f.id === edge.id);
             setSelectedEdgeIdx(prev => prev === idx ? null : idx);
             setSelectedId(null);
           }}
@@ -3221,15 +3197,13 @@ const InfrastructureContent = () => {
         </Typography>
         {/* Enabled */}
         {(() => {
-          const count = DATA_FLOWS.filter((_, i) => {
-            const edgeId = `e-${i}`;
-            const base = getFlowState(activeCategories.has(DATA_FLOWS[i].source), activeCategories.has(DATA_FLOWS[i].target));
-            return (enabledFlows.has(edgeId) && base === 'missing_config') ? true : base === 'enabled';
-          }).length + DATA_FLOWS.filter((_, i) => enabledFlows.has(`e-${i}`) && getFlowState(activeCategories.has(DATA_FLOWS[i].source), activeCategories.has(DATA_FLOWS[i].target)) === 'missing_config').length;
-          const enabledCount = DATA_FLOWS.filter((_, i) => {
-            const edgeId = `e-${i}`;
-            const base = getFlowState(activeCategories.has(DATA_FLOWS[i].source), activeCategories.has(DATA_FLOWS[i].target));
-            return enabledFlows.has(edgeId) && base === 'missing_config';
+          const count = DATA_FLOWS.filter((flow) => {
+            const base = getFlowState(activeCategories.has(flow.source), activeCategories.has(flow.target));
+            return (enabledFlows.has(flow.id) && base === 'missing_config') ? true : base === 'enabled';
+          }).length + DATA_FLOWS.filter((flow) => enabledFlows.has(flow.id) && getFlowState(activeCategories.has(flow.source), activeCategories.has(flow.target)) === 'missing_config').length;
+          const enabledCount = DATA_FLOWS.filter((flow) => {
+            const base = getFlowState(activeCategories.has(flow.source), activeCategories.has(flow.target));
+            return enabledFlows.has(flow.id) && base === 'missing_config';
           }).length;
           return (
             <Tooltip title="Both categories have apps configured and the data flow has been explicitly verified. Click to filter." placement="right" arrow>
@@ -3246,10 +3220,9 @@ const InfrastructureContent = () => {
         })()}
         {/* Misconfigured */}
         {(() => {
-          const count = DATA_FLOWS.filter((_, i) => {
-            const edgeId = `e-${i}`;
-            const base = getFlowState(activeCategories.has(DATA_FLOWS[i].source), activeCategories.has(DATA_FLOWS[i].target));
-            return base === 'missing_config' && !enabledFlows.has(edgeId);
+          const count = DATA_FLOWS.filter((flow) => {
+            const base = getFlowState(activeCategories.has(flow.source), activeCategories.has(flow.target));
+            return base === 'missing_config' && !enabledFlows.has(flow.id);
           }).length;
           return (
             <Tooltip title="Both categories have apps configured, but the flow has not been verified yet. Click to filter." placement="right" arrow>
