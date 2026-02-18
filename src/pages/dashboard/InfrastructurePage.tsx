@@ -676,6 +676,10 @@ const GradientEdge = ({
   };
   const arrowAngle = arrowAngleMap[targetPosition] ?? 0;
   const arrowColor = data?.useGradient ? targetColor : (style.stroke as string || 'hsl(var(--muted-foreground))');
+  // Push the tip slightly inside the node border for a clean overlap
+  const inset = 5;
+  const insetX = Math.cos(arrowAngle * Math.PI / 180) * inset;
+  const insetY = Math.sin(arrowAngle * Math.PI / 180) * inset;
   // Arrow size: tip at (0,0) pointing right, body extends LEFT — so tip is always exactly at targetX,targetY
   const S = 8;  // half-height
   const L = 10; // length
@@ -712,7 +716,7 @@ const GradientEdge = ({
       <polygon
         points={`0,0 ${-L},${-S} ${-L},${S}`}
         fill={arrowColor}
-        transform={`translate(${targetX},${targetY}) rotate(${arrowAngle})`}
+        transform={`translate(${targetX + insetX},${targetY + insetY}) rotate(${arrowAngle})`}
         style={{ pointerEvents: 'none', transition: 'fill 0.2s' }}
       />
       {/* Label on hover */}
