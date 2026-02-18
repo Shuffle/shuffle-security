@@ -10,7 +10,7 @@
  * If the user switches orgs, it resets to the default until getinfo is called again.
  */
 
-const DEV_BACKEND = 'https://barry-boxes-protection-demonstrates.trycloudflare.com';
+const DEV_BACKEND = 'https://mailman-may-spring-wealth.trycloudflare.com';
 const PROD_BACKEND = 'https://shuffler.io';
 
 // Determine if we're in Lovable preview (dev) or published (prod)
