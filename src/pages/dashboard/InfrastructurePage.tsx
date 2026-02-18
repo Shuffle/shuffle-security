@@ -2094,7 +2094,7 @@ const InfrastructureContent = () => {
         sourceHandle,
         targetHandle,
         label: flow.label,
-        animated: !!isFullyHighlighted,
+        animated: !!isConnected,
         reconnectable: true,
         zIndex: isConnected ? 10 : 0,
         type: 'gradient',
