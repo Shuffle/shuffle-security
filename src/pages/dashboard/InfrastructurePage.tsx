@@ -1955,6 +1955,8 @@ const CategoryDetailDrawer = ({
   onViewAllFlows,
   activeCategories,
   configuredCategories,
+  disabledAppsForCategory,
+  onToggleAppDisabledForCategory,
 }: {
   category: ToolCategory | null;
   matchedApps: MatchedApp[];
@@ -1965,6 +1967,8 @@ const CategoryDetailDrawer = ({
   onViewAllFlows: () => void;
   activeCategories: Set<string>;
   configuredCategories: Set<string>;
+  disabledAppsForCategory?: Set<string>;
+  onToggleAppDisabledForCategory?: (appName: string) => void;
 }) => {
   const navigate = useNavigate();
   const hasApps = matchedApps.length > 0;
@@ -2040,6 +2044,9 @@ const CategoryDetailDrawer = ({
               collapsed={false}
               filterApps={matchedApps.map(a => a.name)}
               onAddClick={() => setShowSearch(true)}
+              iconSize={36}
+              disabledApps={disabledAppsForCategory}
+              onDisable={onToggleAppDisabledForCategory}
             />
           </Box>
         )}
@@ -2309,6 +2316,8 @@ const InfrastructureContent = () => {
   const [agenticFlows, setAgenticFlows] = useState<Set<string>>(new Set());
   // disabledAppsPerFlow: maps edgeId → set of app names disabled for that flow
   const [disabledAppsPerFlow, setDisabledAppsPerFlow] = useState<Record<string, Set<string>>>({});
+  // disabledAppsPerCategory: maps categoryId → set of app names disabled in that category's drawer
+  const [disabledAppsPerCategory, setDisabledAppsPerCategory] = useState<Record<string, Set<string>>>({});
   const [updatingEdgeNodes, setUpdatingEdgeNodes] = useState<{ source: string; target: string; draggedEnd: 'source' | 'target' } | null>(null);
   const updatingEdgeNodesRef = useRef<{ source: string; target: string; draggedEnd: 'source' | 'target' } | null>(null);
   const [savedPositions, setSavedPositions] = useState<Record<string, { x: number; y: number }> | null>(null);
@@ -2444,6 +2453,18 @@ const InfrastructureContent = () => {
         setDatastoreItem(DISABLED_APPS_CACHE_KEY, serializable, DATASTORE_CATEGORIES.INFRASTRUCTURE)
           .catch(e => console.warn('Failed to save disabled apps:', e));
       }, 0);
+      return next;
+    });
+  }, []);
+
+  // Toggle a specific app as disabled/enabled for a category drawer
+  const toggleAppDisabledForCategory = useCallback((categoryId: string, appName: string) => {
+    setDisabledAppsPerCategory(prev => {
+      const next = { ...prev };
+      const current = new Set(next[categoryId] || []);
+      if (current.has(appName)) current.delete(appName);
+      else current.add(appName);
+      next[categoryId] = current;
       return next;
     });
   }, []);
@@ -3177,6 +3198,8 @@ const InfrastructureContent = () => {
         }}
         activeCategories={activeCategories}
         configuredCategories={activeCategories}
+        disabledAppsForCategory={selectedCategory ? (disabledAppsPerCategory[selectedCategory.id] || new Set()) : new Set()}
+        onToggleAppDisabledForCategory={selectedCategory ? (appName) => toggleAppDisabledForCategory(selectedCategory.id, appName) : undefined}
       />
 
       {/* Edge state legend — bottom-right overlay */}

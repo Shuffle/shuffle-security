@@ -27,13 +27,20 @@ interface IntegrationStatusProps {
   filterApps?: string[];
   /** When provided, the Add button calls this instead of navigating to /onboarding */
   onAddClick?: () => void;
+  /** Icon size override (default: 26) */
+  iconSize?: number;
+  /** When provided, hovering an icon shows a cross-out button that calls this with the app name */
+  onDisable?: (name: string) => void;
+  /** Set of app names that are currently disabled */
+  disabledApps?: Set<string>;
 }
 
-export const IntegrationStatus = ({ collapsed, filterApps, onAddClick }: IntegrationStatusProps) => {
+export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize = 26, onDisable, disabledApps }: IntegrationStatusProps) => {
   const [allIntegrations, setAllIntegrations] = useState<Integration[]>([]);
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   // Apply filter if provided (case-insensitive name match)
   const integrations = filterApps
@@ -101,6 +108,7 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick }: Integra
   };
 
   // Icon-only view for both collapsed and expanded states
+  const sz = iconSize;
   return (
     <Box sx={{ px: collapsed ? 0 : 1, py: 1 }}>
       {/* Header - only show when expanded */}
@@ -132,13 +140,17 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick }: Integra
           <CircularProgress size={20} sx={{ color: 'hsl(var(--muted-foreground))' }} />
         ) : (
           <>
-            {integrations.slice(0, displayLimit).map((integration) => (
+            {integrations.slice(0, displayLimit).map((integration) => {
+              const isDisabled = disabledApps?.has(integration.name) ?? false;
+              const isHovered = hoveredId === integration.id;
+              return (
               <Tooltip 
                 key={integration.id} 
-                title={
+                title={onDisable && isHovered ? '' : (
                   <Box sx={{ textAlign: 'left', minWidth: 160, p: 0.5 }}>
                     <Typography sx={{ fontWeight: 600, fontSize: '0.85rem', color: 'hsl(var(--foreground))' }}>
                       {integration.name}
+                      {isDisabled && <Typography component="span" sx={{ ml: 1, fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))' }}>(disabled)</Typography>}
                     </Typography>
                     <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', mb: 1, textTransform: 'capitalize' }}>
                       {integration.category}
@@ -167,71 +179,121 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick }: Integra
                       ))}
                     </Box>
                   </Box>
-                }
+                )}
                 placement="right"
                 arrow
               >
               <Box
-                  component={Link}
-                  to={`/apps/${encodeURIComponent(integration.name)}`}
+                  onMouseEnter={() => onDisable && setHoveredId(integration.id)}
+                  onMouseLeave={() => onDisable && setHoveredId(null)}
                   sx={{
                     position: 'relative',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    cursor: 'pointer',
+                    cursor: onDisable ? 'default' : 'pointer',
                     textDecoration: 'none',
-                    '&:hover': {
+                    opacity: isDisabled ? 0.35 : 1,
+                    transition: 'opacity 0.15s ease',
+                    '&:hover': onDisable ? {} : {
                       transform: 'scale(1.1)',
                       transition: 'transform 0.15s ease',
                     },
                   }}
                 >
-                  {integration.icon && !failedImages.has(integration.id) ? (
+                  {/* Icon — rendered as link only when not in disable mode */}
+                  <Box
+                    component={onDisable ? 'div' : Link}
+                    {...(!onDisable ? { to: `/apps/${encodeURIComponent(integration.name)}` } : {})}
+                    sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}
+                  >
+                    {integration.icon && !failedImages.has(integration.id) ? (
+                      <Box
+                        component="img"
+                        src={integration.icon}
+                        alt={integration.name}
+                        sx={{
+                          width: sz,
+                          height: sz,
+                          borderRadius: '50%',
+                          objectFit: 'contain',
+                          backgroundColor: 'hsl(var(--muted))',
+                          p: 0.25,
+                          filter: isDisabled ? 'grayscale(1)' : 'none',
+                          transition: 'filter 0.15s ease',
+                        }}
+                        onError={() => {
+                          setFailedImages(prev => new Set(prev).add(integration.id));
+                        }}
+                      />
+                    ) : (
+                      <Avatar
+                        sx={{
+                          width: sz,
+                          height: sz,
+                          backgroundColor: 'hsl(var(--muted))',
+                          fontSize: sz * 0.4 + 'px',
+                          color: 'hsl(var(--foreground))',
+                          filter: isDisabled ? 'grayscale(1)' : 'none',
+                        }}
+                      >
+                        {integration.name.charAt(0).toUpperCase()}
+                      </Avatar>
+                    )}
+                  </Box>
+
+                  {/* Status dot */}
+                  {!isDisabled && (
                     <Box
-                      component="img"
-                      src={integration.icon}
-                      alt={integration.name}
                       sx={{
-                        width: 26,
-                        height: 26,
+                        position: 'absolute',
+                        bottom: -1,
+                        right: -1,
+                        width: 8,
+                        height: 8,
                         borderRadius: '50%',
-                        objectFit: 'contain',
-                        backgroundColor: 'hsl(var(--muted))',
-                        p: 0.25,
-                      }}
-                      onError={() => {
-                        setFailedImages(prev => new Set(prev).add(integration.id));
+                        backgroundColor: getStatusColor(integration.hasValidAuth),
+                        border: '1.5px solid hsl(var(--card))',
+                        pointerEvents: 'none',
                       }}
                     />
-                  ) : (
-                    <Avatar
+                  )}
+
+                  {/* Hover cross-out overlay */}
+                  {onDisable && isHovered && (
+                    <Box
+                      onClick={() => onDisable(integration.name)}
                       sx={{
-                        width: 26,
-                        height: 26,
-                        backgroundColor: 'hsl(var(--muted))',
-                        fontSize: '0.75rem',
-                        color: 'hsl(var(--foreground))',
+                        position: 'absolute',
+                        inset: 0,
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: isDisabled
+                          ? 'hsla(var(--severity-low) / 0.25)'
+                          : 'hsla(var(--destructive) / 0.75)',
+                        cursor: 'pointer',
+                        transition: 'background-color 0.15s ease',
                       }}
                     >
-                      {integration.name.charAt(0).toUpperCase()}
-                    </Avatar>
+                      {isDisabled ? (
+                        /* Re-enable: checkmark */
+                        <svg width={sz * 0.45} height={sz * 0.45} viewBox="0 0 12 12" fill="none">
+                          <path d="M2 6l3 3 5-5" stroke="hsl(var(--severity-low))" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      ) : (
+                        /* Disable: X */
+                        <svg width={sz * 0.45} height={sz * 0.45} viewBox="0 0 12 12" fill="none">
+                          <path d="M2 2l8 8M10 2l-8 8" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
+                        </svg>
+                      )}
+                    </Box>
                   )}
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      bottom: -1,
-                      right: -1,
-                      width: 8,
-                      height: 8,
-                      borderRadius: '50%',
-                      backgroundColor: getStatusColor(integration.hasValidAuth),
-                      border: '1.5px solid hsl(var(--card))',
-                    }}
-                  />
                 </Box>
               </Tooltip>
-            ))}
+              );
+            })}
             
             {hasMore && !expanded && (
               <Tooltip title={`Show all ${integrations.length} integrations`} placement="right">
