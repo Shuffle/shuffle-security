@@ -2082,7 +2082,7 @@ const CategoryDetailDrawer = ({
             >
               <X size={15} style={{ transform: 'rotate(45deg)' }} />
               <Typography sx={{ fontSize: '0.85rem', fontWeight: 600 }}>
-                Search for {category.label} tools...
+                Find your {category.label} tools...
               </Typography>
             </Box>
           </Box>
