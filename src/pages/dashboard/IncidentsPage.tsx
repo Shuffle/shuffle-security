@@ -862,7 +862,7 @@ const IncidentsPage = () => {
         }}
       >
         {/* Card list */}
-        <Box>
+        <Box sx={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}>
           <IncidentCardView
             incidents={sortedIncidents}
             getIncidentUrl={getIncidentUrl}
