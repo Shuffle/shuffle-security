@@ -153,6 +153,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           ...getAuthHeader(),
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ org_id: orgId }),
       });
 
       if (response.ok) {
