@@ -383,7 +383,7 @@ export function normalizeCategory(apiCategory: string): string {
 export const DEFAULT_USECASES: Usecase[] = [
   {
     id: 'siem_case_management_1', phase: 'ingest', source: 'siem', target: 'case_management',
-    label: 'Alerts', animated: true,
+    label: 'SIEM to Ticket', animated: true,
     tags: ['Alert', 'Detection', 'Logs'],
     description: 'SIEM-generated alerts are the primary trigger for new cases. Automating this flow ensures no critical detection goes uninvestigated and reduces mean time to respond (MTTR).',
     agenticDescription: 'An agent triages incoming alerts, deduplicates them against open cases, scores severity using threat intel context, and auto-assigns to the right analyst based on type and on-call schedule.',
