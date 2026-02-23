@@ -53,6 +53,8 @@ import {
   type FlowPhase,
   type Usecase,
 } from '@/config/usecases';
+import { useAuth } from '@/context/AuthContext';
+import { useUsecases, type UsecaseDrift } from '@/hooks/useUsecases';
 
 // Re-export for any external consumers
 export { type FlowPhase, FLOW_PHASES };
@@ -716,6 +718,7 @@ const DataFlowCard = ({
   flowState = 'disabled',
   highlighted = false,
   isAgentic = false,
+  drift,
   onClick,
   onMouseEnter,
   onMouseLeave,
@@ -726,6 +729,7 @@ const DataFlowCard = ({
   flowState?: FlowState;
   highlighted?: boolean;
   isAgentic?: boolean;
+  drift?: import('@/hooks/useUsecases').UsecaseDrift;
   onClick?: () => void;
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
@@ -782,6 +786,22 @@ const DataFlowCard = ({
           </Typography>
         </Tooltip>
       )}
+      {drift && (
+        <Tooltip title={
+          <Box>
+            <Typography variant="caption" sx={{ fontWeight: 700 }}>API Drift Detected</Typography>
+            {drift.drifts.map(d => (
+              <Typography key={d} variant="caption" sx={{ display: 'block', opacity: 0.85 }}>
+                • {d.replace(/_/g, ' ')}
+              </Typography>
+            ))}
+          </Box>
+        } arrow>
+          <Typography sx={{ fontSize: '0.6rem', px: 0.75, py: 0.25, borderRadius: 0.75, flexShrink: 0, bgcolor: 'hsla(200 80% 50% / 0.12)', border: '1px solid hsla(200 80% 50% / 0.3)', color: 'hsl(200 80% 50%)', fontWeight: 700, letterSpacing: '0.04em' }}>
+            DRIFT
+          </Typography>
+        </Tooltip>
+      )}
       {flowState !== 'enabled' && (
         <Typography sx={{ fontSize: '0.6rem', color: FLOW_STATE_BADGE[flowState].color, bgcolor: FLOW_STATE_BADGE[flowState].bg, border: `1px solid ${FLOW_STATE_BADGE[flowState].border}`, px: 0.75, py: 0.25, borderRadius: 0.75, flexShrink: 0 }}>
           {FLOW_STATE_BADGE[flowState].label}
@@ -817,6 +837,8 @@ const AllDataFlowsDrawer = ({
   agenticFlows,
   initialFilter,
   onEdgeHover,
+  driftMap,
+  isSupport,
 }: {
   open: boolean;
   onClose: () => void;
@@ -829,6 +851,8 @@ const AllDataFlowsDrawer = ({
   agenticFlows: Set<string>;
   initialFilter?: FlowState | null;
   onEdgeHover: (edgeId: string | null) => void;
+  driftMap?: Map<string, UsecaseDrift>;
+  isSupport?: boolean;
 }) => {
   const [activeFilter, setActiveFilter] = useState<FlowState | null>(null);
 
@@ -935,6 +959,11 @@ const AllDataFlowsDrawer = ({
           </Typography>
           <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
             {activeFilter ? `${filteredTotal} of ${DATA_FLOWS.length}` : DATA_FLOWS.length} connections
+            {isSupport && driftMap && driftMap.size > 0 && (
+              <Box component="span" sx={{ ml: 1, color: 'hsl(200 80% 50%)', fontWeight: 700 }}>
+                • {driftMap.size} drift{driftMap.size > 1 ? 's' : ''}
+              </Box>
+            )}
           </Typography>
         </Box>
         <IconButton onClick={onClose} size="small" sx={{ color: 'hsl(var(--muted-foreground))' }}>
@@ -1028,6 +1057,7 @@ const AllDataFlowsDrawer = ({
                     flowState={state}
                     highlighted={highlightEdgeIdx === idx}
                     isAgentic={agenticFlows.has(flow.id)}
+                    drift={isSupport ? driftMap?.get(flow.id) : undefined}
                     onClick={() => { onClose(); onSelectFlow(idx); }}
                     onMouseEnter={() => onEdgeHover(flow.id)}
                     onMouseLeave={() => onEdgeHover(null)}
@@ -1785,6 +1815,9 @@ type HandleOverrides = Record<string, { sourceHandle?: string; targetHandle?: st
 const InfrastructureContent = () => {
   usePageMeta({ title: 'Infrastructure', description: 'Security tool integrations and data flow visualization' });
   const reactFlowInstance = useReactFlow();
+  const { userInfo } = useAuth();
+  const { driftMap, hasDrift } = useUsecases();
+  const isSupport = userInfo?.support === true;
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [hoveredEdgeId, setHoveredEdgeId] = useState<string | null>(null);
@@ -2773,6 +2806,8 @@ const InfrastructureContent = () => {
         agenticFlows={agenticFlows}
         initialFilter={allFlowsFilter}
         onEdgeHover={(edgeId) => setHoveredEdgeId(edgeId)}
+        driftMap={driftMap}
+        isSupport={isSupport}
       />
       <EdgeDetailDrawer
         flow={selectedEdgeIdx !== null ? DATA_FLOWS[selectedEdgeIdx] || null : null}
