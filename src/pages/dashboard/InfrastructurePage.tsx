@@ -1090,7 +1090,11 @@ const AllDataFlowsDrawer = ({
               </Box>
 
               <Box sx={{ ml: 0.5 }}>
-                {flows.map(({ flow, idx, state }) => (
+                {[...flows].sort((a, b) => {
+                  const tagA = a.flow.tags?.[0] || '';
+                  const tagB = b.flow.tags?.[0] || '';
+                  return tagA.localeCompare(tagB);
+                }).map(({ flow, idx, state }) => (
                   <DataFlowCard
                     key={flow.id}
                     flow={flow}
