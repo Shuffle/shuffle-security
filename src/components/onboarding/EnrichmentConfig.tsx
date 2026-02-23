@@ -39,12 +39,13 @@ import {
 import shuffleLogo from '@/assets/shuffle-logo.png';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { useThreatFeeds, DEFAULT_THREAT_FEEDS, ThreatFeed } from '@/hooks/useThreatFeeds';
+import { getAutomationLabels } from '@/config/usecases';
 
-// Workflow labels for each automation area
+// Workflow labels for each automation area — derived from shared usecase registry
 const AUTOMATION_WORKFLOW_LABELS: Record<string, string[]> = {
-  automatic_ingestion: ['Ingest Tickets', 'Ingest Tickets_webhook'],
-  threat_intel: ['Enable Threat feeds'],
-  notifications: ['Notifications'],
+  automatic_ingestion: getAutomationLabels('automatic_ingestion'),
+  threat_intel: getAutomationLabels('threat_intel'),
+  notifications: getAutomationLabels('notifications'),
 };
 
 // Generate workflow for an automation area
