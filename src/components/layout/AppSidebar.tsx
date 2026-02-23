@@ -182,7 +182,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
         sx={{ 
           position: 'fixed',
           left: (collapsed ? collapsedWidth : drawerWidth) + 10 - 12,
-          top: 'calc(2.5% + 100px)',
+          top: collapsed ? 'calc(2.5% + 100px)' : 'calc(2.5% + 104px)',
           color: 'hsl(var(--muted-foreground))',
           backgroundColor: 'hsl(var(--card))',
           border: '1px solid hsl(var(--border))',
