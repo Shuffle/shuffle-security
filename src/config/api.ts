@@ -13,6 +13,9 @@
 const DEV_BACKEND = 'https://mainland-counting-shepherd-emissions.trycloudflare.com';
 const PROD_BACKEND = 'https://shuffler.io';
 
+// Base URL for Shuffle Automation dashboard (used in tool switcher)
+export const SHUFFLE_AUTOMATION_URL = 'https://shuffler.io/new-dashboard';
+
 // Determine if we're in Lovable preview (dev) or published (prod)
 export const isDevEnvironment = (): boolean => {
   if (import.meta.env.VITE_SHUFFLE_API_URL) return false;

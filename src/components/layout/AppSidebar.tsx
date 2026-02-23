@@ -34,6 +34,7 @@ import RssFeedIcon from '@mui/icons-material/RssFeed';
 import RadarIcon from '@mui/icons-material/Radar';
 import { Braces, Waypoints, Bot, Network } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { SHUFFLE_AUTOMATION_URL } from '@/config/api';
 import { IntegrationStatus } from './IntegrationStatus';
 import AgentPermissionsDrawer from '@/components/agent/AgentPermissionsDrawer';
 
@@ -288,7 +289,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
         >
           <MenuItem
             onClick={() => {
-              window.open('https://shuffler.io', '_blank');
+              window.open(SHUFFLE_AUTOMATION_URL, '_blank');
               setToolMenuAnchor(null);
             }}
             sx={{
