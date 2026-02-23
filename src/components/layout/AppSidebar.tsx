@@ -337,12 +337,14 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
             size="small" 
             sx={{ 
               color: 'hsl(var(--muted-foreground))',
+              backgroundColor: 'hsl(var(--card))',
+              border: '1px solid hsl(var(--border))',
               borderRadius: 1,
               width: 24,
               height: 24,
               position: 'absolute',
-              right: 8,
-              top: 100,
+              right: 0,
+              top: 103,
               '&:hover': {
                 backgroundColor: 'hsl(var(--muted))',
               },
