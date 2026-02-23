@@ -258,7 +258,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                   fontWeight: 600, 
                   fontSize: '1rem' 
                 }}>
-                  Shutdown
+                  Shuffle
                 </Typography>
                 <Typography sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, fontSize: '1rem' }}>
                   Security
