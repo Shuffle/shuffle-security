@@ -105,21 +105,19 @@ function computeDrifts(apiCategories: ApiUsecaseCategory[]): UsecaseDrift[] {
   const { matched, apiOnly, localOnly } = matchUsecases(apiCategories);
   const drifts: UsecaseDrift[] = [];
 
-  // Matched pairs: check for mismatches
+  // Matched pairs: always emit an entry (clean or with drifts)
   for (const { local, api, apiCategoryName } of matched) {
     const d: DriftType[] = [];
     const apiPhase = apiCategoryToPhase(apiCategoryName);
     if (apiPhase !== local.phase) d.push('phase_mismatch');
     if (api.description && !local.description) d.push('description_added');
-    if (d.length > 0) {
-      drifts.push({
-        usecaseId: local.id,
-        drifts: d,
-        apiUsecase: api,
-        apiCategory: apiCategoryName,
-        localValue: local,
-      });
-    }
+    drifts.push({
+      usecaseId: local.id,
+      drifts: d,
+      apiUsecase: api,
+      apiCategory: apiCategoryName,
+      localValue: local,
+    });
   }
 
   // API-only usecases (no matching data flow)
@@ -224,7 +222,7 @@ export function useUsecases() {
     apiCategories,
     drifts,
     driftMap,
-    hasDrift: drifts.length > 0,
+    hasDrift: drifts.some(d => d.drifts.length > 0),
     getDrift: (id: string) => driftMap.get(id),
     getById: (id: string) => usecases.find(uc => uc.id === id),
     getByPhase: (phase: FlowPhase) => getUsecasesByPhase(phase, usecases),
