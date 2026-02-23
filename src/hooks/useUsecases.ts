@@ -6,6 +6,7 @@
 
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/context/AuthContext';
 import { getApiUrl, shuffleFetch } from '@/config/api';
 import {
   DEFAULT_USECASES,
@@ -199,8 +200,9 @@ async function fetchUsecases(): Promise<FetchResult> {
 // ── Hook ───────────────────────────────────────────────────────────────────────
 
 export function useUsecases() {
+  const { isAuthenticated } = useAuth();
   const query = useQuery({
-    queryKey: ['usecases'],
+    queryKey: ['usecases', isAuthenticated],
     queryFn: fetchUsecases,
     staleTime: 5 * 60 * 1000,
     retry: 1,
