@@ -343,8 +343,9 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
               width: 24,
               height: 24,
               position: 'absolute',
-              right: 0,
+              right: -12,
               top: 103,
+              zIndex: 1300,
               '&:hover': {
                 backgroundColor: 'hsl(var(--muted))',
               },
