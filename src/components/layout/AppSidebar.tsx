@@ -214,7 +214,8 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
           display: { xs: 'none', sm: 'flex' },
           flexDirection: 'column',
           transition: 'width 0.2s ease',
-          overflow: 'hidden',
+          overflowX: 'visible',
+          overflowY: 'hidden',
           zIndex: 1200,
         }}
       >
