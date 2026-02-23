@@ -719,6 +719,7 @@ const DataFlowCard = ({
   flowState = 'disabled',
   highlighted = false,
   isAgentic = false,
+  showTags = false,
   drift,
   onClick,
   onMouseEnter,
@@ -730,6 +731,7 @@ const DataFlowCard = ({
   flowState?: FlowState;
   highlighted?: boolean;
   isAgentic?: boolean;
+  showTags?: boolean;
   drift?: import('@/hooks/useUsecases').UsecaseDrift;
   onClick?: () => void;
   onMouseEnter?: () => void;
@@ -773,12 +775,29 @@ const DataFlowCard = ({
         flexShrink: 0,
       }} />
       <Box sx={{ flex: 1, minWidth: 0 }}>
-        <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: flowState === 'enabled' ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))' }}>
-          {flow.label}
-        </Typography>
-        <Typography sx={{ fontSize: '0.68rem', color: 'hsl(var(--muted-foreground))', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          → {targetCat?.label || flow.target}
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: flowState === 'enabled' ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))' }}>
+            {flow.label}
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.25 }}>
+          <Typography sx={{ fontSize: '0.68rem', color: 'hsl(var(--muted-foreground))', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            → {targetCat?.label || flow.target}
+          </Typography>
+          {showTags && flow.tags && flow.tags.length > 0 && (
+            <>
+              <Box sx={{ width: '1px', height: 10, bgcolor: 'hsla(var(--muted-foreground) / 0.2)', flexShrink: 0 }} />
+              {flow.tags.map(tag => {
+                const tc = TAG_COLORS[tag] ?? DEFAULT_TAG_COLOR;
+                return (
+                  <Typography key={tag} sx={{ fontSize: '0.58rem', px: 0.5, py: 0.1, borderRadius: 0.5, fontWeight: 600, letterSpacing: '0.03em', color: tc.color, bgcolor: tc.bg, border: `1px solid ${tc.border}`, flexShrink: 0, lineHeight: 1.4 }}>
+                    {tag}
+                  </Typography>
+                );
+              })}
+            </>
+          )}
+        </Box>
       </Box>
       {isAgentic && (
         <Tooltip title="Agentic mode enabled" arrow>
@@ -1943,7 +1962,11 @@ const CategoryDetailDrawer = ({
                   </Box>
                 </Box>
                 <Box sx={{ ml: 0.5 }}>
-                  {phaseFlows.map(({ flow, idx }) => {
+                  {[...phaseFlows].sort((a, b) => {
+                    const tagA = a.flow.tags?.[0] || '';
+                    const tagB = b.flow.tags?.[0] || '';
+                    return tagA.localeCompare(tagB);
+                  }).map(({ flow, idx }) => {
                     const isEnabled = activeCategories.has(flow.source) && activeCategories.has(flow.target);
                     const flowState = getFlowState(configuredCategories.has(flow.source), configuredCategories.has(flow.target));
                     return (
@@ -1953,6 +1976,7 @@ const CategoryDetailDrawer = ({
                         edgeId={flow.id}
                         enabled={isEnabled}
                         flowState={flowState}
+                        showTags
                         onClick={() => onEdgeClick(idx)}
                         onMouseEnter={() => onEdgeHover(flow.id)}
                         onMouseLeave={() => onEdgeHover(null)}
