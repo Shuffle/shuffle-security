@@ -1483,109 +1483,111 @@ const EdgeDetailDrawer = ({
       {/* API Usecase mapping (support only) */}
       {isSupport && driftMap && (() => {
         const drift = driftMap.get(flow.id);
-        const hasMatch = drift ? !drift.drifts.includes('local_only') : false;
-        const apiUc = drift?.apiUsecase;
-        
-        // If no drift entry exists, try to find a match from all drifts
-        const matchedDrift = drift || Array.from(driftMap.values()).find(d => 
-          d.localValue?.id === flow.id && d.apiUsecase
-        );
-        const matchedApiUc = matchedDrift?.apiUsecase;
-        const matchedCategory = matchedDrift?.apiCategory;
-        
-        // If this flow has no drift at all, it means it matched cleanly
-        // We need to check apiCategories for a clean match too
-        const isCleanMatch = !drift;
+        const matchedApiUc = drift?.apiUsecase;
+        const matchedCategory = drift?.apiCategory;
+        const isLocalOnly = drift?.drifts.includes('local_only');
+        const hasMatch = !!matchedApiUc;
+        const hasDrifts = drift ? drift.drifts.filter(d => d !== 'local_only').length > 0 : false;
+
+        // Matching details for debug display
+        const normalizedSource = normalizeCategory(flow.source);
+        const normalizedTarget = normalizeCategory(flow.target);
+        const matchKey = `${normalizedSource}→${normalizedTarget}`;
 
         return (
-          <Box sx={{ px: 3, py: 2.5, borderTop: '1px solid hsl(var(--border))', bgcolor: 'hsla(200 80% 50% / 0.02)' }}>
-            <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, color: 'hsl(200 80% 50%)', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1.5, display: 'flex', alignItems: 'center', gap: 0.75 }}>
-              <Box component="span" sx={{ width: 16, height: 16, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'hsla(200 80% 50% / 0.15)', fontSize: '0.55rem', fontWeight: 800 }}>
-                API
+          <Box sx={{ px: 3, py: 2.5, borderTop: '1px solid hsl(var(--border))', bgcolor: hasMatch ? 'hsla(200 80% 50% / 0.02)' : 'hsla(45 93% 47% / 0.03)' }}>
+            <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, color: hasMatch ? 'hsl(200 80% 50%)' : 'hsl(45 93% 47%)', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1.5, display: 'flex', alignItems: 'center', gap: 0.75 }}>
+              <Box component="span" sx={{
+                width: 16, height: 16, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                bgcolor: hasMatch ? 'hsla(200 80% 50% / 0.15)' : 'hsla(45 93% 47% / 0.15)',
+                fontSize: '0.55rem', fontWeight: 800,
+              }}>
+                {hasMatch ? '✓' : '✗'}
               </Box>
-              Matched Usecase
+              {hasMatch ? 'Matched Usecase' : 'No Matched Usecase'}
             </Typography>
 
-            {(matchedApiUc || isCleanMatch) ? (
-              <Box sx={{ borderRadius: 2, border: '1px solid hsla(200 80% 50% / 0.2)', bgcolor: 'hsla(200 80% 50% / 0.04)', p: 2 }}>
-                {matchedApiUc ? (
-                  <>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                      <Typography sx={{ fontSize: '0.9rem', fontWeight: 700, color: 'hsl(var(--foreground))' }}>
-                        {matchedApiUc.name}
-                      </Typography>
-                      {matchedCategory && (
-                        <Typography sx={{ fontSize: '0.6rem', px: 0.75, py: 0.25, borderRadius: 0.75, bgcolor: 'hsla(200 80% 50% / 0.12)', border: '1px solid hsla(200 80% 50% / 0.3)', color: 'hsl(200 80% 50%)', fontWeight: 700 }}>
-                          {matchedCategory}
-                        </Typography>
-                      )}
-                    </Box>
-                    <Box sx={{ display: 'flex', gap: 0.75, mb: 1.5, flexWrap: 'wrap' }}>
-                      <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))' }}>
-                        {matchedApiUc.type} → {matchedApiUc.last}
-                      </Typography>
-                      {matchedApiUc.priority && (
-                        <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', opacity: 0.7 }}>
-                          Priority: {matchedApiUc.priority}
-                        </Typography>
-                      )}
-                    </Box>
-                    {matchedApiUc.description && (
-                      <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--foreground))', lineHeight: 1.6, mb: 1.5 }}>
-                        {matchedApiUc.description}
-                      </Typography>
-                    )}
-                    {/* Drift indicators */}
-                    {drift && drift.drifts.length > 0 && (
-                      <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mb: 1.5 }}>
-                        {drift.drifts.map(d => (
-                          <Typography key={d} sx={{ fontSize: '0.6rem', px: 0.75, py: 0.25, borderRadius: 0.75, fontWeight: 700, bgcolor: d === 'phase_mismatch' ? 'hsla(45 93% 47% / 0.12)' : 'hsla(200 80% 50% / 0.12)', border: d === 'phase_mismatch' ? '1px solid hsla(45 93% 47% / 0.3)' : '1px solid hsla(200 80% 50% / 0.3)', color: d === 'phase_mismatch' ? 'hsl(45 93% 47%)' : 'hsl(200 80% 50%)' }}>
-                            {d.replace(/_/g, ' ').toUpperCase()}
-                          </Typography>
-                        ))}
-                      </Box>
-                    )}
-                    {/* Links */}
-                    {(matchedApiUc.video || matchedApiUc.blogpost) && (
-                      <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
-                        {matchedApiUc.video && (
-                          <Typography
-                            component="a"
-                            href={matchedApiUc.video}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            sx={{ fontSize: '0.75rem', color: 'hsl(200 80% 50%)', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 0.5, '&:hover': { textDecoration: 'underline' } }}
-                          >
-                            ▶ Video
-                          </Typography>
-                        )}
-                        {matchedApiUc.blogpost && (
-                          <Typography
-                            component="a"
-                            href={matchedApiUc.blogpost}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            sx={{ fontSize: '0.75rem', color: 'hsl(200 80% 50%)', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 0.5, '&:hover': { textDecoration: 'underline' } }}
-                          >
-                            📝 Blog Post
-                          </Typography>
-                        )}
-                      </Box>
-                    )}
-                  </>
-                ) : (
-                  <Typography sx={{ fontSize: '0.8rem', color: 'hsl(142 71% 45%)', fontWeight: 600 }}>
-                    ✓ Clean match — no drift detected
+            {/* Match resolution debug box */}
+            <Box sx={{ borderRadius: 1.5, border: '1px solid hsl(var(--border))', bgcolor: 'hsla(var(--muted-foreground) / 0.03)', p: 1.5, mb: 1.5, fontFamily: 'monospace' }}>
+              <Typography sx={{ fontSize: '0.6rem', fontWeight: 700, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.06em', mb: 0.75 }}>
+                Match Resolution
+              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
+                <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))' }}>
+                  Data Flow: <Box component="span" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}>{flow.source}</Box> → <Box component="span" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}>{flow.target}</Box>
+                </Typography>
+                {(normalizedSource !== flow.source || normalizedTarget !== flow.target) && (
+                  <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))' }}>
+                    Normalized: <Box component="span" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}>{normalizedSource}</Box> → <Box component="span" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}>{normalizedTarget}</Box>
+                  </Typography>
+                )}
+                <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))' }}>
+                  Match Key: <Box component="span" sx={{ color: hasMatch ? 'hsl(142 71% 45%)' : 'hsl(45 93% 47%)', fontWeight: 700 }}>{matchKey}</Box>
+                </Typography>
+                {hasMatch && matchedApiUc && (
+                  <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))' }}>
+                    API Route: <Box component="span" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}>{matchedApiUc.type}</Box> → <Box component="span" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}>{matchedApiUc.last}</Box>
+                    {' '}= <Box component="span" sx={{ color: 'hsl(142 71% 45%)', fontWeight: 700 }}>{normalizeCategory(matchedApiUc.type)}→{normalizeCategory(matchedApiUc.last)}</Box>
                   </Typography>
                 )}
               </Box>
+            </Box>
+
+            {hasMatch && matchedApiUc ? (
+              <Box sx={{ borderRadius: 2, border: '1px solid hsla(200 80% 50% / 0.2)', bgcolor: 'hsla(200 80% 50% / 0.04)', p: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                  <Typography sx={{ fontSize: '0.9rem', fontWeight: 700, color: 'hsl(var(--foreground))' }}>
+                    {matchedApiUc.name}
+                  </Typography>
+                  {matchedCategory && (
+                    <Typography sx={{ fontSize: '0.6rem', px: 0.75, py: 0.25, borderRadius: 0.75, bgcolor: 'hsla(200 80% 50% / 0.12)', border: '1px solid hsla(200 80% 50% / 0.3)', color: 'hsl(200 80% 50%)', fontWeight: 700 }}>
+                      {matchedCategory}
+                    </Typography>
+                  )}
+                </Box>
+                {matchedApiUc.description && (
+                  <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--foreground))', lineHeight: 1.6, mb: 1.5 }}>
+                    {matchedApiUc.description}
+                  </Typography>
+                )}
+                {/* Drift indicators */}
+                {hasDrifts && drift && (
+                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mb: 1.5 }}>
+                    {drift.drifts.filter(d => d !== 'local_only').map(d => (
+                      <Typography key={d} sx={{ fontSize: '0.6rem', px: 0.75, py: 0.25, borderRadius: 0.75, fontWeight: 700, bgcolor: d === 'phase_mismatch' ? 'hsla(45 93% 47% / 0.12)' : 'hsla(200 80% 50% / 0.12)', border: d === 'phase_mismatch' ? '1px solid hsla(45 93% 47% / 0.3)' : '1px solid hsla(200 80% 50% / 0.3)', color: d === 'phase_mismatch' ? 'hsl(45 93% 47%)' : 'hsl(200 80% 50%)' }}>
+                        {d.replace(/_/g, ' ').toUpperCase()}
+                      </Typography>
+                    ))}
+                  </Box>
+                )}
+                {/* Links */}
+                {(matchedApiUc.video || matchedApiUc.blogpost) && (
+                  <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+                    {matchedApiUc.video && (
+                      <Typography component="a" href={matchedApiUc.video} target="_blank" rel="noopener noreferrer"
+                        sx={{ fontSize: '0.75rem', color: 'hsl(200 80% 50%)', fontWeight: 600, textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
+                        ▶ Video
+                      </Typography>
+                    )}
+                    {matchedApiUc.blogpost && (
+                      <Typography component="a" href={matchedApiUc.blogpost} target="_blank" rel="noopener noreferrer"
+                        sx={{ fontSize: '0.75rem', color: 'hsl(200 80% 50%)', fontWeight: 600, textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
+                        📝 Blog Post
+                      </Typography>
+                    )}
+                  </Box>
+                )}
+              </Box>
             ) : (
-              <Box sx={{ borderRadius: 2, border: '1px solid hsla(45 93% 47% / 0.25)', bgcolor: 'hsla(45 93% 47% / 0.04)', p: 2 }}>
-                <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, color: 'hsl(45 93% 47%)', mb: 0.5 }}>
-                  No API Usecase
-                </Typography>
-                <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.5 }}>
-                  This data flow ({flow.source} → {flow.target}) has no matching usecase in the API. It may need to be added to /api/v1/workflows/usecases.
+              <Box sx={{ borderRadius: 2, border: '1px solid hsla(0 65% 50% / 0.25)', bgcolor: 'hsla(0 65% 50% / 0.04)', p: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.75 }}>
+                  <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'hsl(0 65% 50%)' }} />
+                  <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: 'hsl(0 65% 50%)' }}>
+                    Unmatched Data Flow
+                  </Typography>
+                </Box>
+                <Typography sx={{ fontSize: '0.78rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.6 }}>
+                  No API usecase matches the route <Box component="span" sx={{ fontFamily: 'monospace', fontWeight: 700, color: 'hsl(var(--foreground))' }}>{matchKey}</Box>. This data flow needs a corresponding entry in <Box component="span" sx={{ fontFamily: 'monospace', fontSize: '0.72rem' }}>/api/v1/workflows/usecases</Box>.
                 </Typography>
               </Box>
             )}
