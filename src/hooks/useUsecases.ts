@@ -220,6 +220,7 @@ export function useUsecases() {
     ...query,
     usecases,
     apiCategories,
+    apiLoaded: apiCategories.length > 0,
     drifts,
     driftMap,
     hasDrift: drifts.some(d => d.drifts.length > 0),

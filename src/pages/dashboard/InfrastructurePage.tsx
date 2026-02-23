@@ -1173,6 +1173,7 @@ const EdgeDetailDrawer = ({
   onToggleAppDisabled,
   driftMap,
   isSupport,
+  apiLoaded,
 }: {
   flow: (typeof DATA_FLOWS)[number] | null;
   edgeIdx: number | null;
@@ -1191,6 +1192,7 @@ const EdgeDetailDrawer = ({
   onToggleAppDisabled: (appName: string) => void;
   driftMap?: Map<string, UsecaseDrift>;
   isSupport?: boolean;
+  apiLoaded?: boolean;
 }) => {
   if (!flow) return null;
   const edgeId = edgeIdx !== null ? (DATA_FLOWS[edgeIdx]?.id ?? '') : '';
@@ -1481,11 +1483,26 @@ const EdgeDetailDrawer = ({
       })()}
 
       {/* API Usecase mapping (support only) */}
-      {isSupport && driftMap && (() => {
-        const drift = driftMap.get(flow.id);
+      {isSupport && (() => {
+        if (!apiLoaded) {
+          return (
+            <Box sx={{ px: 3, py: 2.5, borderTop: '1px solid hsl(var(--border))', bgcolor: 'hsla(var(--muted-foreground) / 0.03)' }}>
+              <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                <Box component="span" sx={{ width: 16, height: 16, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'hsla(var(--muted-foreground) / 0.15)', fontSize: '0.55rem', fontWeight: 800 }}>
+                  …
+                </Box>
+                API Usecase
+              </Typography>
+              <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', mt: 1 }}>
+                Not logged in or API not responding. Log in to see usecase matching.
+              </Typography>
+            </Box>
+          );
+        }
+
+        const drift = driftMap?.get(flow.id);
         const matchedApiUc = drift?.apiUsecase;
         const matchedCategory = drift?.apiCategory;
-        const isLocalOnly = drift?.drifts.includes('local_only');
         const hasMatch = !!matchedApiUc;
         const hasDrifts = drift ? drift.drifts.filter(d => d !== 'local_only').length > 0 : false;
 
@@ -2011,7 +2028,7 @@ const InfrastructureContent = () => {
   usePageMeta({ title: 'Infrastructure', description: 'Security tool integrations and data flow visualization' });
   const reactFlowInstance = useReactFlow();
   const { userInfo } = useAuth();
-  const { driftMap, hasDrift } = useUsecases();
+  const { driftMap, hasDrift, apiLoaded } = useUsecases();
   const isSupport = userInfo?.support === true;
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -3029,6 +3046,7 @@ const InfrastructureContent = () => {
         }}
         driftMap={driftMap}
         isSupport={isSupport}
+        apiLoaded={apiLoaded}
       />
     </Box>
   );
