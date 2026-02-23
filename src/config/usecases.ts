@@ -354,6 +354,7 @@ export function apiCategoryToPhase(categoryName: string): FlowPhase {
  * The API may use "cases" while we use "case_management", etc.
  */
 export function normalizeCategory(apiCategory: string): string {
+  if (!apiCategory) return '';
   const map: Record<string, string> = {
     cases: 'case_management',
     case: 'case_management',

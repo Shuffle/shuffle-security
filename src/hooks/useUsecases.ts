@@ -72,6 +72,7 @@ function matchUsecases(apiCategories: ApiUsecaseCategory[]): {
 
   for (const cat of apiCategories) {
     for (const apiUc of cat.list) {
+      if (!apiUc.type || !apiUc.last) continue; // Skip entries without both type and last
       const source = normalizeCategory(apiUc.type);
       const target = normalizeCategory(apiUc.last);
       const key = `${source}→${target}`;
