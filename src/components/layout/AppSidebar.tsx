@@ -175,31 +175,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
 
   return (
     <>
-      {/* Toggle button - outside sidebar only when collapsed to avoid clipping */}
-      {collapsed && (
-        <IconButton 
-          onClick={onToggle} 
-          size="small" 
-          sx={{ 
-            position: 'fixed',
-            left: collapsedWidth + 10 - 12,
-            top: 'calc(2.5% + 22px)',
-            color: 'hsl(var(--muted-foreground))',
-            backgroundColor: 'hsl(var(--card))',
-            border: '1px solid hsl(var(--border))',
-            borderRadius: 1,
-            width: 24,
-            height: 24,
-            zIndex: 1300,
-            display: { xs: 'none', sm: 'flex' },
-            '&:hover': {
-              backgroundColor: 'hsl(var(--muted))',
-            },
-          }}
-        >
-          <ChevronRightIcon sx={{ fontSize: 16 }} />
-        </IconButton>
-      )}
+
 
       <Box
         sx={{
@@ -330,24 +306,6 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
           </MenuItem>
         </Menu>
 
-        {/* Toggle button - inside when expanded */}
-        {!collapsed && (
-          <IconButton 
-            onClick={onToggle} 
-            size="small" 
-            sx={{ 
-              color: 'hsl(var(--muted-foreground))',
-              borderRadius: 1,
-              width: 24,
-              height: 24,
-              '&:hover': {
-                backgroundColor: 'hsl(var(--muted))',
-              },
-            }}
-          >
-            <ChevronLeftIcon sx={{ fontSize: 16 }} />
-          </IconButton>
-        )}
       </Box>
 
       {/* Search Bar */}
@@ -395,7 +353,25 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
         </Box>
       )}
 
-      <Divider sx={{ borderColor: 'hsl(var(--border))', mx: collapsed ? 1 : 2 }} />
+      <Box sx={{ display: 'flex', alignItems: 'center', mx: collapsed ? 1 : 2 }}>
+        <Divider sx={{ borderColor: 'hsl(var(--border))', flexGrow: 1 }} />
+        <IconButton 
+          onClick={onToggle} 
+          size="small" 
+          sx={{ 
+            color: 'hsl(var(--muted-foreground))',
+            borderRadius: 1,
+            width: 24,
+            height: 24,
+            ml: 0.5,
+            '&:hover': {
+              backgroundColor: 'hsl(var(--muted))',
+            },
+          }}
+        >
+          {collapsed ? <ChevronRightIcon sx={{ fontSize: 16 }} /> : <ChevronLeftIcon sx={{ fontSize: 16 }} />}
+        </IconButton>
+      </Box>
 
       {/* Navigation Items */}
       <List sx={{ px: 1, py: 2, flexGrow: 1, overflowY: 'auto' }}>
