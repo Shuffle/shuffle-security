@@ -49,6 +49,7 @@ import {
   DEFAULT_USECASES,
   CATEGORY_KEYWORDS,
   matchAppToCategory,
+  normalizeCategory,
   type ToolCategory,
   type FlowPhase,
   type Usecase,
@@ -789,16 +790,37 @@ const DataFlowCard = ({
       {drift && (
         <Tooltip title={
           <Box>
-            <Typography variant="caption" sx={{ fontWeight: 700 }}>API Drift Detected</Typography>
+            <Typography variant="caption" sx={{ fontWeight: 700 }}>
+              {drift.drifts.includes('local_only') ? 'No API Usecase' : 'API Drift'}
+            </Typography>
             {drift.drifts.map(d => (
               <Typography key={d} variant="caption" sx={{ display: 'block', opacity: 0.85 }}>
-                • {d.replace(/_/g, ' ')}
+                • {d === 'local_only' ? 'This data flow has no matching usecase in the API'
+                  : d === 'api_only' ? 'This API usecase has no matching data flow'
+                  : d === 'phase_mismatch' ? `Phase mismatch: API says "${drift.apiCategory}"`
+                  : d.replace(/_/g, ' ')}
               </Typography>
             ))}
+            {drift.apiUsecase && (
+              <Typography variant="caption" sx={{ display: 'block', mt: 0.5, opacity: 0.7, fontStyle: 'italic' }}>
+                API: "{drift.apiUsecase.name}" ({drift.apiCategory})
+              </Typography>
+            )}
           </Box>
         } arrow>
-          <Typography sx={{ fontSize: '0.6rem', px: 0.75, py: 0.25, borderRadius: 0.75, flexShrink: 0, bgcolor: 'hsla(200 80% 50% / 0.12)', border: '1px solid hsla(200 80% 50% / 0.3)', color: 'hsl(200 80% 50%)', fontWeight: 700, letterSpacing: '0.04em' }}>
-            DRIFT
+          <Typography sx={{
+            fontSize: '0.6rem', px: 0.75, py: 0.25, borderRadius: 0.75, flexShrink: 0, fontWeight: 700, letterSpacing: '0.04em',
+            bgcolor: drift.drifts.includes('local_only')
+              ? 'hsla(45 93% 47% / 0.12)'
+              : 'hsla(200 80% 50% / 0.12)',
+            border: drift.drifts.includes('local_only')
+              ? '1px solid hsla(45 93% 47% / 0.3)'
+              : '1px solid hsla(200 80% 50% / 0.3)',
+            color: drift.drifts.includes('local_only')
+              ? 'hsl(45 93% 47%)'
+              : 'hsl(200 80% 50%)',
+          }}>
+            {drift.drifts.includes('local_only') ? 'NO API' : 'DRIFT'}
           </Typography>
         </Tooltip>
       )}
@@ -1072,6 +1094,56 @@ const AllDataFlowsDrawer = ({
             <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))' }}>No flows match this filter.</Typography>
           </Box>
         )}
+
+        {/* API-only usecases (support view) */}
+        {isSupport && driftMap && (() => {
+          const apiOnlyDrifts = Array.from(driftMap.values()).filter(d => d.drifts.includes('api_only'));
+          if (apiOnlyDrifts.length === 0) return null;
+          return (
+            <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid hsla(200 80% 50% / 0.2)' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+                <Box sx={{ width: 20, height: 20, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'hsla(200 80% 50% / 0.15)', color: 'hsl(200 80% 50%)', fontSize: '0.65rem', fontWeight: 700 }}>
+                  !
+                </Box>
+                <Typography sx={{ fontSize: '0.78rem', fontWeight: 700, color: 'hsl(200 80% 50%)' }}>
+                  API Usecases Without Data Flows
+                </Typography>
+                <Typography sx={{ fontSize: '0.65rem', color: 'hsl(200 80% 50%)', ml: 'auto', fontWeight: 700 }}>
+                  {apiOnlyDrifts.length}
+                </Typography>
+              </Box>
+              {apiOnlyDrifts.map((drift) => {
+                const source = normalizeCategory(drift.apiUsecase!.type);
+                const target = normalizeCategory(drift.apiUsecase!.last);
+                const sourceCat = TOOL_CATEGORIES.find(c => c.id === source);
+                const targetCat = TOOL_CATEGORIES.find(c => c.id === target);
+                return (
+                  <Box
+                    key={drift.usecaseId}
+                    sx={{
+                      display: 'flex', alignItems: 'center', gap: 1, px: 1.5, py: 1, ml: 1, mb: 0.5,
+                      borderRadius: 1.5, border: '1px solid hsla(200 80% 50% / 0.15)',
+                      bgcolor: 'hsla(200 80% 50% / 0.04)',
+                    }}
+                  >
+                    <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: 'hsl(200 80% 50%)', flexShrink: 0 }} />
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: 'hsl(200 80% 50%)' }}>
+                        {drift.apiUsecase!.name}
+                      </Typography>
+                      <Typography sx={{ fontSize: '0.68rem', color: 'hsl(var(--muted-foreground))', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {sourceCat?.label || source} → {targetCat?.label || target} • {drift.apiCategory}
+                      </Typography>
+                    </Box>
+                    <Typography sx={{ fontSize: '0.6rem', px: 0.75, py: 0.25, borderRadius: 0.75, flexShrink: 0, bgcolor: 'hsla(200 80% 50% / 0.12)', border: '1px solid hsla(200 80% 50% / 0.3)', color: 'hsl(200 80% 50%)', fontWeight: 700 }}>
+                      API ONLY
+                    </Typography>
+                  </Box>
+                );
+              })}
+            </Box>
+          );
+        })()}
       </Box>
     </Drawer>
   );

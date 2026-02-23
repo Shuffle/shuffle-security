@@ -11,62 +11,136 @@ import {
   DEFAULT_USECASES,
   type Usecase,
   type FlowPhase,
+  type ApiUsecaseCategory,
+  type ApiUsecase,
   getUsecasesByArea,
   getUsecasesByPhase,
   getAutomationLabels,
+  apiCategoryToPhase,
+  normalizeCategory,
 } from '@/config/usecases';
 
 // ── Drift detection ────────────────────────────────────────────────────────────
 
-export type DriftType = 'label_changed' | 'description_changed' | 'phase_changed' | 'status_changed' | 'api_only' | 'local_only';
+export type DriftType =
+  | 'api_only'       // Usecase exists in API but has no matching data flow
+  | 'local_only'     // Data flow exists locally but has no matching API usecase
+  | 'phase_mismatch' // Matched, but API category implies a different phase
+  | 'description_added'; // API provides a description our default doesn't have
 
 export interface UsecaseDrift {
   usecaseId: string;
   drifts: DriftType[];
-  apiValue?: Partial<Usecase>;
-  localValue?: Partial<Usecase>;
+  /** The API usecase that matched (or didn't) */
+  apiUsecase?: ApiUsecase;
+  /** The API category name */
+  apiCategory?: string;
+  /** The local usecase if it exists */
+  localValue?: Usecase;
 }
 
-function detectDrift(merged: Usecase[], apiList: any[]): UsecaseDrift[] {
-  const drifts: UsecaseDrift[] = [];
-  const apiMap = new Map<string, any>();
+// ── Matching logic ─────────────────────────────────────────────────────────────
 
-  for (const apiUc of apiList) {
-    const id = apiUc.id || apiUc.name;
-    if (id) apiMap.set(id, apiUc);
-  }
+interface MatchedPair {
+  local: Usecase;
+  api: ApiUsecase;
+  apiCategoryName: string;
+}
 
-  const defaultMap = new Map<string, Usecase>();
+/**
+ * Match API usecases to local data flows based on source (type) → target (last).
+ * Returns matched pairs, unmatched API usecases, and unmatched local flows.
+ */
+function matchUsecases(apiCategories: ApiUsecaseCategory[]): {
+  matched: MatchedPair[];
+  apiOnly: { uc: ApiUsecase; categoryName: string }[];
+  localOnly: Usecase[];
+} {
+  // Build a lookup: "source→target" → local usecase(s)
+  const localByRoute = new Map<string, Usecase[]>();
   for (const uc of DEFAULT_USECASES) {
-    defaultMap.set(uc.id, uc);
+    const key = `${uc.source}→${uc.target}`;
+    const arr = localByRoute.get(key) || [];
+    arr.push(uc);
+    localByRoute.set(key, arr);
   }
 
-  // Check each API usecase against defaults
-  for (const [id, apiUc] of apiMap) {
-    const local = defaultMap.get(id);
-    if (!local) {
-      drifts.push({ usecaseId: id, drifts: ['api_only'], apiValue: apiUc });
-      continue;
-    }
+  const matched: MatchedPair[] = [];
+  const apiOnly: { uc: ApiUsecase; categoryName: string }[] = [];
+  const matchedLocalIds = new Set<string>();
 
-    const d: DriftType[] = [];
-    if (apiUc.label && apiUc.label !== local.label) d.push('label_changed');
-    if (apiUc.description && apiUc.description !== local.description) d.push('description_changed');
-    if (apiUc.phase && apiUc.phase !== local.phase) d.push('phase_changed');
-    if (apiUc.status && apiUc.status !== (local.status || undefined)) d.push('status_changed');
+  for (const cat of apiCategories) {
+    for (const apiUc of cat.list) {
+      const source = normalizeCategory(apiUc.type);
+      const target = normalizeCategory(apiUc.last);
+      const key = `${source}→${target}`;
 
-    if (d.length > 0) {
-      drifts.push({ usecaseId: id, drifts: d, apiValue: apiUc, localValue: local });
-    }
-  }
-
-  // Check for local-only usecases (in defaults but not in API)
-  if (apiList.length > 0) {
-    for (const local of DEFAULT_USECASES) {
-      if (!apiMap.has(local.id)) {
-        drifts.push({ usecaseId: local.id, drifts: ['local_only'], localValue: local });
+      const locals = localByRoute.get(key);
+      if (locals && locals.length > 0) {
+        // Match the first unmatched local flow on this route
+        const unmatched = locals.find(l => !matchedLocalIds.has(l.id));
+        if (unmatched) {
+          matched.push({ local: unmatched, api: apiUc, apiCategoryName: cat.name });
+          matchedLocalIds.add(unmatched.id);
+        } else {
+          // All locals on this route already matched — this is extra from API
+          apiOnly.push({ uc: apiUc, categoryName: cat.name });
+        }
+      } else {
+        apiOnly.push({ uc: apiUc, categoryName: cat.name });
       }
     }
+  }
+
+  const localOnly = DEFAULT_USECASES.filter(uc => !matchedLocalIds.has(uc.id));
+
+  return { matched, apiOnly, localOnly };
+}
+
+// ── Drift computation ──────────────────────────────────────────────────────────
+
+function computeDrifts(apiCategories: ApiUsecaseCategory[]): UsecaseDrift[] {
+  if (apiCategories.length === 0) return [];
+
+  const { matched, apiOnly, localOnly } = matchUsecases(apiCategories);
+  const drifts: UsecaseDrift[] = [];
+
+  // Matched pairs: check for mismatches
+  for (const { local, api, apiCategoryName } of matched) {
+    const d: DriftType[] = [];
+    const apiPhase = apiCategoryToPhase(apiCategoryName);
+    if (apiPhase !== local.phase) d.push('phase_mismatch');
+    if (api.description && !local.description) d.push('description_added');
+    if (d.length > 0) {
+      drifts.push({
+        usecaseId: local.id,
+        drifts: d,
+        apiUsecase: api,
+        apiCategory: apiCategoryName,
+        localValue: local,
+      });
+    }
+  }
+
+  // API-only usecases (no matching data flow)
+  for (const { uc, categoryName } of apiOnly) {
+    const source = normalizeCategory(uc.type);
+    const target = normalizeCategory(uc.last);
+    drifts.push({
+      usecaseId: `api_${source}_${target}_${uc.name.toLowerCase().replace(/\s+/g, '_')}`,
+      drifts: ['api_only'],
+      apiUsecase: uc,
+      apiCategory: categoryName,
+    });
+  }
+
+  // Local-only data flows (no matching API usecase)
+  for (const local of localOnly) {
+    drifts.push({
+      usecaseId: local.id,
+      drifts: ['local_only'],
+      localValue: local,
+    });
   }
 
   return drifts;
@@ -76,7 +150,7 @@ function detectDrift(merged: Usecase[], apiList: any[]): UsecaseDrift[] {
 
 interface FetchResult {
   usecases: Usecase[];
-  rawApiList: any[];
+  apiCategories: ApiUsecaseCategory[];
 }
 
 async function fetchUsecases(): Promise<FetchResult> {
@@ -84,61 +158,43 @@ async function fetchUsecases(): Promise<FetchResult> {
     const res = await shuffleFetch(getApiUrl('/api/v1/workflows/usecases'));
     if (!res.ok) {
       console.warn(`[useUsecases] API returned ${res.status}, using defaults`);
-      return { usecases: DEFAULT_USECASES, rawApiList: [] };
+      return { usecases: DEFAULT_USECASES, apiCategories: [] };
     }
 
     const data = await res.json();
-    console.log('[useUsecases] API response shape:', Object.keys(data));
 
-    const apiList: any[] = Array.isArray(data) ? data : data.usecases ?? data.data ?? [];
+    // The API returns an array of category objects
+    const apiCategories: ApiUsecaseCategory[] = Array.isArray(data) ? data : [];
 
-    if (!apiList.length) {
-      console.log('[useUsecases] No usecases in API response, using defaults');
-      return { usecases: DEFAULT_USECASES, rawApiList: [] };
+    if (apiCategories.length === 0) {
+      console.log('[useUsecases] No categories in API response, using defaults');
+      return { usecases: DEFAULT_USECASES, apiCategories: [] };
     }
 
-    // Merge: API is source of truth, local defaults fill gaps
-    const merged = new Map<string, Usecase>();
+    console.log(
+      `[useUsecases] API returned ${apiCategories.length} categories with ${apiCategories.reduce((n, c) => n + c.list.length, 0)} usecases`
+    );
 
+    // Merge: enrich local defaults with API data where matched
+    const { matched } = matchUsecases(apiCategories);
+    const enriched = new Map<string, Usecase>();
     for (const uc of DEFAULT_USECASES) {
-      merged.set(uc.id, { ...uc });
+      enriched.set(uc.id, { ...uc });
     }
 
-    for (const apiUc of apiList) {
-      const id = apiUc.id || apiUc.name;
-      if (!id) continue;
-
-      const existing = merged.get(id);
-      if (existing) {
-        merged.set(id, {
-          ...existing,
-          status: apiUc.status ?? (apiUc.is_valid === false ? 'misconfigured' : existing.status),
-          label: apiUc.label ?? existing.label,
-          description: apiUc.description ?? existing.description,
-        });
-      } else if (apiUc.source && apiUc.target) {
-        merged.set(id, {
-          id,
-          source: apiUc.source,
-          target: apiUc.target,
-          label: apiUc.label || id,
-          description: apiUc.description || '',
-          agenticDescription: apiUc.agentic_description || apiUc.agenticDescription || '',
-          phase: apiUc.phase || 'correlation',
-          tags: apiUc.tags || [],
-          animated: apiUc.animated,
-          automationLabel: apiUc.automation_label || apiUc.automationLabel,
-          automationCategory: apiUc.automation_category || apiUc.automationCategory,
-          automationArea: apiUc.automation_area || apiUc.automationArea,
-          status: apiUc.status,
-        });
-      }
+    for (const { local, api, apiCategoryName } of matched) {
+      const existing = enriched.get(local.id)!;
+      enriched.set(local.id, {
+        ...existing,
+        // Enrich with API data where available
+        description: api.description || existing.description,
+      });
     }
 
-    return { usecases: Array.from(merged.values()), rawApiList: apiList };
+    return { usecases: Array.from(enriched.values()), apiCategories };
   } catch (err) {
     console.warn('[useUsecases] Fetch failed, using defaults:', err);
-    return { usecases: DEFAULT_USECASES, rawApiList: [] };
+    return { usecases: DEFAULT_USECASES, apiCategories: [] };
   }
 }
 
@@ -153,9 +209,9 @@ export function useUsecases() {
   });
 
   const usecases = query.data?.usecases ?? DEFAULT_USECASES;
-  const rawApiList = query.data?.rawApiList ?? [];
+  const apiCategories = query.data?.apiCategories ?? [];
 
-  const drifts = useMemo(() => detectDrift(usecases, rawApiList), [usecases, rawApiList]);
+  const drifts = useMemo(() => computeDrifts(apiCategories), [apiCategories]);
   const driftMap = useMemo(() => {
     const map = new Map<string, UsecaseDrift>();
     for (const d of drifts) map.set(d.usecaseId, d);
@@ -165,6 +221,7 @@ export function useUsecases() {
   return {
     ...query,
     usecases,
+    apiCategories,
     drifts,
     driftMap,
     hasDrift: drifts.length > 0,

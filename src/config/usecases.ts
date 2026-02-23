@@ -312,6 +312,72 @@ export interface Usecase {
   status?: 'enabled' | 'disabled' | 'misconfigured';
 }
 
+// ── API usecase types (from /api/v1/workflows/usecases) ────────────────────────
+
+export interface ApiUsecaseItem {
+  name: string;
+  items?: Record<string, any>;
+}
+
+export interface ApiUsecase {
+  name: string;
+  priority?: number;
+  type: string;       // source category (e.g. "siem", "edr", "communication")
+  last: string;       // target category (e.g. "cases")
+  description?: string;
+  video?: string;
+  blogpost?: string;
+  reference_image?: string;
+  items?: ApiUsecaseItem;
+}
+
+export interface ApiUsecaseCategory {
+  name: string;       // e.g. "1. Collect", "2. Enrich"
+  color?: string;
+  list: ApiUsecase[];
+}
+
+/**
+ * Map API category names to our FlowPhase.
+ * The API uses numbered prefixes like "1. Collect".
+ */
+export function apiCategoryToPhase(categoryName: string): FlowPhase {
+  const lower = categoryName.toLowerCase();
+  if (lower.includes('collect') || lower.includes('ingest') || lower.includes('1.')) return 'ingest';
+  if (lower.includes('respond') || lower.includes('response') || lower.includes('action') || lower.includes('3.')) return 'response';
+  // Default: correlation/enrich
+  return 'correlation';
+}
+
+/**
+ * Normalize API type/last fields to our category IDs.
+ * The API may use "cases" while we use "case_management", etc.
+ */
+export function normalizeCategory(apiCategory: string): string {
+  const map: Record<string, string> = {
+    cases: 'case_management',
+    case: 'case_management',
+    case_management: 'case_management',
+    communication: 'communication',
+    chat: 'communication',
+    siem: 'siem',
+    edr: 'edr',
+    endpoint: 'edr',
+    email: 'email',
+    network: 'network',
+    firewall: 'network',
+    threat_intel: 'threat_intel',
+    intel: 'threat_intel',
+    iam: 'iam',
+    identity: 'iam',
+    cloud: 'cloud',
+    asset_management: 'asset_management',
+    assets: 'asset_management',
+    cmdb: 'asset_management',
+  };
+  return map[apiCategory.toLowerCase()] || apiCategory.toLowerCase();
+}
+
 // ── Default usecases (migrated from InfrastructurePage DATA_FLOWS) ─────────────
 
 export const DEFAULT_USECASES: Usecase[] = [
