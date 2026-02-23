@@ -1174,6 +1174,7 @@ const EdgeDetailDrawer = ({
   driftMap,
   isSupport,
   apiLoaded,
+  usecasesLoading,
 }: {
   flow: (typeof DATA_FLOWS)[number] | null;
   edgeIdx: number | null;
@@ -1193,6 +1194,7 @@ const EdgeDetailDrawer = ({
   driftMap?: Map<string, UsecaseDrift>;
   isSupport?: boolean;
   apiLoaded?: boolean;
+  usecasesLoading?: boolean;
 }) => {
   if (!flow) return null;
   const edgeId = edgeIdx !== null ? (DATA_FLOWS[edgeIdx]?.id ?? '') : '';
@@ -1484,6 +1486,21 @@ const EdgeDetailDrawer = ({
 
       {/* API Usecase mapping (support only) */}
       {isSupport && (() => {
+        if (usecasesLoading) {
+          return (
+            <Box sx={{ px: 3, py: 2.5, borderTop: '1px solid hsl(var(--border))', bgcolor: 'hsla(var(--muted-foreground) / 0.03)' }}>
+              <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                <Box component="span" sx={{ width: 16, height: 16, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'hsla(var(--muted-foreground) / 0.15)', fontSize: '0.55rem', fontWeight: 800 }}>
+                  …
+                </Box>
+                API Usecase
+              </Typography>
+              <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', mt: 1 }}>
+                Loading usecase data…
+              </Typography>
+            </Box>
+          );
+        }
         if (!apiLoaded) {
           return (
             <Box sx={{ px: 3, py: 2.5, borderTop: '1px solid hsl(var(--border))', bgcolor: 'hsla(var(--muted-foreground) / 0.03)' }}>
@@ -2028,7 +2045,7 @@ const InfrastructureContent = () => {
   usePageMeta({ title: 'Infrastructure', description: 'Security tool integrations and data flow visualization' });
   const reactFlowInstance = useReactFlow();
   const { userInfo } = useAuth();
-  const { driftMap, hasDrift, apiLoaded } = useUsecases();
+  const { driftMap, hasDrift, apiLoaded, isLoading: usecasesLoading } = useUsecases();
   const isSupport = userInfo?.support === true;
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -3047,6 +3064,7 @@ const InfrastructureContent = () => {
         driftMap={driftMap}
         isSupport={isSupport}
         apiLoaded={apiLoaded}
+        usecasesLoading={usecasesLoading}
       />
     </Box>
   );
