@@ -1099,6 +1099,7 @@ const AllDataFlowsDrawer = ({
                     flowState={state}
                     highlighted={highlightEdgeIdx === idx}
                     isAgentic={agenticFlows.has(flow.id)}
+                    showTags
                     drift={isSupport ? driftMap?.get(flow.id) : undefined}
                     onClick={() => { onClose(); onSelectFlow(idx); }}
                     onMouseEnter={() => onEdgeHover(flow.id)}
