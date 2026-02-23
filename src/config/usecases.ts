@@ -310,6 +310,8 @@ export interface Usecase {
   automationArea?: 'automatic_ingestion' | 'threat_intel' | 'notifications' | 'response' | 'correlation';
   /** Runtime status (filled by API / hook) */
   status?: 'enabled' | 'disabled' | 'misconfigured';
+  /** True if this flow requires manual verification (e.g. log forwarding can't be auto-detected) */
+  manualVerification?: boolean;
 }
 
 // ── API usecase types (from /api/v1/workflows/usecases) ────────────────────────
@@ -396,6 +398,7 @@ export const DEFAULT_USECASES: Usecase[] = [
     id: 'network_siem_1', phase: 'ingest', source: 'network', target: 'siem',
     label: 'Flow logs',
     tags: ['Logs', 'Detection'],
+    manualVerification: true,
     description: 'Network flow logs (NetFlow, DNS, proxy) give the SIEM east-west and north-south visibility. Without them, lateral movement and C2 traffic go undetected.',
     agenticDescription: 'An agent monitors ingested flow logs for anomalous patterns (beaconing, port scans, unusual data volumes), generates hypotheses, and creates enriched SIEM alerts with analyst-ready summaries.',
     automationArea: 'automatic_ingestion',
@@ -404,6 +407,7 @@ export const DEFAULT_USECASES: Usecase[] = [
     id: 'edr_siem_1', phase: 'correlation', source: 'edr', target: 'siem',
     label: 'Telemetry',
     tags: ['Logs', 'Detection', 'Correlation'],
+    manualVerification: true,
     description: 'Endpoint telemetry (process trees, file hashes, registry changes) enriches SIEM detections with host-level context, enabling accurate correlation rules.',
     agenticDescription: 'An agent cross-references endpoint telemetry with known attack patterns, surfaces hidden process chains, and annotates SIEM events with host risk scores before they reach an analyst.',
     automationArea: 'correlation',
@@ -412,6 +416,7 @@ export const DEFAULT_USECASES: Usecase[] = [
     id: 'iam_siem_1', phase: 'correlation', source: 'iam', target: 'siem',
     label: 'Auth logs',
     tags: ['Logs', 'Detection', 'Correlation'],
+    manualVerification: true,
     description: 'Authentication and authorization logs reveal credential abuse, impossible travel, privilege escalation, and brute-force attempts across the identity layer.',
     agenticDescription: 'An agent detects impossible travel, credential stuffing patterns, and privilege escalation attempts in auth logs, then creates SIEM alerts with user risk context and recommended actions.',
     automationArea: 'correlation',
@@ -498,6 +503,7 @@ export const DEFAULT_USECASES: Usecase[] = [
     id: 'cloud_siem_1', phase: 'ingest', source: 'cloud', target: 'siem',
     label: 'Audit logs', animated: true,
     tags: ['Logs', 'Detection'],
+    manualVerification: true,
     description: 'Cloud audit logs (CloudTrail, Activity Log, Audit Logs) provide visibility into API calls, configuration changes, and access patterns across cloud environments.',
     agenticDescription: 'An agent detects anomalous API call patterns, privilege escalation, and misconfiguration events in cloud audit logs, then generates prioritized SIEM alerts with remediation context.',
     automationArea: 'automatic_ingestion',
@@ -506,6 +512,7 @@ export const DEFAULT_USECASES: Usecase[] = [
     id: 'cloud_iam_1', phase: 'correlation', source: 'cloud', target: 'iam',
     label: 'Identity events',
     tags: ['Logs', 'Correlation', 'Detection'],
+    manualVerification: true,
     description: 'Cloud identity events (role changes, permission grants, federation configs) feed IAM monitoring to detect privilege escalation in cloud environments.',
     agenticDescription: 'An agent tracks excessive permission grants, detects role assumption chains indicating privilege escalation, and triggers automated least-privilege review recommendations in IAM.',
     automationArea: 'correlation',
@@ -556,6 +563,7 @@ export const DEFAULT_USECASES: Usecase[] = [
     id: 'cloud_asset_management_1', phase: 'correlation', source: 'cloud', target: 'asset_management',
     label: 'Resource inventory',
     tags: ['Logs', 'Context'],
+    manualVerification: true,
     description: 'Auto-syncing cloud resources into the asset inventory ensures the CMDB stays current, preventing blind spots in vulnerability management and incident response.',
     agenticDescription: 'An agent continuously reconciles cloud inventory with the CMDB, flags newly exposed resources, identifies shadow IT, and marks assets with missing security controls for immediate action.',
     automationArea: 'correlation',
@@ -564,6 +572,7 @@ export const DEFAULT_USECASES: Usecase[] = [
     id: 'asset_management_siem_1', phase: 'ingest', source: 'asset_management', target: 'siem',
     label: 'Endpoint logs', animated: true,
     tags: ['Logs', 'Detection', 'Alert'],
+    manualVerification: true,
     description: 'Forwarding endpoint telemetry and asset logs (process events, file changes, network connections, vulnerability scan results) to the SIEM enriches correlation and enables asset-aware detections.',
     agenticDescription: 'An agent normalises endpoint telemetry from diverse agents, tags each event with asset criticality and owner from the CMDB, and forwards structured logs to the SIEM with context that tunes alert priority.',
     automationArea: 'automatic_ingestion',

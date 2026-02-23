@@ -30,7 +30,7 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { useNavigate } from 'react-router-dom';
-import { Box, Typography, Chip, Avatar, IconButton, Drawer, Tooltip, Button } from '@mui/material';
+import { Box, Typography, Chip, Avatar, IconButton, Drawer, Tooltip, Button, Menu, MenuItem } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import {
   ArrowRight,
@@ -721,6 +721,7 @@ const DataFlowCard = ({
   isAgentic = false,
   showTags = false,
   drift,
+  onSetFlowState,
   onClick,
   onMouseEnter,
   onMouseLeave,
@@ -733,10 +734,12 @@ const DataFlowCard = ({
   isAgentic?: boolean;
   showTags?: boolean;
   drift?: import('@/hooks/useUsecases').UsecaseDrift;
+  onSetFlowState?: (edgeId: string, state: FlowState) => void;
   onClick?: () => void;
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
 }) => {
+  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const sourceCat = TOOL_CATEGORIES.find(c => c.id === flow.source);
   const targetCat = TOOL_CATEGORIES.find(c => c.id === flow.target);
   const flowColor = sourceCat?.color || '--primary';
@@ -784,15 +787,19 @@ const DataFlowCard = ({
           </Typography>
         </Box>
         {showTags && flow.tags && flow.tags.length > 0 && (
-          <Box sx={{ display: 'flex', gap: 0.4, mt: 0.25 }}>
-            {flow.tags.slice(0, 3).map(tag => {
-              const tc = TAG_COLORS[tag] ?? DEFAULT_TAG_COLOR;
-              return (
-                <Typography key={tag} sx={{ fontSize: '0.55rem', px: 0.5, py: 0.1, borderRadius: 0.5, fontWeight: 600, letterSpacing: '0.03em', color: tc.color, bgcolor: tc.bg, border: `1px solid ${tc.border}`, lineHeight: 1.3 }}>
-                  {tag}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4, mt: 0.25 }}>
+            {flow.tags.slice(0, 3).map(tag => (
+              <Typography key={tag} sx={{ fontSize: '0.55rem', px: 0.5, py: 0.1, borderRadius: 0.5, fontWeight: 600, letterSpacing: '0.03em', color: 'hsl(var(--muted-foreground))', bgcolor: 'hsla(var(--muted-foreground) / 0.08)', border: '1px solid hsla(var(--muted-foreground) / 0.15)', lineHeight: 1.3 }}>
+                {tag}
+              </Typography>
+            ))}
+            {flow.manualVerification && (
+              <Tooltip title="Requires manual verification — log forwarding can't be auto-detected" arrow>
+                <Typography sx={{ fontSize: '0.55rem', px: 0.5, py: 0.1, borderRadius: 0.5, fontWeight: 700, letterSpacing: '0.03em', color: 'hsl(35 92% 50%)', bgcolor: 'hsla(35 92% 50% / 0.1)', border: '1px solid hsla(35 92% 50% / 0.25)', lineHeight: 1.3 }}>
+                  Manual
                 </Typography>
-              );
-            })}
+              </Tooltip>
+            )}
           </Box>
         )}
       </Box>
@@ -840,10 +847,47 @@ const DataFlowCard = ({
           </Typography>
         </Tooltip>
       )}
-      {flowState !== 'enabled' && (
-        <Typography sx={{ fontSize: '0.6rem', color: FLOW_STATE_BADGE[flowState].color, bgcolor: FLOW_STATE_BADGE[flowState].bg, border: `1px solid ${FLOW_STATE_BADGE[flowState].border}`, px: 0.75, py: 0.25, borderRadius: 0.75, flexShrink: 0 }}>
-          {FLOW_STATE_BADGE[flowState].label}
-        </Typography>
+      {/* Status dropdown */}
+      {onSetFlowState ? (
+        <>
+          <Typography
+            onClick={(e) => { e.stopPropagation(); setMenuAnchor(e.currentTarget); }}
+            sx={{
+              fontSize: '0.6rem', color: FLOW_STATE_BADGE[flowState].color, bgcolor: FLOW_STATE_BADGE[flowState].bg,
+              border: `1px solid ${FLOW_STATE_BADGE[flowState].border}`, px: 0.75, py: 0.25, borderRadius: 0.75,
+              flexShrink: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 0.3,
+              '&:hover': { opacity: 0.8 },
+            }}
+          >
+            {FLOW_STATE_BADGE[flowState].label}
+            <Box component="span" sx={{ fontSize: '0.5rem', ml: 0.15 }}>▼</Box>
+          </Typography>
+          <Menu
+            anchorEl={menuAnchor}
+            open={Boolean(menuAnchor)}
+            onClose={(e: any) => { e?.stopPropagation?.(); setMenuAnchor(null); }}
+            onClick={(e) => e.stopPropagation()}
+            sx={{ '& .MuiPaper-root': { bgcolor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: 2, minWidth: 150, boxShadow: '0 8px 24px hsla(0 0% 0% / 0.3)', zIndex: 1500 } }}
+          >
+            {(['disabled', 'missing_config', 'enabled'] as FlowState[]).map(state => (
+              <MenuItem
+                key={state}
+                selected={flowState === state}
+                onClick={(e) => { e.stopPropagation(); onSetFlowState(edgeId, state); setMenuAnchor(null); }}
+                sx={{ fontSize: '0.78rem', py: 0.75, gap: 1, color: 'hsl(var(--foreground))' }}
+              >
+                <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: FLOW_STATE_BADGE[state].color, flexShrink: 0 }} />
+                {FLOW_STATE_BADGE[state].label}
+              </MenuItem>
+            ))}
+          </Menu>
+        </>
+      ) : (
+        flowState !== 'enabled' && (
+          <Typography sx={{ fontSize: '0.6rem', color: FLOW_STATE_BADGE[flowState].color, bgcolor: FLOW_STATE_BADGE[flowState].bg, border: `1px solid ${FLOW_STATE_BADGE[flowState].border}`, px: 0.75, py: 0.25, borderRadius: 0.75, flexShrink: 0 }}>
+            {FLOW_STATE_BADGE[flowState].label}
+          </Typography>
+        )
       )}
       {targetCat && (
         <Box sx={{ color: flowState === 'enabled' ? `hsl(var(${targetCat.color}))` : 'hsl(var(--muted-foreground))', display: 'flex', '& svg': { width: 14, height: 14 }, opacity: 0.6 }}>
@@ -871,7 +915,7 @@ const AllDataFlowsDrawer = ({
   activeCategories,
   configuredCategories,
   highlightEdgeIdx,
-  enabledFlows,
+  flowStateOverrides,
   agenticFlows,
   initialFilter,
   onEdgeHover,
@@ -885,7 +929,7 @@ const AllDataFlowsDrawer = ({
   activeCategories: Set<string>;
   configuredCategories: Set<string>;
   highlightEdgeIdx: number | null;
-  enabledFlows: Set<string>;
+  flowStateOverrides: Map<string, FlowState>;
   agenticFlows: Set<string>;
   initialFilter?: FlowState | null;
   onEdgeHover: (edgeId: string | null) => void;
@@ -901,11 +945,11 @@ const AllDataFlowsDrawer = ({
 
   // Compute flow state for each flow
   const flowsWithState = useMemo(() => DATA_FLOWS.map((flow, idx) => {
-    const isManuallyEnabled = enabledFlows.has(flow.id);
+    const override = flowStateOverrides.get(flow.id);
     const base = getFlowState(configuredCategories.has(flow.source), configuredCategories.has(flow.target));
-    const state: FlowState = isManuallyEnabled && base === 'missing_config' ? 'enabled' : base;
+    const state: FlowState = override || base;
     return { flow, idx, state };
-  }), [configuredCategories, enabledFlows]);
+  }), [configuredCategories, flowStateOverrides]);
 
   // Group flows by phase, applying filter
   const groupedByPhase = useMemo(() => {
@@ -1186,8 +1230,8 @@ const EdgeDetailDrawer = ({
   activeCategories,
   configuredCategories,
   categoryApps,
-  enabledFlows,
-  onToggleEnabled,
+  flowStateOverrides,
+  onSetFlowState,
   agenticFlows,
   onToggleAgentic,
   disabledApps,
@@ -1206,8 +1250,8 @@ const EdgeDetailDrawer = ({
   activeCategories: Set<string>;
   configuredCategories: Set<string>;
   categoryApps: Record<string, MatchedApp[]>;
-  enabledFlows: Set<string>;
-  onToggleEnabled: (edgeId: string) => void;
+  flowStateOverrides: Map<string, FlowState>;
+  onSetFlowState: (edgeId: string, state: FlowState) => void;
   agenticFlows: Set<string>;
   onToggleAgentic: (edgeId: string) => void;
   disabledApps: Set<string>;
@@ -1219,7 +1263,7 @@ const EdgeDetailDrawer = ({
 }) => {
   if (!flow) return null;
   const edgeId = edgeIdx !== null ? (DATA_FLOWS[edgeIdx]?.id ?? '') : '';
-  const isManuallyEnabled = enabledFlows.has(edgeId);
+  const overrideState = flowStateOverrides.get(edgeId);
 
   const sourceCat = getToolCategoryMeta(flow.source);
   const targetCat = getToolCategoryMeta(flow.target);
@@ -1230,7 +1274,7 @@ const EdgeDetailDrawer = ({
   const sourceActive = activeCategories.has(flow.source);
   const targetActive = activeCategories.has(flow.target);
   const baseFlowState = getFlowState(sourceConfigured, targetConfigured);
-  const flowState: FlowState = isManuallyEnabled && baseFlowState === 'missing_config' ? 'enabled' : baseFlowState;
+  const flowState: FlowState = overrideState || baseFlowState;
   const badge = FLOW_STATE_BADGE[flowState];
 
   // Check if at least one side has a validated app
@@ -2069,7 +2113,7 @@ const InfrastructureContent = () => {
   const [categoryApps, setCategoryApps] = useState<Record<string, MatchedApp[]>>({});
   const [savedHandles, setSavedHandles] = useState<HandleOverrides>({});
   const [savedWaypoints, setSavedWaypoints] = useState<WaypointOverrides>({});
-  const [enabledFlows, setEnabledFlows] = useState<Set<string>>(new Set());
+  const [flowStateOverrides, setFlowStateOverrides] = useState<Map<string, FlowState>>(new Map());
   const [agenticFlows, setAgenticFlows] = useState<Set<string>>(new Set());
   // disabledApps: global set of app names disabled across all flows and category drawers
   const [disabledApps, setDisabledApps] = useState<Set<string>>(new Set());
@@ -2139,7 +2183,14 @@ const InfrastructureContent = () => {
       }
       if (enabledResult.success && enabledResult.item?.value) {
         const parsed = typeof enabledResult.item.value === 'string' ? JSON.parse(enabledResult.item.value) : enabledResult.item.value;
-        if (Array.isArray(parsed)) setEnabledFlows(new Set(parsed));
+        // Support both old format (array of IDs = enabled) and new format (object { id: state })
+        if (Array.isArray(parsed)) {
+          const map = new Map<string, FlowState>();
+          parsed.forEach((id: string) => map.set(id, 'enabled'));
+          setFlowStateOverrides(map);
+        } else if (parsed && typeof parsed === 'object') {
+          setFlowStateOverrides(new Map(Object.entries(parsed) as [string, FlowState][]));
+        }
       }
       if (agenticResult.success && agenticResult.item?.value) {
         const parsed = typeof agenticResult.item.value === 'string' ? JSON.parse(agenticResult.item.value) : agenticResult.item.value;
@@ -2160,17 +2211,16 @@ const InfrastructureContent = () => {
     loadData();
   }, []);
 
-  // Toggle a flow between enabled and misconfigured, persisted to datastore
-  const toggleFlowEnabled = useCallback((edgeId: string) => {
-    setEnabledFlows(prev => {
-      const next = new Set(prev);
-      if (next.has(edgeId)) next.delete(edgeId);
-      else next.add(edgeId);
-      // Persist outside updater to avoid duplicate saves in strict mode
-      const arr = Array.from(next);
+  // Set a flow to a specific state, persisted to datastore
+  const setFlowStateFn = useCallback((edgeId: string, state: FlowState) => {
+    setFlowStateOverrides(prev => {
+      const next = new Map(prev);
+      // If setting to the auto-computed default, remove the override
+      next.set(edgeId, state);
+      const obj = Object.fromEntries(next);
       setTimeout(() => {
-        setDatastoreItem(ENABLED_FLOWS_CACHE_KEY, arr, DATASTORE_CATEGORIES.INFRASTRUCTURE)
-          .catch(e => console.warn('Failed to save enabled flows:', e));
+        setDatastoreItem(ENABLED_FLOWS_CACHE_KEY, obj, DATASTORE_CATEGORIES.INFRASTRUCTURE)
+          .catch(e => console.warn('Failed to save flow states:', e));
       }, 0);
       return next;
     });
@@ -2328,12 +2378,12 @@ const InfrastructureContent = () => {
       // Use global disabled apps check
       const sourceActive = isCategoryActiveForEdge(flow.source);
       const targetActive = isCategoryActiveForEdge(flow.target);
-      const isManuallyEnabled = enabledFlows.has(edgeId);
+      const overrideState = flowStateOverrides.get(edgeId);
       const isSimulated = simulatedEdgeIds.has(edgeId);
 
-      // Effective state: manually enabled overrides missing_config → enabled
+      // Effective state: override takes priority, otherwise compute from config
       const baseFlowState = getFlowState(sourceActive, targetActive);
-      const flowState: FlowState = (isManuallyEnabled && baseFlowState === 'missing_config') ? 'enabled' : baseFlowState;
+      const flowState: FlowState = overrideState || baseFlowState;
       // Simulated edges are treated as if fully enabled
       const bothActive = flowState === 'enabled' || isSimulated;
 
@@ -2445,7 +2495,7 @@ const InfrastructureContent = () => {
         // Arrow is drawn as a custom SVG polygon inside GradientEdge, always oriented to the last segment
       };
     }),
-    [activeId, hoveredId, activeColor, activeCategories, isCategoryActiveForEdge, enabledFlows, hoveredEdgeId, selectedEdgeIdx, savedHandles, savedWaypoints, persistWaypoints, simulatedEdgeIds, simulatedPhases]
+    [activeId, hoveredId, activeColor, activeCategories, isCategoryActiveForEdge, flowStateOverrides, hoveredEdgeId, selectedEdgeIdx, savedHandles, savedWaypoints, persistWaypoints, simulatedEdgeIds, simulatedPhases]
   );
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
@@ -2972,12 +3022,10 @@ const InfrastructureContent = () => {
         {(() => {
           const count = DATA_FLOWS.filter((flow) => {
             const base = getFlowState(activeCategories.has(flow.source), activeCategories.has(flow.target));
-            return (enabledFlows.has(flow.id) && base === 'missing_config') ? true : base === 'enabled';
-          }).length + DATA_FLOWS.filter((flow) => enabledFlows.has(flow.id) && getFlowState(activeCategories.has(flow.source), activeCategories.has(flow.target)) === 'missing_config').length;
-          const enabledCount = DATA_FLOWS.filter((flow) => {
-            const base = getFlowState(activeCategories.has(flow.source), activeCategories.has(flow.target));
-            return enabledFlows.has(flow.id) && base === 'missing_config';
+            const effective = flowStateOverrides.get(flow.id) || base;
+            return effective === 'enabled';
           }).length;
+          const enabledCount = count;
           return (
             <Tooltip title="Both categories have apps configured and the data flow has been explicitly verified. Click to filter." placement="right" arrow>
               <Box onClick={() => { setAllFlowsFilter('enabled'); setShowAllFlows(true); }} sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer', borderRadius: 1, px: 0.5, py: 0.25, transition: 'background 0.15s', '&:hover': { bgcolor: 'hsla(142 71% 45% / 0.08)' } }}>
@@ -2995,7 +3043,8 @@ const InfrastructureContent = () => {
         {(() => {
           const count = DATA_FLOWS.filter((flow) => {
             const base = getFlowState(activeCategories.has(flow.source), activeCategories.has(flow.target));
-            return base === 'missing_config' && !enabledFlows.has(flow.id);
+            const effective = flowStateOverrides.get(flow.id) || base;
+            return effective === 'missing_config';
           }).length;
           return (
             <Tooltip title="Both categories have apps configured, but the flow has not been verified yet. Click to filter." placement="right" arrow>
@@ -3043,7 +3092,7 @@ const InfrastructureContent = () => {
         activeCategories={activeCategories}
         configuredCategories={activeCategories}
         highlightEdgeIdx={lastViewedEdgeIdx}
-        enabledFlows={enabledFlows}
+        flowStateOverrides={flowStateOverrides}
         agenticFlows={agenticFlows}
         initialFilter={allFlowsFilter}
         onEdgeHover={(edgeId) => setHoveredEdgeId(edgeId)}
@@ -3058,8 +3107,8 @@ const InfrastructureContent = () => {
         activeCategories={activeCategories}
         configuredCategories={activeCategories}
         categoryApps={categoryApps}
-        enabledFlows={enabledFlows}
-        onToggleEnabled={toggleFlowEnabled}
+        flowStateOverrides={flowStateOverrides}
+        onSetFlowState={setFlowStateFn}
         agenticFlows={agenticFlows}
         onToggleAgentic={toggleAgenticFlow}
         disabledApps={disabledApps}
