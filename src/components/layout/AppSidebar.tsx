@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import shuffleInfraLogo from '@/assets/shuffle-infrastructure-logo.png';
 import { useLocation, Link } from 'react-router-dom';
 import {
   Box,
@@ -299,11 +300,9 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
               '&:hover': { backgroundColor: 'hsl(var(--muted))' },
             }}
           >
-            <svg width="24" height="24" viewBox="0 0 56 56" fill="none">
-              <path d="M14 14h28v6H20v16h16v-10h-8v-6h14v22H14V14z" fill="#FF6600" />
-            </svg>
+            <img src={shuffleInfraLogo} alt="Shuffle Infrastructure" width={24} height={24} style={{ borderRadius: 4 }} />
             <Typography sx={{ fontSize: '0.875rem', color: 'hsl(var(--foreground))' }}>
-              Shuffle Automation
+              Shuffle Infrastructure
             </Typography>
           </MenuItem>
           <MenuItem
@@ -319,14 +318,9 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
             <svg width="24" height="24" viewBox="0 0 56 56" fill="none">
               <path d="M14 14h28v6H20v16h16v-10h-8v-6h14v22H14V14z" fill="#FF6600" />
             </svg>
-            <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5 }}>
-              <Typography sx={{ fontSize: '0.875rem', color: 'hsl(var(--foreground))' }}>
-                Shuffle Security
-              </Typography>
-              <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
-                (Shutdown)
-              </Typography>
-            </Box>
+            <Typography sx={{ fontSize: '0.875rem', color: 'hsl(var(--foreground))' }}>
+              Shuffle Security
+            </Typography>
           </MenuItem>
         </Menu>
 
