@@ -66,6 +66,29 @@ function matchUsecases(apiCategories: ApiUsecaseCategory[]): {
     localByRoute.set(key, arr);
   }
 
+  // Route aliases: API may use a different source category than the local flow.
+  // e.g. API "communication→case_management" should match local "email→case_management"
+  const routeAliases: Record<string, string[]> = {
+    communication: ['email'],   // API uses "communication" for email-related flows
+    email: ['communication'],
+  };
+
+  const findLocals = (key: string, source: string): Usecase[] | undefined => {
+    const direct = localByRoute.get(key);
+    if (direct && direct.length > 0) return direct;
+    // Try aliases for the source category
+    const aliases = routeAliases[source];
+    if (aliases) {
+      const target = key.split('→')[1];
+      for (const alias of aliases) {
+        const altKey = `${alias}→${target}`;
+        const altLocals = localByRoute.get(altKey);
+        if (altLocals && altLocals.length > 0) return altLocals;
+      }
+    }
+    return undefined;
+  };
+
   const matched: MatchedPair[] = [];
   const apiOnly: { uc: ApiUsecase; categoryName: string }[] = [];
   const matchedLocalIds = new Set<string>();
@@ -77,15 +100,13 @@ function matchUsecases(apiCategories: ApiUsecaseCategory[]): {
       const target = normalizeCategory(apiUc.last);
       const key = `${source}→${target}`;
 
-      const locals = localByRoute.get(key);
+      const locals = findLocals(key, source);
       if (locals && locals.length > 0) {
-        // Match the first unmatched local flow on this route
         const unmatched = locals.find(l => !matchedLocalIds.has(l.id));
         if (unmatched) {
           matched.push({ local: unmatched, api: apiUc, apiCategoryName: cat.name });
           matchedLocalIds.add(unmatched.id);
         } else {
-          // All locals on this route already matched — this is extra from API
           apiOnly.push({ uc: apiUc, categoryName: cat.name });
         }
       } else {
