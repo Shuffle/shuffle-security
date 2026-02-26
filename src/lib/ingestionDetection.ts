@@ -32,7 +32,7 @@ export const isIngestionApp = (appName: string): boolean => {
     SIEM_PATTERNS.some(p => name.includes(p));
 };
 
-export type IngestionCategory = 'email' | 'cases' | 'edr' | 'siem';
+export type IngestionCategory = 'email' | 'cases' | 'edr' | 'siem' | 'other';
 
 export const getIngestionCategory = (appName: string, appCategories?: string[]): IngestionCategory | null => {
   const name = appName.toLowerCase();
@@ -70,8 +70,7 @@ export function extractValidatedIngestionApps(authApiResponse: any[]): Validated
 
   for (const { app, bestImage, hasValidAuth } of dedupedApps) {
     if (!hasValidAuth) continue; // Only validated apps
-    const category = getIngestionCategory(app.name, app.categories);
-    if (!category) continue;
+    const category = getIngestionCategory(app.name, app.categories) || 'other';
 
     apps.push({
       name: app.name,
