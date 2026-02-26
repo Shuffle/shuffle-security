@@ -117,8 +117,8 @@ const RulesPage = () => {
         id: d.file_id || d.id || d.name,
         filename: d.title || d.name || 'Untitled',
         filesize: 0,
-        created_at: d.created_at || Math.floor(Date.now() / 1000),
-        updated_at: d.updated_at || d.created_at || Math.floor(Date.now() / 1000),
+        created_at: d.created_at || 0,
+        updated_at: d.updated_at || d.created_at || 0,
         namespace: SIGMA_NAMESPACE,
         labels: [
           ...(d.level ? [d.level] : []),
@@ -233,6 +233,7 @@ const RulesPage = () => {
   };
 
   const formatDate = (timestamp: number) => {
+    if (!timestamp) return '—';
     return new Date(timestamp * 1000).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
