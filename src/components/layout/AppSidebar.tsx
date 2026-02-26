@@ -214,7 +214,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
           width: 24,
           height: 24,
           zIndex: 1300,
-          display: { xs: 'none', sm: 'flex' },
+          display: { xs: 'none', sm: hoverExpanded ? 'none' : 'flex' },
           transition: 'left 0.2s ease',
           '&:hover': {
             backgroundColor: 'hsl(var(--muted))',
