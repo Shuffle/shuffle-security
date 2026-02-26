@@ -135,6 +135,8 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
         gap: 0.5,
         justifyContent: collapsed ? 'center' : 'flex-start',
         px: collapsed ? 0 : 1,
+        maxHeight: expanded ? 'none' : 80,
+        overflow: 'hidden',
       }}>
         {loading ? (
           <CircularProgress size={20} sx={{ color: 'hsl(var(--muted-foreground))' }} />
