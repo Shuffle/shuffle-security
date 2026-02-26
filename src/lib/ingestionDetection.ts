@@ -75,12 +75,15 @@ export function extractValidatedIngestionApps(
     authApiResponse.filter(auth => auth.active || auth.validation?.valid)
   );
 
-  // Build a reverse map: app ID -> normalized name from ALL auth entries
+  // Build reverse map for both possible key shapes used in automation.tools:
+  // - auth.app.id (app identifier)
+  // - auth.id (auth instance identifier)
   const idToNormalizedName = new Map<string, string>();
   authApiResponse.forEach(auth => {
-    if (auth.app?.id && auth.app?.name) {
+    if (auth.app?.name) {
       const normalized = auth.app.name.toLowerCase().trim().replace(/[\s_\-]+/g, '_');
-      idToNormalizedName.set(auth.app.id, normalized);
+      if (auth.app?.id) idToNormalizedName.set(auth.app.id, normalized);
+      if (auth.id) idToNormalizedName.set(auth.id, normalized);
     }
   });
 
