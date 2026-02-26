@@ -93,5 +93,12 @@ export function extractValidatedIngestionApps(
     });
   }
 
+  // Sort: enabled first, then alphabetically
+  apps.sort((a, b) => {
+    if (a.enabled && !b.enabled) return -1;
+    if (!a.enabled && b.enabled) return 1;
+    return a.name.localeCompare(b.name);
+  });
+
   return apps;
 }
