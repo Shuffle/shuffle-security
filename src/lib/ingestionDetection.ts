@@ -34,6 +34,22 @@ export const isIngestionApp = (appName: string): boolean => {
 
 export type IngestionCategory = 'email' | 'cases' | 'edr' | 'siem' | 'other';
 
+export const normalizeAppName = (name: string): string =>
+  name.toLowerCase().trim().replace(/[\s_\-]+/g, '_');
+
+export const resolveIngestionEnablement = (
+  appName: string,
+  explicitTrueNames: Set<string>,
+  explicitFalseNames: Set<string>,
+  selectedNames: Set<string>,
+): boolean => {
+  const normalizedName = normalizeAppName(appName);
+
+  if (explicitTrueNames.has(normalizedName)) return true;
+  if (explicitFalseNames.has(normalizedName)) return false;
+  return selectedNames.has(normalizedName);
+};
+
 export const getIngestionCategory = (appName: string, appCategories?: string[]): IngestionCategory | null => {
   const name = appName.toLowerCase();
   const categories = (appCategories || []).map(c => c.toLowerCase());
@@ -81,7 +97,7 @@ export function extractValidatedIngestionApps(
   const idToNormalizedName = new Map<string, string>();
   authApiResponse.forEach(auth => {
     if (auth.app?.name) {
-      const normalized = auth.app.name.toLowerCase().trim().replace(/[\s_\-]+/g, '_');
+      const normalized = normalizeAppName(auth.app.name);
       if (auth.app?.id) idToNormalizedName.set(auth.app.id, normalized);
       if (auth.id) idToNormalizedName.set(auth.id, normalized);
     }
@@ -99,7 +115,7 @@ export function extractValidatedIngestionApps(
   }
 
   const selectedNames = new Set(
-    (selectedAppNames || []).map(name => name.toLowerCase().trim().replace(/[\s_\-]+/g, '_'))
+    (selectedAppNames || []).map(name => normalizeAppName(name))
   );
 
   const apps: ValidatedIngestionApp[] = [];
@@ -107,16 +123,13 @@ export function extractValidatedIngestionApps(
   for (const { app, bestImage, hasValidAuth } of dedupedApps) {
     if (!hasValidAuth) continue;
     const category = getIngestionCategory(app.name, app.categories) || 'other';
-    const normalizedName = app.name.toLowerCase().trim().replace(/[\s_\-]+/g, '_');
 
-    let enabled = false;
-    if (explicitTrueNames.has(normalizedName)) {
-      enabled = true;
-    } else if (explicitFalseNames.has(normalizedName)) {
-      enabled = false;
-    } else {
-      enabled = selectedNames.has(normalizedName);
-    }
+    const enabled = resolveIngestionEnablement(
+      app.name,
+      explicitTrueNames,
+      explicitFalseNames,
+      selectedNames,
+    );
 
     apps.push({
       id: app.id,

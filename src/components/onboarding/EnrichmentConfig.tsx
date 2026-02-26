@@ -34,6 +34,8 @@ import {
   EMAIL_APP_PATTERNS, CASES_PATTERNS, EDR_PATTERNS, SIEM_PATTERNS,
   THREAT_INTEL_PATTERNS, COMMUNICATION_PATTERNS_NAMES,
   isEmailApp, isThreatIntelApp, getIngestionCategory,
+  resolveIngestionEnablement,
+  normalizeAppName,
   type IngestionCategory,
 } from '@/lib/ingestionDetection';
 import shuffleLogo from '@/assets/shuffle-logo.png';
@@ -557,28 +559,43 @@ export const EnrichmentConfig = ({
 
   const isToolEnabled = (optionId: string, appId: string): boolean => {
     const current = enrichmentState[optionId];
-    if (current?.tools && appId in current.tools) {
-      return current.tools[appId] !== false;
-    }
     const appInfo = getAppInfo(optionId, appId);
-    return appInfo?.isSelected === true && appInfo?.isValidated === true;
+
+    if (!appInfo?.isValidated) return false;
+
+    const explicitTrueNames = new Set<string>();
+    const explicitFalseNames = new Set<string>();
+
+    if (current?.tools) {
+      for (const [toolId, value] of Object.entries(current.tools)) {
+        const toolInfo = getAppInfo(optionId, toolId);
+        if (!toolInfo?.name) continue;
+        if (value === true) explicitTrueNames.add(normalizeAppName(toolInfo.name));
+        if (value === false) explicitFalseNames.add(normalizeAppName(toolInfo.name));
+      }
+    }
+
+    const selectedNames = new Set<string>(
+      appInfo.isSelected ? [normalizeAppName(appInfo.name)] : []
+    );
+
+    return resolveIngestionEnablement(
+      appInfo.name,
+      explicitTrueNames,
+      explicitFalseNames,
+      selectedNames,
+    );
   };
 
-  const triggerWorkflowGeneration = useCallback((optionId: string, state: EnrichmentState, actionName?: string) => {
+  const triggerWorkflowGeneration = useCallback((optionId: string, _state: EnrichmentState, actionName?: string) => {
     const option = enrichmentOptions.find(o => o.id === optionId);
     if (!option) return;
     
     const allTools = getAllToolsForOption(option);
     
-    const enabledTools = actionName === 'disable' 
+    const enabledTools = actionName === 'disable'
       ? allTools
-      : allTools.filter(tool => {
-          const current = state[optionId];
-          if (current?.tools && tool.id in current.tools) {
-            return current.tools[tool.id] !== false;
-          }
-          return tool.isSelected === true && tool.isValidated === true;
-        });
+      : allTools.filter(tool => isToolEnabled(optionId, tool.id));
     
     const enabledAppNames = enabledTools.map(tool => tool.name);
     

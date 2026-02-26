@@ -89,6 +89,7 @@ const OnboardingPage = () => {
   const [authStates, setAuthStates] = useState<Record<string, AppAuthState>>({});
   const [authenticatedApps, setAuthenticatedApps] = useState<ApiAuthEntry[]>([]);
   const [authLoaded, setAuthLoaded] = useState(false);
+  const [selectedToolsLoaded, setSelectedToolsLoaded] = useState(false);
   const [enrichmentState, setEnrichmentState] = useState<EnrichmentState>({
     automatic_ingestion: { enabled: true, config: {} },
     integration_search: { enabled: true, config: {} },
@@ -150,7 +151,10 @@ const OnboardingPage = () => {
   // Load saved config from datastore on mount
   useEffect(() => {
     const loadSavedConfig = async () => {
-      if (!API_CONFIG.apiKey) return;
+      if (!API_CONFIG.apiKey) {
+        setSelectedToolsLoaded(true);
+        return;
+      }
       
       try {
         // Load selected tools
@@ -176,11 +180,20 @@ const OnboardingPage = () => {
         }
       } catch (error) {
         console.error('Failed to load saved config:', error);
+      } finally {
+        setSelectedToolsLoaded(true);
       }
     };
     
     loadSavedConfig();
   }, []);
+
+  useEffect(() => {
+    if (!selectedToolsLoaded || !API_CONFIG.apiKey) return;
+
+    setDatastoreItem(SELECTED_TOOLS_KEY, selectedApps, ONBOARDING_CONFIG_CATEGORY)
+      .catch(error => console.error('Failed to persist selected tools:', error));
+  }, [selectedToolsLoaded, selectedApps]);
 
   // Fetch authenticated apps from API
   useEffect(() => {
@@ -224,8 +237,8 @@ const OnboardingPage = () => {
       
       const currentKey = steps[activeStep].key;
       
-      // When moving from More Tools to Authentication
-      if (currentKey === 'tools' && selectedApps.length > 0) {
+      // When moving from Sources to Authentication
+      if (currentKey === 'sources' && selectedApps.length > 0) {
         setDatastoreItem(SELECTED_TOOLS_KEY, selectedApps, ONBOARDING_CONFIG_CATEGORY)
           .catch(error => console.error('Failed to save tools:', error));
         
