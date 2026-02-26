@@ -400,7 +400,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
       <Divider sx={{ borderColor: 'hsl(var(--border))', mx: visuallyCollapsed ? 1 : 2 }} />
 
       {/* Navigation Items */}
-      <List sx={{ px: 1, py: 2, flexGrow: 1, overflowY: 'auto' }}>
+      <List sx={{ px: 1, py: 2, flexGrow: 1, overflowY: 'auto', overflowX: 'hidden' }}>
         {navItems.map((item) => (
           <Box key={item.label}>
             {item.children ? (
@@ -586,7 +586,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
         ))}
       </List>
       {/* Integrations Section */}
-      <Box sx={{ mt: 2 }}>
+      <Box sx={{ mt: 2, overflow: 'hidden' }}>
         <Divider sx={{ borderColor: 'hsl(var(--border))', mx: visuallyCollapsed ? 1 : 2, mb: 1 }} />
         <IntegrationStatus collapsed={visuallyCollapsed} />
         
