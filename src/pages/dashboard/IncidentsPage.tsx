@@ -660,41 +660,40 @@ const IncidentsPage = () => {
           )}
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          {/* Ingestion Sources */}
+          {/* Ingestion Sources - icon only with tooltip */}
           {ingestionApps.length > 0 && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mr: 0.5 }}>
-                <DownloadIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
-                <Typography sx={{ fontSize: '0.72rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, color: 'text.secondary' }}>
-                  Ingestion Sources
-                </Typography>
-              </Box>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
-                {ingestionApps.map(app => (
-                  <Chip
-                    key={app.name}
-                    label={app.name.replace(/_/g, ' ')}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+              {ingestionApps.map(app => (
+                <Tooltip key={app.name} title={app.name.replace(/_/g, ' ')}>
+                  <IconButton
+                    component={Link}
+                    to={`/apps/${app.name.toLowerCase()}`}
                     size="small"
-                    avatar={app.image ? (
+                    sx={{
+                      width: 32,
+                      height: 32,
+                      border: '1px solid',
+                      borderColor: app.validated ? 'rgba(34, 197, 94, 0.20)' : 'rgba(255,255,255,0.08)',
+                      bgcolor: app.validated ? 'rgba(34, 197, 94, 0.10)' : 'rgba(255,255,255,0.05)',
+                      borderRadius: 1,
+                      '&:hover': {
+                        bgcolor: app.validated ? 'rgba(34, 197, 94, 0.18)' : 'rgba(255,255,255,0.1)',
+                      },
+                    }}
+                  >
+                    {app.image ? (
                       <Box
                         component="img"
                         src={app.image}
-                        alt=""
-                        sx={{ width: 18, height: 18, borderRadius: '50%', objectFit: 'contain', bgcolor: 'rgba(255,255,255,0.1)' }}
+                        alt={app.name}
+                        sx={{ width: 18, height: 18, borderRadius: '50%', objectFit: 'contain' }}
                       />
-                    ) : undefined}
-                    sx={{
-                      bgcolor: app.validated ? 'rgba(34, 197, 94, 0.10)' : 'rgba(255,255,255,0.05)',
-                      color: app.validated ? '#4ade80' : 'rgba(255,255,255,0.4)',
-                      border: '1px solid',
-                      borderColor: app.validated ? 'rgba(34, 197, 94, 0.20)' : 'rgba(255,255,255,0.08)',
-                      fontSize: '0.78rem',
-                      height: 28,
-                      '& .MuiChip-avatar': { ml: 0.5 },
-                    }}
-                  />
-                ))}
-              </Box>
+                    ) : (
+                      <DownloadIcon sx={{ fontSize: 16, color: app.validated ? '#4ade80' : 'rgba(255,255,255,0.4)' }} />
+                    )}
+                  </IconButton>
+                </Tooltip>
+              ))}
             </Box>
           )}
 
