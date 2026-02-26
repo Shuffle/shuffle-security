@@ -43,8 +43,7 @@ import AgentPermissionsDrawer from '@/components/agent/AgentPermissionsDrawer';
 
 const drawerWidth = 260;
 const collapsedWidth = 64;
-const hoverExpandDelay = 200;
-const hoverCollapseDelay = 300;
+const hoverCollapseDelay = 250;
 
 interface NavItem {
   label: string;
@@ -159,9 +158,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
   const handleMouseEnter = () => {
     if (!collapsed) return;
     if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
-    hoverTimeoutRef.current = setTimeout(() => {
-      setHoverExpanded(true);
-    }, hoverExpandDelay);
+    setHoverExpanded(true);
   };
 
   const handleMouseLeave = () => {
