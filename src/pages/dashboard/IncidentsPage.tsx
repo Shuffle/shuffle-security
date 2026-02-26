@@ -675,9 +675,18 @@ const IncidentsPage = () => {
           )}
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          {/* Ingestion Sources - icon only with tooltip */}
+          {/* Ingestion Sources - grouped in a subtle container with add button */}
           {ingestionApps.length > 0 && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 0.5,
+              bgcolor: 'hsl(var(--muted) / 0.4)',
+              border: '1px solid hsl(var(--border))',
+              borderRadius: 1.5,
+              px: 0.75,
+              py: 0.5,
+            }}>
               {ingestionApps.map(app => (
                 <Tooltip key={app.name} title={`${app.name.replace(/_/g, ' ')}${app.enabled ? '' : ' (not active)'}`}>
                   <IconButton
@@ -685,18 +694,18 @@ const IncidentsPage = () => {
                     to={`/apps/${app.name.toLowerCase()}`}
                     size="small"
                     sx={{
-                      width: 32,
-                      height: 32,
+                      width: 30,
+                      height: 30,
                       border: '1px solid',
-                      borderColor: app.enabled ? 'rgba(34, 197, 94, 0.20)' : 'rgba(255,255,255,0.08)',
-                      bgcolor: app.enabled ? 'rgba(34, 197, 94, 0.10)' : 'rgba(255,255,255,0.05)',
+                      borderColor: app.enabled ? 'rgba(34, 197, 94, 0.20)' : 'transparent',
+                      bgcolor: app.enabled ? 'rgba(34, 197, 94, 0.10)' : 'transparent',
                       borderRadius: 1,
-                      opacity: app.enabled ? 1 : 0.4,
+                      opacity: app.enabled ? 1 : 0.35,
                       filter: app.enabled ? 'none' : 'grayscale(1)',
                       transition: 'opacity 0.15s ease, filter 0.15s ease',
                       '&:hover': {
                         bgcolor: app.enabled ? 'rgba(34, 197, 94, 0.18)' : 'rgba(255,255,255,0.1)',
-                        opacity: app.enabled ? 1 : 0.6,
+                        opacity: app.enabled ? 1 : 0.7,
                         filter: 'none',
                       },
                     }}
@@ -714,6 +723,27 @@ const IncidentsPage = () => {
                   </IconButton>
                 </Tooltip>
               ))}
+              <Tooltip title="Add ingestion source">
+                <IconButton
+                  component={Link}
+                  to="/onboarding/automate"
+                  size="small"
+                  sx={{
+                    width: 28,
+                    height: 28,
+                    color: 'hsl(var(--muted-foreground))',
+                    border: '1px dashed hsl(var(--border))',
+                    borderRadius: 1,
+                    '&:hover': {
+                      bgcolor: 'hsl(var(--muted))',
+                      borderStyle: 'solid',
+                      color: 'hsl(var(--primary))',
+                    },
+                  }}
+                >
+                  <AddIcon sx={{ fontSize: 16 }} />
+                </IconButton>
+              </Tooltip>
             </Box>
           )}
 
