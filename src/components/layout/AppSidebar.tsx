@@ -41,6 +41,8 @@ import AgentPermissionsDrawer from '@/components/agent/AgentPermissionsDrawer';
 
 const drawerWidth = 260;
 const collapsedWidth = 64;
+const hoverExpandDelay = 200;
+const hoverCollapseDelay = 300;
 
 interface NavItem {
   label: string;
@@ -145,6 +147,26 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
   const [expandedItems, setExpandedItems] = useState<string[]>(['Incidents']);
   const [agentDrawerOpen, setAgentDrawerOpen] = useState(false);
   const [toolMenuAnchor, setToolMenuAnchor] = useState<null | HTMLElement>(null);
+  const [hoverExpanded, setHoverExpanded] = useState(false);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // The sidebar appears expanded if it's actually expanded OR hover-expanded
+  const visuallyCollapsed = collapsed && !hoverExpanded;
+
+  const handleMouseEnter = () => {
+    if (!collapsed) return;
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    hoverTimeoutRef.current = setTimeout(() => {
+      setHoverExpanded(true);
+    }, hoverExpandDelay);
+  };
+
+  const handleMouseLeave = () => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    hoverTimeoutRef.current = setTimeout(() => {
+      setHoverExpanded(false);
+    }, hoverCollapseDelay);
+  };
 
   const organizations = userInfo?.orgs || [];
   const sortedOrgs = sortOrgsWithHierarchy(organizations);
@@ -203,12 +225,14 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
       </IconButton>
 
       <Box
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
         sx={{
           position: 'fixed',
           left: 10,
           top: '2.5%',
           height: '95%',
-          width: collapsed ? collapsedWidth : drawerWidth,
+          width: visuallyCollapsed ? collapsedWidth : drawerWidth,
           backgroundColor: 'hsl(var(--card))',
           borderRadius: 2,
           border: '1px solid hsl(var(--border))',
@@ -216,7 +240,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
           flexDirection: 'column',
           transition: 'width 0.2s ease',
           overflow: 'hidden',
-          zIndex: 1200,
+          zIndex: hoverExpanded ? 1250 : 1200,
         }}
       >
       {/* Header with Logo and Toggle */}
@@ -230,13 +254,13 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
         }}
       >
         <Box
-          onClick={(e) => !collapsed && setToolMenuAnchor(e.currentTarget)}
+          onClick={(e) => !visuallyCollapsed && setToolMenuAnchor(e.currentTarget)}
           sx={{
             display: 'flex',
             alignItems: 'center',
             gap: 1.5,
             flexShrink: 0,
-            cursor: collapsed ? 'default' : 'pointer',
+            cursor: visuallyCollapsed ? 'default' : 'pointer',
             borderRadius: 1,
             '&:hover': {
               opacity: 0.8,
@@ -249,7 +273,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
               fill="#FF6600"
             />
           </svg>
-          {!collapsed && (
+          {!visuallyCollapsed && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5 }}>
                 <Typography sx={{ 
@@ -329,7 +353,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
       </Box>
 
       {/* Search Bar */}
-      {!collapsed ? (
+      {!visuallyCollapsed ? (
         <Box sx={{ px: 2, mb: 2 }}>
           <Box
             sx={{
@@ -373,7 +397,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
         </Box>
       )}
 
-      <Divider sx={{ borderColor: 'hsl(var(--border))', mx: collapsed ? 1 : 2 }} />
+      <Divider sx={{ borderColor: 'hsl(var(--border))', mx: visuallyCollapsed ? 1 : 2 }} />
 
       {/* Navigation Items */}
       <List sx={{ px: 1, py: 2, flexGrow: 1, overflowY: 'auto' }}>
@@ -381,7 +405,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
           <Box key={item.label}>
             {item.children ? (
               <>
-                <Tooltip title={collapsed ? item.label : ''} placement="right">
+                <Tooltip title={visuallyCollapsed ? item.label : ''} placement="right">
                   <ListItem disablePadding sx={{ mb: 0.5 }}>
                     <ListItemButton
                       component={Link}
@@ -390,15 +414,15 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                         // Allow ctrl/cmd+click to open in new tab
                         if (e.ctrlKey || e.metaKey) return;
                         
-                        if (!collapsed) {
+                        if (!visuallyCollapsed) {
                           handleExpand(item.label);
                         }
                       }}
                       sx={{
                         borderRadius: 1,
                         minHeight: 40,
-                        justifyContent: collapsed ? 'center' : 'flex-start',
-                        px: collapsed ? 1.5 : 2,
+                        justifyContent: visuallyCollapsed ? 'center' : 'flex-start',
+                        px: visuallyCollapsed ? 1.5 : 2,
                         backgroundColor: isActive(item.path) ? 'hsl(var(--muted))' : 'transparent',
                         '&:hover': {
                           backgroundColor: 'hsl(var(--muted))',
@@ -407,7 +431,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                     >
                       <ListItemIcon
                         sx={{
-                          minWidth: collapsed ? 0 : 36,
+                          minWidth: visuallyCollapsed ? 0 : 36,
                           color: isActive(item.path) 
                             ? 'hsl(var(--primary))' 
                             : 'hsl(var(--muted-foreground))',
@@ -415,7 +439,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                       >
                         {item.icon}
                       </ListItemIcon>
-                      {!collapsed && (
+                      {!visuallyCollapsed && (
                         <>
                           <ListItemText
                             primary={item.label}
@@ -436,7 +460,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                   </ListItem>
                 </Tooltip>
                 {/* Expanded: show children in collapsible list */}
-                {!collapsed && (
+                {!visuallyCollapsed && (
                   <Collapse in={expandedItems.includes(item.label)} timeout="auto" unmountOnExit>
                     <List component="div" disablePadding>
                       {item.children.map((child) => (
@@ -481,7 +505,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                   </Collapse>
                 )}
                 {/* Collapsed: show children as icon-only buttons */}
-                {collapsed && (
+                {visuallyCollapsed && (
                   <List component="div" disablePadding sx={{ mt: 0.5 }}>
                     {item.children.map((child) => (
                       <Tooltip key={child.path} title={child.label} placement="right">
@@ -518,7 +542,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                 )}
               </>
             ) : (
-              <Tooltip title={collapsed ? item.label : ''} placement="right">
+              <Tooltip title={visuallyCollapsed ? item.label : ''} placement="right">
                 <ListItem disablePadding sx={{ mb: 0.5 }}>
                   <ListItemButton
                     component={Link}
@@ -526,8 +550,8 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                     sx={{
                       borderRadius: 1,
                       minHeight: 40,
-                      justifyContent: collapsed ? 'center' : 'flex-start',
-                      px: collapsed ? 1.5 : 2,
+                      justifyContent: visuallyCollapsed ? 'center' : 'flex-start',
+                      px: visuallyCollapsed ? 1.5 : 2,
                       backgroundColor: isActive(item.path) ? 'hsl(var(--muted))' : 'transparent',
                       '&:hover': {
                         backgroundColor: 'hsl(var(--muted))',
@@ -536,7 +560,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                   >
                     <ListItemIcon
                       sx={{
-                        minWidth: collapsed ? 0 : 36,
+                        minWidth: visuallyCollapsed ? 0 : 36,
                         color: isActive(item.path) 
                           ? 'hsl(var(--primary))' 
                           : 'hsl(var(--muted-foreground))',
@@ -544,7 +568,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                     >
                       {item.icon}
                     </ListItemIcon>
-                    {!collapsed && (
+                    {!visuallyCollapsed && (
                       <ListItemText
                         primary={item.label}
                         primaryTypographyProps={{
@@ -563,23 +587,23 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
       </List>
       {/* Integrations Section */}
       <Box sx={{ mt: 2 }}>
-        <Divider sx={{ borderColor: 'hsl(var(--border))', mx: collapsed ? 1 : 2, mb: 1 }} />
-        <IntegrationStatus collapsed={collapsed} />
+        <Divider sx={{ borderColor: 'hsl(var(--border))', mx: visuallyCollapsed ? 1 : 2, mb: 1 }} />
+        <IntegrationStatus collapsed={visuallyCollapsed} />
         
         {/* Agent Permissions Button */}
-        <Box sx={{ px: collapsed ? 0 : 1, py: 0.5 }}>
-          <Tooltip title={collapsed ? 'Agent Permissions' : ''} placement="right">
+        <Box sx={{ px: visuallyCollapsed ? 0 : 1, py: 0.5 }}>
+          <Tooltip title={visuallyCollapsed ? 'Agent Permissions' : ''} placement="right">
             <Box
               onClick={() => setAgentDrawerOpen(true)}
               sx={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: 1.5,
-                px: collapsed ? 0 : 1.5,
+                px: visuallyCollapsed ? 0 : 1.5,
                 py: 0.75,
                 borderRadius: 1,
                 cursor: 'pointer',
-                justifyContent: collapsed ? 'center' : 'flex-start',
+                justifyContent: visuallyCollapsed ? 'center' : 'flex-start',
                 color: 'hsl(var(--muted-foreground))',
                 transition: 'all 0.15s ease',
                 '&:hover': {
@@ -589,7 +613,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
               }}
             >
               <Bot size={16} />
-              {!collapsed && (
+              {!visuallyCollapsed && (
                 <Typography sx={{ fontSize: '0.75rem', fontWeight: 500 }}>
                   Agent Permissions
                 </Typography>
@@ -604,10 +628,10 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
 
       {/* Bottom Section */}
       <Box sx={{ mt: 'auto' }}>
-        <Divider sx={{ borderColor: 'hsl(var(--border))', mx: collapsed ? 1 : 2 }} />
+        <Divider sx={{ borderColor: 'hsl(var(--border))', mx: visuallyCollapsed ? 1 : 2 }} />
         
         {/* Organization Selector */}
-        {!collapsed ? (
+        {!visuallyCollapsed ? (
           <Box sx={{ p: 2 }}>
             <Autocomplete
               value={selectedOrg}
@@ -759,7 +783,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
               display: 'flex',
               alignItems: 'center',
               gap: 1.5,
-              justifyContent: collapsed ? 'center' : 'flex-start',
+              justifyContent: visuallyCollapsed ? 'center' : 'flex-start',
               p: 1.5,
               borderRadius: 1,
               transition: 'background-color 0.15s ease',
@@ -777,7 +801,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
             >
               {getUserInitial()}
             </Avatar>
-            {!collapsed && (
+            {!visuallyCollapsed && (
               <>
                 <Box sx={{ flexGrow: 1, overflow: 'hidden' }}>
                   <Typography 
