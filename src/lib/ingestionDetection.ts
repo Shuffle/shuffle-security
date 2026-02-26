@@ -78,10 +78,10 @@ export function extractValidatedIngestionApps(
     if (!hasValidAuth) continue;
     const category = getIngestionCategory(app.name, app.categories) || 'other';
 
-    // Determine enabled: if enabledToolIds provided, check it; otherwise default to true
+    // Determine enabled: only true if explicitly set to true in the tools map
     const enabled = enabledToolIds
-      ? enabledToolIds[app.id] !== false
-      : true;
+      ? enabledToolIds[app.id] === true
+      : false;
 
     apps.push({
       id: app.id,
