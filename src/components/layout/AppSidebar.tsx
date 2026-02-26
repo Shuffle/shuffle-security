@@ -43,7 +43,7 @@ import AgentPermissionsDrawer from '@/components/agent/AgentPermissionsDrawer';
 
 const drawerWidth = 260;
 const collapsedWidth = 64;
-const hoverCollapseDelay = 250;
+const hoverCollapseDelay = 150;
 
 interface NavItem {
   label: string;
