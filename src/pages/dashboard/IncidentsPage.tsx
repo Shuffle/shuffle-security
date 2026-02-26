@@ -32,6 +32,7 @@ import { ResolveIncidentDialog, ResolutionData, RESOLUTION_REASONS } from '@/com
 import { CategoryAutomationsDialog } from '@/components/incidents/CategoryAutomationsDialog';
 import { extractValidatedIngestionApps, ValidatedIngestionApp } from '@/lib/ingestionDetection';
 import { getApiUrl, getAuthHeader } from '@/config/api';
+import { getDatastoreItem } from '@/services/datastore';
 import DownloadIcon from '@mui/icons-material/Download';
 import { IncidentCardView } from '@/components/incidents/IncidentCardView';
 import { IncidentStatsCards } from '@/components/incidents/IncidentStatsCards';
@@ -296,18 +297,32 @@ const IncidentsPage = () => {
     }
   }, [categoryConfig]);
 
-  // Fetch ingestion apps
+  // Fetch ingestion apps + automation config to determine enabled state
   useEffect(() => {
     const fetchIngestionApps = async () => {
       try {
-        const response = await fetch(getApiUrl('/api/v1/apps/authentication'), {
-          credentials: 'include',
-          headers: { ...getAuthHeader() },
-        });
-        if (response.ok) {
-          const result = await response.json();
+        const [authResponse, configResponse] = await Promise.all([
+          fetch(getApiUrl('/api/v1/apps/authentication'), {
+            credentials: 'include',
+            headers: { ...getAuthHeader() },
+          }),
+          getDatastoreItem('automation_config', 'shuffle-security_onboarding'),
+        ]);
+
+        if (authResponse.ok) {
+          const result = await authResponse.json();
           const authApps = Array.isArray(result) ? result : (result.data || []);
-          setIngestionApps(extractValidatedIngestionApps(authApps));
+
+          // Extract enabled tool IDs from automation config
+          let enabledToolIds: Record<string, boolean> | undefined;
+          if (configResponse.success && configResponse.item?.value) {
+            const config = typeof configResponse.item.value === 'string'
+              ? JSON.parse(configResponse.item.value)
+              : configResponse.item.value;
+            enabledToolIds = config?.automatic_ingestion?.tools;
+          }
+
+          setIngestionApps(extractValidatedIngestionApps(authApps, enabledToolIds));
         }
       } catch (error) {
         console.error('Failed to fetch ingestion apps:', error);
@@ -664,7 +679,7 @@ const IncidentsPage = () => {
           {ingestionApps.length > 0 && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
               {ingestionApps.map(app => (
-                <Tooltip key={app.name} title={app.name.replace(/_/g, ' ')}>
+                <Tooltip key={app.name} title={`${app.name.replace(/_/g, ' ')}${app.enabled ? '' : ' (not active)'}`}>
                   <IconButton
                     component={Link}
                     to={`/apps/${app.name.toLowerCase()}`}
@@ -673,11 +688,16 @@ const IncidentsPage = () => {
                       width: 32,
                       height: 32,
                       border: '1px solid',
-                      borderColor: app.validated ? 'rgba(34, 197, 94, 0.20)' : 'rgba(255,255,255,0.08)',
-                      bgcolor: app.validated ? 'rgba(34, 197, 94, 0.10)' : 'rgba(255,255,255,0.05)',
+                      borderColor: app.enabled ? 'rgba(34, 197, 94, 0.20)' : 'rgba(255,255,255,0.08)',
+                      bgcolor: app.enabled ? 'rgba(34, 197, 94, 0.10)' : 'rgba(255,255,255,0.05)',
                       borderRadius: 1,
+                      opacity: app.enabled ? 1 : 0.4,
+                      filter: app.enabled ? 'none' : 'grayscale(1)',
+                      transition: 'opacity 0.15s ease, filter 0.15s ease',
                       '&:hover': {
-                        bgcolor: app.validated ? 'rgba(34, 197, 94, 0.18)' : 'rgba(255,255,255,0.1)',
+                        bgcolor: app.enabled ? 'rgba(34, 197, 94, 0.18)' : 'rgba(255,255,255,0.1)',
+                        opacity: app.enabled ? 1 : 0.6,
+                        filter: 'none',
                       },
                     }}
                   >
@@ -689,7 +709,7 @@ const IncidentsPage = () => {
                         sx={{ width: 18, height: 18, borderRadius: '50%', objectFit: 'contain' }}
                       />
                     ) : (
-                      <DownloadIcon sx={{ fontSize: 16, color: app.validated ? '#4ade80' : 'rgba(255,255,255,0.4)' }} />
+                      <DownloadIcon sx={{ fontSize: 16, color: app.enabled ? '#4ade80' : 'rgba(255,255,255,0.4)' }} />
                     )}
                   </IconButton>
                 </Tooltip>

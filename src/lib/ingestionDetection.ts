@@ -50,18 +50,24 @@ export const getIngestionCategory = (appName: string, appCategories?: string[]):
 // Validated ingestion app extraction from raw API data
 // ============================================================================
 export interface ValidatedIngestionApp {
+  id: string;
   name: string;
   image?: string;
   validated: boolean;
+  enabled: boolean;
   category: IngestionCategory;
 }
 
 /**
- * Extract validated ingestion apps from the raw /api/v1/apps/authentication response.
- * Returns deduplicated apps that match ingestion categories (Email, Cases, EDR, SIEM)
- * and have valid (tested) authentication — matching the "Automatic Ingestion" view.
+ * Extract validated apps from the raw /api/v1/apps/authentication response.
+ * Returns deduplicated apps that have valid authentication.
+ * Pass enabledToolIds to mark which are actually enabled for ingestion (from automation config).
+ * If enabledToolIds is not provided, all validated apps are marked as enabled.
  */
-export function extractValidatedIngestionApps(authApiResponse: any[]): ValidatedIngestionApp[] {
+export function extractValidatedIngestionApps(
+  authApiResponse: any[],
+  enabledToolIds?: Record<string, boolean>,
+): ValidatedIngestionApp[] {
   const dedupedApps = deduplicateAuthApps(
     authApiResponse.filter(auth => auth.active || auth.validation?.valid)
   );
@@ -69,13 +75,20 @@ export function extractValidatedIngestionApps(authApiResponse: any[]): Validated
   const apps: ValidatedIngestionApp[] = [];
 
   for (const { app, bestImage, hasValidAuth } of dedupedApps) {
-    if (!hasValidAuth) continue; // Only validated apps
+    if (!hasValidAuth) continue;
     const category = getIngestionCategory(app.name, app.categories) || 'other';
 
+    // Determine enabled: if enabledToolIds provided, check it; otherwise default to true
+    const enabled = enabledToolIds
+      ? enabledToolIds[app.id] !== false
+      : true;
+
     apps.push({
+      id: app.id,
       name: app.name,
       image: bestImage || app.large_image,
       validated: true,
+      enabled,
       category,
     });
   }
