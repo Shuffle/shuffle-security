@@ -35,6 +35,8 @@ import RssFeedIcon from '@mui/icons-material/RssFeed';
 import RadarIcon from '@mui/icons-material/Radar';
 import { Braces, Waypoints, Bot, Network } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import LogoutIcon from '@mui/icons-material/Logout';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import { SHUFFLE_AUTOMATION_URL } from '@/config/api';
 import { IntegrationStatus } from './IntegrationStatus';
 import AgentPermissionsDrawer from '@/components/agent/AgentPermissionsDrawer';
@@ -143,10 +145,11 @@ const sortOrgsWithHierarchy = (orgs: Array<{ id: string; name: string; creator_o
 
 export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
   const location = useLocation();
-  const { userInfo, setActiveOrg } = useAuth();
+  const { userInfo, setActiveOrg, logout } = useAuth();
   const [expandedItems, setExpandedItems] = useState<string[]>(['Incidents']);
   const [agentDrawerOpen, setAgentDrawerOpen] = useState(false);
   const [toolMenuAnchor, setToolMenuAnchor] = useState<null | HTMLElement>(null);
+  const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(null);
   const [hoverExpanded, setHoverExpanded] = useState(false);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -762,8 +765,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
 
         {/* Settings Button (User Section) */}
         <Box
-          component={Link}
-          to="/settings"
+          onClick={(e) => setUserMenuAnchor(e.currentTarget)}
           sx={{
             p: 2,
             pt: 0,
@@ -816,15 +818,6 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                   >
                     {userInfo?.username || 'User'}
                   </Typography>
-                  <Typography 
-                    variant="caption" 
-                    sx={{ 
-                      color: 'hsl(var(--muted-foreground))',
-                      display: 'block',
-                    }}
-                  >
-                    Settings
-                  </Typography>
                 </Box>
                 <SettingsIcon 
                   sx={{ 
@@ -836,6 +829,76 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
             )}
           </Box>
         </Box>
+        <Menu
+          anchorEl={userMenuAnchor}
+          open={Boolean(userMenuAnchor)}
+          onClose={() => setUserMenuAnchor(null)}
+          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+          transformOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+          slotProps={{
+            paper: {
+              sx: {
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: 1.5,
+                minWidth: 180,
+                mb: 1,
+                zIndex: 1400,
+              },
+            },
+          }}
+        >
+          <MenuItem
+            component={Link}
+            to="/users"
+            onClick={() => setUserMenuAnchor(null)}
+            sx={{
+              py: 1.25,
+              px: 2,
+              gap: 1.5,
+              fontSize: '0.875rem',
+              color: 'hsl(var(--foreground))',
+              '&:hover': { backgroundColor: 'hsl(var(--muted))' },
+            }}
+          >
+            <AdminPanelSettingsIcon sx={{ fontSize: 18, color: 'hsl(var(--muted-foreground))' }} />
+            Org Admin
+          </MenuItem>
+          <MenuItem
+            component={Link}
+            to="/settings"
+            onClick={() => setUserMenuAnchor(null)}
+            sx={{
+              py: 1.25,
+              px: 2,
+              gap: 1.5,
+              fontSize: '0.875rem',
+              color: 'hsl(var(--foreground))',
+              '&:hover': { backgroundColor: 'hsl(var(--muted))' },
+            }}
+          >
+            <SettingsIcon sx={{ fontSize: 18, color: 'hsl(var(--muted-foreground))' }} />
+            User Account
+          </MenuItem>
+          <Divider sx={{ borderColor: 'hsl(var(--border))', my: 0.5 }} />
+          <MenuItem
+            onClick={() => {
+              setUserMenuAnchor(null);
+              logout();
+            }}
+            sx={{
+              py: 1.25,
+              px: 2,
+              gap: 1.5,
+              fontSize: '0.875rem',
+              color: 'hsl(var(--destructive, 0 84% 60%))',
+              '&:hover': { backgroundColor: 'hsl(var(--destructive, 0 84% 60%) / 0.1)' },
+            }}
+          >
+            <LogoutIcon sx={{ fontSize: 18 }} />
+            Logout
+          </MenuItem>
+        </Menu>
       </Box>
     </Box>
     </>
