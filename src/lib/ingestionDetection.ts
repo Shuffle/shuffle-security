@@ -61,8 +61,8 @@ export interface ValidatedIngestionApp {
 /**
  * Extract validated apps from the raw /api/v1/apps/authentication response.
  * Returns deduplicated apps that have valid authentication.
- * Pass enabledToolIds to mark which are actually enabled for ingestion (from automation config).
- * If enabledToolIds is not provided, all validated apps are marked as enabled.
+ * Pass enabledToolIds (keyed by app ID) to mark which are actually enabled for ingestion.
+ * Also pass the raw auth response to resolve ID-to-name mapping for enabled lookups.
  */
 export function extractValidatedIngestionApps(
   authApiResponse: any[],
@@ -72,15 +72,37 @@ export function extractValidatedIngestionApps(
     authApiResponse.filter(auth => auth.active || auth.validation?.valid)
   );
 
+  // Build a reverse map: app ID -> normalized name from ALL auth entries
+  // so we can match enabledToolIds (which use per-entry IDs) to deduplicated apps
+  const idToNormalizedName = new Map<string, string>();
+  authApiResponse.forEach(auth => {
+    if (auth.app?.id && auth.app?.name) {
+      const normalized = auth.app.name.toLowerCase().trim().replace(/[\s_\-]+/g, '_');
+      idToNormalizedName.set(auth.app.id, normalized);
+    }
+  });
+
+  // Build a set of normalized names that are enabled
+  const enabledNames = new Set<string>();
+  if (enabledToolIds) {
+    for (const [id, value] of Object.entries(enabledToolIds)) {
+      if (value === true) {
+        const name = idToNormalizedName.get(id);
+        if (name) enabledNames.add(name);
+      }
+    }
+  }
+
   const apps: ValidatedIngestionApp[] = [];
 
   for (const { app, bestImage, hasValidAuth } of dedupedApps) {
     if (!hasValidAuth) continue;
     const category = getIngestionCategory(app.name, app.categories) || 'other';
+    const normalizedName = app.name.toLowerCase().trim().replace(/[\s_\-]+/g, '_');
 
-    // Determine enabled: only true if explicitly set to true in the tools map
+    // Enabled only if this normalized name is in the enabled set
     const enabled = enabledToolIds
-      ? enabledToolIds[app.id] === true
+      ? enabledNames.has(normalizedName)
       : false;
 
     apps.push({
