@@ -238,7 +238,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
           border: '1px solid hsl(var(--border))',
           display: { xs: 'none', sm: 'flex' },
           flexDirection: 'column',
-          transition: 'width 0.2s ease',
+          transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           overflow: 'hidden',
           zIndex: hoverExpanded ? 1250 : 1200,
         }}
