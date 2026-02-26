@@ -1391,7 +1391,7 @@ const EdgeDetailDrawer = ({
               </Typography>
               <Button
                 size="small"
-                onClick={() => onToggleEnabled(edgeId)}
+                onClick={() => onSetFlowState(edgeId, 'missing_config')}
                 sx={{
                   color: 'hsl(var(--muted-foreground))',
                   fontWeight: 600,
@@ -1411,7 +1411,7 @@ const EdgeDetailDrawer = ({
             <Box sx={{ mt: 1.5 }}>
               <Button
                 size="small"
-                onClick={() => onToggleEnabled(edgeId)}
+                onClick={() => onSetFlowState(edgeId, 'enabled')}
                 sx={{
                   bgcolor: 'hsl(142 71% 45%)',
                   color: '#fff',
