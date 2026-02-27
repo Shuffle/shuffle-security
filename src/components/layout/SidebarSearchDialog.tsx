@@ -1,6 +1,6 @@
 /**
  * SidebarSearchDialog — Ctrl+K powered search popup for the sidebar.
- * Searches apps via Algolia + local nav items.
+ * Searches apps via Algolia + correlations via /api/v2/correlations + local nav items.
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -14,7 +14,8 @@ import { Box, Typography, InputBase, CircularProgress } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import RadarIcon from '@mui/icons-material/Radar';
-import { Network, Braces, Waypoints } from 'lucide-react';
+import { Network, Braces, Waypoints, Link2 } from 'lucide-react';
+import { getApiUrl, getAuthHeader } from '@/config/api';
 import type { AlgoliaSearchApp } from '@/lib/singul-local/singul.helpers';
 
 const ALGOLIA_APP_ID = 'JNSS5CFDZZ';
@@ -34,7 +35,18 @@ interface AppResult {
   app: AlgoliaSearchApp;
 }
 
-type SearchResult = NavResult | AppResult;
+interface CorrelationItem {
+  key: string;
+  amount: number;
+  ref: string[];
+}
+
+interface CorrelationResult {
+  type: 'correlation';
+  correlation: CorrelationItem;
+}
+
+type SearchResult = NavResult | AppResult | CorrelationResult;
 
 const navItems: NavResult[] = [
   { type: 'nav', label: 'Incidents', path: '/incidents', icon: <WarningAmberIcon sx={{ fontSize: 18 }} /> },
@@ -49,6 +61,12 @@ const navItems: NavResult[] = [
   { type: 'nav', label: 'Settings', path: '/settings', icon: <WarningAmberIcon sx={{ fontSize: 18 }} /> },
 ];
 
+const NOISE_KEYS = new Set([
+  'new', 'in_progress', 'resolved', 'escalated', 'closed', 'open', 'pending',
+  'critical', 'high', 'medium', 'low', 'informational', 'info', 'warning', 'error',
+  'unknown', 'none', 'null', 'undefined', 'true', 'false',
+]);
+
 interface SidebarSearchDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -58,19 +76,23 @@ export const SidebarSearchDialog = ({ open, onOpenChange }: SidebarSearchDialogP
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [appResults, setAppResults] = useState<AlgoliaSearchApp[]>([]);
+  const [correlationResults, setCorrelationResults] = useState<CorrelationItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [correlationsLoading, setCorrelationsLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
-  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const appDebounceRef = useRef<NodeJS.Timeout | null>(null);
+  const corrDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
   // Filter nav items by query
   const filteredNav: NavResult[] = query.trim()
     ? navItems.filter((n) => n.label.toLowerCase().includes(query.toLowerCase()))
     : navItems;
 
-  // Combined results: nav first, then apps
+  // Combined results: nav first, then correlations, then apps
   const results: SearchResult[] = [
     ...filteredNav,
+    ...correlationResults.map((c) => ({ type: 'correlation' as const, correlation: c })),
     ...appResults.map((app) => ({ type: 'app' as const, app })),
   ];
 
@@ -94,18 +116,64 @@ export const SidebarSearchDialog = ({ open, onOpenChange }: SidebarSearchDialogP
     }
   }, []);
 
-  // Debounced search
+  // Search correlations
+  const searchCorrelations = useCallback(async (q: string) => {
+    if (!q.trim() || q.trim().length < 2) {
+      setCorrelationResults([]);
+      return;
+    }
+    setCorrelationsLoading(true);
+    try {
+      const response = await fetch(getApiUrl('/api/v2/correlations'), {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeader(),
+        },
+        body: JSON.stringify({
+          type: 'datastore',
+          key: q.trim(),
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const correlationData = Array.isArray(data) ? data : (data.correlations || data.data || []);
+        const filtered = correlationData.filter(
+          (c: CorrelationItem) => !NOISE_KEYS.has(c.key.toLowerCase())
+        );
+        setCorrelationResults(filtered.slice(0, 8));
+      } else {
+        setCorrelationResults([]);
+      }
+    } catch {
+      setCorrelationResults([]);
+    } finally {
+      setCorrelationsLoading(false);
+    }
+  }, []);
+
+  // Debounced app search (200ms)
   useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => searchApps(query), 200);
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+    if (appDebounceRef.current) clearTimeout(appDebounceRef.current);
+    appDebounceRef.current = setTimeout(() => searchApps(query), 200);
+    return () => { if (appDebounceRef.current) clearTimeout(appDebounceRef.current); };
   }, [query, searchApps]);
+
+  // Debounced correlation search (400ms — slightly longer to avoid spamming)
+  useEffect(() => {
+    if (corrDebounceRef.current) clearTimeout(corrDebounceRef.current);
+    corrDebounceRef.current = setTimeout(() => searchCorrelations(query), 400);
+    return () => { if (corrDebounceRef.current) clearTimeout(corrDebounceRef.current); };
+  }, [query, searchCorrelations]);
 
   // Reset on open
   useEffect(() => {
     if (open) {
       setQuery('');
       setAppResults([]);
+      setCorrelationResults([]);
       setSelectedIndex(0);
       setTimeout(() => inputRef.current?.focus(), 50);
     }
@@ -119,8 +187,19 @@ export const SidebarSearchDialog = ({ open, onOpenChange }: SidebarSearchDialogP
   const handleSelect = (result: SearchResult) => {
     if (result.type === 'nav') {
       navigate(result.path);
-    } else {
+    } else if (result.type === 'app') {
       navigate(`/apps?app=${result.app.name}`);
+    } else if (result.type === 'correlation') {
+      // Navigate to the first incident ref if available
+      const incidentRef = result.correlation.ref?.find((r) => r.includes('shuffle-security_incidents'));
+      if (incidentRef) {
+        // Extract the key from the ref format "category/key"
+        const parts = incidentRef.split('/');
+        const key = parts[parts.length - 1];
+        if (key) {
+          navigate(`/incidents/${key}`);
+        }
+      }
     }
     onOpenChange(false);
   };
@@ -137,6 +216,8 @@ export const SidebarSearchDialog = ({ open, onOpenChange }: SidebarSearchDialogP
       handleSelect(results[selectedIndex]);
     }
   };
+
+  const isAnyLoading = loading || correlationsLoading;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -169,7 +250,7 @@ export const SidebarSearchDialog = ({ open, onOpenChange }: SidebarSearchDialogP
           <SearchIcon sx={{ color: 'hsl(var(--muted-foreground))', fontSize: 20 }} />
           <InputBase
             inputRef={inputRef}
-            placeholder="Search pages, apps, integrations..."
+            placeholder="Search pages, apps, correlations..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -180,7 +261,7 @@ export const SidebarSearchDialog = ({ open, onOpenChange }: SidebarSearchDialogP
               '& input::placeholder': { color: 'hsl(var(--muted-foreground))', opacity: 1 },
             }}
           />
-          {loading && <CircularProgress size={16} sx={{ color: 'hsl(var(--primary))' }} />}
+          {isAnyLoading && <CircularProgress size={16} sx={{ color: 'hsl(var(--primary))' }} />}
           <Typography
             sx={{
               fontSize: '0.7rem',
@@ -198,7 +279,7 @@ export const SidebarSearchDialog = ({ open, onOpenChange }: SidebarSearchDialogP
         </Box>
 
         {/* Results */}
-        <Box sx={{ overflowY: 'auto', maxHeight: '55vh' }}>
+        <Box sx={{ overflowY: 'auto', flex: 1 }}>
           {/* Nav section */}
           {filteredNav.length > 0 && (
             <Box sx={{ px: 1.5, pt: 1.5, pb: 0.5 }}>
@@ -231,6 +312,68 @@ export const SidebarSearchDialog = ({ open, onOpenChange }: SidebarSearchDialogP
             </Box>
           )}
 
+          {/* Correlations section */}
+          {correlationResults.length > 0 && (
+            <Box sx={{ px: 1.5, pt: 1.5, pb: 0.5 }}>
+              <Typography sx={{ fontSize: '0.65rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: 1, px: 1, mb: 0.5 }}>
+                Correlations
+              </Typography>
+              {correlationResults.map((corr, idx) => {
+                const globalIdx = filteredNav.length + idx;
+                const refCount = corr.ref?.length || 0;
+                return (
+                  <Box
+                    key={`${corr.key}-${idx}`}
+                    onClick={() => handleSelect({ type: 'correlation', correlation: corr })}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1.5,
+                      px: 1.5,
+                      py: 1,
+                      borderRadius: 1,
+                      cursor: 'pointer',
+                      backgroundColor: selectedIndex === globalIdx ? 'hsl(var(--muted))' : 'transparent',
+                      '&:hover': { backgroundColor: 'hsl(var(--muted))', opacity: 0.9 },
+                    }}
+                  >
+                    <Box sx={{ color: 'hsl(var(--muted-foreground))', display: 'flex' }}>
+                      <Link2 size={16} />
+                    </Box>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {corr.key}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexShrink: 0 }}>
+                      <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))' }}>
+                        {refCount} ref{refCount !== 1 ? 's' : ''}
+                      </Typography>
+                      {corr.amount > 1 && (
+                        <Typography sx={{ fontSize: '0.6rem', color: 'hsl(var(--primary))', fontWeight: 600 }}>
+                          ×{corr.amount}
+                        </Typography>
+                      )}
+                    </Box>
+                  </Box>
+                );
+              })}
+            </Box>
+          )}
+
+          {/* Correlations loading indicator (only when typing and no results yet) */}
+          {correlationsLoading && correlationResults.length === 0 && query.trim().length >= 2 && (
+            <Box sx={{ px: 1.5, pt: 1.5, pb: 0.5 }}>
+              <Typography sx={{ fontSize: '0.65rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: 1, px: 1, mb: 0.5 }}>
+                Correlations
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, px: 1.5, py: 1 }}>
+                <CircularProgress size={14} sx={{ color: 'hsl(var(--muted-foreground))' }} />
+                <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))' }}>Searching...</Typography>
+              </Box>
+            </Box>
+          )}
+
           {/* Apps section */}
           {appResults.length > 0 && (
             <Box sx={{ px: 1.5, pt: 1.5, pb: 1.5 }}>
@@ -238,7 +381,7 @@ export const SidebarSearchDialog = ({ open, onOpenChange }: SidebarSearchDialogP
                 Integrations
               </Typography>
               {appResults.map((app, idx) => {
-                const globalIdx = filteredNav.length + idx;
+                const globalIdx = filteredNav.length + correlationResults.length + idx;
                 return (
                   <Box
                     key={app.objectID}
@@ -281,7 +424,7 @@ export const SidebarSearchDialog = ({ open, onOpenChange }: SidebarSearchDialogP
           )}
 
           {/* Empty state */}
-          {query.trim() && filteredNav.length === 0 && appResults.length === 0 && !loading && (
+          {query.trim() && filteredNav.length === 0 && appResults.length === 0 && correlationResults.length === 0 && !isAnyLoading && (
             <Box sx={{ px: 3, py: 4, textAlign: 'center' }}>
               <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.85rem' }}>
                 No results for "{query}"
