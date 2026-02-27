@@ -1479,12 +1479,23 @@ const IncidentDetailPage = () => {
                             seen.add(a.app.name);
                             return true;
                           })
-                          .map((a: any) => ({
-                            id: a.app.name,
-                            name: (a.app.name || '').replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
-                            large_image: a.app.large_image || '',
-                            categories: Object.keys(a.app.categories || {}),
-                          }));
+                          .map((a: any) => {
+                            const rawCategories = a.app?.categories ?? a.categories ?? a.app?.category ?? a.category ?? [];
+                            const categories = Array.isArray(rawCategories)
+                              ? rawCategories
+                              : typeof rawCategories === 'string'
+                                ? [rawCategories]
+                                : typeof rawCategories === 'object' && rawCategories !== null
+                                  ? Object.keys(rawCategories)
+                                  : [];
+
+                            return {
+                              id: a.app.name,
+                              name: (a.app.name || '').replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                              large_image: a.app.large_image || '',
+                              categories,
+                            };
+                          });
                         setForwardingApps(apps);
                       }
                     })
@@ -2928,14 +2939,19 @@ const IncidentDetailPage = () => {
                   onClick={async () => {
                     setShowForwardDialog(false);
                     try {
-                      const isMessaging = app.categories.some((c: string) => ['communication', 'email'].includes(c.toLowerCase()));
+                      const categories = (app.categories || []).map((c: string) => c.toLowerCase());
+                      const isMessaging = categories.includes('communication') || categories.includes('email') || app.id.toLowerCase() === 'gmail';
+                      const ticketPayload = incident?.rawOCSF || incident || {};
                       const forwardBody: Record<string, any> = isMessaging
                         ? {
                             action: 'send_message',
                             category: 'cases',
                             key: incident?.id,
                             app_name: app.id,
-                            body: JSON.stringify(incident?.rawOCSF || {}),
+                            body: ticketPayload,
+                            fields: {
+                              body: ticketPayload,
+                            },
                           }
                         : {
                             action: 'update_ticket',
