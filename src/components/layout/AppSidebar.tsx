@@ -328,25 +328,6 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
               Shuffle Infrastructure
             </Typography>
           </MenuItem>
-          <MenuItem
-            selected
-            sx={{
-              py: 1.5,
-              px: 2,
-              gap: 1.5,
-              backgroundColor: 'hsla(var(--primary) / 0.12) !important',
-              border: '1px solid hsla(var(--primary) / 0.3)',
-              borderRadius: 1,
-              '&:hover': { backgroundColor: 'hsla(var(--primary) / 0.18)' },
-            }}
-          >
-            <svg width="24" height="24" viewBox="0 0 56 56" fill="none">
-              <path d="M14 14h28v6H20v16h16v-10h-8v-6h14v22H14V14z" fill="#FF6600" />
-            </svg>
-            <Typography sx={{ fontSize: '0.875rem', color: 'hsl(var(--foreground))', fontWeight: 600 }}>
-              Shuffle Security
-            </Typography>
-          </MenuItem>
         </Menu>
 
       </Box>
