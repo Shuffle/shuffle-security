@@ -21,6 +21,7 @@ import { setDatastoreItem, getDatastoreItem } from '@/services/datastore';
 import {
   isEmailApp, isIngestionApp, isThreatIntelApp,
 } from '@/lib/ingestionDetection';
+import { findIngestTicketsWorkflow, extractWorkflowAppNames } from '@/lib/ingestionDetection';
 import { trackOnboardingStep, trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
 
 // Datastore category for onboarding config (using shuffle-security_ prefix for consistency)
@@ -97,6 +98,7 @@ const OnboardingPage = () => {
     email_notify: { enabled: true, config: {} },
     chat_notify: { enabled: true, config: {} },
   });
+  const [workflowAppNames, setWorkflowAppNames] = useState<Set<string> | undefined>(undefined);
 
   // Compute whether to show Welcome (hide if any app is configured)
   const hasConfiguredApps = authenticatedApps.some(a => a.active);
@@ -220,6 +222,30 @@ const OnboardingPage = () => {
     };
     
     fetchAuthenticatedApps();
+  }, []);
+
+  // Fetch workflows to derive ingestion enabled state (workflows are the source of truth)
+  useEffect(() => {
+    const fetchWorkflows = async () => {
+      if (!API_CONFIG.apiKey) return;
+      try {
+        const response = await fetch(getApiUrl('/api/v1/workflows'), {
+          credentials: 'include',
+          headers: { ...getAuthHeader() },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          const workflowList = Array.isArray(data) ? data : (data.workflows || []);
+          const ingestWorkflow = findIngestTicketsWorkflow(workflowList);
+          if (ingestWorkflow) {
+            setWorkflowAppNames(extractWorkflowAppNames(ingestWorkflow));
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch workflows:', error);
+      }
+    };
+    fetchWorkflows();
   }, []);
 
   const handleNext = () => {
@@ -881,6 +907,7 @@ const OnboardingPage = () => {
                       }}
                       authenticatedApps={authenticatedApps}
                       selectedApps={selectedApps}
+                      workflowAppNames={workflowAppNames}
                       authStates={authStates}
                       apiAuthEntries={authenticatedApps}
                       onAuthChange={handleAuthChange}

@@ -163,6 +163,8 @@ interface EnrichmentConfigProps {
   onSave?: (state: EnrichmentState) => void;
   authenticatedApps?: AuthAppEntry[];
   selectedApps?: SelectedApp[];
+  /** Normalized app names extracted from the 'Ingest Tickets' workflow (source of truth) */
+  workflowAppNames?: Set<string>;
   // Auth callbacks for inline configuration of pending apps
   authStates?: Record<string, AppAuthState>;
   apiAuthEntries?: AppAuthApiEntry[];
@@ -263,6 +265,7 @@ export const EnrichmentConfig = ({
   onSave,
   authenticatedApps = [],
   selectedApps = [],
+  workflowAppNames,
   authStates = {},
   apiAuthEntries = [],
   onAuthChange,
@@ -563,6 +566,11 @@ export const EnrichmentConfig = ({
     if (!appInfo?.isValidated) return false;
 
     const normalized = normalizeAppName(appInfo.name);
+
+    // For automatic_ingestion, workflows are the source of truth
+    if (optionId === 'automatic_ingestion' && workflowAppNames) {
+      return workflowAppNames.has(normalized);
+    }
 
     // Check explicit toggles in the enrichment state
     if (current?.tools) {
