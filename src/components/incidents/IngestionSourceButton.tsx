@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Box, IconButton, Popover, Typography, Chip, Button } from '@mui/material';
+import { Box, IconButton, Popover, Typography, Chip, Button, Tooltip } from '@mui/material';
 import BlockIcon from '@mui/icons-material/Block';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
@@ -65,37 +65,39 @@ export const IngestionSourceButton = ({ app, allApps, onToggled }: IngestionSour
 
   return (
     <Box sx={{ position: 'relative' }}>
-      <IconButton
-        onClick={(e) => setAnchorEl(e.currentTarget)}
-        size="small"
-        sx={{
-          width: 30,
-          height: 30,
-          border: '1px solid',
-          borderColor: isEnabled ? 'rgba(34, 197, 94, 0.20)' : 'transparent',
-          bgcolor: isEnabled ? 'rgba(34, 197, 94, 0.10)' : 'transparent',
-          borderRadius: 1,
-          opacity: isEnabled ? 1 : 0.35,
-          filter: isEnabled ? 'none' : 'grayscale(1)',
-          transition: 'opacity 0.15s ease, filter 0.15s ease',
-          '&:hover': {
-            bgcolor: isEnabled ? 'rgba(34, 197, 94, 0.18)' : 'rgba(255,255,255,0.1)',
-            opacity: isEnabled ? 1 : 0.7,
-            filter: 'none',
-          },
-        }}
-      >
-        {app.image ? (
-          <Box
-            component="img"
-            src={app.image}
-            alt={app.name}
-            sx={{ width: 18, height: 18, borderRadius: '50%', objectFit: 'contain' }}
-          />
-        ) : (
-          <DownloadIcon sx={{ fontSize: 16, color: isEnabled ? '#4ade80' : 'rgba(255,255,255,0.4)' }} />
-        )}
-      </IconButton>
+      <Tooltip title={displayName} placement="bottom">
+        <IconButton
+          onClick={(e) => setAnchorEl(e.currentTarget)}
+          size="small"
+          sx={{
+            width: 30,
+            height: 30,
+            border: '1px solid',
+            borderColor: isEnabled ? 'rgba(34, 197, 94, 0.20)' : 'transparent',
+            bgcolor: isEnabled ? 'rgba(34, 197, 94, 0.10)' : 'transparent',
+            borderRadius: 1,
+            opacity: isEnabled ? 1 : 0.35,
+            filter: isEnabled ? 'none' : 'grayscale(1)',
+            transition: 'opacity 0.15s ease, filter 0.15s ease',
+            '&:hover': {
+              bgcolor: isEnabled ? 'rgba(34, 197, 94, 0.18)' : 'rgba(255,255,255,0.1)',
+              opacity: isEnabled ? 1 : 0.7,
+              filter: 'none',
+            },
+          }}
+        >
+          {app.image ? (
+            <Box
+              component="img"
+              src={app.image}
+              alt={app.name}
+              sx={{ width: 18, height: 18, borderRadius: '50%', objectFit: 'contain' }}
+            />
+          ) : (
+            <DownloadIcon sx={{ fontSize: 16, color: isEnabled ? '#4ade80' : 'rgba(255,255,255,0.4)' }} />
+          )}
+        </IconButton>
+      </Tooltip>
       <Popover
         open={popoverOpen}
         anchorEl={anchorEl}
