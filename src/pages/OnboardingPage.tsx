@@ -278,6 +278,19 @@ const OnboardingPage = () => {
     fetchWorkflows();
   }, []);
 
+  // Sync enrichmentState.automatic_ingestion.enabled with workflow existence
+  useEffect(() => {
+    if (workflowAppNames && workflowAppNames.size > 0) {
+      setEnrichmentState(prev => {
+        if (prev.automatic_ingestion?.enabled) return prev; // already enabled
+        return {
+          ...prev,
+          automatic_ingestion: { ...prev.automatic_ingestion, enabled: true },
+        };
+      });
+    }
+  }, [workflowAppNames]);
+
   const handleNext = () => {
     if (activeStep === steps.length - 1) {
       const connectedApps = selectedApps.filter(
