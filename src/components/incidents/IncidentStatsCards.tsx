@@ -1,4 +1,4 @@
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, Skeleton } from '@mui/material';
 import { motion } from 'framer-motion';
 import {
   TrendingUp,
@@ -27,6 +27,7 @@ interface IncidentStatsCardsProps {
   incidents: DisplayIncident[];
   onFilterChange?: (type: 'status' | 'severity' | 'assignee', value: string | null) => void;
   currentUsername?: string;
+  isLoading?: boolean;
 }
 
 interface StatCardProps {
@@ -39,9 +40,10 @@ interface StatCardProps {
   delay: number;
   onClick?: () => void;
   clickable?: boolean;
+  isLoading?: boolean;
 }
 
-const StatCard = ({ icon: Icon, iconColor, iconBg, value, label, trend, delay, onClick, clickable }: StatCardProps) => (
+const StatCard = ({ icon: Icon, iconColor, iconBg, value, label, trend, delay, onClick, clickable, isLoading }: StatCardProps) => (
   <motion.div
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
@@ -92,16 +94,20 @@ const StatCard = ({ icon: Icon, iconColor, iconBg, value, label, trend, delay, o
           </Typography>
         )}
       </Box>
-      <Typography
-        variant="h4"
-        sx={{
-          fontWeight: 700,
-          color: 'hsl(var(--foreground))',
-          mb: 0.5,
-        }}
-      >
-        {value}
-      </Typography>
+      {isLoading ? (
+        <Skeleton variant="text" width={48} height={40} sx={{ bgcolor: 'hsl(var(--muted) / 0.3)', mb: 0.5 }} />
+      ) : (
+        <Typography
+          variant="h4"
+          sx={{
+            fontWeight: 700,
+            color: 'hsl(var(--foreground))',
+            mb: 0.5,
+          }}
+        >
+          {value}
+        </Typography>
+      )}
       <Typography
         variant="body2"
         sx={{ color: 'hsl(var(--muted-foreground))' }}
@@ -112,7 +118,7 @@ const StatCard = ({ icon: Icon, iconColor, iconBg, value, label, trend, delay, o
   </motion.div>
 );
 
-export const IncidentStatsCards = ({ incidents, onFilterChange, currentUsername }: IncidentStatsCardsProps) => {
+export const IncidentStatsCards = ({ incidents, onFilterChange, currentUsername, isLoading }: IncidentStatsCardsProps) => {
   // Calculate stats
   const resolvedCount = incidents.filter(i => i.status === 'resolved').length;
   
@@ -174,6 +180,7 @@ export const IncidentStatsCards = ({ incidents, onFilterChange, currentUsername 
           delay={0}
           clickable={!!onFilterChange}
           onClick={() => onFilterChange?.('assignee', currentUsername)}
+          isLoading={isLoading}
         />
       )}
       <StatCard
@@ -185,6 +192,7 @@ export const IncidentStatsCards = ({ incidents, onFilterChange, currentUsername 
         delay={0.05}
         clickable={!!onFilterChange}
         onClick={() => onFilterChange?.('status', 'new')}
+        isLoading={isLoading}
       />
       <StatCard
         icon={inProgressConfig.icon}
@@ -195,6 +203,7 @@ export const IncidentStatsCards = ({ incidents, onFilterChange, currentUsername 
         delay={0.1}
         clickable={!!onFilterChange}
         onClick={() => onFilterChange?.('status', 'in_progress')}
+        isLoading={isLoading}
       />
       <StatCard
         icon={resolvedConfig.icon}
@@ -205,6 +214,7 @@ export const IncidentStatsCards = ({ incidents, onFilterChange, currentUsername 
         delay={0.15}
         clickable={!!onFilterChange}
         onClick={() => onFilterChange?.('status', 'resolved')}
+        isLoading={isLoading}
       />
       <StatCard
         icon={statusConfig.escalated.icon}
@@ -215,6 +225,7 @@ export const IncidentStatsCards = ({ incidents, onFilterChange, currentUsername 
         delay={0.25}
         clickable={!!onFilterChange}
         onClick={() => onFilterChange?.('severity', 'critical')}
+        isLoading={isLoading}
       />
       <StatCard
         icon={Clock}
@@ -223,6 +234,7 @@ export const IncidentStatsCards = ({ incidents, onFilterChange, currentUsername 
         value={avgResponseTime}
         label="Avg Response"
         delay={0.3}
+        isLoading={isLoading}
       />
     </Box>
   );

@@ -991,6 +991,7 @@ const IncidentsPage = () => {
           <IncidentStatsCards 
             incidents={activeIncidents}
             currentUsername={currentUsername}
+            isLoading={isLoading || !hasFetched}
             onFilterChange={(type, value) => {
               setFilters(prev => ({
                 ...prev,
