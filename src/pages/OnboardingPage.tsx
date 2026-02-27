@@ -100,55 +100,85 @@ const OnboardingPage = () => {
   });
   const [workflowAppNames, setWorkflowAppNames] = useState<Set<string> | undefined>(undefined);
 
-  // Compute whether to show Welcome (hide if any app is configured)
+  // Per-org localStorage key for welcome completion
+  const getWelcomeCompletedKey = () => {
+    try {
+      const userInfo = localStorage.getItem('shuffle_user_info');
+      if (userInfo) {
+        const parsed = JSON.parse(userInfo);
+        const orgId = parsed.active_org?.id;
+        if (orgId) return `shuffle_onboarding_welcome_done_${orgId}`;
+      }
+    } catch { /* ignore */ }
+    return 'shuffle_onboarding_welcome_done';
+  };
+
+  const isWelcomeCompleted = () => localStorage.getItem(getWelcomeCompletedKey()) === 'true';
+  const markWelcomeCompleted = () => localStorage.setItem(getWelcomeCompletedKey(), 'true');
+
+  // Compute whether to show Welcome (hide if any app is configured OR already completed)
   const hasConfiguredApps = authenticatedApps.some(a => a.active);
+  const [welcomeDone, setWelcomeDone] = useState(() => isWelcomeCompleted());
+
+  const hideWelcome = hasConfiguredApps || welcomeDone;
 
   // Compute dynamic steps
   const steps = useMemo(() => {
-    if (hasConfiguredApps) {
+    if (hideWelcome) {
       return ALL_STEPS.filter(s => s.key !== 'welcome');
     }
     return ALL_STEPS;
-  }, [hasConfiguredApps]);
+  }, [hideWelcome]);
 
-  // Build path-to-index mapping
-  const pathToStep = useMemo(() => {
-    const map: Record<string, number> = {};
-    steps.forEach((s, i) => { map[s.path] = i; });
-    // Also map /onboarding to first step if Welcome is hidden
-    if (hasConfiguredApps) {
-      map['/onboarding'] = 0;
-    }
+  // Build path-to-key and key-to-path mappings
+  const pathToKey = useMemo(() => {
+    const map: Record<string, string> = {};
+    steps.forEach(s => { map[s.path] = s.key; });
+    // /onboarding always maps to first step
+    map['/onboarding'] = steps[0]?.key || 'sources';
     return map;
-  }, [steps, hasConfiguredApps]);
+  }, [steps]);
 
-  // Derive step from URL
-  const getStepFromPath = () => pathToStep[location.pathname] ?? 0;
-  
-  const [activeStep, setActiveStep] = useState(getStepFromPath);
-  
-  // Sync URL when step changes
-  useEffect(() => {
-    const step = steps[activeStep];
-    if (step && location.pathname !== step.path) {
-      navigate(step.path, { replace: true });
-    }
-  }, [activeStep, steps, location.pathname, navigate]);
+  // Derive active step KEY from URL (stable, not index-based)
+  const getKeyFromPath = (pathname: string) => pathToKey[pathname] || steps[0]?.key || 'sources';
 
-  // Sync step when URL changes (e.g., browser back/forward)
+  const [activeStepKey, setActiveStepKey] = useState(() => getKeyFromPath(location.pathname));
+
+  // Derived index for rendering (computed, never set directly)
+  const activeStep = useMemo(() => {
+    const idx = steps.findIndex(s => s.key === activeStepKey);
+    return idx >= 0 ? idx : 0;
+  }, [activeStepKey, steps]);
+
+  // Single useEffect: sync URL ↔ step key without circular fighting
   useEffect(() => {
-    const stepFromPath = getStepFromPath();
-    if (stepFromPath !== activeStep) {
-      setActiveStep(stepFromPath);
+    const currentStep = steps.find(s => s.key === activeStepKey);
+    if (currentStep && location.pathname !== currentStep.path) {
+      // Step key changed → update URL
+      navigate(currentStep.path, { replace: true });
+    } else if (!currentStep || location.pathname !== currentStep.path) {
+      // URL changed (browser back/forward) → update key
+      const keyFromPath = getKeyFromPath(location.pathname);
+      if (keyFromPath !== activeStepKey) {
+        setActiveStepKey(keyFromPath);
+      }
     }
-  }, [location.pathname, pathToStep]);
+  }, [activeStepKey, location.pathname]);
 
   // Redirect /onboarding to first real step when Welcome is hidden
   useEffect(() => {
-    if (authLoaded && hasConfiguredApps && location.pathname === '/onboarding') {
+    if (authLoaded && hideWelcome && location.pathname === '/onboarding') {
       navigate(steps[0].path, { replace: true });
     }
-  }, [authLoaded, hasConfiguredApps, location.pathname, steps, navigate]);
+  }, [authLoaded, hideWelcome]);
+
+  // Mark welcome done when auth loads and apps are configured
+  useEffect(() => {
+    if (authLoaded && hasConfiguredApps && !welcomeDone) {
+      markWelcomeCompleted();
+      setWelcomeDone(true);
+    }
+  }, [authLoaded, hasConfiguredApps]);
 
   // Load saved config from datastore on mount
   useEffect(() => {
@@ -259,7 +289,13 @@ const OnboardingPage = () => {
     } else {
       const nextStep = activeStep + 1;
       trackOnboardingStep(nextStep, steps[nextStep].label);
-      setActiveStep(nextStep);
+      setActiveStepKey(steps[nextStep].key);
+      
+      // Mark welcome as completed when leaving it
+      if (steps[activeStep].key === 'welcome') {
+        markWelcomeCompleted();
+        setWelcomeDone(true);
+      }
       
       const currentKey = steps[activeStep].key;
       
@@ -294,7 +330,7 @@ const OnboardingPage = () => {
   };
 
   const handleBack = () => {
-    setActiveStep((prev) => prev - 1);
+    setActiveStepKey(steps[activeStep - 1].key);
   };
 
   const handleAuthChange = (systemId: string, credentials: Record<string, string>) => {
@@ -758,7 +794,7 @@ const OnboardingPage = () => {
               {steps.map((step, index) => (
                 <Box
                   key={step.label}
-                  onClick={() => setActiveStep(index)}
+                  onClick={() => setActiveStepKey(step.key)}
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
