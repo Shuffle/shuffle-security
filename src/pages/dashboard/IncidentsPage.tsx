@@ -1044,6 +1044,7 @@ const IncidentsPage = () => {
         category={DATASTORE_CATEGORIES.INCIDENTS}
         automations={categoryAutomations}
         onAutomationsChange={setCategoryAutomations}
+        initialSettings={categoryConfig?.settings}
       />
 
       <ResolveIncidentDialog
