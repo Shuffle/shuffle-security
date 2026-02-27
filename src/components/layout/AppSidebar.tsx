@@ -381,7 +381,8 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
               py: 1,
               gap: 1,
               cursor: 'pointer',
-              '&:hover': { backgroundColor: 'hsl(var(--accent))' },
+              '&:hover': { border: '1px solid hsl(var(--border))', backgroundColor: 'transparent' },
+              border: '1px solid transparent',
             }}
           >
             <SearchIcon sx={{ color: 'hsl(var(--muted-foreground))', fontSize: 20 }} />
