@@ -163,6 +163,7 @@ export const SidebarSearchDialog = ({ open, onOpenChange }: SidebarSearchDialogP
         body: JSON.stringify({
           type: 'datastore',
           key: q.trim(),
+          category: 'shuffle-security_incidents',
         }),
       });
 
