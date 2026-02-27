@@ -2919,7 +2919,7 @@ const IncidentDetailPage = () => {
                           ...getAuthHeader(),
                         },
                         body: JSON.stringify({
-                          action: 'forward',
+                          action: 'update_ticket',
                           category: 'cases',
                           key: incident?.id,
                           app: app.id,
