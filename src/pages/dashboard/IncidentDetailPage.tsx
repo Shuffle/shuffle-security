@@ -20,6 +20,9 @@ import {
   Skeleton,
   Collapse,
   LinearProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -43,6 +46,10 @@ import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import ForwardIcon from '@mui/icons-material/Forward';
+import CloseIcon from '@mui/icons-material/Close';
+import Menu from '@mui/material/Menu';
 import { useDatastore } from '@/hooks/useDatastore';
 import { useAuth } from '@/context/AuthContext';
 import { DATASTORE_CATEGORIES, getDatastoreItem, setDatastoreItem } from '@/services/datastore';
@@ -390,8 +397,12 @@ const IncidentDetailPage = () => {
   
   const [isSaving, setIsSaving] = useState(false);
   const [showResolveDialog, setShowResolveDialog] = useState(false);
+  const [actionsMenuAnchor, setActionsMenuAnchor] = useState<null | HTMLElement>(null);
+  const [showForwardDialog, setShowForwardDialog] = useState(false);
    const [activeTab, setActiveTab] = useState(0); // 0=Tasks, 1=Details, 2=Observables, 3=Correlations, 4=Raw
    const [rawJsonText, setRawJsonText] = useState('');
+  const [forwardingApps, setForwardingApps] = useState<Array<{ id: string; name: string; large_image: string }>>([]);
+  const [forwardingAppsLoading, setForwardingAppsLoading] = useState(false);
   const [correlations, setCorrelations] = useState<Array<{ key: string; amount: number; ref: string[] }>>([]);
   const [correlationsLoading, setCorrelationsLoading] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -1378,11 +1389,32 @@ const IncidentDetailPage = () => {
               </IconButton>
             </Tooltip>
 
-            <Tooltip title="Resync from source">
-              <Button
-                variant="outlined"
+            <Tooltip title="Actions">
+              <IconButton
                 size="small"
+                onClick={(e) => setActionsMenuAnchor(e.currentTarget)}
+                sx={{ 
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: 1,
+                  width: 32,
+                  height: 32,
+                }}
+              >
+                <MoreVertIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Menu
+              anchorEl={actionsMenuAnchor}
+              open={Boolean(actionsMenuAnchor)}
+              onClose={() => setActionsMenuAnchor(null)}
+              PaperProps={{
+                sx: { bgcolor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', minWidth: 160 },
+              }}
+            >
+              <MenuItem
+                disabled={isSaving || !incident?.source}
                 onClick={async () => {
+                  setActionsMenuAnchor(null);
                   if (!incident?.id) return;
                   try {
                     const response = await fetch(getApiUrl('/api/v1/workflows/categories/run'), {
@@ -1400,7 +1432,6 @@ const IncidentDetailPage = () => {
                     });
                     if (response.ok) {
                       toast.success('Resync triggered');
-                      // Reload after a short delay to pick up changes
                       setTimeout(() => loadIncident(false), 3000);
                     } else {
                       toast.error('Resync failed');
@@ -1409,41 +1440,63 @@ const IncidentDetailPage = () => {
                     toast.error('Resync failed');
                   }
                 }}
-                disabled={isSaving}
-                startIcon={<RefreshIcon sx={{ fontSize: 16 }} />}
-                sx={{
-                  borderColor: 'rgba(255,255,255,0.2)',
-                  color: 'text.secondary',
-                  height: 32,
-                  minWidth: 'auto',
-                  px: 1.5,
-                  fontSize: '0.75rem',
-                  '&:hover': { borderColor: 'rgba(255,255,255,0.4)', bgcolor: 'rgba(255,255,255,0.05)' },
-                }}
               >
+                <RefreshIcon sx={{ fontSize: 16, mr: 1 }} />
                 Resync
-              </Button>
-            </Tooltip>
-
-
-            {!isResolved && (
-              <Button 
-                variant="outlined"
-                size="small"
-                onClick={() => setShowResolveDialog(true)} 
-                disabled={isSaving}
-                sx={{ 
-                  borderColor: '#22c55e',
-                  color: '#22c55e',
-                  height: 32,
-                  minWidth: 'auto',
-                  px: 2,
-                  '&:hover': { borderColor: '#22c55e', bgcolor: 'rgba(34, 197, 94, 0.1)' },
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  setActionsMenuAnchor(null);
+                  setShowForwardDialog(true);
+                  // Load authenticated apps for forward
+                  setForwardingAppsLoading(true);
+                  fetch(getApiUrl('/api/v1/apps/authentication'), {
+                    credentials: 'include',
+                    headers: { ...getAuthHeader() },
+                  })
+                    .then(r => r.json())
+                    .then(result => {
+                      const authData = result.data || result;
+                      if (Array.isArray(authData)) {
+                        // Deduplicate by app name, only validated ones
+                        const seen = new Set<string>();
+                        const apps = authData
+                          .filter((a: any) => a.app?.name && a.validation?.valid)
+                          .filter((a: any) => {
+                            if (seen.has(a.app.name)) return false;
+                            seen.add(a.app.name);
+                            return true;
+                          })
+                          .map((a: any) => ({
+                            id: a.app.name,
+                            name: (a.app.name || '').replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                            large_image: a.app.large_image || '',
+                          }));
+                        setForwardingApps(apps);
+                      }
+                    })
+                    .catch(() => setForwardingApps([]))
+                    .finally(() => setForwardingAppsLoading(false));
                 }}
               >
-                Resolve
-              </Button>
-            )}
+                <ForwardIcon sx={{ fontSize: 16, mr: 1 }} />
+                Forward
+              </MenuItem>
+              {!isResolved && <Divider />}
+              {!isResolved && (
+                <MenuItem
+                  disabled={isSaving}
+                  onClick={() => {
+                    setActionsMenuAnchor(null);
+                    setShowResolveDialog(true);
+                  }}
+                  sx={{ color: '#22c55e' }}
+                >
+                  <CheckCircleIcon sx={{ fontSize: 16, mr: 1 }} />
+                  Resolve
+                </MenuItem>
+              )}
+            </Menu>
 
           </Box>
         </Box>
@@ -2823,6 +2876,80 @@ const IncidentDetailPage = () => {
         incidentTitle={incident?.title || ''}
         isLoading={isSaving}
       />
+
+      {/* Forward Dialog */}
+      <Dialog
+        open={showForwardDialog}
+        onClose={() => setShowForwardDialog(false)}
+        PaperProps={{
+          sx: { bgcolor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', minWidth: 400, maxWidth: 500 },
+        }}
+      >
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1 }}>
+          <Typography variant="h6" sx={{ fontSize: '1rem' }}>Forward Incident</Typography>
+          <IconButton size="small" onClick={() => setShowForwardDialog(false)}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ pt: 1 }}>
+          <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
+            Choose a tool to forward this incident to.
+          </Typography>
+          {forwardingAppsLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <CircularProgress size={24} />
+            </Box>
+          ) : forwardingApps.length === 0 ? (
+            <Typography variant="body2" sx={{ color: 'text.disabled', textAlign: 'center', py: 4 }}>
+              No authenticated tools available. Configure integrations in Settings.
+            </Typography>
+          ) : (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+              {forwardingApps.map((app) => (
+                <MenuItem
+                  key={app.id}
+                  onClick={async () => {
+                    setShowForwardDialog(false);
+                    try {
+                      const response = await fetch(getApiUrl('/api/v1/workflows/categories/run'), {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          ...getAuthHeader(),
+                        },
+                        body: JSON.stringify({
+                          action: 'forward',
+                          category: 'cases',
+                          key: incident?.id,
+                          app: app.id,
+                        }),
+                      });
+                      if (response.ok) {
+                        toast.success(`Forwarded to ${app.name}`);
+                      } else {
+                        toast.error(`Failed to forward to ${app.name}`);
+                      }
+                    } catch {
+                      toast.error(`Failed to forward to ${app.name}`);
+                    }
+                  }}
+                  sx={{ borderRadius: 1, py: 1 }}
+                >
+                  <Avatar
+                    src={app.large_image}
+                    sx={{ width: 28, height: 28, mr: 1.5, borderRadius: 1 }}
+                    variant="rounded"
+                  >
+                    {app.name.charAt(0)}
+                  </Avatar>
+                  <Typography variant="body2">{app.name}</Typography>
+                </MenuItem>
+              ))}
+            </Box>
+          )}
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 };
