@@ -2570,7 +2570,11 @@ const IncidentDetailPage = () => {
         }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Typography variant="caption" sx={{ color: 'text.secondary', fontFamily: 'monospace' }}>
-              Raw OCSF Data (editable)
+              Raw OCSF{' '}
+              <a href="https://schema.ocsf.io/1.7.0/classes/incident_finding" target="_blank" rel="noopener noreferrer" style={{ color: 'hsl(var(--primary))', textDecoration: 'underline' }}>
+                Incident Finding 2005
+              </a>
+              {' '}(editable)
             </Typography>
             <Button
               size="small"
