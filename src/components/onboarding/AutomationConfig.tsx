@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { AppAuthCard, type AppAuthState, type ApiAuthEntry as AppAuthApiEntry } from '@/components/onboarding/AppAuthConfig';
 import type { AlgoliaSearchApp } from '@/lib/singul-local';
@@ -518,7 +518,7 @@ export const AutomationConfig = ({
     onEnrichmentChange(newState);
     onSave?.(newState);
     
-    triggerWorkflowGeneration(id, newState, isEnabling ? undefined : 'disable');
+    debouncedTriggerWorkflow(id, isEnabling ? undefined : 'disable');
   };
 
   const updateConfig = (id: string, field: string, value: string) => {
@@ -601,40 +601,45 @@ export const AutomationConfig = ({
     return !!appInfo.isSelected;
   };
 
-  const triggerWorkflowGeneration = useCallback((
-    optionId: string,
-    _state: EnrichmentState,
-    actionName?: string,
-    /** Override: app name just toggled + its new state, so we don't rely on stale React state */
-    immediateOverride?: { normalized: string; enabled: boolean },
-  ) => {
+  // Pending overrides accumulated across rapid toggles (read at debounce fire time)
+  const pendingOverridesRef = useRef<Record<string, boolean>>({});
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const fireWorkflowGeneration = useCallback((optionId: string, actionName?: string) => {
     const option = enrichmentOptions.find(o => o.id === optionId);
     if (!option) return;
-    
+
     const allTools = getAllToolsForOption(option);
-    
+    const overrides = pendingOverridesRef.current;
+
     let enabledTools: typeof allTools;
     if (actionName === 'disable') {
       enabledTools = allTools;
-    } else if (optionId === 'automatic_ingestion' && immediateOverride) {
-      // Build the list using the override so the just-toggled app is included/excluded
+    } else {
       enabledTools = allTools.filter(tool => {
         const norm = normalizeAppName(tool.name);
-        if (norm === immediateOverride.normalized) return immediateOverride.enabled;
+        if (norm in overrides) return overrides[norm];
         return isToolEnabled(optionId, tool.id);
       });
-    } else {
-      enabledTools = allTools.filter(tool => isToolEnabled(optionId, tool.id));
     }
-    
+
     const enabledAppNames = enabledTools.map(tool => tool.name);
-    
     const labels = AUTOMATION_WORKFLOW_LABELS[optionId] || [];
-    
     labels.forEach(label => {
       generateWorkflow(label, enabledAppNames, 'cases', actionName);
     });
+
+    // Clear pending overrides after firing
+    pendingOverridesRef.current = {};
   }, [enrichmentOptions]);
+
+  /** Debounced workflow generation — waits 1.2s after the last toggle before sending */
+  const debouncedTriggerWorkflow = useCallback((optionId: string, actionName?: string) => {
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    debounceTimerRef.current = setTimeout(() => {
+      fireWorkflowGeneration(optionId, actionName);
+    }, 1200);
+  }, [fireWorkflowGeneration]);
 
   const toggleTool = (optionId: string, appId: string, appName: string) => {
     const current = enrichmentState[optionId] || { enabled: false, config: {}, tools: {} };
@@ -651,6 +656,9 @@ export const AutomationConfig = ({
     if (optionId === 'automatic_ingestion') {
       setLocalWorkflowOverrides(prev => ({ ...prev, [normalized]: newToolState }));
     }
+
+    // Accumulate override for the debounced request
+    pendingOverridesRef.current[normalized] = newToolState;
     
     const newState = {
       ...enrichmentState,
@@ -662,7 +670,7 @@ export const AutomationConfig = ({
     onEnrichmentChange(newState);
     onSave?.(newState);
     
-    triggerWorkflowGeneration(optionId, newState, undefined, { normalized, enabled: newToolState });
+    debouncedTriggerWorkflow(optionId);
   };
 
   const enrichmentItems = enrichmentOptions.filter((o) => o.category === 'enrichment');
