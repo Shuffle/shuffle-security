@@ -42,6 +42,10 @@ import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { useThreatFeeds, DEFAULT_THREAT_FEEDS, ThreatFeed } from '@/hooks/useThreatFeeds';
 import { getAutomationLabels } from '@/config/usecases';
 
+/** Convert internal app names (e.g. "google_sheets") to readable form ("Google Sheets") */
+const readableAppName = (name: string): string =>
+  name.replace(/[_\-]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
 // Workflow labels for each automation area — derived from shared usecase registry
 const AUTOMATION_WORKFLOW_LABELS: Record<string, string[]> = {
   automatic_ingestion: getAutomationLabels('automatic_ingestion'),
@@ -249,9 +253,9 @@ const SourceChip = ({ label, apps, activeCount, totalCount, hasAnyActive, option
       {activeApps.length > 0 && (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
           {activeApps.slice(0, 2).map((app) => (
-            <Tooltip key={app.id} title={<Box><Typography variant="caption" sx={{ fontWeight: 600 }}>{app.name}</Typography><Typography variant="caption" sx={{ display: 'block', opacity: 0.8 }}>Active{app.isSelected ? ' • This setup' : ' • Pre-existing'}</Typography></Box>} arrow placement="top">
+            <Tooltip key={app.id} title={<Box><Typography variant="caption" sx={{ fontWeight: 600 }}>{readableAppName(app.name)}</Typography><Typography variant="caption" sx={{ display: 'block', opacity: 0.8 }}>Active{app.isSelected ? ' • This setup' : ' • Pre-existing'}</Typography></Box>} arrow placement="top">
               <Box sx={{ position: 'relative' }}>
-                <Avatar src={app.image} alt={app.name} sx={{ width: 16, height: 16, fontSize: '0.5rem', border: '1px solid', borderColor: 'rgba(34, 197, 94, 0.5)' }}>{app.name[0]}</Avatar>
+                <Avatar src={app.image} alt={readableAppName(app.name)} sx={{ width: 16, height: 16, fontSize: '0.5rem', border: '1px solid', borderColor: 'rgba(34, 197, 94, 0.5)' }}>{app.name[0]}</Avatar>
               </Box>
             </Tooltip>
           ))}
@@ -278,6 +282,8 @@ export const AutomationConfig = ({
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [configuringAppId, setConfiguringAppId] = useState<string | null>(null);
   const [otherExpanded, setOtherExpanded] = useState<Record<string, boolean>>({});
+  // Optimistic overrides for workflow app names (toggled locally before server confirms)
+  const [localWorkflowOverrides, setLocalWorkflowOverrides] = useState<Record<string, boolean>>({});
   
   // Threat feeds management
   const { threatFeeds, saveFeed, deleteFeed, toggleFeed, initializeDefaults: initThreatFeeds } = useThreatFeeds();
@@ -570,9 +576,14 @@ export const AutomationConfig = ({
 
     const normalized = normalizeAppName(appInfo.name);
 
-    // For automatic_ingestion, workflows are the source of truth
-    if (optionId === 'automatic_ingestion' && workflowAppNames) {
-      return workflowAppNames.has(normalized);
+    // For automatic_ingestion, workflows are the source of truth + local optimistic overrides
+    if (optionId === 'automatic_ingestion') {
+      if (normalized in localWorkflowOverrides) {
+        return localWorkflowOverrides[normalized];
+      }
+      if (workflowAppNames) {
+        return workflowAppNames.has(normalized);
+      }
     }
 
     // Check explicit toggles in the enrichment state
@@ -612,8 +623,18 @@ export const AutomationConfig = ({
   const toggleTool = (optionId: string, appId: string, appName: string) => {
     const current = enrichmentState[optionId] || { enabled: false, config: {}, tools: {} };
     const currentTools = current.tools || {};
-    const isCurrentlyEnabled = currentTools[appId] !== false;
-    const newToolState = !isCurrentlyEnabled;
+    const normalized = normalizeAppName(appName);
+
+    // For automatic_ingestion, use workflow-aware check
+    const wasEnabled = optionId === 'automatic_ingestion'
+      ? isToolEnabled(optionId, appId)
+      : currentTools[appId] !== false;
+    const newToolState = !wasEnabled;
+
+    // Optimistic local override for automatic_ingestion
+    if (optionId === 'automatic_ingestion') {
+      setLocalWorkflowOverrides(prev => ({ ...prev, [normalized]: newToolState }));
+    }
     
     const newState = {
       ...enrichmentState,
@@ -739,7 +760,7 @@ export const AutomationConfig = ({
             <Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                 <Typography variant="body2" sx={{ color: 'white' }}>
-                  {app.name}
+                  {readableAppName(app.name)}
                 </Typography>
                 {app.isSelected && (
                   <Chip
@@ -1084,7 +1105,7 @@ export const AutomationConfig = ({
                                         {/* App icon preview when collapsed */}
                                         <Box sx={{ display: 'flex', alignItems: 'center', ml: 0.5, flex: 1 }}>
                                           {source.apps.slice(0, 6).map((app, idx) => (
-                                            <Tooltip key={app.id} title={app.name} arrow placement="top">
+                                            <Tooltip key={app.id} title={readableAppName(app.name)} arrow placement="top">
                                               <Avatar
                                                 src={app.image}
                                                 alt={app.name}
@@ -1181,7 +1202,7 @@ export const AutomationConfig = ({
                                       {app.name[0]}
                                     </Avatar>
                                     <Typography variant="body2" sx={{ color: 'white' }}>
-                                      {app.name}
+                                      {readableAppName(app.name)}
                                     </Typography>
                                   </Box>
                                   <Switch
