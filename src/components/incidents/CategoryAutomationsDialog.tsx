@@ -68,6 +68,8 @@ const WEEKS_OPTIONS = [
   { label: '12 weeks', seconds: 7257600 },
   { label: '26 weeks', seconds: 15724800 },
   { label: '52 weeks', seconds: 31449600 },
+  { label: '104 weeks', seconds: 62899200 },
+  { label: '156 weeks', seconds: 94348800 },
 ];
 
 const automationConfigs = [
