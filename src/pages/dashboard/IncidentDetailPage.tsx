@@ -2021,14 +2021,14 @@ const IncidentDetailPage = () => {
               </Box>
 
               {/* Metadata fields on the right */}
-              <Box sx={{ flex: '0 0 auto', display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box sx={{ flex: '0 0 220px', maxWidth: 260, display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
                 <Box>
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>ID</Typography>
-                  <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.75rem' }}>{incident.id}</Typography>
+                  <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.75rem', wordBreak: 'break-all' }}>{incident.id}</Typography>
                 </Box>
-                <Box>
+                <Box sx={{ minWidth: 0 }}>
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>Source</Typography>
-                  <Typography variant="body2">{incident.source || <Typography component="span" variant="body2" sx={{ color: 'text.disabled', fontStyle: 'italic' }}>Unknown</Typography>}</Typography>
+                  <Typography variant="body2" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{incident.source || <Typography component="span" variant="body2" sx={{ color: 'text.disabled', fontStyle: 'italic' }}>Unknown</Typography>}</Typography>
                 </Box>
                 <Box>
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>Created</Typography>
