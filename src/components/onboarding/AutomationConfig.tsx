@@ -701,7 +701,7 @@ export const AutomationConfig = ({
           app={algoliaApp}
           authState={curAuthState}
           isExpanded={true}
-          onToggle={() => {}}
+          onToggle={() => setConfiguringAppId(null)}
           onAuthChange={onAuthChange}
           onTestConnection={onTestConnection}
           onSaveAuth={onSaveAuth}
