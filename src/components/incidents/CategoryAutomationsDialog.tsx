@@ -32,7 +32,8 @@ import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import DownloadIcon from '@mui/icons-material/Download';
 
 import { CategoryAutomation } from '@/services/datastore';
-import { extractValidatedIngestionApps, ValidatedIngestionApp } from '@/lib/ingestionDetection';
+import { extractValidatedIngestionApps, ValidatedIngestionApp, findIngestTicketsWorkflow, extractWorkflowAppNames } from '@/lib/ingestionDetection';
+import { IngestionSourceButton } from '@/components/incidents/IngestionSourceButton';
 
 // API format for automations
 interface AutomationApiFormat {
@@ -147,6 +148,37 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
   const [webhookUrl, setWebhookUrl] = useState('');
   const [ingestionApps, setIngestionApps] = useState<ValidatedIngestionApp[]>([]);
 
+  const fetchIngestionApps = async () => {
+    try {
+      const [authResponse, wfResponse] = await Promise.all([
+        fetch(getApiUrl('/api/v1/apps/authentication'), {
+          credentials: 'include',
+          headers: { ...getAuthHeader() },
+        }),
+        fetch(getApiUrl('/api/v1/workflows'), {
+          credentials: 'include',
+          headers: { ...getAuthHeader() },
+        }),
+      ]);
+      if (authResponse.ok) {
+        const result = await authResponse.json();
+        const authApps = Array.isArray(result) ? result : (result.data || []);
+        let workflowAppNames: Set<string> | undefined;
+        if (wfResponse.ok) {
+          const wfData = await wfResponse.json();
+          const wfList = Array.isArray(wfData) ? wfData : wfData.workflows || [];
+          const ingestWf = findIngestTicketsWorkflow(wfList);
+          if (ingestWf) {
+            workflowAppNames = extractWorkflowAppNames(ingestWf);
+          }
+        }
+        setIngestionApps(extractValidatedIngestionApps(authApps, workflowAppNames));
+      }
+    } catch (error) {
+      console.error('Failed to fetch ingestion apps:', error);
+    }
+  };
+
   // Fetch workflows and ingestion config when dialog opens
   useEffect(() => {
     if (open) {
@@ -168,24 +200,6 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
           console.error('Failed to fetch workflows:', error);
         } finally {
           setLoadingWorkflows(false);
-        }
-      };
-
-      const fetchIngestionApps = async () => {
-        try {
-          const response = await fetch(getApiUrl('/api/v1/apps/authentication'), {
-            credentials: 'include',
-            headers: {
-              ...getAuthHeader(),
-            },
-          });
-          if (response.ok) {
-            const result = await response.json();
-            const authApps = Array.isArray(result) ? result : (result.data || []);
-            setIngestionApps(extractValidatedIngestionApps(authApps));
-          }
-        } catch (error) {
-          console.error('Failed to fetch ingestion apps:', error);
         }
       };
 
@@ -381,22 +395,12 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
         {/* Ingestion Sources */}
         {ingestionApps.length > 0 && (
           <Box
-            onClick={() => {
-              onClose();
-              navigate('/onboarding/automate');
-            }}
             sx={{
               mb: 3,
               p: 2,
               borderRadius: 2,
               bgcolor: 'rgba(255,255,255,0.02)',
               border: '1px solid rgba(255,255,255,0.08)',
-              cursor: 'pointer',
-              transition: 'all 0.15s ease',
-              '&:hover': {
-                bgcolor: 'rgba(255,255,255,0.04)',
-                borderColor: 'rgba(255,255,255,0.14)',
-              },
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
@@ -412,38 +416,29 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
                   Ingestion Sources
                 </Typography>
               </Box>
-              <Typography sx={{
-                fontSize: '0.68rem',
-                color: 'rgba(255,255,255,0.35)',
-                fontWeight: 500,
-              }}>
+              <Typography
+                onClick={() => {
+                  onClose();
+                  navigate('/onboarding/automate');
+                }}
+                sx={{
+                  fontSize: '0.68rem',
+                  color: 'rgba(255,255,255,0.35)',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  '&:hover': { color: 'rgba(255,255,255,0.6)' },
+                }}
+              >
                 Configure →
               </Typography>
             </Box>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
               {ingestionApps.map(app => (
-                <Chip
+                <IngestionSourceButton
                   key={app.name}
-                  label={app.name.replace(/_/g, ' ')}
-                  size="small"
-                  avatar={app.image ? (
-                    <Box
-                      component="img"
-                      src={app.image}
-                      alt=""
-                      sx={{ width: 18, height: 18, borderRadius: '50%', objectFit: 'contain', bgcolor: 'rgba(255,255,255,0.1)' }}
-                    />
-                  ) : undefined}
-                  sx={{
-                    bgcolor: app.validated ? 'rgba(34, 197, 94, 0.10)' : 'rgba(255,255,255,0.05)',
-                    color: app.validated ? '#4ade80' : 'rgba(255,255,255,0.4)',
-                    border: '1px solid',
-                    borderColor: app.validated ? 'rgba(34, 197, 94, 0.20)' : 'rgba(255,255,255,0.08)',
-                    fontSize: '0.78rem',
-                    height: 28,
-                    '& .MuiChip-avatar': { ml: 0.5 },
-                    pointerEvents: 'none',
-                  }}
+                  app={app}
+                  allApps={ingestionApps}
+                  onToggled={fetchIngestionApps}
                 />
               ))}
             </Box>
