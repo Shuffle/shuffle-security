@@ -1483,7 +1483,7 @@ const IncidentDetailPage = () => {
                             id: a.app.name,
                             name: (a.app.name || '').replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
                             large_image: a.app.large_image || '',
-                            categories: a.app.categories || [],
+                            categories: Object.keys(a.app.categories || {}),
                           }));
                         setForwardingApps(apps);
                       }
