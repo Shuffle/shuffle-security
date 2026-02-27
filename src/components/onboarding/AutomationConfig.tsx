@@ -142,13 +142,16 @@ const baseEnrichmentOptions: (Omit<EnrichmentOption, 'connectedApps'> & { isDyna
   },
 ];
 
-export interface EnrichmentState {
+export interface AutomationState {
   [key: string]: {
     enabled: boolean;
     config: Record<string, string>;
     tools?: Record<string, boolean>;
   };
 }
+
+/** @deprecated Use AutomationState instead */
+export type EnrichmentState = AutomationState;
 
 interface SelectedApp {
   objectID: string;
@@ -157,7 +160,7 @@ interface SelectedApp {
   categories?: string[];
 }
 
-interface EnrichmentConfigProps {
+interface AutomationConfigProps {
   enrichmentState: EnrichmentState;
   onEnrichmentChange: (state: EnrichmentState) => void;
   onSave?: (state: EnrichmentState) => void;
@@ -259,7 +262,7 @@ const SourceChip = ({ label, apps, activeCount, totalCount, hasAnyActive, option
   );
 };
 
-export const EnrichmentConfig = ({
+export const AutomationConfig = ({
   enrichmentState, 
   onEnrichmentChange,
   onSave,
@@ -271,7 +274,7 @@ export const EnrichmentConfig = ({
   onAuthChange,
   onTestConnection,
   onSaveAuth,
-}: EnrichmentConfigProps) => {
+}: AutomationConfigProps) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [configuringAppId, setConfiguringAppId] = useState<string | null>(null);
   const [otherExpanded, setOtherExpanded] = useState<Record<string, boolean>>({});

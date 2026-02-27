@@ -6,7 +6,7 @@
  *
  * Consumed by:
  *  - InfrastructurePage (edge rendering, drawer details, phase filtering)
- *  - EnrichmentConfig   (automation toggles, workflow generation)
+ *  - AutomationConfig   (automation toggles, workflow generation)
  *  - useUsecases hook   (API merge + accessor helpers)
  */
 
