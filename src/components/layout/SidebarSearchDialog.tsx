@@ -146,7 +146,10 @@ export const SidebarSearchDialog = ({ open, onOpenChange }: SidebarSearchDialogP
           background: 'hsl(var(--card))',
           border: '1px solid hsl(var(--border))',
           borderRadius: 12,
+          width: 520,
+          minWidth: 520,
           maxWidth: 520,
+          minHeight: 400,
           maxHeight: '70vh',
           display: 'flex',
           flexDirection: 'column',
@@ -217,7 +220,7 @@ export const SidebarSearchDialog = ({ open, onOpenChange }: SidebarSearchDialogP
                       borderRadius: 1,
                       cursor: 'pointer',
                       backgroundColor: selectedIndex === globalIdx ? 'hsl(var(--muted))' : 'transparent',
-                      '&:hover': { backgroundColor: 'hsl(var(--muted))' },
+                      '&:hover': { backgroundColor: 'hsl(var(--muted))', opacity: 0.9 },
                     }}
                   >
                     <Box sx={{ color: 'hsl(var(--muted-foreground))', display: 'flex' }}>{item.icon}</Box>
@@ -249,7 +252,7 @@ export const SidebarSearchDialog = ({ open, onOpenChange }: SidebarSearchDialogP
                       borderRadius: 1,
                       cursor: 'pointer',
                       backgroundColor: selectedIndex === globalIdx ? 'hsl(var(--muted))' : 'transparent',
-                      '&:hover': { backgroundColor: 'hsl(var(--muted))' },
+                      '&:hover': { backgroundColor: 'hsl(var(--muted))', opacity: 0.9 },
                     }}
                   >
                     {app.image_url ? (
