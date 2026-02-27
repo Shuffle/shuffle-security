@@ -1424,7 +1424,7 @@ const IncidentDetailPage = () => {
                   if (!incident?.id) return;
                   try {
                     const source = incident.source || '';
-                    const response = await fetch(getApiUrl(`/api/v1/apps/${encodeURIComponent(source)}/categories/run`), {
+                    const response = await fetch(getApiUrl('/api/v1/apps/categories/run'), {
                       method: 'POST',
                       credentials: 'include',
                       headers: {
@@ -2927,7 +2927,7 @@ const IncidentDetailPage = () => {
                   onClick={async () => {
                     setShowForwardDialog(false);
                     try {
-                      const response = await fetch(getApiUrl('/api/v1/workflows/categories/run'), {
+                      const response = await fetch(getApiUrl('/api/v1/apps/categories/run'), {
                         method: 'POST',
                         credentials: 'include',
                         headers: {
