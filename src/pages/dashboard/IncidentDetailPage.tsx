@@ -1417,7 +1417,8 @@ const IncidentDetailPage = () => {
                   setActionsMenuAnchor(null);
                   if (!incident?.id) return;
                   try {
-                    const response = await fetch(getApiUrl('/api/v1/workflows/categories/run'), {
+                    const source = incident.source || '';
+                    const response = await fetch(getApiUrl(`/api/v1/apps/${encodeURIComponent(source)}/categories/run`), {
                       method: 'POST',
                       credentials: 'include',
                       headers: {
@@ -1425,7 +1426,7 @@ const IncidentDetailPage = () => {
                         ...getAuthHeader(),
                       },
                       body: JSON.stringify({
-                        action: 'resync',
+                        action: 'get_ticket',
                         category: 'cases',
                         key: incident.id,
                       }),
