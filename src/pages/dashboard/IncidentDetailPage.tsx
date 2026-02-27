@@ -401,7 +401,7 @@ const IncidentDetailPage = () => {
   const [showForwardDialog, setShowForwardDialog] = useState(false);
    const [activeTab, setActiveTab] = useState(0); // 0=Tasks, 1=Details, 2=Observables, 3=Correlations, 4=Raw
    const [rawJsonText, setRawJsonText] = useState('');
-  const [forwardingApps, setForwardingApps] = useState<Array<{ id: string; name: string; large_image: string }>>([]);
+  const [forwardingApps, setForwardingApps] = useState<Array<{ id: string; name: string; large_image: string; categories: string[] }>>([]);
   const [forwardingAppsLoading, setForwardingAppsLoading] = useState(false);
   const [correlations, setCorrelations] = useState<Array<{ key: string; amount: number; ref: string[] }>>([]);
   const [correlationsLoading, setCorrelationsLoading] = useState(false);
@@ -1483,6 +1483,7 @@ const IncidentDetailPage = () => {
                             id: a.app.name,
                             name: (a.app.name || '').replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
                             large_image: a.app.large_image || '',
+                            categories: a.app.categories || [],
                           }));
                         setForwardingApps(apps);
                       }
@@ -2927,6 +2928,21 @@ const IncidentDetailPage = () => {
                   onClick={async () => {
                     setShowForwardDialog(false);
                     try {
+                      const isMessaging = app.categories.some((c: string) => ['communication', 'email'].includes(c.toLowerCase()));
+                      const forwardBody: Record<string, any> = isMessaging
+                        ? {
+                            action: 'send_message',
+                            category: 'cases',
+                            key: incident?.id,
+                            app_name: app.id,
+                            body: JSON.stringify(incident?.rawOCSF || {}),
+                          }
+                        : {
+                            action: 'update_ticket',
+                            category: 'cases',
+                            key: incident?.id,
+                            app_name: app.id,
+                          };
                       const response = await fetch(getApiUrl('/api/v1/apps/categories/run'), {
                         method: 'POST',
                         credentials: 'include',
@@ -2934,12 +2950,7 @@ const IncidentDetailPage = () => {
                           'Content-Type': 'application/json',
                           ...getAuthHeader(),
                         },
-                        body: JSON.stringify({
-                          action: 'update_ticket',
-                          category: 'cases',
-                          key: incident?.id,
-                          app: app.id,
-                        }),
+                        body: JSON.stringify(forwardBody),
                       });
                       if (response.ok) {
                         toast.success(`Forwarded to ${app.name}`);
