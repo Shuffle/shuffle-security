@@ -719,6 +719,7 @@ export const AutomationConfig = ({
     return (
       <Box key={app.id} sx={{ mb: 0.5 }}>
         <Box
+          onClick={!app.isValidated && onAuthChange && onTestConnection && onSaveAuth ? () => setConfiguringAppId(isConfiguring ? null : app.id) : undefined}
           sx={{
             display: 'flex',
             alignItems: 'center',
@@ -726,21 +727,33 @@ export const AutomationConfig = ({
             py: 0.75,
             px: 1.5,
             borderRadius: 1.5,
+            cursor: !app.isValidated && onAuthChange ? 'pointer' : 'default',
             background: enabled 
               ? 'rgba(255, 102, 0, 0.08)' 
-              : 'rgba(0, 0, 0, 0.2)',
+              : isConfiguring
+                ? 'rgba(255, 102, 0, 0.06)'
+                : !app.isValidated
+                  ? 'rgba(255, 152, 0, 0.06)'
+                  : 'rgba(0, 0, 0, 0.2)',
             border: '1px solid',
             borderColor: enabled 
               ? 'rgba(255, 102, 0, 0.25)' 
               : isConfiguring
                 ? 'rgba(255, 102, 0, 0.4)'
-                : 'transparent',
-            opacity: enabled ? 1 : 0.6,
+                : !app.isValidated
+                  ? 'rgba(255, 152, 0, 0.2)'
+                  : 'transparent',
+            opacity: enabled ? 1 : app.isValidated ? 0.6 : 0.85,
             transition: 'all 0.2s ease',
             '&:hover': {
               background: enabled 
                 ? 'rgba(255, 102, 0, 0.12)' 
-                : 'rgba(0, 0, 0, 0.3)',
+                : !app.isValidated
+                  ? 'rgba(255, 152, 0, 0.1)'
+                  : 'rgba(0, 0, 0, 0.3)',
+              borderColor: !app.isValidated && !enabled
+                ? 'rgba(255, 152, 0, 0.4)'
+                : undefined,
             },
           }}
         >
@@ -828,29 +841,20 @@ export const AutomationConfig = ({
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             {!app.isValidated && onAuthChange && onTestConnection && onSaveAuth && (
-              <Button
+              <Chip
+                label={isConfiguring ? 'Close' : 'Click to configure'}
                 size="small"
-                variant="outlined"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setConfiguringAppId(isConfiguring ? null : app.id);
-                }}
                 sx={{
-                  fontSize: '0.65rem',
+                  height: 20,
+                  fontSize: '0.6rem',
                   fontWeight: 600,
-                  py: 0.25,
-                  px: 1,
-                  minWidth: 'auto',
-                  borderColor: isConfiguring ? '#FF6600' : 'rgba(255, 152, 0, 0.4)',
+                  background: isConfiguring ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255, 152, 0, 0.12)',
                   color: isConfiguring ? '#FF6600' : '#ff9800',
-                  '&:hover': {
-                    borderColor: '#FF6600',
-                    background: 'rgba(255, 102, 0, 0.1)',
-                  },
+                  border: '1px solid',
+                  borderColor: isConfiguring ? 'rgba(255, 102, 0, 0.4)' : 'rgba(255, 152, 0, 0.3)',
+                  '& .MuiChip-label': { px: 0.75 },
                 }}
-              >
-                {isConfiguring ? 'Close' : 'Configure'}
-              </Button>
+              />
             )}
             <Switch
               size="small"
