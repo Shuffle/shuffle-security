@@ -701,7 +701,7 @@ const IncidentsPage = () => {
               py: 0.5,
             }}>
               {ingestionApps.map(app => (
-                <IngestionSourceButton key={app.name} app={app} />
+                <IngestionSourceButton key={app.name} app={app} allApps={ingestionApps} />
               ))}
               <Tooltip title="Add ingestion source">
                 <IconButton

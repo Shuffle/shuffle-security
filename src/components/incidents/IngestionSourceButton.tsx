@@ -11,10 +11,11 @@ import { toast } from 'sonner';
 
 interface IngestionSourceButtonProps {
   app: ValidatedIngestionApp;
+  allApps: ValidatedIngestionApp[];
   onToggled?: () => void;
 }
 
-export const IngestionSourceButton = ({ app, onToggled }: IngestionSourceButtonProps) => {
+export const IngestionSourceButton = ({ app, allApps, onToggled }: IngestionSourceButtonProps) => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [loading, setLoading] = useState(false);
   const popoverOpen = Boolean(anchorEl);
@@ -23,16 +24,17 @@ export const IngestionSourceButton = ({ app, onToggled }: IngestionSourceButtonP
   const handleToggle = async () => {
     setLoading(true);
     try {
+      // Compute the new list of all active app names after this toggle
+      const willBeEnabled = !app.enabled;
+      const activeNames = allApps
+        .filter(a => a.name === app.name ? willBeEnabled : a.enabled)
+        .map(a => a.name);
+
       const body: Record<string, string> = {
         label: 'Ingest Tickets',
-        app_name: app.name,
+        app_name: activeNames.join(','),
         category: 'cases',
       };
-
-      // If currently enabled, we're deactivating
-      if (app.enabled) {
-        body.action_name = 'disable';
-      }
 
       await fetch(getApiUrl('/api/v2/workflows/generate'), {
         method: 'POST',
@@ -44,7 +46,7 @@ export const IngestionSourceButton = ({ app, onToggled }: IngestionSourceButtonP
         body: JSON.stringify(body),
       });
 
-      toast.success(app.enabled ? `${displayName} deactivated` : `${displayName} activated`);
+      toast.success(willBeEnabled ? `${displayName} activated` : `${displayName} deactivated`);
       onToggled?.();
     } catch (error) {
       console.error('Failed to toggle app:', error);
