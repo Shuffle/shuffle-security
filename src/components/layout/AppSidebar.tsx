@@ -328,7 +328,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
               <path d="M14 14h28v6H20v16h16v-10h-8v-6h14v22H14V14z" fill="#FF6600" />
             </svg>
             <Typography sx={{ fontSize: '0.875rem', color: 'hsl(var(--foreground))', fontWeight: 600 }}>
-              Shuffle Security
+              <span style={{ color: '#FF6600' }}>Shuffle</span> Security
             </Typography>
           </MenuItem>
           <MenuItem
@@ -346,7 +346,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
           >
             <img src={shuffleInfraLogo} alt="Shuffle Infrastructure" width={24} height={24} style={{ borderRadius: 4 }} />
             <Typography sx={{ fontSize: '0.875rem', color: 'hsl(var(--foreground))' }}>
-              Shuffle Infrastructure
+              <span style={{ color: '#FF6600' }}>Shuffle</span> Infrastructure
             </Typography>
           </MenuItem>
         </Menu>
