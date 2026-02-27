@@ -1412,7 +1412,13 @@ const IncidentDetailPage = () => {
               }}
             >
               <MenuItem
-                disabled={isSaving || !incident?.source}
+                disabled={isSaving || !incident?.source || (() => {
+                  const product = incident?.rawOCSF?.product || incident?.rawOCSF?.metadata?.product;
+                  const name = product?.name;
+                  const id = product?.id;
+                  const uid = product?.uid;
+                  return name && (name === id || name === uid);
+                })()}
                 onClick={async () => {
                   setActionsMenuAnchor(null);
                   if (!incident?.id) return;
@@ -1429,6 +1435,7 @@ const IncidentDetailPage = () => {
                         action: 'get_ticket',
                         category: 'cases',
                         key: incident.id,
+                        app_name: source,
                       }),
                     });
                     if (response.ok) {
