@@ -688,11 +688,12 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
             </Box>
             <FormControl size="small" sx={{ minWidth: 130 }}>
               <Select
-                value={cleanupTimeout}
+                value={String(cleanupTimeout)}
                 onChange={(e) => {
                   setCleanupTimeout(Number(e.target.value));
                   setHasChanges(true);
                 }}
+                displayEmpty
                 sx={{
                   bgcolor: 'rgba(0,0,0,0.2)',
                   fontSize: '0.85rem',
@@ -705,7 +706,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
                 }}
               >
                 {WEEKS_OPTIONS.map((opt) => (
-                  <MenuItem key={opt.seconds} value={opt.seconds}>
+                  <MenuItem key={opt.seconds} value={String(opt.seconds)}>
                     {opt.label}
                   </MenuItem>
                 ))}
