@@ -45,7 +45,7 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import { useDatastore } from '@/hooks/useDatastore';
 import { useAuth } from '@/context/AuthContext';
-import { DATASTORE_CATEGORIES, getDatastoreItem } from '@/services/datastore';
+import { DATASTORE_CATEGORIES, getDatastoreItem, setDatastoreItem } from '@/services/datastore';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { useUsers } from '@/hooks/useUsers';
 import { useCustomFields, CustomField } from '@/hooks/useCustomFields';
@@ -2515,17 +2515,12 @@ const IncidentDetailPage = () => {
                 try {
                   const parsed = JSON.parse(rawJsonText);
                   setIsSaving(true);
-                  const response = await fetch(getApiUrl(`/api/v1/apps/categories/${DATASTORE_CATEGORIES.INCIDENTS}/${incident.id}`), {
-                    method: 'PUT',
-                    credentials: 'include',
-                    headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
-                    body: JSON.stringify(parsed),
-                  });
-                  if (response.ok) {
+                  const result = await setDatastoreItem(incident.id, parsed, DATASTORE_CATEGORIES.INCIDENTS);
+                  if (result.success) {
                     toast.success('Raw data saved');
                     loadIncident(false);
                   } else {
-                    toast.error('Failed to save');
+                    toast.error(result.error || 'Failed to save');
                   }
                 } catch (e: any) {
                   toast.error(e?.message?.includes('JSON') ? 'Invalid JSON' : 'Failed to save');
