@@ -7,7 +7,7 @@ import { WelcomeStep } from '@/components/onboarding/WelcomeStep';
 import { UnifiedSourceSetup } from '@/components/onboarding/UnifiedSourceSetup';
 import type { AlgoliaSearchApp } from '@/lib/singul-local';
 import { AppAuthConfig, AppAuthState, AuthStatus } from '@/components/onboarding/AppAuthConfig';
-import { EnrichmentConfig, EnrichmentState } from '@/components/onboarding/EnrichmentConfig';
+import { AutomationConfig, EnrichmentState } from '@/components/onboarding/AutomationConfig';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
@@ -898,7 +898,7 @@ const OnboardingPage = () => {
                   )}
 
                   {steps[activeStep]?.key === 'automate' && (
-                    <EnrichmentConfig
+                    <AutomationConfig
                       enrichmentState={enrichmentState}
                       onEnrichmentChange={setEnrichmentState}
                       onSave={(state) => {
