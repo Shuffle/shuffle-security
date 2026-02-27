@@ -390,7 +390,8 @@ const IncidentDetailPage = () => {
   
   const [isSaving, setIsSaving] = useState(false);
   const [showResolveDialog, setShowResolveDialog] = useState(false);
-  const [activeTab, setActiveTab] = useState(0); // 0=Tasks, 1=Details, 2=Observables, 3=Correlations
+   const [activeTab, setActiveTab] = useState(0); // 0=Tasks, 1=Details, 2=Observables, 3=Correlations, 4=Raw
+   const [rawJsonText, setRawJsonText] = useState('');
   const [correlations, setCorrelations] = useState<Array<{ key: string; amount: number; ref: string[] }>>([]);
   const [correlationsLoading, setCorrelationsLoading] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -1461,6 +1462,7 @@ const IncidentDetailPage = () => {
           }}>
             <Box sx={{ 
               display: 'flex', 
+              alignItems: 'center',
               gap: 0.5, 
               p: 0.5, 
               bgcolor: 'rgba(255,255,255,0.03)', 
@@ -1515,6 +1517,39 @@ const IncidentDetailPage = () => {
                   )}
                 </Box>
               ))}
+
+              {/* Spacer pushes Raw tab to the right */}
+              <Box sx={{ flex: 1 }} />
+
+              <Box
+                onClick={() => {
+                  if (activeTab !== 4 && incident?.rawOCSF) {
+                    setRawJsonText(JSON.stringify(incident.rawOCSF, null, 2));
+                  }
+                  setActiveTab(4);
+                }}
+                sx={{
+                  px: 1.5,
+                  py: 0.75,
+                  borderRadius: 1.5,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  transition: 'all 0.2s ease',
+                  bgcolor: activeTab === 4 ? 'rgba(255, 102, 0, 0.15)' : 'transparent',
+                  color: activeTab === 4 ? '#ff6600' : 'text.disabled',
+                  fontWeight: activeTab === 4 ? 600 : 400,
+                  fontSize: '0.8rem',
+                  fontFamily: 'monospace',
+                  '&:hover': {
+                    bgcolor: activeTab === 4 ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255,255,255,0.05)',
+                    color: activeTab === 4 ? '#ff6600' : 'text.secondary',
+                  },
+                }}
+              >
+                {'{ }'}
+              </Box>
             </Box>
           </Box>
 
@@ -2454,6 +2489,85 @@ const IncidentDetailPage = () => {
               </Box>
             </Box>
           )}
+        </Box>
+       )}
+
+      {activeTab === 4 && (
+        /* Raw JSON Tab */
+        <Box sx={{
+          bgcolor: 'rgba(255,255,255,0.02)',
+          borderRadius: 2,
+          border: '1px solid rgba(255,255,255,0.06)',
+          p: 2,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 1.5,
+        }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="caption" sx={{ color: 'text.secondary', fontFamily: 'monospace' }}>
+              Raw OCSF Data (editable)
+            </Typography>
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={async () => {
+                if (!incident?.id) return;
+                try {
+                  const parsed = JSON.parse(rawJsonText);
+                  setIsSaving(true);
+                  const response = await fetch(getApiUrl(`/api/v1/apps/categories/${DATASTORE_CATEGORIES.INCIDENTS}/${incident.id}`), {
+                    method: 'PUT',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+                    body: JSON.stringify(parsed),
+                  });
+                  if (response.ok) {
+                    toast.success('Raw data saved');
+                    loadIncident(false);
+                  } else {
+                    toast.error('Failed to save');
+                  }
+                } catch (e: any) {
+                  toast.error(e?.message?.includes('JSON') ? 'Invalid JSON' : 'Failed to save');
+                } finally {
+                  setIsSaving(false);
+                }
+              }}
+              disabled={isSaving}
+              sx={{
+                borderColor: 'rgba(255,255,255,0.2)',
+                color: '#ff6600',
+                fontSize: '0.75rem',
+                height: 28,
+                '&:hover': { borderColor: '#ff6600', bgcolor: 'rgba(255, 102, 0, 0.08)' },
+              }}
+            >
+              Save
+            </Button>
+          </Box>
+          <TextField
+            multiline
+            fullWidth
+            minRows={16}
+            maxRows={40}
+            value={rawJsonText}
+            onChange={(e) => setRawJsonText(e.target.value)}
+            sx={{
+              '& .MuiInputBase-root': {
+                fontFamily: 'monospace',
+                fontSize: '0.75rem',
+                lineHeight: 1.6,
+                bgcolor: 'rgba(0,0,0,0.3)',
+                borderRadius: 1.5,
+              },
+              '& .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'rgba(255,255,255,0.08)',
+              },
+              '&:hover .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'rgba(255,255,255,0.15)',
+              },
+            }}
+          />
         </Box>
       )}
         </Box>
