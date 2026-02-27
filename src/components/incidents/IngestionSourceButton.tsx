@@ -115,8 +115,9 @@ export const IngestionSourceButton = ({ app, onToggled }: IngestionSourceButtonP
         </Typography>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
           <Button
-            component={Link}
-            to={`/apps/${app.name.toLowerCase()}`}
+            component="a"
+            href={`/apps/${app.name.toLowerCase()}`}
+            target="_blank"
             size="small"
             startIcon={<OpenInNewIcon sx={{ fontSize: 14 }} />}
             onClick={() => setAnchorEl(null)}
