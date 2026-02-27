@@ -15,6 +15,10 @@ import {
   TextField,
   Autocomplete,
   Chip,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
 } from '@mui/material';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import CloseIcon from '@mui/icons-material/Close';
@@ -22,6 +26,7 @@ import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import WebhookIcon from '@mui/icons-material/Webhook';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import EnhancedEncryptionIcon from '@mui/icons-material/EnhancedEncryption';
+import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import { toast } from 'sonner';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -51,7 +56,19 @@ interface CategoryAutomationsDialogProps {
   category: string;
   automations: CategoryAutomation[] | null;
   onAutomationsChange: (automations: CategoryAutomation[]) => void;
+  initialSettings?: { timeout?: number; public?: boolean };
 }
+
+const WEEKS_OPTIONS = [
+  { label: 'Never', seconds: 0 },
+  { label: '1 week', seconds: 604800 },
+  { label: '2 weeks', seconds: 1209600 },
+  { label: '4 weeks', seconds: 2419200 },
+  { label: '8 weeks', seconds: 4838400 },
+  { label: '12 weeks', seconds: 7257600 },
+  { label: '26 weeks', seconds: 15724800 },
+  { label: '52 weeks', seconds: 31449600 },
+];
 
 const automationConfigs = [
   {
@@ -115,11 +132,13 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
   category,
   automations: initialAutomations,
   onAutomationsChange,
+  initialSettings,
 }) => {
   const navigate = useNavigate();
   const [automations, setAutomations] = useState<CategoryAutomation[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [cleanupTimeout, setCleanupTimeout] = useState<number>(0);
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [loadingWorkflows, setLoadingWorkflows] = useState(false);
   const [selectedWorkflows, setSelectedWorkflows] = useState<Workflow[]>([]);
@@ -196,6 +215,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
       });
       setAutomations(allAutomations);
       setHasChanges(false);
+      setCleanupTimeout(initialSettings?.timeout || 0);
 
       // Extract existing workflow IDs and webhook URL
       const workflowAutomation = existingByName.get('Run workflow');
@@ -284,10 +304,15 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
         enabled: false,
       });
 
-      const payload = {
+      const payload: any = {
         category,
         automations: apiAutomations,
       };
+      if (cleanupTimeout > 0) {
+        payload.settings = { timeout: cleanupTimeout };
+      } else {
+        payload.settings = { timeout: 0 };
+      }
       
       const response = await fetch(getApiUrl('/api/v2/datastore/automate'), {
         method: 'POST',
@@ -618,6 +643,72 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
                 </Box>
               );
             })}
+          </Box>
+        </Box>
+
+        <Divider sx={{ my: 3, borderColor: 'rgba(255,255,255,0.06)' }} />
+
+        {/* Cleanup Section */}
+        <Box>
+          <Typography 
+            variant="body2" 
+            color="text.secondary" 
+            sx={{ 
+              mb: 1.5, 
+              fontWeight: 500, 
+              textTransform: 'uppercase', 
+              letterSpacing: 0.5,
+              fontSize: '0.75rem',
+            }}
+          >
+            Cleanup
+          </Typography>
+          <Box 
+            sx={{ 
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+              py: 1.5, 
+              px: 2, 
+              bgcolor: 'rgba(255,255,255,0.03)', 
+              borderRadius: 1.5,
+              border: '1px solid rgba(255,255,255,0.06)',
+            }}
+          >
+            <DeleteSweepIcon sx={{ color: cleanupTimeout > 0 ? '#f59e0b' : 'rgba(255,255,255,0.4)', fontSize: 22 }} />
+            <Box sx={{ flex: 1 }}>
+              <Typography sx={{ fontSize: '0.95rem', color: cleanupTimeout > 0 ? 'text.primary' : 'rgba(255,255,255,0.6)' }}>
+                Auto-delete incidents after
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                Automatically removes resolved incidents after the selected period
+              </Typography>
+            </Box>
+            <FormControl size="small" sx={{ minWidth: 130 }}>
+              <Select
+                value={cleanupTimeout}
+                onChange={(e) => {
+                  setCleanupTimeout(Number(e.target.value));
+                  setHasChanges(true);
+                }}
+                sx={{
+                  bgcolor: 'rgba(0,0,0,0.2)',
+                  fontSize: '0.85rem',
+                  '& .MuiSelect-select': { py: 0.75 },
+                }}
+                MenuProps={{
+                  PaperProps: {
+                    sx: { bgcolor: '#2a2a2a', border: '1px solid rgba(255,255,255,0.1)' },
+                  },
+                }}
+              >
+                {WEEKS_OPTIONS.map((opt) => (
+                  <MenuItem key={opt.seconds} value={opt.seconds}>
+                    {opt.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Box>
         </Box>
       </DialogContent>
