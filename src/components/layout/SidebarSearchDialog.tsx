@@ -17,6 +17,7 @@ import RadarIcon from '@mui/icons-material/Radar';
 import DescriptionIcon from '@mui/icons-material/Description';
 import { Network, Braces, Waypoints, Link2, Workflow } from 'lucide-react';
 import { getApiUrl, getAuthHeader } from '@/config/api';
+import { useWorkflows } from '@/hooks/useWorkflows';
 import type { AlgoliaSearchApp } from '@/lib/singul-local/singul.helpers';
 
 const ALGOLIA_APP_ID = 'JNSS5CFDZZ';
@@ -87,38 +88,16 @@ interface SidebarSearchDialogProps {
 export const SidebarSearchDialog = ({ open, onOpenChange }: SidebarSearchDialogProps) => {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
+  const { data: allWorkflows = [] } = useWorkflows();
   const [appResults, setAppResults] = useState<AlgoliaSearchApp[]>([]);
   const [correlationResults, setCorrelationResults] = useState<CorrelationItem[]>([]);
   const [workflowResults, setWorkflowResults] = useState<WorkflowItem[]>([]);
-  const [allWorkflows, setAllWorkflows] = useState<WorkflowItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [correlationsLoading, setCorrelationsLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const appDebounceRef = useRef<NodeJS.Timeout | null>(null);
   const corrDebounceRef = useRef<NodeJS.Timeout | null>(null);
-  const workflowsFetchedRef = useRef(false);
-
-  // Fetch all workflows once on first open
-  useEffect(() => {
-    if (!open || workflowsFetchedRef.current) return;
-    workflowsFetchedRef.current = true;
-    (async () => {
-      try {
-        const res = await fetch(getApiUrl('/api/v1/workflows'), {
-          credentials: 'include',
-          headers: { ...getAuthHeader() },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          const list = Array.isArray(data) ? data : (data.workflows || []);
-          setAllWorkflows(list.map((w: any) => ({ id: w.id, name: w.name, description: w.description || '' })));
-        }
-      } catch {
-        // silent
-      }
-    })();
-  }, [open]);
 
   // Filter workflows locally by query
   useEffect(() => {
