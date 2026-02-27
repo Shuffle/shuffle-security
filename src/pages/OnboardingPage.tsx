@@ -345,9 +345,11 @@ const OnboardingPage = () => {
   };
 
   const handleTestConnection = async (systemId: string, authenticationId?: string) => {
-    // Find the app info
+    // Find the app info from selected apps, or fall back to authenticated apps
+    // (inline auth on Automate page uses ConnectedApp.id which may not be in selectedApps)
     const app = selectedApps.find(a => a.objectID === systemId);
-    if (!app) return;
+    const authApp = !app ? authenticatedApps.find(a => a.app?.id === systemId || a.app?.name === systemId) : null;
+    const appName = app?.name?.toLowerCase() || authApp?.app?.name?.toLowerCase() || systemId;
 
     setAuthStates((prev) => ({
       ...prev,
@@ -361,7 +363,7 @@ const OnboardingPage = () => {
       // Build request body with optional authentication_id
       const requestBody: Record<string, string | boolean> = {
         action: 'test_api',
-        app: app.name.toLowerCase(),
+        app: appName,
         skip_workflow: true,
       };
       
