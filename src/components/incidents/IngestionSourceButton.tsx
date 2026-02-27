@@ -1,20 +1,59 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Box, IconButton, Popover, Typography, Chip, Button } from '@mui/material';
+import { Box, IconButton, Popover, Typography, Chip, Button, CircularProgress } from '@mui/material';
 import BlockIcon from '@mui/icons-material/Block';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import DownloadIcon from '@mui/icons-material/Download';
 import { ValidatedIngestionApp } from '@/lib/ingestionDetection';
+import { getApiUrl, getAuthHeader } from '@/config/api';
+import { toast } from 'sonner';
 
 interface IngestionSourceButtonProps {
   app: ValidatedIngestionApp;
+  onToggled?: () => void;
 }
 
-export const IngestionSourceButton = ({ app }: IngestionSourceButtonProps) => {
+export const IngestionSourceButton = ({ app, onToggled }: IngestionSourceButtonProps) => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const [loading, setLoading] = useState(false);
   const popoverOpen = Boolean(anchorEl);
   const displayName = app.name.replace(/_/g, ' ');
+
+  const handleToggle = async () => {
+    setLoading(true);
+    try {
+      const body: Record<string, string> = {
+        label: 'Ingest Tickets',
+        app_name: app.name,
+        category: 'cases',
+      };
+
+      // If currently enabled, we're deactivating
+      if (app.enabled) {
+        body.action_name = 'disable';
+      }
+
+      await fetch(getApiUrl('/api/v2/workflows/generate'), {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          ...getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+
+      toast.success(app.enabled ? `${displayName} deactivated` : `${displayName} activated`);
+      onToggled?.();
+    } catch (error) {
+      console.error('Failed to toggle app:', error);
+      toast.error('Failed to update app status');
+    } finally {
+      setLoading(false);
+      setAnchorEl(null);
+    }
+  };
 
   return (
     <Box sx={{ position: 'relative' }}>
@@ -96,20 +135,18 @@ export const IngestionSourceButton = ({ app }: IngestionSourceButtonProps) => {
           </Button>
           <Button
             size="small"
-            startIcon={app.enabled ? <BlockIcon sx={{ fontSize: 14 }} /> : <CheckCircleOutlineIcon sx={{ fontSize: 14 }} />}
-            onClick={() => {
-              // TODO: implement disable logic
-              setAnchorEl(null);
-            }}
+            disabled={loading}
+            startIcon={loading ? <CircularProgress size={14} /> : app.enabled ? <BlockIcon sx={{ fontSize: 14 }} /> : <CheckCircleOutlineIcon sx={{ fontSize: 14 }} />}
+            onClick={handleToggle}
             sx={{
               justifyContent: 'flex-start',
               textTransform: 'none',
               fontSize: '0.75rem',
-              color: app.enabled ? 'hsl(var(--destructive))' : 'hsl(var(--primary))',
+              color: app.enabled ? 'hsl(var(--destructive))' : '#22c55e',
               px: 1,
               py: 0.5,
               borderRadius: 1,
-              '&:hover': { bgcolor: app.enabled ? 'hsl(var(--destructive) / 0.1)' : 'hsl(var(--primary) / 0.1)' },
+              '&:hover': { bgcolor: app.enabled ? 'hsl(var(--destructive) / 0.1)' : 'rgba(34, 197, 94, 0.1)' },
             }}
           >
             {app.enabled ? 'Deactivate' : 'Activate'}
