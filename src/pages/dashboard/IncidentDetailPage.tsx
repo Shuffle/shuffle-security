@@ -469,7 +469,12 @@ const IncidentDetailPage = () => {
         setEditedAssignee(normalizedAssignee);
         setEditedStatus(parsed.status);
         setEditedTlp(parsed.tlp || 'TLP:AMBER');
-        setEditedReferences(parsed.references || []);
+        const rawRefs = parsed.references;
+        setEditedReferences(
+          Array.isArray(rawRefs) ? rawRefs :
+          typeof rawRefs === 'string' ? (() => { try { const p = JSON.parse(rawRefs); return Array.isArray(p) ? p : []; } catch { return []; } })() :
+          []
+        );
         setEditedObservables(parsed.observables || []);
         const customAttrs = parsed.rawOCSF?.metadata?.extensions?.custom_attributes;
         // Support both customFields and custom_fields naming at various levels
