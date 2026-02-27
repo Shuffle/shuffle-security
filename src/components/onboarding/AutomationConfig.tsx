@@ -601,15 +601,31 @@ export const AutomationConfig = ({
     return !!appInfo.isSelected;
   };
 
-  const triggerWorkflowGeneration = useCallback((optionId: string, _state: EnrichmentState, actionName?: string) => {
+  const triggerWorkflowGeneration = useCallback((
+    optionId: string,
+    _state: EnrichmentState,
+    actionName?: string,
+    /** Override: app name just toggled + its new state, so we don't rely on stale React state */
+    immediateOverride?: { normalized: string; enabled: boolean },
+  ) => {
     const option = enrichmentOptions.find(o => o.id === optionId);
     if (!option) return;
     
     const allTools = getAllToolsForOption(option);
     
-    const enabledTools = actionName === 'disable'
-      ? allTools
-      : allTools.filter(tool => isToolEnabled(optionId, tool.id));
+    let enabledTools: typeof allTools;
+    if (actionName === 'disable') {
+      enabledTools = allTools;
+    } else if (optionId === 'automatic_ingestion' && immediateOverride) {
+      // Build the list using the override so the just-toggled app is included/excluded
+      enabledTools = allTools.filter(tool => {
+        const norm = normalizeAppName(tool.name);
+        if (norm === immediateOverride.normalized) return immediateOverride.enabled;
+        return isToolEnabled(optionId, tool.id);
+      });
+    } else {
+      enabledTools = allTools.filter(tool => isToolEnabled(optionId, tool.id));
+    }
     
     const enabledAppNames = enabledTools.map(tool => tool.name);
     
@@ -646,7 +662,7 @@ export const AutomationConfig = ({
     onEnrichmentChange(newState);
     onSave?.(newState);
     
-    triggerWorkflowGeneration(optionId, newState);
+    triggerWorkflowGeneration(optionId, newState, undefined, { normalized, enabled: newToolState });
   };
 
   const enrichmentItems = enrichmentOptions.filter((o) => o.category === 'enrichment');
