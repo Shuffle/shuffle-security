@@ -1,6 +1,6 @@
 /**
  * Shared app category detection utilities.
- * Used by onboarding (EnrichmentConfig) and incident automations (CategoryAutomationsDialog).
+ * Used by onboarding (AutomationConfig) and incident automations (CategoryAutomationsDialog).
  */
 
 import { AuthAppEntry, deduplicateAuthApps } from '@/lib/utils';
@@ -37,19 +37,6 @@ export type IngestionCategory = 'email' | 'cases' | 'edr' | 'siem' | 'other';
 export const normalizeAppName = (name: string): string =>
   name.toLowerCase().trim().replace(/[\s_\-]+/g, '_');
 
-export const resolveIngestionEnablement = (
-  appName: string,
-  explicitTrueNames: Set<string>,
-  explicitFalseNames: Set<string>,
-  selectedNames: Set<string>,
-): boolean => {
-  const normalizedName = normalizeAppName(appName);
-
-  if (explicitTrueNames.has(normalizedName)) return true;
-  if (explicitFalseNames.has(normalizedName)) return false;
-  return selectedNames.has(normalizedName);
-};
-
 export const getIngestionCategory = (appName: string, appCategories?: string[]): IngestionCategory | null => {
   const name = appName.toLowerCase();
   const categories = (appCategories || []).map(c => c.toLowerCase());
@@ -61,6 +48,37 @@ export const getIngestionCategory = (appName: string, appCategories?: string[]):
   
   return null;
 };
+
+// ============================================================================
+// Workflow-based ingestion detection
+// ============================================================================
+
+/** Name of the workflow that powers automatic ingestion */
+export const INGEST_TICKETS_WORKFLOW_NAME = 'Ingest Tickets';
+
+/**
+ * Extract app names from a workflow's actions array.
+ * Returns a Set of normalized app names found in the workflow.
+ */
+export function extractWorkflowAppNames(workflow: any): Set<string> {
+  const names = new Set<string>();
+  if (!workflow?.actions || !Array.isArray(workflow.actions)) return names;
+
+  for (const action of workflow.actions) {
+    if (action.app_name) {
+      names.add(normalizeAppName(action.app_name));
+    }
+  }
+  return names;
+}
+
+/**
+ * Find the 'Ingest Tickets' workflow from a list of workflows.
+ * Returns the workflow object or null.
+ */
+export function findIngestTicketsWorkflow(workflows: any[]): any | null {
+  return workflows.find(w => w.name === INGEST_TICKETS_WORKFLOW_NAME) || null;
+}
 
 // ============================================================================
 // Validated ingestion app extraction from raw API data
@@ -78,45 +96,21 @@ export interface ValidatedIngestionApp {
  * Extract validated apps from the raw /api/v1/apps/authentication response.
  * Returns deduplicated apps that have valid authentication.
  *
- * Enablement logic mirrors onboarding:
- * 1) If tool has explicit override in tools map -> use it
- * 2) Otherwise, enabled when selected in onboarding + validated
+ * Enablement is determined by whether the app appears in the
+ * 'Ingest Tickets' workflow's actions (workflows are the source of truth).
+ *
+ * @param authApiResponse - Raw response from /api/v1/apps/authentication
+ * @param workflowAppNames - Set of normalized app names from the Ingest Tickets workflow actions
  */
 export function extractValidatedIngestionApps(
   authApiResponse: any[],
-  enabledToolIds?: Record<string, boolean>,
-  selectedAppNames?: string[],
+  workflowAppNames?: Set<string>,
 ): ValidatedIngestionApp[] {
   const dedupedApps = deduplicateAuthApps(
     authApiResponse.filter(auth => auth.active || auth.validation?.valid)
   );
 
-  // Build reverse map for both possible key shapes used in automation.tools:
-  // - auth.app.id (app identifier)
-  // - auth.id (auth instance identifier)
-  const idToNormalizedName = new Map<string, string>();
-  authApiResponse.forEach(auth => {
-    if (auth.app?.name) {
-      const normalized = normalizeAppName(auth.app.name);
-      if (auth.app?.id) idToNormalizedName.set(auth.app.id, normalized);
-      if (auth.id) idToNormalizedName.set(auth.id, normalized);
-    }
-  });
-
-  const explicitTrueNames = new Set<string>();
-  const explicitFalseNames = new Set<string>();
-  if (enabledToolIds) {
-    for (const [id, value] of Object.entries(enabledToolIds)) {
-      const name = idToNormalizedName.get(id);
-      if (!name) continue;
-      if (value === true) explicitTrueNames.add(name);
-      if (value === false) explicitFalseNames.add(name);
-    }
-  }
-
-  const selectedNames = new Set(
-    (selectedAppNames || []).map(name => normalizeAppName(name))
-  );
+  const enabledNames = workflowAppNames || new Set<string>();
 
   const apps: ValidatedIngestionApp[] = [];
 
@@ -124,12 +118,7 @@ export function extractValidatedIngestionApps(
     if (!hasValidAuth) continue;
     const category = getIngestionCategory(app.name, app.categories) || 'other';
 
-    const enabled = resolveIngestionEnablement(
-      app.name,
-      explicitTrueNames,
-      explicitFalseNames,
-      selectedNames,
-    );
+    const enabled = enabledNames.has(normalizeAppName(app.name));
 
     apps.push({
       id: app.id,

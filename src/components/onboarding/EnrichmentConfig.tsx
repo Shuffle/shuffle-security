@@ -34,7 +34,6 @@ import {
   EMAIL_APP_PATTERNS, CASES_PATTERNS, EDR_PATTERNS, SIEM_PATTERNS,
   THREAT_INTEL_PATTERNS, COMMUNICATION_PATTERNS_NAMES,
   isEmailApp, isThreatIntelApp, getIngestionCategory,
-  resolveIngestionEnablement,
   normalizeAppName,
   type IngestionCategory,
 } from '@/lib/ingestionDetection';
@@ -563,28 +562,21 @@ export const EnrichmentConfig = ({
 
     if (!appInfo?.isValidated) return false;
 
-    const explicitTrueNames = new Set<string>();
-    const explicitFalseNames = new Set<string>();
+    const normalized = normalizeAppName(appInfo.name);
 
+    // Check explicit toggles in the enrichment state
     if (current?.tools) {
       for (const [toolId, value] of Object.entries(current.tools)) {
         const toolInfo = getAppInfo(optionId, toolId);
         if (!toolInfo?.name) continue;
-        if (value === true) explicitTrueNames.add(normalizeAppName(toolInfo.name));
-        if (value === false) explicitFalseNames.add(normalizeAppName(toolInfo.name));
+        if (normalizeAppName(toolInfo.name) === normalized) {
+          return value === true;
+        }
       }
     }
 
-    const selectedNames = new Set<string>(
-      appInfo.isSelected ? [normalizeAppName(appInfo.name)] : []
-    );
-
-    return resolveIngestionEnablement(
-      appInfo.name,
-      explicitTrueNames,
-      explicitFalseNames,
-      selectedNames,
-    );
+    // Fallback: enabled if selected in onboarding
+    return !!appInfo.isSelected;
   };
 
   const triggerWorkflowGeneration = useCallback((optionId: string, _state: EnrichmentState, actionName?: string) => {

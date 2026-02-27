@@ -30,9 +30,8 @@ import { OCSFIncidentFinding, Observable, TLP_LABELS, convertLegacyTlp, mapOCSFS
 import { deduplicateTasks } from '@/lib/utils';
 import { ResolveIncidentDialog, ResolutionData, RESOLUTION_REASONS } from '@/components/incidents/ResolveIncidentDialog';
 import { CategoryAutomationsDialog } from '@/components/incidents/CategoryAutomationsDialog';
-import { extractValidatedIngestionApps, ValidatedIngestionApp } from '@/lib/ingestionDetection';
+import { extractValidatedIngestionApps, ValidatedIngestionApp, findIngestTicketsWorkflow, extractWorkflowAppNames } from '@/lib/ingestionDetection';
 import { getApiUrl, getAuthHeader } from '@/config/api';
-import { getDatastoreItem } from '@/services/datastore';
 import DownloadIcon from '@mui/icons-material/Download';
 import { IncidentCardView } from '@/components/incidents/IncidentCardView';
 import { IncidentStatsCards } from '@/components/incidents/IncidentStatsCards';
@@ -298,51 +297,45 @@ const IncidentsPage = () => {
     }
   }, [categoryConfig]);
 
-  // Fetch ingestion apps + automation config to determine enabled state
-  useEffect(() => {
-    const fetchIngestionApps = async () => {
-      try {
-        const [authResponse, configResponse, selectedToolsResponse] = await Promise.all([
-          fetch(getApiUrl('/api/v1/apps/authentication'), {
-            credentials: 'include',
-            headers: { ...getAuthHeader() },
-          }),
-          getDatastoreItem('automation_config', 'shuffle-security_onboarding'),
-          getDatastoreItem('selected_tools', 'shuffle-security_onboarding'),
-        ]);
+  // Fetch ingestion apps — workflows are the source of truth for enabled state
+  const fetchIngestionApps = useCallback(async () => {
+    try {
+      const [authResponse, workflowsResponse] = await Promise.all([
+        fetch(getApiUrl('/api/v1/apps/authentication'), {
+          credentials: 'include',
+          headers: { ...getAuthHeader() },
+        }),
+        fetch(getApiUrl('/api/v1/workflows'), {
+          credentials: 'include',
+          headers: { ...getAuthHeader() },
+        }),
+      ]);
 
-        if (authResponse.ok) {
-          const result = await authResponse.json();
-          const authApps = Array.isArray(result) ? result : (result.data || []);
+      if (authResponse.ok) {
+        const result = await authResponse.json();
+        const authApps = Array.isArray(result) ? result : (result.data || []);
 
-          // Extract enabled tool IDs from automation config
-          let enabledToolIds: Record<string, boolean> | undefined;
-          if (configResponse.success && configResponse.item?.value) {
-            const config = typeof configResponse.item.value === 'string'
-              ? JSON.parse(configResponse.item.value)
-              : configResponse.item.value;
-            enabledToolIds = config?.automatic_ingestion?.tools;
+        // Derive enabled apps from the Ingest Tickets workflow actions
+        let workflowAppNames: Set<string> | undefined;
+        if (workflowsResponse.ok) {
+          const workflows = await workflowsResponse.json();
+          const workflowList = Array.isArray(workflows) ? workflows : (workflows.workflows || []);
+          const ingestWorkflow = findIngestTicketsWorkflow(workflowList);
+          if (ingestWorkflow) {
+            workflowAppNames = extractWorkflowAppNames(ingestWorkflow);
           }
-
-          // Selected apps from onboarding (used as default enablement when no explicit toggle exists)
-          let selectedAppNames: string[] = [];
-          if (selectedToolsResponse.success && selectedToolsResponse.item?.value) {
-            const selectedTools = typeof selectedToolsResponse.item.value === 'string'
-              ? JSON.parse(selectedToolsResponse.item.value)
-              : selectedToolsResponse.item.value;
-            if (Array.isArray(selectedTools)) {
-              selectedAppNames = selectedTools.map((app: any) => app?.name).filter(Boolean);
-            }
-          }
-
-          setIngestionApps(extractValidatedIngestionApps(authApps, enabledToolIds, selectedAppNames));
         }
-      } catch (error) {
-        console.error('Failed to fetch ingestion apps:', error);
+
+        setIngestionApps(extractValidatedIngestionApps(authApps, workflowAppNames));
       }
-    };
-    fetchIngestionApps();
+    } catch (error) {
+      console.error('Failed to fetch ingestion apps:', error);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchIngestionApps();
+  }, [fetchIngestionApps]);
 
   // Helper: check if an incident has meaningful content (title or description)
   const hasContent = (incident: DisplayIncident): boolean => {
@@ -701,7 +694,7 @@ const IncidentsPage = () => {
               py: 0.5,
             }}>
               {ingestionApps.map(app => (
-                <IngestionSourceButton key={app.name} app={app} allApps={ingestionApps} />
+                <IngestionSourceButton key={app.name} app={app} allApps={ingestionApps} onToggled={fetchIngestionApps} />
               ))}
               <Tooltip title="Add ingestion source">
                 <IconButton

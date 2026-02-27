@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Box, IconButton, Popover, Typography, Chip, Button } from '@mui/material';
 import BlockIcon from '@mui/icons-material/Block';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
@@ -7,11 +6,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import DownloadIcon from '@mui/icons-material/Download';
 import { ValidatedIngestionApp } from '@/lib/ingestionDetection';
 import { getApiUrl, getAuthHeader } from '@/config/api';
-import { getDatastoreItem, setDatastoreItem } from '@/services/datastore';
 import { toast } from 'sonner';
-
-const ONBOARDING_CONFIG_CATEGORY = 'shuffle-security_onboarding';
-const AUTOMATION_CONFIG_KEY = 'automation_config';
 
 interface IngestionSourceButtonProps {
   app: ValidatedIngestionApp;
@@ -35,12 +30,13 @@ export const IngestionSourceButton = ({ app, allApps, onToggled }: IngestionSour
     setOptimisticEnabled(willBeEnabled);
     setAnchorEl(null);
 
+    // Compute new list of all active app names after this toggle
     const activeNames = allApps
       .filter(a => a.name === app.name ? willBeEnabled : a.enabled)
       .map(a => a.name);
 
     try {
-      // 1. Call workflow generate with all active app names
+      // Regenerate the Ingest Tickets workflow with the updated app list
       await fetch(getApiUrl('/api/v2/workflows/generate'), {
         method: 'POST',
         credentials: 'include',
@@ -55,33 +51,9 @@ export const IngestionSourceButton = ({ app, allApps, onToggled }: IngestionSour
         }),
       });
 
-      // 2. Update automation_config in datastore to persist the toggle
-      try {
-        const response = await getDatastoreItem(AUTOMATION_CONFIG_KEY, ONBOARDING_CONFIG_CATEGORY);
-        let config: Record<string, any> = {};
-        if (response.success && response.item?.value) {
-          config = typeof response.item.value === 'string'
-            ? JSON.parse(response.item.value)
-            : response.item.value;
-        }
-
-        // Ensure automatic_ingestion.tools exists
-        if (!config.automatic_ingestion) {
-          config.automatic_ingestion = { enabled: true, config: {}, tools: {} };
-        }
-        if (!config.automatic_ingestion.tools) {
-          config.automatic_ingestion.tools = {};
-        }
-
-        // Set the explicit toggle for this app's ID
-        config.automatic_ingestion.tools[app.id] = willBeEnabled;
-
-        await setDatastoreItem(AUTOMATION_CONFIG_KEY, config, ONBOARDING_CONFIG_CATEGORY);
-      } catch (dsError) {
-        console.error('Failed to persist automation_config:', dsError);
-      }
-
       toast.success(willBeEnabled ? `${displayName} activated` : `${displayName} deactivated`);
+      // Reset optimistic state and let parent refetch from workflows
+      setOptimisticEnabled(null);
       onToggled?.();
     } catch (error) {
       // Rollback
