@@ -226,8 +226,10 @@ export const SidebarSearchDialog = ({ open, onOpenChange }: SidebarSearchDialogP
     } else if (result.type === 'correlation') {
       const incidentRef = result.correlation.ref?.find((r) => r.includes('shuffle-security_incidents'));
       if (incidentRef) {
-        const parts = incidentRef.split('/');
-        const key = parts[parts.length - 1];
+        // Ref format: "shuffle-security_incidents|<key>" — extract key after the pipe
+        const key = incidentRef.includes('|') 
+          ? incidentRef.split('|').pop() 
+          : incidentRef.split('/').pop();
         if (key) {
           navigate(`/incidents/${key}`);
         }
