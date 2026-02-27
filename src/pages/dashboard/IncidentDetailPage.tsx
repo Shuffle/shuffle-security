@@ -1444,6 +1444,10 @@ const IncidentDetailPage = () => {
                 <RefreshIcon sx={{ fontSize: 16, mr: 1 }} />
                 Resync
               </MenuItem>
+              <MenuItem disabled>
+                <LinkIcon sx={{ fontSize: 16, mr: 1 }} />
+                Visit Source
+              </MenuItem>
               <MenuItem
                 onClick={() => {
                   setActionsMenuAnchor(null);
