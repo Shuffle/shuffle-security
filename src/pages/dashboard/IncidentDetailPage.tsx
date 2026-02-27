@@ -148,10 +148,21 @@ const parseTimestamp = (timestamp: number | string | undefined): number => {
 
 
 // Strict check: only return string if it has meaningful non-whitespace content
+// Also rejects raw JSON objects/arrays that shouldn't be displayed as text
 const meaningfulString = (val: unknown): string | undefined => {
   if (typeof val !== 'string') return undefined;
   const trimmed = val.trim();
-  return trimmed.length > 0 ? trimmed : undefined;
+  if (trimmed.length === 0) return undefined;
+  // Reject values that look like serialized JSON objects or arrays
+  if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+    try {
+      JSON.parse(trimmed);
+      return undefined; // It's valid JSON — not a meaningful display string
+    } catch {
+      // Not valid JSON, treat as regular string
+    }
+  }
+  return trimmed;
 };
 
 const parseIncidentFromDatastore = (item: { key: string; value: string; created?: number; edited?: number }): DisplayIncident | null => {
@@ -1366,6 +1377,53 @@ const IncidentDetailPage = () => {
               </IconButton>
             </Tooltip>
 
+            <Tooltip title="Resync from source">
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={async () => {
+                  if (!incident?.id) return;
+                  try {
+                    const response = await fetch(getApiUrl('/api/v1/workflows/categories/run'), {
+                      method: 'POST',
+                      credentials: 'include',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        ...getAuthHeader(),
+                      },
+                      body: JSON.stringify({
+                        action: 'resync',
+                        category: 'cases',
+                        key: incident.id,
+                      }),
+                    });
+                    if (response.ok) {
+                      toast.success('Resync triggered');
+                      // Reload after a short delay to pick up changes
+                      setTimeout(() => loadIncident(false), 3000);
+                    } else {
+                      toast.error('Resync failed');
+                    }
+                  } catch {
+                    toast.error('Resync failed');
+                  }
+                }}
+                disabled={isSaving}
+                startIcon={<RefreshIcon sx={{ fontSize: 16 }} />}
+                sx={{
+                  borderColor: 'rgba(255,255,255,0.2)',
+                  color: 'text.secondary',
+                  height: 32,
+                  minWidth: 'auto',
+                  px: 1.5,
+                  fontSize: '0.75rem',
+                  '&:hover': { borderColor: 'rgba(255,255,255,0.4)', bgcolor: 'rgba(255,255,255,0.05)' },
+                }}
+              >
+                Resync
+              </Button>
+            </Tooltip>
+
 
             {!isResolved && (
               <Button 
@@ -1970,7 +2028,7 @@ const IncidentDetailPage = () => {
                 </Box>
                 <Box>
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>Source</Typography>
-                  <Typography variant="body2">{incident.source}</Typography>
+                  <Typography variant="body2">{incident.source || <Typography component="span" variant="body2" sx={{ color: 'text.disabled', fontStyle: 'italic' }}>Unknown</Typography>}</Typography>
                 </Box>
                 <Box>
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>Created</Typography>
