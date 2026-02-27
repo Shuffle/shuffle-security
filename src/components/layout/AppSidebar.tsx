@@ -296,7 +296,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
           anchorEl={toolMenuAnchor}
           open={Boolean(toolMenuAnchor)}
           onClose={() => setToolMenuAnchor(null)}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+          anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
           transformOrigin={{ vertical: 'top', horizontal: 'left' }}
           slotProps={{
             paper: {
@@ -304,13 +304,33 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                 backgroundColor: 'hsl(var(--card))',
                 border: '1px solid hsl(var(--border))',
                 borderRadius: 1.5,
-                mt: 0.5,
-                minWidth: 220,
+                minWidth: 230,
                 zIndex: 1400,
               },
             },
           }}
         >
+          <MenuItem
+            selected
+            sx={{
+              py: 1.5,
+              px: 2,
+              gap: 1.5,
+              backgroundColor: 'hsla(var(--primary) / 0.12) !important',
+              border: '1px solid hsla(var(--primary) / 0.3)',
+              borderRadius: 1,
+              mx: 0.5,
+              '&:hover': { backgroundColor: 'hsla(var(--primary) / 0.18) !important' },
+            }}
+            onClick={() => setToolMenuAnchor(null)}
+          >
+            <svg width="24" height="24" viewBox="0 0 56 56" fill="none">
+              <path d="M14 14h28v6H20v16h16v-10h-8v-6h14v22H14V14z" fill="#FF6600" />
+            </svg>
+            <Typography sx={{ fontSize: '0.875rem', color: 'hsl(var(--foreground))', fontWeight: 600 }}>
+              Shuffle Security
+            </Typography>
+          </MenuItem>
           <MenuItem
             onClick={() => {
               window.open(SHUFFLE_AUTOMATION_URL, '_blank');
@@ -320,6 +340,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
               py: 1.5,
               px: 2,
               gap: 1.5,
+              mx: 0.5,
               '&:hover': { backgroundColor: 'hsl(var(--muted))' },
             }}
           >
