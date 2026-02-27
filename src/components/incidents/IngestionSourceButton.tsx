@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Box, IconButton, Popover, Typography, Chip, Button, CircularProgress } from '@mui/material';
+import { Box, IconButton, Popover, Typography, Chip, Button } from '@mui/material';
 import BlockIcon from '@mui/icons-material/Block';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
@@ -17,25 +17,25 @@ interface IngestionSourceButtonProps {
 
 export const IngestionSourceButton = ({ app, allApps, onToggled }: IngestionSourceButtonProps) => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [optimisticEnabled, setOptimisticEnabled] = useState<boolean | null>(null);
   const popoverOpen = Boolean(anchorEl);
   const displayName = app.name.replace(/_/g, ' ');
 
+  // Use optimistic state if set, otherwise fall back to actual
+  const isEnabled = optimisticEnabled !== null ? optimisticEnabled : app.enabled;
+
   const handleToggle = async () => {
-    setLoading(true);
+    const willBeEnabled = !isEnabled;
+
+    // Optimistic update: flip immediately & close popover
+    setOptimisticEnabled(willBeEnabled);
+    setAnchorEl(null);
+
+    const activeNames = allApps
+      .filter(a => a.name === app.name ? willBeEnabled : a.enabled)
+      .map(a => a.name);
+
     try {
-      // Compute the new list of all active app names after this toggle
-      const willBeEnabled = !app.enabled;
-      const activeNames = allApps
-        .filter(a => a.name === app.name ? willBeEnabled : a.enabled)
-        .map(a => a.name);
-
-      const body: Record<string, string> = {
-        label: 'Ingest Tickets',
-        app_name: activeNames.join(','),
-        category: 'cases',
-      };
-
       await fetch(getApiUrl('/api/v2/workflows/generate'), {
         method: 'POST',
         credentials: 'include',
@@ -43,17 +43,20 @@ export const IngestionSourceButton = ({ app, allApps, onToggled }: IngestionSour
           ...getAuthHeader(),
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+          label: 'Ingest Tickets',
+          app_name: activeNames.join(','),
+          category: 'cases',
+        }),
       });
 
       toast.success(willBeEnabled ? `${displayName} activated` : `${displayName} deactivated`);
       onToggled?.();
     } catch (error) {
+      // Rollback
+      setOptimisticEnabled(null);
       console.error('Failed to toggle app:', error);
       toast.error('Failed to update app status');
-    } finally {
-      setLoading(false);
-      setAnchorEl(null);
     }
   };
 
@@ -66,15 +69,15 @@ export const IngestionSourceButton = ({ app, allApps, onToggled }: IngestionSour
           width: 30,
           height: 30,
           border: '1px solid',
-          borderColor: app.enabled ? 'rgba(34, 197, 94, 0.20)' : 'transparent',
-          bgcolor: app.enabled ? 'rgba(34, 197, 94, 0.10)' : 'transparent',
+          borderColor: isEnabled ? 'rgba(34, 197, 94, 0.20)' : 'transparent',
+          bgcolor: isEnabled ? 'rgba(34, 197, 94, 0.10)' : 'transparent',
           borderRadius: 1,
-          opacity: app.enabled ? 1 : 0.35,
-          filter: app.enabled ? 'none' : 'grayscale(1)',
+          opacity: isEnabled ? 1 : 0.35,
+          filter: isEnabled ? 'none' : 'grayscale(1)',
           transition: 'opacity 0.15s ease, filter 0.15s ease',
           '&:hover': {
-            bgcolor: app.enabled ? 'rgba(34, 197, 94, 0.18)' : 'rgba(255,255,255,0.1)',
-            opacity: app.enabled ? 1 : 0.7,
+            bgcolor: isEnabled ? 'rgba(34, 197, 94, 0.18)' : 'rgba(255,255,255,0.1)',
+            opacity: isEnabled ? 1 : 0.7,
             filter: 'none',
           },
         }}
@@ -87,7 +90,7 @@ export const IngestionSourceButton = ({ app, allApps, onToggled }: IngestionSour
             sx={{ width: 18, height: 18, borderRadius: '50%', objectFit: 'contain' }}
           />
         ) : (
-          <DownloadIcon sx={{ fontSize: 16, color: app.enabled ? '#4ade80' : 'rgba(255,255,255,0.4)' }} />
+          <DownloadIcon sx={{ fontSize: 16, color: isEnabled ? '#4ade80' : 'rgba(255,255,255,0.4)' }} />
         )}
       </IconButton>
       <Popover
@@ -111,7 +114,7 @@ export const IngestionSourceButton = ({ app, allApps, onToggled }: IngestionSour
       >
         <Typography variant="caption" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))', textTransform: 'capitalize', mb: 1, display: 'block' }}>
           {displayName}
-          {!app.enabled && (
+          {!isEnabled && (
             <Chip label="Not Active" size="small" sx={{ ml: 0.5, height: 18, fontSize: '0.65rem', bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }} />
           )}
         </Typography>
@@ -138,21 +141,20 @@ export const IngestionSourceButton = ({ app, allApps, onToggled }: IngestionSour
           </Button>
           <Button
             size="small"
-            disabled={loading}
-            startIcon={loading ? <CircularProgress size={14} /> : app.enabled ? <BlockIcon sx={{ fontSize: 14 }} /> : <CheckCircleOutlineIcon sx={{ fontSize: 14 }} />}
+            startIcon={isEnabled ? <BlockIcon sx={{ fontSize: 14 }} /> : <CheckCircleOutlineIcon sx={{ fontSize: 14 }} />}
             onClick={handleToggle}
             sx={{
               justifyContent: 'flex-start',
               textTransform: 'none',
               fontSize: '0.75rem',
-              color: app.enabled ? 'hsl(var(--destructive))' : '#22c55e',
+              color: isEnabled ? 'hsl(var(--destructive))' : '#22c55e',
               px: 1,
               py: 0.5,
               borderRadius: 1,
-              '&:hover': { bgcolor: app.enabled ? 'hsl(var(--destructive) / 0.1)' : 'rgba(34, 197, 94, 0.1)' },
+              '&:hover': { bgcolor: isEnabled ? 'hsl(var(--destructive) / 0.1)' : 'rgba(34, 197, 94, 0.1)' },
             }}
           >
-            {app.enabled ? 'Deactivate' : 'Activate'}
+            {isEnabled ? 'Deactivate' : 'Activate'}
           </Button>
         </Box>
       </Popover>
