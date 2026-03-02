@@ -461,7 +461,7 @@ export const IncidentCardView = ({
                       <img
                         src={sourceApp.image}
                         alt={incident.source}
-                        style={{ width: 18, height: 18, objectFit: 'contain' }}
+                        style={{ width: 18, height: 18, objectFit: 'contain', borderRadius: 4 }}
                       />
                     </Box>
                   </Tooltip>
