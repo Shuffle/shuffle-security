@@ -530,14 +530,34 @@ const IncidentDetailPage = () => {
           loadedCustomFields = {};
         }
         
+        // Flatten object values to strings — APIs like Notion return nested objects
+        const flattenedCustomFields: Record<string, string | number | boolean> = {};
+        for (const [k, v] of Object.entries(loadedCustomFields)) {
+          if (v === null || v === undefined) {
+            flattenedCustomFields[k] = '';
+          } else if (typeof v === 'object') {
+            // Try to extract a meaningful string from common patterns
+            const obj = v as any;
+            const meaningful = obj.name || obj.title || obj.label || obj.value || obj.display || obj.text;
+            if (typeof meaningful === 'string') {
+              flattenedCustomFields[k] = meaningful;
+            } else {
+              flattenedCustomFields[k] = JSON.stringify(v);
+            }
+            console.log(`[CustomFields] Flattened object field "${k}":`, typeof v, '->', flattenedCustomFields[k]?.toString().substring(0, 100));
+          } else {
+            flattenedCustomFields[k] = v as string | number | boolean;
+          }
+        }
+        
         // Log custom fields size — large custom_fields are a known perf bottleneck
-        const cfStr = JSON.stringify(loadedCustomFields);
+        const cfStr = JSON.stringify(flattenedCustomFields);
         if (cfStr.length > 5_000) {
           console.warn(`[Perf] customFields is large: ${(cfStr.length / 1024).toFixed(1)}KB`);
         }
-        console.log('[CustomFields] Loaded fields:', Object.keys(loadedCustomFields));
+        console.log('[CustomFields] Loaded fields:', Object.keys(flattenedCustomFields));
         
-        setEditedCustomFields(loadedCustomFields);
+        setEditedCustomFields(flattenedCustomFields);
         setActivity(parsed.activity || []);
         const loadedTasks = parsed.tasks || customAttrs?.tasks || (parsed.rawOCSF as any)?.tasks || [];
         // Ensure all tasks have unique IDs (but don't filter duplicates - just normalize IDs)
