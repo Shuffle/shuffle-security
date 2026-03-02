@@ -12,50 +12,62 @@ export function cn(...inputs: ClassValue[]) {
  * - Strips remaining HTML tags
  * - Normalizes whitespace while preserving intentional line breaks
  */
+
+// Pre-compiled regexes to avoid creating them on every call
+const HTML_BLOCK_END_RE = /<\/(div|p|h[1-6]|li|tr)>/gi;
+const HTML_BR_RE = /<br\s*\/?>/gi;
+const HTML_LIST_RE = /<\/?(ul|ol|table|tbody|thead)>/gi;
+const HTML_TAG_RE = /<[^>]*>/g;
+const HTML_NUMERIC_ENTITY_RE = /&#(\d+);/g;
+const HTML_HEX_ENTITY_RE = /&#x([a-fA-F0-9]+);/g;
+const MULTI_NEWLINE_RE = /\n{3,}/g;
+const SPACE_NOT_NEWLINE_RE = /[^\S\n]+/g;
+
+// Pre-compiled entity regexes
+const ENTITY_MAP: [RegExp, string][] = [
+  [/&nbsp;/gi, ' '],
+  [/&amp;/gi, '&'],
+  [/&lt;/gi, '<'],
+  [/&gt;/gi, '>'],
+  [/&quot;/gi, '"'],
+  [/&#39;/gi, "'"],
+  [/&apos;/gi, "'"],
+  [/&ndash;/gi, '–'],
+  [/&mdash;/gi, '—'],
+  [/&hellip;/gi, '…'],
+  [/&copy;/gi, '©'],
+  [/&reg;/gi, '®'],
+  [/&trade;/gi, '™'],
+  [/&bull;/gi, '•'],
+];
+
 export function htmlToPlainText(html: string): string {
   if (!html) return '';
   
   let text = html;
   
   // Convert block-level elements to newlines before stripping tags
-  text = text.replace(/<\/(div|p|h[1-6]|li|tr)>/gi, '\n');
-  text = text.replace(/<br\s*\/?>/gi, '\n');
-  text = text.replace(/<\/?(ul|ol|table|tbody|thead)>/gi, '\n');
+  text = text.replace(HTML_BLOCK_END_RE, '\n');
+  text = text.replace(HTML_BR_RE, '\n');
+  text = text.replace(HTML_LIST_RE, '\n');
   
   // Strip all remaining HTML tags
-  text = text.replace(/<[^>]*>/g, '');
+  text = text.replace(HTML_TAG_RE, '');
   
-  // Decode common HTML entities
-  const entities: Record<string, string> = {
-    '&nbsp;': ' ',
-    '&amp;': '&',
-    '&lt;': '<',
-    '&gt;': '>',
-    '&quot;': '"',
-    '&#39;': "'",
-    '&apos;': "'",
-    '&ndash;': '–',
-    '&mdash;': '—',
-    '&hellip;': '…',
-    '&copy;': '©',
-    '&reg;': '®',
-    '&trade;': '™',
-    '&bull;': '•',
-  };
-  
-  for (const [entity, char] of Object.entries(entities)) {
-    text = text.replace(new RegExp(entity, 'gi'), char);
+  // Decode common HTML entities using pre-compiled regexes
+  for (const [re, char] of ENTITY_MAP) {
+    text = text.replace(re, char);
   }
   
   // Decode numeric entities (&#60; &#x3C; etc.)
-  text = text.replace(/&#(\d+);/g, (_, num) => String.fromCharCode(parseInt(num, 10)));
-  text = text.replace(/&#x([a-fA-F0-9]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+  text = text.replace(HTML_NUMERIC_ENTITY_RE, (_, num) => String.fromCharCode(parseInt(num, 10)));
+  text = text.replace(HTML_HEX_ENTITY_RE, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
   
   // Normalize multiple consecutive newlines to max 2
-  text = text.replace(/\n{3,}/g, '\n\n');
+  text = text.replace(MULTI_NEWLINE_RE, '\n\n');
   
   // Normalize spaces (but not newlines)
-  text = text.replace(/[^\S\n]+/g, ' ');
+  text = text.replace(SPACE_NOT_NEWLINE_RE, ' ');
   
   // Trim each line
   text = text.split('\n').map(line => line.trim()).join('\n');
