@@ -19,7 +19,7 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { motion } from 'framer-motion';
-import { Settings } from 'lucide-react';
+import { Settings, Play } from 'lucide-react';
 import AgentIcon from '@/components/agent/AgentIcon';
 import { useAgentActivity } from '@/hooks/useAgentActivity';
 import AgentActivityFeed from '@/components/agent/AgentActivityFeed';
@@ -54,7 +54,13 @@ const AgentActivityPage = () => {
 
   const { enabledPermissions, totalPermissions } = useAgentPermissions();
   const [permissionsOpen, setPermissionsOpen] = useState(false);
+  const [permissionsInitialTab, setPermissionsInitialTab] = useState(0);
   const [selectedRun, setSelectedRun] = useState<AgentRun | null>(null);
+
+  const openDrawer = (tab: number) => {
+    setPermissionsInitialTab(tab);
+    setPermissionsOpen(true);
+  };
 
   // Pre-fill search from URL query param (e.g. /agent?search=AbuseIPDB)
   useEffect(() => {
@@ -153,8 +159,24 @@ const AgentActivityPage = () => {
             </Tooltip>
             <Button
               size="small"
+              startIcon={<Play size={14} />}
+              onClick={() => openDrawer(1)}
+              sx={{
+                border: '1px solid hsl(var(--border))',
+                borderRadius: 1.5,
+                color: 'hsl(var(--muted-foreground))',
+                textTransform: 'none',
+                fontSize: '0.8rem',
+                px: 1.5,
+                '&:hover': { bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--foreground))' },
+              }}
+            >
+              Run Action
+            </Button>
+            <Button
+              size="small"
               startIcon={<Settings size={14} />}
-              onClick={() => setPermissionsOpen(true)}
+              onClick={() => openDrawer(0)}
               sx={{
                 border: '1px solid hsl(var(--border))',
                 borderRadius: 1.5,
@@ -281,7 +303,7 @@ const AgentActivityPage = () => {
       </Box>
 
       {/* Permissions drawer */}
-      <AgentPermissionsDrawer open={permissionsOpen} onClose={() => setPermissionsOpen(false)} />
+      <AgentPermissionsDrawer open={permissionsOpen} onClose={() => setPermissionsOpen(false)} initialTab={permissionsInitialTab} />
 
       {/* Action/view drawer for selected run */}
       <AgentActionDrawer
