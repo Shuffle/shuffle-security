@@ -37,6 +37,7 @@ import {
   MonitorOff,
   UserX,
   KeyRound,
+  CheckCircle2,
   Megaphone,
   AlertTriangle,
   Mail,
@@ -193,6 +194,7 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
     } catch { return { url: '', apikey: '', model: '' }; }
   });
   const [localModelSaved, setLocalModelSaved] = useState(false);
+  const [hasOpenAIAuth, setHasOpenAIAuth] = useState(false);
 
   const handleLocalModelChange = (field: keyof AgentLocalModel, value: string) => {
     setLocalModel(prev => ({ ...prev, [field]: value }));
@@ -226,6 +228,10 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
             image: bestImage || app.large_image || '',
           }));
         setAgentTools(tools);
+
+        // Check for valid OpenAI authentication
+        const openaiAuth = deduped.some(d => d.hasValidAuth && d.app.name?.toLowerCase() === 'openai');
+        setHasOpenAIAuth(openaiAuth);
 
         // If nothing stored yet, enable all by default
         const stored = localStorage.getItem(AGENT_TOOLS_KEY);
@@ -431,7 +437,17 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
         >
           <Tab label="Permissions" icon={<ShieldCheck size={14} />} iconPosition="start" sx={{ gap: 0.75 }} />
           <Tab label="Action" icon={<Play size={14} />} iconPosition="start" sx={{ gap: 0.75 }} />
-          <Tab label="Local Model" icon={<Server size={14} />} iconPosition="start" sx={{ gap: 0.75 }} />
+          <Tab
+            label={
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                Local Model
+                {hasOpenAIAuth && <CheckCircle2 size={13} style={{ color: 'hsl(142, 71%, 45%)' }} />}
+              </Box>
+            }
+            icon={<Server size={14} />}
+            iconPosition="start"
+            sx={{ gap: 0.75 }}
+          />
         </Tabs>
       </Box>
 
