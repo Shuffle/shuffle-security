@@ -115,6 +115,17 @@ const automationConfigs = [
     apiType: 'singul',
     hasConfig: false,
   },
+  {
+    type: 'security_rules',
+    name: 'Security rules',
+    description: 'Applies security rules to the incident data.',
+    icon: SecurityIcon,
+    color: '#3b82f6',
+    apiIcon: '',
+    apiType: 'singul',
+    optionKey: 'rules',
+    hasConfig: true,
+  },
 ];
 
 const getOrgId = (): string | null => {
@@ -148,7 +159,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
   const [selectedWorkflows, setSelectedWorkflows] = useState<Workflow[]>([]);
   const [webhookUrl, setWebhookUrl] = useState('');
   const [ingestionApps, setIngestionApps] = useState<ValidatedIngestionApp[]>([]);
-  const [securityRules, setSecurityRules] = useState('');
+  const [securityRulesText, setSecurityRulesText] = useState('');
 
   const fetchIngestionApps = async () => {
     try {
@@ -234,7 +245,6 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
       setAutomations(allAutomations);
       setHasChanges(false);
       setCleanupTimeout(initialSettings?.timeout || 0);
-      setSecurityRules((initialSettings as any)?.security_rules || '');
 
       // Extract existing workflow IDs and webhook URL
       const workflowAutomation = existingByName.get('Run workflow');
@@ -252,6 +262,14 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
         const urlOption = webhookAutomation.options.find(o => o.key === 'webhook_url');
         if (urlOption?.value) {
           setWebhookUrl(urlOption.value);
+        }
+      }
+
+      const rulesAutomation = existingByName.get('Security rules');
+      if (rulesAutomation?.options) {
+        const rulesOption = rulesAutomation.options.find(o => o.key === 'rules');
+        if (rulesOption?.value) {
+          setSecurityRulesText(rulesOption.value);
         }
       }
     }
@@ -295,6 +313,8 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
           optionValue = selectedWorkflows.map(w => w.id).join(',');
         } else if (config.type === 'webhook') {
           optionValue = webhookUrl;
+        } else if (config.type === 'security_rules') {
+          optionValue = securityRulesText;
         }
         
         const baseAutomation: AutomationApiFormat = {
@@ -328,9 +348,9 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
         automations: apiAutomations,
       };
       if (cleanupTimeout > 0) {
-        payload.settings = { timeout: cleanupTimeout, security_rules: securityRules };
+        payload.settings = { timeout: cleanupTimeout };
       } else {
-        payload.settings = { timeout: 0, security_rules: securityRules };
+        payload.settings = { timeout: 0 };
       }
       
       const response = await fetch(getApiUrl('/api/v2/datastore/automate'), {
@@ -640,6 +660,31 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
                       />
                     </Box>
                   )}
+
+                  {/* Security Rules Configuration */}
+                  {automation.enabled && automation.type === 'security_rules' && (
+                    <Box sx={{ px: 2, pb: 2, pt: 0.5 }}>
+                      <TextField
+                        size="small"
+                        fullWidth
+                        multiline
+                        minRows={2}
+                        maxRows={6}
+                        placeholder="Enter security rules..."
+                        value={securityRulesText}
+                        onChange={(e) => {
+                          setSecurityRulesText(e.target.value);
+                          setHasChanges(true);
+                        }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            bgcolor: 'rgba(0,0,0,0.2)',
+                            fontSize: '0.85rem',
+                          },
+                        }}
+                      />
+                    </Box>
+                  )}
                 </Box>
               );
             })}
@@ -647,64 +692,6 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
         </Box>
 
         <Divider sx={{ my: 3, borderColor: 'rgba(255,255,255,0.06)' }} />
-
-        {/* Security Rules Section */}
-        <Box>
-          <Typography 
-            variant="body2" 
-            color="text.secondary" 
-            sx={{ 
-              mb: 1.5, 
-              fontWeight: 500, 
-              textTransform: 'uppercase', 
-              letterSpacing: 0.5,
-              fontSize: '0.75rem',
-            }}
-          >
-            Security Rules
-          </Typography>
-          <Box 
-            sx={{ 
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: 2,
-              py: 1.5, 
-              px: 2, 
-              bgcolor: 'rgba(255,255,255,0.03)', 
-              borderRadius: 1.5,
-              border: '1px solid rgba(255,255,255,0.06)',
-            }}
-          >
-            <SecurityIcon sx={{ color: securityRules ? '#3b82f6' : 'rgba(255,255,255,0.4)', fontSize: 22, mt: 0.5 }} />
-            <Box sx={{ flex: 1 }}>
-              <Typography sx={{ fontSize: '0.95rem', color: securityRules ? 'text.primary' : 'rgba(255,255,255,0.6)', mb: 0.5 }}>
-                Custom security rules
-              </Typography>
-              <Typography variant="caption" sx={{ color: 'text.disabled', display: 'block', mb: 1.5 }}>
-                Define security rules to apply to incidents in this category
-              </Typography>
-              <TextField
-                size="small"
-                fullWidth
-                multiline
-                minRows={2}
-                maxRows={6}
-                placeholder="Enter security rules..."
-                value={securityRules}
-                onChange={(e) => {
-                  setSecurityRules(e.target.value);
-                  setHasChanges(true);
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    bgcolor: 'rgba(0,0,0,0.2)',
-                    fontSize: '0.85rem',
-                  },
-                }}
-              />
-            </Box>
-          </Box>
-        </Box>
 
         {/* Cleanup Section */}
         <Box>
