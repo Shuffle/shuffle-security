@@ -1,4 +1,4 @@
-import { Box, Typography, Chip, Checkbox, Skeleton } from '@mui/material';
+import { Box, Typography, Chip, Checkbox, Skeleton, Tooltip } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
@@ -34,14 +34,20 @@ interface DisplayIncident {
   correlationCount?: number;
 }
 
+interface IngestionApp {
+  name: string;
+  image?: string;
+}
+
 interface IncidentCardViewProps {
   incidents: DisplayIncident[];
   onIncidentClick?: (incident: DisplayIncident) => void;
-  onFilterChange?: (type: 'severity' | 'status' | 'assignee', value: string) => void;
+  onFilterChange?: (type: 'severity' | 'status' | 'assignee' | 'source', value: string) => void;
   getIncidentUrl?: (incident: DisplayIncident) => string;
   selectedIds?: Set<string>;
   onSelectionChange?: (selectedIds: Set<string>) => void;
   isLoading?: boolean;
+  ingestionApps?: IngestionApp[];
 }
 
 // Skeleton card component for loading state
@@ -166,6 +172,7 @@ export const IncidentCardView = ({
   selectedIds = new Set(),
   onSelectionChange,
   isLoading = false,
+  ingestionApps = [],
 }: IncidentCardViewProps) => {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [hasRendered, setHasRendered] = useState(false);
@@ -240,6 +247,13 @@ export const IncidentCardView = ({
         const iconColor = statusInfo.color;
         const selected = isSelected(incident.id);
         const showCheck = showCheckbox(incident.id);
+
+        // Match source to an ingestion app for logo
+        const sourceApp = incident.source 
+          ? ingestionApps.find(app => 
+              app.name.toLowerCase().replace(/[\s_-]/g, '') === incident.source!.toLowerCase().replace(/[\s_-]/g, '')
+            )
+          : undefined;
 
         return (
           <motion.div
@@ -421,6 +435,37 @@ export const IncidentCardView = ({
 
               {/* Chips */}
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
+                {sourceApp?.image && (
+                  <Tooltip title={`Filter by ${incident.source}`} placement="bottom">
+                    <Box
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        onFilterChange?.('source', incident.source || '');
+                      }}
+                      sx={{
+                        width: 24,
+                        height: 24,
+                        borderRadius: 1,
+                        overflow: 'hidden',
+                        cursor: 'pointer',
+                        border: '1px solid hsl(var(--border))',
+                        '&:hover': { borderColor: 'hsl(var(--border-subtle))', transform: 'scale(1.1)' },
+                        transition: 'all 0.15s',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <img
+                        src={sourceApp.image}
+                        alt={incident.source}
+                        style={{ width: 18, height: 18, objectFit: 'contain' }}
+                      />
+                    </Box>
+                  </Tooltip>
+                )}
                 {(incident.correlationCount ?? 0) > 0 && (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'hsl(var(--muted-foreground))' }}>
                     <Link2 size={14} />
