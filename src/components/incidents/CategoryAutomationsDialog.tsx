@@ -837,9 +837,11 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
             setAutomations(automations.map(a => {
               if (a.type === 'enrich') return { ...a, enabled: true, trigger: 'on_edit' as const };
               if (a.type === 'security_rules') return { ...a, enabled: true, trigger: 'on_edit' as const };
+              if (a.type === 'ai_agent') return { ...a, enabled: true, trigger: 'on_edit' as const };
               return a;
             }));
             setSecurityRulesText('merge if always; deny if has_deleted_field');
+            setAiAgentPrompts([`Provide a short triage plan for the incident in english and update it in the internal shuffle datastore with the same key and category 'shuffle-security_incidents'.   Make sure it is JSON formatted like {"tasks": []} so that we can inject it in existing data. Some incidents are duds and should be closed quickly. Others are important ones. Others are missing important details. Use the following format for each task, and ONLY update the relevant fields: [{"assignee": "AI Agent", "title": "Title of the task", "category": "triage/containment/recovery/communication/documentation", "completed": false, "createdBy": "ai-agent@shuffler.io"}]. ONLY output as JSON and nothing more.   If the incident has RELEVANT tasks, add to them if necessary. When done, ALWAYS make sure the "status" is inProgress.`]);
             setHasChanges(true);
           }}
           sx={{ textTransform: 'none', color: 'text.secondary', fontSize: '0.8rem' }}
