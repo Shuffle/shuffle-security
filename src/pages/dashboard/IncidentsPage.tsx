@@ -246,9 +246,10 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
 
 interface Filters {
   severity: string | null;
-  status: string | string[] | null;  // Can be single value or array for multi-status filter
+  status: string | string[] | null;
   tlp: string | null;
   assignee: string | null;
+  source: string | null;
 }
 
 const IncidentsPage = () => {
@@ -256,7 +257,7 @@ const IncidentsPage = () => {
   const currentUsername = userInfo?.username || '';
   const { users, loading: usersLoading } = useUsers();
 
-  const [filters, setFilters] = useState<Filters>({ severity: null, status: null, tlp: null, assignee: null });
+  const [filters, setFilters] = useState<Filters>({ severity: null, status: null, tlp: null, assignee: null, source: null });
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [automationsDialogOpen, setAutomationsDialogOpen] = useState(false);
   const [categoryAutomations, setCategoryAutomations] = useState<CategoryAutomation[] | null>(null);
@@ -437,6 +438,9 @@ const IncidentsPage = () => {
     if (filters.tlp) {
       result = result.filter(i => i.tlp === filters.tlp);
     }
+    if (filters.source) {
+      result = result.filter(i => (i.source || '').toLowerCase() === filters.source!.toLowerCase());
+    }
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -499,7 +503,7 @@ const IncidentsPage = () => {
   };
 
   const resetToDefaults = () => {
-    setFilters({ severity: null, status: ['new', 'in_progress'], tlp: null, assignee: null });
+    setFilters({ severity: null, status: ['new', 'in_progress'], tlp: null, assignee: null, source: null });
     setSearchQuery('');
     setSelectedIds(new Set());
   };
@@ -607,6 +611,7 @@ const IncidentsPage = () => {
 
   const isDefaultFilter = !filters.severity && 
     !filters.tlp && 
+    !filters.source &&
     filters.assignee === null && 
     !searchQuery.trim() &&
     Array.isArray(filters.status) && 
@@ -977,6 +982,31 @@ const IncidentsPage = () => {
                 )
               )}
 
+              {filters.source && (
+                <Chip
+                  label={`Source: ${filters.source}`}
+                  size="small"
+                  onDelete={() => setFilters(prev => ({ ...prev, source: null }))}
+                  avatar={
+                    (() => {
+                      const app = ingestionApps.find(a => 
+                        a.name.toLowerCase().replace(/[\s_-]/g, '') === filters.source!.toLowerCase().replace(/[\s_-]/g, '')
+                      );
+                      return app?.image ? (
+                        <img src={app.image} alt="" style={{ width: 16, height: 16, objectFit: 'contain', borderRadius: 2 }} />
+                      ) : undefined;
+                    })()
+                  }
+                  sx={{ 
+                    textTransform: 'capitalize',
+                    backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                    color: '#60a5fa',
+                    fontWeight: 500,
+                    '& .MuiChip-deleteIcon': { color: '#60a5fa' },
+                  }}
+                />
+              )}
+
               {!isDefaultFilter && (
                 <Button size="small" onClick={resetToDefaults} sx={{ minWidth: 'auto', height: 36 }}>
                   Reset
@@ -1008,6 +1038,7 @@ const IncidentsPage = () => {
             selectedIds={selectedIds}
             onSelectionChange={setSelectedIds}
             isLoading={isLoading}
+            ingestionApps={ingestionApps}
             onFilterChange={(type, value) => {
               setFilters(prev => ({
                 ...prev,
