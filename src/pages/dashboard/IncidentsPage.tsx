@@ -262,6 +262,8 @@ const IncidentsPage = () => {
   const [automationsDialogOpen, setAutomationsDialogOpen] = useState(false);
   const [categoryAutomations, setCategoryAutomations] = useState<CategoryAutomation[] | null>(null);
   const [ingestionApps, setIngestionApps] = useState<ValidatedIngestionApp[]>([]);
+  const [ingestWorkflowId, setIngestWorkflowId] = useState<string | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkResolveDialogOpen, setBulkResolveDialogOpen] = useState(false);
@@ -324,6 +326,7 @@ const IncidentsPage = () => {
           const ingestWorkflow = findIngestTicketsWorkflow(workflowList);
           if (ingestWorkflow) {
             workflowAppNames = extractWorkflowAppNames(ingestWorkflow);
+            setIngestWorkflowId(ingestWorkflow.id);
           }
         }
 
@@ -777,6 +780,49 @@ const IncidentsPage = () => {
                   <AddIcon sx={{ fontSize: 16 }} />
                 </IconButton>
               </Tooltip>
+              {ingestWorkflowId && (
+                <Tooltip title="Sync now">
+                  <IconButton
+                    size="small"
+                    disabled={isSyncing}
+                    onClick={async () => {
+                      setIsSyncing(true);
+                      try {
+                        const resp = await fetch(getApiUrl(`/api/v1/workflows/${ingestWorkflowId}/execute`), {
+                          method: 'POST',
+                          credentials: 'include',
+                          headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+                          body: JSON.stringify({ execution_source: 'manual', start: '' }),
+                        });
+                        if (resp.ok) {
+                          toast.success('Sync started — new incidents will appear shortly');
+                          // Refresh incidents after a short delay
+                          setTimeout(() => fetchItems(), 3000);
+                        } else {
+                          toast.error('Failed to trigger sync');
+                        }
+                      } catch {
+                        toast.error('Failed to trigger sync');
+                      } finally {
+                        setIsSyncing(false);
+                      }
+                    }}
+                    sx={{
+                      width: 28,
+                      height: 28,
+                      color: isSyncing ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: 1,
+                      '&:hover': {
+                        bgcolor: 'hsl(var(--muted))',
+                        color: 'hsl(var(--primary))',
+                      },
+                    }}
+                  >
+                    {isSyncing ? <CircularProgress size={14} color="inherit" /> : <RefreshIcon sx={{ fontSize: 16 }} />}
+                  </IconButton>
+                </Tooltip>
+              )}
             </Box>
           )}
 
