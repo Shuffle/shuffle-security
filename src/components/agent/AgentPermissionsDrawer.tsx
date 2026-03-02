@@ -53,6 +53,7 @@ import AgentActionDrawer from '@/components/agent/AgentActionDrawer';
 import AgentIcon from '@/components/agent/AgentIcon';
 import AddIcon from '@mui/icons-material/Add';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
+import SaveIcon from '@mui/icons-material/Save';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { deduplicateAuthApps } from '@/lib/utils';
 import { SingulJS } from '@/lib/singul-local';
@@ -122,6 +123,13 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
 };
 
 const AGENT_TOOLS_KEY = 'agent_enabled_tools';
+const AGENT_LOCAL_MODEL_KEY = 'agent_local_model';
+
+interface AgentLocalModel {
+  url: string;
+  apikey: string;
+  model: string;
+}
 
 interface AgentTool {
   id: string;
@@ -176,6 +184,26 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
   });
   const [toolsLoading, setToolsLoading] = useState(false);
   const [toolsPopover, setToolsPopover] = useState<{ anchor: HTMLElement; tool: AgentTool } | null>(null);
+
+  // Local model state
+  const [localModel, setLocalModel] = useState<AgentLocalModel>(() => {
+    try {
+      const stored = localStorage.getItem(AGENT_LOCAL_MODEL_KEY);
+      return stored ? JSON.parse(stored) : { url: '', apikey: '', model: '' };
+    } catch { return { url: '', apikey: '', model: '' }; }
+  });
+  const [localModelSaved, setLocalModelSaved] = useState(false);
+
+  const handleLocalModelChange = (field: keyof AgentLocalModel, value: string) => {
+    setLocalModel(prev => ({ ...prev, [field]: value }));
+    setLocalModelSaved(false);
+  };
+
+  const saveLocalModel = () => {
+    localStorage.setItem(AGENT_LOCAL_MODEL_KEY, JSON.stringify(localModel));
+    setLocalModelSaved(true);
+    setTimeout(() => setLocalModelSaved(false), 2000);
+  };
 
   // Fetch authenticated apps for tools list
   const fetchAgentTools = useCallback(async () => {
@@ -403,6 +431,7 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
         >
           <Tab label="Permissions" icon={<ShieldCheck size={14} />} iconPosition="start" sx={{ gap: 0.75 }} />
           <Tab label="Action" icon={<Play size={14} />} iconPosition="start" sx={{ gap: 0.75 }} />
+          <Tab label="Local Model" icon={<Server size={14} />} iconPosition="start" sx={{ gap: 0.75 }} />
         </Tabs>
       </Box>
 
@@ -1063,6 +1092,131 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
               }}
             >
               View all activity
+            </Button>
+          </Box>
+        )}
+
+        {activeTab === 2 && (
+          /* ── Local Model Tab ── */
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+            <Box sx={{
+              px: 2.5,
+              py: 2,
+              borderRadius: 2,
+              border: '1px solid hsl(var(--border))',
+              bgcolor: 'hsla(var(--muted) / 0.3)',
+            }}>
+              <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.5 }}>
+                Configure a local or self-hosted model endpoint for agent operations.
+              </Typography>
+            </Box>
+
+            {/* URL */}
+            <Box>
+              <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>
+                URL
+              </Typography>
+              <InputBase
+                value={localModel.url}
+                onChange={(e) => handleLocalModelChange('url', e.target.value)}
+                placeholder="http://localhost:11434/v1"
+                fullWidth
+                sx={{
+                  fontSize: '0.82rem',
+                  color: 'hsl(var(--foreground))',
+                  px: 1.5,
+                  py: 1,
+                  borderRadius: 2,
+                  border: '1px solid hsl(var(--border))',
+                  bgcolor: 'hsl(var(--card))',
+                  fontFamily: "'JetBrains Mono', monospace",
+                  '& input::placeholder': { color: 'hsl(var(--muted-foreground))', opacity: 0.6 },
+                  '&:focus-within': {
+                    borderColor: 'hsla(var(--primary) / 0.5)',
+                    boxShadow: '0 0 0 3px hsla(var(--primary) / 0.08)',
+                  },
+                }}
+              />
+            </Box>
+
+            {/* API Key */}
+            <Box>
+              <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>
+                API Key
+              </Typography>
+              <InputBase
+                value={localModel.apikey}
+                onChange={(e) => handleLocalModelChange('apikey', e.target.value)}
+                placeholder="sk-..."
+                type="password"
+                fullWidth
+                sx={{
+                  fontSize: '0.82rem',
+                  color: 'hsl(var(--foreground))',
+                  px: 1.5,
+                  py: 1,
+                  borderRadius: 2,
+                  border: '1px solid hsl(var(--border))',
+                  bgcolor: 'hsl(var(--card))',
+                  fontFamily: "'JetBrains Mono', monospace",
+                  '& input::placeholder': { color: 'hsl(var(--muted-foreground))', opacity: 0.6 },
+                  '&:focus-within': {
+                    borderColor: 'hsla(var(--primary) / 0.5)',
+                    boxShadow: '0 0 0 3px hsla(var(--primary) / 0.08)',
+                  },
+                }}
+              />
+            </Box>
+
+            {/* Model */}
+            <Box>
+              <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>
+                Model
+              </Typography>
+              <InputBase
+                value={localModel.model}
+                onChange={(e) => handleLocalModelChange('model', e.target.value)}
+                placeholder="llama3, mistral, gpt-4o..."
+                fullWidth
+                sx={{
+                  fontSize: '0.82rem',
+                  color: 'hsl(var(--foreground))',
+                  px: 1.5,
+                  py: 1,
+                  borderRadius: 2,
+                  border: '1px solid hsl(var(--border))',
+                  bgcolor: 'hsl(var(--card))',
+                  fontFamily: "'JetBrains Mono', monospace",
+                  '& input::placeholder': { color: 'hsl(var(--muted-foreground))', opacity: 0.6 },
+                  '&:focus-within': {
+                    borderColor: 'hsla(var(--primary) / 0.5)',
+                    boxShadow: '0 0 0 3px hsla(var(--primary) / 0.08)',
+                  },
+                }}
+              />
+            </Box>
+
+            {/* Save button */}
+            <Button
+              variant="contained"
+              startIcon={localModelSaved ? <ShieldCheck size={14} /> : <SaveIcon sx={{ fontSize: 14 }} />}
+              onClick={saveLocalModel}
+              sx={{
+                bgcolor: localModelSaved ? 'hsl(var(--severity-low))' : 'hsl(var(--primary))',
+                color: localModelSaved ? '#fff' : 'hsl(var(--primary-foreground))',
+                textTransform: 'none',
+                fontSize: '0.82rem',
+                fontWeight: 600,
+                borderRadius: 2,
+                alignSelf: 'flex-start',
+                px: 3,
+                '&:hover': {
+                  bgcolor: localModelSaved ? 'hsl(var(--severity-low))' : 'hsl(var(--primary))',
+                  filter: 'brightness(1.1)',
+                },
+              }}
+            >
+              {localModelSaved ? 'Saved' : 'Save Configuration'}
             </Button>
           </Box>
         )}
