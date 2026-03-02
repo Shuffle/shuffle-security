@@ -446,7 +446,7 @@ export const IncidentCardView = ({
                       sx={{
                         width: 24,
                         height: 24,
-                        borderRadius: 1,
+                        borderRadius: '6px',
                         overflow: 'hidden',
                         cursor: 'pointer',
                         border: '1px solid hsl(var(--border))',
