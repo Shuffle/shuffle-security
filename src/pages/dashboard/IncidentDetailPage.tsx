@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef, forwardRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -292,23 +292,23 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
 };
 
 // Collapsible Section Component
-const Section = ({ 
-  title, 
-  icon: Icon, 
-  children, 
-  defaultOpen = true,
-  badge,
-}: { 
+const Section = forwardRef<HTMLDivElement, { 
   title: string; 
   icon: React.ElementType; 
   children: React.ReactNode; 
   defaultOpen?: boolean;
   badge?: string | number;
-}) => {
+}>(({ 
+  title, 
+  icon: Icon, 
+  children, 
+  defaultOpen = true,
+  badge,
+}, ref) => {
   const [open, setOpen] = useState(defaultOpen);
   
   return (
-    <Box sx={{ 
+    <Box ref={ref} sx={{ 
       bgcolor: 'rgba(255,255,255,0.02)', 
       borderRadius: 2, 
       border: '1px solid rgba(255,255,255,0.06)',
@@ -351,7 +351,8 @@ const Section = ({
       </Collapse>
     </Box>
   );
-};
+});
+Section.displayName = 'Section';
 
 const IncidentDetailPage = () => {
   const { id } = useParams<{ id: string }>();
