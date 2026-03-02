@@ -292,7 +292,7 @@ export const IncidentCardView = ({
                   borderColor: selected 
                     ? 'hsl(var(--primary) / 0.4)' 
                     : 'hsl(var(--border-subtle))',
-                  transform: showCheck ? 'none' : 'translateX(4px)',
+                  transform: 'none',
                 },
               }}
             >
