@@ -221,7 +221,7 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
         const authData = Array.isArray(result) ? result : (result.data || []);
         const deduped = deduplicateAuthApps(authData.filter((a: any) => a.active || a.validation?.valid));
         const tools: AgentTool[] = deduped
-          .filter(d => d.hasValidAuth)
+          .filter(d => d.hasValidAuth && d.app.name?.toLowerCase() !== 'openai')
           .map(({ app, bestImage }) => ({
             id: app.id,
             name: app.name,
@@ -233,7 +233,19 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
         const openaiAuth = deduped.some(d => d.hasValidAuth && d.app.name?.toLowerCase() === 'openai');
         setHasOpenAIAuth(openaiAuth);
 
-        // If nothing stored yet, enable all by default
+        // Auto-remove OpenAI from enabled tools if present
+        setEnabledTools(prev => {
+          if (prev.has('openai') || prev.has('OpenAI')) {
+            const next = new Set(prev);
+            next.delete('openai');
+            next.delete('OpenAI');
+            localStorage.setItem(AGENT_TOOLS_KEY, JSON.stringify([...next]));
+            return next;
+          }
+          return prev;
+        });
+
+        // If nothing stored yet, enable all (non-OpenAI) by default
         const stored = localStorage.getItem(AGENT_TOOLS_KEY);
         if (!stored) {
           const allNames = new Set(tools.map(t => t.name));
@@ -267,6 +279,22 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
     setActiveTab(initialTab ?? 0);
   }
   prevOpenRef.current = open;
+
+  // Pre-populate selectedApps from enabled tools when switching to Action tab
+  const prevTabRef = useRef(activeTab);
+  useEffect(() => {
+    if (activeTab === 1 && prevTabRef.current !== 1 && agentTools.length > 0) {
+      const enabledAppObjects = agentTools
+        .filter(t => enabledTools.has(t.name))
+        .map(t => ({
+          name: t.name,
+          objectID: t.id,
+          image_url: t.image,
+        } as unknown as AlgoliaSearchApp));
+      setSelectedApps(enabledAppObjects);
+    }
+    prevTabRef.current = activeTab;
+  }, [activeTab, agentTools, enabledTools]);
 
   const toggleExpand = (categoryId: string) => {
     setExpandedCategories(prev =>
