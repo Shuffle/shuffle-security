@@ -277,14 +277,17 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
       }
 
       const aiAutomation = existingByName.get('Run AI Agent');
-      if (aiAutomation?.options) {
-        const promptsOption = aiAutomation.options.find(o => o.key === 'prompts');
-        if (promptsOption?.value) {
-          const parsed = promptsOption.value.split('\n').filter(Boolean);
-          setAiAgentPrompts(parsed.length > 0 ? parsed : ['']);
-        } else {
-          setAiAgentPrompts(['']);
-        }
+      if (aiAutomation?.options && aiAutomation.options.length > 0) {
+        // Options use keys: "action", "action-2", "action-3", etc.
+        const actionOptions = aiAutomation.options
+          .filter(o => o.key === 'action' || /^action-\d+$/.test(o.key))
+          .sort((a, b) => {
+            const numA = a.key === 'action' ? 1 : parseInt(a.key.replace('action-', ''));
+            const numB = b.key === 'action' ? 1 : parseInt(b.key.replace('action-', ''));
+            return numA - numB;
+          });
+        const prompts = actionOptions.map(o => o.value).filter(Boolean);
+        setAiAgentPrompts(prompts.length > 0 ? prompts : ['']);
       } else {
         setAiAgentPrompts(['']);
       }
@@ -324,21 +327,32 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
         const automation = automations.find(a => a.type === config.type);
         const isEnabled = automation?.enabled || false;
         
-        let optionValue = '';
+        // Build options based on type
+        let options: { key: string; value: string }[] = [];
         if (config.type === 'workflow') {
-          optionValue = selectedWorkflows.map(w => w.id).join(',');
+          options = [{ key: config.optionKey || '', value: selectedWorkflows.map(w => w.id).join(',') }];
         } else if (config.type === 'webhook') {
-          optionValue = webhookUrl;
+          options = [{ key: config.optionKey || '', value: webhookUrl }];
         } else if (config.type === 'security_rules') {
-          optionValue = securityRulesText;
+          options = [{ key: config.optionKey || '', value: securityRulesText }];
         } else if (config.type === 'ai_agent') {
-          optionValue = aiAgentPrompts.filter(p => p.trim()).join('\n');
+          // Use "action", "action-2", "action-3" format
+          const validPrompts = aiAgentPrompts.filter(p => p.trim());
+          options = validPrompts.map((prompt, idx) => ({
+            key: idx === 0 ? 'action' : `action-${idx + 1}`,
+            value: prompt,
+          }));
+          if (options.length === 0) {
+            options = [{ key: 'action', value: '' }];
+          }
+        } else {
+          options = [{ key: config.optionKey || '', value: '' }];
         }
         
         const baseAutomation: AutomationApiFormat = {
           name: config.name,
           description: config.description,
-          options: [{ key: config.optionKey || '', value: optionValue }],
+          options,
           icon: config.apiIcon || '',
           enabled: isEnabled,
         };
