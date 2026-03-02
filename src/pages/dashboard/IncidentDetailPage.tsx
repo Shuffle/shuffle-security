@@ -154,6 +154,7 @@ const parseTimestamp = (timestamp: number | string | undefined): number => {
 };
 
 
+
 // Strict check: only return string if it has meaningful non-whitespace content
 // Also rejects raw JSON objects/arrays that shouldn't be displayed as text
 const meaningfulString = (val: unknown): string | undefined => {
@@ -421,6 +422,7 @@ const IncidentDetailPage = () => {
    const [rawJsonText, setRawJsonText] = useState('');
   const [forwardingApps, setForwardingApps] = useState<Array<{ id: string; name: string; large_image: string; categories: string[] }>>([]);
   const [forwardingAppsLoading, setForwardingAppsLoading] = useState(false);
+  const [sourceAppImage, setSourceAppImage] = useState<string | null>(null);
   const [correlations, setCorrelations] = useState<Array<{ key: string; amount: number; ref: string[] }>>([]);
   const [correlationsLoading, setCorrelationsLoading] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -449,6 +451,30 @@ const IncidentDetailPage = () => {
 
   // Fetch agent runs for this incident — deferred until incident loaded
   const { runsForIncident: agentRuns, isLoading: agentRunsLoading } = useIncidentAgentRuns(!loading ? id : undefined);
+
+  // Fetch source app image when incident source is known
+  useEffect(() => {
+    if (!incident?.source) return;
+    const source = incident.source.toLowerCase().replace(/[\s_-]/g, '');
+    fetch(getApiUrl('/api/v1/apps/authentication'), {
+      credentials: 'include',
+      headers: { ...getAuthHeader() },
+    })
+      .then(r => r.json())
+      .then(result => {
+        const authData = result.data || result;
+        if (Array.isArray(authData)) {
+          const match = authData.find((a: any) => {
+            const appName = (a.app?.name || '').toLowerCase().replace(/[\s_-]/g, '');
+            return appName === source;
+          });
+          if (match?.app?.large_image) {
+            setSourceAppImage(match.app.large_image);
+          }
+        }
+      })
+      .catch(() => {});
+  }, [incident?.source]);
 
   // Load incident function (reusable for refresh)
   const loadIncident = useCallback(async (showLoading = true) => {
@@ -1314,12 +1340,17 @@ const IncidentDetailPage = () => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              backgroundColor: `${severityColors[editedSeverity]}15`,
-              border: `1px solid ${severityColors[editedSeverity]}30`,
+              backgroundColor: sourceAppImage ? 'transparent' : `${severityColors[editedSeverity]}15`,
+              border: sourceAppImage ? 'none' : `1px solid ${severityColors[editedSeverity]}30`,
               flexShrink: 0,
+              overflow: 'hidden',
             }}
           >
-            <TaskAltIcon sx={{ fontSize: 28, color: severityColors[editedSeverity] }} />
+            {sourceAppImage ? (
+              <img src={sourceAppImage} alt={incident?.source || ''} style={{ width: 44, height: 44, objectFit: 'contain', borderRadius: 8 }} />
+            ) : (
+              <TaskAltIcon sx={{ fontSize: 28, color: severityColors[editedSeverity] }} />
+            )}
           </Box>
 
           {/* Title and meta */}
@@ -2236,7 +2267,12 @@ const IncidentDetailPage = () => {
                 </Box>
                 <Box sx={{ minWidth: 0 }}>
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>Source</Typography>
-                  <Typography variant="body2" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{incident.source || <Typography component="span" variant="body2" sx={{ color: 'text.disabled', fontStyle: 'italic' }}>Unknown</Typography>}</Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                    {sourceAppImage && (
+                      <img src={sourceAppImage} alt={incident.source || ''} style={{ width: 18, height: 18, objectFit: 'contain', borderRadius: 4 }} />
+                    )}
+                    <Typography variant="body2" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{incident.source || <Typography component="span" variant="body2" sx={{ color: 'text.disabled', fontStyle: 'italic' }}>Unknown</Typography>}</Typography>
+                  </Box>
                 </Box>
                 <Box>
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>Created</Typography>
