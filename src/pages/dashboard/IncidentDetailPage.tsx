@@ -3054,6 +3054,7 @@ const IncidentDetailPage = () => {
                             category: 'cases',
                             key: incident?.id,
                             app_name: app.id,
+                            fields: [{ key: 'key', value: JSON.stringify(ticketPayload) }],
                           };
                       const response = await fetch(getApiUrl('/api/v1/apps/categories/run'), {
                         method: 'POST',
