@@ -447,59 +447,6 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
       </DialogTitle>
 
       <DialogContent sx={{ px: 4, pb: 3 }}>
-        {/* Ingestion Sources */}
-        {ingestionApps.length > 0 && (
-          <Box
-            sx={{
-              mb: 3,
-              p: 2,
-              borderRadius: 2,
-              bgcolor: 'rgba(255,255,255,0.02)',
-              border: '1px solid rgba(255,255,255,0.08)',
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <DownloadIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
-                <Typography sx={{
-                  fontSize: '0.72rem',
-                  fontWeight: 600,
-                  textTransform: 'uppercase',
-                  letterSpacing: 0.5,
-                  color: 'text.secondary',
-                }}>
-                  Ingestion Sources
-                </Typography>
-              </Box>
-              <Typography
-                onClick={() => {
-                  onClose();
-                  navigate('/onboarding/automate');
-                }}
-                sx={{
-                  fontSize: '0.68rem',
-                  color: 'rgba(255,255,255,0.35)',
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  '&:hover': { color: 'rgba(255,255,255,0.6)' },
-                }}
-              >
-                Configure →
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-              {ingestionApps.map(app => (
-                <IngestionSourceButton
-                  key={app.name}
-                  app={app}
-                  allApps={ingestionApps}
-                  onToggled={fetchIngestionApps}
-                />
-              ))}
-            </Box>
-          </Box>
-        )}
-
         {/* Trigger Section */}
         <Box sx={{ mb: 4 }}>
           <Typography 
