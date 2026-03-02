@@ -24,7 +24,8 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
-import { Activity, Bot, CheckCircle2, Circle, AlertCircle, Clock, Wrench, MessageCircleQuestion, Flag, Play, Brain } from 'lucide-react';
+import { Activity, CheckCircle2, Circle, AlertCircle, Clock, Wrench, MessageCircleQuestion, Flag, Play, Brain } from 'lucide-react';
+import AgentIcon from '@/components/agent/AgentIcon';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 import { SingulJS } from '@/lib/singul-local';
 import type { AlgoliaSearchApp, SingulJSHandle } from '@/lib/singul-local';
@@ -498,7 +499,7 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
               color: 'hsl(var(--primary))',
               flexShrink: 0,
             }}>
-              <Bot size={22} />
+              <AgentIcon size={22} />
             </Box>
             <Box sx={{ flex: 1 }}>
               <Typography sx={{ fontWeight: 600, fontSize: '1.05rem', color: 'hsl(var(--foreground))' }}>

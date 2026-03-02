@@ -7,7 +7,7 @@ import {
   Chip,
   InputBase,
 } from '@mui/material';
-import SmartToyOutlinedIcon from '@mui/icons-material/SmartToyOutlined';
+import AgentIcon from '@/components/agent/AgentIcon';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
@@ -340,7 +340,7 @@ const AppMcpChat = ({ appName, appIcon, appId, categories }: AppMcpChatProps) =>
                       sx={{ width: 18, height: 18, '& img': { objectFit: 'contain' } }}
                     />
                   ) : (
-                    <SmartToyOutlinedIcon sx={{ fontSize: 16, color: 'hsl(var(--primary))' }} />
+                    <AgentIcon size={16} />
                   )}
                 </Box>
                 <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>

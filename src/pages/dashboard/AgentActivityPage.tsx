@@ -19,7 +19,8 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { motion } from 'framer-motion';
-import { Bot, Settings } from 'lucide-react';
+import { Settings } from 'lucide-react';
+import AgentIcon from '@/components/agent/AgentIcon';
 import { useAgentActivity } from '@/hooks/useAgentActivity';
 import AgentActivityFeed from '@/components/agent/AgentActivityFeed';
 import AgentActivityStatsPanel from '@/components/agent/AgentActivityStats';
@@ -101,7 +102,7 @@ const AgentActivityPage = () => {
             color: 'hsl(var(--primary))',
             flexShrink: 0,
           }}>
-            <Bot size={26} />
+            <AgentIcon size={26} />
           </Box>
           <Box sx={{ flex: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.25 }}>
