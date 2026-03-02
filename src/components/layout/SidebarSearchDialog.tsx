@@ -184,19 +184,21 @@ export const SidebarSearchDialog = ({ open, onOpenChange }: SidebarSearchDialogP
     }
   }, []);
 
-  // Debounced app search (200ms)
+  // Debounced app search (200ms) — only when dialog is open
   useEffect(() => {
+    if (!open) return;
     if (appDebounceRef.current) clearTimeout(appDebounceRef.current);
     appDebounceRef.current = setTimeout(() => searchApps(query), 200);
     return () => { if (appDebounceRef.current) clearTimeout(appDebounceRef.current); };
-  }, [query, searchApps]);
+  }, [query, searchApps, open]);
 
-  // Debounced correlation search (400ms)
+  // Debounced correlation search (400ms) — only when dialog is open
   useEffect(() => {
+    if (!open) return;
     if (corrDebounceRef.current) clearTimeout(corrDebounceRef.current);
     corrDebounceRef.current = setTimeout(() => searchCorrelations(query), 400);
     return () => { if (corrDebounceRef.current) clearTimeout(corrDebounceRef.current); };
-  }, [query, searchCorrelations]);
+  }, [query, searchCorrelations, open]);
 
   // Reset on open
   useEffect(() => {
@@ -210,10 +212,10 @@ export const SidebarSearchDialog = ({ open, onOpenChange }: SidebarSearchDialogP
     }
   }, [open]);
 
-  // Reset selected index when results change
+  // Reset selected index when query changes
   useEffect(() => {
     setSelectedIndex(0);
-  }, [results.length]);
+  }, [query]);
 
   const handleSelect = (result: SearchResult) => {
     if (result.type === 'nav') {

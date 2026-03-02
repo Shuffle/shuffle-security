@@ -83,7 +83,7 @@ import { MentionInput } from '@/components/incidents/MentionInput';
 import { TaskDateTimePicker } from '@/components/incidents/TaskDateTimePicker';
 import { FileAttachments } from '@/components/incidents/FileAttachments';
 import { toast } from 'sonner';
-import { isAIAssignee, deduplicateTasks } from '@/lib/utils';
+import { isAIAssignee, deduplicateTasks, htmlToPlainText } from '@/lib/utils';
 import { useIncidentAgentRuns } from '@/hooks/useIncidentAgentRuns';
 import AgentActivityFeed from '@/components/agent/AgentActivityFeed';
 
@@ -430,8 +430,8 @@ const IncidentDetailPage = () => {
     category: DATASTORE_CATEGORIES.INCIDENTS,
   });
 
-  // Fetch agent runs for this incident (cached, max once per 60s)
-  const { runsForIncident: agentRuns, isLoading: agentRunsLoading } = useIncidentAgentRuns(id);
+  // Fetch agent runs for this incident — deferred until incident loaded
+  const { runsForIncident: agentRuns, isLoading: agentRunsLoading } = useIncidentAgentRuns(!loading ? id : undefined);
 
   // Load incident function (reusable for refresh)
   const loadIncident = useCallback(async (showLoading = true) => {
@@ -457,7 +457,7 @@ const IncidentDetailPage = () => {
         setEditedTitle(parsed.title);
         // Use desc (new OCSF) first, fall back to message (legacy), convert HTML to readable text
         const rawDesc = parsed.rawOCSF?.desc || parsed.rawOCSF?.message || '';
-        const { htmlToPlainText } = await import('@/lib/utils');
+        
         setEditedMessage(htmlToPlainText(rawDesc));
         setEditedSeverity(parsed.severity);
         // Normalize assignee: must be a valid team member or AI Agent
@@ -565,10 +565,10 @@ const IncidentDetailPage = () => {
     return () => clearInterval(intervalId);
   }, [loadIncident, isSaving]);
 
-  // Fetch correlations
+  // Fetch correlations — deferred until incident is loaded to avoid blocking the UI
   useEffect(() => {
     const fetchCorrelations = async () => {
-      if (!id) return;
+      if (!id || loading) return;
       
       setCorrelationsLoading(true);
       try {
@@ -607,7 +607,7 @@ const IncidentDetailPage = () => {
     };
 
     fetchCorrelations();
-  }, [id]);
+  }, [id, loading]);
 
   // Auto-save with debounce
   const saveToDatastore = useCallback(async () => {
