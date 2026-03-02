@@ -615,6 +615,7 @@ const IncidentsPage = () => {
     filters.status.includes('in_progress');
 
   // Show empty state when no relevant incidents exist (after loading completes)
+  // But NOT when there was a load error — show error state instead
   if (hasFetched && !isLoading && relevantIncidents.length === 0 && irrelevantCount === 0) {
     return (
       <motion.div
@@ -656,7 +657,58 @@ const IncidentsPage = () => {
           </Box>
         </Box>
 
-        <IncidentsEmptyState />
+        {error ? (
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              py: 12,
+              px: 4,
+              textAlign: 'center',
+              maxWidth: 520,
+              mx: 'auto',
+            }}
+          >
+            <Box
+              sx={{
+                width: 80,
+                height: 80,
+                borderRadius: '20px',
+                backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                border: '1px solid rgba(239, 68, 68, 0.15)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                mb: 4,
+              }}
+            >
+              <RefreshIcon sx={{ fontSize: 36, color: '#ef4444', opacity: 0.8 }} />
+            </Box>
+            <Typography variant="h5" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))', mb: 1.5 }}>
+              Failed to load incidents
+            </Typography>
+            <Typography variant="body1" sx={{ color: 'hsl(var(--muted-foreground))', mb: 5, lineHeight: 1.7, maxWidth: 420 }}>
+              There was a problem connecting to the server. Check your network connection and try again.
+            </Typography>
+            <Button
+              variant="contained"
+              size="large"
+              startIcon={<RefreshIcon />}
+              onClick={() => fetchItems()}
+              sx={{
+                px: 4, py: 1.5, borderRadius: 2, textTransform: 'none', fontWeight: 600, fontSize: '0.95rem',
+                backgroundColor: '#FF6600',
+                '&:hover': { backgroundColor: '#e55c00' },
+              }}
+            >
+              Retry
+            </Button>
+          </Box>
+        ) : (
+          <IncidentsEmptyState />
+        )}
 
         <CreateIncidentDialog
           open={createDialogOpen}
