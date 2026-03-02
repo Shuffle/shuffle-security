@@ -22,8 +22,8 @@ const footerLinks = {
   ],
 };
 
-// Shutdown logo SVG component
-const ShutdownLogo = () => (
+// Shuffle logo SVG component
+const ShuffleLogo = () => (
   <svg width="28" height="28" viewBox="0 0 56 56" fill="none">
     <path
       d="M14 14h28v6H20v16h16v-10h-8v-6h14v22H14V14z"
@@ -46,7 +46,7 @@ export const Footer = () => {
         <Grid container spacing={8}>
           <Grid size={{ xs: 12, md: 4 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-              <ShutdownLogo />
+              <ShuffleLogo />
               <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5 }}>
                 <Typography
                   variant="h6"
@@ -57,7 +57,7 @@ export const Footer = () => {
                     WebkitTextFillColor: 'transparent',
                   }}
                 >
-                  Shutdown
+                  Shuffle
                 </Typography>
                 <Typography
                   variant="h6"
@@ -152,7 +152,7 @@ export const Footer = () => {
           }}
         >
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            © 2026 Shutdown Security. All rights reserved.
+            © 2026 Shuffle Security. All rights reserved.
           </Typography>
           <Stack direction="row" spacing={3}>
             <MuiLink 

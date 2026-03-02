@@ -78,7 +78,7 @@ export const WelcomeStep = ({ onSelect, selectedChallenge }: WelcomeStepProps) =
             <Sparkles size={16} color="#FF6600" />
           </motion.div>
           <Typography variant="caption" sx={{ color: '#FF6600', fontWeight: 600, letterSpacing: '0.5px' }}>
-            WELCOME TO SHUTDOWN
+            WELCOME TO SHUFFLE
           </Typography>
         </Box>
       </motion.div>

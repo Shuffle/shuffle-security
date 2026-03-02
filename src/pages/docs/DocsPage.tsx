@@ -14,7 +14,7 @@ const DocsPage = () => {
   const docTitle = slug === 'index' ? 'Documentation' : slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   usePageMeta({
     title: docTitle,
-    description: `Shutdown Security documentation — ${docTitle}. Learn how to set up and use the platform.`,
+    description: `Shuffle Security documentation — ${docTitle}. Learn how to set up and use the platform.`,
     url: `/docs/${slug}`,
   });
 

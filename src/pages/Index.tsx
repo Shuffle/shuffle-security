@@ -8,7 +8,7 @@ import { usePageMeta } from '@/hooks/usePageMeta';
 
 const Index = () => {
   usePageMeta({
-    title: 'Shutdown Security',
+    title: 'Shuffle Security',
     description: 'Open-source AI-powered incident response platform with 3,000+ integrations. Automatic security you control — cloud, on-prem, hybrid.',
     url: '/',
   });

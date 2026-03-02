@@ -1,4 +1,4 @@
-# Shutdown Security
+# Shuffle Security
 
 A security operations platform for managing alerts, cases, and incident response workflows.
 
