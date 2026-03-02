@@ -119,13 +119,13 @@ const automationConfigs = [
   },
   {
     type: 'security_rules',
-    name: 'Security rules',
-    description: 'Applies security rules to the incident data.',
+    name: 'Security Rules',
+    description: 'Describes security rules that are validated BEFORE an update occurs. This is in order for bad writes to be avoided. Control: allow, deny, merge, overwrite. Logic: if, or, and. Functions: same_shape, is_superset, has_deleted_field',
     icon: SecurityIcon,
     color: '#3b82f6',
     apiIcon: '',
-    apiType: 'singul',
-    optionKey: 'rules',
+    apiType: '',
+    optionKey: 'rule',
     hasConfig: true,
   },
 ];
@@ -268,9 +268,9 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
         }
       }
 
-      const rulesAutomation = existingByName.get('Security rules');
+      const rulesAutomation = existingByName.get('Security Rules');
       if (rulesAutomation?.options) {
-        const rulesOption = rulesAutomation.options.find(o => o.key === 'rules');
+        const rulesOption = rulesAutomation.options.find(o => o.key === 'rule');
         if (rulesOption?.value) {
           setSecurityRulesText(rulesOption.value);
         }
