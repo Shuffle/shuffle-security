@@ -449,8 +449,8 @@ export const IncidentCardView = ({
                         borderRadius: '6px',
                         overflow: 'hidden',
                         cursor: 'pointer',
-                        border: '1px solid hsl(var(--border))',
-                        '&:hover': { borderColor: 'hsl(var(--border-subtle))', transform: 'scale(1.1)' },
+                        border: 'none',
+                        '&:hover': { transform: 'scale(1.1)' },
                         transition: 'all 0.15s',
                         display: 'flex',
                         alignItems: 'center',
@@ -461,7 +461,7 @@ export const IncidentCardView = ({
                       <img
                         src={sourceApp.image}
                         alt={incident.source}
-                        style={{ width: 18, height: 18, objectFit: 'contain', borderRadius: 4 }}
+                        style={{ width: 22, height: 22, objectFit: 'contain', borderRadius: '6px' }}
                       />
                     </Box>
                   </Tooltip>
