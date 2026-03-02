@@ -27,6 +27,7 @@ import WebhookIcon from '@mui/icons-material/Webhook';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import EnhancedEncryptionIcon from '@mui/icons-material/EnhancedEncryption';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
+import SecurityIcon from '@mui/icons-material/Security';
 import { toast } from 'sonner';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -147,6 +148,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
   const [selectedWorkflows, setSelectedWorkflows] = useState<Workflow[]>([]);
   const [webhookUrl, setWebhookUrl] = useState('');
   const [ingestionApps, setIngestionApps] = useState<ValidatedIngestionApp[]>([]);
+  const [securityRules, setSecurityRules] = useState('');
 
   const fetchIngestionApps = async () => {
     try {
@@ -232,6 +234,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
       setAutomations(allAutomations);
       setHasChanges(false);
       setCleanupTimeout(initialSettings?.timeout || 0);
+      setSecurityRules((initialSettings as any)?.security_rules || '');
 
       // Extract existing workflow IDs and webhook URL
       const workflowAutomation = existingByName.get('Run workflow');
@@ -325,9 +328,9 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
         automations: apiAutomations,
       };
       if (cleanupTimeout > 0) {
-        payload.settings = { timeout: cleanupTimeout };
+        payload.settings = { timeout: cleanupTimeout, security_rules: securityRules };
       } else {
-        payload.settings = { timeout: 0 };
+        payload.settings = { timeout: 0, security_rules: securityRules };
       }
       
       const response = await fetch(getApiUrl('/api/v2/datastore/automate'), {
@@ -644,6 +647,64 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
         </Box>
 
         <Divider sx={{ my: 3, borderColor: 'rgba(255,255,255,0.06)' }} />
+
+        {/* Security Rules Section */}
+        <Box>
+          <Typography 
+            variant="body2" 
+            color="text.secondary" 
+            sx={{ 
+              mb: 1.5, 
+              fontWeight: 500, 
+              textTransform: 'uppercase', 
+              letterSpacing: 0.5,
+              fontSize: '0.75rem',
+            }}
+          >
+            Security Rules
+          </Typography>
+          <Box 
+            sx={{ 
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: 2,
+              py: 1.5, 
+              px: 2, 
+              bgcolor: 'rgba(255,255,255,0.03)', 
+              borderRadius: 1.5,
+              border: '1px solid rgba(255,255,255,0.06)',
+            }}
+          >
+            <SecurityIcon sx={{ color: securityRules ? '#3b82f6' : 'rgba(255,255,255,0.4)', fontSize: 22, mt: 0.5 }} />
+            <Box sx={{ flex: 1 }}>
+              <Typography sx={{ fontSize: '0.95rem', color: securityRules ? 'text.primary' : 'rgba(255,255,255,0.6)', mb: 0.5 }}>
+                Custom security rules
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.disabled', display: 'block', mb: 1.5 }}>
+                Define security rules to apply to incidents in this category
+              </Typography>
+              <TextField
+                size="small"
+                fullWidth
+                multiline
+                minRows={2}
+                maxRows={6}
+                placeholder="Enter security rules..."
+                value={securityRules}
+                onChange={(e) => {
+                  setSecurityRules(e.target.value);
+                  setHasChanges(true);
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    bgcolor: 'rgba(0,0,0,0.2)',
+                    fontSize: '0.85rem',
+                  },
+                }}
+              />
+            </Box>
+          </Box>
+        </Box>
 
         {/* Cleanup Section */}
         <Box>
