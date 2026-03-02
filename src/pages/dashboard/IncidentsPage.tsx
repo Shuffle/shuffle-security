@@ -19,6 +19,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { useDatastore } from '@/hooks/useDatastore';
@@ -819,7 +820,7 @@ const IncidentsPage = () => {
                       },
                     }}
                   >
-                    {isSyncing ? <CircularProgress size={14} color="inherit" /> : <RefreshIcon sx={{ fontSize: 16 }} />}
+                    {isSyncing ? <CircularProgress size={14} color="inherit" /> : <PlayArrowIcon sx={{ fontSize: 16 }} />}
                   </IconButton>
                 </Tooltip>
               )}
