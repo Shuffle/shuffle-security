@@ -502,7 +502,7 @@ const IncidentDetailPage = () => {
         setEditedObservables(parsed.observables || []);
         const customAttrs = parsed.rawOCSF?.metadata?.extensions?.custom_attributes;
         // Support both customFields and custom_fields naming at various levels
-        const loadedCustomFields = 
+        let loadedCustomFields: any = 
           (parsed.rawOCSF as any)?.customFields ||
           (parsed.rawOCSF as any)?.custom_fields ||
           customAttrs?.customFields ||
@@ -510,11 +510,32 @@ const IncidentDetailPage = () => {
           parsed.customFields ||
           {};
         
+        // If customFields resolved to a JSON string, parse it into an object
+        if (typeof loadedCustomFields === 'string') {
+          console.warn('[CustomFields] customFields was a string, parsing:', loadedCustomFields.substring(0, 200));
+          try {
+            const parsed2 = JSON.parse(loadedCustomFields);
+            if (parsed2 && typeof parsed2 === 'object' && !Array.isArray(parsed2)) {
+              loadedCustomFields = parsed2;
+            } else {
+              console.warn('[CustomFields] Parsed value is not a plain object, ignoring');
+              loadedCustomFields = {};
+            }
+          } catch {
+            console.warn('[CustomFields] Failed to parse string as JSON, ignoring');
+            loadedCustomFields = {};
+          }
+        } else if (Array.isArray(loadedCustomFields)) {
+          console.warn('[CustomFields] customFields was an array, converting to empty object');
+          loadedCustomFields = {};
+        }
+        
         // Log custom fields size — large custom_fields are a known perf bottleneck
         const cfStr = JSON.stringify(loadedCustomFields);
         if (cfStr.length > 5_000) {
           console.warn(`[Perf] customFields is large: ${(cfStr.length / 1024).toFixed(1)}KB`);
         }
+        console.log('[CustomFields] Loaded fields:', Object.keys(loadedCustomFields));
         
         setEditedCustomFields(loadedCustomFields);
         setActivity(parsed.activity || []);
