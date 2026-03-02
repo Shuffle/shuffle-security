@@ -277,8 +277,8 @@ const AppDetailPage = () => {
   usePageMeta({
     title: displayName ? `${displayName} Integration` : 'App Integration',
     description: appInfo?.description
-      ? `${displayName} — ${appInfo.description}. Connect and automate with Shutdown Security.`
-      : `Connect ${displayName} to Shutdown Security. Automate workflows, run AI-powered actions, and integrate with 3,000+ tools.`,
+      ? `${displayName} — ${appInfo.description}. Connect and automate with Shuffle Security.`
+      : `Connect ${displayName} to Shuffle Security. Automate workflows, run AI-powered actions, and integrate with 3,000+ tools.`,
     image: resolvedImage || undefined,
     url: `/apps/${appname}`,
   });

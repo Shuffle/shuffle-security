@@ -22,8 +22,8 @@ export default defineConfig(({ mode }) => ({
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
       },
       manifest: {
-        name: "Shutdown Security",
-        short_name: "Shutdown",
+        name: "Shuffle Security",
+        short_name: "Shuffle",
         description: "Open-source AI-powered incident response platform with 3,000+ integrations.",
         start_url: "/",
         display: "standalone",

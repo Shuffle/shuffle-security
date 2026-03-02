@@ -1,5 +1,5 @@
 // OCSF Incident Finding Schema (class_uid: 2005)
-// Full specification with custom metadata extensions for Shuffle/Shutdown Security
+// Full specification with custom metadata extensions for Shuffle Security
 
 // ============================================================================
 // TLP (Traffic Light Protocol) - Integer-based per OCSF
@@ -171,7 +171,7 @@ export interface OCSFIncidentFinding {
         comments?: Comment[];
         tlp?: number;
         
-        // Custom extensions for Shuffle/Shutdown Security
+        // Custom extensions for Shuffle Security
         tasks?: IncidentTask[];
         observables?: Observable[];
         customFields?: Record<string, string | number | boolean>;
