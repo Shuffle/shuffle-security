@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import AgentIcon from '@/components/agent/AgentIcon';
 import {
   Box,
   Typography,
@@ -358,8 +359,8 @@ export const TaskEditor = ({
                         animation: task.aiWorking ? 'pulse 2s infinite' : 'none',
                       }}
                     >
-                      <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#22c55e' }} />
-                      {task.aiWorking ? 'AI Working...' : '🤖 AI Agent'}
+                      <AgentIcon size={14} />
+                      {task.aiWorking ? 'AI Working...' : 'AI Agent'}
                     </div>
                   )}
                   

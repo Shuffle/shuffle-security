@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -11,7 +11,11 @@ import {
   Button,
   Collapse,
   Alert,
+  TextField,
 } from '@mui/material';
+import { toast } from 'sonner';
+import { setDatastoreItem, getDatastoreItem, DATASTORE_CATEGORIES } from '@/services/datastore';
+import AgentIcon from '@/components/agent/AgentIcon';
 import { motion, AnimatePresence } from 'framer-motion';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -55,6 +59,8 @@ const RISK_CONFIG: Record<RiskLevel, { label: string; color: string; bg: string;
   },
 };
 
+const AGENT_CONFIG_KEY = 'agent_local_config';
+
 const AgentPermissionsPage = () => {
   const {
     categories,
@@ -67,6 +73,42 @@ const AgentPermissionsPage = () => {
     toggleCategory,
     resetToDefaults,
   } = useAgentPermissions();
+
+  // Local agent config state
+  const [agentUrl, setAgentUrl] = useState('');
+  const [agentApiKey, setAgentApiKey] = useState('');
+  const [configLoading, setConfigLoading] = useState(true);
+  const [configSaving, setConfigSaving] = useState(false);
+
+  // Load agent config from datastore
+  useEffect(() => {
+    (async () => {
+      try {
+        const resp = await getDatastoreItem(AGENT_CONFIG_KEY, DATASTORE_CATEGORIES.CONFIGURATION);
+        if (resp.success && resp.item?.value) {
+          const data = typeof resp.item.value === 'string' ? JSON.parse(resp.item.value) : resp.item.value;
+          setAgentUrl(data.url || '');
+          setAgentApiKey(data.apikey || '');
+        }
+      } catch { /* ignore */ }
+      setConfigLoading(false);
+    })();
+  }, []);
+
+  const saveAgentConfig = useCallback(async () => {
+    setConfigSaving(true);
+    try {
+      const resp = await setDatastoreItem(AGENT_CONFIG_KEY, { url: agentUrl, apikey: agentApiKey }, DATASTORE_CATEGORIES.CONFIGURATION);
+      if (resp.success) {
+        toast.success('Agent configuration saved');
+      } else {
+        toast.error(resp.error || 'Failed to save configuration');
+      }
+    } catch (err) {
+      toast.error('Failed to save configuration');
+    }
+    setConfigSaving(false);
+  }, [agentUrl, agentApiKey]);
 
   const [expandedCategories, setExpandedCategories] = useState<string[]>(
     () => categories.map(c => c.id)
@@ -188,6 +230,84 @@ const AgentPermissionsPage = () => {
         {error && (
           <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>
         )}
+        {/* Local Agent Setup */}
+        <Paper
+          sx={{
+            mb: 3,
+            bgcolor: 'hsl(var(--card))',
+            border: '1px solid hsl(var(--border))',
+            overflow: 'hidden',
+          }}
+        >
+          <Box sx={{ px: 3, py: 2, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <AgentIcon size={22} />
+            <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+              Local Agent Setup
+            </Typography>
+          </Box>
+          <Box sx={{ borderTop: '1px solid hsl(var(--border))', px: 3, py: 2.5 }}>
+            <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))', mb: 2.5 }}>
+              Configure the connection to your local or self-hosted agent instance.
+            </Typography>
+            {configLoading ? (
+              <CircularProgress size={20} sx={{ color: 'hsl(var(--primary))' }} />
+            ) : (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <TextField
+                  label="Agent URL"
+                  placeholder="https://localhost:8000 or https://agent.yourdomain.com"
+                  size="small"
+                  fullWidth
+                  value={agentUrl}
+                  onChange={(e) => setAgentUrl(e.target.value)}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      bgcolor: 'hsl(var(--background))',
+                      color: 'hsl(var(--foreground))',
+                      '& fieldset': { borderColor: 'hsl(var(--border))' },
+                      '&:hover fieldset': { borderColor: 'hsl(var(--primary))' },
+                    },
+                    '& .MuiInputLabel-root': { color: 'hsl(var(--muted-foreground))' },
+                  }}
+                />
+                <TextField
+                  label="API Key"
+                  placeholder="Enter your agent API key"
+                  size="small"
+                  fullWidth
+                  type="password"
+                  value={agentApiKey}
+                  onChange={(e) => setAgentApiKey(e.target.value)}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      bgcolor: 'hsl(var(--background))',
+                      color: 'hsl(var(--foreground))',
+                      '& fieldset': { borderColor: 'hsl(var(--border))' },
+                      '&:hover fieldset': { borderColor: 'hsl(var(--primary))' },
+                    },
+                    '& .MuiInputLabel-root': { color: 'hsl(var(--muted-foreground))' },
+                  }}
+                />
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    disabled={configSaving}
+                    onClick={saveAgentConfig}
+                    sx={{
+                      textTransform: 'none',
+                      bgcolor: 'hsl(var(--primary))',
+                      color: 'hsl(var(--primary-foreground))',
+                      '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)' },
+                    }}
+                  >
+                    {configSaving ? 'Saving…' : 'Save Configuration'}
+                  </Button>
+                </Box>
+              </Box>
+            )}
+          </Box>
+        </Paper>
 
         {/* Category sections */}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>

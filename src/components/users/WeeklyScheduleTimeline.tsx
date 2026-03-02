@@ -11,7 +11,7 @@ import {
   Tooltip,
   Avatar,
 } from '@mui/material';
-import { SmartToy as AiIcon } from '@mui/icons-material';
+import AgentIcon from '@/components/agent/AgentIcon';
 
 type EscalationLevel = 'tier1' | 'tier2' | 'tier3' | 'manager';
 
@@ -304,7 +304,7 @@ export const WeeklyScheduleTimeline = ({ userSchedules }: WeeklyScheduleTimeline
                               </Avatar>
                             )}
                             {primaryUser?.userId === 'ai-agent' && !hasHuman && hour % 6 === 0 && (
-                              <AiIcon sx={{ fontSize: 16, color: AI_AGENT_COLOR }} />
+                              <AgentIcon size={16} />
                             )}
                           </Box>
                         </Tooltip>

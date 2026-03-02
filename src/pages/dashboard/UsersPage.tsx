@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import AgentIcon from '@/components/agent/AgentIcon';
 import {
   Box,
   Typography,
@@ -30,7 +31,7 @@ import {
   Schedule as ScheduleIcon,
   CheckCircle as CheckCircleIcon,
   Upload as UploadIcon,
-  SmartToy as AiIcon,
+  SmartToy as AiIconMui,
   CalendarMonth as CalendarIcon,
   AccessTime as AccessTimeIcon,
   Person as PersonIcon,
@@ -609,16 +610,7 @@ const UsersPage = () => {
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5 }}>
-                <Avatar 
-                  sx={{ 
-                    bgcolor: '#9333ea', 
-                    width: 48, 
-                    height: 48,
-                    boxShadow: '0 0 20px #9333ea40',
-                  }}
-                >
-                  <AiIcon />
-                </Avatar>
+                <AgentIcon size={48} style={{ borderRadius: 8 }} />
                 <Box>
                   <Typography variant="h6" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
                     AI Agent

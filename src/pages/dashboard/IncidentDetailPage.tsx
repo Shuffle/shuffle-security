@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef, forwardRef } from 'react';
+import AgentIcon from '@/components/agent/AgentIcon';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -1467,7 +1468,7 @@ const IncidentDetailPage = () => {
                     if (isAIAssignee(value as string)) {
                       return (
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          🤖 AI Agent
+                          <AgentIcon size={16} /> AI Agent
                         </Box>
                       );
                     }
@@ -1477,8 +1478,8 @@ const IncidentDetailPage = () => {
                   <MenuItem value="">Unassigned</MenuItem>
                   <MenuItem value="AI Agent">
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#22c55e' }} />
-                      🤖 AI Agent
+                      <AgentIcon size={16} />
+                      AI Agent
                     </Box>
                   </MenuItem>
                   {users.map((user) => (
@@ -2016,13 +2017,7 @@ const IncidentDetailPage = () => {
                           >
                             <MenuItem value=""><em>Unassigned</em></MenuItem>
                             <MenuItem value="AI Agent" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <Box component="span" sx={{ 
-                                width: 6, 
-                                height: 6, 
-                                borderRadius: '50%', 
-                                bgcolor: '#22c55e',
-                                display: 'inline-block',
-                              }} />
+                              <AgentIcon size={16} />
                               AI Agent
                             </MenuItem>
                             {users.map((user) => (
