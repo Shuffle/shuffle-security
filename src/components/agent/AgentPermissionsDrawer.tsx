@@ -171,7 +171,7 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
   const [isRunning, setIsRunning] = useState(false);
   const [runResult, setRunResult] = useState<string | null>(null);
   const [runError, setRunError] = useState<string | null>(null);
-  const [selectedApp, setSelectedApp] = useState<AlgoliaSearchApp | null>(null);
+  const [selectedApps, setSelectedApps] = useState<AlgoliaSearchApp[]>([]);
   const singulRef = useRef<SingulJSHandle>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -295,9 +295,9 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
         method: 'tools/call',
         params: {
           input: { text: agentInput.trim() },
-          ...(selectedApp ? {
-            tool_name: selectedApp.name,
-            tool_id: selectedApp.objectID || selectedApp.name,
+          ...(selectedApps.length > 0 ? {
+            tool_names: selectedApps.map(a => a.name),
+            tool_ids: selectedApps.map(a => a.objectID || a.name),
           } : {}),
         },
       };
@@ -892,87 +892,91 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
             {/* App selector */}
             <Box>
               <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>
-                Target App (optional)
+                Target Apps (optional)
               </Typography>
 
-              {selectedApp ? (
-                <Box sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1.5,
-                  p: 1.5,
-                  borderRadius: 2,
-                  border: '1px solid hsl(var(--border))',
-                  bgcolor: 'hsl(var(--card))',
-                }}>
-                  <Avatar
-                    src={selectedApp.image_url || `https://shuffler.io/images/apps/${selectedApp.name}.png`}
-                    sx={{ width: 28, height: 28, '& img': { objectFit: 'contain' } }}
-                  />
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: 'hsl(var(--foreground))', textTransform: 'capitalize' }}>
-                      {selectedApp.name?.replace(/_/g, ' ')}
-                    </Typography>
-                    {selectedApp.categories && selectedApp.categories.length > 0 && (
-                      <Typography sx={{ fontSize: '0.68rem', color: 'hsl(var(--muted-foreground))' }}>
-                        {selectedApp.categories.slice(0, 2).join(' · ')}
-                      </Typography>
-                    )}
-                  </Box>
-                  <IconButton
-                    size="small"
-                    onClick={() => setSelectedApp(null)}
-                    sx={{ color: 'hsl(var(--muted-foreground))', width: 24, height: 24 }}
-                  >
-                    <CloseIcon sx={{ fontSize: 14 }} />
-                  </IconButton>
-                </Box>
-              ) : (
-                <Box sx={{
-                  borderRadius: 2,
-                  border: '1px solid hsl(var(--border))',
-                  bgcolor: 'hsl(var(--background))',
-                  overflow: 'hidden',
-                  '& .singul-container': { background: 'transparent !important' },
-                  '& .singul-input': {
-                    background: 'transparent !important',
-                    color: 'hsl(var(--foreground)) !important',
-                    fontSize: '0.82rem !important',
-                    border: 'none !important',
-                    padding: '8px 12px !important',
-                  },
-                  '& .singul-results': {
-                    background: 'hsl(var(--card)) !important',
-                    border: '1px solid hsl(var(--border)) !important',
-                    maxHeight: '200px !important',
-                  },
-                  '& .singul-result-item': {
-                    color: 'hsl(var(--foreground)) !important',
-                    fontSize: '0.8rem !important',
-                  },
-                  '& .singul-result-item:hover': {
-                    background: 'hsla(var(--primary) / 0.08) !important',
-                  },
-                }}>
-                  <SingulJS
-                    ref={singulRef}
-                    authToken=""
-                    placeholder="Search integrations…"
-                    layout="list"
-                    hitsPerPage={8}
-                    inline={true}
-                    showDescription={false}
-                    showCategories={false}
-                    hideAuthStatus={true}
-                    preventDefault={true}
-                    onAppSelected={(e) => {
-                      if (e?.app) {
-                        setSelectedApp(e.app);
+              {/* Selected apps chips */}
+              {selectedApps.length > 0 && (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 1.5 }}>
+                  {selectedApps.map((app) => (
+                    <Chip
+                      key={app.objectID || app.name}
+                      avatar={
+                        <Avatar
+                          src={app.image_url || `https://shuffler.io/images/apps/${app.name}.png`}
+                          sx={{ width: 20, height: 20, '& img': { objectFit: 'contain' } }}
+                        />
                       }
-                    }}
-                  />
+                      label={app.name?.replace(/_/g, ' ')}
+                      size="small"
+                      onDelete={() => setSelectedApps(prev => prev.filter(a => a.name !== app.name))}
+                      sx={{
+                        height: 28,
+                        fontSize: '0.75rem',
+                        fontWeight: 500,
+                        textTransform: 'capitalize',
+                        bgcolor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        color: 'hsl(var(--foreground))',
+                        '& .MuiChip-deleteIcon': {
+                          color: 'hsl(var(--muted-foreground))',
+                          fontSize: 16,
+                          '&:hover': { color: 'hsl(var(--destructive))' },
+                        },
+                      }}
+                    />
+                  ))}
                 </Box>
               )}
+
+              {/* Always-visible search */}
+              <Box sx={{
+                borderRadius: 2,
+                border: '1px solid hsl(var(--border))',
+                bgcolor: 'hsl(var(--background))',
+                overflow: 'hidden',
+                position: 'relative',
+                '& .singul-container': { background: 'transparent !important' },
+                '& .singul-input': {
+                  background: 'transparent !important',
+                  color: 'hsl(var(--foreground)) !important',
+                  fontSize: '0.82rem !important',
+                  border: 'none !important',
+                  padding: '8px 12px !important',
+                },
+                '& .singul-results': {
+                  background: 'hsl(var(--card)) !important',
+                  border: '1px solid hsl(var(--border)) !important',
+                  maxHeight: '180px !important',
+                  overflowY: 'auto !important',
+                  position: 'relative !important',
+                },
+                '& .singul-result-item': {
+                  color: 'hsl(var(--foreground)) !important',
+                  fontSize: '0.8rem !important',
+                },
+                '& .singul-result-item:hover': {
+                  background: 'hsla(var(--primary) / 0.08) !important',
+                },
+              }}>
+                <SingulJS
+                  ref={singulRef}
+                  authToken=""
+                  placeholder={selectedApps.length > 0 ? 'Add another app…' : 'Search integrations…'}
+                  layout="list"
+                  hitsPerPage={5}
+                  inline={true}
+                  showDescription={false}
+                  showCategories={false}
+                  hideAuthStatus={true}
+                  preventDefault={true}
+                  onAppSelected={(e) => {
+                    if (e?.app && !selectedApps.some(a => a.name === e.app.name)) {
+                      setSelectedApps(prev => [...prev, e.app]);
+                    }
+                  }}
+                />
+              </Box>
             </Box>
 
             {/* Agent input */}
@@ -1004,7 +1008,7 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
                   maxRows={6}
                   value={agentInput}
                   onChange={(e) => setAgentInput(e.target.value)}
-                  placeholder={selectedApp ? `Ask ${selectedApp.name.replace(/_/g, ' ')} something…` : 'Describe what you want the agent to do…'}
+                  placeholder={selectedApps.length > 0 ? `Ask about ${selectedApps.map(a => a.name.replace(/_/g, ' ')).join(', ')}…` : 'Describe what you want the agent to do…'}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
                       e.preventDefault();
