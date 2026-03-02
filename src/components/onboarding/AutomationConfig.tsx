@@ -729,25 +729,25 @@ export const AutomationConfig = ({
             borderRadius: 1.5,
             cursor: !app.isValidated && onAuthChange ? 'pointer' : 'default',
             background: enabled 
-              ? 'rgba(255, 102, 0, 0.08)' 
+              ? 'rgba(34, 197, 94, 0.06)' 
               : isConfiguring
                 ? 'rgba(255, 102, 0, 0.06)'
                 : !app.isValidated
-                  ? 'rgba(255, 152, 0, 0.06)'
+                  ? 'rgba(255, 152, 0, 0.04)'
                   : 'rgba(0, 0, 0, 0.2)',
             border: '1px solid',
             borderColor: enabled 
-              ? 'rgba(255, 102, 0, 0.25)' 
+              ? 'rgba(34, 197, 94, 0.4)' 
               : isConfiguring
                 ? 'rgba(255, 102, 0, 0.4)'
                 : !app.isValidated
                   ? 'rgba(255, 152, 0, 0.2)'
                   : 'transparent',
-            opacity: enabled ? 1 : app.isValidated ? 0.6 : 0.85,
+            opacity: enabled ? 1 : app.isValidated ? 0.7 : 0.85,
             transition: 'all 0.2s ease',
             '&:hover': {
               background: enabled 
-                ? 'rgba(255, 102, 0, 0.12)' 
+                ? 'rgba(34, 197, 94, 0.1)' 
                 : !app.isValidated
                   ? 'rgba(255, 152, 0, 0.1)'
                   : 'rgba(0, 0, 0, 0.3)',
