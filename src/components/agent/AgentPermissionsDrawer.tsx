@@ -50,6 +50,7 @@ import {
 import { useAgentPermissions, RiskLevel, AgentPermissionCategory } from '@/hooks/useAgentPermissions';
 import AgentActionDrawer from '@/components/agent/AgentActionDrawer';
 import AgentIcon from '@/components/agent/AgentIcon';
+import { IntegrationStatus } from '@/components/layout/IntegrationStatus';
 
 // Per-permission icons for a more modern look
 const PERMISSION_ICONS: Record<string, React.ReactNode> = {
@@ -370,6 +371,28 @@ const AgentPermissionsDrawer = ({ open, onClose }: AgentPermissionsDrawerProps) 
                 {error && (
                   <Alert severity="error" sx={{ mb: 2, fontSize: '0.8rem' }}>{error}</Alert>
                 )}
+
+                {/* Tools / Integrations the agent can use */}
+                <Box sx={{
+                  mb: 3,
+                  px: 2,
+                  py: 2,
+                  borderRadius: 2,
+                  border: '1px solid hsl(var(--border))',
+                  bgcolor: 'hsl(var(--background))',
+                }}>
+                  <Typography sx={{
+                    fontSize: '0.7rem',
+                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    color: 'hsl(var(--muted-foreground))',
+                    mb: 1,
+                  }}>
+                    Tools
+                  </Typography>
+                  <IntegrationStatus collapsed={false} iconSize={24} />
+                </Box>
 
                 {/* Categories — all disabled */}
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, opacity: 0.5, pointerEvents: 'none' }}>
