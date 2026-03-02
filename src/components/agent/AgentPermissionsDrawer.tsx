@@ -43,12 +43,13 @@ import {
   Flame,
   Database,
   Terminal,
-  Bot,
+  
   Play,
   Lightbulb,
 } from 'lucide-react';
 import { useAgentPermissions, RiskLevel, AgentPermissionCategory } from '@/hooks/useAgentPermissions';
 import AgentActionDrawer from '@/components/agent/AgentActionDrawer';
+import AgentIcon from '@/components/agent/AgentIcon';
 
 // Per-permission icons for a more modern look
 const PERMISSION_ICONS: Record<string, React.ReactNode> = {
@@ -203,7 +204,7 @@ const AgentPermissionsDrawer = ({ open, onClose }: AgentPermissionsDrawerProps) 
           color: 'hsl(var(--primary))',
           flexShrink: 0,
         }}>
-          <Bot size={22} />
+          <AgentIcon size={22} />
         </Box>
         <Box sx={{ flex: 1 }}>
           <Typography sx={{ fontWeight: 600, fontSize: '1.1rem', color: 'hsl(var(--foreground))' }}>

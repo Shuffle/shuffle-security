@@ -33,7 +33,8 @@ import FingerprintIcon from '@mui/icons-material/Fingerprint';
 import TuneIcon from '@mui/icons-material/Tune';
 import RssFeedIcon from '@mui/icons-material/RssFeed';
 import RadarIcon from '@mui/icons-material/Radar';
-import { Braces, Waypoints, Bot, Network } from 'lucide-react';
+import { Braces, Waypoints, Network } from 'lucide-react';
+import AgentIcon from '@/components/agent/AgentIcon';
 import { useAuth } from '@/context/AuthContext';
 import LogoutIcon from '@mui/icons-material/Logout';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
@@ -631,7 +632,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                 },
               }}
             >
-              <Bot size={16} />
+              <AgentIcon size={16} />
               {!visuallyCollapsed && (
                 <Typography sx={{ fontSize: '0.75rem', fontWeight: 500 }}>
                   Agent Permissions

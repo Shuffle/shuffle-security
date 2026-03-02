@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, KeyboardEvent, ChangeEvent } from 'react';
 import { Box, TextField, TextFieldProps, Typography, Avatar } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
-import SmartToyIcon from '@mui/icons-material/SmartToy';
+import AgentIcon from '@/components/agent/AgentIcon';
 import { useUsers, User } from '@/hooks/useUsers';
 import { Popover, PopoverContent, PopoverAnchor } from '@/components/ui/popover';
 
@@ -190,7 +190,7 @@ export const MentionInput = ({ value, onChange, onSubmit, ...props }: MentionInp
                   color: user.isAI ? '#22c55e' : '#ff6600',
                 }}
               >
-                {user.isAI ? <SmartToyIcon sx={{ fontSize: 12 }} /> : <PersonIcon sx={{ fontSize: 12 }} />}
+                {user.isAI ? <AgentIcon size={12} /> : <PersonIcon sx={{ fontSize: 12 }} />}
               </Avatar>
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography 

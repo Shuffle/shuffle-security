@@ -25,7 +25,7 @@ import RestoreIcon from '@mui/icons-material/Restore';
 import CloseIcon from '@mui/icons-material/Close';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import WebhookIcon from '@mui/icons-material/Webhook';
-import SmartToyIcon from '@mui/icons-material/SmartToy';
+import AgentIcon from '@/components/agent/AgentIcon';
 import EnhancedEncryptionIcon from '@mui/icons-material/EnhancedEncryption';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import SecurityIcon from '@mui/icons-material/Security';
@@ -100,7 +100,7 @@ const automationConfigs = [
     type: 'ai_agent',
     name: 'Run AI Agent',
     description: 'Runs an AI Agent to process the updated value. Uses built-in ShuffleAI configs. Learn more: https://shuffler.io/docs/AI',
-    icon: SmartToyIcon,
+    icon: (props: any) => <AgentIcon size={props?.sx?.fontSize || 20} />,
     color: '#10b981',
     apiIcon: '',
     apiType: 'singul',

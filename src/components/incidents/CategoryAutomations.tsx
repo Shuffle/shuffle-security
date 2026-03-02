@@ -9,7 +9,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import WebhookIcon from '@mui/icons-material/Webhook';
-import SmartToyIcon from '@mui/icons-material/SmartToy';
+import AgentIcon from '@/components/agent/AgentIcon';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import EnhancedEncryptionIcon from '@mui/icons-material/EnhancedEncryption';
 import EditIcon from '@mui/icons-material/Edit';
@@ -48,7 +48,7 @@ const automationTypeConfig = {
     bgColor: 'rgba(139, 92, 246, 0.1)',
   },
   ai_agent: {
-    icon: SmartToyIcon,
+    icon: (props: any) => <AgentIcon size={props?.sx?.fontSize || 20} />,
     label: 'Run AI Agent',
     color: '#10b981',
     bgColor: 'rgba(16, 185, 129, 0.1)',
