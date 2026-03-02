@@ -161,7 +161,12 @@ const meaningfulString = (val: unknown): string | undefined => {
   const trimmed = val.trim();
   if (trimmed.length === 0) return undefined;
   // Reject values that look like serialized JSON objects or arrays
+  // Skip JSON.parse for large strings (>10KB) to avoid blocking the main thread
   if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+    if (trimmed.length > 10_000) {
+      console.warn(`[Perf] meaningfulString: skipping JSON.parse on large string (${(trimmed.length / 1024).toFixed(1)}KB)`);
+      return undefined; // Large JSON-looking strings are never meaningful display strings
+    }
     try {
       JSON.parse(trimmed);
       return undefined; // It's valid JSON — not a meaningful display string
@@ -173,8 +178,14 @@ const meaningfulString = (val: unknown): string | undefined => {
 };
 
 const parseIncidentFromDatastore = (item: { key: string; value: string; created?: number; edited?: number }): DisplayIncident | null => {
+  const parseStart = performance.now();
   try {
+    const jsonStart = performance.now();
     const data = JSON.parse(item.value);
+    const jsonTime = performance.now() - jsonStart;
+    if (jsonTime > 5) {
+      console.warn(`[Perf] JSON.parse took ${jsonTime.toFixed(1)}ms for incident ${item.key} (${(item.value.length / 1024).toFixed(1)}KB)`);
+    }
     
     // Check if this is new OCSF format (has finding_uid at root)
     const isNewFormat = 'finding_uid' in data && 'title' in data;
@@ -286,8 +297,14 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
       tasks: data.tasks || [],
       rawOCSF: data,
     };
-  } catch {
+  } catch (err) {
+    console.error(`[Perf] parseIncidentFromDatastore failed for ${item.key}:`, err);
     return null;
+  } finally {
+    const totalTime = performance.now() - parseStart;
+    if (totalTime > 10) {
+      console.warn(`[Perf] parseIncidentFromDatastore total: ${totalTime.toFixed(1)}ms for ${item.key}`);
+    }
   }
 };
 
@@ -440,8 +457,11 @@ const IncidentDetailPage = () => {
       return;
     }
 
+    const loadStart = performance.now();
     if (showLoading) setLoading(true);
     const result = await getDatastoreItem(id, DATASTORE_CATEGORIES.INCIDENTS);
+    const fetchTime = performance.now() - loadStart;
+    console.log(`[Perf] Incident fetch: ${fetchTime.toFixed(1)}ms, size: ${((result.item?.value?.length || 0) / 1024).toFixed(1)}KB`);
     
     if (result.success && result.item) {
       const itemData = {
@@ -450,9 +470,12 @@ const IncidentDetailPage = () => {
         created: result.item.created,
         edited: result.item.edited,
       };
+      const parseStart = performance.now();
       const parsed = parseIncidentFromDatastore(itemData);
+      console.log(`[Perf] parseIncidentFromDatastore: ${(performance.now() - parseStart).toFixed(1)}ms`);
       
       if (parsed) {
+        const stateStart = performance.now();
         setIncident(parsed);
         setEditedTitle(parsed.title);
         // Use desc (new OCSF) first, fall back to message (legacy), convert HTML to readable text
@@ -486,6 +509,13 @@ const IncidentDetailPage = () => {
           (customAttrs as any)?.custom_fields ||
           parsed.customFields ||
           {};
+        
+        // Log custom fields size — large custom_fields are a known perf bottleneck
+        const cfStr = JSON.stringify(loadedCustomFields);
+        if (cfStr.length > 5_000) {
+          console.warn(`[Perf] customFields is large: ${(cfStr.length / 1024).toFixed(1)}KB`);
+        }
+        
         setEditedCustomFields(loadedCustomFields);
         setActivity(parsed.activity || []);
         const loadedTasks = parsed.tasks || customAttrs?.tasks || (parsed.rawOCSF as any)?.tasks || [];
@@ -496,6 +526,10 @@ const IncidentDetailPage = () => {
         }));
         setTasks(normalizedTasks);
         // Snapshot the normalized values so auto-save won't fire on load
+        // Pre-stringify here (once) so auto-save comparisons are cheap
+        const refsStr = JSON.stringify(parsed.references || []);
+        const obsStr = JSON.stringify(parsed.observables || []);
+        const tasksStr = JSON.stringify(normalizedTasks);
         initialValuesRef.current = {
           title: parsed.title,
           message: htmlToPlainText(rawDesc),
@@ -503,16 +537,18 @@ const IncidentDetailPage = () => {
           assignee: normalizedAssignee,
           status: parsed.status,
           tlp: parsed.tlp || 'TLP:AMBER',
-          references: JSON.stringify(parsed.references || []),
-          observables: JSON.stringify(parsed.observables || []),
-          customFields: JSON.stringify(loadedCustomFields),
-          tasks: JSON.stringify(normalizedTasks),
+          references: refsStr,
+          observables: obsStr,
+          customFields: cfStr,
+          tasks: tasksStr,
         };
+        console.log(`[Perf] State hydration: ${(performance.now() - stateStart).toFixed(1)}ms`);
         // Auto-switch to Details tab if no tasks (only on initial load)
         if (showLoading && loadedTasks.length === 0) {
           setActiveTab(1);
         }
         setLoading(false);
+        console.log(`[Perf] Total loadIncident: ${(performance.now() - loadStart).toFixed(1)}ms`);
         return;
       }
     }
@@ -672,6 +708,7 @@ const IncidentDetailPage = () => {
     try {
       await addItem(incident.id, updatedData);
       // Update the initial snapshot so future comparisons are against the saved state
+      // Use cached JSON refs to avoid redundant serialization
       initialValuesRef.current = {
         title: editedTitle,
         message: editedMessage,
@@ -679,10 +716,10 @@ const IncidentDetailPage = () => {
         assignee: editedAssignee,
         status: editedStatus,
         tlp: editedTlp,
-        references: JSON.stringify(editedReferences),
-        observables: JSON.stringify(editedObservables),
-        customFields: JSON.stringify(editedCustomFields),
-        tasks: JSON.stringify(tasks),
+        references: refsJsonRef.current,
+        observables: obsJsonRef.current,
+        customFields: cfJsonRef.current,
+        tasks: tasksJsonRef.current,
       };
     } catch (error) {
       toast.error('Failed to save changes');
@@ -691,11 +728,22 @@ const IncidentDetailPage = () => {
     }
   }, [incident, editedTitle, editedMessage, editedSeverity, editedAssignee, editedStatus, editedTlp, editedReferences, editedObservables, editedCustomFields, activity, tasks, addItem]);
 
-  // Cache stringified tasks to avoid re-serializing 325+ tasks on every render
+  // Cache stringified complex values to avoid re-serializing on every render
   const tasksJsonRef = useRef('');
+  const refsJsonRef = useRef('');
+  const obsJsonRef = useRef('');
+  const cfJsonRef = useRef('');
+  useEffect(() => { tasksJsonRef.current = JSON.stringify(tasks); }, [tasks]);
+  useEffect(() => { refsJsonRef.current = JSON.stringify(editedReferences); }, [editedReferences]);
+  useEffect(() => { obsJsonRef.current = JSON.stringify(editedObservables); }, [editedObservables]);
   useEffect(() => {
-    tasksJsonRef.current = JSON.stringify(tasks);
-  }, [tasks]);
+    const start = performance.now();
+    cfJsonRef.current = JSON.stringify(editedCustomFields);
+    const elapsed = performance.now() - start;
+    if (elapsed > 5) {
+      console.warn(`[Perf] JSON.stringify(customFields) took ${elapsed.toFixed(1)}ms (${(cfJsonRef.current.length / 1024).toFixed(1)}KB)`);
+    }
+  }, [editedCustomFields]);
 
   // Debounced auto-save
   useEffect(() => {
@@ -706,6 +754,7 @@ const IncidentDetailPage = () => {
     }
     
     // Compare against the initial normalized values, not raw data
+    // Uses cached JSON strings to avoid re-serializing large objects every render
     const init = initialValuesRef.current;
     const changedFields: string[] = [];
     if (editedTitle !== init.title) changedFields.push(`title: "${editedTitle}" vs "${init.title}"`);
@@ -714,9 +763,9 @@ const IncidentDetailPage = () => {
     if (editedAssignee !== init.assignee) changedFields.push(`assignee: "${editedAssignee}" vs "${init.assignee}"`);
     if (editedStatus !== init.status) changedFields.push(`status: "${editedStatus}" vs "${init.status}"`);
     if (editedTlp !== init.tlp) changedFields.push(`tlp: "${editedTlp}" vs "${init.tlp}"`);
-    if (JSON.stringify(editedReferences) !== init.references) changedFields.push('references');
-    if (JSON.stringify(editedObservables) !== init.observables) changedFields.push('observables');
-    if (JSON.stringify(editedCustomFields) !== init.customFields) changedFields.push(`customFields: ${JSON.stringify(editedCustomFields).slice(0, 80)} vs ${init.customFields.slice(0, 80)}`);
+    if (refsJsonRef.current !== init.references) changedFields.push('references');
+    if (obsJsonRef.current !== init.observables) changedFields.push('observables');
+    if (cfJsonRef.current !== init.customFields) changedFields.push('customFields');
     if (tasksJsonRef.current !== init.tasks) changedFields.push('tasks');
     const hasChanges = changedFields.length > 0;
     
