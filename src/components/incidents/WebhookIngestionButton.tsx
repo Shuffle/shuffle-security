@@ -60,7 +60,6 @@ export const WebhookIngestionButton = ({ webhook, onToggled }: WebhookIngestionB
           headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
           body: JSON.stringify({
             label: 'Ingest Tickets_webhook',
-            category: 'cases',
           }),
         });
         if (!res.ok) throw new Error('Failed to create webhook workflow');
