@@ -561,11 +561,11 @@ export const DEFAULT_USECASES: Usecase[] = [
   },
   {
     id: 'case_management_cases_forward_1', phase: 'response', source: 'case_management', target: 'case_management',
-    label: 'Forward Updates', animated: true,
+    label: 'Forward Tickets', animated: true,
     tags: ['Response', 'Sync'],
     description: 'Forward incident updates, status changes, and resolution notes to external ticketing systems, keeping all platforms in sync and ensuring stakeholders on other tools stay informed.',
     agenticDescription: 'An agent detects significant case updates (status changes, new findings, escalations) and pushes structured updates to connected ticketing systems, mapping fields and priorities to each platform\'s schema.',
-    automationLabel: 'Forward Updates',
+    automationLabel: 'Forward Tickets',
     automationCategory: 'cases',
     automationArea: 'forward_updates',
   },
