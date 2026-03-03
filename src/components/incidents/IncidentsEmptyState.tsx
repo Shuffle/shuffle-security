@@ -1,11 +1,21 @@
-import { Box, Typography, Button } from '@mui/material';
+import { Box, Typography, Button, IconButton, Tooltip } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import InboxIcon from '@mui/icons-material/Inbox';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import AddIcon from '@mui/icons-material/Add';
+import { ValidatedIngestionApp } from '@/lib/ingestionDetection';
+import { IngestionSourceButton } from './IngestionSourceButton';
 
-export const IncidentsEmptyState = () => {
+interface IncidentsEmptyStateProps {
+  ingestionApps?: ValidatedIngestionApp[];
+  onIngestionToggled?: () => void;
+}
+
+export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled }: IncidentsEmptyStateProps) => {
+  const hasApps = ingestionApps.length > 0;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 24 }}
@@ -59,14 +69,55 @@ export const IncidentsEmptyState = () => {
           variant="body1"
           sx={{
             color: 'hsl(var(--muted-foreground))',
-            mb: 5,
+            mb: 3,
             lineHeight: 1.7,
             maxWidth: 420,
           }}
         >
-          Connect your security tools to start ingesting alerts and incidents automatically. 
-          Set up your sources in just a few minutes.
+          {hasApps
+            ? 'Your ingestion sources are configured below. Incidents will appear here once alerts start flowing in.'
+            : 'Connect your security tools to start ingesting alerts and incidents automatically. Set up your sources in just a few minutes.'}
         </Typography>
+
+        {/* Ingestion sources bar */}
+        {hasApps && (
+          <Box sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 0.5,
+            bgcolor: 'hsl(var(--muted) / 0.4)',
+            border: '1px solid hsl(var(--border))',
+            borderRadius: 1.5,
+            px: 1,
+            py: 0.75,
+            mb: 4,
+          }}>
+            {ingestionApps.map(app => (
+              <IngestionSourceButton key={app.name} app={app} allApps={ingestionApps} onToggled={onIngestionToggled} />
+            ))}
+            <Tooltip title="Add ingestion source" placement="bottom">
+              <IconButton
+                component={Link}
+                to="/onboarding/automate"
+                size="small"
+                sx={{
+                  width: 28,
+                  height: 28,
+                  color: 'hsl(var(--muted-foreground))',
+                  border: '1px dashed hsl(var(--border))',
+                  borderRadius: 1,
+                  '&:hover': {
+                    bgcolor: 'hsl(var(--muted))',
+                    borderStyle: 'solid',
+                    color: 'hsl(var(--primary))',
+                  },
+                }}
+              >
+                <AddIcon sx={{ fontSize: 16 }} />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        )}
 
         {/* CTA */}
         <Button
@@ -89,7 +140,7 @@ export const IncidentsEmptyState = () => {
             },
           }}
         >
-          Set Up Ingestion
+          {hasApps ? 'Manage Sources' : 'Set Up Ingestion'}
         </Button>
 
         {/* Secondary hint */}

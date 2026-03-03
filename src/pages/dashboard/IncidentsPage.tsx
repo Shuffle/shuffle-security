@@ -716,7 +716,7 @@ const IncidentsPage = () => {
             </Button>
           </Box>
         ) : (
-          <IncidentsEmptyState />
+          <IncidentsEmptyState ingestionApps={ingestionApps} onIngestionToggled={fetchIngestionApps} />
         )}
 
         <CreateIncidentDialog
