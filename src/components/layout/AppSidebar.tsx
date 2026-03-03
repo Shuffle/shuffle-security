@@ -524,42 +524,6 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                     </List>
                   </Collapse>
                 )}
-                {/* Collapsed: show children as icon-only buttons */}
-                {visuallyCollapsed && (
-                  <List component="div" disablePadding sx={{ mt: 0.5 }}>
-                    {item.children.map((child) => (
-                      <Tooltip key={child.path} title={child.label} placement="right">
-                        <ListItem disablePadding sx={{ mb: 0.5 }}>
-                          <ListItemButton
-                            component={Link}
-                            to={child.path}
-                            sx={{
-                              borderRadius: 1,
-                              minHeight: 32,
-                              justifyContent: 'center',
-                              px: 1.5,
-                              backgroundColor: isActive(child.path) ? 'hsl(var(--muted))' : 'transparent',
-                              '&:hover': {
-                                backgroundColor: 'hsl(var(--muted))',
-                              },
-                            }}
-                          >
-                            <ListItemIcon
-                              sx={{
-                                minWidth: 0,
-                                color: isActive(child.path) 
-                                  ? 'hsl(var(--primary))' 
-                                  : 'hsl(var(--muted-foreground))',
-                              }}
-                            >
-                              {child.icon}
-                            </ListItemIcon>
-                          </ListItemButton>
-                        </ListItem>
-                      </Tooltip>
-                    ))}
-                  </List>
-                )}
               </>
             ) : (
               <Tooltip title={visuallyCollapsed ? item.label : ''} placement="right">
