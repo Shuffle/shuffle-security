@@ -51,7 +51,7 @@ export const IngestionSourceButton = ({ app, allApps, onToggled }: IngestionSour
         }),
       });
 
-      toast.success(willBeEnabled ? `${displayName} activated` : `${displayName} deactivated`);
+      toast.success(willBeEnabled ? `${displayName} sync enabled` : `${displayName} sync disabled`);
       // Reset optimistic state and let parent refetch from workflows
       setOptimisticEnabled(null);
       onToggled?.();
@@ -159,7 +159,7 @@ export const IngestionSourceButton = ({ app, allApps, onToggled }: IngestionSour
               '&:hover': { bgcolor: isEnabled ? 'hsl(var(--destructive) / 0.1)' : 'rgba(34, 197, 94, 0.1)' },
             }}
           >
-            {isEnabled ? 'Deactivate' : 'Activate'}
+            {isEnabled ? 'Disable Sync' : 'Enable Sync'}
           </Button>
         </Box>
       </Popover>
