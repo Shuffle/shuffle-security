@@ -25,7 +25,9 @@ import SecurityIcon from '@mui/icons-material/Security';
 import DownloadIcon from '@mui/icons-material/Download';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
+import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import { toast } from 'sonner';
+import { askAI } from '@/services/ai';
 import { deleteFile, getFileDownloadUrl, formatFileSize, ShuffleFile, createAndUploadFile } from '@/services/files';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { getApiUrl, getAuthHeader } from '@/config/api';
@@ -91,6 +93,8 @@ const RulesPage = () => {
   const [editingFile, setEditingFile] = useState<ShuffleFile | null>(null);
   const [ruleName, setRuleName] = useState('');
   const [ruleContent, setRuleContent] = useState(SIGMA_TEMPLATE);
+  const [sampleLog, setSampleLog] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   const fetchDetections = async () => {
@@ -247,7 +251,39 @@ const RulesPage = () => {
     setEditingFile(null);
     setRuleName('');
     setRuleContent(SIGMA_TEMPLATE);
+    setSampleLog('');
     setIsCreateDialogOpen(true);
+  };
+
+  const handleGenerateFromLog = async () => {
+    if (!sampleLog.trim()) {
+      toast.error('Paste a sample log first');
+      return;
+    }
+    setIsGenerating(true);
+    try {
+      const { success, result, error } = await askAI({
+        query: `Generate a Sigma detection rule in valid YAML from this sample log. Only output the YAML, no explanation:\n\n${sampleLog}`,
+      });
+      if (success && result) {
+        // Strip markdown fences if present
+        const cleaned = result.replace(/^```(?:ya?ml)?\n?/i, '').replace(/\n?```$/i, '').trim();
+        setRuleContent(cleaned);
+        // Try to extract title for the rule name
+        const titleMatch = cleaned.match(/^title:\s*(.+)$/m);
+        if (titleMatch && !ruleName.trim()) {
+          setRuleName(titleMatch[1].trim().toLowerCase().replace(/\s+/g, '_'));
+        }
+        toast.success('Sigma rule generated');
+      } else {
+        toast.error(error || 'Failed to generate rule');
+      }
+    } catch (e) {
+      console.error('AI generation error:', e);
+      toast.error('Failed to generate rule');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleEditFile = async (file: ShuffleFile) => {
@@ -670,7 +706,52 @@ const RulesPage = () => {
           <AddIcon sx={{ color: 'hsl(var(--primary))' }} />
           {editingFile ? 'Edit Sigma Rule' : 'Create Sigma Rule'}
         </DialogTitle>
-        <DialogContent sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <DialogContent sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+          {/* Sample Log + Generate (only for new rules) */}
+          {!editingFile && (
+            <Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                  Sample Log
+                </Typography>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={isGenerating ? <CircularProgress size={14} color="inherit" /> : <AutoFixHighIcon sx={{ fontSize: 14 }} />}
+                  onClick={handleGenerateFromLog}
+                  disabled={isGenerating || !sampleLog.trim()}
+                  sx={{
+                    textTransform: 'none',
+                    fontSize: '0.75rem',
+                    borderColor: 'hsl(var(--border))',
+                    color: 'hsl(var(--primary))',
+                    '&:hover': { borderColor: 'hsl(var(--primary))', bgcolor: 'hsl(var(--primary) / 0.08)' },
+                  }}
+                >
+                  {isGenerating ? 'Generating…' : 'Generate Rule'}
+                </Button>
+              </Box>
+              <TextField
+                multiline
+                rows={5}
+                value={sampleLog}
+                onChange={(e) => setSampleLog(e.target.value)}
+                fullWidth
+                placeholder="Paste a sample log entry here and click Generate to create a Sigma rule automatically…"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: 'hsl(var(--muted))',
+                    fontFamily: 'monospace',
+                    fontSize: '0.8rem',
+                    '& fieldset': { borderColor: 'hsl(var(--border))' },
+                    '&:hover fieldset': { borderColor: 'hsl(var(--border))' },
+                    '&.Mui-focused fieldset': { borderColor: 'hsl(var(--primary))' },
+                  },
+                  '& .MuiOutlinedInput-input': { color: 'hsl(var(--foreground))' },
+                }}
+              />
+            </Box>
+          )}
           <TextField
             label="Rule Name"
             placeholder="e.g., suspicious_powershell_execution"
@@ -679,25 +760,14 @@ const RulesPage = () => {
             fullWidth
             size="small"
             sx={{
-              mt: 1,
               '& .MuiOutlinedInput-root': {
                 backgroundColor: 'hsl(var(--muted))',
-                '& fieldset': {
-                  borderColor: 'hsl(var(--border))',
-                },
-                '&:hover fieldset': {
-                  borderColor: 'hsl(var(--border))',
-                },
-                '&.Mui-focused fieldset': {
-                  borderColor: 'hsl(var(--primary))',
-                },
+                '& fieldset': { borderColor: 'hsl(var(--border))' },
+                '&:hover fieldset': { borderColor: 'hsl(var(--border))' },
+                '&.Mui-focused fieldset': { borderColor: 'hsl(var(--primary))' },
               },
-              '& .MuiOutlinedInput-input': {
-                color: 'hsl(var(--foreground))',
-              },
-              '& .MuiInputLabel-root': {
-                color: 'hsl(var(--muted-foreground))',
-              },
+              '& .MuiOutlinedInput-input': { color: 'hsl(var(--foreground))' },
+              '& .MuiInputLabel-root': { color: 'hsl(var(--muted-foreground))' },
             }}
           />
           <Box>
