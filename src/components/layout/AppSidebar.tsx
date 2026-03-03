@@ -47,11 +47,18 @@ const drawerWidth = 260;
 const collapsedWidth = 64;
 const hoverCollapseDelay = 150;
 
+interface NavChild {
+  label: string;
+  path: string;
+  icon: React.ReactNode;
+  disabled?: boolean;
+}
+
 interface NavItem {
   label: string;
   icon: React.ReactNode;
   path?: string;
-  children?: { label: string; path: string; icon: React.ReactNode }[];
+  children?: NavChild[];
 }
 
 const navItems: NavItem[] = [
@@ -72,7 +79,7 @@ const navItems: NavItem[] = [
     path: '/detection',
     children: [
       { label: 'Sigma Rules', path: '/detection/sigma', icon: <Braces size={16} /> },
-      // { label: 'MITRE ATT&CK', path: '/detection/mitre', icon: <Waypoints size={16} /> },
+      { label: 'MITRE ATT&CK', path: '/detection/mitre', icon: <Waypoints size={16} />, disabled: true },
     ],
   },
   { label: 'Infrastructure', icon: <Network size={20} />, path: '/infrastructure' },
@@ -487,16 +494,19 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                       {item.children.map((child) => (
                         <ListItem key={child.path} disablePadding sx={{ mb: 0.5 }}>
                           <ListItemButton
-                            component={Link}
-                            to={child.path}
+                            component={child.disabled ? 'div' : Link}
+                            {...(child.disabled ? {} : { to: child.path })}
+                            disabled={child.disabled}
                             sx={{
                               pl: 3,
                               borderRadius: 1,
                               minHeight: 36,
                               backgroundColor: isActive(child.path) ? 'hsl(var(--muted))' : 'transparent',
                               '&:hover': {
-                                backgroundColor: 'hsl(var(--muted))',
+                                backgroundColor: child.disabled ? 'transparent' : 'hsl(var(--muted))',
                               },
+                              opacity: child.disabled ? 0.45 : 1,
+                              pointerEvents: child.disabled ? 'none' : 'auto',
                             }}
                           >
                             <ListItemIcon
