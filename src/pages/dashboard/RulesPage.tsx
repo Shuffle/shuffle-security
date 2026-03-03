@@ -378,7 +378,7 @@ const RulesPage = () => {
         setRuleContent(cleaned);
         // Try to extract title for the rule name
         const titleMatch = cleaned.match(/^title:\s*(.+)$/m);
-        if (titleMatch && !ruleName.trim()) {
+        if (titleMatch) {
           setRuleName(titleMatch[1].trim().toLowerCase().replace(/\s+/g, '_'));
         }
         // Flash highlight on the rule content field

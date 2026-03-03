@@ -37,12 +37,22 @@ export const askAI = async ({
       }),
     });
 
-    if (!res.ok) {
-      return { success: false, error: `AI request failed: ${res.status} ${res.statusText}` };
+    // Don't fail on HTTP status — the API can return 500 even on success
+    const text = await res.text();
+    let result: string;
+    try {
+      const data = JSON.parse(text);
+      result = typeof data === 'string' ? data : (data.result || data.response || text);
+    } catch {
+      result = text;
     }
 
-    const data = await res.json();
-    return { success: true, result: typeof data === 'string' ? data : (data.result || data.response || JSON.stringify(data)) };
+    // Validate we got meaningful content
+    if (result && result.trim().length > 0) {
+      return { success: true, result };
+    }
+
+    return { success: false, error: 'AI returned empty response' };
   } catch (error) {
     console.error('AI conversation error:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
