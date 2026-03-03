@@ -316,8 +316,9 @@ export default function UsecaseAlluvialDiagram({ sourceCategory, targetCategory 
             );
           })}
 
-          {/* Animated particles along paths */}
-          {sourceApps.map((_, i) => {
+          {/* Animated particles along paths — only for authenticated (green) source apps */}
+          {sourceApps.map((app, i) => {
+            if (!app.hasValidAuth) return null;
             const fromY = getY(i, sourceApps.length);
             const pathD = makePath(leftX + nodeSize / 2 + 4, fromY, centerX - 28, centerY);
             return (
@@ -328,7 +329,8 @@ export default function UsecaseAlluvialDiagram({ sourceCategory, targetCategory 
               </g>
             );
           })}
-          {targetApps.map((_, i) => {
+          {/* Animated particles to target — only if corresponding source apps are authenticated */}
+          {sourceApps.some(app => app.hasValidAuth) && targetApps.map((_, i) => {
             const toY = getY(i, targetApps.length);
             const pathD = makePath(centerX + 28, centerY, rightX - nodeSize / 2 - 4, toY);
             return (
