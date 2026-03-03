@@ -1,4 +1,4 @@
-import { Box, Typography, Button, ButtonGroup, IconButton, Tooltip, CircularProgress } from '@mui/material';
+import { Box, Typography, Button, IconButton, Tooltip, CircularProgress } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
@@ -145,52 +145,51 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, is
           </Box>
         )}
 
-        {/* CTA button group */}
-        <ButtonGroup
-          variant="contained"
-          size="large"
-          sx={{
-            borderRadius: 2,
-            overflow: 'hidden',
-            boxShadow: 'none',
-            '& .MuiButtonGroup-grouped': {
-              borderColor: 'rgba(255,255,255,0.2) !important',
-            },
-          }}
-        >
+        {/* CTA buttons */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Button
             component={Link}
             to="/onboarding/sources"
+            variant="contained"
+            size="large"
             startIcon={<RocketLaunchIcon />}
             sx={{
               px: 3,
               py: 1.5,
+              borderRadius: 2,
               textTransform: 'none',
               fontWeight: 600,
               fontSize: '0.95rem',
               backgroundColor: '#FF6600',
+              boxShadow: 'none',
               '&:hover': { backgroundColor: '#e55c00' },
             }}
           >
             {hasApps ? 'Manage Sources' : 'Set Up Ingestion'}
           </Button>
           <Button
+            variant="outlined"
+            size="large"
             onClick={onCreateIncident}
             startIcon={<AddIcon />}
             sx={{
               px: 2.5,
               py: 1.5,
+              borderRadius: 2,
               textTransform: 'none',
               fontWeight: 600,
               fontSize: '0.95rem',
-              backgroundColor: 'hsl(var(--muted))',
+              borderColor: 'hsl(var(--border))',
               color: 'hsl(var(--foreground))',
-              '&:hover': { backgroundColor: 'hsl(var(--muted-foreground) / 0.2)' },
+              '&:hover': {
+                borderColor: 'hsl(var(--muted-foreground))',
+                bgcolor: 'hsl(var(--muted) / 0.5)',
+              },
             }}
           >
-            Add manually
+            Add
           </Button>
-        </ButtonGroup>
+        </Box>
 
       </Box>
     </motion.div>
