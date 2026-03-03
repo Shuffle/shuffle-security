@@ -528,13 +528,11 @@ export const AutomationConfig = ({
     options.push({
       id: 'notifications',
       name: 'Notifications',
-      description: notifyTotal > 0 
-        ? `Send alerts via ${chatNotifyApps.length > 0 ? 'Chat' : ''}${chatNotifyApps.length > 0 && emailNotifyApps.length > 0 ? ' & ' : ''}${emailNotifyApps.length > 0 ? 'Email' : ''}`
-        : 'Connect email or chat tools to enable notifications',
+      description: 'Send alerts via Chat & Email (coming soon)',
       icon: <ChatIcon />,
       color: '#8b5cf6',
       category: 'response',
-      notificationSources,
+      disabled: true,
     });
     
     return options;
@@ -912,20 +910,8 @@ export const AutomationConfig = ({
     );
   };
 
-  const renderSection = (title: string, items: EnrichmentOption[]) => (
+  const renderSection = (_title: string, items: EnrichmentOption[]) => (
     <Box sx={{ mb: 4 }}>
-      <Typography
-        variant="overline"
-        sx={{
-          color: 'rgba(255, 102, 0, 0.8)',
-          fontWeight: 600,
-          letterSpacing: 1.5,
-          mb: 2,
-          display: 'block',
-        }}
-      >
-        {title}
-      </Typography>
       <motion.div variants={containerVariants} initial="hidden" animate="visible">
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {items.map((option) => {
@@ -1742,20 +1728,6 @@ export const AutomationConfig = ({
       )}
 
       {/* Automation Sections */}
-      <Box sx={{ mb: 1 }}>
-        {enabledCount > 0 && (
-          <Chip
-            label={`${enabledCount} automation${enabledCount > 1 ? 's' : ''} enabled`}
-            size="small"
-            sx={{
-              mb: 2,
-              background: 'rgba(255, 102, 0, 0.1)',
-              border: '1px solid rgba(255, 102, 0, 0.3)',
-              color: '#FF6600',
-            }}
-          />
-        )}
-      </Box>
 
       {renderSection('Data Enrichment', enrichmentItems)}
       {renderSection('Automated Response', responseItems)}
