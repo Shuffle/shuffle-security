@@ -803,7 +803,6 @@ const RulesPage = () => {
         }}
       >
         <DialogTitle sx={{ 
-          borderBottom: '1px solid hsl(var(--border))',
           color: 'hsl(var(--foreground))',
           display: 'flex',
           alignItems: 'center',
