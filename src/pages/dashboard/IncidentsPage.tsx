@@ -899,7 +899,7 @@ const IncidentsPage = () => {
               <Tooltip title="Add ingestion source">
                 <IconButton
                   component={Link}
-                  to="/onboarding/automate"
+                  to="/onboarding/sources"
                   size="small"
                   sx={{
                     width: 28,
