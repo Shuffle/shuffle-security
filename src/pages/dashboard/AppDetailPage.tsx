@@ -581,41 +581,6 @@ const AppDetailPage = () => {
                     {activateLoading ? '…' : isActivated ? 'Deactivate' : 'Activate'}
                   </Button>
                 )}
-                <Tooltip title="Refresh" arrow>
-                  <IconButton
-                    onClick={() => refreshAuth()}
-                    sx={{
-                      color: 'hsl(var(--muted-foreground))',
-                      '&:hover': { color: 'hsl(var(--foreground))' },
-                    }}
-                  >
-                    <RefreshIcon />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="View agent activity" arrow>
-                  <IconButton
-                    component={Link}
-                    to={`/agent?search=${encodeURIComponent(appname || '')}`}
-                    sx={{
-                      color: 'hsl(var(--muted-foreground))',
-                      '&:hover': { color: 'hsl(var(--primary))' },
-                    }}
-                  >
-                    <TimelineIcon />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="View in catalog" arrow>
-                  <IconButton
-                    component={Link}
-                    to={`/apps?search=${encodeURIComponent(appname || '')}`}
-                    sx={{
-                      color: 'hsl(var(--muted-foreground))',
-                      '&:hover': { color: 'hsl(var(--primary))' },
-                    }}
-                  >
-                    <OpenInNewIcon />
-                  </IconButton>
-                </Tooltip>
               </Box>
             )}
           </Box>
