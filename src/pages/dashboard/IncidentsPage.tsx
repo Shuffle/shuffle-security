@@ -735,14 +735,17 @@ const IncidentsPage = () => {
                   const pollInterval = setInterval(async () => {
                     pollCount++;
                     await fetchItems();
-                    if (pollCount >= 6) clearInterval(pollInterval);
-                  }, 5000);
+                    if (pollCount >= 6) {
+                      clearInterval(pollInterval);
+                      setIsSyncing(false);
+                    }
+                  }, 10000);
                 } else {
                   toast.error('Failed to trigger sync');
+                  setIsSyncing(false);
                 }
               } catch {
                 toast.error('Failed to trigger sync');
-              } finally {
                 setIsSyncing(false);
               }
             } : undefined}
@@ -828,21 +831,22 @@ const IncidentsPage = () => {
                         });
                         if (resp.ok) {
                           toast.success('Sync started — polling for new incidents…');
-                          // Poll every 5s for 30s
+                          // Poll every 10s for 60s, keep syncing state active
                           let pollCount = 0;
                           const pollInterval = setInterval(async () => {
                             pollCount++;
                             await fetchItems();
                             if (pollCount >= 6) {
                               clearInterval(pollInterval);
+                              setIsSyncing(false);
                             }
-                          }, 5000);
+                          }, 10000);
                         } else {
                           toast.error('Failed to trigger sync');
+                          setIsSyncing(false);
                         }
                       } catch {
                         toast.error('Failed to trigger sync');
-                      } finally {
                         setIsSyncing(false);
                       }
                     }}
