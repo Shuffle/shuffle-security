@@ -22,6 +22,7 @@ import SecurityIcon from '@mui/icons-material/Security';
 import EmailIcon from '@mui/icons-material/Email';
 import ChatIcon from '@mui/icons-material/Chat';
 import TravelExploreIcon from '@mui/icons-material/TravelExplore';
+import SyncAltIcon from '@mui/icons-material/SyncAlt';
 import DownloadIcon from '@mui/icons-material/Download';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import AddIcon from '@mui/icons-material/Add';
@@ -49,6 +50,7 @@ const readableAppName = (name: string): string =>
 // Workflow labels for each automation area — derived from shared usecase registry
 const AUTOMATION_WORKFLOW_LABELS: Record<string, string[]> = {
   automatic_ingestion: getAutomationLabels('automatic_ingestion'),
+  forward_updates: getAutomationLabels('forward_updates'),
   threat_intel: getAutomationLabels('threat_intel'),
   notifications: getAutomationLabels('notifications'),
 };
@@ -123,6 +125,15 @@ const baseEnrichmentOptions: (Omit<EnrichmentOption, 'connectedApps'> & { isDyna
     description: 'Automatically ingest and normalize data from connected tools',
     icon: <DownloadIcon />,
     color: '#22c55e',
+    category: 'enrichment',
+    isDynamic: true,
+  },
+  {
+    id: 'forward_updates',
+    name: 'Forward Updates',
+    description: 'Forward incident updates to external ticketing systems',
+    icon: <SyncAltIcon />,
+    color: '#f59e0b',
     category: 'enrichment',
     isDynamic: true,
   },
@@ -409,6 +420,19 @@ export const AutomationConfig = ({
             ? `${validatedCount} validated${totalCount > validatedCount ? `, ${totalCount - validatedCount} pending` : ''}`
             : 'Connect Email, Cases, EDR, or SIEM tools to enable automatic ingestion',
           ingestionSources,
+        };
+      }
+      if (opt.id === 'forward_updates') {
+        // Show cases/ticketing apps for forwarding updates
+        const forwardApps: ConnectedApp[] = sortApps(ingestionByCategory.cases);
+        const fwdValidated = forwardApps.filter(a => a.isValidated).length;
+        const fwdTotal = forwardApps.length;
+        return {
+          ...opt,
+          description: fwdTotal > 0
+            ? `${fwdValidated} validated${fwdTotal > fwdValidated ? `, ${fwdTotal - fwdValidated} pending` : ''}`
+            : 'Connect ticketing tools to forward incident updates',
+          connectedApps: forwardApps,
         };
       }
       if (opt.id === 'threat_intel') {

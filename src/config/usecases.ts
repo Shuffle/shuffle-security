@@ -307,7 +307,7 @@ export interface Usecase {
   /** Category sent with the generate call */
   automationCategory?: string;
   /** Onboarding area this usecase belongs to */
-  automationArea?: 'automatic_ingestion' | 'threat_intel' | 'notifications' | 'response' | 'correlation';
+  automationArea?: 'automatic_ingestion' | 'forward_updates' | 'threat_intel' | 'notifications' | 'response' | 'correlation';
   /** Runtime status (filled by API / hook) */
   status?: 'enabled' | 'disabled' | 'misconfigured';
   /** True if this flow requires manual verification (e.g. log forwarding can't be auto-detected) */
@@ -558,6 +558,16 @@ export const DEFAULT_USECASES: Usecase[] = [
     automationLabel: 'Ingest Tickets',
     automationCategory: 'cases',
     automationArea: 'automatic_ingestion',
+  },
+  {
+    id: 'case_management_cases_forward_1', phase: 'response', source: 'case_management', target: 'case_management',
+    label: 'Forward Updates', animated: true,
+    tags: ['Response', 'Sync'],
+    description: 'Forward incident updates, status changes, and resolution notes to external ticketing systems, keeping all platforms in sync and ensuring stakeholders on other tools stay informed.',
+    agenticDescription: 'An agent detects significant case updates (status changes, new findings, escalations) and pushes structured updates to connected ticketing systems, mapping fields and priorities to each platform\'s schema.',
+    automationLabel: 'Forward Updates',
+    automationCategory: 'cases',
+    automationArea: 'forward_updates',
   },
   {
     id: 'cloud_asset_management_1', phase: 'correlation', source: 'cloud', target: 'asset_management',
