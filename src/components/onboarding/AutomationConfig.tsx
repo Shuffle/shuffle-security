@@ -423,22 +423,24 @@ export const AutomationConfig = ({
         };
       }
       if (opt.id === 'forward_updates') {
-        // Show all authenticated apps for forwarding incidents
-        const forwardApps: ConnectedApp[] = sortApps([
-          ...ingestionByCategory.email,
-          ...ingestionByCategory.cases,
-          ...ingestionByCategory.edr,
-          ...ingestionByCategory.siem,
-          ...ingestionByCategory.other,
-        ]);
-        const fwdValidated = forwardApps.filter(a => a.isValidated).length;
-        const fwdTotal = forwardApps.length;
+        // Use the same categorized ingestionSources UI as automatic_ingestion
+        const forwardSources: IngestionSource[] = [
+          { category: 'email', label: 'Email', apps: sortApps(ingestionByCategory.email) },
+          { category: 'cases', label: 'Cases', apps: sortApps(ingestionByCategory.cases) },
+          { category: 'edr', label: 'EDR', apps: sortApps(ingestionByCategory.edr) },
+          { category: 'siem', label: 'SIEM', apps: sortApps(ingestionByCategory.siem) },
+        ];
+        if (ingestionByCategory.other.length > 0) {
+          forwardSources.push({ category: 'other', label: 'Other', apps: sortApps(ingestionByCategory.other), isOther: true });
+        }
+        const fwdTotal = forwardSources.flatMap(s => s.apps).length;
+        const fwdValidated = forwardSources.flatMap(s => s.apps).filter(a => a.isValidated).length;
         return {
           ...opt,
           description: fwdTotal > 0
             ? `${fwdValidated} validated${fwdTotal > fwdValidated ? `, ${fwdTotal - fwdValidated} pending` : ''}`
-            : 'Connect ticketing tools to forward incident updates',
-          connectedApps: forwardApps,
+            : 'Connect tools to forward incident updates',
+          ingestionSources: forwardSources,
         };
       }
       if (opt.id === 'threat_intel') {
