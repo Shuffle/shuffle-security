@@ -354,12 +354,12 @@ export default function UsecaseAlluvialDiagram({
         >
           <defs>
             <linearGradient id="flow-gradient-left" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.08" />
+              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.2" />
             </linearGradient>
             <linearGradient id="flow-gradient-right" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.08" />
-              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.3" />
+              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.4" />
             </linearGradient>
             <filter id="glow">
               <feGaussianBlur stdDeviation="3" result="blur" />
