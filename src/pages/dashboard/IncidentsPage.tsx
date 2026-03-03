@@ -38,6 +38,7 @@ import { IncidentCardView } from '@/components/incidents/IncidentCardView';
 import { IncidentStatsCards } from '@/components/incidents/IncidentStatsCards';
 import { IncidentsEmptyState } from '@/components/incidents/IncidentsEmptyState';
 import { IngestionSourceButton } from '@/components/incidents/IngestionSourceButton';
+import { WebhookIngestionButton } from '@/components/incidents/WebhookIngestionButton';
 
 import { toast } from 'sonner';
 
@@ -265,6 +266,7 @@ const IncidentsPage = () => {
   const [categoryAutomations, setCategoryAutomations] = useState<CategoryAutomation[] | null>(null);
   const [ingestionApps, setIngestionApps] = useState<ValidatedIngestionApp[]>([]);
   const [ingestWorkflowId, setIngestWorkflowId] = useState<string | null>(null);
+  const [webhookIngestionUrl, setWebhookIngestionUrl] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -329,6 +331,23 @@ const IncidentsPage = () => {
           if (ingestWorkflow) {
             workflowAppNames = extractWorkflowAppNames(ingestWorkflow);
             setIngestWorkflowId(ingestWorkflow.id);
+          }
+
+          // Detect "Ingestion Webhook" workflow and extract webhook URL
+          const webhookWorkflow = workflowList.find((w: any) => w.name === 'Ingestion Webhook');
+          if (webhookWorkflow) {
+            const webhookTrigger = (webhookWorkflow.triggers || []).find(
+              (t: any) => t.trigger_type === 'WEBHOOK' || t.app_name === 'Webhook'
+            );
+            if (webhookTrigger) {
+              // The webhook URL is typically the workflow's webhook endpoint
+              const webhookId = webhookTrigger.id || webhookTrigger.trigger_id;
+              if (webhookId) {
+                setWebhookIngestionUrl(getApiUrl(`/api/v1/hooks/webhook_${webhookId}`));
+              }
+            }
+          } else {
+            setWebhookIngestionUrl(null);
           }
         }
 
@@ -754,6 +773,7 @@ const IncidentsPage = () => {
           <IncidentsEmptyState 
             ingestionApps={ingestionApps} 
             onIngestionToggled={fetchIngestionApps}
+            webhookUrl={webhookIngestionUrl}
             isSyncing={isSyncing}
             onSyncNow={ingestWorkflowId ? async () => {
               setIsSyncing(true);
@@ -815,7 +835,7 @@ const IncidentsPage = () => {
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           {/* Ingestion Sources - grouped in a subtle container with add button */}
-          {ingestionApps.length > 0 && (
+          {(ingestionApps.length > 0 || webhookIngestionUrl) && (
             <Box sx={{ 
               display: 'flex', 
               alignItems: 'center', 
@@ -826,6 +846,9 @@ const IncidentsPage = () => {
               px: 0.75,
               py: 0.5,
             }}>
+              {webhookIngestionUrl && (
+                <WebhookIngestionButton webhookUrl={webhookIngestionUrl} />
+              )}
               {ingestionApps.map(app => (
                 <IngestionSourceButton key={app.name} app={app} allApps={ingestionApps} onToggled={fetchIngestionApps} />
               ))}

@@ -8,17 +8,19 @@ import AddIcon from '@mui/icons-material/Add';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { ValidatedIngestionApp } from '@/lib/ingestionDetection';
 import { IngestionSourceButton } from './IngestionSourceButton';
+import { WebhookIngestionButton } from './WebhookIngestionButton';
 
 interface IncidentsEmptyStateProps {
   ingestionApps?: ValidatedIngestionApp[];
   onIngestionToggled?: () => void;
+  webhookUrl?: string | null;
   isSyncing?: boolean;
   onSyncNow?: () => void;
   onCreateIncident?: () => void;
 }
 
-export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, isSyncing = false, onSyncNow, onCreateIncident }: IncidentsEmptyStateProps) => {
-  const hasApps = ingestionApps.length > 0;
+export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, webhookUrl, isSyncing = false, onSyncNow, onCreateIncident }: IncidentsEmptyStateProps) => {
+  const hasApps = ingestionApps.length > 0 || !!webhookUrl;
 
   return (
     <motion.div
@@ -96,6 +98,9 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, is
             py: 0.75,
             mb: 4,
           }}>
+            {webhookUrl && (
+              <WebhookIngestionButton webhookUrl={webhookUrl} />
+            )}
             {ingestionApps.map(app => (
               <IngestionSourceButton key={app.name} app={app} allApps={ingestionApps} onToggled={onIngestionToggled} />
             ))}
