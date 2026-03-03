@@ -258,8 +258,8 @@ export default function UsecasesPage() {
           <Box
             sx={{
               display: 'grid',
-              gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', lg: '1fr 1fr 1fr' },
-              gap: 2,
+              gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr', lg: '1fr 1fr 1fr 1fr' },
+              gap: 1.5,
             }}
           >
             {group.flows.map((flow) => (
@@ -320,59 +320,24 @@ function UsecaseCard({ flow, drift, apiLoaded, onClick }: { flow: Usecase; drift
         },
       }}
     >
-      <CardActionArea onClick={onClick} sx={{ p: 2.5, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', height: '100%' }}>
+      <CardActionArea onClick={onClick} sx={{ px: 2, py: 1.5, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
         {/* Label + sync icon */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.5, width: '100%' }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))', flexGrow: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, width: '100%' }}>
+          <Typography variant="body2" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))', flexGrow: 1, fontSize: '0.82rem' }}>
             {flow.label}
           </Typography>
           {syncIcon}
         </Box>
 
         {/* Source → Target */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 1.5 }}>
-          <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.7rem' }}>
             {sourceCat}
           </Typography>
-          <ArrowRight size={12} style={{ color: 'hsl(var(--muted-foreground))' }} />
-          <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+          <ArrowRight size={10} style={{ color: 'hsl(var(--muted-foreground))' }} />
+          <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.7rem' }}>
             {targetCat}
           </Typography>
-        </Box>
-
-        {/* Description (truncated) */}
-        <Typography
-          variant="body2"
-          sx={{
-            color: 'hsl(var(--muted-foreground))',
-            fontSize: '0.78rem',
-            lineHeight: 1.5,
-            display: '-webkit-box',
-            WebkitLineClamp: 3,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-            mb: 1.5,
-            flexGrow: 1,
-          }}
-        >
-          {flow.description}
-        </Typography>
-
-        {/* Tags */}
-        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-          {flow.tags.slice(0, 3).map((tag) => (
-            <Chip
-              key={tag}
-              label={tag}
-              size="small"
-              sx={{
-                height: 20,
-                fontSize: '0.65rem',
-                bgcolor: 'hsl(var(--muted) / 0.5)',
-                color: 'hsl(var(--muted-foreground))',
-              }}
-            />
-          ))}
         </Box>
       </CardActionArea>
     </Card>
