@@ -59,10 +59,18 @@ const CATEGORY_PATTERNS: Record<string, string[]> = {
 };
 
 function matchesCategory(appName: string, categoryId: string): boolean {
+  if (isShuffleInternalApp(appName)) return false;
   const patterns = CATEGORY_PATTERNS[categoryId];
   if (!patterns) return false;
   const lower = appName.toLowerCase();
   return patterns.some(p => lower.includes(p));
+}
+
+/** Filter out Shuffle's own internal tools (e.g. "Shuffle Tools", "Shuffle Datastore") */
+const SHUFFLE_INTERNAL_PATTERNS = ['shuffle tools', 'shuffle datastore', 'shuffle workflow'];
+function isShuffleInternalApp(appName: string): boolean {
+  const lower = appName.toLowerCase();
+  return SHUFFLE_INTERNAL_PATTERNS.some(p => lower.includes(p));
 }
 
 // ── Status dot color ───────────────────────────────────────────────────────────
@@ -274,7 +282,7 @@ export default function UsecaseAlluvialDiagram({
     if (highlightCategory && ingestAppNames && ingestAppNames.size > 0) {
       // Show all apps that are in the ingest workflow
       const ingestNodes = allApps.filter(a =>
-        ingestAppNames.has(normalizeAppName(a.name))
+        ingestAppNames.has(normalizeAppName(a.name)) && !isShuffleInternalApp(a.name)
       );
       // Mark which ones match the highlight category
       return ingestNodes.map(a => ({
