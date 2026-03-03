@@ -8,19 +8,19 @@ import AddIcon from '@mui/icons-material/Add';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { ValidatedIngestionApp } from '@/lib/ingestionDetection';
 import { IngestionSourceButton } from './IngestionSourceButton';
-import { WebhookIngestionButton } from './WebhookIngestionButton';
+import { WebhookIngestionButton, WebhookIngestionInfo } from './WebhookIngestionButton';
 
 interface IncidentsEmptyStateProps {
   ingestionApps?: ValidatedIngestionApp[];
   onIngestionToggled?: () => void;
-  webhookUrl?: string | null;
+  webhook?: WebhookIngestionInfo;
   isSyncing?: boolean;
   onSyncNow?: () => void;
   onCreateIncident?: () => void;
 }
 
-export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, webhookUrl, isSyncing = false, onSyncNow, onCreateIncident }: IncidentsEmptyStateProps) => {
-  const hasApps = ingestionApps.length > 0 || !!webhookUrl;
+export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, webhook, isSyncing = false, onSyncNow, onCreateIncident }: IncidentsEmptyStateProps) => {
+  const hasApps = ingestionApps.length > 0 || !!webhook?.exists || !!webhook?.enabled;
 
   return (
     <motion.div
@@ -98,8 +98,8 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, we
             py: 0.75,
             mb: 4,
           }}>
-            {webhookUrl && (
-              <WebhookIngestionButton webhookUrl={webhookUrl} />
+            {webhook && (
+              <WebhookIngestionButton webhook={webhook} onToggled={onIngestionToggled} />
             )}
             {ingestionApps.map(app => (
               <IngestionSourceButton key={app.name} app={app} allApps={ingestionApps} onToggled={onIngestionToggled} />
