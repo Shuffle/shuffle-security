@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   Box,
   Card,
@@ -258,6 +258,7 @@ const IncidentsPage = () => {
   const currentUsername = userInfo?.username || '';
   const { users, loading: usersLoading } = useUsers();
 
+  const [searchParams, setSearchParams] = useSearchParams();
   const [filters, setFilters] = useState<Filters>({ severity: null, status: null, tlp: null, assignee: null, source: null });
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [automationsDialogOpen, setAutomationsDialogOpen] = useState(false);
@@ -342,6 +343,42 @@ const IncidentsPage = () => {
     fetchIngestionApps();
   }, [fetchIngestionApps]);
 
+  // Auto-sync when arriving from onboarding with ?autoSync=1
+  const autoSyncTriggered = useCallback(async () => {
+    if (!searchParams.has('autoSync') || !ingestWorkflowId || isSyncing) return;
+    // Clear the param so it doesn't re-trigger
+    setSearchParams((prev) => { prev.delete('autoSync'); return prev; }, { replace: true });
+    setIsSyncing(true);
+    try {
+      const resp = await fetch(getApiUrl(`/api/v1/workflows/${ingestWorkflowId}/execute`), {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+        body: JSON.stringify({ execution_source: 'manual', start: '' }),
+      });
+      if (resp.ok) {
+        toast.success('Sync started — polling for new incidents…');
+        let pollCount = 0;
+        const pollInterval = setInterval(async () => {
+          pollCount++;
+          await fetchItems();
+          if (pollCount >= 6) {
+            clearInterval(pollInterval);
+            setIsSyncing(false);
+          }
+        }, 10000);
+      } else {
+        setIsSyncing(false);
+      }
+    } catch {
+      setIsSyncing(false);
+    }
+  }, [searchParams, ingestWorkflowId, isSyncing, setSearchParams, fetchItems]);
+
+  useEffect(() => {
+    autoSyncTriggered();
+  }, [autoSyncTriggered]);
+
   // Helper: check if an incident has meaningful content (title or description)
   const hasContent = (incident: DisplayIncident): boolean => {
     const hasTitle = !!incident.title;
@@ -368,8 +405,6 @@ const IncidentsPage = () => {
         return incident;
       });
   }, [datastoreItems, validUsernames]);
-
-
 
   // Split into relevant and irrelevant
   const [relevantIncidents, irrelevantCount] = useMemo(() => {
