@@ -25,7 +25,7 @@ const floatingIcons = [
 const FloatingIcon = ({ name, abbr, color, x, y, delay, size }: typeof floatingIcons[0]) => (
   <motion.div
     initial={{ opacity: 0, scale: 0 }}
-    animate={{ opacity: 0.6, scale: 1 }}
+    animate={{ opacity: 0.35, scale: 1 }}
     whileHover={{ opacity: 1 }}
     transition={{ duration: 0.6, delay: delay + 0.5 }}
     style={{
@@ -118,9 +118,9 @@ export const HeroSection = () => {
           right: 0,
           bottom: 0,
           background: `
-            radial-gradient(ellipse 80% 50% at 50% -20%, rgba(255, 102, 0, 0.15) 0%, transparent 50%),
-            radial-gradient(ellipse 60% 40% at 90% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
-            radial-gradient(ellipse 60% 40% at 10% 80%, rgba(34, 197, 94, 0.06) 0%, transparent 50%)
+            radial-gradient(ellipse 80% 50% at 50% -20%, rgba(255, 102, 0, 0.07) 0%, transparent 50%),
+            radial-gradient(ellipse 60% 40% at 90% 80%, rgba(139, 92, 246, 0.04) 0%, transparent 50%),
+            radial-gradient(ellipse 60% 40% at 10% 80%, rgba(34, 197, 94, 0.03) 0%, transparent 50%)
           `,
           pointerEvents: 'none',
         }}
@@ -135,8 +135,8 @@ export const HeroSection = () => {
           right: 0,
           bottom: 0,
           backgroundImage: `
-            linear-gradient(rgba(255, 102, 0, 0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255, 102, 0, 0.03) 1px, transparent 1px)
+            linear-gradient(rgba(255, 102, 0, 0.015) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 102, 0, 0.015) 1px, transparent 1px)
           `,
           backgroundSize: '80px 80px',
           pointerEvents: 'none',
