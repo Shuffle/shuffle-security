@@ -148,6 +148,9 @@ const AppDetailPage = () => {
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
   const [appLoading, setAppLoading] = useState(true);
   const [appNotFound, setAppNotFound] = useState(false);
+  const [isActivated, setIsActivated] = useState<boolean | null>(null);
+  const [activatedAppId, setActivatedAppId] = useState<string | null>(null);
+  const [activateLoading, setActivateLoading] = useState(false);
 
   const {
     authStates,
@@ -229,6 +232,73 @@ const AppDetailPage = () => {
     };
     fetchAppInfo();
   }, [appname]);
+
+  // Check if app is activated via /api/v1/apps
+  useEffect(() => {
+    if (!appname || !isAuthenticated || !API_CONFIG.apiKey) return;
+    const normalizedName = appname.toLowerCase().replace(/[\s_\-]+/g, '_');
+    (async () => {
+      try {
+        const res = await fetch(getApiUrl('/api/v1/apps'), {
+          credentials: 'include',
+          headers: { ...getAuthHeader() },
+        });
+        if (!res.ok) return;
+        const apps = await res.json();
+        if (!Array.isArray(apps)) return;
+        const match = apps.find((a: any) =>
+          (a.name || '').toLowerCase().replace(/[\s_\-]+/g, '_') === normalizedName && a.activated
+        );
+        setIsActivated(!!match);
+        setActivatedAppId(match?.id || null);
+      } catch {
+        // silently fail
+      }
+    })();
+  }, [appname, isAuthenticated]);
+
+  const handleActivateToggle = async () => {
+    if (!appname || activateLoading) return;
+    setActivateLoading(true);
+    try {
+      if (isActivated && activatedAppId) {
+        // Deactivate
+        const res = await fetch(getApiUrl(`/api/v1/apps/${activatedAppId}/activate`), {
+          method: 'DELETE',
+          credentials: 'include',
+          headers: { ...getAuthHeader() },
+        });
+        if (res.ok) {
+          setIsActivated(false);
+          setActivatedAppId(null);
+        }
+      } else {
+        // Find app ID first via search, then activate
+        const searchRes = await fetch(getApiUrl(`/api/v1/apps/${encodeURIComponent(appname)}/config`), {
+          credentials: 'include',
+          headers: { ...getAuthHeader() },
+        });
+        if (searchRes.ok) {
+          const data = await searchRes.json();
+          const appId = data.id;
+          if (appId) {
+            const activateRes = await fetch(getApiUrl(`/api/v1/apps/${appId}/activate`), {
+              credentials: 'include',
+              headers: { ...getAuthHeader() },
+            });
+            if (activateRes.ok) {
+              setIsActivated(true);
+              setActivatedAppId(appId);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Activate/deactivate failed:', e);
+    } finally {
+      setActivateLoading(false);
+    }
+  };
 
   // Get matching auth entries for this app
   const matchingEntries = useMemo(() => {
@@ -476,7 +546,40 @@ const AppDetailPage = () => {
 
             {/* Action buttons — only for authenticated users */}
             {isAuthenticated && (
-              <Box sx={{ display: 'flex', gap: 1, flexShrink: 0 }}>
+              <Box sx={{ display: 'flex', gap: 1, flexShrink: 0, alignItems: 'center' }}>
+                {isActivated !== null && (
+                  <Button
+                    onClick={handleActivateToggle}
+                    disabled={activateLoading}
+                    variant={isActivated ? 'outlined' : 'contained'}
+                    size="small"
+                    sx={{
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      fontSize: '0.75rem',
+                      borderRadius: 2,
+                      px: 2,
+                      py: 0.75,
+                      minHeight: 0,
+                      ...(isActivated
+                        ? {
+                            color: 'hsl(var(--muted-foreground))',
+                            borderColor: 'hsl(var(--border))',
+                            '&:hover': {
+                              borderColor: 'hsl(var(--destructive))',
+                              color: 'hsl(var(--destructive))',
+                              bgcolor: 'hsla(var(--destructive) / 0.08)',
+                            },
+                          }
+                        : {
+                            bgcolor: '#FF6600',
+                            '&:hover': { bgcolor: '#e55c00' },
+                          }),
+                    }}
+                  >
+                    {activateLoading ? '…' : isActivated ? 'Deactivate' : 'Activate'}
+                  </Button>
+                )}
                 <Tooltip title="Refresh" arrow>
                   <IconButton
                     onClick={() => refreshAuth()}
