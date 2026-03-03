@@ -19,6 +19,7 @@ interface Integration {
   category: string;
   hasValidAuth: boolean;
   authInstances: { label: string; isValidated: boolean }[];
+  isActiveOnly?: boolean;
 }
 
 interface IntegrationStatusProps {
@@ -58,41 +59,77 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
       
       setLoading(true);
       try {
-        const response = await fetch(getApiUrl('/api/v1/apps/authentication'), {
+        // Fetch authenticated apps
+        const authResponse = await fetch(getApiUrl('/api/v1/apps/authentication'), {
           credentials: 'include',
-          headers: {
-            ...getAuthHeader(),
-          },
+          headers: { ...getAuthHeader() },
         });
         
-        if (response.ok) {
-          const result = await response.json();
+        let dedupedIntegrations: Integration[] = [];
+        const authNameSet = new Set<string>();
+
+        if (authResponse.ok) {
+          const result = await authResponse.json();
           const authData: AuthAppEntry[] = result.data || result;
           
           if (Array.isArray(authData)) {
-            // Use shared deduplication utility
             const dedupedApps = deduplicateAuthApps(authData);
             
-            // Convert to integration objects and sort by validation status
-            const dedupedIntegrations = dedupedApps
-              .map(({ app, instances, hasValidAuth, bestImage }) => ({
-                id: app.id,
-                name: app.name,
-                icon: bestImage || app.large_image || '',
-                category: app.categories?.[0] || 'Integration',
-                hasValidAuth,
-                authInstances: instances,
-              }))
-              .sort((a, b) => {
-                // Valid first, then alphabetically
-                if (a.hasValidAuth && !b.hasValidAuth) return -1;
-                if (!a.hasValidAuth && b.hasValidAuth) return 1;
-                return a.name.localeCompare(b.name);
+            dedupedIntegrations = dedupedApps
+              .map(({ app, instances, hasValidAuth, bestImage }) => {
+                authNameSet.add(app.name.toLowerCase());
+                return {
+                  id: app.id,
+                  name: app.name,
+                  icon: bestImage || app.large_image || '',
+                  category: app.categories?.[0] || 'Integration',
+                  hasValidAuth,
+                  authInstances: instances,
+                  isActiveOnly: false,
+                };
               });
-            
-            setAllIntegrations(dedupedIntegrations);
           }
         }
+
+        // Fetch active apps (only if count < 10)
+        try {
+          const appsResponse = await fetch(getApiUrl('/api/v1/apps'), {
+            credentials: 'include',
+            headers: { ...getAuthHeader() },
+          });
+          if (appsResponse.ok) {
+            const appsData = await appsResponse.json();
+            if (Array.isArray(appsData) && appsData.length < 10) {
+              for (const app of appsData) {
+                if (app.activated && !authNameSet.has((app.name || '').toLowerCase())) {
+                  authNameSet.add((app.name || '').toLowerCase());
+                  dedupedIntegrations.push({
+                    id: app.id || app.name,
+                    name: app.name,
+                    icon: app.large_image || '',
+                    category: app.categories?.[0] || 'Integration',
+                    hasValidAuth: false,
+                    authInstances: [],
+                    isActiveOnly: true,
+                  });
+                }
+              }
+            }
+          }
+        } catch (_) {
+          // Non-critical, ignore
+        }
+
+        // Sort: valid auth first, then active-only (red dot) last, then alphabetically
+        dedupedIntegrations.sort((a, b) => {
+          if (a.hasValidAuth && !b.hasValidAuth) return -1;
+          if (!a.hasValidAuth && b.hasValidAuth) return 1;
+          if (!a.isActiveOnly && b.isActiveOnly) return -1;
+          if (a.isActiveOnly && !b.isActiveOnly) return 1;
+          return a.name.localeCompare(b.name);
+        });
+            
+        setAllIntegrations(dedupedIntegrations);
       } catch (error) {
         console.error('Failed to fetch integrations:', error);
       } finally {
@@ -103,8 +140,9 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
     fetchIntegrations();
   }, []);
 
-  const getStatusColor = (hasValidAuth: boolean) => {
-    return hasValidAuth ? 'hsl(var(--severity-low))' : 'hsl(var(--muted-foreground))';
+  const getStatusColor = (integration: Integration) => {
+    if (integration.isActiveOnly) return 'hsl(var(--destructive))';
+    return integration.hasValidAuth ? 'hsl(var(--severity-low))' : 'hsl(var(--muted-foreground))';
   };
 
   // Icon-only view for both collapsed and expanded states
@@ -254,7 +292,7 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
                         width: 8,
                         height: 8,
                         borderRadius: '50%',
-                        backgroundColor: getStatusColor(integration.hasValidAuth),
+                        backgroundColor: getStatusColor(integration),
                         border: '1.5px solid hsl(var(--card))',
                         pointerEvents: 'none',
                       }}
