@@ -99,19 +99,22 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
           });
           if (appsResponse.ok) {
             const appsData = await appsResponse.json();
-            if (Array.isArray(appsData) && appsData.length < 10) {
-              for (const app of appsData) {
-                if (app.activated && !authNameSet.has((app.name || '').toLowerCase())) {
-                  authNameSet.add((app.name || '').toLowerCase());
-                  dedupedIntegrations.push({
-                    id: app.id || app.name,
-                    name: app.name,
-                    icon: app.large_image || '',
-                    category: app.categories?.[0] || 'Integration',
-                    hasValidAuth: false,
-                    authInstances: [],
-                    isActiveOnly: true,
-                  });
+            if (Array.isArray(appsData)) {
+              const activatedApps = appsData.filter((app: any) => app.activated);
+              if (activatedApps.length < 10) {
+                for (const app of activatedApps) {
+                  if (!authNameSet.has((app.name || '').toLowerCase())) {
+                    authNameSet.add((app.name || '').toLowerCase());
+                    dedupedIntegrations.push({
+                      id: app.id || app.name,
+                      name: app.name,
+                      icon: app.large_image || '',
+                      category: app.categories?.[0] || 'Integration',
+                      hasValidAuth: false,
+                      authInstances: [],
+                      isActiveOnly: true,
+                    });
+                  }
                 }
               }
             }
