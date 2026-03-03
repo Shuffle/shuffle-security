@@ -1037,39 +1037,58 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
 
               {/* Always-visible search */}
               <Box sx={{
-                borderRadius: 2,
+                borderRadius: 1.5,
                 border: '1px solid hsl(var(--border))',
-                bgcolor: 'hsl(var(--background))',
+                bgcolor: 'hsl(var(--card))',
                 overflow: 'hidden',
                 position: 'relative',
-                '& .singul-container': { background: 'transparent !important' },
+                '& .singul-container': { background: 'transparent !important', padding: '0 !important' },
+                '& .singul-input-wrapper, & .singul-search-wrapper': { background: 'transparent !important' },
                 '& .singul-input': {
                   background: 'transparent !important',
                   color: 'hsl(var(--foreground)) !important',
-                  fontSize: '0.82rem !important',
+                  fontSize: '0.78rem !important',
                   border: 'none !important',
-                  padding: '8px 12px !important',
+                  padding: '6px 10px !important',
+                  height: '32px !important',
+                  boxSizing: 'border-box !important',
                 },
                 '& .singul-results': {
                   background: 'hsl(var(--card)) !important',
-                  border: '1px solid hsl(var(--border)) !important',
-                  maxHeight: '180px !important',
+                  border: 'none !important',
+                  borderTop: '1px solid hsl(var(--border)) !important',
+                  maxHeight: '160px !important',
                   overflowY: 'auto !important',
                   position: 'relative !important',
+                  padding: '4px !important',
                 },
                 '& .singul-result-item': {
                   color: 'hsl(var(--foreground)) !important',
                   background: 'transparent !important',
-                  fontSize: '0.8rem !important',
-                  padding: '6px 12px !important',
+                  fontSize: '0.75rem !important',
+                  padding: '4px 8px !important',
                   borderRadius: '4px !important',
-                  margin: '2px 4px !important',
+                  margin: '1px 0 !important',
+                  minHeight: 'unset !important',
+                  height: 'auto !important',
+                  gap: '8px !important',
                 },
                 '& .singul-result-item:hover': {
                   background: 'hsl(var(--muted)) !important',
                 },
                 '& .singul-result-item img': {
                   borderRadius: '4px !important',
+                  width: '24px !important',
+                  height: '24px !important',
+                },
+                '& .singul-result-item span, & .singul-result-item p, & .singul-result-item a': {
+                  color: 'hsl(var(--foreground)) !important',
+                  fontSize: '0.75rem !important',
+                },
+                '& .singul-no-results': {
+                  color: 'hsl(var(--muted-foreground)) !important',
+                  fontSize: '0.72rem !important',
+                  padding: '8px !important',
                 },
               }}>
                 <SingulJS
