@@ -72,7 +72,7 @@ const navItems: NavItem[] = [
     path: '/detection',
     children: [
       { label: 'Sigma Rules', path: '/detection/sigma', icon: <Braces size={16} /> },
-      { label: 'MITRE ATT&CK', path: '/detection/mitre', icon: <Waypoints size={16} /> },
+      // { label: 'MITRE ATT&CK', path: '/detection/mitre', icon: <Waypoints size={16} /> },
     ],
   },
   { label: 'Infrastructure', icon: <Network size={20} />, path: '/infrastructure' },
