@@ -108,7 +108,7 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, on
             <Tooltip title="Add ingestion source" placement="bottom">
               <IconButton
                 component={Link}
-                to="/onboarding/automate"
+                to="/onboarding/sources"
                 size="small"
                 sx={{
                   width: 28,
