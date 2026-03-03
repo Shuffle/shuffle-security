@@ -356,7 +356,7 @@ const RulesPage = () => {
   const handleOpenCreateDialog = () => {
     setEditingFile(null);
     setRuleName('');
-    setRuleContent(SIGMA_TEMPLATE);
+    setRuleContent('');
     setSampleLog('');
     setIsCreateDialogOpen(true);
   };
@@ -870,9 +870,9 @@ const RulesPage = () => {
                       fontSize: '0.7rem',
                       cursor: 'pointer',
                       backgroundColor: 'hsl(var(--muted))',
-                      color: 'hsl(var(--primary))',
+                      color: 'hsl(var(--muted-foreground))',
                       border: '1px solid hsl(var(--border))',
-                      '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.1)', borderColor: 'hsl(var(--primary))' },
+                      '&:hover': { backgroundColor: 'hsl(var(--muted) / 0.8)', borderColor: 'hsl(var(--muted-foreground) / 0.3)' },
                     }}
                   />
                 ))}
@@ -924,9 +924,9 @@ const RulesPage = () => {
                         fontSize: '0.7rem',
                         cursor: 'pointer',
                         backgroundColor: 'hsl(var(--muted))',
-                        color: 'hsl(var(--primary))',
+                        color: 'hsl(var(--muted-foreground))',
                         border: '1px solid hsl(var(--border))',
-                        '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.1)', borderColor: 'hsl(var(--primary))' },
+                        '&:hover': { backgroundColor: 'hsl(var(--muted) / 0.8)', borderColor: 'hsl(var(--muted-foreground) / 0.3)' },
                       }}
                     />
                   ))}
