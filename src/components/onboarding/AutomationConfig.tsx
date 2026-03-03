@@ -36,7 +36,7 @@ import {
   EMAIL_APP_PATTERNS, CASES_PATTERNS, EDR_PATTERNS, SIEM_PATTERNS,
   THREAT_INTEL_PATTERNS, COMMUNICATION_PATTERNS_NAMES,
   isEmailApp, isThreatIntelApp, getIngestionCategory,
-  normalizeAppName,
+  normalizeAppName, extractValidatedIngestionApps,
   type IngestionCategory,
 } from '@/lib/ingestionDetection';
 import shuffleLogo from '@/assets/shuffle-logo.png';
@@ -322,43 +322,37 @@ export const AutomationConfig = ({
     const dedupedApps = deduplicateAuthApps(
       authenticatedApps.filter(auth => auth.active || auth.validation?.valid)
     );
-    
     const appValidationMap = new Map<string, boolean>();
     dedupedApps.forEach(({ app, hasValidAuth }) => {
-      const normalized = app.name.toLowerCase().trim().replace(/[\s_\-]+/g, '_');
-      appValidationMap.set(normalized, hasValidAuth);
+      appValidationMap.set(normalizeAppName(app.name), hasValidAuth);
     });
-    
+
+    // Use the same shared function as IncidentsPage for consistent ingestion app detection
+    const validatedApps = extractValidatedIngestionApps(
+      authenticatedApps.filter(auth => auth.active || auth.validation?.valid),
+      workflowAppNames,
+    );
+
+    // Group validated apps by category into ConnectedApp format
     const ingestionByCategory: Record<IngestionCategory | 'other', ConnectedApp[]> = {
-      email: [],
-      cases: [],
-      edr: [],
-      siem: [],
-      other: [],
+      email: [], cases: [], edr: [], siem: [], other: [],
     };
-    
-    // Track which app IDs have been categorized
-    const categorizedIngestionIds = new Set<string>();
-    
-    dedupedApps.forEach(({ app, bestImage, hasValidAuth }) => {
-      const category = getIngestionCategory(app.name, app.categories);
-      if (category) {
-        ingestionByCategory[category].push({
-          id: app.id,
-          name: app.name,
-          image: bestImage || app.large_image,
-          isValidated: hasValidAuth,
-          isSelected: isAppSelected(app.name),
-          hasAuthConfig: true,
-        });
-        categorizedIngestionIds.add(app.id);
-      }
-    });
-    
+
+    for (const vApp of validatedApps) {
+      ingestionByCategory[vApp.category].push({
+        id: vApp.id,
+        name: vApp.name,
+        image: vApp.image,
+        isValidated: vApp.validated,
+        isSelected: isAppSelected(vApp.name),
+        hasAuthConfig: true,
+      });
+    }
+
+    // Also include selected (pending) apps not yet authenticated
+    const validatedNames = new Set(validatedApps.map(a => normalizeAppName(a.name)));
     selectedApps.forEach(app => {
-      const normalizedName = app.name.toLowerCase().trim().replace(/[\s_\-]+/g, '_');
-      if (appValidationMap.has(normalizedName)) return;
-      
+      if (validatedNames.has(normalizeAppName(app.name))) return;
       const category = getIngestionCategory(app.name, app.categories);
       if (category) {
         ingestionByCategory[category].push({
@@ -369,27 +363,9 @@ export const AutomationConfig = ({
           isSelected: true,
           hasAuthConfig: false,
         });
-        categorizedIngestionIds.add(app.objectID);
       }
     });
-    
-    // Collect "Other" apps: authenticated but not categorized as ingestion, threat intel, or communication
-    dedupedApps.forEach(({ app, bestImage, hasValidAuth }) => {
-      if (categorizedIngestionIds.has(app.id)) return;
-      if (isThreatIntelApp(app.name)) return;
-      if (isEmailApp(app.name)) return; // Already in email category
-      if (isCommunicationApp({ app, active: true, validation: { valid: true } })) return;
-      
-      ingestionByCategory.other.push({
-        id: app.id,
-        name: app.name,
-        image: bestImage || app.large_image,
-        isValidated: hasValidAuth,
-        isSelected: isAppSelected(app.name),
-        hasAuthConfig: true,
-      });
-    });
-    
+
     const sortApps = (apps: ConnectedApp[]): ConnectedApp[] => {
       return [...apps].sort((a, b) => {
         const scoreA = (a.isSelected ? 2 : 0) + (a.isValidated ? 1 : 0);
@@ -405,7 +381,6 @@ export const AutomationConfig = ({
       { category: 'siem', label: 'SIEM', apps: sortApps(ingestionByCategory.siem) },
     ];
     
-    // Only add "Other" if there are uncategorized apps
     if (ingestionByCategory.other.length > 0) {
       ingestionSources.push({ category: 'other', label: 'Other', apps: sortApps(ingestionByCategory.other), isOther: true });
     }
