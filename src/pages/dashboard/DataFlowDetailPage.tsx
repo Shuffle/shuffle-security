@@ -457,8 +457,12 @@ const DataFlowDetailPage = () => {
             </Button>
           )}
         </Box>
-        {flow.id === 'siem_case_management_1' ? (
-          <UsecaseAlluvialDiagram sourceCategory={flow.source} targetCategory={flow.target} />
+        {['siem_case_management_1', 'edr_case_management_1', 'email_case_management_1'].includes(flow.id) ? (
+          <UsecaseAlluvialDiagram
+            sourceCategory={flow.source}
+            targetCategory={flow.target}
+            highlightCategory={flow.source}
+          />
         ) : (
           <Box sx={{ display: 'flex', alignItems: 'stretch', gap: 2 }}>
             {/* Source */}

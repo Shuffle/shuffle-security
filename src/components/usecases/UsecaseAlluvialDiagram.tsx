@@ -1,7 +1,10 @@
 /**
  * UsecaseAlluvialDiagram — Alluvial/Sankey-style visualization showing
  * Source tools → Shuffle → Destination tools for a given usecase.
- * Reuses the same icon + status dot pattern from IntegrationStatus.
+ *
+ * For ingest usecases (SIEM→Ticket, EDR→Ticket, Phishing→Ticket), sources
+ * are all apps enabled in the "Ingest Tickets" workflow, with the apps
+ * matching the usecase's source category visually highlighted (ring glow).
  */
 
 import { useState, useEffect, useMemo } from 'react';
@@ -9,7 +12,15 @@ import { Box, Typography, Avatar, Tooltip } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
-import { SIEM_PATTERNS, CASES_PATTERNS } from '@/lib/ingestionDetection';
+import {
+  SIEM_PATTERNS,
+  CASES_PATTERNS,
+  EDR_PATTERNS,
+  EMAIL_APP_PATTERNS,
+  findIngestTicketsWorkflow,
+  extractWorkflowAppNames,
+  normalizeAppName,
+} from '@/lib/ingestionDetection';
 import { TOOL_CATEGORIES } from '@/config/usecases';
 import shuffleLogo from '@/assets/shuffle-icon.png';
 
@@ -21,6 +32,8 @@ interface AppNode {
   icon: string;
   hasValidAuth: boolean;
   isActiveOnly: boolean;
+  /** Whether this app matches the highlighted source category */
+  isHighlighted?: boolean;
 }
 
 interface UsecaseAlluvialDiagramProps {
@@ -28,6 +41,11 @@ interface UsecaseAlluvialDiagramProps {
   sourceCategory: string;
   /** Target tool category ID (e.g. 'case_management') */
   targetCategory: string;
+  /**
+   * If set, source apps are ALL apps in the Ingest Tickets workflow,
+   * and apps matching this category get a visual highlight.
+   */
+  highlightCategory?: string;
 }
 
 // ── Pattern matchers ───────────────────────────────────────────────────────────
@@ -35,7 +53,8 @@ interface UsecaseAlluvialDiagramProps {
 const CATEGORY_PATTERNS: Record<string, string[]> = {
   siem: SIEM_PATTERNS,
   case_management: CASES_PATTERNS,
-  // extend as needed
+  edr: EDR_PATTERNS,
+  email: EMAIL_APP_PATTERNS,
 };
 
 function matchesCategory(appName: string, categoryId: string): boolean {
@@ -45,7 +64,7 @@ function matchesCategory(appName: string, categoryId: string): boolean {
   return patterns.some(p => lower.includes(p));
 }
 
-// ── Status dot color (same logic as IntegrationStatus) ─────────────────────────
+// ── Status dot color ───────────────────────────────────────────────────────────
 
 function getStatusColor(app: AppNode): string {
   if (app.isActiveOnly) return 'hsl(var(--destructive))';
@@ -54,7 +73,7 @@ function getStatusColor(app: AppNode): string {
 
 // ── App bubble component ───────────────────────────────────────────────────────
 
-function AppBubble({ app, size = 40 }: { app: AppNode; size?: number }) {
+function AppBubble({ app, size = 40, highlighted = false }: { app: AppNode; size?: number; highlighted?: boolean }) {
   const [imgFailed, setImgFailed] = useState(false);
 
   return (
@@ -85,6 +104,19 @@ function AppBubble({ app, size = 40 }: { app: AppNode; size?: number }) {
           '&:hover': { transform: 'scale(1.12)' },
         }}
       >
+        {/* Highlight ring for category-matching apps */}
+        {highlighted && (
+          <Box
+            sx={{
+              position: 'absolute',
+              inset: -3,
+              borderRadius: '50%',
+              border: '2px solid hsl(var(--primary))',
+              boxShadow: '0 0 10px hsl(var(--primary) / 0.4)',
+              pointerEvents: 'none',
+            }}
+          />
+        )}
         {app.icon && !imgFailed ? (
           <Box
             component="img"
@@ -98,6 +130,7 @@ function AppBubble({ app, size = 40 }: { app: AppNode; size?: number }) {
               objectFit: 'contain',
               backgroundColor: 'hsl(var(--muted))',
               p: 0.5,
+              opacity: highlighted ? 1 : 0.7,
             }}
           />
         ) : (
@@ -108,6 +141,7 @@ function AppBubble({ app, size = 40 }: { app: AppNode; size?: number }) {
               backgroundColor: 'hsl(var(--muted))',
               fontSize: size * 0.38,
               color: 'hsl(var(--foreground))',
+              opacity: highlighted ? 1 : 0.7,
             }}
           >
             {app.name.charAt(0).toUpperCase()}
@@ -134,20 +168,37 @@ function AppBubble({ app, size = 40 }: { app: AppNode; size?: number }) {
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
-export default function UsecaseAlluvialDiagram({ sourceCategory, targetCategory }: UsecaseAlluvialDiagramProps) {
+export default function UsecaseAlluvialDiagram({
+  sourceCategory,
+  targetCategory,
+  highlightCategory,
+}: UsecaseAlluvialDiagramProps) {
   const [allApps, setAllApps] = useState<AppNode[]>([]);
+  const [ingestAppNames, setIngestAppNames] = useState<Set<string> | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch authenticated + active apps
+  // Fetch authenticated + active apps, and ingest workflow
   useEffect(() => {
     if (!API_CONFIG.apiKey) { setLoading(false); return; }
 
     (async () => {
       try {
-        const authRes = await fetch(getApiUrl('/api/v1/apps/authentication'), {
-          credentials: 'include',
-          headers: { ...getAuthHeader() },
-        });
+        // Parallel fetch: auth apps, active apps, workflows
+        const [authRes, appsRes, workflowsRes] = await Promise.all([
+          fetch(getApiUrl('/api/v1/apps/authentication'), {
+            credentials: 'include',
+            headers: { ...getAuthHeader() },
+          }),
+          fetch(getApiUrl('/api/v1/apps'), {
+            credentials: 'include',
+            headers: { ...getAuthHeader() },
+          }),
+          fetch(getApiUrl('/api/v1/workflows'), {
+            credentials: 'include',
+            headers: { ...getAuthHeader() },
+          }),
+        ]);
+
         const authNameSet = new Set<string>();
         let nodes: AppNode[] = [];
 
@@ -170,12 +221,8 @@ export default function UsecaseAlluvialDiagram({ sourceCategory, targetCategory 
         }
 
         // Fill with active apps
-        try {
-          const appsRes = await fetch(getApiUrl('/api/v1/apps'), {
-            credentials: 'include',
-            headers: { ...getAuthHeader() },
-          });
-          if (appsRes.ok) {
+        if (appsRes.ok) {
+          try {
             const appsData = await appsRes.json();
             if (Array.isArray(appsData)) {
               for (const app of appsData.filter((a: any) => a.activated)) {
@@ -191,8 +238,20 @@ export default function UsecaseAlluvialDiagram({ sourceCategory, targetCategory 
                 }
               }
             }
-          }
-        } catch (_) {}
+          } catch (_) {}
+        }
+
+        // Parse ingest workflow
+        if (workflowsRes.ok) {
+          try {
+            const wfData = await workflowsRes.json();
+            const workflows = Array.isArray(wfData) ? wfData : (wfData.workflows || []);
+            const ingestWf = findIngestTicketsWorkflow(workflows);
+            if (ingestWf) {
+              setIngestAppNames(extractWorkflowAppNames(ingestWf));
+            }
+          } catch (_) {}
+        }
 
         setAllApps(nodes);
       } catch (err) {
@@ -203,10 +262,23 @@ export default function UsecaseAlluvialDiagram({ sourceCategory, targetCategory 
     })();
   }, []);
 
-  const sourceApps = useMemo(
-    () => allApps.filter(a => matchesCategory(a.name, sourceCategory)),
-    [allApps, sourceCategory],
-  );
+  // Source apps: if highlightCategory is set, show all ingest workflow apps
+  // Otherwise fall back to category-based filtering
+  const sourceApps = useMemo(() => {
+    if (highlightCategory && ingestAppNames && ingestAppNames.size > 0) {
+      // Show all apps that are in the ingest workflow
+      const ingestNodes = allApps.filter(a =>
+        ingestAppNames.has(normalizeAppName(a.name))
+      );
+      // Mark which ones match the highlight category
+      return ingestNodes.map(a => ({
+        ...a,
+        isHighlighted: matchesCategory(a.name, highlightCategory),
+      }));
+    }
+    return allApps.filter(a => matchesCategory(a.name, sourceCategory));
+  }, [allApps, sourceCategory, highlightCategory, ingestAppNames]);
+
   const targetApps = useMemo(
     () => allApps.filter(a => matchesCategory(a.name, targetCategory)),
     [allApps, targetCategory],
@@ -214,6 +286,9 @@ export default function UsecaseAlluvialDiagram({ sourceCategory, targetCategory 
 
   const sourceMeta = TOOL_CATEGORIES.find(c => c.id === sourceCategory);
   const targetMeta = TOOL_CATEGORIES.find(c => c.id === targetCategory);
+
+  // Source label: when showing ingest apps, label as "Ingestion Sources"
+  const sourceLabel = highlightCategory ? 'Ingestion Sources' : (sourceMeta?.label || sourceCategory);
 
   // SVG dimensions
   const nodeSize = 40;
@@ -223,8 +298,8 @@ export default function UsecaseAlluvialDiagram({ sourceCategory, targetCategory 
 
   const maxNodes = Math.max(sourceApps.length, targetApps.length, 1);
   const colHeight = maxNodes * (nodeSize + rowGap) - rowGap;
-  const svgHeight = colHeight + svgPadding * 2 + 40; // extra for labels
-  const svgWidth = colWidth * 3 + 160; // 3 columns with spacing
+  const svgHeight = colHeight + svgPadding * 2 + 40;
+  const svgWidth = colWidth * 3 + 160;
 
   const leftX = svgPadding + nodeSize / 2;
   const centerX = svgWidth / 2;
@@ -238,7 +313,6 @@ export default function UsecaseAlluvialDiagram({ sourceCategory, targetCategory 
 
   const centerY = (svgHeight - 30) / 2;
 
-  // Curved path from source node to center
   const makePath = (fromX: number, fromY: number, toX: number, toY: number) => {
     const cx1 = fromX + (toX - fromX) * 0.45;
     const cx2 = fromX + (toX - fromX) * 0.55;
@@ -259,7 +333,6 @@ export default function UsecaseAlluvialDiagram({ sourceCategory, targetCategory 
 
   return (
     <Box sx={{ width: '100%', overflow: 'hidden' }}>
-      {/* SVG alluvial diagram */}
       <Box sx={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'center' }}>
         <svg
           width={svgWidth}
@@ -267,7 +340,6 @@ export default function UsecaseAlluvialDiagram({ sourceCategory, targetCategory 
           viewBox={`0 0 ${svgWidth} ${svgHeight + 30}`}
           style={{ overflow: 'visible' }}
         >
-          {/* Gradient definitions */}
           <defs>
             <linearGradient id="flow-gradient-left" x1="0" y1="0" x2="1" y2="0">
               <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.3" />
@@ -316,7 +388,7 @@ export default function UsecaseAlluvialDiagram({ sourceCategory, targetCategory 
             );
           })}
 
-          {/* Animated particles along paths — only for authenticated (green) source apps */}
+          {/* Animated particles — only for authenticated source apps */}
           {sourceApps.map((app, i) => {
             if (!app.hasValidAuth) return null;
             const fromY = getY(i, sourceApps.length);
@@ -329,7 +401,6 @@ export default function UsecaseAlluvialDiagram({ sourceCategory, targetCategory 
               </g>
             );
           })}
-          {/* Animated particles to target — only if corresponding source apps are authenticated */}
           {sourceApps.some(app => app.hasValidAuth) && targetApps.map((_, i) => {
             const toY = getY(i, targetApps.length);
             const pathD = makePath(centerX + 28, centerY, rightX - nodeSize / 2 - 4, toY);
@@ -344,7 +415,7 @@ export default function UsecaseAlluvialDiagram({ sourceCategory, targetCategory 
 
           {/* Column labels */}
           <text x={leftX} y={svgHeight + 16} textAnchor="middle" fill="hsl(var(--muted-foreground))" fontSize="11" fontWeight="600">
-            {sourceMeta?.label || sourceCategory}
+            {sourceLabel}
           </text>
           <text x={centerX} y={svgHeight + 16} textAnchor="middle" fill="hsl(var(--muted-foreground))" fontSize="11" fontWeight="600">
             Shuffle
@@ -354,9 +425,8 @@ export default function UsecaseAlluvialDiagram({ sourceCategory, targetCategory 
           </text>
         </svg>
 
-        {/* Overlay HTML app bubbles on top of SVG */}
+        {/* Overlay HTML app bubbles */}
         <Box sx={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: svgWidth, height: svgHeight + 30, pointerEvents: 'none' }}>
-          {/* Source apps */}
           {sourceApps.map((app, i) => {
             const y = getY(i, sourceApps.length);
             return (
@@ -369,7 +439,7 @@ export default function UsecaseAlluvialDiagram({ sourceCategory, targetCategory 
                   pointerEvents: 'auto',
                 }}
               >
-                <AppBubble app={app} size={nodeSize} />
+                <AppBubble app={app} size={nodeSize} highlighted={!!app.isHighlighted} />
               </Box>
             );
           })}
@@ -406,7 +476,6 @@ export default function UsecaseAlluvialDiagram({ sourceCategory, targetCategory 
             </Tooltip>
           </Box>
 
-          {/* Target apps */}
           {targetApps.map((app, i) => {
             const y = getY(i, targetApps.length);
             return (
@@ -426,7 +495,6 @@ export default function UsecaseAlluvialDiagram({ sourceCategory, targetCategory 
         </Box>
       </Box>
 
-      {/* Empty state */}
       {!hasApps && (
         <Typography sx={{ textAlign: 'center', color: 'hsl(var(--muted-foreground))', fontSize: '0.8rem', mt: 2 }}>
           No {sourceMeta?.label} or {targetMeta?.label} tools connected yet.{' '}
