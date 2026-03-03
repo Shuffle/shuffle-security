@@ -24,7 +24,7 @@ import {
   normalizeAppName,
 } from '@/lib/ingestionDetection';
 import { TOOL_CATEGORIES } from '@/config/usecases';
-import shuffleLogo from '@/assets/shuffle-icon.png';
+import shuffleInfraLogo from '@/assets/shuffle-infrastructure-logo.png';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -541,26 +541,13 @@ export default function UsecaseAlluvialDiagram({
               pointerEvents: 'auto',
             }}
           >
-            <Tooltip title="Shuffle Security" placement="bottom" arrow>
+            <Tooltip title="Shuffle Datastore" placement="bottom" arrow>
               <Box
-                sx={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  background: 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.7))',
-                  boxShadow: '0 4px 20px hsl(var(--primary) / 0.3)',
-                }}
-              >
-                <Box
-                  component="img"
-                  src={shuffleLogo}
-                  alt="Shuffle"
-                  sx={{ width: 28, height: 28, objectFit: 'contain', filter: 'brightness(10)' }}
-                />
-              </Box>
+                component="img"
+                src={shuffleInfraLogo}
+                alt="Shuffle"
+                sx={{ width: 48, height: 48, objectFit: 'contain' }}
+              />
             </Tooltip>
           </Box>
 
