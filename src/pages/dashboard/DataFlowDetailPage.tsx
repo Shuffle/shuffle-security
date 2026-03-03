@@ -3,10 +3,10 @@
  * Route: /infrastructure/flows/:flowId
  */
 
-import { useEffect, useMemo, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, Typography, Chip, Button, IconButton, Avatar, Skeleton } from '@mui/material';
-import { ArrowRight, ArrowLeft, Bot, Check } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Bot, Check, Link as LinkIcon, Copy } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
@@ -79,12 +79,16 @@ const ConnectionEndpoint = ({
   categoryDetails,
   apps,
   loading,
+  selectedApps,
+  onToggleApp,
 }: {
   label: string;
   category: ReturnType<typeof getToolCategoryMeta>;
   categoryDetails: typeof TOOL_CATEGORIES[number] | undefined;
   apps: MatchedApp[];
   loading: boolean;
+  selectedApps: Set<string>;
+  onToggleApp: (appName: string) => void;
 }) => {
   const colorVar = category?.color || '--primary';
   const hasApps = apps.length > 0;
@@ -132,7 +136,7 @@ const ConnectionEndpoint = ({
       {/* Apps list */}
       <Box sx={{ pl: 0.5 }}>
         <Typography sx={{ fontSize: '0.6rem', fontWeight: 700, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.06em', mb: 0.75 }}>
-          Your Tools
+          Your Tools {hasApps && selectedApps.size > 0 && `(${selectedApps.size} selected)`}
         </Typography>
         {loading ? (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
@@ -140,28 +144,53 @@ const ConnectionEndpoint = ({
           </Box>
         ) : hasApps ? (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-            {apps.map(app => (
-              <Box key={app.name} sx={{
-                display: 'flex', alignItems: 'center', gap: 1, py: 0.75, px: 1,
-                borderRadius: 1.5,
-                border: app.hasValidAuth ? `1px solid hsla(142 71% 45% / 0.2)` : '1px solid hsl(var(--border))',
-                bgcolor: app.hasValidAuth ? 'hsla(142 71% 45% / 0.04)' : 'transparent',
-              }}>
-                <Avatar
-                  src={app.image}
-                  alt={app.name}
-                  sx={{ width: 22, height: 22, bgcolor: 'hsla(var(--muted-foreground) / 0.1)' }}
+            {apps.map(app => {
+              const isSelected = selectedApps.has(app.name);
+              return (
+                <Box
+                  key={app.name}
+                  onClick={() => onToggleApp(app.name)}
+                  sx={{
+                    display: 'flex', alignItems: 'center', gap: 1, py: 0.75, px: 1,
+                    borderRadius: 1.5,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                    border: isSelected
+                      ? `1px solid hsla(var(${colorVar}) / 0.4)`
+                      : app.hasValidAuth
+                        ? `1px solid hsla(142 71% 45% / 0.2)`
+                        : '1px solid hsl(var(--border))',
+                    bgcolor: isSelected
+                      ? `hsla(var(${colorVar}) / 0.08)`
+                      : app.hasValidAuth
+                        ? 'hsla(142 71% 45% / 0.04)'
+                        : 'transparent',
+                    '&:hover': {
+                      bgcolor: isSelected
+                        ? `hsla(var(${colorVar}) / 0.12)`
+                        : 'hsla(var(--muted-foreground) / 0.06)',
+                    },
+                  }}
                 >
-                  {app.name.charAt(0).toUpperCase()}
-                </Avatar>
-                <Typography sx={{ fontSize: '0.78rem', fontWeight: 600, color: 'hsl(var(--foreground))', flex: 1 }}>
-                  {app.name}
-                </Typography>
-                {app.hasValidAuth && (
-                  <Check size={14} style={{ color: 'hsl(142 71% 45%)' }} />
-                )}
-              </Box>
-            ))}
+                  <Avatar
+                    src={app.image}
+                    alt={app.name}
+                    sx={{ width: 22, height: 22, bgcolor: 'hsla(var(--muted-foreground) / 0.1)' }}
+                  >
+                    {app.name.charAt(0).toUpperCase()}
+                  </Avatar>
+                  <Typography sx={{ fontSize: '0.78rem', fontWeight: 600, color: 'hsl(var(--foreground))', flex: 1 }}>
+                    {app.name}
+                  </Typography>
+                  {isSelected && (
+                    <Check size={14} style={{ color: `hsl(var(${colorVar}))` }} />
+                  )}
+                  {!isSelected && app.hasValidAuth && (
+                    <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: 'hsl(142 71% 45%)', flexShrink: 0 }} />
+                  )}
+                </Box>
+              );
+            })}
           </Box>
         ) : (
           <Box sx={{
@@ -223,6 +252,50 @@ const DataFlowDetailPage = () => {
       }
     };
     fetchApps();
+  }, []);
+
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Parse selected tools from URL
+  const selectedSourceApps = useMemo(() => {
+    const param = searchParams.get('source_tools');
+    return new Set(param ? param.split(',').map(s => s.trim()).filter(Boolean) : []);
+  }, [searchParams]);
+
+  const selectedTargetApps = useMemo(() => {
+    const param = searchParams.get('target_tools');
+    return new Set(param ? param.split(',').map(s => s.trim()).filter(Boolean) : []);
+  }, [searchParams]);
+
+  const updateUrlParams = useCallback((key: string, selected: Set<string>) => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      if (selected.size > 0) {
+        next.set(key, Array.from(selected).join(','));
+      } else {
+        next.delete(key);
+      }
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
+
+  const toggleSourceApp = useCallback((appName: string) => {
+    const next = new Set(selectedSourceApps);
+    if (next.has(appName)) next.delete(appName); else next.add(appName);
+    updateUrlParams('source_tools', next);
+  }, [selectedSourceApps, updateUrlParams]);
+
+  const toggleTargetApp = useCallback((appName: string) => {
+    const next = new Set(selectedTargetApps);
+    if (next.has(appName)) next.delete(appName); else next.add(appName);
+    updateUrlParams('target_tools', next);
+  }, [selectedTargetApps, updateUrlParams]);
+
+  const hasSelection = selectedSourceApps.size > 0 || selectedTargetApps.size > 0;
+
+  const copyShareLink = useCallback(() => {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url);
   }, []);
 
   usePageMeta({
@@ -359,7 +432,30 @@ const DataFlowDetailPage = () => {
         bgcolor: 'hsl(var(--card))',
         mb: 3,
       }}>
-        <Section title="Connection Path" borderBottom={false}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+          <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            Connection Path
+          </Typography>
+          {hasSelection && (
+            <Button
+              size="small"
+              startIcon={<Copy size={12} />}
+              onClick={copyShareLink}
+              sx={{
+                fontSize: '0.7rem',
+                fontWeight: 600,
+                color: 'hsl(var(--primary))',
+                textTransform: 'none',
+                py: 0.25,
+                px: 1,
+                minHeight: 0,
+                '&:hover': { bgcolor: 'hsla(var(--primary) / 0.08)' },
+              }}
+            >
+              Copy share link
+            </Button>
+          )}
+        </Box>
           <Box sx={{ display: 'flex', alignItems: 'stretch', gap: 2 }}>
             {/* Source */}
             <ConnectionEndpoint
@@ -368,6 +464,8 @@ const DataFlowDetailPage = () => {
               categoryDetails={sourceDetails}
               apps={sourceApps}
               loading={appsLoading}
+              selectedApps={selectedSourceApps}
+              onToggleApp={toggleSourceApp}
             />
 
             {/* Arrow */}
@@ -382,9 +480,10 @@ const DataFlowDetailPage = () => {
               categoryDetails={targetDetails}
               apps={targetApps}
               loading={appsLoading}
+              selectedApps={selectedTargetApps}
+              onToggleApp={toggleTargetApp}
             />
           </Box>
-        </Section>
       </Box>
 
       {/* Two-column layout: Description + Agentic */}
