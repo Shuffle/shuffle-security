@@ -346,9 +346,9 @@ const IncidentsPage = () => {
                 webhookUrl = getApiUrl(`/api/v1/hooks/webhook_${webhookId}`);
               }
             }
-            // Workflow is enabled if its status isn't 'stopped'
-            const isStopped = (webhookWorkflow.status || '').toLowerCase() === 'stopped';
-            const webhookEnabled = !isStopped;
+            // Enabled only if the trigger itself is not stopped
+            const triggerStopped = !webhookTrigger || (webhookTrigger.status || '').toLowerCase() === 'stopped';
+            const webhookEnabled = !triggerStopped;
             setWebhookIngestion({
               url: webhookUrl,
               exists: true,
