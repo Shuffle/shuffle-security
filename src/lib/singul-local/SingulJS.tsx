@@ -345,10 +345,12 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
             {/* Show both status chips - only if not hidden */}
             {!hideAuthStatus && (
               <div className="singul-auth-chips">
-                {authState.configured ? (
-                  <span className="singul-auth-label singul-configured-label">Configured</span>
-                ) : (
-                  <span className="singul-auth-label singul-not-configured-label">Not configured</span>
+                {!authState.validated && (
+                  authState.configured ? (
+                    <span className="singul-auth-label singul-configured-label">Configured</span>
+                  ) : (
+                    <span className="singul-auth-label singul-not-configured-label">Not configured</span>
+                  )
                 )}
                 {authState.validated ? (
                   <span className="singul-auth-label singul-validated-label">Tested</span>

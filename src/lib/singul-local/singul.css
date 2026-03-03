@@ -148,8 +148,11 @@
 /* Inline Results Container */
 .singul-results-container {
   margin-top: 16px;
-  max-height: 500px;
+  max-height: 400px;
   overflow-y: auto;
+  position: relative;
+  mask-image: linear-gradient(to bottom, black calc(100% - 32px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 32px), transparent 100%);
 }
 
 .singul-results-container.singul-results-grid {
