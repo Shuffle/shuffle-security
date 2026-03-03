@@ -5,16 +5,13 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import DownloadIcon from '@mui/icons-material/Download';
 import { ValidatedIngestionApp } from '@/lib/ingestionDetection';
-import { getApiUrl, getAuthHeader } from '@/config/api';
-import { toast } from 'sonner';
 
 interface IngestionSourceButtonProps {
   app: ValidatedIngestionApp;
-  allApps: ValidatedIngestionApp[];
-  onToggled?: () => void;
+  onToggle: (appName: string, enabled: boolean) => void;
 }
 
-export const IngestionSourceButton = ({ app, allApps, onToggled }: IngestionSourceButtonProps) => {
+export const IngestionSourceButton = ({ app, onToggle }: IngestionSourceButtonProps) => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [optimisticEnabled, setOptimisticEnabled] = useState<boolean | null>(null);
   const popoverOpen = Boolean(anchorEl);
@@ -23,45 +20,18 @@ export const IngestionSourceButton = ({ app, allApps, onToggled }: IngestionSour
   // Use optimistic state if set, otherwise fall back to actual
   const isEnabled = optimisticEnabled !== null ? optimisticEnabled : app.enabled;
 
-  const handleToggle = async () => {
+  const handleToggle = () => {
     const willBeEnabled = !isEnabled;
-
-    // Optimistic update: flip immediately & close popover
     setOptimisticEnabled(willBeEnabled);
     setAnchorEl(null);
-
-    // Compute new list of all active app names after this toggle
-    const activeNames = allApps
-      .filter(a => a.name === app.name ? willBeEnabled : a.enabled)
-      .map(a => a.name);
-
-    try {
-      // Regenerate the Ingest Tickets workflow with the updated app list
-      await fetch(getApiUrl('/api/v2/workflows/generate'), {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          ...getAuthHeader(),
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          label: 'Ingest Tickets',
-          app_name: activeNames.join(','),
-          category: 'cases',
-        }),
-      });
-
-      toast.success(willBeEnabled ? `${displayName} sync enabled` : `${displayName} sync disabled`);
-      // Reset optimistic state and let parent refetch from workflows
-      setOptimisticEnabled(null);
-      onToggled?.();
-    } catch (error) {
-      // Rollback
-      setOptimisticEnabled(null);
-      console.error('Failed to toggle app:', error);
-      toast.error('Failed to update app status');
-    }
+    onToggle(app.name, willBeEnabled);
   };
+
+  // Reset optimistic state when the real prop catches up
+  if (optimisticEnabled !== null && app.enabled === optimisticEnabled) {
+    // Schedule reset to avoid setState during render
+    setTimeout(() => setOptimisticEnabled(null), 0);
+  }
 
   return (
     <Box sx={{ position: 'relative' }}>

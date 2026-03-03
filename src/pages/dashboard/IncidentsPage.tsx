@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   Box,
@@ -31,7 +31,7 @@ import { OCSFIncidentFinding, Observable, TLP_LABELS, convertLegacyTlp, mapOCSFS
 import { deduplicateTasks } from '@/lib/utils';
 import { ResolveIncidentDialog, ResolutionData, RESOLUTION_REASONS } from '@/components/incidents/ResolveIncidentDialog';
 import { CategoryAutomationsDialog } from '@/components/incidents/CategoryAutomationsDialog';
-import { extractValidatedIngestionApps, ValidatedIngestionApp, findIngestTicketsWorkflow, extractWorkflowAppNames } from '@/lib/ingestionDetection';
+import { extractValidatedIngestionApps, ValidatedIngestionApp, findIngestTicketsWorkflow, extractWorkflowAppNames, normalizeAppName } from '@/lib/ingestionDetection';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 import DownloadIcon from '@mui/icons-material/Download';
 import { IncidentCardView } from '@/components/incidents/IncidentCardView';
@@ -268,6 +268,11 @@ const IncidentsPage = () => {
   const [ingestWorkflowId, setIngestWorkflowId] = useState<string | null>(null);
   const [webhookIngestion, setWebhookIngestion] = useState<WebhookIngestionInfo>({ url: null, exists: false, enabled: false, workflowId: null });
   const [isSyncing, setIsSyncing] = useState(false);
+  const pendingTogglesRef = useRef<Map<string, boolean>>(new Map());
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkResolveDialogOpen, setBulkResolveDialogOpen] = useState(false);
@@ -370,6 +375,37 @@ const IncidentsPage = () => {
   useEffect(() => {
     fetchIngestionApps();
   }, [fetchIngestionApps]);
+
+  // Debounced handler: collects app toggles for 3s then fires one generate call
+  const handleToggleApp = useCallback((appName: string, enabled: boolean) => {
+    pendingTogglesRef.current.set(appName, enabled);
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    debounceTimerRef.current = setTimeout(async () => {
+      const toggles = new Map(pendingTogglesRef.current);
+      pendingTogglesRef.current.clear();
+      const activeNames = ingestionApps
+        .filter(a => toggles.has(a.name) ? toggles.get(a.name) : a.enabled)
+        .map(a => a.name);
+      try {
+        await fetch(getApiUrl('/api/v2/workflows/generate'), {
+          method: 'POST',
+          credentials: 'include',
+          headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            label: 'Ingest Tickets',
+            app_name: activeNames.join(','),
+            category: 'cases',
+          }),
+        });
+        toast.success('Ingestion sources updated');
+        fetchIngestionApps();
+      } catch (error) {
+        console.error('Failed to update ingestion sources:', error);
+        toast.error('Failed to update ingestion sources');
+        fetchIngestionApps();
+      }
+    }, 3000);
+  }, [ingestionApps, fetchIngestionApps]);
 
   // Auto-sync when arriving from onboarding with ?autoSync=1
   const autoSyncTriggered = useCallback(async () => {
@@ -782,6 +818,7 @@ const IncidentsPage = () => {
           <IncidentsEmptyState 
             ingestionApps={ingestionApps} 
             onIngestionToggled={fetchIngestionApps}
+            onToggleApp={handleToggleApp}
             webhook={webhookIngestion}
             isSyncing={isSyncing}
             onSyncNow={ingestWorkflowId ? async () => {
@@ -857,7 +894,7 @@ const IncidentsPage = () => {
             }}>
               <WebhookIngestionButton webhook={webhookIngestion} onToggled={fetchIngestionApps} />
               {ingestionApps.map(app => (
-                <IngestionSourceButton key={app.name} app={app} allApps={ingestionApps} onToggled={fetchIngestionApps} />
+                <IngestionSourceButton key={app.name} app={app} onToggle={handleToggleApp} />
               ))}
               <Tooltip title="Add ingestion source">
                 <IconButton

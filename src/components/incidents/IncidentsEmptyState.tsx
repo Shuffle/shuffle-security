@@ -13,13 +13,14 @@ import { WebhookIngestionButton, WebhookIngestionInfo } from './WebhookIngestion
 interface IncidentsEmptyStateProps {
   ingestionApps?: ValidatedIngestionApp[];
   onIngestionToggled?: () => void;
+  onToggleApp?: (appName: string, enabled: boolean) => void;
   webhook?: WebhookIngestionInfo;
   isSyncing?: boolean;
   onSyncNow?: () => void;
   onCreateIncident?: () => void;
 }
 
-export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, webhook, isSyncing = false, onSyncNow, onCreateIncident }: IncidentsEmptyStateProps) => {
+export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, onToggleApp, webhook, isSyncing = false, onSyncNow, onCreateIncident }: IncidentsEmptyStateProps) => {
   const hasApps = ingestionApps.length > 0 || !!webhook?.exists || !!webhook?.enabled;
 
   return (
@@ -102,7 +103,7 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, we
               <WebhookIngestionButton webhook={webhook} onToggled={onIngestionToggled} />
             )}
             {ingestionApps.map(app => (
-              <IngestionSourceButton key={app.name} app={app} allApps={ingestionApps} onToggled={onIngestionToggled} />
+              <IngestionSourceButton key={app.name} app={app} onToggle={onToggleApp || (() => {})} />
             ))}
             <Tooltip title="Add ingestion source" placement="bottom">
               <IconButton
