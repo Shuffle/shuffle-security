@@ -398,6 +398,12 @@ export default function UsecaseAlluvialDiagram({
   const makePath = (fromX: number, fromY: number, toX: number, toY: number) => {
     const cx1 = fromX + (toX - fromX) * 0.45;
     const cx2 = fromX + (toX - fromX) * 0.55;
+    // When fromY ≈ toY the bezier is flat/invisible — add a slight arc
+    const yDiff = Math.abs(fromY - toY);
+    if (yDiff < 8) {
+      const bulge = 20; // vertical offset to create visible curvature
+      return `M ${fromX} ${fromY} C ${cx1} ${fromY - bulge}, ${cx2} ${toY - bulge}, ${toX} ${toY}`;
+    }
     return `M ${fromX} ${fromY} C ${cx1} ${fromY}, ${cx2} ${toY}, ${toX} ${toY}`;
   };
 
