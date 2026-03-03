@@ -1,4 +1,4 @@
-import { Box, Typography, Button, IconButton, Tooltip, CircularProgress } from '@mui/material';
+import { Box, Typography, Button, ButtonGroup, IconButton, Tooltip, CircularProgress } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
@@ -14,9 +14,10 @@ interface IncidentsEmptyStateProps {
   onIngestionToggled?: () => void;
   isSyncing?: boolean;
   onSyncNow?: () => void;
+  onCreateIncident?: () => void;
 }
 
-export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, isSyncing = false, onSyncNow }: IncidentsEmptyStateProps) => {
+export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, isSyncing = false, onSyncNow, onCreateIncident }: IncidentsEmptyStateProps) => {
   const hasApps = ingestionApps.length > 0;
 
   return (
@@ -144,29 +145,52 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, is
           </Box>
         )}
 
-        {/* CTA */}
-        <Button
-          component={Link}
-          to="/onboarding/sources"
+        {/* CTA button group */}
+        <ButtonGroup
           variant="contained"
           size="large"
-          startIcon={<RocketLaunchIcon />}
-          endIcon={<ArrowForwardIcon sx={{ fontSize: 18 }} />}
           sx={{
-            px: 4,
-            py: 1.5,
             borderRadius: 2,
-            textTransform: 'none',
-            fontWeight: 600,
-            fontSize: '0.95rem',
-            backgroundColor: '#FF6600',
-            '&:hover': {
-              backgroundColor: '#e55c00',
+            overflow: 'hidden',
+            boxShadow: 'none',
+            '& .MuiButtonGroup-grouped': {
+              borderColor: 'rgba(255,255,255,0.2) !important',
             },
           }}
         >
-          {hasApps ? 'Manage Sources' : 'Set Up Ingestion'}
-        </Button>
+          <Button
+            component={Link}
+            to="/onboarding/sources"
+            startIcon={<RocketLaunchIcon />}
+            sx={{
+              px: 3,
+              py: 1.5,
+              textTransform: 'none',
+              fontWeight: 600,
+              fontSize: '0.95rem',
+              backgroundColor: '#FF6600',
+              '&:hover': { backgroundColor: '#e55c00' },
+            }}
+          >
+            {hasApps ? 'Manage Sources' : 'Set Up Ingestion'}
+          </Button>
+          <Button
+            onClick={onCreateIncident}
+            startIcon={<AddIcon />}
+            sx={{
+              px: 2.5,
+              py: 1.5,
+              textTransform: 'none',
+              fontWeight: 600,
+              fontSize: '0.95rem',
+              backgroundColor: 'hsl(var(--muted))',
+              color: 'hsl(var(--foreground))',
+              '&:hover': { backgroundColor: 'hsl(var(--muted-foreground) / 0.2)' },
+            }}
+          >
+            Add manually
+          </Button>
+        </ButtonGroup>
 
       </Box>
     </motion.div>

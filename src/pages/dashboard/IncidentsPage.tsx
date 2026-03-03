@@ -746,6 +746,7 @@ const IncidentsPage = () => {
                 setIsSyncing(false);
               }
             } : undefined}
+            onCreateIncident={() => setCreateDialogOpen(true)}
           />
         )}
 
