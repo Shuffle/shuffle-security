@@ -202,6 +202,7 @@ const RulesPage = () => {
   const [sampleLog, setSampleLog] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [justGenerated, setJustGenerated] = useState(false);
 
   const fetchDetections = async () => {
     setIsLoading(true);
@@ -380,7 +381,10 @@ const RulesPage = () => {
         if (titleMatch && !ruleName.trim()) {
           setRuleName(titleMatch[1].trim().toLowerCase().replace(/\s+/g, '_'));
         }
-        toast.success('Sigma rule generated');
+        // Flash highlight on the rule content field
+        setJustGenerated(true);
+        setTimeout(() => setJustGenerated(false), 3000);
+        toast.success('Rule generated and applied to Rule Content below ↓');
       } else {
         toast.error(error || 'Failed to generate rule');
       }
@@ -899,9 +903,27 @@ const RulesPage = () => {
           />
           <Box>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-              <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-                Rule Content (YAML)
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                  Rule Content (YAML)
+                </Typography>
+                {justGenerated && (
+                  <Chip
+                    label="✓ AI Generated"
+                    size="small"
+                    sx={{
+                      height: 20,
+                      fontSize: '0.65rem',
+                      fontWeight: 600,
+                      backgroundColor: 'hsl(142 76% 36% / 0.15)',
+                      color: 'hsl(142 76% 36%)',
+                      border: '1px solid hsl(142 76% 36% / 0.3)',
+                      animation: 'fadeIn 0.3s ease-in',
+                      '@keyframes fadeIn': { from: { opacity: 0 }, to: { opacity: 1 } },
+                    }}
+                  />
+                )}
+              </Box>
               {!editingFile && (
                 <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
                   <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', mr: 0.5, lineHeight: '24px' }}>
@@ -946,7 +968,8 @@ const RulesPage = () => {
                   fontFamily: 'monospace',
                   fontSize: '0.875rem',
                   '& fieldset': {
-                    borderColor: 'hsl(var(--border))',
+                    borderColor: justGenerated ? 'hsl(142 76% 36% / 0.5)' : 'hsl(var(--border))',
+                    transition: 'border-color 0.5s ease',
                   },
                   '&:hover fieldset': {
                     borderColor: 'hsl(var(--border))',
