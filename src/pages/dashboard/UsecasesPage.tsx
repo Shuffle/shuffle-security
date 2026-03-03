@@ -15,6 +15,10 @@ import {
   Tooltip,
   ToggleButton,
   ToggleButtonGroup,
+  Select as MuiSelect,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from '@mui/material';
 import { Search, ArrowRight, Download, Zap, Activity, CheckCircle2, Circle, AlertTriangle } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
@@ -41,14 +45,29 @@ export default function UsecasesPage() {
 
   const [search, setSearch] = useState('');
   const [phaseFilter, setPhaseFilter] = useState<FlowPhase | 'all'>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [tagFilter, setTagFilter] = useState<string>('all');
 
   const navigate = useNavigate();
   const { usecases, apiLoaded, getDrift } = useUsecases();
+
+  // Collect unique tags across all usecases
+  const allTags = useMemo(() => {
+    const tagSet = new Set<string>();
+    usecases.forEach((u) => u.tags.forEach((t) => tagSet.add(t)));
+    return Array.from(tagSet).sort();
+  }, [usecases]);
 
   const filtered = useMemo(() => {
     let list = usecases;
     if (phaseFilter !== 'all') {
       list = list.filter((u) => u.phase === phaseFilter);
+    }
+    if (categoryFilter !== 'all') {
+      list = list.filter((u) => u.source === categoryFilter || u.target === categoryFilter);
+    }
+    if (tagFilter !== 'all') {
+      list = list.filter((u) => u.tags.includes(tagFilter));
     }
     if (search.trim()) {
       const q = search.toLowerCase();
@@ -62,7 +81,7 @@ export default function UsecasesPage() {
       );
     }
     return list;
-  }, [search, phaseFilter, usecases]);
+  }, [search, phaseFilter, categoryFilter, tagFilter, usecases]);
 
   // Group by phase in order
   const grouped = useMemo(() => {
@@ -106,6 +125,46 @@ export default function UsecasesPage() {
             ),
           }}
         />
+
+        <FormControl size="small" sx={{ minWidth: 160 }}>
+          <InputLabel sx={{ color: 'hsl(var(--muted-foreground))' }}>Category</InputLabel>
+          <MuiSelect
+            value={categoryFilter}
+            label="Category"
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            sx={{
+              bgcolor: 'hsl(var(--card))',
+              color: 'hsl(var(--foreground))',
+              '& fieldset': { borderColor: 'hsl(var(--border))' },
+              '& .MuiSelect-icon': { color: 'hsl(var(--muted-foreground))' },
+            }}
+          >
+            <MenuItem value="all">All Categories</MenuItem>
+            {TOOL_CATEGORIES.map((cat) => (
+              <MenuItem key={cat.id} value={cat.id}>{cat.label}</MenuItem>
+            ))}
+          </MuiSelect>
+        </FormControl>
+
+        <FormControl size="small" sx={{ minWidth: 140 }}>
+          <InputLabel sx={{ color: 'hsl(var(--muted-foreground))' }}>Type</InputLabel>
+          <MuiSelect
+            value={tagFilter}
+            label="Type"
+            onChange={(e) => setTagFilter(e.target.value)}
+            sx={{
+              bgcolor: 'hsl(var(--card))',
+              color: 'hsl(var(--foreground))',
+              '& fieldset': { borderColor: 'hsl(var(--border))' },
+              '& .MuiSelect-icon': { color: 'hsl(var(--muted-foreground))' },
+            }}
+          >
+            <MenuItem value="all">All Types</MenuItem>
+            {allTags.map((tag) => (
+              <MenuItem key={tag} value={tag}>{tag}</MenuItem>
+            ))}
+          </MuiSelect>
+        </FormControl>
 
         <ToggleButtonGroup
           exclusive
