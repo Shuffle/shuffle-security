@@ -8,8 +8,9 @@
  */
 
 import { useState, useEffect, useMemo } from 'react';
-import { Box, Typography, Avatar, Tooltip } from '@mui/material';
-import { Link } from 'react-router-dom';
+import { Box, Typography, Avatar, Tooltip, IconButton } from '@mui/material';
+import { Link, useNavigate } from 'react-router-dom';
+import { Plus } from 'lucide-react';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
 import {
@@ -182,6 +183,7 @@ export default function UsecaseAlluvialDiagram({
   targetCategory,
   highlightCategory,
 }: UsecaseAlluvialDiagramProps) {
+  const navigate = useNavigate();
   const [allApps, setAllApps] = useState<AppNode[]>([]);
   const [ingestAppNames, setIngestAppNames] = useState<Set<string> | null>(null);
   const [forwardAppNames, setForwardAppNames] = useState<Set<string> | null>(null);
@@ -315,11 +317,12 @@ export default function UsecaseAlluvialDiagram({
   const colWidth = 80;
   const svgPadding = 20;
   const rowGap = 16;
+  const addButtonSpace = 48; // space for the + button below apps
 
   const maxNodes = Math.max(sourceApps.length, targetApps.length, 1);
   const colHeight = maxNodes * (nodeSize + rowGap) - rowGap;
-  const svgHeight = colHeight + svgPadding * 2 + 40;
-  const svgWidth = colWidth * 3 + 160;
+  const svgHeight = colHeight + svgPadding * 2 + 40 + addButtonSpace;
+  const svgWidth = colWidth * 3 + 300;
 
   const leftX = svgPadding + nodeSize / 2;
   const centerX = svgWidth / 2;
@@ -331,7 +334,14 @@ export default function UsecaseAlluvialDiagram({
     return startY + idx * (nodeSize + rowGap);
   };
 
-  const centerY = (svgHeight - 30) / 2;
+  const centerY = (svgHeight - 30 - addButtonSpace) / 2;
+
+  // Y position for the add button (below the last app, or at center if no apps)
+  const getAddButtonY = (appCount: number) => {
+    if (appCount === 0) return centerY + nodeSize / 2 + 12;
+    const lastY = getY(appCount - 1, appCount);
+    return lastY + nodeSize / 2 + 12;
+  };
 
   const makePath = (fromX: number, fromY: number, toX: number, toY: number) => {
     const cx1 = fromX + (toX - fromX) * 0.45;
@@ -512,13 +522,73 @@ export default function UsecaseAlluvialDiagram({
               </Box>
             );
           })}
+
+          {/* Add source tool button */}
+          <Box
+            sx={{
+              position: 'absolute',
+              left: leftX - 16,
+              top: getAddButtonY(sourceApps.length),
+              pointerEvents: 'auto',
+            }}
+          >
+            <Tooltip title="Add source tools" placement="bottom" arrow>
+              <IconButton
+                onClick={() => navigate('/onboarding/sources')}
+                sx={{
+                  width: 32,
+                  height: 32,
+                  border: '2px dashed hsla(var(--muted-foreground) / 0.3)',
+                  color: 'hsl(var(--muted-foreground))',
+                  transition: 'all 0.2s ease',
+                  '&:hover': {
+                    borderColor: 'hsl(var(--primary))',
+                    color: 'hsl(var(--primary))',
+                    bgcolor: 'hsla(var(--primary) / 0.08)',
+                  },
+                }}
+              >
+                <Plus size={16} />
+              </IconButton>
+            </Tooltip>
+          </Box>
+
+          {/* Add destination tool button */}
+          <Box
+            sx={{
+              position: 'absolute',
+              left: rightX - 16,
+              top: getAddButtonY(targetApps.length),
+              pointerEvents: 'auto',
+            }}
+          >
+            <Tooltip title="Add destination tools" placement="bottom" arrow>
+              <IconButton
+                onClick={() => navigate(`/apps?category=${targetCategory}`)}
+                sx={{
+                  width: 32,
+                  height: 32,
+                  border: '2px dashed hsla(var(--muted-foreground) / 0.3)',
+                  color: 'hsl(var(--muted-foreground))',
+                  transition: 'all 0.2s ease',
+                  '&:hover': {
+                    borderColor: 'hsl(var(--primary))',
+                    color: 'hsl(var(--primary))',
+                    bgcolor: 'hsla(var(--primary) / 0.08)',
+                  },
+                }}
+              >
+                <Plus size={16} />
+              </IconButton>
+            </Tooltip>
+          </Box>
         </Box>
       </Box>
 
       {!hasApps && (
         <Typography sx={{ textAlign: 'center', color: 'hsl(var(--muted-foreground))', fontSize: '0.8rem', mt: 2 }}>
           No {sourceMeta?.label} or {targetMeta?.label} tools connected yet.{' '}
-          <Box component={Link} to="/onboarding" sx={{ color: 'hsl(var(--primary))', textDecoration: 'underline' }}>
+          <Box component={Link} to="/onboarding/sources" sx={{ color: 'hsl(var(--primary))', textDecoration: 'underline' }}>
             Connect tools
           </Box>
         </Typography>
