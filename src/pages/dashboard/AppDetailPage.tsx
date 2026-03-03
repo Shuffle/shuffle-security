@@ -263,8 +263,8 @@ const AppDetailPage = () => {
     try {
       if (isActivated && activatedAppId) {
         // Deactivate
-        const res = await fetch(getApiUrl(`/api/v1/apps/${activatedAppId}/activate`), {
-          method: 'DELETE',
+        const res = await fetch(getApiUrl(`/api/v1/apps/${activatedAppId}/deactivate`), {
+          method: 'POST',
           credentials: 'include',
           headers: { ...getAuthHeader() },
         });
@@ -283,6 +283,7 @@ const AppDetailPage = () => {
           const appId = data.id;
           if (appId) {
             const activateRes = await fetch(getApiUrl(`/api/v1/apps/${appId}/activate`), {
+              method: 'POST',
               credentials: 'include',
               headers: { ...getAuthHeader() },
             });
