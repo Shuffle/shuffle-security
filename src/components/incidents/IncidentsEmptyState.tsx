@@ -1,19 +1,22 @@
-import { Box, Typography, Button, IconButton, Tooltip } from '@mui/material';
+import { Box, Typography, Button, IconButton, Tooltip, CircularProgress } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import InboxIcon from '@mui/icons-material/Inbox';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import AddIcon from '@mui/icons-material/Add';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { ValidatedIngestionApp } from '@/lib/ingestionDetection';
 import { IngestionSourceButton } from './IngestionSourceButton';
 
 interface IncidentsEmptyStateProps {
   ingestionApps?: ValidatedIngestionApp[];
   onIngestionToggled?: () => void;
+  isSyncing?: boolean;
+  onSyncNow?: () => void;
 }
 
-export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled }: IncidentsEmptyStateProps) => {
+export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, isSyncing = false, onSyncNow }: IncidentsEmptyStateProps) => {
   const hasApps = ingestionApps.length > 0;
 
   return (
@@ -116,6 +119,28 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled }: 
                 <AddIcon sx={{ fontSize: 16 }} />
               </IconButton>
             </Tooltip>
+            {onSyncNow && (
+              <Tooltip title="Sync now" placement="bottom">
+                <IconButton
+                  size="small"
+                  disabled={isSyncing}
+                  onClick={onSyncNow}
+                  sx={{
+                    width: 28,
+                    height: 28,
+                    color: isSyncing ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: 1,
+                    '&:hover': {
+                      bgcolor: 'hsl(var(--muted))',
+                      color: 'hsl(var(--primary))',
+                    },
+                  }}
+                >
+                  {isSyncing ? <CircularProgress size={14} color="inherit" /> : <PlayArrowIcon sx={{ fontSize: 16 }} />}
+                </IconButton>
+              </Tooltip>
+            )}
           </Box>
         )}
 
