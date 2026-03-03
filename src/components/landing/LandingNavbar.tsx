@@ -22,6 +22,7 @@ import { trackCTA, trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
 
 const navItems = [
   { label: 'Features', href: '#features' },
+  { label: 'Usecases', href: '/usecases', internal: true },
   { label: 'Docs', href: '/docs', internal: true },
 ];
 
