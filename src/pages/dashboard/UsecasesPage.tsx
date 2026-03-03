@@ -18,7 +18,7 @@ import {
   FormControl,
   InputLabel,
 } from '@mui/material';
-import { Search, ArrowRight, Download, Zap, Activity, CheckCircle2, Circle, AlertTriangle, Network } from 'lucide-react';
+import { Search, ArrowRight, Download, Zap, Activity, CheckCircle2, Circle, AlertTriangle, Network, Clock } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import {
   FLOW_PHASES,
@@ -266,8 +266,11 @@ export default function UsecasesPage() {
   );
 }
 
+const ACTIVE_USECASE_IDS = ['siem_case_management_1', 'edr_case_management_1', 'email_case_management_1'];
+
 function UsecaseCard({ flow, drift, apiLoaded, onClick }: { flow: Usecase; drift?: UsecaseDrift; apiLoaded: boolean; onClick: () => void }) {
   const sourceCat = categoryLabel(flow.source);
+  const isComingSoon = !ACTIVE_USECASE_IDS.includes(flow.id);
   const targetCat = categoryLabel(flow.target);
 
   // Determine sync status
@@ -314,7 +317,23 @@ function UsecaseCard({ flow, drift, apiLoaded, onClick }: { flow: Usecase; drift
           <Typography variant="body2" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))', flexGrow: 1, fontSize: '0.82rem' }}>
             {flow.label}
           </Typography>
-          {syncIcon}
+          {isComingSoon && (
+            <Chip
+              icon={<Clock size={10} />}
+              label="Soon"
+              size="small"
+              sx={{
+                height: 18,
+                fontSize: '0.6rem',
+                fontWeight: 700,
+                bgcolor: 'hsla(45 93% 47% / 0.1)',
+                color: 'hsl(45 93% 47%)',
+                border: '1px solid hsla(45 93% 47% / 0.25)',
+                '& .MuiChip-icon': { color: 'hsl(45 93% 47%)', ml: 0.5 },
+              }}
+            />
+          )}
+          {!isComingSoon && syncIcon}
         </Box>
 
         {/* Source → Target */}
