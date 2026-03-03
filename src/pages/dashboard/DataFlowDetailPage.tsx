@@ -3,18 +3,31 @@
  * Route: /infrastructure/flows/:flowId
  */
 
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Box, Typography, Chip, Button, IconButton } from '@mui/material';
-import { ArrowRight, ArrowLeft, Bot, CheckCircle, AlertTriangle, XCircle, ExternalLink } from 'lucide-react';
+import { Box, Typography, Chip, Button, IconButton, Avatar, Skeleton } from '@mui/material';
+import { ArrowRight, ArrowLeft, Bot, Check } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
+import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
+import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
 import {
   DEFAULT_USECASES,
   TOOL_CATEGORIES,
   FLOW_PHASES,
+  CATEGORY_KEYWORDS,
+  matchAppToCategory,
   type Usecase,
   type FlowPhase,
 } from '@/config/usecases';
 import { getToolCategoryMeta } from '@/pages/dashboard/InfrastructurePage';
+
+// ── Types ──────────────────────────────────────────────────────────────────────
+
+interface MatchedApp {
+  name: string;
+  image: string;
+  hasValidAuth?: boolean;
+}
 
 // ── Tag colors (shared with InfrastructurePage) ────────────────────────────────
 
@@ -58,12 +71,159 @@ const Section = ({ title, children, borderBottom = true }: { title: string; chil
   </Box>
 );
 
+// ── Connection Endpoint ─────────────────────────────────────────────────────────
+
+const ConnectionEndpoint = ({
+  label,
+  category,
+  categoryDetails,
+  apps,
+  loading,
+}: {
+  label: string;
+  category: ReturnType<typeof getToolCategoryMeta>;
+  categoryDetails: typeof TOOL_CATEGORIES[number] | undefined;
+  apps: MatchedApp[];
+  loading: boolean;
+}) => {
+  const colorVar = category?.color || '--primary';
+  const hasApps = apps.length > 0;
+
+  return (
+    <Box sx={{ flex: 1, minWidth: 0 }}>
+      <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.06em', mb: 1 }}>
+        {label}
+      </Typography>
+
+      {/* Category header */}
+      <Box sx={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1,
+        mb: 1.5,
+        p: 1.5,
+        borderRadius: 2,
+        bgcolor: `hsla(var(${colorVar}) / 0.06)`,
+        border: `1px solid hsla(var(${colorVar}) / 0.15)`,
+      }}>
+        {category && (
+          <Box sx={{
+            width: 32, height: 32, borderRadius: '50%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            bgcolor: `hsla(var(${colorVar}) / 0.12)`,
+            color: `hsl(var(${colorVar}))`,
+            flexShrink: 0,
+          }}>
+            {category.icon}
+          </Box>
+        )}
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography sx={{ fontSize: '0.88rem', fontWeight: 700, color: `hsl(var(${colorVar}))` }}>
+            {category?.label || 'Unknown'}
+          </Typography>
+          {categoryDetails && (
+            <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.4, mt: 0.25 }} noWrap>
+              {categoryDetails.description.split('—')[0].trim()}
+            </Typography>
+          )}
+        </Box>
+      </Box>
+
+      {/* Apps list */}
+      <Box sx={{ pl: 0.5 }}>
+        <Typography sx={{ fontSize: '0.6rem', fontWeight: 700, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.06em', mb: 0.75 }}>
+          Your Tools
+        </Typography>
+        {loading ? (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            {[1, 2].map(i => <Skeleton key={i} variant="rounded" height={32} sx={{ borderRadius: 1.5, bgcolor: 'hsla(var(--muted-foreground) / 0.08)' }} />)}
+          </Box>
+        ) : hasApps ? (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            {apps.map(app => (
+              <Box key={app.name} sx={{
+                display: 'flex', alignItems: 'center', gap: 1, py: 0.75, px: 1,
+                borderRadius: 1.5,
+                border: app.hasValidAuth ? `1px solid hsla(142 71% 45% / 0.2)` : '1px solid hsl(var(--border))',
+                bgcolor: app.hasValidAuth ? 'hsla(142 71% 45% / 0.04)' : 'transparent',
+              }}>
+                <Avatar
+                  src={app.image}
+                  alt={app.name}
+                  sx={{ width: 22, height: 22, bgcolor: 'hsla(var(--muted-foreground) / 0.1)' }}
+                >
+                  {app.name.charAt(0).toUpperCase()}
+                </Avatar>
+                <Typography sx={{ fontSize: '0.78rem', fontWeight: 600, color: 'hsl(var(--foreground))', flex: 1 }}>
+                  {app.name}
+                </Typography>
+                {app.hasValidAuth && (
+                  <Check size={14} style={{ color: 'hsl(142 71% 45%)' }} />
+                )}
+              </Box>
+            ))}
+          </Box>
+        ) : (
+          <Box sx={{
+            py: 2, px: 1.5,
+            borderRadius: 1.5,
+            border: '1px dashed hsla(var(--muted-foreground) / 0.25)',
+            textAlign: 'center',
+          }}>
+            <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
+              No tools configured
+            </Typography>
+            <Typography sx={{ fontSize: '0.68rem', color: 'hsla(var(--muted-foreground) / 0.6)', mt: 0.5 }}>
+              {categoryDetails?.examples.slice(0, 3).join(', ')}…
+            </Typography>
+          </Box>
+        )}
+      </Box>
+    </Box>
+  );
+};
+
 // ── Main component ─────────────────────────────────────────────────────────────
 
 const DataFlowDetailPage = () => {
   const { flowId } = useParams<{ flowId: string }>();
   const navigate = useNavigate();
   const flow = DEFAULT_USECASES.find(f => f.id === flowId);
+
+  // Fetch authenticated apps from the API
+  const [categoryApps, setCategoryApps] = useState<Record<string, MatchedApp[]>>({});
+  const [appsLoading, setAppsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchApps = async () => {
+      try {
+        const res = await fetch(getApiUrl('/api/v1/apps/authentication'), {
+          credentials: 'include',
+          headers: getAuthHeader(),
+        });
+        if (!res.ok) return;
+        const authData = await res.json();
+        if (!Array.isArray(authData)) return;
+
+        const dedupedApps = deduplicateAuthApps(authData);
+        const mapped: Record<string, MatchedApp[]> = {};
+
+        dedupedApps.forEach(({ app, bestImage, hasValidAuth }) => {
+          const catId = matchAppToCategory(app.name, app.categories || []);
+          if (!catId) return;
+          if (!mapped[catId]) mapped[catId] = [];
+          mapped[catId].push({ name: app.name, image: bestImage || app.large_image || '', hasValidAuth });
+        });
+
+        setCategoryApps(mapped);
+      } catch (e) {
+        console.error('Failed to fetch apps:', e);
+      } finally {
+        setAppsLoading(false);
+      }
+    };
+    fetchApps();
+  }, []);
 
   usePageMeta({
     title: flow ? `${flow.label} — Data Flow` : 'Data Flow Not Found',
@@ -90,6 +250,8 @@ const DataFlowDetailPage = () => {
   const phaseInfo = getPhaseInfo(flow.phase);
   const related = getRelatedFlows(flow);
   const headerColor = sourceCat?.color || '--primary';
+  const sourceApps = categoryApps[flow.source] || [];
+  const targetApps = categoryApps[flow.target] || [];
 
   // Find current index for prev/next navigation
   const currentIdx = DEFAULT_USECASES.findIndex(f => f.id === flow.id);
@@ -198,42 +360,29 @@ const DataFlowDetailPage = () => {
         mb: 3,
       }}>
         <Section title="Connection Path" borderBottom={false}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            {sourceCat && (
-              <Chip
-                icon={<Box sx={{ display: 'flex', color: `hsl(var(${sourceCat.color}))` }}>{sourceCat.icon}</Box>}
-                label={sourceCat.label}
-                size="small"
-                onClick={() => navigate('/infrastructure')}
-                sx={{
-                  bgcolor: `hsla(var(${sourceCat.color}) / 0.1)`,
-                  color: `hsl(var(${sourceCat.color}))`,
-                  fontWeight: 600,
-                  fontSize: '0.82rem',
-                  border: `1px solid hsla(var(${sourceCat.color}) / 0.25)`,
-                  cursor: 'pointer',
-                  '&:hover': { bgcolor: `hsla(var(${sourceCat.color}) / 0.2)` },
-                }}
-              />
-            )}
-            <ArrowRight size={18} style={{ color: 'hsl(var(--muted-foreground))', flexShrink: 0 }} />
-            {targetCat && (
-              <Chip
-                icon={<Box sx={{ display: 'flex', color: `hsl(var(${targetCat.color}))` }}>{targetCat.icon}</Box>}
-                label={targetCat.label}
-                size="small"
-                onClick={() => navigate('/infrastructure')}
-                sx={{
-                  bgcolor: `hsla(var(${targetCat.color}) / 0.1)`,
-                  color: `hsl(var(${targetCat.color}))`,
-                  fontWeight: 600,
-                  fontSize: '0.82rem',
-                  border: `1px solid hsla(var(${targetCat.color}) / 0.25)`,
-                  cursor: 'pointer',
-                  '&:hover': { bgcolor: `hsla(var(${targetCat.color}) / 0.2)` },
-                }}
-              />
-            )}
+          <Box sx={{ display: 'flex', alignItems: 'stretch', gap: 2 }}>
+            {/* Source */}
+            <ConnectionEndpoint
+              label="Source"
+              category={sourceCat}
+              categoryDetails={sourceDetails}
+              apps={sourceApps}
+              loading={appsLoading}
+            />
+
+            {/* Arrow */}
+            <Box sx={{ display: 'flex', alignItems: 'center', pt: 3 }}>
+              <ArrowRight size={22} style={{ color: 'hsl(var(--muted-foreground))' }} />
+            </Box>
+
+            {/* Target */}
+            <ConnectionEndpoint
+              label="Destination"
+              category={targetCat}
+              categoryDetails={targetDetails}
+              apps={targetApps}
+              loading={appsLoading}
+            />
           </Box>
         </Section>
       </Box>
