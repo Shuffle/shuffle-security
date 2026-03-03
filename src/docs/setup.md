@@ -1,18 +1,8 @@
-# Setup Guide
+# Self-Hosting Guide
 
-This guide explains how to configure Shuffle Security to connect to your Shuffle Automation backend.
+Shuffle Security is a **frontend-only application** — it contains no backend, no database, and no server-side logic. It is a purpose-built UI layer on top of your existing [Shuffle Automation](https://shuffler.io) instance, focused entirely on security operations: incident triage, case management, and automated response.
 
-## Prerequisites
-
-Before setting up Shuffle Security, ensure you have:
-
-- A running **Shuffle Automation** instance (Cloud or self-hosted)
-- Valid credentials to authenticate with your Shuffle instance
-- Network connectivity between Shuffle Security and your Shuffle backend
-
-## Understanding the Connection
-
-Shuffle Security is a **frontend-only application** that communicates with the Shuffle Automation API. It does not store any data locally — all alerts, cases, and workflows are managed by your Shuffle backend.
+All data, workflows, authentication, and integrations are handled by your Shuffle backend. This app simply presents them through a security-focused interface.
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
@@ -21,7 +11,7 @@ Shuffle Security is a **frontend-only application** that communicates with the S
 │                                                              │
 │   ┌──────────────────┐       ┌─────────────────────────┐    │
 │   │ Shuffle Security │ ────▶ │   Shuffle Automation    │    │
-│   │    (This App)    │ ◀──── │      (Backend API)      │    │
+│   │  (Static Files)  │ ◀──── │      (Backend API)      │    │
 │   └──────────────────┘       └─────────────────────────┘    │
 │          │                              │                    │
 │          │                              │                    │
@@ -31,164 +21,185 @@ Shuffle Security is a **frontend-only application** that communicates with the S
 └──────────────────────────────────────────────────────────────┘
 ```
 
-## Configuration Options
+---
 
-### Shuffle Cloud Regions
+## Prerequisites
 
-| Region | URL | Description |
-|--------|-----|-------------|
-| **EU (Default)** | `https://shuffler.io` | European data center |
-| **US** | `https://us.shuffler.io` | United States data center |
+Before self-hosting, you need:
 
-### Self-Hosted
+- A running **Shuffle Automation** instance (Cloud or self-hosted)
+- **Node.js 18+** and **npm** (or Bun)
+- Network connectivity between the browser and your Shuffle backend
 
-If you're running Shuffle on your own infrastructure:
-
-| Setup | Example URL |
-|-------|-------------|
-| Custom domain | `https://shuffle.yourdomain.com` |
-| Internal network | `https://shuffle.internal:3001` |
-| Local development | `http://localhost:3001` |
+> **Important:** Shuffle Security does not replace Shuffle Automation. It requires a Shuffle backend to function. Without one, there is nothing to display.
 
 ---
 
-## Configuration Methods
+## Quick Start
 
-### Method 1: Environment Variable (Recommended)
-
-The recommended approach is to set the `VITE_SHUFFLE_API_URL` environment variable.
-
-#### Step 1: Create a `.env` file
-
-In the root of your Shuffle Security deployment, create a `.env` file:
+### 1. Clone the repository
 
 ```bash
-# Copy the example file
+git clone https://github.com/Shuffle/security.git
+cd security
+```
+
+### 2. Configure the backend URL
+
+Create a `.env` file pointing to your Shuffle instance:
+
+```bash
 cp .env.example .env
 ```
 
-#### Step 2: Set your Shuffle URL
-
-Edit the `.env` file:
+Edit `.env`:
 
 ```env
-# For Shuffle Cloud (EU) - this is the default
+# Shuffle Cloud (EU) — default
 VITE_SHUFFLE_API_URL=https://shuffler.io
 
-# For Shuffle Cloud (US)
+# Shuffle Cloud (US)
 VITE_SHUFFLE_API_URL=https://us.shuffler.io
 
-# For self-hosted Shuffle
+# Self-hosted Shuffle
 VITE_SHUFFLE_API_URL=https://shuffle.yourdomain.com
 ```
 
-#### Step 3: Rebuild the application
-
-After changing environment variables, rebuild the application:
+### 3. Build and serve
 
 ```bash
+npm install
 npm run build
+```
+
+The output is a set of static files in `dist/`. Serve them with any web server:
+
+```bash
+# Using a simple static server
+npx serve dist
+
+# Or copy to Nginx, Caddy, S3, etc.
 ```
 
 ---
 
-### Method 2: Direct Configuration
+## Deployment Options
 
-If you prefer, you can modify the configuration file directly.
+Since Shuffle Security is just static HTML, CSS, and JavaScript, you can host it anywhere:
 
-#### File to modify
+| Method | Notes |
+|--------|-------|
+| **Nginx / Caddy** | Serve the `dist/` folder. Add a catch-all rule for SPA routing |
+| **Docker** | Wrap in an Nginx container. See example below |
+| **S3 + CloudFront** | Upload `dist/` to S3, serve via CloudFront with SPA error handling |
+| **Vercel / Netlify** | Connect the repo and set `VITE_SHUFFLE_API_URL` as an environment variable |
+| **Behind Shuffle** | Serve alongside your existing Shuffle instance on a subpath or subdomain |
 
+### Docker Example
+
+```dockerfile
+FROM node:18-alpine AS build
+WORKDIR /app
+COPY . .
+RUN npm install && npm run build
+
+FROM nginx:alpine
+COPY --from=build /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
 ```
-src/config/api.ts
+
+```nginx
+# nginx.conf
+server {
+    listen 80;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
 ```
 
-#### Configuration
+---
 
-Open `src/config/api.ts` and update the `baseUrl`:
+## Shuffle Cloud Regions
 
-```typescript
-export const API_CONFIG = {
-  // Change this to your Shuffle backend URL
-  baseUrl: 'https://shuffle.yourdomain.com',  // ← Modify this line
-  
-  // API version
-  version: 'v1',
-};
-```
+If you're using Shuffle Cloud (not self-hosted), select the region closest to your users:
 
-#### Available options
+| Region | URL |
+|--------|-----|
+| **EU (Default)** | `https://shuffler.io` |
+| **US** | `https://us.shuffler.io` |
 
-```typescript
-// Shuffle Cloud (EU) - Default
-baseUrl: 'https://shuffler.io'
-
-// Shuffle Cloud (US)
-baseUrl: 'https://us.shuffler.io'
-
-// Self-hosted example
-baseUrl: 'https://shuffle.yourdomain.com'
-```
+The app automatically detects your organization's region after login via the `/api/v1/getinfo` endpoint and routes subsequent requests accordingly.
 
 ---
 
 ## Authentication
 
-Shuffle Security uses the same authentication as Shuffle Automation. When you log in:
+Shuffle Security uses the same authentication as your Shuffle backend:
 
-1. Your credentials are sent to the Shuffle API (`POST /api/v1/login`)
-2. Shuffle returns a session token
-3. The token is used for subsequent API requests
-4. Sessions are managed by your Shuffle backend
+1. User enters credentials in the login page
+2. Credentials are sent to `POST /api/v1/login` on your Shuffle instance
+3. Shuffle returns a session cookie
+4. All subsequent API calls include the cookie via `credentials: 'include'`
 
-### Important Notes
+There is no separate user database, no social login, and no password recovery — all of that is managed by Shuffle Automation.
 
-- **No social login** — Shuffle Security uses username/password authentication only
-- **Session management** — Sessions are controlled by your Shuffle instance settings
-- **API keys** — For automation, you can also use Shuffle API keys
+For development or automation, you can also authenticate with a Shuffle API key using the **Developer: Use API Key** option on the login page.
 
 ---
 
-## Verifying the Connection
+## CORS Configuration (Required for Cross-Origin)
 
-After configuration, verify your setup:
-
-1. Navigate to Shuffle Security in your browser
-2. Click **Sign In**
-3. Enter your Shuffle credentials
-4. If successful, you'll be redirected to the dashboard
-
-### Troubleshooting
-
-| Issue | Possible Cause | Solution |
-|-------|---------------|----------|
-| Connection refused | Wrong URL or Shuffle not running | Verify the URL and that Shuffle is accessible |
-| CORS errors | Cross-origin requests blocked | Ensure Shuffle allows requests from your Shuffle Security domain |
-| 401 Unauthorized | Invalid credentials | Check your username/password |
-| Network timeout | Firewall or connectivity issue | Check network connectivity to Shuffle |
-
----
-
-## CORS Configuration (Self-Hosted)
-
-If you're running Shuffle Security on a different domain than your Shuffle instance, you may need to configure CORS on your Shuffle backend.
-
-In your Shuffle environment configuration, ensure the Shuffle Security domain is allowed:
+If Shuffle Security is hosted on a different domain than your Shuffle backend, you must configure CORS on Shuffle to allow requests:
 
 ```yaml
-# Example: Docker environment variable
+# Docker environment variable for Shuffle
 SHUFFLE_ALLOWED_ORIGINS=https://security.yourdomain.com
 ```
 
-Refer to the [Shuffle documentation](https://shuffler.io/docs) for detailed CORS configuration.
+Without this, the browser will block API requests due to cross-origin restrictions.
+
+> **Tip:** If you serve Shuffle Security on the same domain as Shuffle (e.g., as a subpath), CORS is not needed.
+
+---
+
+## What This App Does — and Doesn't Do
+
+### It does:
+
+- Provide a dedicated **incident triage and case management** UI
+- Display your **connected integrations** and their authentication status
+- Visualize **data flows** between your security tools
+- Trigger and monitor **automated workflows** via Shuffle
+- Offer an **onboarding wizard** to connect tools and enable automation
+
+### It does not:
+
+- Store any data (all data lives in Shuffle)
+- Run any backend code (it's pure client-side JavaScript)
+- Replace Shuffle Automation (it's a specialized view on top of it)
+- Handle authentication independently (delegated to Shuffle)
+
+---
+
+## Troubleshooting
+
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| Blank page after login | Wrong `VITE_SHUFFLE_API_URL` | Verify the URL points to your Shuffle instance and rebuild |
+| CORS errors in console | Cross-origin requests blocked | Add your domain to `SHUFFLE_ALLOWED_ORIGINS` on Shuffle |
+| 401 on every request | Session cookie not sent | Ensure same-site or configure CORS with credentials |
+| Page not found on refresh | SPA routing not configured | Add `try_files $uri /index.html` to your web server |
+| API calls hit wrong region | Region URL not resolving | Check that `/api/v1/getinfo` returns the correct `region_url` |
 
 ---
 
 ## Next Steps
 
-Once connected, explore:
-
-- **[Incidents](/incidents)** — View and manage security incidents
-- **[Templates](/templates)** — Build reusable incident templates
-- **[Custom Fields](/incidents/custom-fields)** — Configure custom fields for incidents
-
-For API details, see the [Shuffle API Documentation](https://shuffler.io/docs/API).
+- **[Getting Started](/docs/getting-started)** — Walk through the onboarding flow
+- **[Shuffle API Documentation](https://shuffler.io/docs/API)** — Full API reference
+- **[Shuffle Automation](https://shuffler.io)** — Manage workflows, apps, and backend configuration

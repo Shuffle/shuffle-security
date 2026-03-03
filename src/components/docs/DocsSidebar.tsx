@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import HomeIcon from '@mui/icons-material/Home';
 import SettingsIcon from '@mui/icons-material/Settings';
-import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
+import DnsIcon from '@mui/icons-material/Dns';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
 interface DocLink {
@@ -27,8 +27,8 @@ interface DocsSidebarProps {
 
 const docLinks: DocLink[] = [
   { label: 'Overview', slug: 'index', icon: <HomeIcon /> },
-  { label: 'Getting Started', slug: 'getting-started', icon: <RocketLaunchIcon /> },
-  { label: 'Setup Guide', slug: 'setup', icon: <SettingsIcon /> },
+  { label: 'Getting Started', slug: 'getting-started', icon: <SettingsIcon /> },
+  { label: 'Self-Hosting', slug: 'setup', icon: <DnsIcon /> },
 ];
 
 const externalLinks: DocLink[] = [
