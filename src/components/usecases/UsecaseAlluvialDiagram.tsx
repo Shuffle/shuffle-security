@@ -74,6 +74,41 @@ function isShuffleInternalApp(appName: string): boolean {
   return SHUFFLE_INTERNAL_PATTERNS.some(p => lower.includes(p));
 }
 
+// ── Sample apps for unauthenticated visitors ────────────────────────────────
+
+const SAMPLE_APPS: Record<string, { name: string; icon: string }[]> = {
+  siem: [
+    { name: 'Splunk', icon: 'https://storage.googleapis.com/shuffle_public/app_images/Splunk_1995363ec370368ed05a2882ec0ea8fc.png' },
+    { name: 'Elasticsearch', icon: 'https://storage.googleapis.com/shuffle_public/app_images/Elasticsearch_971706758e274c2e4083f2621fb5a6f7.png' },
+    { name: 'Wazuh', icon: 'https://storage.googleapis.com/shuffle_public/app_images/Wazuh_fb715a176a192620c25d49ba119e94e5.png' },
+  ],
+  edr: [
+    { name: 'SentinelOne', icon: 'https://storage.googleapis.com/shuffle_public/app_images/SentinelOne_0373ed696a3a2cba0a2b6838068f2b80.png' },
+    { name: 'Microsoft Defender', icon: 'https://storage.googleapis.com/shuffle_public/app_images/Microsoft_365_Defender_29c926c37334c191666f6470caa05e1c.png' },
+    { name: 'Carbon Black', icon: 'https://storage.googleapis.com/shuffle_public/app_images/Carbon_Black_Response_e9fa2602ea6baafffa4b5eec722095d3.png' },
+  ],
+  email: [
+    { name: 'Gmail', icon: 'https://storage.googleapis.com/shuffle_public/app_images/Gmail_794e51c3c1a8b24b89ccc573a3defc47.png' },
+    { name: 'Outlook', icon: 'https://storage.googleapis.com/shuffle_public/app_images/Outlook_Office365_accdaaf2eeba6a6ed43b2efc0112032d.png' },
+  ],
+  case_management: [
+    { name: 'Jira', icon: 'https://storage.googleapis.com/shuffle_public/app_images/Jira_eb0c5e572e14ac1140a8355ba93c0d76.png' },
+    { name: 'ServiceNow', icon: 'https://storage.googleapis.com/shuffle_public/app_images/Servicenow_b9c2feaf99b6309dabaeaa8518c61d3d.png' },
+    { name: 'TheHive', icon: 'https://storage.googleapis.com/shuffle_public/app_images/TheHive_7b0b20f198b28bcd6e7e3d2e7c1d84af.png' },
+  ],
+};
+
+function getSampleApps(categoryId: string): AppNode[] {
+  const samples = SAMPLE_APPS[categoryId] || [];
+  return samples.map(s => ({
+    id: `sample-${s.name}`,
+    name: s.name,
+    icon: s.icon,
+    hasValidAuth: false,
+    isActiveOnly: false,
+  }));
+}
+
 // ── Status dot color ───────────────────────────────────────────────────────────
 
 function getStatusColor(app: AppNode): string {
@@ -83,81 +118,67 @@ function getStatusColor(app: AppNode): string {
 
 // ── App bubble component ───────────────────────────────────────────────────────
 
-function AppBubble({ app, size = 40, highlighted = false }: { app: AppNode; size?: number; highlighted?: boolean }) {
+function AppBubble({ app, size = 40, highlighted = false, isSample = false }: { app: AppNode; size?: number; highlighted?: boolean; isSample?: boolean }) {
   const [imgFailed, setImgFailed] = useState(false);
 
-  return (
-    <Tooltip
-      title={
-        <Box sx={{ textAlign: 'left', p: 0.5 }}>
-          <Typography sx={{ fontWeight: 600, fontSize: '0.85rem', color: 'hsl(var(--foreground))' }}>
-            {app.name}
-          </Typography>
-          <Typography sx={{ fontSize: '0.7rem', color: app.hasValidAuth ? 'hsl(var(--severity-low))' : 'hsl(var(--muted-foreground))' }}>
-            {app.hasValidAuth ? 'Authenticated' : app.isActiveOnly ? 'Not authenticated' : 'Inactive'}
-          </Typography>
-        </Box>
-      }
-      placement="bottom"
-      arrow
+  const content = (
+    <Box
+      sx={{
+        position: 'relative',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        textDecoration: 'none',
+        transition: 'transform 0.15s ease',
+        cursor: 'pointer',
+        '&:hover': { transform: 'scale(1.12)' },
+      }}
     >
-      <Box
-        component={Link}
-        to={`/apps/${encodeURIComponent(app.name)}`}
-        sx={{
-          position: 'relative',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          textDecoration: 'none',
-          transition: 'transform 0.15s ease',
-          '&:hover': { transform: 'scale(1.12)' },
-        }}
-      >
-        {/* Highlight ring for category-matching apps */}
-        {highlighted && (
-          <Box
-            sx={{
-              position: 'absolute',
-              inset: -3,
-              borderRadius: '50%',
-              border: '2px solid hsl(var(--primary))',
-              boxShadow: '0 0 10px hsl(var(--primary) / 0.4)',
-              pointerEvents: 'none',
-            }}
-          />
-        )}
-        {app.icon && !imgFailed ? (
-          <Box
-            component="img"
-            src={app.icon}
-            alt={app.name}
-            onError={() => setImgFailed(true)}
-            sx={{
-              width: size,
-              height: size,
-              borderRadius: '50%',
-              objectFit: 'contain',
-              backgroundColor: 'hsl(var(--muted))',
-              p: 0.5,
-              opacity: highlighted ? 1 : 0.7,
-            }}
-          />
-        ) : (
-          <Avatar
-            sx={{
-              width: size,
-              height: size,
-              backgroundColor: 'hsl(var(--muted))',
-              fontSize: size * 0.38,
-              color: 'hsl(var(--foreground))',
-              opacity: highlighted ? 1 : 0.7,
-            }}
-          >
-            {app.name.charAt(0).toUpperCase()}
-          </Avatar>
-        )}
-        {/* Status dot */}
+      {/* Highlight ring for category-matching apps */}
+      {highlighted && (
+        <Box
+          sx={{
+            position: 'absolute',
+            inset: -3,
+            borderRadius: '50%',
+            border: '2px solid hsl(var(--primary))',
+            boxShadow: '0 0 10px hsl(var(--primary) / 0.4)',
+            pointerEvents: 'none',
+          }}
+        />
+      )}
+      {app.icon && !imgFailed ? (
+        <Box
+          component="img"
+          src={app.icon}
+          alt={app.name}
+          onError={() => setImgFailed(true)}
+          sx={{
+            width: size,
+            height: size,
+            borderRadius: '50%',
+            objectFit: 'contain',
+            backgroundColor: 'hsl(var(--muted))',
+            p: 0.5,
+            opacity: highlighted || isSample ? 1 : 0.7,
+          }}
+        />
+      ) : (
+        <Avatar
+          sx={{
+            width: size,
+            height: size,
+            backgroundColor: 'hsl(var(--muted))',
+            fontSize: size * 0.38,
+            color: 'hsl(var(--foreground))',
+            opacity: highlighted || isSample ? 1 : 0.7,
+          }}
+        >
+          {app.name.charAt(0).toUpperCase()}
+        </Avatar>
+      )}
+      {/* Status dot — hide for sample apps */}
+      {!isSample && (
         <Box
           sx={{
             position: 'absolute',
@@ -171,7 +192,32 @@ function AppBubble({ app, size = 40, highlighted = false }: { app: AppNode; size
             pointerEvents: 'none',
           }}
         />
-      </Box>
+      )}
+    </Box>
+  );
+
+  return (
+    <Tooltip
+      title={
+        <Box sx={{ textAlign: 'left', p: 0.5 }}>
+          <Typography sx={{ fontWeight: 600, fontSize: '0.85rem', color: 'hsl(var(--foreground))' }}>
+            {app.name}
+          </Typography>
+          {!isSample && (
+            <Typography sx={{ fontSize: '0.7rem', color: app.hasValidAuth ? 'hsl(var(--severity-low))' : 'hsl(var(--muted-foreground))' }}>
+              {app.hasValidAuth ? 'Authenticated' : app.isActiveOnly ? 'Not authenticated' : 'Inactive'}
+            </Typography>
+          )}
+        </Box>
+      }
+      placement="bottom"
+      arrow
+    >
+      {isSample ? content : (
+        <Box component={Link} to={`/apps/${encodeURIComponent(app.name)}`} sx={{ textDecoration: 'none' }}>
+          {content}
+        </Box>
+      )}
     </Tooltip>
   );
 }
@@ -184,6 +230,7 @@ export default function UsecaseAlluvialDiagram({
   highlightCategory,
 }: UsecaseAlluvialDiagramProps) {
   const navigate = useNavigate();
+  const isLoggedIn = !!API_CONFIG.apiKey;
   const [allApps, setAllApps] = useState<AppNode[]>([]);
   const [ingestAppNames, setIngestAppNames] = useState<Set<string> | null>(null);
   const [forwardAppNames, setForwardAppNames] = useState<Set<string> | null>(null);
@@ -281,24 +328,29 @@ export default function UsecaseAlluvialDiagram({
   // Source apps: if highlightCategory is set, show all ingest workflow apps
   // Otherwise fall back to category-based filtering
   const sourceApps = useMemo(() => {
+    if (!isLoggedIn) {
+      // Show sample apps for the source category when not logged in
+      const samples = highlightCategory ? getSampleApps(highlightCategory) : getSampleApps(sourceCategory);
+      return samples.map(a => ({ ...a, isHighlighted: true }));
+    }
     if (highlightCategory && ingestAppNames && ingestAppNames.size > 0) {
-      // Show all apps that are in the ingest workflow
       const ingestNodes = allApps.filter(a =>
         ingestAppNames.has(normalizeAppName(a.name)) && !isShuffleInternalApp(a.name)
       );
-      // Mark which ones match the highlight category
       return ingestNodes.map(a => ({
         ...a,
         isHighlighted: matchesCategory(a.name, highlightCategory),
       }));
     }
     return allApps.filter(a => matchesCategory(a.name, sourceCategory));
-  }, [allApps, sourceCategory, highlightCategory, ingestAppNames]);
+  }, [allApps, sourceCategory, highlightCategory, ingestAppNames, isLoggedIn]);
 
   // Target/destination apps: use Forward Tickets workflow as source of truth when available
   const targetApps = useMemo(() => {
+    if (!isLoggedIn) {
+      return getSampleApps(targetCategory);
+    }
     if (highlightCategory && forwardAppNames && forwardAppNames.size > 0) {
-      // Show apps from the Forward Tickets workflow that match the target category
       return allApps.filter(a =>
         forwardAppNames.has(normalizeAppName(a.name)) && matchesCategory(a.name, targetCategory)
       );
@@ -469,7 +521,7 @@ export default function UsecaseAlluvialDiagram({
                   pointerEvents: 'auto',
                 }}
               >
-                <AppBubble app={app} size={nodeSize} highlighted={!!app.isHighlighted} />
+                <AppBubble app={app} size={nodeSize} highlighted={!!app.isHighlighted} isSample={!isLoggedIn} />
               </Box>
             );
           })}
@@ -518,7 +570,7 @@ export default function UsecaseAlluvialDiagram({
                   pointerEvents: 'auto',
                 }}
               >
-                <AppBubble app={app} size={nodeSize} />
+                <AppBubble app={app} size={nodeSize} isSample={!isLoggedIn} />
               </Box>
             );
           })}
