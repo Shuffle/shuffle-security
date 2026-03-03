@@ -76,7 +76,7 @@ const navItems: NavItem[] = [
     ],
   },
   { label: 'Infrastructure', icon: <Network size={20} />, path: '/infrastructure' },
-  { label: 'Usecases', icon: <Activity size={20} />, path: '/usecases' },
+  { label: 'Automation', icon: <Activity size={20} />, path: '/usecases' },
 ];
 
 interface AppSidebarProps {
