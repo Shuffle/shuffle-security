@@ -1011,49 +1011,24 @@ export const AutomationConfig = ({
                           sx={{ 
                             color: 'rgba(255, 255, 255, 0.5)', 
                             lineHeight: 1.4, 
-                            mb: (option.ingestionSources || option.notificationSources || option.threatIntelSources) ? 1.5 : 0 
                           }}
                         >
                           {option.description}
                         </Typography>
-                        
-                        {/* Source breakdowns */}
-                        {option.ingestionSources && (
-                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                            {option.ingestionSources.map((source) => {
-                              const activeCount = source.apps.filter(a => isToolEnabled(option.id, a.id)).length;
-                              const totalCount = source.apps.length;
-                              return (
-                                <SourceChip key={source.category} label={source.label} apps={source.apps} activeCount={activeCount} totalCount={totalCount} hasAnyActive={activeCount > 0} optionId={option.id} isToolEnabled={isToolEnabled} />
-                              );
-                            })}
-                          </Box>
-                        )}
-                        
-                        {option.notificationSources && (
-                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                            {option.notificationSources.map((source) => {
-                              const activeCount = source.apps.filter(a => isToolEnabled(option.id, a.id)).length;
-                              const totalCount = source.apps.length;
-                              return (
-                                <SourceChip key={source.category} label={source.label} apps={source.apps} activeCount={activeCount} totalCount={totalCount} hasAnyActive={activeCount > 0} optionId={option.id} isToolEnabled={isToolEnabled} />
-                              );
-                            })}
-                          </Box>
-                        )}
-                        
-                        {option.threatIntelSources && (
-                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                            {option.threatIntelSources.map((source) => {
-                              const activeCount = source.apps.filter(a => isToolEnabled(option.id, a.id)).length;
-                              const totalCount = source.apps.length;
-                              return (
-                                <SourceChip key={source.category} label={source.label} apps={source.apps} activeCount={activeCount} totalCount={totalCount} hasAnyActive={activeCount > 0} optionId={option.id} isToolEnabled={isToolEnabled} />
-                              );
-                            })}
-                          </Box>
-                        )}
                       </Box>
+                      
+                      {/* Source chips on the right side */}
+                      {(option.ingestionSources || option.notificationSources || option.threatIntelSources) && (
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, flexShrink: 0, maxWidth: '45%', justifyContent: 'flex-end', alignItems: 'center' }}>
+                          {(option.ingestionSources || option.notificationSources || option.threatIntelSources)!.map((source) => {
+                            const activeCount = source.apps.filter(a => isToolEnabled(option.id, a.id)).length;
+                            const totalCount = source.apps.length;
+                            return (
+                              <SourceChip key={source.category} label={source.label} apps={source.apps} activeCount={activeCount} totalCount={totalCount} hasAnyActive={activeCount > 0} optionId={option.id} isToolEnabled={isToolEnabled} />
+                            );
+                          })}
+                        </Box>
+                      )}
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, pt: 0.5 }}>
                         {(hasExpandableTools || (hasConfig && state.enabled)) && (
                           <Box
