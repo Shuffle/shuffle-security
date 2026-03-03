@@ -363,6 +363,7 @@ const DataFlowDetailPage = () => {
         border: '1px solid hsl(var(--border))',
         bgcolor: 'hsl(var(--card))',
         background: `linear-gradient(135deg, hsla(var(${headerColor}) / 0.06) 0%, hsl(var(--card)) 60%)`,
+        position: 'relative',
       }}>
         <Box sx={{
           width: 56,
@@ -424,32 +425,28 @@ const DataFlowDetailPage = () => {
             </Box>
           )}
         </Box>
-      </Box>
-
-      {/* Coming soon banner for non-first-three usecases */}
-      {!['siem_case_management_1', 'edr_case_management_1', 'email_case_management_1'].includes(flow.id) && (
-        <Box sx={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1.5,
-          px: 3,
-          py: 2,
-          mb: 3,
-          borderRadius: 2,
-          border: '1px solid hsla(45 93% 47% / 0.3)',
-          bgcolor: 'hsla(45 93% 47% / 0.06)',
-        }}>
-          <Clock size={18} style={{ color: 'hsl(45 93% 47%)', flexShrink: 0 }} />
-          <Box>
-            <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: 'hsl(45 93% 47%)' }}>
+        {/* Coming soon badge — top right of hero */}
+        {!['siem_case_management_1', 'edr_case_management_1', 'email_case_management_1'].includes(flow.id) && (
+          <Box sx={{
+            position: 'absolute',
+            top: 16,
+            right: 16,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 0.75,
+            px: 1.5,
+            py: 0.5,
+            borderRadius: 1.5,
+            bgcolor: 'hsla(45 93% 47% / 0.1)',
+            border: '1px solid hsla(45 93% 47% / 0.25)',
+          }}>
+            <Clock size={13} style={{ color: 'hsl(45 93% 47%)' }} />
+            <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, color: 'hsl(45 93% 47%)' }}>
               Coming Soon
             </Typography>
-            <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
-              This usecase is not yet available for automated setup. Stay tuned for updates.
-            </Typography>
           </Box>
-        </Box>
-      )}
+        )}
+      </Box>
 
       {/* Connection Path */}
       <Box sx={{

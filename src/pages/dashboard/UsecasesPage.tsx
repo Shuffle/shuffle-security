@@ -318,20 +318,11 @@ function UsecaseCard({ flow, drift, apiLoaded, onClick }: { flow: Usecase; drift
             {flow.label}
           </Typography>
           {isComingSoon && (
-            <Chip
-              icon={<Clock size={10} />}
-              label="Soon"
-              size="small"
-              sx={{
-                height: 18,
-                fontSize: '0.6rem',
-                fontWeight: 700,
-                bgcolor: 'hsla(45 93% 47% / 0.1)',
-                color: 'hsl(45 93% 47%)',
-                border: '1px solid hsla(45 93% 47% / 0.25)',
-                '& .MuiChip-icon': { color: 'hsl(45 93% 47%)', ml: 0.5 },
-              }}
-            />
+            <Tooltip title="Coming soon" placement="top" arrow>
+              <Box sx={{ display: 'inline-flex' }}>
+                <Clock size={13} style={{ color: 'hsl(45 93% 47%)' }} />
+              </Box>
+            </Tooltip>
           )}
           {!isComingSoon && syncIcon}
         </Box>
