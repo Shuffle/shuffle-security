@@ -937,7 +937,7 @@ const RulesPage = () => {
                       onClick={() => {
                         setRuleContent(ex.content);
                         const titleMatch = ex.content.match(/^title:\s*(.+)$/m);
-                        if (titleMatch && !ruleName.trim()) {
+                        if (titleMatch) {
                           setRuleName(titleMatch[1].trim().toLowerCase().replace(/\s+/g, '_'));
                         }
                       }}
