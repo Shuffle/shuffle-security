@@ -298,7 +298,7 @@ const OnboardingPage = () => {
       );
       localStorage.setItem('connected_integrations', JSON.stringify(connectedApps));
       trackPredefinedEvent(GA_EVENTS.ONBOARDING_COMPLETE, undefined, connectedApps.length);
-      navigate('/incidents');
+      navigate('/incidents?autoSync=1');
     } else {
       const nextStep = activeStep + 1;
       trackOnboardingStep(nextStep, steps[nextStep].label);
