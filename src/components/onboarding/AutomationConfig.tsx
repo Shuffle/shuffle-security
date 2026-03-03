@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
+import { IntegrationStatus } from '@/components/layout/IntegrationStatus';
 import { AppAuthCard, type AppAuthState, type ApiAuthEntry as AppAuthApiEntry } from '@/components/onboarding/AppAuthConfig';
 import type { AlgoliaSearchApp } from '@/lib/singul-local';
 import {
@@ -1531,55 +1532,6 @@ export const AutomationConfig = ({
 
   const enabledCount = Object.values(enrichmentState).filter((s) => s.enabled).length;
 
-  // Build connected apps summary from authenticatedApps + activated apps from /api/v1/apps
-  const [activatedApps, setActivatedApps] = useState<Array<{ id: string; name: string; large_image?: string }>>([]);
-  
-  // Fetch all activated apps from /api/v1/apps on mount
-  useEffect(() => {
-    const headers = getAuthHeader();
-    if (!headers.Authorization) return;
-    fetch(getApiUrl('/api/v1/apps'), { headers })
-      .then(res => res.json())
-      .then((data: any[]) => {
-        if (Array.isArray(data)) {
-          const activated = data.filter((a: any) => a.activated);
-          setActivatedApps(activated.map((a: any) => ({ id: a.id, name: a.name, large_image: a.large_image })));
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-  const dedupedSummaryApps = useMemo(() => {
-    return deduplicateAuthApps(
-      authenticatedApps.filter(auth => auth.active || auth.validation?.valid)
-    );
-  }, [authenticatedApps]);
-
-  // Merge activated apps that aren't already in dedupedSummaryApps
-  const allSummaryApps = useMemo(() => {
-    const authAppIds = new Set(dedupedSummaryApps.map(a => a.app.id));
-    const extraApps = activatedApps
-      .filter(a => !authAppIds.has(a.id))
-      .map(a => ({
-        app: { id: a.id, name: a.name, large_image: a.large_image } as any,
-        bestImage: a.large_image,
-        hasValidAuth: false,
-      }));
-    return [...dedupedSummaryApps, ...extraApps];
-  }, [dedupedSummaryApps, activatedApps]);
-
-  const validatedSummaryCount = allSummaryApps.filter(a => a.hasValidAuth).length;
-  const totalSummaryCount = allSummaryApps.length;
-
-  // Sort: validated first, then alphabetically
-  const sortedSummaryApps = useMemo(() => {
-    return [...allSummaryApps].sort((a, b) => {
-      if (a.hasValidAuth && !b.hasValidAuth) return -1;
-      if (!a.hasValidAuth && b.hasValidAuth) return 1;
-      return a.app.name.localeCompare(b.app.name);
-    });
-  }, [allSummaryApps]);
-
   return (
     <Box>
       {/* Header */}
@@ -1602,108 +1554,12 @@ export const AutomationConfig = ({
         </Typography>
       </Box>
 
-      {/* Connected Apps Summary Strip */}
-      {totalSummaryCount > 0 && (
-        <Box
-          sx={{
-            mb: 4,
-            p: 2.5,
-            borderRadius: 3,
-            background: 'rgba(0, 0, 0, 0.25)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', mb: 1.5 }}>
-            <Chip
-              label={`${validatedSummaryCount}/${totalSummaryCount} validated`}
-              size="small"
-              sx={{
-                height: 22,
-                background: validatedSummaryCount === totalSummaryCount
-                  ? 'rgba(34, 197, 94, 0.15)'
-                  : 'rgba(255, 152, 0, 0.15)',
-                color: validatedSummaryCount === totalSummaryCount ? '#22c55e' : '#ff9800',
-                fontWeight: 600,
-                fontSize: '0.7rem',
-              }}
-            />
-          </Box>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-            {sortedSummaryApps.map((dedupedApp) => (
-              <Tooltip
-                key={dedupedApp.app.id}
-                title={
-                  <Box sx={{ p: 0.5 }}>
-                    <Typography sx={{ fontWeight: 600, fontSize: '0.8rem' }}>
-                      {dedupedApp.app.name.replace(/_/g, ' ')}
-                    </Typography>
-                    <Typography sx={{ fontSize: '0.7rem', opacity: 0.8, mt: 0.25 }}>
-                      {dedupedApp.hasValidAuth ? '✓ Validated' : '⏳ Pending validation'}
-                    </Typography>
-                  </Box>
-                }
-                arrow
-                placement="top"
-              >
-                <Box
-                  component={RouterLink}
-                  to={`/apps/${encodeURIComponent(dedupedApp.app.name.toLowerCase())}`}
-                  sx={{
-                    position: 'relative',
-                    cursor: 'pointer',
-                    transition: 'transform 0.15s ease',
-                    '&:hover': { transform: 'scale(1.15)' },
-                  }}
-                >
-                  {dedupedApp.bestImage ? (
-                    <Avatar
-                      src={dedupedApp.bestImage}
-                      alt={dedupedApp.app.name}
-                      sx={{
-                        width: 32,
-                        height: 32,
-                        border: '2px solid',
-                        borderColor: dedupedApp.hasValidAuth ? 'rgba(34, 197, 94, 0.5)' : 'rgba(255, 152, 0, 0.5)',
-                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                        '& img': { objectFit: 'contain', p: 0.25 },
-                      }}
-                    />
-                  ) : (
-                    <Avatar
-                      sx={{
-                        width: 32,
-                        height: 32,
-                        border: '2px solid',
-                        borderColor: dedupedApp.hasValidAuth ? 'rgba(34, 197, 94, 0.5)' : 'rgba(255, 152, 0, 0.5)',
-                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                      }}
-                    >
-                      {dedupedApp.app.name.charAt(0).toUpperCase()}
-                    </Avatar>
-                  )}
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      bottom: -1,
-                      right: -1,
-                      width: 10,
-                      height: 10,
-                      borderRadius: '50%',
-                      backgroundColor: dedupedApp.hasValidAuth ? '#22c55e' : '#ff9800',
-                      border: '2px solid rgba(0, 0, 0, 0.5)',
-                    }}
-                  />
-                </Box>
-              </Tooltip>
-            ))}
-          </Box>
-        </Box>
-      )}
+      {/* Connected Apps — reuse sidebar component */}
+      <Box sx={{ mb: 3 }}>
+        <IntegrationStatus collapsed={false} iconSize={30} />
+      </Box>
 
       {/* Automation Sections */}
-
       {renderSection('Data Enrichment', enrichmentItems)}
       {renderSection('Automated Response', responseItems)}
     </Box>
