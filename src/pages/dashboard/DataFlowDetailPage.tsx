@@ -8,6 +8,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, Typography, Chip, Button, IconButton, Avatar, Skeleton } from '@mui/material';
 import { ArrowRight, ArrowLeft, Bot, Check, Link as LinkIcon, Copy } from 'lucide-react';
 import UsecaseAlluvialDiagram from '@/components/usecases/UsecaseAlluvialDiagram';
+import { Clock } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
@@ -424,6 +425,31 @@ const DataFlowDetailPage = () => {
           )}
         </Box>
       </Box>
+
+      {/* Coming soon banner for non-first-three usecases */}
+      {!['siem_case_management_1', 'edr_case_management_1', 'email_case_management_1'].includes(flow.id) && (
+        <Box sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.5,
+          px: 3,
+          py: 2,
+          mb: 3,
+          borderRadius: 2,
+          border: '1px solid hsla(45 93% 47% / 0.3)',
+          bgcolor: 'hsla(45 93% 47% / 0.06)',
+        }}>
+          <Clock size={18} style={{ color: 'hsl(45 93% 47%)', flexShrink: 0 }} />
+          <Box>
+            <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: 'hsl(45 93% 47%)' }}>
+              Coming Soon
+            </Typography>
+            <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
+              This usecase is not yet available for automated setup. Stay tuned for updates.
+            </Typography>
+          </Box>
+        </Box>
+      )}
 
       {/* Connection Path */}
       <Box sx={{
