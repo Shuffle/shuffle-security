@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { AppAuthCard, type AppAuthState, type ApiAuthEntry as AppAuthApiEntry } from '@/components/onboarding/AppAuthConfig';
 import type { AlgoliaSearchApp } from '@/lib/singul-local';
@@ -1570,24 +1570,54 @@ export const AutomationConfig = ({
 
   const enabledCount = Object.values(enrichmentState).filter((s) => s.enabled).length;
 
-  // Build connected apps summary from authenticatedApps
+  // Build connected apps summary from authenticatedApps + activated apps from /api/v1/apps
+  const [activatedApps, setActivatedApps] = useState<Array<{ id: string; name: string; large_image?: string }>>([]);
+  
+  // Fetch all activated apps from /api/v1/apps on mount
+  useEffect(() => {
+    const headers = getAuthHeader();
+    if (!headers.Authorization) return;
+    fetch(getApiUrl('/api/v1/apps'), { headers })
+      .then(res => res.json())
+      .then((data: any[]) => {
+        if (Array.isArray(data)) {
+          const activated = data.filter((a: any) => a.activated);
+          setActivatedApps(activated.map((a: any) => ({ id: a.id, name: a.name, large_image: a.large_image })));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const dedupedSummaryApps = useMemo(() => {
     return deduplicateAuthApps(
       authenticatedApps.filter(auth => auth.active || auth.validation?.valid)
     );
   }, [authenticatedApps]);
 
-  const validatedSummaryCount = dedupedSummaryApps.filter(a => a.hasValidAuth).length;
-  const totalSummaryCount = dedupedSummaryApps.length;
+  // Merge activated apps that aren't already in dedupedSummaryApps
+  const allSummaryApps = useMemo(() => {
+    const authAppIds = new Set(dedupedSummaryApps.map(a => a.app.id));
+    const extraApps = activatedApps
+      .filter(a => !authAppIds.has(a.id))
+      .map(a => ({
+        app: { id: a.id, name: a.name, large_image: a.large_image } as any,
+        bestImage: a.large_image,
+        hasValidAuth: false,
+      }));
+    return [...dedupedSummaryApps, ...extraApps];
+  }, [dedupedSummaryApps, activatedApps]);
+
+  const validatedSummaryCount = allSummaryApps.filter(a => a.hasValidAuth).length;
+  const totalSummaryCount = allSummaryApps.length;
 
   // Sort: validated first, then alphabetically
   const sortedSummaryApps = useMemo(() => {
-    return [...dedupedSummaryApps].sort((a, b) => {
+    return [...allSummaryApps].sort((a, b) => {
       if (a.hasValidAuth && !b.hasValidAuth) return -1;
       if (!a.hasValidAuth && b.hasValidAuth) return 1;
       return a.app.name.localeCompare(b.app.name);
     });
-  }, [dedupedSummaryApps]);
+  }, [allSummaryApps]);
 
   return (
     <Box>
@@ -1622,18 +1652,7 @@ export const AutomationConfig = ({
             border: '1px solid rgba(255, 255, 255, 0.08)',
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
-            <Typography
-              variant="overline"
-              sx={{
-                color: 'rgba(255, 255, 255, 0.5)',
-                fontWeight: 600,
-                letterSpacing: 1.5,
-                fontSize: '0.65rem',
-              }}
-            >
-              Connected Apps
-            </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', mb: 1.5 }}>
             <Chip
               label={`${validatedSummaryCount}/${totalSummaryCount} validated`}
               size="small"
