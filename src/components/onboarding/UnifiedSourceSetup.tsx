@@ -17,8 +17,20 @@ import {
 } from 'lucide-react';
 import { SingulJS } from '@/lib/singul-local';
 import type { AlgoliaSearchApp, SingulJSHandle } from '@/lib/singul-local';
-import { API_CONFIG } from '@/config/api';
+import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { getIngestionCategory, type IngestionCategory } from '@/lib/ingestionDetection';
+
+/** Fire-and-forget activate call for a newly selected app */
+const activateApp = (appId: string) => {
+  if (!API_CONFIG.apiKey) return;
+  fetch(getApiUrl(`/api/v1/apps/${encodeURIComponent(appId)}/activate`), {
+    method: 'GET',
+    credentials: 'include',
+    headers: { ...getAuthHeader() },
+  }).catch(() => {
+    // Non-critical
+  });
+};
 
 // Extended category type for the Sources page (includes 'other')
 type SourceCategory = IngestionCategory | 'other';
@@ -399,6 +411,21 @@ export const UnifiedSourceSetup = ({
     }, 200);
   }, []);
 
+  // Track previous selected IDs to detect new additions
+  const prevSelectedIdsRef = useRef(new Set(selectedApps.map(a => a.objectID)));
+
+  const handleAppsChange = useCallback((newApps: AlgoliaSearchApp[]) => {
+    // Detect newly added apps and activate them
+    const prevIds = prevSelectedIdsRef.current;
+    for (const app of newApps) {
+      if (!prevIds.has(app.objectID)) {
+        activateApp(app.objectID);
+      }
+    }
+    prevSelectedIdsRef.current = new Set(newApps.map(a => a.objectID));
+    onAppsChange(newApps);
+  }, [onAppsChange]);
+
   const toggleCategory = (id: string) => {
     const willOpen = openCategory !== id;
     setOpenCategory(prev => (prev === id ? null : id));
@@ -455,7 +482,7 @@ export const UnifiedSourceSetup = ({
             totalSteps={CATEGORIES.length}
             selectedApps={categorizedApps[category.id]}
             allSelectedApps={selectedApps}
-            onAppsChange={onAppsChange}
+            onAppsChange={handleAppsChange}
             isOpen={openCategory === category.id}
             onToggleOpen={() => toggleCategory(category.id)}
             sectionRef={(el) => { sectionRefs.current[category.id] = el; }}

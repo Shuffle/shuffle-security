@@ -91,18 +91,22 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
           }
         }
 
-        // Fetch active apps (only if count < 10)
-        try {
-          const appsResponse = await fetch(getApiUrl('/api/v1/apps'), {
-            credentials: 'include',
-            headers: { ...getAuthHeader() },
-          });
-          if (appsResponse.ok) {
-            const appsData = await appsResponse.json();
-            if (Array.isArray(appsData)) {
-              const activatedApps = appsData.filter((app: any) => app.activated);
-              if (activatedApps.length < 10) {
+        // Only fetch active apps if we have fewer than 10 auth integrations
+        // and fill up to 10 total
+        if (dedupedIntegrations.length < 10) {
+          try {
+            const appsResponse = await fetch(getApiUrl('/api/v1/apps'), {
+              credentials: 'include',
+              headers: { ...getAuthHeader() },
+            });
+            if (appsResponse.ok) {
+              const appsData = await appsResponse.json();
+              if (Array.isArray(appsData)) {
+                const activatedApps = appsData.filter((app: any) => app.activated);
+                const slotsRemaining = 10 - dedupedIntegrations.length;
+                let added = 0;
                 for (const app of activatedApps) {
+                  if (added >= slotsRemaining) break;
                   if (!authNameSet.has((app.name || '').toLowerCase())) {
                     authNameSet.add((app.name || '').toLowerCase());
                     dedupedIntegrations.push({
@@ -114,13 +118,14 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
                       authInstances: [],
                       isActiveOnly: true,
                     });
+                    added++;
                   }
                 }
               }
             }
+          } catch (_) {
+            // Non-critical, ignore
           }
-        } catch (_) {
-          // Non-critical, ignore
         }
 
         // Sort: valid auth first, then active-only (red dot) last, then alphabetically
