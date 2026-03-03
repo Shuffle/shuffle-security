@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { toast } from '@/hooks/use-toast';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import {
@@ -259,43 +260,48 @@ const AppDetailPage = () => {
 
   const handleActivateToggle = async () => {
     if (!appname || activateLoading) return;
+    const wasActivated = isActivated;
+    const prevAppId = activatedAppId;
+
+    // Optimistic update
+    setIsActivated(!wasActivated);
     setActivateLoading(true);
+
     try {
-      if (isActivated && activatedAppId) {
-        // Deactivate
-        const res = await fetch(getApiUrl(`/api/v1/apps/${activatedAppId}/deactivate`), {
+      if (wasActivated && prevAppId) {
+        const res = await fetch(getApiUrl(`/api/v1/apps/${prevAppId}/deactivate`), {
           method: 'POST',
           credentials: 'include',
           headers: { ...getAuthHeader() },
         });
-        if (res.ok) {
-          setIsActivated(false);
-          setActivatedAppId(null);
-        }
+        if (!res.ok) throw new Error('Deactivate failed');
+        setActivatedAppId(null);
       } else {
-        // Find app ID first via search, then activate
         const searchRes = await fetch(getApiUrl(`/api/v1/apps/${encodeURIComponent(appname)}/config`), {
           credentials: 'include',
           headers: { ...getAuthHeader() },
         });
-        if (searchRes.ok) {
-          const data = await searchRes.json();
-          const appId = data.id;
-          if (appId) {
-            const activateRes = await fetch(getApiUrl(`/api/v1/apps/${appId}/activate`), {
-              method: 'POST',
-              credentials: 'include',
-              headers: { ...getAuthHeader() },
-            });
-            if (activateRes.ok) {
-              setIsActivated(true);
-              setActivatedAppId(appId);
-            }
-          }
-        }
+        if (!searchRes.ok) throw new Error('Could not find app');
+        const data = await searchRes.json();
+        const appId = data.id;
+        if (!appId) throw new Error('No app ID');
+        const activateRes = await fetch(getApiUrl(`/api/v1/apps/${appId}/activate`), {
+          method: 'POST',
+          credentials: 'include',
+          headers: { ...getAuthHeader() },
+        });
+        if (!activateRes.ok) throw new Error('Activate failed');
+        setActivatedAppId(appId);
       }
     } catch (e) {
-      console.error('Activate/deactivate failed:', e);
+      // Revert optimistic update
+      setIsActivated(wasActivated);
+      setActivatedAppId(prevAppId);
+      toast({
+        title: wasActivated ? 'Deactivation failed' : 'Activation failed',
+        description: 'Something went wrong. Please try again.',
+        variant: 'destructive',
+      });
     } finally {
       setActivateLoading(false);
     }
