@@ -267,7 +267,7 @@ export const HeroSection = () => {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.6 }}
           >
-            <Box sx={{ mt: 10 }}>
+            <Box sx={{ mt: 16 }}>
               <Typography
                 sx={{
                   color: 'text.secondary',
