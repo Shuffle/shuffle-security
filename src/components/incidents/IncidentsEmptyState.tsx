@@ -168,17 +168,6 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, is
           {hasApps ? 'Manage Sources' : 'Set Up Ingestion'}
         </Button>
 
-        {/* Secondary hint */}
-        <Typography
-          variant="caption"
-          sx={{
-            mt: 3,
-            color: 'hsl(var(--muted-foreground))',
-            opacity: 0.6,
-          }}
-        >
-          You can also create incidents manually using the + button above
-        </Typography>
       </Box>
     </motion.div>
   );
