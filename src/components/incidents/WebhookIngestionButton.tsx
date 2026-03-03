@@ -52,28 +52,30 @@ export const WebhookIngestionButton = ({ webhook, onToggled }: WebhookIngestionB
     setAnchorEl(null);
 
     try {
-      if (!webhook.exists) {
-        // Generate the webhook workflow
+      if (willBeEnabled) {
+        // Generate/enable the webhook workflow
         const res = await fetch(getApiUrl('/api/v2/workflows/generate'), {
           method: 'POST',
           credentials: 'include',
           headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            label: 'Ingestion Webhook',
+            label: 'Ingest Tickets_webhook',
             category: 'cases',
           }),
         });
         if (!res.ok) throw new Error('Failed to create webhook workflow');
       } else {
-        // Start or stop the existing workflow's webhook trigger
-        // We toggle by setting the trigger status
-        const endpoint = willBeEnabled ? 'start' : 'stop';
-        const res = await fetch(getApiUrl(`/api/v1/workflows/${webhook.workflowId}/${endpoint}`), {
-          method: 'GET',
+        // Remove the webhook by calling generate with action: remove
+        const res = await fetch(getApiUrl('/api/v2/workflows/generate'), {
+          method: 'POST',
           credentials: 'include',
-          headers: { ...getAuthHeader() },
+          headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            label: 'Ingest Tickets_webhook',
+            action: 'remove',
+          }),
         });
-        if (!res.ok) throw new Error(`Failed to ${endpoint} webhook`);
+        if (!res.ok) throw new Error('Failed to remove webhook workflow');
       }
 
       toast.success(willBeEnabled ? 'Ingestion Webhook enabled' : 'Ingestion Webhook disabled');
