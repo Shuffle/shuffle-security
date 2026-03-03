@@ -1375,19 +1375,33 @@ const IncidentDetailPage = () => {
               />
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5, flexWrap: 'wrap' }}>
-              {/* Status badge (read-only) */}
-              <Chip
-                label={statusConfig[editedStatus]?.label || editedStatus.replace('_', ' ')}
-                size="small"
-                sx={{
-                  fontSize: '0.7rem',
-                  fontWeight: 600,
-                  height: 22,
-                  bgcolor: statusConfig[editedStatus]?.bg,
-                  color: statusConfig[editedStatus]?.color,
-                  '& .MuiChip-label': { px: 1.5 },
-                }}
-              />
+              {/* Status dropdown */}
+              <FormControl size="small" variant="standard">
+                <Select
+                  value={editedStatus}
+                  onChange={(e) => setEditedStatus(e.target.value)}
+                  disableUnderline
+                  sx={{
+                    fontSize: '0.7rem',
+                    fontWeight: 600,
+                    color: statusConfig[editedStatus]?.color || 'hsl(var(--muted-foreground))',
+                    '& .MuiSelect-select': { 
+                      py: 0.25, px: 1,
+                      borderRadius: 3,
+                      bgcolor: statusConfig[editedStatus]?.bg || 'transparent',
+                    },
+                    '& .MuiSelect-icon': { color: statusConfig[editedStatus]?.color || 'hsl(var(--muted-foreground))', fontSize: 16 },
+                  }}
+                  renderValue={(val) => statusConfig[val]?.label || val.replace('_', ' ')}
+                >
+                  {Object.entries(statusConfig).map(([key, cfg]) => (
+                    <MenuItem key={key} value={key} sx={{ fontSize: '0.8rem', gap: 1 }}>
+                      <cfg.icon size={14} color={cfg.color} />
+                      {cfg.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
               
               <Typography variant="caption" sx={{ color: 'text.disabled' }}>•</Typography>
               
