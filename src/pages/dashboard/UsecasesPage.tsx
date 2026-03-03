@@ -206,9 +206,9 @@ export default function UsecasesPage() {
 
       {/* Grouped card grid */}
       {grouped.map((group) => (
-        <Box key={group.id} sx={{ mb: 5 }}>
+        <Box key={group.id} sx={{ mb: 6 }}>
           {/* Phase header */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2.5, pt: 2, borderTop: '1px solid hsl(var(--border) / 0.5)' }}>
             <Chip
               label={group.step}
               size="small"
