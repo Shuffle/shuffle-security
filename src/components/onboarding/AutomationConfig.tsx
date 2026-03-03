@@ -423,9 +423,12 @@ export const AutomationConfig = ({
         };
       }
       if (opt.id === 'forward_updates') {
-        // Show cases/ticketing apps + other authenticated apps for forwarding
+        // Show all authenticated apps for forwarding incidents
         const forwardApps: ConnectedApp[] = sortApps([
+          ...ingestionByCategory.email,
           ...ingestionByCategory.cases,
+          ...ingestionByCategory.edr,
+          ...ingestionByCategory.siem,
           ...ingestionByCategory.other,
         ]);
         const fwdValidated = forwardApps.filter(a => a.isValidated).length;
