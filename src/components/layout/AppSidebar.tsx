@@ -82,7 +82,6 @@ const navItems: NavItem[] = [
       { label: 'MITRE ATT&CK', path: '/detection/mitre', icon: <Waypoints size={16} />, disabled: true },
     ],
   },
-  { label: 'Infrastructure', icon: <Network size={20} />, path: '/infrastructure' },
   { label: 'Automation', icon: <Activity size={20} />, path: '/usecases' },
 ];
 

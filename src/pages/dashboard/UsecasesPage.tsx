@@ -3,7 +3,7 @@
  */
 
 import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -93,12 +93,31 @@ export default function UsecasesPage() {
   return (
     <Box sx={{ px: { xs: 2, md: 4 }, py: 4, maxWidth: 1200, mx: 'auto' }}>
       {/* Header */}
-      <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5, color: 'hsl(var(--foreground))' }}>
-        Usecases
-      </Typography>
-      <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))', mb: 3 }}>
-        All data flows across your security stack — grouped by implementation phase.
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
+        <Box>
+          <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5, color: 'hsl(var(--foreground))' }}>
+            Usecases
+          </Typography>
+          <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+            All data flows across your security stack — grouped by implementation phase.
+          </Typography>
+        </Box>
+        <Chip
+          icon={<Activity size={14} />}
+          label="Infrastructure"
+          component={Link}
+          to="/infrastructure"
+          clickable
+          size="small"
+          sx={{
+            bgcolor: 'hsl(var(--muted))',
+            color: 'hsl(var(--foreground))',
+            fontWeight: 500,
+            mt: 0.5,
+            '&:hover': { bgcolor: 'hsl(var(--muted-foreground) / 0.2)' },
+          }}
+        />
+      </Box>
 
       {/* Filters */}
       <Box sx={{ display: 'flex', gap: 2, mb: 4, flexWrap: 'wrap', alignItems: 'center' }}>
