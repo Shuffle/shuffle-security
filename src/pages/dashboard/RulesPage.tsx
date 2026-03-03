@@ -197,7 +197,7 @@ const RulesPage = () => {
   // Create/Edit dialog state
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingFile, setEditingFile] = useState<ShuffleFile | null>(null);
-  const [ruleName, setRuleName] = useState('');
+  
   const [ruleContent, setRuleContent] = useState(SIGMA_TEMPLATE);
   const [sampleLog, setSampleLog] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -356,7 +356,7 @@ const RulesPage = () => {
 
   const handleOpenCreateDialog = () => {
     setEditingFile(null);
-    setRuleName('');
+    
     setRuleContent('');
     setSampleLog('');
     setIsCreateDialogOpen(true);
@@ -376,11 +376,6 @@ const RulesPage = () => {
         // Strip markdown fences if present
         const cleaned = result.replace(/^```(?:ya?ml)?\n?/i, '').replace(/\n?```$/i, '').trim();
         setRuleContent(cleaned);
-        // Try to extract title for the rule name
-        const titleMatch = cleaned.match(/^title:\s*(.+)$/m);
-        if (titleMatch) {
-          setRuleName(titleMatch[1].trim().toLowerCase().replace(/\s+/g, '_'));
-        }
         // Flash highlight on the rule content field
         setJustGenerated(true);
         setTimeout(() => setJustGenerated(false), 3000);
@@ -398,7 +393,7 @@ const RulesPage = () => {
 
   const handleEditFile = async (file: ShuffleFile) => {
     setEditingFile(file);
-    setRuleName(file.filename.replace(/\.(yml|yaml|sigma)$/i, ''));
+    
     setIsCreateDialogOpen(true);
     
     try {
@@ -424,14 +419,20 @@ const RulesPage = () => {
     }
   };
 
+  const extractRuleName = (content: string): string => {
+    const match = content.match(/^title:\s*(.+)$/m);
+    return match ? match[1].trim().toLowerCase().replace(/\s+/g, '_') : '';
+  };
+
   const handleSaveRule = async () => {
-    if (!ruleName.trim()) {
-      toast.error('Please enter a rule name');
+    if (!ruleContent.trim()) {
+      toast.error('Please enter rule content');
       return;
     }
 
-    if (!ruleContent.trim()) {
-      toast.error('Please enter rule content');
+    const derivedName = extractRuleName(ruleContent);
+    if (!derivedName) {
+      toast.error('Rule must contain a "title:" field');
       return;
     }
 
@@ -449,7 +450,7 @@ const RulesPage = () => {
           },
           body: JSON.stringify({
             content: ruleContent,
-            filename: ruleName.endsWith('.yml') ? ruleName : `${ruleName}.yml`,
+            filename: derivedName.endsWith('.yml') ? derivedName : `${derivedName}.yml`,
           }),
         });
 
@@ -463,7 +464,7 @@ const RulesPage = () => {
         }
       } else {
         // Create new file
-        const filename = ruleName.endsWith('.yml') ? ruleName : `${ruleName}.yml`;
+        const filename = derivedName.endsWith('.yml') ? derivedName : `${derivedName}.yml`;
         const blob = new Blob([ruleContent], { type: 'text/yaml' });
         const file = new File([blob], filename, { type: 'text/yaml' });
 
@@ -883,24 +884,6 @@ const RulesPage = () => {
               </Box>
             </Box>
           )}
-          <TextField
-            label="Rule Name"
-            placeholder="e.g., suspicious_powershell_execution"
-            value={ruleName}
-            onChange={(e) => setRuleName(e.target.value)}
-            fullWidth
-            size="small"
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                backgroundColor: 'hsl(var(--muted))',
-                '& fieldset': { borderColor: 'hsl(var(--border))' },
-                '&:hover fieldset': { borderColor: 'hsl(var(--border))' },
-                '&.Mui-focused fieldset': { borderColor: 'hsl(var(--primary))' },
-              },
-              '& .MuiOutlinedInput-input': { color: 'hsl(var(--foreground))' },
-              '& .MuiInputLabel-root': { color: 'hsl(var(--muted-foreground))' },
-            }}
-          />
           <Box>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -936,10 +919,6 @@ const RulesPage = () => {
                       size="small"
                       onClick={() => {
                         setRuleContent(ex.content);
-                        const titleMatch = ex.content.match(/^title:\s*(.+)$/m);
-                        if (titleMatch) {
-                          setRuleName(titleMatch[1].trim().toLowerCase().replace(/\s+/g, '_'));
-                        }
                       }}
                       sx={{
                         height: 24,
@@ -995,7 +974,7 @@ const RulesPage = () => {
           <Button
             variant="contained"
             onClick={handleSaveRule}
-            disabled={isSaving || !ruleName.trim() || !ruleContent.trim()}
+            disabled={isSaving || !ruleContent.trim() || !extractRuleName(ruleContent)}
             startIcon={isSaving ? <CircularProgress size={16} color="inherit" /> : null}
             sx={{
               backgroundColor: 'hsl(var(--primary))',
