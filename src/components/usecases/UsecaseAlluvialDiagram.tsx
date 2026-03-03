@@ -390,9 +390,9 @@ export default function UsecaseAlluvialDiagram({
 
   // Y position for the add button (below the last app, or at center if no apps)
   const getAddButtonY = (appCount: number) => {
-    if (appCount === 0) return centerY + nodeSize / 2 + 12;
+    if (appCount === 0) return centerY;
     const lastY = getY(appCount - 1, appCount);
-    return lastY + nodeSize / 2 + 12;
+    return lastY + nodeSize / 2 + rowGap + 16;
   };
 
   const makePath = (fromX: number, fromY: number, toX: number, toY: number) => {
