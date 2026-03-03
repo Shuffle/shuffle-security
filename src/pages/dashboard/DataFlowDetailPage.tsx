@@ -525,36 +525,44 @@ const DataFlowDetailPage = () => {
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3, mb: 3 }}>
         {/* Why This Matters */}
         <Box sx={{
-          p: 3,
+          p: 3.5,
           borderRadius: 3,
           border: '1px solid hsl(var(--border))',
           bgcolor: 'hsl(var(--card))',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 2,
         }}>
-          <Section title="Why This Matters" borderBottom={false}>
-            <Typography sx={{ fontSize: '0.88rem', color: 'hsl(var(--foreground))', lineHeight: 1.8 }}>
-              {flow.description}
-            </Typography>
-          </Section>
+          <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            Why This Matters
+          </Typography>
+          <Typography sx={{ fontSize: '0.9rem', color: 'hsla(var(--foreground) / 0.85)', lineHeight: 1.85 }}>
+            {flow.description}
+          </Typography>
         </Box>
 
         {/* Agentic Mode */}
         <Box sx={{
-          p: 3,
+          p: 3.5,
           borderRadius: 3,
-          border: '1px solid hsla(var(--primary) / 0.2)',
-          bgcolor: 'hsla(var(--primary) / 0.03)',
+          border: `1px solid hsla(var(${headerColor}) / 0.25)`,
+          bgcolor: `hsla(var(${headerColor}) / 0.03)`,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 2,
         }}>
-          <Section title="Agentic Mode" borderBottom={false}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-              <Bot size={16} style={{ color: 'hsl(var(--primary))' }} />
-              <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: 'hsl(var(--primary))' }}>
-                AI Agent Behavior
-              </Typography>
-            </Box>
-            <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--foreground))', lineHeight: 1.8 }}>
-              {flow.agenticDescription}
+          <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            Agentic Mode
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Bot size={15} style={{ color: `hsl(var(${headerColor}))` }} />
+            <Typography sx={{ fontSize: '0.78rem', fontWeight: 700, color: `hsl(var(${headerColor}))` }}>
+              AI Agent Behavior
             </Typography>
-          </Section>
+          </Box>
+          <Typography sx={{ fontSize: '0.9rem', color: 'hsla(var(--foreground) / 0.85)', lineHeight: 1.85 }}>
+            {flow.agenticDescription}
+          </Typography>
         </Box>
       </Box>
 
