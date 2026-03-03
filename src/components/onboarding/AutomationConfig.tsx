@@ -184,6 +184,8 @@ interface AutomationConfigProps {
   selectedApps?: SelectedApp[];
   /** Normalized app names extracted from the 'Ingest Tickets' workflow (source of truth) */
   workflowAppNames?: Set<string>;
+  /** Normalized app names extracted from the 'Forward Tickets' workflow (source of truth) */
+  forwardWorkflowAppNames?: Set<string>;
   // Auth callbacks for inline configuration of pending apps
   authStates?: Record<string, AppAuthState>;
   apiAuthEntries?: AppAuthApiEntry[];
@@ -285,6 +287,7 @@ export const AutomationConfig = ({
   authenticatedApps = [],
   selectedApps = [],
   workflowAppNames,
+  forwardWorkflowAppNames,
   authStates = {},
   apiAuthEntries = [],
   onAuthChange,
@@ -366,6 +369,40 @@ export const AutomationConfig = ({
       }
     });
 
+    // Build a separate category map for Forward Tickets using forwardWorkflowAppNames
+    const forwardValidatedApps = extractValidatedIngestionApps(
+      authenticatedApps.filter(auth => auth.active || auth.validation?.valid),
+      forwardWorkflowAppNames,
+    );
+    const forwardByCategory: Record<IngestionCategory | 'other', ConnectedApp[]> = {
+      email: [], cases: [], edr: [], siem: [], other: [],
+    };
+    for (const vApp of forwardValidatedApps) {
+      forwardByCategory[vApp.category].push({
+        id: vApp.id,
+        name: vApp.name,
+        image: vApp.image,
+        isValidated: vApp.validated,
+        isSelected: isAppSelected(vApp.name),
+        hasAuthConfig: true,
+      });
+    }
+    const fwdValidatedNames = new Set(forwardValidatedApps.map(a => normalizeAppName(a.name)));
+    selectedApps.forEach(app => {
+      if (fwdValidatedNames.has(normalizeAppName(app.name))) return;
+      const category = getIngestionCategory(app.name, app.categories);
+      if (category) {
+        forwardByCategory[category].push({
+          id: app.objectID,
+          name: app.name,
+          image: app.image_url,
+          isValidated: false,
+          isSelected: true,
+          hasAuthConfig: false,
+        });
+      }
+    });
+
     const sortApps = (apps: ConnectedApp[]): ConnectedApp[] => {
       return [...apps].sort((a, b) => {
         const scoreA = (a.isSelected ? 2 : 0) + (a.isValidated ? 1 : 0);
@@ -401,13 +438,13 @@ export const AutomationConfig = ({
       if (opt.id === 'forward_updates') {
         // Use the same categorized ingestionSources UI as automatic_ingestion
         const forwardSources: IngestionSource[] = [
-          { category: 'cases', label: 'Cases', apps: sortApps(ingestionByCategory.cases) },
+          { category: 'cases', label: 'Cases', apps: sortApps(forwardByCategory.cases) },
         ];
         const otherForwardApps = [
-          ...sortApps(ingestionByCategory.email),
-          ...sortApps(ingestionByCategory.edr),
-          ...sortApps(ingestionByCategory.siem),
-          ...sortApps(ingestionByCategory.other),
+          ...sortApps(forwardByCategory.email),
+          ...sortApps(forwardByCategory.edr),
+          ...sortApps(forwardByCategory.siem),
+          ...sortApps(forwardByCategory.other),
         ];
         if (otherForwardApps.length > 0) {
           forwardSources.push({ category: 'other', label: 'Other', apps: otherForwardApps, isOther: true });
@@ -595,6 +632,16 @@ export const AutomationConfig = ({
       }
     }
 
+    // For forward_updates, use the Forward Tickets workflow as source of truth
+    if (optionId === 'forward_updates') {
+      if (normalized in localWorkflowOverrides) {
+        return localWorkflowOverrides[normalized];
+      }
+      if (forwardWorkflowAppNames) {
+        return forwardWorkflowAppNames.has(normalized);
+      }
+    }
+
     // Check explicit toggles in the enrichment state
     if (current?.tools) {
       for (const [toolId, value] of Object.entries(current.tools)) {
@@ -655,14 +702,14 @@ export const AutomationConfig = ({
     const currentTools = current.tools || {};
     const normalized = normalizeAppName(appName);
 
-    // For automatic_ingestion, use workflow-aware check
-    const wasEnabled = optionId === 'automatic_ingestion'
+    // For automatic_ingestion and forward_updates, use workflow-aware check
+    const wasEnabled = (optionId === 'automatic_ingestion' || optionId === 'forward_updates')
       ? isToolEnabled(optionId, appId)
       : currentTools[appId] !== false;
     const newToolState = !wasEnabled;
 
-    // Optimistic local override for automatic_ingestion
-    if (optionId === 'automatic_ingestion') {
+    // Optimistic local override for workflow-based options
+    if (optionId === 'automatic_ingestion' || optionId === 'forward_updates') {
       setLocalWorkflowOverrides(prev => ({ ...prev, [normalized]: newToolState }));
     }
 

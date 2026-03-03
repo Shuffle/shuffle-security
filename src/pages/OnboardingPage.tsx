@@ -21,7 +21,7 @@ import { setDatastoreItem, getDatastoreItem } from '@/services/datastore';
 import {
   isEmailApp, isIngestionApp, isThreatIntelApp,
 } from '@/lib/ingestionDetection';
-import { findIngestTicketsWorkflow, extractWorkflowAppNames } from '@/lib/ingestionDetection';
+import { findIngestTicketsWorkflow, findForwardTicketsWorkflow, extractWorkflowAppNames } from '@/lib/ingestionDetection';
 import { trackOnboardingStep, trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
 
 // Datastore category for onboarding config (using shuffle-security_ prefix for consistency)
@@ -99,6 +99,7 @@ const OnboardingPage = () => {
     chat_notify: { enabled: true, config: {} },
   });
   const [workflowAppNames, setWorkflowAppNames] = useState<Set<string> | undefined>(undefined);
+  const [forwardWorkflowAppNames, setForwardWorkflowAppNames] = useState<Set<string> | undefined>(undefined);
 
   // Per-org localStorage key for welcome completion
   const getWelcomeCompletedKey = () => {
@@ -269,6 +270,10 @@ const OnboardingPage = () => {
           const ingestWorkflow = findIngestTicketsWorkflow(workflowList);
           if (ingestWorkflow) {
             setWorkflowAppNames(extractWorkflowAppNames(ingestWorkflow));
+          }
+          const forwardWorkflow = findForwardTicketsWorkflow(workflowList);
+          if (forwardWorkflow) {
+            setForwardWorkflowAppNames(extractWorkflowAppNames(forwardWorkflow));
           }
         }
       } catch (error) {
@@ -959,6 +964,7 @@ const OnboardingPage = () => {
                       authenticatedApps={authenticatedApps}
                       selectedApps={selectedApps}
                       workflowAppNames={workflowAppNames}
+                      forwardWorkflowAppNames={forwardWorkflowAppNames}
                       authStates={authStates}
                       apiAuthEntries={authenticatedApps}
                       onAuthChange={handleAuthChange}
