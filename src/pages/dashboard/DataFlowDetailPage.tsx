@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, Typography, Chip, Button, IconButton, Avatar, Skeleton } from '@mui/material';
 import { ArrowRight, ArrowLeft, Bot, Check, Link as LinkIcon, Copy } from 'lucide-react';
+import UsecaseAlluvialDiagram from '@/components/usecases/UsecaseAlluvialDiagram';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
@@ -436,7 +437,7 @@ const DataFlowDetailPage = () => {
           <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
             Connection Path
           </Typography>
-          {hasSelection && (
+          {flow.id !== 'siem_case_management_1' && hasSelection && (
             <Button
               size="small"
               startIcon={<Copy size={12} />}
@@ -456,6 +457,9 @@ const DataFlowDetailPage = () => {
             </Button>
           )}
         </Box>
+        {flow.id === 'siem_case_management_1' ? (
+          <UsecaseAlluvialDiagram sourceCategory={flow.source} targetCategory={flow.target} />
+        ) : (
           <Box sx={{ display: 'flex', alignItems: 'stretch', gap: 2 }}>
             {/* Source */}
             <ConnectionEndpoint
@@ -484,6 +488,7 @@ const DataFlowDetailPage = () => {
               onToggleApp={toggleTargetApp}
             />
           </Box>
+        )}
       </Box>
 
       {/* Two-column layout: Description + Agentic */}
