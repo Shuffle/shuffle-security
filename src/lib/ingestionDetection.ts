@@ -56,8 +56,11 @@ export const getIngestionCategory = (appName: string, appCategories?: string[]):
 /** Name of the workflow that powers automatic ingestion */
 export const INGEST_TICKETS_WORKFLOW_NAME = 'Ingest Tickets';
 
+/** Name of the workflow that powers forward tickets */
+export const FORWARD_TICKETS_WORKFLOW_NAME = 'Forward Tickets';
+
 /**
- * Extract app names from a workflow's actions array.
+ * Extract normalized app names from a workflow's actions.
  * Returns a Set of normalized app names found in the workflow.
  */
 export function extractWorkflowAppNames(workflow: any): Set<string> {
@@ -65,13 +68,14 @@ export function extractWorkflowAppNames(workflow: any): Set<string> {
   if (!workflow?.actions || !Array.isArray(workflow.actions)) return names;
 
   for (const action of workflow.actions) {
-    // Type 1: Regular actions with app_name or app_id
     if (action.app_name) {
       names.add(normalizeAppName(action.app_name));
     }
-
-    // Type 2: Singul actions – look inside parameters for name="app_name"
-    if (Array.isArray(action.parameters)) {
+    if (action.app_id) {
+      names.add(normalizeAppName(action.app_id));
+    }
+    // Handle Singul-type actions with nested app_name in parameters
+    if (action.parameters) {
       for (const param of action.parameters) {
         if (param.name === 'app_name' && param.value) {
           names.add(normalizeAppName(param.value));
@@ -88,6 +92,14 @@ export function extractWorkflowAppNames(workflow: any): Set<string> {
  */
 export function findIngestTicketsWorkflow(workflows: any[]): any | null {
   return workflows.find(w => w.name === INGEST_TICKETS_WORKFLOW_NAME) || null;
+}
+
+/**
+ * Find the 'Forward Tickets' workflow from a list of workflows.
+ * Returns the workflow object or null.
+ */
+export function findForwardTicketsWorkflow(workflows: any[]): any | null {
+  return workflows.find(w => w.name === FORWARD_TICKETS_WORKFLOW_NAME) || null;
 }
 
 // ============================================================================
