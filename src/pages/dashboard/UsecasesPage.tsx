@@ -24,6 +24,7 @@ import {
   type FlowPhase,
   type Usecase,
 } from '@/config/usecases';
+import UsecaseAlluvialDiagram from '@/components/usecases/UsecaseAlluvialDiagram';
 
 const categoryLabel = (id: string) =>
   TOOL_CATEGORIES.find((c) => c.id === id)?.label || id;
@@ -131,6 +132,41 @@ export default function UsecasesPage() {
           ))}
         </ToggleButtonGroup>
       </Box>
+
+      {/* Featured: SIEM to Ticket alluvial diagram */}
+      {(phaseFilter === 'all' || phaseFilter === 'ingest') && (
+        <Card
+          variant="outlined"
+          sx={{
+            bgcolor: 'hsl(var(--card))',
+            borderColor: 'hsl(var(--border))',
+            mb: 5,
+            p: { xs: 2, md: 3 },
+            overflow: 'hidden',
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+            <Chip
+              label="Featured"
+              size="small"
+              sx={{
+                fontWeight: 700,
+                fontSize: '0.65rem',
+                height: 20,
+                bgcolor: 'hsl(var(--primary) / 0.12)',
+                color: 'hsl(var(--primary))',
+              }}
+            />
+            <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+              SIEM to Ticket
+            </Typography>
+          </Box>
+          <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.8rem', mb: 2, maxWidth: 600 }}>
+            SIEM alerts flow through Shuffle to automatically create and enrich tickets in your case management tools.
+          </Typography>
+          <UsecaseAlluvialDiagram sourceCategory="siem" targetCategory="case_management" />
+        </Card>
+      )}
 
       {/* Grouped card grid */}
       {grouped.map((group) => (
