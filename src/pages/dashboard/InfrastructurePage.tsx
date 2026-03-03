@@ -39,6 +39,7 @@ import {
   Download,
   Zap,
   X,
+  ExternalLink,
 } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { IntegrationStatus } from '@/components/layout/IntegrationStatus';
@@ -767,6 +768,7 @@ const DataFlowCard = ({
           bgcolor: highlighted ? `hsla(var(${flowColor}) / 0.12)` : 'hsla(var(--muted-foreground) / 0.06)',
           borderColor: highlighted ? `hsla(var(${flowColor}) / 0.5)` : 'hsl(var(--border))',
           opacity: flowState === 'disabled' ? 0.65 : 1,
+          '& .flow-detail-link': { opacity: 0.6 },
         },
       }}
     >
@@ -889,6 +891,15 @@ const DataFlowCard = ({
           </Typography>
         )
       )}
+      <Box
+        component="a"
+        href={`/infrastructure/flows/${flow.id}`}
+        onClick={(e: React.MouseEvent) => { e.stopPropagation(); }}
+        sx={{ display: 'flex', alignItems: 'center', color: 'hsl(var(--muted-foreground))', opacity: 0, transition: 'opacity 0.15s', '&:hover': { opacity: 1, color: 'hsl(var(--primary))' } }}
+        className="flow-detail-link"
+      >
+        <ExternalLink size={13} />
+      </Box>
       {targetCat && (
         <Box sx={{ color: flowState === 'enabled' ? `hsl(var(${targetCat.color}))` : 'hsl(var(--muted-foreground))', display: 'flex', '& svg': { width: 14, height: 14 }, opacity: 0.6 }}>
           {targetCat.icon}
@@ -1348,6 +1359,16 @@ const EdgeDetailDrawer = ({
             Data Flow Connection
           </Typography>
         </Box>
+        <Tooltip title="Open detail page" arrow>
+          <IconButton
+            component="a"
+            href={`/infrastructure/flows/${flow.id}`}
+            size="small"
+            sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--primary))' } }}
+          >
+            <ExternalLink size={16} />
+          </IconButton>
+        </Tooltip>
         <IconButton onClick={onClose} size="small" sx={{ color: 'hsl(var(--muted-foreground))' }}>
           <CloseIcon fontSize="small" />
         </IconButton>
