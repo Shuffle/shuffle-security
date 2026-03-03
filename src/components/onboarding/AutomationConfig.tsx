@@ -130,7 +130,7 @@ const baseEnrichmentOptions: (Omit<EnrichmentOption, 'connectedApps'> & { isDyna
   },
   {
     id: 'forward_updates',
-    name: 'Forward Updates',
+    name: 'Forward Incidents',
     description: 'Forward incident updates to external ticketing systems',
     icon: <SyncAltIcon />,
     color: '#f59e0b',
@@ -423,8 +423,11 @@ export const AutomationConfig = ({
         };
       }
       if (opt.id === 'forward_updates') {
-        // Show cases/ticketing apps for forwarding updates
-        const forwardApps: ConnectedApp[] = sortApps(ingestionByCategory.cases);
+        // Show cases/ticketing apps + other authenticated apps for forwarding
+        const forwardApps: ConnectedApp[] = sortApps([
+          ...ingestionByCategory.cases,
+          ...ingestionByCategory.other,
+        ]);
         const fwdValidated = forwardApps.filter(a => a.isValidated).length;
         const fwdTotal = forwardApps.length;
         return {
