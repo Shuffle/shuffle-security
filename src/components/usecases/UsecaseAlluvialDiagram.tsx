@@ -386,7 +386,7 @@ export default function UsecaseAlluvialDiagram({
     return startY + idx * (nodeSize + rowGap);
   };
 
-  const centerY = (svgHeight - 30 - addButtonSpace) / 2;
+  const centerY = (svgHeight - 30) / 2;
 
   // Y position for the add button (below the last app, or at center if no apps)
   const getAddButtonY = (appCount: number) => {
