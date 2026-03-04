@@ -94,6 +94,30 @@ const DEFAULT_PIPELINES: DefaultPipeline[] = [
     command: 'export live=true | to_opensearch "localhost:9200", action="create", index="shuffle_logs", user="admin", passwd="PASSWORD"',
     hasPlaceholders: true,
   },
+  {
+    label: 'Kafka Subscriber',
+    description: 'Subscribe to a Kafka topic and ingest events',
+    command: 'from_kafka "localhost:9092", topic="security_events" | import',
+    hasPlaceholders: true,
+  },
+  {
+    label: 'ZeroMQ Subscriber',
+    description: 'Subscribe to a ZeroMQ socket for event ingestion',
+    command: 'load_zmq "tcp://localhost:5555" | read_json | import',
+    hasPlaceholders: true,
+  },
+  {
+    label: 'File Watcher',
+    description: 'Watch a local JSON log file and ingest new entries',
+    command: 'load_file "/var/log/events.json", follow=true | read_json | import',
+    hasPlaceholders: true,
+  },
+  {
+    label: 'Velociraptor Import',
+    description: 'Ingest Velociraptor hunt results from a file',
+    command: 'from_file "/tmp/velociraptor_results.json" | read_json | import',
+    hasPlaceholders: true,
+  },
 ];
 
 const PipelinesPage = () => {
