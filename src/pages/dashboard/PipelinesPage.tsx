@@ -425,7 +425,7 @@ Use case: ${aiPrompt}`,
             />
           </Box>
           <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-            Monitor and manage Tenzir pipelines across all environments
+            Lightweight detection infrastructure — ingest, match, and forward security events without heavy tooling
           </Typography>
         </Box>
 
