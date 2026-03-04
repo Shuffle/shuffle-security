@@ -27,6 +27,7 @@ import DataFlowDetailPage from '@/pages/dashboard/DataFlowDetailPage';
 import UsecasesPage from '@/pages/dashboard/UsecasesPage';
 import AppDetailPage from '@/pages/dashboard/AppDetailPage';
 import DocsPage from '@/pages/docs/DocsPage';
+import PipelinesPage from '@/pages/dashboard/PipelinesPage';
 
 import AppsPage from '@/pages/AppsPage';
 import NotFound from './pages/NotFound';
@@ -94,6 +95,7 @@ const App = () => (
               <Route path="/templates" element={<TemplatesPage />} />
               <Route path="/detection" element={<DetectionOnboardingPage />} />
               <Route path="/detection/sigma" element={<RulesPage />} />
+              <Route path="/detection/pipelines" element={<PipelinesPage />} />
               <Route path="/detection/mitre" element={<MitreAttackPage />} />
               <Route path="/incidents/ioc-types" element={<IOCTypesPage />} />
               <Route path="/incidents/threat-feeds" element={<ThreatFeedsPage />} />
