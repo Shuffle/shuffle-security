@@ -429,17 +429,31 @@ export default function UsecaseAlluvialDiagram({
       return [...samples.map(a => ({ ...a, isHighlighted: true, isEnabled: true })), ...guestNodes];
     }
     if (highlightCategory && ingestAppNames) {
-      const validatedIngestNodes = allApps.filter(a =>
-        a.hasValidAuth &&
-        ingestAppNames.has(normalizeAppName(a.name)) &&
-        !isShuffleInternalApp(a.name)
-      ).map(a => ({
-        ...a,
-        isHighlighted: matchesCategory(a.name, highlightCategory),
-        isEnabled: true,
-      }));
+      // Show ALL validated apps (like /incidents page does)
+      // Apps in the ingest workflow are "enabled", others are "disabled" (greyed out, clickable)
+      const validatedApps = allApps.filter(a =>
+        a.hasValidAuth && !isShuffleInternalApp(a.name)
+      );
 
-      return validatedIngestNodes;
+      // Enabled: in the ingest workflow
+      const enabledNodes = validatedApps
+        .filter(a => ingestAppNames.has(normalizeAppName(a.name)))
+        .map(a => ({
+          ...a,
+          isHighlighted: matchesCategory(a.name, highlightCategory),
+          isEnabled: true,
+        }));
+
+      // Disabled: validated but not in the workflow (can be activated)
+      const disabledNodes = validatedApps
+        .filter(a => !ingestAppNames.has(normalizeAppName(a.name)))
+        .map(a => ({
+          ...a,
+          isHighlighted: false,
+          isEnabled: false,
+        }));
+
+      return [...enabledNodes, ...disabledNodes];
     }
     return allApps.filter(a => matchesCategory(a.name, sourceCategory) && a.hasValidAuth).map(a => ({ ...a, isEnabled: true }));
   }, [allApps, sourceCategory, highlightCategory, ingestAppNames, isLoggedIn, guestSourceNames]);
