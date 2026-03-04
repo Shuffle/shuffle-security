@@ -203,7 +203,7 @@ const AppDetailPage = () => {
 
       // Step 2: Use the Algolia objectID (app ID) for the config API
       const appId = algoliaMatch?.objectID;
-      if (API_CONFIG.apiKey && appId) {
+      if (appId) {
         try {
           const response = await fetch(
             getApiUrl(`/api/v1/apps/${encodeURIComponent(appId)}/config`),
@@ -240,7 +240,7 @@ const AppDetailPage = () => {
 
   // Check if app is activated via /api/v1/apps
   useEffect(() => {
-    if (!appname || !isAuthenticated || !API_CONFIG.apiKey) return;
+    if (!appname || !isAuthenticated) return;
     const normalizedName = appname.toLowerCase().replace(/[\s_\-]+/g, '_');
     (async () => {
       try {

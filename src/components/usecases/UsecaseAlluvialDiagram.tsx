@@ -13,7 +13,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import AppSearchDrawer from '@/components/shared/AppSearchDrawer';
 import AppDetailDrawer from '@/components/shared/AppDetailDrawer';
-import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
+import { useAuth } from '@/context/AuthContext';
+import { getApiUrl, getAuthHeader } from '@/config/api';
 import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
 import {
   SIEM_PATTERNS,
@@ -287,7 +288,7 @@ export default function UsecaseAlluvialDiagram({
   highlightCategory,
 }: UsecaseAlluvialDiagramProps) {
   const navigate = useNavigate();
-  const isLoggedIn = !!API_CONFIG.apiKey;
+  const { isAuthenticated: isLoggedIn } = useAuth();
   const [allApps, setAllApps] = useState<AppNode[]>([]);
   const [ingestAppNames, setIngestAppNames] = useState<Set<string> | null>(null);
   const [forwardAppNames, setForwardAppNames] = useState<Set<string> | null>(null);
@@ -297,7 +298,7 @@ export default function UsecaseAlluvialDiagram({
 
   // Fetch authenticated + active apps, and ingest workflow
   useEffect(() => {
-    if (!API_CONFIG.apiKey) { setLoading(false); return; }
+    if (!isLoggedIn) { setLoading(false); return; }
 
     (async () => {
       try {

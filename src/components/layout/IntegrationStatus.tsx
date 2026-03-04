@@ -59,7 +59,7 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
   // Fetch enabled integrations from API
   useEffect(() => {
     const fetchIntegrations = async () => {
-      if (!API_CONFIG.apiKey) return;
+      
       
       setLoading(true);
       try {
