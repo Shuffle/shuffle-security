@@ -43,7 +43,7 @@ const CATEGORIES: {
   searchTerm: string;
   icon: typeof Mail;
 }[] = [
-  { id: 'email', label: 'Email', description: 'Inboxes & mail servers', searchTerm: 'email', icon: Mail },
+  { id: 'email', label: 'Email', description: 'Inboxes & mail servers', searchTerm: 'Communication', icon: Mail },
   { id: 'siem', label: 'SIEM', description: 'Log aggregation & analytics', searchTerm: 'siem', icon: Radar },
   { id: 'edr', label: 'EDR', description: 'Endpoint detection & response', searchTerm: 'edr', icon: Search },
   { id: 'cases', label: 'Cases', description: 'Ticketing & case management', searchTerm: 'cases', icon: Ticket },

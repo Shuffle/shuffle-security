@@ -685,11 +685,13 @@ export default function UsecaseAlluvialDiagram({
       <AppSearchDrawer
         open={searchOpen !== null}
         onClose={() => setSearchOpen(null)}
-        initialQuery={
-          searchOpen === 'left'
+        initialQuery={(() => {
+          const raw = searchOpen === 'left'
             ? (sourceMeta?.label || highlightCategory || sourceCategory)
-            : (targetMeta?.label || targetCategory)
-        }
+            : (targetMeta?.label || targetCategory);
+          if (raw?.toLowerCase() === 'email') return 'Communication';
+          return raw;
+        })()}
         title={`Add ${searchOpen === 'left' ? (sourceLabel) : (targetMeta?.label || targetCategory)} Tool`}
         subtitle="Search and authenticate an integration"
       />
