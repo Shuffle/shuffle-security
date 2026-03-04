@@ -160,10 +160,6 @@ const DetectionOnboardingPage = () => {
 
   // Fetch environments function (extracted for reuse)
   const fetchEnvironments = async (isInitialLoad = false) => {
-    if (!API_CONFIG.apiKey) {
-      if (isInitialLoad) setLoadingEnvs(false);
-      return;
-    }
 
     try {
       const response = await fetch(getApiUrl('/api/v1/getenvironments'), {
@@ -245,7 +241,7 @@ const DetectionOnboardingPage = () => {
   // Auto-check sensor and rules status on load, auto-expand to appropriate step
   useEffect(() => {
     const autoCheckStatus = async () => {
-      if (!selectedEnvId || environments.length === 0 || !API_CONFIG.apiKey) return;
+      if (!selectedEnvId || environments.length === 0) return;
       
       const env = environments.find(e => e.id === selectedEnvId);
       if (!env) return;
@@ -380,16 +376,6 @@ const DetectionOnboardingPage = () => {
     setSensorStatus({ loading: true, checked: false, success: false });
     
     // Re-fetch to get latest checkin status and get fresh data directly
-    if (!API_CONFIG.apiKey) {
-      setSensorStatus({
-        loading: false,
-        checked: true,
-        success: false,
-        message: 'No API key configured',
-      });
-      return;
-    }
-
     try {
       const response = await fetch(getApiUrl('/api/v1/getenvironments'), {
         credentials: 'include',
