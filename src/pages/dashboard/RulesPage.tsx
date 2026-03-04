@@ -696,7 +696,7 @@ const RulesPage = () => {
             <TableHeader>
               <TableRow className="border-b border-border hover:bg-transparent">
                 <TableHead className="text-muted-foreground font-medium">Filename</TableHead>
-                <TableHead className="text-muted-foreground font-medium">Size</TableHead>
+                <TableHead className="text-muted-foreground font-medium">Labels</TableHead>
                 <TableHead className="text-muted-foreground font-medium">Labels</TableHead>
                 <TableHead className="text-muted-foreground font-medium">Created</TableHead>
                 <TableHead className="text-muted-foreground font-medium text-right">Actions</TableHead>
@@ -710,9 +710,6 @@ const RulesPage = () => {
                       <SecurityIcon sx={{ color: 'hsl(var(--primary))', fontSize: 18 }} />
                       {file.filename}
                     </Box>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {formatFileSize(file.filesize)}
                   </TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
@@ -733,7 +730,7 @@ const RulesPage = () => {
                     </Box>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {formatDate(file.created_at)}
+                    {(file as any).date ? (file as any).date : formatDate(file.created_at)}
                   </TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
