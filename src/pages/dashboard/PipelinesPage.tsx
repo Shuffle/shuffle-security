@@ -555,24 +555,9 @@ Use case: ${aiPrompt}`,
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'flex-start',
-          py: 12,
+          py: 4,
           gap: 3,
         }}>
-          <StorageIcon sx={{ fontSize: 48, color: 'hsl(var(--muted-foreground))', opacity: 0.4 }} />
-          <Typography sx={{ color: 'hsl(var(--muted-foreground))' }}>
-            {pipelines.length === 0 ? 'No pipelines found across your environments' : 'No pipelines match your filters'}
-          </Typography>
-          {pipelines.length === 0 && (
-            <Button
-              variant="outlined"
-              startIcon={<AddIcon />}
-              onClick={() => setCreateOpen(true)}
-              sx={{ textTransform: 'none', borderColor: 'hsl(var(--border))', color: 'hsl(var(--foreground))' }}
-            >
-              Create your first pipeline
-            </Button>
-          )}
-
           {/* Templates */}
           {availableTemplates.length > 0 && (
           <Box sx={{ width: '100%', mt: 8 }}>
