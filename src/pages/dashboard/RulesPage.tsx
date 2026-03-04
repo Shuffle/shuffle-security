@@ -626,8 +626,8 @@ const RulesPage = () => {
         </Box>
       </Box>
 
-      {/* Search */}
-      <Box sx={{ mb: 3 }}>
+      {/* Search + count */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
         <TextField
           placeholder="Search rules..."
           value={searchQuery}
@@ -638,22 +638,13 @@ const RulesPage = () => {
             '& .MuiOutlinedInput-root': {
               height: 36,
               backgroundColor: 'hsl(var(--muted))',
-              '& fieldset': {
-                borderColor: 'hsl(var(--border))',
-              },
-              '&:hover fieldset': {
-                borderColor: 'hsl(var(--border))',
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: 'hsl(var(--primary))',
-              },
+              '& fieldset': { borderColor: 'hsl(var(--border))' },
+              '&:hover fieldset': { borderColor: 'hsl(var(--border))' },
+              '&.Mui-focused fieldset': { borderColor: 'hsl(var(--primary))' },
             },
             '& .MuiOutlinedInput-input': {
               color: 'hsl(var(--foreground))',
-              '&::placeholder': {
-                color: 'hsl(var(--muted-foreground))',
-                opacity: 1,
-              },
+              '&::placeholder': { color: 'hsl(var(--muted-foreground))', opacity: 1 },
             },
           }}
           InputProps={{
@@ -664,24 +655,18 @@ const RulesPage = () => {
             ),
           }}
         />
-      </Box>
-
-      {/* Stats */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-        <Card sx={{ 
-          backgroundColor: 'hsl(var(--card))', 
-          border: '1px solid hsl(var(--border))',
-          minWidth: 140,
-        }}>
-          <CardContent sx={{ py: 2, px: 3, '&:last-child': { pb: 2 } }}>
-            <Typography variant="h4" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}>
-              {files.length}
-            </Typography>
-            <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-              Total Rules
-            </Typography>
-          </CardContent>
-        </Card>
+        <Chip
+          label={`${files.length} rule${files.length !== 1 ? 's' : ''}`}
+          size="small"
+          sx={{
+            height: 24,
+            fontSize: '0.75rem',
+            fontWeight: 600,
+            backgroundColor: 'hsl(var(--muted))',
+            color: 'hsl(var(--muted-foreground))',
+            border: '1px solid hsl(var(--border))',
+          }}
+        />
       </Box>
 
       {/* Table */}
