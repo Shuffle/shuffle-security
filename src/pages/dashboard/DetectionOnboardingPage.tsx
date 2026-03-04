@@ -2603,6 +2603,15 @@ const DetectionOnboardingPage = () => {
           >
           MITRE ATT&CK →
           </Button>
+          <Button
+            component={Link}
+            to="/detection/pipelines"
+            variant="text"
+            size="small"
+            sx={{ color: 'hsl(var(--primary))', textTransform: 'none' }}
+          >
+            Pipelines →
+          </Button>
         </Box>
       </Box>
 
