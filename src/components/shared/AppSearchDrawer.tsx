@@ -167,7 +167,7 @@ export default function AppSearchDrawer({
         </Box>
 
         {/* Search body */}
-        <Box sx={{ flex: 1, overflowY: 'auto', p: 3 }}>
+        <Box sx={{ flex: 1, overflowY: 'auto', p: 3, minHeight: '70vh' }}>
           <AnimatePresence mode="wait">
             <motion.div
               key="search"
