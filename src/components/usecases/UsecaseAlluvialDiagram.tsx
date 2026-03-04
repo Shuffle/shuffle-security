@@ -9,7 +9,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Box, Typography, Avatar, Tooltip, IconButton, Chip } from '@mui/material';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import AppSearchDrawer from '@/components/shared/AppSearchDrawer';
 import AppDetailDrawer from '@/components/shared/AppDetailDrawer';
@@ -288,6 +288,7 @@ export default function UsecaseAlluvialDiagram({
   highlightCategory,
 }: UsecaseAlluvialDiagramProps) {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { isAuthenticated: isLoggedIn } = useAuth();
   const [allApps, setAllApps] = useState<AppNode[]>([]);
   const [ingestAppNames, setIngestAppNames] = useState<Set<string> | null>(null);
@@ -295,6 +296,29 @@ export default function UsecaseAlluvialDiagram({
   const [loading, setLoading] = useState(true);
   const [searchOpen, setSearchOpen] = useState<'left' | 'right' | null>(null);
   const [detailAppName, setDetailAppName] = useState<string | null>(null);
+
+  // Guest-selected apps from URL params
+  const guestSourceNames = useMemo(() => {
+    const raw = searchParams.get('source');
+    return raw ? raw.split(',').filter(Boolean) : [];
+  }, [searchParams]);
+
+  const guestDestNames = useMemo(() => {
+    const raw = searchParams.get('dest');
+    return raw ? raw.split(',').filter(Boolean) : [];
+  }, [searchParams]);
+
+  const addGuestApp = (side: 'left' | 'right', app: { name: string; icon: string }) => {
+    const paramKey = side === 'left' ? 'source' : 'dest';
+    const current = searchParams.get(paramKey);
+    const names = current ? current.split(',').filter(Boolean) : [];
+    if (!names.some(n => n.toLowerCase() === app.name.toLowerCase())) {
+      names.push(app.name);
+    }
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set(paramKey, names.join(','));
+    setSearchParams(newParams, { replace: true });
+  };
 
   // Fetch authenticated + active apps, and ingest workflow
   useEffect(() => {
@@ -390,10 +414,21 @@ export default function UsecaseAlluvialDiagram({
   const sourceApps = useMemo(() => {
     if (!isLoggedIn) {
       const samples = highlightCategory ? getSampleApps(highlightCategory) : getSampleApps(sourceCategory);
-      return samples.map(a => ({ ...a, isHighlighted: true, isEnabled: true }));
+      // Add guest-selected apps from URL
+      const guestNodes: AppNode[] = guestSourceNames
+        .filter(name => !samples.some(s => s.name.toLowerCase() === name.toLowerCase()))
+        .map(name => ({
+          id: `guest-${name}`,
+          name,
+          icon: `https://storage.googleapis.com/shuffle_public/app_images/${name.replace(/\s+/g, '_')}.png`,
+          hasValidAuth: false,
+          isActiveOnly: false,
+          isHighlighted: true,
+          isEnabled: true,
+        }));
+      return [...samples.map(a => ({ ...a, isHighlighted: true, isEnabled: true })), ...guestNodes];
     }
     if (highlightCategory && ingestAppNames) {
-      // Only show validated (authenticated) apps that are in the ingest workflow
       const validatedIngestNodes = allApps.filter(a =>
         a.hasValidAuth &&
         ingestAppNames.has(normalizeAppName(a.name)) &&
@@ -407,12 +442,23 @@ export default function UsecaseAlluvialDiagram({
       return validatedIngestNodes;
     }
     return allApps.filter(a => matchesCategory(a.name, sourceCategory) && a.hasValidAuth).map(a => ({ ...a, isEnabled: true }));
-  }, [allApps, sourceCategory, highlightCategory, ingestAppNames, isLoggedIn]);
+  }, [allApps, sourceCategory, highlightCategory, ingestAppNames, isLoggedIn, guestSourceNames]);
 
   // Target/destination apps: use Forward Tickets workflow as source of truth when available
   const targetApps = useMemo(() => {
     if (!isLoggedIn) {
-      return getSampleApps(targetCategory);
+      const samples = getSampleApps(targetCategory);
+      // Add guest-selected apps from URL
+      const guestNodes: AppNode[] = guestDestNames
+        .filter(name => !samples.some(s => s.name.toLowerCase() === name.toLowerCase()))
+        .map(name => ({
+          id: `guest-${name}`,
+          name,
+          icon: `https://storage.googleapis.com/shuffle_public/app_images/${name.replace(/\s+/g, '_')}.png`,
+          hasValidAuth: false,
+          isActiveOnly: false,
+        }));
+      return [...samples, ...guestNodes];
     }
     if (highlightCategory && forwardAppNames && forwardAppNames.size > 0) {
       return allApps.filter(a =>
@@ -420,7 +466,7 @@ export default function UsecaseAlluvialDiagram({
       );
     }
     return allApps.filter(a => matchesCategory(a.name, targetCategory));
-  }, [allApps, targetCategory, highlightCategory, forwardAppNames]);
+  }, [allApps, targetCategory, highlightCategory, forwardAppNames, isLoggedIn, guestDestNames]);
 
   const sourceMeta = TOOL_CATEGORIES.find(c => c.id === sourceCategory);
   const targetMeta = TOOL_CATEGORIES.find(c => c.id === targetCategory);
@@ -773,6 +819,9 @@ export default function UsecaseAlluvialDiagram({
         title={`Add ${searchOpen === 'left' ? (sourceLabel) : (targetMeta?.label || targetCategory)} Tool`}
         subtitle="Search and authenticate an integration"
         showPipelinesBanner={isSiemSource && searchOpen === 'left'}
+        onQuickSelect={!isLoggedIn ? (app) => {
+          if (searchOpen) addGuestApp(searchOpen, app);
+        } : undefined}
       />
 
       {/* App detail drawer — opens when clicking an app bubble */}

@@ -102,6 +102,8 @@ interface AppSearchDrawerProps {
   width?: number;
   /** Show the Shuffle Pipelines banner above search results */
   showPipelinesBanner?: boolean;
+  /** If provided, selecting an app calls this instead of opening AppDetailDrawer */
+  onQuickSelect?: (app: { name: string; icon: string; categories: string[] }) => void;
 }
 
 export default function AppSearchDrawer({
@@ -113,6 +115,7 @@ export default function AppSearchDrawer({
   anchor = 'right',
   width = 560,
   showPipelinesBanner = false,
+  onQuickSelect,
 }: AppSearchDrawerProps) {
   const [detailAppName, setDetailAppName] = useState<string | null>(null);
 
@@ -122,6 +125,15 @@ export default function AppSearchDrawer({
   };
 
   const handleAppSelected = (detail: AppSelectedEvent) => {
+    if (onQuickSelect) {
+      onQuickSelect({
+        name: detail.app.name,
+        icon: detail.app.image_url || '',
+        categories: detail.app.categories || [],
+      });
+      onClose();
+      return;
+    }
     setDetailAppName(detail.app.name);
   };
 
