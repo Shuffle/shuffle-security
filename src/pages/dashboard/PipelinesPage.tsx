@@ -119,6 +119,17 @@ const PipelinesPage = () => {
   // Action loading
   const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
 
+  // Auto-select best environment when create dialog opens
+  useEffect(() => {
+    if (createOpen && !newEnvId && environments.length > 0) {
+      const nonCloud = environments.filter(e => e.Type !== 'cloud');
+      const now = Math.floor(Date.now() / 1000);
+      const running = nonCloud.find(e => e.checkin > 0 && (now - e.checkin) < 300);
+      const first = nonCloud[0];
+      setNewEnvId(running?.id || first?.id || '');
+    }
+  }, [createOpen, environments]);
+
   const fetchEnvironments = useCallback(async () => {
     if (!API_CONFIG.apiKey) {
       setIsLoading(false);
