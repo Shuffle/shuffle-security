@@ -103,8 +103,6 @@ const App = () => (
               <Route path="/agent" element={<AgentActivityPage />} />
               <Route path="/infrastructure" element={<InfrastructurePage />} />
               <Route path="/infrastructure/flows/:flowId" element={<DataFlowDetailPage />} />
-              <Route path="/usecases" element={<UsecasesPage />} />
-              
               <Route path="/users" element={<UsersPage />} />
               <Route path="/organizations" element={<OrganizationsPage />} />
               <Route path="/settings" element={<SettingsPage />} />
@@ -112,6 +110,7 @@ const App = () => (
 
             {/* App detail & usecase detail: uses sidebar when authenticated, standalone when guest */}
             <Route element={<ConditionalDashboardLayout />}>
+              <Route path="/usecases" element={<UsecasesPage />} />
               <Route path="/apps/:appname" element={<AppDetailPage />} />
               <Route path="/usecases/:flowId" element={<DataFlowDetailPage />} />
             </Route>
