@@ -11,6 +11,7 @@ import { SingulJS } from '@/lib/singul-local';
 import type { AppSelectedEvent } from '@/lib/singul-local';
 import { API_CONFIG } from '@/config/api';
 import AppDetailDrawer from '@/components/shared/AppDetailDrawer';
+import { ShufflePipelinesBanner } from '@/components/usecases/UsecaseAlluvialDiagram';
 
 // Singul styles — compact dark theme
 const singulStyles = {
@@ -99,6 +100,8 @@ interface AppSearchDrawerProps {
   subtitle?: string;
   anchor?: 'left' | 'right';
   width?: number;
+  /** Show the Shuffle Pipelines banner above search results */
+  showPipelinesBanner?: boolean;
 }
 
 export default function AppSearchDrawer({
@@ -109,6 +112,7 @@ export default function AppSearchDrawer({
   subtitle = 'Search and configure a tool',
   anchor = 'right',
   width = 560,
+  showPipelinesBanner = false,
 }: AppSearchDrawerProps) {
   const [detailAppName, setDetailAppName] = useState<string | null>(null);
 
@@ -168,6 +172,7 @@ export default function AppSearchDrawer({
 
         {/* Search body */}
         <Box sx={{ flex: 1, overflowY: 'auto', p: 3, minHeight: '70vh' }}>
+          {showPipelinesBanner && <ShufflePipelinesBanner />}
           <AnimatePresence mode="wait">
             <motion.div
               key="search"
