@@ -1,20 +1,16 @@
 /**
- * AppSearchDrawer — Reusable drawer for searching and authenticating apps.
- * Two-phase flow: Search → Authenticate. Can be opened from anywhere.
- *
- * Uses the shared useAppAuthFlow hook for auth logic.
+ * AppSearchDrawer — Reusable drawer for searching apps.
+ * Selecting an app opens the AppDetailDrawer for full configuration.
  */
 
 import { useState } from 'react';
-import { Box, Typography, IconButton, CircularProgress, Drawer } from '@mui/material';
+import { Box, Typography, IconButton, Drawer } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SingulJS } from '@/lib/singul-local';
 import type { AppSelectedEvent } from '@/lib/singul-local';
-import { AppAuthCard } from '@/components/onboarding/AppAuthConfig';
 import { API_CONFIG } from '@/config/api';
-import { useAppAuthFlow } from '@/hooks/useAppAuthFlow';
+import AppDetailDrawer from '@/components/shared/AppDetailDrawer';
 
 // Singul styles — compact dark theme
 const singulStyles = {
@@ -98,19 +94,12 @@ const singulStyles = {
 interface AppSearchDrawerProps {
   open: boolean;
   onClose: () => void;
-  /** Initial search query (e.g. category like "SIEM") */
   initialQuery?: string;
-  /** Title override */
   title?: string;
-  /** Subtitle override */
   subtitle?: string;
-  /** Anchor side */
   anchor?: 'left' | 'right';
-  /** Width in px */
   width?: number;
 }
-
-type Phase = 'search' | 'auth';
 
 export default function AppSearchDrawer({
   open,
@@ -121,99 +110,65 @@ export default function AppSearchDrawer({
   anchor = 'right',
   width = 480,
 }: AppSearchDrawerProps) {
-  const [phase, setPhase] = useState<Phase>('search');
-  const {
-    selectedApp,
-    authState,
-    authenticatedApps,
-    authLoading,
-    selectApp,
-    clearSelection,
-    handleAuthChange,
-    handleTestConnection,
-    handleSaveAuth,
-  } = useAppAuthFlow();
+  const [detailAppName, setDetailAppName] = useState<string | null>(null);
 
-  // Reset on close
   const handleClose = () => {
-    setPhase('search');
-    clearSelection();
+    setDetailAppName(null);
     onClose();
   };
 
   const handleAppSelected = (detail: AppSelectedEvent) => {
-    selectApp(detail.app);
-    setPhase('auth');
-  };
-
-  const handleBack = () => {
-    setPhase('search');
-    clearSelection();
+    setDetailAppName(detail.app.name);
   };
 
   return (
-    <Drawer
-      anchor={anchor}
-      open={open}
-      onClose={handleClose}
-      PaperProps={{
-        sx: {
-          width,
-          maxWidth: '100vw',
-          background: 'linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%)',
-          borderLeft: anchor === 'right' ? '1px solid hsl(var(--border))' : 'none',
-          borderRight: anchor === 'left' ? '1px solid hsl(var(--border))' : 'none',
-        },
-      }}
-    >
-      {/* Header */}
-      <Box
-        sx={{
-          px: 3,
-          py: 2,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1.5,
-          borderBottom: '1px solid hsl(var(--border))',
-          flexShrink: 0,
+    <>
+      <Drawer
+        anchor={anchor}
+        open={open && detailAppName === null}
+        onClose={handleClose}
+        PaperProps={{
+          sx: {
+            width,
+            maxWidth: '100vw',
+            background: 'linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%)',
+            borderLeft: anchor === 'right' ? '1px solid hsl(var(--border))' : 'none',
+            borderRight: anchor === 'left' ? '1px solid hsl(var(--border))' : 'none',
+          },
         }}
       >
-        {phase === 'auth' && (
+        {/* Header */}
+        <Box
+          sx={{
+            px: 3,
+            py: 2,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+            borderBottom: '1px solid hsl(var(--border))',
+            flexShrink: 0,
+          }}
+        >
+          <Box sx={{ flex: 1 }}>
+            <Typography sx={{ color: 'hsl(var(--foreground))', fontWeight: 700, fontSize: '1rem', lineHeight: 1.2 }}>
+              {title}
+            </Typography>
+            <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem' }}>
+              {subtitle}
+            </Typography>
+          </Box>
           <IconButton
             size="small"
-            onClick={handleBack}
+            onClick={handleClose}
             sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--foreground))' } }}
           >
-            <ArrowBackIcon fontSize="small" />
+            <CloseIcon fontSize="small" />
           </IconButton>
-        )}
-
-        <Box sx={{ flex: 1 }}>
-          <Typography sx={{ color: 'hsl(var(--foreground))', fontWeight: 700, fontSize: '1rem', lineHeight: 1.2 }}>
-            {phase === 'search'
-              ? title
-              : selectedApp?.name.replace(/_/g, ' ')}
-          </Typography>
-          <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem' }}>
-            {phase === 'search'
-              ? subtitle
-              : 'Configure authentication'}
-          </Typography>
         </Box>
 
-        <IconButton
-          size="small"
-          onClick={handleClose}
-          sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--foreground))' } }}
-        >
-          <CloseIcon fontSize="small" />
-        </IconButton>
-      </Box>
-
-      {/* Body */}
-      <Box sx={{ flex: 1, overflowY: 'auto', p: 3 }}>
-        <AnimatePresence mode="wait">
-          {phase === 'search' ? (
+        {/* Search body */}
+        <Box sx={{ flex: 1, overflowY: 'auto', p: 3 }}>
+          <AnimatePresence mode="wait">
             <motion.div
               key="search"
               initial={{ opacity: 0, x: -20 }}
@@ -235,39 +190,23 @@ export default function AppSearchDrawer({
                 showCategories={true}
                 showCheckbox={false}
                 multiSelect={false}
-                preventDefault={false}
+                preventDefault={true}
                 onAppSelected={handleAppSelected}
                 customStyles={singulStyles}
               />
             </motion.div>
-          ) : (
-            <motion.div
-              key="auth"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.2 }}
-            >
-              {authLoading ? (
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', py: 6 }}>
-                  <CircularProgress size={28} sx={{ color: 'hsl(var(--primary))' }} />
-                </Box>
-              ) : selectedApp ? (
-                <AppAuthCard
-                  app={selectedApp}
-                  authState={authState}
-                  isExpanded={true}
-                  onToggle={() => {}}
-                  onAuthChange={handleAuthChange}
-                  onTestConnection={handleTestConnection}
-                  onSaveAuth={handleSaveAuth}
-                  apiAuthEntries={authenticatedApps}
-                />
-              ) : null}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </Box>
-    </Drawer>
+          </AnimatePresence>
+        </Box>
+      </Drawer>
+
+      {/* App detail drawer — opens when an app is selected from search */}
+      <AppDetailDrawer
+        open={open && detailAppName !== null}
+        onClose={() => setDetailAppName(null)}
+        appName={detailAppName}
+        anchor={anchor}
+        width={width}
+      />
+    </>
   );
 }

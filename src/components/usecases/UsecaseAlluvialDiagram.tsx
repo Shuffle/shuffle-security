@@ -12,6 +12,7 @@ import { Box, Typography, Avatar, Tooltip, IconButton } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import AppSearchDrawer from '@/components/shared/AppSearchDrawer';
+import AppDetailDrawer from '@/components/shared/AppDetailDrawer';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
 import {
@@ -119,7 +120,7 @@ function getStatusColor(app: AppNode): string {
 
 // ── App bubble component ───────────────────────────────────────────────────────
 
-function AppBubble({ app, size = 40, highlighted = false, isSample = false }: { app: AppNode; size?: number; highlighted?: boolean; isSample?: boolean }) {
+function AppBubble({ app, size = 40, highlighted = false, isSample = false, onClickApp }: { app: AppNode; size?: number; highlighted?: boolean; isSample?: boolean; onClickApp?: (appName: string) => void }) {
   const [imgFailed, setImgFailed] = useState(false);
 
   const content = (
@@ -215,7 +216,10 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false }: { 
       arrow
     >
       {isSample ? content : (
-        <Box component={Link} to={`/apps/${encodeURIComponent(app.name)}`} sx={{ textDecoration: 'none' }}>
+        <Box
+          onClick={() => onClickApp?.(app.name)}
+          sx={{ textDecoration: 'none', cursor: 'pointer' }}
+        >
           {content}
         </Box>
       )}
@@ -237,6 +241,7 @@ export default function UsecaseAlluvialDiagram({
   const [forwardAppNames, setForwardAppNames] = useState<Set<string> | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchOpen, setSearchOpen] = useState<'left' | 'right' | null>(null);
+  const [detailAppName, setDetailAppName] = useState<string | null>(null);
 
   // Fetch authenticated + active apps, and ingest workflow
   useEffect(() => {
@@ -578,7 +583,7 @@ export default function UsecaseAlluvialDiagram({
                   pointerEvents: 'auto',
                 }}
               >
-                <AppBubble app={app} size={nodeSize} highlighted={!!app.isHighlighted} isSample={!isLoggedIn} />
+                <AppBubble app={app} size={nodeSize} highlighted={!!app.isHighlighted} isSample={!isLoggedIn} onClickApp={setDetailAppName} />
               </Box>
             );
           })}
@@ -614,7 +619,7 @@ export default function UsecaseAlluvialDiagram({
                   pointerEvents: 'auto',
                 }}
               >
-                <AppBubble app={app} size={nodeSize} isSample={!isLoggedIn} />
+                <AppBubble app={app} size={nodeSize} isSample={!isLoggedIn} onClickApp={setDetailAppName} />
               </Box>
             );
           })}
@@ -695,6 +700,13 @@ export default function UsecaseAlluvialDiagram({
         })()}
         title={`Add ${searchOpen === 'left' ? (sourceLabel) : (targetMeta?.label || targetCategory)} Tool`}
         subtitle="Search and authenticate an integration"
+      />
+
+      {/* App detail drawer — opens when clicking an app bubble */}
+      <AppDetailDrawer
+        open={detailAppName !== null}
+        onClose={() => setDetailAppName(null)}
+        appName={detailAppName}
       />
 
       {!hasApps && (
