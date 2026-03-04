@@ -156,6 +156,26 @@ export default function UsecasesPage() {
           }}
         />
 
+        <FormControl size="small" sx={{ minWidth: 200 }}>
+          <InputLabel sx={{ color: 'hsl(var(--muted-foreground))' }}>Phase</InputLabel>
+          <MuiSelect
+            value={phaseFilter}
+            label="Phase"
+            onChange={(e) => setPhaseFilter(e.target.value as FlowPhase | 'all')}
+            sx={{
+              bgcolor: 'hsl(var(--card))',
+              color: 'hsl(var(--foreground))',
+              '& fieldset': { borderColor: 'hsl(var(--border))' },
+              '& .MuiSelect-icon': { color: 'hsl(var(--muted-foreground))' },
+            }}
+          >
+            <MenuItem value="all">All Phases</MenuItem>
+            {FLOW_PHASES.map((p) => (
+              <MenuItem key={p.id} value={p.id}>{p.step}. {p.label}</MenuItem>
+            ))}
+          </MuiSelect>
+        </FormControl>
+
         <FormControl size="small" sx={{ minWidth: 160 }}>
           <InputLabel sx={{ color: 'hsl(var(--muted-foreground))' }}>Category</InputLabel>
           <MuiSelect
@@ -192,26 +212,6 @@ export default function UsecasesPage() {
             <MenuItem value="all">All Types</MenuItem>
             {allTags.map((tag) => (
               <MenuItem key={tag} value={tag}>{tag}</MenuItem>
-            ))}
-          </MuiSelect>
-        </FormControl>
-
-        <FormControl size="small" sx={{ minWidth: 200 }}>
-          <InputLabel sx={{ color: 'hsl(var(--muted-foreground))' }}>Phase</InputLabel>
-          <MuiSelect
-            value={phaseFilter}
-            label="Phase"
-            onChange={(e) => setPhaseFilter(e.target.value as FlowPhase | 'all')}
-            sx={{
-              bgcolor: 'hsl(var(--card))',
-              color: 'hsl(var(--foreground))',
-              '& fieldset': { borderColor: 'hsl(var(--border))' },
-              '& .MuiSelect-icon': { color: 'hsl(var(--muted-foreground))' },
-            }}
-          >
-            <MenuItem value="all">All Phases</MenuItem>
-            {FLOW_PHASES.map((p) => (
-              <MenuItem key={p.id} value={p.id}>{p.step}. {p.label}</MenuItem>
             ))}
           </MuiSelect>
         </FormControl>
