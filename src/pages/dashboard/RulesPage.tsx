@@ -26,11 +26,12 @@ import DownloadIcon from '@mui/icons-material/Download';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
+import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import { toast } from 'sonner';
 import { askAI } from '@/services/ai';
 import { deleteFile, getFileDownloadUrl, formatFileSize, ShuffleFile, createAndUploadFile } from '@/services/files';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
-import { getApiUrl, getAuthHeader } from '@/config/api';
+import { getApiUrl, getAuthHeader, API_CONFIG } from '@/config/api';
 
 const SIGMA_NAMESPACE = 'sigma';
 
@@ -203,6 +204,38 @@ const RulesPage = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [justGenerated, setJustGenerated] = useState(false);
+  const [loadingDefaultRules, setLoadingDefaultRules] = useState(false);
+
+  const loadDefaultRules = async () => {
+    if (!API_CONFIG.apiKey) return;
+    setLoadingDefaultRules(true);
+    try {
+      const response = await fetch(getApiUrl('/api/v1/files/download_remote'), {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          ...getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: 'https://github.com/shuffle/security-rules',
+          path: 'sigma',
+          field_3: 'main',
+        }),
+      });
+      if (response.ok) {
+        toast.success('Default rules loaded successfully');
+        fetchDetections();
+      } else {
+        toast.error('Failed to load default rules');
+      }
+    } catch (error) {
+      console.error('Error loading default rules:', error);
+      toast.error('Error loading default rules');
+    } finally {
+      setLoadingDefaultRules(false);
+    }
+  };
 
   const fetchDetections = async () => {
     setIsLoading(true);
@@ -502,6 +535,23 @@ const RulesPage = () => {
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1.5 }}>
+          <Button
+            variant="outlined"
+            startIcon={loadingDefaultRules ? <CircularProgress size={16} color="inherit" /> : <CloudDownloadIcon />}
+            onClick={loadDefaultRules}
+            disabled={loadingDefaultRules}
+            sx={{
+              height: 36,
+              borderColor: 'hsl(var(--border))',
+              color: 'hsl(var(--foreground))',
+              '&:hover': {
+                borderColor: 'hsl(var(--border))',
+                backgroundColor: 'hsl(var(--muted))',
+              },
+            }}
+          >
+            Enable Default Rules
+          </Button>
           <Button
             variant="outlined"
             startIcon={<RefreshIcon />}
