@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import {
   AppBar,
   Toolbar,
@@ -41,6 +41,8 @@ export const LandingNavbar = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { isAuthenticated } = useAuth();
+  const location = useLocation();
+  const isOnLoginPage = location.pathname === '/login';
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -155,11 +157,11 @@ export const LandingNavbar = () => {
                     <>
                       <Button
                         component={Link}
-                        to="/login"
+                        to={isOnLoginPage ? '/register' : '/login'}
                         variant="text"
                         sx={{ color: 'text.secondary' }}
                       >
-                        Sign In
+                        {isOnLoginPage ? 'Sign Up' : 'Sign In'}
                       </Button>
                       <Button
                         component="a"
@@ -226,8 +228,8 @@ export const LandingNavbar = () => {
             ) : (
               <>
                 <ListItem disablePadding>
-                  <ListItemButton component={Link} to="/login" onClick={handleDrawerToggle}>
-                    <ListItemText primary="Sign In" />
+                  <ListItemButton component={Link} to={isOnLoginPage ? '/register' : '/login'} onClick={handleDrawerToggle}>
+                    <ListItemText primary={isOnLoginPage ? 'Sign Up' : 'Sign In'} />
                   </ListItemButton>
                 </ListItem>
                 <ListItem sx={{ px: 2, pt: 2 }}>
