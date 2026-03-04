@@ -221,7 +221,7 @@ export default function UsecasesPage() {
       {grouped.map((group) => (
         <Box key={group.id} sx={{ mb: 6 }}>
           {/* Phase header */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2.5, pt: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2.5, pt: 5 }}>
             <Chip
               label={group.step}
               size="small"
