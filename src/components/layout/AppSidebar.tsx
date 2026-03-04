@@ -437,14 +437,6 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                     <ListItemButton
                       component={Link}
                       to={item.path!}
-                      onClick={(e: React.MouseEvent) => {
-                        // Allow ctrl/cmd+click to open in new tab
-                        if (e.ctrlKey || e.metaKey) return;
-                        
-                        if (!visuallyCollapsed) {
-                          handleExpand(item.label);
-                        }
-                      }}
                       sx={{
                         borderRadius: 1,
                         minHeight: 40,
@@ -476,11 +468,25 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                               color: 'hsl(var(--foreground))',
                             }}
                           />
-                          {expandedItems.includes(item.label) ? (
-                            <ExpandLess sx={{ fontSize: 18, color: 'hsl(var(--muted-foreground))' }} />
-                          ) : (
-                            <ExpandMore sx={{ fontSize: 18, color: 'hsl(var(--muted-foreground))' }} />
-                          )}
+                          <IconButton
+                            size="small"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleExpand(item.label);
+                            }}
+                            sx={{
+                              p: 0.25,
+                              color: 'hsl(var(--muted-foreground))',
+                              '&:hover': { color: 'hsl(var(--foreground))' },
+                            }}
+                          >
+                            {expandedItems.includes(item.label) ? (
+                              <ExpandLess sx={{ fontSize: 18 }} />
+                            ) : (
+                              <ExpandMore sx={{ fontSize: 18 }} />
+                            )}
+                          </IconButton>
                         </>
                       )}
                     </ListItemButton>
