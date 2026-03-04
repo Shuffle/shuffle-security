@@ -28,6 +28,7 @@ import {
 } from '@/config/usecases';
 import { useUsecases, type UsecaseDrift } from '@/hooks/useUsecases';
 import UsecaseAlluvialDiagram from '@/components/usecases/UsecaseAlluvialDiagram';
+import { useAuth } from '@/context/AuthContext';
 
 const categoryLabel = (id: string) =>
   TOOL_CATEGORIES.find((c) => c.id === id)?.label || id;
@@ -48,6 +49,8 @@ export default function UsecasesPage() {
 
   const navigate = useNavigate();
   const { usecases, apiLoaded, getDrift } = useUsecases();
+  const { userInfo, isAuthenticated } = useAuth();
+  const isSupport = userInfo?.support === true;
 
   // Collect unique tags across all usecases
   const allTags = useMemo(() => {
@@ -58,6 +61,12 @@ export default function UsecasesPage() {
 
   const filtered = useMemo(() => {
     let list = usecases;
+
+    // Hide inactive (non-animated) usecases for non-support users
+    if (!isSupport) {
+      list = list.filter((u) => u.animated === true);
+    }
+
     if (phaseFilter !== 'all') {
       list = list.filter((u) => u.phase === phaseFilter);
     }
@@ -79,7 +88,7 @@ export default function UsecasesPage() {
       );
     }
     return list;
-  }, [search, phaseFilter, categoryFilter, tagFilter, usecases]);
+  }, [search, phaseFilter, categoryFilter, tagFilter, usecases, isSupport]);
 
   // Group by phase in order
   const grouped = useMemo(() => {
@@ -131,6 +140,21 @@ export default function UsecasesPage() {
           <ArrowRight size={14} style={{ opacity: 0.5 }} />
         </Box>
       </Box>
+
+      {/* Support-only banner */}
+      {isSupport && (
+        <Box sx={{
+          mb: 3, px: 2, py: 1.5, borderRadius: 1,
+          bgcolor: 'hsl(45 93% 47% / 0.1)',
+          border: '1px solid hsl(45 93% 47% / 0.3)',
+          display: 'flex', alignItems: 'center', gap: 1,
+        }}>
+          <AlertTriangle size={14} style={{ color: 'hsl(45 93% 47%)' }} />
+          <Typography variant="body2" sx={{ color: 'hsl(45 93% 47%)', fontWeight: 500 }}>
+            Support view — showing all {usecases.length} automations (including {usecases.filter(u => !u.animated).length} inactive hidden from users)
+          </Typography>
+        </Box>
+      )}
 
       {/* Filters */}
       <Box sx={{ display: 'flex', gap: 2, mb: 4, flexWrap: 'wrap', alignItems: 'center' }}>
