@@ -491,82 +491,7 @@ Use case: ${aiPrompt}`,
         )}
       </Box>
 
-      {/* Default Pipelines */}
-      <Box sx={{ mb: 4 }}>
-        <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1.5 }}>
-          Quick Deploy Templates
-        </Typography>
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr 1fr' }, gap: 2 }}>
-          {DEFAULT_PIPELINES.map((dp) => (
-            <Box
-              key={dp.label}
-              sx={{
-                border: '1px solid hsl(var(--border))',
-                borderRadius: 1.5,
-                p: 2,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 1,
-                transition: 'border-color 0.15s',
-                '&:hover': { borderColor: 'rgba(255, 102, 0, 0.4)' },
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Typography sx={{ color: 'hsl(var(--foreground))', fontSize: '0.85rem', fontWeight: 600 }}>
-                  {dp.label}
-                </Typography>
-                {dp.hasPlaceholders && (
-                  <Chip label="Editable" size="small" sx={{ height: 18, fontSize: '0.6rem', backgroundColor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }} />
-                )}
-              </Box>
-              <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem', lineHeight: 1.4, flexGrow: 1 }}>
-                {dp.description}
-              </Typography>
-              <Box sx={{
-                backgroundColor: 'hsl(var(--muted))',
-                borderRadius: 0.75,
-                px: 1.5,
-                py: 1,
-                fontFamily: 'monospace',
-                fontSize: '0.65rem',
-                color: 'hsl(var(--muted-foreground))',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-              }}>
-                {dp.command}
-              </Box>
-              <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
-                <Button
-                  size="small"
-                  startIcon={<RocketLaunchIcon sx={{ fontSize: '14px !important' }} />}
-                  onClick={() => {
-                    setNewCommand(dp.command);
-                    setCreateOpen(true);
-                  }}
-                  sx={{
-                    flex: 1,
-                    textTransform: 'none',
-                    fontSize: '0.75rem',
-                    fontWeight: 600,
-                    color: '#FF6600',
-                    borderColor: 'rgba(255, 102, 0, 0.3)',
-                    '&:hover': { borderColor: '#FF6600', backgroundColor: 'rgba(255, 102, 0, 0.06)' },
-                  }}
-                  variant="outlined"
-                >
-                  Deploy
-                </Button>
-                <Tooltip title="Copy command">
-                  <IconButton size="small" onClick={() => copyToClipboard(dp.command)} sx={{ color: 'hsl(var(--muted-foreground))' }}>
-                    <ContentCopyIcon sx={{ fontSize: 14 }} />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-            </Box>
-          ))}
-        </Box>
-      </Box>
+
 
       {/* Table */}
       {isLoading ? (
@@ -596,6 +521,83 @@ Use case: ${aiPrompt}`,
               Create your first pipeline
             </Button>
           )}
+
+          {/* Quick Deploy Templates */}
+          <Box sx={{ width: '100%', mt: 4 }}>
+            <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1.5 }}>
+              Quick Deploy Templates
+            </Typography>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr 1fr' }, gap: 2 }}>
+              {DEFAULT_PIPELINES.map((dp) => (
+                <Box
+                  key={dp.label}
+                  sx={{
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: 1.5,
+                    p: 2,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 1,
+                    transition: 'border-color 0.15s',
+                    '&:hover': { borderColor: 'rgba(255, 102, 0, 0.4)' },
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Typography sx={{ color: 'hsl(var(--foreground))', fontSize: '0.85rem', fontWeight: 600 }}>
+                      {dp.label}
+                    </Typography>
+                    {dp.hasPlaceholders && (
+                      <Chip label="Editable" size="small" sx={{ height: 18, fontSize: '0.6rem', backgroundColor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }} />
+                    )}
+                  </Box>
+                  <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem', lineHeight: 1.4, flexGrow: 1 }}>
+                    {dp.description}
+                  </Typography>
+                  <Box sx={{
+                    backgroundColor: 'hsl(var(--muted))',
+                    borderRadius: 0.75,
+                    px: 1.5,
+                    py: 1,
+                    fontFamily: 'monospace',
+                    fontSize: '0.65rem',
+                    color: 'hsl(var(--muted-foreground))',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {dp.command}
+                  </Box>
+                  <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
+                    <Button
+                      size="small"
+                      startIcon={<RocketLaunchIcon sx={{ fontSize: '14px !important' }} />}
+                      onClick={() => {
+                        setNewCommand(dp.command);
+                        setCreateOpen(true);
+                      }}
+                      sx={{
+                        flex: 1,
+                        textTransform: 'none',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        color: '#FF6600',
+                        borderColor: 'rgba(255, 102, 0, 0.3)',
+                        '&:hover': { borderColor: '#FF6600', backgroundColor: 'rgba(255, 102, 0, 0.06)' },
+                      }}
+                      variant="outlined"
+                    >
+                      Deploy
+                    </Button>
+                    <Tooltip title="Copy command">
+                      <IconButton size="small" onClick={() => copyToClipboard(dp.command)} sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                        <ContentCopyIcon sx={{ fontSize: 14 }} />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+          </Box>
         </Box>
       ) : (
         <Box sx={{
