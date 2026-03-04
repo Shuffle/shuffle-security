@@ -26,6 +26,7 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import StopIcon from '@mui/icons-material/Stop';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import StorageIcon from '@mui/icons-material/Storage';
 import { toast } from 'sonner';
@@ -60,6 +61,38 @@ interface Pipeline {
   _environmentId: string;
   _environmentName: string;
 }
+
+interface DefaultPipeline {
+  label: string;
+  description: string;
+  command: string;
+  hasPlaceholders?: boolean;
+}
+
+const DEFAULT_PIPELINES: DefaultPipeline[] = [
+  {
+    label: 'TCP Syslog',
+    description: 'Ingest syslog events over TCP on port 1514',
+    command: 'load_tcp "0.0.0.0:1514" { read_syslog } | import',
+  },
+  {
+    label: 'UDP Syslog',
+    description: 'Ingest syslog events over UDP on port 1514',
+    command: 'load_udp "0.0.0.0:1514", insert_newlines=true | read_syslog | import',
+  },
+  {
+    label: 'Sigma Rule Alerting',
+    description: 'Live export with Sigma rule matching, forwarded to a webhook',
+    command: 'export live=true | sigma "/tmp/sigma_rules" | to "http://localhost:5002/api/v1/hooks/webhook_e031c4c0-3f7e-4c0f-a8d2-ff87be206907"',
+    hasPlaceholders: true,
+  },
+  {
+    label: 'OpenSearch Forwarder',
+    description: 'Forward live events to an OpenSearch instance',
+    command: 'export live=true | to_opensearch "localhost:9200", action="create", index="shuffle_logs", user="admin", passwd="PASSWORD"',
+    hasPlaceholders: true,
+  },
+];
 
 const PipelinesPage = () => {
   const [environments, setEnvironments] = useState<Environment[]>([]);
@@ -418,6 +451,83 @@ const PipelinesPage = () => {
             </MuiSelect>
           </FormControl>
         )}
+      </Box>
+
+      {/* Default Pipelines */}
+      <Box sx={{ mb: 4 }}>
+        <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1.5 }}>
+          Quick Deploy Templates
+        </Typography>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr 1fr' }, gap: 2 }}>
+          {DEFAULT_PIPELINES.map((dp) => (
+            <Box
+              key={dp.label}
+              sx={{
+                border: '1px solid hsl(var(--border))',
+                borderRadius: 1.5,
+                p: 2,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 1,
+                transition: 'border-color 0.15s',
+                '&:hover': { borderColor: 'rgba(255, 102, 0, 0.4)' },
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Typography sx={{ color: 'hsl(var(--foreground))', fontSize: '0.85rem', fontWeight: 600 }}>
+                  {dp.label}
+                </Typography>
+                {dp.hasPlaceholders && (
+                  <Chip label="Editable" size="small" sx={{ height: 18, fontSize: '0.6rem', backgroundColor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }} />
+                )}
+              </Box>
+              <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem', lineHeight: 1.4, flexGrow: 1 }}>
+                {dp.description}
+              </Typography>
+              <Box sx={{
+                backgroundColor: 'hsl(var(--muted))',
+                borderRadius: 0.75,
+                px: 1.5,
+                py: 1,
+                fontFamily: 'monospace',
+                fontSize: '0.65rem',
+                color: 'hsl(var(--muted-foreground))',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}>
+                {dp.command}
+              </Box>
+              <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
+                <Button
+                  size="small"
+                  startIcon={<RocketLaunchIcon sx={{ fontSize: '14px !important' }} />}
+                  onClick={() => {
+                    setNewCommand(dp.command);
+                    setCreateOpen(true);
+                  }}
+                  sx={{
+                    flex: 1,
+                    textTransform: 'none',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    color: '#FF6600',
+                    borderColor: 'rgba(255, 102, 0, 0.3)',
+                    '&:hover': { borderColor: '#FF6600', backgroundColor: 'rgba(255, 102, 0, 0.06)' },
+                  }}
+                  variant="outlined"
+                >
+                  Deploy
+                </Button>
+                <Tooltip title="Copy command">
+                  <IconButton size="small" onClick={() => copyToClipboard(dp.command)} sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                    <ContentCopyIcon sx={{ fontSize: 14 }} />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+            </Box>
+          ))}
+        </Box>
       </Box>
 
       {/* Table */}
