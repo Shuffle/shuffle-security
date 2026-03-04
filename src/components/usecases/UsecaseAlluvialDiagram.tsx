@@ -690,6 +690,7 @@ export default function UsecaseAlluvialDiagram({
             ? (sourceMeta?.label || highlightCategory || sourceCategory)
             : (targetMeta?.label || targetCategory);
           if (raw?.toLowerCase() === 'email') return 'Communication';
+          if (raw?.toLowerCase() === 'case management') return 'Cases';
           return raw;
         })()}
         title={`Add ${searchOpen === 'left' ? (sourceLabel) : (targetMeta?.label || targetCategory)} Tool`}
