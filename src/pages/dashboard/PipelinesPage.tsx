@@ -23,6 +23,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import StopIcon from '@mui/icons-material/Stop';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -149,6 +150,9 @@ const PipelinesPage = () => {
 
   // Detail dialog
   const [detailPipeline, setDetailPipeline] = useState<Pipeline | null>(null);
+
+  // Editing: tracks the pipeline being edited (delete old + create new)
+  const [editingPipeline, setEditingPipeline] = useState<Pipeline | null>(null);
 
   // Action loading
   const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
@@ -306,9 +310,28 @@ const PipelinesPage = () => {
     }
 
     setIsCreating(true);
+    const isEdit = !!editingPipeline;
+
     try {
       const env = environments.find(e => e.id === newEnvId);
       const envName = env?.Name || '';
+
+      // If editing, delete the old pipeline first
+      if (isEdit && editingPipeline) {
+        const oldEnv = environments.find(e => e.id === editingPipeline._environmentId);
+        await fetch(getApiUrl('/api/v1/triggers/pipeline'), {
+          method: 'POST',
+          credentials: 'include',
+          headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: editingPipeline.name || editingPipeline.definition || '',
+            id: editingPipeline.pipeline || editingPipeline.id || '',
+            type: 'delete',
+            command: editingPipeline.definition || editingPipeline.command || '',
+            environment: oldEnv?.Name || editingPipeline._environmentName,
+          }),
+        });
+      }
 
       // Add optimistic pipeline
       const optimisticId = `pending-${Date.now()}`;
@@ -321,18 +344,23 @@ const PipelinesPage = () => {
         _environmentId: newEnvId,
         _environmentName: envName,
       };
+
+      // If editing, remove the old pipeline from the list immediately
+      if (isEdit && editingPipeline) {
+        const oldId = editingPipeline.pipeline || editingPipeline.id || '';
+        setPipelines(prev => prev.filter(p => (p.pipeline || p.id || '') !== oldId));
+      }
+
       setPendingPipelines(prev => [...prev, optimisticPipeline]);
       setCreateOpen(false);
       setNewCommand('');
       setNewEnvId('');
+      setEditingPipeline(null);
 
       const response = await fetch(getApiUrl('/api/v1/triggers/pipeline'), {
         method: 'POST',
         credentials: 'include',
-        headers: {
-          ...getAuthHeader(),
-          'Content-Type': 'application/json',
-        },
+        headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
         body: JSON.stringify({
           command: newCommand,
           name: newCommand,
@@ -345,21 +373,23 @@ const PipelinesPage = () => {
       });
 
       if (response.ok) {
-        toast.success('Pipeline created');
-        // Remove optimistic and refresh real data
+        toast.success(isEdit ? 'Pipeline updated' : 'Pipeline created');
         setTimeout(() => {
           setPendingPipelines(prev => prev.filter(p => p.pipeline !== optimisticId));
           fetchEnvironments();
         }, 2000);
       } else {
         const text = await response.text();
-        toast.error(`Failed to create: ${text.substring(0, 80)}`);
+        toast.error(`Failed to ${isEdit ? 'update' : 'create'}: ${text.substring(0, 80)}`);
         setPendingPipelines(prev => prev.filter(p => p.pipeline !== optimisticId));
+        // On edit failure, refresh to restore old state
+        if (isEdit) fetchEnvironments();
       }
     } catch (error) {
       console.error('Error creating pipeline:', error);
-      toast.error('Error creating pipeline');
+      toast.error(`Error ${isEdit ? 'updating' : 'creating'} pipeline`);
       setPendingPipelines([]);
+      if (isEdit) fetchEnvironments();
     } finally {
       setIsCreating(false);
     }
@@ -401,6 +431,14 @@ Use case: ${aiPrompt}`,
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success('Copied to clipboard');
+  };
+
+  const openEditDialog = (pipeline: Pipeline) => {
+    setEditingPipeline(pipeline);
+    setNewCommand(pipeline.definition || pipeline.command || pipeline.pipeline || '');
+    setNewEnvId(pipeline._environmentId);
+    setDetailPipeline(null);
+    setCreateOpen(true);
   };
 
   const formatTime = (ts?: number) => {
@@ -755,6 +793,11 @@ Use case: ${aiPrompt}`,
                                   </IconButton>
                                 </Tooltip>
                               )}
+                              <Tooltip title="Edit">
+                                <IconButton size="small" onClick={() => openEditDialog(p)} sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: '#FF6600' } }}>
+                                  <EditIcon sx={{ fontSize: 14 }} />
+                                </IconButton>
+                              </Tooltip>
                               <Tooltip title="Copy command">
                                 <IconButton size="small" onClick={() => copyToClipboard(definition)} sx={{ color: 'hsl(var(--muted-foreground))' }}>
                                   <ContentCopyIcon sx={{ fontSize: 14 }} />
@@ -781,7 +824,7 @@ Use case: ${aiPrompt}`,
       {/* Create Pipeline Dialog */}
       <Dialog
         open={createOpen}
-        onClose={() => setCreateOpen(false)}
+        onClose={() => { setCreateOpen(false); setEditingPipeline(null); }}
         maxWidth="sm"
         fullWidth
         PaperProps={{
@@ -793,7 +836,7 @@ Use case: ${aiPrompt}`,
         }}
       >
         <DialogTitle sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, fontSize: '1.1rem' }}>
-          Create Pipeline
+          {editingPipeline ? 'Edit Pipeline' : 'Create Pipeline'}
         </DialogTitle>
         <DialogContent sx={{ pt: '16px !important' }}>
           <FormControl fullWidth size="small" sx={{ mb: 3 }}>
@@ -940,7 +983,7 @@ Use case: ${aiPrompt}`,
           )}
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={() => setCreateOpen(false)} sx={{ color: 'hsl(var(--muted-foreground))', textTransform: 'none' }}>
+          <Button onClick={() => { setCreateOpen(false); setEditingPipeline(null); }} sx={{ color: 'hsl(var(--muted-foreground))', textTransform: 'none' }}>
             Cancel
           </Button>
           <Button
@@ -949,7 +992,7 @@ Use case: ${aiPrompt}`,
             variant="contained"
             sx={{ bgcolor: '#FF6600', textTransform: 'none', fontWeight: 600, '&:hover': { bgcolor: '#e55b00' } }}
           >
-            {isCreating ? <CircularProgress size={18} color="inherit" /> : 'Create'}
+            {isCreating ? <CircularProgress size={18} color="inherit" /> : editingPipeline ? 'Update' : 'Create'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -1057,13 +1100,22 @@ Use case: ${aiPrompt}`,
                 </Box>
               </DialogContent>
               <DialogActions sx={{ px: 3, pb: 2, justifyContent: 'space-between' }}>
-                <Button
-                  onClick={() => { handleAction(detailPipeline, 'delete'); setDetailPipeline(null); }}
-                  startIcon={<DeleteIcon />}
-                  sx={{ color: 'hsl(var(--destructive, 0 84% 60%))', textTransform: 'none' }}
-                >
-                  Delete
-                </Button>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Button
+                    onClick={() => { handleAction(detailPipeline, 'delete'); setDetailPipeline(null); }}
+                    startIcon={<DeleteIcon />}
+                    sx={{ color: 'hsl(var(--destructive, 0 84% 60%))', textTransform: 'none' }}
+                  >
+                    Delete
+                  </Button>
+                  <Button
+                    onClick={() => openEditDialog(detailPipeline)}
+                    startIcon={<EditIcon />}
+                    sx={{ color: '#FF6600', textTransform: 'none' }}
+                  >
+                    Edit
+                  </Button>
+                </Box>
                 <Box sx={{ display: 'flex', gap: 1 }}>
                   <Button onClick={() => setDetailPipeline(null)} sx={{ color: 'hsl(var(--muted-foreground))', textTransform: 'none' }}>
                     Close
