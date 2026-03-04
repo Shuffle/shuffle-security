@@ -734,15 +734,6 @@ const RulesPage = () => {
                   </TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
-                      <Tooltip title="View">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleViewFile(file)}
-                          sx={{ color: 'hsl(var(--muted-foreground))' }}
-                        >
-                          <VisibilityIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
                       <Tooltip title="Edit">
                         <IconButton
                           size="small"
