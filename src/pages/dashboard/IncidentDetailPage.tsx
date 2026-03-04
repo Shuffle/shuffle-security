@@ -1610,6 +1610,7 @@ const IncidentDetailPage = () => {
                 Visit Source
               </MenuItem>
               <MenuItem
+                disabled
                 onClick={() => {
                   setActionsMenuAnchor(null);
                   setShowForwardDialog(true);
