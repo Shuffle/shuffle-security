@@ -8,6 +8,7 @@ import { Box, CircularProgress } from '@mui/material';
 const docs: Record<string, () => Promise<{ default: string }>> = {
   index: () => import('@/docs/index.md?raw'),
   'getting-started': () => import('@/docs/getting-started.md?raw'),
+  'shuffle-pipelines': () => import('@/docs/shuffle-pipelines.md?raw'),
   setup: () => import('@/docs/setup.md?raw'),
 };
 
