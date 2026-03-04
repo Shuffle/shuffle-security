@@ -268,6 +268,7 @@ const IncidentsPage = () => {
   const [ingestWorkflowId, setIngestWorkflowId] = useState<string | null>(null);
   const [webhookIngestion, setWebhookIngestion] = useState<WebhookIngestionInfo>({ url: null, exists: false, enabled: false, workflowId: null });
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isUpdatingApps, setIsUpdatingApps] = useState(false);
   const pendingTogglesRef = useRef<Map<string, boolean>>(new Map());
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -379,6 +380,7 @@ const IncidentsPage = () => {
   // Debounced handler: collects app toggles for 3s then fires one generate call
   const handleToggleApp = useCallback((appName: string, enabled: boolean) => {
     pendingTogglesRef.current.set(appName, enabled);
+    setIsUpdatingApps(true);
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     debounceTimerRef.current = setTimeout(async () => {
       const toggles = new Map(pendingTogglesRef.current);
@@ -403,6 +405,8 @@ const IncidentsPage = () => {
         console.error('Failed to update ingestion sources:', error);
         toast.error('Failed to update ingestion sources');
         fetchIngestionApps();
+      } finally {
+        setIsUpdatingApps(false);
       }
     }, 3000);
   }, [ingestionApps, fetchIngestionApps]);
@@ -821,6 +825,7 @@ const IncidentsPage = () => {
             onToggleApp={handleToggleApp}
             webhook={webhookIngestion}
             isSyncing={isSyncing}
+            isUpdatingApps={isUpdatingApps}
             onSyncNow={ingestWorkflowId ? async () => {
               setIsSyncing(true);
               try {
@@ -918,10 +923,11 @@ const IncidentsPage = () => {
                 </IconButton>
               </Tooltip>
               {ingestWorkflowId && (
-                <Tooltip title="Sync now">
+                <Tooltip title={isUpdatingApps ? "Updating sources…" : "Sync now"}>
+                  <span>
                   <IconButton
                     size="small"
-                    disabled={isSyncing}
+                    disabled={isSyncing || isUpdatingApps}
                     onClick={async () => {
                       setIsSyncing(true);
                       try {
@@ -966,6 +972,7 @@ const IncidentsPage = () => {
                   >
                     {isSyncing ? <CircularProgress size={14} color="inherit" /> : <PlayArrowIcon sx={{ fontSize: 16 }} />}
                   </IconButton>
+                  </span>
                 </Tooltip>
               )}
             </Box>

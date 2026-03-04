@@ -16,11 +16,12 @@ interface IncidentsEmptyStateProps {
   onToggleApp?: (appName: string, enabled: boolean) => void;
   webhook?: WebhookIngestionInfo;
   isSyncing?: boolean;
+  isUpdatingApps?: boolean;
   onSyncNow?: () => void;
   onCreateIncident?: () => void;
 }
 
-export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, onToggleApp, webhook, isSyncing = false, onSyncNow, onCreateIncident }: IncidentsEmptyStateProps) => {
+export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, onToggleApp, webhook, isSyncing = false, isUpdatingApps = false, onSyncNow, onCreateIncident }: IncidentsEmptyStateProps) => {
   const hasApps = ingestionApps.length > 0 || !!webhook?.exists || !!webhook?.enabled;
 
   return (
@@ -127,10 +128,11 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, on
               </IconButton>
             </Tooltip>
             {onSyncNow && (
-              <Tooltip title="Sync now" placement="bottom">
+              <Tooltip title={isUpdatingApps ? "Updating sources…" : "Sync now"} placement="bottom">
+                <span>
                 <IconButton
                   size="small"
-                  disabled={isSyncing}
+                  disabled={isSyncing || isUpdatingApps}
                   onClick={onSyncNow}
                   sx={{
                     width: 28,
@@ -146,6 +148,7 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, on
                 >
                   {isSyncing ? <CircularProgress size={14} color="inherit" /> : <PlayArrowIcon sx={{ fontSize: 16 }} />}
                 </IconButton>
+                </span>
               </Tooltip>
             )}
           </Box>
