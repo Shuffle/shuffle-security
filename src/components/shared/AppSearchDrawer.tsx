@@ -108,7 +108,7 @@ export default function AppSearchDrawer({
   title = 'Add Integration',
   subtitle = 'Search and configure a tool',
   anchor = 'right',
-  width = 480,
+  width = 560,
 }: AppSearchDrawerProps) {
   const [detailAppName, setDetailAppName] = useState<string | null>(null);
 
