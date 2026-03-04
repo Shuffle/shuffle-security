@@ -171,7 +171,7 @@ export default function AppSearchDrawer({
         </Box>
 
         {/* Search body */}
-        <Box sx={{ flex: 1, overflowY: 'auto', p: 3, minHeight: '70vh' }}>
+        <Box sx={{ flex: 1, overflowY: 'auto', p: 3, minHeight: '85vh' }}>
           {showPipelinesBanner && <ShufflePipelinesBanner />}
           <AnimatePresence mode="wait">
             <motion.div
