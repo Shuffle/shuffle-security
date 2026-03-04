@@ -416,12 +416,6 @@ export default function AppDetailDrawer({
               </Box>
             </motion.div>
 
-            {/* Description */}
-            {appInfo?.description && (
-              <Box sx={{ mb: 3 }}>
-                <CollapsibleDescription description={appInfo.description} />
-              </Box>
-            )}
 
             {/* Authentication section */}
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.1 }}>
@@ -464,57 +458,10 @@ export default function AppDetailDrawer({
                     appId={matchingEntries[0]?.app?.id || matchingEntries[0]?.id || appName || ''}
                     categories={appInfo?.categories}
                   />
-                  <Box sx={{ mt: 2 }}>
-                    <ApiCallViewer
-                      config={{
-                        method: 'POST',
-                        url: getApiUrl(`/api/v1/apps/${encodeURIComponent(appName || '')}/mcp`),
-                        headers: {
-                          'Content-Type': 'application/json',
-                          'Authorization': `Bearer ${API_CONFIG.apiKey || '<your-api-key>'}`,
-                        },
-                        body: {
-                          jsonrpc: '2.0',
-                          id: '<request-id>',
-                          method: 'tools/call',
-                          params: {
-                            tool_name: appName || '',
-                            tool_id: matchingEntries[0]?.app?.id || appName || '',
-                            input: { text: '<your-prompt>' },
-                          },
-                        },
-                      }}
-                    />
-                  </Box>
                 </Box>
               </motion.div>
             )}
 
-            {/* Quick info */}
-            <Divider sx={{ borderColor: 'hsl(var(--border))', my: 2 }} />
-            <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
-              <Box sx={{ flex: 1, minWidth: 140, p: 2, borderRadius: 2, backgroundColor: 'hsl(var(--muted) / 0.5)', border: '1px solid hsl(var(--border))' }}>
-                <Typography variant="overline" sx={{ color: 'hsl(var(--muted-foreground))', fontWeight: 600, letterSpacing: 1, fontSize: '0.6rem' }}>Auth Type</Typography>
-                <Typography sx={{ color: 'hsl(var(--foreground))', fontWeight: 500, fontSize: '0.82rem', mt: 0.25, textTransform: 'capitalize' }}>
-                  {appInfo?.authentication?.type?.replace(/_/g, ' ') || 'API Key'}
-                </Typography>
-              </Box>
-              <Box
-                sx={{
-                  flex: 1, minWidth: 140, p: 2, borderRadius: 2,
-                  backgroundColor: hasValidAuth ? 'hsla(142, 76%, 36%, 0.08)' : 'hsl(var(--muted) / 0.5)',
-                  border: '1px solid',
-                  borderColor: hasValidAuth ? 'hsla(142, 76%, 36%, 0.2)' : 'hsl(var(--border))',
-                }}
-              >
-                <Typography variant="overline" sx={{ color: 'hsl(var(--muted-foreground))', fontWeight: 600, letterSpacing: 1, fontSize: '0.6rem' }}>Status</Typography>
-                <Typography sx={{ color: hasValidAuth ? 'hsl(var(--severity-low))' : 'hsl(var(--muted-foreground))', fontWeight: 500, fontSize: '0.82rem', mt: 0.25 }}>
-                  {isAuthenticated
-                    ? hasValidAuth ? 'Connected' : hasAnyAuth ? 'Pending' : 'Not Configured'
-                    : 'Sign up to connect'}
-                </Typography>
-              </Box>
-            </Box>
           </>
         )}
       </Box>
