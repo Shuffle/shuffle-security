@@ -539,8 +539,8 @@ Use case: ${aiPrompt}`,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'center',
-          py: 12,
+          justifyContent: 'flex-start',
+          py: 6,
           gap: 2,
         }}>
           <StorageIcon sx={{ fontSize: 48, color: 'hsl(var(--muted-foreground))', opacity: 0.4 }} />
