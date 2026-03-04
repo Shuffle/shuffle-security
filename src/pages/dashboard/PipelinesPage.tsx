@@ -29,11 +29,13 @@ import StopIcon from '@mui/icons-material/Stop';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import StorageIcon from '@mui/icons-material/Storage';
 import { toast } from 'sonner';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { getApiUrl, getAuthHeader, API_CONFIG } from '@/config/api';
+import { Link } from 'react-router-dom';
 import { askAI } from '@/services/ai';
 
 interface Environment {
@@ -237,6 +239,10 @@ const PipelinesPage = () => {
   useEffect(() => {
     fetchEnvironments();
   }, [fetchEnvironments]);
+
+  // Check if at least one valid (non-cloud, running) sensor exists
+  const now = Math.floor(Date.now() / 1000);
+  const hasValidSensor = environments.some(e => e.Type !== 'cloud' && e.checkin > 0 && (now - e.checkin) < 300);
 
   const getStateColor = (state?: string): 'success' | 'error' | 'warning' | 'default' => {
     if (!state) return 'default';
@@ -526,22 +532,55 @@ Use case: ${aiPrompt}`,
               <RefreshIcon fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => setCreateOpen(true)}
-            size="small"
-            sx={{
-              bgcolor: '#FF6600',
-              textTransform: 'none',
-              fontWeight: 600,
-              '&:hover': { bgcolor: '#e55b00' },
-            }}
-          >
-            New Pipeline
-          </Button>
+          <Tooltip title={hasValidSensor ? '' : 'A running sensor is required. Set one up on the Detection page first.'}>
+            <span>
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => setCreateOpen(true)}
+                disabled={!hasValidSensor}
+                size="small"
+                sx={{
+                  bgcolor: '#FF6600',
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  '&:hover': { bgcolor: '#e55b00' },
+                  '&.Mui-disabled': { bgcolor: 'hsla(var(--muted-foreground) / 0.2)', color: 'hsl(var(--muted-foreground))' },
+                }}
+              >
+                New Pipeline
+              </Button>
+            </span>
+          </Tooltip>
         </Box>
       </Box>
+
+      {/* No sensor warning */}
+      {!isLoading && !hasValidSensor && (
+        <Box sx={{
+          mb: 3,
+          p: 2,
+          borderRadius: 2,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.5,
+          backgroundColor: 'hsla(var(--primary) / 0.08)',
+          border: '1px solid hsla(var(--primary) / 0.2)',
+        }}>
+          <WarningAmberIcon sx={{ color: 'hsl(var(--primary))', fontSize: 20 }} />
+          <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--foreground))', flex: 1 }}>
+            No running sensor detected. Deploy a sensor first to create pipelines.
+          </Typography>
+          <Button
+            component={Link}
+            to="/detection"
+            size="small"
+            sx={{ textTransform: 'none', fontWeight: 600, color: 'hsl(var(--primary))' }}
+          >
+            Go to Detection Setup →
+          </Button>
+        </Box>
+      )}
 
       {/* Filters */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3, flexWrap: 'wrap' }}>
