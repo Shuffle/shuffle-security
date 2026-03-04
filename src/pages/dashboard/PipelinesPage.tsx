@@ -185,8 +185,24 @@ const PipelinesPage = () => {
       // Extract pipelines from all environments
       const allPipelines: Pipeline[] = [];
       for (const env of active) {
-        const pList = env.data_lake?.pipelines;
-        if (!pList || !Array.isArray(pList)) continue;
+        const raw = env.data_lake?.pipelines;
+        if (!raw) continue;
+        
+        // Handle both array and object/map formats
+        let pList: any[];
+        if (Array.isArray(raw)) {
+          pList = raw;
+        } else if (typeof raw === 'object') {
+          // Could be a map keyed by pipeline ID
+          pList = Object.values(raw);
+          console.log('[PipelinesPage] data_lake.pipelines is an object, converting values:', pList.length);
+        } else {
+          console.log('[PipelinesPage] data_lake.pipelines unexpected type:', typeof raw, raw);
+          continue;
+        }
+
+        console.log(`[PipelinesPage] Env "${env.Name}" has ${pList.length} pipelines`);
+
         for (const p of pList) {
           if (typeof p === 'string') {
             allPipelines.push({
@@ -205,6 +221,7 @@ const PipelinesPage = () => {
           }
         }
       }
+      console.log('[PipelinesPage] Total pipelines found:', allPipelines.length);
       setPipelines(allPipelines);
     } catch (error) {
       console.error('Failed to fetch environments:', error);
