@@ -529,70 +529,86 @@ const RulesPage = () => {
             <Typography variant="h4" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
               Detection Rules
             </Typography>
+            <Chip
+              label="Coming Soon"
+              size="small"
+              sx={{
+                height: 22,
+                fontSize: '0.65rem',
+                fontWeight: 600,
+                backgroundColor: 'hsla(var(--primary) / 0.12)',
+                color: 'hsl(var(--primary))',
+                border: '1px solid hsla(var(--primary) / 0.25)',
+              }}
+            />
           </Box>
           <Typography sx={{ color: 'hsl(var(--muted-foreground))' }}>
             Manage Sigma detection rules for threat hunting and alerting
           </Typography>
         </Box>
-        <Box sx={{ display: 'flex', gap: 1.5 }}>
-          <Button
-            variant="outlined"
-            startIcon={loadingDefaultRules ? <CircularProgress size={16} color="inherit" /> : <CloudDownloadIcon />}
-            onClick={loadDefaultRules}
-            disabled={loadingDefaultRules}
-            sx={{
-              height: 36,
-              borderColor: 'hsl(var(--border))',
-              color: 'hsl(var(--foreground))',
-              '&:hover': {
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Tooltip title="Default Rules">
+            <Button
+              variant="outlined"
+              startIcon={loadingDefaultRules ? <CircularProgress size={16} color="inherit" /> : <CloudDownloadIcon />}
+              onClick={loadDefaultRules}
+              disabled={loadingDefaultRules}
+              sx={{
+                height: 36,
                 borderColor: 'hsl(var(--border))',
-                backgroundColor: 'hsl(var(--muted))',
-              },
-            }}
-          >
-            Enable Default Rules
-          </Button>
-          <Button
-            variant="outlined"
-            startIcon={<RefreshIcon />}
-            onClick={fetchDetections}
-            disabled={isLoading}
-            sx={{
-              height: 36,
-              borderColor: 'hsl(var(--border))',
-              color: 'hsl(var(--foreground))',
-              '&:hover': {
-                borderColor: 'hsl(var(--border))',
-                backgroundColor: 'hsl(var(--muted))',
-              },
-            }}
-          >
-            Refresh
-          </Button>
-          <Button
-            variant="outlined"
-            component="label"
-            startIcon={isUploading ? <CircularProgress size={16} color="inherit" /> : <UploadIcon />}
-            disabled={isUploading}
-            sx={{
-              height: 36,
-              borderColor: 'hsl(var(--border))',
-              color: 'hsl(var(--foreground))',
-              '&:hover': {
-                borderColor: 'hsl(var(--border))',
-                backgroundColor: 'hsl(var(--muted))',
-              },
-            }}
-          >
-            Upload
-            <input
-              type="file"
-              hidden
-              multiple
-              accept=".yml,.yaml,.sigma"
-              onChange={handleUpload}
-            />
-          </Button>
+                color: 'hsl(var(--foreground))',
+                '&:hover': {
+                  borderColor: 'hsl(var(--border))',
+                  backgroundColor: 'hsl(var(--muted))',
+                },
+              }}
+            >
+              Default Rules
+            </Button>
+          </Tooltip>
+          <Tooltip title="Refresh">
+            <IconButton
+              onClick={fetchDetections}
+              disabled={isLoading}
+              sx={{
+                width: 36,
+                height: 36,
+                borderRadius: 1,
+                border: '1px solid hsl(var(--border))',
+                color: 'hsl(var(--foreground))',
+                '&:hover': {
+                  backgroundColor: 'hsl(var(--muted))',
+                },
+              }}
+            >
+              <RefreshIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Upload rules">
+            <IconButton
+              component="label"
+              disabled={isUploading}
+              sx={{
+                width: 36,
+                height: 36,
+                borderRadius: 1,
+                border: '1px solid hsl(var(--border))',
+                color: 'hsl(var(--foreground))',
+                '&:hover': {
+                  backgroundColor: 'hsl(var(--muted))',
+                },
+              }}
+            >
+              {isUploading ? <CircularProgress size={16} color="inherit" /> : <UploadIcon fontSize="small" />}
+              <input
+                type="file"
+                hidden
+                multiple
+                accept=".yml,.yaml,.sigma"
+                onChange={handleUpload}
+              />
+            </IconButton>
+          </Tooltip>
           <Button
             variant="contained"
             startIcon={<AddIcon />}
