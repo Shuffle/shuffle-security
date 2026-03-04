@@ -63,10 +63,6 @@ export function useAppAuth() {
 
   // Load authenticated apps on mount
   const fetchAuthenticatedApps = useCallback(async () => {
-    if (!API_CONFIG.apiKey) {
-      setLoading(false);
-      return;
-    }
     
     try {
       const response = await fetch(getApiUrl('/api/v1/apps/authentication'), {

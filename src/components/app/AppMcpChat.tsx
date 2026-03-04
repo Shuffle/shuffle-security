@@ -189,7 +189,7 @@ const AppMcpChat = ({ appName, appIcon, appId, categories }: AppMcpChatProps) =>
   const primaryCategory = useMemo(() => getPrimaryCategory(appName, categories), [appName, categories]);
   const runAction = async () => {
     const trimmed = input.trim();
-    if (!trimmed || runState === 'running' || !API_CONFIG.apiKey) return;
+    if (!trimmed || runState === 'running') return;
 
     setQuery(trimmed);
     setInput('');

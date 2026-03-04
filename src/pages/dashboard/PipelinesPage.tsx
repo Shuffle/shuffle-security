@@ -168,10 +168,6 @@ const PipelinesPage = () => {
   }, [createOpen, environments]);
 
   const fetchEnvironments = useCallback(async () => {
-    if (!API_CONFIG.apiKey) {
-      setIsLoading(false);
-      return;
-    }
 
     try {
       const response = await fetch(getApiUrl('/api/v1/getenvironments'), {

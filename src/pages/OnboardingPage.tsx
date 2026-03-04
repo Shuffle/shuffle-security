@@ -184,10 +184,6 @@ const OnboardingPage = () => {
   // Load saved config from datastore on mount
   useEffect(() => {
     const loadSavedConfig = async () => {
-      if (!API_CONFIG.apiKey) {
-        setSelectedToolsLoaded(true);
-        return;
-      }
       
       try {
         // Load selected tools
@@ -222,7 +218,7 @@ const OnboardingPage = () => {
   }, []);
 
   useEffect(() => {
-    if (!selectedToolsLoaded || !API_CONFIG.apiKey) return;
+    if (!selectedToolsLoaded) return;
 
     setDatastoreItem(SELECTED_TOOLS_KEY, selectedApps, ONBOARDING_CONFIG_CATEGORY)
       .catch(error => console.error('Failed to persist selected tools:', error));
@@ -231,7 +227,6 @@ const OnboardingPage = () => {
   // Fetch authenticated apps from API
   useEffect(() => {
     const fetchAuthenticatedApps = async () => {
-      if (!API_CONFIG.apiKey) return;
       
       try {
         const response = await fetch(getApiUrl('/api/v1/apps/authentication'), {
@@ -258,7 +253,7 @@ const OnboardingPage = () => {
   // Fetch workflows to derive ingestion enabled state (workflows are the source of truth)
   useEffect(() => {
     const fetchWorkflows = async () => {
-      if (!API_CONFIG.apiKey) return;
+      
       try {
         const response = await fetch(getApiUrl('/api/v1/workflows'), {
           credentials: 'include',

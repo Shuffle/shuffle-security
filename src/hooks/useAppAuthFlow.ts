@@ -20,7 +20,7 @@ export function useAppAuthFlow() {
   const [authLoading, setAuthLoading] = useState(false);
 
   const fetchAuthForApp = useCallback(async (appName: string) => {
-    if (!API_CONFIG.apiKey) return;
+    
     setAuthLoading(true);
     try {
       const response = await fetch(getApiUrl('/api/v1/apps/authentication'), {

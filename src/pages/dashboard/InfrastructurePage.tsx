@@ -2307,7 +2307,7 @@ const InfrastructureContent = () => {
   // Fetch authenticated apps and map to categories
   useEffect(() => {
     const fetchApps = async () => {
-      if (!API_CONFIG.apiKey) return;
+      
       try {
         const response = await fetch(getApiUrl('/api/v1/apps/authentication'), {
           credentials: 'include',

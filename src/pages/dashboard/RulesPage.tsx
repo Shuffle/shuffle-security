@@ -207,7 +207,7 @@ const RulesPage = () => {
   const [loadingDefaultRules, setLoadingDefaultRules] = useState(false);
 
   const loadDefaultRules = async () => {
-    if (!API_CONFIG.apiKey) return;
+    
     setLoadingDefaultRules(true);
     try {
       const response = await fetch(getApiUrl('/api/v1/files/download_remote'), {

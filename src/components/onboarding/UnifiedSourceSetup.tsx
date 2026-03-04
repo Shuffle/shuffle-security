@@ -22,7 +22,7 @@ import { getIngestionCategory, type IngestionCategory } from '@/lib/ingestionDet
 
 /** Fire-and-forget activate call for a newly selected app */
 const activateApp = (appId: string) => {
-  if (!API_CONFIG.apiKey) return;
+  
   fetch(getApiUrl(`/api/v1/apps/${encodeURIComponent(appId)}/activate`), {
     method: 'GET',
     credentials: 'include',

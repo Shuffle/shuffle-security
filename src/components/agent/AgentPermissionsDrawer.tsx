@@ -210,7 +210,7 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
 
   // Fetch authenticated apps for tools list
   const fetchAgentTools = useCallback(async () => {
-    if (!API_CONFIG.apiKey) return;
+    
     setToolsLoading(true);
     try {
       const resp = await fetch(getApiUrl('/api/v1/apps/authentication'), {
