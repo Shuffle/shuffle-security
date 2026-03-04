@@ -555,8 +555,8 @@ Use case: ${aiPrompt}`,
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'flex-start',
-          py: 6,
-          gap: 2,
+          py: 12,
+          gap: 3,
         }}>
           <StorageIcon sx={{ fontSize: 48, color: 'hsl(var(--muted-foreground))', opacity: 0.4 }} />
           <Typography sx={{ color: 'hsl(var(--muted-foreground))' }}>
@@ -575,7 +575,7 @@ Use case: ${aiPrompt}`,
 
           {/* Templates */}
           {availableTemplates.length > 0 && (
-          <Box sx={{ width: '100%', mt: 4 }}>
+          <Box sx={{ width: '100%', mt: 8 }}>
             <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1.5 }}>
               Templates
             </Typography>
