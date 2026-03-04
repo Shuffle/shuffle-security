@@ -498,6 +498,18 @@ Use case: ${aiPrompt}`,
                 border: '1px solid rgba(255, 102, 0, 0.3)',
               }}
             />
+            <Chip
+              label="PUBLIC PREVIEW"
+              size="small"
+              sx={{
+                height: 22,
+                fontSize: '0.65rem',
+                fontWeight: 600,
+                backgroundColor: 'hsla(var(--primary) / 0.12)',
+                color: 'hsl(var(--primary))',
+                border: '1px solid hsla(var(--primary) / 0.25)',
+              }}
+            />
           </Box>
           <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
             Lightweight detection infrastructure — ingest, match, and forward security events without heavy tooling

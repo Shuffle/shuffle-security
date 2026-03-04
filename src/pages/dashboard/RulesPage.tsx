@@ -530,7 +530,7 @@ const RulesPage = () => {
               Detection Rules
             </Typography>
             <Chip
-              label="Coming Soon"
+              label="PUBLIC PREVIEW"
               size="small"
               sx={{
                 height: 22,
