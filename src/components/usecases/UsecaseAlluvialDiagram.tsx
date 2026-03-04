@@ -238,6 +238,8 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, disa
 export function ShufflePipelinesBanner() {
   return (
     <Box
+      component="a"
+      href="/docs/shuffle-pipelines"
       sx={{
         display: 'flex',
         alignItems: 'center',
@@ -247,6 +249,13 @@ export function ShufflePipelinesBanner() {
         borderRadius: 2.5,
         background: 'linear-gradient(135deg, hsla(25, 100%, 50%, 0.08) 0%, hsla(25, 100%, 50%, 0.03) 100%)',
         border: '1px solid hsla(25, 100%, 50%, 0.2)',
+        textDecoration: 'none',
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+        '&:hover': {
+          border: '1px solid hsla(25, 100%, 50%, 0.4)',
+          background: 'linear-gradient(135deg, hsla(25, 100%, 50%, 0.12) 0%, hsla(25, 100%, 50%, 0.05) 100%)',
+        },
       }}
     >
       <Box
