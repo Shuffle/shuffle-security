@@ -1293,7 +1293,7 @@ const DetectionOnboardingPage = () => {
   };
 
   return (
-    <Box sx={{ p: 4, maxWidth: 960, mx: 'auto' }}>
+    <Box sx={{ p: 4, maxWidth: 1400, mx: 'auto' }}>
       {/* Header */}
       <Box sx={{ mb: 4 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
@@ -1311,12 +1311,11 @@ const DetectionOnboardingPage = () => {
             size="small"
             sx={{
               height: 22,
-              fontSize: '0.6rem',
-              fontWeight: 700,
-              letterSpacing: '0.05em',
-              bgcolor: 'hsla(var(--primary) / 0.15)',
+              fontSize: '0.65rem',
+              fontWeight: 600,
+              backgroundColor: 'hsla(var(--primary) / 0.12)',
               color: 'hsl(var(--primary))',
-              borderRadius: 1,
+              border: '1px solid hsla(var(--primary) / 0.25)',
             }}
           />
         </Box>

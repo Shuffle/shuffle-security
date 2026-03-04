@@ -477,13 +477,13 @@ Use case: ${aiPrompt}`,
   };
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1400, mx: 'auto' }}>
+    <Box sx={{ p: 4, maxWidth: 1400, mx: 'auto' }}>
       {/* Header */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 4 }}>
         <Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
             <StorageIcon sx={{ color: '#FF6600', fontSize: 28 }} />
-            <Typography variant="h5" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}>
+            <Typography variant="h4" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}>
               Pipeline Controller
             </Typography>
             <Chip
