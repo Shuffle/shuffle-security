@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
+import AppSearchDrawer from '@/components/shared/AppSearchDrawer';
 import {
   Box,
   Card,
@@ -271,7 +272,7 @@ const IncidentsPage = () => {
   const [isUpdatingApps, setIsUpdatingApps] = useState(false);
   const pendingTogglesRef = useRef<Map<string, boolean>>(new Map());
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
+  const [appSearchOpen, setAppSearchOpen] = useState(false);
   
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -903,8 +904,7 @@ const IncidentsPage = () => {
               ))}
               <Tooltip title="Add ingestion source">
                 <IconButton
-                  component={Link}
-                  to="/onboarding/sources"
+                  onClick={() => setAppSearchOpen(true)}
                   size="small"
                   sx={{
                     width: 28,
@@ -1338,6 +1338,16 @@ const IncidentsPage = () => {
         onResolve={handleBulkResolve}
         incidentTitle={`${selectedIds.size} selected incident${selectedIds.size !== 1 ? 's' : ''}`}
         isLoading={isBulkResolving}
+      />
+
+      <AppSearchDrawer
+        open={appSearchOpen}
+        onClose={() => {
+          setAppSearchOpen(false);
+          fetchIngestionApps();
+        }}
+        title="Add Ingestion Source"
+        subtitle="Search and authenticate a tool to ingest incidents from"
       />
 
     </motion.div>
