@@ -9,7 +9,7 @@ interface PageMeta {
 }
 
 const BASE_TITLE = 'Shuffle Security';
-const BASE_URL = 'https://shuffle-cases.lovable.app';
+const BASE_URL = 'https://security.shuffler.io';
 const DEFAULT_IMAGE = `${BASE_URL}/favicon.ico`;
 
 function setMetaTag(property: string, content: string, isOg = false) {
