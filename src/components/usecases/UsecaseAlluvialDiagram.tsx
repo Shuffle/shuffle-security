@@ -393,31 +393,20 @@ export default function UsecaseAlluvialDiagram({
       return samples.map(a => ({ ...a, isHighlighted: true, isEnabled: true }));
     }
     if (highlightCategory && ingestAppNames) {
-      // Enabled: apps in the ingest workflow (excluding Shuffle internals)
-      const ingestNodes = allApps.filter(a =>
-        ingestAppNames.has(normalizeAppName(a.name)) && !isShuffleInternalApp(a.name)
+      // Only show validated (authenticated) apps that are in the ingest workflow
+      const validatedIngestNodes = allApps.filter(a =>
+        a.hasValidAuth &&
+        ingestAppNames.has(normalizeAppName(a.name)) &&
+        !isShuffleInternalApp(a.name)
       ).map(a => ({
         ...a,
         isHighlighted: matchesCategory(a.name, highlightCategory),
         isEnabled: true,
       }));
 
-      // Greyed out: authenticated apps matching this category but NOT in the workflow
-      const ingestNamesLower = new Set([...ingestAppNames]);
-      const disabledNodes = allApps.filter(a =>
-        !isShuffleInternalApp(a.name) &&
-        matchesCategory(a.name, highlightCategory) &&
-        !ingestNamesLower.has(normalizeAppName(a.name))
-      ).map(a => ({
-        ...a,
-        isHighlighted: false,
-        isEnabled: false,
-      }));
-
-      // Enabled first, then disabled
-      return [...ingestNodes, ...disabledNodes];
+      return validatedIngestNodes;
     }
-    return allApps.filter(a => matchesCategory(a.name, sourceCategory)).map(a => ({ ...a, isEnabled: true }));
+    return allApps.filter(a => matchesCategory(a.name, sourceCategory) && a.hasValidAuth).map(a => ({ ...a, isEnabled: true }));
   }, [allApps, sourceCategory, highlightCategory, ingestAppNames, isLoggedIn]);
 
   // Target/destination apps: use Forward Tickets workflow as source of truth when available
@@ -698,24 +687,32 @@ export default function UsecaseAlluvialDiagram({
             );
           })}
 
-          {/* Add source tool button */}
+          {/* Show source tools button */}
           <Box
             sx={{
               position: 'absolute',
-              left: leftX - 16,
+              left: leftX - 20,
               top: getAddButtonY(sourceApps.length),
               pointerEvents: 'auto',
             }}
           >
-            <Tooltip title="Add source tools" placement="bottom" arrow>
-              <IconButton
+            <Tooltip title="Browse and add source tools" placement="bottom" arrow>
+              <Box
                 onClick={() => setSearchOpen('left')}
                 sx={{
-                  width: 32,
-                  height: 32,
-                  border: '2px dashed hsla(var(--muted-foreground) / 0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  px: 1,
+                  py: 0.5,
+                  borderRadius: '8px',
+                  border: '1px dashed hsla(var(--muted-foreground) / 0.3)',
                   color: 'hsl(var(--muted-foreground))',
+                  fontSize: '0.65rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
                   transition: 'all 0.2s ease',
+                  whiteSpace: 'nowrap',
                   '&:hover': {
                     borderColor: 'hsl(var(--primary))',
                     color: 'hsl(var(--primary))',
@@ -723,8 +720,9 @@ export default function UsecaseAlluvialDiagram({
                   },
                 }}
               >
-                <Plus size={16} />
-              </IconButton>
+                <Plus size={12} />
+                Show source tools
+              </Box>
             </Tooltip>
           </Box>
 
