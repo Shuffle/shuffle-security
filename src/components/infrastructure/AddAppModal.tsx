@@ -2,6 +2,8 @@
  * AddAppModal — Two-phase modal for the Infrastructure page category drawer.
  * Phase 1: SingulJS search (same style as /onboarding/sources)
  * Phase 2: AppAuthCard for the selected app (same as /onboarding/authenticate)
+ *
+ * Refactored to use the shared useAppAuthFlow hook.
  */
 
 import { useState, useEffect } from 'react';
@@ -17,14 +19,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
 } from '@/components/ui/dialog';
 import { SingulJS } from '@/lib/singul-local';
-import type { AlgoliaSearchApp, AppSelectedEvent } from '@/lib/singul-local';
+import type { AppSelectedEvent } from '@/lib/singul-local';
 import { AppAuthCard } from '@/components/onboarding/AppAuthConfig';
-import type { AppAuthState, ApiAuthEntry } from '@/components/onboarding/AppAuthConfig';
-import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
+import { API_CONFIG } from '@/config/api';
+import { useAppAuthFlow } from '@/hooks/useAppAuthFlow';
 
 // Singul styles — matches /onboarding/sources
 const singulStyles = {
@@ -118,151 +118,34 @@ type Phase = 'search' | 'auth';
 
 export const AddAppModal = ({ open, onClose, initialQuery, categoryLabel }: AddAppModalProps) => {
   const [phase, setPhase] = useState<Phase>('search');
-  const [selectedApp, setSelectedApp] = useState<AlgoliaSearchApp | null>(null);
-
-  // Auth state for the selected app
-  const [authState, setAuthState] = useState<AppAuthState>({
-    systemId: '',
-    status: 'pending',
-    credentials: {},
-  });
-  const [authenticatedApps, setAuthenticatedApps] = useState<ApiAuthEntry[]>([]);
-  const [authLoading, setAuthLoading] = useState(false);
+  const {
+    selectedApp,
+    authState,
+    authenticatedApps,
+    authLoading,
+    selectApp,
+    clearSelection,
+    handleAuthChange,
+    handleTestConnection,
+    handleSaveAuth,
+  } = useAppAuthFlow();
 
   // Reset when modal opens/closes
   useEffect(() => {
     if (!open) {
       setPhase('search');
-      setSelectedApp(null);
-      setAuthState({ systemId: '', status: 'pending', credentials: {} });
+      clearSelection();
     }
-  }, [open]);
-
-  // Fetch existing auth entries for the selected app
-  const fetchAuthForApp = async (appName: string) => {
-    if (!API_CONFIG.apiKey) return;
-    setAuthLoading(true);
-    try {
-      const response = await fetch(getApiUrl('/api/v1/apps/authentication'), {
-        credentials: 'include',
-        headers: { ...getAuthHeader() },
-      });
-      if (response.ok) {
-        const result = await response.json();
-        const authData = result.data || result;
-        if (Array.isArray(authData)) {
-          // Filter to only this app's auth entries
-          const appEntries = authData.filter(
-            (a: ApiAuthEntry) => a.app?.name?.toLowerCase() === appName.toLowerCase()
-          );
-          setAuthenticatedApps(appEntries);
-        }
-      }
-    } catch (err) {
-      console.error('Failed to fetch auth entries:', err);
-    } finally {
-      setAuthLoading(false);
-    }
-  };
+  }, [open, clearSelection]);
 
   const handleAppSelected = (detail: AppSelectedEvent) => {
-    setSelectedApp(detail.app);
-    setAuthState({ systemId: detail.app.objectID, status: 'pending', credentials: {} });
-    fetchAuthForApp(detail.app.name);
+    selectApp(detail.app);
     setPhase('auth');
   };
 
   const handleBack = () => {
     setPhase('search');
-    setSelectedApp(null);
-  };
-
-  const handleAuthChange = (_appId: string, credentials: Record<string, string>) => {
-    setAuthState(prev => ({ ...prev, credentials }));
-  };
-
-  const handleTestConnection = async (systemId: string, authenticationId?: string) => {
-    if (!selectedApp) return;
-    setAuthState(prev => ({ ...prev, status: 'testing' }));
-
-    try {
-      const requestBody: Record<string, string | boolean> = {
-        action: 'test_api',
-        app: selectedApp.name.toLowerCase(),
-        skip_workflow: true,
-      };
-      if (authenticationId) requestBody.authentication_id = authenticationId;
-
-      const response = await fetch(getApiUrl('/api/v1/apps/categories/run'), {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          ...getAuthHeader(),
-          'Content-Type': 'application/json',
-          'Accept-Encoding': 'identity',
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      const result = await response.json();
-      const validActions = ['done', 'app_validation'];
-      const isValid = response.ok && validActions.includes(result.action) && result.success === true;
-
-      // Refresh auth list
-      await fetchAuthForApp(selectedApp.name);
-
-      setAuthState(prev => ({
-        ...prev,
-        status: isValid ? 'connected' : 'error',
-        successMessage: isValid ? 'Connection verified' : undefined,
-        errorMessage: isValid ? undefined : (result.reason || 'Connection failed. Please check your credentials.'),
-      }));
-    } catch (err) {
-      setAuthState(prev => ({
-        ...prev,
-        status: 'error',
-        errorMessage: err instanceof Error ? err.message : 'Connection test failed.',
-      }));
-    }
-  };
-
-  const handleSaveAuth = async (appId: string, credentials: Record<string, string>): Promise<boolean> => {
-    if (!selectedApp) return false;
-
-    const fields = Object.entries(credentials)
-      .filter(([key, value]) => key?.trim() && value?.trim())
-      .map(([key, value]) => ({ key, value }));
-
-    const payload = {
-      label: `Auth for ${selectedApp.name.replace(/_/g, ' ')}`,
-      app: {
-        name: selectedApp.name,
-        id: selectedApp.objectID,
-        app_version: '1.0.0',
-      },
-      fields,
-      active: true,
-    };
-
-    try {
-      const response = await fetch(getApiUrl('/api/v1/apps/authentication'), {
-        method: 'PUT',
-        credentials: 'include',
-        headers: {
-          ...getAuthHeader(),
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-      const result = await response.json();
-      if (response.ok && result.success !== false) {
-        await fetchAuthForApp(selectedApp.name);
-        return true;
-      }
-      return false;
-    } catch {
-      return false;
-    }
+    clearSelection();
   };
 
   return (
