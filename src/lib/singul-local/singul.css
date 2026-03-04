@@ -315,6 +315,11 @@
   box-shadow: 0 0 6px rgba(245, 158, 11, 0.4);
 }
 
+.singul-dot-activated {
+  background-color: #3b82f6;
+  box-shadow: 0 0 6px rgba(59, 130, 246, 0.4);
+}
+
 .singul-dot-inactive {
   background-color: rgba(156, 163, 175, 0.5);
 }

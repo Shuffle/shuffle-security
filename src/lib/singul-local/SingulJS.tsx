@@ -336,12 +336,13 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
                 className="singul-app-icon"
                 style={customStyles.appIcon}
               />
-              {/* Color-coded status dot */}
+              {/* Color-coded status dot: green=tested, yellow=configured, blue=activated/selected, gray=inactive */}
               {!hideAuthStatus && (
                 <span
                   className={`singul-status-dot ${
                     authState.validated ? 'singul-dot-validated' :
                     authState.configured ? 'singul-dot-configured' :
+                    selected ? 'singul-dot-activated' :
                     'singul-dot-inactive'
                   }`}
                 />
