@@ -5,13 +5,14 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Box, Typography, Chip, Button, Avatar } from '@mui/material';
-import { ArrowRight, ArrowLeft, Bot, Link as LinkIcon } from 'lucide-react';
+import { Box, Typography, Chip, Button, Avatar, IconButton, Tooltip } from '@mui/material';
+import { ArrowRight, ArrowLeft, Bot, Link as LinkIcon, Plus } from 'lucide-react';
 import UsecaseAlluvialDiagram from '@/components/usecases/UsecaseAlluvialDiagram';
 import { IntegrationStatus } from '@/components/layout/IntegrationStatus';
 import { Clock } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
+import AppSearchDrawer from '@/components/shared/AppSearchDrawer';
 import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
 import {
   DEFAULT_USECASES,
@@ -75,11 +76,13 @@ const ConnectionEndpoint = ({
   category,
   categoryDetails,
   appNames,
+  onAddTool,
 }: {
   label: string;
   category: ReturnType<typeof getToolCategoryMeta>;
   categoryDetails: typeof TOOL_CATEGORIES[number] | undefined;
   appNames: string[];
+  onAddTool?: () => void;
 }) => {
   const colorVar = category?.color || '--primary';
 
@@ -125,9 +128,33 @@ const ConnectionEndpoint = ({
 
       {/* Apps via IntegrationStatus */}
       <Box sx={{ pl: 0.5 }}>
-        <Typography sx={{ fontSize: '0.6rem', fontWeight: 700, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.06em', mb: 0.75 }}>
-          Your Tools
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.75 }}>
+          <Typography sx={{ fontSize: '0.6rem', fontWeight: 700, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            Your Tools
+          </Typography>
+          {onAddTool && (
+            <Tooltip title={`Add ${category?.label || ''} tool`} placement="top" arrow>
+              <IconButton
+                onClick={onAddTool}
+                size="small"
+                sx={{
+                  width: 24,
+                  height: 24,
+                  border: '1.5px dashed hsla(var(--muted-foreground) / 0.3)',
+                  color: 'hsl(var(--muted-foreground))',
+                  transition: 'all 0.2s ease',
+                  '&:hover': {
+                    borderColor: 'hsl(var(--primary))',
+                    color: 'hsl(var(--primary))',
+                    bgcolor: 'hsla(var(--primary) / 0.08)',
+                  },
+                }}
+              >
+                <Plus size={14} />
+              </IconButton>
+            </Tooltip>
+          )}
+        </Box>
         {appNames.length > 0 ? (
           <IntegrationStatus
             collapsed={false}
@@ -137,12 +164,21 @@ const ConnectionEndpoint = ({
             hideAddButton
           />
         ) : (
-          <Box sx={{
-            py: 2, px: 1.5,
-            borderRadius: 1.5,
-            border: '1px dashed hsla(var(--muted-foreground) / 0.25)',
-            textAlign: 'center',
-          }}>
+          <Box
+            onClick={onAddTool}
+            sx={{
+              py: 2, px: 1.5,
+              borderRadius: 1.5,
+              border: '1px dashed hsla(var(--muted-foreground) / 0.25)',
+              textAlign: 'center',
+              cursor: onAddTool ? 'pointer' : 'default',
+              transition: 'all 0.2s ease',
+              '&:hover': onAddTool ? {
+                borderColor: 'hsl(var(--primary))',
+                bgcolor: 'hsla(var(--primary) / 0.04)',
+              } : {},
+            }}
+          >
             <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
               No tools configured
             </Typography>
@@ -165,6 +201,7 @@ const DataFlowDetailPage = () => {
 
   // Fetch apps from API and match to categories
   const [categoryAppNames, setCategoryAppNames] = useState<Record<string, string[]>>({});
+  const [searchDrawerQuery, setSearchDrawerQuery] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchApps = async () => {
@@ -393,6 +430,7 @@ const DataFlowDetailPage = () => {
               category={sourceCat}
               categoryDetails={sourceDetails}
               appNames={sourceAppNames}
+              onAddTool={() => setSearchDrawerQuery(sourceCat?.label || flow.source)}
             />
 
             {/* Arrow */}
@@ -406,6 +444,7 @@ const DataFlowDetailPage = () => {
               category={targetCat}
               categoryDetails={targetDetails}
               appNames={targetAppNames}
+              onAddTool={() => setSearchDrawerQuery(targetCat?.label || flow.target)}
             />
           </Box>
         )}
@@ -588,6 +627,20 @@ const CategoryCard = ({ category, role }: { category: typeof TOOL_CATEGORIES[num
           ))}
         </Box>
       </Box>
+
+      {/* App search drawer */}
+      <AppSearchDrawer
+        open={searchDrawerQuery !== null}
+        onClose={() => setSearchDrawerQuery(null)}
+        initialQuery={(() => {
+          const raw = searchDrawerQuery || '';
+          if (raw.toLowerCase() === 'email') return 'Communication';
+          if (raw.toLowerCase() === 'case management') return 'Cases';
+          return raw;
+        })()}
+        title={`Add ${searchDrawerQuery || ''} Tool`}
+        subtitle="Search and authenticate an integration"
+      />
     </Box>
   );
 };
