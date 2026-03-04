@@ -69,6 +69,7 @@ interface DefaultPipeline {
   description: string;
   command: string;
   hasPlaceholders?: boolean;
+  matchKeys: string[]; // keywords to match against deployed pipelines
 }
 
 const DEFAULT_PIPELINES: DefaultPipeline[] = [
@@ -76,47 +77,55 @@ const DEFAULT_PIPELINES: DefaultPipeline[] = [
     label: 'TCP Syslog',
     description: 'Ingest syslog events over TCP on port 1514',
     command: 'load_tcp "0.0.0.0:1514" { read_syslog } | import',
+    matchKeys: ['load_tcp', 'syslog', 'tcp'],
   },
   {
     label: 'UDP Syslog',
     description: 'Ingest syslog events over UDP on port 1514',
     command: 'load_udp "0.0.0.0:1514", insert_newlines=true | read_syslog | import',
+    matchKeys: ['load_udp', 'udp'],
   },
   {
     label: 'Sigma Rule Alerting',
     description: 'Live export with Sigma rule matching, forwarded to a webhook',
     command: 'export live=true | sigma "/tmp/sigma_rules" | to "http://localhost:5002/api/v1/hooks/webhook_e031c4c0-3f7e-4c0f-a8d2-ff87be206907"',
     hasPlaceholders: true,
+    matchKeys: ['sigma', 'sigma_rules'],
   },
   {
     label: 'OpenSearch Forwarder',
     description: 'Forward live events to an OpenSearch instance',
     command: 'export live=true | to_opensearch "localhost:9200", action="create", index="shuffle_logs", user="admin", passwd="PASSWORD"',
     hasPlaceholders: true,
+    matchKeys: ['to_opensearch', 'opensearch'],
   },
   {
     label: 'Kafka Subscriber',
     description: 'Subscribe to a Kafka topic and ingest events',
     command: 'from_kafka "localhost:9092", topic="security_events" | import',
     hasPlaceholders: true,
+    matchKeys: ['from_kafka', 'kafka'],
   },
   {
     label: 'ZeroMQ Subscriber',
     description: 'Subscribe to a ZeroMQ socket for event ingestion',
     command: 'load_zmq "tcp://localhost:5555" | read_json | import',
     hasPlaceholders: true,
+    matchKeys: ['load_zmq', 'zeromq', 'zmq'],
   },
   {
     label: 'File Watcher',
     description: 'Watch a local JSON log file and ingest new entries',
     command: 'load_file "/var/log/events.json", follow=true | read_json | import',
     hasPlaceholders: true,
+    matchKeys: ['load_file', 'follow=true'],
   },
   {
     label: 'Velociraptor Import',
     description: 'Ingest Velociraptor hunt results from a file',
     command: 'from_file "/tmp/velociraptor_results.json" | read_json | import',
     hasPlaceholders: true,
+    matchKeys: ['velociraptor', 'from_file'],
   },
 ];
 
@@ -364,6 +373,12 @@ Use case: ${aiPrompt}`,
     });
   };
 
+  // Filter out templates that match already-deployed pipelines
+  const deployedDefs = pipelines.map(p => (p.definition || p.command || p.pipeline || '').toLowerCase());
+  const availableTemplates = DEFAULT_PIPELINES.filter(dp =>
+    !dp.matchKeys.some(key => deployedDefs.some(def => def.includes(key.toLowerCase())))
+  );
+
   // Filtering
   const uniqueStates = [...new Set(pipelines.map(p => getStateLabel(p)))].sort();
   const uniqueEnvs = [...new Set(pipelines.map(p => p._environmentName))].sort();
@@ -559,12 +574,13 @@ Use case: ${aiPrompt}`,
           )}
 
           {/* Quick Deploy Templates */}
+          {availableTemplates.length > 0 && (
           <Box sx={{ width: '100%', mt: 4 }}>
             <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1.5 }}>
               Quick Deploy Templates
             </Typography>
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr 1fr' }, gap: 2 }}>
-              {DEFAULT_PIPELINES.map((dp) => (
+              {availableTemplates.map((dp) => (
                 <Box
                   key={dp.label}
                   sx={{
@@ -634,6 +650,7 @@ Use case: ${aiPrompt}`,
               ))}
             </Box>
           </Box>
+          )}
         </Box>
       ) : (
         <Box sx={{
