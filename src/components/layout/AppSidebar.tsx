@@ -356,7 +356,12 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
           </MenuItem>
           <MenuItem
             onClick={() => {
-              window.open(SHUFFLE_AUTOMATION_URL, '_blank');
+              const hostname = window.location.hostname;
+              const isManagedHost = hostname.includes('lovable') || hostname.includes('shuffler.io') || hostname.includes('shutdown.no');
+              const url = isManagedHost
+                ? SHUFFLE_AUTOMATION_URL
+                : `${window.location.protocol}//${hostname}:3001`;
+              window.open(url, '_blank');
               setToolMenuAnchor(null);
             }}
             sx={{
