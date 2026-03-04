@@ -573,11 +573,11 @@ Use case: ${aiPrompt}`,
             </Button>
           )}
 
-          {/* Quick Deploy Templates */}
+          {/* Templates */}
           {availableTemplates.length > 0 && (
           <Box sx={{ width: '100%', mt: 4 }}>
             <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1.5 }}>
-              Quick Deploy Templates
+              Templates
             </Typography>
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr 1fr' }, gap: 2 }}>
               {availableTemplates.map((dp) => (
