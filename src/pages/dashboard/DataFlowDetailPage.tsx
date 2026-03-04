@@ -541,6 +541,20 @@ const DataFlowDetailPage = () => {
           </Button>
         ) : <Box />}
       </Box>
+
+      {/* App search drawer */}
+      <AppSearchDrawer
+        open={searchDrawerQuery !== null}
+        onClose={() => setSearchDrawerQuery(null)}
+        initialQuery={(() => {
+          const raw = searchDrawerQuery || '';
+          if (raw.toLowerCase() === 'email') return 'Communication';
+          if (raw.toLowerCase() === 'case management') return 'Cases';
+          return raw;
+        })()}
+        title={`Add ${searchDrawerQuery || ''} Tool`}
+        subtitle="Search and authenticate an integration"
+      />
     </Box>
   );
 };
@@ -628,19 +642,7 @@ const CategoryCard = ({ category, role }: { category: typeof TOOL_CATEGORIES[num
         </Box>
       </Box>
 
-      {/* App search drawer */}
-      <AppSearchDrawer
-        open={searchDrawerQuery !== null}
-        onClose={() => setSearchDrawerQuery(null)}
-        initialQuery={(() => {
-          const raw = searchDrawerQuery || '';
-          if (raw.toLowerCase() === 'email') return 'Communication';
-          if (raw.toLowerCase() === 'case management') return 'Cases';
-          return raw;
-        })()}
-        title={`Add ${searchDrawerQuery || ''} Tool`}
-        subtitle="Search and authenticate an integration"
-      />
+
     </Box>
   );
 };
