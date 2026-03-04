@@ -11,6 +11,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Box, Typography, Avatar, Tooltip, IconButton } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
+import InlineAppSearch from './InlineAppSearch';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
 import {
@@ -235,6 +236,7 @@ export default function UsecaseAlluvialDiagram({
   const [ingestAppNames, setIngestAppNames] = useState<Set<string> | null>(null);
   const [forwardAppNames, setForwardAppNames] = useState<Set<string> | null>(null);
   const [loading, setLoading] = useState(true);
+  const [searchOpen, setSearchOpen] = useState<'left' | 'right' | null>(null);
 
   // Fetch authenticated + active apps, and ingest workflow
   useEffect(() => {
@@ -420,7 +422,7 @@ export default function UsecaseAlluvialDiagram({
   const hasApps = sourceApps.length > 0 || targetApps.length > 0;
 
   return (
-    <Box sx={{ width: '100%', overflow: 'hidden' }}>
+    <Box sx={{ width: '100%', overflow: 'visible', position: 'relative' }}>
       <Box sx={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'center' }}>
         <svg
           width={svgWidth}
@@ -568,7 +570,7 @@ export default function UsecaseAlluvialDiagram({
             );
           })}
 
-          {/* Add source tool button */}
+          {/* Add source tool button + inline search */}
           <Box
             sx={{
               position: 'absolute',
@@ -579,12 +581,14 @@ export default function UsecaseAlluvialDiagram({
           >
             <Tooltip title="Add source tools" placement="bottom" arrow>
               <IconButton
-                onClick={() => navigate('/onboarding/sources')}
+                onClick={() => setSearchOpen(searchOpen === 'left' ? null : 'left')}
                 sx={{
                   width: 32,
                   height: 32,
-                  border: '2px dashed hsla(var(--muted-foreground) / 0.3)',
-                  color: 'hsl(var(--muted-foreground))',
+                  border: searchOpen === 'left'
+                    ? '2px solid hsl(var(--primary))'
+                    : '2px dashed hsla(var(--muted-foreground) / 0.3)',
+                  color: searchOpen === 'left' ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
                   transition: 'all 0.2s ease',
                   '&:hover': {
                     borderColor: 'hsl(var(--primary))',
@@ -596,9 +600,18 @@ export default function UsecaseAlluvialDiagram({
                 <Plus size={16} />
               </IconButton>
             </Tooltip>
+            {searchOpen === 'left' && (
+              <Box sx={{ position: 'relative', mt: 1 }}>
+                <InlineAppSearch
+                  onClose={() => setSearchOpen(null)}
+                  side="left"
+                  categoryHint={highlightCategory || sourceCategory}
+                />
+              </Box>
+            )}
           </Box>
 
-          {/* Add destination tool button */}
+          {/* Add destination tool button + inline search */}
           <Box
             sx={{
               position: 'absolute',
@@ -609,12 +622,14 @@ export default function UsecaseAlluvialDiagram({
           >
             <Tooltip title="Add destination tools" placement="bottom" arrow>
               <IconButton
-                onClick={() => navigate(`/apps?category=${targetCategory}`)}
+                onClick={() => setSearchOpen(searchOpen === 'right' ? null : 'right')}
                 sx={{
                   width: 32,
                   height: 32,
-                  border: '2px dashed hsla(var(--muted-foreground) / 0.3)',
-                  color: 'hsl(var(--muted-foreground))',
+                  border: searchOpen === 'right'
+                    ? '2px solid hsl(var(--primary))'
+                    : '2px dashed hsla(var(--muted-foreground) / 0.3)',
+                  color: searchOpen === 'right' ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
                   transition: 'all 0.2s ease',
                   '&:hover': {
                     borderColor: 'hsl(var(--primary))',
@@ -626,6 +641,15 @@ export default function UsecaseAlluvialDiagram({
                 <Plus size={16} />
               </IconButton>
             </Tooltip>
+            {searchOpen === 'right' && (
+              <Box sx={{ position: 'relative', mt: 1 }}>
+                <InlineAppSearch
+                  onClose={() => setSearchOpen(null)}
+                  side="right"
+                  categoryHint={targetCategory}
+                />
+              </Box>
+            )}
           </Box>
         </Box>
       </Box>
