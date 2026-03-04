@@ -1,4 +1,4 @@
-import { ThemeProvider, CssBaseline } from '@mui/material';
+import { ThemeProvider, CssBaseline, Box } from '@mui/material';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
 import { Toaster } from 'sonner';
@@ -42,7 +42,9 @@ const ConditionalDashboardLayout = () => {
   return (
     <>
       <LandingNavbar />
-      <Outlet />
+      <Box sx={{ pt: '72px' }}>
+        <Outlet />
+      </Box>
     </>
   );
 };
