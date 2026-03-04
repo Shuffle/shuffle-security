@@ -411,10 +411,59 @@ export default function UsecaseAlluvialDiagram({
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-        <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.85rem' }}>
-          Loading integrations…
-        </Typography>
+      <Box sx={{ display: 'flex', gap: 4, py: 4, px: 2, alignItems: 'center' }}>
+        {/* Left column shimmer */}
+        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+          {[1, 2, 3].map((i) => (
+            <Box
+              key={i}
+              sx={{
+                height: 48,
+                borderRadius: 2,
+                background: 'linear-gradient(90deg, hsl(var(--muted)) 25%, hsl(var(--muted-foreground) / 0.08) 50%, hsl(var(--muted)) 75%)',
+                backgroundSize: '200% 100%',
+                animation: 'shimmer 1.5s ease-in-out infinite',
+                '@keyframes shimmer': {
+                  '0%': { backgroundPosition: '200% 0' },
+                  '100%': { backgroundPosition: '-200% 0' },
+                },
+              }}
+            />
+          ))}
+        </Box>
+        {/* Center lines shimmer */}
+        <Box sx={{ width: 60, display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
+          {[1, 2, 3].map((i) => (
+            <Box
+              key={i}
+              sx={{
+                height: 2,
+                width: '100%',
+                borderRadius: 1,
+                background: 'linear-gradient(90deg, hsl(var(--muted)) 25%, hsl(var(--muted-foreground) / 0.08) 50%, hsl(var(--muted)) 75%)',
+                backgroundSize: '200% 100%',
+                animation: 'shimmer 1.5s ease-in-out infinite',
+                animationDelay: `${i * 0.2}s`,
+              }}
+            />
+          ))}
+        </Box>
+        {/* Right column shimmer */}
+        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+          {[1, 2, 3].map((i) => (
+            <Box
+              key={i}
+              sx={{
+                height: 48,
+                borderRadius: 2,
+                background: 'linear-gradient(90deg, hsl(var(--muted)) 25%, hsl(var(--muted-foreground) / 0.08) 50%, hsl(var(--muted)) 75%)',
+                backgroundSize: '200% 100%',
+                animation: 'shimmer 1.5s ease-in-out infinite',
+                animationDelay: `${i * 0.15}s`,
+              }}
+            />
+          ))}
+        </Box>
       </Box>
     );
   }
