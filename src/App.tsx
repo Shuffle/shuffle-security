@@ -9,6 +9,7 @@ import Index from './pages/Index';
 import AuthPage from './pages/AuthPage';
 import OnboardingPage from './pages/OnboardingPage';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { LandingNavbar } from '@/components/landing/LandingNavbar';
 import IncidentsPage from '@/pages/dashboard/IncidentsPage';
 import IncidentDetailPage from '@/pages/dashboard/IncidentDetailPage';
 import TemplatesPage from '@/pages/dashboard/TemplatesPage';
@@ -33,12 +34,17 @@ import AppsPage from '@/pages/AppsPage';
 import NotFound from './pages/NotFound';
 import { ScrollToTop } from '@/components/ScrollToTop';
 
-/** Layout that conditionally shows sidebar for authenticated users, bare page for guests */
+/** Layout that conditionally shows sidebar for authenticated users, navbar + content for guests */
 const ConditionalDashboardLayout = () => {
   const { isAuthenticated, isLoading } = useAuth();
   if (isLoading) return <Outlet />;
   if (isAuthenticated) return <DashboardLayout />;
-  return <Outlet />;
+  return (
+    <>
+      <LandingNavbar />
+      <Outlet />
+    </>
+  );
 };
 
 const queryClient = new QueryClient();
