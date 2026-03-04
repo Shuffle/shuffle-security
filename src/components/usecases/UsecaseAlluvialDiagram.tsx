@@ -817,39 +817,61 @@ export default function UsecaseAlluvialDiagram({
           <Box
             sx={{
               position: 'absolute',
-              left: leftX - 20,
+              left: sourceApps.length === 0 ? leftX - 20 : leftX - 16,
               top: getAddButtonY(sourceApps.length),
               pointerEvents: 'auto',
             }}
           >
-            <Tooltip title="Browse and add source tools" placement="bottom" arrow>
-              <Box
-                onClick={() => setSearchOpen('left')}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 0.5,
-                  px: 1,
-                  py: 0.5,
-                  borderRadius: '8px',
-                  border: '1px dashed hsla(var(--muted-foreground) / 0.3)',
-                  color: 'hsl(var(--muted-foreground))',
-                  fontSize: '0.65rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  whiteSpace: 'nowrap',
-                  '&:hover': {
-                    borderColor: 'hsl(var(--primary))',
-                    color: 'hsl(var(--primary))',
-                    bgcolor: 'hsla(var(--primary) / 0.08)',
-                  },
-                }}
-              >
-                <Plus size={12} />
-                Show source tools
-              </Box>
-            </Tooltip>
+            {sourceApps.length === 0 ? (
+              <Tooltip title="Browse and add source tools" placement="bottom" arrow>
+                <Box
+                  onClick={() => setSearchOpen('left')}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.5,
+                    px: 1,
+                    py: 0.5,
+                    borderRadius: '8px',
+                    border: '1px dashed hsla(var(--muted-foreground) / 0.3)',
+                    color: 'hsl(var(--muted-foreground))',
+                    fontSize: '0.65rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    whiteSpace: 'nowrap',
+                    '&:hover': {
+                      borderColor: 'hsl(var(--primary))',
+                      color: 'hsl(var(--primary))',
+                      bgcolor: 'hsla(var(--primary) / 0.08)',
+                    },
+                  }}
+                >
+                  <Plus size={12} />
+                  Show source tools
+                </Box>
+              </Tooltip>
+            ) : (
+              <Tooltip title="Add source tools" placement="bottom" arrow>
+                <IconButton
+                  onClick={() => setSearchOpen('left')}
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    border: '2px dashed hsla(var(--muted-foreground) / 0.3)',
+                    color: 'hsl(var(--muted-foreground))',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      borderColor: 'hsl(var(--primary))',
+                      color: 'hsl(var(--primary))',
+                      bgcolor: 'hsla(var(--primary) / 0.08)',
+                    },
+                  }}
+                >
+                  <Plus size={16} />
+                </IconButton>
+              </Tooltip>
+            )}
           </Box>
 
           {/* Add destination tool button */}
