@@ -38,6 +38,8 @@ interface AppNode {
   isActiveOnly: boolean;
   /** Whether this app matches the highlighted source category */
   isHighlighted?: boolean;
+  /** Whether this app is enabled in the workflow (false = greyed out) */
+  isEnabled?: boolean;
 }
 
 interface UsecaseAlluvialDiagramProps {
@@ -120,7 +122,7 @@ function getStatusColor(app: AppNode): string {
 
 // ── App bubble component ───────────────────────────────────────────────────────
 
-function AppBubble({ app, size = 40, highlighted = false, isSample = false, onClickApp }: { app: AppNode; size?: number; highlighted?: boolean; isSample?: boolean; onClickApp?: (appName: string) => void }) {
+function AppBubble({ app, size = 40, highlighted = false, isSample = false, disabled = false, onClickApp }: { app: AppNode; size?: number; highlighted?: boolean; isSample?: boolean; disabled?: boolean; onClickApp?: (appName: string) => void }) {
   const [imgFailed, setImgFailed] = useState(false);
 
   const content = (
@@ -162,7 +164,8 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, onCl
             objectFit: 'contain',
             backgroundColor: 'hsl(var(--muted))',
             p: 0.5,
-            opacity: highlighted || isSample ? 1 : 0.7,
+            opacity: disabled ? 0.3 : (highlighted || isSample ? 1 : 0.7),
+            filter: disabled ? 'grayscale(100%)' : 'none',
           }}
         />
       ) : (
@@ -173,7 +176,8 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, onCl
             backgroundColor: 'hsl(var(--muted))',
             fontSize: size * 0.38,
             color: 'hsl(var(--foreground))',
-            opacity: highlighted || isSample ? 1 : 0.7,
+            opacity: disabled ? 0.3 : (highlighted || isSample ? 1 : 0.7),
+            filter: disabled ? 'grayscale(100%)' : 'none',
           }}
         >
           {app.name.charAt(0).toUpperCase()}
@@ -206,8 +210,8 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, onCl
             {app.name}
           </Typography>
           {!isSample && (
-            <Typography sx={{ fontSize: '0.7rem', color: app.hasValidAuth ? 'hsl(var(--severity-low))' : 'hsl(var(--muted-foreground))' }}>
-              {app.hasValidAuth ? 'Authenticated' : app.isActiveOnly ? 'Not authenticated' : 'Inactive'}
+            <Typography sx={{ fontSize: '0.7rem', color: disabled ? 'hsl(var(--muted-foreground))' : app.hasValidAuth ? 'hsl(var(--severity-low))' : 'hsl(var(--muted-foreground))' }}>
+              {disabled ? 'Not enabled for ingestion' : app.hasValidAuth ? 'Authenticated' : app.isActiveOnly ? 'Not authenticated' : 'Inactive'}
             </Typography>
           )}
         </Box>
@@ -336,20 +340,35 @@ export default function UsecaseAlluvialDiagram({
   // Otherwise fall back to category-based filtering
   const sourceApps = useMemo(() => {
     if (!isLoggedIn) {
-      // Show sample apps for the source category when not logged in
       const samples = highlightCategory ? getSampleApps(highlightCategory) : getSampleApps(sourceCategory);
-      return samples.map(a => ({ ...a, isHighlighted: true }));
+      return samples.map(a => ({ ...a, isHighlighted: true, isEnabled: true }));
     }
-    if (highlightCategory && ingestAppNames && ingestAppNames.size > 0) {
+    if (highlightCategory && ingestAppNames) {
+      // Enabled: apps in the ingest workflow (excluding Shuffle internals)
       const ingestNodes = allApps.filter(a =>
         ingestAppNames.has(normalizeAppName(a.name)) && !isShuffleInternalApp(a.name)
-      );
-      return ingestNodes.map(a => ({
+      ).map(a => ({
         ...a,
         isHighlighted: matchesCategory(a.name, highlightCategory),
+        isEnabled: true,
       }));
+
+      // Greyed out: authenticated apps matching this category but NOT in the workflow
+      const ingestNamesLower = new Set([...ingestAppNames]);
+      const disabledNodes = allApps.filter(a =>
+        !isShuffleInternalApp(a.name) &&
+        matchesCategory(a.name, highlightCategory) &&
+        !ingestNamesLower.has(normalizeAppName(a.name))
+      ).map(a => ({
+        ...a,
+        isHighlighted: false,
+        isEnabled: false,
+      }));
+
+      // Enabled first, then disabled
+      return [...ingestNodes, ...disabledNodes];
     }
-    return allApps.filter(a => matchesCategory(a.name, sourceCategory));
+    return allApps.filter(a => matchesCategory(a.name, sourceCategory)).map(a => ({ ...a, isEnabled: true }));
   }, [allApps, sourceCategory, highlightCategory, ingestAppNames, isLoggedIn]);
 
   // Target/destination apps: use Forward Tickets workflow as source of truth when available
@@ -502,8 +521,9 @@ export default function UsecaseAlluvialDiagram({
             </filter>
           </defs>
 
-          {/* Flow paths: source → center */}
-          {sourceApps.map((_, i) => {
+          {/* Flow paths: source → center (only for enabled apps) */}
+          {sourceApps.map((app, i) => {
+            if (app.isEnabled === false) return null;
             const fromY = getY(i, sourceApps.length);
             return (
               <path
@@ -534,7 +554,7 @@ export default function UsecaseAlluvialDiagram({
 
           {/* Animated particles — only for authenticated source apps */}
           {sourceApps.map((app, i) => {
-            if (!app.hasValidAuth) return null;
+            if (!app.hasValidAuth || app.isEnabled === false) return null;
             const fromY = getY(i, sourceApps.length);
             const pathD = makePath(leftX + nodeSize / 2 + 4, fromY, centerX - 28, centerY);
             return (
@@ -545,7 +565,7 @@ export default function UsecaseAlluvialDiagram({
               </g>
             );
           })}
-          {sourceApps.some(app => app.hasValidAuth) && targetApps.map((_, i) => {
+          {sourceApps.some(app => app.hasValidAuth && app.isEnabled !== false) && targetApps.map((_, i) => {
             const toY = getY(i, targetApps.length);
             const pathD = makePath(centerX + 28, centerY, rightX - nodeSize / 2 - 4, toY);
             return (
@@ -583,7 +603,7 @@ export default function UsecaseAlluvialDiagram({
                   pointerEvents: 'auto',
                 }}
               >
-                <AppBubble app={app} size={nodeSize} highlighted={!!app.isHighlighted} isSample={!isLoggedIn} onClickApp={setDetailAppName} />
+                <AppBubble app={app} size={nodeSize} highlighted={!!app.isHighlighted} isSample={!isLoggedIn} disabled={app.isEnabled === false} onClickApp={setDetailAppName} />
               </Box>
             );
           })}
