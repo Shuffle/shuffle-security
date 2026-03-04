@@ -38,6 +38,8 @@ interface AppInfo {
   description: string;
   large_image?: string;
   categories?: string[];
+  /** Algolia objectID — used as the canonical app ID for API calls */
+  algoliaId?: string;
   authentication?: {
     type?: string;
     parameters?: { id: string; name: string; description: string; example: string; required: boolean }[];
@@ -195,14 +197,16 @@ const AppDetailPage = () => {
           description: algoliaMatch.description || '',
           large_image: algoliaMatch.image_url || '',
           categories: algoliaMatch.categories || [],
+          algoliaId: algoliaMatch.objectID,
         });
       }
 
-      // Step 2: Try the config API for richer data (auth type, parameters)
-      if (API_CONFIG.apiKey) {
+      // Step 2: Use the Algolia objectID (app ID) for the config API
+      const appId = algoliaMatch?.objectID;
+      if (API_CONFIG.apiKey && appId) {
         try {
           const response = await fetch(
-            getApiUrl(`/api/v1/apps/${encodeURIComponent(appname)}/config`),
+            getApiUrl(`/api/v1/apps/${encodeURIComponent(appId)}/config`),
             { credentials: 'include', headers: { ...getAuthHeader() } }
           );
           if (response.ok) {
@@ -277,7 +281,8 @@ const AppDetailPage = () => {
         if (!res.ok) throw new Error('Deactivate failed');
         setActivatedAppId(null);
       } else {
-        const searchRes = await fetch(getApiUrl(`/api/v1/apps/${encodeURIComponent(appname)}/config`), {
+        const configId = appInfo?.algoliaId || appname;
+        const searchRes = await fetch(getApiUrl(`/api/v1/apps/${encodeURIComponent(configId!)}/config`), {
           credentials: 'include',
           headers: { ...getAuthHeader() },
         });
@@ -329,7 +334,7 @@ const AppDetailPage = () => {
   const algoliaApp: AlgoliaSearchApp | null = useMemo(() => {
     if (!appname) return null;
     return {
-      objectID: appname,
+      objectID: appInfo?.algoliaId || appname,
       name: appname,
       image_url: resolvedImage,
       description: appInfo?.description || '',

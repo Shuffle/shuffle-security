@@ -132,6 +132,7 @@ export default function AppDetailDrawer({
 
     (async () => {
       // Algolia
+      let algoliaId: string | null = null;
       try {
         const { algoliasearch } = await import('algoliasearch');
         const client = algoliasearch('JNSS5CFDZZ', 'c8f882473ff42d41158430be09ec2b4e');
@@ -144,6 +145,7 @@ export default function AppDetailDrawer({
         ) || (hits.length > 0 ? hits[0] : null);
 
         if (match) {
+          algoliaId = match.objectID;
           setAppInfo({
             name: match.name || searchName,
             description: match.description || '',
@@ -153,11 +155,11 @@ export default function AppDetailDrawer({
         }
       } catch {}
 
-      // Config API for richer data
-      if (API_CONFIG.apiKey) {
+      // Config API — use Algolia objectID
+      if (API_CONFIG.apiKey && algoliaId) {
         try {
           const response = await fetch(
-            getApiUrl(`/api/v1/apps/${encodeURIComponent(appName)}/config`),
+            getApiUrl(`/api/v1/apps/${encodeURIComponent(algoliaId)}/config`),
             { credentials: 'include', headers: { ...getAuthHeader() } }
           );
           if (response.ok) {
