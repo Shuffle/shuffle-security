@@ -688,7 +688,7 @@ export default function UsecaseAlluvialDiagram({
             Shuffle
           </text>
           <text x={rightX} y={svgHeight + 16} textAnchor="middle" fill="hsl(var(--muted-foreground))" fontSize="11" fontWeight="600">
-            {targetMeta?.label || targetCategory}
+            {targetCategory === 'case_management' ? 'Cases (optional)' : (targetMeta?.label || targetCategory)}
           </text>
         </svg>
 
