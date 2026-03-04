@@ -147,7 +147,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Reset region URL immediately — the new org may have a different region
       resetRegionUrl();
 
-      const token = localStorage.getItem('session_token');
       const response = await fetch(getApiUrl('/api/v1/orgs/' + orgId + '/change'), {
         method: 'POST',
         credentials: 'include',
@@ -158,17 +157,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         body: JSON.stringify({ org_id: orgId }),
       });
 
-      if (response.ok) {
-        // Refresh user info to get updated active_org and region_url
-        await fetchUserInfo(token);
-      } else {
+      if (!response.ok) {
         console.warn('Org change API returned non-OK:', response.status);
       }
 
-      // Always reload so all data refetches for the new org
+      // Always call getinfo after org change to resolve the new region_url
+      // and update userInfo before reloading
+      await fetchUserInfo();
+
+      // Reload so all components refetch for the new org
       window.location.reload();
     } catch (err) {
       console.error('Failed to change org:', err);
+      // Still reload on error to ensure a clean state
+      window.location.reload();
     }
   }, [fetchUserInfo]);
 
