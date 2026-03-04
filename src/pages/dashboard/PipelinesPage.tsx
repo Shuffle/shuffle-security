@@ -136,6 +136,7 @@ const PipelinesPage = () => {
   const [aiPrompt, setAiPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [justGenerated, setJustGenerated] = useState(false);
+  const [showAiSection, setShowAiSection] = useState(false);
 
   // Detail dialog
   const [detailPipeline, setDetailPipeline] = useState<Pipeline | null>(null);
@@ -797,61 +798,85 @@ Use case: ${aiPrompt}`,
             </MuiSelect>
           </FormControl>
 
-          {/* AI Generation */}
-          <Box sx={{
-            border: '1px solid hsl(var(--border))',
-            borderRadius: 1.5,
-            p: 2,
-            mb: 3,
-            backgroundColor: 'rgba(255, 102, 0, 0.03)',
-          }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-              <AutoFixHighIcon sx={{ fontSize: 16, color: '#FF6600' }} />
-              <Typography sx={{ color: 'hsl(var(--foreground))', fontSize: '0.8rem', fontWeight: 600 }}>
-                Generate with AI
-              </Typography>
+          {/* AI Generation Toggle */}
+          {!showAiSection ? (
+            <Button
+              size="small"
+              startIcon={<AutoFixHighIcon sx={{ fontSize: '14px !important' }} />}
+              onClick={() => setShowAiSection(true)}
+              sx={{
+                mb: 2,
+                textTransform: 'none',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                color: '#FF6600',
+                borderColor: 'rgba(255, 102, 0, 0.3)',
+                '&:hover': { borderColor: '#FF6600', backgroundColor: 'rgba(255, 102, 0, 0.06)' },
+              }}
+              variant="outlined"
+            >
+              Generate with AI
+            </Button>
+          ) : (
+            <Box sx={{
+              border: '1px solid hsl(var(--border))',
+              borderRadius: 1.5,
+              p: 2,
+              mb: 2,
+              backgroundColor: 'rgba(255, 102, 0, 0.03)',
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+                <AutoFixHighIcon sx={{ fontSize: 16, color: '#FF6600' }} />
+                <Typography sx={{ color: 'hsl(var(--foreground))', fontSize: '0.8rem', fontWeight: 600, flexGrow: 1 }}>
+                  Generate with AI
+                </Typography>
+                <IconButton size="small" onClick={() => setShowAiSection(false)} sx={{ color: 'hsl(var(--muted-foreground))', p: 0.25 }}>
+                  <Typography sx={{ fontSize: '0.7rem' }}>✕</Typography>
+                </IconButton>
+              </Box>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <TextField
+                  placeholder="e.g. Ingest Windows event logs over TCP and forward matches to OpenSearch"
+                  value={aiPrompt}
+                  onChange={(e) => setAiPrompt(e.target.value)}
+                  fullWidth
+                  size="small"
+                  autoFocus
+                  disabled={isGenerating}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleGenerateFromAI(); } }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      height: 36,
+                      backgroundColor: 'hsl(var(--muted))',
+                      fontSize: '0.8rem',
+                      '& fieldset': { borderColor: 'hsl(var(--border))' },
+                    },
+                    '& .MuiOutlinedInput-input': {
+                      color: 'hsl(var(--foreground))',
+                      '&::placeholder': { color: 'hsl(var(--muted-foreground))', opacity: 1 },
+                    },
+                  }}
+                />
+                <Button
+                  onClick={handleGenerateFromAI}
+                  disabled={isGenerating || !aiPrompt.trim()}
+                  variant="outlined"
+                  size="small"
+                  sx={{
+                    minWidth: 90,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    fontSize: '0.75rem',
+                    borderColor: 'rgba(255, 102, 0, 0.3)',
+                    color: '#FF6600',
+                    '&:hover': { borderColor: '#FF6600', backgroundColor: 'rgba(255, 102, 0, 0.06)' },
+                  }}
+                >
+                  {isGenerating ? <CircularProgress size={16} sx={{ color: '#FF6600' }} /> : 'Generate'}
+                </Button>
+              </Box>
             </Box>
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <TextField
-                placeholder="e.g. Ingest Windows event logs over TCP and forward matches to OpenSearch"
-                value={aiPrompt}
-                onChange={(e) => setAiPrompt(e.target.value)}
-                fullWidth
-                size="small"
-                disabled={isGenerating}
-                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleGenerateFromAI(); } }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    height: 36,
-                    backgroundColor: 'hsl(var(--muted))',
-                    fontSize: '0.8rem',
-                    '& fieldset': { borderColor: 'hsl(var(--border))' },
-                  },
-                  '& .MuiOutlinedInput-input': {
-                    color: 'hsl(var(--foreground))',
-                    '&::placeholder': { color: 'hsl(var(--muted-foreground))', opacity: 1 },
-                  },
-                }}
-              />
-              <Button
-                onClick={handleGenerateFromAI}
-                disabled={isGenerating || !aiPrompt.trim()}
-                variant="outlined"
-                size="small"
-                sx={{
-                  minWidth: 90,
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  fontSize: '0.75rem',
-                  borderColor: 'rgba(255, 102, 0, 0.3)',
-                  color: '#FF6600',
-                  '&:hover': { borderColor: '#FF6600', backgroundColor: 'rgba(255, 102, 0, 0.06)' },
-                }}
-              >
-                {isGenerating ? <CircularProgress size={16} sx={{ color: '#FF6600' }} /> : 'Generate'}
-              </Button>
-            </Box>
-          </Box>
+          )}
 
           <TextField
             label="Pipeline Command"
