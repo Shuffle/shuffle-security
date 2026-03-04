@@ -20,6 +20,7 @@ import {
   Alert,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import AddIcon from '@mui/icons-material/Add';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
@@ -32,6 +33,7 @@ import StorageIcon from '@mui/icons-material/Storage';
 import { toast } from 'sonner';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { getApiUrl, getAuthHeader, API_CONFIG } from '@/config/api';
+import { askAI } from '@/services/ai';
 
 interface Environment {
   id: string;
@@ -107,6 +109,9 @@ const PipelinesPage = () => {
   const [newCommand, setNewCommand] = useState('');
   const [newEnvId, setNewEnvId] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [justGenerated, setJustGenerated] = useState(false);
 
   // Detail dialog
   const [detailPipeline, setDetailPipeline] = useState<Pipeline | null>(null);
@@ -275,6 +280,39 @@ const PipelinesPage = () => {
       toast.error('Error creating pipeline');
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const handleGenerateFromAI = async () => {
+    if (!aiPrompt.trim()) {
+      toast.error('Describe what you want the pipeline to do');
+      return;
+    }
+    setIsGenerating(true);
+    try {
+      const { success, result, error } = await askAI({
+        query: `Generate a Tenzir pipeline command for the following use case. Only output the pipeline command, no explanation or markdown formatting. Use Tenzir pipeline syntax (operators separated by |). Here are some examples of valid commands:
+- load_tcp "0.0.0.0:1514" { read_syslog } | import
+- load_udp "0.0.0.0:1514", insert_newlines=true | read_syslog | import
+- export live=true | sigma "/tmp/sigma_rules" | to "http://example.com/webhook"
+- export live=true | to_opensearch "localhost:9200", action="create", index="shuffle_logs", user="admin", passwd="PASSWORD"
+
+Use case: ${aiPrompt}`,
+      });
+      if (success && result) {
+        const cleaned = result.replace(/^```[^\n]*\n?/i, '').replace(/\n?```$/i, '').trim();
+        setNewCommand(cleaned);
+        setJustGenerated(true);
+        setTimeout(() => setJustGenerated(false), 3000);
+        toast.success('Pipeline command generated');
+      } else {
+        toast.error(error || 'Failed to generate pipeline command');
+      }
+    } catch (e) {
+      console.error('AI generation error:', e);
+      toast.error('Failed to generate pipeline command');
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -722,9 +760,65 @@ const PipelinesPage = () => {
             </MuiSelect>
           </FormControl>
 
+          {/* AI Generation */}
+          <Box sx={{
+            border: '1px solid hsl(var(--border))',
+            borderRadius: 1.5,
+            p: 2,
+            mb: 3,
+            backgroundColor: 'rgba(255, 102, 0, 0.03)',
+          }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+              <AutoFixHighIcon sx={{ fontSize: 16, color: '#FF6600' }} />
+              <Typography sx={{ color: 'hsl(var(--foreground))', fontSize: '0.8rem', fontWeight: 600 }}>
+                Generate with AI
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <TextField
+                placeholder="e.g. Ingest Windows event logs over TCP and forward matches to OpenSearch"
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                fullWidth
+                size="small"
+                disabled={isGenerating}
+                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleGenerateFromAI(); } }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    height: 36,
+                    backgroundColor: 'hsl(var(--muted))',
+                    fontSize: '0.8rem',
+                    '& fieldset': { borderColor: 'hsl(var(--border))' },
+                  },
+                  '& .MuiOutlinedInput-input': {
+                    color: 'hsl(var(--foreground))',
+                    '&::placeholder': { color: 'hsl(var(--muted-foreground))', opacity: 1 },
+                  },
+                }}
+              />
+              <Button
+                onClick={handleGenerateFromAI}
+                disabled={isGenerating || !aiPrompt.trim()}
+                variant="outlined"
+                size="small"
+                sx={{
+                  minWidth: 90,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  fontSize: '0.75rem',
+                  borderColor: 'rgba(255, 102, 0, 0.3)',
+                  color: '#FF6600',
+                  '&:hover': { borderColor: '#FF6600', backgroundColor: 'rgba(255, 102, 0, 0.06)' },
+                }}
+              >
+                {isGenerating ? <CircularProgress size={16} sx={{ color: '#FF6600' }} /> : 'Generate'}
+              </Button>
+            </Box>
+          </Box>
+
           <TextField
             label="Pipeline Command"
-            placeholder='e.g. listen syslog tcp://0.0.0.0:1514'
+            placeholder='e.g. load_tcp "0.0.0.0:1514" { read_syslog } | import'
             value={newCommand}
             onChange={(e) => setNewCommand(e.target.value)}
             fullWidth
@@ -735,12 +829,29 @@ const PipelinesPage = () => {
                 backgroundColor: 'hsl(var(--muted))',
                 fontFamily: 'monospace',
                 fontSize: '0.85rem',
-                '& fieldset': { borderColor: 'hsl(var(--border))' },
+                '& fieldset': { borderColor: justGenerated ? 'rgba(255, 102, 0, 0.6)' : 'hsl(var(--border))' },
+                transition: 'border-color 0.3s',
               },
               '& .MuiOutlinedInput-input': { color: 'hsl(var(--foreground))' },
               '& .MuiInputLabel-root': { color: 'hsl(var(--muted-foreground))' },
             }}
           />
+
+          {justGenerated && (
+            <Chip
+              label="✓ AI Generated"
+              size="small"
+              sx={{
+                mt: 1,
+                height: 20,
+                fontSize: '0.65rem',
+                fontWeight: 600,
+                backgroundColor: 'rgba(255, 102, 0, 0.12)',
+                color: '#FF6600',
+                border: '1px solid rgba(255, 102, 0, 0.3)',
+              }}
+            />
+          )}
 
           {newEnvId && !isSensorRunning(newEnvId) && (
             <Alert severity="warning" sx={{ mt: 2, bgcolor: 'transparent', border: '1px solid rgba(255,152,0,0.3)', color: 'hsl(var(--foreground))' }}>
