@@ -7,7 +7,7 @@
  * matching the usecase's source category visually highlighted (ring glow).
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Box, Typography, Avatar, Tooltip, IconButton, Chip } from '@mui/material';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Plus } from 'lucide-react';
@@ -124,8 +124,9 @@ function getStatusColor(app: AppNode): string {
 
 // ── App bubble component ───────────────────────────────────────────────────────
 
-function AppBubble({ app, size = 40, highlighted = false, isSample = false, disabled = false, onClickApp }: { app: AppNode; size?: number; highlighted?: boolean; isSample?: boolean; disabled?: boolean; onClickApp?: (appName: string) => void }) {
+function AppBubble({ app, size = 40, highlighted = false, isSample = false, disabled = false, onClickApp, onRemoveApp }: { app: AppNode; size?: number; highlighted?: boolean; isSample?: boolean; disabled?: boolean; onClickApp?: (appName: string) => void; onRemoveApp?: (appName: string) => void }) {
   const [imgFailed, setImgFailed] = useState(false);
+  const [hovered, setHovered] = useState(false);
 
   const content = (
     <Box
@@ -139,8 +140,9 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, disa
         cursor: 'pointer',
         '&:hover': { transform: 'scale(1.12)' },
       }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
-      {/* Highlight ring for category-matching apps */}
       {highlighted && (
         <Box
           sx={{
@@ -185,8 +187,7 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, disa
           {app.name.charAt(0).toUpperCase()}
         </Avatar>
       )}
-      {/* Status dot — hide for sample apps */}
-      {!isSample && (
+      {!isSample && !hovered && (
         <Box
           sx={{
             position: 'absolute',
@@ -200,6 +201,39 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, disa
             pointerEvents: 'none',
           }}
         />
+      )}
+      {hovered && onRemoveApp && (
+        <Box
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemoveApp(app.name);
+          }}
+          sx={{
+            position: 'absolute',
+            bottom: -2,
+            right: -2,
+            width: 16,
+            height: 16,
+            borderRadius: '50%',
+            backgroundColor: 'hsl(var(--destructive))',
+            border: '2px solid hsl(var(--card))',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            transition: 'transform 0.1s ease',
+            '&:hover': { transform: 'scale(1.2)' },
+          }}
+        >
+          <Box
+            component="svg"
+            viewBox="0 0 24 24"
+            sx={{ width: 8, height: 8, stroke: 'white', strokeWidth: 3, fill: 'none' }}
+          >
+            <line x1="4" y1="4" x2="20" y2="20" />
+            <line x1="20" y1="4" x2="4" y2="20" />
+          </Box>
+        </Box>
       )}
     </Box>
   );
@@ -329,7 +363,29 @@ export default function UsecaseAlluvialDiagram({
     setSearchParams(newParams, { replace: true });
   };
 
-  // Fetch authenticated + active apps, and ingest workflow
+  // Locally disabled apps (hidden from the diagram)
+  const [hiddenApps, setHiddenApps] = useState<Set<string>>(new Set());
+
+  const handleRemoveApp = useCallback((appName: string) => {
+    // For guests: also remove from URL params
+    if (!isLoggedIn) {
+      const newParams = new URLSearchParams(searchParams);
+      for (const key of ['source', 'dest']) {
+        const current = newParams.get(key);
+        if (current) {
+          const filtered = current.split(',').filter(n => n.toLowerCase() !== appName.toLowerCase());
+          if (filtered.length > 0) {
+            newParams.set(key, filtered.join(','));
+          } else {
+            newParams.delete(key);
+          }
+        }
+      }
+      setSearchParams(newParams, { replace: true });
+    }
+    setHiddenApps(prev => new Set(prev).add(appName.toLowerCase()));
+  }, [isLoggedIn, searchParams, setSearchParams]);
+
   useEffect(() => {
     if (!isLoggedIn) { setLoading(false); return; }
 
@@ -435,7 +491,8 @@ export default function UsecaseAlluvialDiagram({
           isHighlighted: true,
           isEnabled: true,
         }));
-      return [...samples.map(a => ({ ...a, isHighlighted: true, isEnabled: true })), ...guestNodes];
+      return [...samples.map(a => ({ ...a, isHighlighted: true, isEnabled: true })), ...guestNodes]
+        .filter(a => !hiddenApps.has(a.name.toLowerCase()));
     }
     if (highlightCategory && ingestAppNames) {
       // Show ALL validated apps (like /incidents page does)
@@ -462,10 +519,10 @@ export default function UsecaseAlluvialDiagram({
           isEnabled: false,
         }));
 
-      return [...enabledNodes, ...disabledNodes];
+      return [...enabledNodes, ...disabledNodes].filter(a => !hiddenApps.has(a.name.toLowerCase()));
     }
-    return allApps.filter(a => matchesCategory(a.name, sourceCategory) && a.hasValidAuth).map(a => ({ ...a, isEnabled: true }));
-  }, [allApps, sourceCategory, highlightCategory, ingestAppNames, isLoggedIn, guestSourceNames]);
+    return allApps.filter(a => matchesCategory(a.name, sourceCategory) && a.hasValidAuth && !hiddenApps.has(a.name.toLowerCase())).map(a => ({ ...a, isEnabled: true }));
+  }, [allApps, sourceCategory, highlightCategory, ingestAppNames, isLoggedIn, guestSourceNames, hiddenApps]);
 
   // Target/destination apps: use Forward Tickets workflow as source of truth when available
   const targetApps = useMemo(() => {
@@ -481,15 +538,15 @@ export default function UsecaseAlluvialDiagram({
           hasValidAuth: false,
           isActiveOnly: false,
         }));
-      return [...samples, ...guestNodes];
+      return [...samples, ...guestNodes].filter(a => !hiddenApps.has(a.name.toLowerCase()));
     }
     if (highlightCategory && forwardAppNames && forwardAppNames.size > 0) {
       return allApps.filter(a =>
-        forwardAppNames.has(normalizeAppName(a.name)) && matchesCategory(a.name, targetCategory)
+        forwardAppNames.has(normalizeAppName(a.name)) && matchesCategory(a.name, targetCategory) && !hiddenApps.has(a.name.toLowerCase())
       );
     }
-    return allApps.filter(a => matchesCategory(a.name, targetCategory));
-  }, [allApps, targetCategory, highlightCategory, forwardAppNames, isLoggedIn, guestDestNames]);
+    return allApps.filter(a => matchesCategory(a.name, targetCategory) && !hiddenApps.has(a.name.toLowerCase()));
+  }, [allApps, targetCategory, highlightCategory, forwardAppNames, isLoggedIn, guestDestNames, hiddenApps]);
 
   const sourceMeta = TOOL_CATEGORIES.find(c => c.id === sourceCategory);
   const targetMeta = TOOL_CATEGORIES.find(c => c.id === targetCategory);
@@ -715,7 +772,7 @@ export default function UsecaseAlluvialDiagram({
                   pointerEvents: 'auto',
                 }}
               >
-                <AppBubble app={app} size={nodeSize} highlighted={!!app.isHighlighted} isSample={!isLoggedIn} disabled={app.isEnabled === false} onClickApp={setDetailAppName} />
+                <AppBubble app={app} size={nodeSize} highlighted={!!app.isHighlighted} isSample={!isLoggedIn} disabled={app.isEnabled === false} onClickApp={setDetailAppName} onRemoveApp={handleRemoveApp} />
               </Box>
             );
           })}
@@ -751,7 +808,7 @@ export default function UsecaseAlluvialDiagram({
                   pointerEvents: 'auto',
                 }}
               >
-                <AppBubble app={app} size={nodeSize} isSample={!isLoggedIn} onClickApp={setDetailAppName} />
+                <AppBubble app={app} size={nodeSize} isSample={!isLoggedIn} onClickApp={setDetailAppName} onRemoveApp={handleRemoveApp} />
               </Box>
             );
           })}
