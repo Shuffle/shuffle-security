@@ -153,6 +153,9 @@ const PipelinesPage = () => {
   // Action loading
   const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
 
+  // Optimistic pipelines (pending creation)
+  const [pendingPipelines, setPendingPipelines] = useState<Pipeline[]>([]);
+
   // Auto-select best environment when create dialog opens
   useEffect(() => {
     if (createOpen && !newEnvId && environments.length > 0) {
@@ -309,6 +312,24 @@ const PipelinesPage = () => {
     setIsCreating(true);
     try {
       const env = environments.find(e => e.id === newEnvId);
+      const envName = env?.Name || '';
+
+      // Add optimistic pipeline
+      const optimisticId = `pending-${Date.now()}`;
+      const optimisticPipeline: Pipeline = {
+        pipeline: optimisticId,
+        name: newCommand.length > 60 ? newCommand.substring(0, 57) + '...' : newCommand,
+        definition: newCommand,
+        command: newCommand,
+        state: 'creating',
+        _environmentId: newEnvId,
+        _environmentName: envName,
+      };
+      setPendingPipelines(prev => [...prev, optimisticPipeline]);
+      setCreateOpen(false);
+      setNewCommand('');
+      setNewEnvId('');
+
       const response = await fetch(getApiUrl('/api/v1/triggers/pipeline'), {
         method: 'POST',
         credentials: 'include',
@@ -320,7 +341,7 @@ const PipelinesPage = () => {
           command: newCommand,
           name: newCommand,
           type: 'create',
-          environment: env?.Name || '',
+          environment: envName,
           workflow_id: '',
           trigger_id: '',
           start_node: '',
@@ -329,17 +350,20 @@ const PipelinesPage = () => {
 
       if (response.ok) {
         toast.success('Pipeline created');
-        setCreateOpen(false);
-        setNewCommand('');
-        setNewEnvId('');
-        setTimeout(() => fetchEnvironments(), 2000);
+        // Remove optimistic and refresh real data
+        setTimeout(() => {
+          setPendingPipelines(prev => prev.filter(p => p.pipeline !== optimisticId));
+          fetchEnvironments();
+        }, 2000);
       } else {
         const text = await response.text();
         toast.error(`Failed to create: ${text.substring(0, 80)}`);
+        setPendingPipelines(prev => prev.filter(p => p.pipeline !== optimisticId));
       }
     } catch (error) {
       console.error('Error creating pipeline:', error);
       toast.error('Error creating pipeline');
+      setPendingPipelines([]);
     } finally {
       setIsCreating(false);
     }
@@ -400,7 +424,7 @@ Use case: ${aiPrompt}`,
   const uniqueStates = [...new Set(pipelines.map(p => getStateLabel(p)))].sort();
   const uniqueEnvs = [...new Set(pipelines.map(p => p._environmentName))].sort();
 
-  const filtered = pipelines.filter(p => {
+  const filtered = [...pendingPipelines, ...pipelines].filter(p => {
     const label = getPipelineLabel(p).toLowerCase();
     const def = (p.definition || p.command || '').toLowerCase();
     const q = searchQuery.toLowerCase();
@@ -632,6 +656,7 @@ Use case: ${aiPrompt}`,
               {filtered.map((p, idx) => {
                 const id = p.pipeline || p.id || `p-${idx}`;
                 const state = getStateLabel(p);
+                const isPending = state === 'creating';
                 const isRunning = state === 'running' || state === 'active' || state === 'started';
                 const loading = actionLoading[id];
                 const definition = p.definition || p.command || p.pipeline || '';
@@ -640,25 +665,37 @@ Use case: ${aiPrompt}`,
                   <TableRow
                     key={`${p._environmentId}-${id}-${idx}`}
                     className="border-b border-border cursor-pointer hover:bg-muted/50"
-                    onClick={() => setDetailPipeline(p)}
+                    onClick={() => !isPending && setDetailPipeline(p)}
+                    style={isPending ? { opacity: 0.6 } : undefined}
                   >
                     <TableCell className="py-3">
-                      <Typography sx={{ color: 'hsl(var(--foreground))', fontSize: '0.875rem', fontWeight: 500 }}>
-                        {getPipelineLabel(p)}
-                      </Typography>
-                      {p.start_time ? (
-                        <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem', mt: 0.25 }}>
-                          Started {formatTime(p.start_time)}
-                        </Typography>
-                      ) : null}
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        {isPending && <CircularProgress size={14} sx={{ color: '#FF6600', flexShrink: 0 }} />}
+                        <Box>
+                          <Typography sx={{ color: 'hsl(var(--foreground))', fontSize: '0.875rem', fontWeight: 500 }}>
+                            {getPipelineLabel(p)}
+                          </Typography>
+                          {isPending ? (
+                            <Typography sx={{ color: '#FF6600', fontSize: '0.75rem', mt: 0.25 }}>
+                              Deploying...
+                            </Typography>
+                          ) : p.start_time ? (
+                            <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem', mt: 0.25 }}>
+                              Started {formatTime(p.start_time)}
+                            </Typography>
+                          ) : null}
+                        </Box>
+                      </Box>
                     </TableCell>
                     <TableCell>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <Box sx={{
                           width: 6, height: 6, borderRadius: '50%',
-                          backgroundColor: isSensorRunning(p._environmentId)
-                            ? 'hsl(var(--success, 142 76% 36%))'
-                            : 'hsl(var(--muted-foreground))',
+                          backgroundColor: isPending
+                            ? '#FF6600'
+                            : isSensorRunning(p._environmentId)
+                              ? 'hsl(var(--success, 142 76% 36%))'
+                              : 'hsl(var(--muted-foreground))',
                         }} />
                         <Typography sx={{ color: 'hsl(var(--foreground))', fontSize: '0.8rem' }}>
                           {p._environmentName}
@@ -666,13 +703,22 @@ Use case: ${aiPrompt}`,
                       </Box>
                     </TableCell>
                     <TableCell>
-                      <Chip
-                        label={state}
-                        size="small"
-                        color={getStateColor(state)}
-                        variant="outlined"
-                        sx={{ height: 22, fontSize: '0.7rem', fontWeight: 600, textTransform: 'capitalize' }}
-                      />
+                      {isPending ? (
+                        <Chip
+                          label="creating"
+                          size="small"
+                          variant="outlined"
+                          sx={{ height: 22, fontSize: '0.7rem', fontWeight: 600, borderColor: 'rgba(255, 102, 0, 0.4)', color: '#FF6600' }}
+                        />
+                      ) : (
+                        <Chip
+                          label={state}
+                          size="small"
+                          color={getStateColor(state)}
+                          variant="outlined"
+                          sx={{ height: 22, fontSize: '0.7rem', fontWeight: 600, textTransform: 'capitalize' }}
+                        />
+                      )}
                     </TableCell>
                     <TableCell>
                       <Typography
@@ -690,37 +736,43 @@ Use case: ${aiPrompt}`,
                       </Typography>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }} onClick={e => e.stopPropagation()}>
-                        {loading ? (
-                          <CircularProgress size={18} sx={{ color: 'hsl(var(--muted-foreground))' }} />
-                        ) : (
-                          <>
-                            {isRunning ? (
-                              <Tooltip title="Stop">
-                                <IconButton size="small" onClick={() => handleAction(p, 'stop')} sx={{ color: 'hsl(var(--destructive, 0 84% 60%))' }}>
-                                  <StopIcon fontSize="small" />
+                      {isPending ? (
+                        <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.7rem', fontStyle: 'italic' }}>
+                          Validating...
+                        </Typography>
+                      ) : (
+                        <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }} onClick={e => e.stopPropagation()}>
+                          {loading ? (
+                            <CircularProgress size={18} sx={{ color: 'hsl(var(--muted-foreground))' }} />
+                          ) : (
+                            <>
+                              {isRunning ? (
+                                <Tooltip title="Stop">
+                                  <IconButton size="small" onClick={() => handleAction(p, 'stop')} sx={{ color: 'hsl(var(--destructive, 0 84% 60%))' }}>
+                                    <StopIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                              ) : (
+                                <Tooltip title="Start">
+                                  <IconButton size="small" onClick={() => handleAction(p, 'start')} sx={{ color: 'hsl(142 76% 36%)' }}>
+                                    <PlayArrowIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                              )}
+                              <Tooltip title="Copy command">
+                                <IconButton size="small" onClick={() => copyToClipboard(definition)} sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                                  <ContentCopyIcon sx={{ fontSize: 14 }} />
                                 </IconButton>
                               </Tooltip>
-                            ) : (
-                              <Tooltip title="Start">
-                                <IconButton size="small" onClick={() => handleAction(p, 'start')} sx={{ color: 'hsl(142 76% 36%)' }}>
-                                  <PlayArrowIcon fontSize="small" />
+                              <Tooltip title="Delete">
+                                <IconButton size="small" onClick={() => handleAction(p, 'delete')} sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--destructive, 0 84% 60%))' } }}>
+                                  <DeleteIcon sx={{ fontSize: 16 }} />
                                 </IconButton>
                               </Tooltip>
-                            )}
-                            <Tooltip title="Copy command">
-                              <IconButton size="small" onClick={() => copyToClipboard(definition)} sx={{ color: 'hsl(var(--muted-foreground))' }}>
-                                <ContentCopyIcon sx={{ fontSize: 14 }} />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Delete">
-                              <IconButton size="small" onClick={() => handleAction(p, 'delete')} sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--destructive, 0 84% 60%))' } }}>
-                                <DeleteIcon sx={{ fontSize: 16 }} />
-                              </IconButton>
-                            </Tooltip>
-                          </>
-                        )}
-                      </Box>
+                            </>
+                          )}
+                        </Box>
+                      )}
                     </TableCell>
                   </TableRow>
                 );
@@ -775,42 +827,37 @@ Use case: ${aiPrompt}`,
             </MuiSelect>
           </FormControl>
 
-          {/* AI Generation Toggle */}
-          {!showAiSection ? (
+          {/* Pipeline Command with AI button top-right */}
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
+            <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem', fontWeight: 500 }}>
+              Pipeline Command
+            </Typography>
             <Button
               size="small"
               startIcon={<AutoFixHighIcon sx={{ fontSize: '14px !important' }} />}
-              onClick={() => setShowAiSection(true)}
+              onClick={() => setShowAiSection(s => !s)}
               sx={{
-                mb: 2,
                 textTransform: 'none',
-                fontSize: '0.75rem',
+                fontSize: '0.7rem',
                 fontWeight: 600,
-                color: '#FF6600',
-                borderColor: 'rgba(255, 102, 0, 0.3)',
-                '&:hover': { borderColor: '#FF6600', backgroundColor: 'rgba(255, 102, 0, 0.06)' },
+                color: showAiSection ? 'hsl(var(--muted-foreground))' : '#FF6600',
+                py: 0.25,
+                px: 1,
+                minHeight: 0,
               }}
-              variant="outlined"
             >
-              Generate with AI
+              {showAiSection ? 'Close AI' : 'Generate with AI'}
             </Button>
-          ) : (
+          </Box>
+
+          {showAiSection && (
             <Box sx={{
               border: '1px solid hsl(var(--border))',
               borderRadius: 1.5,
-              p: 2,
-              mb: 2,
+              p: 1.5,
+              mb: 1.5,
               backgroundColor: 'rgba(255, 102, 0, 0.03)',
             }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-                <AutoFixHighIcon sx={{ fontSize: 16, color: '#FF6600' }} />
-                <Typography sx={{ color: 'hsl(var(--foreground))', fontSize: '0.8rem', fontWeight: 600, flexGrow: 1 }}>
-                  Generate with AI
-                </Typography>
-                <IconButton size="small" onClick={() => setShowAiSection(false)} sx={{ color: 'hsl(var(--muted-foreground))', p: 0.25 }}>
-                  <Typography sx={{ fontSize: '0.7rem' }}>✕</Typography>
-                </IconButton>
-              </Box>
               <Box sx={{ display: 'flex', gap: 1 }}>
                 <TextField
                   placeholder="e.g. Ingest Windows event logs over TCP and forward matches to OpenSearch"
@@ -856,7 +903,6 @@ Use case: ${aiPrompt}`,
           )}
 
           <TextField
-            label="Pipeline Command"
             placeholder='e.g. load_tcp "0.0.0.0:1514" { read_syslog } | import'
             value={newCommand}
             onChange={(e) => setNewCommand(e.target.value)}
@@ -872,7 +918,6 @@ Use case: ${aiPrompt}`,
                 transition: 'border-color 0.3s',
               },
               '& .MuiOutlinedInput-input': { color: 'hsl(var(--foreground))' },
-              '& .MuiInputLabel-root': { color: 'hsl(var(--muted-foreground))' },
             }}
           />
 
