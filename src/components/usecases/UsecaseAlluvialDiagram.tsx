@@ -131,7 +131,9 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, disa
   const [imgFailed, setImgFailed] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const [confirmRemoveAnchor, setConfirmRemoveAnchor] = useState<HTMLElement | null>(null);
   const popoverOpen = Boolean(anchorEl);
+  const confirmOpen = Boolean(confirmRemoveAnchor);
 
   const displayName = app.name.replace(/_/g, ' ');
   const isEnabled = app.isEnabled !== false;
@@ -224,7 +226,11 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, disa
         <Box
           onClick={(e) => {
             e.stopPropagation();
-            onRemoveApp(app.name);
+            if (isSample) {
+              onRemoveApp(app.name);
+            } else {
+              setConfirmRemoveAnchor(e.currentTarget as HTMLElement);
+            }
           }}
           sx={{
             position: 'absolute',
@@ -352,6 +358,54 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, disa
               {isEnabled ? 'Disable Sync' : 'Enable Sync'}
             </Button>
           )}
+        </Box>
+      </Popover>
+
+      {/* Confirm remove popover */}
+      <Popover
+        open={confirmOpen}
+        anchorEl={confirmRemoveAnchor}
+        onClose={() => setConfirmRemoveAnchor(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'center' }}
+        sx={{ zIndex: 1700 }}
+        slotProps={{
+          paper: {
+            sx: {
+              mt: 0.5,
+              bgcolor: 'hsl(var(--card))',
+              border: '1px solid hsl(var(--border))',
+              borderRadius: 1.5,
+              p: 1.5,
+              minWidth: 180,
+            },
+          },
+        }}
+      >
+        <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: 'hsl(var(--foreground))', mb: 1 }}>
+          Remove {app.name.replace(/_/g, ' ')}?
+        </Typography>
+        <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--muted-foreground))', mb: 1.5 }}>
+          This will hide the app from this diagram.
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+          <Button
+            size="small"
+            onClick={() => setConfirmRemoveAnchor(null)}
+            sx={{ textTransform: 'none', fontSize: '0.72rem', color: 'hsl(var(--muted-foreground))', px: 1.5, py: 0.5, borderRadius: 1, '&:hover': { bgcolor: 'hsl(var(--muted))' } }}
+          >
+            Cancel
+          </Button>
+          <Button
+            size="small"
+            onClick={() => {
+              setConfirmRemoveAnchor(null);
+              onRemoveApp?.(app.name);
+            }}
+            sx={{ textTransform: 'none', fontSize: '0.72rem', color: 'white', bgcolor: 'hsl(var(--destructive))', px: 1.5, py: 0.5, borderRadius: 1, '&:hover': { bgcolor: 'hsl(var(--destructive) / 0.85)' } }}
+          >
+            Remove
+          </Button>
         </Box>
       </Popover>
     </>
