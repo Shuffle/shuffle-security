@@ -3,15 +3,16 @@
  * Selecting an app opens the AppDetailDrawer for full configuration.
  */
 
-import { useState, useEffect } from 'react';
-import { Box, Typography, IconButton, Drawer, Avatar, Skeleton, Tooltip } from '@mui/material';
+import { useState } from 'react';
+import { Box, Typography, IconButton, Drawer } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SingulJS } from '@/lib/singul-local';
 import type { AppSelectedEvent } from '@/lib/singul-local';
-import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
+import { API_CONFIG } from '@/config/api';
 import AppDetailDrawer from '@/components/shared/AppDetailDrawer';
 import { ShufflePipelinesBanner } from '@/components/usecases/UsecaseAlluvialDiagram';
+import { IntegrationStatus } from '@/components/layout/IntegrationStatus';
 
 // Singul styles — compact dark theme
 const singulStyles = {
@@ -92,13 +93,6 @@ const singulStyles = {
   },
 };
 
-interface AvailableApp {
-  name: string;
-  large_image?: string;
-  categories?: string[];
-  activated?: boolean;
-}
-
 interface AppSearchDrawerProps {
   open: boolean;
   onClose: () => void;
@@ -125,32 +119,6 @@ export default function AppSearchDrawer({
   onQuickSelect,
 }: AppSearchDrawerProps) {
   const [detailAppName, setDetailAppName] = useState<string | null>(null);
-  const [availableApps, setAvailableApps] = useState<AvailableApp[]>([]);
-  const [appsLoading, setAppsLoading] = useState(false);
-
-  // Fetch available apps when drawer opens
-  useEffect(() => {
-    if (!open || !API_CONFIG.apiKey) return;
-    setAppsLoading(true);
-    (async () => {
-      try {
-        const res = await fetch(getApiUrl('/api/v1/apps'), {
-          credentials: 'include',
-          headers: { ...getAuthHeader() },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data)) {
-            setAvailableApps(data.filter((a: any) => a.name));
-          }
-        }
-      } catch {
-        // silently fail
-      } finally {
-        setAppsLoading(false);
-      }
-    })();
-  }, [open]);
 
   const handleClose = () => {
     setDetailAppName(null);
@@ -168,19 +136,6 @@ export default function AppSearchDrawer({
       return;
     }
     setDetailAppName(detail.app.name);
-  };
-
-  const handleAvailableAppClick = (app: AvailableApp) => {
-    if (onQuickSelect) {
-      onQuickSelect({
-        name: app.name,
-        icon: app.large_image || '',
-        categories: app.categories || [],
-      });
-      onClose();
-      return;
-    }
-    setDetailAppName(app.name);
   };
 
   return (
@@ -232,74 +187,10 @@ export default function AppSearchDrawer({
         <Box sx={{ flex: 1, overflowY: 'auto', p: 3, minHeight: '92vh' }}>
           {showPipelinesBanner && <ShufflePipelinesBanner />}
 
-          {/* Available apps row */}
-          {API_CONFIG.apiKey && (appsLoading || availableApps.length > 0) && (
+          {/* Your Apps — reuse IntegrationStatus */}
+          {API_CONFIG.apiKey && (
             <Box sx={{ mb: 2.5 }}>
-              <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>
-                Your Apps
-              </Typography>
-              <Box sx={{
-                display: 'flex',
-                gap: 1,
-                overflowX: 'auto',
-                pb: 1,
-                '&::-webkit-scrollbar': { height: 4 },
-                '&::-webkit-scrollbar-thumb': { bgcolor: 'hsl(var(--border))', borderRadius: 2 },
-              }}>
-                {appsLoading ? (
-                  Array.from({ length: 6 }).map((_, i) => (
-                    <Skeleton key={i} variant="rounded" width={56} height={56} sx={{ borderRadius: 2, flexShrink: 0, bgcolor: 'hsl(var(--muted) / 0.3)' }} />
-                  ))
-                ) : (
-                  availableApps.map((app) => (
-                    <Tooltip key={app.name} title={app.name.replace(/_/g, ' ')} placement="bottom" arrow>
-                      <Box
-                        onClick={() => handleAvailableAppClick(app)}
-                        sx={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          gap: 0.5,
-                          p: 1,
-                          borderRadius: 2,
-                          border: '1px solid hsl(var(--border))',
-                          bgcolor: 'hsl(var(--card))',
-                          cursor: 'pointer',
-                          flexShrink: 0,
-                          minWidth: 56,
-                          transition: 'all 0.15s ease',
-                          '&:hover': {
-                            borderColor: 'hsla(25, 100%, 50%, 0.5)',
-                            bgcolor: 'hsla(25, 100%, 50%, 0.06)',
-                          },
-                        }}
-                      >
-                        <Avatar
-                          src={app.large_image || `${API_CONFIG.baseUrl}/api/v1/apps/${encodeURIComponent(app.name)}/config?field=large_image`}
-                          alt={app.name}
-                          variant="rounded"
-                          sx={{ width: 32, height: 32, bgcolor: 'transparent' }}
-                          imgProps={{ style: { objectFit: 'contain', padding: 2 } }}
-                        >
-                          {app.name.charAt(0).toUpperCase()}
-                        </Avatar>
-                        <Typography sx={{
-                          fontSize: '0.6rem',
-                          color: 'hsl(var(--muted-foreground))',
-                          fontWeight: 500,
-                          maxWidth: 56,
-                          textAlign: 'center',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                        }}>
-                          {app.name.replace(/_/g, ' ')}
-                        </Typography>
-                      </Box>
-                    </Tooltip>
-                  ))
-                )}
-              </Box>
+              <IntegrationStatus collapsed={false} showAll hideAddButton />
             </Box>
           )}
 
