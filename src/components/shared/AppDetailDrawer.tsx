@@ -265,13 +265,13 @@ export default function AppDetailDrawer({
   const algoliaApp: AlgoliaSearchApp | null = useMemo(() => {
     if (!appName) return null;
     return {
-      objectID: appName,
+      objectID: resolvedAlgoliaId || appName,
       name: appName,
       image_url: resolvedImage,
       description: appInfo?.description || '',
       categories: appInfo?.categories || [],
     } as AlgoliaSearchApp;
-  }, [appName, appInfo, resolvedImage]);
+  }, [appName, appInfo, resolvedImage, resolvedAlgoliaId]);
 
   const authState = authStates[appName || ''] || { systemId: appName || '', status: 'pending' as const, credentials: {} };
   const hasValidAuth = matchingEntries.some(e => e.validation?.valid === true);
