@@ -8,7 +8,7 @@
  */
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Box, Typography, Avatar, Tooltip, IconButton, Chip, Popover, Button } from '@mui/material';
+import { Box, Typography, Avatar, Tooltip, IconButton, Chip, Popover, Button, Dialog } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import BlockIcon from '@mui/icons-material/Block';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
@@ -131,9 +131,8 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, disa
   const [imgFailed, setImgFailed] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-  const [confirmRemoveAnchor, setConfirmRemoveAnchor] = useState<HTMLElement | null>(null);
+  const [confirmRemoveOpen, setConfirmRemoveOpen] = useState(false);
   const popoverOpen = Boolean(anchorEl);
-  const confirmOpen = Boolean(confirmRemoveAnchor);
 
   const displayName = app.name.replace(/_/g, ' ');
   const isEnabled = app.isEnabled !== false;
@@ -229,7 +228,7 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, disa
             if (isSample) {
               onRemoveApp(app.name);
             } else {
-              setConfirmRemoveAnchor(e.currentTarget as HTMLElement);
+              setConfirmRemoveOpen(true);
             }
           }}
           sx={{
@@ -361,53 +360,47 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, disa
         </Box>
       </Popover>
 
-      {/* Confirm remove popover */}
-      <Popover
-        open={confirmOpen}
-        anchorEl={confirmRemoveAnchor}
-        onClose={() => setConfirmRemoveAnchor(null)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'center' }}
-        sx={{ zIndex: 1700 }}
-        slotProps={{
-          paper: {
-            sx: {
-              mt: 0.5,
-              bgcolor: 'hsl(var(--card))',
-              border: '1px solid hsl(var(--border))',
-              borderRadius: 1.5,
-              p: 1.5,
-              minWidth: 180,
-            },
+      {/* Confirm remove dialog */}
+      <Dialog
+        open={confirmRemoveOpen}
+        onClose={() => setConfirmRemoveOpen(false)}
+        PaperProps={{
+          sx: {
+            bgcolor: 'hsl(var(--card))',
+            border: '1px solid hsl(var(--border))',
+            borderRadius: 2,
+            p: 2.5,
+            minWidth: 320,
+            maxWidth: 400,
           },
         }}
       >
-        <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: 'hsl(var(--foreground))', mb: 1 }}>
+        <Typography sx={{ fontSize: '0.95rem', fontWeight: 600, color: 'hsl(var(--foreground))', mb: 0.5 }}>
           Remove {app.name.replace(/_/g, ' ')}?
         </Typography>
-        <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--muted-foreground))', mb: 1.5 }}>
+        <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))', mb: 2 }}>
           This will hide the app from this diagram.
         </Typography>
         <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
           <Button
             size="small"
-            onClick={() => setConfirmRemoveAnchor(null)}
-            sx={{ textTransform: 'none', fontSize: '0.72rem', color: 'hsl(var(--muted-foreground))', px: 1.5, py: 0.5, borderRadius: 1, '&:hover': { bgcolor: 'hsl(var(--muted))' } }}
+            onClick={() => setConfirmRemoveOpen(false)}
+            sx={{ textTransform: 'none', fontSize: '0.78rem', color: 'hsl(var(--muted-foreground))', px: 2, py: 0.5, borderRadius: 1, '&:hover': { bgcolor: 'hsl(var(--muted))' } }}
           >
             Cancel
           </Button>
           <Button
             size="small"
             onClick={() => {
-              setConfirmRemoveAnchor(null);
+              setConfirmRemoveOpen(false);
               onRemoveApp?.(app.name);
             }}
-            sx={{ textTransform: 'none', fontSize: '0.72rem', color: 'white', bgcolor: 'hsl(var(--destructive))', px: 1.5, py: 0.5, borderRadius: 1, '&:hover': { bgcolor: 'hsl(var(--destructive) / 0.85)' } }}
+            sx={{ textTransform: 'none', fontSize: '0.78rem', color: 'white', bgcolor: 'hsl(var(--destructive))', px: 2, py: 0.5, borderRadius: 1, '&:hover': { bgcolor: 'hsl(var(--destructive) / 0.85)' } }}
           >
             Remove
           </Button>
         </Box>
-      </Popover>
+      </Dialog>
     </>
   );
 }
