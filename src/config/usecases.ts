@@ -511,7 +511,7 @@ export const DEFAULT_USECASES: Usecase[] = [
   },
   {
     id: 'cloud_siem_1', phase: 'ingest', source: 'cloud', target: 'siem',
-    label: 'Audit logs', animated: true,
+    label: 'Audit logs',
     tags: ['Logs', 'Detection'],
     manualVerification: true,
     description: 'Cloud audit logs (CloudTrail, Activity Log, Audit Logs) provide visibility into API calls, configuration changes, and access patterns across cloud environments.',
@@ -580,7 +580,7 @@ export const DEFAULT_USECASES: Usecase[] = [
   },
   {
     id: 'asset_management_siem_1', phase: 'ingest', source: 'asset_management', target: 'siem',
-    label: 'Endpoint logs', animated: true,
+    label: 'Endpoint logs',
     tags: ['Logs', 'Detection', 'Alert'],
     manualVerification: true,
     description: 'Forwarding endpoint telemetry and asset logs (process events, file changes, network connections, vulnerability scan results) to the SIEM enriches correlation and enables asset-aware detections.',
