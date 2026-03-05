@@ -1122,35 +1122,57 @@ Use case: ${aiPrompt}`,
                   </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
-                  {templates.map((dp) => (
-                    <Box
-                      key={dp.label}
-                      onClick={() => {
-                        setNewCommand(dp.command);
-                        setCreateOpen(true);
-                      }}
-                      sx={{
-                        border: dp.recommended
-                          ? '1px solid rgba(255, 102, 0, 0.35)'
-                          : '1px solid hsl(var(--border))',
-                        borderRadius: 1.5,
-                        px: 1.5,
-                        py: 1.25,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 1,
-                        cursor: 'pointer',
-                        transition: 'all 0.15s',
-                        bgcolor: dp.recommended ? 'rgba(255, 102, 0, 0.06)' : 'transparent',
-                        '&:hover': { borderColor: 'rgba(255, 102, 0, 0.5)', backgroundColor: 'rgba(255, 102, 0, 0.08)' },
-                      }}
-                    >
-                      <RocketLaunchIcon sx={{ fontSize: 14, color: dp.recommended ? 'rgb(255, 102, 0)' : 'hsl(var(--muted-foreground))', flexShrink: 0 }} />
-                      <Typography sx={{ color: 'hsl(var(--foreground))', fontSize: '0.8rem', fontWeight: dp.recommended ? 600 : 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {dp.label}
-                      </Typography>
-                    </Box>
-                  ))}
+                  {templates.map((dp) => {
+                    // Check if a deployed pipeline closely matches this template
+                    const isDeployed = pipelines.some(p => {
+                      const cmd = (p.definition || p.command || p.name || '').toLowerCase();
+                      return dp.matchKeys.some(k => cmd.includes(k.toLowerCase()));
+                    });
+                    const deployedAndRunning = isDeployed && pipelines.some(p => {
+                      const cmd = (p.definition || p.command || p.name || '').toLowerCase();
+                      const matches = dp.matchKeys.some(k => cmd.includes(k.toLowerCase()));
+                      if (!matches) return false;
+                      const state = (p.state || getStateLabel(p)).toLowerCase();
+                      return state === 'running' || state === 'active' || state === 'started';
+                    });
+
+                    return (
+                      <Box
+                        key={dp.label}
+                        onClick={() => {
+                          setNewCommand(dp.command);
+                          setCreateOpen(true);
+                        }}
+                        sx={{
+                          border: deployedAndRunning
+                            ? '1px solid rgba(34, 197, 94, 0.4)'
+                            : dp.recommended
+                              ? '1px solid rgba(255, 102, 0, 0.35)'
+                              : '1px solid hsl(var(--border))',
+                          borderRadius: 1.5,
+                          px: 1.5,
+                          py: 1.25,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1,
+                          cursor: 'pointer',
+                          transition: 'all 0.15s',
+                          bgcolor: deployedAndRunning
+                            ? 'rgba(34, 197, 94, 0.08)'
+                            : 'transparent',
+                          '&:hover': { borderColor: deployedAndRunning ? 'rgba(34, 197, 94, 0.6)' : 'rgba(255, 102, 0, 0.5)', backgroundColor: deployedAndRunning ? 'rgba(34, 197, 94, 0.12)' : 'rgba(255, 102, 0, 0.08)' },
+                        }}
+                      >
+                        <RocketLaunchIcon sx={{ fontSize: 14, color: deployedAndRunning ? '#22c55e' : dp.recommended ? 'rgb(255, 102, 0)' : 'hsl(var(--muted-foreground))', flexShrink: 0 }} />
+                        <Typography sx={{ color: 'hsl(var(--foreground))', fontSize: '0.8rem', fontWeight: (dp.recommended || deployedAndRunning) ? 600 : 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {dp.label}
+                        </Typography>
+                        {deployedAndRunning && (
+                          <Chip label="Running" size="small" sx={{ height: 18, fontSize: '0.6rem', fontWeight: 600, bgcolor: 'rgba(34, 197, 94, 0.15)', color: '#22c55e', '& .MuiChip-label': { px: 0.75 } }} />
+                        )}
+                      </Box>
+                    );
+                  })}
                 </Box>
               </Box>
             );
