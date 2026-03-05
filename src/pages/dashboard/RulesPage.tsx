@@ -454,15 +454,12 @@ const RulesPage = () => {
   };
 
   const handleImproveWithAI = async () => {
-    if (!ruleContent.trim()) {
-      toast.error('No rule content to improve');
+    if (!ruleContent.trim() || !aiPrompt.trim()) {
       return;
     }
     setIsGenerating(true);
-    setPreAiContent(ruleContent);
-    const instruction = aiPrompt.trim()
-      ? `Modify this Sigma detection rule according to the following instruction: "${aiPrompt.trim()}". Only output the updated YAML, no explanation:\n\n${ruleContent}`
-      : `Improve and fix this Sigma detection rule. Keep the same intent but enhance the detection logic, fix any YAML issues, and add missing fields if appropriate. Only output the improved YAML, no explanation:\n\n${ruleContent}`;
+    if (preAiContent === null) setPreAiContent(ruleContent); // preserve original only on first AI edit
+    const instruction = `Modify this Sigma detection rule according to the following instruction: "${aiPrompt.trim()}". Only output the updated YAML, no explanation:\n\n${ruleContent}`;
     try {
       const { success, result, error } = await askAI({ query: instruction });
       if (success && result) {
@@ -1077,7 +1074,7 @@ const RulesPage = () => {
                     value={aiPrompt}
                     onChange={(e) => setAiPrompt(e.target.value)}
                     placeholder="e.g. Add more false positives, broaden detection…"
-                    onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleImproveWithAI(); } }}
+                    onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && aiPrompt.trim()) { e.preventDefault(); handleImproveWithAI(); } }}
                     sx={{
                       minWidth: 300,
                       '& .MuiOutlinedInput-root': {
@@ -1099,7 +1096,7 @@ const RulesPage = () => {
                     variant="outlined"
                     startIcon={isGenerating ? <CircularProgress size={14} color="inherit" /> : <AutoFixHighIcon sx={{ fontSize: 14 }} />}
                     onClick={handleImproveWithAI}
-                    disabled={isGenerating || !ruleContent.trim()}
+                    disabled={isGenerating || !ruleContent.trim() || !aiPrompt.trim()}
                     sx={{
                       textTransform: 'none',
                       fontSize: '0.75rem',
@@ -1109,7 +1106,7 @@ const RulesPage = () => {
                       '&:hover': { borderColor: 'hsl(var(--primary))', bgcolor: 'hsl(var(--primary) / 0.08)' },
                     }}
                   >
-                    {isGenerating ? 'Improving…' : aiPrompt.trim() ? 'Apply' : 'Improve'}
+                    {isGenerating ? 'Improving…' : 'Improve'}
                   </Button>
                 </Box>
               ) : (
