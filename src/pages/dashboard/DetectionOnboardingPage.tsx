@@ -1,4 +1,4 @@
-import { useState, useEffect, forwardRef } from 'react';
+import { useState, useEffect, forwardRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Box,
@@ -33,6 +33,8 @@ import AddIcon from '@mui/icons-material/Add';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { DeploymentInstructions } from '@/components/detection/DeploymentInstructions';
 import WebhookStatusBanner, { WebhookActiveChip } from '@/components/detection/WebhookStatusBanner';
+import ProductionPipelineStatus from '@/components/detection/ProductionPipelineStatus';
+import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import azureLogo from '@/assets/azure-logo.png';
 import gcpLogo from '@/assets/gcp-logo.png';
 import awsLogo from '@/assets/aws-logo.png';
@@ -2633,6 +2635,72 @@ const DetectionOnboardingPage = () => {
                 {testStatus.message}
               </Alert>
             )}
+          </Box>
+        </Collapse>
+      </Paper>
+
+      {/* Step 4: Production */}
+      <Paper
+        sx={{
+          backgroundColor: 'hsl(var(--card))',
+          border: '1px solid hsl(var(--border))',
+          borderRadius: 2,
+          mt: 2,
+          mb: 2,
+          overflow: 'hidden',
+          opacity: testStatus.success ? 1 : 0.6,
+        }}
+      >
+        <Box
+          onClick={() => { setUserToggledStep(true); setExpandedStep(expandedStep === 4 ? null : 4); }}
+          sx={{
+            p: 3,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+            cursor: 'pointer',
+            '&:hover': { backgroundColor: 'hsl(var(--muted) / 0.3)' },
+          }}
+        >
+          {(() => {
+            const env = selectedEnvironment;
+            const running = env ? isSensorRunning(env) : false;
+            const ready = env ? isPipelineReady(env) : false;
+            const allGood = running && ready && webhookStatus.ready;
+            return allGood
+              ? <CheckCircleIcon sx={{ color: 'hsl(var(--severity-low))', fontSize: 28 }} />
+              : <Box sx={{
+                  width: 28, height: 28, borderRadius: '50%',
+                  border: '2px solid hsl(var(--border))',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: 'hsl(var(--muted-foreground))', fontWeight: 600, fontSize: '0.85rem',
+                }}>4</Box>;
+          })()}
+          <Box sx={{ flex: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <RocketLaunchIcon sx={{ color: 'hsl(var(--primary))', fontSize: 20 }} />
+              <Typography sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+                Production
+              </Typography>
+            </Box>
+            <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.875rem', mt: 0.5 }}>
+              Visualize the end-to-end data flow and identify where the pipeline may be interrupted
+            </Typography>
+          </Box>
+          {expandedStep === 4 ? (
+            <ExpandLessIcon sx={{ color: 'hsl(var(--muted-foreground))' }} />
+          ) : (
+            <ExpandMoreIcon sx={{ color: 'hsl(var(--muted-foreground))' }} />
+          )}
+        </Box>
+
+        <Collapse in={expandedStep === 4}>
+          <Box sx={{ px: 3, pb: 3, pt: 1 }}>
+            <ProductionPipelineStatus
+              environment={selectedEnvironment}
+              sensorRunning={selectedEnvironment ? isSensorRunning(selectedEnvironment) : false}
+              pipelineReady={selectedEnvironment ? isPipelineReady(selectedEnvironment) : false}
+            />
           </Box>
         </Collapse>
       </Paper>
