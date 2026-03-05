@@ -255,6 +255,7 @@ interface Filters {
   tlp: string | null;
   assignee: string | null;
   source: string | null;
+  tag: string | null;
 }
 
 const IncidentsPage = () => {
@@ -263,7 +264,7 @@ const IncidentsPage = () => {
   const { users, loading: usersLoading } = useUsers();
 
   const [searchParams, setSearchParams] = useSearchParams();
-  const [filters, setFilters] = useState<Filters>({ severity: null, status: null, tlp: null, assignee: null, source: null });
+  const [filters, setFilters] = useState<Filters>({ severity: null, status: null, tlp: null, assignee: null, source: null, tag: null });
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [automationsDialogOpen, setAutomationsDialogOpen] = useState(false);
   const [categoryAutomations, setCategoryAutomations] = useState<CategoryAutomation[] | null>(null);
@@ -551,6 +552,9 @@ const IncidentsPage = () => {
     if (filters.source) {
       result = result.filter(i => (i.source || '').toLowerCase() === filters.source!.toLowerCase());
     }
+    if (filters.tag) {
+      result = result.filter(i => i.labels?.some(l => l.toLowerCase() === filters.tag!.toLowerCase()));
+    }
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -614,7 +618,7 @@ const IncidentsPage = () => {
   };
 
   const resetToDefaults = () => {
-    setFilters({ severity: null, status: ['new', 'in_progress'], tlp: null, assignee: null, source: null });
+    setFilters({ severity: null, status: ['new', 'in_progress'], tlp: null, assignee: null, source: null, tag: null });
     setSearchQuery('');
     setSelectedIds(new Set());
   };
@@ -723,12 +727,22 @@ const IncidentsPage = () => {
   const isDefaultFilter = !filters.severity && 
     !filters.tlp && 
     !filters.source &&
+    !filters.tag &&
     filters.assignee === null && 
     !searchQuery.trim() &&
     Array.isArray(filters.status) && 
     filters.status.length === 2 && 
     filters.status.includes('new') && 
     filters.status.includes('in_progress');
+
+  // Collect unique tags across all active incidents for the filter UI
+  const allTags = useMemo(() => {
+    const tagSet = new Set<string>();
+    activeIncidents.forEach(inc => {
+      inc.labels?.forEach(l => { if (l.trim()) tagSet.add(l); });
+    });
+    return Array.from(tagSet).sort();
+  }, [activeIncidents]);
 
   // Show empty state when no relevant incidents exist (after loading completes)
   // But NOT when there was a load error — show error state instead
@@ -1206,6 +1220,42 @@ const IncidentsPage = () => {
                     '& .MuiChip-deleteIcon': { color: '#60a5fa' },
                   }}
                 />
+              )}
+
+              {filters.tag && (
+                <Chip
+                  label={`Tag: ${filters.tag}`}
+                  size="small"
+                  onDelete={() => setFilters(prev => ({ ...prev, tag: null }))}
+                  sx={{ 
+                    backgroundColor: 'rgba(6, 182, 212, 0.15)',
+                    color: '#06b6d4',
+                    fontWeight: 500,
+                    '& .MuiChip-deleteIcon': { color: '#06b6d4' },
+                  }}
+                />
+              )}
+
+              {/* Tag quick-filter chips */}
+              {!filters.tag && allTags.length > 0 && (
+                <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center', flexWrap: 'wrap', maxWidth: 320, overflow: 'hidden' }}>
+                  {allTags.slice(0, 8).map(tag => (
+                    <Chip
+                      key={tag}
+                      label={tag}
+                      size="small"
+                      onClick={() => setFilters(prev => ({ ...prev, tag }))}
+                      sx={{
+                        fontSize: '0.7rem',
+                        height: 24,
+                        backgroundColor: 'rgba(6, 182, 212, 0.08)',
+                        color: '#06b6d4',
+                        cursor: 'pointer',
+                        '&:hover': { backgroundColor: 'rgba(6, 182, 212, 0.2)' },
+                      }}
+                    />
+                  ))}
+                </Box>
               )}
 
               {!isDefaultFilter && (
