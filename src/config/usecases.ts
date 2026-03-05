@@ -386,7 +386,7 @@ export function normalizeCategory(apiCategory: string): string {
 export const DEFAULT_USECASES: Usecase[] = [
   {
     id: 'siem_case_management_1', phase: 'ingest', source: 'siem', target: 'case_management',
-    label: 'SIEM to Ticket', animated: true,
+    label: 'SIEM alerts', animated: true,
     tags: ['Alert', 'Detection', 'Logs'],
     description: 'SIEM-generated alerts are the primary trigger for new cases. Automating this flow ensures no critical detection goes uninvestigated and reduces mean time to respond (MTTR).',
     agenticDescription: 'An agent triages incoming alerts, deduplicates them against open cases, scores severity using threat intel context, and auto-assigns to the right analyst based on type and on-call schedule.',
@@ -406,7 +406,7 @@ export const DEFAULT_USECASES: Usecase[] = [
   },
   {
     id: 'email_case_management_1', phase: 'ingest', source: 'email', target: 'case_management',
-    label: 'Phishing reports', animated: true,
+    label: 'Email reports', animated: true,
     tags: ['Alert', 'Logs'],
     description: 'User-reported phishing emails create cases for triage. Automating intake with deduplication and auto-enrichment drastically cuts analyst workload.',
     agenticDescription: 'An agent parses reported emails, extracts and enriches all IOCs, determines phishing verdict using threat intel, and auto-closes low-risk reports while escalating confirmed campaigns.',
