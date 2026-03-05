@@ -8,10 +8,12 @@
  */
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Box, Typography, Avatar, Tooltip, IconButton, Chip, Popover, Button, Dialog } from '@mui/material';
+import { Box, Typography, Avatar, Tooltip, IconButton, Chip, Popover, Button, Dialog, InputBase } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import BlockIcon from '@mui/icons-material/Block';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import CheckIcon from '@mui/icons-material/Check';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Plus, Webhook } from 'lucide-react';
 import AppSearchDrawer from '@/components/shared/AppSearchDrawer';
@@ -127,19 +129,22 @@ function getStatusColor(app: AppNode): string {
 
 // ── App bubble component ───────────────────────────────────────────────────────
 
-function AppBubble({ app, size = 40, highlighted = false, isSample = false, disabled = false, onClickApp, onRemoveApp, onToggleSync, onVisitApp }: { app: AppNode; size?: number; highlighted?: boolean; isSample?: boolean; disabled?: boolean; onClickApp?: (appName: string) => void; onRemoveApp?: (appName: string) => void; onToggleSync?: (appName: string, enabled: boolean) => void; onVisitApp?: (appName: string) => void }) {
+function AppBubble({ app, size = 40, highlighted = false, isSample = false, disabled = false, onClickApp, onRemoveApp, onToggleSync, onVisitApp, webhookInfo, onWebhookToggled }: { app: AppNode; size?: number; highlighted?: boolean; isSample?: boolean; disabled?: boolean; onClickApp?: (appName: string) => void; onRemoveApp?: (appName: string) => void; onToggleSync?: (appName: string, enabled: boolean) => void; onVisitApp?: (appName: string) => void; webhookInfo?: { url: string | null; exists: boolean; enabled: boolean; workflowId: string | null }; onWebhookToggled?: () => void }) {
   const [imgFailed, setImgFailed] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [confirmRemoveOpen, setConfirmRemoveOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [webhookOptimistic, setWebhookOptimistic] = useState<boolean | null>(null);
   const popoverOpen = Boolean(anchorEl);
 
   const displayName = app.name.replace(/_/g, ' ');
   const isEnabled = app.isEnabled !== false;
   const isWebhook = app.id === 'webhook-ingestion';
+  const webhookEnabled = webhookOptimistic !== null ? webhookOptimistic : (webhookInfo?.enabled ?? false);
 
   const handleClick = (e: React.MouseEvent<HTMLElement>) => {
-    if (isSample || isWebhook) return;
+    if (isSample) return;
     setAnchorEl(e.currentTarget);
   };
 
@@ -180,8 +185,9 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, disa
           sx={{
             width: size,
             height: size,
-            backgroundColor: 'rgba(6, 182, 212, 0.15)',
-            color: '#06b6d4',
+            backgroundColor: webhookEnabled ? 'rgba(34, 197, 94, 0.15)' : 'rgba(6, 182, 212, 0.15)',
+            color: webhookEnabled ? '#4ade80' : '#06b6d4',
+            opacity: webhookEnabled ? 1 : 0.5,
           }}
         >
           <Webhook size={size * 0.5} />
@@ -298,7 +304,7 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, disa
         )}
       </Tooltip>
 
-      {/* Popover — same style as IngestionSourceButton on /incidents */}
+      {/* Popover — webhook or app actions */}
       <Popover
         open={popoverOpen}
         anchorEl={anchorEl}
@@ -314,80 +320,150 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, disa
               border: '1px solid hsl(var(--border))',
               borderRadius: 1.5,
               p: 1.5,
-              minWidth: 160,
+              minWidth: isWebhook ? 280 : 160,
+              maxWidth: isWebhook ? 400 : undefined,
             },
           },
         }}
       >
-        <Typography variant="caption" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))', textTransform: 'capitalize', mb: 1, display: 'block' }}>
-          {displayName}
-          {!isEnabled && (
-            <Chip label="Not Active" size="small" sx={{ ml: 0.5, height: 18, fontSize: '0.65rem', bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }} />
-          )}
-        </Typography>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-          <Button
-            size="small"
-            startIcon={<OpenInNewIcon sx={{ fontSize: 14 }} />}
-            onClick={() => {
-              setAnchorEl(null);
-              onVisitApp?.(app.name);
-            }}
-            sx={{
-              justifyContent: 'flex-start',
-              textTransform: 'none',
-              fontSize: '0.75rem',
-              color: 'hsl(var(--foreground))',
-              px: 1,
-              py: 0.5,
-              borderRadius: 1,
-              '&:hover': { bgcolor: 'hsl(var(--muted))' },
-            }}
-          >
-            Visit app
-          </Button>
-          {onToggleSync && (
+        {isWebhook ? (
+          /* Webhook popover — same UX as /incidents WebhookIngestionButton */
+          <>
+            <Typography variant="caption" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))', mb: 0.5, display: 'block' }}>
+              Ingestion Webhook
+              {!webhookEnabled && (
+                <Chip label="Not Active" size="small" sx={{ ml: 0.5, height: 18, fontSize: '0.65rem', bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }} />
+              )}
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', mb: 1, display: 'block', lineHeight: 1.4 }}>
+              {webhookEnabled
+                ? 'Send alerts to this URL to push incidents directly.'
+                : webhookInfo?.exists
+                  ? 'This webhook is currently stopped. Enable it to receive pushed alerts.'
+                  : 'Enable to create a webhook endpoint for pushing alerts.'}
+            </Typography>
+
+            {webhookEnabled && webhookInfo?.url && (
+              <Box sx={{
+                display: 'flex', alignItems: 'center', gap: 0.5,
+                bgcolor: 'hsl(var(--muted) / 0.5)', border: '1px solid hsl(var(--border))',
+                borderRadius: 1, px: 1, py: 0.5, mb: 1,
+              }}>
+                <InputBase
+                  value={webhookInfo.url}
+                  readOnly
+                  fullWidth
+                  sx={{ fontSize: '0.7rem', fontFamily: 'monospace', color: 'hsl(var(--foreground))', '& input': { p: 0 } }}
+                />
+                <IconButton size="small" onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(webhookInfo.url!);
+                    setCopied(true);
+                    import('sonner').then(({ toast }) => toast.success('Webhook URL copied'));
+                    setTimeout(() => setCopied(false), 2000);
+                  } catch { import('sonner').then(({ toast }) => toast.error('Failed to copy')); }
+                }} sx={{ p: 0.5, color: 'hsl(var(--muted-foreground))' }}>
+                  {copied ? <CheckIcon sx={{ fontSize: 14, color: '#4ade80' }} /> : <ContentCopyIcon sx={{ fontSize: 14 }} />}
+                </IconButton>
+              </Box>
+            )}
+
             <Button
               size="small"
-              startIcon={isEnabled ? <BlockIcon sx={{ fontSize: 14 }} /> : <CheckCircleOutlineIcon sx={{ fontSize: 14 }} />}
-              onClick={handleToggle}
-              sx={{
-                justifyContent: 'flex-start',
-                textTransform: 'none',
-                fontSize: '0.75rem',
-                color: isEnabled ? 'hsl(var(--destructive))' : '#22c55e',
-                px: 1,
-                py: 0.5,
-                borderRadius: 1,
-                '&:hover': { bgcolor: isEnabled ? 'hsl(var(--destructive) / 0.1)' : 'rgba(34, 197, 94, 0.1)' },
-              }}
-            >
-              {isEnabled ? 'Disable Sync' : 'Enable Sync'}
-            </Button>
-          )}
-          {onRemoveApp && (
-            <Button
-              size="small"
-              startIcon={<Box component="svg" viewBox="0 0 24 24" sx={{ width: 14, height: 14, stroke: 'currentColor', strokeWidth: 2, fill: 'none' }}><line x1="4" y1="4" x2="20" y2="20" /><line x1="20" y1="4" x2="4" y2="20" /></Box>}
-              onClick={() => {
+              startIcon={webhookEnabled ? <BlockIcon sx={{ fontSize: 14 }} /> : <CheckCircleOutlineIcon sx={{ fontSize: 14 }} />}
+              onClick={async () => {
+                const willBeEnabled = !webhookEnabled;
+                setWebhookOptimistic(willBeEnabled);
                 setAnchorEl(null);
-                setConfirmRemoveOpen(true);
+                try {
+                  const res = await fetch(getApiUrl('/api/v2/workflows/generate'), {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      label: 'Ingest Tickets_webhook',
+                      ...(willBeEnabled ? {} : { action_name: 'remove' }),
+                    }),
+                  });
+                  if (!res.ok) throw new Error();
+                  import('sonner').then(({ toast }) => toast.success(willBeEnabled ? 'Ingestion Webhook enabled' : 'Ingestion Webhook disabled'));
+                  setWebhookOptimistic(null);
+                  onWebhookToggled?.();
+                } catch {
+                  setWebhookOptimistic(null);
+                  import('sonner').then(({ toast }) => toast.error('Failed to update webhook status'));
+                }
               }}
               sx={{
-                justifyContent: 'flex-start',
-                textTransform: 'none',
-                fontSize: '0.75rem',
-                color: 'hsl(var(--destructive))',
-                px: 1,
-                py: 0.5,
-                borderRadius: 1,
-                '&:hover': { bgcolor: 'hsl(var(--destructive) / 0.1)' },
+                justifyContent: 'flex-start', textTransform: 'none', fontSize: '0.75rem',
+                color: webhookEnabled ? 'hsl(var(--destructive))' : '#22c55e',
+                px: 1, py: 0.5, borderRadius: 1,
+                '&:hover': { bgcolor: webhookEnabled ? 'hsl(var(--destructive) / 0.1)' : 'rgba(34, 197, 94, 0.1)' },
               }}
             >
-              Remove
+              {webhookEnabled ? 'Disable Webhook' : 'Enable Webhook'}
             </Button>
-          )}
-        </Box>
+          </>
+        ) : (
+          /* Regular app popover */
+          <>
+            <Typography variant="caption" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))', textTransform: 'capitalize', mb: 1, display: 'block' }}>
+              {displayName}
+              {!isEnabled && (
+                <Chip label="Not Active" size="small" sx={{ ml: 0.5, height: 18, fontSize: '0.65rem', bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }} />
+              )}
+            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+              <Button
+                size="small"
+                startIcon={<OpenInNewIcon sx={{ fontSize: 14 }} />}
+                onClick={() => {
+                  setAnchorEl(null);
+                  onVisitApp?.(app.name);
+                }}
+                sx={{
+                  justifyContent: 'flex-start', textTransform: 'none', fontSize: '0.75rem',
+                  color: 'hsl(var(--foreground))', px: 1, py: 0.5, borderRadius: 1,
+                  '&:hover': { bgcolor: 'hsl(var(--muted))' },
+                }}
+              >
+                Visit app
+              </Button>
+              {onToggleSync && (
+                <Button
+                  size="small"
+                  startIcon={isEnabled ? <BlockIcon sx={{ fontSize: 14 }} /> : <CheckCircleOutlineIcon sx={{ fontSize: 14 }} />}
+                  onClick={handleToggle}
+                  sx={{
+                    justifyContent: 'flex-start', textTransform: 'none', fontSize: '0.75rem',
+                    color: isEnabled ? 'hsl(var(--destructive))' : '#22c55e',
+                    px: 1, py: 0.5, borderRadius: 1,
+                    '&:hover': { bgcolor: isEnabled ? 'hsl(var(--destructive) / 0.1)' : 'rgba(34, 197, 94, 0.1)' },
+                  }}
+                >
+                  {isEnabled ? 'Disable Sync' : 'Enable Sync'}
+                </Button>
+              )}
+              {onRemoveApp && (
+                <Button
+                  size="small"
+                  startIcon={<Box component="svg" viewBox="0 0 24 24" sx={{ width: 14, height: 14, stroke: 'currentColor', strokeWidth: 2, fill: 'none' }}><line x1="4" y1="4" x2="20" y2="20" /><line x1="20" y1="4" x2="4" y2="20" /></Box>}
+                  onClick={() => {
+                    setAnchorEl(null);
+                    setConfirmRemoveOpen(true);
+                  }}
+                  sx={{
+                    justifyContent: 'flex-start', textTransform: 'none', fontSize: '0.75rem',
+                    color: 'hsl(var(--destructive))', px: 1, py: 0.5, borderRadius: 1,
+                    '&:hover': { bgcolor: 'hsl(var(--destructive) / 0.1)' },
+                  }}
+                >
+                  Remove
+                </Button>
+              )}
+            </Box>
+          </>
+        )}
       </Popover>
 
       {/* Confirm remove dialog */}
@@ -508,6 +584,7 @@ export default function UsecaseAlluvialDiagram({
   const [ingestAppNames, setIngestAppNames] = useState<Set<string> | null>(null);
   const [forwardAppNames, setForwardAppNames] = useState<Set<string> | null>(null);
   const [loading, setLoading] = useState(true);
+  const [webhookInfo, setWebhookInfo] = useState<{ url: string | null; exists: boolean; enabled: boolean; workflowId: string | null }>({ url: null, exists: false, enabled: false, workflowId: null });
   const [searchOpen, setSearchOpen] = useState<'left' | 'right' | null>(null);
   const pendingTogglesRef = useRef<Map<string, boolean>>(new Map());
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -557,6 +634,35 @@ export default function UsecaseAlluvialDiagram({
     }
     setHiddenApps(prev => new Set(prev).add(appName.toLowerCase()));
   }, [isLoggedIn, searchParams, setSearchParams]);
+
+  // Re-fetch webhook status after toggle
+  const handleWebhookToggled = useCallback(async () => {
+    try {
+      const res = await fetch(getApiUrl('/api/v1/workflows'), {
+        credentials: 'include',
+        headers: { ...getAuthHeader() },
+      });
+      if (res.ok) {
+        const wfData = await res.json();
+        const workflows = Array.isArray(wfData) ? wfData : (wfData.workflows || []);
+        const webhookWorkflow = workflows.find((w: any) => w.name === 'Ingestion Webhook');
+        if (webhookWorkflow) {
+          const webhookTrigger = (webhookWorkflow.triggers || []).find(
+            (t: any) => t.trigger_type === 'WEBHOOK' || t.app_name === 'Webhook'
+          );
+          let webhookUrl: string | null = null;
+          if (webhookTrigger) {
+            const webhookId = webhookTrigger.id || webhookTrigger.trigger_id;
+            if (webhookId) webhookUrl = getApiUrl(`/api/v1/hooks/webhook_${webhookId}`);
+          }
+          const triggerStopped = !webhookTrigger || (webhookTrigger.status || '').toLowerCase() === 'stopped';
+          setWebhookInfo({ url: webhookUrl, exists: true, enabled: !triggerStopped, workflowId: webhookWorkflow.id });
+        } else {
+          setWebhookInfo({ url: null, exists: false, enabled: false, workflowId: null });
+        }
+      }
+    } catch {}
+  }, []);
 
   // Toggle sync: same debounced approach as /incidents page
   const handleToggleSync = useCallback((appName: string, enabled: boolean) => {
@@ -675,7 +781,7 @@ export default function UsecaseAlluvialDiagram({
           } catch (_) {}
         }
 
-        // Parse ingest & forward workflows
+        // Parse ingest & forward workflows + webhook status
         if (workflowsRes.ok) {
           try {
             const wfData = await workflowsRes.json();
@@ -687,6 +793,24 @@ export default function UsecaseAlluvialDiagram({
             const forwardWf = findForwardTicketsWorkflow(workflows);
             if (forwardWf) {
               setForwardAppNames(extractWorkflowAppNames(forwardWf));
+            }
+            // Detect webhook workflow
+            const webhookWorkflow = workflows.find((w: any) => w.name === 'Ingestion Webhook');
+            if (webhookWorkflow) {
+              const webhookTrigger = (webhookWorkflow.triggers || []).find(
+                (t: any) => t.trigger_type === 'WEBHOOK' || t.app_name === 'Webhook'
+              );
+              let webhookUrl: string | null = null;
+              if (webhookTrigger) {
+                const webhookId = webhookTrigger.id || webhookTrigger.trigger_id;
+                if (webhookId) {
+                  webhookUrl = getApiUrl(`/api/v1/hooks/webhook_${webhookId}`);
+                }
+              }
+              const triggerStopped = !webhookTrigger || (webhookTrigger.status || '').toLowerCase() === 'stopped';
+              setWebhookInfo({ url: webhookUrl, exists: true, enabled: !triggerStopped, workflowId: webhookWorkflow.id });
+            } else {
+              setWebhookInfo({ url: null, exists: false, enabled: false, workflowId: null });
             }
           } catch (_) {}
         }
@@ -700,21 +824,21 @@ export default function UsecaseAlluvialDiagram({
     })();
   }, []);
 
-  // Permanent webhook node shown in every source column
+  // Permanent webhook node shown at the top of every source column
   const webhookNode: AppNode = useMemo(() => ({
     id: 'webhook-ingestion',
     name: 'Webhook',
     icon: '',
-    hasValidAuth: true,
+    hasValidAuth: webhookInfo.enabled,
     isActiveOnly: false,
     isHighlighted: true,
-    isEnabled: true,
-  }), []);
+    isEnabled: webhookInfo.enabled || webhookInfo.exists,
+  }), [webhookInfo]);
 
   // Source apps: if highlightCategory is set, show all ingest workflow apps
   // Otherwise fall back to category-based filtering
   const sourceApps = useMemo(() => {
-    const appendWebhook = (apps: AppNode[]) => [...apps, webhookNode];
+    const prependWebhook = (apps: AppNode[]) => [webhookNode, ...apps];
 
     if (!isLoggedIn) {
       const samples = highlightCategory ? getSampleApps(highlightCategory) : getSampleApps(sourceCategory);
@@ -730,7 +854,7 @@ export default function UsecaseAlluvialDiagram({
           isHighlighted: true,
           isEnabled: true,
         }));
-      return appendWebhook(
+      return prependWebhook(
         [...samples.map(a => ({ ...a, isHighlighted: true, isEnabled: true })), ...guestNodes]
           .filter(a => !hiddenApps.has(a.name.toLowerCase()))
       );
@@ -756,11 +880,11 @@ export default function UsecaseAlluvialDiagram({
           isEnabled: false,
         }));
 
-      return appendWebhook(
+      return prependWebhook(
         [...enabledNodes, ...disabledNodes].filter(a => !hiddenApps.has(a.name.toLowerCase()))
       );
     }
-    return appendWebhook(
+    return prependWebhook(
       allApps.filter(a => matchesCategory(a.name, sourceCategory) && a.hasValidAuth && !hiddenApps.has(a.name.toLowerCase())).map(a => ({ ...a, isEnabled: true }))
     );
   }, [allApps, sourceCategory, highlightCategory, ingestAppNames, isLoggedIn, guestSourceNames, hiddenApps, webhookNode]);
@@ -1013,7 +1137,7 @@ export default function UsecaseAlluvialDiagram({
                   pointerEvents: 'auto',
                 }}
               >
-                <AppBubble app={app} size={nodeSize} highlighted={!!app.isHighlighted} isSample={!isLoggedIn} disabled={app.isEnabled === false} onRemoveApp={handleRemoveApp} onToggleSync={isLoggedIn && highlightCategory ? handleToggleSync : undefined} onVisitApp={handleVisitApp} />
+                <AppBubble app={app} size={nodeSize} highlighted={!!app.isHighlighted} isSample={!isLoggedIn} disabled={app.isEnabled === false} onRemoveApp={handleRemoveApp} onToggleSync={isLoggedIn && highlightCategory ? handleToggleSync : undefined} onVisitApp={handleVisitApp} webhookInfo={app.id === 'webhook-ingestion' ? webhookInfo : undefined} onWebhookToggled={handleWebhookToggled} />
               </Box>
             );
           })}
