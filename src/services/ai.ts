@@ -42,6 +42,10 @@ export const askAI = async ({
     let result: string;
     try {
       const data = JSON.parse(text);
+      // Check for explicit failure from the API
+      if (data && typeof data === 'object' && data.success === false) {
+        return { success: false, error: data.reason || data.error || 'AI query failed' };
+      }
       result = typeof data === 'string' ? data : (data.result || data.response || text);
     } catch {
       result = text;
