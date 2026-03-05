@@ -38,7 +38,7 @@ import { ScrollToTop } from '@/components/ScrollToTop';
 /** Layout that conditionally shows sidebar for authenticated users, navbar + content for guests */
 const ConditionalDashboardLayout = () => {
   const { isAuthenticated, isLoading } = useAuth();
-  if (isLoading) return <Outlet />;
+  if (isLoading) return <AppDetailProvider><Outlet /></AppDetailProvider>;
   if (isAuthenticated) return <DashboardLayout />;
   return (
     <AppDetailProvider>
