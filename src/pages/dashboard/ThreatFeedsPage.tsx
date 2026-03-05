@@ -35,7 +35,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { useThreatFeeds, ThreatFeed, DEFAULT_THREAT_FEEDS } from '@/hooks/useThreatFeeds';
-import { getDatastoreItem, DATASTORE_CATEGORIES } from '@/services/datastore';
+import { getDatastoreItem, setDatastoreItem, DATASTORE_CATEGORIES } from '@/services/datastore';
 
 // Datastore keys for onboarding config
 const ONBOARDING_CONFIG_CATEGORY = 'shuffle-security_onboarding';
@@ -225,6 +225,36 @@ const ThreatFeedsPage = () => {
         <Alert 
           severity={automationEnabled ? 'success' : 'warning'}
           icon={automationEnabled ? <CheckCircleIcon /> : <ErrorOutlineIcon />}
+          action={
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={async () => {
+                try {
+                  const response = await getDatastoreItem(AUTOMATION_CONFIG_KEY, ONBOARDING_CONFIG_CATEGORY);
+                  let config: any = {};
+                  if (response.success && response.item?.value) {
+                    config = typeof response.item.value === 'string'
+                      ? JSON.parse(response.item.value)
+                      : response.item.value;
+                  }
+                  const newEnabled = !automationEnabled;
+                  config.threat_intel = { ...config.threat_intel, enabled: newEnabled };
+                  await setDatastoreItem(AUTOMATION_CONFIG_KEY, config, ONBOARDING_CONFIG_CATEGORY);
+                  setAutomationEnabled(newEnabled);
+                } catch (error) {
+                  console.error('Failed to toggle threat intel:', error);
+                }
+              }}
+              sx={{ 
+                whiteSpace: 'nowrap',
+                borderColor: automationEnabled ? '#22c55e' : undefined,
+                color: automationEnabled ? '#22c55e' : undefined,
+              }}
+            >
+              {automationEnabled ? 'Disable' : 'Enable'}
+            </Button>
+          }
           sx={{ 
             mb: 2, 
             '& .MuiAlert-icon': { 
@@ -239,7 +269,7 @@ const ThreatFeedsPage = () => {
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
               {automationEnabled 
                 ? '— Incidents will be automatically enriched with threat intelligence from enabled feeds.'
-                : '— Enable Threat Intel in the onboarding flow to automatically enrich incidents.'}
+                : '— Enable to automatically enrich incidents with threat intelligence.'}
             </Typography>
           </Box>
         </Alert>
