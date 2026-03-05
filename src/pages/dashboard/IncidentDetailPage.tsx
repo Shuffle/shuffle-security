@@ -53,6 +53,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import Menu from '@mui/material/Menu';
 import { useDatastore } from '@/hooks/useDatastore';
 import { useAuth } from '@/context/AuthContext';
+import { useAppDetail } from '@/context/AppDetailContext';
 import { DATASTORE_CATEGORIES, getDatastoreItem, setDatastoreItem } from '@/services/datastore';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { useUsers } from '@/hooks/useUsers';
@@ -380,6 +381,7 @@ const IncidentDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { userInfo } = useAuth();
+  const { openApp } = useAppDetail();
   const currentUsername = userInfo?.username || '';
 
   const [incident, setIncident] = useState<DisplayIncident | null>(null);
@@ -2303,11 +2305,24 @@ const IncidentDetailPage = () => {
                 </Box>
                 <Box sx={{ minWidth: 0 }}>
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>Source</Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                  <Box 
+                    sx={{ 
+                      display: 'flex', alignItems: 'center', gap: 0.75, 
+                      cursor: incident.source ? 'pointer' : 'default',
+                      borderRadius: 1,
+                      '&:hover': incident.source ? { bgcolor: 'rgba(255,255,255,0.05)' } : {},
+                      mx: -0.5, px: 0.5, py: 0.25,
+                    }}
+                    onClick={() => {
+                      if (incident.source) {
+                        openApp(incident.source);
+                      }
+                    }}
+                  >
                     {sourceAppImage && (
                       <img src={sourceAppImage} alt={incident.source || ''} style={{ width: 18, height: 18, objectFit: 'contain', borderRadius: 4 }} />
                     )}
-                    <Typography variant="body2" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{incident.source || <Typography component="span" variant="body2" sx={{ color: 'text.disabled', fontStyle: 'italic' }}>Unknown</Typography>}</Typography>
+                    <Typography variant="body2" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: incident.source ? '#06b6d4' : undefined }}>{incident.source || <Typography component="span" variant="body2" sx={{ color: 'text.disabled', fontStyle: 'italic' }}>Unknown</Typography>}</Typography>
                   </Box>
                 </Box>
                 <Box>
