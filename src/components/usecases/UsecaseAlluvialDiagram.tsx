@@ -844,7 +844,7 @@ export default function UsecaseAlluvialDiagram({
     hasValidAuth: webhookInfo.enabled,
     isActiveOnly: false,
     isHighlighted: true,
-    isEnabled: webhookInfo.enabled || webhookInfo.exists,
+    isEnabled: !isLoggedIn || webhookInfo.enabled || webhookInfo.exists,
   }), [webhookInfo]);
 
   // Source apps: if highlightCategory is set, show all ingest workflow apps
