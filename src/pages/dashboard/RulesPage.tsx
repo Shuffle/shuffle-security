@@ -452,6 +452,35 @@ const RulesPage = () => {
     }
   };
 
+  const handleImproveWithAI = async () => {
+    if (!ruleContent.trim()) {
+      toast.error('No rule content to improve');
+      return;
+    }
+    setIsGenerating(true);
+    setPreAiContent(ruleContent);
+    try {
+      const { success, result, error } = await askAI({
+        query: `Improve and fix this Sigma detection rule. Keep the same intent but enhance the detection logic, fix any YAML issues, and add missing fields if appropriate. Only output the improved YAML, no explanation:\n\n${ruleContent}`,
+      });
+      if (success && result) {
+        const cleaned = result.replace(/^```(?:ya?ml)?\n?/i, '').replace(/\n?```$/i, '').trim();
+        setRuleContent(cleaned);
+        setJustGenerated(true);
+        setTimeout(() => setJustGenerated(false), 3000);
+        toast.success('Rule improved by AI');
+      } else {
+        toast.error(error || 'Failed to improve rule');
+        setPreAiContent(null);
+      }
+    } catch (e) {
+      console.error('AI improve error:', e);
+      toast.error('Failed to improve rule');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const handleEditFile = async (file: ShuffleFile) => {
     setEditingFile(file);
     setSampleLog('');
@@ -1035,7 +1064,24 @@ const RulesPage = () => {
                   />
                 )}
               </Box>
-              {!editingFile && (
+              {editingFile ? (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={isGenerating ? <CircularProgress size={14} color="inherit" /> : <AutoFixHighIcon sx={{ fontSize: 14 }} />}
+                  onClick={handleImproveWithAI}
+                  disabled={isGenerating || !ruleContent.trim()}
+                  sx={{
+                    textTransform: 'none',
+                    fontSize: '0.75rem',
+                    borderColor: 'hsl(var(--border))',
+                    color: 'hsl(var(--primary))',
+                    '&:hover': { borderColor: 'hsl(var(--primary))', bgcolor: 'hsl(var(--primary) / 0.08)' },
+                  }}
+                >
+                  {isGenerating ? 'Improving…' : 'Improve with AI'}
+                </Button>
+              ) : (
                 <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
                   <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', mr: 0.5, lineHeight: '24px' }}>
                     Templates:
