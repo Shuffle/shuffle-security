@@ -443,6 +443,11 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                     <ListItemButton
                       component={Link}
                       to={item.path!}
+                      onClick={() => {
+                        if (!expandedItems.includes(item.label)) {
+                          handleExpand(item.label);
+                        }
+                      }}
                       sx={{
                         borderRadius: 1,
                         minHeight: 40,
