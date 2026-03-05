@@ -730,6 +730,57 @@ export default function UsecaseAlluvialDiagram({
     }, 3000);
   }, [allApps, ingestAppNames]);
 
+  // Toggle forwarding: add/remove app from Forward Tickets workflow
+  const handleToggleForward = useCallback((appName: string, enabled: boolean) => {
+    setForwardAppNames(prev => {
+      const next = new Set(prev || []);
+      const normalized = normalizeAppName(appName);
+      if (enabled) {
+        next.add(normalized);
+      } else {
+        next.delete(normalized);
+      }
+      return next;
+    });
+
+    // Update the backend
+    (async () => {
+      try {
+        const { toast } = await import('sonner');
+        if (enabled) {
+          await fetch(getApiUrl('/api/v2/workflows/generate'), {
+            method: 'POST',
+            credentials: 'include',
+            headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              label: 'Forward Tickets',
+              app_name: appName,
+              category: 'cases',
+            }),
+          });
+          toast.success(`${appName.replace(/_/g, ' ')} enabled for forwarding`);
+        } else {
+          await fetch(getApiUrl('/api/v2/workflows/generate'), {
+            method: 'POST',
+            credentials: 'include',
+            headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              label: 'Forward Tickets',
+              app_name: appName,
+              category: 'cases',
+              action_name: 'remove',
+            }),
+          });
+          toast.success(`${appName.replace(/_/g, ' ')} disabled for forwarding`);
+        }
+      } catch (error) {
+        console.error('Failed to update forwarding:', error);
+        const { toast } = await import('sonner');
+        toast.error('Failed to update forwarding');
+      }
+    })();
+  }, []);
+
   useEffect(() => {
     if (!isLoggedIn) { setLoading(false); return; }
 
@@ -917,10 +968,18 @@ export default function UsecaseAlluvialDiagram({
         }));
       return [...samples, ...guestNodes].filter(a => !hiddenApps.has(a.name.toLowerCase()));
     }
-    if (highlightCategory && forwardAppNames && forwardAppNames.size > 0) {
-      return allApps.filter(a =>
-        forwardAppNames.has(normalizeAppName(a.name)) && matchesCategory(a.name, targetCategory) && !hiddenApps.has(a.name.toLowerCase())
+    if (highlightCategory && forwardAppNames) {
+      // Show all case_management apps, mark forwarding-enabled ones
+      const caseMgmtApps = allApps.filter(a =>
+        a.hasValidAuth && matchesCategory(a.name, targetCategory) && !hiddenApps.has(a.name.toLowerCase())
       );
+      const enabledApps = caseMgmtApps
+        .filter(a => forwardAppNames.has(normalizeAppName(a.name)))
+        .map(a => ({ ...a, isEnabled: true }));
+      const disabledApps = caseMgmtApps
+        .filter(a => !forwardAppNames.has(normalizeAppName(a.name)))
+        .map(a => ({ ...a, isEnabled: false }));
+      return [...enabledApps, ...disabledApps];
     }
     return allApps.filter(a => matchesCategory(a.name, targetCategory) && !hiddenApps.has(a.name.toLowerCase()));
   }, [allApps, targetCategory, highlightCategory, forwardAppNames, isLoggedIn, guestDestNames, guestAppIcons, hiddenApps]);
@@ -1112,7 +1171,8 @@ export default function UsecaseAlluvialDiagram({
               </g>
             );
           })}
-          {(isLoggedIn ? sourceApps.some(app => app.hasValidAuth && app.isEnabled !== false) : sourceApps.length > 0) && targetApps.map((_, i) => {
+          {(isLoggedIn ? sourceApps.some(app => app.hasValidAuth && app.isEnabled !== false) : sourceApps.length > 0) && targetApps.map((app, i) => {
+            if (isLoggedIn && !app.hasValidAuth) return null;
             const toY = getY(i, targetApps.length);
             const pathD = makePath(centerX + 28, centerY, rightX - nodeSize / 2 - 4, toY);
             return (
@@ -1201,7 +1261,7 @@ export default function UsecaseAlluvialDiagram({
                   pointerEvents: 'auto',
                 }}
               >
-                <AppBubble app={app} size={nodeSize} isSample={!isLoggedIn} onRemoveApp={handleRemoveApp} onVisitApp={handleVisitApp} />
+                <AppBubble app={app} size={nodeSize} isSample={!isLoggedIn} onRemoveApp={handleRemoveApp} onToggleSync={isLoggedIn ? handleToggleForward : undefined} onVisitApp={handleVisitApp} />
               </Box>
             );
           })}
