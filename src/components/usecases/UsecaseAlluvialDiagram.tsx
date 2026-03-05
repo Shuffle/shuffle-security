@@ -13,7 +13,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import BlockIcon from '@mui/icons-material/Block';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Plus } from 'lucide-react';
+import { Plus, Webhook } from 'lucide-react';
 import AppSearchDrawer from '@/components/shared/AppSearchDrawer';
 import { useAuth } from '@/context/AuthContext';
 import { useAppDetail } from '@/context/AppDetailContext';
@@ -136,9 +136,10 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, disa
 
   const displayName = app.name.replace(/_/g, ' ');
   const isEnabled = app.isEnabled !== false;
+  const isWebhook = app.id === 'webhook-ingestion';
 
   const handleClick = (e: React.MouseEvent<HTMLElement>) => {
-    if (isSample) return;
+    if (isSample || isWebhook) return;
     setAnchorEl(e.currentTarget);
   };
 
@@ -174,7 +175,18 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, disa
           }}
         />
       )}
-      {app.icon && !imgFailed ? (
+      {isWebhook ? (
+        <Avatar
+          sx={{
+            width: size,
+            height: size,
+            backgroundColor: 'rgba(6, 182, 212, 0.15)',
+            color: '#06b6d4',
+          }}
+        >
+          <Webhook size={size * 0.5} />
+        </Avatar>
+      ) : app.icon && !imgFailed ? (
         <Box
           component="img"
           src={app.icon}
@@ -688,9 +700,22 @@ export default function UsecaseAlluvialDiagram({
     })();
   }, []);
 
+  // Permanent webhook node shown in every source column
+  const webhookNode: AppNode = useMemo(() => ({
+    id: 'webhook-ingestion',
+    name: 'Webhook',
+    icon: '',
+    hasValidAuth: true,
+    isActiveOnly: false,
+    isHighlighted: true,
+    isEnabled: true,
+  }), []);
+
   // Source apps: if highlightCategory is set, show all ingest workflow apps
   // Otherwise fall back to category-based filtering
   const sourceApps = useMemo(() => {
+    const appendWebhook = (apps: AppNode[]) => [...apps, webhookNode];
+
     if (!isLoggedIn) {
       const samples = highlightCategory ? getSampleApps(highlightCategory) : getSampleApps(sourceCategory);
       // Add guest-selected apps from URL
@@ -705,17 +730,16 @@ export default function UsecaseAlluvialDiagram({
           isHighlighted: true,
           isEnabled: true,
         }));
-      return [...samples.map(a => ({ ...a, isHighlighted: true, isEnabled: true })), ...guestNodes]
-        .filter(a => !hiddenApps.has(a.name.toLowerCase()));
+      return appendWebhook(
+        [...samples.map(a => ({ ...a, isHighlighted: true, isEnabled: true })), ...guestNodes]
+          .filter(a => !hiddenApps.has(a.name.toLowerCase()))
+      );
     }
     if (highlightCategory && ingestAppNames) {
-      // Show ALL validated apps (like /incidents page does)
-      // Apps in the ingest workflow are "enabled", others are "disabled" (greyed out, clickable)
       const validatedApps = allApps.filter(a =>
         a.hasValidAuth && !isShuffleInternalApp(a.name)
       );
 
-      // Enabled: in the ingest workflow
       const enabledNodes = validatedApps
         .filter(a => ingestAppNames.has(normalizeAppName(a.name)))
         .map(a => ({
@@ -724,7 +748,6 @@ export default function UsecaseAlluvialDiagram({
           isEnabled: true,
         }));
 
-      // Disabled: validated but not in the workflow (can be activated)
       const disabledNodes = validatedApps
         .filter(a => !ingestAppNames.has(normalizeAppName(a.name)))
         .map(a => ({
@@ -733,10 +756,14 @@ export default function UsecaseAlluvialDiagram({
           isEnabled: false,
         }));
 
-      return [...enabledNodes, ...disabledNodes].filter(a => !hiddenApps.has(a.name.toLowerCase()));
+      return appendWebhook(
+        [...enabledNodes, ...disabledNodes].filter(a => !hiddenApps.has(a.name.toLowerCase()))
+      );
     }
-    return allApps.filter(a => matchesCategory(a.name, sourceCategory) && a.hasValidAuth && !hiddenApps.has(a.name.toLowerCase())).map(a => ({ ...a, isEnabled: true }));
-  }, [allApps, sourceCategory, highlightCategory, ingestAppNames, isLoggedIn, guestSourceNames, hiddenApps]);
+    return appendWebhook(
+      allApps.filter(a => matchesCategory(a.name, sourceCategory) && a.hasValidAuth && !hiddenApps.has(a.name.toLowerCase())).map(a => ({ ...a, isEnabled: true }))
+    );
+  }, [allApps, sourceCategory, highlightCategory, ingestAppNames, isLoggedIn, guestSourceNames, hiddenApps, webhookNode]);
 
   // Target/destination apps: use Forward Tickets workflow as source of truth when available
   const targetApps = useMemo(() => {
