@@ -752,7 +752,7 @@ export default function UsecaseAlluvialDiagram({
               return {
                 id: app.id,
                 name: app.name,
-                icon: bestImage || app.large_image || '',
+                icon: bestImage || app.large_image || `https://storage.googleapis.com/shuffle_public/app_images/${app.name.replace(/\s+/g, '_')}.png`,
                 hasValidAuth,
                 isActiveOnly: false,
               };
@@ -771,7 +771,7 @@ export default function UsecaseAlluvialDiagram({
                   nodes.push({
                     id: app.id || app.name,
                     name: app.name,
-                    icon: app.large_image || '',
+                    icon: app.large_image || `https://storage.googleapis.com/shuffle_public/app_images/${(app.name || '').replace(/\s+/g, '_')}.png`,
                     hasValidAuth: false,
                     isActiveOnly: true,
                   });
