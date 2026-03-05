@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -27,11 +27,13 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { toast } from 'sonner';
 import { askAI } from '@/services/ai';
 import { deleteFile, getFileDownloadUrl, formatFileSize, ShuffleFile, createAndUploadFile } from '@/services/files';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { getApiUrl, getAuthHeader, API_CONFIG } from '@/config/api';
+import { Link } from 'react-router-dom';
 
 const SIGMA_NAMESPACE = 'sigma';
 
@@ -205,6 +207,27 @@ const RulesPage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [justGenerated, setJustGenerated] = useState(false);
   const [loadingDefaultRules, setLoadingDefaultRules] = useState(false);
+  const [hasValidSensor, setHasValidSensor] = useState(true);
+
+  useEffect(() => {
+    const checkSensors = async () => {
+      try {
+        const res = await fetch(getApiUrl('/api/v1/getenvironments'), {
+          credentials: 'include',
+          headers: { ...getAuthHeader() },
+        });
+        if (res.ok) {
+          const envs = await res.json();
+          const now = Math.floor(Date.now() / 1000);
+          const valid = (envs as any[]).some(
+            (e: any) => !e.archived && e.Type !== 'cloud' && e.checkin > 0 && (now - e.checkin) < 300
+          );
+          setHasValidSensor(valid);
+        }
+      } catch { /* ignore */ }
+    };
+    checkSensors();
+  }, []);
 
   const loadDefaultRules = async () => {
     
@@ -625,6 +648,33 @@ const RulesPage = () => {
           </Button>
         </Box>
       </Box>
+
+      {/* No sensor warning */}
+      {!hasValidSensor && (
+        <Box sx={{
+          mb: 3,
+          p: 2,
+          borderRadius: 2,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.5,
+          backgroundColor: 'hsla(var(--primary) / 0.08)',
+          border: '1px solid hsla(var(--primary) / 0.2)',
+        }}>
+          <WarningAmberIcon sx={{ color: 'hsl(var(--primary))', fontSize: 20 }} />
+          <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--foreground))', flex: 1 }}>
+            No running sensor detected. Rules are uploaded but won't be active until a sensor is running.
+          </Typography>
+          <Button
+            component={Link}
+            to="/detection"
+            size="small"
+            sx={{ textTransform: 'none', fontWeight: 600, color: 'hsl(var(--primary))' }}
+          >
+            Go to Detection Setup →
+          </Button>
+        </Box>
+      )}
 
       {/* Search + count */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
