@@ -8,6 +8,7 @@
  */
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { algoliasearch } from 'algoliasearch';
 import { Box, Typography, Avatar, Tooltip, IconButton, Chip, Popover, Button, Dialog, InputBase } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import BlockIcon from '@mui/icons-material/Block';
@@ -596,6 +597,38 @@ export default function UsecaseAlluvialDiagram({
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Cache Algolia icons for guest-added apps (name → icon URL)
   const [guestAppIcons, setGuestAppIcons] = useState<Record<string, string>>({});
+
+  // Fetch icons from Algolia for guest apps loaded from URL params
+  useEffect(() => {
+    if (isLoggedIn) return;
+    const allGuestNames = [
+      ...(searchParams.get('source')?.split(',').filter(Boolean) || []),
+      ...(searchParams.get('dest')?.split(',').filter(Boolean) || []),
+    ];
+    const missing = allGuestNames.filter(n => !guestAppIcons[n.toLowerCase()]);
+    if (missing.length === 0) return;
+
+    const client = algoliasearch('JNSS5CFDZZ', 'c8f882473ff42d41158430be09ec2b4e');
+    (async () => {
+      const icons: Record<string, string> = {};
+      for (const name of missing) {
+        try {
+          const res = await client.searchSingleIndex({
+            indexName: 'appsearch',
+            searchParams: { query: name.replace(/_/g, ' '), hitsPerPage: 1 },
+          });
+          const hit = res.hits[0] as any;
+          if (hit?.image_url) {
+            icons[name.toLowerCase()] = hit.image_url;
+          }
+        } catch { /* skip */ }
+      }
+      if (Object.keys(icons).length > 0) {
+        setGuestAppIcons(prev => ({ ...prev, ...icons }));
+      }
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoggedIn]);
 
   // Guest-selected apps from URL params
   const guestSourceNames = useMemo(() => {
