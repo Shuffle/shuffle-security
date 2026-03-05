@@ -160,6 +160,7 @@ const DetectionOnboardingPage = () => {
     elapsedSeconds: 0,
   });
   const [expandedStep, setExpandedStep] = useState<number | null>(1);
+  const [userToggledStep, setUserToggledStep] = useState(false);
   const [deploymentDialog, setDeploymentDialog] = useState<{
     open: boolean;
     provider: DeploymentProvider;
@@ -294,7 +295,7 @@ const DetectionOnboardingPage = () => {
                 success: true,
                 message: `${enabledRules.length} rules enabled`,
               });
-              setExpandedStep(3);
+              if (!userToggledStep) setExpandedStep(3);
             } else {
               // No rules enabled, expand step 2
               setRulesStatus({
@@ -303,18 +304,18 @@ const DetectionOnboardingPage = () => {
                 success: false,
                 message: 'No rules enabled yet',
               });
-              setExpandedStep(2);
+              if (!userToggledStep) setExpandedStep(2);
             }
           } else {
-            setExpandedStep(2);
+            if (!userToggledStep) setExpandedStep(2);
           }
         } catch (error) {
           console.error('Failed to auto-check rules:', error);
-          setExpandedStep(2);
+          if (!userToggledStep) setExpandedStep(2);
         }
       } else if (sensorRunning) {
         // Sensor running but not detection-ready, stay on step 1 or expand step 2
-        setExpandedStep(2);
+        if (!userToggledStep) setExpandedStep(2);
       }
     };
 
@@ -1419,7 +1420,7 @@ const DetectionOnboardingPage = () => {
         }}
       >
         <Box
-          onClick={() => setExpandedStep(expandedStep === 1 ? null : 1)}
+          onClick={() => { setUserToggledStep(true); setExpandedStep(expandedStep === 1 ? null : 1); }}
           sx={{
             p: 3,
             display: 'flex',
@@ -1885,7 +1886,7 @@ const DetectionOnboardingPage = () => {
         }}
       >
         <Box
-          onClick={() => setExpandedStep(expandedStep === 2 ? null : 2)}
+          onClick={() => { setUserToggledStep(true); setExpandedStep(expandedStep === 2 ? null : 2); }}
           sx={{
             p: 3,
             display: 'flex',
@@ -2000,7 +2001,7 @@ const DetectionOnboardingPage = () => {
         }}
       >
         <Box
-          onClick={() => setExpandedStep(expandedStep === 3 ? null : 3)}
+          onClick={() => { setUserToggledStep(true); setExpandedStep(expandedStep === 3 ? null : 3); }}
           sx={{
             p: 3,
             display: 'flex',
