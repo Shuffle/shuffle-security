@@ -221,15 +221,11 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, disa
           }}
         />
       )}
-      {hovered && onRemoveApp && (
+      {isSample && hovered && onRemoveApp && (
         <Box
           onClick={(e) => {
             e.stopPropagation();
-            if (isSample) {
-              onRemoveApp(app.name);
-            } else {
-              setConfirmRemoveOpen(true);
-            }
+            onRemoveApp(app.name);
           }}
           sx={{
             position: 'absolute',
@@ -355,6 +351,28 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, disa
               }}
             >
               {isEnabled ? 'Disable Sync' : 'Enable Sync'}
+            </Button>
+          )}
+          {onRemoveApp && (
+            <Button
+              size="small"
+              startIcon={<Box component="svg" viewBox="0 0 24 24" sx={{ width: 14, height: 14, stroke: 'currentColor', strokeWidth: 2, fill: 'none' }}><line x1="4" y1="4" x2="20" y2="20" /><line x1="20" y1="4" x2="4" y2="20" /></Box>}
+              onClick={() => {
+                setAnchorEl(null);
+                setConfirmRemoveOpen(true);
+              }}
+              sx={{
+                justifyContent: 'flex-start',
+                textTransform: 'none',
+                fontSize: '0.75rem',
+                color: 'hsl(var(--destructive))',
+                px: 1,
+                py: 0.5,
+                borderRadius: 1,
+                '&:hover': { bgcolor: 'hsl(var(--destructive) / 0.1)' },
+              }}
+            >
+              Remove
             </Button>
           )}
         </Box>
