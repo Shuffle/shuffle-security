@@ -981,7 +981,7 @@ Use case: ${aiPrompt}`,
       <Dialog
         open={createOpen}
         onClose={() => { setCreateOpen(false); setEditingPipeline(null); }}
-        maxWidth="sm"
+        maxWidth="md"
         fullWidth
         PaperProps={{
           sx: {
@@ -1103,7 +1103,8 @@ Use case: ${aiPrompt}`,
             onChange={(e) => setNewCommand(e.target.value)}
             fullWidth
             multiline
-            rows={4}
+            minRows={4}
+            maxRows={20}
             sx={{
               '& .MuiOutlinedInput-root': {
                 backgroundColor: 'hsl(var(--muted))',
