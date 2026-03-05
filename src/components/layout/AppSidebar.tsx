@@ -771,7 +771,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
           const usage = userInfo.app_execution_usage || 0;
           const limit = userInfo.app_execution_limit;
           const pct = (usage / limit) * 100;
-          if (pct < 75) return null;
+          if (pct < 65) return null;
           const isOver = pct >= 100;
           return (
             <Box sx={{ px: 2, pb: 1.5 }}>
@@ -792,8 +792,8 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                     ? `Automation will stop until ${new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}, but incidents and detections still work.`
                     : `${pct.toFixed(0)}% of app executions used. Consider upgrading soon.`}
                 </Typography>
-                {/* Action buttons for over-limit */}
-                {isOver && (
+                {/* Action buttons */}
+                {(
                   <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
                     <Box
                       component="a"
