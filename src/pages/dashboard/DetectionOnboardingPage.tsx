@@ -254,6 +254,9 @@ const DetectionOnboardingPage = () => {
       const env = environments.find(e => e.id === selectedEnvId);
       if (!env) return;
 
+      // Never auto-swap tabs for cloud environments — keep user on step 1
+      if (env.Type === 'cloud') return;
+
       const sensorRunning = isSensorRunning(env);
       const pipelineReady = isPipelineReady(env);
 
