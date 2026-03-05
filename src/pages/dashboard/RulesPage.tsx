@@ -508,12 +508,9 @@ const RulesPage = () => {
           credentials: 'include',
           headers: {
             ...getAuthHeader(),
-            'Content-Type': 'application/json',
+            'Content-Type': 'text/plain',
           },
-          body: JSON.stringify({
-            content: ruleContent,
-            filename: derivedName.endsWith('.yml') ? derivedName : `${derivedName}.yml`,
-          }),
+          body: ruleContent,
         });
 
         if (response.ok) {
