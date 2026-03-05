@@ -406,7 +406,7 @@ export const DEFAULT_USECASES: Usecase[] = [
   },
   {
     id: 'email_case_management_1', phase: 'ingest', source: 'email', target: 'case_management',
-    label: 'Phishing reports',
+    label: 'Phishing reports', animated: true,
     tags: ['Alert', 'Logs'],
     description: 'User-reported phishing emails create cases for triage. Automating intake with deduplication and auto-enrichment drastically cuts analyst workload.',
     agenticDescription: 'An agent parses reported emails, extracts and enriches all IOCs, determines phishing verdict using threat intel, and auto-closes low-risk reports while escalating confirmed campaigns.',
