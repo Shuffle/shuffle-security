@@ -1111,7 +1111,7 @@ const DetectionOnboardingPage = () => {
             
             // Check if our test pipeline exists and its status
             const testPipeline = pipelineList.find((p: any) => {
-              const pipelineStr = typeof p === 'string' ? p : (p?.command || p?.name || JSON.stringify(p));
+              const pipelineStr = typeof p === 'string' ? p : (p?.definition || p?.command || p?.name || JSON.stringify(p));
               return pipelineStr.includes('notepad.exe') && pipelineStr.includes('parse_syslog');
             });
             
