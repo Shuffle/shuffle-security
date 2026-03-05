@@ -757,7 +757,7 @@ Use case: ${aiPrompt}`,
           </Typography>
         </Box>
 
-        <Box sx={{ display: 'flex', gap: 1 }}>
+        <Box sx={{ display: 'flex', gap: 2 }}>
           <Tooltip title="Refresh">
             <IconButton
               onClick={() => { setIsLoading(true); fetchEnvironments(); }}
