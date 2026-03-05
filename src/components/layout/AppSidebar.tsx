@@ -784,12 +784,12 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.75 }}>
                   <WarningAmberIcon sx={{ fontSize: 14, color: isOver ? 'hsl(var(--destructive))' : 'hsl(var(--severity-medium))' }} />
                   <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: isOver ? 'hsl(var(--destructive))' : 'hsl(var(--severity-medium))' }}>
-                    {isOver ? 'Limit Reached' : 'Approaching Limit'}
+                    {isOver ? 'App run limit reached' : 'Approaching Limit'}
                   </Typography>
                 </Box>
                 <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.4, mb: 1 }}>
                   {isOver
-                    ? `App runs overrun. Ingestion will stop until ${new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}.`
+                    ? `Automation will stop until ${new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}, but incidents and detections still work.`
                     : `${pct.toFixed(0)}% of app executions used. Consider upgrading soon.`}
                 </Typography>
                 {/* Action buttons for over-limit */}
