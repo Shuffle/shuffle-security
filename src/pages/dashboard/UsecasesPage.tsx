@@ -51,6 +51,7 @@ export default function UsecasesPage() {
   const { usecases, apiLoaded, getDrift } = useUsecases();
   const { userInfo, isAuthenticated } = useAuth();
   const isSupport = userInfo?.support === true;
+  const [showAllAsSupport, setShowAllAsSupport] = useState(true);
 
   // Collect unique tags across all usecases
   const allTags = useMemo(() => {
@@ -63,7 +64,7 @@ export default function UsecasesPage() {
     let list = usecases;
 
     // Hide inactive (non-animated) usecases for non-support users
-    if (!isSupport) {
+    if (!(isSupport && showAllAsSupport)) {
       list = list.filter((u) => u.animated === true);
     }
 
@@ -88,7 +89,7 @@ export default function UsecasesPage() {
       );
     }
     return list;
-  }, [search, phaseFilter, categoryFilter, tagFilter, usecases, isSupport]);
+  }, [search, phaseFilter, categoryFilter, tagFilter, usecases, isSupport, showAllAsSupport]);
 
   // Group by phase in order
   const grouped = useMemo(() => {
@@ -147,12 +148,30 @@ export default function UsecasesPage() {
           mb: 3, px: 2, py: 1.5, borderRadius: 1,
           bgcolor: 'hsl(45 93% 47% / 0.1)',
           border: '1px solid hsl(45 93% 47% / 0.3)',
-          display: 'flex', alignItems: 'center', gap: 1,
+          display: 'flex', alignItems: 'center', gap: 1.5, justifyContent: 'space-between',
         }}>
-          <AlertTriangle size={14} style={{ color: 'hsl(45 93% 47%)' }} />
-          <Typography variant="body2" sx={{ color: 'hsl(45 93% 47%)', fontWeight: 500 }}>
-            Support view — showing all {usecases.length} automations (including {usecases.filter(u => !u.animated).length} inactive hidden from users)
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <AlertTriangle size={14} style={{ color: 'hsl(45 93% 47%)' }} />
+            <Typography variant="body2" sx={{ color: 'hsl(45 93% 47%)', fontWeight: 500 }}>
+              {showAllAsSupport
+                ? `Support view — showing all ${usecases.length} automations (including ${usecases.filter(u => !u.animated).length} inactive hidden from users)`
+                : `Viewing as normal user — showing ${usecases.filter(u => u.animated).length} active automations`
+              }
+            </Typography>
+          </Box>
+          <Chip
+            label={showAllAsSupport ? 'View as user' : 'View as support'}
+            size="small"
+            onClick={() => setShowAllAsSupport(!showAllAsSupport)}
+            sx={{
+              cursor: 'pointer',
+              fontWeight: 600,
+              fontSize: '0.7rem',
+              bgcolor: showAllAsSupport ? 'hsl(var(--primary) / 0.15)' : 'hsl(45 93% 47% / 0.2)',
+              color: showAllAsSupport ? 'hsl(var(--primary))' : 'hsl(45 93% 47%)',
+              '&:hover': { bgcolor: showAllAsSupport ? 'hsl(var(--primary) / 0.25)' : 'hsl(45 93% 47% / 0.3)' },
+            }}
+          />
         </Box>
       )}
 
