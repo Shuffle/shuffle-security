@@ -1,4 +1,5 @@
 import { Box, Typography, Chip, Checkbox, Skeleton, Tooltip } from '@mui/material';
+import { Tag } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
@@ -32,6 +33,7 @@ interface DisplayIncident {
   tlp?: string;
   taskCount?: number;
   correlationCount?: number;
+  labels?: string[];
 }
 
 interface IngestionApp {
@@ -439,7 +441,7 @@ export const IncidentCardView = ({
               </Box>
 
               {/* Chips */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: 400 }}>
                 {sourceApp?.image && (
                   <Tooltip title={`Filter by ${incident.source}`} placement="bottom">
                     <Box
@@ -478,6 +480,45 @@ export const IncidentCardView = ({
                       {incident.correlationCount}
                     </Typography>
                   </Box>
+                )}
+                {incident.labels && incident.labels.length > 0 && (
+                  <>
+                    {incident.labels.slice(0, 3).map((label, idx) => (
+                      <Chip
+                        key={`label-${idx}`}
+                        icon={<Tag size={10} />}
+                        label={label}
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                        }}
+                        sx={{
+                          backgroundColor: 'rgba(168, 85, 247, 0.12)',
+                          color: '#a855f7',
+                          fontWeight: 500,
+                          fontSize: '0.65rem',
+                          height: 22,
+                          '& .MuiChip-icon': { color: '#a855f7', ml: 0.5 },
+                        }}
+                      />
+                    ))}
+                    {incident.labels.length > 3 && (
+                      <Tooltip title={incident.labels.slice(3).join(', ')} placement="bottom">
+                        <Chip
+                          label={`+${incident.labels.length - 3}`}
+                          size="small"
+                          sx={{
+                            backgroundColor: 'rgba(168, 85, 247, 0.08)',
+                            color: '#a855f7',
+                            fontWeight: 500,
+                            fontSize: '0.65rem',
+                            height: 22,
+                          }}
+                        />
+                      </Tooltip>
+                    )}
+                  </>
                 )}
                 <Chip
                   label={incident.severity || 'unknown'}

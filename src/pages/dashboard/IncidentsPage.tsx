@@ -106,6 +106,7 @@ interface DisplayIncident {
   rawOCSF?: OCSFIncidentFinding;
   taskCount?: number;
   tasks?: TaskItem[];
+  labels?: string[];
 }
 
 type SortDirection = 'asc' | 'desc';
@@ -189,6 +190,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
         rawOCSF: ocsf,
         taskCount: deduplicateTasks(tasks).length,
         tasks,
+        labels: Array.isArray(ocsf.types) ? ocsf.types : [],
       };
     } else if (isLegacyOCSF) {
       // Legacy OCSF format with finding_info_list
@@ -556,7 +558,8 @@ const IncidentsPage = () => {
         (i.title || '').toLowerCase().includes(q) ||
         i.id.toLowerCase().includes(q) ||
         (i.source || '').toLowerCase().includes(q) ||
-        (i.assignee && i.assignee.toLowerCase().includes(q))
+        (i.assignee && i.assignee.toLowerCase().includes(q)) ||
+        (i.labels && i.labels.some(l => l.toLowerCase().includes(q)))
       );
     }
 

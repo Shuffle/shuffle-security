@@ -110,6 +110,7 @@ interface DisplayIncident {
   activity?: ActivityItem[];
   tasks?: IncidentTask[];
   rawOCSF?: any; // Use any to support both new and legacy formats
+  labels?: string[];
 }
 
 // Status and severity colors now imported from shared config
@@ -242,6 +243,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
         activity: mergedActivity,
         tasks,
         rawOCSF: data, // Store raw data for updates
+        labels: Array.isArray(ocsf.types) ? ocsf.types : [],
       };
     } else if (isLegacyOCSF) {
       // Legacy OCSF format
@@ -274,6 +276,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
         activity: activity || [],
         tasks,
         rawOCSF: legacyData,
+        labels: Array.isArray(findingInfo?.types) ? findingInfo.types : [],
       };
     }
     
@@ -395,6 +398,8 @@ const IncidentDetailPage = () => {
   const [newObservableType, setNewObservableType] = useState('ip');
   const [newObservableValue, setNewObservableValue] = useState('');
   const [editedCustomFields, setEditedCustomFields] = useState<Record<string, string | number | boolean>>({});
+  const [editedLabels, setEditedLabels] = useState<string[]>([]);
+  const [newLabelInput, setNewLabelInput] = useState('');
   
   // Activity/comments
   const [newComment, setNewComment] = useState('');
@@ -440,6 +445,7 @@ const IncidentDetailPage = () => {
     observables: string;
     customFields: string;
     tasks: string;
+    labels: string;
   } | null>(null);
   
   const { users, loading: usersLoading } = useUsers();
@@ -585,6 +591,7 @@ const IncidentDetailPage = () => {
         console.log('[CustomFields] Loaded fields:', Object.keys(flattenedCustomFields));
         
         setEditedCustomFields(flattenedCustomFields);
+        setEditedLabels(parsed.labels || []);
         setActivity(parsed.activity || []);
         const loadedTasks = parsed.tasks || customAttrs?.tasks || (parsed.rawOCSF as any)?.tasks || [];
         // Ensure all tasks have unique IDs (but don't filter duplicates - just normalize IDs)
@@ -598,6 +605,7 @@ const IncidentDetailPage = () => {
         const refsStr = JSON.stringify(parsed.references || []);
         const obsStr = JSON.stringify(parsed.observables || []);
         const tasksStr = JSON.stringify(normalizedTasks);
+        const labelsStr = JSON.stringify(parsed.labels || []);
         initialValuesRef.current = {
           title: parsed.title,
           message: htmlToPlainText(rawDesc),
@@ -609,6 +617,7 @@ const IncidentDetailPage = () => {
           observables: obsStr,
           customFields: cfStr,
           tasks: tasksStr,
+          labels: labelsStr,
         };
         console.log(`[Perf] State hydration: ${(performance.now() - stateStart).toFixed(1)}ms`);
         // Auto-switch to Details tab if no tasks (only on initial load)
@@ -736,6 +745,7 @@ const IncidentDetailPage = () => {
       status_id: statusId,
       status: statusLabel,
       assignee: editedAssignee.trim() || '',
+      types: editedLabels, // OCSF types[] field for labels
       observables: editedObservables, // Always include, even if empty array
       // Store tasks and activity at top level (primary location)
       tasks: tasks, // Always include, even if empty array
@@ -788,22 +798,25 @@ const IncidentDetailPage = () => {
         observables: obsJsonRef.current,
         customFields: cfJsonRef.current,
         tasks: tasksJsonRef.current,
+        labels: labelsJsonRef.current,
       };
     } catch (error) {
       toast.error('Failed to save changes');
     } finally {
       setIsSaving(false);
     }
-  }, [incident, editedTitle, editedMessage, editedSeverity, editedAssignee, editedStatus, editedTlp, editedReferences, editedObservables, editedCustomFields, activity, tasks, addItem]);
+  }, [incident, editedTitle, editedMessage, editedSeverity, editedAssignee, editedStatus, editedTlp, editedReferences, editedObservables, editedCustomFields, editedLabels, activity, tasks, addItem]);
 
   // Cache stringified complex values to avoid re-serializing on every render
   const tasksJsonRef = useRef('');
   const refsJsonRef = useRef('');
   const obsJsonRef = useRef('');
   const cfJsonRef = useRef('');
+  const labelsJsonRef = useRef('');
   useEffect(() => { tasksJsonRef.current = JSON.stringify(tasks); }, [tasks]);
   useEffect(() => { refsJsonRef.current = JSON.stringify(editedReferences); }, [editedReferences]);
   useEffect(() => { obsJsonRef.current = JSON.stringify(editedObservables); }, [editedObservables]);
+  useEffect(() => { labelsJsonRef.current = JSON.stringify(editedLabels); }, [editedLabels]);
   useEffect(() => {
     const start = performance.now();
     cfJsonRef.current = JSON.stringify(editedCustomFields);
@@ -835,6 +848,7 @@ const IncidentDetailPage = () => {
     if (obsJsonRef.current !== init.observables) changedFields.push('observables');
     if (cfJsonRef.current !== init.customFields) changedFields.push('customFields');
     if (tasksJsonRef.current !== init.tasks) changedFields.push('tasks');
+    if (labelsJsonRef.current !== init.labels) changedFields.push('labels');
     const hasChanges = changedFields.length > 0;
     
     if (hasChanges) {
@@ -850,7 +864,7 @@ const IncidentDetailPage = () => {
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [incident, editedTitle, editedMessage, editedSeverity, editedAssignee, editedStatus, editedTlp, editedReferences, editedObservables, editedCustomFields, tasks, saveToDatastore]);
+  }, [incident, editedTitle, editedMessage, editedSeverity, editedAssignee, editedStatus, editedTlp, editedReferences, editedObservables, editedCustomFields, editedLabels, tasks, saveToDatastore]);
 
   // Metrics calculation with MTTD and MTTR
   const metrics = useMemo(() => {
@@ -1520,6 +1534,69 @@ const IncidentDetailPage = () => {
                 <AccessTimeIcon sx={{ fontSize: 12 }} />
                 {incident.editedTs ? formatTimestamp(incident.editedTs) : formatTimestamp(incident.createdTs)}
               </Typography>
+
+              {/* Labels */}
+              {(editedLabels.length > 0 || true) && (
+                <>
+                  <Typography variant="caption" sx={{ color: 'text.disabled' }}>•</Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
+                    {editedLabels.map((label, idx) => (
+                      <Chip
+                        key={idx}
+                        label={label}
+                        size="small"
+                        onDelete={() => {
+                          autoProgressStatus();
+                          setEditedLabels(editedLabels.filter((_, i) => i !== idx));
+                        }}
+                        sx={{
+                          height: 20,
+                          fontSize: '0.65rem',
+                          fontWeight: 500,
+                          bgcolor: 'rgba(168, 85, 247, 0.12)',
+                          color: '#a855f7',
+                          '& .MuiChip-deleteIcon': { fontSize: 14, color: '#a855f7', '&:hover': { color: '#c084fc' } },
+                        }}
+                      />
+                    ))}
+                    <Box
+                      component="form"
+                      onSubmit={(e: React.FormEvent) => {
+                        e.preventDefault();
+                        const trimmed = newLabelInput.trim();
+                        if (trimmed && !editedLabels.includes(trimmed)) {
+                          autoProgressStatus();
+                          setEditedLabels([...editedLabels, trimmed]);
+                          setNewLabelInput('');
+                        }
+                      }}
+                      sx={{ display: 'inline-flex' }}
+                    >
+                      <TextField
+                        value={newLabelInput}
+                        onChange={(e) => setNewLabelInput(e.target.value)}
+                        placeholder="+ label"
+                        variant="standard"
+                        size="small"
+                        InputProps={{
+                          disableUnderline: true,
+                          sx: {
+                            fontSize: '0.7rem',
+                            color: '#a855f7',
+                            width: newLabelInput ? 'auto' : 60,
+                            minWidth: 60,
+                            px: 0.5,
+                            py: 0,
+                            '&:hover': { bgcolor: 'rgba(168, 85, 247, 0.08)' },
+                            borderRadius: 1,
+                          },
+                        }}
+                        sx={{ '& .MuiInput-root': { height: 20 } }}
+                      />
+                    </Box>
+                  </Box>
+                </>
+              )}
             </Box>
           </Box>
 
