@@ -593,6 +593,8 @@ export default function UsecaseAlluvialDiagram({
   const [loading, setLoading] = useState(true);
   const [webhookInfo, setWebhookInfo] = useState<{ url: string | null; exists: boolean; enabled: boolean; workflowId: string | null }>({ url: null, exists: false, enabled: false, workflowId: null });
   const [searchOpen, setSearchOpen] = useState<'left' | 'right' | null>(null);
+  // Track apps manually added to the destination via "+ Add" (bypasses category matching)
+  const [manualDestApps, setManualDestApps] = useState<Set<string>>(new Set());
   const pendingTogglesRef = useRef<Map<string, boolean>>(new Map());
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Cache Algolia icons for guest-added apps (name → icon URL)
@@ -1009,8 +1011,9 @@ export default function UsecaseAlluvialDiagram({
     }
     if (highlightCategory) {
       // Show validated case_management apps, mark forwarding-enabled ones
+      // Include apps that match category OR were manually added to destination
       const caseMgmtApps = allApps.filter(a =>
-        a.hasValidAuth && !isShuffleInternalApp(a.name) && matchesCategory(a.name, targetCategory) && !hiddenApps.has(a.name.toLowerCase())
+        a.hasValidAuth && !isShuffleInternalApp(a.name) && (matchesCategory(a.name, targetCategory) || manualDestApps.has(normalizeAppName(a.name))) && !hiddenApps.has(a.name.toLowerCase())
       );
       if (forwardAppNames && forwardAppNames.size > 0) {
         const enabledApps = caseMgmtApps
@@ -1023,8 +1026,8 @@ export default function UsecaseAlluvialDiagram({
       }
       return caseMgmtApps;
     }
-    return allApps.filter(a => a.hasValidAuth && matchesCategory(a.name, targetCategory) && !hiddenApps.has(a.name.toLowerCase()));
-  }, [allApps, targetCategory, highlightCategory, forwardAppNames, isLoggedIn, guestDestNames, guestAppIcons, hiddenApps]);
+    return allApps.filter(a => a.hasValidAuth && (matchesCategory(a.name, targetCategory) || manualDestApps.has(normalizeAppName(a.name))) && !hiddenApps.has(a.name.toLowerCase()));
+  }, [allApps, targetCategory, highlightCategory, forwardAppNames, isLoggedIn, guestDestNames, guestAppIcons, hiddenApps, manualDestApps]);
 
   const sourceMeta = TOOL_CATEGORIES.find(c => c.id === sourceCategory);
   const targetMeta = TOOL_CATEGORIES.find(c => c.id === targetCategory);
@@ -1458,6 +1461,7 @@ export default function UsecaseAlluvialDiagram({
             import('sonner').then(({ toast }) => toast.success(`${addedAppName.replace(/_/g, ' ')} added to ingestion sources`));
           } else {
             setForwardAppNames(prev => { const next = new Set(prev || []); next.add(normalizeAppName(addedAppName)); return next; });
+            setManualDestApps(prev => { const next = new Set(prev); next.add(normalizeAppName(addedAppName)); return next; });
             setHiddenApps(prev => { const next = new Set(prev); next.delete(addedAppName.toLowerCase()); return next; });
             import('sonner').then(({ toast }) => toast.success(`${addedAppName.replace(/_/g, ' ')} added to forwarding`));
           }
