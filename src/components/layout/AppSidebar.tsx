@@ -767,12 +767,36 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
         )}
 
         {/* Execution Usage Warning */}
-        {!visuallyCollapsed && userInfo?.app_execution_limit && userInfo.app_execution_limit > 0 && (() => {
+        {userInfo?.app_execution_limit && userInfo.app_execution_limit > 0 && (() => {
           const usage = userInfo.app_execution_usage || 0;
           const limit = userInfo.app_execution_limit;
           const pct = (usage / limit) * 100;
           if (pct < 65) return null;
           const isOver = pct >= 100;
+
+          // Collapsed: show a small icon indicator
+          if (visuallyCollapsed) {
+            return (
+              <Box sx={{ display: 'flex', justifyContent: 'center', pb: 1.5 }}>
+                <Tooltip title={isOver ? 'App run limit reached' : `${pct.toFixed(0)}% of app runs used`} placement="right">
+                  <Box sx={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: '50%',
+                    bgcolor: isOver ? 'hsl(var(--destructive) / 0.15)' : 'hsl(var(--severity-medium) / 0.15)',
+                    border: `1.5px solid ${isOver ? 'hsl(var(--destructive) / 0.5)' : 'hsl(var(--severity-medium) / 0.5)'}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'default',
+                  }}>
+                    <WarningAmberIcon sx={{ fontSize: 16, color: isOver ? 'hsl(var(--destructive))' : 'hsl(var(--severity-medium))' }} />
+                  </Box>
+                </Tooltip>
+              </Box>
+            );
+          }
+
           return (
             <Box sx={{ px: 2, pb: 1.5 }}>
               <Box sx={{
