@@ -766,6 +766,50 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
           </Box>
         )}
 
+        {/* Execution Usage Warning */}
+        {!visuallyCollapsed && userInfo?.app_execution_limit && userInfo.app_execution_limit > 0 && (() => {
+          const usage = userInfo.app_execution_usage || 0;
+          const limit = userInfo.app_execution_limit;
+          const pct = (usage / limit) * 100;
+          if (pct < 75) return null;
+          const isOver = pct >= 100;
+          return (
+            <Box sx={{ px: 2, pb: 1.5 }}>
+              <Box sx={{
+                p: 1.5,
+                borderRadius: 1.5,
+                bgcolor: isOver ? 'hsl(var(--destructive) / 0.1)' : 'hsl(var(--severity-medium) / 0.1)',
+                border: `1px solid ${isOver ? 'hsl(var(--destructive) / 0.3)' : 'hsl(var(--severity-medium) / 0.3)'}`,
+              }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.75 }}>
+                  <WarningAmberIcon sx={{ fontSize: 14, color: isOver ? 'hsl(var(--destructive))' : 'hsl(var(--severity-medium))' }} />
+                  <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: isOver ? 'hsl(var(--destructive))' : 'hsl(var(--severity-medium))' }}>
+                    {isOver ? 'Limit Reached' : 'Approaching Limit'}
+                  </Typography>
+                </Box>
+                <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.4, mb: 1 }}>
+                  {isOver
+                    ? 'App executions exhausted. Ingestion may stop until the limit resets or is increased.'
+                    : `${pct.toFixed(0)}% of app executions used. Consider upgrading soon.`}
+                </Typography>
+                {/* Usage bar */}
+                <Box sx={{ width: '100%', height: 4, borderRadius: 2, bgcolor: 'hsl(var(--muted))' }}>
+                  <Box sx={{
+                    width: `${Math.min(pct, 100)}%`,
+                    height: '100%',
+                    borderRadius: 2,
+                    bgcolor: isOver ? 'hsl(var(--destructive))' : 'hsl(var(--severity-medium))',
+                    transition: 'width 0.3s ease',
+                  }} />
+                </Box>
+                <Typography sx={{ fontSize: '0.6rem', color: 'hsl(var(--muted-foreground))', mt: 0.5, textAlign: 'right' }}>
+                  {usage.toLocaleString()} / {limit.toLocaleString()}
+                </Typography>
+              </Box>
+            </Box>
+          );
+        })()}
+
         {/* Settings Button (User Section) */}
         <Box
           onClick={(e) => setUserMenuAnchor(e.currentTarget)}

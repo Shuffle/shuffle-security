@@ -15,6 +15,8 @@ interface UserInfo {
   active_org?: Organization;
   orgs?: Organization[];
   support?: boolean;
+  app_execution_limit?: number;
+  app_execution_usage?: number;
 }
 
 interface AuthContextType {
@@ -69,6 +71,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           active_org: data.active_org,
           orgs: data.orgs || [],
           support: data.support === true,
+          app_execution_limit: data.app_execution_limit,
+          app_execution_usage: data.app_execution_usage,
         };
         setUserInfo(info);
         // Store in localStorage so datastore service can access org ID
