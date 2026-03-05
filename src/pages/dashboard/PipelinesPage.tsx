@@ -78,6 +78,7 @@ interface DefaultPipeline {
   hasPlaceholders?: boolean;
   matchKeys: string[]; // keywords to match against deployed pipelines
   category: PipelineTemplateCategory;
+  _dynamicWebhook?: boolean; // flag for dynamic webhook URL resolution
 }
 
 const TEMPLATE_CATEGORY_META: Record<PipelineTemplateCategory, { label: string; description: string }> = {
@@ -103,11 +104,12 @@ const DEFAULT_PIPELINES: DefaultPipeline[] = [
   },
   {
     label: 'Sigma Rule Alerting',
-    description: 'Live export with Sigma rule matching, forwarded to a webhook',
-    command: 'export live=true | sigma "/tmp/sigma_rules" | to "http://localhost:5002/api/v1/hooks/webhook_e031c4c0-3f7e-4c0f-a8d2-ff87be206907"',
-    hasPlaceholders: true,
+    description: 'Live export with Sigma rule matching, forwarded to the incidents webhook',
+    command: '', // Dynamically resolved from the Ingestion Webhook workflow
+    hasPlaceholders: false,
     matchKeys: ['sigma', 'sigma_rules'],
     category: 'detect',
+    _dynamicWebhook: true, // flag for dynamic resolution
   },
   {
     label: 'OpenSearch Forwarder',
@@ -222,6 +224,8 @@ const PipelinesPage = () => {
   // Optimistic pipelines (pending creation)
   const [pendingPipelines, setPendingPipelines] = useState<Pipeline[]>([]);
 
+  // Dynamic webhook URL for Sigma template
+  const [webhookUrl, setWebhookUrl] = useState<string | null>(null);
   // Auto-select best environment when create dialog opens
   useEffect(() => {
     if (createOpen && !newEnvId && environments.length > 0) {
@@ -236,13 +240,17 @@ const PipelinesPage = () => {
   const fetchEnvironments = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Fetch environments and triggers (pipelines) in parallel
-      const [envResponse, triggersResponse] = await Promise.all([
+      // Fetch environments, triggers (pipelines), and workflows in parallel
+      const [envResponse, triggersResponse, workflowsResponse] = await Promise.all([
         fetch(getApiUrl('/api/v1/getenvironments'), {
           credentials: 'include',
           headers: { ...getAuthHeader() },
         }),
         fetch(getApiUrl('/api/v1/triggers'), {
+          credentials: 'include',
+          headers: { ...getAuthHeader() },
+        }),
+        fetch(getApiUrl('/api/v1/workflows'), {
           credentials: 'include',
           headers: { ...getAuthHeader() },
         }),
@@ -305,6 +313,26 @@ const PipelinesPage = () => {
 
       console.log('[PipelinesPage] Total pipelines found:', allPipelines.length);
       setPipelines(allPipelines);
+
+      // Extract webhook URL from "Ingestion Webhook" workflow
+      if (workflowsResponse.ok) {
+        try {
+          const workflows = await workflowsResponse.json();
+          const workflowList = Array.isArray(workflows) ? workflows : (workflows.workflows || []);
+          const webhookWorkflow = workflowList.find((w: any) => w.name === 'Ingestion Webhook');
+          if (webhookWorkflow) {
+            const webhookTrigger = (webhookWorkflow.triggers || []).find(
+              (t: any) => t.trigger_type === 'WEBHOOK' || t.app_name === 'Webhook'
+            );
+            if (webhookTrigger) {
+              const webhookId = webhookTrigger.id || webhookTrigger.trigger_id;
+              if (webhookId) {
+                setWebhookUrl(getApiUrl(`/api/v1/hooks/webhook_${webhookId}`));
+              }
+            }
+          }
+        } catch { /* ignore workflow parse errors */ }
+      }
     } catch (error) {
       console.error('Failed to fetch pipelines:', error);
       toast.error('Failed to load pipelines');
@@ -694,8 +722,16 @@ Use case: ${aiPrompt}`,
     });
   };
 
-  // All templates are always available
-  const availableTemplates = DEFAULT_PIPELINES;
+  // Resolve dynamic webhook URLs in templates
+  const availableTemplates = DEFAULT_PIPELINES.map(t => {
+    if (t._dynamicWebhook && webhookUrl) {
+      return { ...t, command: `export live=true | sigma "/tmp/sigma_rules" | to "${webhookUrl}"`, hasPlaceholders: false };
+    }
+    if (t._dynamicWebhook && !webhookUrl) {
+      return { ...t, command: 'export live=true | sigma "/tmp/sigma_rules" | to "<enable webhook on Incidents page>"', hasPlaceholders: true };
+    }
+    return t;
+  });
 
   // Filtering
   const uniqueStates = [...new Set(pipelines.map(p => getStateLabel(p)))].sort();
