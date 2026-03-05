@@ -761,8 +761,16 @@ Use case: ${aiPrompt}`,
           <Tooltip title="Refresh">
             <IconButton
               onClick={() => { setIsLoading(true); fetchEnvironments(); }}
-              size="small"
-              sx={{ color: 'hsl(var(--muted-foreground))' }}
+              sx={{
+                width: 36,
+                height: 36,
+                borderRadius: 1,
+                border: '1px solid hsl(var(--border))',
+                color: 'hsl(var(--foreground))',
+                '&:hover': {
+                  backgroundColor: 'hsl(var(--muted))',
+                },
+              }}
             >
               <RefreshIcon fontSize="small" />
             </IconButton>
@@ -774,12 +782,12 @@ Use case: ${aiPrompt}`,
                 startIcon={<AddIcon />}
                 onClick={() => setCreateOpen(true)}
                 disabled={!hasValidSensor}
-                size="small"
                 sx={{
-                  bgcolor: '#FF6600',
+                  height: 36,
+                  backgroundColor: 'hsl(var(--primary))',
                   textTransform: 'none',
                   fontWeight: 600,
-                  '&:hover': { bgcolor: '#e55b00' },
+                  '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.9)' },
                   '&.Mui-disabled': { bgcolor: 'hsla(var(--muted-foreground) / 0.2)', color: 'hsl(var(--muted-foreground))' },
                 }}
               >
