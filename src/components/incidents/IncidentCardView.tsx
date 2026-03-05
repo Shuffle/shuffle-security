@@ -408,17 +408,29 @@ export const IncidentCardView = ({
                       {incident.source}
                     </Typography>
                   )}
-                  {incident.assignee && (
+                   {incident.assignee && (
                     <>
                       <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
                         •
                       </Typography>
-                      <Typography
-                        variant="caption"
-                        sx={{ color: 'hsl(var(--muted-foreground))' }}
-                      >
-                        {incident.assignee}
-                      </Typography>
+                      <Chip
+                        label={incident.assignee}
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          onFilterChange?.('assignee', incident.assignee || '');
+                        }}
+                        sx={{
+                          backgroundColor: 'rgba(251, 146, 60, 0.12)',
+                          color: '#fb923c',
+                          fontWeight: 500,
+                          fontSize: '0.65rem',
+                          height: 22,
+                          cursor: 'pointer',
+                          '&:hover': { backgroundColor: 'rgba(251, 146, 60, 0.22)' },
+                        }}
+                      />
                     </>
                   )}
                   {(incident.taskCount ?? 0) > 0 && (
@@ -463,12 +475,12 @@ export const IncidentCardView = ({
                           e.preventDefault();
                         }}
                         sx={{
-                          backgroundColor: 'rgba(168, 85, 247, 0.12)',
-                          color: '#a855f7',
+                          backgroundColor: 'rgba(6, 182, 212, 0.12)',
+                          color: '#06b6d4',
                           fontWeight: 500,
                           fontSize: '0.65rem',
                           height: 22,
-                          '& .MuiChip-icon': { color: '#a855f7', ml: 0.5 },
+                          '& .MuiChip-icon': { color: '#06b6d4', ml: 0.5 },
                         }}
                       />
                     ))}
@@ -478,8 +490,8 @@ export const IncidentCardView = ({
                           label={`+${incident.labels.length - 3}`}
                           size="small"
                           sx={{
-                            backgroundColor: 'rgba(168, 85, 247, 0.08)',
-                            color: '#a855f7',
+                           backgroundColor: 'rgba(6, 182, 212, 0.08)',
+                            color: '#06b6d4',
                             fontWeight: 500,
                             fontSize: '0.65rem',
                             height: 22,
