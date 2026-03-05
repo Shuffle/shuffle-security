@@ -1627,59 +1627,6 @@ const DetectionOnboardingPage = () => {
                         </Typography>
                       </Alert>
                     )}
-                    
-                    <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-                      {/* Running status */}
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box
-                          sx={{
-                            width: 10,
-                            height: 10,
-                            borderRadius: '50%',
-                            backgroundColor: isSensorRunning(selectedEnvironment)
-                              ? 'hsl(var(--severity-low))'
-                              : 'hsl(var(--severity-medium))',
-                          }}
-                        />
-                        <Typography sx={{ fontSize: '0.875rem', color: 'hsl(var(--muted-foreground))' }}>
-                          {isSensorRunning(selectedEnvironment) ? 'Running' : 'Not Running'}
-                        </Typography>
-                      </Box>
-                      
-                      {/* Detection Ready status */}
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box
-                          sx={{
-                            width: 10,
-                            height: 10,
-                            borderRadius: '50%',
-                            backgroundColor: isPipelineReady(selectedEnvironment)
-                              ? 'hsl(var(--severity-info))'
-                              : 'hsl(var(--muted-foreground) / 0.3)',
-                          }}
-                        />
-                        <Typography sx={{ fontSize: '0.875rem', color: 'hsl(var(--muted-foreground))' }}>
-                          {isPipelineReady(selectedEnvironment) ? 'Detection Ready' : 'Detection Not Ready'}
-                        </Typography>
-                      </Box>
-                      
-                      {/* Pipelines count */}
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box
-                          sx={{
-                            width: 10,
-                            height: 10,
-                            borderRadius: '50%',
-                            backgroundColor: getPipelineCount(selectedEnvironment) > 0
-                              ? 'hsl(var(--primary))'
-                              : 'hsl(var(--muted-foreground) / 0.3)',
-                          }}
-                        />
-                        <Typography sx={{ fontSize: '0.875rem', color: 'hsl(var(--muted-foreground))' }}>
-                          {getPipelineCount(selectedEnvironment)} Pipeline{getPipelineCount(selectedEnvironment) !== 1 ? 's' : ''}
-                        </Typography>
-                      </Box>
-                    </Box>
                   </Box>
                 )}
               </Box>
