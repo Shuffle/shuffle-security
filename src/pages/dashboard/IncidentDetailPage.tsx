@@ -1535,68 +1535,6 @@ const IncidentDetailPage = () => {
                 {incident.editedTs ? formatTimestamp(incident.editedTs) : formatTimestamp(incident.createdTs)}
               </Typography>
 
-              {/* Labels */}
-              {(editedLabels.length > 0 || true) && (
-                <>
-                  <Typography variant="caption" sx={{ color: 'text.disabled' }}>•</Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
-                    {editedLabels.map((label, idx) => (
-                      <Chip
-                        key={idx}
-                        label={label}
-                        size="small"
-                        onDelete={() => {
-                          autoProgressStatus();
-                          setEditedLabels(editedLabels.filter((_, i) => i !== idx));
-                        }}
-                        sx={{
-                          height: 20,
-                          fontSize: '0.65rem',
-                          fontWeight: 500,
-                          bgcolor: 'rgba(168, 85, 247, 0.12)',
-                          color: '#a855f7',
-                          '& .MuiChip-deleteIcon': { fontSize: 14, color: '#a855f7', '&:hover': { color: '#c084fc' } },
-                        }}
-                      />
-                    ))}
-                    <Box
-                      component="form"
-                      onSubmit={(e: React.FormEvent) => {
-                        e.preventDefault();
-                        const trimmed = newLabelInput.trim();
-                        if (trimmed && !editedLabels.includes(trimmed)) {
-                          autoProgressStatus();
-                          setEditedLabels([...editedLabels, trimmed]);
-                          setNewLabelInput('');
-                        }
-                      }}
-                      sx={{ display: 'inline-flex' }}
-                    >
-                      <TextField
-                        value={newLabelInput}
-                        onChange={(e) => setNewLabelInput(e.target.value)}
-                        placeholder="+ label"
-                        variant="standard"
-                        size="small"
-                        InputProps={{
-                          disableUnderline: true,
-                          sx: {
-                            fontSize: '0.7rem',
-                            color: '#a855f7',
-                            width: newLabelInput ? 'auto' : 60,
-                            minWidth: 60,
-                            px: 0.5,
-                            py: 0,
-                            '&:hover': { bgcolor: 'rgba(168, 85, 247, 0.08)' },
-                            borderRadius: 1,
-                          },
-                        }}
-                        sx={{ '& .MuiInput-root': { height: 20 } }}
-                      />
-                    </Box>
-                  </Box>
-                </>
-              )}
             </Box>
           </Box>
 
@@ -2400,6 +2338,66 @@ const IncidentDetailPage = () => {
                 namespace="incidents"
                 labels={[incident.id]}
               />
+            </Box>
+
+            {/* Labels */}
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 1 }}>
+                Labels
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexWrap: 'wrap' }}>
+                {editedLabels.map((label, idx) => (
+                  <Chip
+                    key={idx}
+                    label={label}
+                    size="small"
+                    onDelete={() => {
+                      autoProgressStatus();
+                      setEditedLabels(editedLabels.filter((_, i) => i !== idx));
+                    }}
+                    sx={{
+                      height: 24,
+                      fontSize: '0.75rem',
+                      fontWeight: 500,
+                      bgcolor: 'rgba(168, 85, 247, 0.12)',
+                      color: '#a855f7',
+                      '& .MuiChip-deleteIcon': { fontSize: 16, color: '#a855f7', '&:hover': { color: '#c084fc' } },
+                    }}
+                  />
+                ))}
+                <Box
+                  component="form"
+                  onSubmit={(e: React.FormEvent) => {
+                    e.preventDefault();
+                    const trimmed = newLabelInput.trim();
+                    if (trimmed && !editedLabels.includes(trimmed)) {
+                      autoProgressStatus();
+                      setEditedLabels([...editedLabels, trimmed]);
+                      setNewLabelInput('');
+                    }
+                  }}
+                  sx={{ display: 'inline-flex' }}
+                >
+                  <TextField
+                    value={newLabelInput}
+                    onChange={(e) => setNewLabelInput(e.target.value)}
+                    placeholder="+ Add label"
+                    variant="outlined"
+                    size="small"
+                    InputProps={{
+                      sx: {
+                        fontSize: '0.75rem',
+                        height: 28,
+                        bgcolor: 'rgba(0,0,0,0.2)',
+                        '& fieldset': { borderColor: 'rgba(255,255,255,0.1)', borderStyle: 'dashed' },
+                        '&:hover fieldset': { borderColor: 'rgba(168, 85, 247, 0.3)' },
+                        '&.Mui-focused fieldset': { borderColor: '#a855f7' },
+                      },
+                    }}
+                    sx={{ width: 120 }}
+                  />
+                </Box>
+              </Box>
             </Box>
           </Section>
 
