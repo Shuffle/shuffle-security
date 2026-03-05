@@ -109,6 +109,8 @@ interface AppSearchDrawerProps {
   onSelectOverride?: (app: { name: string; icon: string; categories: string[] }) => boolean;
   /** Called when the detail drawer closes, with the app name that was being configured */
   onDetailClose?: (appName: string) => void;
+  /** When set, replaces Activate with "+ Add" in the detail drawer */
+  onAddToCanvas?: (appName: string) => void;
 }
 
 export default function AppSearchDrawer({
@@ -123,6 +125,7 @@ export default function AppSearchDrawer({
   onQuickSelect,
   onSelectOverride,
   onDetailClose,
+  onAddToCanvas,
 }: AppSearchDrawerProps) {
   const [detailAppName, setDetailAppName] = useState<string | null>(null);
 
@@ -246,6 +249,7 @@ export default function AppSearchDrawer({
         appName={detailAppName}
         anchor={anchor}
         width={width}
+        onAddToCanvas={onAddToCanvas}
       />
     </>
   );

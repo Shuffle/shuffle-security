@@ -94,6 +94,8 @@ interface AppDetailDrawerProps {
   width?: number;
   /** Called when drawer closes so parent can refresh data */
   onRefresh?: () => void;
+  /** When set, replaces the Activate button with "+ Add" and calls this on click */
+  onAddToCanvas?: (appName: string) => void;
 }
 
 export default function AppDetailDrawer({
@@ -103,6 +105,7 @@ export default function AppDetailDrawer({
   anchor = 'right',
   width = 520,
   onRefresh,
+  onAddToCanvas,
 }: AppDetailDrawerProps) {
   const { isAuthenticated } = useAuth();
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
@@ -444,8 +447,26 @@ export default function AppDetailDrawer({
                   )}
                 </Box>
 
-                {/* Activate toggle */}
-                {isAuthenticated && isActivated !== null && (
+                {/* Add to canvas button (usecase page) */}
+                {onAddToCanvas && appName && (
+                  <Button
+                    onClick={() => {
+                      onAddToCanvas(appName);
+                      onClose();
+                    }}
+                    variant="contained"
+                    size="small"
+                    sx={{
+                      textTransform: 'none', fontWeight: 600, fontSize: '0.72rem', borderRadius: 2, px: 1.5, py: 0.5, minHeight: 0, flexShrink: 0,
+                      bgcolor: '#FF6600', '&:hover': { bgcolor: '#e55c00' },
+                    }}
+                  >
+                    + Add
+                  </Button>
+                )}
+
+                {/* Activate toggle (non-usecase contexts) */}
+                {!onAddToCanvas && isAuthenticated && isActivated !== null && (
                   <Button
                     onClick={handleActivateToggle}
                     disabled={activateLoading}

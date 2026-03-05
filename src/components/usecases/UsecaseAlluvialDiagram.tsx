@@ -1417,6 +1417,19 @@ export default function UsecaseAlluvialDiagram({
         title={`Add ${searchOpen === 'left' ? (sourceLabel) : (targetMeta?.label || targetCategory)} Tool`}
         subtitle="Search and authenticate an integration"
         showPipelinesBanner={isSiemSource && searchOpen === 'left'}
+        onAddToCanvas={isLoggedIn ? (addedAppName) => {
+          const side = searchOpen || 'right';
+          if (side === 'left' && highlightCategory) {
+            handleToggleSync(addedAppName, true);
+            setHiddenApps(prev => { const next = new Set(prev); next.delete(addedAppName.toLowerCase()); return next; });
+            import('sonner').then(({ toast }) => toast.success(`${addedAppName.replace(/_/g, ' ')} added to ingestion sources`));
+          } else {
+            setForwardAppNames(prev => { const next = new Set(prev || []); next.add(normalizeAppName(addedAppName)); return next; });
+            setHiddenApps(prev => { const next = new Set(prev); next.delete(addedAppName.toLowerCase()); return next; });
+            import('sonner').then(({ toast }) => toast.success(`${addedAppName.replace(/_/g, ' ')} added to forwarding`));
+          }
+          setSearchOpen(null);
+        } : undefined}
         onQuickSelect={!isLoggedIn ? (app) => {
           if (searchOpen) addGuestApp(searchOpen, app);
         } : undefined}
