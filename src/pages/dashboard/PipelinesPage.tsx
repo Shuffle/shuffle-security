@@ -725,7 +725,7 @@ Use case: ${aiPrompt}`,
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
             <StorageIcon sx={{ color: '#FF6600', fontSize: 28 }} />
             <Typography variant="h4" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}>
-              Pipeline Controller
+              Tenzir Pipelines
             </Typography>
             <Chip
               label="Tenzir"
