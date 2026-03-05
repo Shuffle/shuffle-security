@@ -1478,12 +1478,12 @@ const IncidentDetailPage = () => {
                     bgcolor: isAIAssignee(editedAssignee) 
                       ? 'rgba(34, 197, 94, 0.15)' 
                       : editedAssignee 
-                        ? 'rgba(168, 85, 247, 0.15)' 
+                        ? 'rgba(251, 146, 60, 0.15)' 
                         : 'rgba(148, 163, 184, 0.1)',
                     color: isAIAssignee(editedAssignee) 
                       ? '#22c55e' 
                       : editedAssignee 
-                        ? '#a855f7' 
+                        ? '#fb923c' 
                         : 'text.secondary',
                     borderRadius: 1,
                     px: 1,
@@ -1493,7 +1493,7 @@ const IncidentDetailPage = () => {
                       color: isAIAssignee(editedAssignee) 
                         ? '#22c55e' 
                         : editedAssignee 
-                          ? '#a855f7' 
+                          ? '#fb923c' 
                           : 'text.secondary', 
                       fontSize: 16 
                     },
@@ -2359,9 +2359,9 @@ const IncidentDetailPage = () => {
                       height: 24,
                       fontSize: '0.75rem',
                       fontWeight: 500,
-                      bgcolor: 'rgba(168, 85, 247, 0.12)',
-                      color: '#a855f7',
-                      '& .MuiChip-deleteIcon': { fontSize: 16, color: '#a855f7', '&:hover': { color: '#c084fc' } },
+                      bgcolor: 'rgba(6, 182, 212, 0.12)',
+                      color: '#06b6d4',
+                      '& .MuiChip-deleteIcon': { fontSize: 16, color: '#06b6d4', '&:hover': { color: '#67e8f9' } },
                     }}
                   />
                 ))}
@@ -2390,8 +2390,8 @@ const IncidentDetailPage = () => {
                         height: 28,
                         bgcolor: 'rgba(0,0,0,0.2)',
                         '& fieldset': { borderColor: 'rgba(255,255,255,0.1)', borderStyle: 'dashed' },
-                        '&:hover fieldset': { borderColor: 'rgba(168, 85, 247, 0.3)' },
-                        '&.Mui-focused fieldset': { borderColor: '#a855f7' },
+                        '&:hover fieldset': { borderColor: 'rgba(6, 182, 212, 0.3)' },
+                        '&.Mui-focused fieldset': { borderColor: '#06b6d4' },
                       },
                     }}
                     sx={{ width: 120 }}
