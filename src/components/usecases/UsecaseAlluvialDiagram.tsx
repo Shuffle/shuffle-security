@@ -284,8 +284,14 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, disa
               {app.name}
             </Typography>
             {!isSample && (
-              <Typography sx={{ fontSize: '0.7rem', color: disabled ? 'hsl(var(--muted-foreground))' : app.hasValidAuth ? 'hsl(var(--severity-low))' : 'hsl(var(--muted-foreground))' }}>
-                {disabled ? 'Not enabled for ingestion' : app.hasValidAuth ? 'Enabled' : app.isActiveOnly ? 'Not enabled' : 'Inactive'}
+              <Typography sx={{ fontSize: '0.7rem', color: disabled ? 'hsl(var(--muted-foreground))' : (app.isEnabled === false) ? 'hsl(var(--muted-foreground))' : app.hasValidAuth ? 'hsl(var(--severity-low))' : 'hsl(var(--muted-foreground))' }}>
+                {disabled
+                  ? 'Not enabled for ingestion'
+                  : (app.isEnabled === false)
+                    ? (side === 'right' ? 'Not forwarding' : 'Not enabled')
+                    : app.hasValidAuth
+                      ? (side === 'right' ? 'Forwarding' : 'Enabled')
+                      : app.isActiveOnly ? 'Not enabled' : 'Inactive'}
               </Typography>
             )}
           </Box>
@@ -1142,8 +1148,9 @@ export default function UsecaseAlluvialDiagram({
             );
           })}
 
-          {/* Flow paths: center → target */}
-          {targetApps.map((_, i) => {
+          {/* Flow paths: center → target (only for enabled/forwarding apps) */}
+          {targetApps.map((app, i) => {
+            if (isLoggedIn && app.isEnabled === false) return null;
             const toY = getY(i, targetApps.length);
             return (
               <path
@@ -1152,7 +1159,7 @@ export default function UsecaseAlluvialDiagram({
                 fill="none"
                 stroke="url(#flow-gradient-right)"
                 strokeWidth={2.5}
-                opacity={0.7}
+                opacity={app.isEnabled === false ? 0.2 : 0.7}
               />
             );
           })}
@@ -1172,7 +1179,7 @@ export default function UsecaseAlluvialDiagram({
             );
           })}
           {(isLoggedIn ? sourceApps.some(app => app.hasValidAuth && app.isEnabled !== false) : sourceApps.length > 0) && targetApps.map((app, i) => {
-            if (isLoggedIn && !app.hasValidAuth) return null;
+            if (isLoggedIn && (!app.hasValidAuth || app.isEnabled === false)) return null;
             const toY = getY(i, targetApps.length);
             const pathD = makePath(centerX + 28, centerY, rightX - nodeSize / 2 - 4, toY);
             return (
