@@ -289,6 +289,8 @@ const PipelinesPage = () => {
 
     try {
       const env = environments.find(e => e.id === pipeline._environmentId);
+      // API expects "stop" for both stop and delete operations
+      const apiType = action === 'delete' ? 'stop' : action;
       const response = await fetch(getApiUrl('/api/v1/triggers/pipeline'), {
         method: 'POST',
         credentials: 'include',
@@ -298,8 +300,7 @@ const PipelinesPage = () => {
         },
         body: JSON.stringify({
           name: pipeline.name || pipeline.definition || '',
-          id: pipeline.pipeline || pipeline.id || '',
-          type: action,
+          type: apiType,
           command: pipeline.definition || pipeline.command || '',
           environment: env?.Name || pipeline._environmentName,
         }),
@@ -345,13 +346,12 @@ const PipelinesPage = () => {
           method: 'POST',
           credentials: 'include',
           headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: editingPipeline.name || editingPipeline.definition || '',
-            id: editingPipeline.pipeline || editingPipeline.id || '',
-            type: 'delete',
-            command: editingPipeline.definition || editingPipeline.command || '',
-            environment: oldEnv?.Name || editingPipeline._environmentName,
-          }),
+           body: JSON.stringify({
+             name: editingPipeline.name || editingPipeline.definition || '',
+             type: 'stop',
+             command: editingPipeline.definition || editingPipeline.command || '',
+             environment: oldEnv?.Name || editingPipeline._environmentName,
+           }),
         });
       }
 
