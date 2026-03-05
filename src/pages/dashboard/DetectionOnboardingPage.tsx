@@ -1629,14 +1629,18 @@ const DetectionOnboardingPage = () => {
                       setCreateDialogOpen(true);
                     }}
                     sx={{
-                      borderColor: 'hsl(var(--primary))',
-                      color: 'hsl(var(--primary))',
+                      borderColor: selectedEnvironment && !isSensorValid(selectedEnvironment)
+                        ? 'hsl(var(--primary))'
+                        : 'hsl(var(--border))',
+                      color: selectedEnvironment && !isSensorValid(selectedEnvironment)
+                        ? 'hsl(var(--primary))'
+                        : 'hsl(var(--foreground))',
                       textTransform: 'none',
                       height: 40,
-                      fontWeight: 600,
+                      fontWeight: selectedEnvironment && !isSensorValid(selectedEnvironment) ? 600 : 500,
                       '&:hover': {
                         borderColor: 'hsl(var(--primary))',
-                        backgroundColor: 'hsl(var(--primary) / 0.1)',
+                        backgroundColor: 'hsl(var(--primary) / 0.08)',
                         color: 'hsl(var(--primary))',
                       },
                     }}
