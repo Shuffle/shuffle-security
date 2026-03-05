@@ -906,6 +906,7 @@ const IncidentsPage = () => {
           {/* Ingestion Sources - grouped in a subtle container with add button */}
           {(ingestionApps.length > 0 || webhookIngestion.exists || webhookIngestion.enabled) && (
             <Box sx={{ 
+              position: 'relative',
               display: 'flex', 
               alignItems: 'center', 
               gap: 0.5,
@@ -915,6 +916,23 @@ const IncidentsPage = () => {
               px: 0.75,
               py: 0.5,
             }}>
+              <Typography sx={{
+                position: 'absolute',
+                top: -8,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                fontSize: '0.6rem',
+                fontWeight: 600,
+                color: 'hsl(var(--muted-foreground))',
+                bgcolor: 'hsl(var(--card))',
+                px: 0.75,
+                lineHeight: 1,
+                letterSpacing: '0.05em',
+                textTransform: 'uppercase',
+                whiteSpace: 'nowrap',
+              }}>
+                Automation
+              </Typography>
               <WebhookIngestionButton webhook={webhookIngestion} onToggled={fetchIngestionApps} />
               {ingestionApps.map(app => (
                 <IngestionSourceButton key={app.name} app={app} onToggle={handleToggleApp} />
