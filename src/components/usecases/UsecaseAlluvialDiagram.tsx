@@ -7,12 +7,14 @@
  * matching the usecase's source category visually highlighted (ring glow).
  */
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Box, Typography, Avatar, Tooltip, IconButton, Chip } from '@mui/material';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { Box, Typography, Avatar, Tooltip, IconButton, Chip, Popover, Button } from '@mui/material';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import BlockIcon from '@mui/icons-material/Block';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import AppSearchDrawer from '@/components/shared/AppSearchDrawer';
-import AppDetailDrawer from '@/components/shared/AppDetailDrawer';
 import { useAuth } from '@/context/AuthContext';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
@@ -124,9 +126,24 @@ function getStatusColor(app: AppNode): string {
 
 // ── App bubble component ───────────────────────────────────────────────────────
 
-function AppBubble({ app, size = 40, highlighted = false, isSample = false, disabled = false, onClickApp, onRemoveApp }: { app: AppNode; size?: number; highlighted?: boolean; isSample?: boolean; disabled?: boolean; onClickApp?: (appName: string) => void; onRemoveApp?: (appName: string) => void }) {
+function AppBubble({ app, size = 40, highlighted = false, isSample = false, disabled = false, onClickApp, onRemoveApp, onToggleSync }: { app: AppNode; size?: number; highlighted?: boolean; isSample?: boolean; disabled?: boolean; onClickApp?: (appName: string) => void; onRemoveApp?: (appName: string) => void; onToggleSync?: (appName: string, enabled: boolean) => void }) {
   const [imgFailed, setImgFailed] = useState(false);
   const [hovered, setHovered] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const popoverOpen = Boolean(anchorEl);
+
+  const displayName = app.name.replace(/_/g, ' ');
+  const isEnabled = app.isEnabled !== false;
+
+  const handleClick = (e: React.MouseEvent<HTMLElement>) => {
+    if (isSample) return;
+    setAnchorEl(e.currentTarget);
+  };
+
+  const handleToggle = () => {
+    setAnchorEl(null);
+    onToggleSync?.(app.name, !isEnabled);
+  };
 
   const content = (
     <Box
@@ -239,31 +256,102 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, disa
   );
 
   return (
-    <Tooltip
-      title={
-        <Box sx={{ textAlign: 'left', p: 0.5 }}>
-          <Typography sx={{ fontWeight: 600, fontSize: '0.85rem', color: 'hsl(var(--foreground))' }}>
-            {app.name}
-          </Typography>
-          {!isSample && (
-            <Typography sx={{ fontSize: '0.7rem', color: disabled ? 'hsl(var(--muted-foreground))' : app.hasValidAuth ? 'hsl(var(--severity-low))' : 'hsl(var(--muted-foreground))' }}>
-              {disabled ? 'Not enabled for ingestion' : app.hasValidAuth ? 'Authenticated' : app.isActiveOnly ? 'Not authenticated' : 'Inactive'}
+    <>
+      <Tooltip
+        title={
+          <Box sx={{ textAlign: 'left', p: 0.5 }}>
+            <Typography sx={{ fontWeight: 600, fontSize: '0.85rem', color: 'hsl(var(--foreground))' }}>
+              {app.name}
             </Typography>
+            {!isSample && (
+              <Typography sx={{ fontSize: '0.7rem', color: disabled ? 'hsl(var(--muted-foreground))' : app.hasValidAuth ? 'hsl(var(--severity-low))' : 'hsl(var(--muted-foreground))' }}>
+                {disabled ? 'Not enabled for ingestion' : app.hasValidAuth ? 'Authenticated' : app.isActiveOnly ? 'Not authenticated' : 'Inactive'}
+              </Typography>
+            )}
+          </Box>
+        }
+        placement="bottom"
+        arrow
+        disableHoverListener={popoverOpen}
+      >
+        {isSample ? content : (
+          <Box
+            onClick={handleClick}
+            sx={{ textDecoration: 'none', cursor: 'pointer' }}
+          >
+            {content}
+          </Box>
+        )}
+      </Tooltip>
+
+      {/* Popover — same style as IngestionSourceButton on /incidents */}
+      <Popover
+        open={popoverOpen}
+        anchorEl={anchorEl}
+        onClose={() => setAnchorEl(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'center' }}
+        slotProps={{
+          paper: {
+            sx: {
+              mt: 0.5,
+              bgcolor: 'hsl(var(--card))',
+              border: '1px solid hsl(var(--border))',
+              borderRadius: 1.5,
+              p: 1.5,
+              minWidth: 160,
+            },
+          },
+        }}
+      >
+        <Typography variant="caption" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))', textTransform: 'capitalize', mb: 1, display: 'block' }}>
+          {displayName}
+          {!isEnabled && (
+            <Chip label="Not Active" size="small" sx={{ ml: 0.5, height: 18, fontSize: '0.65rem', bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }} />
+          )}
+        </Typography>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+          <Button
+            component="a"
+            href={`/apps/${app.name.toLowerCase()}`}
+            size="small"
+            startIcon={<OpenInNewIcon sx={{ fontSize: 14 }} />}
+            onClick={() => setAnchorEl(null)}
+            sx={{
+              justifyContent: 'flex-start',
+              textTransform: 'none',
+              fontSize: '0.75rem',
+              color: 'hsl(var(--foreground))',
+              px: 1,
+              py: 0.5,
+              borderRadius: 1,
+              '&:hover': { bgcolor: 'hsl(var(--muted))' },
+            }}
+          >
+            Visit app
+          </Button>
+          {onToggleSync && (
+            <Button
+              size="small"
+              startIcon={isEnabled ? <BlockIcon sx={{ fontSize: 14 }} /> : <CheckCircleOutlineIcon sx={{ fontSize: 14 }} />}
+              onClick={handleToggle}
+              sx={{
+                justifyContent: 'flex-start',
+                textTransform: 'none',
+                fontSize: '0.75rem',
+                color: isEnabled ? 'hsl(var(--destructive))' : '#22c55e',
+                px: 1,
+                py: 0.5,
+                borderRadius: 1,
+                '&:hover': { bgcolor: isEnabled ? 'hsl(var(--destructive) / 0.1)' : 'rgba(34, 197, 94, 0.1)' },
+              }}
+            >
+              {isEnabled ? 'Disable Sync' : 'Enable Sync'}
+            </Button>
           )}
         </Box>
-      }
-      placement="bottom"
-      arrow
-    >
-      {isSample ? content : (
-        <Box
-          onClick={() => onClickApp?.(app.name)}
-          sx={{ textDecoration: 'none', cursor: 'pointer' }}
-        >
-          {content}
-        </Box>
-      )}
-    </Tooltip>
+      </Popover>
+    </>
   );
 }
 
@@ -330,7 +418,6 @@ export default function UsecaseAlluvialDiagram({
   targetCategory,
   highlightCategory,
 }: UsecaseAlluvialDiagramProps) {
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { isAuthenticated: isLoggedIn } = useAuth();
   const [allApps, setAllApps] = useState<AppNode[]>([]);
@@ -338,7 +425,8 @@ export default function UsecaseAlluvialDiagram({
   const [forwardAppNames, setForwardAppNames] = useState<Set<string> | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchOpen, setSearchOpen] = useState<'left' | 'right' | null>(null);
-  const [detailAppName, setDetailAppName] = useState<string | null>(null);
+  const pendingTogglesRef = useRef<Map<string, boolean>>(new Map());
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Guest-selected apps from URL params
   const guestSourceNames = useMemo(() => {
@@ -385,6 +473,60 @@ export default function UsecaseAlluvialDiagram({
     }
     setHiddenApps(prev => new Set(prev).add(appName.toLowerCase()));
   }, [isLoggedIn, searchParams, setSearchParams]);
+
+  // Toggle sync: same debounced approach as /incidents page
+  const handleToggleSync = useCallback((appName: string, enabled: boolean) => {
+    // Optimistic update: toggle the app in ingestAppNames
+    setIngestAppNames(prev => {
+      if (!prev) return prev;
+      const next = new Set(prev);
+      const normalized = normalizeAppName(appName);
+      if (enabled) {
+        next.add(normalized);
+      } else {
+        next.delete(normalized);
+      }
+      return next;
+    });
+
+    pendingTogglesRef.current.set(appName, enabled);
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    debounceTimerRef.current = setTimeout(async () => {
+      const toggles = new Map(pendingTogglesRef.current);
+      pendingTogglesRef.current.clear();
+
+      // Build active app names from current source apps + toggles
+      const currentIngest = ingestAppNames || new Set<string>();
+      const activeNames: string[] = [];
+      // Include currently enabled apps (minus any toggled off)
+      allApps.filter(a => a.hasValidAuth && !isShuffleInternalApp(a.name)).forEach(a => {
+        const norm = normalizeAppName(a.name);
+        const isCurrentlyIn = currentIngest.has(norm);
+        const toggled = toggles.get(a.name);
+        const shouldBeEnabled = toggled !== undefined ? toggled : isCurrentlyIn;
+        if (shouldBeEnabled) activeNames.push(a.name);
+      });
+
+      try {
+        const { toast } = await import('sonner');
+        await fetch(getApiUrl('/api/v2/workflows/generate'), {
+          method: 'POST',
+          credentials: 'include',
+          headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            label: 'Ingest Tickets',
+            app_name: activeNames.join(','),
+            category: 'cases',
+          }),
+        });
+        toast.success('Ingestion sources updated');
+      } catch (error) {
+        console.error('Failed to update ingestion sources:', error);
+        const { toast } = await import('sonner');
+        toast.error('Failed to update ingestion sources');
+      }
+    }, 3000);
+  }, [allApps, ingestAppNames]);
 
   useEffect(() => {
     if (!isLoggedIn) { setLoading(false); return; }
@@ -772,7 +914,7 @@ export default function UsecaseAlluvialDiagram({
                   pointerEvents: 'auto',
                 }}
               >
-                <AppBubble app={app} size={nodeSize} highlighted={!!app.isHighlighted} isSample={!isLoggedIn} disabled={app.isEnabled === false} onClickApp={setDetailAppName} onRemoveApp={handleRemoveApp} />
+                <AppBubble app={app} size={nodeSize} highlighted={!!app.isHighlighted} isSample={!isLoggedIn} disabled={app.isEnabled === false} onRemoveApp={handleRemoveApp} onToggleSync={isLoggedIn && highlightCategory ? handleToggleSync : undefined} />
               </Box>
             );
           })}
@@ -808,7 +950,7 @@ export default function UsecaseAlluvialDiagram({
                   pointerEvents: 'auto',
                 }}
               >
-                <AppBubble app={app} size={nodeSize} isSample={!isLoggedIn} onClickApp={setDetailAppName} onRemoveApp={handleRemoveApp} />
+                <AppBubble app={app} size={nodeSize} isSample={!isLoggedIn} onRemoveApp={handleRemoveApp} />
               </Box>
             );
           })}
@@ -926,12 +1068,6 @@ export default function UsecaseAlluvialDiagram({
         } : undefined}
       />
 
-      {/* App detail drawer — opens when clicking an app bubble */}
-      <AppDetailDrawer
-        open={detailAppName !== null}
-        onClose={() => setDetailAppName(null)}
-        appName={detailAppName}
-      />
 
       {!hasApps && (
         <Typography sx={{ textAlign: 'center', color: 'hsl(var(--muted-foreground))', fontSize: '0.8rem', mt: 2 }}>
