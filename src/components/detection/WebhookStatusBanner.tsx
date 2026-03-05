@@ -1,41 +1,44 @@
-import { Box, Typography, Button, CircularProgress } from '@mui/material';
+import { Box, Typography, Button, CircularProgress, Chip } from '@mui/material';
 import WebhookIcon from '@mui/icons-material/Webhook';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { useWebhookStatus } from '@/hooks/useWebhookStatus';
 import { toast } from 'sonner';
 
 /**
- * Shared banner that shows whether the Ingestion Webhook is active.
- * If inactive, provides a one-click enable button.
+ * Small chip shown inline next to page titles when webhook is active.
+ */
+export const WebhookActiveChip = () => {
+  const { exists, enabled, isLoading } = useWebhookStatus();
+
+  if (isLoading || !exists || !enabled) return null;
+
+  return (
+    <Chip
+      icon={<WebhookIcon sx={{ fontSize: '14px !important', color: '#22c55e !important' }} />}
+      label="Webhook Active"
+      size="small"
+      sx={{
+        height: 22,
+        fontSize: '0.65rem',
+        fontWeight: 600,
+        bgcolor: 'rgba(34, 197, 94, 0.10)',
+        color: '#22c55e',
+        border: '1px solid rgba(34, 197, 94, 0.25)',
+        '& .MuiChip-label': { px: 0.75 },
+      }}
+    />
+  );
+};
+
+/**
+ * Full-width banner shown when webhook is NOT active.
+ * Includes an enable button.
  */
 const WebhookStatusBanner = () => {
   const { exists, enabled, isLoading, enable, isEnabling } = useWebhookStatus();
 
-  // Don't render while loading
-  if (isLoading) return null;
+  // Don't render if loading or webhook is already active
+  if (isLoading || (exists && enabled)) return null;
 
-  // Webhook is active — show a subtle confirmation
-  if (exists && enabled) {
-    return (
-      <Box sx={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 1,
-        px: 2,
-        py: 1,
-        borderRadius: 1.5,
-        border: '1px solid rgba(34, 197, 94, 0.2)',
-        bgcolor: 'rgba(34, 197, 94, 0.06)',
-      }}>
-        <CheckCircleOutlineIcon sx={{ fontSize: 16, color: '#22c55e' }} />
-        <Typography sx={{ fontSize: '0.78rem', color: '#22c55e', fontWeight: 500 }}>
-          Ingestion Webhook active
-        </Typography>
-      </Box>
-    );
-  }
-
-  // Webhook missing or stopped — show warning with enable button
   const handleEnable = async () => {
     try {
       await enable();

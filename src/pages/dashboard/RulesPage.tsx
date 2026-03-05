@@ -34,7 +34,7 @@ import { deleteFile, getFileDownloadUrl, formatFileSize, ShuffleFile, createAndU
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { getApiUrl, getAuthHeader, API_CONFIG } from '@/config/api';
 import { Link } from 'react-router-dom';
-import WebhookStatusBanner from '@/components/detection/WebhookStatusBanner';
+import WebhookStatusBanner, { WebhookActiveChip } from '@/components/detection/WebhookStatusBanner';
 
 const SIGMA_NAMESPACE = 'sigma';
 
@@ -572,6 +572,7 @@ const RulesPage = () => {
                 border: '1px solid hsla(var(--primary) / 0.25)',
               }}
             />
+            <WebhookActiveChip />
           </Box>
           <Typography sx={{ color: 'hsl(var(--muted-foreground))' }}>
             Manage Sigma detection rules for threat hunting and alerting

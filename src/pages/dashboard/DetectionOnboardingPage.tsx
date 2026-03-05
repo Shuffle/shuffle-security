@@ -32,7 +32,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import AddIcon from '@mui/icons-material/Add';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { DeploymentInstructions } from '@/components/detection/DeploymentInstructions';
-import WebhookStatusBanner from '@/components/detection/WebhookStatusBanner';
+import WebhookStatusBanner, { WebhookActiveChip } from '@/components/detection/WebhookStatusBanner';
 import azureLogo from '@/assets/azure-logo.png';
 import gcpLogo from '@/assets/gcp-logo.png';
 import awsLogo from '@/assets/aws-logo.png';
@@ -1372,6 +1372,7 @@ const DetectionOnboardingPage = () => {
               border: '1px solid hsla(var(--primary) / 0.25)',
             }}
           />
+          <WebhookActiveChip />
         </Box>
         <Typography sx={{ color: 'hsl(var(--muted-foreground))' }}>
           Get your detection pipelines running in three simple steps.{' '}

@@ -37,7 +37,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 import { getApiUrl, getAuthHeader, API_CONFIG } from '@/config/api';
 import { Link } from 'react-router-dom';
 import { askAI } from '@/services/ai';
-import WebhookStatusBanner from '@/components/detection/WebhookStatusBanner';
+import WebhookStatusBanner, { WebhookActiveChip } from '@/components/detection/WebhookStatusBanner';
 
 interface Environment {
   id: string;
@@ -786,6 +786,7 @@ Use case: ${aiPrompt}`,
                 border: '1px solid hsla(var(--primary) / 0.25)',
               }}
             />
+            <WebhookActiveChip />
           </Box>
           <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
             Lightweight detection infrastructure — ingest, match, and forward security events without heavy tooling
