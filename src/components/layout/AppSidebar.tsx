@@ -67,9 +67,9 @@ const navItems: NavItem[] = [
     icon: <WarningAmberIcon />,
     path: '/incidents',
     children: [
-      { label: 'Templates', path: '/templates', icon: <DescriptionIcon fontSize="small" /> },
-      { label: 'IOC Types', path: '/incidents/ioc-types', icon: <FingerprintIcon fontSize="small" /> },
       { label: 'Threat Feeds', path: '/incidents/threat-feeds', icon: <RssFeedIcon fontSize="small" /> },
+      { label: 'IOC Types', path: '/incidents/ioc-types', icon: <FingerprintIcon fontSize="small" /> },
+      { label: 'Templates', path: '/templates', icon: <DescriptionIcon fontSize="small" /> },
       { label: 'Custom Fields', path: '/incidents/custom-fields', icon: <TuneIcon fontSize="small" /> },
     ],
   },
