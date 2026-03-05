@@ -588,6 +588,8 @@ export default function UsecaseAlluvialDiagram({
   const [searchOpen, setSearchOpen] = useState<'left' | 'right' | null>(null);
   const pendingTogglesRef = useRef<Map<string, boolean>>(new Map());
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Cache Algolia icons for guest-added apps (name → icon URL)
+  const [guestAppIcons, setGuestAppIcons] = useState<Record<string, string>>({});
 
   // Guest-selected apps from URL params
   const guestSourceNames = useMemo(() => {
@@ -610,6 +612,10 @@ export default function UsecaseAlluvialDiagram({
     const newParams = new URLSearchParams(searchParams);
     newParams.set(paramKey, names.join(','));
     setSearchParams(newParams, { replace: true });
+    // Store the Algolia icon so we can render it
+    if (app.icon) {
+      setGuestAppIcons(prev => ({ ...prev, [app.name.toLowerCase()]: app.icon }));
+    }
   };
 
   // Locally disabled apps (hidden from the diagram)
@@ -752,7 +758,7 @@ export default function UsecaseAlluvialDiagram({
               return {
                 id: app.id,
                 name: app.name,
-                icon: bestImage || app.large_image || `https://storage.googleapis.com/shuffle_public/app_images/${app.name.replace(/\s+/g, '_')}.png`,
+                icon: bestImage || app.large_image || '',
                 hasValidAuth,
                 isActiveOnly: false,
               };
@@ -771,7 +777,7 @@ export default function UsecaseAlluvialDiagram({
                   nodes.push({
                     id: app.id || app.name,
                     name: app.name,
-                    icon: app.large_image || `https://storage.googleapis.com/shuffle_public/app_images/${(app.name || '').replace(/\s+/g, '_')}.png`,
+                    icon: app.large_image || '',
                     hasValidAuth: false,
                     isActiveOnly: true,
                   });
@@ -848,7 +854,7 @@ export default function UsecaseAlluvialDiagram({
         .map(name => ({
           id: `guest-${name}`,
           name,
-          icon: `https://storage.googleapis.com/shuffle_public/app_images/${name.replace(/\s+/g, '_')}.png`,
+          icon: guestAppIcons[name.toLowerCase()] || `https://storage.googleapis.com/shuffle_public/app_images/${name.replace(/\s+/g, '_')}.png`,
           hasValidAuth: false,
           isActiveOnly: false,
           isHighlighted: true,
@@ -887,7 +893,7 @@ export default function UsecaseAlluvialDiagram({
     return prependWebhook(
       allApps.filter(a => matchesCategory(a.name, sourceCategory) && a.hasValidAuth && !hiddenApps.has(a.name.toLowerCase())).map(a => ({ ...a, isEnabled: true }))
     );
-  }, [allApps, sourceCategory, highlightCategory, ingestAppNames, isLoggedIn, guestSourceNames, hiddenApps, webhookNode]);
+  }, [allApps, sourceCategory, highlightCategory, ingestAppNames, isLoggedIn, guestSourceNames, guestAppIcons, hiddenApps, webhookNode]);
 
   // Target/destination apps: use Forward Tickets workflow as source of truth when available
   const targetApps = useMemo(() => {
@@ -899,7 +905,7 @@ export default function UsecaseAlluvialDiagram({
         .map(name => ({
           id: `guest-${name}`,
           name,
-          icon: `https://storage.googleapis.com/shuffle_public/app_images/${name.replace(/\s+/g, '_')}.png`,
+          icon: guestAppIcons[name.toLowerCase()] || `https://storage.googleapis.com/shuffle_public/app_images/${name.replace(/\s+/g, '_')}.png`,
           hasValidAuth: false,
           isActiveOnly: false,
         }));
@@ -911,7 +917,7 @@ export default function UsecaseAlluvialDiagram({
       );
     }
     return allApps.filter(a => matchesCategory(a.name, targetCategory) && !hiddenApps.has(a.name.toLowerCase()));
-  }, [allApps, targetCategory, highlightCategory, forwardAppNames, isLoggedIn, guestDestNames, hiddenApps]);
+  }, [allApps, targetCategory, highlightCategory, forwardAppNames, isLoggedIn, guestDestNames, guestAppIcons, hiddenApps]);
 
   const sourceMeta = TOOL_CATEGORIES.find(c => c.id === sourceCategory);
   const targetMeta = TOOL_CATEGORIES.find(c => c.id === targetCategory);
@@ -1295,6 +1301,11 @@ export default function UsecaseAlluvialDiagram({
             normalizeAppName(a.name) === normalizeAppName(app.name) && a.hasValidAuth
           );
           if (!matchedApp) return false; // Not authenticated — open detail drawer
+
+          // Backfill icon from Algolia if the API didn't provide one
+          if (!matchedApp.icon && app.icon) {
+            matchedApp.icon = app.icon;
+          }
 
           // Already authenticated: add to the workflow directly
           if (searchOpen === 'left' && highlightCategory) {
