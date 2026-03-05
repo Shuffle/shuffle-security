@@ -728,18 +728,6 @@ Use case: ${aiPrompt}`,
               Tenzir Pipelines
             </Typography>
             <Chip
-              label="Tenzir"
-              size="small"
-              sx={{
-                height: 22,
-                fontSize: '0.7rem',
-                fontWeight: 600,
-                backgroundColor: 'rgba(255, 102, 0, 0.12)',
-                color: '#FF6600',
-                border: '1px solid rgba(255, 102, 0, 0.3)',
-              }}
-            />
-            <Chip
               label="PUBLIC PREVIEW"
               size="small"
               sx={{
