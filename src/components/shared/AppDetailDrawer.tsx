@@ -95,7 +95,7 @@ interface AppDetailDrawerProps {
   /** Called when drawer closes so parent can refresh data */
   onRefresh?: () => void;
   /** When set, replaces the Activate button with "+ Add" and calls this on click */
-  onAddToCanvas?: (appName: string) => void;
+  onAddToCanvas?: (appInfo: { name: string; icon: string; algoliaId: string | null }) => void;
 }
 
 export default function AppDetailDrawer({
@@ -451,7 +451,7 @@ export default function AppDetailDrawer({
                 {onAddToCanvas && appName && (
                   <Button
                     onClick={() => {
-                      onAddToCanvas(appName);
+                      onAddToCanvas({ name: appName, icon: resolvedImage || '', algoliaId: resolvedAlgoliaId });
                       onClose();
                     }}
                     variant="contained"

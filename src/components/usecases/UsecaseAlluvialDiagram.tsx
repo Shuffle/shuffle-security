@@ -1417,8 +1417,41 @@ export default function UsecaseAlluvialDiagram({
         title={`Add ${searchOpen === 'left' ? (sourceLabel) : (targetMeta?.label || targetCategory)} Tool`}
         subtitle="Search and authenticate an integration"
         showPipelinesBanner={isSiemSource && searchOpen === 'left'}
-        onAddToCanvas={isLoggedIn ? (addedAppName) => {
+        onAddToCanvas={isLoggedIn ? ({ name: addedAppName, icon: addedIcon, algoliaId }) => {
           const side = searchOpen || 'right';
+
+          // Ensure app exists in allApps so it renders on the canvas
+          setAllApps(prev => {
+            const exists = prev.some(a => normalizeAppName(a.name) === normalizeAppName(addedAppName));
+            if (exists) {
+              return prev.map(a =>
+                normalizeAppName(a.name) === normalizeAppName(addedAppName)
+                  ? { ...a, hasValidAuth: true, icon: addedIcon || a.icon }
+                  : a
+              );
+            }
+            return [...prev, { id: algoliaId || addedAppName, name: addedAppName, icon: addedIcon || '', hasValidAuth: true, isActiveOnly: false }];
+          });
+
+          // Activate app in background
+          if (algoliaId) {
+            (async () => {
+              try {
+                const configRes = await fetch(getApiUrl(`/api/v1/apps/${encodeURIComponent(algoliaId)}/config`), {
+                  credentials: 'include', headers: { ...getAuthHeader() },
+                });
+                if (configRes.ok) {
+                  const data = await configRes.json();
+                  if (data.id) {
+                    await fetch(getApiUrl(`/api/v1/apps/${data.id}/activate`), {
+                      method: 'POST', credentials: 'include', headers: { ...getAuthHeader() },
+                    });
+                  }
+                }
+              } catch {}
+            })();
+          }
+
           if (side === 'left' && highlightCategory) {
             handleToggleSync(addedAppName, true);
             setHiddenApps(prev => { const next = new Set(prev); next.delete(addedAppName.toLowerCase()); return next; });

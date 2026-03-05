@@ -110,7 +110,7 @@ interface AppSearchDrawerProps {
   /** Called when the detail drawer closes, with the app name that was being configured */
   onDetailClose?: (appName: string) => void;
   /** When set, replaces Activate with "+ Add" in the detail drawer */
-  onAddToCanvas?: (appName: string) => void;
+  onAddToCanvas?: (appInfo: { name: string; icon: string; algoliaId: string | null }) => void;
 }
 
 export default function AppSearchDrawer({
