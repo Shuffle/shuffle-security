@@ -61,6 +61,7 @@ interface Pipeline {
   definition?: string;
   state?: string;
   start_time?: number;
+  started_at?: string;
   created?: number;
   // enriched locally
   _environmentId: string;
@@ -307,8 +308,8 @@ const PipelinesPage = () => {
 
   const getStateLabel = (p: Pipeline): string => {
     if (p.state) return p.state;
-    // Infer from start_time
-    if (p.start_time && p.start_time > 0) return 'running';
+    // Infer from start_time or started_at
+    if (p.started_at || (p.start_time && p.start_time > 0)) return 'running';
     return 'unknown';
   };
 
@@ -553,18 +554,26 @@ Use case: ${aiPrompt}`,
     setCreateOpen(true);
   };
 
-  const formatTime = (ts?: number) => {
+  const formatTime = (ts?: number | string) => {
     if (!ts) return '—';
-    // Handle nanosecond timestamps (> 1e15), microsecond (> 1e12), millisecond (> 1e10), or seconds
+    // Handle ISO string (e.g. "2026-03-05T09:38:37.484868410Z")
+    if (typeof ts === 'string') {
+      const date = new Date(ts);
+      if (isNaN(date.getTime())) return '—';
+      return date.toLocaleString('en-US', {
+        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+      });
+    }
+    // Handle numeric timestamps
     let ms: number;
     if (ts > 1e15) {
-      ms = ts / 1e6; // nanoseconds to ms
+      ms = ts / 1e6;
     } else if (ts > 1e12) {
-      ms = ts / 1e3; // microseconds to ms
+      ms = ts / 1e3;
     } else if (ts > 1e10) {
-      ms = ts; // already ms
+      ms = ts;
     } else {
-      ms = ts * 1000; // seconds to ms
+      ms = ts * 1000;
     }
     const date = new Date(ms);
     if (isNaN(date.getTime())) return '—';
@@ -884,9 +893,9 @@ Use case: ${aiPrompt}`,
                             <Typography sx={{ color: '#FF6600', fontSize: '0.75rem', mt: 0.25 }}>
                               Deploying...
                             </Typography>
-                          ) : p.start_time ? (
+                          ) : (p.started_at || p.start_time) ? (
                             <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem', mt: 0.25 }}>
-                              Started {formatTime(p.start_time)}
+                              Started {formatTime(p.started_at || p.start_time)}
                             </Typography>
                           ) : null}
                         </Box>
@@ -1223,7 +1232,7 @@ Use case: ${aiPrompt}`,
                       Started
                     </Typography>
                     <Typography sx={{ color: 'hsl(var(--foreground))', fontSize: '0.875rem' }}>
-                      {formatTime(detailPipeline.start_time)}
+                      {formatTime(detailPipeline.started_at || detailPipeline.start_time)}
                     </Typography>
                   </Box>
                 </Box>
