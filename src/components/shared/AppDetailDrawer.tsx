@@ -6,6 +6,8 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { Download, Forward } from 'lucide-react';
+import { getDatastoreByCategory, DATASTORE_CATEGORIES } from '@/services/datastore';
 import {
   Box,
   Typography,
@@ -109,6 +111,7 @@ export default function AppDetailDrawer({
   const [activatedAppId, setActivatedAppId] = useState<string | null>(null);
   const [activateLoading, setActivateLoading] = useState(false);
   const [authExpanded, setAuthExpanded] = useState(true);
+  const [incidentStats, setIncidentStats] = useState<{ ingested: number; forwarded: number } | null>(null);
 
   const {
     authStates,
@@ -192,6 +195,47 @@ export default function AppDetailDrawer({
       setAppLoading(false);
     })();
   }, [open, appName]);
+
+  // Fetch incident stats for this app
+  useEffect(() => {
+    if (!open || !appName || !isAuthenticated) {
+      setIncidentStats(null);
+      return;
+    }
+
+    (async () => {
+      try {
+        const result = await getDatastoreByCategory(DATASTORE_CATEGORIES.INCIDENTS);
+        if (!result.success || !result.data) {
+          setIncidentStats({ ingested: 0, forwarded: 0 });
+          return;
+        }
+
+        const normalizedAppName = appName.toLowerCase().replace(/[\s_\-]+/g, '');
+        let ingested = 0;
+        let forwarded = 0;
+
+        for (const item of result.data) {
+          try {
+            const parsed = JSON.parse(item.value);
+            const productName = (parsed.metadata?.product?.name || '').toLowerCase().replace(/[\s_\-]+/g, '');
+            if (productName && productName === normalizedAppName) {
+              ingested++;
+            }
+            // Check if forwarded to this app (via finding_info dest or similar)
+            const forwardDest = (parsed.metadata?.product?.forward_name || parsed.forward_target || '').toLowerCase().replace(/[\s_\-]+/g, '');
+            if (forwardDest && forwardDest === normalizedAppName) {
+              forwarded++;
+            }
+          } catch {}
+        }
+
+        setIncidentStats({ ingested, forwarded });
+      } catch {
+        setIncidentStats({ ingested: 0, forwarded: 0 });
+      }
+    })();
+  }, [open, appName, isAuthenticated]);
 
   const handleClose = () => {
     onRefresh?.();
@@ -416,6 +460,46 @@ export default function AppDetailDrawer({
               </Box>
             </motion.div>
 
+
+            {/* Incident stats */}
+            {isAuthenticated && incidentStats && incidentStats.ingested > 0 && (
+              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.08 }}>
+                <Box sx={{
+                  display: 'flex',
+                  gap: 2,
+                  mb: 3,
+                  p: 2,
+                  borderRadius: 2,
+                  border: '1px solid hsl(var(--border))',
+                  bgcolor: 'hsl(var(--muted) / 0.3)',
+                }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Download size={14} style={{ color: 'hsl(var(--primary))' }} />
+                    <Box>
+                      <Typography sx={{ fontSize: '1.1rem', fontWeight: 700, color: 'hsl(var(--foreground))', lineHeight: 1 }}>
+                        {incidentStats.ingested}
+                      </Typography>
+                      <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', fontWeight: 500 }}>
+                        Incidents ingested
+                      </Typography>
+                    </Box>
+                  </Box>
+                  {incidentStats.forwarded > 0 && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 2, pl: 2, borderLeft: '1px solid hsl(var(--border))' }}>
+                      <Forward size={14} style={{ color: 'hsl(var(--severity-low))' }} />
+                      <Box>
+                        <Typography sx={{ fontSize: '1.1rem', fontWeight: 700, color: 'hsl(var(--foreground))', lineHeight: 1 }}>
+                          {incidentStats.forwarded}
+                        </Typography>
+                        <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', fontWeight: 500 }}>
+                          Forwarded
+                        </Typography>
+                      </Box>
+                    </Box>
+                  )}
+                </Box>
+              </motion.div>
+            )}
 
             {/* Authentication section */}
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.1 }}>
