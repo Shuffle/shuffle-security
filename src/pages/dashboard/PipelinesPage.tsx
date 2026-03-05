@@ -174,7 +174,7 @@ const PipelinesPage = () => {
   }, [createOpen, environments]);
 
   const fetchEnvironments = useCallback(async () => {
-
+    setIsLoading(true);
     try {
       const response = await fetch(getApiUrl('/api/v1/getenvironments'), {
         credentials: 'include',
@@ -261,10 +261,9 @@ const PipelinesPage = () => {
   };
 
   const getPipelineLabel = (p: Pipeline): string => {
+    // Return full name/definition — CSS handles truncation
     if (p.name) return p.name;
-    const def = p.definition || p.command || p.pipeline || '';
-    if (def.length > 60) return def.substring(0, 57) + '...';
-    return def || 'Unnamed Pipeline';
+    return p.definition || p.command || p.pipeline || 'Unnamed Pipeline';
   };
 
   const handleAction = async (pipeline: Pipeline, action: 'start' | 'stop' | 'delete') => {
@@ -730,7 +729,7 @@ Use case: ${aiPrompt}`,
           <Table>
             <TableHeader>
               <TableRow className="border-b border-border hover:bg-transparent">
-                <TableHead className="text-muted-foreground font-medium text-xs w-[30%]">Pipeline</TableHead>
+                <TableHead className="text-muted-foreground font-medium text-xs" style={{ width: '30%', maxWidth: 0 }}>Pipeline</TableHead>
                 <TableHead className="text-muted-foreground font-medium text-xs w-[15%]">Environment</TableHead>
                 <TableHead className="text-muted-foreground font-medium text-xs w-[10%]">Status</TableHead>
                 <TableHead className="text-muted-foreground font-medium text-xs w-[30%]">Command</TableHead>
@@ -753,11 +752,19 @@ Use case: ${aiPrompt}`,
                     onClick={() => !isPending && setDetailPipeline(p)}
                     style={isPending ? { opacity: 0.6 } : undefined}
                   >
-                    <TableCell className="py-3">
+                    <TableCell className="py-3" style={{ maxWidth: 0 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         {isPending && <CircularProgress size={14} sx={{ color: '#FF6600', flexShrink: 0 }} />}
-                        <Box>
-                          <Typography sx={{ color: 'hsl(var(--foreground))', fontSize: '0.875rem', fontWeight: 500 }}>
+                        <Box sx={{ overflow: 'hidden', minWidth: 0 }}>
+                          <Typography sx={{
+                            color: 'hsl(var(--foreground))',
+                            fontSize: '0.875rem',
+                            fontWeight: 500,
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            maxWidth: '100%',
+                          }}>
                             {getPipelineLabel(p)}
                           </Typography>
                           {isPending ? (
