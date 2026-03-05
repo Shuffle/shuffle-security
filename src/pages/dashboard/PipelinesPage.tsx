@@ -520,7 +520,20 @@ Use case: ${aiPrompt}`,
 
   const formatTime = (ts?: number) => {
     if (!ts) return '—';
-    return new Date(ts * 1000).toLocaleString('en-US', {
+    // Handle nanosecond timestamps (> 1e15), microsecond (> 1e12), millisecond (> 1e10), or seconds
+    let ms: number;
+    if (ts > 1e15) {
+      ms = ts / 1e6; // nanoseconds to ms
+    } else if (ts > 1e12) {
+      ms = ts / 1e3; // microseconds to ms
+    } else if (ts > 1e10) {
+      ms = ts; // already ms
+    } else {
+      ms = ts * 1000; // seconds to ms
+    }
+    const date = new Date(ms);
+    if (isNaN(date.getTime())) return '—';
+    return date.toLocaleString('en-US', {
       month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
     });
   };
@@ -801,11 +814,10 @@ Use case: ${aiPrompt}`,
           <Table>
             <TableHeader>
               <TableRow className="border-b border-border hover:bg-transparent">
-                <TableHead className="text-muted-foreground font-medium text-xs" style={{ width: '30%', maxWidth: 0 }}>Pipeline</TableHead>
-                <TableHead className="text-muted-foreground font-medium text-xs w-[15%]">Environment</TableHead>
+                <TableHead className="text-muted-foreground font-medium text-xs" style={{ width: '45%', maxWidth: 0 }}>Pipeline</TableHead>
+                <TableHead className="text-muted-foreground font-medium text-xs w-[20%]">Environment</TableHead>
                 <TableHead className="text-muted-foreground font-medium text-xs w-[10%]">Status</TableHead>
-                <TableHead className="text-muted-foreground font-medium text-xs w-[30%]">Command</TableHead>
-                <TableHead className="text-muted-foreground font-medium text-xs w-[15%] text-right">Actions</TableHead>
+                <TableHead className="text-muted-foreground font-medium text-xs w-[25%] text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -830,14 +842,15 @@ Use case: ${aiPrompt}`,
                         <Box sx={{ overflow: 'hidden', minWidth: 0 }}>
                           <Typography sx={{
                             color: 'hsl(var(--foreground))',
-                            fontSize: '0.875rem',
+                            fontSize: '0.8rem',
+                            fontFamily: 'monospace',
                             fontWeight: 500,
                             whiteSpace: 'nowrap',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
                             maxWidth: '100%',
                           }}>
-                            {getPipelineLabel(p)}
+                            {definition}
                           </Typography>
                           {isPending ? (
                             <Typography sx={{ color: '#FF6600', fontSize: '0.75rem', mt: 0.25 }}>
@@ -883,21 +896,6 @@ Use case: ${aiPrompt}`,
                           sx={{ height: 22, fontSize: '0.7rem', fontWeight: 600, textTransform: 'capitalize' }}
                         />
                       )}
-                    </TableCell>
-                    <TableCell>
-                      <Typography
-                        sx={{
-                          color: 'hsl(var(--muted-foreground))',
-                          fontSize: '0.75rem',
-                          fontFamily: 'monospace',
-                          maxWidth: 320,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {definition}
-                      </Typography>
                     </TableCell>
                     <TableCell className="text-right">
                       {isPending ? (
