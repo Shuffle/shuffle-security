@@ -176,60 +176,77 @@ const PipelinesPage = () => {
   const fetchEnvironments = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(getApiUrl('/api/v1/getenvironments'), {
-        credentials: 'include',
-        headers: { ...getAuthHeader() },
-      });
+      // Fetch environments and triggers (pipelines) in parallel
+      const [envResponse, triggersResponse] = await Promise.all([
+        fetch(getApiUrl('/api/v1/getenvironments'), {
+          credentials: 'include',
+          headers: { ...getAuthHeader() },
+        }),
+        fetch(getApiUrl('/api/v1/triggers'), {
+          credentials: 'include',
+          headers: { ...getAuthHeader() },
+        }),
+      ]);
 
-      if (!response.ok) throw new Error('Failed to fetch');
+      if (!envResponse.ok) throw new Error('Failed to fetch environments');
 
-      const data: Environment[] = await response.json();
-      const active = data.filter(e => !e.archived);
+      const envData: Environment[] = await envResponse.json();
+      const active = envData.filter(e => !e.archived);
       setEnvironments(active);
 
-      // Extract pipelines from all environments
-      const allPipelines: Pipeline[] = [];
-      for (const env of active) {
-        const raw = env.data_lake?.pipelines;
-        if (!raw) continue;
-        
-        // Handle both array and object/map formats
-        let pList: any[];
-        if (Array.isArray(raw)) {
-          pList = raw;
-        } else if (typeof raw === 'object') {
-          // Could be a map keyed by pipeline ID
-          pList = Object.values(raw);
-          console.log('[PipelinesPage] data_lake.pipelines is an object, converting values:', pList.length);
-        } else {
-          console.log('[PipelinesPage] data_lake.pipelines unexpected type:', typeof raw, raw);
-          continue;
-        }
+      // Build environment lookup for enrichment
+      const envMap = new Map(active.map(e => [e.id, e]));
 
-        console.log(`[PipelinesPage] Env "${env.Name}" has ${pList.length} pipelines`);
+      // Extract pipelines from /api/v1/triggers response
+      const allPipelines: Pipeline[] = [];
+
+      if (triggersResponse.ok) {
+        const triggersData = await triggersResponse.json();
+        const rawPipelines = triggersData?.pipelines || triggersData?.Pipelines || [];
+        const pList = Array.isArray(rawPipelines) ? rawPipelines : (typeof rawPipelines === 'object' ? Object.values(rawPipelines) : []);
+
+        console.log('[PipelinesPage] Triggers API returned', pList.length, 'pipelines');
 
         for (const p of pList) {
-          if (typeof p === 'string') {
-            allPipelines.push({
-              pipeline: p,
-              definition: p,
-              _environmentId: env.id,
-              _environmentName: env.Name,
-            });
-          } else if (p && typeof p === 'object') {
+          if (p && typeof p === 'object') {
+            const envId = p.environment_id || p._environmentId || '';
+            const env = envMap.get(envId);
             allPipelines.push({
               ...p,
               pipeline: p.pipeline || p.id || p.name || '',
-              _environmentId: env.id,
-              _environmentName: env.Name,
+              _environmentId: envId,
+              _environmentName: env?.Name || p.environment || p._environmentName || 'Unknown',
+            });
+          } else if (typeof p === 'string') {
+            allPipelines.push({
+              pipeline: p,
+              definition: p,
+              _environmentId: '',
+              _environmentName: 'Unknown',
             });
           }
         }
+      } else {
+        console.warn('[PipelinesPage] Triggers API failed, falling back to getenvironments data_lake');
+        // Fallback: extract from data_lake.pipelines in environments
+        for (const env of active) {
+          const raw = env.data_lake?.pipelines;
+          if (!raw) continue;
+          const pList = Array.isArray(raw) ? raw : (typeof raw === 'object' ? Object.values(raw) : []);
+          for (const p of pList) {
+            if (typeof p === 'string') {
+              allPipelines.push({ pipeline: p, definition: p, _environmentId: env.id, _environmentName: env.Name });
+            } else if (p && typeof p === 'object') {
+              allPipelines.push({ ...p, pipeline: p.pipeline || p.id || p.name || '', _environmentId: env.id, _environmentName: env.Name });
+            }
+          }
+        }
       }
+
       console.log('[PipelinesPage] Total pipelines found:', allPipelines.length);
       setPipelines(allPipelines);
     } catch (error) {
-      console.error('Failed to fetch environments:', error);
+      console.error('Failed to fetch pipelines:', error);
       toast.error('Failed to load pipelines');
     } finally {
       setIsLoading(false);
