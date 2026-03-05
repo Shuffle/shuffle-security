@@ -80,7 +80,7 @@ const navItems: NavItem[] = [
     children: [
       { label: 'Rules', path: '/detection/sigma', icon: <Braces size={16} /> },
       { label: 'Pipelines', path: '/detection/pipelines', icon: <Network size={16} /> },
-      { label: 'MITRE ATT&CK', path: '/detection/mitre', icon: <Waypoints size={16} />, disabled: true },
+      { label: 'ATT&CK', path: '/detection/mitre', icon: <Waypoints size={16} />, disabled: true },
     ],
   },
   { label: 'Automation', icon: <Activity size={20} />, path: '/usecases' },
