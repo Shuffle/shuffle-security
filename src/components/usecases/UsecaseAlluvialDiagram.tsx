@@ -16,6 +16,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import AppSearchDrawer from '@/components/shared/AppSearchDrawer';
 import { useAuth } from '@/context/AuthContext';
+import { useAppDetail } from '@/context/AppDetailContext';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
 import {
@@ -126,7 +127,7 @@ function getStatusColor(app: AppNode): string {
 
 // ── App bubble component ───────────────────────────────────────────────────────
 
-function AppBubble({ app, size = 40, highlighted = false, isSample = false, disabled = false, onClickApp, onRemoveApp, onToggleSync }: { app: AppNode; size?: number; highlighted?: boolean; isSample?: boolean; disabled?: boolean; onClickApp?: (appName: string) => void; onRemoveApp?: (appName: string) => void; onToggleSync?: (appName: string, enabled: boolean) => void }) {
+function AppBubble({ app, size = 40, highlighted = false, isSample = false, disabled = false, onClickApp, onRemoveApp, onToggleSync, onVisitApp }: { app: AppNode; size?: number; highlighted?: boolean; isSample?: boolean; disabled?: boolean; onClickApp?: (appName: string) => void; onRemoveApp?: (appName: string) => void; onToggleSync?: (appName: string, enabled: boolean) => void; onVisitApp?: (appName: string) => void }) {
   const [imgFailed, setImgFailed] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
@@ -312,11 +313,12 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, disa
         </Typography>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
           <Button
-            component="a"
-            href={`/apps/${app.name.toLowerCase()}`}
             size="small"
             startIcon={<OpenInNewIcon sx={{ fontSize: 14 }} />}
-            onClick={() => setAnchorEl(null)}
+            onClick={() => {
+              setAnchorEl(null);
+              onVisitApp?.(app.name);
+            }}
             sx={{
               justifyContent: 'flex-start',
               textTransform: 'none',
@@ -420,6 +422,10 @@ export default function UsecaseAlluvialDiagram({
 }: UsecaseAlluvialDiagramProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const { isAuthenticated: isLoggedIn } = useAuth();
+  const appDetailCtx = useAppDetail();
+  const handleVisitApp = useCallback((appName: string) => {
+    appDetailCtx.openApp(appName);
+  }, [appDetailCtx]);
   const [allApps, setAllApps] = useState<AppNode[]>([]);
   const [ingestAppNames, setIngestAppNames] = useState<Set<string> | null>(null);
   const [forwardAppNames, setForwardAppNames] = useState<Set<string> | null>(null);
@@ -914,7 +920,7 @@ export default function UsecaseAlluvialDiagram({
                   pointerEvents: 'auto',
                 }}
               >
-                <AppBubble app={app} size={nodeSize} highlighted={!!app.isHighlighted} isSample={!isLoggedIn} disabled={app.isEnabled === false} onRemoveApp={handleRemoveApp} onToggleSync={isLoggedIn && highlightCategory ? handleToggleSync : undefined} />
+                <AppBubble app={app} size={nodeSize} highlighted={!!app.isHighlighted} isSample={!isLoggedIn} disabled={app.isEnabled === false} onRemoveApp={handleRemoveApp} onToggleSync={isLoggedIn && highlightCategory ? handleToggleSync : undefined} onVisitApp={handleVisitApp} />
               </Box>
             );
           })}
@@ -950,7 +956,7 @@ export default function UsecaseAlluvialDiagram({
                   pointerEvents: 'auto',
                 }}
               >
-                <AppBubble app={app} size={nodeSize} isSample={!isLoggedIn} onRemoveApp={handleRemoveApp} />
+                <AppBubble app={app} size={nodeSize} isSample={!isLoggedIn} onRemoveApp={handleRemoveApp} onVisitApp={handleVisitApp} />
               </Box>
             );
           })}

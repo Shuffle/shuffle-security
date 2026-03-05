@@ -11,6 +11,7 @@ import AddIcon from '@mui/icons-material/Add';
 import { Link } from 'react-router-dom';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
+import { useAppDetail } from '@/context/AppDetailContext';
 
 interface Integration {
   id: string;
@@ -46,6 +47,7 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
   const [expanded, setExpanded] = useState(false);
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const appDetail = useAppDetail();
 
   // Apply filter if provided (case-insensitive name match)
   const integrations = filterApps
@@ -255,9 +257,8 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
                 >
                   {/* Icon — rendered as link only when not in disable mode */}
                   <Box
-                    component={onDisable ? 'div' : Link}
-                    {...(!onDisable ? { to: `/apps/${encodeURIComponent(integration.name)}` } : {})}
-                    sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}
+                    onClick={!onDisable ? () => appDetail.openApp(integration.name) : undefined}
+                    sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', cursor: !onDisable ? 'pointer' : 'default' }}
                   >
                     {integration.icon && !failedImages.has(integration.id) ? (
                       <Box

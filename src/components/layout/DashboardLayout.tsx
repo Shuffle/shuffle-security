@@ -2,6 +2,8 @@ import { useState, useEffect, ReactNode } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Box } from '@mui/material';
 import { AppSidebar } from './AppSidebar';
+import { AppDetailProvider, useAppDetail } from '@/context/AppDetailContext';
+import AppDetailDrawer from '@/components/shared/AppDetailDrawer';
 
 const drawerWidth = 260;
 const collapsedWidth = 64;
@@ -11,6 +13,17 @@ interface DashboardLayoutProps {
   children?: ReactNode;
   defaultCollapsed?: boolean;
 }
+
+const GlobalAppDetailDrawer = () => {
+  const { currentAppName, isOpen, closeApp } = useAppDetail();
+  return (
+    <AppDetailDrawer
+      open={isOpen}
+      onClose={closeApp}
+      appName={currentAppName}
+    />
+  );
+};
 
 export const DashboardLayout = ({ children, defaultCollapsed }: DashboardLayoutProps) => {
   const location = useLocation();
@@ -38,33 +51,36 @@ export const DashboardLayout = ({ children, defaultCollapsed }: DashboardLayoutP
   }, [sidebarCollapsed, isOnboarding]);
 
   return (
-    <Box sx={{ display: 'flex', height: '100vh', backgroundColor: 'hsl(var(--background))', width: '100%' }}>
-      <AppSidebar
-        collapsed={sidebarCollapsed}
-        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-      />
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100vh',
-          minWidth: 0,
-          width: '100%',
-          transition: 'margin 0.2s ease',
-          marginLeft: { 
-            xs: 0, 
-            sm: `${(sidebarCollapsed ? collapsedWidth : drawerWidth) + 20}px` 
-          },
-          overflowY: 'auto',
-          overflowX: 'hidden',
-        }}
-      >
-        <Box sx={{ p: { xs: 1, sm: 2, md: 3 }, width: '100%', maxWidth: '100%' }}>
-          {children || <Outlet />}
+    <AppDetailProvider>
+      <Box sx={{ display: 'flex', height: '100vh', backgroundColor: 'hsl(var(--background))', width: '100%' }}>
+        <AppSidebar
+          collapsed={sidebarCollapsed}
+          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+        />
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100vh',
+            minWidth: 0,
+            width: '100%',
+            transition: 'margin 0.2s ease',
+            marginLeft: { 
+              xs: 0, 
+              sm: `${(sidebarCollapsed ? collapsedWidth : drawerWidth) + 20}px` 
+            },
+            overflowY: 'auto',
+            overflowX: 'hidden',
+          }}
+        >
+          <Box sx={{ p: { xs: 1, sm: 2, md: 3 }, width: '100%', maxWidth: '100%' }}>
+            {children || <Outlet />}
+          </Box>
         </Box>
+        <GlobalAppDetailDrawer />
       </Box>
-    </Box>
+    </AppDetailProvider>
   );
 };

@@ -5,6 +5,7 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import DownloadIcon from '@mui/icons-material/Download';
 import { ValidatedIngestionApp } from '@/lib/ingestionDetection';
+import { useAppDetail } from '@/context/AppDetailContext';
 
 interface IngestionSourceButtonProps {
   app: ValidatedIngestionApp;
@@ -16,6 +17,7 @@ export const IngestionSourceButton = ({ app, onToggle }: IngestionSourceButtonPr
   const [optimisticEnabled, setOptimisticEnabled] = useState<boolean | null>(null);
   const popoverOpen = Boolean(anchorEl);
   const displayName = app.name.replace(/_/g, ' ');
+  const { openApp } = useAppDetail();
 
   // Use optimistic state if set, otherwise fall back to actual
   const isEnabled = optimisticEnabled !== null ? optimisticEnabled : app.enabled;
@@ -95,12 +97,12 @@ export const IngestionSourceButton = ({ app, onToggle }: IngestionSourceButtonPr
         </Typography>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
           <Button
-            component="a"
-            href={`/apps/${app.name.toLowerCase()}`}
-            target="_blank"
             size="small"
             startIcon={<OpenInNewIcon sx={{ fontSize: 14 }} />}
-            onClick={() => setAnchorEl(null)}
+            onClick={() => {
+              setAnchorEl(null);
+              openApp(app.name);
+            }}
             sx={{
               justifyContent: 'flex-start',
               textTransform: 'none',
