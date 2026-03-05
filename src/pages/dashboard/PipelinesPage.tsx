@@ -79,6 +79,7 @@ interface DefaultPipeline {
   matchKeys: string[]; // keywords to match against deployed pipelines
   category: PipelineTemplateCategory;
   _dynamicWebhook?: boolean; // flag for dynamic webhook URL resolution
+  recommended?: boolean;
 }
 
 const TEMPLATE_CATEGORY_META: Record<PipelineTemplateCategory, { label: string; description: string }> = {
@@ -94,6 +95,7 @@ const DEFAULT_PIPELINES: DefaultPipeline[] = [
     command: 'load_tcp "0.0.0.0:1514" { read_syslog } | import',
     matchKeys: ['load_tcp', 'syslog', 'tcp'],
     category: 'ingest',
+    recommended: true,
   },
   {
     label: 'UDP Syslog',
@@ -101,15 +103,17 @@ const DEFAULT_PIPELINES: DefaultPipeline[] = [
     command: 'load_udp "0.0.0.0:1514", insert_newlines=true | read_syslog | import',
     matchKeys: ['load_udp', 'udp'],
     category: 'ingest',
+    recommended: true,
   },
   {
     label: 'Sigma Rule Alerting',
     description: 'Live export with Sigma rule matching, forwarded to the incidents webhook',
-    command: '', // Dynamically resolved from the Ingestion Webhook workflow
+    command: '',
     hasPlaceholders: false,
     matchKeys: ['sigma', 'sigma_rules'],
     category: 'detect',
-    _dynamicWebhook: true, // flag for dynamic resolution
+    _dynamicWebhook: true,
+    recommended: true,
   },
   {
     label: 'OpenSearch Forwarder',
@@ -1121,7 +1125,9 @@ Use case: ${aiPrompt}`,
                         setCreateOpen(true);
                       }}
                       sx={{
-                        border: '1px solid hsl(var(--border))',
+                        border: dp.recommended
+                          ? '1px solid rgba(255, 102, 0, 0.35)'
+                          : '1px solid hsl(var(--border))',
                         borderRadius: 1.5,
                         px: 1.5,
                         py: 1.25,
@@ -1130,11 +1136,12 @@ Use case: ${aiPrompt}`,
                         gap: 1,
                         cursor: 'pointer',
                         transition: 'all 0.15s',
-                        '&:hover': { borderColor: 'rgba(255, 102, 0, 0.4)', backgroundColor: 'rgba(255, 102, 0, 0.04)' },
+                        bgcolor: dp.recommended ? 'rgba(255, 102, 0, 0.06)' : 'transparent',
+                        '&:hover': { borderColor: 'rgba(255, 102, 0, 0.5)', backgroundColor: 'rgba(255, 102, 0, 0.08)' },
                       }}
                     >
-                      <RocketLaunchIcon sx={{ fontSize: 14, color: 'hsl(var(--muted-foreground))', flexShrink: 0 }} />
-                      <Typography sx={{ color: 'hsl(var(--foreground))', fontSize: '0.8rem', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <RocketLaunchIcon sx={{ fontSize: 14, color: dp.recommended ? 'rgb(255, 102, 0)' : 'hsl(var(--muted-foreground))', flexShrink: 0 }} />
+                      <Typography sx={{ color: 'hsl(var(--foreground))', fontSize: '0.8rem', fontWeight: dp.recommended ? 600 : 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {dp.label}
                       </Typography>
                     </Box>
