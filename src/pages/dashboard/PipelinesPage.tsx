@@ -418,9 +418,43 @@ const PipelinesPage = () => {
             setActionLoading(prev => ({ ...prev, [id]: false }));
           };
           poll();
-          return; // Don't clear loading in finally
+          return;
+        } else if (action === 'delete') {
+          // Poll until pipeline disappears from list, timeout after 60s
+          toast.success('Deleting pipeline...');
+          const maxAttempts = 30;
+          let attempt = 0;
+          const pollDelete = async () => {
+            while (attempt < maxAttempts) {
+              await new Promise(r => setTimeout(r, 2000));
+              attempt++;
+              try {
+                const res = await fetch(getApiUrl('/api/v1/triggers'), {
+                  credentials: 'include',
+                  headers: { ...getAuthHeader() },
+                });
+                if (res.ok) {
+                  const data = await res.json();
+                  const rawPipelines = data?.pipelines || data?.Pipelines || [];
+                  const pList = Array.isArray(rawPipelines) ? rawPipelines : Object.values(rawPipelines);
+                  const stillExists = (pList as any[]).some((p: any) => (p.pipeline || p.id) === id);
+                  if (!stillExists) {
+                    await fetchEnvironments();
+                    toast.success('Pipeline deleted');
+                    setActionLoading(prev => ({ ...prev, [id]: false }));
+                    return;
+                  }
+                }
+              } catch { /* continue polling */ }
+            }
+            await fetchEnvironments();
+            toast.error('Pipeline delete timed out — check status manually');
+            setActionLoading(prev => ({ ...prev, [id]: false }));
+          };
+          pollDelete();
+          return;
         } else {
-          toast.success(`Pipeline ${action === 'delete' ? 'deleted' : 'stopped'}`);
+          toast.success('Pipeline stopped');
           setTimeout(() => fetchEnvironments(), 2000);
         }
       } else {
