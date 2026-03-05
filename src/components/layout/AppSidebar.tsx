@@ -795,7 +795,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                     justifyContent: 'center',
                     cursor: 'default',
                   }}>
-                    <WarningAmberIcon sx={{ fontSize: 16, color: isOver ? 'hsl(var(--destructive))' : 'hsl(var(--severity-medium))' }} />
+                    <WarningAmberIcon sx={{ fontSize: 16, color: isOver ? 'hsl(var(--destructive))' : 'hsl(var(--severity-medium))', mt: '-1px' }} />
                   </Box>
                 </Tooltip>
               </Box>
