@@ -1007,20 +1007,23 @@ export default function UsecaseAlluvialDiagram({
         }));
       return [...samples, ...guestNodes].filter(a => !hiddenApps.has(a.name.toLowerCase()));
     }
-    if (highlightCategory && forwardAppNames) {
-      // Show all case_management apps, mark forwarding-enabled ones
+    if (highlightCategory) {
+      // Show validated case_management apps, mark forwarding-enabled ones
       const caseMgmtApps = allApps.filter(a =>
-        a.hasValidAuth && matchesCategory(a.name, targetCategory) && !hiddenApps.has(a.name.toLowerCase())
+        a.hasValidAuth && !isShuffleInternalApp(a.name) && matchesCategory(a.name, targetCategory) && !hiddenApps.has(a.name.toLowerCase())
       );
-      const enabledApps = caseMgmtApps
-        .filter(a => forwardAppNames.has(normalizeAppName(a.name)))
-        .map(a => ({ ...a, isEnabled: true }));
-      const disabledApps = caseMgmtApps
-        .filter(a => !forwardAppNames.has(normalizeAppName(a.name)))
-        .map(a => ({ ...a, isEnabled: false }));
-      return [...enabledApps, ...disabledApps];
+      if (forwardAppNames && forwardAppNames.size > 0) {
+        const enabledApps = caseMgmtApps
+          .filter(a => forwardAppNames.has(normalizeAppName(a.name)))
+          .map(a => ({ ...a, isEnabled: true }));
+        const disabledApps = caseMgmtApps
+          .filter(a => !forwardAppNames.has(normalizeAppName(a.name)))
+          .map(a => ({ ...a, isEnabled: false }));
+        return [...enabledApps, ...disabledApps];
+      }
+      return caseMgmtApps;
     }
-    return allApps.filter(a => matchesCategory(a.name, targetCategory) && !hiddenApps.has(a.name.toLowerCase()));
+    return allApps.filter(a => a.hasValidAuth && matchesCategory(a.name, targetCategory) && !hiddenApps.has(a.name.toLowerCase()));
   }, [allApps, targetCategory, highlightCategory, forwardAppNames, isLoggedIn, guestDestNames, guestAppIcons, hiddenApps]);
 
   const sourceMeta = TOOL_CATEGORIES.find(c => c.id === sourceCategory);
