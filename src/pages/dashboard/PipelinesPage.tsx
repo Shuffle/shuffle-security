@@ -861,8 +861,8 @@ Use case: ${aiPrompt}`,
         </Box>
       )}
 
-      {/* Filters */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3, flexWrap: 'wrap' }}>
+      {/* Filters — only show when there are pipelines */}
+      {pipelines.length > 0 && <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3, flexWrap: 'wrap' }}>
         <TextField
           placeholder="Search pipelines..."
           value={searchQuery}
@@ -945,7 +945,7 @@ Use case: ${aiPrompt}`,
             </MuiSelect>
           </FormControl>
         )}
-      </Box>
+      </Box>}
 
 
 
@@ -1107,7 +1107,7 @@ Use case: ${aiPrompt}`,
 
       {/* Templates — grouped by category */}
       {!isLoading && availableTemplates.length > 0 && (
-        <Box sx={{ mt: 4, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Box sx={{ mt: pipelines.length > 0 ? 6 : 4, display: 'flex', flexDirection: 'column', gap: 2 }}>
           {(['ingest', 'detect', 'forward'] as PipelineTemplateCategory[]).map((cat) => {
             const templates = availableTemplates.filter(t => t.category === cat);
             if (templates.length === 0) return null;
