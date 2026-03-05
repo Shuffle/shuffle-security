@@ -69,13 +69,22 @@ interface Pipeline {
   _environmentName: string;
 }
 
+type PipelineTemplateCategory = 'ingest' | 'detect' | 'forward';
+
 interface DefaultPipeline {
   label: string;
   description: string;
   command: string;
   hasPlaceholders?: boolean;
   matchKeys: string[]; // keywords to match against deployed pipelines
+  category: PipelineTemplateCategory;
 }
+
+const TEMPLATE_CATEGORY_META: Record<PipelineTemplateCategory, { label: string; description: string }> = {
+  ingest: { label: 'Ingest', description: 'Get data into the system' },
+  detect: { label: 'Detect', description: 'Match rules against ingested data' },
+  forward: { label: 'Forward', description: 'Send matched events to external systems' },
+};
 
 const DEFAULT_PIPELINES: DefaultPipeline[] = [
   {
@@ -83,12 +92,14 @@ const DEFAULT_PIPELINES: DefaultPipeline[] = [
     description: 'Ingest syslog events over TCP on port 1514',
     command: 'load_tcp "0.0.0.0:1514" { read_syslog } | import',
     matchKeys: ['load_tcp', 'syslog', 'tcp'],
+    category: 'ingest',
   },
   {
     label: 'UDP Syslog',
     description: 'Ingest syslog events over UDP on port 1514',
     command: 'load_udp "0.0.0.0:1514", insert_newlines=true | read_syslog | import',
     matchKeys: ['load_udp', 'udp'],
+    category: 'ingest',
   },
   {
     label: 'Sigma Rule Alerting',
@@ -96,6 +107,7 @@ const DEFAULT_PIPELINES: DefaultPipeline[] = [
     command: 'export live=true | sigma "/tmp/sigma_rules" | to "http://localhost:5002/api/v1/hooks/webhook_e031c4c0-3f7e-4c0f-a8d2-ff87be206907"',
     hasPlaceholders: true,
     matchKeys: ['sigma', 'sigma_rules'],
+    category: 'detect',
   },
   {
     label: 'OpenSearch Forwarder',
@@ -103,6 +115,7 @@ const DEFAULT_PIPELINES: DefaultPipeline[] = [
     command: 'export live=true | to_opensearch "localhost:9200", action="create", index="shuffle_logs", user="admin", passwd="PASSWORD"',
     hasPlaceholders: true,
     matchKeys: ['to_opensearch', 'opensearch'],
+    category: 'forward',
   },
   {
     label: 'Kafka Subscriber',
@@ -110,6 +123,7 @@ const DEFAULT_PIPELINES: DefaultPipeline[] = [
     command: 'from_kafka "localhost:9092", topic="security_events" | import',
     hasPlaceholders: true,
     matchKeys: ['from_kafka', 'kafka'],
+    category: 'ingest',
   },
   {
     label: 'ZeroMQ Subscriber',
@@ -117,6 +131,7 @@ const DEFAULT_PIPELINES: DefaultPipeline[] = [
     command: 'load_zmq "tcp://localhost:5555" | read_json | import',
     hasPlaceholders: true,
     matchKeys: ['load_zmq', 'zeromq', 'zmq'],
+    category: 'ingest',
   },
   {
     label: 'File Watcher',
@@ -124,6 +139,7 @@ const DEFAULT_PIPELINES: DefaultPipeline[] = [
     command: 'load_file "/var/log/events.json", follow=true | read_json | import',
     hasPlaceholders: true,
     matchKeys: ['load_file', 'follow=true'],
+    category: 'ingest',
   },
   {
     label: 'Velociraptor Import',
@@ -131,6 +147,7 @@ const DEFAULT_PIPELINES: DefaultPipeline[] = [
     command: 'from_file "/tmp/velociraptor_results.json" | read_json | import',
     hasPlaceholders: true,
     matchKeys: ['velociraptor', 'from_file'],
+    category: 'ingest',
   },
   {
     label: 'AWS S3 Logs',
@@ -138,6 +155,7 @@ const DEFAULT_PIPELINES: DefaultPipeline[] = [
     command: 'from_s3 "s3://my-bucket/logs/**/*.json", watch=true | import',
     hasPlaceholders: true,
     matchKeys: ['from_s3', 's3'],
+    category: 'ingest',
   },
   {
     label: 'GCP Pub/Sub',
@@ -145,6 +163,7 @@ const DEFAULT_PIPELINES: DefaultPipeline[] = [
     command: 'from "gcps://my-project/my-subscription" { read_json } | import',
     hasPlaceholders: true,
     matchKeys: ['gcps://', 'google_cloud_pubsub', 'pubsub'],
+    category: 'ingest',
   },
   {
     label: 'Azure Event Hub',
@@ -152,6 +171,7 @@ const DEFAULT_PIPELINES: DefaultPipeline[] = [
     command: 'let $options = { "bootstrap.servers": "<namespace>.servicebus.windows.net:9093", "security.protocol": "SASL_SSL", "sasl.mechanism": "PLAIN", "sasl.username": "$ConnectionString", "sasl.password": "<connection-string>" }\nfrom_kafka "<topic>", options=$options | import',
     hasPlaceholders: true,
     matchKeys: ['azure', 'event_hub', 'servicebus'],
+    category: 'ingest',
   },
   {
     label: 'Suricata EVE',
@@ -159,6 +179,7 @@ const DEFAULT_PIPELINES: DefaultPipeline[] = [
     command: 'load_file "/var/log/suricata/eve.json", follow=true | read_json | where #schema == "suricata.alert" | import',
     hasPlaceholders: true,
     matchKeys: ['suricata', 'eve.json'],
+    category: 'ingest',
   },
   {
     label: 'Zeek Logs',
@@ -166,6 +187,7 @@ const DEFAULT_PIPELINES: DefaultPipeline[] = [
     command: 'from_file "/opt/zeek/logs/current/*.log" | read_zeek_tsv | import',
     hasPlaceholders: true,
     matchKeys: ['zeek', 'read_zeek_tsv', 'bro'],
+    category: 'ingest',
   },
 ];
 
@@ -848,40 +870,54 @@ Use case: ${aiPrompt}`,
       </Box>
 
 
-      {/* Templates — always visible */}
+      {/* Templates — grouped by category */}
       {!isLoading && availableTemplates.length > 0 && (
-        <Box sx={{ mb: 3 }}>
-          <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1.5 }}>
-            Templates
-          </Typography>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
-            {availableTemplates.map((dp) => (
-              <Box
-                key={dp.label}
-                onClick={() => {
-                  setNewCommand(dp.command);
-                  setCreateOpen(true);
-                }}
-                sx={{
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: 1.5,
-                  px: 1.5,
-                  py: 1.25,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  cursor: 'pointer',
-                  transition: 'all 0.15s',
-                  '&:hover': { borderColor: 'rgba(255, 102, 0, 0.4)', backgroundColor: 'rgba(255, 102, 0, 0.04)' },
-                }}
-              >
-                <RocketLaunchIcon sx={{ fontSize: 14, color: 'hsl(var(--muted-foreground))', flexShrink: 0 }} />
-                <Typography sx={{ color: 'hsl(var(--foreground))', fontSize: '0.8rem', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {dp.label}
-                </Typography>
+        <Box sx={{ mb: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {(['ingest', 'detect', 'forward'] as PipelineTemplateCategory[]).map((cat) => {
+            const templates = availableTemplates.filter(t => t.category === cat);
+            if (templates.length === 0) return null;
+            const meta = TEMPLATE_CATEGORY_META[cat];
+            return (
+              <Box key={cat}>
+                <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, mb: 1 }}>
+                  <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    {meta.label}
+                  </Typography>
+                  <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.7rem', opacity: 0.7 }}>
+                    — {meta.description}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
+                  {templates.map((dp) => (
+                    <Box
+                      key={dp.label}
+                      onClick={() => {
+                        setNewCommand(dp.command);
+                        setCreateOpen(true);
+                      }}
+                      sx={{
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: 1.5,
+                        px: 1.5,
+                        py: 1.25,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        cursor: 'pointer',
+                        transition: 'all 0.15s',
+                        '&:hover': { borderColor: 'rgba(255, 102, 0, 0.4)', backgroundColor: 'rgba(255, 102, 0, 0.04)' },
+                      }}
+                    >
+                      <RocketLaunchIcon sx={{ fontSize: 14, color: 'hsl(var(--muted-foreground))', flexShrink: 0 }} />
+                      <Typography sx={{ color: 'hsl(var(--foreground))', fontSize: '0.8rem', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {dp.label}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
               </Box>
-            ))}
-          </Box>
+            );
+          })}
         </Box>
       )}
 
