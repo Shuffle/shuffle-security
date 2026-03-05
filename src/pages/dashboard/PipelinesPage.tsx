@@ -63,6 +63,7 @@ interface Pipeline {
   start_time?: number;
   started_at?: string;
   created?: number;
+  last_modified?: number;
   // enriched locally
   _environmentId: string;
   _environmentName: string;
@@ -323,9 +324,12 @@ const PipelinesPage = () => {
     const id = pipeline.pipeline || pipeline.id || '';
     setActionLoading(prev => ({ ...prev, [id]: true }));
 
+    // Capture original timestamps to detect changes
+    const originalStartedAt = pipeline.started_at || '';
+    const originalLastModified = pipeline.last_modified || 0;
+
     try {
       const env = environments.find(e => e.id === pipeline._environmentId);
-      // API expects "stop" for both stop and delete operations
       const apiType = action === 'delete' ? 'stop' : action;
       const response = await fetch(getApiUrl('/api/v1/triggers/pipeline'), {
         method: 'POST',
@@ -343,9 +347,60 @@ const PipelinesPage = () => {
       });
 
       if (response.ok) {
-        toast.success(`Pipeline ${action === 'delete' ? 'deleted' : action === 'start' ? 'started' : 'stopped'}`);
-        // Refresh after a short delay
-        setTimeout(() => fetchEnvironments(), 2000);
+        if (action === 'start') {
+          // Poll until started_at or last_modified changes, timeout after 60s
+          toast.success('Starting pipeline...');
+          const maxAttempts = 30;
+          let attempt = 0;
+          const definition = (pipeline.definition || pipeline.command || '').toLowerCase().substring(0, 40);
+          const poll = async () => {
+            while (attempt < maxAttempts) {
+              await new Promise(r => setTimeout(r, 2000));
+              attempt++;
+              try {
+                const res = await fetch(getApiUrl('/api/v1/triggers'), {
+                  credentials: 'include',
+                  headers: { ...getAuthHeader() },
+                });
+                if (res.ok) {
+                  const data = await res.json();
+                  const rawPipelines = data?.pipelines || data?.Pipelines || [];
+                  const pList = Array.isArray(rawPipelines) ? rawPipelines : Object.values(rawPipelines);
+                  const match = (pList as any[]).find((p: any) => {
+                    const cmd = (p.definition || p.command || p.name || '').toLowerCase();
+                    return cmd.includes(definition) && (p.pipeline || p.id) === id;
+                  });
+                  if (match) {
+                    const stateStr = (match.state || '').toLowerCase();
+                    const newStartedAt = match.started_at || '';
+                    const newLastModified = match.last_modified || 0;
+                    if (newStartedAt !== originalStartedAt || newLastModified !== originalLastModified ||
+                        stateStr === 'running' || stateStr === 'active' || stateStr === 'started') {
+                      await fetchEnvironments();
+                      toast.success('Pipeline started');
+                      setActionLoading(prev => ({ ...prev, [id]: false }));
+                      return;
+                    }
+                    if (stateStr === 'failed' || stateStr === 'error') {
+                      await fetchEnvironments();
+                      toast.error('Pipeline failed to start');
+                      setActionLoading(prev => ({ ...prev, [id]: false }));
+                      return;
+                    }
+                  }
+                }
+              } catch { /* continue polling */ }
+            }
+            await fetchEnvironments();
+            toast.error('Pipeline start timed out — check status manually');
+            setActionLoading(prev => ({ ...prev, [id]: false }));
+          };
+          poll();
+          return; // Don't clear loading in finally
+        } else {
+          toast.success(`Pipeline ${action === 'delete' ? 'deleted' : 'stopped'}`);
+          setTimeout(() => fetchEnvironments(), 2000);
+        }
       } else {
         const text = await response.text();
         toast.error(`Failed to ${action} pipeline: ${text.substring(0, 80)}`);
@@ -353,9 +408,8 @@ const PipelinesPage = () => {
     } catch (error) {
       console.error(`Error ${action}ing pipeline:`, error);
       toast.error(`Error ${action}ing pipeline`);
-    } finally {
-      setActionLoading(prev => ({ ...prev, [id]: false }));
     }
+    setActionLoading(prev => ({ ...prev, [id]: false }));
   };
 
   const handleCreate = async () => {
