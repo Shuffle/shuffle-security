@@ -130,6 +130,41 @@ const DEFAULT_PIPELINES: DefaultPipeline[] = [
     hasPlaceholders: true,
     matchKeys: ['velociraptor', 'from_file'],
   },
+  {
+    label: 'AWS S3 Logs',
+    description: 'Read JSON log files from an S3 bucket continuously',
+    command: 'from_s3 "s3://my-bucket/logs/**/*.json", watch=true | import',
+    hasPlaceholders: true,
+    matchKeys: ['from_s3', 's3'],
+  },
+  {
+    label: 'GCP Pub/Sub',
+    description: 'Subscribe to a Google Cloud Pub/Sub topic for log ingestion',
+    command: 'from "gcps://my-project/my-subscription" { read_json } | import',
+    hasPlaceholders: true,
+    matchKeys: ['gcps://', 'google_cloud_pubsub', 'pubsub'],
+  },
+  {
+    label: 'Azure Event Hub',
+    description: 'Consume events from Azure Event Hubs via Kafka endpoint',
+    command: 'let $options = { "bootstrap.servers": "<namespace>.servicebus.windows.net:9093", "security.protocol": "SASL_SSL", "sasl.mechanism": "PLAIN", "sasl.username": "$ConnectionString", "sasl.password": "<connection-string>" }\nfrom_kafka "<topic>", options=$options | import',
+    hasPlaceholders: true,
+    matchKeys: ['azure', 'event_hub', 'servicebus'],
+  },
+  {
+    label: 'Suricata EVE',
+    description: 'Ingest Suricata IDS alerts from eve.json',
+    command: 'load_file "/var/log/suricata/eve.json", follow=true | read_json | where #schema == "suricata.alert" | import',
+    hasPlaceholders: true,
+    matchKeys: ['suricata', 'eve.json'],
+  },
+  {
+    label: 'Zeek Logs',
+    description: 'Ingest Zeek/Bro network monitoring logs',
+    command: 'from_file "/opt/zeek/logs/current/*.log" | read_zeek_tsv | import',
+    hasPlaceholders: true,
+    matchKeys: ['zeek', 'read_zeek_tsv', 'bro'],
+  },
 ];
 
 const PipelinesPage = () => {
