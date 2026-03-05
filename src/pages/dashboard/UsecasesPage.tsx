@@ -142,8 +142,8 @@ export default function UsecasesPage() {
         </Box>
       </Box>
 
-      {/* Support-only banner */}
-      {isSupport && (
+      {/* Banner */}
+      {isSupport ? (
         <Box sx={{
           mb: 3, px: 2, py: 1.5, borderRadius: 1,
           bgcolor: 'hsl(45 93% 47% / 0.1)',
@@ -172,6 +172,18 @@ export default function UsecasesPage() {
               '&:hover': { bgcolor: showAllAsSupport ? 'hsl(var(--primary) / 0.25)' : 'hsl(45 93% 47% / 0.3)' },
             }}
           />
+        </Box>
+      ) : (
+        <Box sx={{
+          mb: 3, px: 2, py: 1.5, borderRadius: 1,
+          bgcolor: 'hsl(var(--primary) / 0.06)',
+          border: '1px solid hsl(var(--primary) / 0.15)',
+          display: 'flex', alignItems: 'center', gap: 1,
+        }}>
+          <Zap size={14} style={{ color: 'hsl(var(--primary))' }} />
+          <Typography variant="body2" sx={{ color: 'hsl(var(--primary))', fontWeight: 500 }}>
+            More automations coming soon — we're actively building new integrations.
+          </Typography>
         </Box>
       )}
 
