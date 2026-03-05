@@ -776,44 +776,40 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
           return (
             <Box sx={{ px: 2, pb: 1.5 }}>
               <Box sx={{
-                p: 1.5,
-                borderRadius: 1.5,
-                bgcolor: isOver ? 'hsl(var(--destructive) / 0.1)' : 'hsl(var(--severity-medium) / 0.1)',
-                border: `1px solid ${isOver ? 'hsl(var(--destructive) / 0.3)' : 'hsl(var(--severity-medium) / 0.3)'}`,
+                borderRadius: 2,
+                overflow: 'hidden',
+                bgcolor: isOver ? 'hsl(var(--destructive) / 0.08)' : 'hsl(var(--severity-medium) / 0.08)',
+                border: `1px solid ${isOver ? 'hsl(var(--destructive) / 0.2)' : 'hsl(var(--severity-medium) / 0.2)'}`,
+                position: 'relative',
               }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.75 }}>
-                  <WarningAmberIcon sx={{ fontSize: 14, color: isOver ? 'hsl(var(--destructive))' : 'hsl(var(--severity-medium))' }} />
-                  <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: isOver ? 'hsl(var(--destructive))' : 'hsl(var(--severity-medium))' }}>
-                    {isOver ? 'App run limit reached' : 'App run limit warning'}
+                <Box sx={{ p: 1.5, pb: 1.25 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.5 }}>
+                    <WarningAmberIcon sx={{ fontSize: 14, color: isOver ? 'hsl(var(--destructive))' : 'hsl(var(--severity-medium))' }} />
+                    <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: isOver ? 'hsl(var(--destructive))' : 'hsl(var(--severity-medium))' }}>
+                      {isOver ? 'App run limit reached' : 'App run limit warning'}
+                    </Typography>
+                  </Box>
+                  <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.4, mb: 1 }}>
+                    {isOver
+                      ? `Automation will stop until ${new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}, but incidents and detections still work.`
+                      : `${pct.toFixed(0)}% of app runs used. Automation may stop soon, but incidents and detections still work.`}
                   </Typography>
-                </Box>
-                <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.4, mb: 1 }}>
-                  {isOver
-                    ? `Automation will stop until ${new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}, but incidents and detections still work.`
-                    : `${pct.toFixed(0)}% of app runs used. Automation may stop soon, but incidents and detections still work.`}
-                </Typography>
-                {/* Action buttons */}
-                {(
-                  <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                  {/* Action links */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                     <Box
                       component="a"
                       href="https://shuffler.io/pricing"
                       target="_blank"
                       rel="noopener noreferrer"
                       sx={{
-                        flex: 1,
-                        textAlign: 'center',
                         fontSize: '0.65rem',
                         fontWeight: 600,
-                        py: 0.5,
-                        borderRadius: 1,
-                        bgcolor: 'hsl(var(--primary))',
-                        color: 'hsl(var(--primary-foreground))',
+                        color: isOver ? 'hsl(var(--destructive))' : 'hsl(var(--severity-medium))',
                         textDecoration: 'none',
-                        '&:hover': { opacity: 0.9 },
+                        '&:hover': { textDecoration: 'underline' },
                       }}
                     >
-                      Upgrade
+                      Upgrade →
                     </Box>
                     <Box
                       component="a"
@@ -821,35 +817,29 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                       target="_blank"
                       rel="noopener noreferrer"
                       sx={{
-                        flex: 1,
-                        textAlign: 'center',
                         fontSize: '0.65rem',
-                        fontWeight: 600,
-                        py: 0.5,
-                        borderRadius: 1,
-                        border: '1px solid hsl(var(--border))',
-                        color: 'hsl(var(--foreground))',
+                        fontWeight: 500,
+                        color: 'hsl(var(--muted-foreground))',
                         textDecoration: 'none',
-                        '&:hover': { bgcolor: 'hsl(var(--muted))' },
+                        '&:hover': { textDecoration: 'underline' },
                       }}
                     >
-                      Support
+                      Contact support
                     </Box>
                   </Box>
-                )}
-                {/* Usage bar */}
-                <Box sx={{ width: '100%', height: 4, borderRadius: 2, bgcolor: 'hsl(var(--muted))' }}>
+                  <Typography sx={{ fontSize: '0.6rem', color: 'hsl(var(--muted-foreground))', mt: 0.75, opacity: 0.7 }}>
+                    {usage.toLocaleString()} / {limit.toLocaleString()} runs
+                  </Typography>
+                </Box>
+                {/* Bottom border progress bar */}
+                <Box sx={{ width: '100%', height: 3, bgcolor: 'hsl(var(--muted) / 0.5)' }}>
                   <Box sx={{
                     width: `${Math.min(pct, 100)}%`,
                     height: '100%',
-                    borderRadius: 2,
                     bgcolor: isOver ? 'hsl(var(--destructive))' : 'hsl(var(--severity-medium))',
                     transition: 'width 0.3s ease',
                   }} />
                 </Box>
-                <Typography sx={{ fontSize: '0.6rem', color: 'hsl(var(--muted-foreground))', mt: 0.5, textAlign: 'right' }}>
-                  {usage.toLocaleString()} / {limit.toLocaleString()}
-                </Typography>
               </Box>
             </Box>
           );
