@@ -208,6 +208,7 @@ const PipelinesPage = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [justGenerated, setJustGenerated] = useState(false);
   const [showAiSection, setShowAiSection] = useState(false);
+  const [preAiCommand, setPreAiCommand] = useState<string | null>(null);
 
   // Detail dialog
   const [detailPipeline, setDetailPipeline] = useState<Pipeline | null>(null);
@@ -636,6 +637,7 @@ Use case: ${aiPrompt}`,
       });
       if (success && result) {
         const cleaned = result.replace(/^```[^\n]*\n?/i, '').replace(/\n?```$/i, '').trim();
+        setPreAiCommand(newCommand);
         setNewCommand(cleaned);
         setJustGenerated(true);
         setTimeout(() => setJustGenerated(false), 3000);
@@ -900,56 +902,7 @@ Use case: ${aiPrompt}`,
       </Box>
 
 
-      {/* Templates — grouped by category */}
-      {!isLoading && availableTemplates.length > 0 && (
-        <Box sx={{ mb: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {(['ingest', 'detect', 'forward'] as PipelineTemplateCategory[]).map((cat) => {
-            const templates = availableTemplates.filter(t => t.category === cat);
-            if (templates.length === 0) return null;
-            const meta = TEMPLATE_CATEGORY_META[cat];
-            return (
-              <Box key={cat}>
-                <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, mb: 1 }}>
-                  <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    {meta.label}
-                  </Typography>
-                  <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.7rem', opacity: 0.7 }}>
-                    — {meta.description}
-                  </Typography>
-                </Box>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
-                  {templates.map((dp) => (
-                    <Box
-                      key={dp.label}
-                      onClick={() => {
-                        setNewCommand(dp.command);
-                        setCreateOpen(true);
-                      }}
-                      sx={{
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: 1.5,
-                        px: 1.5,
-                        py: 1.25,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 1,
-                        cursor: 'pointer',
-                        transition: 'all 0.15s',
-                        '&:hover': { borderColor: 'rgba(255, 102, 0, 0.4)', backgroundColor: 'rgba(255, 102, 0, 0.04)' },
-                      }}
-                    >
-                      <RocketLaunchIcon sx={{ fontSize: 14, color: 'hsl(var(--muted-foreground))', flexShrink: 0 }} />
-                      <Typography sx={{ color: 'hsl(var(--foreground))', fontSize: '0.8rem', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {dp.label}
-                      </Typography>
-                    </Box>
-                  ))}
-                </Box>
-              </Box>
-            );
-          })}
-        </Box>
-      )}
+
 
       {/* Table */}
       {isLoading ? (
@@ -1106,10 +1059,61 @@ Use case: ${aiPrompt}`,
         </Box>
       )}
 
+      {/* Templates — grouped by category */}
+      {!isLoading && availableTemplates.length > 0 && (
+        <Box sx={{ mt: 4, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {(['ingest', 'detect', 'forward'] as PipelineTemplateCategory[]).map((cat) => {
+            const templates = availableTemplates.filter(t => t.category === cat);
+            if (templates.length === 0) return null;
+            const meta = TEMPLATE_CATEGORY_META[cat];
+            return (
+              <Box key={cat}>
+                <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, mb: 1 }}>
+                  <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    {meta.label}
+                  </Typography>
+                  <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.7rem', opacity: 0.7 }}>
+                    — {meta.description}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
+                  {templates.map((dp) => (
+                    <Box
+                      key={dp.label}
+                      onClick={() => {
+                        setNewCommand(dp.command);
+                        setCreateOpen(true);
+                      }}
+                      sx={{
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: 1.5,
+                        px: 1.5,
+                        py: 1.25,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        cursor: 'pointer',
+                        transition: 'all 0.15s',
+                        '&:hover': { borderColor: 'rgba(255, 102, 0, 0.4)', backgroundColor: 'rgba(255, 102, 0, 0.04)' },
+                      }}
+                    >
+                      <RocketLaunchIcon sx={{ fontSize: 14, color: 'hsl(var(--muted-foreground))', flexShrink: 0 }} />
+                      <Typography sx={{ color: 'hsl(var(--foreground))', fontSize: '0.8rem', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {dp.label}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
+            );
+          })}
+        </Box>
+      )}
+
       {/* Create Pipeline Dialog */}
       <Dialog
         open={createOpen}
-        onClose={() => { setCreateOpen(false); setEditingPipeline(null); }}
+        onClose={() => { setCreateOpen(false); setEditingPipeline(null); setPreAiCommand(null); setJustGenerated(false); }}
         maxWidth="md"
         fullWidth
         PaperProps={{
@@ -1246,21 +1250,43 @@ Use case: ${aiPrompt}`,
             }}
           />
 
-          {justGenerated && (
-            <Chip
-              label="✓ AI Generated"
-              size="small"
-              sx={{
-                mt: 1,
-                height: 20,
-                fontSize: '0.65rem',
-                fontWeight: 600,
-                backgroundColor: 'rgba(255, 102, 0, 0.12)',
-                color: '#FF6600',
-                border: '1px solid rgba(255, 102, 0, 0.3)',
-              }}
-            />
-          )}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+            {justGenerated && (
+              <Chip
+                label="✓ AI Generated"
+                size="small"
+                sx={{
+                  height: 20,
+                  fontSize: '0.65rem',
+                  fontWeight: 600,
+                  backgroundColor: 'rgba(255, 102, 0, 0.12)',
+                  color: '#FF6600',
+                  border: '1px solid rgba(255, 102, 0, 0.3)',
+                }}
+              />
+            )}
+            {preAiCommand !== null && (
+              <Chip
+                label="↩ Undo AI changes"
+                size="small"
+                onClick={() => {
+                  setNewCommand(preAiCommand);
+                  setPreAiCommand(null);
+                  setJustGenerated(false);
+                }}
+                sx={{
+                  height: 20,
+                  fontSize: '0.65rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  backgroundColor: 'hsl(var(--muted))',
+                  color: 'hsl(var(--muted-foreground))',
+                  border: '1px solid hsl(var(--border))',
+                  '&:hover': { borderColor: '#FF6600', color: '#FF6600' },
+                }}
+              />
+            )}
+          </Box>
 
           {newEnvId && !isSensorRunning(newEnvId) && (
             <Alert severity="warning" sx={{ mt: 2, bgcolor: 'transparent', border: '1px solid rgba(255,152,0,0.3)', color: 'hsl(var(--foreground))' }}>
@@ -1269,7 +1295,7 @@ Use case: ${aiPrompt}`,
           )}
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={() => { setCreateOpen(false); setEditingPipeline(null); }} sx={{ color: 'hsl(var(--muted-foreground))', textTransform: 'none' }}>
+          <Button onClick={() => { setCreateOpen(false); setEditingPipeline(null); setPreAiCommand(null); setJustGenerated(false); }} sx={{ color: 'hsl(var(--muted-foreground))', textTransform: 'none' }}>
             Cancel
           </Button>
           <Button
