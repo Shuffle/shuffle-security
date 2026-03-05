@@ -395,11 +395,66 @@ const PipelinesPage = () => {
       });
 
       if (response.ok) {
-        toast.success(isEdit ? 'Pipeline updated' : 'Pipeline created');
-        setTimeout(() => {
+        toast.success(isEdit ? 'Pipeline updated — verifying startup...' : 'Pipeline created — verifying startup...');
+
+        // Poll to verify the pipeline actually started
+        const verifyStartup = async () => {
+          const startedAt = Date.now();
+          const TIMEOUT_MS = 60_000;
+          const POLL_INTERVAL = 5_000;
+
+          while (Date.now() - startedAt < TIMEOUT_MS) {
+            await new Promise(r => setTimeout(r, POLL_INTERVAL));
+
+            try {
+              const checkRes = await fetch(getApiUrl('/api/v1/triggers'), {
+                credentials: 'include',
+                headers: { ...getAuthHeader() },
+              });
+
+              if (checkRes.ok) {
+                const checkData = await checkRes.json();
+                const pList = checkData?.pipelines || checkData?.Pipelines || [];
+                const pArr = Array.isArray(pList) ? pList : Object.values(pList);
+
+                // Look for a pipeline matching our command in the target environment
+                const match = (pArr as any[]).find((p: any) => {
+                  const cmd = (p.definition || p.command || p.name || '').toLowerCase();
+                  return cmd.includes(newCommand.substring(0, 40).toLowerCase());
+                });
+
+                if (match) {
+                  const state = (match.state || '').toLowerCase();
+                  if (state === 'running' || state === 'active' || state === 'started') {
+                    // Success — pipeline is running
+                    setPendingPipelines(prev => prev.filter(p => p.pipeline !== optimisticId));
+                    fetchEnvironments();
+                    return;
+                  }
+                  if (state === 'failed' || state === 'error' || state === 'stopped') {
+                    // Explicit failure
+                    toast.error('Pipeline failed to start. The command may be invalid or use unsupported syntax.');
+                    setPendingPipelines(prev => prev.filter(p => p.pipeline !== optimisticId));
+                    fetchEnvironments();
+                    return;
+                  }
+                }
+              }
+            } catch {
+              // Ignore poll errors, keep trying
+            }
+          }
+
+          // Timeout reached — pipeline never confirmed running
+          toast.error(
+            'Pipeline did not start within 60 seconds. It may contain invalid syntax or use unsupported operators. Check your Tenzir command and try again.',
+            { duration: 10000 }
+          );
           setPendingPipelines(prev => prev.filter(p => p.pipeline !== optimisticId));
           fetchEnvironments();
-        }, 2000);
+        };
+
+        verifyStartup();
       } else {
         const text = await response.text();
         toast.error(`Failed to ${isEdit ? 'update' : 'create'}: ${text.substring(0, 80)}`);
