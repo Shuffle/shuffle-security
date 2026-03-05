@@ -1685,9 +1685,36 @@ const DetectionOnboardingPage = () => {
               </Box>
             )}
 
-            {/* Deployment Options - Hidden for cloud sensors or running sensors */}
-            {(isCreatingNew || (selectedEnvironment && isSensorValid(selectedEnvironment) && !isSensorRunning(selectedEnvironment))) && (
+            {/* Deployment Options - Hidden for running sensors, but shown for cloud sensors (to display warning) */}
+            {(isCreatingNew || (selectedEnvironment && !isSensorRunning(selectedEnvironment))) && (
               <>
+                {/* Show cloud warning if cloud sensor selected */}
+                {selectedEnvironment && !isSensorValid(selectedEnvironment) ? (
+                  <Alert 
+                    severity="warning" 
+                    sx={{ 
+                      backgroundColor: 'rgba(255, 152, 0, 0.08)',
+                      border: '1px solid rgba(255, 152, 0, 0.3)',
+                      '& .MuiAlert-message': { color: 'hsl(var(--foreground))' },
+                      mb: 2,
+                    }}
+                  >
+                    <Typography sx={{ fontSize: '0.875rem', mb: 1 }}>
+                      Cloud environments cannot be used for detection. Please select or create a self-hosted sensor.
+                    </Typography>
+                    <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))' }}>
+                      Need help? Contact us at{' '}
+                      <a href="https://shuffler.io/contact" target="_blank" rel="noopener noreferrer" style={{ color: '#FF6600' }}>
+                        shuffler.io/contact
+                      </a>{' '}
+                      or on{' '}
+                      <a href="https://discord.gg/B2CBzUm" target="_blank" rel="noopener noreferrer" style={{ color: '#FF6600' }}>
+                        Discord
+                      </a>
+                    </Typography>
+                  </Alert>
+                ) : (
+                <>
                 <Typography sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, fontSize: '0.9rem', mb: 2 }}>
                   2. Choose Deployment Method
                 </Typography>
@@ -1838,6 +1865,8 @@ const DetectionOnboardingPage = () => {
                   >
                     No sensors detected yet. Deploy one using the options above, then check again.
                   </Alert>
+                )}
+                </>
                 )}
               </>
             )}
