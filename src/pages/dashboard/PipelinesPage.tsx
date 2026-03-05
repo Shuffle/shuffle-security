@@ -538,11 +538,8 @@ Use case: ${aiPrompt}`,
     });
   };
 
-  // Filter out templates that match already-deployed pipelines
-  const deployedDefs = pipelines.map(p => (p.definition || p.command || p.pipeline || '').toLowerCase());
-  const availableTemplates = DEFAULT_PIPELINES.filter(dp =>
-    !dp.matchKeys.some(key => deployedDefs.some(def => def.includes(key.toLowerCase())))
-  );
+  // All templates are always available
+  const availableTemplates = DEFAULT_PIPELINES;
 
   // Filtering
   const uniqueStates = [...new Set(pipelines.map(p => getStateLabel(p)))].sort();
@@ -753,6 +750,42 @@ Use case: ${aiPrompt}`,
       </Box>
 
 
+      {/* Templates — always visible */}
+      {!isLoading && availableTemplates.length > 0 && (
+        <Box sx={{ mb: 3 }}>
+          <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1.5 }}>
+            Templates
+          </Typography>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
+            {availableTemplates.map((dp) => (
+              <Box
+                key={dp.label}
+                onClick={() => {
+                  setNewCommand(dp.command);
+                  setCreateOpen(true);
+                }}
+                sx={{
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: 1.5,
+                  px: 1.5,
+                  py: 1.25,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                  '&:hover': { borderColor: 'rgba(255, 102, 0, 0.4)', backgroundColor: 'rgba(255, 102, 0, 0.04)' },
+                }}
+              >
+                <RocketLaunchIcon sx={{ fontSize: 14, color: 'hsl(var(--muted-foreground))', flexShrink: 0 }} />
+                <Typography sx={{ color: 'hsl(var(--foreground))', fontSize: '0.8rem', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {dp.label}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        </Box>
+      )}
 
       {/* Table */}
       {isLoading ? (
@@ -760,50 +793,10 @@ Use case: ${aiPrompt}`,
           <CircularProgress sx={{ color: '#FF6600' }} />
         </Box>
       ) : filtered.length === 0 ? (
-        <Box sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'flex-start',
-          py: 4,
-          gap: 3,
-        }}>
-          {/* Templates */}
-          {availableTemplates.length > 0 && (
-          <Box sx={{ width: '100%', mt: 2 }}>
-            <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1.5 }}>
-              Templates
-            </Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
-              {availableTemplates.map((dp) => (
-                <Box
-                  key={dp.label}
-                  onClick={() => {
-                    setNewCommand(dp.command);
-                    setCreateOpen(true);
-                  }}
-                  sx={{
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: 1.5,
-                    px: 1.5,
-                    py: 1.25,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1,
-                    cursor: 'pointer',
-                    transition: 'all 0.15s',
-                    '&:hover': { borderColor: 'rgba(255, 102, 0, 0.4)', backgroundColor: 'rgba(255, 102, 0, 0.04)' },
-                  }}
-                >
-                  <RocketLaunchIcon sx={{ fontSize: 14, color: 'hsl(var(--muted-foreground))', flexShrink: 0 }} />
-                  <Typography sx={{ color: 'hsl(var(--foreground))', fontSize: '0.8rem', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {dp.label}
-                  </Typography>
-                </Box>
-              ))}
-            </Box>
-          </Box>
-          )}
+        <Box sx={{ py: 4, textAlign: 'center' }}>
+          <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.9rem' }}>
+            No pipelines found
+          </Typography>
         </Box>
       ) : (
         <Box sx={{
