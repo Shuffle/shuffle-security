@@ -784,13 +784,13 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.75 }}>
                   <WarningAmberIcon sx={{ fontSize: 14, color: isOver ? 'hsl(var(--destructive))' : 'hsl(var(--severity-medium))' }} />
                   <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: isOver ? 'hsl(var(--destructive))' : 'hsl(var(--severity-medium))' }}>
-                    {isOver ? 'App run limit reached' : 'Approaching Limit'}
+                    {isOver ? 'App run limit reached' : 'App run limit warning'}
                   </Typography>
                 </Box>
                 <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.4, mb: 1 }}>
                   {isOver
                     ? `Automation will stop until ${new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}, but incidents and detections still work.`
-                    : `${pct.toFixed(0)}% of app executions used. Consider upgrading soon.`}
+                    : `${pct.toFixed(0)}% of app runs used. Automation may stop soon, but incidents and detections still work.`}
                 </Typography>
                 {/* Action buttons */}
                 {(
