@@ -1155,23 +1155,47 @@ export default function UsecaseAlluvialDiagram({
             );
           })}
 
-          {/* Center: Shuffle logo */}
+          {/* Center: Shuffle logo + processing steps */}
           <Box
             sx={{
               position: 'absolute',
               left: centerX - 24,
               top: centerY - 24,
               pointerEvents: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
             }}
           >
-            <Tooltip title="Shuffle Datastore" placement="bottom" arrow>
-              <Box
-                component="img"
-                src={shuffleInfraLogo}
-                alt="Shuffle"
-                sx={{ width: 48, height: 48, objectFit: 'contain' }}
-              />
-            </Tooltip>
+            <Box
+              component="img"
+              src={shuffleInfraLogo}
+              alt="Shuffle"
+              sx={{ width: 48, height: 48, objectFit: 'contain' }}
+            />
+            <Box sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 0.25,
+              mt: 0.75,
+              whiteSpace: 'nowrap',
+            }}>
+              {['OCSF translation', 'Enrichment', 'Task creation', 'Agentic response'].map((step) => (
+                <Box key={step} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Box
+                    component="svg"
+                    viewBox="0 0 16 16"
+                    sx={{ width: 10, height: 10, flexShrink: 0 }}
+                  >
+                    <circle cx="8" cy="8" r="8" fill="hsl(var(--primary) / 0.15)" />
+                    <path d="M4.5 8.2 6.8 10.5 11.5 5.8" stroke="hsl(var(--primary))" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                  </Box>
+                  <Typography sx={{ fontSize: '0.6rem', color: 'hsl(var(--muted-foreground))', fontWeight: 500, lineHeight: 1.4 }}>
+                    {step}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
           </Box>
 
           {targetApps.map((app, i) => {
