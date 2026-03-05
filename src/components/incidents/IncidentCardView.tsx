@@ -442,37 +442,6 @@ export const IncidentCardView = ({
 
               {/* Chips */}
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: 400 }}>
-                {sourceApp?.image && (
-                  <Tooltip title={`Filter by ${incident.source}`} placement="bottom">
-                    <Box
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        onFilterChange?.('source', incident.source || '');
-                      }}
-                      sx={{
-                        width: 24,
-                        height: 24,
-                        borderRadius: '6px',
-                        overflow: 'hidden',
-                        cursor: 'pointer',
-                        border: 'none',
-                        '&:hover': { transform: 'scale(1.1)' },
-                        transition: 'all 0.15s',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                      }}
-                    >
-                      <img
-                        src={sourceApp.image}
-                        alt={incident.source}
-                        style={{ width: 22, height: 22, objectFit: 'contain', borderRadius: '6px' }}
-                      />
-                    </Box>
-                  </Tooltip>
-                )}
                 {(incident.correlationCount ?? 0) > 0 && (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'hsl(var(--muted-foreground))' }}>
                     <Link2 size={14} />
@@ -558,6 +527,41 @@ export const IncidentCardView = ({
                   }}
                 />
               </Box>
+
+              {/* Source app logo — far right */}
+              {sourceApp?.image ? (
+                <Tooltip title={`Filter by ${incident.source}`} placement="bottom">
+                  <Box
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      onFilterChange?.('source', incident.source || '');
+                    }}
+                    sx={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: '6px',
+                      overflow: 'hidden',
+                      cursor: 'pointer',
+                      border: 'none',
+                      '&:hover': { transform: 'scale(1.1)' },
+                      transition: 'all 0.15s',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <img
+                      src={sourceApp.image}
+                      alt={incident.source}
+                      style={{ width: 24, height: 24, objectFit: 'contain', borderRadius: '6px' }}
+                    />
+                  </Box>
+                </Tooltip>
+              ) : (
+                <Box sx={{ width: 28, flexShrink: 0 }} />
+              )}
 
             </Box>
           </motion.div>
