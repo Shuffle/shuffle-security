@@ -48,6 +48,7 @@ interface Environment {
   org_id: string;
   checkin: number;
   auth: string;
+  running_ip?: string;
   data_lake?: {
     enabled: boolean;
     pipelines: any;
@@ -947,8 +948,105 @@ Use case: ${aiPrompt}`,
         )}
       </Box>}
 
+      {/* Syslog endpoint info — shown when TCP/UDP pipelines are running and env has running_ip */}
+      {!isLoading && (() => {
+        // Find running syslog pipelines
+        const runningSyslog: { protocol: string; port: string; ip: string; envName: string }[] = [];
+        for (const p of pipelines) {
+          const state = getStateLabel(p).toLowerCase();
+          if (state !== 'running' && state !== 'active' && state !== 'started') continue;
+          const def = (p.definition || p.command || '').toLowerCase();
+          const env = environments.find(e => e.id === p._environmentId);
+          if (!env?.running_ip) continue;
 
-
+          // Match TCP syslog: load_tcp with port
+          const tcpMatch = def.match(/load_tcp\s+"[^"]*:(\d+)"/);
+          if (tcpMatch) {
+            runningSyslog.push({ protocol: 'TCP', port: tcpMatch[1], ip: env.running_ip, envName: env.Name });
+          }
+          // Match UDP syslog: load_udp with port
+          const udpMatch = def.match(/load_udp\s+"[^"]*:(\d+)"/);
+          if (udpMatch) {
+            runningSyslog.push({ protocol: 'UDP', port: udpMatch[1], ip: env.running_ip, envName: env.Name });
+          }
+        }
+        if (runningSyslog.length === 0) return null;
+        return (
+          <Box sx={{
+            mb: 3,
+            p: 2.5,
+            borderRadius: 2,
+            bgcolor: 'hsla(var(--severity-low) / 0.08)',
+            border: '1px solid hsla(var(--severity-low) / 0.25)',
+          }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+              <Box sx={{
+                width: 8, height: 8, borderRadius: '50%',
+                bgcolor: 'hsl(var(--severity-low))',
+                boxShadow: '0 0 6px hsl(var(--severity-low))',
+              }} />
+              <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+                Syslog ingestion is active — send logs to:
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+              {runningSyslog.map((s, i) => (
+                <Box
+                  key={i}
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${s.ip}:${s.port}`);
+                    toast.success('Copied to clipboard');
+                  }}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1.5,
+                    px: 2,
+                    py: 1,
+                    borderRadius: 1.5,
+                    bgcolor: 'hsl(var(--card))',
+                    border: '1px solid hsl(var(--border))',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                    '&:hover': {
+                      borderColor: 'hsl(var(--severity-low))',
+                      bgcolor: 'hsla(var(--severity-low) / 0.05)',
+                    },
+                  }}
+                >
+                  <Chip
+                    label={s.protocol}
+                    size="small"
+                    sx={{
+                      height: 22,
+                      fontSize: '0.65rem',
+                      fontWeight: 700,
+                      bgcolor: s.protocol === 'TCP' ? 'hsla(var(--primary) / 0.12)' : 'hsla(var(--severity-medium) / 0.12)',
+                      color: s.protocol === 'TCP' ? 'hsl(var(--primary))' : 'hsl(var(--severity-medium))',
+                      border: `1px solid ${s.protocol === 'TCP' ? 'hsla(var(--primary) / 0.3)' : 'hsla(var(--severity-medium) / 0.3)'}`,
+                    }}
+                  />
+                  <Typography sx={{
+                    fontSize: '0.9rem',
+                    fontWeight: 600,
+                    fontFamily: 'monospace',
+                    color: 'hsl(var(--foreground))',
+                    letterSpacing: '0.02em',
+                  }}>
+                    {s.ip}:{s.port}
+                  </Typography>
+                  <Tooltip title="Click to copy" placement="top">
+                    <ContentCopyIcon sx={{ fontSize: 14, color: 'hsl(var(--muted-foreground))', opacity: 0.6 }} />
+                  </Tooltip>
+                  <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))' }}>
+                    {s.envName}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        );
+      })()}
 
       {/* Table */}
       {isLoading ? (
