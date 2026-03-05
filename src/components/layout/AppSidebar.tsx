@@ -789,9 +789,54 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                 </Box>
                 <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.4, mb: 1 }}>
                   {isOver
-                    ? 'App executions exhausted. Ingestion may stop until the limit resets or is increased.'
+                    ? `App runs overrun. Ingestion will stop until ${new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}.`
                     : `${pct.toFixed(0)}% of app executions used. Consider upgrading soon.`}
                 </Typography>
+                {/* Action buttons for over-limit */}
+                {isOver && (
+                  <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                    <Box
+                      component="a"
+                      href="https://shuffler.io/pricing"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      sx={{
+                        flex: 1,
+                        textAlign: 'center',
+                        fontSize: '0.65rem',
+                        fontWeight: 600,
+                        py: 0.5,
+                        borderRadius: 1,
+                        bgcolor: 'hsl(var(--primary))',
+                        color: 'hsl(var(--primary-foreground))',
+                        textDecoration: 'none',
+                        '&:hover': { opacity: 0.9 },
+                      }}
+                    >
+                      Upgrade
+                    </Box>
+                    <Box
+                      component="a"
+                      href="https://shuffler.io/contact?category=support"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      sx={{
+                        flex: 1,
+                        textAlign: 'center',
+                        fontSize: '0.65rem',
+                        fontWeight: 600,
+                        py: 0.5,
+                        borderRadius: 1,
+                        border: '1px solid hsl(var(--border))',
+                        color: 'hsl(var(--foreground))',
+                        textDecoration: 'none',
+                        '&:hover': { bgcolor: 'hsl(var(--muted))' },
+                      }}
+                    >
+                      Support
+                    </Box>
+                  </Box>
+                )}
                 {/* Usage bar */}
                 <Box sx={{ width: '100%', height: 4, borderRadius: 2, bgcolor: 'hsl(var(--muted))' }}>
                   <Box sx={{
