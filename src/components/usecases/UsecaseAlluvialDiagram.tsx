@@ -411,7 +411,7 @@ export function ShufflePipelinesBanner() {
   return (
     <Box
       component="a"
-      href="/docs/shuffle-pipelines"
+      href="/detection"
       sx={{
         display: 'flex',
         alignItems: 'center',

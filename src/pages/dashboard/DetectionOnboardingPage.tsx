@@ -1373,7 +1373,21 @@ const DetectionOnboardingPage = () => {
           />
         </Box>
         <Typography sx={{ color: 'hsl(var(--muted-foreground))' }}>
-          Get your detection pipelines running in three simple steps
+          Get your detection pipelines running in three simple steps.{' '}
+          <Box
+            component="a"
+            href="https://shuffler.io/blog/shuffle_pipelines"
+            target="_blank"
+            rel="noopener noreferrer"
+            sx={{
+              color: 'hsl(var(--primary))',
+              textDecoration: 'none',
+              fontWeight: 500,
+              '&:hover': { textDecoration: 'underline' },
+            }}
+          >
+            Learn more about Shuffle Pipelines →
+          </Box>
         </Typography>
       </Box>
 
