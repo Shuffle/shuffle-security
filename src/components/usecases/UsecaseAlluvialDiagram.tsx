@@ -285,7 +285,7 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, disa
             </Typography>
             {!isSample && (
               <Typography sx={{ fontSize: '0.7rem', color: disabled ? 'hsl(var(--muted-foreground))' : app.hasValidAuth ? 'hsl(var(--severity-low))' : 'hsl(var(--muted-foreground))' }}>
-                {disabled ? 'Not enabled for ingestion' : app.hasValidAuth ? 'Authenticated' : app.isActiveOnly ? 'Not authenticated' : 'Inactive'}
+                {disabled ? 'Not enabled for ingestion' : app.hasValidAuth ? 'Enabled' : app.isActiveOnly ? 'Not enabled' : 'Inactive'}
               </Typography>
             )}
           </Box>
