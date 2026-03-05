@@ -206,6 +206,7 @@ const RulesPage = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [justGenerated, setJustGenerated] = useState(false);
+  const [preAiContent, setPreAiContent] = useState<string | null>(null);
   const [loadingDefaultRules, setLoadingDefaultRules] = useState(false);
   const [hasValidSensor, setHasValidSensor] = useState(true);
 
@@ -412,9 +413,10 @@ const RulesPage = () => {
 
   const handleOpenCreateDialog = () => {
     setEditingFile(null);
-    
     setRuleContent('');
     setSampleLog('');
+    setPreAiContent(null);
+    setJustGenerated(false);
     setIsCreateDialogOpen(true);
   };
 
@@ -424,6 +426,7 @@ const RulesPage = () => {
       return;
     }
     setIsGenerating(true);
+    setPreAiContent(ruleContent); // Save current content for rollback
     try {
       const { success, result, error } = await askAI({
         query: `Generate a Sigma detection rule in valid YAML from this sample log. Only output the YAML, no explanation:\n\n${sampleLog}`,
@@ -438,6 +441,7 @@ const RulesPage = () => {
         toast.success('Rule generated and applied to Rule Content below ↓');
       } else {
         toast.error(error || 'Failed to generate rule');
+        setPreAiContent(null); // Clear rollback on failure
       }
     } catch (e) {
       console.error('AI generation error:', e);
@@ -449,7 +453,9 @@ const RulesPage = () => {
 
   const handleEditFile = async (file: ShuffleFile) => {
     setEditingFile(file);
-    
+    setSampleLog('');
+    setPreAiContent(null);
+    setJustGenerated(false);
     setIsCreateDialogOpen(true);
     
     try {
@@ -916,73 +922,71 @@ const RulesPage = () => {
           {editingFile ? 'Edit Sigma Rule' : 'Create Sigma Rule'}
         </DialogTitle>
         <DialogContent sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-          {/* Sample Log + Generate (only for new rules) */}
-          {!editingFile && (
-            <Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-                  Sample Log
-                </Typography>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  startIcon={isGenerating ? <CircularProgress size={14} color="inherit" /> : <AutoFixHighIcon sx={{ fontSize: 14 }} />}
-                  onClick={handleGenerateFromLog}
-                  disabled={isGenerating || !sampleLog.trim()}
-                  sx={{
-                    textTransform: 'none',
-                    fontSize: '0.75rem',
-                    borderColor: 'hsl(var(--border))',
-                    color: 'hsl(var(--primary))',
-                    '&:hover': { borderColor: 'hsl(var(--primary))', bgcolor: 'hsl(var(--primary) / 0.08)' },
-                  }}
-                >
-                  {isGenerating ? 'Generating…' : 'Generate Rule'}
-                </Button>
-              </Box>
-              <TextField
-                multiline
-                rows={5}
-                value={sampleLog}
-                onChange={(e) => setSampleLog(e.target.value)}
-                fullWidth
-                placeholder="Paste a sample log entry here and click Generate to create a Sigma rule automatically…"
+          {/* Sample Log + Generate */}
+          <Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+              <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                Sample Log
+              </Typography>
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={isGenerating ? <CircularProgress size={14} color="inherit" /> : <AutoFixHighIcon sx={{ fontSize: 14 }} />}
+                onClick={handleGenerateFromLog}
+                disabled={isGenerating || !sampleLog.trim()}
                 sx={{
-                  '& .MuiOutlinedInput-root': {
-                    backgroundColor: 'hsl(var(--muted))',
-                    fontFamily: 'monospace',
-                    fontSize: '0.8rem',
-                    '& fieldset': { borderColor: 'hsl(var(--border))' },
-                    '&:hover fieldset': { borderColor: 'hsl(var(--border))' },
-                    '&.Mui-focused fieldset': { borderColor: 'hsl(var(--primary))' },
-                  },
-                  '& .MuiOutlinedInput-input': { color: 'hsl(var(--foreground))' },
+                  textTransform: 'none',
+                  fontSize: '0.75rem',
+                  borderColor: 'hsl(var(--border))',
+                  color: 'hsl(var(--primary))',
+                  '&:hover': { borderColor: 'hsl(var(--primary))', bgcolor: 'hsl(var(--primary) / 0.08)' },
                 }}
-              />
-              <Box sx={{ display: 'flex', gap: 0.75, mt: 1, flexWrap: 'wrap' }}>
-                <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', mr: 0.5, lineHeight: '24px' }}>
-                  Examples:
-                </Typography>
-                {EXAMPLE_LOGS.map((ex) => (
-                  <Chip
-                    key={ex.label}
-                    label={ex.label}
-                    size="small"
-                    onClick={() => setSampleLog(ex.log)}
-                    sx={{
-                      height: 24,
-                      fontSize: '0.7rem',
-                      cursor: 'pointer',
-                      backgroundColor: 'hsl(var(--muted))',
-                      color: 'hsl(var(--muted-foreground))',
-                      border: '1px solid hsl(var(--border))',
-                      '&:hover': { backgroundColor: 'hsl(var(--muted) / 0.8)', borderColor: 'hsl(var(--muted-foreground) / 0.3)' },
-                    }}
-                  />
-                ))}
-              </Box>
+              >
+                {isGenerating ? 'Generating…' : 'Generate Rule'}
+              </Button>
             </Box>
-          )}
+            <TextField
+              multiline
+              rows={5}
+              value={sampleLog}
+              onChange={(e) => setSampleLog(e.target.value)}
+              fullWidth
+              placeholder="Paste a sample log entry here and click Generate to create a Sigma rule automatically…"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  backgroundColor: 'hsl(var(--muted))',
+                  fontFamily: 'monospace',
+                  fontSize: '0.8rem',
+                  '& fieldset': { borderColor: 'hsl(var(--border))' },
+                  '&:hover fieldset': { borderColor: 'hsl(var(--border))' },
+                  '&.Mui-focused fieldset': { borderColor: 'hsl(var(--primary))' },
+                },
+                '& .MuiOutlinedInput-input': { color: 'hsl(var(--foreground))' },
+              }}
+            />
+            <Box sx={{ display: 'flex', gap: 0.75, mt: 1, flexWrap: 'wrap' }}>
+              <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', mr: 0.5, lineHeight: '24px' }}>
+                Examples:
+              </Typography>
+              {EXAMPLE_LOGS.map((ex) => (
+                <Chip
+                  key={ex.label}
+                  label={ex.label}
+                  size="small"
+                  onClick={() => setSampleLog(ex.log)}
+                  sx={{
+                    height: 24,
+                    fontSize: '0.7rem',
+                    cursor: 'pointer',
+                    backgroundColor: 'hsl(var(--muted))',
+                    color: 'hsl(var(--muted-foreground))',
+                    border: '1px solid hsl(var(--border))',
+                    '&:hover': { backgroundColor: 'hsl(var(--muted) / 0.8)', borderColor: 'hsl(var(--muted-foreground) / 0.3)' },
+                  }}
+                />
+              ))}
+            </Box>
+          </Box>
           <Box>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -1002,6 +1006,28 @@ const RulesPage = () => {
                       border: '1px solid hsl(142 76% 36% / 0.3)',
                       animation: 'fadeIn 0.3s ease-in',
                       '@keyframes fadeIn': { from: { opacity: 0 }, to: { opacity: 1 } },
+                    }}
+                  />
+                )}
+                {preAiContent !== null && (
+                  <Chip
+                    label="↩ Undo AI changes"
+                    size="small"
+                    onClick={() => {
+                      setRuleContent(preAiContent);
+                      setPreAiContent(null);
+                      setJustGenerated(false);
+                      toast.success('Reverted to previous content');
+                    }}
+                    sx={{
+                      height: 20,
+                      fontSize: '0.65rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      backgroundColor: 'hsl(var(--muted))',
+                      color: 'hsl(var(--muted-foreground))',
+                      border: '1px solid hsl(var(--border))',
+                      '&:hover': { borderColor: 'hsl(var(--primary))', color: 'hsl(var(--primary))' },
                     }}
                   />
                 )}
