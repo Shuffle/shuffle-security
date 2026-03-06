@@ -252,7 +252,7 @@ export default function UsecasesPage() {
           </MuiSelect>
         </FormControl>
 
-        <FormControl size="small" sx={{ minWidth: 140 }}>
+        <FormControl size="small" sx={{ minWidth: { xs: 'calc(50% - 6px)', sm: 140 } }}>
           <InputLabel sx={{ color: 'hsl(var(--muted-foreground))' }}>Type</InputLabel>
           <MuiSelect
             value={tagFilter}
