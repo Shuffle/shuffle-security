@@ -1544,6 +1544,14 @@ const IncidentDetailPage = () => {
           {/* Right side actions */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             {isSaving && <CircularProgress size={18} />}
+            {isResyncing && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <CircularProgress size={16} sx={{ color: '#ff6600' }} />
+                <Typography variant="caption" sx={{ color: '#ff6600', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                  Resyncing…
+                </Typography>
+              </Box>
+            )}
             
             <Tooltip title="Refresh">
               <IconButton 
