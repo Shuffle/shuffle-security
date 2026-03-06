@@ -1610,8 +1610,12 @@ const IncidentDetailPage = () => {
                       }),
                     });
                     if (response.ok) {
-                      toast.success('Resync triggered');
-                      setTimeout(() => loadIncident(false), 3000);
+                      toast.success('Resync triggered — reloading in 30s');
+                      setIsResyncing(true);
+                      setTimeout(() => {
+                        loadIncident(false);
+                        setIsResyncing(false);
+                      }, 30000);
                     } else {
                       toast.error('Resync failed');
                     }
