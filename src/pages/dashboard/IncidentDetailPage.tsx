@@ -1569,7 +1569,7 @@ const IncidentDetailPage = () => {
             </Tooltip>
 
             {/* Show prominent Resync button when incident has no title and no description but has a source */}
-            {!incident?.title && !incident?.description && incident?.id && incident?.source && !isResyncing && (
+            {!incident?.title && !incident?.rawOCSF?.desc && !incident?.rawOCSF?.message && incident?.id && incident?.source && !isResyncing && (
               <Button
                 size="small"
                 variant="outlined"
