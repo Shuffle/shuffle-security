@@ -14,8 +14,6 @@ import DnsIcon from '@mui/icons-material/Dns';
 import SensorsIcon from '@mui/icons-material/Sensors';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import ReportProblemIcon from '@mui/icons-material/ReportProblem';
-import SensorsIcon from '@mui/icons-material/Sensors';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
 interface DocLink {
   label: string;
