@@ -128,7 +128,7 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, on
               </IconButton>
             </Tooltip>
             {onSyncNow && (
-              <Tooltip title={isUpdatingApps ? "Updating sources…" : "Sync now"} placement="bottom">
+              <Tooltip title={isUpdatingApps ? "Updating sources…" : isSyncing ? "Syncing…" : "Sync now"} placement="bottom">
                 <span>
                 <IconButton
                   size="small"
@@ -137,7 +137,7 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, on
                   sx={{
                     width: 28,
                     height: 28,
-                    color: isSyncing ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
+                    color: (isSyncing || isUpdatingApps) ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
                     border: '1px solid hsl(var(--border))',
                     borderRadius: 1,
                     '&:hover': {
@@ -146,7 +146,7 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, on
                     },
                   }}
                 >
-                  {isSyncing ? <CircularProgress size={14} color="inherit" /> : <PlayArrowIcon sx={{ fontSize: 16 }} />}
+                  {(isSyncing || isUpdatingApps) ? <CircularProgress size={14} color="inherit" /> : <PlayArrowIcon sx={{ fontSize: 16 }} />}
                 </IconButton>
                 </span>
               </Tooltip>

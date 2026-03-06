@@ -961,7 +961,7 @@ const IncidentsPage = () => {
                 </IconButton>
               </Tooltip>
               {ingestWorkflowId && (
-                <Tooltip title={isUpdatingApps ? "Updating sources…" : "Sync now"}>
+              <Tooltip title={isUpdatingApps ? "Updating sources…" : isSyncing ? "Syncing…" : "Sync now"}>
                   <span>
                   <IconButton
                     size="small"
@@ -1008,7 +1008,7 @@ const IncidentsPage = () => {
                       },
                     }}
                   >
-                    {isSyncing ? <CircularProgress size={14} color="inherit" /> : <PlayArrowIcon sx={{ fontSize: 16 }} />}
+                    {(isSyncing || isUpdatingApps) ? <CircularProgress size={14} color="inherit" /> : <PlayArrowIcon sx={{ fontSize: 16 }} />}
                   </IconButton>
                   </span>
                 </Tooltip>
