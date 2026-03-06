@@ -1548,7 +1548,7 @@ const IncidentDetailPage = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <CircularProgress size={16} sx={{ color: '#ff6600' }} />
                 <Typography variant="caption" sx={{ color: '#ff6600', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                  Resyncing…
+                  {incident?.source ? `Resyncing from ${incident.source}…` : 'Resyncing…'}
                 </Typography>
               </Box>
             )}
@@ -1601,8 +1601,11 @@ const IncidentDetailPage = () => {
                 onClick={async () => {
                   setActionsMenuAnchor(null);
                   if (!incident?.id) return;
+                  const source = incident.source || '';
+                  setIsResyncing(true);
+                  const label = source ? `Resyncing from ${source}…` : 'Resyncing…';
+                  toast.success(label, { duration: 30000 });
                   try {
-                    const source = incident.source || '';
                     const response = await fetch(getApiUrl('/api/v1/apps/categories/run'), {
                       method: 'POST',
                       credentials: 'include',
@@ -1617,19 +1620,19 @@ const IncidentDetailPage = () => {
                         app_name: source,
                       }),
                     });
-                    if (response.ok) {
-                      setIsResyncing(true);
-                      toast.success('Resync triggered — reloading in 30s', { duration: 30000 });
-                      setTimeout(() => {
-                        loadIncident(false);
-                        setIsResyncing(false);
-                        toast.success('Resync complete — data reloaded');
-                      }, 30000);
-                    } else {
+                    if (!response.ok) {
                       toast.error('Resync failed');
+                      setIsResyncing(false);
+                      return;
                     }
+                    setTimeout(() => {
+                      loadIncident(false);
+                      setIsResyncing(false);
+                      toast.success('Resync complete — data reloaded');
+                    }, 30000);
                   } catch {
                     toast.error('Resync failed');
+                    setIsResyncing(false);
                   }
                 }}
               >
