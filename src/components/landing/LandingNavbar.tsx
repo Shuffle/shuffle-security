@@ -232,10 +232,8 @@ export const LandingNavbar = () => {
                 </ListItem>
                 <ListItem sx={{ px: 2, pt: 2 }}>
                   <Button
-                    component="a"
-                    href="https://shuffler.io/register"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    component={Link}
+                    to="/register"
                     variant="contained"
                     fullWidth
                     onClick={() => {
