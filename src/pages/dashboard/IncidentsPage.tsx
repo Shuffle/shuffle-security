@@ -892,9 +892,9 @@ const IncidentsPage = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Typography variant="h5" sx={{ fontWeight: 600 }}>
+          <Typography variant="h5" sx={{ fontWeight: 600, fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
             Incidents
           </Typography>
           {isLoading && <CircularProgress size={20} />}
@@ -902,7 +902,7 @@ const IncidentsPage = () => {
             <Typography variant="caption" color="error">{error}</Typography>
           )}
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
           {/* Ingestion Sources - grouped in a subtle container with add button */}
           {(ingestionApps.length > 0 || webhookIngestion.exists || webhookIngestion.enabled) && (
             <Box sx={{ 
