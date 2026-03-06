@@ -334,6 +334,8 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
           }}
         >
           <MenuItem
+            component="a"
+            href="/"
             selected
             sx={{
               py: 1.5,
@@ -343,9 +345,17 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
               border: '1px solid hsla(var(--primary) / 0.3)',
               borderRadius: 1,
               mx: 0.5,
+              textDecoration: 'none',
+              color: 'inherit',
               '&:hover': { backgroundColor: 'hsla(var(--primary) / 0.18) !important' },
             }}
-            onClick={() => setToolMenuAnchor(null)}
+            onClick={(e: React.MouseEvent) => {
+              // Allow ctrl/cmd+click to open in new tab naturally
+              if (!e.ctrlKey && !e.metaKey) {
+                e.preventDefault();
+                setToolMenuAnchor(null);
+              }
+            }}
           >
             <svg width="24" height="24" viewBox="0 0 56 56" fill="none">
               <path d="M14 14h28v6H20v16h16v-10h-8v-6h14v22H14V14z" fill="#FF6600" />
@@ -355,21 +365,28 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
             </Typography>
           </MenuItem>
           <MenuItem
-            onClick={() => {
+            component="a"
+            href={(() => {
               const hostname = window.location.hostname;
               const isManagedHost = hostname.includes('lovable') || hostname.includes('shuffler.io') || hostname.includes('shutdown.no');
-              const url = isManagedHost
+              return isManagedHost
                 ? SHUFFLE_AUTOMATION_URL
                 : `${window.location.protocol}//${hostname}:3001`;
-              window.open(url, '_blank');
-              setToolMenuAnchor(null);
-            }}
+            })()}
             sx={{
               py: 1.5,
               px: 2,
               gap: 1.5,
               mx: 0.5,
+              textDecoration: 'none',
+              color: 'inherit',
               '&:hover': { backgroundColor: 'hsl(var(--muted))' },
+            }}
+            onClick={(e: React.MouseEvent) => {
+              // Allow ctrl/cmd+click to open in new tab naturally
+              if (!e.ctrlKey && !e.metaKey) {
+                setToolMenuAnchor(null);
+              }
             }}
           >
             <img src={shuffleInfraLogo} alt="Shuffle Infrastructure" width={24} height={24} style={{ borderRadius: 4 }} />
