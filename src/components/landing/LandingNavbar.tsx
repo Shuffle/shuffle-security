@@ -164,10 +164,8 @@ export const LandingNavbar = () => {
                         {isOnLoginPage ? 'Sign Up' : 'Sign In'}
                       </Button>
                       <Button
-                        component="a"
-                        href="https://shuffler.io/register"
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        component={Link}
+                        to="/register"
                         variant="contained"
                         onClick={() => trackCTA('get_started', 'navbar')}
                       >
@@ -234,10 +232,8 @@ export const LandingNavbar = () => {
                 </ListItem>
                 <ListItem sx={{ px: 2, pt: 2 }}>
                   <Button
-                    component="a"
-                    href="https://shuffler.io/register"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    component={Link}
+                    to="/register"
                     variant="contained"
                     fullWidth
                     onClick={() => {
