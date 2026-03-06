@@ -232,7 +232,7 @@ export default function UsecasesPage() {
           </MuiSelect>
         </FormControl>
 
-        <FormControl size="small" sx={{ minWidth: 160 }}>
+        <FormControl size="small" sx={{ minWidth: { xs: 'calc(50% - 6px)', sm: 160 } }}>
           <InputLabel sx={{ color: 'hsl(var(--muted-foreground))' }}>Category</InputLabel>
           <MuiSelect
             value={categoryFilter}
