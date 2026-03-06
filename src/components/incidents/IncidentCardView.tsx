@@ -453,7 +453,7 @@ export const IncidentCardView = ({
               </Box>
 
               {/* Chips */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: 400 }}>
+              <Box sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', gap: 1, flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: 400 }}>
                 {(incident.correlationCount ?? 0) > 0 && (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'hsl(var(--muted-foreground))' }}>
                     <Link2 size={14} />
