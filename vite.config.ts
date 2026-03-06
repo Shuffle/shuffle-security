@@ -17,9 +17,20 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico"],
       workbox: {
-        navigateFallbackDenylist: [/^\/~oauth/],
+        navigateFallbackDenylist: [/^\/~oauth/, /^\/api\//],
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/(shuffler\.io|us\.shuffler\.io|tunnel\.schemaless\.org)\/api\//,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'shuffle-api',
+              expiration: { maxEntries: 50, maxAgeSeconds: 300 },
+              networkTimeoutSeconds: 10,
+            },
+          },
+        ],
       },
       manifest: {
         name: "Shuffle Security",
