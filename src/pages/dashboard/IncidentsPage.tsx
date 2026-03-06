@@ -934,7 +934,9 @@ const IncidentsPage = () => {
                 textTransform: 'uppercase',
                 whiteSpace: 'nowrap',
               }}>
-                Automation
+                <Tooltip title="Apps with valid authentication appear here as ingestion sources. Toggle them to control which tools automatically pull in incidents." placement="top" arrow>
+                  <span style={{ cursor: 'help' }}>Automation</span>
+                </Tooltip>
               </Typography>
               <WebhookIngestionButton webhook={webhookIngestion} onToggled={fetchIngestionApps} />
               {ingestionApps.map(app => (
