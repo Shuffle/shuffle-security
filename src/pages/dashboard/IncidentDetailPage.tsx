@@ -1604,7 +1604,7 @@ const IncidentDetailPage = () => {
                       body: JSON.stringify({
                         action: 'get_ticket',
                         category: 'cases',
-                        key: incident.id,
+                        fields: [{ key: 'key', value: incident.id }],
                         app_name: source,
                       }),
                     });
