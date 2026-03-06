@@ -424,6 +424,7 @@ const IncidentDetailPage = () => {
   
   const [isSaving, setIsSaving] = useState(false);
   const [showResolveDialog, setShowResolveDialog] = useState(false);
+  const [isResyncing, setIsResyncing] = useState(false);
   const [actionsMenuAnchor, setActionsMenuAnchor] = useState<null | HTMLElement>(null);
   const [showForwardDialog, setShowForwardDialog] = useState(false);
    const [activeTab, setActiveTab] = useState(0); // 0=Tasks, 1=Details, 2=Observables, 3=Correlations, 4=Raw
@@ -1543,6 +1544,14 @@ const IncidentDetailPage = () => {
           {/* Right side actions */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             {isSaving && <CircularProgress size={18} />}
+            {isResyncing && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <CircularProgress size={16} sx={{ color: '#ff6600' }} />
+                <Typography variant="caption" sx={{ color: '#ff6600', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                  Resyncing…
+                </Typography>
+              </Box>
+            )}
             
             <Tooltip title="Refresh">
               <IconButton 
@@ -1609,8 +1618,12 @@ const IncidentDetailPage = () => {
                       }),
                     });
                     if (response.ok) {
-                      toast.success('Resync triggered');
-                      setTimeout(() => loadIncident(false), 3000);
+                      toast.success('Resync triggered — reloading in 30s');
+                      setIsResyncing(true);
+                      setTimeout(() => {
+                        loadIncident(false);
+                        setIsResyncing(false);
+                      }, 30000);
                     } else {
                       toast.error('Resync failed');
                     }
