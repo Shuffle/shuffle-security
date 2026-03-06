@@ -1548,7 +1548,7 @@ const IncidentDetailPage = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <CircularProgress size={16} sx={{ color: '#ff6600' }} />
                 <Typography variant="caption" sx={{ color: '#ff6600', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                  Resyncing…
+                  {incident?.source ? `Resyncing from ${incident.source}…` : 'Resyncing…'}
                 </Typography>
               </Box>
             )}
