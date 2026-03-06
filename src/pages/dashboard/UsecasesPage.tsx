@@ -189,14 +189,14 @@ export default function UsecasesPage() {
       )}
 
       {/* Filters */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 4, flexWrap: 'wrap', alignItems: 'center' }}>
+      <Box sx={{ display: 'flex', gap: 1.5, mb: 4, flexWrap: 'wrap', alignItems: 'center' }}>
         <TextField
           size="small"
           placeholder="Search automations…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           sx={{
-            width: 280,
+            width: { xs: '100%', sm: 280 },
             '& .MuiOutlinedInput-root': {
               bgcolor: 'hsl(var(--card))',
               color: 'hsl(var(--foreground))',
