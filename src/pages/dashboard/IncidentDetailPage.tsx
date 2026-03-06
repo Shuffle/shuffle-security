@@ -1813,6 +1813,11 @@ const IncidentDetailPage = () => {
               bgcolor: 'rgba(255,255,255,0.03)', 
               borderRadius: 2,
               border: '1px solid rgba(255,255,255,0.06)',
+              overflowX: 'auto',
+              WebkitOverflowScrolling: 'touch',
+              '&::-webkit-scrollbar': { display: 'none' },
+              msOverflowStyle: 'none',
+              scrollbarWidth: 'none',
             }}>
               {[
                 { label: 'Tasks', count: visibleTasks.length > 0 ? `${visibleTasks.filter(t => t.completed).length}/${visibleTasks.length}` : null },
