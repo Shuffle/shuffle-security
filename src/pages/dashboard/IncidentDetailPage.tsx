@@ -1350,11 +1350,12 @@ const IncidentDetailPage = () => {
           bgcolor: 'hsl(var(--card))',
           border: '1px solid hsl(var(--border))',
         }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: { xs: '100%', sm: 'auto' }, flex: { sm: 1 }, minWidth: 0 }}>
           {/* Icon */}
           <Box
             sx={{
-              width: 56,
-              height: 56,
+              width: { xs: 40, sm: 56 },
+              height: { xs: 40, sm: 56 },
               borderRadius: 2,
               display: 'flex',
               alignItems: 'center',
