@@ -2,11 +2,14 @@
   "name": "Shuffle Security",
   "short_name": "Shuffle",
   "description": "Open-source AI-powered incident response platform with 3,000+ integrations.",
+  "id": "/",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#1a1a1a",
   "theme_color": "#FF6600",
   "orientation": "any",
+  "categories": ["security", "productivity", "business"],
   "icons": [
     {
       "src": "/pwa-192x192.png",
@@ -24,5 +27,7 @@
       "type": "image/png",
       "purpose": "maskable"
     }
-  ]
+  ],
+  "screenshots": [],
+  "prefer_related_applications": false
 }
