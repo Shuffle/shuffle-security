@@ -2,6 +2,7 @@ import { useState, useEffect, ReactNode } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Box } from '@mui/material';
 import { AppSidebar } from './AppSidebar';
+import { MobileBottomNav } from './MobileBottomNav';
 import { AppDetailProvider, useAppDetail } from '@/context/AppDetailContext';
 import AppDetailDrawer from '@/components/shared/AppDetailDrawer';
 
