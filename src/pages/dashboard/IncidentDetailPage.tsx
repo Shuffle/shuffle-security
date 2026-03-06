@@ -1568,6 +1568,70 @@ const IncidentDetailPage = () => {
               </IconButton>
             </Tooltip>
 
+            {/* Show prominent Resync button when incident has no title and no description but has a source */}
+            {!incident?.title && !incident?.rawOCSF?.desc && !incident?.rawOCSF?.message && incident?.id && incident?.source && !isResyncing && (
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<RefreshIcon sx={{ fontSize: 16 }} />}
+                onClick={async () => {
+                  if (!incident?.id) return;
+                  const source = incident.source || '';
+                  setIsResyncing(true);
+                  const label = source ? `Resyncing from ${source}…` : 'Resyncing…';
+                  toast.success(label, { duration: 30000 });
+                  try {
+                    const previousEdited = incident.rawOCSF?.edited || incident.rawOCSF?.metadata?.modified_time_dt || '';
+                    const response = await fetch(getApiUrl('/api/v1/apps/categories/run'), {
+                      method: 'POST',
+                      credentials: 'include',
+                      headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+                      body: JSON.stringify({
+                        action: 'get_ticket',
+                        category: 'cases',
+                        fields: [{ key: 'id', value: incident.id }],
+                        app_name: source,
+                      }),
+                    });
+                    if (!response.ok) {
+                      toast.error('Resync failed');
+                      setIsResyncing(false);
+                      return;
+                    }
+                    setTimeout(async () => {
+                      await loadIncident(false);
+                      setIsResyncing(false);
+                      const result = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS);
+                      const newEdited = (() => {
+                        try {
+                          const val = JSON.parse(result.item?.value || '{}');
+                          return val.edited || val.metadata?.modified_time_dt || '';
+                        } catch { return ''; }
+                      })();
+                      if (newEdited && newEdited !== previousEdited) {
+                        toast.success('Resync complete — update found');
+                      } else {
+                        toast.info('Resync complete — no changes detected');
+                      }
+                    }, 30000);
+                  } catch {
+                    toast.error('Resync failed');
+                    setIsResyncing(false);
+                  }
+                }}
+                sx={{
+                  borderColor: '#ff6600',
+                  color: '#ff6600',
+                  fontWeight: 600,
+                  fontSize: '0.75rem',
+                  textTransform: 'none',
+                  '&:hover': { borderColor: '#ff6600', bgcolor: 'rgba(255, 102, 0, 0.08)' },
+                }}
+              >
+                Resync from {incident.source}
+              </Button>
+            )}
+
             <Tooltip title="Actions">
               <IconButton
                 size="small"
