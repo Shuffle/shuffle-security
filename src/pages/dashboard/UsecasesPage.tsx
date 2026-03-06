@@ -212,7 +212,7 @@ export default function UsecasesPage() {
           }}
         />
 
-        <FormControl size="small" sx={{ minWidth: 200 }}>
+        <FormControl size="small" sx={{ minWidth: { xs: 'calc(50% - 6px)', sm: 200 } }}>
           <InputLabel sx={{ color: 'hsl(var(--muted-foreground))' }}>Phase</InputLabel>
           <MuiSelect
             value={phaseFilter}
