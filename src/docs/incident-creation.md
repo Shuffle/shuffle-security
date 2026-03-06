@@ -89,6 +89,74 @@ This is useful when an alert was updated in the source tool after initial ingest
 
 ---
 
+## Datastore API (Reading Incidents)
+
+All incidents are stored in the Shuffle datastore under the `shuffle-security_incidents` category. You can query them programmatically using the cache API — useful for building dashboards, exporting data, or integrating with external systems.
+
+### Listing Incidents
+
+```bash
+curl -X GET "https://your-shuffle-instance/api/v1/orgs/<org_id>/list_cache?category=shuffle-security_incidents&top=100" \
+  -H "Authorization: Bearer <api_key>"
+```
+
+This returns a paginated list of incident records. Use the `cursor` field in the response to fetch subsequent pages:
+
+```bash
+curl -X GET "https://your-shuffle-instance/api/v1/orgs/<org_id>/list_cache?category=shuffle-security_incidents&top=100&cursor=<cursor>" \
+  -H "Authorization: Bearer <api_key>"
+```
+
+### Getting a Single Incident
+
+```bash
+curl -X POST "https://your-shuffle-instance/api/v1/orgs/<org_id>/get_cache" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <api_key>" \
+  -d '{
+    "key": "<incident_key>",
+    "org_id": "<org_id>",
+    "category": "shuffle-security_incidents"
+  }'
+```
+
+### Data Format
+
+Incidents follow the OCSF schema (Class ID 2005). Each record includes fields like `title`, `severity_id`, `status_id`, `assignee`, `tasks`, `activity`, and custom fields. Refer to the [OCSF Security Finding](https://schema.ocsf.io/classes/security_finding) documentation for the full schema.
+
+---
+
+## Forwarding to Other Platforms
+
+Shuffle Security can automatically forward incidents to external tools using the **Forward Tickets** workflow. This keeps your downstream systems (ITSM, SOAR, SIEM) in sync without manual effort.
+
+### How It Works
+
+1. **Connect a destination** — Authenticate the target platform (e.g., Jira, ServiceNow, TheHive, Slack) via Infrastructure or Onboarding
+2. **Enable forwarding** — In the Automation diagram, toggle forwarding for the destination app
+3. **Automatic sync** — When incidents are created or updated, the Forward Tickets workflow pushes the data to each enabled destination
+
+### Configuring via Automations
+
+You can also manage forwarding rules from the **Automations** popup on the Incidents page:
+
+- Open **Incidents** → click the **Automations** button
+- Under the automation settings, configure which tools receive forwarded incidents
+- Forwarding respects the same normalization — data is translated from OCSF to the target platform's expected format
+
+### Datastore Automations
+
+The datastore supports category-level automations that trigger workflows when incidents are created, edited, or deleted. These are configured on the `shuffle-security_incidents` category and can be used to:
+
+- **Enrich** — Automatically add threat intelligence context to new incidents
+- **Send messages** — Notify a Slack or Teams channel when a critical incident is created
+- **Run security rules** — Apply merge/deduplication logic (e.g., `merge if always; deny if has_deleted_field`)
+- **Trigger AI Agent** — Run an AI-powered triage agent on every new incident
+
+These automations are managed in the **Automations** dialog and persist as part of the category configuration.
+
+---
+
 ## Choosing the Right Method
 
 | Method | Best For | Setup Effort |
@@ -96,5 +164,7 @@ This is useful when an alert was updated in the source tool after initial ingest
 | **Manual** | Ad-hoc reports, phone/email escalations | None |
 | **API (Webhook)** | Custom integrations, scripts, SIEM forwarding | Low |
 | **Pulling** | Continuous monitoring of connected tools | Medium (one-time auth) |
+| **Datastore API** | Reading/exporting incidents programmatically | Low |
+| **Forwarding** | Keeping downstream tools in sync | Medium (one-time auth) |
 
-Most organizations use **pulling** as their primary ingestion method, supplemented by **webhooks** for tools without native integration and **manual creation** for edge cases.
+Most organizations use **pulling** as their primary ingestion method, supplemented by **webhooks** for tools without native integration, **forwarding** to keep ticketing systems updated, and **manual creation** for edge cases.
