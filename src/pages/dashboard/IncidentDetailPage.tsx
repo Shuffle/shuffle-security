@@ -612,7 +612,7 @@ const IncidentDetailPage = () => {
         const labelsStr = JSON.stringify(parsed.labels || []);
         initialValuesRef.current = {
           title: parsed.title,
-          message: decodeIfBase64(htmlToPlainText(rawDesc)),
+          message: htmlToPlainText(decodeIfBase64(rawDesc)),
           severity: parsed.severity,
           assignee: normalizedAssignee,
           status: parsed.status,
