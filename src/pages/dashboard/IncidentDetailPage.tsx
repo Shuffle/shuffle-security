@@ -1548,9 +1548,9 @@ const IncidentDetailPage = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0, flexWrap: 'wrap' }}>
             {isSaving && <CircularProgress size={18} />}
             {isResyncing && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <CircularProgress size={16} sx={{ color: '#ff6600' }} />
-                <Typography variant="caption" sx={{ color: '#ff6600', fontWeight: 600, whiteSpace: 'nowrap' }}>
+              <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75, px: 1.5, py: 0.5, borderRadius: 1, backgroundColor: 'rgba(255, 102, 0, 0.08)', border: '1px solid rgba(255, 102, 0, 0.2)' }}>
+                <CircularProgress size={14} sx={{ color: '#ff6600' }} />
+                <Typography variant="caption" sx={{ color: '#ff6600', fontWeight: 600, whiteSpace: 'nowrap', lineHeight: 1, fontSize: '0.75rem' }}>
                   {incident?.source ? `Resyncing from ${incident.source}…` : 'Resyncing…'}
                 </Typography>
               </Box>
