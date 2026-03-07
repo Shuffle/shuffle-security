@@ -141,6 +141,14 @@ const baseEnrichmentOptions: (Omit<EnrichmentOption, 'connectedApps'> & { isDyna
     isDynamic: true,
   },
   {
+    id: 'assign_escalate',
+    name: 'Assign & Escalate',
+    description: 'Auto-assign incidents based on schedules and escalate unacknowledged alerts',
+    icon: <AssignmentIndIcon />,
+    color: '#6366f1',
+    category: 'response',
+  },
+  {
     id: 'integration_search',
     name: 'Integration Search',
     description: 'Search across all connected tools simultaneously for IOCs and context (coming soon)',
