@@ -1817,8 +1817,43 @@ const IncidentDetailPage = () => {
 
               <Box
                 onClick={() => {
-                  if (activeTab !== 4 && incident?.rawOCSF) {
-                    setRawJsonText(JSON.stringify(incident.rawOCSF, null, 2));
+                  if (incident?.rawOCSF) {
+                    // Build a live snapshot merging rawOCSF with current edited fields
+                    const severityOption = severityOptions.find(s => s.value === editedSeverity);
+                    const statusLabel = editedStatus === 'new' ? 'New' : editedStatus === 'in_progress' ? 'In Progress' : editedStatus === 'on_hold' ? 'On Hold' : 'Resolved';
+                    const existingFindingInfo = incident.rawOCSF?.finding_info_list?.[0] || (incident.rawOCSF as any)?.finding_info;
+                    const liveSnapshot = {
+                      ...incident.rawOCSF,
+                      desc: editedMessage || editedTitle,
+                      message: editedMessage || editedTitle,
+                      severity_id: severityOption?.id || 3,
+                      severity: severityOption?.label || 'Medium',
+                      status: statusLabel,
+                      assignee: editedAssignee.trim() || '',
+                      types: editedLabels,
+                      observables: editedObservables,
+                      tasks,
+                      activity,
+                      finding_info_list: [{
+                        ...existingFindingInfo,
+                        title: editedTitle,
+                        references: editedReferences,
+                        src_url: editedReferences[0] || '',
+                      }],
+                      metadata: {
+                        ...incident.rawOCSF.metadata,
+                        extensions: {
+                          ...incident.rawOCSF.metadata?.extensions,
+                          custom_attributes: {
+                            ...incident.rawOCSF.metadata?.extensions?.custom_attributes,
+                            tlp: editedTlp,
+                            assignee: editedAssignee.trim() || '',
+                            customFields: editedCustomFields,
+                          },
+                        },
+                      },
+                    };
+                    setRawJsonText(JSON.stringify(liveSnapshot, null, 2));
                   }
                   setActiveTab(4);
                 }}
