@@ -747,6 +747,7 @@ const IncidentDetailPage = () => {
     // CRITICAL: Never use undefined - always use empty values to prevent field deletion
     const updatedData = incident.rawOCSF ? {
       ...incident.rawOCSF,
+      desc: editedMessage || editedTitle,
       message: editedMessage || editedTitle,
       severity_id: severityOption?.id || 3,
       severity: severityOption?.label || 'Medium',
