@@ -570,6 +570,16 @@ export const DEFAULT_USECASES: Usecase[] = [
     automationArea: 'forward_updates',
   },
   {
+    id: 'case_management_assign_escalate_1', phase: 'response', source: 'case_management', target: 'case_management',
+    label: 'Assign & Escalate', animated: true,
+    tags: ['Response', 'Assignment', 'Escalation'],
+    description: 'Automatically assign incoming incidents to the right analyst based on on-call schedules, workload, and expertise. Escalate unacknowledged or aging incidents to the next tier to ensure SLA compliance.',
+    agenticDescription: 'An agent evaluates incoming incidents against team schedules, analyst skill sets, and current workload, assigns ownership, and monitors for SLA breaches to trigger automatic escalation to the next responder or management.',
+    automationLabel: 'Assign & Escalate',
+    automationCategory: 'cases',
+    automationArea: 'assign_escalate',
+  },
+  {
     id: 'cloud_asset_management_1', phase: 'correlation', source: 'cloud', target: 'asset_management',
     label: 'Resource inventory',
     tags: ['Logs', 'Context'],
