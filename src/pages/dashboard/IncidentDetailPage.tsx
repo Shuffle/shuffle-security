@@ -517,7 +517,8 @@ const IncidentDetailPage = () => {
         // Use desc (new OCSF) first, fall back to message (legacy), convert HTML to readable text
         const rawDesc = parsed.rawOCSF?.desc || parsed.rawOCSF?.message || '';
         
-        setEditedMessage(decodeIfBase64(htmlToPlainText(rawDesc)));
+        const decodedDesc = decodeIfBase64(rawDesc);
+        setEditedMessage(htmlToPlainText(decodedDesc));
         setEditedSeverity(parsed.severity);
         // Normalize assignee: must be a valid team member or AI Agent
         const rawAssignee = parsed.assignee || '';
@@ -611,7 +612,7 @@ const IncidentDetailPage = () => {
         const labelsStr = JSON.stringify(parsed.labels || []);
         initialValuesRef.current = {
           title: parsed.title,
-          message: decodeIfBase64(htmlToPlainText(rawDesc)),
+          message: htmlToPlainText(decodeIfBase64(rawDesc)),
           severity: parsed.severity,
           assignee: normalizedAssignee,
           status: parsed.status,
