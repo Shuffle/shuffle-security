@@ -53,6 +53,7 @@ const readableAppName = (name: string): string =>
 const AUTOMATION_WORKFLOW_LABELS: Record<string, string[]> = {
   automatic_ingestion: getAutomationLabels('automatic_ingestion'),
   forward_updates: getAutomationLabels('forward_updates'),
+  assign_escalate: getAutomationLabels('assign_escalate'),
   threat_intel: getAutomationLabels('threat_intel'),
   notifications: getAutomationLabels('notifications'),
 };
