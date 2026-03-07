@@ -76,6 +76,21 @@ export function htmlToPlainText(html: string): string {
   return text.trim();
 }
 
+/**
+ * Decode HTML entities in a string (lightweight, no tag stripping).
+ * Handles named entities (&amp; &#39; etc.) and numeric/hex entities.
+ */
+export function decodeHtmlEntities(text: string): string {
+  if (!text || !text.includes('&')) return text;
+  let result = text;
+  for (const [re, char] of ENTITY_MAP) {
+    result = result.replace(re, char);
+  }
+  result = result.replace(HTML_NUMERIC_ENTITY_RE, (_, num) => String.fromCharCode(parseInt(num, 10)));
+  result = result.replace(HTML_HEX_ENTITY_RE, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+  return result;
+}
+
 // Shared type for authenticated app entries
 export interface AuthAppEntry {
   app: {

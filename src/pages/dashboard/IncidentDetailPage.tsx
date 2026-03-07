@@ -85,7 +85,7 @@ import { MentionInput } from '@/components/incidents/MentionInput';
 import { TaskDateTimePicker } from '@/components/incidents/TaskDateTimePicker';
 import { FileAttachments } from '@/components/incidents/FileAttachments';
 import { toast } from 'sonner';
-import { isAIAssignee, deduplicateTasks, htmlToPlainText } from '@/lib/utils';
+import { isAIAssignee, deduplicateTasks, htmlToPlainText, decodeHtmlEntities } from '@/lib/utils';
 import { useIncidentAgentRuns } from '@/hooks/useIncidentAgentRuns';
 import AgentActivityFeed from '@/components/agent/AgentActivityFeed';
 
@@ -178,7 +178,7 @@ const meaningfulString = (val: unknown): string | undefined => {
       // Not valid JSON, treat as regular string
     }
   }
-  return trimmed;
+  return decodeHtmlEntities(trimmed);
 };
 
 const parseIncidentFromDatastore = (item: { key: string; value: string; created?: number; edited?: number }): DisplayIncident | null => {

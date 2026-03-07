@@ -29,7 +29,7 @@ import { useUsers } from '@/hooks/useUsers';
 import { DATASTORE_CATEGORIES, getDatastoreByCategory, setDatastoreItems, CategoryAutomation, deleteDatastoreItems } from '@/services/datastore';
 import { CreateIncidentDialog, ActivityItem } from '@/components/incidents/CreateIncidentDialog';
 import { OCSFIncidentFinding, Observable, TLP_LABELS, convertLegacyTlp, mapOCSFSeverity, mapOCSFStatus } from '@/config/ocsfIncidentSchema';
-import { deduplicateTasks } from '@/lib/utils';
+import { deduplicateTasks, decodeHtmlEntities } from '@/lib/utils';
 import { ResolveIncidentDialog, ResolutionData, RESOLUTION_REASONS } from '@/components/incidents/ResolveIncidentDialog';
 import { CategoryAutomationsDialog } from '@/components/incidents/CategoryAutomationsDialog';
 import { extractValidatedIngestionApps, ValidatedIngestionApp, findIngestTicketsWorkflow, extractWorkflowAppNames, normalizeAppName } from '@/lib/ingestionDetection';
@@ -141,7 +141,7 @@ const isAIAssignee = (assignee: string | null | undefined): boolean => {
 const meaningfulString = (val: unknown): string | undefined => {
   if (typeof val !== 'string') return undefined;
   const trimmed = val.trim();
-  return trimmed.length > 0 ? trimmed : undefined;
+  return trimmed.length > 0 ? decodeHtmlEntities(trimmed) : undefined;
 };
 
 const parseIncidentFromDatastore = (item: { key: string; value: string; created?: number; edited?: number }): DisplayIncident | null => {
