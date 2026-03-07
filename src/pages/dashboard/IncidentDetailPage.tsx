@@ -85,7 +85,7 @@ import { MentionInput } from '@/components/incidents/MentionInput';
 import { TaskDateTimePicker } from '@/components/incidents/TaskDateTimePicker';
 import { FileAttachments } from '@/components/incidents/FileAttachments';
 import { toast } from 'sonner';
-import { isAIAssignee, deduplicateTasks, htmlToPlainText, decodeHtmlEntities } from '@/lib/utils';
+import { isAIAssignee, deduplicateTasks, htmlToPlainText, decodeHtmlEntities, decodeIfBase64 } from '@/lib/utils';
 import { useIncidentAgentRuns } from '@/hooks/useIncidentAgentRuns';
 import AgentActivityFeed from '@/components/agent/AgentActivityFeed';
 
