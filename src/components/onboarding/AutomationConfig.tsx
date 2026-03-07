@@ -25,6 +25,7 @@ import ChatIcon from '@mui/icons-material/Chat';
 import TravelExploreIcon from '@mui/icons-material/TravelExplore';
 import SyncAltIcon from '@mui/icons-material/SyncAlt';
 import DownloadIcon from '@mui/icons-material/Download';
+import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
