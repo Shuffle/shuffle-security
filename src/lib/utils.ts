@@ -91,6 +91,39 @@ export function decodeHtmlEntities(text: string): string {
   return result;
 }
 
+/**
+ * Detect and decode base64-encoded strings.
+ * Returns the decoded string if it looks like valid base64 and decodes to readable text,
+ * otherwise returns the original string unchanged.
+ */
+export function decodeIfBase64(text: string): string {
+  if (!text || text.length < 8) return text;
+  // Must look like base64: only valid chars, length divisible by 4 (with optional padding)
+  const trimmed = text.trim();
+  if (!/^[A-Za-z0-9+/\n\r]+=*$/.test(trimmed)) return text;
+  if (trimmed.length % 4 !== 0) return text;
+  try {
+    const decoded = atob(trimmed);
+    // Check that the result is mostly printable ASCII/UTF-8
+    const printableRatio = decoded.split('').filter(c => {
+      const code = c.charCodeAt(0);
+      return (code >= 32 && code <= 126) || code === 10 || code === 13 || code === 9 || code > 127;
+    }).length / decoded.length;
+    // If ≥85% printable, it's likely real text
+    if (printableRatio >= 0.85 && decoded.length > 0) {
+      // Try UTF-8 decode for multi-byte chars
+      try {
+        return decodeURIComponent(escape(decoded));
+      } catch {
+        return decoded;
+      }
+    }
+  } catch {
+    // Not valid base64
+  }
+  return text;
+}
+
 // Shared type for authenticated app entries
 export interface AuthAppEntry {
   app: {

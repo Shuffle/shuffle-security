@@ -85,7 +85,7 @@ import { MentionInput } from '@/components/incidents/MentionInput';
 import { TaskDateTimePicker } from '@/components/incidents/TaskDateTimePicker';
 import { FileAttachments } from '@/components/incidents/FileAttachments';
 import { toast } from 'sonner';
-import { isAIAssignee, deduplicateTasks, htmlToPlainText, decodeHtmlEntities } from '@/lib/utils';
+import { isAIAssignee, deduplicateTasks, htmlToPlainText, decodeHtmlEntities, decodeIfBase64 } from '@/lib/utils';
 import { useIncidentAgentRuns } from '@/hooks/useIncidentAgentRuns';
 import AgentActivityFeed from '@/components/agent/AgentActivityFeed';
 
@@ -517,7 +517,7 @@ const IncidentDetailPage = () => {
         // Use desc (new OCSF) first, fall back to message (legacy), convert HTML to readable text
         const rawDesc = parsed.rawOCSF?.desc || parsed.rawOCSF?.message || '';
         
-        setEditedMessage(htmlToPlainText(rawDesc));
+        setEditedMessage(decodeIfBase64(htmlToPlainText(rawDesc)));
         setEditedSeverity(parsed.severity);
         // Normalize assignee: must be a valid team member or AI Agent
         const rawAssignee = parsed.assignee || '';
@@ -611,7 +611,7 @@ const IncidentDetailPage = () => {
         const labelsStr = JSON.stringify(parsed.labels || []);
         initialValuesRef.current = {
           title: parsed.title,
-          message: htmlToPlainText(rawDesc),
+          message: decodeIfBase64(htmlToPlainText(rawDesc)),
           severity: parsed.severity,
           assignee: normalizedAssignee,
           status: parsed.status,
