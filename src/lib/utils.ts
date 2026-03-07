@@ -98,12 +98,14 @@ export function decodeHtmlEntities(text: string): string {
  */
 export function decodeIfBase64(text: string): string {
   if (!text || text.length < 8) return text;
+  // Strip all whitespace for validation (base64 may contain spaces, newlines, etc.)
+  const stripped = text.replace(/\s+/g, '');
+  if (stripped.length < 8) return text;
   // Must look like base64: only valid chars, length divisible by 4 (with optional padding)
-  const trimmed = text.trim();
-  if (!/^[A-Za-z0-9+/\n\r]+=*$/.test(trimmed)) return text;
-  if (trimmed.length % 4 !== 0) return text;
+  if (!/^[A-Za-z0-9+/]+=*$/.test(stripped)) return text;
+  if (stripped.length % 4 !== 0) return text;
   try {
-    const decoded = atob(trimmed);
+    const decoded = atob(stripped);
     // Check that the result is mostly printable ASCII/UTF-8
     const printableRatio = decoded.split('').filter(c => {
       const code = c.charCodeAt(0);
