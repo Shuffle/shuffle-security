@@ -146,6 +146,7 @@ export function useAppAuthFlow() {
       const result = await response.json();
       if (response.ok && result.success !== false) {
         await fetchAuthForApp(selectedApp.name, selectedApp.image_url);
+        refreshAllIntegrationStatus();
         return true;
       }
       return false;
