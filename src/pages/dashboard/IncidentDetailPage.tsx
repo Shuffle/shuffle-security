@@ -907,7 +907,7 @@ const IncidentDetailPage = () => {
 
   // Debounced auto-save
   useEffect(() => {
-    if (!incident || !initialValuesRef.current) return;
+    if (!incident || !initialValuesRef.current || isPublicView) return;
     
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
