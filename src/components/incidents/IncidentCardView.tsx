@@ -186,6 +186,8 @@ export const IncidentCardView = ({
   onSelectionChange,
   isLoading = false,
   ingestionApps = [],
+  resyncingId = null,
+  resyncingSource = '',
 }: IncidentCardViewProps) => {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [hasRendered, setHasRendered] = useState(false);
