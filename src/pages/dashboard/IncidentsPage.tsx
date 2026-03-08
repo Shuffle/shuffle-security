@@ -333,7 +333,7 @@ const IncidentsPage = () => {
   const [sortBy, setSortBy] = useState<SortKey>('created');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
-  const { items: datastoreItems, isLoading, hasFetched, error, fetchItems, addItem, hasMore, fetchNextPage, categoryConfig } = useDatastore({
+  const { items: datastoreItems, isLoading, isRefreshing, hasFetched, error, fetchItems, addItem, hasMore, fetchNextPage, categoryConfig } = useDatastore({
     category: DATASTORE_CATEGORIES.INCIDENTS,
   });
 
@@ -944,7 +944,7 @@ const IncidentsPage = () => {
                   '&:hover': { borderColor: 'rgba(255,255,255,0.2)' },
                 }}
               >
-                <RefreshIcon fontSize="small" sx={isLoading ? { animation: 'spin 1s linear infinite', '@keyframes spin': { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } } } : undefined} />
+                <RefreshIcon fontSize="small" sx={isRefreshing ? { animation: 'spin 1s linear infinite', '@keyframes spin': { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } } } : undefined} />
               </IconButton>
             </Tooltip>
             <Tooltip title="Create Incident">
@@ -1228,7 +1228,7 @@ const IncidentsPage = () => {
                 },
               }}
             >
-              <RefreshIcon fontSize="small" sx={isLoading ? { animation: 'spin 1s linear infinite', '@keyframes spin': { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } } } : undefined} />
+              <RefreshIcon fontSize="small" sx={isRefreshing ? { animation: 'spin 1s linear infinite', '@keyframes spin': { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } } } : undefined} />
             </IconButton>
           </Tooltip>
           <Tooltip title="Create Incident">

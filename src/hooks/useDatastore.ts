@@ -21,6 +21,7 @@ interface UseDatastoreOptions {
 interface UseDatastoreReturn {
   items: DatastoreItem[];
   isLoading: boolean;
+  isRefreshing: boolean;
   hasFetched: boolean;
   error: string | null;
   cursor: string | null;
@@ -38,6 +39,7 @@ interface UseDatastoreReturn {
 export const useDatastore = ({ category }: UseDatastoreOptions): UseDatastoreReturn => {
   const [items, setItems] = useState<DatastoreItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [hasFetched, setHasFetched] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cursor, setCursor] = useState<string | null>(null);
@@ -45,10 +47,11 @@ export const useDatastore = ({ category }: UseDatastoreOptions): UseDatastoreRet
   const [categoryConfig, setCategoryConfig] = useState<CategoryConfig | null>(null);
 
   const fetchItems = useCallback(async (cursorParam?: string) => {
-    // Only show loading spinner on initial fetch to avoid UI flicker on refresh
+    // Only show full loading spinner on initial fetch to avoid UI flicker
     if (!hasFetched) {
       setIsLoading(true);
     }
+    setIsRefreshing(true);
     setError(null);
     try {
       const response = await getDatastoreByCategory(category, cursorParam);
@@ -79,6 +82,7 @@ export const useDatastore = ({ category }: UseDatastoreOptions): UseDatastoreRet
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
       setHasFetched(true);
     }
   }, [category, hasFetched]);
@@ -168,6 +172,7 @@ export const useDatastore = ({ category }: UseDatastoreOptions): UseDatastoreRet
   return {
     items,
     isLoading,
+    isRefreshing,
     hasFetched,
     error,
     cursor,
