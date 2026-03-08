@@ -232,11 +232,26 @@ export const AppAuthCard = ({
   // This is used to determine if we should trust the 200 response as source of truth
   const [wasPreValidatedPerAuth, setWasPreValidatedPerAuth] = useState<Record<string, boolean>>({});
 
-  // Update selection when apiAuthEntries changes, but only on initial load (not after user selection)
+  // Track previous entry count to detect new auths added (e.g. from OAuth popup)
+  const prevEntryCountRef = useRef(apiAuthEntries.length);
+
+  // Update selection when apiAuthEntries changes
   useEffect(() => {
-    if (apiAuthEntries.length > 0 && !userHasSelected) {
-      setSelectedAuthId(getBestDefaultAuth(apiAuthEntries));
+    if (apiAuthEntries.length > 0) {
+      // If a new entry was added (count increased), auto-select the newest one
+      if (apiAuthEntries.length > prevEntryCountRef.current) {
+        const sorted = [...apiAuthEntries].sort((a, b) => {
+          const aTime = a.created || a.edited || 0;
+          const bTime = b.created || b.edited || 0;
+          return bTime - aTime;
+        });
+        const newestId = sorted[0]?.id || sorted[0]?.label || '0';
+        setSelectedAuthId(newestId);
+      } else if (!userHasSelected) {
+        setSelectedAuthId(getBestDefaultAuth(apiAuthEntries));
+      }
     }
+    prevEntryCountRef.current = apiAuthEntries.length;
   }, [apiAuthEntries, userHasSelected]);
   
   // Track pre-validation state when auth selection changes (for first-time tests)
