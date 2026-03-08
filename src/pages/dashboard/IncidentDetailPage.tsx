@@ -871,7 +871,6 @@ const IncidentDetailPage = () => {
     const updatedData = incident.rawOCSF ? {
       ...incident.rawOCSF,
       desc: editedMessage || editedTitle,
-      message: editedMessage || editedTitle,
       severity_id: severityOption?.id || 3,
       severity: severityOption?.label || 'Medium',
       status_id: statusId,
