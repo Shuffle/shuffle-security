@@ -380,9 +380,15 @@ Section.displayName = 'Section';
 const IncidentDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { userInfo } = useAuth();
   const { openApp } = useAppDetail();
   const currentUsername = userInfo?.username || '';
+
+  // Public sharing params
+  const publicAuth = searchParams.get('authorization');
+  const publicOrg = searchParams.get('org');
+  const isPublicView = !!(publicAuth && publicOrg);
 
   const [incident, setIncident] = useState<DisplayIncident | null>(null);
   const [loading, setLoading] = useState(true);
