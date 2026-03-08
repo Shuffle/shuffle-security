@@ -399,12 +399,31 @@ export const IncidentCardView = ({
                   </Box>
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                  <Typography
-                    variant="caption"
-                    sx={{ color: 'hsl(var(--muted-foreground))' }}
-                  >
-                    {formatRelativeTime(incident.editedTs || incident.createdTs)}
-                  </Typography>
+                  {incident.originCreatedTs && (
+                    <Tooltip title={`Created: ${formatAbsoluteTime(incident.originCreatedTs)}`} placement="bottom">
+                      <Typography
+                        variant="caption"
+                        sx={{ color: 'hsl(var(--muted-foreground))', cursor: 'default' }}
+                      >
+                        {formatRelativeTime(incident.originCreatedTs)}
+                      </Typography>
+                    </Tooltip>
+                  )}
+                  {(incident.editedTs && incident.editedTs !== incident.originCreatedTs) && (
+                    <>
+                      <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                        •
+                      </Typography>
+                      <Tooltip title={`Updated: ${formatAbsoluteTime(incident.editedTs)}`} placement="bottom">
+                        <Typography
+                          variant="caption"
+                          sx={{ color: 'hsl(var(--muted-foreground))', cursor: 'default', fontStyle: 'italic' }}
+                        >
+                          edited {formatRelativeTime(incident.editedTs)}
+                        </Typography>
+                      </Tooltip>
+                    </>
+                  )}
                   <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
                     •
                   </Typography>
