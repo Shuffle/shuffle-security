@@ -609,7 +609,7 @@ const IncidentsPage = () => {
               } catch { /* ignore */ }
 
               const title = parsed?.finding_info?.title || parsed?.title || '';
-              if (title && title !== 'Untitled Incident') {
+              if (title && title !== 'Untitled Incident' && title !== 'Requires sync') {
                 console.log(`[AutoResync] Got content for ${target.id} after ${pollCount} polls`);
                 alreadyResynced.add(target.id);
                 sessionStorage.setItem(SESSION_KEY, JSON.stringify([...alreadyResynced]));

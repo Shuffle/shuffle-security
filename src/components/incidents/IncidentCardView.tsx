@@ -433,7 +433,12 @@ export const IncidentCardView = ({
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {incident.title || 'Untitled Incident'}
+                      {incident.title || (
+                        <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, color: '#f59e0b', fontStyle: 'italic', fontWeight: 500 }}>
+                          <RefreshIcon sx={{ fontSize: 14 }} />
+                          Requires sync
+                        </Box>
+                      )}
                     </Typography>
                   )}
                   <Box sx={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>
