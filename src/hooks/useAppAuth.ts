@@ -204,8 +204,9 @@ export function useAppAuth() {
         if (sn === 401 || sn === 403) errorCode = sn;
       }
 
-      // Refresh auth list
+      // Refresh auth list & notify all IntegrationStatus instances
       await fetchAuthenticatedApps();
+      refreshAllIntegrationStatus();
 
       setAuthStates((prev) => ({
         ...prev,
