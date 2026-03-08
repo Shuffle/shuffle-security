@@ -23,6 +23,7 @@ import {
 } from '@/lib/ingestionDetection';
 import { findIngestTicketsWorkflow, findForwardTicketsWorkflow, extractWorkflowAppNames } from '@/lib/ingestionDetection';
 import { trackOnboardingStep, trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
+import { refreshAllIntegrationStatus } from '@/components/layout/IntegrationStatus';
 
 // Datastore category for onboarding config (using shuffle-security_ prefix for consistency)
 const ONBOARDING_CONFIG_CATEGORY = 'shuffle-security_onboarding';
