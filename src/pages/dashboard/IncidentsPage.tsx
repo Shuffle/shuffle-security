@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef, useSyncExternalStore } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import AppSearchDrawer from '@/components/shared/AppSearchDrawer';
 import {
