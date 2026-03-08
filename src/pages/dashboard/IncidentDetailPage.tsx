@@ -871,7 +871,7 @@ const IncidentDetailPage = () => {
 
           if (issues.length > 0) {
             console.warn('[SaveVerify] Mismatch detected in:', issues);
-            toast.error(`Save may not have persisted: ${issues.join(', ')} did not match. Try saving again.`);
+            toast.error(`Save may not have persisted: ${issues.join(', ')} did not match. This is usually caused by security rules — try disabling them in "Automation for Incidents". Contact support@shuffler.io if the issue persists.`);
           } else {
             console.log('[SaveVerify] Verified successfully');
           }
