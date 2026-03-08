@@ -169,6 +169,22 @@ const meaningfulString = (val: unknown): string | undefined => {
   return trimmed.length > 0 ? decodeHtmlEntities(trimmed) : undefined;
 };
 
+/**
+ * Resolve the "created" timestamp for an incident.
+ * Priority: value.created_time → item.created (datastore envelope).
+ */
+const resolveCreatedTs = (data: any, itemCreated?: number): number => {
+  // Prefer created_time from the incident value (OCSF field)
+  if (data?.created_time) {
+    const ct = typeof data.created_time === 'string' && /^\d+$/.test(data.created_time)
+      ? Number(data.created_time) : data.created_time;
+    const ms = normalizeToMs(ct);
+    if (ms > 0) return ms;
+  }
+  // Fallback to datastore envelope created
+  return normalizeToMs(itemCreated);
+};
+
 const parseIncidentFromDatastore = (item: { key: string; value: string; created?: number; edited?: number }): DisplayIncident | null => {
   try {
     const data = JSON.parse(item.value);
