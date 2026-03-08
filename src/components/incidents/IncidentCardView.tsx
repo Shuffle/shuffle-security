@@ -52,7 +52,7 @@ interface IncidentCardViewProps {
   onSelectionChange?: (selectedIds: Set<string>) => void;
   isLoading?: boolean;
   ingestionApps?: IngestionApp[];
-  resyncingId?: string | null;
+  resyncingIds?: Set<string>;
   resyncingSource?: string;
 }
 
