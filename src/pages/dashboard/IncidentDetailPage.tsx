@@ -650,7 +650,7 @@ const IncidentDetailPage = () => {
     }
     
     setLoading(false);
-  }, [id]);
+  }, [id, isPublicView, publicOrg, publicAuth]);
 
   // Initial load
   useEffect(() => {
