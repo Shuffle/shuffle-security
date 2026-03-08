@@ -2650,6 +2650,12 @@ const IncidentDetailPage = () => {
           border: '1px solid rgba(255,255,255,0.06)',
           p: 2.5,
         }}>
+          {/* Auto-ingestion note */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, px: 1.5, py: 1, borderRadius: 1.5, bgcolor: 'rgba(251, 146, 60, 0.08)', border: '1px solid rgba(251, 146, 60, 0.18)' }}>
+            <Typography variant="caption" sx={{ color: '#fb923c', fontWeight: 500 }}>
+              Automatic observable extraction is not yet fully enabled. You can add observables manually below.
+            </Typography>
+          </Box>
           {/* Add Observable input */}
           <Box sx={{ display: 'flex', gap: 1, mb: 2, alignItems: 'center' }}>
             <ObservableTypeSelector
