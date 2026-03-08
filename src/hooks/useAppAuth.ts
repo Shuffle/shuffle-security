@@ -270,6 +270,7 @@ export function useAppAuth() {
 
       if (response.ok) {
         await fetchAuthenticatedApps();
+        refreshAllIntegrationStatus();
         return true;
       }
       return false;
