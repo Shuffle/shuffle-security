@@ -147,6 +147,7 @@ const baseEnrichmentOptions: (Omit<EnrichmentOption, 'connectedApps'> & { isDyna
     icon: <AssignmentIndIcon />,
     color: '#6366f1',
     category: 'response',
+    disabled: true,
   },
   {
     id: 'integration_search',
