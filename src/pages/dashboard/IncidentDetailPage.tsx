@@ -701,6 +701,61 @@ const IncidentDetailPage = () => {
     loadIncident();
   }, [loadIncident]);
 
+  // Auto-resync untitled incidents immediately on load
+  const autoResyncTriggeredRef = useRef(false);
+  useEffect(() => {
+    if (autoResyncTriggeredRef.current || loading || !incident || isResyncing || isPublicView) return;
+    // Only trigger if incident has no meaningful title and has a resyncable source
+    if (incident.title) return;
+    const source = incident.source || '';
+    if (!source) return;
+    // Check source is not a product id/uid (same guard as manual resync)
+    const product = incident.rawOCSF?.product || incident.rawOCSF?.metadata?.product;
+    if (product?.name && (product.name === product.id || product.name === product.uid)) return;
+
+    autoResyncTriggeredRef.current = true;
+    setIsResyncing(true);
+    toast.success(`Resyncing from ${source}…`, { duration: 30000 });
+
+    (async () => {
+      try {
+        const preResult = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS);
+        const previousEdited = preResult.item?.edited || 0;
+
+        const response = await fetch(getApiUrl('/api/v1/apps/categories/run'), {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+          body: JSON.stringify({
+            action: 'get_ticket',
+            category: 'cases',
+            fields: [{ key: 'id', value: incident.id }],
+            app_name: source,
+          }),
+        });
+        if (!response.ok) {
+          toast.error('Auto-resync failed');
+          setIsResyncing(false);
+          return;
+        }
+        setTimeout(async () => {
+          await loadIncident(false);
+          setIsResyncing(false);
+          const postResult = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS);
+          const newEdited = postResult.item?.edited || 0;
+          if (newEdited && newEdited !== previousEdited) {
+            toast.success('Resync complete — update found');
+          } else {
+            toast.info('Resync complete — no changes detected');
+          }
+        }, 30000);
+      } catch {
+        toast.error('Auto-resync failed');
+        setIsResyncing(false);
+      }
+    })();
+  }, [loading, incident, isResyncing, isPublicView, loadIncident]);
+
   // Validate assignee against team members once users finish loading
   useEffect(() => {
     if (usersLoading || !editedAssignee) return;
