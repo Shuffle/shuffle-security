@@ -769,6 +769,18 @@ const IncidentDetailPage = () => {
     })();
   }, [loading, incident, isResyncing, isPublicView, loadIncident]);
 
+  // Show toast for invalid data incidents (no title + no source)
+  const invalidDataToastShown = useRef(false);
+  useEffect(() => {
+    if (invalidDataToastShown.current || loading || !incident) return;
+    const hasTitle = !!incident.title;
+    const hasSource = !!incident.source;
+    if (!hasTitle && !hasSource) {
+      invalidDataToastShown.current = true;
+      toast.error('This incident is not in a valid OCSF format. Validate your ingest pipeline or contact support@shuffler.io', { duration: 8000 });
+    }
+  }, [loading, incident]);
+
   // Validate assignee against team members once users finish loading
   useEffect(() => {
     if (usersLoading || !editedAssignee) return;
