@@ -2053,6 +2053,7 @@ const IncidentDetailPage = () => {
           </Box>
 
           {/* Tab Content */}
+      <Box sx={isPublicView ? { pointerEvents: 'none', '& input, & textarea, & select, & button:not([data-public-ok])': { opacity: 0.7 } } : {}}>
       {activeTab === 0 && (
         /* Tasks Tab */
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
