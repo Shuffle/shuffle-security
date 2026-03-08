@@ -23,6 +23,7 @@ interface IncidentsEmptyStateProps {
 
 export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, onToggleApp, webhook, isSyncing = false, isUpdatingApps = false, onSyncNow, onCreateIncident }: IncidentsEmptyStateProps) => {
   const hasApps = ingestionApps.length > 0 || !!webhook?.exists || !!webhook?.enabled;
+  const hasNonWebhookSources = ingestionApps.length > 0;
 
   return (
     <motion.div
@@ -155,48 +156,93 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, on
         )}
 
         {/* CTA buttons */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.5 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            {hasNonWebhookSources && onSyncNow ? (
+              <>
+                <Button
+                  variant="contained"
+                  size="large"
+                  disabled={isSyncing || isUpdatingApps}
+                  startIcon={(isSyncing || isUpdatingApps) ? <CircularProgress size={18} color="inherit" /> : <PlayArrowIcon />}
+                  onClick={onSyncNow}
+                  sx={{
+                    px: 3,
+                    py: 1.5,
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    fontSize: '0.95rem',
+                    backgroundColor: '#FF6600',
+                    boxShadow: 'none',
+                    '&:hover': { backgroundColor: '#e55c00' },
+                  }}
+                >
+                  Sync Now
+                </Button>
+                <Button
+                  component={Link}
+                  to="/onboarding/sources"
+                  variant="outlined"
+                  size="large"
+                  sx={{
+                    px: 2.5,
+                    py: 1.5,
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    fontSize: '0.95rem',
+                    borderColor: 'hsl(var(--border))',
+                    color: 'hsl(var(--foreground))',
+                    '&:hover': {
+                      borderColor: 'hsl(var(--muted-foreground))',
+                      bgcolor: 'hsl(var(--muted) / 0.5)',
+                    },
+                  }}
+                >
+                  Manage Sources
+                </Button>
+              </>
+            ) : (
+              <Button
+                component={Link}
+                to="/onboarding/sources"
+                variant="contained"
+                size="large"
+                startIcon={<RocketLaunchIcon />}
+                sx={{
+                  px: 3,
+                  py: 1.5,
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  fontSize: '0.95rem',
+                  backgroundColor: '#FF6600',
+                  boxShadow: 'none',
+                  '&:hover': { backgroundColor: '#e55c00' },
+                }}
+              >
+                Set Up Ingestion
+              </Button>
+            )}
+          </Box>
           <Button
-            component={Link}
-            to="/onboarding/sources"
-            variant="contained"
-            size="large"
-            startIcon={<RocketLaunchIcon />}
-            sx={{
-              px: 3,
-              py: 1.5,
-              borderRadius: 2,
-              textTransform: 'none',
-              fontWeight: 600,
-              fontSize: '0.95rem',
-              backgroundColor: '#FF6600',
-              boxShadow: 'none',
-              '&:hover': { backgroundColor: '#e55c00' },
-            }}
-          >
-            {hasApps ? 'Manage Sources' : 'Set Up Ingestion'}
-          </Button>
-          <Button
-            variant="outlined"
-            size="large"
+            variant="text"
+            size="small"
             onClick={onCreateIncident}
             startIcon={<AddIcon />}
             sx={{
-              px: 2.5,
-              py: 1.5,
-              borderRadius: 2,
               textTransform: 'none',
-              fontWeight: 600,
-              fontSize: '0.95rem',
-              borderColor: 'hsl(var(--border))',
-              color: 'hsl(var(--foreground))',
+              fontWeight: 500,
+              fontSize: '0.85rem',
+              color: 'hsl(var(--muted-foreground))',
               '&:hover': {
-                borderColor: 'hsl(var(--muted-foreground))',
+                color: 'hsl(var(--foreground))',
                 bgcolor: 'hsl(var(--muted) / 0.5)',
               },
             }}
           >
-            Add
+            Create Incident
           </Button>
         </Box>
 
