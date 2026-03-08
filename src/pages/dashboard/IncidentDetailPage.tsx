@@ -3540,8 +3540,8 @@ const IncidentDetailPage = () => {
                         </Typography>
                       </Box>
                       <MentionText 
-                        text={item.content} 
-                        sx={{ fontSize: '0.8rem', color: 'text.secondary' }}
+                        text={item.content && /<[a-z][\s\S]*>/i.test(item.content) ? htmlToPlainText(item.content).trim() : item.content} 
+                        sx={{ fontSize: '0.8rem', color: 'text.secondary', whiteSpace: 'pre-wrap' }}
                       />
                       {/* Display attachments if present */}
                       {item.attachments && item.attachments.length > 0 && (
