@@ -328,7 +328,7 @@ const IncidentsPage = () => {
   const [isBulkResolving, setIsBulkResolving] = useState(false);
 
   // Sorting
-  const [sortBy, setSortBy] = useState<SortKey>('edited');
+  const [sortBy, setSortBy] = useState<SortKey>('created');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   const { items: datastoreItems, isLoading, hasFetched, error, fetchItems, addItem, hasMore, fetchNextPage, categoryConfig } = useDatastore({
