@@ -1,4 +1,4 @@
-import { Box, Typography, Chip, Checkbox, Skeleton, Tooltip } from '@mui/material';
+import { Box, Typography, Chip, Checkbox, Skeleton, Tooltip, CircularProgress } from '@mui/material';
 import { Tag } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -51,6 +51,8 @@ interface IncidentCardViewProps {
   onSelectionChange?: (selectedIds: Set<string>) => void;
   isLoading?: boolean;
   ingestionApps?: IngestionApp[];
+  resyncingId?: string | null;
+  resyncingSource?: string;
 }
 
 // Skeleton card component for loading state
@@ -184,6 +186,8 @@ export const IncidentCardView = ({
   onSelectionChange,
   isLoading = false,
   ingestionApps = [],
+  resyncingId = null,
+  resyncingSource = '',
 }: IncidentCardViewProps) => {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [hasRendered, setHasRendered] = useState(false);
@@ -382,18 +386,37 @@ export const IncidentCardView = ({
                 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      fontWeight: 600,
-                      color: 'hsl(var(--foreground))',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {incident.title || 'Untitled Incident'}
-                  </Typography>
+                  {resyncingId === incident.id ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, minWidth: 0 }}>
+                      <CircularProgress size={14} sx={{ color: '#ff6600', flexShrink: 0 }} />
+                      <Typography
+                        variant="body1"
+                        sx={{
+                          fontWeight: 600,
+                          color: '#ff6600',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          fontSize: '0.9rem',
+                        }}
+                      >
+                        Loading details from {resyncingSource || 'source'}…
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        fontWeight: 600,
+                        color: 'hsl(var(--foreground))',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {incident.title || 'Untitled Incident'}
+                    </Typography>
+                  )}
                   <Box sx={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>
                     <StatusIcon size={16} color={statusInfo.color} />
                   </Box>
