@@ -361,6 +361,7 @@ const RulesPage = () => {
             credentials: 'include',
             headers: { ...getAuthHeader() },
           });
+          await new Promise(resolve => setTimeout(resolve, 2000));
           await fetch(getApiUrl('/api/v1/detections/sigma/selected_rules/enable_folder'), {
             method: 'PUT',
             credentials: 'include',
