@@ -434,7 +434,7 @@ export const IncidentCardView = ({
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {incident.title && incident.title !== 'Untitled Incident' && incident.title !== 'Requires sync' ? incident.title : (
+                      {incident.title && incident.title.trim() !== 'Untitled Incident' && incident.title.trim() !== 'Requires sync' && incident.title.trim() ? incident.title.trim() : (
                         incident.source ? (
                           <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, color: '#f59e0b', fontStyle: 'italic', fontWeight: 500 }}>
                             <RefreshIcon sx={{ fontSize: 14 }} />
