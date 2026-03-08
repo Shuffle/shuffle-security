@@ -361,6 +361,7 @@ const IncidentsPage = () => {
 
   // Fetch ingestion apps — workflows are the source of truth for enabled state
   const fetchIngestionApps = useCallback(async () => {
+    setIngestionLoading(true);
     try {
       const [authResponse, workflowsResponse] = await Promise.all([
         fetch(getApiUrl('/api/v1/apps/authentication'), {
