@@ -2763,7 +2763,7 @@ const IncidentDetailPage = () => {
               if (val && regexPattern) {
                 try {
                   if (!new RegExp(regexPattern).test(val)) {
-                    regexWarning = `Value doesn't match expected pattern for "${newObservableType}"`;
+                    regexWarning = `Doesn't match pattern for "${newObservableType}" — regex: ${regexPattern}`;
                   }
                 } catch { /* invalid regex, skip */ }
               }
@@ -2791,45 +2791,60 @@ const IncidentDetailPage = () => {
           {/* Observables list */}
           {editedObservables.length > 0 ? (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              {editedObservables.map((obs, idx) => (
-                <Box 
-                  key={idx} 
-                  sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: 2, 
-                    p: 1.5, 
-                    borderRadius: 1, 
-                    bgcolor: 'rgba(0,0,0,0.2)',
-                    border: '1px solid rgba(255,255,255,0.06)',
-                  }}
-                >
-                  <Chip 
-                    label={obs.type} 
-                    size="small" 
+              {editedObservables.map((obs, idx) => {
+                const iocDef = iocTypes.find(t => t.name === obs.type);
+                const pattern = iocDef?.regex;
+                let mismatch = false;
+                if (pattern) {
+                  try { mismatch = !new RegExp(pattern).test(obs.value); } catch { /* skip */ }
+                }
+                return (
+                  <Box 
+                    key={idx} 
                     sx={{ 
-                      fontWeight: 600, 
-                      fontSize: '0.7rem',
-                      bgcolor: 'rgba(59, 130, 246, 0.15)',
-                      color: '#3b82f6',
-                    }} 
-                  />
-                  <Typography variant="body2" sx={{ flex: 1, fontFamily: 'monospace', fontSize: '0.8rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
-                    {obs.value}
-                  </Typography>
-                  <IconButton 
-                    size="small" 
-                    onClick={() => handleRemoveObservable(idx)}
-                    sx={{ 
-                      p: 0.5, 
-                      color: 'text.disabled',
-                      '&:hover': { color: '#ef4444' },
+                      display: 'flex', 
+                      flexDirection: 'column',
+                      gap: mismatch ? 0.5 : 0,
+                      p: 1.5, 
+                      borderRadius: 1, 
+                      bgcolor: 'rgba(0,0,0,0.2)',
+                      border: mismatch ? '1px solid rgba(251, 146, 60, 0.3)' : '1px solid rgba(255,255,255,0.06)',
                     }}
                   >
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
-                </Box>
-              ))}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Chip 
+                        label={obs.type} 
+                        size="small" 
+                        sx={{ 
+                          fontWeight: 600, 
+                          fontSize: '0.7rem',
+                          bgcolor: mismatch ? 'rgba(251, 146, 60, 0.15)' : 'rgba(59, 130, 246, 0.15)',
+                          color: mismatch ? '#fb923c' : '#3b82f6',
+                        }} 
+                      />
+                      <Typography variant="body2" sx={{ flex: 1, fontFamily: 'monospace', fontSize: '0.8rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
+                        {obs.value}
+                      </Typography>
+                      <IconButton 
+                        size="small" 
+                        onClick={() => handleRemoveObservable(idx)}
+                        sx={{ 
+                          p: 0.5, 
+                          color: 'text.disabled',
+                          '&:hover': { color: '#ef4444' },
+                        }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                    {mismatch && (
+                      <Typography variant="caption" sx={{ color: '#fb923c', fontSize: '0.65rem', pl: 0.5 }}>
+                        ⚠ Value doesn't match expected pattern for "{obs.type}" — regex: <code style={{ fontSize: '0.6rem' }}>{pattern}</code>
+                      </Typography>
+                    )}
+                  </Box>
+                );
+              })}
             </Box>
           ) : (
             <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic', textAlign: 'center', py: 4 }}>
