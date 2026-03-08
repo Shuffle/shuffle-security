@@ -385,7 +385,9 @@ export const IncidentCardView = ({
                   >
                     {incident.title || 'Untitled Incident'}
                   </Typography>
-                  <StatusIcon size={16} color={statusInfo.color} />
+                  <Box sx={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>
+                    <StatusIcon size={16} color={statusInfo.color} />
+                  </Box>
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                   <Typography
