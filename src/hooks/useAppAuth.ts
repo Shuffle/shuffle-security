@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import type { AppAuthState, AuthStatus, ApiAuthEntry } from '@/components/onboarding/AppAuthConfig';
+import { refreshAllIntegrationStatus } from '@/components/layout/IntegrationStatus';
 
 // Helper to process auth data and invalidate entries older than 30 days
 const processAuthData = (authData: ApiAuthEntry[]): ApiAuthEntry[] => {
