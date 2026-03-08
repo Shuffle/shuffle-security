@@ -540,7 +540,7 @@ const IncidentsPage = () => {
     return [relevant, irrelevant] as const;
   }, [incidents]);
 
-  const [showIrrelevant, setShowIrrelevant] = useState(false);
+  const [showIrrelevant, setShowIrrelevant] = useState(true);
   const [resyncingId, setResyncingId] = useState<string | null>(null);
   const [resyncingSource, setResyncingSource] = useState<string>('');
   const autoResyncQueueRef = useRef<Set<string>>(new Set());
