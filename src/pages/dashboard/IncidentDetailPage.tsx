@@ -1475,14 +1475,15 @@ const IncidentDetailPage = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
               <TextField
                 value={editedTitle}
-                onChange={(e) => setEditedTitle(e.target.value)}
+                onChange={(e) => !isPublicView && setEditedTitle(e.target.value)}
                 variant="standard"
+                inputProps={{ readOnly: isPublicView }}
                 InputProps={{
                   disableUnderline: true,
                   sx: { 
                     fontSize: '1.1rem', 
                     fontWeight: 600,
-                    '&:hover': { bgcolor: 'rgba(255,255,255,0.03)' },
+                    ...(!isPublicView && { '&:hover': { bgcolor: 'rgba(255,255,255,0.03)' } }),
                     borderRadius: 1,
                     px: 0.5,
                   },
