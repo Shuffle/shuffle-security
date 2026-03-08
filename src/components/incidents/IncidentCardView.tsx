@@ -28,6 +28,7 @@ interface DisplayIncident {
   assignee: string | null;
   created: string;
   createdTs: number;
+  originCreatedTs?: number;
   edited?: string;
   editedTs?: number;
   tlp?: string;
@@ -164,6 +165,14 @@ const formatRelativeTime = (timestamp: number): string => {
   if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
   if (hours < 24) return `about ${hours} hour${hours > 1 ? 's' : ''} ago`;
   return `${days} day${days > 1 ? 's' : ''} ago`;
+};
+
+const formatAbsoluteTime = (timestamp: number): string => {
+  const d = new Date(timestamp);
+  return d.toLocaleString(undefined, {
+    year: 'numeric', month: 'short', day: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  });
 };
 
 export const IncidentCardView = ({ 
@@ -390,12 +399,31 @@ export const IncidentCardView = ({
                   </Box>
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                  <Typography
-                    variant="caption"
-                    sx={{ color: 'hsl(var(--muted-foreground))' }}
-                  >
-                    {formatRelativeTime(incident.editedTs || incident.createdTs)}
-                  </Typography>
+                  {incident.originCreatedTs && (
+                    <Tooltip title={`Created: ${formatAbsoluteTime(incident.originCreatedTs)}`} placement="bottom">
+                      <Typography
+                        variant="caption"
+                        sx={{ color: 'hsl(var(--muted-foreground))', cursor: 'default' }}
+                      >
+                        {formatRelativeTime(incident.originCreatedTs)}
+                      </Typography>
+                    </Tooltip>
+                  )}
+                  {(incident.editedTs && incident.editedTs !== incident.originCreatedTs) && (
+                    <>
+                      <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                        •
+                      </Typography>
+                      <Tooltip title={`Updated: ${formatAbsoluteTime(incident.editedTs)}`} placement="bottom">
+                        <Typography
+                          variant="caption"
+                          sx={{ color: 'hsl(var(--muted-foreground))', cursor: 'default', fontStyle: 'italic' }}
+                        >
+                          edited {formatRelativeTime(incident.editedTs)}
+                        </Typography>
+                      </Tooltip>
+                    </>
+                  )}
                   <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
                     •
                   </Typography>

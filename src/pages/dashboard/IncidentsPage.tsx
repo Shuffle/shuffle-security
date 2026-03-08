@@ -96,6 +96,7 @@ interface DisplayIncident {
   assignee: string | null;
   created: string;
   createdTs: number;
+  originCreatedTs?: number;
   edited?: string;
   editedTs?: number;
   tlp?: string;
@@ -181,6 +182,9 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
         assignee: rawAssignee,
         created: formatTimestamp(item.created),
         createdTs: parseTimestamp(item.created),
+        originCreatedTs: ocsf.created_time ? parseTimestamp(
+          typeof ocsf.created_time === 'string' && /^\d+$/.test(ocsf.created_time) ? Number(ocsf.created_time) : ocsf.created_time
+        ) : parseTimestamp(item.created),
         edited: item.edited ? formatTimestamp(item.edited) : undefined,
         editedTs: item.edited ? parseTimestamp(item.edited) : undefined,
         tlp: tlpLabel,
@@ -210,6 +214,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
         assignee: legacyData.assignee || null,
         created: formatTimestamp(item.created),
         createdTs: parseTimestamp(item.created),
+        originCreatedTs: parseTimestamp(item.created),
         edited: item.edited ? formatTimestamp(item.edited) : undefined,
         editedTs: item.edited ? parseTimestamp(item.edited) : undefined,
         tlp: typeof tlp === 'string' ? tlp : (tlp ? TLP_LABELS[tlp]?.label : undefined),
@@ -233,6 +238,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
         assignee: data.assignee || null,
         created: formatTimestamp(item.created),
         createdTs: parseTimestamp(item.created),
+        originCreatedTs: parseTimestamp(item.created),
         edited: item.edited ? formatTimestamp(item.edited) : undefined,
         editedTs: item.edited ? parseTimestamp(item.edited) : undefined,
         tlp: data.tlp,
