@@ -1520,6 +1520,11 @@ const IncidentsPage = () => {
         automations={categoryAutomations}
         onAutomationsChange={setCategoryAutomations}
         initialSettings={categoryConfig?.settings}
+        onSaved={() => {
+          // Re-fetch ingestion apps & workflows, then auto-sync
+          fetchIngestionApps();
+          triggerSync();
+        }}
       />
 
       <ResolveIncidentDialog
