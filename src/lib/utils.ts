@@ -14,7 +14,7 @@ export function cn(...inputs: ClassValue[]) {
  */
 
 // Pre-compiled regexes to avoid creating them on every call
-const HTML_BLOCK_END_RE = /<\/(div|p|h[1-6]|li|tr)>/gi;
+const HTML_BLOCK_END_RE = /<\/(div|p|h[1-6]|li|tr|td|th)>/gi;
 const HTML_BR_RE = /<br\s*\/?>/gi;
 const HTML_LIST_RE = /<\/?(ul|ol|table|tbody|thead)>/gi;
 const HTML_TAG_RE = /<[^>]*>/g;
