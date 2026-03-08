@@ -39,6 +39,7 @@ interface UseDatastoreReturn {
 export const useDatastore = ({ category }: UseDatastoreOptions): UseDatastoreReturn => {
   const [items, setItems] = useState<DatastoreItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [hasFetched, setHasFetched] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cursor, setCursor] = useState<string | null>(null);
