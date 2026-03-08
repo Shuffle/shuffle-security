@@ -476,7 +476,7 @@ const IncidentDetailPage = () => {
   const { fields: customFields } = useCustomFields();
   const { observableTypeNames, iocTypes, refetch: refetchIOCTypes } = useIOCTypes();
   const { templates: caseTemplates, trackUsage: trackTemplateUsage } = useCaseTemplates();
-  const { addItem } = useDatastore({
+  const { addItem, getItem } = useDatastore({
     category: DATASTORE_CATEGORIES.INCIDENTS,
   });
 
