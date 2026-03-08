@@ -143,6 +143,12 @@ export function useAppAuthFlow() {
     }
   }, [selectedApp, fetchAuthForApp]);
 
+  const refreshAuth = useCallback(async () => {
+    if (selectedApp) {
+      await fetchAuthForApp(selectedApp.name);
+    }
+  }, [selectedApp, fetchAuthForApp]);
+
   return {
     selectedApp,
     authState,
@@ -153,5 +159,6 @@ export function useAppAuthFlow() {
     handleAuthChange,
     handleTestConnection,
     handleSaveAuth,
+    refreshAuth,
   };
 }
