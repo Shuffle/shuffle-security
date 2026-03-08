@@ -1234,6 +1234,32 @@ const IncidentsPage = () => {
         </Box>
       </Box>
 
+      {/* Warning banner when Ingest Tickets schedule is stopped */}
+      {ingestScheduleStopped && ingestWorkflowId && (
+        <Box sx={{
+          mb: 2,
+          px: 2,
+          py: 1.5,
+          borderRadius: 1.5,
+          bgcolor: 'hsla(var(--severity-medium) / 0.08)',
+          border: '1px solid hsla(var(--severity-medium) / 0.25)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.5,
+        }}>
+          <Box sx={{
+            width: 8,
+            height: 8,
+            borderRadius: '50%',
+            bgcolor: 'hsl(var(--severity-medium))',
+            flexShrink: 0,
+          }} />
+          <Typography sx={{ fontSize: '0.82rem', color: 'hsl(var(--foreground))', flex: 1 }}>
+            <strong>Automatic ingestion is paused</strong> — the "Ingest Tickets" workflow schedule has been stopped. Sources are shown as disabled until the schedule is re-enabled.
+          </Typography>
+        </Box>
+      )}
+
       {/* Floating Filter Bar - sticky */}
       <Card sx={{ mb: 3, position: 'sticky', top: 0, zIndex: 10, backgroundColor: 'hsl(var(--card))' }}>
         <CardContent sx={{ py: 1.5, px: 2, '&:last-child': { pb: 1.5 } }}>
