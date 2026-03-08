@@ -656,6 +656,7 @@ const IncidentsPage = () => {
         alreadyResynced.add(target.id);
         sessionStorage.setItem(SESSION_KEY, JSON.stringify([...alreadyResynced]));
         setResyncingId(null);
+        resyncState.remove(target.id);
         setResyncingSource('');
       }
     };
