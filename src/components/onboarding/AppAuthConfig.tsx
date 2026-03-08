@@ -991,6 +991,7 @@ export const AppAuthCard = ({
                         return bTime - aTime; // Descending (newest first)
                       })
                       .map((authEntry, index) => {
+                      const isLatest = index === 0 && apiAuthEntries.length > 1;
                       const entryId = authEntry.id || authEntry.label || index.toString();
                       const entryLabel = authEntry.label || `Auth ${index + 1}`;
                       const isActive = authEntry.active === true;
