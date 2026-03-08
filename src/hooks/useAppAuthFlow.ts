@@ -154,7 +154,7 @@ export function useAppAuthFlow() {
 
   const refreshAuth = useCallback(async () => {
     if (selectedApp) {
-      await fetchAuthForApp(selectedApp.name);
+      await fetchAuthForApp(selectedApp.name, selectedApp.image_url);
     }
   }, [selectedApp, fetchAuthForApp]);
 
