@@ -32,7 +32,7 @@ import { OCSFIncidentFinding, Observable, TLP_LABELS, convertLegacyTlp, mapOCSFS
 import { deduplicateTasks, decodeHtmlEntities } from '@/lib/utils';
 import { ResolveIncidentDialog, ResolutionData, RESOLUTION_REASONS } from '@/components/incidents/ResolveIncidentDialog';
 import { CategoryAutomationsDialog } from '@/components/incidents/CategoryAutomationsDialog';
-import { extractValidatedIngestionApps, ValidatedIngestionApp, findIngestTicketsWorkflow, extractWorkflowAppNames, normalizeAppName } from '@/lib/ingestionDetection';
+import { extractValidatedIngestionApps, ValidatedIngestionApp, findIngestTicketsWorkflow, extractWorkflowAppNames, normalizeAppName, isWorkflowScheduleStopped } from '@/lib/ingestionDetection';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 import DownloadIcon from '@mui/icons-material/Download';
 import { IncidentCardView } from '@/components/incidents/IncidentCardView';
@@ -316,6 +316,7 @@ const IncidentsPage = () => {
   const [categoryAutomations, setCategoryAutomations] = useState<CategoryAutomation[] | null>(null);
   const [ingestionApps, setIngestionApps] = useState<ValidatedIngestionApp[]>([]);
   const [ingestWorkflowId, setIngestWorkflowId] = useState<string | null>(null);
+  const [ingestScheduleStopped, setIngestScheduleStopped] = useState(false);
   const [webhookIngestion, setWebhookIngestion] = useState<WebhookIngestionInfo>({ url: null, exists: false, enabled: false, workflowId: null });
   const [isSyncing, setIsSyncing] = useState(false);
   const [isUpdatingApps, setIsUpdatingApps] = useState(false);
@@ -387,8 +388,15 @@ const IncidentsPage = () => {
           const workflowList = Array.isArray(workflows) ? workflows : (workflows.workflows || []);
           const ingestWorkflow = findIngestTicketsWorkflow(workflowList);
           if (ingestWorkflow) {
-            workflowAppNames = extractWorkflowAppNames(ingestWorkflow);
+            const scheduleStopped = isWorkflowScheduleStopped(ingestWorkflow);
+            setIngestScheduleStopped(scheduleStopped);
+            // If schedule is stopped, treat as no enabled sources
+            if (!scheduleStopped) {
+              workflowAppNames = extractWorkflowAppNames(ingestWorkflow);
+            }
             setIngestWorkflowId(ingestWorkflow.id);
+          } else {
+            setIngestScheduleStopped(false);
           }
 
           // Detect "Ingestion Webhook" workflow and extract webhook URL + status
@@ -1225,6 +1233,32 @@ const IncidentsPage = () => {
           </Tooltip>
         </Box>
       </Box>
+
+      {/* Warning banner when Ingest Tickets schedule is stopped */}
+      {ingestScheduleStopped && ingestWorkflowId && (
+        <Box sx={{
+          mb: 2,
+          px: 2,
+          py: 1.5,
+          borderRadius: 1.5,
+          bgcolor: 'hsla(var(--severity-medium) / 0.08)',
+          border: '1px solid hsla(var(--severity-medium) / 0.25)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.5,
+        }}>
+          <Box sx={{
+            width: 8,
+            height: 8,
+            borderRadius: '50%',
+            bgcolor: 'hsl(var(--severity-medium))',
+            flexShrink: 0,
+          }} />
+          <Typography sx={{ fontSize: '0.82rem', color: 'hsl(var(--foreground))', flex: 1 }}>
+            <strong>Automatic ingestion is paused</strong> — the "Ingest Tickets" workflow schedule has been stopped. Sources are shown as disabled until the schedule is re-enabled.
+          </Typography>
+        </Box>
+      )}
 
       {/* Floating Filter Bar - sticky */}
       <Card sx={{ mb: 3, position: 'sticky', top: 0, zIndex: 10, backgroundColor: 'hsl(var(--card))' }}>
