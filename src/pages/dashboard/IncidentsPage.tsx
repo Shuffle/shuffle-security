@@ -581,6 +581,7 @@ const IncidentsPage = () => {
     const target = untitled[0];
     autoResyncQueueRef.current.add(target.id);
     setResyncingId(target.id);
+    resyncState.add(target.id);
     setResyncingSource(target.source || '');
 
     const doResync = async () => {
