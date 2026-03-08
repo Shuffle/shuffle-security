@@ -23,6 +23,7 @@ interface IncidentsEmptyStateProps {
 
 export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, onToggleApp, webhook, isSyncing = false, isUpdatingApps = false, onSyncNow, onCreateIncident }: IncidentsEmptyStateProps) => {
   const hasApps = ingestionApps.length > 0 || !!webhook?.exists || !!webhook?.enabled;
+  const hasNonWebhookSources = ingestionApps.length > 0;
 
   return (
     <motion.div
