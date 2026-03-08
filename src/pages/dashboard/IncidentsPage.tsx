@@ -998,6 +998,7 @@ const IncidentsPage = () => {
             webhook={webhookIngestion}
             isSyncing={isSyncing}
             isUpdatingApps={isUpdatingApps}
+            isLoading={ingestionLoading}
             onSyncNow={ingestWorkflowId ? async () => {
               setIsSyncing(true);
               try {
