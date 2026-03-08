@@ -974,7 +974,9 @@ const IncidentDetailPage = () => {
 
   const handleRemoveObservable = (index: number) => {
     autoProgressStatus();
-    setEditedObservables(editedObservables.filter((_, i) => i !== index));
+    const updated = [...editedObservables];
+    updated[index] = { ...updated[index], archived: true };
+    setEditedObservables(updated);
   };
 
   const handleAddComment = async () => {
@@ -1868,7 +1870,7 @@ const IncidentDetailPage = () => {
               {[
                 { label: 'Tasks', count: visibleTasks.length > 0 ? `${visibleTasks.filter(t => t.completed).length}/${visibleTasks.length}` : null },
                 { label: 'Details', count: null },
-                { label: 'Observables', count: editedObservables.length > 0 ? editedObservables.length : null },
+                { label: 'Observables', count: editedObservables.filter(o => !o.archived).length > 0 ? editedObservables.filter(o => !o.archived).length : null },
                 { label: 'Correlations', count: correlations.length > 0 ? correlations.length : null, loading: correlationsLoading },
               ].map((tab, index) => (
                 <Box
@@ -2802,9 +2804,10 @@ const IncidentDetailPage = () => {
           </Box>
           
           {/* Observables list */}
-          {editedObservables.length > 0 ? (
+          {editedObservables.filter(o => !o.archived).length > 0 ? (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               {editedObservables.map((obs, idx) => {
+                if (obs.archived) return null;
                 const iocDef = iocTypes.find(t => t.name === obs.type);
                 const pattern = iocDef?.regex;
                 let mismatch = false;
