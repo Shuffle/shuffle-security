@@ -474,20 +474,6 @@ export const IncidentCardView = ({
                       </>
                     );
                   })()}
-                  <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-                    •
-                  </Typography>
-                  {incident.source && 
-                   incident.source.toLowerCase() !== 'unknown' && 
-                   incident.source.toLowerCase() !== 'name' && 
-                   incident.source.length <= 30 && (
-                    <Typography
-                      variant="caption"
-                      sx={{ color: 'hsl(var(--muted-foreground))' }}
-                    >
-                      {incident.source}
-                    </Typography>
-                  )}
                    {incident.assignee && (
                     <>
                       <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
