@@ -563,6 +563,7 @@ export default function AppDetailDrawer({
                     onTestConnection={(appId, authId) => handleTestConnection(appName || appId, authId)}
                     onSaveAuth={(appId, creds) => handleSaveAuth(appName || appId, creds)}
                     apiAuthEntries={matchingEntries}
+                    onRefreshAuth={refreshAuth}
                   />
                 )}
               </Box>
