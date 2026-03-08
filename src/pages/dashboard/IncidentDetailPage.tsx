@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef, forwardRef } from 'react';
 import AgentIcon from '@/components/agent/AgentIcon';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -54,7 +54,7 @@ import Menu from '@mui/material/Menu';
 import { useDatastore } from '@/hooks/useDatastore';
 import { useAuth } from '@/context/AuthContext';
 import { useAppDetail } from '@/context/AppDetailContext';
-import { DATASTORE_CATEGORIES, getDatastoreItem, setDatastoreItem } from '@/services/datastore';
+import { DATASTORE_CATEGORIES, getDatastoreItem, getDatastoreItemPublic, setDatastoreItem } from '@/services/datastore';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { useUsers } from '@/hooks/useUsers';
 import { useCustomFields, CustomField } from '@/hooks/useCustomFields';
@@ -380,9 +380,15 @@ Section.displayName = 'Section';
 const IncidentDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { userInfo } = useAuth();
   const { openApp } = useAppDetail();
   const currentUsername = userInfo?.username || '';
+
+  // Public sharing params
+  const publicAuth = searchParams.get('authorization');
+  const publicOrg = searchParams.get('org');
+  const isPublicView = !!(publicAuth && publicOrg);
 
   const [incident, setIncident] = useState<DisplayIncident | null>(null);
   const [loading, setLoading] = useState(true);
@@ -497,7 +503,9 @@ const IncidentDetailPage = () => {
 
     const loadStart = performance.now();
     if (showLoading) setLoading(true);
-    const result = await getDatastoreItem(id, DATASTORE_CATEGORIES.INCIDENTS);
+    const result = isPublicView
+      ? await getDatastoreItemPublic(id, publicOrg!, publicAuth!)
+      : await getDatastoreItem(id, DATASTORE_CATEGORIES.INCIDENTS);
     const fetchTime = performance.now() - loadStart;
     console.log(`[Perf] Incident fetch: ${fetchTime.toFixed(1)}ms, size: ${((result.item?.value?.length || 0) / 1024).toFixed(1)}KB`);
     
@@ -642,7 +650,7 @@ const IncidentDetailPage = () => {
     }
     
     setLoading(false);
-  }, [id]);
+  }, [id, isPublicView, publicOrg, publicAuth]);
 
   // Initial load
   useEffect(() => {

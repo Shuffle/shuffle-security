@@ -1,4 +1,4 @@
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Box, CircularProgress } from '@mui/material';
 import { useAuth } from '@/context/AuthContext';
 
@@ -9,6 +9,13 @@ interface ProtectedRouteProps {
 export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+
+  // Allow public access when authorization + org params are present (shared links)
+  const hasPublicAccess = searchParams.has('authorization') && searchParams.has('org');
+  if (hasPublicAccess) {
+    return <>{children}</>;
+  }
 
   if (isLoading) {
     return (
@@ -27,7 +34,6 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   }
 
   if (!isAuthenticated) {
-    // Pass return URL both in state and as URL param (param persists on refresh)
     const returnUrl = encodeURIComponent(location.pathname + location.search);
     return <Navigate to={`/login?returnUrl=${returnUrl}`} state={{ from: location }} replace />;
   }

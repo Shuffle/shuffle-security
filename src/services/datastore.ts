@@ -185,6 +185,33 @@ export const getDatastoreItem = async (
 };
 
 /**
+ * Get a single item from the datastore using public authorization (no login required)
+ */
+export const getDatastoreItemPublic = async (
+  key: string,
+  orgId: string,
+  authorization: string,
+): Promise<DatastoreResponse & { item?: DatastoreItem }> => {
+  const response = await fetch(
+    getApiUrl(`/api/v1/orgs/${orgId}/cache/${key}?type=text&authorization=${authorization}`),
+    { method: 'GET' },
+  );
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      return { success: true, item: undefined };
+    }
+    return { success: false, error: `Failed to get public datastore item: ${response.statusText}` };
+  }
+
+  const data = await response.json();
+  if (data.success === false && !data.value) {
+    return { success: true, item: undefined };
+  }
+  return { success: true, item: data };
+};
+
+/**
  * Get all items in a category with optional cursor-based pagination
  */
 export const getDatastoreByCategory = async (
