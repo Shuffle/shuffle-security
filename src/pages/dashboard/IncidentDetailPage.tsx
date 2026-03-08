@@ -476,7 +476,7 @@ const IncidentDetailPage = () => {
   const { fields: customFields } = useCustomFields();
   const { observableTypeNames, iocTypes, refetch: refetchIOCTypes } = useIOCTypes();
   const { templates: caseTemplates, trackUsage: trackTemplateUsage } = useCaseTemplates();
-  const { addItem } = useDatastore({
+  const { addItem, getItem } = useDatastore({
     category: DATASTORE_CATEGORIES.INCIDENTS,
   });
 
@@ -817,7 +817,11 @@ const IncidentDetailPage = () => {
     };
 
     try {
-      await addItem(incident.id, updatedData);
+      const saveSuccess = await addItem(incident.id, updatedData);
+      if (!saveSuccess) {
+        toast.error('Failed to save changes');
+        return;
+      }
       // Update the initial snapshot so future comparisons are against the saved state
       // Use cached JSON refs to avoid redundant serialization
       initialValuesRef.current = {
@@ -833,12 +837,54 @@ const IncidentDetailPage = () => {
         tasks: tasksJsonRef.current,
         labels: labelsJsonRef.current,
       };
+
+      // Post-save verification: pull back the data after a short delay and verify key fields
+      setTimeout(async () => {
+        try {
+          const verified = await getItem(incident.id);
+          if (!verified) {
+            console.warn('[SaveVerify] Could not fetch back saved incident');
+            toast.error('Save verification failed — could not confirm changes were persisted');
+            return;
+          }
+          const savedData = typeof verified.value === 'string' ? JSON.parse(verified.value) : verified.value;
+          const issues: string[] = [];
+
+          // Verify observables
+          const savedObs = savedData?.observables || savedData?.metadata?.extensions?.custom_attributes?.observables || [];
+          const expectedObs = editedObservables;
+          if (JSON.stringify(savedObs) !== JSON.stringify(expectedObs)) {
+            issues.push('observables');
+          }
+
+          // Verify tasks
+          const savedTasks = savedData?.tasks || savedData?.metadata?.extensions?.custom_attributes?.tasks || [];
+          if (JSON.stringify(savedTasks) !== JSON.stringify(tasks)) {
+            issues.push('tasks');
+          }
+
+          // Verify activity
+          const savedActivity = savedData?.activity || [];
+          if (JSON.stringify(savedActivity) !== JSON.stringify(activity)) {
+            issues.push('activity');
+          }
+
+          if (issues.length > 0) {
+            console.warn('[SaveVerify] Mismatch detected in:', issues);
+            toast.error(`Save may not have persisted: ${issues.join(', ')} did not match. Try saving again.`);
+          } else {
+            console.log('[SaveVerify] Verified successfully');
+          }
+        } catch (verifyErr) {
+          console.warn('[SaveVerify] Verification error:', verifyErr);
+        }
+      }, 1500);
     } catch (error) {
       toast.error('Failed to save changes');
     } finally {
       setIsSaving(false);
     }
-  }, [incident, editedTitle, editedMessage, editedSeverity, editedAssignee, editedStatus, editedTlp, editedReferences, editedObservables, editedCustomFields, editedLabels, activity, tasks, addItem]);
+  }, [incident, editedTitle, editedMessage, editedSeverity, editedAssignee, editedStatus, editedTlp, editedReferences, editedObservables, editedCustomFields, editedLabels, activity, tasks, addItem, getItem]);
 
   // Cache stringified complex values to avoid re-serializing on every render
   const tasksJsonRef = useRef('');
