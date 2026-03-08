@@ -2749,18 +2749,37 @@ const IncidentDetailPage = () => {
               iocTypes={iocTypes}
               onTypeCreated={refetchIOCTypes}
             />
-            <TextField
-              size="small"
-              value={newObservableValue}
-              onChange={(e) => setNewObservableValue(e.target.value)}
-              placeholder="Enter observable value..."
-              fullWidth
-              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddObservable())}
-              sx={inputSx}
-            />
-            <IconButton onClick={handleAddObservable} disabled={!newObservableValue.trim()} sx={{ bgcolor: 'rgba(255,255,255,0.05)' }}>
-              <AddIcon />
-            </IconButton>
+            {(() => {
+              const selectedIoc = iocTypes.find(t => t.name === newObservableType);
+              const regexPattern = selectedIoc?.regex;
+              const val = newObservableValue.trim();
+              let regexWarning = '';
+              if (val && regexPattern) {
+                try {
+                  if (!new RegExp(regexPattern).test(val)) {
+                    regexWarning = `Value doesn't match expected pattern for "${newObservableType}"`;
+                  }
+                } catch { /* invalid regex, skip */ }
+              }
+              return (
+                <>
+                  <TextField
+                    size="small"
+                    value={newObservableValue}
+                    onChange={(e) => setNewObservableValue(e.target.value)}
+                    placeholder="Enter observable value..."
+                    fullWidth
+                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddObservable())}
+                    sx={inputSx}
+                    error={!!regexWarning}
+                    helperText={regexWarning || undefined}
+                  />
+                  <IconButton onClick={handleAddObservable} disabled={!newObservableValue.trim()} sx={{ bgcolor: 'rgba(255,255,255,0.05)', alignSelf: regexWarning ? 'flex-start' : 'center', mt: regexWarning ? '4px' : 0 }}>
+                    <AddIcon />
+                  </IconButton>
+                </>
+              );
+            })()}
           </Box>
           
           {/* Observables list */}
