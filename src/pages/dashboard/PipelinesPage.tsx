@@ -664,7 +664,7 @@ const PipelinesPage = () => {
         query: `Generate a Tenzir pipeline command for the following use case. Only output the pipeline command, no explanation or markdown formatting. Use Tenzir pipeline syntax (operators separated by |). Here are some examples of valid commands:
 - load_tcp "0.0.0.0:1514" { read_syslog } | import
 - load_udp "0.0.0.0:1514", insert_newlines=true | read_syslog | import
-- export live=true | sigma "/tmp/sigma_rules" | set uid = uuid(), event.source = "Tenzir" | to "http://example.com/webhook"
+- export live=true | sigma "/tmp/sigma_rules" | set uid = uuid() | set event.source = "Tenzir" | to "http://example.com/webhook"
 - export live=true | to_opensearch "localhost:9200", action="create", index="shuffle_logs", user="admin", passwd="PASSWORD"
 
 Use case: ${aiPrompt}`,
@@ -731,10 +731,10 @@ Use case: ${aiPrompt}`,
   // Resolve dynamic webhook URLs in templates
   const availableTemplates = DEFAULT_PIPELINES.map(t => {
     if (t._dynamicWebhook && webhookUrl) {
-      return { ...t, command: `export live=true | sigma "/tmp/sigma_rules" | set uid = uuid(), event.source = "Tenzir" | to "${webhookUrl}"`, hasPlaceholders: false };
+      return { ...t, command: `export live=true | sigma "/tmp/sigma_rules" | set uid = uuid() | set event.source = "Tenzir" | to "${webhookUrl}"`, hasPlaceholders: false };
     }
     if (t._dynamicWebhook && !webhookUrl) {
-      return { ...t, command: 'export live=true | sigma "/tmp/sigma_rules" | set uid = uuid(), event.source = "Tenzir" | to "<enable webhook on Incidents page>"', hasPlaceholders: true };
+      return { ...t, command: 'export live=true | sigma "/tmp/sigma_rules" | set uid = uuid() | set event.source = "Tenzir" | to "<enable webhook on Incidents page>"', hasPlaceholders: true };
     }
     return t;
   });
