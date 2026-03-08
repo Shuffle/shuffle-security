@@ -167,6 +167,14 @@ const formatRelativeTime = (timestamp: number): string => {
   return `${days} day${days > 1 ? 's' : ''} ago`;
 };
 
+const formatAbsoluteTime = (timestamp: number): string => {
+  const d = new Date(timestamp);
+  return d.toLocaleString(undefined, {
+    year: 'numeric', month: 'short', day: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  });
+};
+
 export const IncidentCardView = ({ 
   incidents, 
   onIncidentClick, 
