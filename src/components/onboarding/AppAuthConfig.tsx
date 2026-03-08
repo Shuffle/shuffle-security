@@ -385,6 +385,13 @@ export const AppAuthCard = ({
   const [error, setError] = useState<string | null>(null);
   const [appConfig, setAppConfig] = useState<DecodedApp | null>(null);
 
+  // Refresh auth entries every time the card is expanded
+  useEffect(() => {
+    if (isExpanded && onRefreshAuth) {
+      onRefreshAuth();
+    }
+  }, [isExpanded]); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     const fetchAppConfig = async () => {
       if (!isExpanded || appConfig) return;
