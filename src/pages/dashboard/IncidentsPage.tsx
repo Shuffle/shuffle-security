@@ -1217,7 +1217,7 @@ const IncidentsPage = () => {
           </Tooltip>
           <Tooltip title="Refresh">
             <IconButton 
-              onClick={() => fetchItems()} 
+              onClick={() => { sessionStorage.removeItem('shuffle_auto_resync_done'); autoResyncQueueRef.current.clear(); fetchItems(); }} 
               disabled={isLoading}
               sx={{ 
                 width: 36,
