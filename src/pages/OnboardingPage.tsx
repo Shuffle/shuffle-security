@@ -657,6 +657,7 @@ const OnboardingPage = () => {
           if (Array.isArray(authData)) {
             refreshedAuthData = processAuthData(authData);
             setAuthenticatedApps(refreshedAuthData);
+            refreshAllIntegrationStatus();
           }
         }
       } catch (refreshError) {
