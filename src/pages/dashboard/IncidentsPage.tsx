@@ -426,7 +426,17 @@ const IncidentsPage = () => {
           }
         }
 
-        setIngestionApps(extractValidatedIngestionApps(authApps, workflowAppNames));
+        const ingestionResults = extractValidatedIngestionApps(authApps, workflowAppNames);
+        // Backfill missing images from Algolia
+        const { backfillAppImages, deduplicateAuthApps } = await import('@/lib/utils');
+        const deduped = deduplicateAuthApps(authApps.filter((a: any) => a.active || a.validation?.valid));
+        await backfillAppImages(deduped);
+        const imgMap = new Map<string, string>();
+        deduped.forEach(d => { if (d.bestImage) imgMap.set(normalizeAppName(d.app.name), d.bestImage); });
+        ingestionResults.forEach(app => {
+          if (!app.image) app.image = imgMap.get(normalizeAppName(app.name)) || '';
+        });
+        setIngestionApps(ingestionResults);
       }
     } catch (error) {
       console.error('Failed to fetch ingestion apps:', error);

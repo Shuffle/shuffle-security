@@ -237,7 +237,24 @@ const OnboardingPage = () => {
           const result = await response.json();
           const authData = result.data || result;
           if (Array.isArray(authData)) {
-            setAuthenticatedApps(processAuthData(authData));
+            const processed = processAuthData(authData);
+            // Backfill missing images from Algolia before setting state
+            const { deduplicateAuthApps, backfillAppImages } = await import('@/lib/utils');
+            const deduped = deduplicateAuthApps(processed);
+            await backfillAppImages(deduped);
+            // Apply resolved images back to the raw entries
+            const imageMap = new Map<string, string>();
+            deduped.forEach(d => {
+              if (d.bestImage) imageMap.set(d.app.name.toLowerCase().replace(/[\s_\-]+/g, '_'), d.bestImage);
+            });
+            processed.forEach(entry => {
+              if (!entry.app.large_image) {
+                const norm = entry.app.name.toLowerCase().replace(/[\s_\-]+/g, '_');
+                const img = imageMap.get(norm);
+                if (img) entry.app.large_image = img;
+              }
+            });
+            setAuthenticatedApps(processed);
           }
         }
       } catch (error) {

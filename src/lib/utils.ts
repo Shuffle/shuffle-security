@@ -174,14 +174,6 @@ export interface DeduplicatedApp {
  */
 export function deduplicateAuthApps(apps: AuthAppEntry[]): DeduplicatedApp[] {
   const appMap = new Map<string, DeduplicatedApp>();
-  
-  /** Build a fallback image URL from the app id when large_image is missing */
-  const resolveImage = (app: AuthAppEntry['app']): string => {
-    if (app.large_image) return app.large_image;
-    // Shuffle serves app icons at this well-known path
-    if (app.id) return `https://shuffler.io/api/v1/apps/${app.id}/file/large_image`;
-    return '';
-  };
 
   apps.forEach(auth => {
     if (!auth.active && !auth.validation?.valid) return; // Skip inactive/unvalidated
@@ -190,7 +182,7 @@ export function deduplicateAuthApps(apps: AuthAppEntry[]): DeduplicatedApp[] {
     const normalizedName = auth.app.name.toLowerCase().trim().replace(/[\s_\-]+/g, '_');
     const existing = appMap.get(normalizedName);
     const isValidated = auth.validation?.valid === true;
-    const entryImage = resolveImage(auth.app);
+    const entryImage = auth.app.large_image || '';
     const instance = {
       label: auth.label || auth.id || 'Default',
       isValidated,
@@ -223,6 +215,45 @@ export function deduplicateAuthApps(apps: AuthAppEntry[]): DeduplicatedApp[] {
   });
   
   return Array.from(appMap.values());
+}
+
+/**
+ * Backfill missing images in deduplicated apps using Algolia search.
+ * Call this after deduplicateAuthApps() to resolve any entries with empty bestImage.
+ * Mutates the array in-place and returns it for convenience.
+ */
+export async function backfillAppImages(dedupedApps: DeduplicatedApp[]): Promise<DeduplicatedApp[]> {
+  const missing = dedupedApps.filter(d => !d.bestImage && !d.app.large_image);
+  if (missing.length === 0) return dedupedApps;
+
+  try {
+    const { algoliasearch } = await import('algoliasearch');
+    const client = algoliasearch('JNSS5CFDZZ', 'c8f882473ff42d41158430be09ec2b4e');
+
+    // Search each missing app name individually (Algolia doesn't support bulk name lookups)
+    await Promise.all(missing.map(async (entry) => {
+      try {
+        const result = await client.searchSingleIndex({
+          indexName: 'appsearch',
+          searchParams: { query: entry.app.name, hitsPerPage: 3 },
+        });
+        const normalize = (n: string) => n.toLowerCase().replace(/[\s_\-]+/g, '_');
+        const match = (result.hits as any[]).find(
+          h => normalize(h.name || '') === normalize(entry.app.name)
+        );
+        if (match?.image_url) {
+          entry.bestImage = match.image_url;
+          entry.app = { ...entry.app, large_image: match.image_url };
+        }
+      } catch {
+        // Silently skip — image just won't be available
+      }
+    }));
+  } catch {
+    // Algolia import or init failed — skip
+  }
+
+  return dedupedApps;
 }
 
 /**

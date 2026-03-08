@@ -5,7 +5,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
-import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
+import { deduplicateAuthApps, backfillAppImages, type AuthAppEntry } from '@/lib/utils';
 import { setDatastoreItem, getDatastoreItem, DATASTORE_CATEGORIES } from '@/services/datastore';
 import ReactFlow, {
   Background,
@@ -2319,6 +2319,7 @@ const InfrastructureContent = () => {
         if (!Array.isArray(authData)) return;
 
         const dedupedApps = deduplicateAuthApps(authData);
+        await backfillAppImages(dedupedApps);
         const mapped: Record<string, MatchedApp[]> = {};
 
         dedupedApps.forEach(({ app, bestImage, hasValidAuth }) => {

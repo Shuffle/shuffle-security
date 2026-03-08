@@ -21,7 +21,7 @@ import AppSearchDrawer from '@/components/shared/AppSearchDrawer';
 import { useAuth } from '@/context/AuthContext';
 import { useAppDetail } from '@/context/AppDetailContext';
 import { getApiUrl, getAuthHeader } from '@/config/api';
-import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
+import { deduplicateAuthApps, backfillAppImages, type AuthAppEntry } from '@/lib/utils';
 import {
   SIEM_PATTERNS,
   CASES_PATTERNS,
@@ -851,6 +851,7 @@ export default function UsecaseAlluvialDiagram({
           const authData: AuthAppEntry[] = result.data || result;
           if (Array.isArray(authData)) {
             const deduped = deduplicateAuthApps(authData);
+            await backfillAppImages(deduped);
             nodes = deduped.map(({ app, hasValidAuth, bestImage }) => {
               authNameSet.add(app.name.toLowerCase());
               return {
