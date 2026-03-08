@@ -567,8 +567,9 @@ const IncidentsPage = () => {
     );
 
     // Find incidents without a title that have a source and haven't been resynced this session
+    const needsSync = (t?: string) => !t || t === 'Untitled Incident' || t === 'Requires sync';
     const untitled = incidents.filter(inc => {
-      if (inc.title) return false; // Already has a title — no need to resync
+      if (!needsSync(inc.title)) return false; // Already has a real title
       if (!inc.source) return false;
       if (alreadyResynced.has(inc.id)) return false;
       if (autoResyncQueueRef.current.has(inc.id)) return false;
