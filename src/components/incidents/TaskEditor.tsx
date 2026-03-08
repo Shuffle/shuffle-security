@@ -348,8 +348,8 @@ export const TaskEditor = ({
                     </SelectContent>
                   </ShadcnSelect>
                   
-                  {/* AI Agent badge - shows for any AI/agent assignee variation */}
-                  {isAIAssignee(task.assignee) && (
+                  {/* AI Agent badge - only in compact mode (non-compact has the dropdown) */}
+                  {compact && isAIAssignee(task.assignee) && (
                     <div 
                       className="h-7 px-2.5 rounded-full text-xs font-semibold flex items-center gap-1.5"
                       style={{
