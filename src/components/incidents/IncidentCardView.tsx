@@ -51,6 +51,8 @@ interface IncidentCardViewProps {
   onSelectionChange?: (selectedIds: Set<string>) => void;
   isLoading?: boolean;
   ingestionApps?: IngestionApp[];
+  resyncingId?: string | null;
+  resyncingSource?: string;
 }
 
 // Skeleton card component for loading state
