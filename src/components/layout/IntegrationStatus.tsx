@@ -41,6 +41,11 @@ interface IntegrationStatusProps {
   hideAddButton?: boolean;
 }
 
+/** Fire this event from anywhere to make all IntegrationStatus instances re-fetch. */
+export const refreshAllIntegrationStatus = () => {
+  window.dispatchEvent(new CustomEvent('integrations-changed'));
+};
+
 export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize = 26, onDisable, disabledApps, showAll, hideAddButton }: IntegrationStatusProps) => {
   const [allIntegrations, setAllIntegrations] = useState<Integration[]>([]);
   const [loading, setLoading] = useState(false);
