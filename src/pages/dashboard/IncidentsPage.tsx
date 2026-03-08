@@ -116,19 +116,43 @@ type SortKey = 'title' | 'severity' | 'status' | 'assignee' | 'created' | 'edite
 // Status and severity colors now imported from shared config
 import { statusConfig, severityColors, severityOrder } from '@/config/incidentConfig';
 
+/**
+ * Normalize any timestamp (Unix seconds, ms, µs, ns, ISO string, numeric string) to ms epoch.
+ */
+const normalizeToMs = (timestamp: number | string | undefined): number => {
+  if (!timestamp) return 0;
+
+  // ISO / date string (contains non-digit chars like '-', 'T', ':')
+  if (typeof timestamp === 'string' && /[^0-9.]/.test(timestamp)) {
+    const d = new Date(timestamp);
+    return isNaN(d.getTime()) ? 0 : d.getTime();
+  }
+
+  // Numeric (or numeric string)
+  const ts = typeof timestamp === 'string' ? Number(timestamp) : timestamp;
+  if (isNaN(ts) || ts <= 0) return 0;
+
+  // Distinguish by magnitude:
+  //   seconds:      < 1e12   (up to ~33658 AD)
+  //   milliseconds: < 1e15   (up to ~33658 AD)
+  //   microseconds: < 1e18
+  //   nanoseconds:  >= 1e18
+  if (ts < 1e12) return ts * 1000;       // seconds → ms
+  if (ts < 1e15) return ts;              // already ms
+  if (ts < 1e18) return ts / 1000;       // microseconds → ms
+  return ts / 1e6;                        // nanoseconds → ms
+};
+
 const formatTimestamp = (timestamp: number | string | undefined): string => {
-  if (!timestamp) return 'Unknown';
-  const ts = typeof timestamp === 'string' ? parseInt(timestamp, 10) : timestamp;
-  const ms = ts < 10000000000 ? ts * 1000 : ts;
+  const ms = normalizeToMs(timestamp);
+  if (!ms) return 'Unknown';
   const date = new Date(ms);
   if (isNaN(date.getTime())) return 'Unknown';
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
 };
 
 const parseTimestamp = (timestamp: number | string | undefined): number => {
-  if (!timestamp) return 0;
-  const ts = typeof timestamp === 'string' ? parseInt(timestamp, 10) : timestamp;
-  return ts < 10000000000 ? ts * 1000 : ts;
+  return normalizeToMs(timestamp);
 };
 
 // Helper to check if an assignee is the AI Agent

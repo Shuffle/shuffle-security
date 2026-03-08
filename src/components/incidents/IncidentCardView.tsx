@@ -156,9 +156,26 @@ const getIncidentIcon = (source?: string, title?: string) => {
   return Terminal;
 };
 
+/** Normalize timestamp to ms (handles seconds, ms, µs, ns, ISO strings) */
+const normalizeToMs = (timestamp: number | string | undefined): number => {
+  if (!timestamp) return 0;
+  if (typeof timestamp === 'string' && /[^0-9.]/.test(timestamp)) {
+    const d = new Date(timestamp);
+    return isNaN(d.getTime()) ? 0 : d.getTime();
+  }
+  const ts = typeof timestamp === 'string' ? Number(timestamp) : timestamp;
+  if (isNaN(ts) || ts <= 0) return 0;
+  if (ts < 1e12) return ts * 1000;
+  if (ts < 1e15) return ts;
+  if (ts < 1e18) return ts / 1000;
+  return ts / 1e6;
+};
+
 const formatRelativeTime = (timestamp: number): string => {
+  const ms = normalizeToMs(timestamp);
+  if (!ms) return 'unknown';
   const now = Date.now();
-  const diff = now - timestamp;
+  const diff = now - ms;
   const minutes = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
@@ -170,7 +187,9 @@ const formatRelativeTime = (timestamp: number): string => {
 };
 
 const formatAbsoluteTime = (timestamp: number): string => {
-  const d = new Date(timestamp);
+  const ms = normalizeToMs(timestamp);
+  if (!ms) return 'Unknown';
+  const d = new Date(ms);
   return d.toLocaleString(undefined, {
     year: 'numeric', month: 'short', day: 'numeric',
     hour: '2-digit', minute: '2-digit',

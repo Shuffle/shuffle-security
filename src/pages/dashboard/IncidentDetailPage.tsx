@@ -118,18 +118,36 @@ interface DisplayIncident {
 // Status and severity colors now imported from shared config
 import { statusConfig, severityColors } from '@/config/incidentConfig';
 
+/**
+ * Normalize any timestamp (Unix seconds, ms, µs, ns, ISO string, numeric string) to ms epoch.
+ */
+const normalizeToMs = (timestamp: number | string | undefined): number => {
+  if (!timestamp) return 0;
+  if (typeof timestamp === 'string' && /[^0-9.]/.test(timestamp)) {
+    const d = new Date(timestamp);
+    return isNaN(d.getTime()) ? 0 : d.getTime();
+  }
+  const ts = typeof timestamp === 'string' ? Number(timestamp) : timestamp;
+  if (isNaN(ts) || ts <= 0) return 0;
+  if (ts < 1e12) return ts * 1000;
+  if (ts < 1e15) return ts;
+  if (ts < 1e18) return ts / 1000;
+  return ts / 1e6;
+};
+
 const formatTimestamp = (timestamp: number | string | undefined): string => {
-  if (!timestamp) return 'Unknown';
-  const ts = typeof timestamp === 'string' ? parseInt(timestamp, 10) : timestamp;
-  const ms = ts < 10000000000 ? ts * 1000 : ts;
+  const ms = normalizeToMs(timestamp);
+  if (!ms) return 'Unknown';
   const date = new Date(ms);
   if (isNaN(date.getTime())) return 'Unknown';
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
 };
 
 const formatRelativeTime = (timestamp: number): string => {
+  const ms = normalizeToMs(timestamp);
+  if (!ms) return 'Unknown';
   const now = Date.now();
-  const diff = now - timestamp;
+  const diff = now - ms;
   const minutes = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
@@ -138,7 +156,7 @@ const formatRelativeTime = (timestamp: number): string => {
   if (minutes < 60) return `${minutes}m ago`;
   if (hours < 24) return `${hours}h ago`;
   if (days < 7) return `${days}d ago`;
-  return formatTimestamp(timestamp);
+  return formatTimestamp(ms);
 };
 
 const formatDuration = (ms: number): string => {
@@ -152,9 +170,7 @@ const formatDuration = (ms: number): string => {
 };
 
 const parseTimestamp = (timestamp: number | string | undefined): number => {
-  if (!timestamp) return 0;
-  const ts = typeof timestamp === 'string' ? parseInt(timestamp, 10) : timestamp;
-  return ts < 10000000000 ? ts * 1000 : ts;
+  return normalizeToMs(timestamp);
 };
 
 
