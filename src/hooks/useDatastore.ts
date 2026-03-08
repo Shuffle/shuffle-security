@@ -81,7 +81,7 @@ export const useDatastore = ({ category }: UseDatastoreOptions): UseDatastoreRet
       setIsLoading(false);
       setHasFetched(true);
     }
-  }, [category]);
+  }, [category, hasFetched]);
 
   const fetchNextPage = useCallback(async () => {
     if (cursor && !isLoading) {
