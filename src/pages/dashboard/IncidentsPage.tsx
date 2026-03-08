@@ -554,9 +554,9 @@ const IncidentsPage = () => {
       JSON.parse(sessionStorage.getItem(SESSION_KEY) || '[]')
     );
 
-    // Find untitled incidents with a source that haven't been resynced this session
+    // Find incidents without a title that have a source and haven't been resynced this session
     const untitled = incidents.filter(inc => {
-      if (hasContent(inc)) return false;
+      if (inc.title) return false; // Already has a title — no need to resync
       if (!inc.source) return false;
       if (alreadyResynced.has(inc.id)) return false;
       if (autoResyncQueueRef.current.has(inc.id)) return false;
