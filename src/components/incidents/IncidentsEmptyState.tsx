@@ -17,13 +17,25 @@ interface IncidentsEmptyStateProps {
   webhook?: WebhookIngestionInfo;
   isSyncing?: boolean;
   isUpdatingApps?: boolean;
+  isLoading?: boolean;
   onSyncNow?: () => void;
   onCreateIncident?: () => void;
 }
 
-export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, onToggleApp, webhook, isSyncing = false, isUpdatingApps = false, onSyncNow, onCreateIncident }: IncidentsEmptyStateProps) => {
+export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, onToggleApp, webhook, isSyncing = false, isUpdatingApps = false, isLoading = false, onSyncNow, onCreateIncident }: IncidentsEmptyStateProps) => {
   const hasApps = ingestionApps.length > 0 || !!webhook?.exists || !!webhook?.enabled;
   const hasNonWebhookSources = ingestionApps.length > 0;
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', py: 12, gap: 2 }}>
+        <CircularProgress size={32} sx={{ color: '#FF6600' }} />
+        <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+          Loading sources…
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
     <motion.div
