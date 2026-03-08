@@ -851,6 +851,7 @@ export default function UsecaseAlluvialDiagram({
           const authData: AuthAppEntry[] = result.data || result;
           if (Array.isArray(authData)) {
             const deduped = deduplicateAuthApps(authData);
+            await backfillAppImages(deduped);
             nodes = deduped.map(({ app, hasValidAuth, bestImage }) => {
               authNameSet.add(app.name.toLowerCase());
               return {

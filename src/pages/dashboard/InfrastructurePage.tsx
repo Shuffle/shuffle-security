@@ -2319,6 +2319,7 @@ const InfrastructureContent = () => {
         if (!Array.isArray(authData)) return;
 
         const dedupedApps = deduplicateAuthApps(authData);
+        await backfillAppImages(dedupedApps);
         const mapped: Record<string, MatchedApp[]> = {};
 
         dedupedApps.forEach(({ app, bestImage, hasValidAuth }) => {

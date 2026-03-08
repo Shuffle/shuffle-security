@@ -221,6 +221,7 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
         const result = await resp.json();
         const authData = Array.isArray(result) ? result : (result.data || []);
         const deduped = deduplicateAuthApps(authData.filter((a: any) => a.active || a.validation?.valid));
+        await backfillAppImages(deduped);
         const tools: AgentTool[] = deduped
           .filter(d => d.hasValidAuth && d.app.name?.toLowerCase() !== 'openai')
           .map(({ app, bestImage }) => ({
