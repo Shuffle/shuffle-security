@@ -1228,7 +1228,7 @@ const IncidentsPage = () => {
                 },
               }}
             >
-              <RefreshIcon fontSize="small" />
+              <RefreshIcon fontSize="small" sx={isLoading ? { animation: 'spin 1s linear infinite', '@keyframes spin': { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } } } : undefined} />
             </IconButton>
           </Tooltip>
           <Tooltip title="Create Incident">
