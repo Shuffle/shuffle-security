@@ -57,6 +57,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useAppDetail } from '@/context/AppDetailContext';
 import { DATASTORE_CATEGORIES, getDatastoreItem, getDatastoreItemPublic, setDatastoreItem } from '@/services/datastore';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
+import { resyncState } from '@/lib/resyncState';
 import { useUsers } from '@/hooks/useUsers';
 import { useCustomFields, CustomField } from '@/hooks/useCustomFields';
 import { useIOCTypes } from '@/hooks/useIOCTypes';
@@ -715,6 +716,7 @@ const IncidentDetailPage = () => {
 
     autoResyncTriggeredRef.current = true;
     setIsResyncing(true);
+    resyncState.add(incident.id);
     toast.success(`Resyncing from ${source}…`, { duration: 30000 });
 
     (async () => {
@@ -736,6 +738,7 @@ const IncidentDetailPage = () => {
         if (!response.ok) {
           toast.error('Auto-resync failed');
           setIsResyncing(false);
+          resyncState.remove(incident.id);
           return;
         }
         // Poll every 5s for up to 30s checking if the item was updated
@@ -748,17 +751,20 @@ const IncidentDetailPage = () => {
             clearInterval(pollInterval);
             await loadIncident(false);
             setIsResyncing(false);
+            resyncState.remove(incident.id);
             toast.success('Resync complete — update found');
           } else if (pollCount >= 6) {
             clearInterval(pollInterval);
             await loadIncident(false);
             setIsResyncing(false);
+            resyncState.remove(incident.id);
             toast.info('Resync complete — no changes detected');
           }
         }, 5000);
       } catch {
         toast.error('Auto-resync failed');
         setIsResyncing(false);
+        resyncState.remove(incident.id);
       }
     })();
   }, [loading, incident, isResyncing, isPublicView, loadIncident]);
@@ -1888,6 +1894,7 @@ const IncidentDetailPage = () => {
                   if (!incident?.id) return;
                   const source = incident.source || '';
                   setIsResyncing(true);
+                  resyncState.add(incident.id);
                   const label = source ? `Resyncing from ${source}…` : 'Resyncing…';
                   toast.success(label, { duration: 30000 });
                   try {
@@ -1911,6 +1918,7 @@ const IncidentDetailPage = () => {
                     if (!response.ok) {
                       toast.error('Resync failed');
                       setIsResyncing(false);
+                      resyncState.remove(incident.id);
                       return;
                     }
                     // Poll every 5s for up to 30s checking if the item was updated
@@ -1919,21 +1927,24 @@ const IncidentDetailPage = () => {
                       pollCount++;
                       const postResult = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS);
                       const newEdited = postResult.item?.edited || 0;
-                      if (newEdited && newEdited !== previousEdited) {
-                        clearInterval(pollInterval);
-                        await loadIncident(false);
-                        setIsResyncing(false);
-                        toast.success('Resync complete — update found');
-                      } else if (pollCount >= 6) {
-                        clearInterval(pollInterval);
-                        await loadIncident(false);
-                        setIsResyncing(false);
-                        toast.info('Resync complete — no changes detected');
-                      }
+                        if (newEdited && newEdited !== previousEdited) {
+                          clearInterval(pollInterval);
+                          await loadIncident(false);
+                          setIsResyncing(false);
+                          resyncState.remove(incident.id);
+                          toast.success('Resync complete — update found');
+                        } else if (pollCount >= 6) {
+                          clearInterval(pollInterval);
+                          await loadIncident(false);
+                          setIsResyncing(false);
+                          resyncState.remove(incident.id);
+                          toast.info('Resync complete — no changes detected');
+                        }
                     }, 5000);
                   } catch {
                     toast.error('Resync failed');
                     setIsResyncing(false);
+                    resyncState.remove(incident.id);
                   }
                 }}
               >

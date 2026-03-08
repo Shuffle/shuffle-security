@@ -52,7 +52,7 @@ interface IncidentCardViewProps {
   onSelectionChange?: (selectedIds: Set<string>) => void;
   isLoading?: boolean;
   ingestionApps?: IngestionApp[];
-  resyncingId?: string | null;
+  resyncingIds?: Set<string>;
   resyncingSource?: string;
 }
 
@@ -206,7 +206,7 @@ export const IncidentCardView = ({
   onSelectionChange,
   isLoading = false,
   ingestionApps = [],
-  resyncingId = null,
+  resyncingIds = new Set(),
   resyncingSource = '',
 }: IncidentCardViewProps) => {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -406,7 +406,7 @@ export const IncidentCardView = ({
                 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                  {resyncingId === incident.id ? (
+                  {resyncingIds.has(incident.id) ? (
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, minWidth: 0 }}>
                       <CircularProgress size={14} sx={{ color: '#ff6600', flexShrink: 0 }} />
                       <Typography

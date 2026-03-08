@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef, useSyncExternalStore } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import AppSearchDrawer from '@/components/shared/AppSearchDrawer';
 import {
@@ -42,6 +42,7 @@ import { IngestionSourceButton } from '@/components/incidents/IngestionSourceBut
 import { WebhookIngestionButton, WebhookIngestionInfo } from '@/components/incidents/WebhookIngestionButton';
 
 import { toast } from 'sonner';
+import { resyncState } from '@/lib/resyncState';
 
 // Legacy categories for migration
 const LEGACY_ALERTS_CATEGORY = 'shuffle-alerts';
@@ -545,6 +546,17 @@ const IncidentsPage = () => {
   const [resyncingSource, setResyncingSource] = useState<string>('');
   const autoResyncQueueRef = useRef<Set<string>>(new Set());
 
+  // Subscribe to shared resync state (from detail page navigations)
+  const sharedResyncIds = useSyncExternalStore(
+    resyncState.subscribe,
+    resyncState.getAll,
+  );
+  const allResyncingIds = useMemo(() => {
+    const ids = new Set(sharedResyncIds);
+    if (resyncingId) ids.add(resyncingId);
+    return ids;
+  }, [sharedResyncIds, resyncingId]);
+
   // Auto-resync untitled incidents (once per browser session, one at a time)
   useEffect(() => {
     if (!hasFetched || incidents.length === 0) return;
@@ -569,6 +581,7 @@ const IncidentsPage = () => {
     const target = untitled[0];
     autoResyncQueueRef.current.add(target.id);
     setResyncingId(target.id);
+    resyncState.add(target.id);
     setResyncingSource(target.source || '');
 
     const doResync = async () => {
@@ -615,6 +628,7 @@ const IncidentsPage = () => {
                 sessionStorage.setItem(SESSION_KEY, JSON.stringify([...alreadyResynced]));
                 await fetchItems();
                 setResyncingId(null);
+                resyncState.remove(target.id);
                 setResyncingSource('');
                 return;
               }
@@ -630,6 +644,7 @@ const IncidentsPage = () => {
             sessionStorage.setItem(SESSION_KEY, JSON.stringify([...alreadyResynced]));
             await fetchItems();
             setResyncingId(null);
+            resyncState.remove(target.id);
             setResyncingSource('');
           }
         };
@@ -641,6 +656,7 @@ const IncidentsPage = () => {
         alreadyResynced.add(target.id);
         sessionStorage.setItem(SESSION_KEY, JSON.stringify([...alreadyResynced]));
         setResyncingId(null);
+        resyncState.remove(target.id);
         setResyncingSource('');
       }
     };
@@ -1448,7 +1464,7 @@ const IncidentsPage = () => {
             onSelectionChange={setSelectedIds}
             isLoading={isLoading}
             ingestionApps={ingestionApps}
-            resyncingId={resyncingId}
+            resyncingIds={allResyncingIds}
             resyncingSource={resyncingSource}
             onFilterChange={(type, value) => {
               setFilters(prev => ({
