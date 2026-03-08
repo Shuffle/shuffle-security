@@ -98,6 +98,7 @@ export function useAppAuthFlow() {
       const isValid = response.ok && validActions.includes(result.action) && result.success === true;
 
       await fetchAuthForApp(selectedApp.name, selectedApp.image_url);
+      refreshAllIntegrationStatus();
 
       setAuthState(prev => ({
         ...prev,
