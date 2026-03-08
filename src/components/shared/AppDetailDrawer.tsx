@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { toast } from 'sonner';
 import { Download, Forward } from 'lucide-react';
 import { getDatastoreByCategory, DATASTORE_CATEGORIES } from '@/services/datastore';
 import {
@@ -302,22 +303,28 @@ export default function AppDetailDrawer({
         });
         if (!res.ok) throw new Error('Deactivate failed');
         setActivatedAppId(null);
+        toast.success(`${displayName} deactivated`);
       } else {
         const configId = resolvedAlgoliaId || appName;
+        console.log('[Activate] Fetching config for:', configId);
         const searchRes = await fetch(getApiUrl(`/api/v1/apps/${encodeURIComponent(configId)}/config`), {
           credentials: 'include', headers: { ...getAuthHeader() },
         });
-        if (!searchRes.ok) throw new Error('Could not find app');
+        if (!searchRes.ok) throw new Error(`Config fetch failed (${searchRes.status})`);
         const data = await searchRes.json();
         const appId = data.id;
-        if (!appId) throw new Error('No app ID');
+        console.log('[Activate] Got app ID:', appId);
+        if (!appId) throw new Error('No app ID in config response');
         const activateRes = await fetch(getApiUrl(`/api/v1/apps/${appId}/activate`), {
-          method: 'POST', credentials: 'include', headers: { ...getAuthHeader() },
+          method: 'GET', credentials: 'include', headers: { ...getAuthHeader() },
         });
-        if (!activateRes.ok) throw new Error('Activate failed');
+        if (!activateRes.ok) throw new Error(`Activate failed (${activateRes.status})`);
         setActivatedAppId(appId);
+        toast.success(`${displayName} activated`);
       }
-    } catch {
+    } catch (err: any) {
+      console.error('[Activate] Error:', err);
+      toast.error(err?.message || 'Activation failed');
       setIsActivated(wasActivated);
       setActivatedAppId(prevAppId);
     } finally {

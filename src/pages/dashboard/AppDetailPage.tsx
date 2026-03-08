@@ -291,7 +291,7 @@ const AppDetailPage = () => {
         const appId = data.id;
         if (!appId) throw new Error('No app ID');
         const activateRes = await fetch(getApiUrl(`/api/v1/apps/${appId}/activate`), {
-          method: 'POST',
+          method: 'GET',
           credentials: 'include',
           headers: { ...getAuthHeader() },
         });
