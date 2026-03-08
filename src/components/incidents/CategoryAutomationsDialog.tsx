@@ -151,6 +151,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
   automations: initialAutomations,
   onAutomationsChange,
   initialSettings,
+  onSaved,
 }) => {
   const navigate = useNavigate();
   const [automations, setAutomations] = useState<CategoryAutomation[]>([]);
