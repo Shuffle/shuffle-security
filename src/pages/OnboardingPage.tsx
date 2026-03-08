@@ -726,6 +726,7 @@ const OnboardingPage = () => {
           const authData = await authResponse.json();
           if (authData.data) {
             setAuthenticatedApps(processAuthData(authData.data));
+            refreshAllIntegrationStatus();
           }
         }
         return true;
