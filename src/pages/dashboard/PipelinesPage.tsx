@@ -529,6 +529,7 @@ const PipelinesPage = () => {
           credentials: 'include',
           headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
            body: JSON.stringify({
+             id: editingPipeline.id || editingPipeline.pipeline || '',
              name: editingPipeline.name || editingPipeline.definition || '',
              type: 'stop',
              command: editingPipeline.definition || editingPipeline.command || '',
