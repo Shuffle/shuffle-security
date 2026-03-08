@@ -2700,7 +2700,7 @@ const IncidentDetailPage = () => {
                       color: '#3b82f6',
                     }} 
                   />
-                  <Typography variant="body2" sx={{ flex: 1, fontFamily: 'monospace', fontSize: '0.8rem' }}>
+                  <Typography variant="body2" sx={{ flex: 1, fontFamily: 'monospace', fontSize: '0.8rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
                     {obs.value}
                   </Typography>
                   <IconButton 
