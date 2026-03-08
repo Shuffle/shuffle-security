@@ -632,6 +632,7 @@ const AppDetailPage = () => {
                 onTestConnection={(appId, authId) => handleTestConnection(appname || appId, authId)}
                 onSaveAuth={(appId, creds) => handleSaveAuth(appname || appId, creds)}
                 apiAuthEntries={matchingEntries}
+                onRefreshAuth={refreshAuth}
               />
             ) : !isAuthenticated ? (
               <GuestLockedSection
