@@ -1616,9 +1616,7 @@ const IncidentDetailPage = () => {
                         fontFamily: 'monospace',
                         fontSize: '0.75rem',
                         color: 'hsl(var(--foreground))',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
+                        wordBreak: 'break-all',
                         minWidth: 0,
                         userSelect: 'all',
                       }}
