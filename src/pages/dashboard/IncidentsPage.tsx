@@ -388,8 +388,15 @@ const IncidentsPage = () => {
           const workflowList = Array.isArray(workflows) ? workflows : (workflows.workflows || []);
           const ingestWorkflow = findIngestTicketsWorkflow(workflowList);
           if (ingestWorkflow) {
-            workflowAppNames = extractWorkflowAppNames(ingestWorkflow);
+            const scheduleStopped = isWorkflowScheduleStopped(ingestWorkflow);
+            setIngestScheduleStopped(scheduleStopped);
+            // If schedule is stopped, treat as no enabled sources
+            if (!scheduleStopped) {
+              workflowAppNames = extractWorkflowAppNames(ingestWorkflow);
+            }
             setIngestWorkflowId(ingestWorkflow.id);
+          } else {
+            setIngestScheduleStopped(false);
           }
 
           // Detect "Ingestion Webhook" workflow and extract webhook URL + status
