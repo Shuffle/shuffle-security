@@ -454,7 +454,9 @@ const IncidentsPage = () => {
           }),
         });
         toast.success('Ingestion sources updated');
-        fetchIngestionApps();
+        await fetchIngestionApps();
+        // Auto-trigger sync after sources change
+        triggerSync();
       } catch (error) {
         console.error('Failed to update ingestion sources:', error);
         toast.error('Failed to update ingestion sources');
