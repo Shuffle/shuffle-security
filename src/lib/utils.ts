@@ -175,6 +175,14 @@ export interface DeduplicatedApp {
 export function deduplicateAuthApps(apps: AuthAppEntry[]): DeduplicatedApp[] {
   const appMap = new Map<string, DeduplicatedApp>();
   
+  /** Build a fallback image URL from the app id when large_image is missing */
+  const resolveImage = (app: AuthAppEntry['app']): string => {
+    if (app.large_image) return app.large_image;
+    // Shuffle serves app icons at this well-known path
+    if (app.id) return `https://shuffler.io/api/v1/apps/${app.id}/file/large_image`;
+    return '';
+  };
+
   apps.forEach(auth => {
     if (!auth.active && !auth.validation?.valid) return; // Skip inactive/unvalidated
     
@@ -182,7 +190,7 @@ export function deduplicateAuthApps(apps: AuthAppEntry[]): DeduplicatedApp[] {
     const normalizedName = auth.app.name.toLowerCase().trim().replace(/[\s_\-]+/g, '_');
     const existing = appMap.get(normalizedName);
     const isValidated = auth.validation?.valid === true;
-    const entryImage = auth.app.large_image || '';
+    const entryImage = resolveImage(auth.app);
     const instance = {
       label: auth.label || auth.id || 'Default',
       isValidated,
