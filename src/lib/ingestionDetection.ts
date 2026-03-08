@@ -95,6 +95,20 @@ export function findIngestTicketsWorkflow(workflows: any[]): any | null {
 }
 
 /**
+ * Check if a workflow's schedule/trigger is stopped.
+ * Returns true if all triggers are stopped or the workflow has no triggers.
+ */
+export function isWorkflowScheduleStopped(workflow: any): boolean {
+  if (!workflow) return true;
+  const triggers = workflow.triggers;
+  if (!Array.isArray(triggers) || triggers.length === 0) return true;
+  // If every trigger is explicitly stopped, the workflow is effectively disabled
+  return triggers.every(
+    (t: any) => (t.status || '').toLowerCase() === 'stopped'
+  );
+}
+
+/**
  * Find the 'Forward Tickets' workflow from a list of workflows.
  * Returns the workflow object or null.
  */
