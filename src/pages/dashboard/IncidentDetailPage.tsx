@@ -1894,6 +1894,7 @@ const IncidentDetailPage = () => {
                   if (!incident?.id) return;
                   const source = incident.source || '';
                   setIsResyncing(true);
+                  resyncState.add(incident.id);
                   const label = source ? `Resyncing from ${source}…` : 'Resyncing…';
                   toast.success(label, { duration: 30000 });
                   try {
