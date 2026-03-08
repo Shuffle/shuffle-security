@@ -182,6 +182,9 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
         assignee: rawAssignee,
         created: formatTimestamp(item.created),
         createdTs: parseTimestamp(item.created),
+        originCreatedTs: ocsf.created_time ? parseTimestamp(
+          typeof ocsf.created_time === 'string' && /^\d+$/.test(ocsf.created_time) ? Number(ocsf.created_time) : ocsf.created_time
+        ) : parseTimestamp(item.created),
         edited: item.edited ? formatTimestamp(item.edited) : undefined,
         editedTs: item.edited ? parseTimestamp(item.edited) : undefined,
         tlp: tlpLabel,
