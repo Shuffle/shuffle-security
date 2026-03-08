@@ -218,11 +218,36 @@ export function deduplicateAuthApps(apps: AuthAppEntry[]): DeduplicatedApp[] {
 }
 
 /**
- * Backfill missing images in deduplicated apps using Algolia search.
- * Call this after deduplicateAuthApps() to resolve any entries with empty bestImage.
- * Mutates the array in-place and returns it for convenience.
+ * Module-level cache: normalized app name → image URL.
+ * Persists for the lifetime of the session so Algolia is only queried once per app.
+ */
+const _imageCache = new Map<string, string>();
+const _pendingLookups = new Map<string, Promise<string | null>>();
+const _normalize = (n: string) => n.toLowerCase().replace(/[\s_\-]+/g, '_');
+
+/** Manually seed the cache (e.g. from /api/v1/apps or auth data that already has images). */
+export function seedImageCache(appName: string, imageUrl: string) {
+  if (appName && imageUrl) _imageCache.set(_normalize(appName), imageUrl);
+}
+
+/**
+ * Backfill missing images in deduplicated apps using a persistent in-memory cache
+ * and Algolia search as a fallback. Mutates the array in-place.
  */
 export async function backfillAppImages(dedupedApps: DeduplicatedApp[]): Promise<DeduplicatedApp[]> {
+  // First pass: seed cache from entries that already have images, and apply cache hits
+  for (const d of dedupedApps) {
+    const norm = _normalize(d.app.name);
+    const existingImg = d.bestImage || d.app.large_image;
+    if (existingImg) {
+      _imageCache.set(norm, existingImg);
+    } else if (_imageCache.has(norm)) {
+      d.bestImage = _imageCache.get(norm)!;
+      d.app = { ...d.app, large_image: d.bestImage };
+    }
+  }
+
+  // Second pass: find entries still missing images
   const missing = dedupedApps.filter(d => !d.bestImage && !d.app.large_image);
   if (missing.length === 0) return dedupedApps;
 
@@ -230,23 +255,35 @@ export async function backfillAppImages(dedupedApps: DeduplicatedApp[]): Promise
     const { algoliasearch } = await import('algoliasearch');
     const client = algoliasearch('JNSS5CFDZZ', 'c8f882473ff42d41158430be09ec2b4e');
 
-    // Search each missing app name individually (Algolia doesn't support bulk name lookups)
     await Promise.all(missing.map(async (entry) => {
-      try {
-        const result = await client.searchSingleIndex({
-          indexName: 'appsearch',
-          searchParams: { query: entry.app.name, hitsPerPage: 3 },
-        });
-        const normalize = (n: string) => n.toLowerCase().replace(/[\s_\-]+/g, '_');
-        const match = (result.hits as any[]).find(
-          h => normalize(h.name || '') === normalize(entry.app.name)
-        );
-        if (match?.image_url) {
-          entry.bestImage = match.image_url;
-          entry.app = { ...entry.app, large_image: match.image_url };
-        }
-      } catch {
-        // Silently skip — image just won't be available
+      const norm = _normalize(entry.app.name);
+
+      // De-duplicate in-flight requests for the same app name
+      if (!_pendingLookups.has(norm)) {
+        _pendingLookups.set(norm, (async () => {
+          try {
+            const result = await client.searchSingleIndex({
+              indexName: 'appsearch',
+              searchParams: { query: entry.app.name, hitsPerPage: 3 },
+            });
+            const match = (result.hits as any[]).find(
+              h => _normalize(h.name || '') === norm
+            );
+            const url = match?.image_url || null;
+            if (url) _imageCache.set(norm, url);
+            return url;
+          } catch {
+            return null;
+          } finally {
+            _pendingLookups.delete(norm);
+          }
+        })());
+      }
+
+      const url = await _pendingLookups.get(norm);
+      if (url) {
+        entry.bestImage = url;
+        entry.app = { ...entry.app, large_image: url };
       }
     }));
   } catch {
