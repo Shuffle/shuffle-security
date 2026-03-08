@@ -258,6 +258,7 @@ export const AddAppModal = ({ open, onClose, initialQuery, categoryLabel }: AddA
                     onTestConnection={handleTestConnection}
                     onSaveAuth={handleSaveAuth}
                     apiAuthEntries={authenticatedApps}
+                    onRefreshAuth={refreshAuth}
                   />
                 ) : null}
               </motion.div>
