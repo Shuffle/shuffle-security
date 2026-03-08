@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef, forwardRef } from 'react';
 import AgentIcon from '@/components/agent/AgentIcon';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Box,
   Typography,
