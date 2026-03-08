@@ -80,6 +80,7 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
           
           if (Array.isArray(authData)) {
             const dedupedApps = deduplicateAuthApps(authData);
+            await backfillAppImages(dedupedApps);
             
             dedupedIntegrations = dedupedApps
               .map(({ app, instances, hasValidAuth, bestImage }) => {
