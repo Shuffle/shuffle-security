@@ -193,7 +193,7 @@ export const getDatastoreItemPublic = async (
   authorization: string,
 ): Promise<DatastoreResponse & { item?: DatastoreItem }> => {
   const response = await fetch(
-    getApiUrl(`/api/v1/orgs/${orgId}/cache/${key}?type=text&authorization=${authorization}`),
+    getApiUrl(`/api/v1/orgs/${orgId}/cache/${key}?authorization=${authorization}`),
     { method: 'GET' },
   );
 
