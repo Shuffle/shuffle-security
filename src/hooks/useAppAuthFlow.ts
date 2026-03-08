@@ -56,7 +56,7 @@ export function useAppAuthFlow() {
   const selectApp = useCallback((app: AlgoliaSearchApp) => {
     setSelectedApp(app);
     setAuthState({ systemId: app.objectID, status: 'pending', credentials: {} });
-    fetchAuthForApp(app.name);
+    fetchAuthForApp(app.name, app.image_url);
   }, [fetchAuthForApp]);
 
   const clearSelection = useCallback(() => {
