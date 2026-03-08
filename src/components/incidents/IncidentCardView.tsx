@@ -406,7 +406,7 @@ export const IncidentCardView = ({
                 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                  {resyncingId === incident.id ? (
+                  {resyncingIds.has(incident.id) ? (
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, minWidth: 0 }}>
                       <CircularProgress size={14} sx={{ color: '#ff6600', flexShrink: 0 }} />
                       <Typography
