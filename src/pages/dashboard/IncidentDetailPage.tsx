@@ -54,7 +54,7 @@ import Menu from '@mui/material/Menu';
 import { useDatastore } from '@/hooks/useDatastore';
 import { useAuth } from '@/context/AuthContext';
 import { useAppDetail } from '@/context/AppDetailContext';
-import { DATASTORE_CATEGORIES, getDatastoreItem, setDatastoreItem } from '@/services/datastore';
+import { DATASTORE_CATEGORIES, getDatastoreItem, getDatastoreItemPublic, setDatastoreItem } from '@/services/datastore';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { useUsers } from '@/hooks/useUsers';
 import { useCustomFields, CustomField } from '@/hooks/useCustomFields';
