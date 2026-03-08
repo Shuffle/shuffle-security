@@ -1705,9 +1705,15 @@ export const AppAuthConfig = ({
   // Helper to find ALL API auth entries for an app
   const getApiAuthEntries = (app: AlgoliaSearchApp): ApiAuthEntry[] => {
     const normalize = (n: string) => n.toLowerCase().replace(/[\s_\-]+/g, '_');
-    return authenticatedApps.filter(
-      auth => normalize(auth.app?.name || '') === normalize(app.name)
-    );
+    return authenticatedApps
+      .filter(auth => normalize(auth.app?.name || '') === normalize(app.name))
+      .map(auth => ({
+        ...auth,
+        app: {
+          ...auth.app,
+          large_image: auth.app?.large_image || app.image_url,
+        },
+      }));
   };
 
   // Helper to check if app is configured (has any auth entry)
