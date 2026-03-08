@@ -333,7 +333,7 @@ const IncidentsPage = () => {
   const [sortBy, setSortBy] = useState<SortKey>('created');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
-  const { items: datastoreItems, isLoading, hasFetched, error, fetchItems, addItem, hasMore, fetchNextPage, categoryConfig } = useDatastore({
+  const { items: datastoreItems, isLoading, isRefreshing, hasFetched, error, fetchItems, addItem, hasMore, fetchNextPage, categoryConfig } = useDatastore({
     category: DATASTORE_CATEGORIES.INCIDENTS,
   });
 
