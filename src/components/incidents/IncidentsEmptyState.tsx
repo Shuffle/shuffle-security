@@ -26,6 +26,17 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, on
   const hasApps = ingestionApps.length > 0 || !!webhook?.exists || !!webhook?.enabled;
   const hasNonWebhookSources = ingestionApps.length > 0;
 
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', py: 12, gap: 2 }}>
+        <CircularProgress size={32} sx={{ color: '#FF6600' }} />
+        <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+          Loading sources…
+        </Typography>
+      </Box>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 24 }}
