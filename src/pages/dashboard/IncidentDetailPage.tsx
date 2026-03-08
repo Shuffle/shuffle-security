@@ -198,6 +198,20 @@ const meaningfulString = (val: unknown): string | undefined => {
   return decodeHtmlEntities(trimmed);
 };
 
+/**
+ * Resolve the "created" timestamp for an incident.
+ * Priority: value.created_time → item.created (datastore envelope).
+ */
+const resolveCreatedTs = (data: any, itemCreated?: number): number => {
+  if (data?.created_time) {
+    const ct = typeof data.created_time === 'string' && /^\d+$/.test(data.created_time)
+      ? Number(data.created_time) : data.created_time;
+    const ms = normalizeToMs(ct);
+    if (ms > 0) return ms;
+  }
+  return normalizeToMs(itemCreated);
+};
+
 const parseIncidentFromDatastore = (item: { key: string; value: string; created?: number; edited?: number }): DisplayIncident | null => {
   const parseStart = performance.now();
   try {
