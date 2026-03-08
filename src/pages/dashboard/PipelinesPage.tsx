@@ -396,6 +396,7 @@ const PipelinesPage = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          id: id,
           name: pipeline.name || pipeline.definition || '',
           type: apiType,
           command: pipeline.definition || pipeline.command || '',
