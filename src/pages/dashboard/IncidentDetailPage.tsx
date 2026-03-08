@@ -1491,7 +1491,7 @@ const IncidentDetailPage = () => {
                 sx={{ flex: 1 }}
               />
             </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5, flexWrap: 'wrap' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5, flexWrap: 'wrap', ...(isPublicView && { pointerEvents: 'none' }) }}>
               {/* Status dropdown */}
               <FormControl size="small" variant="standard">
                 <Select
