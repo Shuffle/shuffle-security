@@ -1719,6 +1719,7 @@ const CategoryDetailDrawer = ({
   configuredCategories,
   disabledAppsForCategory,
   onToggleAppDisabledForCategory,
+  onRefreshApps,
 }: {
   category: ToolCategory | null;
   matchedApps: MatchedApp[];
