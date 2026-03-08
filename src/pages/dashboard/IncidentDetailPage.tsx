@@ -1742,6 +1742,7 @@ const IncidentDetailPage = () => {
               </DialogContent>
             </Dialog>
 
+            {!isPublicView && (
             <Tooltip title="Actions">
               <IconButton
                 size="small"
@@ -1756,6 +1757,7 @@ const IncidentDetailPage = () => {
                 <MoreVertIcon fontSize="small" />
               </IconButton>
             </Tooltip>
+            )}
             <Menu
               anchorEl={actionsMenuAnchor}
               open={Boolean(actionsMenuAnchor)}
