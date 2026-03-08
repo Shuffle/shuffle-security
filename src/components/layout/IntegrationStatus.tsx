@@ -64,101 +64,103 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
   const hasMore = !showAll && integrations.length > defaultLimit;
 
   // Fetch enabled integrations from API
-  useEffect(() => {
-    const fetchIntegrations = async () => {
+  const fetchIntegrations = useCallback(async () => {
+    setLoading(true);
+    try {
+      const authResponse = await fetch(getApiUrl('/api/v1/apps/authentication'), {
+        credentials: 'include',
+        headers: { ...getAuthHeader() },
+      });
       
-      
-      setLoading(true);
-      try {
-        // Fetch authenticated apps
-        const authResponse = await fetch(getApiUrl('/api/v1/apps/authentication'), {
-          credentials: 'include',
-          headers: { ...getAuthHeader() },
-        });
+      let dedupedIntegrations: Integration[] = [];
+      const authNameSet = new Set<string>();
+
+      if (authResponse.ok) {
+        const result = await authResponse.json();
+        const authData: AuthAppEntry[] = result.data || result;
         
-        let dedupedIntegrations: Integration[] = [];
-        const authNameSet = new Set<string>();
-
-        if (authResponse.ok) {
-          const result = await authResponse.json();
-          const authData: AuthAppEntry[] = result.data || result;
+        if (Array.isArray(authData)) {
+          const dedupedApps = deduplicateAuthApps(authData);
+          await backfillAppImages(dedupedApps);
           
-          if (Array.isArray(authData)) {
-            const dedupedApps = deduplicateAuthApps(authData);
-            await backfillAppImages(dedupedApps);
-            
-            dedupedIntegrations = dedupedApps
-              .map(({ app, instances, hasValidAuth, bestImage }) => {
-                authNameSet.add(app.name.toLowerCase());
-                return {
-                  id: app.id,
-                  name: app.name,
-                  icon: bestImage || app.large_image || '',
-                  category: app.categories?.[0] || 'Integration',
-                  hasValidAuth,
-                  authInstances: instances,
-                  isActiveOnly: false,
-                };
-              });
-          }
-        }
-
-        // Only fetch active apps if we have fewer than 10 auth integrations
-        // and fill up to 10 total
-        if (dedupedIntegrations.length < 10) {
-          try {
-            const appsResponse = await fetch(getApiUrl('/api/v1/apps'), {
-              credentials: 'include',
-              headers: { ...getAuthHeader() },
+          dedupedIntegrations = dedupedApps
+            .map(({ app, instances, hasValidAuth, bestImage }) => {
+              authNameSet.add(app.name.toLowerCase());
+              return {
+                id: app.id,
+                name: app.name,
+                icon: bestImage || app.large_image || '',
+                category: app.categories?.[0] || 'Integration',
+                hasValidAuth,
+                authInstances: instances,
+                isActiveOnly: false,
+              };
             });
-            if (appsResponse.ok) {
-              const appsData = await appsResponse.json();
-              if (Array.isArray(appsData)) {
-                const activatedApps = appsData.filter((app: any) => app.activated);
-                const slotsRemaining = 10 - dedupedIntegrations.length;
-                let added = 0;
-                for (const app of activatedApps) {
-                  if (added >= slotsRemaining) break;
-                  if (!authNameSet.has((app.name || '').toLowerCase())) {
-                    authNameSet.add((app.name || '').toLowerCase());
-                    dedupedIntegrations.push({
-                      id: app.id || app.name,
-                      name: app.name,
-                      icon: app.large_image || '',
-                      category: app.categories?.[0] || 'Integration',
-                      hasValidAuth: false,
-                      authInstances: [],
-                      isActiveOnly: true,
-                    });
-                    added++;
-                  }
+        }
+      }
+
+      if (dedupedIntegrations.length < 10) {
+        try {
+          const appsResponse = await fetch(getApiUrl('/api/v1/apps'), {
+            credentials: 'include',
+            headers: { ...getAuthHeader() },
+          });
+          if (appsResponse.ok) {
+            const appsData = await appsResponse.json();
+            if (Array.isArray(appsData)) {
+              const activatedApps = appsData.filter((app: any) => app.activated);
+              const slotsRemaining = 10 - dedupedIntegrations.length;
+              let added = 0;
+              for (const app of activatedApps) {
+                if (added >= slotsRemaining) break;
+                if (!authNameSet.has((app.name || '').toLowerCase())) {
+                  authNameSet.add((app.name || '').toLowerCase());
+                  dedupedIntegrations.push({
+                    id: app.id || app.name,
+                    name: app.name,
+                    icon: app.large_image || '',
+                    category: app.categories?.[0] || 'Integration',
+                    hasValidAuth: false,
+                    authInstances: [],
+                    isActiveOnly: true,
+                  });
+                  added++;
                 }
               }
             }
-          } catch (_) {
-            // Non-critical, ignore
           }
+        } catch (_) {
+          // Non-critical, ignore
         }
-
-        // Sort: valid auth first, then active-only (red dot) last, then alphabetically
-        dedupedIntegrations.sort((a, b) => {
-          if (a.hasValidAuth && !b.hasValidAuth) return -1;
-          if (!a.hasValidAuth && b.hasValidAuth) return 1;
-          if (!a.isActiveOnly && b.isActiveOnly) return -1;
-          if (a.isActiveOnly && !b.isActiveOnly) return 1;
-          return a.name.localeCompare(b.name);
-        });
-            
-        setAllIntegrations(dedupedIntegrations);
-      } catch (error) {
-        console.error('Failed to fetch integrations:', error);
-      } finally {
-        setLoading(false);
       }
-    };
-    
-    fetchIntegrations();
+
+      dedupedIntegrations.sort((a, b) => {
+        if (a.hasValidAuth && !b.hasValidAuth) return -1;
+        if (!a.hasValidAuth && b.hasValidAuth) return 1;
+        if (!a.isActiveOnly && b.isActiveOnly) return -1;
+        if (a.isActiveOnly && !b.isActiveOnly) return 1;
+        return a.name.localeCompare(b.name);
+      });
+          
+      setAllIntegrations(dedupedIntegrations);
+    } catch (error) {
+      console.error('Failed to fetch integrations:', error);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  // Fetch on mount
+  useEffect(() => {
+    fetchIntegrations();
+  }, [fetchIntegrations]);
+
+  // Re-fetch whenever any integration auth changes globally
+  useEffect(() => {
+    const handler = () => fetchIntegrations();
+    window.addEventListener('integrations-changed', handler);
+    return () => window.removeEventListener('integrations-changed', handler);
+  }, [fetchIntegrations]);
 
   const getStatusColor = (integration: Integration) => {
     if (integration.isActiveOnly) return 'hsl(var(--destructive))';
