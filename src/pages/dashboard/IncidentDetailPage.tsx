@@ -2579,6 +2579,33 @@ const IncidentDetailPage = () => {
                     <Typography variant="body2" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: incident.source ? '#06b6d4' : undefined }}>{incident.source || <Typography component="span" variant="body2" sx={{ color: 'text.disabled', fontStyle: 'italic' }}>Unknown</Typography>}</Typography>
                   </Box>
                 </Box>
+                {/* TLP */}
+                <Box>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>TLP</Typography>
+                  <FormControl size="small" variant="standard" fullWidth>
+                    <Select
+                      value={editedTlp}
+                      onChange={(e) => setEditedTlp(e.target.value)}
+                      disableUnderline
+                      sx={{
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        color: tlpLevels.find(t => t.label === editedTlp)?.color || '#f59e0b',
+                        '& .MuiSelect-select': { py: 0.25, px: 0.5 },
+                        '& .MuiSelect-icon': { fontSize: 16 },
+                      }}
+                    >
+                      {tlpLevels.map((opt) => (
+                        <MenuItem key={opt.value} value={opt.label} sx={{ fontSize: '0.8rem' }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: opt.color, border: opt.color === '#ffffff' ? '1px solid rgba(255,255,255,0.3)' : 'none' }} />
+                            {opt.label}
+                          </Box>
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
                 <Box>
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>Created</Typography>
                   <Typography variant="body2">{incident.created}</Typography>
@@ -2592,6 +2619,63 @@ const IncidentDetailPage = () => {
                 <Box>
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>Age</Typography>
                   <Typography variant="body2">{metrics?.age}</Typography>
+                </Box>
+                {/* Labels */}
+                <Box>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>Labels</Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap', mt: 0.5 }}>
+                    {editedLabels.map((label, idx) => (
+                      <Chip
+                        key={idx}
+                        label={label}
+                        size="small"
+                        onDelete={() => {
+                          autoProgressStatus();
+                          setEditedLabels(editedLabels.filter((_, i) => i !== idx));
+                        }}
+                        sx={{
+                          height: 22,
+                          fontSize: '0.7rem',
+                          fontWeight: 500,
+                          bgcolor: 'rgba(6, 182, 212, 0.12)',
+                          color: '#06b6d4',
+                          '& .MuiChip-deleteIcon': { fontSize: 14, color: '#06b6d4', '&:hover': { color: '#67e8f9' } },
+                        }}
+                      />
+                    ))}
+                    <Box
+                      component="form"
+                      onSubmit={(e: React.FormEvent) => {
+                        e.preventDefault();
+                        const trimmed = newLabelInput.trim();
+                        if (trimmed && !editedLabels.includes(trimmed)) {
+                          autoProgressStatus();
+                          setEditedLabels([...editedLabels, trimmed]);
+                          setNewLabelInput('');
+                        }
+                      }}
+                      sx={{ display: 'inline-flex' }}
+                    >
+                      <TextField
+                        value={newLabelInput}
+                        onChange={(e) => setNewLabelInput(e.target.value)}
+                        placeholder="+ Add"
+                        variant="outlined"
+                        size="small"
+                        InputProps={{
+                          sx: {
+                            fontSize: '0.7rem',
+                            height: 24,
+                            bgcolor: 'rgba(0,0,0,0.2)',
+                            '& fieldset': { borderColor: 'rgba(255,255,255,0.1)', borderStyle: 'dashed' },
+                            '&:hover fieldset': { borderColor: 'rgba(6, 182, 212, 0.3)' },
+                            '&.Mui-focused fieldset': { borderColor: '#06b6d4' },
+                          },
+                        }}
+                        sx={{ width: 80 }}
+                      />
+                    </Box>
+                  </Box>
                 </Box>
               </Box>
             </Box>
