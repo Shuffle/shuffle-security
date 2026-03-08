@@ -2400,25 +2400,6 @@ const IncidentDetailPage = () => {
                                 }}
                               />
                             )}
-                            {task.assignee === 'AI Agent' && (
-                              <Chip
-                                size="small"
-                                label={task.aiWorking ? 'AI Working...' : 'AI Agent'}
-                                sx={{
-                                  height: 18,
-                                  fontSize: '0.65rem',
-                                  fontWeight: 600,
-                                  bgcolor: task.aiWorking ? 'rgba(34, 197, 94, 0.2)' : 'rgba(34, 197, 94, 0.1)',
-                                  color: '#22c55e',
-                                  border: task.aiWorking ? '1px solid rgba(34, 197, 94, 0.4)' : 'none',
-                                  animation: task.aiWorking ? 'pulse 2s infinite' : 'none',
-                                  '@keyframes pulse': {
-                                    '0%, 100%': { opacity: 1 },
-                                    '50%': { opacity: 0.6 },
-                                  },
-                                }}
-                              />
-                            )}
                           </Box>
                           {isBlocked && dependencyTask && (
                             <Typography variant="caption" sx={{ color: 'warning.main', display: 'flex', alignItems: 'center', gap: 0.5 }}>
