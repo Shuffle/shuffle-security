@@ -21,7 +21,7 @@ import AppSearchDrawer from '@/components/shared/AppSearchDrawer';
 import { useAuth } from '@/context/AuthContext';
 import { useAppDetail } from '@/context/AppDetailContext';
 import { getApiUrl, getAuthHeader } from '@/config/api';
-import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
+import { deduplicateAuthApps, backfillAppImages, type AuthAppEntry } from '@/lib/utils';
 import {
   SIEM_PATTERNS,
   CASES_PATTERNS,
