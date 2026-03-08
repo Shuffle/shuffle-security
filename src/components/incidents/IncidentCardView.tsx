@@ -386,18 +386,37 @@ export const IncidentCardView = ({
                 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      fontWeight: 600,
-                      color: 'hsl(var(--foreground))',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {incident.title || 'Untitled Incident'}
-                  </Typography>
+                  {resyncingId === incident.id ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, minWidth: 0 }}>
+                      <CircularProgress size={14} sx={{ color: '#ff6600', flexShrink: 0 }} />
+                      <Typography
+                        variant="body1"
+                        sx={{
+                          fontWeight: 600,
+                          color: '#ff6600',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          fontSize: '0.9rem',
+                        }}
+                      >
+                        Loading details from {resyncingSource || 'source'}…
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        fontWeight: 600,
+                        color: 'hsl(var(--foreground))',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {incident.title || 'Untitled Incident'}
+                    </Typography>
+                  )}
                   <Box sx={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>
                     <StatusIcon size={16} color={statusInfo.color} />
                   </Box>
