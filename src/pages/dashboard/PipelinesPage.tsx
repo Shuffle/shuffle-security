@@ -378,7 +378,7 @@ const PipelinesPage = () => {
   };
 
   const handleAction = async (pipeline: Pipeline, action: 'start' | 'stop' | 'delete') => {
-    const id = pipeline.pipeline || pipeline.id || '';
+    const id = pipeline.id || pipeline.pipeline || '';
     setActionLoading(prev => ({ ...prev, [id]: true }));
 
     // Capture original timestamps to detect changes
