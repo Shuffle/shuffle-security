@@ -768,7 +768,7 @@ const DetectionOnboardingPage = () => {
           return;
         }
         const baseUrl = API_CONFIG.baseUrl;
-        command = `export live=true | sigma "/tmp/sigma_rules" | set uid = uuid() | set event.source = "Tenzir" | to "${baseUrl}/api/v1/hooks/webhook_${hookId}"`;
+        command = `export live=true | sigma "/tmp/sigma_rules" | set uid = uuid() | set source = "Tenzir" | to "${baseUrl}/api/v1/hooks/webhook_${hookId}"`;
       }
       
       const response = await fetch(getApiUrl('/api/v1/triggers/pipeline'), {
