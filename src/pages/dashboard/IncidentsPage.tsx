@@ -499,6 +499,76 @@ const IncidentsPage = () => {
   }, [incidents]);
 
   const [showIrrelevant, setShowIrrelevant] = useState(false);
+  const [resyncingId, setResyncingId] = useState<string | null>(null);
+  const [resyncingSource, setResyncingSource] = useState<string>('');
+  const autoResyncQueueRef = useRef<Set<string>>(new Set());
+
+  // Auto-resync untitled incidents (once per browser session, one at a time)
+  useEffect(() => {
+    if (!hasFetched || incidents.length === 0) return;
+    
+    const SESSION_KEY = 'shuffle_auto_resync_done';
+    const alreadyResynced: Set<string> = new Set(
+      JSON.parse(sessionStorage.getItem(SESSION_KEY) || '[]')
+    );
+
+    // Find untitled incidents with a source that haven't been resynced this session
+    const untitled = incidents.filter(inc => {
+      if (hasContent(inc)) return false;
+      if (!inc.source) return false;
+      if (alreadyResynced.has(inc.id)) return false;
+      if (autoResyncQueueRef.current.has(inc.id)) return false;
+      return true;
+    });
+
+    if (untitled.length === 0 || resyncingId) return;
+
+    // Pick the first one
+    const target = untitled[0];
+    autoResyncQueueRef.current.add(target.id);
+    setResyncingId(target.id);
+    setResyncingSource(target.source || '');
+
+    const doResync = async () => {
+      try {
+        const response = await fetch(getApiUrl('/api/v1/apps/categories/run'), {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeader(),
+          },
+          body: JSON.stringify({
+            action: 'get_ticket',
+            category: 'cases',
+            fields: [{ key: 'id', value: target.id }],
+            app_name: target.source,
+          }),
+        });
+
+        if (!response.ok) {
+          console.warn(`[AutoResync] Failed for ${target.id}`);
+        }
+
+        // Wait for backend processing then refresh
+        setTimeout(async () => {
+          alreadyResynced.add(target.id);
+          sessionStorage.setItem(SESSION_KEY, JSON.stringify([...alreadyResynced]));
+          await fetchItems();
+          setResyncingId(null);
+          setResyncingSource('');
+        }, 30000);
+      } catch (err) {
+        console.warn('[AutoResync] Error:', err);
+        alreadyResynced.add(target.id);
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify([...alreadyResynced]));
+        setResyncingId(null);
+        setResyncingSource('');
+      }
+    };
+
+    doResync();
+  }, [hasFetched, incidents, resyncingId, fetchItems]);
 
   // Active incident list based on irrelevant toggle
   const activeIncidents = useMemo(() => {
