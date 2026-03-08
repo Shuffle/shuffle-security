@@ -2297,9 +2297,10 @@ const IncidentDetailPage = () => {
                       <Box 
                         sx={{ 
                           display: 'flex', 
-                          alignItems: 'flex-start', 
-                          gap: 1.5,
-                          p: 1.5,
+                          alignItems: 'center', 
+                          gap: 1,
+                          py: 1.25,
+                          px: 1.5,
                           borderRadius: isExpanded ? '8px 8px 0 0' : 1,
                           bgcolor: task.completed ? 'rgba(34, 197, 94, 0.08)' : isBlocked ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.2)',
                           border: '1px solid',
@@ -2308,47 +2309,46 @@ const IncidentDetailPage = () => {
                           opacity: isBlocked ? 0.6 : 1,
                         }}
                       >
-                        {/* Left: expand + checkbox */}
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, pt: 0.25 }}>
-                          <IconButton 
-                            size="small" 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setExpandedTaskId(isExpanded ? null : task.id);
-                            }}
-                            sx={{ p: 0.25, color: 'text.secondary' }}
-                          >
-                            {isExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
-                          </IconButton>
-                          
-                          <IconButton 
-                            size="small" 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (!isBlocked) handleToggleTask(task.id);
-                            }}
-                            disabled={isBlocked}
-                            sx={{ 
-                              p: 0.5,
-                              color: task.completed ? '#22c55e' : 'text.secondary',
-                            }}
-                          >
-                            {task.completed ? (
-                              <CheckCircleIcon fontSize="small" />
-                            ) : (
-                              <Box sx={{ 
-                                width: 18, 
-                                height: 18, 
-                                borderRadius: '50%', 
-                                border: '2px solid currentColor',
-                              }} />
-                            )}
-                          </IconButton>
-                        </Box>
+                        {/* Expand toggle */}
+                        <IconButton 
+                          size="small" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExpandedTaskId(isExpanded ? null : task.id);
+                          }}
+                          sx={{ p: 0.25, color: 'text.secondary' }}
+                        >
+                          {isExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+                        </IconButton>
                         
-                        {/* Middle: title (row 1) + category & assignee (row 2) */}
-                        <Box sx={{ flex: 1, minWidth: 0 }}>
-                          {/* Row 1: Title */}
+                        {/* Checkbox */}
+                        <IconButton 
+                          size="small" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!isBlocked) handleToggleTask(task.id);
+                          }}
+                          disabled={isBlocked}
+                          sx={{ 
+                            p: 0.25,
+                            color: task.completed ? '#22c55e' : 'text.secondary',
+                          }}
+                        >
+                          {task.completed ? (
+                            <CheckCircleIcon sx={{ fontSize: 18 }} />
+                          ) : (
+                            <Box sx={{ 
+                              width: 16, 
+                              height: 16, 
+                              borderRadius: '50%', 
+                              border: '2px solid currentColor',
+                            }} />
+                          )}
+                        </IconButton>
+                        
+                        {/* Title + metadata row */}
+                        <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                          {/* Title */}
                           {isExpanded ? (
                             <MentionInput
                               value={task.title}
@@ -2359,12 +2359,10 @@ const IncidentDetailPage = () => {
                               InputProps={{
                                 disableUnderline: true,
                                 sx: { 
-                                  fontSize: '0.875rem',
+                                  fontSize: '0.8rem',
+                                  fontWeight: 500,
                                   textDecoration: task.completed ? 'line-through' : 'none',
                                   color: task.completed ? 'text.secondary' : 'text.primary',
-                                  '&:hover': { bgcolor: 'rgba(255,255,255,0.03)' },
-                                  borderRadius: 0.5,
-                                  px: 0.5,
                                 },
                               }}
                               sx={{ width: '100%' }}
@@ -2374,36 +2372,37 @@ const IncidentDetailPage = () => {
                               onClick={() => setExpandedTaskId(task.id)}
                               sx={{ 
                                 cursor: 'pointer',
-                                fontSize: '0.875rem',
+                                fontSize: '0.8rem',
+                                fontWeight: 500,
+                                lineHeight: 1.4,
                                 textDecoration: task.completed ? 'line-through' : 'none',
                                 color: task.completed ? 'text.secondary' : 'text.primary',
-                                '&:hover': { bgcolor: 'rgba(255,255,255,0.03)' },
-                                borderRadius: 0.5,
-                                px: 0.5,
-                                py: 0.25,
                               }}
                             >
                               <MentionText text={task.title} />
                             </Box>
                           )}
                           
-                          {/* Row 2: Category + Assignee */}
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.75, ml: 0.5, flexWrap: 'wrap' }}>
+                          {/* Metadata: category + assignee */}
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                             {categoryInfo && (
-                              <Chip
-                                size="small"
-                                label={categoryInfo.label}
+                              <Typography
+                                component="span"
                                 sx={{
-                                  height: 18,
                                   fontSize: '0.65rem',
-                                  fontWeight: 500,
-                                  bgcolor: `${categoryInfo.color}20`,
+                                  fontWeight: 600,
                                   color: categoryInfo.color,
-                                  border: `1px solid ${categoryInfo.color}40`,
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '0.03em',
                                 }}
-                              />
+                              >
+                                {categoryInfo.label}
+                              </Typography>
                             )}
-                            <FormControl size="small" sx={{ minWidth: 90 }}>
+                            {categoryInfo && task.assignee && (
+                              <Typography component="span" sx={{ fontSize: '0.6rem', color: 'text.disabled' }}>·</Typography>
+                            )}
+                            <FormControl size="small" sx={{ minWidth: 0 }}>
                               <Select
                                 value={task.assignee || ''}
                                 onChange={(e) => handleUpdateTaskAssignee(task.id, e.target.value)}
@@ -2411,11 +2410,24 @@ const IncidentDetailPage = () => {
                                 disableUnderline
                                 displayEmpty
                                 disabled={usersLoading}
-                                sx={{ fontSize: '0.7rem', color: 'text.secondary' }}
+                                sx={{ 
+                                  fontSize: '0.65rem', 
+                                  color: isAIAssignee(task.assignee) ? '#22c55e' : 'text.secondary',
+                                  '& .MuiSelect-select': { 
+                                    py: 0, 
+                                    pr: '16px !important',
+                                    minHeight: 'unset',
+                                  },
+                                  '& .MuiSvgIcon-root': { 
+                                    fontSize: '0.85rem',
+                                    right: 0,
+                                    color: 'text.disabled',
+                                  },
+                                }}
                               >
                                 <MenuItem value=""><em>Unassigned</em></MenuItem>
                                 <MenuItem value="AI Agent" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                  <AgentIcon size={16} />
+                                  <AgentIcon size={14} />
                                   AI Agent
                                 </MenuItem>
                                 {users.map((user) => (
@@ -2426,19 +2438,18 @@ const IncidentDetailPage = () => {
                           </Box>
                           
                           {isBlocked && dependencyTask && (
-                            <Typography variant="caption" sx={{ color: 'warning.main', display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
+                            <Typography variant="caption" sx={{ fontSize: '0.6rem', color: 'warning.main', display: 'flex', alignItems: 'center', gap: 0.5 }}>
                               ⏳ Waiting on: {dependencyTask.title}
                             </Typography>
                           )}
                         </Box>
                         
                         {/* Right: date + delete */}
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0, pt: 0.25 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexShrink: 0 }}>
                           <TaskDateTimePicker
                             value={task.dueDate || ''}
                             onChange={(value) => handleUpdateTaskDueDate(task.id, value)}
                           />
-                          
                           <IconButton 
                             size="small" 
                             onClick={(e) => {
@@ -2446,17 +2457,15 @@ const IncidentDetailPage = () => {
                               handleDeleteTask(task.id);
                             }}
                             sx={{ 
+                              p: 0.5,
                               color: 'text.disabled',
-                              border: '1px solid rgba(255,255,255,0.08)',
-                              borderRadius: 1,
                               '&:hover': { 
                                 color: '#ef4444',
                                 bgcolor: 'rgba(239, 68, 68, 0.1)',
-                                borderColor: 'rgba(239, 68, 68, 0.3)',
                               } 
                             }}
                           >
-                            <DeleteIcon fontSize="small" />
+                            <DeleteIcon sx={{ fontSize: 16 }} />
                           </IconButton>
                         </Box>
                       </Box>
