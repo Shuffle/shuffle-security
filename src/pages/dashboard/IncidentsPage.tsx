@@ -546,6 +546,17 @@ const IncidentsPage = () => {
   const [resyncingSource, setResyncingSource] = useState<string>('');
   const autoResyncQueueRef = useRef<Set<string>>(new Set());
 
+  // Subscribe to shared resync state (from detail page navigations)
+  const sharedResyncIds = useSyncExternalStore(
+    resyncState.subscribe,
+    resyncState.getAll,
+  );
+  const allResyncingIds = useMemo(() => {
+    const ids = new Set(sharedResyncIds);
+    if (resyncingId) ids.add(resyncingId);
+    return ids;
+  }, [sharedResyncIds, resyncingId]);
+
   // Auto-resync untitled incidents (once per browser session, one at a time)
   useEffect(() => {
     if (!hasFetched || incidents.length === 0) return;
