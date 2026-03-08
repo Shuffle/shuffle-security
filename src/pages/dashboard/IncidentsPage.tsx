@@ -220,11 +220,9 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
         severity: mapOCSFSeverity(ocsf.severity_id || 3),
         status: mapOCSFStatus(ocsf.status_id || 1),
         assignee: rawAssignee,
-        created: formatTimestamp(item.created),
-        createdTs: parseTimestamp(item.created),
-        originCreatedTs: ocsf.created_time ? parseTimestamp(
-          typeof ocsf.created_time === 'string' && /^\d+$/.test(ocsf.created_time) ? Number(ocsf.created_time) : ocsf.created_time
-        ) : parseTimestamp(item.created),
+        created: formatTimestamp(resolveCreatedTs(data, item.created)),
+        createdTs: resolveCreatedTs(data, item.created),
+        originCreatedTs: resolveCreatedTs(data, item.created),
         edited: item.edited ? formatTimestamp(item.edited) : undefined,
         editedTs: item.edited ? parseTimestamp(item.edited) : undefined,
         tlp: tlpLabel,
