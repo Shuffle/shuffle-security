@@ -2386,49 +2386,74 @@ const IncidentDetailPage = () => {
                           {/* Metadata: category + assignee */}
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                             {categoryInfo && (
-                              <Typography
-                                component="span"
+                              <Chip
+                                size="small"
+                                label={categoryInfo.label}
                                 sx={{
-                                  fontSize: '0.65rem',
-                                  fontWeight: 600,
+                                  height: 18,
+                                  fontSize: '0.6rem',
+                                  fontWeight: 500,
+                                  bgcolor: `${categoryInfo.color}20`,
                                   color: categoryInfo.color,
-                                  textTransform: 'uppercase',
-                                  letterSpacing: '0.03em',
+                                  border: `1px solid ${categoryInfo.color}40`,
                                 }}
-                              >
-                                {categoryInfo.label}
-                              </Typography>
+                              />
                             )}
-                            {categoryInfo && task.assignee && (
-                              <Typography component="span" sx={{ fontSize: '0.6rem', color: 'text.disabled' }}>·</Typography>
-                            )}
-                            <FormControl size="small" sx={{ minWidth: 0 }}>
+                            <FormControl size="small" variant="standard">
                               <Select
                                 value={task.assignee || ''}
                                 onChange={(e) => handleUpdateTaskAssignee(task.id, e.target.value)}
-                                variant="standard"
-                                disableUnderline
                                 displayEmpty
+                                disableUnderline
                                 disabled={usersLoading}
-                                sx={{ 
-                                  fontSize: '0.65rem', 
-                                  color: isAIAssignee(task.assignee) ? '#22c55e' : 'text.secondary',
-                                  '& .MuiSelect-select': { 
-                                    py: 0, 
-                                    pr: '16px !important',
-                                    minHeight: 'unset',
-                                  },
+                                sx={{
+                                  fontSize: '0.6rem',
+                                  fontWeight: 600,
+                                  bgcolor: isAIAssignee(task.assignee) 
+                                    ? 'rgba(34, 197, 94, 0.15)' 
+                                    : task.assignee 
+                                      ? 'rgba(251, 146, 60, 0.15)' 
+                                      : 'rgba(148, 163, 184, 0.1)',
+                                  color: isAIAssignee(task.assignee) 
+                                    ? '#22c55e' 
+                                    : task.assignee 
+                                      ? '#fb923c' 
+                                      : 'text.secondary',
+                                  borderRadius: 1,
+                                  px: 0.75,
+                                  py: 0.125,
+                                  '& .MuiSelect-select': { py: 0, pr: 2 },
                                   '& .MuiSvgIcon-root': { 
-                                    fontSize: '0.85rem',
-                                    right: 0,
-                                    color: 'text.disabled',
+                                    color: isAIAssignee(task.assignee) 
+                                      ? '#22c55e' 
+                                      : task.assignee 
+                                        ? '#fb923c' 
+                                        : 'text.secondary', 
+                                    fontSize: 14 
                                   },
                                 }}
+                                MenuProps={{
+                                  PaperProps: {
+                                    sx: { bgcolor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }
+                                  }
+                                }}
+                                renderValue={(value) => {
+                                  if (isAIAssignee(value as string)) {
+                                    return (
+                                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                        <AgentIcon size={12} /> AI Agent
+                                      </Box>
+                                    );
+                                  }
+                                  return value || 'Unassigned';
+                                }}
                               >
-                                <MenuItem value=""><em>Unassigned</em></MenuItem>
-                                <MenuItem value="AI Agent" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                  <AgentIcon size={14} />
-                                  AI Agent
+                                <MenuItem value="">Unassigned</MenuItem>
+                                <MenuItem value="AI Agent">
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                    <AgentIcon size={14} />
+                                    AI Agent
+                                  </Box>
                                 </MenuItem>
                                 {users.map((user) => (
                                   <MenuItem key={user.id} value={user.username}>{user.username}</MenuItem>
