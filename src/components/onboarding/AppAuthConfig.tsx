@@ -504,7 +504,15 @@ export const AppAuthCard = ({
           }
           onClick={() => {
             const authUrl = `https://shuffler.io/appauth?app_id=${app.objectID}`;
-            window.open(authUrl, '_blank', 'width=600,height=700');
+            const popup = window.open(authUrl, '_blank', 'width=600,height=700');
+            if (popup && onRefreshAuth) {
+              const pollTimer = setInterval(() => {
+                if (popup.closed) {
+                  clearInterval(pollTimer);
+                  onRefreshAuth();
+                }
+              }, 500);
+            }
           }}
           sx={{
             py: 1.5,
