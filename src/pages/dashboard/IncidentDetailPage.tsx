@@ -2297,7 +2297,7 @@ const IncidentDetailPage = () => {
                       <Box 
                         sx={{ 
                           display: 'flex', 
-                          alignItems: 'center', 
+                          alignItems: 'flex-start', 
                           gap: 1.5,
                           p: 1.5,
                           borderRadius: isExpanded ? '8px 8px 0 0' : 1,
@@ -2308,84 +2308,87 @@ const IncidentDetailPage = () => {
                           opacity: isBlocked ? 0.6 : 1,
                         }}
                       >
-                        {/* Expand toggle */}
-                        <IconButton 
-                          size="small" 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setExpandedTaskId(isExpanded ? null : task.id);
-                          }}
-                          sx={{ p: 0.25, color: 'text.secondary' }}
-                        >
-                          {isExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
-                        </IconButton>
-                        
-                        <IconButton 
-                          size="small" 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (!isBlocked) handleToggleTask(task.id);
-                          }}
-                          disabled={isBlocked}
-                          sx={{ 
-                            p: 0.5,
-                            color: task.completed ? '#22c55e' : 'text.secondary',
-                          }}
-                        >
-                          {task.completed ? (
-                            <CheckCircleIcon fontSize="small" />
-                          ) : (
-                            <Box sx={{ 
-                              width: 18, 
-                              height: 18, 
-                              borderRadius: '50%', 
-                              border: '2px solid currentColor',
-                            }} />
-                          )}
-                        </IconButton>
-                        
-                        <Box sx={{ flex: 1, minWidth: 0 }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                            {/* Use lightweight MentionText for collapsed tasks, MentionInput only when expanded */}
-                            {isExpanded ? (
-                              <MentionInput
-                                value={task.title}
-                                onChange={(value) => handleUpdateTaskTitle(task.id, value)}
-                                size="small"
-                                variant="standard"
-                                placeholder="Task title..."
-                                InputProps={{
-                                  disableUnderline: true,
-                                  sx: { 
-                                    fontSize: '0.875rem',
-                                    textDecoration: task.completed ? 'line-through' : 'none',
-                                    color: task.completed ? 'text.secondary' : 'text.primary',
-                                    '&:hover': { bgcolor: 'rgba(255,255,255,0.03)' },
-                                    borderRadius: 0.5,
-                                    px: 0.5,
-                                  },
-                                }}
-                                sx={{ flex: 1, minWidth: 200 }}
-                              />
+                        {/* Left: expand + checkbox */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, pt: 0.25 }}>
+                          <IconButton 
+                            size="small" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setExpandedTaskId(isExpanded ? null : task.id);
+                            }}
+                            sx={{ p: 0.25, color: 'text.secondary' }}
+                          >
+                            {isExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+                          </IconButton>
+                          
+                          <IconButton 
+                            size="small" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (!isBlocked) handleToggleTask(task.id);
+                            }}
+                            disabled={isBlocked}
+                            sx={{ 
+                              p: 0.5,
+                              color: task.completed ? '#22c55e' : 'text.secondary',
+                            }}
+                          >
+                            {task.completed ? (
+                              <CheckCircleIcon fontSize="small" />
                             ) : (
-                              <Box 
-                                onClick={() => setExpandedTaskId(task.id)}
-                                sx={{ 
-                                  flex: 1, 
-                                  minWidth: 200, 
-                                  cursor: 'pointer',
+                              <Box sx={{ 
+                                width: 18, 
+                                height: 18, 
+                                borderRadius: '50%', 
+                                border: '2px solid currentColor',
+                              }} />
+                            )}
+                          </IconButton>
+                        </Box>
+                        
+                        {/* Middle: title (row 1) + category & assignee (row 2) */}
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                          {/* Row 1: Title */}
+                          {isExpanded ? (
+                            <MentionInput
+                              value={task.title}
+                              onChange={(value) => handleUpdateTaskTitle(task.id, value)}
+                              size="small"
+                              variant="standard"
+                              placeholder="Task title..."
+                              InputProps={{
+                                disableUnderline: true,
+                                sx: { 
                                   fontSize: '0.875rem',
                                   textDecoration: task.completed ? 'line-through' : 'none',
                                   color: task.completed ? 'text.secondary' : 'text.primary',
                                   '&:hover': { bgcolor: 'rgba(255,255,255,0.03)' },
                                   borderRadius: 0.5,
                                   px: 0.5,
-                                  py: 0.25,
-                                }}
-                              >
-                                <MentionText text={task.title} />
-                              </Box>
-                            )}
+                                },
+                              }}
+                              sx={{ width: '100%' }}
+                            />
+                          ) : (
+                            <Box 
+                              onClick={() => setExpandedTaskId(task.id)}
+                              sx={{ 
+                                cursor: 'pointer',
+                                fontSize: '0.875rem',
+                                textDecoration: task.completed ? 'line-through' : 'none',
+                                color: task.completed ? 'text.secondary' : 'text.primary',
+                                '&:hover': { bgcolor: 'rgba(255,255,255,0.03)' },
+                                borderRadius: 0.5,
+                                px: 0.5,
+                                py: 0.25,
+                              }}
+                            >
+                              <MentionText text={task.title} />
+                            </Box>
+                          )}
+                          
+                          {/* Row 2: Category + Assignee */}
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.75, ml: 0.5, flexWrap: 'wrap' }}>
                             {categoryInfo && (
                               <Chip
                                 size="small"
@@ -2400,61 +2403,62 @@ const IncidentDetailPage = () => {
                                 }}
                               />
                             )}
+                            <FormControl size="small" sx={{ minWidth: 90 }}>
+                              <Select
+                                value={task.assignee || ''}
+                                onChange={(e) => handleUpdateTaskAssignee(task.id, e.target.value)}
+                                variant="standard"
+                                disableUnderline
+                                displayEmpty
+                                disabled={usersLoading}
+                                sx={{ fontSize: '0.7rem', color: 'text.secondary' }}
+                              >
+                                <MenuItem value=""><em>Unassigned</em></MenuItem>
+                                <MenuItem value="AI Agent" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <AgentIcon size={16} />
+                                  AI Agent
+                                </MenuItem>
+                                {users.map((user) => (
+                                  <MenuItem key={user.id} value={user.username}>{user.username}</MenuItem>
+                                ))}
+                              </Select>
+                            </FormControl>
                           </Box>
+                          
                           {isBlocked && dependencyTask && (
-                            <Typography variant="caption" sx={{ color: 'warning.main', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            <Typography variant="caption" sx={{ color: 'warning.main', display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
                               ⏳ Waiting on: {dependencyTask.title}
                             </Typography>
                           )}
                         </Box>
                         
-                        <FormControl size="small" sx={{ minWidth: 100 }}>
-                          <Select
-                            value={task.assignee || ''}
-                            onChange={(e) => handleUpdateTaskAssignee(task.id, e.target.value)}
-                            variant="standard"
-                            disableUnderline
-                            displayEmpty
-                            disabled={usersLoading}
-                            sx={{ fontSize: '0.75rem' }}
+                        {/* Right: date + delete */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0, pt: 0.25 }}>
+                          <TaskDateTimePicker
+                            value={task.dueDate || ''}
+                            onChange={(value) => handleUpdateTaskDueDate(task.id, value)}
+                          />
+                          
+                          <IconButton 
+                            size="small" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteTask(task.id);
+                            }}
+                            sx={{ 
+                              color: 'text.disabled',
+                              border: '1px solid rgba(255,255,255,0.08)',
+                              borderRadius: 1,
+                              '&:hover': { 
+                                color: '#ef4444',
+                                bgcolor: 'rgba(239, 68, 68, 0.1)',
+                                borderColor: 'rgba(239, 68, 68, 0.3)',
+                              } 
+                            }}
                           >
-                            <MenuItem value=""><em>Unassigned</em></MenuItem>
-                            <MenuItem value="AI Agent" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <AgentIcon size={16} />
-                              AI Agent
-                            </MenuItem>
-                            {users.map((user) => (
-                              <MenuItem key={user.id} value={user.username}>{user.username}</MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                        
-                        <TaskDateTimePicker
-                          value={task.dueDate || ''}
-                          onChange={(value) => handleUpdateTaskDueDate(task.id, value)}
-                        />
-                        
-                        <Box sx={{ width: 16 }} />
-                        
-                        <IconButton 
-                          size="small" 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteTask(task.id);
-                          }}
-                          sx={{ 
-                            color: 'text.disabled',
-                            border: '1px solid rgba(255,255,255,0.08)',
-                            borderRadius: 1,
-                            '&:hover': { 
-                              color: '#ef4444',
-                              bgcolor: 'rgba(239, 68, 68, 0.1)',
-                              borderColor: 'rgba(239, 68, 68, 0.3)',
-                            } 
-                          }}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
                       </Box>
                       
                       {/* Expanded Task Details */}
