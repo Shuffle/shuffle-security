@@ -225,10 +225,26 @@ const ThreatFeedsPage = () => {
         <Alert 
           severity={automationEnabled ? 'success' : 'warning'}
           icon={automationEnabled ? <CheckCircleIcon /> : <ErrorOutlineIcon />}
-          action={
+          sx={{ 
+            mb: 2, 
+            '& .MuiAlert-icon': { 
+              color: automationEnabled ? '#22c55e' : undefined 
+            },
+            '& .MuiAlert-message': { width: '100%' },
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+              Threat Intel Automation: {automationEnabled ? 'Active' : 'Inactive'}
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              {automationEnabled 
+                ? '— Incidents will be automatically enriched with threat intelligence from enabled feeds.'
+                : '— Enable to automatically enrich incidents with threat intelligence.'}
+            </Typography>
             <Button
               size="small"
-              variant="outlined"
+              variant={automationEnabled ? 'outlined' : 'contained'}
               onClick={async () => {
                 try {
                   const response = await getDatastoreItem(AUTOMATION_CONFIG_KEY, ONBOARDING_CONFIG_CATEGORY);
@@ -248,29 +264,19 @@ const ThreatFeedsPage = () => {
               }}
               sx={{ 
                 whiteSpace: 'nowrap',
-                borderColor: automationEnabled ? '#22c55e' : undefined,
-                color: automationEnabled ? '#22c55e' : undefined,
+                ml: 0.5,
+                ...(automationEnabled ? {
+                  borderColor: '#22c55e',
+                  color: '#22c55e',
+                } : {
+                  bgcolor: '#f97316',
+                  color: '#fff',
+                  '&:hover': { bgcolor: '#ea580c' },
+                }),
               }}
             >
               {automationEnabled ? 'Disable' : 'Enable'}
             </Button>
-          }
-          sx={{ 
-            mb: 2, 
-            '& .MuiAlert-icon': { 
-              color: automationEnabled ? '#22c55e' : undefined 
-            } 
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-              Threat Intel Automation: {automationEnabled ? 'Active' : 'Inactive'}
-            </Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              {automationEnabled 
-                ? '— Incidents will be automatically enriched with threat intelligence from enabled feeds.'
-                : '— Enable to automatically enrich incidents with threat intelligence.'}
-            </Typography>
           </Box>
         </Alert>
       )}
