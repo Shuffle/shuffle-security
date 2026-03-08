@@ -688,6 +688,10 @@ const IncidentDetailPage = () => {
         if (showLoading && loadedTasks.length === 0 && !searchParams.get('tab')) {
           setActiveTab(1);
         }
+        // If arriving with ?tab=raw, populate rawJsonText now that data is loaded
+        if (showLoading && searchParams.get('tab') === 'raw') {
+          setRawJsonText(JSON.stringify(data, null, 2));
+        }
         setLoading(false);
         console.log(`[Perf] Total loadIncident: ${(performance.now() - loadStart).toFixed(1)}ms`);
         return;
