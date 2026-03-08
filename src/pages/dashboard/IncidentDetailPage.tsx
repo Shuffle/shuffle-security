@@ -1617,6 +1617,10 @@ const IncidentDetailPage = () => {
                   const label = source ? `Resyncing from ${source}…` : 'Resyncing…';
                   toast.success(label, { duration: 30000 });
                   try {
+                    // Capture the envelope's edited timestamp BEFORE resync
+                    const preResult = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS);
+                    const previousEdited = preResult.item?.edited || 0;
+
                     const response = await fetch(getApiUrl('/api/v1/apps/categories/run'), {
                       method: 'POST',
                       credentials: 'include',
@@ -1636,18 +1640,12 @@ const IncidentDetailPage = () => {
                       setIsResyncing(false);
                       return;
                     }
-                    const previousEdited = incident.rawOCSF?.edited || incident.rawOCSF?.metadata?.modified_time_dt || '';
                     setTimeout(async () => {
                       await loadIncident(false);
                       setIsResyncing(false);
-                      // Compare edited timestamp to detect changes
-                      const result = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS);
-                      const newEdited = (() => {
-                        try {
-                          const val = JSON.parse(result.item?.value || '{}');
-                          return val.edited || val.metadata?.modified_time_dt || '';
-                        } catch { return ''; }
-                      })();
+                      // Compare envelope edited timestamp to detect changes
+                      const postResult = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS);
+                      const newEdited = postResult.item?.edited || 0;
                       if (newEdited && newEdited !== previousEdited) {
                         toast.success('Resync complete — update found');
                       } else {
