@@ -2407,7 +2407,7 @@ const IncidentDetailPage = () => {
                                 disableUnderline
                                 disabled={usersLoading}
                                 sx={{
-                                  fontSize: '0.6rem',
+                                  fontSize: '0.7rem',
                                   fontWeight: 600,
                                   bgcolor: isAIAssignee(task.assignee) 
                                     ? 'rgba(34, 197, 94, 0.15)' 
@@ -2420,16 +2420,16 @@ const IncidentDetailPage = () => {
                                       ? '#fb923c' 
                                       : 'text.secondary',
                                   borderRadius: 1,
-                                  px: 0.75,
-                                  py: 0.125,
-                                  '& .MuiSelect-select': { py: 0, pr: 2 },
+                                  px: 1,
+                                  py: 0.25,
+                                  '& .MuiSelect-select': { py: 0, pr: 2.5 },
                                   '& .MuiSvgIcon-root': { 
                                     color: isAIAssignee(task.assignee) 
                                       ? '#22c55e' 
                                       : task.assignee 
                                         ? '#fb923c' 
                                         : 'text.secondary', 
-                                    fontSize: 14 
+                                    fontSize: 16 
                                   },
                                 }}
                                 MenuProps={{
@@ -2441,7 +2441,7 @@ const IncidentDetailPage = () => {
                                   if (isAIAssignee(value as string)) {
                                     return (
                                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                        <AgentIcon size={12} /> AI Agent
+                                        <AgentIcon size={16} /> AI Agent
                                       </Box>
                                     );
                                   }
@@ -2451,7 +2451,7 @@ const IncidentDetailPage = () => {
                                 <MenuItem value="">Unassigned</MenuItem>
                                 <MenuItem value="AI Agent">
                                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                    <AgentIcon size={14} />
+                                    <AgentIcon size={16} />
                                     AI Agent
                                   </Box>
                                 </MenuItem>
