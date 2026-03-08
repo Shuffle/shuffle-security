@@ -82,6 +82,7 @@ export const useDatastore = ({ category }: UseDatastoreOptions): UseDatastoreRet
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
       setHasFetched(true);
     }
   }, [category, hasFetched]);
