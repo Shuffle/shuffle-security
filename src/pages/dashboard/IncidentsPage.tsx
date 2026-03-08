@@ -1523,7 +1523,7 @@ const IncidentsPage = () => {
                 </Typography>
               </Box>
               <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', opacity: 0.7, fontSize: '0.7rem' }}>
-                {showIrrelevant ? 'Showing' : 'Hidden'}
+                {showIrrelevant ? 'Click to hide' : 'Hidden'}
               </Typography>
             </Box>
           )}
