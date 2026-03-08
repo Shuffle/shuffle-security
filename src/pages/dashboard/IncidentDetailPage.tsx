@@ -2804,9 +2804,10 @@ const IncidentDetailPage = () => {
           </Box>
           
           {/* Observables list */}
-          {editedObservables.length > 0 ? (
+          {editedObservables.filter(o => !o.archived).length > 0 ? (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               {editedObservables.map((obs, idx) => {
+                if (obs.archived) return null;
                 const iocDef = iocTypes.find(t => t.name === obs.type);
                 const pattern = iocDef?.regex;
                 let mismatch = false;

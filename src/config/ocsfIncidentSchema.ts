@@ -33,6 +33,7 @@ export const TLP_STRING_TO_INT: Record<string, number> = {
 export interface Observable {
   type: string;
   value: string;
+  archived?: boolean;
 }
 
 // ============================================================================
