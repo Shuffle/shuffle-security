@@ -1677,6 +1677,23 @@ const IncidentDetailPage = () => {
                 sx: { bgcolor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', minWidth: 160 },
               }}
             >
+              {/* Share */}
+              <MenuItem
+                onClick={() => {
+                  setActionsMenuAnchor(null);
+                  setShowShareDialog(true);
+                }}
+              >
+                <LinkIcon sx={{ fontSize: 16, mr: 1 }} />
+                Share
+              </MenuItem>
+              {/* Visit Source */}
+              <MenuItem disabled>
+                <LinkIcon sx={{ fontSize: 16, mr: 1 }} />
+                Visit Source
+              </MenuItem>
+              <Divider />
+              {/* Resync */}
               <MenuItem
                 disabled={isSaving || !incident?.source || (() => {
                   const product = incident?.rawOCSF?.product || incident?.rawOCSF?.metadata?.product;
@@ -1693,7 +1710,6 @@ const IncidentDetailPage = () => {
                   const label = source ? `Resyncing from ${source}…` : 'Resyncing…';
                   toast.success(label, { duration: 30000 });
                   try {
-                    // Capture the envelope's edited timestamp BEFORE resync
                     const preResult = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS);
                     const previousEdited = preResult.item?.edited || 0;
 
@@ -1719,7 +1735,6 @@ const IncidentDetailPage = () => {
                     setTimeout(async () => {
                       await loadIncident(false);
                       setIsResyncing(false);
-                      // Compare envelope edited timestamp to detect changes
                       const postResult = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS);
                       const newEdited = postResult.item?.edited || 0;
                       if (newEdited && newEdited !== previousEdited) {
@@ -1737,16 +1752,12 @@ const IncidentDetailPage = () => {
                 <RefreshIcon sx={{ fontSize: 16, mr: 1 }} />
                 Resync
               </MenuItem>
-              <MenuItem disabled>
-                <LinkIcon sx={{ fontSize: 16, mr: 1 }} />
-                Visit Source
-              </MenuItem>
+              {/* Forward */}
               <MenuItem
                 disabled
                 onClick={() => {
                   setActionsMenuAnchor(null);
                   setShowForwardDialog(true);
-                  // Load authenticated apps for forward
                   setForwardingAppsLoading(true);
                   fetch(getApiUrl('/api/v1/apps/authentication'), {
                     credentials: 'include',
@@ -1756,7 +1767,6 @@ const IncidentDetailPage = () => {
                     .then(result => {
                       const authData = result.data || result;
                       if (Array.isArray(authData)) {
-                        // Deduplicate by app name, only validated ones
                         const seen = new Set<string>();
                         const apps = authData
                           .filter((a: any) => a.app?.name && a.validation?.valid)
@@ -1774,7 +1784,6 @@ const IncidentDetailPage = () => {
                                 : typeof rawCategories === 'object' && rawCategories !== null
                                   ? Object.keys(rawCategories)
                                   : [];
-
                             return {
                               id: a.app.name,
                               name: (a.app.name || '').replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
@@ -1791,15 +1800,6 @@ const IncidentDetailPage = () => {
               >
                 <ForwardIcon sx={{ fontSize: 16, mr: 1 }} />
                 Forward
-              </MenuItem>
-              <MenuItem
-                onClick={() => {
-                  setActionsMenuAnchor(null);
-                  setShowShareDialog(true);
-                }}
-              >
-                <LinkIcon sx={{ fontSize: 16, mr: 1 }} />
-                Share
               </MenuItem>
               {!isResolved && <Divider />}
               {!isResolved && (
