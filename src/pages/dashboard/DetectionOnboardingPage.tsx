@@ -1060,7 +1060,7 @@ const DetectionOnboardingPage = () => {
         // Stop each matching pipeline
         for (const existingPipeline of matchingPipelines) {
           if (existingPipeline && typeof existingPipeline === 'object') {
-            const pipelineId = existingPipeline.pipeline || existingPipeline.id;
+            const pipelineId = existingPipeline.id || existingPipeline.pipeline;
             console.log(`Stopping pipeline: ${pipelineId}`);
             await fetch(getApiUrl('/api/v1/triggers/pipeline'), {
               method: 'POST',
