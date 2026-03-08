@@ -167,7 +167,8 @@ const isAIAssignee = (assignee: string | null | undefined): boolean => {
 const meaningfulString = (val: unknown): string | undefined => {
   if (typeof val !== 'string') return undefined;
   const trimmed = val.trim();
-  return trimmed.length > 0 ? decodeHtmlEntities(trimmed) : undefined;
+  if (trimmed.length === 0 || trimmed === 'undefined' || trimmed === 'null') return undefined;
+  return decodeHtmlEntities(trimmed);
 };
 
 /**
@@ -571,7 +572,7 @@ const IncidentsPage = () => {
     );
 
     // Find incidents without a title that have a source and haven't been resynced this session
-    const needsSync = (t?: string) => !t || t === 'Untitled Incident' || t === 'Requires sync';
+    const needsSync = (t?: string) => !t || t === 'Untitled Incident' || t === 'Requires sync' || t === 'undefined';
     const untitled = incidents.filter(inc => {
       const sync = needsSync(inc.title);
       console.log(`[AutoResync] Checking ${inc.id}: title="${inc.title}" needsSync=${sync} source="${inc.source}" alreadyResynced=${alreadyResynced.has(inc.id)} inQueue=${autoResyncQueueRef.current.has(inc.id)}`);
