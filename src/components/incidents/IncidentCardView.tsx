@@ -451,21 +451,29 @@ export const IncidentCardView = ({
                       </Typography>
                     </Tooltip>
                   )}
-                  {(incident.editedTs && incident.editedTs !== incident.originCreatedTs) && (
-                    <>
-                      <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-                        •
-                      </Typography>
-                      <Tooltip title={`Updated: ${formatAbsoluteTime(incident.editedTs)}`} placement="bottom">
-                        <Typography
-                          variant="caption"
-                          sx={{ color: 'hsl(var(--muted-foreground))', cursor: 'default', fontStyle: 'italic' }}
-                        >
-                          edited {formatRelativeTime(incident.editedTs)}
+                  {(incident.editedTs && incident.editedTs !== incident.originCreatedTs) && (() => {
+                    const isStale = incident.status !== 'resolved' && incident.status !== 'closed' && (Date.now() - incident.editedTs) > 86400000;
+                    return (
+                      <>
+                        <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                          •
                         </Typography>
-                      </Tooltip>
-                    </>
-                  )}
+                        <Tooltip title={`Updated: ${formatAbsoluteTime(incident.editedTs)}`} placement="bottom">
+                          <Typography
+                            variant="caption"
+                            sx={{ 
+                              cursor: 'default', 
+                              fontStyle: 'italic',
+                              color: isStale ? '#f59e0b' : 'hsl(var(--muted-foreground))',
+                              fontWeight: isStale ? 600 : 400,
+                            }}
+                          >
+                            edited {formatRelativeTime(incident.editedTs)}
+                          </Typography>
+                        </Tooltip>
+                      </>
+                    );
+                  })()}
                   <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
                     •
                   </Typography>
