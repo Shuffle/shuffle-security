@@ -230,6 +230,12 @@ const IOCTypesPage = () => {
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+      {/* Auto-ingestion note */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, px: 2, py: 1.5, borderRadius: 2, bgcolor: 'rgba(251, 146, 60, 0.08)', border: '1px solid rgba(251, 146, 60, 0.18)' }}>
+        <Typography variant="body2" sx={{ color: '#fb923c', fontWeight: 500 }}>
+          Automatic observable ingestion is not yet fully enabled. IOC types defined here will be used for manual tagging. Automated extraction is coming soon.
+        </Typography>
+      </Box>
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Typography variant="h5" sx={{ fontWeight: 600 }}>IOC Types</Typography>
