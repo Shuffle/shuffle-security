@@ -559,6 +559,7 @@ const IncidentsPage = () => {
 
   // Auto-resync untitled incidents (once per browser session, one at a time)
   useEffect(() => {
+    console.log('[AutoResync] Effect running. hasFetched:', hasFetched, 'incidents.length:', incidents.length);
     if (!hasFetched || incidents.length === 0) return;
     
     const SESSION_KEY = 'shuffle_auto_resync_done';
@@ -569,13 +570,16 @@ const IncidentsPage = () => {
     // Find incidents without a title that have a source and haven't been resynced this session
     const needsSync = (t?: string) => !t || t === 'Untitled Incident' || t === 'Requires sync';
     const untitled = incidents.filter(inc => {
-      if (!needsSync(inc.title)) return false; // Already has a real title
+      const sync = needsSync(inc.title);
+      console.log(`[AutoResync] Checking ${inc.id}: title="${inc.title}" needsSync=${sync} source="${inc.source}" alreadyResynced=${alreadyResynced.has(inc.id)} inQueue=${autoResyncQueueRef.current.has(inc.id)}`);
+      if (!sync) return false;
       if (!inc.source) return false;
       if (alreadyResynced.has(inc.id)) return false;
       if (autoResyncQueueRef.current.has(inc.id)) return false;
       return true;
     });
 
+    console.log('[AutoResync] Candidates:', untitled.length, 'resyncingId:', resyncingId);
     if (untitled.length === 0 || resyncingId) return;
 
     // Pick the first one
