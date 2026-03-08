@@ -2648,7 +2648,7 @@ const IncidentDetailPage = () => {
                     onClick={() => setIsEditingDescription(true)}
                   >
                     {editedMessage ? (
-                      <Typography variant="body2" sx={{ color: 'text.primary' }}>
+                      <Typography variant="body2" sx={{ color: 'text.primary', whiteSpace: 'pre-wrap' }}>
                         {editedMessage}
                       </Typography>
                     ) : (
