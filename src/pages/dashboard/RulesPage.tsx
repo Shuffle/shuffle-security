@@ -354,6 +354,21 @@ const RulesPage = () => {
     try {
       const result = await deleteFile(file.id);
       if (result.success) {
+        // After deleting, disable then re-enable all rules to sync backend state
+        try {
+          await fetch(getApiUrl('/api/v1/detections/sigma/selected_rules/disable_folder'), {
+            method: 'PUT',
+            credentials: 'include',
+            headers: { ...getAuthHeader() },
+          });
+          await fetch(getApiUrl('/api/v1/detections/sigma/selected_rules/enable_folder'), {
+            method: 'PUT',
+            credentials: 'include',
+            headers: { ...getAuthHeader() },
+          });
+        } catch (syncError) {
+          console.warn('Failed to sync rules after deletion:', syncError);
+        }
         toast.success(`Deleted ${file.filename}`);
         fetchDetections();
       } else {
