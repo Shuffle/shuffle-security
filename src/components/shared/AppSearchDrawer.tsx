@@ -249,6 +249,7 @@ export default function AppSearchDrawer({
         appName={detailAppName}
         anchor={anchor}
         width={width}
+        onRefresh={onClose}
         onAddToCanvas={onAddToCanvas}
       />
     </>

@@ -1719,6 +1719,7 @@ const CategoryDetailDrawer = ({
   configuredCategories,
   disabledAppsForCategory,
   onToggleAppDisabledForCategory,
+  onRefreshApps,
 }: {
   category: ToolCategory | null;
   matchedApps: MatchedApp[];
@@ -1731,6 +1732,7 @@ const CategoryDetailDrawer = ({
   configuredCategories: Set<string>;
   disabledAppsForCategory?: Set<string>;
   onToggleAppDisabledForCategory?: (appName: string) => void;
+  onRefreshApps?: () => void;
 }) => {
   const navigate = useNavigate();
   const hasApps = matchedApps.length > 0;
@@ -1860,7 +1862,10 @@ const CategoryDetailDrawer = ({
         {/* Add App Modal */}
         <AddAppModal
           open={showSearch}
-          onClose={() => setShowSearch(false)}
+          onClose={() => {
+            setShowSearch(false);
+            onRefreshApps?.();
+          }}
           initialQuery={category.label}
           categoryLabel={category.label}
         />
@@ -2305,37 +2310,37 @@ const InfrastructureContent = () => {
   }, []);
 
   // Fetch authenticated apps and map to categories
-  useEffect(() => {
-    const fetchApps = async () => {
-      
-      try {
-        const response = await fetch(getApiUrl('/api/v1/apps/authentication'), {
-          credentials: 'include',
-          headers: { ...getAuthHeader() },
-        });
-        if (!response.ok) return;
-        const result = await response.json();
-        const authData: AuthAppEntry[] = result.data || result;
-        if (!Array.isArray(authData)) return;
+  const fetchApps = useCallback(async () => {
+    try {
+      const response = await fetch(getApiUrl('/api/v1/apps/authentication'), {
+        credentials: 'include',
+        headers: { ...getAuthHeader() },
+      });
+      if (!response.ok) return;
+      const result = await response.json();
+      const authData: AuthAppEntry[] = result.data || result;
+      if (!Array.isArray(authData)) return;
 
-        const dedupedApps = deduplicateAuthApps(authData);
-        await backfillAppImages(dedupedApps);
-        const mapped: Record<string, MatchedApp[]> = {};
+      const dedupedApps = deduplicateAuthApps(authData);
+      await backfillAppImages(dedupedApps);
+      const mapped: Record<string, MatchedApp[]> = {};
 
-        dedupedApps.forEach(({ app, bestImage, hasValidAuth }) => {
-          const catId = matchAppToCategory(app.name, app.categories || []);
-          if (!catId) return;
-          if (!mapped[catId]) mapped[catId] = [];
-          mapped[catId].push({ name: app.name, image: bestImage || app.large_image || '', hasValidAuth });
-        });
+      dedupedApps.forEach(({ app, bestImage, hasValidAuth }) => {
+        const catId = matchAppToCategory(app.name, app.categories || []);
+        if (!catId) return;
+        if (!mapped[catId]) mapped[catId] = [];
+        mapped[catId].push({ name: app.name, image: bestImage || app.large_image || '', hasValidAuth });
+      });
 
-        setCategoryApps(mapped);
-      } catch (e) {
-        console.error('Failed to fetch apps for infrastructure:', e);
-      }
-    };
-    fetchApps();
+      setCategoryApps(mapped);
+    } catch (e) {
+      console.error('Failed to fetch apps for infrastructure:', e);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchApps();
+  }, [fetchApps]);
 
   const activeId = selectedId || hoveredId;
 
@@ -3018,6 +3023,7 @@ const InfrastructureContent = () => {
         configuredCategories={activeCategories}
         disabledAppsForCategory={disabledApps}
         onToggleAppDisabledForCategory={toggleAppDisabled}
+        onRefreshApps={fetchApps}
       />
 
       {/* Edge state legend — bottom-right overlay */}
