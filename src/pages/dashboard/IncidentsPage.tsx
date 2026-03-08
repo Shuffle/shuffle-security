@@ -26,7 +26,7 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { useDatastore } from '@/hooks/useDatastore';
 import { useAuth } from '@/context/AuthContext';
 import { useUsers } from '@/hooks/useUsers';
-import { DATASTORE_CATEGORIES, getDatastoreByCategory, setDatastoreItems, CategoryAutomation, deleteDatastoreItems } from '@/services/datastore';
+import { DATASTORE_CATEGORIES, getDatastoreByCategory, getDatastoreItem, setDatastoreItems, CategoryAutomation, deleteDatastoreItems } from '@/services/datastore';
 import { CreateIncidentDialog, ActivityItem } from '@/components/incidents/CreateIncidentDialog';
 import { OCSFIncidentFinding, Observable, TLP_LABELS, convertLegacyTlp, mapOCSFSeverity, mapOCSFStatus } from '@/config/ocsfIncidentSchema';
 import { deduplicateTasks, decodeHtmlEntities } from '@/lib/utils';
@@ -550,14 +550,50 @@ const IncidentsPage = () => {
           console.warn(`[AutoResync] Failed for ${target.id}`);
         }
 
-        // Wait for backend processing then refresh
-        setTimeout(async () => {
-          alreadyResynced.add(target.id);
-          sessionStorage.setItem(SESSION_KEY, JSON.stringify([...alreadyResynced]));
-          await fetchItems();
-          setResyncingId(null);
-          setResyncingSource('');
-        }, 30000);
+        // Poll the specific incident every 5s for up to 60s
+        const POLL_INTERVAL = 5000;
+        const MAX_POLLS = 12;
+        let pollCount = 0;
+
+        const poll = async () => {
+          pollCount++;
+          try {
+            const item = await getDatastoreItem(target.id, DATASTORE_CATEGORIES.INCIDENTS);
+            if (item.success && item.item) {
+              // Check if it now has real content
+              let parsed: any = null;
+              try {
+                parsed = typeof item.item.value === 'string' ? JSON.parse(item.item.value) : item.item.value;
+              } catch { /* ignore */ }
+
+              const title = parsed?.finding_info?.title || parsed?.title || '';
+              if (title && title !== 'Untitled Incident') {
+                console.log(`[AutoResync] Got content for ${target.id} after ${pollCount} polls`);
+                alreadyResynced.add(target.id);
+                sessionStorage.setItem(SESSION_KEY, JSON.stringify([...alreadyResynced]));
+                await fetchItems();
+                setResyncingId(null);
+                setResyncingSource('');
+                return;
+              }
+            }
+          } catch { /* ignore poll errors */ }
+
+          if (pollCount < MAX_POLLS) {
+            setTimeout(poll, POLL_INTERVAL);
+          } else {
+            // Give up after max polls
+            console.warn(`[AutoResync] Timed out for ${target.id}`);
+            alreadyResynced.add(target.id);
+            sessionStorage.setItem(SESSION_KEY, JSON.stringify([...alreadyResynced]));
+            await fetchItems();
+            setResyncingId(null);
+            setResyncingSource('');
+          }
+        };
+
+        // Start first poll after 5s
+        setTimeout(poll, POLL_INTERVAL);
       } catch (err) {
         console.warn('[AutoResync] Error:', err);
         alreadyResynced.add(target.id);
