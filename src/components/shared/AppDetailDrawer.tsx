@@ -193,9 +193,16 @@ export default function AppDetailDrawer({
               );
               setIsActivated(!!match);
               setActivatedAppId(match?.id || null);
+            } else {
+              // API returned non-array (e.g. wrapped in {data: [...]})
+              setIsActivated(false);
             }
+          } else {
+            setIsActivated(false);
           }
-        } catch {}
+        } catch {
+          setIsActivated(false);
+        }
       }
 
       setAppLoading(false);
