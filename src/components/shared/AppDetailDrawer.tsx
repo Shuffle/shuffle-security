@@ -128,13 +128,15 @@ export default function AppDetailDrawer({
     refreshAuth,
   } = useAppAuth();
 
-  // Fetch app info when opened
+  // Fetch app info and refresh auth when opened with a new app
   useEffect(() => {
     if (!open || !appName) return;
     setAppLoading(true);
     setAppInfo(null);
     setIsActivated(null);
     setResolvedAlgoliaId(null);
+    // Always refresh auth when opening a different app
+    refreshAuth();
 
     const normalizedName = appName.toLowerCase().replace(/[\s_\-]+/g, '_');
     const searchName = appName.replace(/_/g, ' ');
