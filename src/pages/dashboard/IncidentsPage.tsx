@@ -559,8 +559,11 @@ const IncidentsPage = () => {
 
   // Auto-resync untitled incidents (once per browser session, one at a time)
   useEffect(() => {
-    console.log('[AutoResync] Effect running. hasFetched:', hasFetched, 'incidents.length:', incidents.length);
-    if (!hasFetched || incidents.length === 0) return;
+    console.log('[AutoResync] Effect running. hasFetched:', hasFetched, 'incidents.length:', incidents.length, 'resyncingId:', resyncingId, 'queueSize:', autoResyncQueueRef.current.size, 'queue:', [...autoResyncQueueRef.current]);
+    if (!hasFetched || incidents.length === 0) {
+      console.log('[AutoResync] Bailing: hasFetched=', hasFetched, 'incidents.length=', incidents.length);
+      return;
+    }
     
     const SESSION_KEY = 'shuffle_auto_resync_done';
     const alreadyResynced: Set<string> = new Set(
