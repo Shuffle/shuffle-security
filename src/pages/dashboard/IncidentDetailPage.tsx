@@ -435,7 +435,20 @@ const IncidentDetailPage = () => {
   const [showForwardDialog, setShowForwardDialog] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [publicAuthorization, setPublicAuthorization] = useState<string>('');
-   const [activeTab, setActiveTab] = useState(0); // 0=Tasks, 1=Details, 2=Observables, 3=Correlations, 4=Raw
+  const TAB_NAMES = ['tasks', 'details', 'observables', 'correlations', 'raw'] as const;
+  const initialTab = (() => {
+    const t = searchParams.get('tab');
+    if (t) { const idx = TAB_NAMES.indexOf(t as any); return idx >= 0 ? idx : 0; }
+    return 0;
+  })();
+   const [activeTab, setActiveTabState] = useState(initialTab);
+   const setActiveTab = (tab: number) => {
+     setActiveTabState(tab);
+     const newParams = new URLSearchParams(searchParams);
+     if (tab === 0) { newParams.delete('tab'); } else { newParams.set('tab', TAB_NAMES[tab] || ''); }
+     const paramStr = newParams.toString();
+     window.history.replaceState(null, '', `${window.location.pathname}${paramStr ? '?' + paramStr : ''}`);
+   };
    const [rawJsonText, setRawJsonText] = useState('');
   const [forwardingApps, setForwardingApps] = useState<Array<{ id: string; name: string; large_image: string; categories: string[] }>>([]);
   const [forwardingAppsLoading, setForwardingAppsLoading] = useState(false);
@@ -639,8 +652,8 @@ const IncidentDetailPage = () => {
           labels: labelsStr,
         };
         console.log(`[Perf] State hydration: ${(performance.now() - stateStart).toFixed(1)}ms`);
-        // Auto-switch to Details tab if no tasks (only on initial load)
-        if (showLoading && loadedTasks.length === 0) {
+        // Auto-switch to Details tab if no tasks (only on initial load, and only if no tab param)
+        if (showLoading && loadedTasks.length === 0 && !searchParams.get('tab')) {
           setActiveTab(1);
         }
         setLoading(false);
