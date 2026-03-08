@@ -427,6 +427,8 @@ const IncidentDetailPage = () => {
   const [isResyncing, setIsResyncing] = useState(false);
   const [actionsMenuAnchor, setActionsMenuAnchor] = useState<null | HTMLElement>(null);
   const [showForwardDialog, setShowForwardDialog] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [publicAuthorization, setPublicAuthorization] = useState<string>('');
    const [activeTab, setActiveTab] = useState(0); // 0=Tasks, 1=Details, 2=Observables, 3=Correlations, 4=Raw
    const [rawJsonText, setRawJsonText] = useState('');
   const [forwardingApps, setForwardingApps] = useState<Array<{ id: string; name: string; large_image: string; categories: string[] }>>([]);
@@ -500,6 +502,7 @@ const IncidentDetailPage = () => {
     console.log(`[Perf] Incident fetch: ${fetchTime.toFixed(1)}ms, size: ${((result.item?.value?.length || 0) / 1024).toFixed(1)}KB`);
     
     if (result.success && result.item) {
+      setPublicAuthorization(result.item.public_authorization || '');
       const itemData = {
         key: result.item.key || id,
         value: result.item.value,
@@ -1578,6 +1581,79 @@ const IncidentDetailPage = () => {
               </IconButton>
             </Tooltip>
 
+            {/* Share Dialog */}
+            <Dialog
+              open={showShareDialog}
+              onClose={() => setShowShareDialog(false)}
+              maxWidth="sm"
+              fullWidth
+              PaperProps={{ sx: { bgcolor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 2 } }}
+            >
+              <DialogTitle sx={{ pb: 1 }}>
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>Share Incident</Typography>
+                <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                  Anyone with this link can view the incident without logging in.
+                </Typography>
+              </DialogTitle>
+              <DialogContent>
+                <Box sx={{ mt: 1 }}>
+                  <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', mb: 0.5, display: 'block' }}>
+                    Public link
+                  </Typography>
+                  <Box sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    p: 1.5,
+                    borderRadius: 1.5,
+                    bgcolor: 'rgba(255,255,255,0.03)',
+                    border: '1px solid hsl(var(--border))',
+                  }}>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        flex: 1,
+                        fontFamily: 'monospace',
+                        fontSize: '0.75rem',
+                        color: 'hsl(var(--foreground))',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        minWidth: 0,
+                        userSelect: 'all',
+                      }}
+                    >
+                      {`${window.location.origin}/incidents/${incident?.id}?authorization=${publicAuthorization}&org=${userInfo?.active_org?.id || ''}`}
+                    </Typography>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => {
+                        const url = `${window.location.origin}/incidents/${incident?.id}?authorization=${publicAuthorization}&org=${userInfo?.active_org?.id || ''}`;
+                        navigator.clipboard.writeText(url);
+                        toast.success('Link copied to clipboard');
+                      }}
+                      sx={{
+                        flexShrink: 0,
+                        textTransform: 'none',
+                        borderColor: 'hsl(var(--border))',
+                        color: 'hsl(var(--foreground))',
+                        fontWeight: 600,
+                        fontSize: '0.75rem',
+                        '&:hover': { borderColor: 'hsl(var(--primary))', color: 'hsl(var(--primary))' },
+                      }}
+                    >
+                      Copy
+                    </Button>
+                  </Box>
+                  {!publicAuthorization && (
+                    <Typography variant="caption" sx={{ color: '#fb923c', mt: 1, display: 'block' }}>
+                      No public authorization token found for this incident. The link may not work for unauthenticated users.
+                    </Typography>
+                  )}
+                </Box>
+              </DialogContent>
+            </Dialog>
 
             <Tooltip title="Actions">
               <IconButton
@@ -1715,6 +1791,15 @@ const IncidentDetailPage = () => {
               >
                 <ForwardIcon sx={{ fontSize: 16, mr: 1 }} />
                 Forward
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  setActionsMenuAnchor(null);
+                  setShowShareDialog(true);
+                }}
+              >
+                <LinkIcon sx={{ fontSize: 16, mr: 1 }} />
+                Share
               </MenuItem>
               {!isResolved && <Divider />}
               {!isResolved && (

@@ -13,6 +13,7 @@ export interface DatastoreItem {
   category: string;
   created?: number;
   edited?: number;
+  public_authorization?: string;
 }
 
 export interface CategoryAutomation {
