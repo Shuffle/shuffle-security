@@ -1150,9 +1150,21 @@ const IncidentsPage = () => {
             </Box>
           )}
 
-          <Tooltip title="Automation for Incidents">
+          <Tooltip title={(() => {
+            const workflowAuto = categoryAutomations?.find(a => a.type === 'workflow' && a.enabled);
+            const wfId = workflowAuto?.options?.find(o => o.key === 'workflow_id')?.value?.split(',')[0]?.trim();
+            return wfId ? "Click to open automation workflow" : "Automation for Incidents";
+          })()}>
             <IconButton 
-              onClick={() => setAutomationsDialogOpen(true)}
+              onClick={() => {
+                const workflowAuto = categoryAutomations?.find(a => a.type === 'workflow' && a.enabled);
+                const wfId = workflowAuto?.options?.find(o => o.key === 'workflow_id')?.value?.split(',')[0]?.trim();
+                if (wfId) {
+                  window.open(`https://shuffler.io/workflows/${wfId}`, '_blank');
+                } else {
+                  setAutomationsDialogOpen(true);
+                }
+              }}
               sx={{ 
                 width: 36,
                 height: 36,
