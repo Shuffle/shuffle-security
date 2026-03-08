@@ -54,8 +54,15 @@ export const useDatastore = ({ category }: UseDatastoreOptions): UseDatastoreRet
           // Appending to existing items (pagination)
           setItems(prev => [...prev, ...response.data!]);
         } else {
-          // Fresh fetch
-          setItems(response.data);
+          // Fresh fetch — only update if data actually changed to avoid scroll reset
+          setItems(prev => {
+            const newData = response.data!;
+            // Quick equality check: same length and same keys in same order
+            if (prev.length === newData.length && prev.every((item, i) => item.key === newData[i].key && item.edited === newData[i].edited)) {
+              return prev; // No change — keep same reference
+            }
+            return newData;
+          });
         }
         setCursor(response.cursor || null);
         setHasMore(!!response.cursor);
