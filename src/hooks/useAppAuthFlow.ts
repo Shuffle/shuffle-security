@@ -19,7 +19,7 @@ export function useAppAuthFlow() {
   const [authenticatedApps, setAuthenticatedApps] = useState<ApiAuthEntry[]>([]);
   const [authLoading, setAuthLoading] = useState(false);
 
-  const fetchAuthForApp = useCallback(async (appName: string) => {
+  const fetchAuthForApp = useCallback(async (appName: string, appImageUrl?: string) => {
     
     setAuthLoading(true);
     try {
@@ -31,9 +31,18 @@ export function useAppAuthFlow() {
         const result = await response.json();
         const authData = result.data || result;
         if (Array.isArray(authData)) {
-          const appEntries = authData.filter(
-            (a: ApiAuthEntry) => a.app?.name?.toLowerCase() === appName.toLowerCase()
-          );
+          const normalize = (n: string) => n.toLowerCase().replace(/[\s_\-]+/g, '_');
+          const appEntries = authData
+            .filter(
+              (a: ApiAuthEntry) => normalize(a.app?.name || '') === normalize(appName)
+            )
+            .map((a: ApiAuthEntry) => ({
+              ...a,
+              app: {
+                ...a.app,
+                large_image: a.app?.large_image || appImageUrl || '',
+              },
+            }));
           setAuthenticatedApps(appEntries);
         }
       }
@@ -47,7 +56,7 @@ export function useAppAuthFlow() {
   const selectApp = useCallback((app: AlgoliaSearchApp) => {
     setSelectedApp(app);
     setAuthState({ systemId: app.objectID, status: 'pending', credentials: {} });
-    fetchAuthForApp(app.name);
+    fetchAuthForApp(app.name, app.image_url);
   }, [fetchAuthForApp]);
 
   const clearSelection = useCallback(() => {
@@ -87,7 +96,7 @@ export function useAppAuthFlow() {
       const validActions = ['done', 'app_validation'];
       const isValid = response.ok && validActions.includes(result.action) && result.success === true;
 
-      await fetchAuthForApp(selectedApp.name);
+      await fetchAuthForApp(selectedApp.name, selectedApp.image_url);
 
       setAuthState(prev => ({
         ...prev,
@@ -134,7 +143,7 @@ export function useAppAuthFlow() {
       });
       const result = await response.json();
       if (response.ok && result.success !== false) {
-        await fetchAuthForApp(selectedApp.name);
+        await fetchAuthForApp(selectedApp.name, selectedApp.image_url);
         return true;
       }
       return false;
@@ -145,7 +154,7 @@ export function useAppAuthFlow() {
 
   const refreshAuth = useCallback(async () => {
     if (selectedApp) {
-      await fetchAuthForApp(selectedApp.name);
+      await fetchAuthForApp(selectedApp.name, selectedApp.image_url);
     }
   }, [selectedApp, fetchAuthForApp]);
 
