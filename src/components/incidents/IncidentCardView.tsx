@@ -1,4 +1,4 @@
-import { Box, Typography, Chip, Checkbox, Skeleton, Tooltip } from '@mui/material';
+import { Box, Typography, Chip, Checkbox, Skeleton, Tooltip, CircularProgress } from '@mui/material';
 import { Tag } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
