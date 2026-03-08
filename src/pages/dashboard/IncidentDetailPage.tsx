@@ -1913,17 +1913,24 @@ const IncidentDetailPage = () => {
                       setIsResyncing(false);
                       return;
                     }
-                    setTimeout(async () => {
-                      await loadIncident(false);
-                      setIsResyncing(false);
+                    // Poll every 5s for up to 30s checking if the item was updated
+                    let pollCount = 0;
+                    const pollInterval = setInterval(async () => {
+                      pollCount++;
                       const postResult = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS);
                       const newEdited = postResult.item?.edited || 0;
                       if (newEdited && newEdited !== previousEdited) {
+                        clearInterval(pollInterval);
+                        await loadIncident(false);
+                        setIsResyncing(false);
                         toast.success('Resync complete — update found');
-                      } else {
+                      } else if (pollCount >= 6) {
+                        clearInterval(pollInterval);
+                        await loadIncident(false);
+                        setIsResyncing(false);
                         toast.info('Resync complete — no changes detected');
                       }
-                    }, 30000);
+                    }, 5000);
                   } catch {
                     toast.error('Resync failed');
                     setIsResyncing(false);
