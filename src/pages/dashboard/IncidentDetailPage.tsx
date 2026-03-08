@@ -2798,13 +2798,19 @@ const IncidentDetailPage = () => {
                 if (pattern) {
                   try { mismatch = !new RegExp(pattern).test(obs.value); } catch { /* skip */ }
                 }
+                // Find matching types (other types whose regex matches this value)
+                const suggestedTypes = mismatch
+                  ? iocTypes.filter(t => t.name !== obs.type && t.regex).filter(t => {
+                      try { return new RegExp(t.regex!).test(obs.value); } catch { return false; }
+                    }).slice(0, 3)
+                  : [];
                 return (
                   <Box 
                     key={idx} 
                     sx={{ 
                       display: 'flex', 
                       flexDirection: 'column',
-                      gap: mismatch ? 0.5 : 0,
+                      gap: (mismatch) ? 0.5 : 0,
                       p: 1.5, 
                       borderRadius: 1, 
                       bgcolor: 'rgba(0,0,0,0.2)',
@@ -2838,9 +2844,39 @@ const IncidentDetailPage = () => {
                       </IconButton>
                     </Box>
                     {mismatch && (
-                      <Typography variant="caption" sx={{ color: '#fb923c', fontSize: '0.65rem', pl: 0.5 }}>
-                        ⚠ Value doesn't match expected pattern for "{obs.type}" — regex: <code style={{ fontSize: '0.6rem' }}>{pattern}</code>
-                      </Typography>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, pl: 0.5 }}>
+                        <Typography variant="caption" sx={{ color: '#fb923c', fontSize: '0.65rem' }}>
+                          ⚠ Doesn't match pattern for "{obs.type}"
+                        </Typography>
+                        {suggestedTypes.length > 0 && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
+                            <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.65rem' }}>
+                              Matches:
+                            </Typography>
+                            {suggestedTypes.map(st => (
+                              <Chip
+                                key={st.name}
+                                label={`Change to ${st.name}`}
+                                size="small"
+                                onClick={() => {
+                                  const updated = [...editedObservables];
+                                  updated[idx] = { ...updated[idx], type: st.name };
+                                  setEditedObservables(updated);
+                                }}
+                                sx={{
+                                  height: 20,
+                                  fontSize: '0.6rem',
+                                  fontWeight: 600,
+                                  cursor: 'pointer',
+                                  bgcolor: 'rgba(34, 197, 94, 0.12)',
+                                  color: '#22c55e',
+                                  '&:hover': { bgcolor: 'rgba(34, 197, 94, 0.25)' },
+                                }}
+                              />
+                            ))}
+                          </Box>
+                        )}
+                      </Box>
                     )}
                   </Box>
                 );
