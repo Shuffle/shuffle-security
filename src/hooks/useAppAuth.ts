@@ -226,6 +226,7 @@ export function useAppAuth() {
     } catch (error) {
       await new Promise(resolve => setTimeout(resolve, 3000));
       await fetchAuthenticatedApps();
+      refreshAllIntegrationStatus();
 
       setAuthStates((prev) => ({
         ...prev,
