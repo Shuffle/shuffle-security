@@ -317,6 +317,7 @@ const IncidentsPage = () => {
   const [webhookIngestion, setWebhookIngestion] = useState<WebhookIngestionInfo>({ url: null, exists: false, enabled: false, workflowId: null });
   const [isSyncing, setIsSyncing] = useState(false);
   const [isUpdatingApps, setIsUpdatingApps] = useState(false);
+  const [ingestionLoading, setIngestionLoading] = useState(true);
   const pendingTogglesRef = useRef<Map<string, boolean>>(new Map());
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [appSearchOpen, setAppSearchOpen] = useState(false);
