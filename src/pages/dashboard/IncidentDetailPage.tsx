@@ -974,7 +974,9 @@ const IncidentDetailPage = () => {
 
   const handleRemoveObservable = (index: number) => {
     autoProgressStatus();
-    setEditedObservables(editedObservables.filter((_, i) => i !== index));
+    const updated = [...editedObservables];
+    updated[index] = { ...updated[index], archived: true };
+    setEditedObservables(updated);
   };
 
   const handleAddComment = async () => {
