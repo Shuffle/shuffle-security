@@ -49,6 +49,7 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import ForwardIcon from '@mui/icons-material/Forward';
+import CallMergeIcon from '@mui/icons-material/CallMerge';
 import CloseIcon from '@mui/icons-material/Close';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import Menu from '@mui/material/Menu';
@@ -82,6 +83,7 @@ import {
   convertLegacyTlp,
 } from '@/config/ocsfIncidentSchema';
 import { ResolveIncidentDialog, ResolutionData, RESOLUTION_REASONS } from '@/components/incidents/ResolveIncidentDialog';
+import { MergeIncidentDialog } from '@/components/incidents/MergeIncidentDialog';
 import { MentionText } from '@/components/incidents/MentionText';
 import { MentionInput } from '@/components/incidents/MentionInput';
 import { TaskDateTimePicker } from '@/components/incidents/TaskDateTimePicker';
@@ -466,6 +468,7 @@ const IncidentDetailPage = () => {
   const [actionsMenuAnchor, setActionsMenuAnchor] = useState<null | HTMLElement>(null);
   const [showForwardDialog, setShowForwardDialog] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
+  const [showMergeDialog, setShowMergeDialog] = useState(false);
   const [publicAuthorization, setPublicAuthorization] = useState<string>('');
   const TAB_NAMES = ['tasks', 'details', 'observables', 'correlations', 'raw'] as const;
   const initialTab = (() => {
@@ -2014,6 +2017,18 @@ const IncidentDetailPage = () => {
               >
                 <ForwardIcon sx={{ fontSize: 16, mr: 1 }} />
                 Forward
+              </MenuItem>
+              <Divider />
+              {/* Merge */}
+              <MenuItem
+                disabled={isSaving}
+                onClick={() => {
+                  setActionsMenuAnchor(null);
+                  setShowMergeDialog(true);
+                }}
+              >
+                <CallMergeIcon sx={{ fontSize: 16, mr: 1 }} />
+                Merge Into…
               </MenuItem>
               {!isResolved && <Divider />}
               {!isResolved && (
@@ -3739,6 +3754,17 @@ const IncidentDetailPage = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Merge Dialog */}
+      <MergeIncidentDialog
+        open={showMergeDialog}
+        onClose={() => setShowMergeDialog(false)}
+        currentIncidentId={incident?.id || ''}
+        currentIncidentTitle={incident?.title || ''}
+        onMergeComplete={() => {
+          loadIncident(false);
+        }}
+      />
     </motion.div>
   );
 };
