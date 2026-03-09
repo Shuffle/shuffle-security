@@ -467,6 +467,7 @@ const IncidentDetailPage = () => {
   const [actionsMenuAnchor, setActionsMenuAnchor] = useState<null | HTMLElement>(null);
   const [showForwardDialog, setShowForwardDialog] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
+  const [showMergeDialog, setShowMergeDialog] = useState(false);
   const [publicAuthorization, setPublicAuthorization] = useState<string>('');
   const TAB_NAMES = ['tasks', 'details', 'observables', 'correlations', 'raw'] as const;
   const initialTab = (() => {
