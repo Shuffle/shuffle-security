@@ -2027,7 +2027,7 @@ const IncidentDetailPage = () => {
                   setShowMergeDialog(true);
                 }}
               >
-                <MergeIcon sx={{ fontSize: 16, mr: 1 }} />
+                <CallMergeIcon sx={{ fontSize: 16, mr: 1 }} />
                 Merge Into…
               </MenuItem>
               {!isResolved && <Divider />}
