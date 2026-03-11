@@ -211,7 +211,7 @@ export const IncidentCardView = ({
 }: IncidentCardViewProps) => {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [hasRendered, setHasRendered] = useState(false);
-  const renderTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const renderTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Track when items have actually rendered to the DOM
   // Use requestAnimationFrame to wait until after paint

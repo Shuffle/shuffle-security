@@ -43,6 +43,7 @@ import { WebhookIngestionButton, WebhookIngestionInfo } from '@/components/incid
 
 import { toast } from 'sonner';
 import { resyncState } from '@/lib/resyncState';
+import { trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
 
 // Legacy categories for migration
 const LEGACY_ALERTS_CATEGORY = 'shuffle-alerts';
@@ -452,6 +453,7 @@ const IncidentsPage = () => {
   // Debounced handler: collects app toggles for 3s then fires one generate call
   const handleToggleApp = useCallback((appName: string, enabled: boolean) => {
     pendingTogglesRef.current.set(appName, enabled);
+    trackPredefinedEvent(GA_EVENTS.INCIDENT_INGESTION_TOGGLE, appName, enabled ? 1 : 0);
     setIsUpdatingApps(true);
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     debounceTimerRef.current = setTimeout(async () => {
@@ -497,6 +499,7 @@ const IncidentsPage = () => {
         body: JSON.stringify({ execution_source: 'manual', start: '' }),
       });
       if (resp.ok) {
+        trackPredefinedEvent(GA_EVENTS.INCIDENT_SYNC);
         toast.success('Sync started — polling for new incidents…');
         let pollCount = 0;
         const pollInterval = setInterval(async () => {
@@ -1186,6 +1189,7 @@ const IncidentsPage = () => {
                 if (wfId) {
                   window.open(`https://shuffler.io/workflows/${wfId}`, '_blank');
                 } else {
+                  trackPredefinedEvent(GA_EVENTS.INCIDENT_AUTOMATION_CHANGE, 'open_dialog');
                   setAutomationsDialogOpen(true);
                 }
               }}

@@ -575,6 +575,11 @@ export const AutomationConfig = ({
     onEnrichmentChange(newState);
     onSave?.(newState);
     
+    // Track automation toggle
+    import('@/lib/analytics').then(({ trackPredefinedEvent, GA_EVENTS }) => {
+      trackPredefinedEvent(GA_EVENTS.ONBOARDING_AUTOMATION_TOGGLE, id, isEnabling ? 1 : 0);
+    });
+    
     debouncedTriggerWorkflow(id, isEnabling ? undefined : 'disable');
   };
 

@@ -31,6 +31,7 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import AddIcon from '@mui/icons-material/Add';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
+import { trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
 import { DeploymentInstructions } from '@/components/detection/DeploymentInstructions';
 import WebhookStatusBanner, { WebhookActiveChip } from '@/components/detection/WebhookStatusBanner';
 import ProductionPipelineStatus from '@/components/detection/ProductionPipelineStatus';
@@ -427,11 +428,13 @@ const DetectionOnboardingPage = () => {
   };
 
   const openDeploymentDialog = (provider: DeploymentProvider) => {
+    trackPredefinedEvent(GA_EVENTS.DETECTION_DEPLOY_CLICK, provider);
     setDeploymentDialog({ open: true, provider });
   };
 
   // Check if selected sensor is connected (uses already-fetched environment data)
   const checkSensors = async () => {
+    trackPredefinedEvent(GA_EVENTS.DETECTION_SENSOR_CHECK, selectedEnvId);
     setSensorStatus({ loading: true, checked: false, success: false });
     
     // Re-fetch to get latest checkin status and get fresh data directly
