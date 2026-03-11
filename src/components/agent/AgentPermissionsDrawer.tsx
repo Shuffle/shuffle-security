@@ -125,13 +125,6 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
 };
 
 const AGENT_TOOLS_KEY = 'agent_enabled_tools';
-const AGENT_LOCAL_MODEL_KEY = 'agent_local_model';
-
-interface AgentLocalModel {
-  url: string;
-  apikey: string;
-  model: string;
-}
 
 interface AgentTool {
   id: string;
