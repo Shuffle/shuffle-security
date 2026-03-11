@@ -56,7 +56,7 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
 
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchClient = useRef<SearchClient | null>(null);
 
   // Fetch authenticated apps when apiKey is provided

@@ -160,7 +160,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
   const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(null);
   const [hoverExpanded, setHoverExpanded] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Ctrl+K keyboard shortcut
   useEffect(() => {

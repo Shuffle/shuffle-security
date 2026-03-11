@@ -96,8 +96,8 @@ export const SidebarSearchDialog = ({ open, onOpenChange }: SidebarSearchDialogP
   const [correlationsLoading, setCorrelationsLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
-  const appDebounceRef = useRef<NodeJS.Timeout | null>(null);
-  const corrDebounceRef = useRef<NodeJS.Timeout | null>(null);
+  const appDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const corrDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Filter workflows locally by query
   useEffect(() => {

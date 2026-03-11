@@ -1,5 +1,5 @@
 // Google Analytics event tracking helper
-// Provides type-safe event tracking for key user actions
+// Only fires on allowed domains: *.shuffler.io, shutdown.no
 
 declare global {
   interface Window {
@@ -8,13 +8,22 @@ declare global {
   }
 }
 
+/** Returns true if the current hostname is an allowed tracking domain */
+const isAllowedDomain = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  const hostname = window.location.hostname;
+  return hostname.endsWith('.shuffler.io') || hostname === 'shuffler.io' || hostname === 'shutdown.no';
+};
+
 // Event categories for organization
 export type EventCategory = 
   | 'auth'
   | 'onboarding'
   | 'navigation'
   | 'engagement'
-  | 'conversion';
+  | 'conversion'
+  | 'incidents'
+  | 'detection';
 
 // Predefined events for type safety
 export const GA_EVENTS = {
@@ -32,6 +41,10 @@ export const GA_EVENTS = {
   ONBOARDING_COMPLETE: { category: 'onboarding', action: 'onboarding_complete' },
   CHALLENGE_SELECTED: { category: 'onboarding', action: 'challenge_selected' },
   TOOL_SELECTED: { category: 'onboarding', action: 'tool_selected' },
+  ONBOARDING_APP_CLICK: { category: 'onboarding', action: 'app_click' },
+  ONBOARDING_AUTH_TEST_SUCCESS: { category: 'onboarding', action: 'auth_test_success' },
+  ONBOARDING_AUTH_TEST_FAILURE: { category: 'onboarding', action: 'auth_test_failure' },
+  ONBOARDING_AUTOMATION_TOGGLE: { category: 'onboarding', action: 'automation_toggle' },
   
   // Navigation events
   CTA_CLICK: { category: 'navigation', action: 'cta_click' },
@@ -46,6 +59,24 @@ export const GA_EVENTS = {
   // Conversion events
   FREE_TRIAL_START: { category: 'conversion', action: 'free_trial_start' },
   INTEGRATION_CONNECTED: { category: 'conversion', action: 'integration_connected' },
+
+  // Incident events
+  INCIDENT_AUTOMATION_CHANGE: { category: 'incidents', action: 'automation_change' },
+  INCIDENT_CREATE: { category: 'incidents', action: 'create' },
+  INCIDENT_RESOLVE: { category: 'incidents', action: 'resolve' },
+  INCIDENT_BULK_RESOLVE: { category: 'incidents', action: 'bulk_resolve' },
+  INCIDENT_SYNC: { category: 'incidents', action: 'sync' },
+  INCIDENT_INGESTION_TOGGLE: { category: 'incidents', action: 'ingestion_toggle' },
+  INCIDENT_MERGE: { category: 'incidents', action: 'merge' },
+
+  // Detection events
+  DETECTION_SENSOR_SELECT: { category: 'detection', action: 'sensor_select' },
+  DETECTION_SENSOR_CHECK: { category: 'detection', action: 'sensor_check' },
+  DETECTION_RULES_LOAD: { category: 'detection', action: 'rules_load' },
+  DETECTION_DEPLOY_CLICK: { category: 'detection', action: 'deploy_click' },
+  DETECTION_TEST_RUN: { category: 'detection', action: 'test_run' },
+  DETECTION_STEP_EXPAND: { category: 'detection', action: 'step_expand' },
+  DETECTION_ENV_CREATE: { category: 'detection', action: 'env_create' },
 } as const;
 
 interface TrackEventParams {
@@ -57,14 +88,13 @@ interface TrackEventParams {
 }
 
 /**
- * Track a custom event in Google Analytics
+ * Track a custom event in Google Analytics.
+ * Only fires on *.shuffler.io and shutdown.no domains.
  */
 export function trackEvent({ category, action, label, value, custom }: TrackEventParams): void {
+  if (!isAllowedDomain()) return;
+
   if (typeof window === 'undefined' || !window.gtag) {
-    // GA not loaded, log in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[GA Event]', { category, action, label, value, custom });
-    }
     return;
   }
 
@@ -98,6 +128,7 @@ export function trackPredefinedEvent(
  * Track page views (useful for SPA navigation)
  */
 export function trackPageView(path: string, title?: string): void {
+  if (!isAllowedDomain()) return;
   if (typeof window === 'undefined' || !window.gtag) return;
 
   window.gtag('event', 'page_view', {
