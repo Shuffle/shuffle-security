@@ -27,7 +27,13 @@ const getDefaultBaseUrl = (): string => {
   if (import.meta.env.VITE_SHUFFLE_API_URL) {
     return import.meta.env.VITE_SHUFFLE_API_URL;
   }
-  return isDevEnvironment() ? DEV_BACKEND : PROD_BACKEND;
+  if (isDevEnvironment()) return DEV_BACKEND;
+  // In production without an explicit API URL, use the current domain
+  // (self-hosted deployments proxy /api/* via nginx to the backend)
+  if (typeof window !== 'undefined') {
+    return window.location.origin;
+  }
+  return PROD_BACKEND;
 };
 
 // Dynamic region URL state (only applies in production, not dev)
