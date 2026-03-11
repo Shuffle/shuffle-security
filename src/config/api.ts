@@ -16,6 +16,9 @@ const PROD_BACKEND = 'https://shuffler.io';
 // Base URL for Shuffle Automation dashboard (used in tool switcher)
 export const SHUFFLE_AUTOMATION_URL = 'https://shuffler.io/new-dashboard';
 
+// Known cloud domains that should always use shuffler.io as the default backend
+const CLOUD_DOMAINS = ['security.shuffler.io', 'shutdown.no'];
+
 // Determine if we're in Lovable preview (dev) or published (prod)
 export const isDevEnvironment = (): boolean => {
   if (import.meta.env.VITE_SHUFFLE_API_URL) return false;
@@ -23,13 +26,20 @@ export const isDevEnvironment = (): boolean => {
   return hostname.includes('lovableproject.com') || hostname.includes('id-preview--');
 };
 
+/** Check if running on a known Shuffle Cloud domain */
+const isCloudDomain = (): boolean => {
+  const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+  return CLOUD_DOMAINS.includes(hostname);
+};
+
 const getDefaultBaseUrl = (): string => {
   if (import.meta.env.VITE_SHUFFLE_API_URL) {
     return import.meta.env.VITE_SHUFFLE_API_URL;
   }
   if (isDevEnvironment()) return DEV_BACKEND;
-  // In production without an explicit API URL, use the current domain
-  // (self-hosted deployments proxy /api/* via nginx to the backend)
+  // Cloud domains always default to shuffler.io; region_url from getinfo may override later
+  if (isCloudDomain()) return PROD_BACKEND;
+  // Self-hosted / on-prem: use current domain (nginx proxies /api/* to backend)
   if (typeof window !== 'undefined') {
     return window.location.origin;
   }
