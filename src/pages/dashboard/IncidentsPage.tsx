@@ -453,6 +453,7 @@ const IncidentsPage = () => {
   // Debounced handler: collects app toggles for 3s then fires one generate call
   const handleToggleApp = useCallback((appName: string, enabled: boolean) => {
     pendingTogglesRef.current.set(appName, enabled);
+    trackPredefinedEvent(GA_EVENTS.INCIDENT_INGESTION_TOGGLE, appName, enabled ? 1 : 0);
     setIsUpdatingApps(true);
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     debounceTimerRef.current = setTimeout(async () => {
