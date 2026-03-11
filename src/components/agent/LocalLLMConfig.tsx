@@ -50,63 +50,17 @@ export const saveLocalModelConfig = (model: AgentLocalModel) => {
   localStorage.setItem(AGENT_LOCAL_MODEL_KEY, JSON.stringify(model));
 };
 
-/** Test connectivity to an OpenAI-compatible endpoint */
-export const testLocalLLM = async (config: AgentLocalModel): Promise<LocalLLMTestResult> => {
+/** Test connectivity by sending a simple query through the Shuffle AI conversation endpoint */
+export const testLocalLLM = async (_config: AgentLocalModel): Promise<LocalLLMTestResult> => {
   const start = performance.now();
-  const baseUrl = config.url.replace(/\/+$/, '');
-
-  // Step 1: Try /v1/models or /models
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (config.apikey) headers['Authorization'] = `Bearer ${config.apikey}`;
-
-  // Try fetching models list first
   try {
-    const modelsUrl = baseUrl.endsWith('/v1') ? `${baseUrl}/models` : `${baseUrl}/v1/models`;
-    const resp = await fetch(modelsUrl, { headers, signal: AbortSignal.timeout(10000) });
-    if (resp.ok) {
-      const data = await resp.json();
-      const models = Array.isArray(data?.data)
-        ? data.data.map((m: any) => m.id || m.name).filter(Boolean).slice(0, 10)
-        : [];
-      const latencyMs = Math.round(performance.now() - start);
-      return {
-        success: true,
-        message: models.length
-          ? `Connected — ${models.length} model${models.length > 1 ? 's' : ''} available (${latencyMs}ms)`
-          : `Connected (${latencyMs}ms)`,
-        models,
-        latencyMs,
-      };
-    }
-  } catch {
-    // Models endpoint not available, try a lightweight completion
-  }
-
-  // Step 2: Fallback — send a tiny completion request
-  try {
-    const chatUrl = baseUrl.endsWith('/v1')
-      ? `${baseUrl}/chat/completions`
-      : `${baseUrl}/v1/chat/completions`;
-    const resp = await fetch(chatUrl, {
-      method: 'POST',
-      headers,
-      signal: AbortSignal.timeout(15000),
-      body: JSON.stringify({
-        model: config.model || 'test',
-        messages: [{ role: 'user', content: 'ping' }],
-        max_tokens: 1,
-      }),
-    });
+    const { askAI } = await import('@/services/ai');
+    const response = await askAI({ query: 'ping', outputFormat: 'raw' });
     const latencyMs = Math.round(performance.now() - start);
-    if (resp.ok) {
-      return { success: true, message: `Connected — completions endpoint OK (${latencyMs}ms)`, latencyMs };
+    if (response.success) {
+      return { success: true, message: `AI model responding (${latencyMs}ms)`, latencyMs };
     }
-    const errText = await resp.text().catch(() => '');
-    return {
-      success: false,
-      message: `Server responded ${resp.status}${errText ? `: ${errText.slice(0, 120)}` : ''}`,
-      latencyMs,
-    };
+    return { success: false, message: response.error || 'AI query failed', latencyMs };
   } catch (err) {
     const latencyMs = Math.round(performance.now() - start);
     return {
@@ -162,7 +116,6 @@ const LocalLLMConfig = ({ compact, onSave, onTestResult }: LocalLLMConfigProps) 
   };
 
   const handleTest = async () => {
-    if (!localModel.url.trim()) return;
     setTesting(true);
     setTestResult(null);
     const result = await testLocalLLM(localModel);
@@ -170,8 +123,6 @@ const LocalLLMConfig = ({ compact, onSave, onTestResult }: LocalLLMConfigProps) 
     onTestResult?.(result);
     setTesting(false);
   };
-
-  const canTest = localModel.url.trim().length > 0;
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
@@ -249,30 +200,6 @@ const LocalLLMConfig = ({ compact, onSave, onTestResult }: LocalLLMConfigProps) 
             <Typography sx={{ fontSize: '0.8rem', fontWeight: 500 }}>
               {testResult.message}
             </Typography>
-            {testResult.models && testResult.models.length > 0 && (
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1 }}>
-                {testResult.models.map((m) => (
-                  <Box
-                    key={m}
-                    onClick={() => handleChange('model', m)}
-                    sx={{
-                      fontSize: '0.7rem',
-                      px: 1,
-                      py: 0.25,
-                      borderRadius: 1,
-                      bgcolor: localModel.model === m ? 'hsla(var(--primary) / 0.2)' : 'hsla(var(--muted) / 0.5)',
-                      color: localModel.model === m ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
-                      border: localModel.model === m ? '1px solid hsla(var(--primary) / 0.4)' : '1px solid transparent',
-                      cursor: 'pointer',
-                      fontFamily: "'JetBrains Mono', monospace",
-                      '&:hover': { bgcolor: 'hsla(var(--primary) / 0.15)' },
-                    }}
-                  >
-                    {m}
-                  </Box>
-                ))}
-              </Box>
-            )}
           </Alert>
         )}
       </Collapse>
@@ -303,7 +230,7 @@ const LocalLLMConfig = ({ compact, onSave, onTestResult }: LocalLLMConfigProps) 
           variant="outlined"
           startIcon={testing ? <CircularProgress size={14} sx={{ color: 'inherit' }} /> : <Zap size={14} />}
           onClick={handleTest}
-          disabled={!canTest || testing}
+          disabled={testing}
           sx={{
             textTransform: 'none',
             fontSize: '0.82rem',
