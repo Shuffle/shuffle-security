@@ -1189,6 +1189,7 @@ const IncidentsPage = () => {
                 if (wfId) {
                   window.open(`https://shuffler.io/workflows/${wfId}`, '_blank');
                 } else {
+                  trackPredefinedEvent(GA_EVENTS.INCIDENT_AUTOMATION_CHANGE, 'open_dialog');
                   setAutomationsDialogOpen(true);
                 }
               }}
