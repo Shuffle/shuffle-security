@@ -203,30 +203,6 @@ const LocalLLMConfig = ({ compact, onSave, onTestResult }: LocalLLMConfigProps) 
             <Typography sx={{ fontSize: '0.8rem', fontWeight: 500 }}>
               {testResult.message}
             </Typography>
-            {testResult.models && testResult.models.length > 0 && (
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1 }}>
-                {testResult.models.map((m) => (
-                  <Box
-                    key={m}
-                    onClick={() => handleChange('model', m)}
-                    sx={{
-                      fontSize: '0.7rem',
-                      px: 1,
-                      py: 0.25,
-                      borderRadius: 1,
-                      bgcolor: localModel.model === m ? 'hsla(var(--primary) / 0.2)' : 'hsla(var(--muted) / 0.5)',
-                      color: localModel.model === m ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
-                      border: localModel.model === m ? '1px solid hsla(var(--primary) / 0.4)' : '1px solid transparent',
-                      cursor: 'pointer',
-                      fontFamily: "'JetBrains Mono', monospace",
-                      '&:hover': { bgcolor: 'hsla(var(--primary) / 0.15)' },
-                    }}
-                  >
-                    {m}
-                  </Box>
-                ))}
-              </Box>
-            )}
           </Alert>
         )}
       </Collapse>
