@@ -6,8 +6,8 @@ services:
     container_name: shuffle-cases
     hostname: shuffle-cases
     ports:
-      - "${FRONTEND_PORT:-3443}:80"
-      - "${FRONTEND_PORT_HTTPS:-3444}:443"
+      - "${FRONTEND_SECURITY_PORT:-3443}:80"
+      - "${FRONTEND_SECURITY_PORT_HTTPS:-3444}:443"
     networks:
       - shuffle
     environment:
