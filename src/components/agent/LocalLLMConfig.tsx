@@ -51,17 +51,40 @@ export const saveLocalModelConfig = (model: AgentLocalModel) => {
   localStorage.setItem(AGENT_LOCAL_MODEL_KEY, JSON.stringify(model));
 };
 
-/** Test connectivity by sending a simple query through the Shuffle AI conversation endpoint */
+/** Test by checking if a verified OpenAI app authentication exists */
 export const testLocalLLM = async (_config: AgentLocalModel): Promise<LocalLLMTestResult> => {
   const start = performance.now();
   try {
-    const { askAI } = await import('@/services/ai');
-    const response = await askAI({ query: 'ping', outputFormat: 'raw' });
+    const response = await fetch(getApiUrl('/api/v1/apps/authentication'), {
+      credentials: 'include',
+      headers: { ...getAuthHeader() },
+    });
     const latencyMs = Math.round(performance.now() - start);
-    if (response.success) {
-      return { success: true, message: `AI model responding (${latencyMs}ms)`, latencyMs };
+    if (!response.ok) {
+      return { success: false, message: `Failed to fetch authentications (${response.status})`, latencyMs };
     }
-    return { success: false, message: response.error || 'AI query failed', latencyMs };
+    const result = await response.json();
+    const authData = Array.isArray(result.data || result) ? (result.data || result) : [];
+    // Find any OpenAI auth entry that has been validated
+    const openaiAuth = authData.find((entry: any) => {
+      const appName = (entry.app?.name || entry.app?.id || '').toLowerCase();
+      const isOpenAI = appName.includes('openai');
+      const isValid = entry.validation?.valid === true;
+      return isOpenAI && isValid;
+    });
+    if (openaiAuth) {
+      const label = openaiAuth.label || openaiAuth.app?.name || 'OpenAI';
+      return { success: true, message: `Verified — ${label} authentication found (${latencyMs}ms)`, latencyMs };
+    }
+    // Check if there's an unverified OpenAI auth
+    const anyOpenai = authData.find((entry: any) => {
+      const appName = (entry.app?.name || entry.app?.id || '').toLowerCase();
+      return appName.includes('openai');
+    });
+    if (anyOpenai) {
+      return { success: false, message: 'OpenAI authentication found but not verified — test it in Apps first', latencyMs };
+    }
+    return { success: false, message: 'No OpenAI authentication configured — add one in Apps', latencyMs };
   } catch (err) {
     const latencyMs = Math.round(performance.now() - start);
     return {
