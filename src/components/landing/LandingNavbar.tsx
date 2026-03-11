@@ -21,7 +21,7 @@ import { useAuth } from '@/context/AuthContext';
 import { trackCTA, trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
 
 const navItems = [
-  { label: 'Features', href: '#features' },
+  { label: 'Features', href: '/#features', internal: true },
   { label: 'Usecases', href: '/usecases', internal: true },
   { label: 'Docs', href: '/docs', internal: true },
 ];
