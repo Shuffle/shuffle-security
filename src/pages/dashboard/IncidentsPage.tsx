@@ -499,6 +499,7 @@ const IncidentsPage = () => {
         body: JSON.stringify({ execution_source: 'manual', start: '' }),
       });
       if (resp.ok) {
+        trackPredefinedEvent(GA_EVENTS.INCIDENT_SYNC);
         toast.success('Sync started — polling for new incidents…');
         let pollCount = 0;
         const pollInterval = setInterval(async () => {

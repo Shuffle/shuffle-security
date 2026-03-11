@@ -101,6 +101,10 @@ export const PrimaryToolStep = ({
   const context = getChallengeContext();
 
   const handlePopularToolClick = (tool: typeof popularTools[0]) => {
+    // Track app click in onboarding
+    import('@/lib/analytics').then(({ trackPredefinedEvent, GA_EVENTS }) => {
+      trackPredefinedEvent(GA_EVENTS.ONBOARDING_APP_CLICK, tool.name);
+    });
     // Search for this tool in Singul to get the full app data
     if (singulRef.current) {
       singulRef.current.search(tool.searchTerm);

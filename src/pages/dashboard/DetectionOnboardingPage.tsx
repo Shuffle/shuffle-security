@@ -428,6 +428,7 @@ const DetectionOnboardingPage = () => {
   };
 
   const openDeploymentDialog = (provider: DeploymentProvider) => {
+    trackPredefinedEvent(GA_EVENTS.DETECTION_DEPLOY_CLICK, provider);
     setDeploymentDialog({ open: true, provider });
   };
 

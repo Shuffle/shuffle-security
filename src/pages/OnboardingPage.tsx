@@ -625,18 +625,26 @@ const OnboardingPage = () => {
       const testedAuthEntry = refreshedAuthData.find(auth => auth.id === authenticationId);
       const isNowValid = testedAuthEntry?.validation?.valid === true;
 
+      // Track auth test result
+      const finalSuccess = isValid || isNowValid;
+      trackPredefinedEvent(
+        finalSuccess ? GA_EVENTS.ONBOARDING_AUTH_TEST_SUCCESS : GA_EVENTS.ONBOARDING_AUTH_TEST_FAILURE,
+        appName,
+        errorCode,
+      );
+
       // Update UI state based on both test result and refreshed data
       setAuthStates((prev) => ({
         ...prev,
         [systemId]: {
           ...prev[systemId],
-          status: (isValid || isNowValid) ? 'connected' : 'error',
-          errorMessage: (isValid || isNowValid) ? undefined : errorMessage,
-          successMessage: (isValid || isNowValid) ? (successMessage || 'Connection verified') : undefined,
-          warningMessage: (isValid || isNowValid) ? warningMessage : undefined,
-          workflowId: (isValid || isNowValid) ? undefined : workflowId,
-          executionId: (isValid || isNowValid) ? undefined : executionId,
-          errorCode: (isValid || isNowValid) ? undefined : errorCode,
+          status: finalSuccess ? 'connected' : 'error',
+          errorMessage: finalSuccess ? undefined : errorMessage,
+          successMessage: finalSuccess ? (successMessage || 'Connection verified') : undefined,
+          warningMessage: finalSuccess ? warningMessage : undefined,
+          workflowId: finalSuccess ? undefined : workflowId,
+          executionId: finalSuccess ? undefined : executionId,
+          errorCode: finalSuccess ? undefined : errorCode,
         },
       }));
     } catch (error) {
