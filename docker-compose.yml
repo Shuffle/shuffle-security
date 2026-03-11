@@ -1,0 +1,21 @@
+version: "3.8"
+
+services:
+  frontend:
+    image: ghcr.io/shuffle/shuffle-cases:latest
+    container_name: shuffle-cases
+    hostname: shuffle-cases
+    ports:
+      - "${FRONTEND_PORT:-3443}:80"
+      - "${FRONTEND_PORT_HTTPS:-3444}:443"
+    networks:
+      - shuffle
+    environment:
+      - BACKEND_HOSTNAME=${BACKEND_HOSTNAME}
+    restart: unless-stopped
+    depends_on:
+      - backend
+
+networks:
+  shuffle:
+    driver: bridge
