@@ -116,7 +116,6 @@ const LocalLLMConfig = ({ compact, onSave, onTestResult }: LocalLLMConfigProps) 
   };
 
   const handleTest = async () => {
-    if (!localModel.url.trim()) return;
     setTesting(true);
     setTestResult(null);
     const result = await testLocalLLM(localModel);
@@ -124,8 +123,6 @@ const LocalLLMConfig = ({ compact, onSave, onTestResult }: LocalLLMConfigProps) 
     onTestResult?.(result);
     setTesting(false);
   };
-
-  const canTest = localModel.url.trim().length > 0;
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
