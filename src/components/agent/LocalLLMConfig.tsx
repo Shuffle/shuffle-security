@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import {
   Box,
   Typography,
@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import { ShieldCheck, Wifi, WifiOff, Zap } from 'lucide-react';
+import { getApiUrl, getAuthHeader } from '@/config/api';
 
 const AGENT_LOCAL_MODEL_KEY = 'agent_local_model';
 
