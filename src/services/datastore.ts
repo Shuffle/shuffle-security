@@ -44,6 +44,7 @@ export interface DatastoreResponse {
   data?: DatastoreItem[];
   categoryConfig?: CategoryConfig;
   cursor?: string;
+  totalAmount?: number;
   error?: string;
 }
 
