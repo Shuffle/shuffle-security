@@ -19,7 +19,7 @@ const jsonHighlight = HighlightStyle.define([
   { tag: t.number, color: 'hsl(var(--infra-email))' },
   { tag: [t.bool, t.null], color: 'hsl(var(--destructive))' },
   { tag: [t.brace, t.squareBracket], color: 'hsl(var(--severity-medium))' },
-  { tag: [t.comma, t.separator], color: 'hsl(var(--foreground-muted))' },
+  { tag: [t.punctuation, t.separator], color: 'hsl(var(--foreground-muted))' },
 ]);
 
 const editorTheme = EditorView.theme({
