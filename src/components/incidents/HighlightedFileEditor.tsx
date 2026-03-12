@@ -111,28 +111,28 @@ const HighlightedFileEditor = ({ value, onChange, validateJson = true, onValidat
             inset: 0,
             overflow: 'hidden',
             pointerEvents: 'none',
-            bgcolor: 'hsl(var(--muted) / 0.35)',
+            bgcolor: 'rgba(0, 0, 0, 0.45)',
             p: '14px',
             '& .hl-comment': {
-              color: 'hsl(var(--muted-foreground) / 0.8)',
+              color: '#6b7280',
               fontStyle: 'italic',
             },
             '& .hl-variable': {
-              color: 'hsl(var(--primary))',
+              color: '#ff6600',
               fontWeight: 600,
             },
             '& .hl-key': {
-              color: 'hsl(var(--muted-foreground) / 0.95)',
+              color: '#e2e8f0',
             },
             '& .hl-string': {
-              color: 'hsl(var(--foreground) / 0.78)',
+              color: '#a5d6a7',
             },
             '& .hl-literal': {
-              color: 'hsl(var(--destructive) / 0.9)',
+              color: '#ef9a9a',
               fontWeight: 500,
             },
             '& .hl-number': {
-              color: 'hsl(var(--primary) / 0.85)',
+              color: '#ce93d8',
             },
           }}
         >
@@ -144,7 +144,7 @@ const HighlightedFileEditor = ({ value, onChange, validateJson = true, onValidat
               lineHeight: 1.6,
               whiteSpace: 'pre-wrap',
               wordWrap: 'break-word',
-              color: 'transparent',
+              color: '#cbd5e1',
             }}
             dangerouslySetInnerHTML={{ __html: highlighted }}
           />
