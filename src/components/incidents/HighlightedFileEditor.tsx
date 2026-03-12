@@ -3,7 +3,7 @@ import { Box, Typography } from '@mui/material';
 import CodeMirror from '@uiw/react-codemirror';
 import { json } from '@codemirror/lang-json';
 import { EditorView, Decoration, DecorationSet, ViewPlugin, ViewUpdate, MatchDecorator } from '@codemirror/view';
-import { foldAll } from '@codemirror/language';
+import { foldable, syntaxTree, foldEffect } from '@codemirror/language';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { tags as t } from '@lezer/highlight';
 
@@ -160,8 +160,25 @@ const HighlightedFileEditor = ({ value, onChange, validateJson = true, onValidat
           }}
           editable
           onCreateEditor={useCallback((view: EditorView) => {
-            // Fold all blocks after a short delay to let the language parser finish
-            setTimeout(() => foldAll(view), 100);
+            setTimeout(() => {
+              const effects: any[] = [];
+              const tree = syntaxTree(view.state);
+              tree.iterate({
+                enter: (node) => {
+                  if (node.type.name === 'Object' || node.type.name === 'Array') {
+                    // Skip top-level: parent is JsonText (the root)
+                    if (node.node.parent?.type.name === 'JsonText') return;
+                    const range = foldable(view.state, node.from, node.to);
+                    if (range) {
+                      effects.push(foldEffect.of({ from: range.from, to: range.to }));
+                    }
+                  }
+                },
+              });
+              if (effects.length) {
+                view.dispatch({ effects });
+              }
+            }, 100);
           }, [])}
         />
       </Box>
