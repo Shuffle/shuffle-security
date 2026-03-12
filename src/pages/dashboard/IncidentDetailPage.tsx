@@ -3560,7 +3560,7 @@ const IncidentDetailPage = () => {
             </Box>
           </Box>
           <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.8rem', lineHeight: 1.5 }}>
-            This file maps fields from the <strong>original ingested data</strong> into the <strong>normalized incident format {'{ }'}</strong>. Variables like <code style={{ color: '#93c5fd', fontFamily: 'monospace', fontSize: '0.75rem' }}>$field.subfield</code> reference the source data and are resolved when the translation runs.
+            This file maps fields from the <strong>original ingested data</strong> into the <strong>normalized incident format {'{ }'}</strong>. Variables like <code style={{ color: 'hsl(var(--primary))', fontFamily: 'monospace', fontSize: '0.75rem' }}>$field.subfield</code> reference the source data and are resolved when the translation runs.
           </Typography>
           {fileError ? (
             <Box sx={{ p: 3, textAlign: 'center' }}>

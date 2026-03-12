@@ -1,4 +1,4 @@
-import { useRef, useCallback, useMemo } from 'react';
+import { useRef, useCallback, useMemo, useEffect } from 'react';
 import { Box, Typography } from '@mui/material';
 
 interface HighlightedFileEditorProps {
@@ -14,41 +14,35 @@ const escapeHtml = (str: string) =>
 const highlightLine = (line: string): string => {
   const escaped = escapeHtml(line);
 
-  // Comment lines
   if (/^\s*(\/\/|#)/.test(escaped)) {
-    return `<span style="color:#6b7280;font-style:italic">${escaped}</span>`;
+    return `<span class="hl-comment">${escaped}</span>`;
   }
 
   let result = escaped;
 
-  // $variable.field.subfield
   result = result.replace(
     /(\$[a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)/g,
-    '<span style="color:#93c5fd;font-weight:500">$1</span>'
+    '<span class="hl-variable">$1</span>'
   );
 
-  // JSON key ("key":)
   result = result.replace(
     /(&quot;)([^&]*?)(&quot;)\s*:/g,
-    '<span style="color:#d1d5db">$1$2$3</span>:'
+    '<span class="hl-key">$1$2$3</span>:'
   );
 
-  // Remaining quoted strings
   result = result.replace(
     /(&quot;)((?:(?!&quot;).)*)(&quot;)/g,
-    '<span style="color:#86efac">$1$2$3</span>'
+    '<span class="hl-string">$1$2$3</span>'
   );
 
-  // Booleans and null
   result = result.replace(
     /\b(true|false|null)\b/g,
-    '<span style="color:#fca5a5">$1</span>'
+    '<span class="hl-literal">$1</span>'
   );
 
-  // Numbers (standalone)
   result = result.replace(
     /\b(\d+\.?\d*)\b/g,
-    '<span style="color:#fcd34d">$1</span>'
+    '<span class="hl-number">$1</span>'
   );
 
   return result;
@@ -70,28 +64,30 @@ const HighlightedFileEditor = ({ value, onChange, validateJson = true, onValidat
   }, []);
 
   const jsonError = useMemo(() => {
-    if (!validateJson || !value.trim()) return null;
+    if (!validateJson) return null;
+    if (!value.trim()) return 'JSON is required';
+
     try {
       JSON.parse(value);
       return null;
     } catch (e: any) {
       const msg = e.message || 'Invalid JSON';
-      // Extract position info if available
       const match = msg.match(/position (\d+)/);
+
       if (match) {
-        const pos = parseInt(match[1]);
+        const pos = parseInt(match[1], 10);
         const before = value.substring(0, pos);
         const line = before.split('\n').length;
         return `Line ${line}: ${msg}`;
       }
+
       return msg;
     }
   }, [value, validateJson]);
 
   const isValid = !validateJson || jsonError === null;
 
-  // Notify parent of validation state
-  useMemo(() => {
+  useEffect(() => {
     onValidationChange?.(isValid);
   }, [isValid, onValidationChange]);
 
@@ -99,14 +95,15 @@ const HighlightedFileEditor = ({ value, onChange, validateJson = true, onValidat
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-      <Box sx={{
-        position: 'relative',
-        borderRadius: 1.5,
-        overflow: 'hidden',
-        border: `1px solid ${jsonError ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.08)'}`,
-        transition: 'border-color 0.2s ease',
-      }}>
-        {/* Highlighted backdrop */}
+      <Box
+        sx={{
+          position: 'relative',
+          borderRadius: 1.5,
+          overflow: 'hidden',
+          border: `1px solid ${jsonError ? 'hsl(var(--destructive) / 0.6)' : 'hsl(var(--border))'}`,
+          transition: 'border-color 0.2s ease',
+        }}
+      >
         <Box
           ref={backdropRef}
           sx={{
@@ -114,8 +111,29 @@ const HighlightedFileEditor = ({ value, onChange, validateJson = true, onValidat
             inset: 0,
             overflow: 'hidden',
             pointerEvents: 'none',
-            bgcolor: 'rgba(0,0,0,0.3)',
+            bgcolor: 'hsl(var(--muted) / 0.35)',
             p: '14px',
+            '& .hl-comment': {
+              color: 'hsl(var(--muted-foreground) / 0.8)',
+              fontStyle: 'italic',
+            },
+            '& .hl-variable': {
+              color: 'hsl(var(--primary))',
+              fontWeight: 600,
+            },
+            '& .hl-key': {
+              color: 'hsl(var(--muted-foreground) / 0.95)',
+            },
+            '& .hl-string': {
+              color: 'hsl(var(--foreground) / 0.78)',
+            },
+            '& .hl-literal': {
+              color: 'hsl(var(--destructive) / 0.9)',
+              fontWeight: 500,
+            },
+            '& .hl-number': {
+              color: 'hsl(var(--primary) / 0.85)',
+            },
           }}
         >
           <pre
@@ -132,7 +150,6 @@ const HighlightedFileEditor = ({ value, onChange, validateJson = true, onValidat
           />
         </Box>
 
-        {/* Transparent textarea on top */}
         <textarea
           ref={textareaRef}
           value={value}
@@ -150,8 +167,8 @@ const HighlightedFileEditor = ({ value, onChange, validateJson = true, onValidat
             outline: 'none',
             resize: 'vertical',
             background: 'transparent',
-            color: 'rgba(255,255,255,0.05)',
-            caretColor: '#ff6600',
+            color: 'hsl(var(--foreground) / 0.05)',
+            caretColor: 'hsl(var(--primary))',
             fontFamily: 'monospace',
             fontSize: '0.75rem',
             lineHeight: 1.6,
@@ -161,11 +178,12 @@ const HighlightedFileEditor = ({ value, onChange, validateJson = true, onValidat
           }}
         />
       </Box>
-      {jsonError && (
+
+      {jsonError ? (
         <Typography
           variant="caption"
           sx={{
-            color: '#ef4444',
+            color: 'hsl(var(--destructive))',
             fontFamily: 'monospace',
             fontSize: '0.7rem',
             mt: 0.5,
@@ -174,20 +192,21 @@ const HighlightedFileEditor = ({ value, onChange, validateJson = true, onValidat
         >
           ⚠ {jsonError}
         </Typography>
-      )}
-      {validateJson && !jsonError && value.trim() && (
-        <Typography
-          variant="caption"
-          sx={{
-            color: '#4ade80',
-            fontFamily: 'monospace',
-            fontSize: '0.7rem',
-            mt: 0.5,
-            px: 1,
-          }}
-        >
-          ✓ Valid JSON
-        </Typography>
+      ) : (
+        validateJson && (
+          <Typography
+            variant="caption"
+            sx={{
+              color: 'hsl(var(--primary))',
+              fontFamily: 'monospace',
+              fontSize: '0.7rem',
+              mt: 0.5,
+              px: 1,
+            }}
+          >
+            ✓ Valid JSON
+          </Typography>
+        )
       )}
     </Box>
   );
