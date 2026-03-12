@@ -3526,6 +3526,10 @@ const IncidentDetailPage = () => {
                 variant="outlined"
                 onClick={async () => {
                   if (!incidentFileId) return;
+                  if (!fileJsonValid) {
+                    toast.error('Cannot save: JSON is invalid');
+                    return;
+                  }
                   setFileSaving(true);
                   try {
                     const resp = await fetch(getApiUrl(`/api/v1/files/${incidentFileId}/edit`), {
@@ -3542,7 +3546,7 @@ const IncidentDetailPage = () => {
                     setFileSaving(false);
                   }
                 }}
-                disabled={fileSaving || fileLoading}
+                disabled={fileSaving || fileLoading || !fileJsonValid}
                 sx={{
                   borderColor: 'rgba(255,255,255,0.2)',
                   color: '#ff6600',
