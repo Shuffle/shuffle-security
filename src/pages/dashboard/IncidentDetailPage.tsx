@@ -2204,12 +2204,12 @@ const IncidentDetailPage = () => {
                       gap: 1,
                       transition: 'all 0.2s ease',
                       opacity: hasFile ? 1 : 0.4,
-                      bgcolor: activeTab === 6 ? 'rgba(255, 102, 0, 0.15)' : 'transparent',
-                      color: activeTab === 6 ? '#ff6600' : 'text.secondary',
-                      fontWeight: activeTab === 6 ? 600 : 400,
+                      bgcolor: activeTab === 5 ? 'rgba(255, 102, 0, 0.15)' : 'transparent',
+                      color: activeTab === 5 ? '#ff6600' : 'text.secondary',
+                      fontWeight: activeTab === 5 ? 600 : 400,
                       fontSize: '0.875rem',
                       '&:hover': hasFile ? {
-                        bgcolor: activeTab === 6 ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255,255,255,0.05)',
+                        bgcolor: activeTab === 5 ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255,255,255,0.05)',
                       } : {},
                     }}
                   >
