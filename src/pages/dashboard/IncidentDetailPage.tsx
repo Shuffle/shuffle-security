@@ -92,6 +92,7 @@ import { toast } from 'sonner';
 import { isAIAssignee, deduplicateTasks, htmlToPlainText, decodeHtmlEntities, decodeIfBase64 } from '@/lib/utils';
 import { useIncidentAgentRuns } from '@/hooks/useIncidentAgentRuns';
 import AgentActivityFeed from '@/components/agent/AgentActivityFeed';
+import HighlightedFileEditor from '@/components/incidents/HighlightedFileEditor';
 
 // TaskTemplate interface is now imported from useCaseTemplates
 
