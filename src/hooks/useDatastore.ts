@@ -26,6 +26,7 @@ interface UseDatastoreReturn {
   error: string | null;
   cursor: string | null;
   hasMore: boolean;
+  totalAmount: number | null;
   categoryConfig: CategoryConfig | null;
   fetchItems: (cursorParam?: string) => Promise<void>;
   fetchNextPage: () => Promise<void>;
