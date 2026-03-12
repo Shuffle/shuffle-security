@@ -2224,6 +2224,7 @@ const IncidentDetailPage = () => {
               >
                 {'{ }'}
               </Box>
+              </Box>{/* End right tab group */}
             </Box>
           </Box>
 
