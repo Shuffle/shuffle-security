@@ -3495,66 +3495,6 @@ const IncidentDetailPage = () => {
       )}
 
       {activeTab === 5 && (
-        /* Automation Control Tab */
-        <Box sx={{
-          bgcolor: 'rgba(255,255,255,0.02)',
-          borderRadius: 2,
-          border: '1px solid rgba(255,255,255,0.06)',
-          p: 3,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 3,
-        }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
-            <SettingsIcon sx={{ fontSize: 18, color: '#ff6600' }} />
-            Automation Control
-          </Typography>
-
-          {incident?.rawOCSF?.shuffle_execution_id && (
-            <Box sx={{
-              p: 2,
-              borderRadius: 2,
-              bgcolor: 'rgba(255,255,255,0.02)',
-              border: '1px solid rgba(255,255,255,0.06)',
-            }}>
-              <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
-                Execution ID
-              </Typography>
-              <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem', wordBreak: 'break-all' }}>
-                {incident.rawOCSF.shuffle_execution_id}
-              </Typography>
-              <Box sx={{ mt: 1 }}>
-                <a
-                  href={`https://shuffler.io/workflows/${incident.rawOCSF.shuffle_execution_id}?execution_id=${incident.rawOCSF.shuffle_execution_id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ color: '#ff6600', fontSize: '0.75rem', textDecoration: 'underline' }}
-                >
-                  View in Shuffle →
-                </a>
-              </Box>
-            </Box>
-          )}
-
-          {incident?.rawOCSF?.shuffle_translation_file && (
-            <Box sx={{
-              p: 2,
-              borderRadius: 2,
-              bgcolor: 'rgba(255,255,255,0.02)',
-              border: '1px solid rgba(255,255,255,0.06)',
-            }}>
-              <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
-                Translation File
-              </Typography>
-              <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem', wordBreak: 'break-all' }}>
-                {incident.rawOCSF.shuffle_translation_file}
-              </Typography>
-            </Box>
-          )}
-        </Box>
-      )}
-
-      {activeTab === 6 && (
         /* File Editor Tab */
         <Box sx={{
           bgcolor: 'rgba(255,255,255,0.02)',
