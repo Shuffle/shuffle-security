@@ -182,6 +182,7 @@ export const useDatastore = ({ category }: UseDatastoreOptions): UseDatastoreRet
     error,
     cursor,
     hasMore,
+    totalAmount,
     categoryConfig,
     fetchItems,
     fetchNextPage,
