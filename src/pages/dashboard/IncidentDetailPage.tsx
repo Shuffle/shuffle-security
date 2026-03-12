@@ -522,7 +522,7 @@ const IncidentDetailPage = () => {
   }, [incidentFileId]);
 
   useEffect(() => {
-    if (activeTab === 6 && incidentFileId && !fileLoaded) {
+    if (activeTab === 5 && incidentFileId && !fileLoaded) {
       loadFileContent();
     }
   }, [activeTab, incidentFileId, fileLoaded, loadFileContent]);
