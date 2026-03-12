@@ -2214,7 +2214,7 @@ const IncidentDetailPage = () => {
                       } : {},
                     }}
                   >
-                    File
+                    Translation File
                   </Box>
                 );
               })()}
