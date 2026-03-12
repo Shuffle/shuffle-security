@@ -3474,7 +3474,7 @@ const IncidentDetailPage = () => {
               </Typography>
               <Box sx={{ mt: 1 }}>
                 <a
-                  href={`/workflows/${incident.rawOCSF.shuffle_execution_id}?execution_id=${incident.rawOCSF.shuffle_execution_id}`}
+                  href={`${['security.shuffler.io', 'shutdown.no'].includes(window.location.hostname) ? 'https://shuffler.io' : window.location.origin}/workflows/${incident.rawOCSF.shuffle_execution_id}?execution_id=${incident.rawOCSF.shuffle_execution_id}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{ color: '#ff6600', fontSize: '0.75rem', textDecoration: 'underline' }}
