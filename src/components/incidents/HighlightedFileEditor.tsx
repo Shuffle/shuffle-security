@@ -88,6 +88,10 @@ const editorTheme = EditorView.theme(
       outline: '1px solid hsl(var(--primary) / 0.45)',
       color: 'hsl(var(--severity-medium))',
     },
+    '.cm-variable-token': {
+      color: 'hsl(var(--primary))',
+      fontWeight: '600',
+    },
   },
   { dark: true }
 );
