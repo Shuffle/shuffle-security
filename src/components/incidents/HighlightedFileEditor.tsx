@@ -116,11 +116,21 @@ const HighlightedFileEditor = ({ value, onChange, validateJson = true, onValidat
           overflow: 'hidden',
           border: `1px solid ${jsonError ? 'hsl(var(--destructive) / 0.6)' : 'hsl(var(--border))'}`,
           transition: 'border-color 0.2s ease',
+          '& .cm-editor': {
+            backgroundColor: 'hsl(var(--background-elevated) / 0.98) !important',
+          },
+          '& .cm-scroller': {
+            backgroundColor: 'transparent !important',
+          },
+          '& .cm-gutters': {
+            backgroundColor: 'hsl(var(--background) / 0.8) !important',
+          },
         }}
       >
         <CodeMirror
           value={value}
           onChange={onChange}
+          theme={editorTheme}
           extensions={extensions}
           basicSetup={{
             lineNumbers: true,
