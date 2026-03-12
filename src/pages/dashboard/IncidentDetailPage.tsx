@@ -503,6 +503,13 @@ const IncidentDetailPage = () => {
     return /^file_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(fileId) ? fileId : null;
   }, [incident?.rawOCSF]);
 
+  // Check if unmapped_original exists in the raw OCSF data
+  const unmappedOriginal = useMemo(() => {
+    const raw = incident?.rawOCSF;
+    if (!raw?.unmapped_original) return null;
+    return raw.unmapped_original;
+  }, [incident?.rawOCSF]);
+
   // Load file content when File tab is activated
   const loadFileContent = useCallback(async () => {
     if (!incidentFileId) return;
@@ -2207,6 +2214,32 @@ const IncidentDetailPage = () => {
               border: '1px solid rgba(255,255,255,0.06)',
               flexShrink: 0,
             }}>
+              {/* Original tab - only shown when unmapped_original exists */}
+              {unmappedOriginal && (
+                <Box
+                  onClick={() => setActiveTab(6)}
+                  sx={{
+                    px: 2,
+                    py: 1,
+                    borderRadius: 1.5,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    transition: 'all 0.2s ease',
+                    bgcolor: activeTab === 6 ? 'rgba(255, 102, 0, 0.15)' : 'transparent',
+                    color: activeTab === 6 ? '#ff6600' : 'text.secondary',
+                    fontWeight: activeTab === 6 ? 600 : 400,
+                    fontSize: '0.875rem',
+                    '&:hover': {
+                      bgcolor: activeTab === 6 ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255,255,255,0.05)',
+                    },
+                  }}
+                >
+                  Original
+                </Box>
+              )}
+
               {/* File tab */}
               {(() => {
                 const hasFile = !!incidentFileId;
@@ -3556,6 +3589,34 @@ const IncidentDetailPage = () => {
             onChange={setRawJsonText}
             validateJson={true}
             onValidationChange={setRawJsonValid}
+          />
+        </Box>
+      )}
+
+      {activeTab === 6 && unmappedOriginal && (
+        /* Original Data Tab */
+        <Box sx={{
+          bgcolor: 'rgba(255,255,255,0.02)',
+          borderRadius: 2,
+          border: '1px solid rgba(255,255,255,0.06)',
+          p: 2,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 1.5,
+        }}>
+          <Box>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
+              <DescriptionIcon sx={{ fontSize: 18, color: '#ff6600' }} />
+              Original Data
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem' }}>
+              The raw unmapped data as originally ingested before any translation was applied.
+            </Typography>
+          </Box>
+          <HighlightedFileEditor
+            value={typeof unmappedOriginal === 'string' ? unmappedOriginal : JSON.stringify(unmappedOriginal, null, 2)}
+            onChange={() => {}}
+            validateJson={false}
           />
         </Box>
       )}
