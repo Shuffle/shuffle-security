@@ -52,6 +52,7 @@ import ForwardIcon from '@mui/icons-material/Forward';
 import CallMergeIcon from '@mui/icons-material/CallMerge';
 import CloseIcon from '@mui/icons-material/Close';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import Menu from '@mui/material/Menu';
 import { useDatastore } from '@/hooks/useDatastore';
 import { useAuth } from '@/context/AuthContext';
@@ -2237,7 +2238,12 @@ const IncidentDetailPage = () => {
                   }}
                 >
                   Original
-                </Box>
+               </Box>
+              )}
+
+              {/* Arrow: Original → Translation */}
+              {unmappedOriginal && (
+                <ChevronRightIcon sx={{ fontSize: 16, color: 'text.disabled', mx: -0.25 }} />
               )}
 
               {/* File tab */}
@@ -2265,10 +2271,13 @@ const IncidentDetailPage = () => {
                       } : {},
                     }}
                   >
-                    Translation File
+                    Translation
                   </Box>
                 );
               })()}
+
+              {/* Arrow: Translation → OCSF */}
+              <ChevronRightIcon sx={{ fontSize: 16, color: 'text.disabled', mx: -0.25 }} />
 
               <Box
                 onClick={() => {
@@ -2311,8 +2320,8 @@ const IncidentDetailPage = () => {
                   setActiveTab(4);
                 }}
                 sx={{
-                  px: 1.5,
-                  py: 0.75,
+                  px: 2,
+                  py: 1,
                   borderRadius: 1.5,
                   cursor: 'pointer',
                   display: 'flex',
@@ -2322,15 +2331,14 @@ const IncidentDetailPage = () => {
                   bgcolor: activeTab === 4 ? 'rgba(255, 102, 0, 0.15)' : 'transparent',
                   color: activeTab === 4 ? '#ff6600' : 'text.disabled',
                   fontWeight: activeTab === 4 ? 600 : 400,
-                  fontSize: '0.8rem',
-                  fontFamily: 'monospace',
+                  fontSize: '0.875rem',
                   '&:hover': {
                     bgcolor: activeTab === 4 ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255,255,255,0.05)',
                     color: activeTab === 4 ? '#ff6600' : 'text.secondary',
                   },
                 }}
               >
-                {'{ }'}
+                OCSF
               </Box>
             </Box>
           </Box>
