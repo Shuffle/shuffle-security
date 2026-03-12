@@ -486,8 +486,10 @@ const IncidentDetailPage = () => {
      window.history.replaceState(null, '', `${window.location.pathname}${paramStr ? '?' + paramStr : ''}`);
    };
    const [rawJsonText, setRawJsonText] = useState('');
+   const [rawJsonValid, setRawJsonValid] = useState(true);
   // File editor state
   const [fileContent, setFileContent] = useState('');
+  const [fileJsonValid, setFileJsonValid] = useState(true);
   const [fileLoading, setFileLoading] = useState(false);
   const [fileSaving, setFileSaving] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
