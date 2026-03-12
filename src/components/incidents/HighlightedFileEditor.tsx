@@ -151,6 +151,13 @@ const HighlightedFileEditor = ({ value, onChange, validateJson = true, onValidat
             '& .hl-number': {
               color: '#ce93d8',
             },
+            '& .hl-bracket': {
+              color: '#ffd54f',
+              fontWeight: 600,
+            },
+            '& .hl-punctuation': {
+              color: '#90a4ae',
+            },
           }}
         >
           <pre
