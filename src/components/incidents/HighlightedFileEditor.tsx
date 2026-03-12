@@ -32,31 +32,31 @@ const highlightLine = (line: string): string => {
   // $variable.field.subfield (before other replacements to avoid conflicts)
   result = result.replace(
     /(\$[a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)/g,
-    '<span style="color:#ff6600;font-weight:600;background:rgba(255,102,0,0.12);padding:0 2px;border-radius:2px">$1</span>'
+    '<span style="color:#93c5fd;font-weight:500">$1</span>'
   );
 
   // JSON key ("key":)
   result = result.replace(
     /(&quot;)([^&]*?)(&quot;)\s*:/g,
-    '<span style="color:#67e8f9">$1$2$3</span>:'
+    '<span style="color:#d1d5db">$1$2$3</span>:'
   );
 
   // Remaining quoted strings
   result = result.replace(
     /(&quot;)((?:(?!&quot;).)*)(&quot;)/g,
-    '<span style="color:#4ade80">$1$2$3</span>'
+    '<span style="color:#86efac">$1$2$3</span>'
   );
 
   // Booleans and null
   result = result.replace(
     /\b(true|false|null)\b/g,
-    '<span style="color:#f87171;font-weight:500">$1</span>'
+    '<span style="color:#fca5a5">$1</span>'
   );
 
   // Numbers (standalone)
   result = result.replace(
     /\b(\d+\.?\d*)\b/g,
-    '<span style="color:#c084fc">$1</span>'
+    '<span style="color:#fcd34d">$1</span>'
   );
 
   return result;
