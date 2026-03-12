@@ -1476,8 +1476,11 @@ const IncidentsPage = () => {
             </Box>
 
             <Typography variant="body2" sx={{ ml: 'auto', color: 'text.secondary' }}>
-              {sortedIncidents.length} incident{sortedIncidents.length !== 1 ? 's' : ''}
-              {sortedIncidents.length > ITEMS_PER_PAGE && ` · Page ${currentPage} of ${Math.ceil(sortedIncidents.length / ITEMS_PER_PAGE)}`}
+              {(() => {
+                const displayTotal = totalAmount && totalAmount > 1000 ? totalAmount : sortedIncidents.length;
+                const totalPages = Math.ceil(displayTotal / ITEMS_PER_PAGE);
+                return `${displayTotal} incident${displayTotal !== 1 ? 's' : ''}${totalPages > 1 ? ` · Page ${currentPage} of ${totalPages}` : ''}`;
+              })()}
             </Typography>
           </Box>
         </CardContent>
