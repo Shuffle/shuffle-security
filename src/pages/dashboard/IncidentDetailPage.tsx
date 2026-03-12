@@ -2124,6 +2124,37 @@ const IncidentDetailPage = () => {
                 </Box>
               ))}
 
+              {/* Automation Control tab */}
+              {(() => {
+                const raw = incident?.rawOCSF;
+                const hasAutomation = !!(raw?.shuffle_execution_id || raw?.shuffle_translation_file);
+                return (
+                  <Box
+                    onClick={() => hasAutomation && setActiveTab(5)}
+                    sx={{
+                      px: 2,
+                      py: 1,
+                      borderRadius: 1.5,
+                      cursor: hasAutomation ? 'pointer' : 'not-allowed',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      transition: 'all 0.2s ease',
+                      opacity: hasAutomation ? 1 : 0.4,
+                      bgcolor: activeTab === 5 ? 'rgba(255, 102, 0, 0.15)' : 'transparent',
+                      color: activeTab === 5 ? '#ff6600' : 'text.secondary',
+                      fontWeight: activeTab === 5 ? 600 : 400,
+                      fontSize: '0.875rem',
+                      '&:hover': hasAutomation ? {
+                        bgcolor: activeTab === 5 ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255,255,255,0.05)',
+                      } : {},
+                    }}
+                  >
+                    Automation
+                  </Box>
+                );
+              })()}
+
               {/* Spacer pushes Raw tab to the right */}
               <Box sx={{ flex: 1 }} />
 
