@@ -14,42 +14,62 @@ interface HighlightedFileEditorProps {
 }
 
 const jsonHighlight = HighlightStyle.define([
-  { tag: t.propertyName, color: 'hsl(var(--foreground))' },
-  { tag: t.string, color: 'hsl(var(--status-resolved))' },
-  { tag: t.number, color: 'hsl(var(--infra-email))' },
-  { tag: [t.bool, t.null], color: 'hsl(var(--destructive))' },
-  { tag: [t.brace, t.squareBracket], color: 'hsl(var(--severity-medium))' },
-  { tag: [t.punctuation, t.separator], color: 'hsl(var(--foreground-muted))' },
+  { tag: t.propertyName, color: '#e2e8f0' },
+  { tag: t.string, color: '#a5d6a7' },
+  { tag: t.number, color: '#ce93d8' },
+  { tag: [t.bool, t.null], color: '#ef9a9a', fontWeight: '500' },
+  { tag: [t.brace, t.squareBracket], color: '#ffd54f', fontWeight: '600' },
+  { tag: [t.punctuation, t.separator], color: '#90a4ae' },
 ]);
 
 const editorTheme = EditorView.theme({
   '&': {
-    backgroundColor: 'hsl(var(--background-elevated))',
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
     fontSize: '0.75rem',
   },
   '.cm-content': {
     fontFamily: 'JetBrains Mono, monospace',
-    caretColor: 'hsl(var(--primary))',
+    caretColor: 'hsl(24, 100%, 50%)',
+    padding: '14px 0',
   },
   '.cm-line': {
     lineHeight: '1.6',
+    padding: '0 14px',
   },
   '.cm-scroller': {
     minHeight: '480px',
+    overflow: 'auto',
   },
   '.cm-focused': {
     outline: 'none',
   },
+  '.cm-focused .cm-selectionBackground, .cm-selectionBackground, ::selection': {
+    backgroundColor: 'hsla(24, 100%, 50%, 0.2) !important',
+  },
   '.cm-cursor, .cm-dropCursor': {
-    borderLeftColor: 'hsl(var(--primary))',
+    borderLeftColor: 'hsl(24, 100%, 50%)',
+    borderLeftWidth: '2px',
   },
   '.cm-activeLine': {
-    backgroundColor: 'hsl(var(--secondary) / 0.45)',
+    backgroundColor: 'hsla(0, 0%, 100%, 0.03)',
   },
   '.cm-gutters': {
-    backgroundColor: 'hsl(var(--background))',
-    color: 'hsl(var(--foreground-muted))',
-    borderRight: '1px solid hsl(var(--border))',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    color: 'hsla(0, 0%, 100%, 0.25)',
+    border: 'none',
+    paddingRight: '4px',
+  },
+  '.cm-activeLineGutter': {
+    backgroundColor: 'transparent',
+    color: 'hsla(0, 0%, 100%, 0.5)',
+  },
+  '.cm-foldGutter': {
+    color: 'hsla(0, 0%, 100%, 0.2)',
+  },
+  '.cm-matchingBracket': {
+    backgroundColor: 'hsla(24, 100%, 50%, 0.25)',
+    outline: '1px solid hsla(24, 100%, 50%, 0.4)',
+    color: '#ffd54f !important',
   },
 });
 
