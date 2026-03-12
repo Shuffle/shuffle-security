@@ -84,6 +84,7 @@ const navItems: NavItem[] = [
     ],
   },
   { label: 'Automation', icon: <Activity size={20} />, path: '/usecases' },
+  { label: 'Documentation', icon: <BookOpen size={20} />, path: '/docs' },
 ];
 
 interface AppSidebarProps {
