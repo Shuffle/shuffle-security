@@ -119,12 +119,63 @@ const getJsonError = (value: string, validateJson: boolean): string | null => {
 };
 
 const HighlightedFileEditor = ({ value, onChange, validateJson = true, onValidationChange }: HighlightedFileEditorProps) => {
+  const editorViewRef = useRef<EditorView | null>(null);
+  const hasAutoFoldedRef = useRef(false);
   const jsonError = useMemo(() => getJsonError(value, validateJson), [value, validateJson]);
   const isValid = !validateJson || jsonError === null;
+
+  const autoFoldNested = useCallback((view: EditorView, attempt = 0) => {
+    if (hasAutoFoldedRef.current) return;
+
+    let topLevelStart: number | null = null;
+    const tree = syntaxTree(view.state);
+
+    tree.iterate({
+      enter: (node) => {
+        if (
+          topLevelStart === null &&
+          (node.type.name === 'Object' || node.type.name === 'Array') &&
+          node.node.parent?.type.name === 'JsonText'
+        ) {
+          topLevelStart = node.from;
+          return false;
+        }
+      },
+    });
+
+    if (topLevelStart === null) {
+      if (attempt < 50) {
+        setTimeout(() => autoFoldNested(view, attempt + 1), 100);
+      }
+      return;
+    }
+
+    foldAll(view);
+
+    const topLevelLine = view.state.doc.lineAt(topLevelStart);
+    const topLevelRange = foldable(view.state, topLevelLine.from, topLevelLine.to);
+
+    if (topLevelRange) {
+      view.dispatch({
+        effects: unfoldEffect.of({ from: topLevelRange.from, to: topLevelRange.to }),
+      });
+      hasAutoFoldedRef.current = true;
+      return;
+    }
+
+    if (attempt < 50) {
+      setTimeout(() => autoFoldNested(view, attempt + 1), 100);
+    }
+  }, []);
 
   useEffect(() => {
     onValidationChange?.(isValid);
   }, [isValid, onValidationChange]);
+
+  useEffect(() => {
+    if (!editorViewRef.current || hasAutoFoldedRef.current || !value.trim()) return;
+    autoFoldNested(editorViewRef.current);
+  }, [value, autoFoldNested]);
 
   const extensions = useMemo(() => [json(), syntaxHighlighting(jsonHighlight), variableHighlighter, EditorView.lineWrapping], []);
 
@@ -160,36 +211,10 @@ const HighlightedFileEditor = ({ value, onChange, validateJson = true, onValidat
           }}
           editable
           onCreateEditor={useCallback((view: EditorView) => {
-            const tryFold = (attempt = 0) => {
-              const effects: any[] = [];
-              const tree = syntaxTree(view.state);
-
-              tree.iterate({
-                enter: (node) => {
-                  if (node.type.name === 'Object' || node.type.name === 'Array') {
-                    // Skip top-level: parent is JsonText (the root)
-                    if (node.node.parent?.type.name === 'JsonText') return;
-                    const range = foldable(view.state, node.from, node.to);
-                    if (range) {
-                      effects.push(foldEffect.of({ from: range.from, to: range.to }));
-                    }
-                  }
-                },
-              });
-
-              if (effects.length) {
-                view.dispatch({ effects });
-                return;
-              }
-
-              // Keep retrying until JSON content/parser is ready
-              if (attempt < 50) {
-                setTimeout(() => tryFold(attempt + 1), 100);
-              }
-            };
-
-            setTimeout(() => tryFold(), 100);
-          }, [])}
+            editorViewRef.current = view;
+            hasAutoFoldedRef.current = false;
+            autoFoldNested(view);
+          }, [autoFoldNested])}
         />
       </Box>
 
