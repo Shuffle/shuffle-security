@@ -160,8 +160,43 @@ const HighlightedFileEditor = ({ value, onChange, validateJson = true, onValidat
           }}
           editable
           onCreateEditor={useCallback((view: EditorView) => {
-            // Fold all blocks after a short delay to let the language parser finish
-            setTimeout(() => foldAll(view), 100);
+            setTimeout(() => {
+              // Fold all, then unfold the top-level object/array
+              foldAll(view);
+              // Find the first foldable range (top-level) and unfold it
+              const tree = syntaxTree(view.state);
+              const topNode = tree.topNode.firstChild;
+              if (topNode) {
+                const range = foldable(view.state, topNode.from, topNode.to);
+                if (range) {
+                  view.dispatch({
+                    effects: (unfoldAll as any)(view.state)
+                      ? undefined
+                      : undefined,
+                  });
+                }
+              }
+              // Simpler approach: fold all then unfold line 1
+              unfoldAll(view);
+              // Now fold only sub-objects (depth > 0)
+              const foldEffects: any[] = [];
+              tree.iterate({
+                enter: (node) => {
+                  if (node.type.name === 'Object' || node.type.name === 'Array') {
+                    if (node.node.parent && node.node.parent.type.name !== 'JsonText') {
+                      const r = foldable(view.state, node.from, node.to);
+                      if (r) {
+                        foldEffects.push(r);
+                      }
+                    }
+                  }
+                },
+              });
+              // Apply folds
+              if (foldEffects.length > 0) {
+                const { foldEffect } = require('@codemirror/language');
+              }
+            }, 100);
           }, [])}
         />
       </Box>
