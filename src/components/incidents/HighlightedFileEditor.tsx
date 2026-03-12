@@ -163,10 +163,9 @@ const HighlightedFileEditor = ({ value, onChange, validateJson = true, onValidat
             const tryFold = (attempt = 0) => {
               const effects: any[] = [];
               const tree = syntaxTree(view.state);
-              let hasContent = false;
+
               tree.iterate({
                 enter: (node) => {
-                  hasContent = true;
                   if (node.type.name === 'Object' || node.type.name === 'Array') {
                     // Skip top-level: parent is JsonText (the root)
                     if (node.node.parent?.type.name === 'JsonText') return;
@@ -177,14 +176,19 @@ const HighlightedFileEditor = ({ value, onChange, validateJson = true, onValidat
                   }
                 },
               });
+
               if (effects.length) {
                 view.dispatch({ effects });
-              } else if (hasContent === false && attempt < 10) {
-                // Parser not ready yet, retry
+                return;
+              }
+
+              // Keep retrying until JSON content/parser is ready
+              if (attempt < 50) {
                 setTimeout(() => tryFold(attempt + 1), 100);
               }
             };
-            setTimeout(() => tryFold(), 150);
+
+            setTimeout(() => tryFold(), 100);
           }, [])}
         />
       </Box>
