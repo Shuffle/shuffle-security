@@ -159,6 +159,10 @@ const HighlightedFileEditor = ({ value, onChange, validateJson = true, onValidat
             bracketMatching: true,
           }}
           editable
+          onCreateEditor={useCallback((view: EditorView) => {
+            // Fold all blocks after a short delay to let the language parser finish
+            setTimeout(() => foldAll(view), 100);
+          }, [])}
         />
       </Box>
 
