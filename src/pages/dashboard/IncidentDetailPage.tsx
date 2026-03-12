@@ -3574,7 +3574,7 @@ const IncidentDetailPage = () => {
               <CircularProgress size={24} sx={{ color: '#ff6600' }} />
             </Box>
           ) : (
-            <HighlightedFileEditor value={fileContent} onChange={setFileContent} />
+            <HighlightedFileEditor value={fileContent} onChange={setFileContent} validateJson={true} onValidationChange={setFileJsonValid} />
           )}
         </Box>
       )}
