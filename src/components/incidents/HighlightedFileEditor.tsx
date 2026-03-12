@@ -2,9 +2,24 @@ import { useEffect, useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 import CodeMirror from '@uiw/react-codemirror';
 import { json } from '@codemirror/lang-json';
-import { EditorView } from '@codemirror/view';
+import { EditorView, Decoration, DecorationSet, ViewPlugin, ViewUpdate, MatchDecorator } from '@codemirror/view';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { tags as t } from '@lezer/highlight';
+
+// Decorator that highlights $variable.path patterns inside strings
+const variableMark = Decoration.mark({ class: 'cm-variable-token' });
+const variableMatcher = new MatchDecorator({
+  regexp: /\$[a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*/g,
+  decoration: () => variableMark,
+});
+const variableHighlighter = ViewPlugin.fromClass(
+  class {
+    decorations: DecorationSet;
+    constructor(view: EditorView) { this.decorations = variableMatcher.createDeco(view as any); }
+    update(update: ViewUpdate) { this.decorations = variableMatcher.updateDeco(update, this.decorations); }
+  },
+  { decorations: (v) => v.decorations }
+);
 
 interface HighlightedFileEditorProps {
   value: string;
@@ -73,6 +88,10 @@ const editorTheme = EditorView.theme(
       outline: '1px solid hsl(var(--primary) / 0.45)',
       color: 'hsl(var(--severity-medium))',
     },
+    '.cm-variable-token': {
+      color: 'hsl(var(--primary))',
+      fontWeight: '600',
+    },
   },
   { dark: true }
 );
@@ -106,7 +125,7 @@ const HighlightedFileEditor = ({ value, onChange, validateJson = true, onValidat
     onValidationChange?.(isValid);
   }, [isValid, onValidationChange]);
 
-  const extensions = useMemo(() => [json(), syntaxHighlighting(jsonHighlight), EditorView.lineWrapping], []);
+  const extensions = useMemo(() => [json(), syntaxHighlighting(jsonHighlight), variableHighlighter, EditorView.lineWrapping], []);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
