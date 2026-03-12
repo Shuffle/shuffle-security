@@ -44,6 +44,7 @@ export interface DatastoreResponse {
   data?: DatastoreItem[];
   categoryConfig?: CategoryConfig;
   cursor?: string;
+  totalAmount?: number;
   error?: string;
 }
 
@@ -254,6 +255,7 @@ export const getDatastoreByCategory = async (
     data: Array.isArray(data) ? data : data.keys || data.data || [],
     categoryConfig: data.category_config,
     cursor: data.cursor,
+    totalAmount: data.total_amount,
   };
 };
 

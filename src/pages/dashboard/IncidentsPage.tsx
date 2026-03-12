@@ -334,13 +334,13 @@ const IncidentsPage = () => {
   const [bulkResolveDialogOpen, setBulkResolveDialogOpen] = useState(false);
   const [isBulkResolving, setIsBulkResolving] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 10;
+  const ITEMS_PER_PAGE = 50;
 
   // Sorting
   const [sortBy, setSortBy] = useState<SortKey>('created');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
-  const { items: datastoreItems, isLoading, isRefreshing, hasFetched, error, fetchItems, addItem, hasMore, fetchNextPage, categoryConfig } = useDatastore({
+  const { items: datastoreItems, isLoading, isRefreshing, hasFetched, error, fetchItems, addItem, hasMore, fetchNextPage, categoryConfig, totalAmount } = useDatastore({
     category: DATASTORE_CATEGORIES.INCIDENTS,
   });
 
@@ -1476,8 +1476,11 @@ const IncidentsPage = () => {
             </Box>
 
             <Typography variant="body2" sx={{ ml: 'auto', color: 'text.secondary' }}>
-              {sortedIncidents.length} incident{sortedIncidents.length !== 1 ? 's' : ''}
-              {sortedIncidents.length > ITEMS_PER_PAGE && ` · Page ${currentPage} of ${Math.ceil(sortedIncidents.length / ITEMS_PER_PAGE)}`}
+              {(() => {
+                const displayTotal = totalAmount && totalAmount > 1000 ? totalAmount : sortedIncidents.length;
+                const totalPages = Math.ceil(displayTotal / ITEMS_PER_PAGE);
+                return `${displayTotal} incident${displayTotal !== 1 ? 's' : ''}${totalPages > 1 ? ` · Page ${currentPage} of ${totalPages}` : ''}`;
+              })()}
             </Typography>
           </Box>
         </CardContent>

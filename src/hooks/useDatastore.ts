@@ -26,6 +26,7 @@ interface UseDatastoreReturn {
   error: string | null;
   cursor: string | null;
   hasMore: boolean;
+  totalAmount: number | null;
   categoryConfig: CategoryConfig | null;
   fetchItems: (cursorParam?: string) => Promise<void>;
   fetchNextPage: () => Promise<void>;
@@ -45,6 +46,7 @@ export const useDatastore = ({ category }: UseDatastoreOptions): UseDatastoreRet
   const [cursor, setCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [categoryConfig, setCategoryConfig] = useState<CategoryConfig | null>(null);
+  const [totalAmount, setTotalAmount] = useState<number | null>(null);
 
   const fetchItems = useCallback(async (cursorParam?: string) => {
     // Only show full loading spinner on initial fetch to avoid UI flicker
@@ -74,6 +76,9 @@ export const useDatastore = ({ category }: UseDatastoreOptions): UseDatastoreRet
         setHasMore(!!response.cursor);
         if (response.categoryConfig) {
           setCategoryConfig(response.categoryConfig);
+        }
+        if (response.totalAmount != null) {
+          setTotalAmount(response.totalAmount);
         }
       } else {
         setError(response.error || 'Failed to fetch items');
@@ -177,6 +182,7 @@ export const useDatastore = ({ category }: UseDatastoreOptions): UseDatastoreRet
     error,
     cursor,
     hasMore,
+    totalAmount,
     categoryConfig,
     fetchItems,
     fetchNextPage,
