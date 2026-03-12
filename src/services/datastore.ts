@@ -80,6 +80,7 @@ export const setDatastoreItem = async (
     key,
     value: typeof value === 'string' ? value : JSON.stringify(value),
     category,
+    ignore_security_rules: true,
   };
 
   const response = await fetch(getApiUrl(`/api/v1/orgs/${orgId}/set_cache`), {
