@@ -161,40 +161,22 @@ const HighlightedFileEditor = ({ value, onChange, validateJson = true, onValidat
           editable
           onCreateEditor={useCallback((view: EditorView) => {
             setTimeout(() => {
-              // Fold all, then unfold the top-level object/array
-              foldAll(view);
-              // Find the first foldable range (top-level) and unfold it
+              const effects: any[] = [];
               const tree = syntaxTree(view.state);
-              const topNode = tree.topNode.firstChild;
-              if (topNode) {
-                const range = foldable(view.state, topNode.from, topNode.to);
-                if (range) {
-                  view.dispatch({
-                    effects: (unfoldAll as any)(view.state)
-                      ? undefined
-                      : undefined,
-                  });
-                }
-              }
-              // Simpler approach: fold all then unfold line 1
-              unfoldAll(view);
-              // Now fold only sub-objects (depth > 0)
-              const foldEffects: any[] = [];
               tree.iterate({
                 enter: (node) => {
                   if (node.type.name === 'Object' || node.type.name === 'Array') {
-                    if (node.node.parent && node.node.parent.type.name !== 'JsonText') {
-                      const r = foldable(view.state, node.from, node.to);
-                      if (r) {
-                        foldEffects.push(r);
-                      }
+                    // Skip top-level: parent is JsonText (the root)
+                    if (node.node.parent?.type.name === 'JsonText') return;
+                    const range = foldable(view.state, node.from, node.to);
+                    if (range) {
+                      effects.push(foldEffect.of({ from: range.from, to: range.to }));
                     }
                   }
                 },
               });
-              // Apply folds
-              if (foldEffects.length > 0) {
-                const { foldEffect } = require('@codemirror/language');
+              if (effects.length) {
+                view.dispatch({ effects });
               }
             }, 100);
           }, [])}
