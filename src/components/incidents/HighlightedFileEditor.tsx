@@ -38,15 +38,15 @@ const highlightLine = (line: string): string => {
     '<span class="hl-string">$1$2$3</span>'
   );
 
-  // Booleans and null
+  // Booleans and null (only if not inside a span already)
   result = result.replace(
-    /\b(true|false|null)\b/g,
+    /(?<![">])\b(true|false|null)\b(?![<])/g,
     '<span class="hl-literal">$1</span>'
   );
 
-  // Numbers
+  // Numbers (only standalone, not inside spans)
   result = result.replace(
-    /\b(\d+\.?\d*)\b/g,
+    /(?<![">a-zA-Z])\b(\d+\.?\d*(?:e[+\-]?\d+)?)\b(?![<])/gi,
     '<span class="hl-number">$1</span>'
   );
 
