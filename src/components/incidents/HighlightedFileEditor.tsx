@@ -119,7 +119,7 @@ const getJsonError = (value: string, validateJson: boolean): string | null => {
   }
 };
 
-const HighlightedFileEditor = ({ value, onChange, validateJson = true, onValidationChange }: HighlightedFileEditorProps) => {
+const HighlightedFileEditor = ({ value, onChange, validateJson = true, onValidationChange, editable = true }: HighlightedFileEditorProps) => {
   const editorViewRef = useRef<EditorView | null>(null);
   const hasAutoFoldedRef = useRef(false);
   const jsonError = useMemo(() => getJsonError(value, validateJson), [value, validateJson]);
