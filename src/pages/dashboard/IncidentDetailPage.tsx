@@ -2238,7 +2238,12 @@ const IncidentDetailPage = () => {
                   }}
                 >
                   Original
-                </Box>
+               </Box>
+              )}
+
+              {/* Arrow: Original → Translation */}
+              {unmappedOriginal && (
+                <ChevronRightIcon sx={{ fontSize: 16, color: 'text.disabled', mx: -0.25 }} />
               )}
 
               {/* File tab */}
@@ -2266,10 +2271,13 @@ const IncidentDetailPage = () => {
                       } : {},
                     }}
                   >
-                    Translation File
+                    Translation
                   </Box>
                 );
               })()}
+
+              {/* Arrow: Translation → OCSF */}
+              <ChevronRightIcon sx={{ fontSize: 16, color: 'text.disabled', mx: -0.25 }} />
 
               <Box
                 onClick={() => {
