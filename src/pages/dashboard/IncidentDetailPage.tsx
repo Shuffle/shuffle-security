@@ -2216,29 +2216,31 @@ const IncidentDetailPage = () => {
               flexShrink: 0,
             }}>
               {/* Original tab - always visible, disabled when no data */}
-              <Box
-                onClick={() => unmappedOriginal && setActiveTab(6)}
-                sx={{
-                  px: 2,
-                  py: 1,
-                  borderRadius: 1.5,
-                  cursor: unmappedOriginal ? 'pointer' : 'not-allowed',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  transition: 'all 0.2s ease',
-                  opacity: unmappedOriginal ? 1 : 0.4,
-                  bgcolor: activeTab === 6 ? 'rgba(255, 102, 0, 0.15)' : 'transparent',
-                  color: activeTab === 6 ? '#ff6600' : 'text.secondary',
-                  fontWeight: activeTab === 6 ? 600 : 400,
-                  fontSize: '0.875rem',
-                  '&:hover': unmappedOriginal ? {
-                    bgcolor: activeTab === 6 ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255,255,255,0.05)',
-                  } : {},
-                }}
-              >
-                Original
-              </Box>
+              <Tooltip title={unmappedOriginal ? 'The raw data before any translation' : 'No original data available for this incident'} arrow>
+                <Box
+                  onClick={() => unmappedOriginal && setActiveTab(6)}
+                  sx={{
+                    px: 2,
+                    py: 1,
+                    borderRadius: 1.5,
+                    cursor: unmappedOriginal ? 'pointer' : 'not-allowed',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    transition: 'all 0.2s ease',
+                    opacity: unmappedOriginal ? 1 : 0.4,
+                    bgcolor: activeTab === 6 ? 'rgba(255, 102, 0, 0.15)' : 'transparent',
+                    color: activeTab === 6 ? '#ff6600' : 'text.secondary',
+                    fontWeight: activeTab === 6 ? 600 : 400,
+                    fontSize: '0.875rem',
+                    '&:hover': unmappedOriginal ? {
+                      bgcolor: activeTab === 6 ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255,255,255,0.05)',
+                    } : {},
+                  }}
+                >
+                  Original
+                </Box>
+              </Tooltip>
 
               {/* Arrow: Original → Translation */}
               <ChevronRightIcon sx={{ fontSize: 16, color: 'text.disabled', mx: -0.25 }} />
