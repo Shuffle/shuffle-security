@@ -2208,6 +2208,36 @@ const IncidentDetailPage = () => {
                 );
               })()}
 
+              {/* File tab */}
+              {(() => {
+                const hasFile = !!incidentFileId;
+                return (
+                  <Box
+                    onClick={() => hasFile && setActiveTab(6)}
+                    sx={{
+                      px: 2,
+                      py: 1,
+                      borderRadius: 1.5,
+                      cursor: hasFile ? 'pointer' : 'not-allowed',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      transition: 'all 0.2s ease',
+                      opacity: hasFile ? 1 : 0.4,
+                      bgcolor: activeTab === 6 ? 'rgba(255, 102, 0, 0.15)' : 'transparent',
+                      color: activeTab === 6 ? '#ff6600' : 'text.secondary',
+                      fontWeight: activeTab === 6 ? 600 : 400,
+                      fontSize: '0.875rem',
+                      '&:hover': hasFile ? {
+                        bgcolor: activeTab === 6 ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255,255,255,0.05)',
+                      } : {},
+                    }}
+                  >
+                    File
+                  </Box>
+                );
+              })()}
+
               <Box
                 onClick={() => {
                   if (incident?.rawOCSF) {
