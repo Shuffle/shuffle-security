@@ -3431,50 +3431,110 @@ const IncidentDetailPage = () => {
           gap: 1.5,
         }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography variant="caption" sx={{ color: 'text.secondary', fontFamily: 'monospace' }}>
-              Raw OCSF{' '}
-              <a href="https://schema.ocsf.io/1.7.0/classes/incident_finding" target="_blank" rel="noopener noreferrer" style={{ color: 'hsl(var(--primary))', textDecoration: 'underline' }}>
-                Incident Finding 2005
-              </a>
-              {' '}(editable)
-            </Typography>
-            <Button
-              size="small"
-              variant="outlined"
-              onClick={async () => {
-                if (!incident?.id) return;
-                if (!rawJsonValid) {
-                  toast.error('Cannot save: JSON is invalid');
-                  return;
-                }
-                try {
-                  const parsed = JSON.parse(rawJsonText);
-                  setIsSaving(true);
-                  const result = await setDatastoreItem(incident.id, parsed, DATASTORE_CATEGORIES.INCIDENTS);
-                  if (result.success) {
-                    toast.success('Raw data saved');
-                    loadIncident(false);
-                  } else {
-                    toast.error(result.error || 'Failed to save');
+            <Box>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
+                <DescriptionIcon sx={{ fontSize: 18, color: '#ff6600' }} />
+                Raw OCSF
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontFamily: 'monospace', fontSize: '0.7rem' }}>
+                <a href="https://schema.ocsf.io/1.7.0/classes/incident_finding" target="_blank" rel="noopener noreferrer" style={{ color: 'hsl(var(--primary))', textDecoration: 'underline' }}>
+                  Incident Finding 2005
+                </a>
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => {
+                  if (incident?.rawOCSF) {
+                    const severityOption = severityOptions.find(s => s.value === editedSeverity);
+                    const statusLabel = editedStatus === 'new' ? 'New' : editedStatus === 'in_progress' ? 'In Progress' : editedStatus === 'on_hold' ? 'On Hold' : 'Resolved';
+                    const existingFindingInfo = incident.rawOCSF?.finding_info_list?.[0] || (incident.rawOCSF as any)?.finding_info;
+                    const liveSnapshot = {
+                      ...incident.rawOCSF,
+                      desc: editedMessage || editedTitle,
+                      severity_id: severityOption?.id || 3,
+                      severity: severityOption?.label || 'Medium',
+                      status: statusLabel,
+                      assignee: editedAssignee.trim() || '',
+                      types: editedLabels,
+                      observables: editedObservables,
+                      tasks,
+                      activity,
+                      finding_info_list: [{
+                        ...existingFindingInfo,
+                        title: editedTitle,
+                        references: editedReferences,
+                        src_url: editedReferences[0] || '',
+                      }],
+                      metadata: {
+                        ...incident.rawOCSF.metadata,
+                        extensions: {
+                          ...incident.rawOCSF.metadata?.extensions,
+                          custom_attributes: {
+                            ...incident.rawOCSF.metadata?.extensions?.custom_attributes,
+                            tlp: editedTlp,
+                            assignee: editedAssignee.trim() || '',
+                            customFields: editedCustomFields,
+                          },
+                        },
+                      },
+                    };
+                    setRawJsonText(JSON.stringify(liveSnapshot, null, 2));
                   }
-                } catch (e: any) {
-                  toast.error(e?.message?.includes('JSON') ? 'Invalid JSON' : 'Failed to save');
-                } finally {
-                  setIsSaving(false);
-                }
-              }}
-              disabled={isSaving || !rawJsonValid}
-              sx={{
-                borderColor: 'rgba(255,255,255,0.2)',
-                color: '#ff6600',
-                fontSize: '0.75rem',
-                height: 28,
-                '&:hover': { borderColor: '#ff6600', bgcolor: 'rgba(255, 102, 0, 0.08)' },
-              }}
-            >
-              Save
-            </Button>
+                }}
+                sx={{
+                  borderColor: 'rgba(255,255,255,0.2)',
+                  color: 'text.secondary',
+                  fontSize: '0.75rem',
+                  height: 28,
+                  '&:hover': { borderColor: 'rgba(255,255,255,0.4)' },
+                }}
+              >
+                Reload
+              </Button>
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={async () => {
+                  if (!incident?.id) return;
+                  if (!rawJsonValid) {
+                    toast.error('Cannot save: JSON is invalid');
+                    return;
+                  }
+                  try {
+                    const parsed = JSON.parse(rawJsonText);
+                    setIsSaving(true);
+                    const result = await setDatastoreItem(incident.id, parsed, DATASTORE_CATEGORIES.INCIDENTS);
+                    if (result.success) {
+                      toast.success('Raw data saved');
+                      loadIncident(false);
+                    } else {
+                      toast.error(result.error || 'Failed to save');
+                    }
+                  } catch (e: any) {
+                    toast.error(e?.message?.includes('JSON') ? 'Invalid JSON' : 'Failed to save');
+                  } finally {
+                    setIsSaving(false);
+                  }
+                }}
+                disabled={isSaving || !rawJsonValid}
+                sx={{
+                  borderColor: 'rgba(255,255,255,0.2)',
+                  color: '#ff6600',
+                  fontSize: '0.75rem',
+                  height: 28,
+                  '&:hover': { borderColor: '#ff6600', bgcolor: 'rgba(255, 102, 0, 0.08)' },
+                }}
+              >
+                Save
+              </Button>
+            </Box>
           </Box>
+          <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.8rem', lineHeight: 1.5 }}>
+            The normalized <strong>OCSF Incident Finding</strong> output after translation. This is the final {'{ }'} structure stored for this incident.
+          </Typography>
           <HighlightedFileEditor
             value={rawJsonText}
             onChange={setRawJsonText}
