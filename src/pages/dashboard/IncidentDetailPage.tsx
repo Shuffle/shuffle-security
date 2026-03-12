@@ -503,6 +503,13 @@ const IncidentDetailPage = () => {
     return /^file_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(fileId) ? fileId : null;
   }, [incident?.rawOCSF]);
 
+  // Check if unmapped_original exists in the raw OCSF data
+  const unmappedOriginal = useMemo(() => {
+    const raw = incident?.rawOCSF;
+    if (!raw?.unmapped_original) return null;
+    return raw.unmapped_original;
+  }, [incident?.rawOCSF]);
+
   // Load file content when File tab is activated
   const loadFileContent = useCallback(async () => {
     if (!incidentFileId) return;
