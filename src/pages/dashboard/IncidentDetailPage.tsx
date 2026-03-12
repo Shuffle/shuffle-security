@@ -2339,7 +2339,7 @@ const IncidentDetailPage = () => {
                   },
                 }}
               >
-                {'{ }'}
+                OCSF
               </Box>
             </Box>
           </Box>
