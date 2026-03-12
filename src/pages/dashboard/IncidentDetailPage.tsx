@@ -515,7 +515,23 @@ const IncidentDetailPage = () => {
       });
       if (!resp.ok) throw new Error(`Failed to load file (${resp.status})`);
       const text = await resp.text();
-      setFileContent(text);
+      // Sort keys alphabetically to match the { } tab output
+      try {
+        const parsed = JSON.parse(text);
+        const sortKeys = (obj: any): any => {
+          if (Array.isArray(obj)) return obj.map(sortKeys);
+          if (obj && typeof obj === 'object') {
+            return Object.keys(obj).sort().reduce((acc: any, key: string) => {
+              acc[key] = sortKeys(obj[key]);
+              return acc;
+            }, {});
+          }
+          return obj;
+        };
+        setFileContent(JSON.stringify(sortKeys(parsed), null, 2));
+      } catch {
+        setFileContent(text);
+      }
       setFileLoaded(true);
     } catch (e: any) {
       setFileError(e.message || 'Failed to load file');
