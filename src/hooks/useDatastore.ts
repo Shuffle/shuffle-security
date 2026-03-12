@@ -77,6 +77,9 @@ export const useDatastore = ({ category }: UseDatastoreOptions): UseDatastoreRet
         if (response.categoryConfig) {
           setCategoryConfig(response.categoryConfig);
         }
+        if (response.totalAmount != null) {
+          setTotalAmount(response.totalAmount);
+        }
       } else {
         setError(response.error || 'Failed to fetch items');
       }
