@@ -18,49 +18,44 @@ const highlightLine = (line: string): string => {
     return `<span class="hl-comment">${escaped}</span>`;
   }
 
-  let result = escaped;
+  // Single-pass tokenizer to avoid regex ordering conflicts
+  const tokenRegex = /(\$[a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)|((&quot;)((?:(?!&quot;).)*?)(&quot;))|\b(true|false|null)\b|\b(\d+\.?\d*(?:e[+\-]?\d+)?)\b|([{}\[\]])|([,:])/gi;
 
-  // $variable.field.subfield
-  result = result.replace(
-    /(\$[a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)/g,
-    '<span class="hl-variable">$1</span>'
-  );
+  let result = '';
+  let lastIndex = 0;
 
-  // JSON key ("key":)
-  result = result.replace(
-    /(&quot;)([^&]*?)(&quot;)\s*:/g,
-    '<span class="hl-key">$1$2$3</span><span class="hl-punctuation">:</span>'
-  );
+  escaped.replace(tokenRegex, (match, variable, _fullStr, qOpen, strContent, qClose, literal, number, bracket, punct, offset) => {
+    // Append any text before this match as base text
+    result += escaped.slice(lastIndex, offset);
+    lastIndex = offset + match.length;
 
-  // Remaining quoted strings
-  result = result.replace(
-    /(&quot;)((?:(?!&quot;).)*)(&quot;)/g,
-    '<span class="hl-string">$1$2$3</span>'
-  );
+    if (variable) {
+      result += `<span class="hl-variable">${match}</span>`;
+    } else if (qOpen) {
+      // Check if next non-space is ":" → key, otherwise string
+      const after = escaped.slice(lastIndex);
+      if (/^\s*:/.test(after)) {
+        result += `<span class="hl-key">${match}</span>`;
+      } else {
+        result += `<span class="hl-string">${match}</span>`;
+      }
+    } else if (literal) {
+      result += `<span class="hl-literal">${match}</span>`;
+    } else if (number) {
+      result += `<span class="hl-number">${match}</span>`;
+    } else if (bracket) {
+      result += `<span class="hl-bracket">${match}</span>`;
+    } else if (punct) {
+      result += `<span class="hl-punctuation">${match}</span>`;
+    } else {
+      result += match;
+    }
 
-  // Booleans and null (only if not inside a span already)
-  result = result.replace(
-    /(?<![">])\b(true|false|null)\b(?![<])/g,
-    '<span class="hl-literal">$1</span>'
-  );
+    return match; // unused, we build result manually
+  });
 
-  // Numbers (only standalone, not inside spans)
-  result = result.replace(
-    /(?<![">a-zA-Z])\b(\d+\.?\d*(?:e[+\-]?\d+)?)\b(?![<])/gi,
-    '<span class="hl-number">$1</span>'
-  );
-
-  // Brackets and braces
-  result = result.replace(
-    /([{}\[\]])/g,
-    '<span class="hl-bracket">$1</span>'
-  );
-
-  // Commas
-  result = result.replace(
-    /,/g,
-    '<span class="hl-punctuation">,</span>'
-  );
+  // Append any remaining text
+  result += escaped.slice(lastIndex);
 
   return result;
 };
