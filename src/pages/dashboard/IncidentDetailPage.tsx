@@ -2320,8 +2320,8 @@ const IncidentDetailPage = () => {
                   setActiveTab(4);
                 }}
                 sx={{
-                  px: 1.5,
-                  py: 0.75,
+                  px: 2,
+                  py: 1,
                   borderRadius: 1.5,
                   cursor: 'pointer',
                   display: 'flex',
@@ -2331,8 +2331,7 @@ const IncidentDetailPage = () => {
                   bgcolor: activeTab === 4 ? 'rgba(255, 102, 0, 0.15)' : 'transparent',
                   color: activeTab === 4 ? '#ff6600' : 'text.disabled',
                   fontWeight: activeTab === 4 ? 600 : 400,
-                  fontSize: '0.8rem',
-                  fontFamily: 'monospace',
+                  fontSize: '0.875rem',
                   '&:hover': {
                     bgcolor: activeTab === 4 ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255,255,255,0.05)',
                     color: activeTab === 4 ? '#ff6600' : 'text.secondary',
