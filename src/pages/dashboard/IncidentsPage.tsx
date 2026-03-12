@@ -788,6 +788,11 @@ const IncidentsPage = () => {
     return result;
   }, [filteredByAssignee, filters, searchQuery]);
 
+  // Reset to page 1 when filters or search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters, searchQuery, showIrrelevant]);
+
   // Sort incidents
   const sortedIncidents = useMemo(() => {
     const sorted = [...filteredIncidents];
