@@ -3549,7 +3549,7 @@ const IncidentDetailPage = () => {
             </Box>
           </Box>
           <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.8rem', lineHeight: 1.5 }}>
-            The normalized <strong>OCSF Incident Finding</strong> output after translation. This is the final {'{ }'} structure stored for this incident.
+            The normalized <strong>OCSF Incident Finding</strong> output after applying the Translation File to the original ingested data. This is the final {'{ }'} structure stored for this incident and used across the platform for display, automation, and forwarding.
           </Typography>
           <HighlightedFileEditor
             value={rawJsonText}
