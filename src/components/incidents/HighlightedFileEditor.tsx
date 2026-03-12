@@ -20,29 +20,46 @@ const highlightLine = (line: string): string => {
 
   let result = escaped;
 
+  // $variable.field.subfield
   result = result.replace(
     /(\$[a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)/g,
     '<span class="hl-variable">$1</span>'
   );
 
+  // JSON key ("key":)
   result = result.replace(
     /(&quot;)([^&]*?)(&quot;)\s*:/g,
-    '<span class="hl-key">$1$2$3</span>:'
+    '<span class="hl-key">$1$2$3</span><span class="hl-punctuation">:</span>'
   );
 
+  // Remaining quoted strings
   result = result.replace(
     /(&quot;)((?:(?!&quot;).)*)(&quot;)/g,
     '<span class="hl-string">$1$2$3</span>'
   );
 
+  // Booleans and null
   result = result.replace(
     /\b(true|false|null)\b/g,
     '<span class="hl-literal">$1</span>'
   );
 
+  // Numbers
   result = result.replace(
     /\b(\d+\.?\d*)\b/g,
     '<span class="hl-number">$1</span>'
+  );
+
+  // Brackets and braces
+  result = result.replace(
+    /([{}\[\]])/g,
+    '<span class="hl-bracket">$1</span>'
+  );
+
+  // Commas
+  result = result.replace(
+    /,/g,
+    '<span class="hl-punctuation">,</span>'
   );
 
   return result;
