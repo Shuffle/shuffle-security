@@ -2,9 +2,24 @@ import { useEffect, useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 import CodeMirror from '@uiw/react-codemirror';
 import { json } from '@codemirror/lang-json';
-import { EditorView } from '@codemirror/view';
+import { EditorView, Decoration, DecorationSet, ViewPlugin, ViewUpdate, MatchDecorator } from '@codemirror/view';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { tags as t } from '@lezer/highlight';
+
+// Decorator that highlights $variable.path patterns inside strings
+const variableMark = Decoration.mark({ class: 'cm-variable-token' });
+const variableMatcher = new MatchDecorator({
+  regexp: /\$[a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*/g,
+  decoration: () => variableMark,
+});
+const variableHighlighter = ViewPlugin.fromClass(
+  class {
+    decorations: DecorationSet;
+    constructor(view: EditorView) { this.decorations = variableMatcher.createDeco(view as any); }
+    update(update: ViewUpdate) { this.decorations = variableMatcher.updateDeco(update, this.decorations); }
+  },
+  { decorations: (v) => v.decorations }
+);
 
 interface HighlightedFileEditorProps {
   value: string;
