@@ -470,7 +470,7 @@ const IncidentDetailPage = () => {
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [showMergeDialog, setShowMergeDialog] = useState(false);
   const [publicAuthorization, setPublicAuthorization] = useState<string>('');
-  const TAB_NAMES = ['tasks', 'details', 'observables', 'correlations', 'raw'] as const;
+  const TAB_NAMES = ['tasks', 'details', 'observables', 'correlations', 'raw', 'automation'] as const;
   const initialTab = (() => {
     const t = searchParams.get('tab');
     if (t) { const idx = TAB_NAMES.indexOf(t as any); return idx >= 0 ? idx : 0; }
@@ -2124,6 +2124,37 @@ const IncidentDetailPage = () => {
                 </Box>
               ))}
 
+              {/* Automation Control tab */}
+              {(() => {
+                const raw = incident?.rawOCSF;
+                const hasAutomation = !!(raw?.shuffle_execution_id || raw?.shuffle_translation_file);
+                return (
+                  <Box
+                    onClick={() => hasAutomation && setActiveTab(5)}
+                    sx={{
+                      px: 2,
+                      py: 1,
+                      borderRadius: 1.5,
+                      cursor: hasAutomation ? 'pointer' : 'not-allowed',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      transition: 'all 0.2s ease',
+                      opacity: hasAutomation ? 1 : 0.4,
+                      bgcolor: activeTab === 5 ? 'rgba(255, 102, 0, 0.15)' : 'transparent',
+                      color: activeTab === 5 ? '#ff6600' : 'text.secondary',
+                      fontWeight: activeTab === 5 ? 600 : 400,
+                      fontSize: '0.875rem',
+                      '&:hover': hasAutomation ? {
+                        bgcolor: activeTab === 5 ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255,255,255,0.05)',
+                      } : {},
+                    }}
+                  >
+                    Automation
+                  </Box>
+                );
+              })()}
+
               {/* Spacer pushes Raw tab to the right */}
               <Box sx={{ flex: 1 }} />
 
@@ -3402,6 +3433,66 @@ const IncidentDetailPage = () => {
               },
             }}
           />
+        </Box>
+      )}
+
+      {activeTab === 5 && (
+        /* Automation Control Tab */
+        <Box sx={{
+          bgcolor: 'rgba(255,255,255,0.02)',
+          borderRadius: 2,
+          border: '1px solid rgba(255,255,255,0.06)',
+          p: 3,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 3,
+        }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <SettingsIcon sx={{ fontSize: 18, color: '#ff6600' }} />
+            Automation Control
+          </Typography>
+
+          {incident?.rawOCSF?.shuffle_execution_id && (
+            <Box sx={{
+              p: 2,
+              borderRadius: 2,
+              bgcolor: 'rgba(255,255,255,0.02)',
+              border: '1px solid rgba(255,255,255,0.06)',
+            }}>
+              <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
+                Execution ID
+              </Typography>
+              <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem', wordBreak: 'break-all' }}>
+                {incident.rawOCSF.shuffle_execution_id}
+              </Typography>
+              <Box sx={{ mt: 1 }}>
+                <a
+                  href={`https://shuffler.io/workflows/${incident.rawOCSF.shuffle_execution_id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: '#ff6600', fontSize: '0.75rem', textDecoration: 'underline' }}
+                >
+                  View in Shuffle →
+                </a>
+              </Box>
+            </Box>
+          )}
+
+          {incident?.rawOCSF?.shuffle_translation_file && (
+            <Box sx={{
+              p: 2,
+              borderRadius: 2,
+              bgcolor: 'rgba(255,255,255,0.02)',
+              border: '1px solid rgba(255,255,255,0.06)',
+            }}>
+              <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
+                Translation File
+              </Typography>
+              <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem', wordBreak: 'break-all' }}>
+                {incident.rawOCSF.shuffle_translation_file}
+              </Typography>
+            </Box>
+          )}
         </Box>
       )}
       </Box>{/* End isPublicView pointer-events wrapper */}
