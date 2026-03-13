@@ -250,7 +250,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
       
       return {
         id: item.key, // Always use datastore key as the canonical ID
-        title: meaningfulString(findingInfo?.title) || meaningfulString(legacyData.message),
+        title: meaningfulString(findingInfo?.title) || meaningfulString(legacyData.supporting_data) || meaningfulString(legacyData.desc) || meaningfulString(legacyData.message),
         source: meaningfulString(legacyData.metadata?.product?.name) || meaningfulString(findingInfo?.types?.[0]),
         severity: mapOCSFSeverity(legacyData.severity_id),
         status: mapOCSFStatus(legacyData.status_id),
