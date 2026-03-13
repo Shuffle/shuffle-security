@@ -83,7 +83,7 @@ import {
   mapOCSFStatus,
   convertLegacyTlp,
 } from '@/config/ocsfIncidentSchema';
-import { ResolveIncidentDialog, ResolutionData, RESOLUTION_REASONS } from '@/components/incidents/ResolveIncidentDialog';
+import { normalizeStatus } from '@/config/incidentConfig';
 import { MergeIncidentDialog } from '@/components/incidents/MergeIncidentDialog';
 import { MentionText } from '@/components/incidents/MentionText';
 import { MentionInput } from '@/components/incidents/MentionInput';
