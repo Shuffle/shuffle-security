@@ -254,7 +254,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
         title: meaningfulString(findingInfo?.title) || meaningfulString(legacyData.supporting_data) || meaningfulString(legacyData.desc) || meaningfulString(legacyData.message),
         source: meaningfulString(legacyData.metadata?.product?.name) || meaningfulString(findingInfo?.types?.[0]),
         severity: mapOCSFSeverity(legacyData.severity_id),
-        status: mapOCSFStatus(legacyData.status_id),
+        status: normalizeStatus(legacyData.status || mapOCSFStatus(legacyData.status_id)),
         assignee: legacyData.assignee || null,
         created: formatTimestamp(resolveCreatedTs(legacyData, item.created)),
         createdTs: resolveCreatedTs(legacyData, item.created),
