@@ -1,7 +1,7 @@
 // Shared incident status and severity configuration
 // Used across IncidentCardView, IncidentsPage, IncidentDetailPage, and IncidentStatsCards
 
-import { Clock, Zap, Flame, CheckCircle, PauseCircle, LucideIcon } from 'lucide-react';
+import { Clock, Zap, Flame, CheckCircle, PauseCircle, AlertTriangle, LucideIcon } from 'lucide-react';
 
 export const statusConfig: Record<string, { 
   icon: LucideIcon; 
@@ -47,6 +47,68 @@ export const statusConfig: Record<string, {
   },
 };
 
+// ============================================================================
+// Status Synonyms - maps alternative status strings to canonical statuses
+// ============================================================================
+export const STATUS_SYNONYMS: Record<string, string> = {
+  // resolved synonyms
+  closed: 'resolved',
+  done: 'resolved',
+  complete: 'resolved',
+  completed: 'resolved',
+  fixed: 'resolved',
+  remediated: 'resolved',
+  mitigated: 'resolved',
+  // new synonyms
+  open: 'new',
+  created: 'new',
+  pending: 'new',
+  reported: 'new',
+  // in_progress synonyms
+  in_progress: 'in_progress',
+  inprogress: 'in_progress',
+  active: 'in_progress',
+  investigating: 'in_progress',
+  working: 'in_progress',
+  assigned: 'in_progress',
+  acknowledged: 'in_progress',
+  // on_hold synonyms
+  on_hold: 'on_hold',
+  onhold: 'on_hold',
+  paused: 'on_hold',
+  waiting: 'on_hold',
+  suspended: 'on_hold',
+  snoozed: 'on_hold',
+  // escalated synonyms
+  escalated: 'escalated',
+  critical_escalation: 'escalated',
+};
+
+/**
+ * Normalize a status string to a canonical status key.
+ * Returns the canonical status if a synonym is found, otherwise returns the
+ * original (lowercased, trimmed) value so the UI can flag it as unknown.
+ */
+export const normalizeStatus = (raw: string | undefined): string => {
+  if (!raw) return 'new';
+  const key = raw.toLowerCase().trim().replace(/[\s-]+/g, '_');
+  // Direct match in statusConfig
+  if (statusConfig[key]) return key;
+  // Synonym match
+  if (STATUS_SYNONYMS[key]) return STATUS_SYNONYMS[key];
+  // Try without underscores
+  const noUnder = key.replace(/_/g, '');
+  if (STATUS_SYNONYMS[noUnder]) return STATUS_SYNONYMS[noUnder];
+  // Unknown - return as-is so UI can flag it
+  return key;
+};
+
+/**
+ * Check if a status is recognized (exists in statusConfig after normalization)
+ */
+export const isKnownStatus = (status: string): boolean => {
+  return !!statusConfig[status];
+};
 export const severityColors: Record<string, string> = {
   critical: '#ef4444',
   high: '#f97316',
@@ -63,13 +125,16 @@ export const severityOrder: Record<string, number> = {
   informational: 1,
 };
 
-// Helper to get status display info
+// Helper to get status display info (handles unknown statuses with warning styling)
 export const getStatusDisplay = (status: string) => {
   const config = statusConfig[status];
-  return config || { 
-    icon: Clock, 
-    color: '#94a3b8', 
-    bg: 'rgba(148, 163, 184, 0.1)',
-    label: status.replace('_', ' '),
+  if (config) return { ...config, unknown: false };
+  return { 
+    icon: AlertTriangle, 
+    color: '#f59e0b', 
+    bg: 'rgba(245, 158, 11, 0.15)',
+    label: status.replace(/_/g, ' '),
+    id: 0,
+    unknown: true,
   };
 };

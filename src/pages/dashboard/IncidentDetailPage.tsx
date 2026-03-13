@@ -83,6 +83,7 @@ import {
   mapOCSFStatus,
   convertLegacyTlp,
 } from '@/config/ocsfIncidentSchema';
+import { normalizeStatus } from '@/config/incidentConfig';
 import { ResolveIncidentDialog, ResolutionData, RESOLUTION_REASONS } from '@/components/incidents/ResolveIncidentDialog';
 import { MergeIncidentDialog } from '@/components/incidents/MergeIncidentDialog';
 import { MentionText } from '@/components/incidents/MentionText';
@@ -265,7 +266,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
         title: meaningfulString(ocsf.title) || meaningfulString(ocsf.supporting_data) || meaningfulString(ocsf.desc),
         source: meaningfulString(ocsf.product?.name) || meaningfulString(ocsf.types?.[0]),
         severity: mapOCSFSeverity(ocsf.severity_id || 3),
-        status: mapOCSFStatus(ocsf.status_id || 1),
+        status: normalizeStatus(ocsf.status || mapOCSFStatus(ocsf.status_id || 1)),
         assignee: customAttrs?.assignee || (data as any).assignee || null,
         created: formatTimestamp(resolveCreatedTs(data, item.created)),
         createdTs: resolveCreatedTs(data, item.created),
@@ -298,7 +299,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
         title: meaningfulString(findingInfo?.title) || meaningfulString(legacyData.supporting_data) || meaningfulString(legacyData.desc) || meaningfulString(legacyData.message),
         source: meaningfulString(legacyData.metadata?.product?.name) || meaningfulString(findingInfo?.types?.[0]),
         severity: mapOCSFSeverity(legacyData.severity_id),
-        status: mapOCSFStatus(legacyData.status_id),
+        status: normalizeStatus(legacyData.status || mapOCSFStatus(legacyData.status_id)),
         assignee: legacyData.assignee || null,
         created: formatTimestamp(resolveCreatedTs(legacyData, item.created)),
         createdTs: resolveCreatedTs(legacyData, item.created),
@@ -323,7 +324,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
       title: meaningfulString(data.title) || meaningfulString(data.supporting_data) || meaningfulString(data.desc) || meaningfulString(data.message),
       source: meaningfulString(data.source),
       severity: data.severity || 'medium',
-      status: data.status || 'new',
+      status: normalizeStatus(data.status),
       assignee: data.assignee || null,
       created: formatTimestamp(resolveCreatedTs(data, item.created)),
       createdTs: resolveCreatedTs(data, item.created),
@@ -1699,15 +1700,19 @@ const IncidentDetailPage = () => {
                   sx={{
                     fontSize: '0.7rem',
                     fontWeight: 600,
-                    color: statusConfig[editedStatus]?.color || 'hsl(var(--muted-foreground))',
+                    color: statusConfig[editedStatus]?.color || '#f59e0b',
                     '& .MuiSelect-select': { 
                       py: 0.25, px: 1,
                       borderRadius: 3,
-                      bgcolor: statusConfig[editedStatus]?.bg || 'transparent',
+                      bgcolor: statusConfig[editedStatus]?.bg || 'rgba(245, 158, 11, 0.15)',
+                      border: !statusConfig[editedStatus] ? '1px dashed rgba(245, 158, 11, 0.4)' : 'none',
                     },
-                    '& .MuiSelect-icon': { color: statusConfig[editedStatus]?.color || 'hsl(var(--muted-foreground))', fontSize: 16 },
+                    '& .MuiSelect-icon': { color: statusConfig[editedStatus]?.color || '#f59e0b', fontSize: 16 },
                   }}
-                  renderValue={(val) => statusConfig[val]?.label || val.replace('_', ' ')}
+                  renderValue={(val) => {
+                    if (!statusConfig[val]) return `⚠ ${val.replace(/_/g, ' ')}`;
+                    return statusConfig[val].label;
+                  }}
                 >
                   {Object.entries(statusConfig).map(([key, cfg]) => {
                     const isDisabled = key === 'on_hold' || key === 'escalated';

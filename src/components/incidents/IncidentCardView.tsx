@@ -17,7 +17,7 @@ import {
   ListTodo,
   Link2,
 } from 'lucide-react';
-import { statusConfig, severityColors } from '@/config/incidentConfig';
+import { statusConfig, severityColors, isKnownStatus } from '@/config/incidentConfig';
 import { useState, useEffect, useRef } from 'react';
 
 interface DisplayIncident {
@@ -599,24 +599,48 @@ export const IncidentCardView = ({
                     '&:hover': { backgroundColor: `${severityColor}35` },
                   }}
                 />
-                <Chip
-                  label={statusInfo.label}
-                  size="small"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    onFilterChange?.('status', incident.status);
-                  }}
-                  sx={{
-                    backgroundColor: statusInfo.bg,
-                    color: statusInfo.color,
-                    fontWeight: 500,
-                    fontSize: '0.7rem',
-                    height: 24,
-                    cursor: 'pointer',
-                    '&:hover': { opacity: 0.8 },
-                  }}
-                />
+                {!isKnownStatus(incident.status) ? (
+                  <Tooltip title={`Unknown status "${incident.status}" — may need manual mapping`} placement="top">
+                    <Chip
+                      label={`⚠ ${statusInfo.label}`}
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        onFilterChange?.('status', incident.status);
+                      }}
+                      sx={{
+                        backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                        color: '#f59e0b',
+                        fontWeight: 500,
+                        fontSize: '0.7rem',
+                        height: 24,
+                        cursor: 'pointer',
+                        border: '1px dashed rgba(245, 158, 11, 0.4)',
+                        '&:hover': { opacity: 0.8 },
+                      }}
+                    />
+                  </Tooltip>
+                ) : (
+                  <Chip
+                    label={statusInfo.label}
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      onFilterChange?.('status', incident.status);
+                    }}
+                    sx={{
+                      backgroundColor: statusInfo.bg,
+                      color: statusInfo.color,
+                      fontWeight: 500,
+                      fontSize: '0.7rem',
+                      height: 24,
+                      cursor: 'pointer',
+                      '&:hover': { opacity: 0.8 },
+                    }}
+                  />
+                )}
               </Box>
 
               {/* Source app logo — far right */}

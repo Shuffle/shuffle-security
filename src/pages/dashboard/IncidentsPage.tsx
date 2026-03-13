@@ -18,6 +18,7 @@ import {
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { motion } from 'framer-motion';
+import { normalizeStatus } from '@/config/incidentConfig';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
@@ -223,7 +224,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
         title: meaningfulString(ocsf.title) || meaningfulString(ocsf.supporting_data) || meaningfulString(ocsf.desc),
         source: meaningfulString(ocsf.product?.name) || meaningfulString(ocsf.types?.[0]),
         severity: mapOCSFSeverity(ocsf.severity_id || 3),
-        status: mapOCSFStatus(ocsf.status_id || 1),
+        status: normalizeStatus(ocsf.status || mapOCSFStatus(ocsf.status_id || 1)),
         assignee: rawAssignee,
         created: formatTimestamp(resolveCreatedTs(data, item.created)),
         createdTs: resolveCreatedTs(data, item.created),
@@ -253,7 +254,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
         title: meaningfulString(findingInfo?.title) || meaningfulString(legacyData.supporting_data) || meaningfulString(legacyData.desc) || meaningfulString(legacyData.message),
         source: meaningfulString(legacyData.metadata?.product?.name) || meaningfulString(findingInfo?.types?.[0]),
         severity: mapOCSFSeverity(legacyData.severity_id),
-        status: mapOCSFStatus(legacyData.status_id),
+        status: normalizeStatus(legacyData.status || mapOCSFStatus(legacyData.status_id)),
         assignee: legacyData.assignee || null,
         created: formatTimestamp(resolveCreatedTs(legacyData, item.created)),
         createdTs: resolveCreatedTs(legacyData, item.created),
@@ -277,7 +278,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
         title: meaningfulString(data.title) || meaningfulString(data.supporting_data) || meaningfulString(data.desc) || meaningfulString(data.message),
         source: meaningfulString(data.source),
         severity: (data.severity || 'medium').toLowerCase(),
-        status: (data.status || 'new').toLowerCase().replace('_', ''),
+        status: normalizeStatus(data.status),
         assignee: data.assignee || null,
         created: formatTimestamp(resolveCreatedTs(data, item.created)),
         createdTs: resolveCreatedTs(data, item.created),
