@@ -17,7 +17,7 @@ import {
   ListTodo,
   Link2,
 } from 'lucide-react';
-import { statusConfig, severityColors } from '@/config/incidentConfig';
+import { statusConfig, severityColors, isKnownStatus } from '@/config/incidentConfig';
 import { useState, useEffect, useRef } from 'react';
 
 interface DisplayIncident {
