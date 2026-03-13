@@ -1700,15 +1700,19 @@ const IncidentDetailPage = () => {
                   sx={{
                     fontSize: '0.7rem',
                     fontWeight: 600,
-                    color: statusConfig[editedStatus]?.color || 'hsl(var(--muted-foreground))',
+                    color: statusConfig[editedStatus]?.color || '#f59e0b',
                     '& .MuiSelect-select': { 
                       py: 0.25, px: 1,
                       borderRadius: 3,
-                      bgcolor: statusConfig[editedStatus]?.bg || 'transparent',
+                      bgcolor: statusConfig[editedStatus]?.bg || 'rgba(245, 158, 11, 0.15)',
+                      border: !statusConfig[editedStatus] ? '1px dashed rgba(245, 158, 11, 0.4)' : 'none',
                     },
-                    '& .MuiSelect-icon': { color: statusConfig[editedStatus]?.color || 'hsl(var(--muted-foreground))', fontSize: 16 },
+                    '& .MuiSelect-icon': { color: statusConfig[editedStatus]?.color || '#f59e0b', fontSize: 16 },
                   }}
-                  renderValue={(val) => statusConfig[val]?.label || val.replace('_', ' ')}
+                  renderValue={(val) => {
+                    if (!statusConfig[val]) return `⚠ ${val.replace(/_/g, ' ')}`;
+                    return statusConfig[val].label;
+                  }}
                 >
                   {Object.entries(statusConfig).map(([key, cfg]) => {
                     const isDisabled = key === 'on_hold' || key === 'escalated';
