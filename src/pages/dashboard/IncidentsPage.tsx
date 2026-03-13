@@ -278,7 +278,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
         title: meaningfulString(data.title) || meaningfulString(data.supporting_data) || meaningfulString(data.desc) || meaningfulString(data.message),
         source: meaningfulString(data.source),
         severity: (data.severity || 'medium').toLowerCase(),
-        status: (data.status || 'new').toLowerCase().replace('_', ''),
+        status: normalizeStatus(data.status),
         assignee: data.assignee || null,
         created: formatTimestamp(resolveCreatedTs(data, item.created)),
         createdTs: resolveCreatedTs(data, item.created),
