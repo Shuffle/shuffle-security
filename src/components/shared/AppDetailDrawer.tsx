@@ -146,7 +146,7 @@ export default function AppDetailDrawer({
       let algoliaId: string | null = null;
       try {
         const { algoliasearch } = await import('algoliasearch');
-        const client = algoliasearch('JNSS5CFDZZ', 'c8f882473ff42d41158430be09ec2b4e');
+        const client = algoliasearch('JNSS5CFDZZ', '33e4e3564f4f060e96e0531957bed552');
         const res = await client.search({
           requests: [{ indexName: 'appsearch', query: searchName, hitsPerPage: 10 }],
         });

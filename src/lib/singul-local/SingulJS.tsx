@@ -10,7 +10,7 @@ import type { AlgoliaSearchApp, AppSelectedEvent, SingulJSProps, AppAuthenticati
 import './singul.css';
 
 const ALGOLIA_APP_ID = 'JNSS5CFDZZ';
-const ALGOLIA_API_KEY = 'c8f882473ff42d41158430be09ec2b4e';
+const ALGOLIA_API_KEY = '33e4e3564f4f060e96e0531957bed552';
 
 export interface SingulJSHandle {
   search: (query: string) => void;
