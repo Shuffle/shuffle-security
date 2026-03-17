@@ -873,8 +873,9 @@ const IncidentsPage = () => {
     if (filters.tag) {
       result = result.filter(i => i.labels?.some(l => l.toLowerCase() === filters.tag!.toLowerCase()));
     }
-    if (filters.org && filters.org.length > 0) {
-      result = result.filter(i => filters.org!.includes(i.orgId || ''));
+    const orgFilter = Array.isArray(filters.org) ? filters.org : filters.org ? [filters.org] : [];
+    if (orgFilter.length > 0) {
+      result = result.filter(i => orgFilter.includes(i.orgId || ''));
     }
 
     if (searchQuery.trim()) {
@@ -1627,7 +1628,7 @@ const IncidentsPage = () => {
                 })()}
                 getOptionLabel={(option) => option.name}
                 value={
-                  (filters.org || []).map(id => {
+                  (Array.isArray(filters.org) ? filters.org : filters.org ? [filters.org] : []).map(id => {
                     if (id === currentOrgId) return { id: currentOrgId || '', name: currentOrgName };
                     if (parentOrg && id === parentOrg.id) return { id: parentOrg.id, name: parentOrg.name };
                     const found = subOrgs.find(o => o.id === id);
@@ -1775,10 +1776,18 @@ const IncidentsPage = () => {
             resyncingIds={allResyncingIds}
             resyncingSource={resyncingSource}
             onFilterChange={(type, value) => {
-              setFilters(prev => ({
-                ...prev,
-                [type]: prev[type] === value ? null : value,
-              }));
+              setFilters(prev => {
+                if (type === 'org') {
+                  const currentOrgs = Array.isArray(prev.org) ? prev.org : prev.org ? [prev.org] : [];
+                  const valStr = String(value);
+                  if (currentOrgs.includes(valStr)) {
+                    const next = currentOrgs.filter(o => o !== valStr);
+                    return { ...prev, org: next.length > 0 ? next : null };
+                  }
+                  return { ...prev, org: [...currentOrgs, valStr] };
+                }
+                return { ...prev, [type]: prev[type] === value ? null : value };
+              });
             }}
           />
           
