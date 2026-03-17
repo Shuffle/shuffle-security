@@ -1683,8 +1683,9 @@ const IncidentsPage = () => {
                     ? datastoreItems.length
                     : subOrgItems.get(option.id)?.items.length || 0;
                   const isOrgLoading = subOrgLoading.has(option.id);
+                  const isSubOrg = option.id !== currentOrgId && (!parentOrg || option.id !== parentOrg.id);
                   return (
-                    <li {...props} key={option.id}>
+                    <li {...props} key={option.id} style={{ paddingLeft: isSubOrg ? 32 : undefined }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           {option.image ? (
