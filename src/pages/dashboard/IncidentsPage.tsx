@@ -1643,7 +1643,7 @@ const IncidentsPage = () => {
                   const hasAll = newValue.some(v => v.id === '__all__');
                   const hasNone = newValue.some(v => v.id === '__none__');
                   if (hasNone) {
-                    setFilters(prev => ({ ...prev, org: null }));
+                    setFilters(prev => ({ ...prev, org: [currentOrgId || ''] }));
                     return;
                   }
                   if (hasAll) {
