@@ -1709,7 +1709,10 @@ const IncidentsPage = () => {
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    placeholder="Orgs"
+                    placeholder={(() => {
+                      const orgFilter = Array.isArray(filters.org) ? filters.org : filters.org ? [filters.org] : [];
+                      return orgFilter.length > 0 ? `${orgFilter.length} Org${orgFilter.length > 1 ? 's' : ''}` : 'Orgs';
+                    })()}
                     sx={{ minWidth: 150, width: 150 }}
                     InputProps={{
                       ...params.InputProps,
