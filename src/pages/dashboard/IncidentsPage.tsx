@@ -1773,6 +1773,16 @@ const IncidentsPage = () => {
             ingestionApps={ingestionApps}
             resyncingIds={allResyncingIds}
             resyncingSource={resyncingSource}
+            orgFilterNames={(() => {
+              const orgFilter = Array.isArray(filters.org) ? filters.org : filters.org ? [filters.org] : [];
+              return orgFilter.map(id => {
+                if (id === currentOrgId) return currentOrgName;
+                const found = subOrgs.find(o => o.id === id);
+                return found?.name || id;
+              });
+            })()}
+            totalOrgCount={1 + subOrgs.length + (parentOrg && parentOrg.id !== currentOrgId ? 1 : 0)}
+            onResetOrgFilter={() => setFilters(prev => ({ ...prev, org: null }))}
             onFilterChange={(type, value) => {
               setFilters(prev => {
                 if (type === 'org') {
