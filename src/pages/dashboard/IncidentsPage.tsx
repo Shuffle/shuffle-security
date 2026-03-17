@@ -118,6 +118,7 @@ interface DisplayIncident {
   orgId?: string;
   orgName?: string;
   orgImage?: string;
+  sharedOrgs?: Array<{ orgId: string; orgName: string; orgImage?: string }>;
 }
 
 type SortDirection = 'asc' | 'desc';
