@@ -488,6 +488,29 @@ export const IncidentCardView = ({
                       </>
                     );
                   })()}
+                  {incident.source && !sourceApp?.image && (
+                    <>
+                      <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                        •
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          color: 'hsl(var(--muted-foreground))',
+                          fontSize: '0.7rem',
+                          cursor: 'pointer',
+                          '&:hover': { color: 'hsl(var(--foreground))' },
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          onFilterChange?.('source', incident.source || '');
+                        }}
+                      >
+                        {incident.source}
+                      </Typography>
+                    </>
+                  )}
                    {incident.assignee && (
                     <>
                       <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
