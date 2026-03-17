@@ -1685,7 +1685,7 @@ const IncidentsPage = () => {
                   const isOrgLoading = subOrgLoading.has(option.id);
                   const isSubOrg = option.id !== currentOrgId && (!parentOrg || option.id !== parentOrg.id);
                   return (
-                    <li {...props} key={option.id} style={{ paddingLeft: isSubOrg ? 32 : undefined }}>
+                    <li {...props} key={option.id} style={{ paddingLeft: isSubOrg ? 48 : 16 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           {option.image ? (
