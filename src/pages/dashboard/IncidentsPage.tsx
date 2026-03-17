@@ -1422,18 +1422,18 @@ const IncidentsPage = () => {
 
             <TextField
               size="small"
-              placeholder="Search incidents..."
+              placeholder="Filter"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <SearchIcon sx={{ color: 'text.secondary' }} />
+                    <SearchIcon sx={{ color: 'text.secondary', fontSize: '1rem' }} />
                   </InputAdornment>
                 ),
                 sx: { height: 36 },
               }}
-              sx={{ width: { xs: 120, sm: 180 }, minWidth: 0, flexShrink: 1 }}
+              sx={{ width: { xs: 100, sm: 140 }, minWidth: 0, flexShrink: 1 }}
             />
 
 
