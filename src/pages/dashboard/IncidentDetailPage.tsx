@@ -181,13 +181,6 @@ const parseTimestamp = (timestamp: number | string | undefined): number => {
   return normalizeToMs(timestamp);
 };
 
-  const { subOrgs, parentOrg } = useSubOrgs(userInfo?.active_org?.id);
-  const crossOrgInfo = useMemo(() => {
-    if (!crossOrgId) return null;
-    if (parentOrg && parentOrg.id === crossOrgId) return { name: parentOrg.name, image: parentOrg.image };
-    const found = subOrgs.find(o => o.id === crossOrgId);
-    return found ? { name: found.name, image: found.image } : null;
-  }, [crossOrgId, subOrgs, parentOrg]);
 
 // Strict check: only return string if it has meaningful non-whitespace content
 // Also rejects raw JSON objects/arrays that shouldn't be displayed as text
