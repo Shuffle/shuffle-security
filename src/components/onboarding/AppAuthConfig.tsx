@@ -1742,19 +1742,39 @@ export const AppAuthCard = ({
                       const hasAuthUrl = !!auth?.authorization_url;
                       const allFilled = hasClientId && hasClientSecret && (!auth?.scope?.length || hasScopes);
 
-                      // Build the direct OAuth2 authorization URL
+                      // Build the direct OAuth2 authorization URL with state
                       const buildOAuth2Url = (): string | null => {
                         if (!auth?.authorization_url || !localCredentials['client_id']?.trim()) return null;
                         const redirectUri = auth.redirect_uri || 'https://shuffler.io/set_authentication';
                         const scopes = selectedScopes.join(' ');
+                        const clientId = localCredentials['client_id'].trim();
+                        const clientSecret = localCredentials['client_secret']?.trim() || '';
+
+                        // Build state parameter matching Shuffle's expected format
+                        const stateParams = new URLSearchParams({
+                          workflow_id: '',
+                          reference_action_id: app.objectID,
+                          app_name: app.name,
+                          app_id: app.objectID,
+                          app_version: app.app_version || '1.0.0',
+                          authentication_url: auth.token_uri || '',
+                          scope: scopes,
+                          client_id: clientId,
+                          client_secret: clientSecret,
+                          org_id: 'undefined',
+                          oauth_url: auth.token_uri?.replace(/\/token.*$/, '') || '',
+                          refresh_uri: auth.refresh_uri || auth.token_uri || '',
+                        });
+
                         const params = new URLSearchParams({
-                          client_id: localCredentials['client_id'].trim(),
+                          client_id: clientId,
                           redirect_uri: redirectUri,
                           response_type: 'code',
                           prompt: 'login',
+                          scope: scopes,
+                          state: stateParams.toString(),
                           access_type: 'offline',
                         });
-                        if (scopes) params.set('scope', scopes);
                         return `${auth.authorization_url}?${params.toString()}`;
                       };
 
