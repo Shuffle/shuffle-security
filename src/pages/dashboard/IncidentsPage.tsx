@@ -362,7 +362,7 @@ const IncidentsPage = () => {
   });
 
   // Sub-org incident fetching for multi-tenant view
-  const [subOrgItems, setSubOrgItems] = useState<Map<string, { orgName: string; items: typeof datastoreItems }>>(new Map());
+  const [subOrgItems, setSubOrgItems] = useState<Map<string, { orgName: string; orgImage?: string; items: typeof datastoreItems }>>(new Map());
   const [subOrgLoading, setSubOrgLoading] = useState<Set<string>>(new Set());
 
   // Fetch incidents from all sub-orgs in parallel
