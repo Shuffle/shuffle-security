@@ -16,6 +16,7 @@ import {
 
 interface UseDatastoreOptions {
   category: string;
+  orgId?: string;
 }
 
 interface UseDatastoreReturn {
