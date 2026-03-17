@@ -1616,14 +1616,18 @@ const IncidentsPage = () => {
                 multiple
                 size="small"
                 options={(() => {
-                  const opts = [
+                  const realOrgs = [
                     { id: currentOrgId || '', name: currentOrgName },
                     ...subOrgs.filter(org => org.id !== currentOrgId),
                   ];
-                  if (parentOrg && parentOrg.id !== currentOrgId && !opts.some(o => o.id === parentOrg.id)) {
-                    opts.unshift({ id: parentOrg.id, name: parentOrg.name });
+                  if (parentOrg && parentOrg.id !== currentOrgId && !realOrgs.some(o => o.id === parentOrg.id)) {
+                    realOrgs.unshift({ id: parentOrg.id, name: parentOrg.name });
                   }
-                  return opts;
+                  return [
+                    { id: '__all__', name: 'All orgs' },
+                    { id: '__none__', name: 'None' },
+                    ...realOrgs,
+                  ];
                 })()}
                 getOptionLabel={(option) => option.name}
                 value={
@@ -1635,13 +1639,48 @@ const IncidentsPage = () => {
                   })
                 }
                 onChange={(_, newValue) => {
+                  // Check if special options were selected
+                  const hasAll = newValue.some(v => v.id === '__all__');
+                  const hasNone = newValue.some(v => v.id === '__none__');
+                  if (hasNone) {
+                    setFilters(prev => ({ ...prev, org: null }));
+                    return;
+                  }
+                  if (hasAll) {
+                    // Select all real orgs
+                    const allIds = [
+                      currentOrgId || '',
+                      ...subOrgs.filter(o => o.id !== currentOrgId).map(o => o.id),
+                    ];
+                    if (parentOrg && parentOrg.id !== currentOrgId && !allIds.includes(parentOrg.id)) {
+                      allIds.unshift(parentOrg.id);
+                    }
+                    setFilters(prev => ({ ...prev, org: allIds }));
+                    return;
+                  }
                   setFilters(prev => ({
                     ...prev,
                     org: newValue.length > 0 ? newValue.map(v => v.id) : null,
                   }));
                 }}
                 isOptionEqualToValue={(option, value) => option.id === value.id}
+                filterOptions={(options, params) => {
+                  const filtered = options.filter(o => {
+                    if (o.id === '__all__' || o.id === '__none__') return true;
+                    return o.name.toLowerCase().includes(params.inputValue.toLowerCase());
+                  });
+                  return filtered;
+                }}
                 renderOption={(props, option) => {
+                  if (option.id === '__all__' || option.id === '__none__') {
+                    return (
+                      <li {...props} key={option.id} style={{ borderBottom: option.id === '__none__' ? '1px solid hsla(var(--border))' : undefined }}>
+                        <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))' }}>
+                          {option.name}
+                        </Typography>
+                      </li>
+                    );
+                  }
                   const count = option.id === currentOrgId
                     ? datastoreItems.length
                     : subOrgItems.get(option.id)?.items.length || 0;
