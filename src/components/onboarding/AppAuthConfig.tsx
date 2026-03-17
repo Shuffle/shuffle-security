@@ -1789,9 +1789,7 @@ export const AppAuthCard = ({
                             variant="outlined"
                             size="medium"
                             startIcon={
-                              saving ? (
-                                <CircularProgress size={16} sx={{ color: 'inherit' }} />
-                              ) : app.image_url ? (
+                              app.image_url ? (
                                 <Box
                                   component="img"
                                   src={app.image_url}
@@ -1822,7 +1820,7 @@ export const AppAuthCard = ({
                                 }, 500);
                               }
                             }}
-                            disabled={saving || !allFilled}
+                            disabled={!allFilled}
                             sx={{
                               borderColor: allFilled ? 'rgba(255, 102, 0, 0.5)' : 'rgba(255, 255, 255, 0.1)',
                               color: allFilled ? '#FF6600' : 'rgba(255, 255, 255, 0.3)',
@@ -1843,7 +1841,7 @@ export const AppAuthCard = ({
                               },
                             }}
                           >
-                            {saving ? 'Saving...' : 'Save & Authenticate'}
+                            Authenticate
                           </Button>
                         </Box>
                       );
