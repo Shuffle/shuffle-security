@@ -309,6 +309,7 @@ interface Filters {
   assignee: string | null;
   source: string | null;
   tag: string | null;
+  org: string | null;
 }
 
 const IncidentsPage = () => {
