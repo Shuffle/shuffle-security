@@ -96,9 +96,10 @@ export const useSubOrgs = (currentOrgId: string | undefined): UseSubOrgsReturn =
 
   return {
     subOrgs,
+    parentOrg,
     isLoading,
     error,
     refetch: fetchSubOrgs,
-    isParentOrg: subOrgs.length > 0,
+    isParentOrg: subOrgs.length > 0 || parentOrg !== null,
   };
 };
