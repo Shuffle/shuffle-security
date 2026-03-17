@@ -359,8 +359,8 @@ const IncidentsPage = () => {
 
   // Fetch incidents from all sub-orgs in parallel
   const fetchSubOrgIncidents = useCallback(async () => {
-    // Only fetch cross-org incidents when we are the parent org
-    if (!isParentOrg || subOrgs.length === 0) return;
+    // Only fetch cross-org incidents when we have child orgs (we are a parent)
+    if (subOrgs.length === 0) return;
 
     const orgsToFetch = subOrgs.filter(o => o.id !== currentOrgId);
     if (orgsToFetch.length === 0) return;
