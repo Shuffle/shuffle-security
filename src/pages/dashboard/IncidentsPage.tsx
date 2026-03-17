@@ -1837,6 +1837,95 @@ const IncidentsPage = () => {
         subtitle="Search and authenticate a tool to ingest incidents from"
       />
 
+      {/* Fixed bottom pagination */}
+      {sortedIncidents.length > ITEMS_PER_PAGE && (
+        <Box sx={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: 1,
+          py: 1.5,
+          px: 2,
+          bgcolor: 'hsl(var(--card))',
+          borderTop: '1px solid hsl(var(--border))',
+          zIndex: 20,
+        }}>
+          <IconButton
+            size="small"
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(p => p - 1)}
+            sx={{
+              width: 36, height: 36,
+              border: '1px solid hsl(var(--border))',
+              borderRadius: 1,
+              color: 'hsl(var(--muted-foreground))',
+              '&:hover': { borderColor: 'hsl(var(--primary))', color: 'hsl(var(--primary))' },
+              '&.Mui-disabled': { opacity: 0.3 },
+            }}
+          >
+            <ChevronLeftIcon fontSize="small" />
+          </IconButton>
+
+          {Array.from({ length: Math.ceil(sortedIncidents.length / ITEMS_PER_PAGE) }, (_, i) => i + 1)
+            .filter(page => {
+              const totalPages = Math.ceil(sortedIncidents.length / ITEMS_PER_PAGE);
+              if (totalPages <= 7) return true;
+              if (page === 1 || page === totalPages) return true;
+              if (Math.abs(page - currentPage) <= 1) return true;
+              return false;
+            })
+            .reduce<(number | 'ellipsis')[]>((acc, page, idx, arr) => {
+              if (idx > 0 && page - (arr[idx - 1] as number) > 1) acc.push('ellipsis');
+              acc.push(page);
+              return acc;
+            }, [])
+            .map((item, idx) =>
+              item === 'ellipsis' ? (
+                <Typography key={`e-${idx}`} sx={{ px: 0.5, color: 'hsl(var(--muted-foreground))' }}>…</Typography>
+              ) : (
+                <Button
+                  key={item}
+                  size="small"
+                  onClick={() => setCurrentPage(item as number)}
+                  sx={{
+                    minWidth: 36, height: 36, px: 0,
+                    borderRadius: 1,
+                    fontWeight: currentPage === item ? 700 : 400,
+                    color: currentPage === item ? 'hsl(var(--primary-foreground))' : 'hsl(var(--muted-foreground))',
+                    bgcolor: currentPage === item ? 'hsl(var(--primary))' : 'transparent',
+                    border: currentPage === item ? 'none' : '1px solid hsl(var(--border))',
+                    '&:hover': {
+                      bgcolor: currentPage === item ? 'hsl(var(--primary))' : 'hsl(var(--muted) / 0.5)',
+                    },
+                  }}
+                >
+                  {item}
+                </Button>
+              )
+            )}
+
+          <IconButton
+            size="small"
+            disabled={currentPage >= Math.ceil(sortedIncidents.length / ITEMS_PER_PAGE)}
+            onClick={() => setCurrentPage(p => p + 1)}
+            sx={{
+              width: 36, height: 36,
+              border: '1px solid hsl(var(--border))',
+              borderRadius: 1,
+              color: 'hsl(var(--muted-foreground))',
+              '&:hover': { borderColor: 'hsl(var(--primary))', color: 'hsl(var(--primary))' },
+              '&.Mui-disabled': { opacity: 0.3 },
+            }}
+          >
+            <ChevronRightIcon fontSize="small" />
+          </IconButton>
+        </Box>
+      )}
+
     </motion.div>
   );
 };
