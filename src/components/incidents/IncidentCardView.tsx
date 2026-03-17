@@ -545,22 +545,23 @@ export const IncidentCardView = ({
                       <Chip
                         avatar={incident.orgImage ? <img src={incident.orgImage} alt="" style={{ width: 14, height: 14, borderRadius: '50%', objectFit: 'cover' }} /> : undefined}
                         icon={!incident.orgImage ? <Globe size={10} /> : undefined}
-                        label={incident.orgName}
+                        label={incident.orgName && incident.orgName.length > 20 ? incident.orgName.slice(0, 18) + '…' : incident.orgName}
                         size="small"
                         onClick={(e) => {
                           e.stopPropagation();
                           e.preventDefault();
                           onFilterChange?.('org', incident.orgId || incident.orgName || '');
                         }}
+                        title={incident.orgName}
                         sx={{
-                          backgroundColor: 'rgba(139, 92, 246, 0.12)',
-                          color: '#a78bfa',
-                          fontWeight: 500,
+                          backgroundColor: 'transparent',
+                          color: 'hsl(var(--muted-foreground))',
+                          fontWeight: 400,
                           fontSize: '0.65rem',
                           height: 22,
                           cursor: 'pointer',
-                          '& .MuiChip-icon': { color: '#a78bfa', ml: 0.5 },
-                          '&:hover': { backgroundColor: 'rgba(139, 92, 246, 0.22)' },
+                          '& .MuiChip-icon': { color: 'hsl(var(--muted-foreground))', ml: 0.5 },
+                          '&:hover': { backgroundColor: 'hsl(var(--muted) / 0.5)' },
                         }}
                       />
                     </>
