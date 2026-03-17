@@ -392,7 +392,7 @@ export const UnifiedSourceSetup = ({
   onAppsChange,
 }: UnifiedSourceSetupProps) => {
   // Only one category open at a time (accordion)
-  const [openCategory, setOpenCategory] = useState<string | null>('email');
+  const [openCategory, setOpenCategory] = useState<string | null>(null);
 
   // Refs for scrolling to sections
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
