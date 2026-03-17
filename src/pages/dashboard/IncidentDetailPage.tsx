@@ -816,7 +816,7 @@ const IncidentDetailPage = () => {
 
     (async () => {
       try {
-        const preResult = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS);
+        const preResult = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS, crossOrgId || undefined);
         const previousEdited = preResult.item?.edited || 0;
 
         const response = await fetch(getApiUrl('/api/v1/apps/categories/run'), {
