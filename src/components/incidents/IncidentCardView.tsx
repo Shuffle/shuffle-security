@@ -38,6 +38,7 @@ interface DisplayIncident {
   labels?: string[];
   orgId?: string;
   orgName?: string;
+  orgImage?: string;
 }
 
 interface IngestionApp {
