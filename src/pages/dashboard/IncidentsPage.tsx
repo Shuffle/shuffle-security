@@ -1397,7 +1397,7 @@ const IncidentsPage = () => {
       {/* Floating Filter Bar - sticky */}
       <Card sx={{ mb: 3, position: 'sticky', top: 0, zIndex: 10, backgroundColor: 'hsl(var(--card))' }}>
         <CardContent sx={{ py: 1.5, px: 2, '&:last-child': { pb: 1.5 } }}>
-          <Box sx={{ display: 'flex', gap: { xs: 1, sm: 2 }, alignItems: 'center', flexWrap: 'wrap' }}>
+          <Box sx={{ display: 'flex', gap: { xs: 1, sm: 1.5 }, alignItems: 'center', flexWrap: 'nowrap', overflow: 'hidden' }}>
             {/* Select all checkbox - always visible */}
             <Tooltip title={selectedIds.size === sortedIncidents.length ? 'Deselect all' : 'Select all'}>
               <Checkbox
@@ -1433,7 +1433,7 @@ const IncidentsPage = () => {
                 ),
                 sx: { height: 36 },
               }}
-              sx={{ width: { xs: 160, sm: 280 }, minWidth: 0, flexShrink: 1 }}
+              sx={{ width: { xs: 120, sm: 180 }, minWidth: 0, flexShrink: 1 }}
             />
 
 
@@ -1484,7 +1484,7 @@ const IncidentsPage = () => {
             <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
               {filters.assignee && filters.assignee !== 'all' && (
                 <Chip
-                  label={`Assignee: ${filters.assignee === 'unassigned' ? 'Unassigned' : filters.assignee}`}
+                  label={filters.assignee === 'unassigned' ? 'Unassigned' : filters.assignee}
                   size="small"
                   onDelete={() => setFilters(prev => ({ ...prev, assignee: null }))}
                   sx={{
@@ -1498,7 +1498,7 @@ const IncidentsPage = () => {
 
               {filters.severity && (
                 <Chip
-                  label={`Severity: ${filters.severity}`}
+                  label={filters.severity}
                   size="small"
                   onDelete={() => setFilters(prev => ({ ...prev, severity: null }))}
                   sx={{ 
@@ -1514,7 +1514,7 @@ const IncidentsPage = () => {
               {filters.status && (
                 Array.isArray(filters.status) ? (
                   <Chip
-                    label={`Status: ${filters.status.map(s => statusConfig[s]?.label || s).join(' / ')}`}
+                    label={filters.status.map(s => statusConfig[s]?.label || s).join(' / ')}
                     size="small"
                     onDelete={() => setFilters(prev => ({ ...prev, status: null }))}
                     sx={{ 
@@ -1526,7 +1526,7 @@ const IncidentsPage = () => {
                   />
                 ) : (
                   <Chip
-                    label={`Status: ${statusConfig[filters.status]?.label || filters.status.replace('_', ' ')}`}
+                    label={statusConfig[filters.status]?.label || filters.status.replace('_', ' ')}
                     size="small"
                     onDelete={() => setFilters(prev => ({ ...prev, status: null }))}
                     sx={{ 
@@ -1541,7 +1541,7 @@ const IncidentsPage = () => {
 
               {filters.source && (
                 <Chip
-                  label={`Source: ${filters.source}`}
+                  label={filters.source}
                   size="small"
                   onDelete={() => setFilters(prev => ({ ...prev, source: null }))}
                   avatar={
@@ -1566,7 +1566,7 @@ const IncidentsPage = () => {
 
               {filters.tag && (
                 <Chip
-                  label={`Tag: ${filters.tag}`}
+                  label={filters.tag}
                   size="small"
                   onDelete={() => setFilters(prev => ({ ...prev, tag: null }))}
                   sx={{ 
@@ -1710,31 +1710,18 @@ const IncidentsPage = () => {
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    placeholder={filters.org && filters.org.length > 0 ? '' : 'Organizations'}
-                    sx={{ minWidth: 160 }}
+                    placeholder="Orgs"
+                    sx={{ minWidth: 80, width: 80 }}
+                    InputProps={{
+                      ...params.InputProps,
+                      startAdornment: null,
+                    }}
                   />
                 )}
-                renderTags={(value, getTagProps) =>
-                  value.map((option, index) => (
-                    <Chip
-                      {...getTagProps({ index })}
-                      key={option.id}
-                      label={option.name}
-                      size="small"
-                      sx={{
-                        backgroundColor: 'rgba(139, 92, 246, 0.15)',
-                        color: '#a78bfa',
-                        fontWeight: 500,
-                        fontSize: '0.7rem',
-                        height: 22,
-                        '& .MuiChip-deleteIcon': { color: '#a78bfa', fontSize: '0.85rem' },
-                      }}
-                    />
-                  ))
-                }
+                renderTags={() => null}
                 sx={{
-                  minWidth: 160,
-                  maxWidth: 320,
+                  minWidth: 80,
+                  width: 80,
                   '& .MuiOutlinedInput-root': {
                     minHeight: 36,
                     py: '2px',
