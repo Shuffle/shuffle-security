@@ -1789,14 +1789,25 @@ const IncidentsPage = () => {
             resyncingSource={resyncingSource}
             orgFilterNames={(() => {
               const orgFilter = Array.isArray(filters.org) ? filters.org : filters.org ? [filters.org] : [];
+              // Build a lookup of all known orgs
+              const allKnownOrgs: { id: string; name: string }[] = [
+                { id: currentOrgId || '', name: currentOrgName },
+                ...subOrgs.map(o => ({ id: o.id, name: o.name })),
+              ];
+              if (parentOrg && !allKnownOrgs.some(o => o.id === parentOrg.id)) {
+                allKnownOrgs.push({ id: parentOrg.id, name: parentOrg.name });
+              }
               return orgFilter.map(id => {
-                if (id === currentOrgId) return currentOrgName;
-                const found = subOrgs.find(o => o.id === id);
+                const found = allKnownOrgs.find(o => o.id === id);
                 return found?.name || id;
               });
             })()}
-            totalOrgCount={1 + subOrgs.length + (parentOrg && parentOrg.id !== currentOrgId ? 1 : 0)}
-            onResetOrgFilter={() => setFilters(prev => ({ ...prev, org: null }))}
+            totalOrgCount={(() => {
+              const allIds = new Set([currentOrgId || '', ...subOrgs.map(o => o.id)]);
+              if (parentOrg) allIds.add(parentOrg.id);
+              return allIds.size;
+            })()}
+            onResetOrgFilter={resetToDefaults}
             onFilterChange={(type, value) => {
               setFilters(prev => {
                 if (type === 'org') {
