@@ -1498,7 +1498,7 @@ const IncidentsPage = () => {
 
               {filters.severity && (
                 <Chip
-                  label={`Severity: ${filters.severity}`}
+                  label={filters.severity}
                   size="small"
                   onDelete={() => setFilters(prev => ({ ...prev, severity: null }))}
                   sx={{ 
