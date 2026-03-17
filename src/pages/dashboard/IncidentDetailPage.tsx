@@ -3743,7 +3743,7 @@ const IncidentDetailPage = () => {
                     const resp = await fetch(getApiUrl(`/api/v1/files/${incidentFileId}/edit`), {
                       method: 'PUT',
                       credentials: 'include',
-                      headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+                      headers: { ...getAuthHeader(), ...crossOrgHeaders, 'Content-Type': 'application/json' },
                       body: fileContent,
                     });
                     if (!resp.ok) throw new Error(`Save failed (${resp.status})`);
