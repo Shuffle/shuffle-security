@@ -1643,7 +1643,7 @@ const IncidentsPage = () => {
                 isOptionEqualToValue={(option, value) => option.id === value.id}
                 renderOption={(props, option) => {
                   const count = option.id === currentOrgId
-                    ? incidents.length
+                    ? datastoreItems.length
                     : subOrgItems.get(option.id)?.items.length || 0;
                   const isOrgLoading = subOrgLoading.has(option.id);
                   return (
