@@ -532,7 +532,7 @@ const IncidentDetailPage = () => {
     try {
       const resp = await fetch(getApiUrl(`/api/v1/files/${incidentFileId}/content`), {
         credentials: 'include',
-        headers: { ...getAuthHeader() },
+        headers: { ...getAuthHeader(), ...crossOrgHeaders },
       });
       if (!resp.ok) throw new Error(`Failed to load file (${resp.status})`);
       const text = await resp.text();
