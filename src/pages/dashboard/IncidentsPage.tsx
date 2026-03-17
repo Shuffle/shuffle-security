@@ -1628,7 +1628,7 @@ const IncidentsPage = () => {
                 })()}
                 getOptionLabel={(option) => option.name}
                 value={
-                  (filters.org || []).map(id => {
+                  (Array.isArray(filters.org) ? filters.org : filters.org ? [filters.org] : []).map(id => {
                     if (id === currentOrgId) return { id: currentOrgId || '', name: currentOrgName };
                     if (parentOrg && id === parentOrg.id) return { id: parentOrg.id, name: parentOrg.name };
                     const found = subOrgs.find(o => o.id === id);
