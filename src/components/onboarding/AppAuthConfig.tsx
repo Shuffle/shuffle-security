@@ -141,6 +141,7 @@ interface AppAuthConfigProps {
   onTestConnection: (appId: string, authenticationId?: string) => void;
   onSaveAuth: (appId: string, credentials: Record<string, string>) => Promise<boolean>;
   onSelectAuth?: (appId: string, authId: string) => void;
+  onRefreshAuth?: () => Promise<void> | void;
 }
 
 export interface AppAuthCardProps {
@@ -1708,6 +1709,7 @@ export const AppAuthConfig = ({
   onTestConnection,
   onSaveAuth,
   onSelectAuth,
+  onRefreshAuth,
 }: AppAuthConfigProps) => {
   // Helper to find ALL API auth entries for an app
   const getApiAuthEntries = (app: AlgoliaSearchApp): ApiAuthEntry[] => {
@@ -1847,6 +1849,7 @@ export const AppAuthConfig = ({
                 onSaveAuth={onSaveAuth}
                 apiAuthEntries={apiAuthEntries}
                 onSelectAuth={onSelectAuth}
+                onRefreshAuth={onRefreshAuth}
               />
             );
           })}
