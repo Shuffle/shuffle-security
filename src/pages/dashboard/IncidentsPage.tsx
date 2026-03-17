@@ -1556,9 +1556,12 @@ const IncidentsPage = () => {
                 />
               )}
 
-              {filters.org && (
+              {filters.org && filters.org.length > 0 && (
                 <Chip
-                  label={`Org: ${subOrgs.find(o => o.id === filters.org)?.name || filters.org}`}
+                  label={`Org: ${filters.org.map(id => {
+                    if (id === currentOrgId) return currentOrgName;
+                    return subOrgs.find(o => o.id === id)?.name || id;
+                  }).join(', ')}`}
                   size="small"
                   onDelete={() => setFilters(prev => ({ ...prev, org: null }))}
                   sx={{ 
