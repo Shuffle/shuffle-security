@@ -160,13 +160,18 @@ export const getDatastoreItem = async (
     payload.category = category;
   }
 
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...getAuthHeader(),
+  };
+  if (overrideOrgId) {
+    headers['Org-Id'] = overrideOrgId;
+  }
+
   const response = await fetch(getApiUrl(`/api/v1/orgs/${orgId}/get_cache`), {
     method: 'POST',
     credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getAuthHeader(),
-    },
+    headers,
     body: JSON.stringify(payload),
   });
 
