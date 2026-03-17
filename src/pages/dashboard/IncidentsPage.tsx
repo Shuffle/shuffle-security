@@ -114,6 +114,8 @@ interface DisplayIncident {
   taskCount?: number;
   tasks?: TaskItem[];
   labels?: string[];
+  orgId?: string;
+  orgName?: string;
 }
 
 type SortDirection = 'asc' | 'desc';
