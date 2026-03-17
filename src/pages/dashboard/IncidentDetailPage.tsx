@@ -1120,6 +1120,20 @@ const IncidentDetailPage = () => {
         toast.error('Failed to save changes');
         return;
       }
+      
+      // Sync to shared orgs (fire-and-forget to avoid blocking primary save)
+      if (sharedOrgs.length > 0) {
+        Promise.allSettled(
+          sharedOrgs.map(org =>
+            setDatastoreItem(incident.id, updatedData, DATASTORE_CATEGORIES.INCIDENTS, org.id)
+          )
+        ).then(results => {
+          const failed = results.filter(r => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.success));
+          if (failed.length > 0) {
+            console.warn(`[CrossOrgSync] ${failed.length}/${sharedOrgs.length} org saves failed`);
+          }
+        });
+      }
       // Update the initial snapshot so future comparisons are against the saved state
       // Use cached JSON refs to avoid redundant serialization
       initialValuesRef.current = {
