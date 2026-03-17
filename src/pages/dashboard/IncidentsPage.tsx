@@ -847,7 +847,7 @@ const IncidentsPage = () => {
   };
 
   const resetToDefaults = () => {
-    setFilters({ severity: null, status: ['new', 'in_progress'], tlp: null, assignee: null, source: null, tag: null });
+    setFilters({ severity: null, status: ['new', 'in_progress'], tlp: null, assignee: null, source: null, tag: null, org: null });
     setSearchQuery('');
     setSelectedIds(new Set());
   };
