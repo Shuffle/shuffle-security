@@ -1433,7 +1433,7 @@ const IncidentsPage = () => {
                 ),
                 sx: { height: 36 },
               }}
-              sx={{ width: { xs: 160, sm: 280 }, minWidth: 0, flexShrink: 1 }}
+              sx={{ width: { xs: 120, sm: 180 }, minWidth: 0, flexShrink: 1 }}
             />
 
 
