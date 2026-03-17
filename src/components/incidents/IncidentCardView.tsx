@@ -764,7 +764,7 @@ export const IncidentCardView = ({
           {orgFilterNames && orgFilterNames.length > 0 && totalOrgCount && totalOrgCount > orgFilterNames.length && (
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
               <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-                Filtering by {orgFilterNames.length} of {totalOrgCount} org{totalOrgCount > 1 ? 's' : ''}: {orgFilterNames.join(', ')}
+                Showing {orgFilterNames.length} of {totalOrgCount} org{totalOrgCount > 1 ? 's' : ''}: {orgFilterNames.join(', ')}
               </Typography>
               {onResetOrgFilter && (
                 <Typography
@@ -777,7 +777,7 @@ export const IncidentCardView = ({
                     '&:hover': { textDecoration: 'underline' },
                   }}
                 >
-                  Show all orgs
+                  Reset filters
                 </Typography>
               )}
             </Box>
