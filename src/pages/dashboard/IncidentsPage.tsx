@@ -1841,17 +1841,19 @@ const IncidentsPage = () => {
       {sortedIncidents.length > ITEMS_PER_PAGE && (
         <Box sx={{
           position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
+          bottom: 16,
+          left: '50%',
+          transform: 'translateX(-50%)',
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
           gap: 1,
-          py: 1.5,
-          px: 2,
+          py: 1,
+          px: 2.5,
           bgcolor: 'hsl(var(--card))',
-          borderTop: '1px solid hsl(var(--border))',
+          border: '1px solid hsl(var(--border))',
+          borderRadius: 2,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
           zIndex: 20,
         }}>
           <IconButton
