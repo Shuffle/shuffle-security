@@ -1709,6 +1709,7 @@ export const AppAuthConfig = ({
   onTestConnection,
   onSaveAuth,
   onSelectAuth,
+  onRefreshAuth,
 }: AppAuthConfigProps) => {
   // Helper to find ALL API auth entries for an app
   const getApiAuthEntries = (app: AlgoliaSearchApp): ApiAuthEntry[] => {
