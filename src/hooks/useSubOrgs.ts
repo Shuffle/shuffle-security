@@ -83,8 +83,8 @@ export const useSubOrgs = (currentOrgId: string | undefined): UseSubOrgsReturn =
         setParentOrg(null);
       }
     } catch (err) {
-      console.warn('[SubOrgs] Failed to fetch sub-orgs:', err);
       setSubOrgs([]);
+      setParentOrg(null);
     } finally {
       setIsLoading(false);
     }
