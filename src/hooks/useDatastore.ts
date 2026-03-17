@@ -156,7 +156,7 @@ export const useDatastore = ({ category, orgId: overrideOrgId }: UseDatastoreOpt
       setError(err instanceof Error ? err.message : 'Unknown error');
       return null;
     }
-  }, [category]);
+  }, [category, overrideOrgId]);
 
   const removeItem = useCallback(async (key: string): Promise<boolean> => {
     setError(null);
