@@ -1548,6 +1548,30 @@ const IncidentsPage = () => {
                 />
               )}
 
+              {filters.org && (
+                <Chip
+                  label={`Org: ${subOrgs.find(o => o.id === filters.org)?.name || filters.org}`}
+                  size="small"
+                  onDelete={() => setFilters(prev => ({ ...prev, org: null }))}
+                  sx={{ 
+                    backgroundColor: 'rgba(139, 92, 246, 0.15)',
+                    color: '#a78bfa',
+                    fontWeight: 500,
+                    '& .MuiChip-deleteIcon': { color: '#a78bfa' },
+                  }}
+                />
+              )}
+
+              {/* Sub-org loading indicator */}
+              {subOrgLoading.size > 0 && (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <CircularProgress size={14} sx={{ color: '#a78bfa' }} />
+                  <Typography variant="caption" sx={{ color: '#a78bfa', fontSize: '0.7rem' }}>
+                    Loading {subOrgLoading.size} sub-org{subOrgLoading.size > 1 ? 's' : ''}…
+                  </Typography>
+                </Box>
+              )}
+
               {/* Tag quick-filter chips removed — use tag chips on incident cards instead */}
 
               {!isDefaultFilter && (
