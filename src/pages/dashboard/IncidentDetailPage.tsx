@@ -642,6 +642,51 @@ const IncidentDetailPage = () => {
     return found ? { name: found.name, image: found.image } : null;
   }, [crossOrgId, subOrgs, parentOrg]);
 
+  // Detect which other orgs share the same incident key
+  const [sharedOrgs, setSharedOrgs] = useState<Array<{ id: string; name: string; image?: string }>>([]);
+  useEffect(() => {
+    if (!id || !userInfo?.active_org?.id) return;
+    const allOrgs = [
+      ...(subOrgs || []).filter(o => o.id !== userInfo.active_org?.id),
+      ...(parentOrg && parentOrg.id !== userInfo.active_org?.id ? [parentOrg] : []),
+    ];
+    if (allOrgs.length === 0) return;
+
+    // Probe each org for the same key
+    const probeOrgs = async () => {
+      const found: Array<{ id: string; name: string; image?: string }> = [];
+      // Current org (or crossOrg) always has it
+      if (crossOrgId) {
+        // The "primary" org is the cross-org; also check current org
+        const currentOrgResult = await getDatastoreItem(id, DATASTORE_CATEGORIES.INCIDENTS);
+        if (currentOrgResult.success && currentOrgResult.item?.value) {
+          found.push({ id: userInfo.active_org!.id, name: userInfo.active_org!.name || '', image: userInfo.active_org!.image });
+        }
+      }
+      
+      const results = await Promise.allSettled(
+        allOrgs.map(async (org) => {
+          // Skip the org we're already viewing from
+          const viewingOrgId = crossOrgId || userInfo.active_org?.id;
+          if (org.id === viewingOrgId) return null;
+          const result = await getDatastoreItem(id, DATASTORE_CATEGORIES.INCIDENTS, org.id);
+          if (result.success && result.item?.value) {
+            return { id: org.id, name: org.name, image: org.image };
+          }
+          return null;
+        })
+      );
+      
+      for (const r of results) {
+        if (r.status === 'fulfilled' && r.value) {
+          found.push(r.value);
+        }
+      }
+      setSharedOrgs(found);
+    };
+    probeOrgs();
+  }, [id, subOrgs, parentOrg, userInfo?.active_org?.id, crossOrgId]);
+
   // Fetch agent runs for this incident — deferred until incident loaded
   const { runsForIncident: agentRuns, isLoading: agentRunsLoading } = useIncidentAgentRuns(!loading ? id : undefined);
 
