@@ -53,6 +53,7 @@ import CallMergeIcon from '@mui/icons-material/CallMerge';
 import CloseIcon from '@mui/icons-material/Close';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import LanguageIcon from '@mui/icons-material/Language';
 import Menu from '@mui/material/Menu';
 import { useDatastore } from '@/hooks/useDatastore';
 import { useAuth } from '@/context/AuthContext';
@@ -415,12 +416,23 @@ const Section = forwardRef<HTMLDivElement, {
 Section.displayName = 'Section';
 
 const IncidentDetailPage = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id: rawId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { userInfo } = useAuth();
   const { openApp } = useAppDetail();
   const currentUsername = userInfo?.username || '';
+
+  // Parse namespaced org ID from sub-org incidents (format: "orgId::incidentId")
+  const crossOrgId = useMemo(() => {
+    if (!rawId || !rawId.includes('::')) return null;
+    return rawId.split('::')[0];
+  }, [rawId]);
+  const id = useMemo(() => {
+    if (!rawId) return rawId;
+    return rawId.includes('::') ? rawId.split('::')[1] : rawId;
+  }, [rawId]);
+  const isCrossOrg = !!crossOrgId && crossOrgId !== userInfo?.active_org?.id;
 
   // Public sharing params
   const publicAuth = searchParams.get('authorization');
@@ -582,6 +594,7 @@ const IncidentDetailPage = () => {
   const { templates: caseTemplates, trackUsage: trackTemplateUsage } = useCaseTemplates();
   const { addItem, getItem } = useDatastore({
     category: DATASTORE_CATEGORIES.INCIDENTS,
+    orgId: crossOrgId || undefined,
   });
 
   // Fetch agent runs for this incident — deferred until incident loaded
@@ -624,7 +637,7 @@ const IncidentDetailPage = () => {
     try {
       result = isPublicView
         ? await getDatastoreItemPublic(id, publicOrg!, publicAuth!)
-        : await getDatastoreItem(id, DATASTORE_CATEGORIES.INCIDENTS);
+        : await getDatastoreItem(id, DATASTORE_CATEGORIES.INCIDENTS, crossOrgId || undefined);
     } catch (err) {
       console.error('[IncidentDetail] Failed to fetch incident:', err);
       setLoading(false);
@@ -804,7 +817,7 @@ const IncidentDetailPage = () => {
 
     (async () => {
       try {
-        const preResult = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS);
+        const preResult = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS, crossOrgId || undefined);
         const previousEdited = preResult.item?.edited || 0;
 
         const response = await fetch(getApiUrl('/api/v1/apps/categories/run'), {
@@ -828,7 +841,7 @@ const IncidentDetailPage = () => {
         let pollCount = 0;
         const pollInterval = setInterval(async () => {
           pollCount++;
-          const postResult = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS);
+          const postResult = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS, crossOrgId || undefined);
           const newEdited = postResult.item?.edited || 0;
           if (newEdited && newEdited !== previousEdited) {
             clearInterval(pollInterval);
@@ -1628,7 +1641,30 @@ const IncidentDetailPage = () => {
           <Typography variant="body2">Back to Incidents</Typography>
         </Box>
 
-        {/* Main header card */}
+        {/* Cross-org banner */}
+        {isCrossOrg && (
+          <Box sx={{
+            mb: 2,
+            px: 2,
+            py: 1,
+            borderRadius: 1.5,
+            bgcolor: 'rgba(139, 92, 246, 0.08)',
+            border: '1px solid rgba(139, 92, 246, 0.25)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+          }}>
+            <LanguageIcon sx={{ fontSize: 16, color: '#a78bfa', flexShrink: 0 }} />
+            <Typography sx={{ fontSize: '0.82rem', color: 'hsl(var(--foreground))' }}>
+              Viewing incident from another organization
+            </Typography>
+            <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', ml: 'auto' }}>
+              {crossOrgId}
+            </Typography>
+          </Box>
+        )}
+
+
         <Box sx={{ 
           display: 'flex',
           alignItems: { xs: 'flex-start', sm: 'center' },
@@ -1996,7 +2032,7 @@ const IncidentDetailPage = () => {
                   const label = source ? `Resyncing from ${source}…` : 'Resyncing…';
                   toast.success(label, { duration: 30000 });
                   try {
-                    const preResult = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS);
+                    const preResult = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS, crossOrgId || undefined);
                     const previousEdited = preResult.item?.edited || 0;
 
                     const response = await fetch(getApiUrl('/api/v1/apps/categories/run'), {
@@ -2023,7 +2059,7 @@ const IncidentDetailPage = () => {
                     let pollCount = 0;
                     const pollInterval = setInterval(async () => {
                       pollCount++;
-                      const postResult = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS);
+                      const postResult = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS, crossOrgId || undefined);
                       const newEdited = postResult.item?.edited || 0;
                         if (newEdited && newEdited !== previousEdited) {
                           clearInterval(pollInterval);
@@ -3578,7 +3614,7 @@ const IncidentDetailPage = () => {
                   try {
                     const parsed = JSON.parse(rawJsonText);
                     setIsSaving(true);
-                    const result = await setDatastoreItem(incident.id, parsed, DATASTORE_CATEGORIES.INCIDENTS);
+                    const result = await setDatastoreItem(incident.id, parsed, DATASTORE_CATEGORIES.INCIDENTS, crossOrgId || undefined);
                     if (result.success) {
                       toast.success('Raw data saved');
                       loadIncident(false);
