@@ -141,6 +141,7 @@ interface AppAuthConfigProps {
   onTestConnection: (appId: string, authenticationId?: string) => void;
   onSaveAuth: (appId: string, credentials: Record<string, string>) => Promise<boolean>;
   onSelectAuth?: (appId: string, authId: string) => void;
+  onRefreshAuth?: () => Promise<void> | void;
 }
 
 export interface AppAuthCardProps {

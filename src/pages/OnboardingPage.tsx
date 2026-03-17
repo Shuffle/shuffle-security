@@ -984,6 +984,7 @@ const OnboardingPage = () => {
                       onAuthChange={handleAuthChange}
                       onTestConnection={handleTestConnection}
                       onSaveAuth={handleSaveAuth}
+                      onRefreshAuth={fetchAuthenticatedApps}
                     />
                   )}
 
