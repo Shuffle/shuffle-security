@@ -986,7 +986,13 @@ const IncidentsPage = () => {
 
   const getIncidentUrl = (incident: DisplayIncident) => {
     const isInvalidData = (!incident.title || incident.title === 'Untitled Incident' || incident.title === 'Requires sync') && !incident.source;
-    return `/incidents/${incident.id}${isInvalidData ? '?tab=raw' : ''}`;
+    const params = new URLSearchParams();
+    if (isInvalidData) params.set('tab', 'raw');
+    if (incident.sharedOrgs && incident.sharedOrgs.length > 1) {
+      params.set('shared_orgs', incident.sharedOrgs.map(o => o.orgId).join(','));
+    }
+    const paramStr = params.toString();
+    return `/incidents/${incident.id}${paramStr ? '?' + paramStr : ''}`;
   };
 
   const handleCreateIncident = async (ocsf: OCSFIncidentFinding) => {

@@ -643,36 +643,49 @@ const IncidentDetailPage = () => {
   }, [crossOrgId, subOrgs, parentOrg]);
 
   // Detect which other orgs share the same incident key
+  // Primary source: shared_orgs query param from the list page (most reliable)
+  // Fallback: probe each org via get_cache
   const [sharedOrgs, setSharedOrgs] = useState<Array<{ id: string; name: string; image?: string }>>([]);
+  
   useEffect(() => {
     if (!id || !userInfo?.active_org?.id) return;
-    const allOrgs = [
-      ...(subOrgs || []).filter(o => o.id !== userInfo.active_org?.id),
-      ...(parentOrg && parentOrg.id !== userInfo.active_org?.id ? [parentOrg] : []),
+    
+    // Check if list page passed shared org IDs
+    const sharedOrgParam = searchParams.get('shared_orgs');
+    const allKnownOrgs = [
+      { id: userInfo.active_org!.id, name: userInfo.active_org!.name || '', image: userInfo.active_org!.image },
+      ...(subOrgs || []),
+      ...(parentOrg ? [parentOrg] : []),
     ];
-    if (allOrgs.length === 0) return;
+    
+    if (sharedOrgParam) {
+      const sharedIds = sharedOrgParam.split(',').filter(Boolean);
+      // The current viewing org is implicit — find the OTHER orgs
+      const viewingOrgId = crossOrgId || userInfo.active_org?.id;
+      const others = sharedIds
+        .filter(oid => oid !== viewingOrgId)
+        .map(oid => {
+          const org = allKnownOrgs.find(o => o.id === oid);
+          return org ? { id: org.id, name: org.name, image: org.image } : { id: oid, name: oid.slice(0, 8) + '…' };
+        });
+      if (others.length > 0) {
+        setSharedOrgs(others);
+        return;
+      }
+    }
+    
+    // Fallback: probe each org
+    const orgsToProbe = allKnownOrgs.filter(o => {
+      const viewingOrgId = crossOrgId || userInfo.active_org?.id;
+      return o.id !== viewingOrgId;
+    });
+    if (orgsToProbe.length === 0) return;
 
-    // Probe each org for the same key
     const probeOrgs = async () => {
       const found: Array<{ id: string; name: string; image?: string }> = [];
-      // Current org (or crossOrg) always has it
-      if (crossOrgId) {
-        // The "primary" org is the cross-org; also check current org
-        try {
-          const currentOrgResult = await getDatastoreItem(id, DATASTORE_CATEGORIES.INCIDENTS);
-          if (currentOrgResult.success && currentOrgResult.item?.value && currentOrgResult.item.value.length > 2) {
-            found.push({ id: userInfo.active_org!.id, name: userInfo.active_org!.name || '', image: userInfo.active_org!.image });
-          }
-        } catch {
-          // Ignore probe failures
-        }
-      }
       
       const results = await Promise.allSettled(
-        allOrgs.map(async (org) => {
-          // Skip the org we're already viewing from
-          const viewingOrgId = crossOrgId || userInfo.active_org?.id;
-          if (org.id === viewingOrgId) return null;
+        orgsToProbe.map(async (org) => {
           try {
             const result = await getDatastoreItem(id, DATASTORE_CATEGORIES.INCIDENTS, org.id);
             if (result.success && result.item?.value && result.item.value.length > 2) {
@@ -690,11 +703,11 @@ const IncidentDetailPage = () => {
           found.push(r.value);
         }
       }
-      console.log(`[CrossOrg] Probed ${allOrgs.length} orgs for key "${id}", found in ${found.length} additional orgs:`, found.map(o => o.name));
+      console.log(`[CrossOrg] Probed ${orgsToProbe.length} orgs for key "${id}", found in ${found.length} additional orgs:`, found.map(o => o.name));
       setSharedOrgs(found);
     };
     probeOrgs();
-  }, [id, subOrgs, parentOrg, userInfo?.active_org?.id, crossOrgId]);
+  }, [id, subOrgs, parentOrg, userInfo?.active_org?.id, crossOrgId, searchParams]);
 
   // Fetch agent runs for this incident — deferred until incident loaded
   const { runsForIncident: agentRuns, isLoading: agentRunsLoading } = useIncidentAgentRuns(!loading ? id : undefined);
