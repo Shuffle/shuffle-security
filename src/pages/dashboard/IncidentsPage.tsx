@@ -405,11 +405,11 @@ const IncidentsPage = () => {
       })
     );
 
-    const newMap = new Map<string, { orgName: string; items: typeof datastoreItems }>();
+    const newMap = new Map<string, { orgName: string; orgImage?: string; items: typeof datastoreItems }>();
     results.forEach((result) => {
       if (result.status === 'fulfilled' && result.value) {
-        const { orgId, orgName, items } = result.value;
-        newMap.set(orgId, { orgName, items });
+        const { orgId, orgName, orgImage, items } = result.value;
+        newMap.set(orgId, { orgName, orgImage, items });
       }
     });
 
