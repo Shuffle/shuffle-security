@@ -1783,7 +1783,7 @@ const IncidentsPage = () => {
           />
           
           {/* Load more from server when on last page */}
-          {hasMore && currentPage >= Math.ceil(sortedIncidents.length / ITEMS_PER_PAGE) && (
+          {hasMore && currentPage >= Math.ceil(sortedIncidents.length / ITEMS_PER_PAGE) && (!filters.org || filters.org.length === 0 || filters.org.includes(currentOrgId || '')) && (
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
               <Button
                 variant="outlined"
