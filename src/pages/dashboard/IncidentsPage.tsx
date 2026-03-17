@@ -352,6 +352,57 @@ const IncidentsPage = () => {
     category: DATASTORE_CATEGORIES.INCIDENTS,
   });
 
+  // Sub-org incident fetching for multi-tenant view
+  const [subOrgItems, setSubOrgItems] = useState<Map<string, { orgName: string; items: typeof datastoreItems }>>(new Map());
+  const [subOrgLoading, setSubOrgLoading] = useState<Set<string>>(new Set());
+
+  // Fetch incidents from all sub-orgs in parallel
+  const fetchSubOrgIncidents = useCallback(async () => {
+    if (subOrgs.length === 0) return;
+
+    const loadingIds = new Set(subOrgs.map(o => o.id));
+    setSubOrgLoading(loadingIds);
+
+    const results = await Promise.allSettled(
+      subOrgs.map(async (org) => {
+        const url = getApiUrl(`/api/v1/orgs/${org.id}/list_cache?category=${encodeURIComponent(DATASTORE_CATEGORIES.INCIDENTS)}&top=1000`);
+        const response = await fetch(url, {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeader(),
+            'Org-Id': org.id,
+          },
+        });
+
+        if (!response.ok) return { orgId: org.id, orgName: org.name, items: [] };
+
+        const data = await response.json();
+        const items = Array.isArray(data) ? data : (data.keys || data.data || []);
+        return { orgId: org.id, orgName: org.name, items };
+      })
+    );
+
+    const newMap = new Map<string, { orgName: string; items: typeof datastoreItems }>();
+    results.forEach((result) => {
+      if (result.status === 'fulfilled' && result.value) {
+        const { orgId, orgName, items } = result.value;
+        newMap.set(orgId, { orgName, items });
+      }
+    });
+
+    setSubOrgItems(newMap);
+    setSubOrgLoading(new Set());
+  }, [subOrgs]);
+
+  // Fetch sub-org incidents when sub-orgs are discovered
+  useEffect(() => {
+    if (subOrgs.length > 0) {
+      fetchSubOrgIncidents();
+    }
+  }, [subOrgs, fetchSubOrgIncidents]);
+
   // Get valid usernames for assignee validation
   const validUsernames = useMemo(() => {
     return new Set(users.map(u => u.username.toLowerCase()));
