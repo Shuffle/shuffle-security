@@ -431,7 +431,7 @@ const IncidentDetailPage = () => {
   }, [rawId]);
   const id = useMemo(() => {
     if (!rawId) return rawId;
-    return rawId.includes('::') ? rawId.split('::')[1] : rawId;
+    return rawId.includes('::') ? (rawId.split('::').filter(Boolean).pop() || rawId) : rawId;
   }, [rawId]);
   const isCrossOrg = !!crossOrgId && crossOrgId !== userInfo?.active_org?.id;
 

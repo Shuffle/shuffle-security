@@ -64,6 +64,12 @@ const getOrgId = (): string | null => {
   return null;
 };
 
+const normalizeDatastoreKey = (key: string): string => {
+  if (!key?.includes('::')) return key;
+  const parts = key.split('::').filter(Boolean);
+  return parts.length > 0 ? parts[parts.length - 1] : key;
+};
+
 /**
  * Set a single item in the datastore
  */
@@ -78,8 +84,9 @@ export const setDatastoreItem = async (
     return { success: false, error: 'No organization ID found' };
   }
 
+  const rawKey = normalizeDatastoreKey(key);
   const payload = {
-    key,
+    key: rawKey,
     value: typeof value === 'string' ? value : JSON.stringify(value),
     category,
     ignore_security_rules: true,
@@ -156,8 +163,9 @@ export const getDatastoreItem = async (
     return { success: false, error: 'No organization ID found' };
   }
 
+  const rawKey = normalizeDatastoreKey(key);
   const payload: Record<string, string> = {
-    key,
+    key: rawKey,
     org_id: orgId,
   };
   
@@ -284,8 +292,9 @@ export const deleteDatastoreItem = async (
     return { success: false, error: 'No organization ID found' };
   }
 
+  const rawKey = normalizeDatastoreKey(key);
   const payload: Record<string, string> = {
-    key,
+    key: rawKey,
     org_id: orgId,
   };
   

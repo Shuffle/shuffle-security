@@ -55,6 +55,12 @@ const LEGACY_ALERTS_CATEGORY = 'shuffle-alerts';
 const LEGACY_SECURITY_ALERTS_CATEGORY = 'shuffle-security_alerts';
 const MIGRATION_KEY = 'shuffle_incidents_migrated_v1';
 
+const toRawIncidentKey = (key: string): string => {
+  if (!key?.includes('::')) return key;
+  const parts = key.split('::').filter(Boolean);
+  return parts.length > 0 ? parts[parts.length - 1] : key;
+};
+
 const migrateToIncidents = async (): Promise<number> => {
   if (localStorage.getItem(MIGRATION_KEY)) return 0;
 
@@ -670,9 +676,10 @@ const IncidentsPage = () => {
       items.forEach((item: any) => {
         const parsed = parseIncidentFromDatastore(item);
         if (parsed) {
+          const rawParsedId = toRawIncidentKey(parsed.id);
           subOrgIncidents.push({
             ...parsed,
-            id: `${orgId}::${parsed.id}`,
+            id: `${orgId}::${rawParsedId}`,
             orgId,
             orgName,
             orgImage,
@@ -689,7 +696,7 @@ const IncidentsPage = () => {
     
     for (const inc of allIncidents) {
       // Extract raw key (strip orgId:: prefix)
-      const rawKey = inc.id.includes('::') ? inc.id.split('::')[1] : inc.id;
+      const rawKey = toRawIncidentKey(inc.id);
       const existing = keyMap.get(rawKey);
       const incOrgInfo = { orgId: inc.orgId || '', orgName: inc.orgName || '', orgImage: inc.orgImage };
       
@@ -991,8 +998,12 @@ const IncidentsPage = () => {
     if (incident.sharedOrgs && incident.sharedOrgs.length > 1) {
       params.set('shared_orgs', incident.sharedOrgs.map(o => o.orgId).join(','));
     }
+    const rawKey = toRawIncidentKey(incident.id);
+    const routeId = incident.orgId && currentOrgId && incident.orgId !== currentOrgId
+      ? `${incident.orgId}::${rawKey}`
+      : rawKey;
     const paramStr = params.toString();
-    return `/incidents/${incident.id}${paramStr ? '?' + paramStr : ''}`;
+    return `/incidents/${routeId}${paramStr ? '?' + paramStr : ''}`;
   };
 
   const handleCreateIncident = async (ocsf: OCSFIncidentFinding) => {
@@ -1015,7 +1026,7 @@ const IncidentsPage = () => {
     const selectedIncidents = incidents.filter(i => selectedIds.has(i.id));
     for (const inc of selectedIncidents) {
       if (inc.sharedOrgs && inc.sharedOrgs.length > 0) {
-        const rawKey = inc.id.includes('::') ? inc.id.split('::')[1] : inc.id;
+        const rawKey = toRawIncidentKey(inc.id);
         for (const org of inc.sharedOrgs) {
           crossOrgDeletes.push(deleteDatastoreItem(rawKey, DATASTORE_CATEGORIES.INCIDENTS, org.orgId));
         }
@@ -1104,12 +1115,11 @@ const IncidentsPage = () => {
           delete (updated.metadata.extensions.custom_attributes as Record<string, unknown>).activity;
         }
         
-        // Primary save
-        const primaryResult = await setDatastoreItem(incident.id, updated, DATASTORE_CATEGORIES.INCIDENTS);
+        const rawKey = toRawIncidentKey(incident.id);
+        const primaryResult = await setDatastoreItem(rawKey, updated, DATASTORE_CATEGORIES.INCIDENTS);
         
         // Sync to shared orgs (fire-and-forget)
         if (incident.sharedOrgs && incident.sharedOrgs.length > 0) {
-          const rawKey = incident.id.includes('::') ? incident.id.split('::')[1] : incident.id;
           Promise.allSettled(
             incident.sharedOrgs.map(org =>
               setDatastoreItem(rawKey, updated, DATASTORE_CATEGORIES.INCIDENTS, org.orgId)
