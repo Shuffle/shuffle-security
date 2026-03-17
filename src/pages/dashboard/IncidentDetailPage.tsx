@@ -518,7 +518,35 @@ const IncidentDetailPage = () => {
   const [fileError, setFileError] = useState<string | null>(null);
   const [fileLoaded, setFileLoaded] = useState(false);
 
-  // Extract file_id from incident data (must match file_{uuid} format)
+  // Sanitized HTML for safe rendering of ingested HTML descriptions (email-client style)
+  const sanitizedDescriptionHtml = useMemo(() => {
+    if (!rawDescriptionHtml) return '';
+    // Check if it actually contains HTML tags
+    if (!/<[a-z][\s\S]*>/i.test(rawDescriptionHtml)) return '';
+    return DOMPurify.sanitize(rawDescriptionHtml, {
+      ALLOWED_TAGS: [
+        'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'hr',
+        'b', 'i', 'u', 'strong', 'em', 'small', 'sub', 'sup', 's', 'mark',
+        'ul', 'ol', 'li', 'dl', 'dt', 'dd',
+        'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption', 'colgroup', 'col',
+        'a', 'img', 'figure', 'figcaption',
+        'blockquote', 'pre', 'code', 'span', 'div', 'section',
+      ],
+      ALLOWED_ATTR: [
+        'href', 'src', 'alt', 'title', 'width', 'height',
+        'style', 'class', 'align', 'valign', 'colspan', 'rowspan',
+        'border', 'cellpadding', 'cellspacing', 'role',
+        'target', 'rel',
+      ],
+      ALLOW_DATA_ATTR: false,
+      ADD_ATTR: ['target'],
+      FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'form', 'input', 'button', 'select', 'textarea'],
+      FORBID_ATTR: ['onerror', 'onclick', 'onload', 'onmouseover', 'onfocus', 'onblur'],
+    });
+  }, [rawDescriptionHtml]);
+  const hasHtmlDescription = sanitizedDescriptionHtml.length > 0;
+
+
   const incidentFileId = useMemo(() => {
     const raw = incident?.rawOCSF;
     if (!raw?.shuffle_translation_file) return null;
