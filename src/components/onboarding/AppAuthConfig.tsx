@@ -102,6 +102,7 @@ interface AppAuthentication {
   redirect_uri?: string;
   token_uri?: string;
   refresh_uri?: string;
+  authorization_url?: string;
   scope?: string[];
   client_id?: string;
   client_secret?: string;
@@ -1734,79 +1735,105 @@ export const AppAuthCard = ({
                     )}
 
                     {/* Save & Authenticate button for OAuth2 apps with manual credentials */}
-                    {isOAuth2 && (
-                      <Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 1.5 }}>
-                        <Button
-                          variant="outlined"
-                          size="medium"
-                          startIcon={
-                            saving ? (
-                              <CircularProgress size={16} sx={{ color: 'inherit' }} />
-                            ) : app.image_url ? (
-                              <Box
-                                component="img"
-                                src={app.image_url}
-                                alt={app.name}
-                                sx={{ width: 20, height: 20, borderRadius: 0.5, objectFit: 'contain' }}
-                              />
-                            ) : (
-                              <LockIcon sx={{ fontSize: 18 }} />
-                            )
-                          }
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            setSaving(true);
-                            const success = await onSaveAuth(app.objectID, localCredentials);
-                            setSaving(false);
-                            if (success) {
-                              setSaveSuccess(true);
-                              setUserHasSelected(false);
-                              setLocalCredentials({});
-                              setFieldErrors({});
-                              // Open OAuth popup after saving
-                              const authUrl = `https://shuffler.io/appauth?app_id=${app.objectID}&source=shuffle`;
-                              const popup = window.open(authUrl, '_blank', 'width=600,height=700');
-                              if (popup && onRefreshAuth) {
-                                const authPollTimer = setInterval(() => {
-                                  onRefreshAuth();
-                                }, 3000);
-                                const closePollTimer = setInterval(() => {
-                                  if (popup.closed) {
-                                    clearInterval(closePollTimer);
-                                    clearInterval(authPollTimer);
-                                    onRefreshAuth();
-                                  }
-                                }, 500);
-                              }
-                            } else {
-                              setSaveSuccess(false);
+                    {isOAuth2 && (() => {
+                      const hasClientId = !!localCredentials['client_id']?.trim();
+                      const hasClientSecret = !!localCredentials['client_secret']?.trim();
+                      const hasScopes = selectedScopes.length > 0;
+                      const hasAuthUrl = !!auth?.authorization_url;
+                      const allFilled = hasClientId && hasClientSecret && (!auth?.scope?.length || hasScopes);
+
+                      // Build the direct OAuth2 authorization URL
+                      const buildOAuth2Url = (): string | null => {
+                        if (!auth?.authorization_url || !localCredentials['client_id']?.trim()) return null;
+                        const redirectUri = auth.redirect_uri || 'https://shuffler.io/set_authentication';
+                        const scopes = selectedScopes.join(' ');
+                        const params = new URLSearchParams({
+                          client_id: localCredentials['client_id'].trim(),
+                          redirect_uri: redirectUri,
+                          response_type: 'code',
+                          prompt: 'login',
+                          access_type: 'offline',
+                        });
+                        if (scopes) params.set('scope', scopes);
+                        return `${auth.authorization_url}?${params.toString()}`;
+                      };
+
+                      return (
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 1.5 }}>
+                          <Button
+                            variant="outlined"
+                            size="medium"
+                            startIcon={
+                              saving ? (
+                                <CircularProgress size={16} sx={{ color: 'inherit' }} />
+                              ) : app.image_url ? (
+                                <Box
+                                  component="img"
+                                  src={app.image_url}
+                                  alt={app.name}
+                                  sx={{ width: 20, height: 20, borderRadius: 0.5, objectFit: 'contain' }}
+                                />
+                              ) : (
+                                <LockIcon sx={{ fontSize: 18 }} />
+                              )
                             }
-                          }}
-                          disabled={saving || (!localCredentials['client_id']?.trim() && !localCredentials['client_secret']?.trim())}
-                          sx={{
-                            borderColor: 'rgba(255, 102, 0, 0.5)',
-                            color: '#FF6600',
-                            fontWeight: 600,
-                            textTransform: 'none',
-                            fontSize: '0.9rem',
-                            px: 3,
-                            py: 1,
-                            borderRadius: 2,
-                            transition: 'all 0.2s ease',
-                            '&:hover': {
-                              borderColor: '#FF6600',
-                              backgroundColor: 'rgba(255, 102, 0, 0.08)',
-                            },
-                            '&.Mui-disabled': {
-                              borderColor: 'rgba(255, 255, 255, 0.1)',
-                              color: 'rgba(255, 255, 255, 0.3)',
-                            },
-                          }}
-                        >
-                          {saving ? 'Saving...' : 'Save & Authenticate'}
-                        </Button>
-                      </Box>
-                    )}
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              setSaving(true);
+                              const success = await onSaveAuth(app.objectID, localCredentials);
+                              setSaving(false);
+                              if (success) {
+                                setSaveSuccess(true);
+                                setUserHasSelected(false);
+                                setLocalCredentials({});
+                                setFieldErrors({});
+
+                                // Build direct OAuth2 URL if authorization_url is available
+                                const directUrl = buildOAuth2Url();
+                                const popupUrl = directUrl || `https://shuffler.io/appauth?app_id=${app.objectID}&source=shuffle`;
+                                const popup = window.open(popupUrl, '_blank', 'width=600,height=700');
+                                if (popup && onRefreshAuth) {
+                                  const authPollTimer = setInterval(() => {
+                                    onRefreshAuth();
+                                  }, 3000);
+                                  const closePollTimer = setInterval(() => {
+                                    if (popup.closed) {
+                                      clearInterval(closePollTimer);
+                                      clearInterval(authPollTimer);
+                                      onRefreshAuth();
+                                    }
+                                  }, 500);
+                                }
+                              } else {
+                                setSaveSuccess(false);
+                              }
+                            }}
+                            disabled={saving || !allFilled}
+                            sx={{
+                              borderColor: allFilled ? 'rgba(255, 102, 0, 0.5)' : 'rgba(255, 255, 255, 0.1)',
+                              color: allFilled ? '#FF6600' : 'rgba(255, 255, 255, 0.3)',
+                              fontWeight: 600,
+                              textTransform: 'none',
+                              fontSize: '0.9rem',
+                              px: 3,
+                              py: 1,
+                              borderRadius: 2,
+                              transition: 'all 0.2s ease',
+                              '&:hover': {
+                                borderColor: '#FF6600',
+                                backgroundColor: 'rgba(255, 102, 0, 0.08)',
+                              },
+                              '&.Mui-disabled': {
+                                borderColor: 'rgba(255, 255, 255, 0.1)',
+                                color: 'rgba(255, 255, 255, 0.3)',
+                              },
+                            }}
+                          >
+                            {saving ? 'Saving...' : 'Save & Authenticate'}
+                          </Button>
+                        </Box>
+                      );
+                    })()}
                   </Box>
                 )}
               </Box>
