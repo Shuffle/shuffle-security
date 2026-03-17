@@ -629,14 +629,15 @@ const IncidentsPage = () => {
       .map((item) => parseIncidentFromDatastore(item))
       .filter((a): a is DisplayIncident => a !== null)
       .map((incident) => {
-        if (incident.assignee) {
-          if (isAIAssignee(incident.assignee)) {
-            return { ...incident, assignee: 'AI Agent' };
-          } else if (!validUsernames.has(incident.assignee.toLowerCase())) {
-            return { ...incident, assignee: null };
+        let updated = incident;
+        if (updated.assignee) {
+          if (isAIAssignee(updated.assignee)) {
+            updated = { ...updated, assignee: 'AI Agent' };
+          } else if (!validUsernames.has(updated.assignee.toLowerCase())) {
+            updated = { ...updated, assignee: null };
           }
         }
-        return incident;
+        return { ...updated, orgId: currentOrgId || '', orgName: currentOrgName };
       });
 
     // Parse sub-org incidents and tag with org info
