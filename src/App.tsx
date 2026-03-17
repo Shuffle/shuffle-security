@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { ThemeProvider, CssBaseline, Box } from '@mui/material';
 import { AppDetailProvider } from '@/context/AppDetailContext';
+import { trackReferralParams } from '@/lib/analytics';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
 import { Toaster } from 'sonner';
@@ -52,7 +54,9 @@ const ConditionalDashboardLayout = () => {
 
 const queryClient = new QueryClient();
 
-const App = () => (
+const App = () => {
+  useEffect(() => { trackReferralParams(); }, []);
+  return (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider theme={muiTheme}>
       <CssBaseline />
@@ -130,6 +134,7 @@ const App = () => (
       </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;

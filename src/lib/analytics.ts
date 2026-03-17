@@ -152,3 +152,21 @@ export function trackCTA(ctaName: string, location?: string): void {
 export function trackOnboardingStep(stepNumber: number, stepName: string): void {
   trackPredefinedEvent(GA_EVENTS.ONBOARDING_STEP, stepName, stepNumber);
 }
+
+/**
+ * Track utm_content and shuffle_ref query params as GA events.
+ * Call once on app init.
+ */
+export function trackReferralParams(): void {
+  if (typeof window === 'undefined') return;
+  const params = new URLSearchParams(window.location.search);
+  const utmContent = params.get('utm_content');
+  const shuffleRef = params.get('shuffle_ref');
+
+  if (utmContent) {
+    trackEvent({ category: 'navigation', action: 'utm_content', label: utmContent });
+  }
+  if (shuffleRef) {
+    trackEvent({ category: 'navigation', action: 'shuffle_ref', label: shuffleRef });
+  }
+}
