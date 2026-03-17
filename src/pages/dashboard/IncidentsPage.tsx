@@ -117,6 +117,7 @@ interface DisplayIncident {
   labels?: string[];
   orgId?: string;
   orgName?: string;
+  orgImage?: string;
 }
 
 type SortDirection = 'asc' | 'desc';
@@ -362,7 +363,7 @@ const IncidentsPage = () => {
   });
 
   // Sub-org incident fetching for multi-tenant view
-  const [subOrgItems, setSubOrgItems] = useState<Map<string, { orgName: string; items: typeof datastoreItems }>>(new Map());
+  const [subOrgItems, setSubOrgItems] = useState<Map<string, { orgName: string; orgImage?: string; items: typeof datastoreItems }>>(new Map());
   const [subOrgLoading, setSubOrgLoading] = useState<Set<string>>(new Set());
 
   // Fetch incidents from all sub-orgs in parallel
@@ -397,19 +398,19 @@ const IncidentsPage = () => {
           },
         });
 
-        if (!response.ok) return { orgId: org.id, orgName: org.name, items: [] };
+        if (!response.ok) return { orgId: org.id, orgName: org.name, orgImage: org.image, items: [] };
 
         const data = await response.json();
         const items = Array.isArray(data) ? data : (data.keys || data.data || []);
-        return { orgId: org.id, orgName: org.name, items };
+        return { orgId: org.id, orgName: org.name, orgImage: org.image, items };
       })
     );
 
-    const newMap = new Map<string, { orgName: string; items: typeof datastoreItems }>();
+    const newMap = new Map<string, { orgName: string; orgImage?: string; items: typeof datastoreItems }>();
     results.forEach((result) => {
       if (result.status === 'fulfilled' && result.value) {
-        const { orgId, orgName, items } = result.value;
-        newMap.set(orgId, { orgName, items });
+        const { orgId, orgName, orgImage, items } = result.value;
+        newMap.set(orgId, { orgName, orgImage, items });
       }
     });
 
@@ -645,20 +646,21 @@ const IncidentsPage = () => {
             updated = { ...updated, assignee: null };
           }
         }
-        return { ...updated, orgId: currentOrgId || '', orgName: currentOrgName };
+        return { ...updated, orgId: currentOrgId || '', orgName: currentOrgName, orgImage: userInfo?.active_org?.image };
       });
 
     // Parse sub-org incidents and tag with org info
     const subOrgIncidents: DisplayIncident[] = [];
-    subOrgItems.forEach(({ orgName, items }, orgId) => {
+    subOrgItems.forEach(({ orgName, orgImage, items }, orgId) => {
       items.forEach((item: any) => {
         const parsed = parseIncidentFromDatastore(item);
         if (parsed) {
           subOrgIncidents.push({
             ...parsed,
-            id: `${orgId}::${parsed.id}`, // Namespace IDs to avoid collisions
+            id: `${orgId}::${parsed.id}`,
             orgId,
             orgName,
+            orgImage,
           });
         }
       });

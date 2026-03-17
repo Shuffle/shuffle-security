@@ -38,6 +38,7 @@ interface DisplayIncident {
   labels?: string[];
   orgId?: string;
   orgName?: string;
+  orgImage?: string;
 }
 
 interface IngestionApp {
@@ -542,7 +543,8 @@ export const IncidentCardView = ({
                         •
                       </Typography>
                       <Chip
-                        icon={<Globe size={10} />}
+                        avatar={incident.orgImage ? <img src={incident.orgImage} alt="" style={{ width: 14, height: 14, borderRadius: '50%', objectFit: 'cover' }} /> : undefined}
+                        icon={!incident.orgImage ? <Globe size={10} /> : undefined}
                         label={incident.orgName}
                         size="small"
                         onClick={(e) => {
