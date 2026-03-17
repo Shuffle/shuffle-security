@@ -1607,22 +1607,42 @@ const IncidentsPage = () => {
                 >
                   {selectedIds.size} selected
                 </Typography>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => setBulkResolveDialogOpen(true)}
-                  sx={{
-                    height: 36,
-                    borderColor: 'hsl(var(--border))',
-                    color: '#22c55e',
-                    '&:hover': {
-                      borderColor: '#22c55e',
-                      backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                    },
-                  }}
-                >
-                  Resolve
-                </Button>
+                {allSelectedResolved ? (
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={handleBulkReopen}
+                    disabled={isBulkResolving}
+                    sx={{
+                      height: 36,
+                      borderColor: 'hsl(var(--border))',
+                      color: '#f59e0b',
+                      '&:hover': {
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                      },
+                    }}
+                  >
+                    Reopen
+                  </Button>
+                ) : (
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={() => setBulkResolveDialogOpen(true)}
+                    sx={{
+                      height: 36,
+                      borderColor: 'hsl(var(--border))',
+                      color: '#22c55e',
+                      '&:hover': {
+                        borderColor: '#22c55e',
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                      },
+                    }}
+                  >
+                    Resolve
+                  </Button>
+                )}
                 <IconButton
                   size="small"
                   onClick={() => setSelectedIds(new Set())}
