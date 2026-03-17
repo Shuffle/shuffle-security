@@ -434,6 +434,12 @@ const IncidentDetailPage = () => {
   }, [rawId]);
   const isCrossOrg = !!crossOrgId && crossOrgId !== userInfo?.active_org?.id;
 
+  // Headers to include on every API call when viewing a cross-org incident
+  const crossOrgHeaders = useMemo<Record<string, string>>(() => {
+    if (!crossOrgId) return {};
+    return { 'Org-Id': crossOrgId };
+  }, [crossOrgId]);
+
   // Public sharing params
   const publicAuth = searchParams.get('authorization');
   const publicOrg = searchParams.get('org');
@@ -532,7 +538,7 @@ const IncidentDetailPage = () => {
     try {
       const resp = await fetch(getApiUrl(`/api/v1/files/${incidentFileId}/content`), {
         credentials: 'include',
-        headers: { ...getAuthHeader() },
+        headers: { ...getAuthHeader(), ...crossOrgHeaders },
       });
       if (!resp.ok) throw new Error(`Failed to load file (${resp.status})`);
       const text = await resp.text();
@@ -614,7 +620,7 @@ const IncidentDetailPage = () => {
     const source = incident.source.toLowerCase().replace(/[\s_-]/g, '');
     fetch(getApiUrl('/api/v1/apps/authentication'), {
       credentials: 'include',
-      headers: { ...getAuthHeader() },
+      headers: { ...getAuthHeader(), ...crossOrgHeaders },
     })
       .then(r => r.json())
       .then(result => {
@@ -831,7 +837,7 @@ const IncidentDetailPage = () => {
         const response = await fetch(getApiUrl('/api/v1/apps/categories/run'), {
           method: 'POST',
           credentials: 'include',
-          headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+          headers: { 'Content-Type': 'application/json', ...getAuthHeader(), ...crossOrgHeaders },
           body: JSON.stringify({
             action: 'get_ticket',
             category: 'cases',
@@ -938,6 +944,7 @@ const IncidentDetailPage = () => {
           headers: {
             'Content-Type': 'application/json',
             ...getAuthHeader(),
+            ...crossOrgHeaders,
           },
           body: JSON.stringify({
             type: 'datastore',
@@ -2050,6 +2057,7 @@ const IncidentDetailPage = () => {
                       headers: {
                         'Content-Type': 'application/json',
                         ...getAuthHeader(),
+                        ...crossOrgHeaders,
                       },
                       body: JSON.stringify({
                         action: 'get_ticket',
@@ -2103,7 +2111,7 @@ const IncidentDetailPage = () => {
                   setForwardingAppsLoading(true);
                   fetch(getApiUrl('/api/v1/apps/authentication'), {
                     credentials: 'include',
-                    headers: { ...getAuthHeader() },
+                    headers: { ...getAuthHeader(), ...crossOrgHeaders },
                   })
                     .then(r => r.json())
                     .then(result => {
@@ -3741,7 +3749,7 @@ const IncidentDetailPage = () => {
                     const resp = await fetch(getApiUrl(`/api/v1/files/${incidentFileId}/edit`), {
                       method: 'PUT',
                       credentials: 'include',
-                      headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+                      headers: { ...getAuthHeader(), ...crossOrgHeaders, 'Content-Type': 'application/json' },
                       body: fileContent,
                     });
                     if (!resp.ok) throw new Error(`Save failed (${resp.status})`);
@@ -4106,6 +4114,7 @@ const IncidentDetailPage = () => {
                         headers: {
                           'Content-Type': 'application/json',
                           ...getAuthHeader(),
+                          ...crossOrgHeaders,
                         },
                         body: JSON.stringify(forwardBody),
                       });
