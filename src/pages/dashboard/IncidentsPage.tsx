@@ -31,7 +31,7 @@ import { useDatastore } from '@/hooks/useDatastore';
 import { useAuth } from '@/context/AuthContext';
 import { useSubOrgs } from '@/hooks/useSubOrgs';
 import { useUsers } from '@/hooks/useUsers';
-import { DATASTORE_CATEGORIES, getDatastoreByCategory, getDatastoreItem, setDatastoreItems, CategoryAutomation, deleteDatastoreItems } from '@/services/datastore';
+import { DATASTORE_CATEGORIES, getDatastoreByCategory, getDatastoreItem, setDatastoreItem, setDatastoreItems, CategoryAutomation, deleteDatastoreItem, deleteDatastoreItems } from '@/services/datastore';
 import { CreateIncidentDialog, ActivityItem } from '@/components/incidents/CreateIncidentDialog';
 import { OCSFIncidentFinding, Observable, TLP_LABELS, convertLegacyTlp, mapOCSFSeverity, mapOCSFStatus } from '@/config/ocsfIncidentSchema';
 import { deduplicateTasks, decodeHtmlEntities } from '@/lib/utils';
