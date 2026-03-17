@@ -998,8 +998,12 @@ const IncidentsPage = () => {
     if (incident.sharedOrgs && incident.sharedOrgs.length > 1) {
       params.set('shared_orgs', incident.sharedOrgs.map(o => o.orgId).join(','));
     }
+    const rawKey = toRawIncidentKey(incident.id);
+    const routeId = incident.orgId && currentOrgId && incident.orgId !== currentOrgId
+      ? `${incident.orgId}::${rawKey}`
+      : rawKey;
     const paramStr = params.toString();
-    return `/incidents/${incident.id}${paramStr ? '?' + paramStr : ''}`;
+    return `/incidents/${routeId}${paramStr ? '?' + paramStr : ''}`;
   };
 
   const handleCreateIncident = async (ocsf: OCSFIncidentFinding) => {
