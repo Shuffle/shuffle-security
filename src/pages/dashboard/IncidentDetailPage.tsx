@@ -2255,8 +2255,8 @@ const IncidentDetailPage = () => {
               scrollbarWidth: 'none',
             }}>
               {[
-                { label: 'Tasks', count: visibleTasks.length > 0 ? `${visibleTasks.filter(t => t.completed).length}/${visibleTasks.length}` : null },
                 { label: 'Details', count: null },
+                { label: 'Tasks', count: visibleTasks.length > 0 ? `${visibleTasks.filter(t => t.completed).length}/${visibleTasks.length}` : null },
                 { label: 'Observables', count: editedObservables.filter(o => !o.archived).length > 0 ? editedObservables.filter(o => !o.archived).length : null },
                 { label: 'Correlations', count: correlations.length > 0 ? correlations.length : null, loading: correlationsLoading },
               ].map((tab, index) => (
