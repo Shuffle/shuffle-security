@@ -825,10 +825,7 @@ const IncidentDetailPage = () => {
           labels: labelsStr,
         };
         console.log(`[Perf] State hydration: ${(performance.now() - stateStart).toFixed(1)}ms`);
-        // Auto-switch to Details tab if no tasks (only on initial load, and only if no tab param)
-        if (showLoading && loadedTasks.length === 0 && !searchParams.get('tab')) {
-          setActiveTab(1);
-        }
+        // Details is now tab 0 (default), no auto-switch needed
         // If arriving with ?tab=raw, populate rawJsonText now that data is loaded
         if (showLoading && searchParams.get('tab') === 'raw') {
           setRawJsonText(JSON.stringify(parsed.rawOCSF || {}, null, 2));
