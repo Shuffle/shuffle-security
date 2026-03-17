@@ -1710,31 +1710,18 @@ const IncidentsPage = () => {
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    placeholder={filters.org && filters.org.length > 0 ? '' : 'Organizations'}
-                    sx={{ minWidth: 160 }}
+                    placeholder="Orgs"
+                    sx={{ minWidth: 80, width: 80 }}
+                    InputProps={{
+                      ...params.InputProps,
+                      startAdornment: null,
+                    }}
                   />
                 )}
-                renderTags={(value, getTagProps) =>
-                  value.map((option, index) => (
-                    <Chip
-                      {...getTagProps({ index })}
-                      key={option.id}
-                      label={option.name}
-                      size="small"
-                      sx={{
-                        backgroundColor: 'rgba(139, 92, 246, 0.15)',
-                        color: '#a78bfa',
-                        fontWeight: 500,
-                        fontSize: '0.7rem',
-                        height: 22,
-                        '& .MuiChip-deleteIcon': { color: '#a78bfa', fontSize: '0.85rem' },
-                      }}
-                    />
-                  ))
-                }
+                renderTags={() => null}
                 sx={{
-                  minWidth: 160,
-                  maxWidth: 320,
+                  minWidth: 80,
+                  width: 80,
                   '& .MuiOutlinedInput-root': {
                     minHeight: 36,
                     py: '2px',
