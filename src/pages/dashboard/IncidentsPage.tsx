@@ -336,7 +336,15 @@ const IncidentsPage = () => {
   const pendingTogglesRef = useRef<Map<string, boolean>>(new Map());
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [appSearchOpen, setAppSearchOpen] = useState(false);
-  
+
+  // Default org filter to current org when in a child org
+  const orgFilterInitRef = useRef(false);
+  useEffect(() => {
+    if (!orgFilterInitRef.current && parentOrg && currentOrgId) {
+      orgFilterInitRef.current = true;
+      setFilters(prev => prev.org === null ? { ...prev, org: [currentOrgId] } : prev);
+    }
+  }, [parentOrg, currentOrgId]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
