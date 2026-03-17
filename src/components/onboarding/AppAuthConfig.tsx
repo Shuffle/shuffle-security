@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { toast } from '@/hooks/use-toast';
 import {
   Box,
   Typography,
@@ -267,6 +268,8 @@ export const AppAuthCard = ({
 
   // Track previous entry count to detect new auths added (e.g. from OAuth popup)
   const prevEntryCountRef = useRef(apiAuthEntries.length);
+  // Guard to prevent multiple auto-tests firing
+  const autoTestFiredRef = useRef<string | null>(null);
 
   // Update selection when apiAuthEntries changes
   useEffect(() => {
@@ -280,6 +283,22 @@ export const AppAuthCard = ({
         });
         const newestId = sorted[0]?.id || sorted[0]?.label || '0';
         setSelectedAuthId(newestId);
+        
+        // Auto-test the new auth if not already validated and not already auto-tested
+        const newestEntry = sorted[0];
+        const alreadyValid = newestEntry?.validation?.valid === true;
+        if (!alreadyValid && newestId !== autoTestFiredRef.current) {
+          autoTestFiredRef.current = newestId;
+          // Small delay to let state settle before firing test
+          setTimeout(() => {
+            toast({
+              title: 'Auto-testing new authentication',
+              description: `Verifying connection for ${app.name.replace(/_/g, ' ')}...`,
+            });
+            setTestingAuthId(newestId);
+            onTestConnection(app.objectID, newestId);
+          }, 500);
+        }
       } else if (!userHasSelected) {
         setSelectedAuthId(getBestDefaultAuth(apiAuthEntries));
       }
