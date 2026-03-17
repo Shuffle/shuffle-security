@@ -117,6 +117,7 @@ interface DisplayIncident {
   labels?: string[];
   orgId?: string;
   orgName?: string;
+  orgImage?: string;
 }
 
 type SortDirection = 'asc' | 'desc';
