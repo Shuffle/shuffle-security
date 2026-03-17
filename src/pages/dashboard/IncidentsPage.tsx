@@ -425,7 +425,21 @@ const IncidentsPage = () => {
     }
   }, [isParentOrg, fetchSubOrgIncidents]);
 
-  // Get valid usernames for assignee validation
+  // Auto-select all orgs when filter is empty and multi-tenant view is available
+  useEffect(() => {
+    if (isParentOrg && (!filters.org || (Array.isArray(filters.org) && filters.org.length === 0))) {
+      const allIds = [
+        currentOrgId || '',
+        ...subOrgs.filter(o => o.id !== currentOrgId).map(o => o.id),
+      ];
+      if (parentOrg && parentOrg.id !== currentOrgId && !allIds.includes(parentOrg.id)) {
+        allIds.unshift(parentOrg.id);
+      }
+      setFilters(prev => ({ ...prev, org: allIds }));
+    }
+  }, [isParentOrg, filters.org, currentOrgId, subOrgs, parentOrg]);
+
+
   const validUsernames = useMemo(() => {
     return new Set(users.map(u => u.username.toLowerCase()));
   }, [users]);
