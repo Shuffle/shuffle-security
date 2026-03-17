@@ -1526,7 +1526,7 @@ const IncidentsPage = () => {
                   />
                 ) : (
                   <Chip
-                    label={`Status: ${statusConfig[filters.status]?.label || filters.status.replace('_', ' ')}`}
+                    label={statusConfig[filters.status]?.label || filters.status.replace('_', ' ')}
                     size="small"
                     onDelete={() => setFilters(prev => ({ ...prev, status: null }))}
                     sx={{ 
