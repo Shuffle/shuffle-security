@@ -11,6 +11,7 @@ export interface SubOrg {
   image?: string;
   creator_org?: string;
   region_url?: string;
+  isParent?: boolean;
 }
 
 interface UseSubOrgsReturn {
