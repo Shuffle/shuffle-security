@@ -1010,11 +1010,27 @@ const IncidentsPage = () => {
   const handleBulkDelete = useCallback(async () => {
     if (selectedIds.size === 0) return;
     
+    // Collect all cross-org delete promises for shared incidents
+    const crossOrgDeletes: Promise<any>[] = [];
+    const selectedIncidents = incidents.filter(i => selectedIds.has(i.id));
+    for (const inc of selectedIncidents) {
+      if (inc.sharedOrgs && inc.sharedOrgs.length > 0) {
+        for (const org of inc.sharedOrgs) {
+          crossOrgDeletes.push(deleteDatastoreItem(inc.id, DATASTORE_CATEGORIES.INCIDENTS, org.orgId));
+        }
+      }
+    }
+
     const result = await deleteDatastoreItems(
       Array.from(selectedIds),
       DATASTORE_CATEGORIES.INCIDENTS
     );
     
+    // Fire cross-org deletes in parallel (best effort)
+    if (crossOrgDeletes.length > 0) {
+      Promise.allSettled(crossOrgDeletes);
+    }
+
     if (result.success) {
       toast.success(`Deleted ${result.deleted} incident${result.deleted !== 1 ? 's' : ''}`);
       setSelectedIds(new Set());
@@ -1024,7 +1040,7 @@ const IncidentsPage = () => {
       setSelectedIds(new Set(result.failed));
       await fetchItems();
     }
-  }, [selectedIds, fetchItems]);
+  }, [selectedIds, incidents, fetchItems]);
 
   const handleBulkResolve = useCallback(async (resolutionData: ResolutionData) => {
     if (selectedIds.size === 0) return;
