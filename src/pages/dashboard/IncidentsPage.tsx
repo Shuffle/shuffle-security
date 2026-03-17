@@ -1400,7 +1400,7 @@ const IncidentsPage = () => {
               '&:hover': { backgroundColor: 'rgba(139, 92, 246, 0.1)' },
             }}
           />
-          {subOrgs.map(org => {
+          {subOrgs.filter(org => org.id !== currentOrgId).map(org => {
             const orgIncidentCount = subOrgItems.get(org.id)?.items.length || 0;
             const isActive = filters.org === org.id;
             const isOrgLoading = subOrgLoading.has(org.id);
