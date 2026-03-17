@@ -1611,12 +1611,13 @@ const IncidentsPage = () => {
                 multiple
                 size="small"
                 options={(() => {
-                  const realOrgs = [
-                    { id: currentOrgId || '', name: currentOrgName },
-                    ...subOrgs.filter(org => org.id !== currentOrgId),
+                  const currentOrgImage = userInfo?.active_org?.image;
+                  const realOrgs: { id: string; name: string; image?: string }[] = [
+                    { id: currentOrgId || '', name: currentOrgName, image: currentOrgImage },
+                    ...subOrgs.filter(org => org.id !== currentOrgId).map(o => ({ id: o.id, name: o.name, image: o.image })),
                   ];
                   if (parentOrg && parentOrg.id !== currentOrgId && !realOrgs.some(o => o.id === parentOrg.id)) {
-                    realOrgs.unshift({ id: parentOrg.id, name: parentOrg.name });
+                    realOrgs.unshift({ id: parentOrg.id, name: parentOrg.name, image: parentOrg.image });
                   }
                   return [
                     { id: '__all__', name: 'All orgs' },
