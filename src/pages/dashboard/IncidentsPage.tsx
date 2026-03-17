@@ -1709,7 +1709,7 @@ const IncidentsPage = () => {
                   <TextField
                     {...params}
                     placeholder="Orgs"
-                    sx={{ minWidth: 100, width: 100 }}
+                    sx={{ minWidth: 150, width: 150 }}
                     InputProps={{
                       ...params.InputProps,
                       startAdornment: null,
@@ -1718,8 +1718,8 @@ const IncidentsPage = () => {
                 )}
                 renderTags={() => null}
                 sx={{
-                  minWidth: 100,
-                  width: 100,
+                  minWidth: 150,
+                  width: 150,
                   '& .MuiOutlinedInput-root': {
                     minHeight: 36,
                     py: '2px',
