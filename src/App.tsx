@@ -57,6 +57,7 @@ const queryClient = new QueryClient();
 const App = () => {
   useEffect(() => { trackReferralParams(); }, []);
   return (
+  <QueryClientProvider client={queryClient}>
     <ThemeProvider theme={muiTheme}>
       <CssBaseline />
       <Toaster 
