@@ -676,9 +676,10 @@ const IncidentsPage = () => {
       items.forEach((item: any) => {
         const parsed = parseIncidentFromDatastore(item);
         if (parsed) {
+          const rawParsedId = toRawIncidentKey(parsed.id);
           subOrgIncidents.push({
             ...parsed,
-            id: `${orgId}::${parsed.id}`,
+            id: `${orgId}::${rawParsedId}`,
             orgId,
             orgName,
             orgImage,
