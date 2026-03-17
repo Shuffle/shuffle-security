@@ -1039,7 +1039,7 @@ const IncidentsPage = () => {
     !filters.tlp && 
     !filters.source &&
     !filters.tag &&
-    !filters.org &&
+    (!filters.org || filters.org.length === 0) &&
     filters.assignee === null && 
     !searchQuery.trim() &&
     Array.isArray(filters.status) && 
