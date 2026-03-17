@@ -1726,12 +1726,16 @@ const IncidentsPage = () => {
                   },
                 }}
                 slotProps={{
+                  popper: {
+                    sx: {
+                      width: '280px !important',
+                    },
+                    placement: 'bottom-start',
+                  },
                   paper: {
                     sx: {
                       bgcolor: 'hsl(var(--card))',
                       border: '1px solid hsl(var(--border))',
-                      minWidth: 200,
-                      maxWidth: 300,
                       '& .MuiAutocomplete-option': {
                         fontSize: '0.82rem',
                         py: 0.75,
