@@ -1067,7 +1067,7 @@ const IncidentsPage = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Tooltip title="Refresh">
               <IconButton 
-                onClick={() => { sessionStorage.removeItem('shuffle_auto_resync_done'); autoResyncQueueRef.current.clear(); fetchItems(); }} 
+                onClick={() => { sessionStorage.removeItem('shuffle_auto_resync_done'); autoResyncQueueRef.current.clear(); fetchItems(); fetchSubOrgIncidents(); }} 
                 disabled={isLoading}
                 sx={{ 
                   width: 36, height: 36, color: 'text.secondary',
