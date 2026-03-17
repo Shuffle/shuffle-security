@@ -103,6 +103,9 @@ interface AppAuthentication {
   token_uri?: string;
   refresh_uri?: string;
   authorization_url?: string;
+  // Common alternative field names for the authorization endpoint
+  auth_uri?: string;
+  authorize_url?: string;
   scope?: string[];
   client_id?: string;
   client_secret?: string;
