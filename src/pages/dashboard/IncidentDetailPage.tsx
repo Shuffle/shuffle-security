@@ -62,6 +62,7 @@ import { DATASTORE_CATEGORIES, getDatastoreItem, getDatastoreItemPublic, setData
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { resyncState } from '@/lib/resyncState';
 import { useUsers } from '@/hooks/useUsers';
+import { useSubOrgs } from '@/hooks/useSubOrgs';
 import { useCustomFields, CustomField } from '@/hooks/useCustomFields';
 import { useIOCTypes } from '@/hooks/useIOCTypes';
 import { ObservableTypeSelector } from '@/components/incidents/ObservableTypeSelector';
@@ -179,7 +180,6 @@ const formatDuration = (ms: number): string => {
 const parseTimestamp = (timestamp: number | string | undefined): number => {
   return normalizeToMs(timestamp);
 };
-
 
 
 // Strict check: only return string if it has meaningful non-whitespace content
@@ -596,6 +596,14 @@ const IncidentDetailPage = () => {
     category: DATASTORE_CATEGORIES.INCIDENTS,
     orgId: crossOrgId || undefined,
   });
+
+  const { subOrgs, parentOrg } = useSubOrgs(userInfo?.active_org?.id);
+  const crossOrgInfo = useMemo(() => {
+    if (!crossOrgId) return null;
+    if (parentOrg && parentOrg.id === crossOrgId) return { name: parentOrg.name, image: parentOrg.image };
+    const found = subOrgs.find(o => o.id === crossOrgId);
+    return found ? { name: found.name, image: found.image } : null;
+  }, [crossOrgId, subOrgs, parentOrg]);
 
   // Fetch agent runs for this incident — deferred until incident loaded
   const { runsForIncident: agentRuns, isLoading: agentRunsLoading } = useIncidentAgentRuns(!loading ? id : undefined);
@@ -1652,14 +1660,15 @@ const IncidentDetailPage = () => {
             border: '1px solid rgba(139, 92, 246, 0.25)',
             display: 'flex',
             alignItems: 'center',
-            gap: 1,
+            gap: 1.5,
           }}>
-            <LanguageIcon sx={{ fontSize: 16, color: '#a78bfa', flexShrink: 0 }} />
+            {crossOrgInfo?.image ? (
+              <img src={crossOrgInfo.image} alt="" style={{ width: 20, height: 20, borderRadius: 4, objectFit: 'contain', flexShrink: 0 }} />
+            ) : (
+              <LanguageIcon sx={{ fontSize: 16, color: '#a78bfa', flexShrink: 0 }} />
+            )}
             <Typography sx={{ fontSize: '0.82rem', color: 'hsl(var(--foreground))' }}>
-              Viewing incident from another organization
-            </Typography>
-            <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', ml: 'auto' }}>
-              {crossOrgId}
+              Viewing incident for organization <strong>{crossOrgInfo?.name || crossOrgId}</strong>
             </Typography>
           </Box>
         )}
