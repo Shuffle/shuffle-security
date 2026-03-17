@@ -84,8 +84,9 @@ export const setDatastoreItem = async (
     return { success: false, error: 'No organization ID found' };
   }
 
+  const rawKey = normalizeDatastoreKey(key);
   const payload = {
-    key,
+    key: rawKey,
     value: typeof value === 'string' ? value : JSON.stringify(value),
     category,
     ignore_security_rules: true,
