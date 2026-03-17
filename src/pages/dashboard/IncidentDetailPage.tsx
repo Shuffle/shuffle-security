@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef, forwardRef } from 'react';
+import DOMPurify from 'dompurify';
 import AgentIcon from '@/components/agent/AgentIcon';
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
@@ -482,6 +483,8 @@ const IncidentDetailPage = () => {
   
   // Description editing state
   const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [showRawDescription, setShowRawDescription] = useState(false);
+  const [rawDescriptionHtml, setRawDescriptionHtml] = useState('');
   
   const [isSaving, setIsSaving] = useState(false);
   const [showResolveDialog, setShowResolveDialog] = useState(false);
@@ -515,7 +518,35 @@ const IncidentDetailPage = () => {
   const [fileError, setFileError] = useState<string | null>(null);
   const [fileLoaded, setFileLoaded] = useState(false);
 
-  // Extract file_id from incident data (must match file_{uuid} format)
+  // Sanitized HTML for safe rendering of ingested HTML descriptions (email-client style)
+  const sanitizedDescriptionHtml = useMemo(() => {
+    if (!rawDescriptionHtml) return '';
+    // Check if it actually contains HTML tags
+    if (!/<[a-z][\s\S]*>/i.test(rawDescriptionHtml)) return '';
+    return DOMPurify.sanitize(rawDescriptionHtml, {
+      ALLOWED_TAGS: [
+        'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'hr',
+        'b', 'i', 'u', 'strong', 'em', 'small', 'sub', 'sup', 's', 'mark',
+        'ul', 'ol', 'li', 'dl', 'dt', 'dd',
+        'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption', 'colgroup', 'col',
+        'a', 'img', 'figure', 'figcaption',
+        'blockquote', 'pre', 'code', 'span', 'div', 'section',
+      ],
+      ALLOWED_ATTR: [
+        'href', 'src', 'alt', 'title', 'width', 'height',
+        'style', 'class', 'align', 'valign', 'colspan', 'rowspan',
+        'border', 'cellpadding', 'cellspacing', 'role',
+        'target', 'rel',
+      ],
+      ALLOW_DATA_ATTR: false,
+      ADD_ATTR: ['target'],
+      FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'form', 'input', 'button', 'select', 'textarea'],
+      FORBID_ATTR: ['onerror', 'onclick', 'onload', 'onmouseover', 'onfocus', 'onblur'],
+    });
+  }, [rawDescriptionHtml]);
+  const hasHtmlDescription = sanitizedDescriptionHtml.length > 0;
+
+
   const incidentFileId = useMemo(() => {
     const raw = incident?.rawOCSF;
     if (!raw?.shuffle_translation_file) return null;
@@ -679,8 +710,12 @@ const IncidentDetailPage = () => {
         // Use desc (new OCSF) first, fall back to message (legacy), convert HTML to readable text
         const rawDesc = parsed.rawOCSF?.desc || parsed.rawOCSF?.message || '';
         
-        // Try base64 on raw first; if unchanged, strip HTML then try base64 again
+        // Store the raw HTML for rendered view
         const rawDecoded = decodeIfBase64(rawDesc);
+        const htmlSource = rawDecoded !== rawDesc ? rawDecoded : rawDesc;
+        setRawDescriptionHtml(htmlSource);
+        
+        // Also create plain-text version for editing
         const processedDesc = rawDecoded !== rawDesc 
           ? rawDecoded 
           : decodeIfBase64(htmlToPlainText(rawDesc));
@@ -2872,7 +2907,39 @@ const IncidentDetailPage = () => {
               {/* Description on the left */}
               <Box sx={{ flex: '1 1 50%', minWidth: 0 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>Description</Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>Description</Typography>
+                    {hasHtmlDescription && !isEditingDescription && (
+                      <Box sx={{ display: 'flex', gap: 0.25 }}>
+                        <Chip
+                          label="Rendered"
+                          size="small"
+                          onClick={() => setShowRawDescription(false)}
+                          sx={{
+                            height: 20,
+                            fontSize: '0.65rem',
+                            cursor: 'pointer',
+                            bgcolor: !showRawDescription ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255,255,255,0.05)',
+                            color: !showRawDescription ? '#ff6600' : 'text.secondary',
+                            '&:hover': { bgcolor: !showRawDescription ? 'rgba(255, 102, 0, 0.2)' : 'rgba(255,255,255,0.1)' },
+                          }}
+                        />
+                        <Chip
+                          label="Raw"
+                          size="small"
+                          onClick={() => setShowRawDescription(true)}
+                          sx={{
+                            height: 20,
+                            fontSize: '0.65rem',
+                            cursor: 'pointer',
+                            bgcolor: showRawDescription ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255,255,255,0.05)',
+                            color: showRawDescription ? '#ff6600' : 'text.secondary',
+                            '&:hover': { bgcolor: showRawDescription ? 'rgba(255, 102, 0, 0.2)' : 'rgba(255,255,255,0.1)' },
+                          }}
+                        />
+                      </Box>
+                    )}
+                  </Box>
                   <IconButton 
                     size="small" 
                     onClick={() => setIsEditingDescription(!isEditingDescription)}
@@ -2898,6 +2965,27 @@ const IncidentDetailPage = () => {
                       sx={inputSx}
                     />
                   </Box>
+                ) : hasHtmlDescription && !showRawDescription ? (
+                  <Box 
+                    sx={{ 
+                      p: 1.5, 
+                      bgcolor: 'rgba(255, 255, 255, 0.95)', 
+                      borderRadius: 1,
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      minHeight: 120,
+                      maxHeight: 450,
+                      overflow: 'auto',
+                      color: '#1a1a1a',
+                      '& img': { maxWidth: '100%', height: 'auto' },
+                      '& a': { color: '#1a73e8', textDecoration: 'underline' },
+                      '& table': { borderCollapse: 'collapse', maxWidth: '100%' },
+                      '& td, & th': { padding: '4px 8px' },
+                      '& *': { maxWidth: '100%', boxSizing: 'border-box' },
+                      fontSize: '0.875rem',
+                      lineHeight: 1.6,
+                    }}
+                    dangerouslySetInnerHTML={{ __html: sanitizedDescriptionHtml }}
+                  />
                 ) : (
                   <Box 
                     sx={{ 
