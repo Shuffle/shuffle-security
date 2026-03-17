@@ -163,8 +163,9 @@ export const getDatastoreItem = async (
     return { success: false, error: 'No organization ID found' };
   }
 
+  const rawKey = normalizeDatastoreKey(key);
   const payload: Record<string, string> = {
-    key,
+    key: rawKey,
     org_id: orgId,
   };
   
