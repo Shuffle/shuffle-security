@@ -1103,8 +1103,19 @@ const IncidentsPage = () => {
           delete (updated.metadata.extensions.custom_attributes as Record<string, unknown>).activity;
         }
         
-        const { setDatastoreItem } = await import('@/services/datastore');
-        return setDatastoreItem(incident.id, updated, DATASTORE_CATEGORIES.INCIDENTS);
+        // Primary save
+        const primaryResult = await setDatastoreItem(incident.id, updated, DATASTORE_CATEGORIES.INCIDENTS);
+        
+        // Sync to shared orgs (fire-and-forget)
+        if (incident.sharedOrgs && incident.sharedOrgs.length > 0) {
+          Promise.allSettled(
+            incident.sharedOrgs.map(org =>
+              setDatastoreItem(incident.id, updated, DATASTORE_CATEGORIES.INCIDENTS, org.orgId)
+            )
+          );
+        }
+        
+        return primaryResult;
       });
     
     const results = await Promise.all(updates);
