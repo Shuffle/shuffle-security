@@ -1424,16 +1424,10 @@ const IncidentsPage = () => {
               <Autocomplete
                 multiple
                 size="small"
-                options={(() => {
-                  const opts = [
-                    { id: currentOrgId || '', name: currentOrgName },
-                    ...subOrgs.filter(org => org.id !== currentOrgId),
-                  ];
-                  if (parentOrg && parentOrg.id !== currentOrgId && !opts.some(o => o.id === parentOrg.id)) {
-                    opts.unshift({ id: parentOrg.id, name: parentOrg.name });
-                  }
-                  return opts;
-                })()}
+                options={[
+                  { id: currentOrgId || '', name: currentOrgName },
+                  ...subOrgs.filter(org => org.id !== currentOrgId),
+                ]}
                 getOptionLabel={(option) => option.name}
                 value={
                   (filters.org || []).map(id => {
