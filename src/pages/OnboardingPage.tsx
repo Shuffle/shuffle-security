@@ -947,7 +947,19 @@ const OnboardingPage = () => {
                   {steps[activeStep]?.key === 'welcome' && (
                     <WelcomeStep
                       selectedChallenge={selectedChallenge}
-                      onSelect={setSelectedChallenge}
+                      onSelect={(challengeId) => {
+                        setSelectedChallenge(challengeId);
+                        // Auto-advance to next step after selection
+                        setTimeout(() => {
+                          const nextStep = activeStep + 1;
+                          if (nextStep < steps.length) {
+                            trackOnboardingStep(nextStep, steps[nextStep].label);
+                            setActiveStepKey(steps[nextStep].key);
+                            markWelcomeCompleted();
+                            setWelcomeDone(true);
+                          }
+                        }, 400);
+                      }}
                     />
                   )}
 
