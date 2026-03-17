@@ -2051,6 +2051,7 @@ const IncidentDetailPage = () => {
                       headers: {
                         'Content-Type': 'application/json',
                         ...getAuthHeader(),
+                        ...crossOrgHeaders,
                       },
                       body: JSON.stringify({
                         action: 'get_ticket',
