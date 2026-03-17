@@ -642,6 +642,51 @@ const IncidentDetailPage = () => {
     return found ? { name: found.name, image: found.image } : null;
   }, [crossOrgId, subOrgs, parentOrg]);
 
+  // Detect which other orgs share the same incident key
+  const [sharedOrgs, setSharedOrgs] = useState<Array<{ id: string; name: string; image?: string }>>([]);
+  useEffect(() => {
+    if (!id || !userInfo?.active_org?.id) return;
+    const allOrgs = [
+      ...(subOrgs || []).filter(o => o.id !== userInfo.active_org?.id),
+      ...(parentOrg && parentOrg.id !== userInfo.active_org?.id ? [parentOrg] : []),
+    ];
+    if (allOrgs.length === 0) return;
+
+    // Probe each org for the same key
+    const probeOrgs = async () => {
+      const found: Array<{ id: string; name: string; image?: string }> = [];
+      // Current org (or crossOrg) always has it
+      if (crossOrgId) {
+        // The "primary" org is the cross-org; also check current org
+        const currentOrgResult = await getDatastoreItem(id, DATASTORE_CATEGORIES.INCIDENTS);
+        if (currentOrgResult.success && currentOrgResult.item?.value) {
+          found.push({ id: userInfo.active_org!.id, name: userInfo.active_org!.name || '', image: userInfo.active_org!.image });
+        }
+      }
+      
+      const results = await Promise.allSettled(
+        allOrgs.map(async (org) => {
+          // Skip the org we're already viewing from
+          const viewingOrgId = crossOrgId || userInfo.active_org?.id;
+          if (org.id === viewingOrgId) return null;
+          const result = await getDatastoreItem(id, DATASTORE_CATEGORIES.INCIDENTS, org.id);
+          if (result.success && result.item?.value) {
+            return { id: org.id, name: org.name, image: org.image };
+          }
+          return null;
+        })
+      );
+      
+      for (const r of results) {
+        if (r.status === 'fulfilled' && r.value) {
+          found.push(r.value);
+        }
+      }
+      setSharedOrgs(found);
+    };
+    probeOrgs();
+  }, [id, subOrgs, parentOrg, userInfo?.active_org?.id, crossOrgId]);
+
   // Fetch agent runs for this incident — deferred until incident loaded
   const { runsForIncident: agentRuns, isLoading: agentRunsLoading } = useIncidentAgentRuns(!loading ? id : undefined);
 
@@ -1075,6 +1120,20 @@ const IncidentDetailPage = () => {
         toast.error('Failed to save changes');
         return;
       }
+      
+      // Sync to shared orgs (fire-and-forget to avoid blocking primary save)
+      if (sharedOrgs.length > 0) {
+        Promise.allSettled(
+          sharedOrgs.map(org =>
+            setDatastoreItem(incident.id, updatedData, DATASTORE_CATEGORIES.INCIDENTS, org.id)
+          )
+        ).then(results => {
+          const failed = results.filter(r => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.success));
+          if (failed.length > 0) {
+            console.warn(`[CrossOrgSync] ${failed.length}/${sharedOrgs.length} org saves failed`);
+          }
+        });
+      }
       // Update the initial snapshot so future comparisons are against the saved state
       // Use cached JSON refs to avoid redundant serialization
       initialValuesRef.current = {
@@ -1137,7 +1196,7 @@ const IncidentDetailPage = () => {
     } finally {
       setIsSaving(false);
     }
-  }, [incident, editedTitle, editedMessage, editedSeverity, editedAssignee, editedStatus, editedTlp, editedReferences, editedObservables, editedCustomFields, editedLabels, activity, tasks, addItem, getItem]);
+  }, [incident, editedTitle, editedMessage, editedSeverity, editedAssignee, editedStatus, editedTlp, editedReferences, editedObservables, editedCustomFields, editedLabels, activity, tasks, addItem, getItem, sharedOrgs]);
 
   // Cache stringified complex values to avoid re-serializing on every render
   const tasksJsonRef = useRef('');
@@ -1688,27 +1747,62 @@ const IncidentDetailPage = () => {
           <Typography variant="body2">Back to Incidents</Typography>
         </Box>
 
-        {/* Cross-org banner */}
-        {isCrossOrg && (
+        {/* Multi-org / Cross-org banner */}
+        {(isCrossOrg || sharedOrgs.length > 0) && (
           <Box sx={{
             mb: 2,
             px: 2,
-            py: 1,
+            py: 1.5,
             borderRadius: 1.5,
             bgcolor: 'rgba(139, 92, 246, 0.08)',
             border: '1px solid rgba(139, 92, 246, 0.25)',
             display: 'flex',
             alignItems: 'center',
             gap: 1.5,
+            flexWrap: 'wrap',
           }}>
-            {crossOrgInfo?.image ? (
-              <img src={crossOrgInfo.image} alt="" style={{ width: 20, height: 20, borderRadius: 4, objectFit: 'contain', flexShrink: 0 }} />
-            ) : (
-              <LanguageIcon sx={{ fontSize: 16, color: '#a78bfa', flexShrink: 0 }} />
+            <LanguageIcon sx={{ fontSize: 16, color: '#a78bfa', flexShrink: 0 }} />
+            {sharedOrgs.length > 0 ? (
+              <>
+                <Typography sx={{ fontSize: '0.82rem', color: 'hsl(var(--foreground))' }}>
+                  This incident exists in <strong>{sharedOrgs.length + 1} organizations</strong> — changes sync to all:
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
+                  {/* Show the "viewing" org first */}
+                  {(() => {
+                    const viewingOrg = isCrossOrg
+                      ? { name: crossOrgInfo?.name || crossOrgId, image: crossOrgInfo?.image }
+                      : { name: userInfo?.active_org?.name || '', image: userInfo?.active_org?.image };
+                    return (
+                      <Chip
+                        size="small"
+                        avatar={viewingOrg.image ? <img src={viewingOrg.image} alt="" style={{ width: 16, height: 16, borderRadius: 3 }} /> : undefined}
+                        label={viewingOrg.name}
+                        sx={{ height: 22, fontSize: '0.72rem', bgcolor: 'rgba(139, 92, 246, 0.2)', color: '#a78bfa', fontWeight: 600 }}
+                      />
+                    );
+                  })()}
+                  {sharedOrgs.map(org => (
+                    <Chip
+                      key={org.id}
+                      size="small"
+                      avatar={org.image ? <img src={org.image} alt="" style={{ width: 16, height: 16, borderRadius: 3 }} /> : undefined}
+                      label={org.name}
+                      sx={{ height: 22, fontSize: '0.72rem', bgcolor: 'rgba(255,255,255,0.06)', color: 'text.secondary' }}
+                    />
+                  ))}
+                </Box>
+              </>
+            ) : isCrossOrg && (
+              <>
+                {crossOrgInfo?.image ? (
+                  <img src={crossOrgInfo.image} alt="" style={{ width: 20, height: 20, borderRadius: 4, objectFit: 'contain', flexShrink: 0 }} />
+                ) : null}
+                <Typography sx={{ fontSize: '0.82rem', color: 'hsl(var(--foreground))' }}>
+                  Viewing incident for organization <strong>{crossOrgInfo?.name || crossOrgId}</strong>
+                </Typography>
+              </>
             )}
-            <Typography sx={{ fontSize: '0.82rem', color: 'hsl(var(--foreground))' }}>
-              Viewing incident for organization <strong>{crossOrgInfo?.name || crossOrgId}</strong>
-            </Typography>
           </Box>
         )}
 

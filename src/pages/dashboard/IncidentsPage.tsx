@@ -118,6 +118,7 @@ interface DisplayIncident {
   orgId?: string;
   orgName?: string;
   orgImage?: string;
+  sharedOrgs?: Array<{ orgId: string; orgName: string; orgImage?: string }>;
 }
 
 type SortDirection = 'asc' | 'desc';
@@ -680,7 +681,40 @@ const IncidentsPage = () => {
       });
     });
 
-    return [...currentOrgIncidents, ...subOrgIncidents];
+    const allIncidents = [...currentOrgIncidents, ...subOrgIncidents];
+
+    // Deduplicate cross-org incidents with the same key — keep the most recently edited
+    const deduped: DisplayIncident[] = [];
+    const keyMap = new Map<string, { best: DisplayIncident; allOrgs: Array<{ orgId: string; orgName: string; orgImage?: string }> }>();
+    
+    for (const inc of allIncidents) {
+      // Extract raw key (strip orgId:: prefix)
+      const rawKey = inc.id.includes('::') ? inc.id.split('::')[1] : inc.id;
+      const existing = keyMap.get(rawKey);
+      const incOrgInfo = { orgId: inc.orgId || '', orgName: inc.orgName || '', orgImage: inc.orgImage };
+      
+      if (!existing) {
+        keyMap.set(rawKey, { best: inc, allOrgs: [incOrgInfo] });
+      } else {
+        existing.allOrgs.push(incOrgInfo);
+        // Keep the one with the latest edit timestamp
+        const existingTs = existing.best.editedTs || existing.best.createdTs || 0;
+        const newTs = inc.editedTs || inc.createdTs || 0;
+        if (newTs > existingTs) {
+          existing.best = inc;
+        }
+      }
+    }
+    
+    for (const { best, allOrgs } of keyMap.values()) {
+      deduped.push({
+        ...best,
+        // Attach shared org info for downstream use
+        sharedOrgs: allOrgs.length > 1 ? allOrgs : undefined,
+      });
+    }
+
+    return deduped;
   }, [datastoreItems, validUsernames, subOrgItems]);
 
   // Split into relevant and irrelevant
