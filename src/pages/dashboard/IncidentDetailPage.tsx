@@ -911,6 +911,85 @@ const IncidentDetailPage = () => {
     loadIncident();
   }, [loadIncident]);
 
+  // Cross-org merge: once we know shared orgs and have the primary incident loaded,
+  // fetch all other org versions and deep-merge them into the current data.
+  const crossOrgMergedRef = useRef(false);
+  useEffect(() => {
+    if (!id || !incident || sharedOrgs.length === 0 || isPublicView || crossOrgMergedRef.current) return;
+    crossOrgMergedRef.current = true;
+
+    const mergeCrossOrg = async () => {
+      console.log(`[CrossOrg] Merging data from ${sharedOrgs.length} other org(s)…`);
+      const primaryRaw = incident.rawOCSF || {};
+      const primaryEdited = incident.editedTs || incident.createdTs || 0;
+      let merged = { ...primaryRaw };
+
+      const results = await Promise.allSettled(
+        sharedOrgs.map(org => getDatastoreItem(id, DATASTORE_CATEGORIES.INCIDENTS, org.id))
+      );
+
+      for (const r of results) {
+        if (r.status !== 'fulfilled' || !r.value.success || !r.value.item?.value || r.value.item.value.length <= 2) continue;
+        try {
+          const otherData = JSON.parse(r.value.item.value);
+          const otherEdited = r.value.item.edited ? (typeof r.value.item.edited === 'number' ? r.value.item.edited : Number(r.value.item.edited)) : 0;
+          merged = deepMergeIncidents(merged, otherData, primaryEdited, otherEdited);
+          console.log(`[CrossOrg] Merged data from org, edited=${otherEdited}`);
+        } catch (err) {
+          console.warn('[CrossOrg] Failed to parse/merge org data:', err);
+        }
+      }
+
+      // Re-parse merged data as if it came from the datastore
+      const mergedItem = {
+        key: id,
+        value: JSON.stringify(merged),
+        created: incident.createdTs ? Math.floor(incident.createdTs / 1000) : undefined,
+        edited: incident.editedTs ? Math.floor(incident.editedTs / 1000) : undefined,
+      };
+      const reParsed = parseIncidentFromDatastore(mergedItem);
+      if (reParsed) {
+        console.log('[CrossOrg] Merged incident applied');
+        setIncident(reParsed);
+        setEditedTitle(reParsed.title);
+        const rawDesc = reParsed.rawOCSF?.desc || reParsed.rawOCSF?.message || '';
+        const rawDecoded = decodeIfBase64(rawDesc);
+        setRawDescriptionHtml(rawDecoded !== rawDesc ? rawDecoded : rawDesc);
+        setEditedMessage(htmlToPlainText(rawDecoded !== rawDesc ? rawDecoded : decodeIfBase64(htmlToPlainText(rawDesc))));
+        setEditedSeverity(reParsed.severity);
+        const rawAssignee = reParsed.assignee || '';
+        setEditedAssignee(isAIAssignee(rawAssignee) ? 'AI Agent' : rawAssignee);
+        setEditedStatus(reParsed.status);
+        setEditedTlp(reParsed.tlp || 'TLP:AMBER');
+        setEditedReferences(Array.isArray(reParsed.references) ? reParsed.references : []);
+        setEditedObservables(reParsed.observables || []);
+        setEditedLabels(reParsed.labels || []);
+        setActivity(reParsed.activity || []);
+        const loadedTasks = reParsed.tasks || [];
+        const normalizedTasks = loadedTasks.map((task: IncidentTask, index: number) => ({
+          ...task,
+          id: task.id || `task-${Date.now()}-${index}`,
+        }));
+        setTasks(normalizedTasks);
+        // Update initial snapshot so auto-save doesn't fire from merge
+        initialValuesRef.current = {
+          title: reParsed.title,
+          message: htmlToPlainText(rawDecoded !== rawDesc ? rawDecoded : decodeIfBase64(htmlToPlainText(rawDesc))),
+          severity: reParsed.severity,
+          assignee: isAIAssignee(rawAssignee) ? 'AI Agent' : rawAssignee,
+          status: reParsed.status,
+          tlp: reParsed.tlp || 'TLP:AMBER',
+          references: JSON.stringify(reParsed.references || []),
+          observables: JSON.stringify(reParsed.observables || []),
+          customFields: JSON.stringify(reParsed.customFields || {}),
+          tasks: JSON.stringify(normalizedTasks),
+          labels: JSON.stringify(reParsed.labels || []),
+        };
+      }
+    };
+    mergeCrossOrg();
+  }, [id, incident?.id, sharedOrgs, isPublicView]);
+
   // Auto-resync untitled incidents immediately on load
   const autoResyncTriggeredRef = useRef(false);
   useEffect(() => {
