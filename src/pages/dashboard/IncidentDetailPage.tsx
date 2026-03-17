@@ -1660,14 +1660,15 @@ const IncidentDetailPage = () => {
             border: '1px solid rgba(139, 92, 246, 0.25)',
             display: 'flex',
             alignItems: 'center',
-            gap: 1,
+            gap: 1.5,
           }}>
-            <LanguageIcon sx={{ fontSize: 16, color: '#a78bfa', flexShrink: 0 }} />
+            {crossOrgInfo?.image ? (
+              <img src={crossOrgInfo.image} alt="" style={{ width: 20, height: 20, borderRadius: 4, objectFit: 'contain', flexShrink: 0 }} />
+            ) : (
+              <LanguageIcon sx={{ fontSize: 16, color: '#a78bfa', flexShrink: 0 }} />
+            )}
             <Typography sx={{ fontSize: '0.82rem', color: 'hsl(var(--foreground))' }}>
-              Viewing incident from another organization
-            </Typography>
-            <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', ml: 'auto' }}>
-              {crossOrgId}
+              Viewing incident for organization <strong>{crossOrgInfo?.name || crossOrgId}</strong>
             </Typography>
           </Box>
         )}
