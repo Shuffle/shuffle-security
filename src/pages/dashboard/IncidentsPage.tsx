@@ -1597,7 +1597,7 @@ const IncidentsPage = () => {
               )}
             </Box>
 
-            <Typography variant="body2" sx={{ ml: 'auto', color: 'text.secondary' }}>
+            <Typography variant="body2" sx={{ ml: 'auto', color: 'text.secondary', whiteSpace: 'nowrap' }}>
               {(() => {
                 const displayTotal = totalAmount && totalAmount > 1000 ? totalAmount : sortedIncidents.length;
                 const subOrgCount = Array.from(subOrgItems.values()).reduce((sum, { items }) => sum + items.length, 0);
@@ -1606,6 +1606,98 @@ const IncidentsPage = () => {
                 return `${displayTotal} incident${displayTotal !== 1 ? 's' : ''}${orgLabel}${totalPages > 1 ? ` · Page ${currentPage} of ${totalPages}` : ''}`;
               })()}
             </Typography>
+
+            {/* Organization multi-select dropdown */}
+            {isParentOrg && (
+              <Autocomplete
+                multiple
+                size="small"
+                options={[
+                  { id: currentOrgId || '', name: currentOrgName },
+                  ...subOrgs.filter(org => org.id !== currentOrgId),
+                ]}
+                getOptionLabel={(option) => option.name}
+                value={
+                  (filters.org || []).map(id => {
+                    if (id === currentOrgId) return { id: currentOrgId || '', name: currentOrgName };
+                    const found = subOrgs.find(o => o.id === id);
+                    return found || { id, name: id };
+                  })
+                }
+                onChange={(_, newValue) => {
+                  setFilters(prev => ({
+                    ...prev,
+                    org: newValue.length > 0 ? newValue.map(v => v.id) : null,
+                  }));
+                }}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                renderOption={(props, option) => {
+                  const count = option.id === currentOrgId
+                    ? incidents.length
+                    : subOrgItems.get(option.id)?.items.length || 0;
+                  const isOrgLoading = subOrgLoading.has(option.id);
+                  return (
+                    <li {...props} key={option.id}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                        <Typography sx={{ fontSize: '0.82rem' }}>{option.name}</Typography>
+                        {isOrgLoading ? (
+                          <CircularProgress size={12} sx={{ color: '#a78bfa', ml: 1 }} />
+                        ) : (
+                          <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', ml: 1 }}>
+                            {count}
+                          </Typography>
+                        )}
+                      </Box>
+                    </li>
+                  );
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    placeholder={filters.org && filters.org.length > 0 ? '' : 'Organizations'}
+                    sx={{ minWidth: 160 }}
+                  />
+                )}
+                renderTags={(value, getTagProps) =>
+                  value.map((option, index) => (
+                    <Chip
+                      {...getTagProps({ index })}
+                      key={option.id}
+                      label={option.name}
+                      size="small"
+                      sx={{
+                        backgroundColor: 'rgba(139, 92, 246, 0.15)',
+                        color: '#a78bfa',
+                        fontWeight: 500,
+                        fontSize: '0.7rem',
+                        height: 22,
+                        '& .MuiChip-deleteIcon': { color: '#a78bfa', fontSize: '0.85rem' },
+                      }}
+                    />
+                  ))
+                }
+                sx={{
+                  minWidth: 160,
+                  maxWidth: 320,
+                  '& .MuiOutlinedInput-root': {
+                    minHeight: 36,
+                    py: '2px',
+                  },
+                }}
+                slotProps={{
+                  paper: {
+                    sx: {
+                      bgcolor: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
+                      '& .MuiAutocomplete-option': {
+                        fontSize: '0.82rem',
+                        py: 0.75,
+                      },
+                    },
+                  },
+                }}
+              />
+            )}
           </Box>
         </CardContent>
       </Card>
