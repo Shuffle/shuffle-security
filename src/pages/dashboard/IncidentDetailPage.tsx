@@ -3590,7 +3590,7 @@ const IncidentDetailPage = () => {
                   try {
                     const parsed = JSON.parse(rawJsonText);
                     setIsSaving(true);
-                    const result = await setDatastoreItem(incident.id, parsed, DATASTORE_CATEGORIES.INCIDENTS);
+                    const result = await setDatastoreItem(incident.id, parsed, DATASTORE_CATEGORIES.INCIDENTS, crossOrgId || undefined);
                     if (result.success) {
                       toast.success('Raw data saved');
                       loadIncident(false);
