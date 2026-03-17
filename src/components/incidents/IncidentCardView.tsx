@@ -57,6 +57,9 @@ interface IncidentCardViewProps {
   ingestionApps?: IngestionApp[];
   resyncingIds?: Set<string>;
   resyncingSource?: string;
+  orgFilterNames?: string[];
+  totalOrgCount?: number;
+  onResetOrgFilter?: () => void;
 }
 
 // Skeleton card component for loading state
