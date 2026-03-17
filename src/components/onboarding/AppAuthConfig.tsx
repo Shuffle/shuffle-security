@@ -227,7 +227,34 @@ export const AppAuthCard = ({
   // Track which auth ID is currently being tested (to avoid updating wrong auth on switch)
   const [testingAuthId, setTestingAuthId] = useState<string | null>(null);
   
-  // Get current test status for selected auth
+  // Delete auth state
+  const [deleteConfirmAuthId, setDeleteConfirmAuthId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDeleteAuth = async (authId: string) => {
+    setDeleting(true);
+    try {
+      const response = await fetch(getApiUrl(`/api/v1/apps/authentication/${authId}`), {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: { ...getAuthHeader() },
+      });
+      if (response.ok) {
+        // If we deleted the selected auth, reset selection
+        if (selectedAuthId === authId) {
+          setSelectedAuthId(ADD_NEW_AUTH);
+          setUserHasSelected(false);
+        }
+        if (onRefreshAuth) await onRefreshAuth();
+      }
+    } catch (err) {
+      console.error('Failed to delete auth:', err);
+    } finally {
+      setDeleting(false);
+      setDeleteConfirmAuthId(null);
+    }
+  };
+
   const localTestStatus = testStatusPerAuth[selectedAuthId] || 'untested';
   
   // Track if the selected auth was already validated BEFORE we started testing
