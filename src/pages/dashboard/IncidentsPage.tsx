@@ -990,6 +990,71 @@ const IncidentsPage = () => {
     return sorted;
   }, [filteredIncidents, sortBy, sortDirection]);
 
+  // Determine if all selected incidents are already resolved
+  const selectedIncidentsList = useMemo(() => incidents.filter(i => selectedIds.has(i.id)), [incidents, selectedIds]);
+  const allSelectedResolved = selectedIds.size > 0 && selectedIncidentsList.every(i => i.status.toLowerCase() === 'resolved');
+  const someSelectedResolved = selectedIds.size > 0 && selectedIncidentsList.some(i => i.status.toLowerCase() === 'resolved');
+
+  const handleBulkReopen = useCallback(async () => {
+    if (selectedIds.size === 0) return;
+    setIsBulkResolving(true);
+
+    const updates = selectedIncidentsList
+      .filter(i => i.status.toLowerCase() === 'resolved')
+      .map(async (incident) => {
+        const reopenActivity: ActivityItem = {
+          id: `status-${Date.now()}-${incident.id}`,
+          type: 'status',
+          user: currentUsername,
+          timestamp: Date.now(),
+          content: 'Reopened incident',
+          details: {},
+          attachments: [],
+        };
+
+        const rawOCSF = incident.rawOCSF || {} as OCSFIncidentFinding;
+        const existingActivity = (rawOCSF as any).activity || [];
+
+        const updated = {
+          ...rawOCSF,
+          class_uid: 2005 as const,
+          class_name: 'Incident Finding' as const,
+          finding_uid: rawOCSF.finding_uid || incident.id,
+          title: rawOCSF.title || incident.title,
+          status_id: 1,
+          status: 'New',
+          status_detail: '',
+          activity: [...existingActivity, reopenActivity],
+        };
+
+        const rawKey = toRawIncidentKey(incident.id);
+        const primaryResult = await setDatastoreItem(rawKey, updated, DATASTORE_CATEGORIES.INCIDENTS);
+
+        if (incident.sharedOrgs && incident.sharedOrgs.length > 0) {
+          Promise.allSettled(
+            incident.sharedOrgs.map(org =>
+              setDatastoreItem(rawKey, updated, DATASTORE_CATEGORIES.INCIDENTS, org.orgId)
+            )
+          );
+        }
+
+        return primaryResult;
+      });
+
+    const results = await Promise.all(updates);
+    const successCount = results.filter(r => r.success).length;
+
+    setIsBulkResolving(false);
+
+    if (successCount > 0) {
+      toast.success(`Reopened ${successCount} incident${successCount !== 1 ? 's' : ''}`);
+    } else {
+      toast.warning('Failed to reopen incidents');
+    }
+
+    setSelectedIds(new Set());
+    await fetchItems();
+  }, [selectedIds, selectedIncidentsList, currentUsername, fetchItems]);
 
   const getIncidentUrl = (incident: DisplayIncident) => {
     const isInvalidData = (!incident.title || incident.title === 'Untitled Incident' || incident.title === 'Requires sync') && !incident.source;
