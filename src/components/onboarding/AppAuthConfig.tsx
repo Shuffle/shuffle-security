@@ -529,10 +529,15 @@ export const AppAuthCard = ({
             const authUrl = `https://shuffler.io/appauth?app_id=${app.objectID}&source=shuffle`;
             const popup = window.open(authUrl, '_blank', 'width=600,height=700');
             if (popup && onRefreshAuth) {
-              const pollTimer = setInterval(() => {
+              // Poll both for auth changes (every 3s) and popup close (every 500ms)
+              const authPollTimer = setInterval(() => {
+                onRefreshAuth();
+              }, 3000);
+              const closePollTimer = setInterval(() => {
                 if (popup.closed) {
-                  clearInterval(pollTimer);
-                  onRefreshAuth();
+                  clearInterval(closePollTimer);
+                  clearInterval(authPollTimer);
+                  onRefreshAuth(); // Final refresh on close
                 }
               }, 500);
             }
