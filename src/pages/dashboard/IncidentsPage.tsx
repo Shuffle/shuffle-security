@@ -1115,12 +1115,11 @@ const IncidentsPage = () => {
           delete (updated.metadata.extensions.custom_attributes as Record<string, unknown>).activity;
         }
         
-        // Primary save
-        const primaryResult = await setDatastoreItem(incident.id, updated, DATASTORE_CATEGORIES.INCIDENTS);
+        const rawKey = toRawIncidentKey(incident.id);
+        const primaryResult = await setDatastoreItem(rawKey, updated, DATASTORE_CATEGORIES.INCIDENTS);
         
         // Sync to shared orgs (fire-and-forget)
         if (incident.sharedOrgs && incident.sharedOrgs.length > 0) {
-          const rawKey = incident.id.includes('::') ? incident.id.split('::')[1] : incident.id;
           Promise.allSettled(
             incident.sharedOrgs.map(org =>
               setDatastoreItem(rawKey, updated, DATASTORE_CATEGORIES.INCIDENTS, org.orgId)
