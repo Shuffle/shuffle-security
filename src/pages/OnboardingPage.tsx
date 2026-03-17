@@ -749,6 +749,7 @@ const OnboardingPage = () => {
   const canProceed = () => {
     const currentKey = steps[activeStep]?.key;
     if (currentKey === 'welcome') return selectedChallenge !== null;
+    if (currentKey === 'sources') return selectedApps.length > 0;
     if (currentKey === 'tools') return true; // optional
     if (currentKey === 'authenticate') {
       return selectedApps.some((app) => {
