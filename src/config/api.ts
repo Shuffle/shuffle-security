@@ -27,7 +27,7 @@ export const isDevEnvironment = (): boolean => {
 };
 
 /** Check if running on a known Shuffle Cloud domain */
-const isCloudDomain = (): boolean => {
+export const isCloudDomain = (): boolean => {
   const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
   return CLOUD_DOMAINS.includes(hostname);
 };
