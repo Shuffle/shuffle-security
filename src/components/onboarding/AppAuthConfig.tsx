@@ -1581,7 +1581,7 @@ export const AppAuthCard = ({
                       </Alert>
                     )}
 
-                    {/* Save button only - Test Connection is available after selecting saved auth */}
+                    {/* Save button for non-OAuth2 apps */}
                     {!isOAuth2 && (
                       <Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 1.5 }}>
                         <Button
@@ -1613,6 +1613,81 @@ export const AppAuthCard = ({
                           }}
                         >
                           {saving ? 'Saving...' : 'Save Authentication'}
+                        </Button>
+                      </Box>
+                    )}
+
+                    {/* Save & Authenticate button for OAuth2 apps with manual credentials */}
+                    {isOAuth2 && (
+                      <Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 1.5 }}>
+                        <Button
+                          variant="outlined"
+                          size="medium"
+                          startIcon={
+                            saving ? (
+                              <CircularProgress size={16} sx={{ color: 'inherit' }} />
+                            ) : app.image_url ? (
+                              <Box
+                                component="img"
+                                src={app.image_url}
+                                alt={app.name}
+                                sx={{ width: 20, height: 20, borderRadius: 0.5, objectFit: 'contain' }}
+                              />
+                            ) : (
+                              <LockIcon sx={{ fontSize: 18 }} />
+                            )
+                          }
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            setSaving(true);
+                            const success = await onSaveAuth(app.objectID, localCredentials);
+                            setSaving(false);
+                            if (success) {
+                              setSaveSuccess(true);
+                              setUserHasSelected(false);
+                              setLocalCredentials({});
+                              setFieldErrors({});
+                              // Open OAuth popup after saving
+                              const authUrl = `https://shuffler.io/appauth?app_id=${app.objectID}&source=shuffle`;
+                              const popup = window.open(authUrl, '_blank', 'width=600,height=700');
+                              if (popup && onRefreshAuth) {
+                                const authPollTimer = setInterval(() => {
+                                  onRefreshAuth();
+                                }, 3000);
+                                const closePollTimer = setInterval(() => {
+                                  if (popup.closed) {
+                                    clearInterval(closePollTimer);
+                                    clearInterval(authPollTimer);
+                                    onRefreshAuth();
+                                  }
+                                }, 500);
+                              }
+                            } else {
+                              setSaveSuccess(false);
+                            }
+                          }}
+                          disabled={saving || (!localCredentials['client_id']?.trim() && !localCredentials['client_secret']?.trim())}
+                          sx={{
+                            borderColor: 'rgba(255, 102, 0, 0.5)',
+                            color: '#FF6600',
+                            fontWeight: 600,
+                            textTransform: 'none',
+                            fontSize: '0.9rem',
+                            px: 3,
+                            py: 1,
+                            borderRadius: 2,
+                            transition: 'all 0.2s ease',
+                            '&:hover': {
+                              borderColor: '#FF6600',
+                              backgroundColor: 'rgba(255, 102, 0, 0.08)',
+                            },
+                            '&.Mui-disabled': {
+                              borderColor: 'rgba(255, 255, 255, 0.1)',
+                              color: 'rgba(255, 255, 255, 0.3)',
+                            },
+                          }}
+                        >
+                          {saving ? 'Saving...' : 'Save & Authenticate'}
                         </Button>
                       </Box>
                     )}
