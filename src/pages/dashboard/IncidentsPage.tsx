@@ -1055,7 +1055,9 @@ const IncidentsPage = () => {
     !filters.tlp && 
     !filters.source &&
     !filters.tag &&
-    (!filters.org || filters.org.length === 0) &&
+    (parentOrg
+      ? (filters.org?.length === 1 && filters.org[0] === currentOrgId)
+      : (!filters.org || filters.org.length === 0)) &&
     filters.assignee === null && 
     !searchQuery.trim() &&
     Array.isArray(filters.status) && 
