@@ -1653,7 +1653,7 @@ const IncidentDetailPage = () => {
             alignItems: 'center',
             gap: 1,
           }}>
-            <Globe size={14} style={{ color: '#a78bfa', flexShrink: 0 }} />
+            <LanguageIcon sx={{ fontSize: 16, color: '#a78bfa', flexShrink: 0 }} />
             <Typography sx={{ fontSize: '0.82rem', color: 'hsl(var(--foreground))' }}>
               Viewing incident from another organization
             </Typography>
