@@ -1484,7 +1484,7 @@ const IncidentsPage = () => {
             <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
               {filters.assignee && filters.assignee !== 'all' && (
                 <Chip
-                  label={`Assignee: ${filters.assignee === 'unassigned' ? 'Unassigned' : filters.assignee}`}
+                  label={filters.assignee === 'unassigned' ? 'Unassigned' : filters.assignee}
                   size="small"
                   onDelete={() => setFilters(prev => ({ ...prev, assignee: null }))}
                   sx={{
