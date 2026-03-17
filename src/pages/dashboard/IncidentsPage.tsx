@@ -359,10 +359,13 @@ const IncidentsPage = () => {
 
   // Fetch incidents from all sub-orgs in parallel
   const fetchSubOrgIncidents = useCallback(async () => {
-    // Only fetch cross-org incidents when we have child orgs (we are a parent)
-    if (subOrgs.length === 0) return;
-
-    const orgsToFetch = subOrgs.filter(o => o.id !== currentOrgId);
+    // Build list of all orgs to fetch (sub-orgs + parent org, excluding current)
+    const orgsToFetch = [
+      ...subOrgs.filter(o => o.id !== currentOrgId),
+    ];
+    if (parentOrg && parentOrg.id !== currentOrgId && !orgsToFetch.some(o => o.id === parentOrg.id)) {
+      orgsToFetch.push(parentOrg);
+    }
     if (orgsToFetch.length === 0) return;
 
     const loadingIds = new Set(orgsToFetch.map(o => o.id));
@@ -404,14 +407,14 @@ const IncidentsPage = () => {
 
     setSubOrgItems(newMap);
     setSubOrgLoading(new Set());
-  }, [subOrgs, isParentOrg, currentOrgId]);
+  }, [subOrgs, parentOrg, currentOrgId]);
 
-  // Fetch sub-org incidents when we are the parent org
+  // Fetch other org incidents when multi-tenant view is available
   useEffect(() => {
-    if (isParentOrg && subOrgs.length > 0) {
+    if (isParentOrg) {
       fetchSubOrgIncidents();
     }
-  }, [isParentOrg, subOrgs, fetchSubOrgIncidents]);
+  }, [isParentOrg, fetchSubOrgIncidents]);
 
   // Get valid usernames for assignee validation
   const validUsernames = useMemo(() => {
