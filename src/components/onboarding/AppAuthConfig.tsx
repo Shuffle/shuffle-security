@@ -103,6 +103,9 @@ interface AppAuthentication {
   token_uri?: string;
   refresh_uri?: string;
   authorization_url?: string;
+  // Common alternative field names for the authorization endpoint
+  auth_uri?: string;
+  authorize_url?: string;
   scope?: string[];
   client_id?: string;
   client_secret?: string;
@@ -446,6 +449,7 @@ export const AppAuthCard = ({
         if (data.success && data.app) {
           const decodedAppString = atob(data.app);
           const decodedApp = JSON.parse(decodedAppString) as DecodedApp;
+          console.log('[AppAuthCard] Decoded auth config for', decodedApp.name, ':', JSON.stringify(decodedApp.authentication, null, 2));
           setAppConfig(decodedApp);
         } else {
           throw new Error('Invalid response format');
@@ -1749,8 +1753,18 @@ export const AppAuthCard = ({
 
                       // Build the direct OAuth2 authorization URL with state
                       const buildOAuth2Url = (): string | null => {
-                        if (!auth?.authorization_url || !localCredentials['client_id']?.trim()) return null;
-                        const redirectUri = auth.redirect_uri || 'https://shuffler.io/set_authentication';
+                        if (!localCredentials['client_id']?.trim()) return null;
+                        
+                        // Resolve authorization URL from multiple possible fields,
+                        // or derive from token_uri (common pattern: /token → /authorize)
+                        const authorizationUrl = auth?.authorization_url 
+                          || auth?.auth_uri 
+                          || auth?.authorize_url
+                          || (auth?.token_uri ? auth.token_uri.replace(/\/token\b.*$/, '/authorize') : null);
+                        
+                        if (!authorizationUrl) return null;
+                        
+                        const redirectUri = auth?.redirect_uri || 'https://shuffler.io/set_authentication';
                         const scopes = selectedScopes.join(' ');
                         const clientId = localCredentials['client_id'].trim();
                         const clientSecret = localCredentials['client_secret']?.trim() || '';
@@ -1762,13 +1776,13 @@ export const AppAuthCard = ({
                           app_name: app.name,
                           app_id: app.objectID,
                           app_version: app.app_version || '1.0.0',
-                          authentication_url: auth.token_uri || '',
+                          authentication_url: auth?.token_uri || '',
                           scope: scopes,
                           client_id: clientId,
                           client_secret: clientSecret,
                           org_id: 'undefined',
-                          oauth_url: auth.token_uri?.replace(/\/token.*$/, '') || '',
-                          refresh_uri: auth.refresh_uri || auth.token_uri || '',
+                          oauth_url: auth?.token_uri?.replace(/\/token.*$/, '') || '',
+                          refresh_uri: auth?.refresh_uri || auth?.token_uri || '',
                         });
 
                         const params = new URLSearchParams({
@@ -1780,7 +1794,9 @@ export const AppAuthCard = ({
                           state: stateParams.toString(),
                           access_type: 'offline',
                         });
-                        return `${auth.authorization_url}?${params.toString()}`;
+
+                        console.log('[OAuth2] Built direct auth URL:', `${authorizationUrl}?${params.toString()}`);
+                        return `${authorizationUrl}?${params.toString()}`;
                       };
 
                       return (
