@@ -2105,7 +2105,7 @@ const IncidentDetailPage = () => {
                   setForwardingAppsLoading(true);
                   fetch(getApiUrl('/api/v1/apps/authentication'), {
                     credentials: 'include',
-                    headers: { ...getAuthHeader() },
+                    headers: { ...getAuthHeader(), ...crossOrgHeaders },
                   })
                     .then(r => r.json())
                     .then(result => {
