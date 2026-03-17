@@ -1541,7 +1541,7 @@ const IncidentsPage = () => {
 
               {filters.source && (
                 <Chip
-                  label={`Source: ${filters.source}`}
+                  label={filters.source}
                   size="small"
                   onDelete={() => setFilters(prev => ({ ...prev, source: null }))}
                   avatar={
