@@ -1709,7 +1709,7 @@ const IncidentsPage = () => {
                   <TextField
                     {...params}
                     placeholder="Orgs"
-                    sx={{ minWidth: 80, width: 80 }}
+                    sx={{ minWidth: 100, width: 100 }}
                     InputProps={{
                       ...params.InputProps,
                       startAdornment: null,
@@ -1718,8 +1718,8 @@ const IncidentsPage = () => {
                 )}
                 renderTags={() => null}
                 sx={{
-                  minWidth: 80,
-                  width: 80,
+                  minWidth: 100,
+                  width: 100,
                   '& .MuiOutlinedInput-root': {
                     minHeight: 36,
                     py: '2px',
@@ -1730,6 +1730,8 @@ const IncidentsPage = () => {
                     sx: {
                       bgcolor: 'hsl(var(--card))',
                       border: '1px solid hsl(var(--border))',
+                      minWidth: 200,
+                      maxWidth: 300,
                       '& .MuiAutocomplete-option': {
                         fontSize: '0.82rem',
                         py: 0.75,
