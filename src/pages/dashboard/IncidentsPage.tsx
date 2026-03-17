@@ -650,15 +650,16 @@ const IncidentsPage = () => {
 
     // Parse sub-org incidents and tag with org info
     const subOrgIncidents: DisplayIncident[] = [];
-    subOrgItems.forEach(({ orgName, items }, orgId) => {
+    subOrgItems.forEach(({ orgName, orgImage, items }, orgId) => {
       items.forEach((item: any) => {
         const parsed = parseIncidentFromDatastore(item);
         if (parsed) {
           subOrgIncidents.push({
             ...parsed,
-            id: `${orgId}::${parsed.id}`, // Namespace IDs to avoid collisions
+            id: `${orgId}::${parsed.id}`,
             orgId,
             orgName,
+            orgImage,
           });
         }
       });
