@@ -11,10 +11,12 @@ export interface SubOrg {
   image?: string;
   creator_org?: string;
   region_url?: string;
+  isParent?: boolean;
 }
 
 interface UseSubOrgsReturn {
   subOrgs: SubOrg[];
+  parentOrg: SubOrg | null;
   isLoading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
@@ -23,6 +25,7 @@ interface UseSubOrgsReturn {
 
 export const useSubOrgs = (currentOrgId: string | undefined): UseSubOrgsReturn => {
   const [subOrgs, setSubOrgs] = useState<SubOrg[]>([]);
+  const [parentOrg, setParentOrg] = useState<SubOrg | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,12 +63,28 @@ export const useSubOrgs = (currentOrgId: string | undefined): UseSubOrgsReturn =
           creator_org: org.creator_org,
           region_url: org.region_url || undefined,
         })));
+
+        // Extract parent org if available
+        const parent = data.parentOrg || data.parent_org;
+        if (parent && parent.id) {
+          setParentOrg({
+            id: parent.id,
+            name: parent.name || parent.id,
+            image: parent.image,
+            creator_org: parent.creator_org,
+            region_url: parent.region_url || undefined,
+            isParent: true,
+          });
+        } else {
+          setParentOrg(null);
+        }
       } else {
         setSubOrgs([]);
+        setParentOrg(null);
       }
     } catch (err) {
-      console.warn('[SubOrgs] Failed to fetch sub-orgs:', err);
       setSubOrgs([]);
+      setParentOrg(null);
     } finally {
       setIsLoading(false);
     }
@@ -77,9 +96,10 @@ export const useSubOrgs = (currentOrgId: string | undefined): UseSubOrgsReturn =
 
   return {
     subOrgs,
+    parentOrg,
     isLoading,
     error,
     refetch: fetchSubOrgs,
-    isParentOrg: subOrgs.length > 0,
+    isParentOrg: subOrgs.length > 0 || parentOrg !== null,
   };
 };
