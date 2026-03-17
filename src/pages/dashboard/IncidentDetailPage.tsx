@@ -597,6 +597,14 @@ const IncidentDetailPage = () => {
     orgId: crossOrgId || undefined,
   });
 
+  const { subOrgs, parentOrg } = useSubOrgs(userInfo?.active_org?.id);
+  const crossOrgInfo = useMemo(() => {
+    if (!crossOrgId) return null;
+    if (parentOrg && parentOrg.id === crossOrgId) return { name: parentOrg.name, image: parentOrg.image };
+    const found = subOrgs.find(o => o.id === crossOrgId);
+    return found ? { name: found.name, image: found.image } : null;
+  }, [crossOrgId, subOrgs, parentOrg]);
+
   // Fetch agent runs for this incident — deferred until incident loaded
   const { runsForIncident: agentRuns, isLoading: agentRunsLoading } = useIncidentAgentRuns(!loading ? id : undefined);
 
