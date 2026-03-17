@@ -1610,6 +1610,7 @@ const IncidentsPage = () => {
             {isParentOrg && (
               <Autocomplete
                 multiple
+                disableCloseOnSelect
                 size="small"
                 options={(() => {
                   const currentOrgImage = userInfo?.active_org?.image;
