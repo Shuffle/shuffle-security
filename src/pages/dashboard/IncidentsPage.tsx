@@ -1109,9 +1109,10 @@ const IncidentsPage = () => {
         
         // Sync to shared orgs (fire-and-forget)
         if (incident.sharedOrgs && incident.sharedOrgs.length > 0) {
+          const rawKey = incident.id.includes('::') ? incident.id.split('::')[1] : incident.id;
           Promise.allSettled(
             incident.sharedOrgs.map(org =>
-              setDatastoreItem(incident.id, updated, DATASTORE_CATEGORIES.INCIDENTS, org.orgId)
+              setDatastoreItem(rawKey, updated, DATASTORE_CATEGORIES.INCIDENTS, org.orgId)
             )
           );
         }
