@@ -1733,27 +1733,62 @@ const IncidentDetailPage = () => {
           <Typography variant="body2">Back to Incidents</Typography>
         </Box>
 
-        {/* Cross-org banner */}
-        {isCrossOrg && (
+        {/* Multi-org / Cross-org banner */}
+        {(isCrossOrg || sharedOrgs.length > 0) && (
           <Box sx={{
             mb: 2,
             px: 2,
-            py: 1,
+            py: 1.5,
             borderRadius: 1.5,
             bgcolor: 'rgba(139, 92, 246, 0.08)',
             border: '1px solid rgba(139, 92, 246, 0.25)',
             display: 'flex',
             alignItems: 'center',
             gap: 1.5,
+            flexWrap: 'wrap',
           }}>
-            {crossOrgInfo?.image ? (
-              <img src={crossOrgInfo.image} alt="" style={{ width: 20, height: 20, borderRadius: 4, objectFit: 'contain', flexShrink: 0 }} />
-            ) : (
-              <LanguageIcon sx={{ fontSize: 16, color: '#a78bfa', flexShrink: 0 }} />
+            <LanguageIcon sx={{ fontSize: 16, color: '#a78bfa', flexShrink: 0 }} />
+            {sharedOrgs.length > 0 ? (
+              <>
+                <Typography sx={{ fontSize: '0.82rem', color: 'hsl(var(--foreground))' }}>
+                  This incident exists in <strong>{sharedOrgs.length + 1} organizations</strong> — changes sync to all:
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
+                  {/* Show the "viewing" org first */}
+                  {(() => {
+                    const viewingOrg = isCrossOrg
+                      ? { name: crossOrgInfo?.name || crossOrgId, image: crossOrgInfo?.image }
+                      : { name: userInfo?.active_org?.name || '', image: userInfo?.active_org?.image };
+                    return (
+                      <Chip
+                        size="small"
+                        avatar={viewingOrg.image ? <img src={viewingOrg.image} alt="" style={{ width: 16, height: 16, borderRadius: 3 }} /> : undefined}
+                        label={viewingOrg.name}
+                        sx={{ height: 22, fontSize: '0.72rem', bgcolor: 'rgba(139, 92, 246, 0.2)', color: '#a78bfa', fontWeight: 600 }}
+                      />
+                    );
+                  })()}
+                  {sharedOrgs.map(org => (
+                    <Chip
+                      key={org.id}
+                      size="small"
+                      avatar={org.image ? <img src={org.image} alt="" style={{ width: 16, height: 16, borderRadius: 3 }} /> : undefined}
+                      label={org.name}
+                      sx={{ height: 22, fontSize: '0.72rem', bgcolor: 'rgba(255,255,255,0.06)', color: 'text.secondary' }}
+                    />
+                  ))}
+                </Box>
+              </>
+            ) : isCrossOrg && (
+              <>
+                {crossOrgInfo?.image ? (
+                  <img src={crossOrgInfo.image} alt="" style={{ width: 20, height: 20, borderRadius: 4, objectFit: 'contain', flexShrink: 0 }} />
+                ) : null}
+                <Typography sx={{ fontSize: '0.82rem', color: 'hsl(var(--foreground))' }}>
+                  Viewing incident for organization <strong>{crossOrgInfo?.name || crossOrgId}</strong>
+                </Typography>
+              </>
             )}
-            <Typography sx={{ fontSize: '0.82rem', color: 'hsl(var(--foreground))' }}>
-              Viewing incident for organization <strong>{crossOrgInfo?.name || crossOrgId}</strong>
-            </Typography>
           </Box>
         )}
 
