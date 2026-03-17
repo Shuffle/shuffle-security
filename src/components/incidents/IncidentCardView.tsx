@@ -539,7 +539,7 @@ export const IncidentCardView = ({
                         }}
                       />
                     </>
-                  )
+                  )}
                   {(incident.taskCount ?? 0) > 0 && (
                     <>
                       <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
