@@ -16,6 +16,7 @@ export interface SubOrg {
 
 interface UseSubOrgsReturn {
   subOrgs: SubOrg[];
+  parentOrg: SubOrg | null;
   isLoading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
