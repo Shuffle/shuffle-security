@@ -102,6 +102,7 @@ interface AppAuthentication {
   redirect_uri?: string;
   token_uri?: string;
   refresh_uri?: string;
+  authorization_url?: string;
   scope?: string[];
   client_id?: string;
   client_secret?: string;
