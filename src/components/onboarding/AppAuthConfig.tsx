@@ -538,61 +538,66 @@ export const AppAuthCard = ({
 
     const availableScopes = auth.scope || [];
 
+    const isCloudOrDev = isDevEnvironment() || isCloudDomain();
+
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        {/* Quick Connect Button - OAuth2 only */}
-        <Button
-          variant="outlined"
-          fullWidth
-          startIcon={
-            app.image_url ? (
-              <Box
-                component="img"
-                src={app.image_url}
-                alt={app.name}
-                sx={{ width: 24, height: 24, borderRadius: 1, objectFit: 'contain' }}
-              />
-            ) : <LockIcon />
-          }
-          onClick={() => {
-            const authUrl = `https://shuffler.io/appauth?app_id=${app.objectID}&source=shuffle`;
-            const popup = window.open(authUrl, '_blank', 'width=600,height=700');
-            if (popup && onRefreshAuth) {
-              // Poll both for auth changes (every 3s) and popup close (every 500ms)
-              const authPollTimer = setInterval(() => {
-                onRefreshAuth();
-              }, 3000);
-              const closePollTimer = setInterval(() => {
-                if (popup.closed) {
-                  clearInterval(closePollTimer);
-                  clearInterval(authPollTimer);
-                  onRefreshAuth(); // Final refresh on close
+        {/* Quick Connect Button - OAuth2 only, cloud/dev only */}
+        {isCloudOrDev && (
+          <>
+            <Button
+              variant="outlined"
+              fullWidth
+              startIcon={
+                app.image_url ? (
+                  <Box
+                    component="img"
+                    src={app.image_url}
+                    alt={app.name}
+                    sx={{ width: 24, height: 24, borderRadius: 1, objectFit: 'contain' }}
+                  />
+                ) : <LockIcon />
+              }
+              onClick={() => {
+                const authUrl = `https://shuffler.io/appauth?app_id=${app.objectID}&source=shuffle`;
+                const popup = window.open(authUrl, '_blank', 'width=600,height=700');
+                if (popup && onRefreshAuth) {
+                  const authPollTimer = setInterval(() => {
+                    onRefreshAuth();
+                  }, 3000);
+                  const closePollTimer = setInterval(() => {
+                    if (popup.closed) {
+                      clearInterval(closePollTimer);
+                      clearInterval(authPollTimer);
+                      onRefreshAuth();
+                    }
+                  }, 500);
                 }
-              }, 500);
-            }
-          }}
-          sx={{
-            py: 1.5,
-            borderColor: 'rgba(255, 102, 0, 0.4)',
-            color: 'white',
-            fontWeight: 600,
-            textTransform: 'none',
-            fontSize: '1rem',
-            '&:hover': {
-              borderColor: '#FF6600',
-              backgroundColor: 'rgba(255, 102, 0, 0.08)',
-            },
-          }}
-        >
-          Quick Connect with {app.name.replace(/_/g, ' ')}
-        </Button>
+              }}
+              sx={{
+                py: 1.5,
+                borderColor: 'rgba(255, 102, 0, 0.4)',
+                color: 'white',
+                fontWeight: 600,
+                textTransform: 'none',
+                fontSize: '1rem',
+                '&:hover': {
+                  borderColor: '#FF6600',
+                  backgroundColor: 'rgba(255, 102, 0, 0.08)',
+                },
+              }}
+            >
+              Quick Connect with {app.name.replace(/_/g, ' ')}
+            </Button>
 
-        {/* OR Divider */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Divider sx={{ flex: 1, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
-          <Typography sx={{ color: 'rgba(255, 255, 255, 0.4)', fontSize: '0.875rem' }}>OR configure manually</Typography>
-          <Divider sx={{ flex: 1, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
-        </Box>
+            {/* OR Divider */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Divider sx={{ flex: 1, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+              <Typography sx={{ color: 'rgba(255, 255, 255, 0.4)', fontSize: '0.875rem' }}>OR configure manually</Typography>
+              <Divider sx={{ flex: 1, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+            </Box>
+          </>
+        )}
 
         {/* Manual OAuth2 Fields */}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
