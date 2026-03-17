@@ -123,7 +123,7 @@ export const useDatastore = ({ category, orgId: overrideOrgId }: UseDatastoreOpt
       setError(err instanceof Error ? err.message : 'Unknown error');
       return false;
     }
-  }, [category, fetchItems]);
+  }, [category, fetchItems, overrideOrgId]);
 
   const addItems = useCallback(async (newItems: { key: string; value: string | object }[]): Promise<boolean> => {
     setError(null);
