@@ -1709,7 +1709,7 @@ const IncidentsPage = () => {
                   <TextField
                     {...params}
                     placeholder="Orgs"
-                    sx={{ minWidth: 80, width: 80 }}
+                    sx={{ minWidth: 100, width: 100 }}
                     InputProps={{
                       ...params.InputProps,
                       startAdornment: null,
