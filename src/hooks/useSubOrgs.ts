@@ -10,6 +10,7 @@ export interface SubOrg {
   name: string;
   image?: string;
   creator_org?: string;
+  region_url?: string;
 }
 
 interface UseSubOrgsReturn {
@@ -57,6 +58,7 @@ export const useSubOrgs = (currentOrgId: string | undefined): UseSubOrgsReturn =
           name: org.name || org.id,
           image: org.image,
           creator_org: org.creator_org,
+          region_url: org.region_url || undefined,
         })));
       } else {
         setSubOrgs([]);

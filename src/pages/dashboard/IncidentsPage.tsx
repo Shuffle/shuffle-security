@@ -365,7 +365,11 @@ const IncidentsPage = () => {
 
     const results = await Promise.allSettled(
       subOrgs.map(async (org) => {
-        const url = getApiUrl(`/api/v1/orgs/${org.id}/list_cache?category=${encodeURIComponent(DATASTORE_CATEGORIES.INCIDENTS)}&top=1000`);
+        // Use region-specific URL if the sub-org is in a different region (cloud only)
+        const baseUrl = org.region_url ? org.region_url.replace(/\/+$/, '') : '';
+        const url = baseUrl
+          ? `${baseUrl}/api/v1/orgs/${org.id}/list_cache?category=${encodeURIComponent(DATASTORE_CATEGORIES.INCIDENTS)}&top=1000`
+          : getApiUrl(`/api/v1/orgs/${org.id}/list_cache?category=${encodeURIComponent(DATASTORE_CATEGORIES.INCIDENTS)}&top=1000`);
         const response = await fetch(url, {
           method: 'GET',
           credentials: 'include',
