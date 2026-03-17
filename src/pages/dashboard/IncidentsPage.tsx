@@ -1514,7 +1514,7 @@ const IncidentsPage = () => {
               {filters.status && (
                 Array.isArray(filters.status) ? (
                   <Chip
-                    label={`Status: ${filters.status.map(s => statusConfig[s]?.label || s).join(' / ')}`}
+                    label={filters.status.map(s => statusConfig[s]?.label || s).join(' / ')}
                     size="small"
                     onDelete={() => setFilters(prev => ({ ...prev, status: null }))}
                     sx={{ 
