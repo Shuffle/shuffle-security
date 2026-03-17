@@ -1684,7 +1684,14 @@ const IncidentsPage = () => {
                   return (
                     <li {...props} key={option.id}>
                       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                        <Typography sx={{ fontSize: '0.82rem' }}>{option.name}</Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          {option.image ? (
+                            <img src={option.image} alt="" style={{ width: 20, height: 20, borderRadius: 4, objectFit: 'contain', flexShrink: 0 }} />
+                          ) : (
+                            <Box sx={{ width: 20, height: 20, borderRadius: '4px', bgcolor: 'hsl(var(--muted) / 0.5)', flexShrink: 0 }} />
+                          )}
+                          <Typography sx={{ fontSize: '0.82rem' }}>{option.name}</Typography>
+                        </Box>
                         {isOrgLoading ? (
                           <CircularProgress size={12} sx={{ color: '#a78bfa', ml: 1 }} />
                         ) : (
