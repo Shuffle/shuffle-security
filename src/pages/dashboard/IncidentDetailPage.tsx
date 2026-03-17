@@ -2898,7 +2898,7 @@ const IncidentDetailPage = () => {
         </Box>
       )}
 
-      {activeTab === 1 && (
+      {activeTab === 0 && (
         /* Details Tab */
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {/* Metadata Section - now includes Description */}
