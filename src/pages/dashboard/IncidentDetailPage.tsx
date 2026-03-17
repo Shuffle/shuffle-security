@@ -831,7 +831,7 @@ const IncidentDetailPage = () => {
         const response = await fetch(getApiUrl('/api/v1/apps/categories/run'), {
           method: 'POST',
           credentials: 'include',
-          headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+          headers: { 'Content-Type': 'application/json', ...getAuthHeader(), ...crossOrgHeaders },
           body: JSON.stringify({
             action: 'get_ticket',
             category: 'cases',
