@@ -37,7 +37,7 @@ import { deduplicateTasks, decodeHtmlEntities } from '@/lib/utils';
 import { ResolveIncidentDialog, ResolutionData, RESOLUTION_REASONS } from '@/components/incidents/ResolveIncidentDialog';
 import { CategoryAutomationsDialog } from '@/components/incidents/CategoryAutomationsDialog';
 import { extractValidatedIngestionApps, ValidatedIngestionApp, findIngestTicketsWorkflow, extractWorkflowAppNames, normalizeAppName, isWorkflowScheduleStopped } from '@/lib/ingestionDetection';
-import { getApiUrl, getAuthHeader } from '@/config/api';
+import { getApiUrl, getAuthHeader, isDevEnvironment } from '@/config/api';
 import DownloadIcon from '@mui/icons-material/Download';
 import { IncidentCardView } from '@/components/incidents/IncidentCardView';
 import { IncidentStatsCards } from '@/components/incidents/IncidentStatsCards';
@@ -365,8 +365,9 @@ const IncidentsPage = () => {
 
     const results = await Promise.allSettled(
       subOrgs.map(async (org) => {
-        // Use region-specific URL if the sub-org is in a different region (cloud only)
-        const baseUrl = org.region_url ? org.region_url.replace(/\/+$/, '') : '';
+        // Use region-specific URL only for cloud domains (not dev/self-hosted)
+        const useRegionUrl = org.region_url && !isDevEnvironment();
+        const baseUrl = useRegionUrl ? org.region_url!.replace(/\/+$/, '') : '';
         const url = baseUrl
           ? `${baseUrl}/api/v1/orgs/${org.id}/list_cache?category=${encodeURIComponent(DATASTORE_CATEGORIES.INCIDENTS)}&top=1000`
           : getApiUrl(`/api/v1/orgs/${org.id}/list_cache?category=${encodeURIComponent(DATASTORE_CATEGORIES.INCIDENTS)}&top=1000`);
