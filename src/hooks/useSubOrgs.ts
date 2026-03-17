@@ -100,7 +100,7 @@ export const useSubOrgs = (currentOrgId: string | undefined): UseSubOrgsReturn =
     isLoading,
     error,
     refetch: fetchSubOrgs,
-    // We are a "parent org" only if we have child orgs and no parent above us
-    isParentOrg: subOrgs.length > 0 && parentOrg === null,
+    // Multi-tenant view is available when we have child orgs or a parent org
+    isParentOrg: subOrgs.length > 0 || parentOrg !== null,
   };
 };
