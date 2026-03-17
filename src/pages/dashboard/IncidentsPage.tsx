@@ -1057,7 +1057,8 @@ const IncidentsPage = () => {
 
   // Show empty state when no relevant incidents exist (after loading completes)
   // But NOT when there was a load error — show error state instead
-  if (hasFetched && !isLoading && relevantIncidents.length === 0 && irrelevantCount === 0) {
+  // Also suppress during refreshes to prevent flash between skeleton and empty state
+  if (hasFetched && !isLoading && !isRefreshing && relevantIncidents.length === 0 && irrelevantCount === 0) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
