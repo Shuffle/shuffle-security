@@ -38,7 +38,7 @@ interface UseDatastoreReturn {
   removeItem: (key: string) => Promise<boolean>;
 }
 
-export const useDatastore = ({ category }: UseDatastoreOptions): UseDatastoreReturn => {
+export const useDatastore = ({ category, orgId: overrideOrgId }: UseDatastoreOptions): UseDatastoreReturn => {
   const [items, setItems] = useState<DatastoreItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
