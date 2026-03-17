@@ -306,13 +306,37 @@ const OnboardingPage = () => {
     }
   }, [workflowAppNames]);
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (activeStep === steps.length - 1) {
       const connectedApps = selectedApps.filter(
         (app) => authStates[app.objectID]?.status === 'connected'
       );
       localStorage.setItem('connected_integrations', JSON.stringify(connectedApps));
       trackPredefinedEvent(GA_EVENTS.ONBOARDING_COMPLETE, undefined, connectedApps.length);
+
+      // Generate the ingestion workflow and webhook workflow in parallel
+      const appNames = selectedApps.map(app => app.name).join(',');
+      await Promise.allSettled([
+        fetch(getApiUrl('/api/v2/workflows/generate'), {
+          method: 'POST',
+          credentials: 'include',
+          headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            label: 'Ingest Tickets',
+            app_name: appNames,
+            category: 'cases',
+          }),
+        }),
+        fetch(getApiUrl('/api/v2/workflows/generate'), {
+          method: 'POST',
+          credentials: 'include',
+          headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            label: 'Ingest Tickets_webhook',
+          }),
+        }),
+      ]);
+
       navigate('/incidents?autoSync=1');
     } else {
       const nextStep = activeStep + 1;
