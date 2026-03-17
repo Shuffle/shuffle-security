@@ -318,7 +318,7 @@ const IncidentsPage = () => {
   const { users, loading: usersLoading } = useUsers();
 
   const [searchParams, setSearchParams] = useSearchParams();
-  const [filters, setFilters] = useState<Filters>({ severity: null, status: null, tlp: null, assignee: null, source: null, tag: null });
+  const [filters, setFilters] = useState<Filters>({ severity: null, status: null, tlp: null, assignee: null, source: null, tag: null, org: null });
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [automationsDialogOpen, setAutomationsDialogOpen] = useState(false);
   const [categoryAutomations, setCategoryAutomations] = useState<CategoryAutomation[] | null>(null);
