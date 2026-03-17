@@ -1601,10 +1601,8 @@ const IncidentsPage = () => {
             <Typography variant="body2" sx={{ ml: 'auto', color: 'text.secondary', whiteSpace: 'nowrap' }}>
               {(() => {
                 const displayTotal = totalAmount && totalAmount > 1000 ? totalAmount : sortedIncidents.length;
-                const subOrgCount = Array.from(subOrgItems.values()).reduce((sum, { items }) => sum + items.length, 0);
                 const totalPages = Math.ceil(displayTotal / ITEMS_PER_PAGE);
-                const orgLabel = subOrgCount > 0 ? ` (${subOrgs.length + 1} orgs)` : '';
-                return `${displayTotal} incident${displayTotal !== 1 ? 's' : ''}${orgLabel}${totalPages > 1 ? ` · Page ${currentPage} of ${totalPages}` : ''}`;
+                return `${displayTotal} incident${displayTotal !== 1 ? 's' : ''}${totalPages > 1 ? ` · Page ${currentPage} of ${totalPages}` : ''}`;
               })()}
             </Typography>
 
