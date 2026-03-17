@@ -319,3 +319,83 @@ export function isAIAssignee(assignee?: string): boolean {
   const normalized = assignee.toLowerCase().replace(/\s+/g, '');
   return normalized === 'agent' || normalized === 'aiagent' || normalized.includes('aiagent');
 }
+
+/**
+ * Deep-merge two incident data objects with conflict resolution:
+ * - Scalars: keep the value from whichever object was edited most recently
+ * - Objects: recursively merge keys
+ * - Arrays: concatenate and deduplicate (by JSON equality for primitives, by 'id'/'key' for objects)
+ * 
+ * @param base - The primary/base incident data
+ * @param overlay - The secondary data to merge in
+ * @param baseEdited - epoch timestamp of when base was last edited
+ * @param overlayEdited - epoch timestamp of when overlay was last edited
+ * @returns The merged object
+ */
+export function deepMergeIncidents<T extends Record<string, any>>(
+  base: T,
+  overlay: T,
+  baseEdited: number,
+  overlayEdited: number,
+): T {
+  const result: Record<string, any> = { ...base };
+
+  for (const key of Object.keys(overlay)) {
+    const bVal = base[key];
+    const oVal = overlay[key];
+
+    // If only one side has it, take whichever exists
+    if (bVal === undefined || bVal === null || bVal === '') {
+      result[key] = oVal;
+      continue;
+    }
+    if (oVal === undefined || oVal === null || oVal === '') {
+      continue; // keep base
+    }
+
+    // Both sides have values
+    if (Array.isArray(bVal) && Array.isArray(oVal)) {
+      // Merge arrays: concat and deduplicate
+      result[key] = mergeArrays(bVal, oVal);
+    } else if (isPlainObject(bVal) && isPlainObject(oVal)) {
+      // Recursively merge objects
+      result[key] = deepMergeIncidents(bVal, oVal, baseEdited, overlayEdited);
+    } else {
+      // Scalar conflict: latest edit wins
+      result[key] = overlayEdited > baseEdited ? oVal : bVal;
+    }
+  }
+
+  return result as T;
+}
+
+function isPlainObject(val: any): val is Record<string, any> {
+  return val !== null && typeof val === 'object' && !Array.isArray(val) && !(val instanceof Date);
+}
+
+function mergeArrays(a: any[], b: any[]): any[] {
+  const seen = new Set<string>();
+  const merged: any[] = [];
+
+  const addItem = (item: any) => {
+    // For objects with id or key, deduplicate by that
+    if (isPlainObject(item) && (item.id || item.key)) {
+      const dedupeKey = String(item.id || item.key);
+      if (!seen.has(dedupeKey)) {
+        seen.add(dedupeKey);
+        merged.push(item);
+      }
+    } else {
+      // For primitives/other, deduplicate by JSON string
+      const json = JSON.stringify(item);
+      if (!seen.has(json)) {
+        seen.add(json);
+        merged.push(item);
+      }
+    }
+  };
+
+  a.forEach(addItem);
+  b.forEach(addItem);
+  return merged;
+}
