@@ -31,7 +31,7 @@ import { useDatastore } from '@/hooks/useDatastore';
 import { useAuth } from '@/context/AuthContext';
 import { useSubOrgs } from '@/hooks/useSubOrgs';
 import { useUsers } from '@/hooks/useUsers';
-import { DATASTORE_CATEGORIES, getDatastoreByCategory, getDatastoreItem, setDatastoreItems, CategoryAutomation, deleteDatastoreItems } from '@/services/datastore';
+import { DATASTORE_CATEGORIES, getDatastoreByCategory, getDatastoreItem, setDatastoreItem, setDatastoreItems, CategoryAutomation, deleteDatastoreItem, deleteDatastoreItems } from '@/services/datastore';
 import { CreateIncidentDialog, ActivityItem } from '@/components/incidents/CreateIncidentDialog';
 import { OCSFIncidentFinding, Observable, TLP_LABELS, convertLegacyTlp, mapOCSFSeverity, mapOCSFStatus } from '@/config/ocsfIncidentSchema';
 import { deduplicateTasks, decodeHtmlEntities } from '@/lib/utils';
@@ -1010,11 +1010,27 @@ const IncidentsPage = () => {
   const handleBulkDelete = useCallback(async () => {
     if (selectedIds.size === 0) return;
     
+    // Collect all cross-org delete promises for shared incidents
+    const crossOrgDeletes: Promise<any>[] = [];
+    const selectedIncidents = incidents.filter(i => selectedIds.has(i.id));
+    for (const inc of selectedIncidents) {
+      if (inc.sharedOrgs && inc.sharedOrgs.length > 0) {
+        for (const org of inc.sharedOrgs) {
+          crossOrgDeletes.push(deleteDatastoreItem(inc.id, DATASTORE_CATEGORIES.INCIDENTS, org.orgId));
+        }
+      }
+    }
+
     const result = await deleteDatastoreItems(
       Array.from(selectedIds),
       DATASTORE_CATEGORIES.INCIDENTS
     );
     
+    // Fire cross-org deletes in parallel (best effort)
+    if (crossOrgDeletes.length > 0) {
+      Promise.allSettled(crossOrgDeletes);
+    }
+
     if (result.success) {
       toast.success(`Deleted ${result.deleted} incident${result.deleted !== 1 ? 's' : ''}`);
       setSelectedIds(new Set());
@@ -1024,7 +1040,7 @@ const IncidentsPage = () => {
       setSelectedIds(new Set(result.failed));
       await fetchItems();
     }
-  }, [selectedIds, fetchItems]);
+  }, [selectedIds, incidents, fetchItems]);
 
   const handleBulkResolve = useCallback(async (resolutionData: ResolutionData) => {
     if (selectedIds.size === 0) return;
@@ -1087,8 +1103,19 @@ const IncidentsPage = () => {
           delete (updated.metadata.extensions.custom_attributes as Record<string, unknown>).activity;
         }
         
-        const { setDatastoreItem } = await import('@/services/datastore');
-        return setDatastoreItem(incident.id, updated, DATASTORE_CATEGORIES.INCIDENTS);
+        // Primary save
+        const primaryResult = await setDatastoreItem(incident.id, updated, DATASTORE_CATEGORIES.INCIDENTS);
+        
+        // Sync to shared orgs (fire-and-forget)
+        if (incident.sharedOrgs && incident.sharedOrgs.length > 0) {
+          Promise.allSettled(
+            incident.sharedOrgs.map(org =>
+              setDatastoreItem(incident.id, updated, DATASTORE_CATEGORIES.INCIDENTS, org.orgId)
+            )
+          );
+        }
+        
+        return primaryResult;
       });
     
     const results = await Promise.all(updates);

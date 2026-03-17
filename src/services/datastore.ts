@@ -276,9 +276,10 @@ export const getDatastoreByCategory = async (
  */
 export const deleteDatastoreItem = async (
   key: string,
-  category: string
+  category: string,
+  overrideOrgId?: string
 ): Promise<DatastoreResponse> => {
-  const orgId = getOrgId();
+  const orgId = overrideOrgId || getOrgId();
   if (!orgId) {
     return { success: false, error: 'No organization ID found' };
   }
@@ -292,13 +293,18 @@ export const deleteDatastoreItem = async (
     payload.category = category;
   }
 
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...getAuthHeader(),
+  };
+  if (overrideOrgId) {
+    headers['Org-Id'] = overrideOrgId;
+  }
+
   const response = await fetch(getApiUrl(`/api/v1/orgs/${orgId}/delete_cache`), {
     method: 'POST',
     credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getAuthHeader(),
-    },
+    headers,
     body: JSON.stringify(payload),
   });
 
