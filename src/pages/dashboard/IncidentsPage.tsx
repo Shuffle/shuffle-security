@@ -1540,9 +1540,10 @@ const IncidentsPage = () => {
           >
           {/* Ingestion Sources - grouped in a subtle container with add button */}
           {(ingestionApps.length > 0 || webhookIngestion.exists || webhookIngestion.enabled) && (
-            <Box sx={{ 
+            <Box className="automation-section-ingest" sx={{ 
               position: 'relative',
-              display: { xs: 'none', md: 'flex' }, 
+              display: 'flex', 
+              maxWidth: 600,
               alignItems: 'center', 
               gap: 0.5,
               bgcolor: 'hsl(var(--muted) / 0.4)',
