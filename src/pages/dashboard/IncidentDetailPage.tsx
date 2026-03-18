@@ -494,7 +494,7 @@ const IncidentDetailPage = () => {
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [showMergeDialog, setShowMergeDialog] = useState(false);
   const [publicAuthorization, setPublicAuthorization] = useState<string>('');
-  const TAB_NAMES = ['details', 'tasks', 'observables', 'correlations', 'raw', 'file'] as const;
+  const TAB_NAMES = ['details', 'tasks', 'observables', 'correlations', 'raw', 'file', 'original', 'changes'] as const;
   const initialTab = (() => {
     const t = searchParams.get('tab');
     if (t) { const idx = TAB_NAMES.indexOf(t as any); return idx >= 0 ? idx : 0; }
@@ -517,6 +517,36 @@ const IncidentDetailPage = () => {
   const [fileSaving, setFileSaving] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
   const [fileLoaded, setFileLoaded] = useState(false);
+
+  // Revisions (Changes tab)
+  const [revisions, setRevisions] = useState<any[]>([]);
+  const [revisionsLoading, setRevisionsLoading] = useState(false);
+  const [revisionsLoaded, setRevisionsLoaded] = useState(false);
+
+  const loadRevisions = useCallback(async () => {
+    if (!id) return;
+    setRevisionsLoading(true);
+    try {
+      const categoryKey = DATASTORE_CATEGORIES.INCIDENTS;
+      const response = await fetch(getApiUrl(`/api/v2/datastore/category/${encodeURIComponent(categoryKey)}/${encodeURIComponent(id)}/revisions`), {
+        credentials: 'include',
+        headers: { ...getAuthHeader(), ...(crossOrgId ? { 'Org-Id': crossOrgId } : {}) },
+      });
+      if (response.ok) {
+        const result = await response.json();
+        setRevisions(Array.isArray(result) ? result : (result.data || result.revisions || []));
+      } else {
+        console.error('[Changes] Failed to load revisions:', response.status);
+        setRevisions([]);
+      }
+    } catch (err) {
+      console.error('[Changes] Error loading revisions:', err);
+      setRevisions([]);
+    } finally {
+      setRevisionsLoading(false);
+      setRevisionsLoaded(true);
+    }
+  }, [id, crossOrgId]);
 
   // Sanitized HTML for safe rendering of ingested HTML descriptions (email-client style)
   const sanitizedDescriptionHtml = useMemo(() => {
@@ -603,6 +633,13 @@ const IncidentDetailPage = () => {
       loadFileContent();
     }
   }, [activeTab, incidentFileId, fileLoaded, loadFileContent]);
+
+  useEffect(() => {
+    if (activeTab === 7 && !revisionsLoaded) {
+      loadRevisions();
+    }
+  }, [activeTab, revisionsLoaded, loadRevisions]);
+
   const [forwardingApps, setForwardingApps] = useState<Array<{ id: string; name: string; large_image: string; categories: string[] }>>([]);
   const [forwardingAppsLoading, setForwardingAppsLoading] = useState(false);
   const [sourceAppImage, setSourceAppImage] = useState<string | null>(null);
@@ -2494,6 +2531,47 @@ const IncidentDetailPage = () => {
                   )}
                 </Box>
               ))}
+              {/* Changes tab — separate since it's index 7 */}
+              <Box
+                onClick={() => setActiveTab(7)}
+                sx={{
+                  px: 2,
+                  py: 1,
+                  borderRadius: 1.5,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  transition: 'all 0.2s ease',
+                  bgcolor: activeTab === 7 ? 'rgba(255, 102, 0, 0.15)' : 'transparent',
+                  color: activeTab === 7 ? '#ff6600' : 'text.secondary',
+                  fontWeight: activeTab === 7 ? 600 : 400,
+                  fontSize: '0.875rem',
+                  '&:hover': {
+                    bgcolor: activeTab === 7 ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255,255,255,0.05)',
+                  },
+                }}
+              >
+                Changes
+                {revisionsLoading ? (
+                  <CircularProgress size={12} sx={{ color: 'text.secondary' }} />
+                ) : revisions.length > 0 && (
+                  <Box
+                    component="span"
+                    sx={{
+                      fontSize: '0.7rem',
+                      fontWeight: 600,
+                      px: 0.75,
+                      py: 0.25,
+                      borderRadius: 1,
+                      bgcolor: activeTab === 7 ? 'rgba(255, 102, 0, 0.3)' : 'rgba(255,255,255,0.08)',
+                      color: activeTab === 7 ? '#ff6600' : 'text.secondary',
+                    }}
+                  >
+                    {revisions.length}
+                  </Box>
+                )}
+              </Box>
             </Box>
 
             {/* Right tab group island: Automation + Raw */}
@@ -4069,6 +4147,140 @@ const IncidentDetailPage = () => {
             </Box>
           ) : (
             <HighlightedFileEditor value={fileContent} onChange={setFileContent} validateJson={true} onValidationChange={setFileJsonValid} />
+          )}
+        </Box>
+      )}
+
+      {activeTab === 7 && (
+        /* Changes Tab — Datastore Revisions */
+        <Box sx={{
+          bgcolor: 'rgba(255,255,255,0.02)',
+          borderRadius: 2,
+          border: '1px solid rgba(255,255,255,0.06)',
+          p: 2,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 1.5,
+        }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
+                <HistoryIcon sx={{ fontSize: 18, color: '#ff6600' }} />
+                Change History
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem' }}>
+                Revisions tracked by the datastore for this incident.
+              </Typography>
+            </Box>
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={() => { setRevisionsLoaded(false); loadRevisions(); }}
+              disabled={revisionsLoading}
+              sx={{
+                borderColor: 'rgba(255,255,255,0.2)',
+                color: 'text.secondary',
+                fontSize: '0.75rem',
+                height: 28,
+                '&:hover': { borderColor: 'rgba(255,255,255,0.4)' },
+              }}
+            >
+              {revisionsLoading ? <CircularProgress size={14} /> : 'Reload'}
+            </Button>
+          </Box>
+
+          {revisionsLoading && !revisionsLoaded ? (
+            <Box sx={{ p: 4, display: 'flex', justifyContent: 'center' }}>
+              <CircularProgress size={24} sx={{ color: '#ff6600' }} />
+            </Box>
+          ) : revisions.length === 0 ? (
+            <Box sx={{ p: 4, textAlign: 'center' }}>
+              <HistoryIcon sx={{ fontSize: 40, color: 'rgba(255,255,255,0.15)', mb: 1 }} />
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                No revisions found for this incident.
+              </Typography>
+            </Box>
+          ) : (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {revisions.map((rev, idx) => {
+                const editedDate = rev.edited ? new Date(rev.edited * 1000) : null;
+                const createdDate = rev.created ? new Date(rev.created * 1000) : null;
+                const displayDate = editedDate || createdDate;
+                const isLatest = idx === 0;
+
+                return (
+                  <Box
+                    key={rev.id || rev.key || idx}
+                    sx={{
+                      p: 2,
+                      bgcolor: isLatest ? 'rgba(255, 102, 0, 0.05)' : 'rgba(255,255,255,0.02)',
+                      border: '1px solid',
+                      borderColor: isLatest ? 'rgba(255, 102, 0, 0.2)' : 'rgba(255,255,255,0.06)',
+                      borderRadius: 1.5,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 2,
+                      transition: 'all 0.15s ease',
+                      '&:hover': {
+                        bgcolor: isLatest ? 'rgba(255, 102, 0, 0.08)' : 'rgba(255,255,255,0.04)',
+                      },
+                    }}
+                  >
+                    <Box sx={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: '50%',
+                      bgcolor: isLatest ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255,255,255,0.06)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}>
+                      <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, color: isLatest ? '#ff6600' : 'text.secondary' }}>
+                        {revisions.length - idx}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        {isLatest && (
+                          <Chip label="Latest" size="small" sx={{ height: 18, fontSize: '0.6rem', bgcolor: 'rgba(255, 102, 0, 0.15)', color: '#ff6600', fontWeight: 600 }} />
+                        )}
+                        {rev.user && (
+                          <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem' }}>
+                            by {rev.user}
+                          </Typography>
+                        )}
+                      </Box>
+                      {displayDate && (
+                        <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <AccessTimeIcon sx={{ fontSize: 12 }} />
+                          {displayDate.toLocaleString()}
+                        </Typography>
+                      )}
+                    </Box>
+                    {rev.value && (
+                      <Tooltip title="View revision data">
+                        <IconButton
+                          size="small"
+                          onClick={() => {
+                            try {
+                              const parsed = typeof rev.value === 'string' ? JSON.parse(rev.value) : rev.value;
+                              setRawJsonText(JSON.stringify(parsed, null, 2));
+                              setActiveTab(4);
+                            } catch {
+                              toast.error('Could not parse revision data');
+                            }
+                          }}
+                          sx={{ color: 'text.secondary', '&:hover': { color: '#ff6600' } }}
+                        >
+                          <VisibilityIcon sx={{ fontSize: 16 }} />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+                  </Box>
+                );
+              })}
+            </Box>
           )}
         </Box>
       )}
