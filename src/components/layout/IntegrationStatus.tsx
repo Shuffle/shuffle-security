@@ -168,7 +168,7 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
 
   const getStatusColor = (integration: Integration) => {
     if (integration.isActiveOnly) return 'hsl(var(--destructive))';
-    return integration.hasValidAuth ? 'hsl(var(--severity-low))' : 'hsl(var(--muted-foreground))';
+    return integration.hasValidAuth ? 'hsl(var(--severity-low))' : 'hsl(var(--severity-medium))';
   };
 
   // Icon-only view for both collapsed and expanded states

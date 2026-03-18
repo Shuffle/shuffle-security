@@ -321,7 +321,8 @@
 }
 
 .singul-dot-inactive {
-  background-color: rgba(156, 163, 175, 0.5);
+  background-color: #f59e0b;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.4);
 }
 
 /* Item border colors based on auth state */
