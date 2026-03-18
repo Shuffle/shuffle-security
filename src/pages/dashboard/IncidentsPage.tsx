@@ -1509,45 +1509,48 @@ const IncidentsPage = () => {
               display: { xs: 'none', md: 'flex' },
               alignItems: 'center',
               gap: 0,
+              // Collapsing side: fast collapse, no delay
               '& .automation-section-ingest, & .automation-section-forward': {
-                transition: 'max-width 0.5s cubic-bezier(0.4,0,0.2,1), opacity 0.4s ease 0.05s, padding 0.5s cubic-bezier(0.4,0,0.2,1), border-color 0.4s ease',
+                transition: 'max-width 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease, padding 0.3s cubic-bezier(0.4,0,0.2,1), border-color 0.2s ease',
                 overflow: 'hidden',
               },
               '& .automation-arrow': {
-                transition: 'max-width 0.5s cubic-bezier(0.4,0,0.2,1), opacity 0.4s ease',
+                transition: 'max-width 0.25s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease',
                 overflow: 'hidden',
               },
+              // Hovering Ingest: collapse Forward immediately, then grow Ingest after
               '&:has(.automation-section-ingest:hover) .automation-section-ingest': {
                 maxWidth: '800px !important',
-                transitionDelay: '0.15s',
+                transition: 'max-width 0.4s cubic-bezier(0.4,0,0.2,1) 0.25s, opacity 0.3s ease 0.2s, padding 0.4s cubic-bezier(0.4,0,0.2,1) 0.25s, border-color 0.3s ease 0.2s',
               },
               '&:has(.automation-section-ingest:hover) .automation-section-forward': {
                 maxWidth: '0px !important',
                 opacity: '0 !important',
                 px: '0 !important',
                 borderColor: 'transparent !important',
-                transitionDelay: '0.15s',
+                transition: 'max-width 0.25s cubic-bezier(0.4,0,0.2,1) 0.1s, opacity 0.15s ease 0.1s, padding 0.25s cubic-bezier(0.4,0,0.2,1) 0.1s, border-color 0.15s ease 0.1s',
               },
               '&:has(.automation-section-ingest:hover) .automation-arrow': {
                 maxWidth: '0px !important',
                 opacity: '0 !important',
-                transitionDelay: '0.15s',
+                transition: 'max-width 0.2s cubic-bezier(0.4,0,0.2,1) 0.1s, opacity 0.15s ease 0.1s',
               },
+              // Hovering Forward: collapse Ingest immediately, then grow Forward after
               '&:has(.automation-section-forward:hover) .automation-section-forward': {
                 maxWidth: '800px !important',
-                transitionDelay: '0.15s',
+                transition: 'max-width 0.4s cubic-bezier(0.4,0,0.2,1) 0.25s, opacity 0.3s ease 0.2s, padding 0.4s cubic-bezier(0.4,0,0.2,1) 0.25s, border-color 0.3s ease 0.2s',
               },
               '&:has(.automation-section-forward:hover) .automation-section-ingest': {
                 maxWidth: '0px !important',
                 opacity: '0 !important',
                 px: '0 !important',
                 borderColor: 'transparent !important',
-                transitionDelay: '0.15s',
+                transition: 'max-width 0.25s cubic-bezier(0.4,0,0.2,1) 0.1s, opacity 0.15s ease 0.1s, padding 0.25s cubic-bezier(0.4,0,0.2,1) 0.1s, border-color 0.15s ease 0.1s',
               },
               '&:has(.automation-section-forward:hover) .automation-arrow': {
                 maxWidth: '0px !important',
                 opacity: '0 !important',
-                transitionDelay: '0.15s',
+                transition: 'max-width 0.2s cubic-bezier(0.4,0,0.2,1) 0.1s, opacity 0.15s ease 0.1s',
               },
             }}
           >
