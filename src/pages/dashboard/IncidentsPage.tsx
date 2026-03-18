@@ -517,6 +517,16 @@ const IncidentsPage = () => {
             setIngestScheduleStopped(false);
           }
 
+          // Detect "Forward Tickets" workflow
+          const forwardWorkflow = findForwardTicketsWorkflow(workflowList);
+          let forwardAppNames: Set<string> | undefined;
+          if (forwardWorkflow) {
+            forwardAppNames = extractWorkflowAppNames(forwardWorkflow);
+            setForwardWorkflowId(forwardWorkflow.id);
+          } else {
+            setForwardWorkflowId(null);
+          }
+
           // Detect "Ingestion Webhook" workflow and extract webhook URL + status
           const webhookWorkflow = workflowList.find((w: any) => w.name === 'Ingestion Webhook');
           if (webhookWorkflow) {
