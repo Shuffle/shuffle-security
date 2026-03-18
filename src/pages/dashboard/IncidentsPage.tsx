@@ -2106,7 +2106,7 @@ const IncidentsPage = () => {
                     {dateFrom ? format(dateFrom, dateFrom.getHours() || dateFrom.getMinutes() || dateFrom.getSeconds() ? 'MMM d, yyyy HH:mm:ss' : 'MMM d, yyyy') : 'From'}
                   </button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                <PopoverContent className="w-auto p-0 border-blue-500/30" align="start">
                   <Calendar
                     mode="single"
                     selected={dateFrom}
@@ -2119,9 +2119,13 @@ const IncidentsPage = () => {
                     disabled={(date) => dateTo ? date > dateTo : false}
                     initialFocus
                     className="p-3 pointer-events-auto"
+                    classNames={{
+                      day_selected: 'bg-blue-500 text-white hover:bg-blue-600 hover:text-white focus:bg-blue-500 focus:text-white',
+                      day_today: 'bg-blue-500/15 text-blue-400',
+                    }}
                   />
-                  <div className="border-t border-border px-3 py-2">
-                    <label className="text-[0.65rem] text-muted-foreground font-medium uppercase tracking-wider">Time</label>
+                  <div className="border-t border-blue-500/20 px-3 py-2">
+                    <label className="text-[0.65rem] text-blue-400 font-medium uppercase tracking-wider">Time</label>
                     <input
                       type="time"
                       step="1"
@@ -2132,7 +2136,7 @@ const IncidentsPage = () => {
                         d.setHours(h || 0, m || 0, s || 0);
                         setDateFrom(d);
                       }}
-                      className="w-full mt-1 text-xs px-2 py-1 rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-blue-500/40"
+                      className="w-full mt-1 text-xs px-2 py-1 rounded-md border border-blue-500/30 bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-blue-500/40"
                     />
                   </div>
                 </PopoverContent>
@@ -2146,7 +2150,7 @@ const IncidentsPage = () => {
                     {dateTo ? format(dateTo, dateTo.getHours() || dateTo.getMinutes() || dateTo.getSeconds() ? 'MMM d, yyyy HH:mm:ss' : 'MMM d, yyyy') : 'To'}
                   </button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="end">
+                <PopoverContent className="w-auto p-0 border-emerald-500/30" align="end">
                   <Calendar
                     mode="single"
                     selected={dateTo}
@@ -2159,9 +2163,13 @@ const IncidentsPage = () => {
                     disabled={(date) => dateFrom ? date < dateFrom : false}
                     initialFocus
                     className="p-3 pointer-events-auto"
+                    classNames={{
+                      day_selected: 'bg-emerald-500 text-white hover:bg-emerald-600 hover:text-white focus:bg-emerald-500 focus:text-white',
+                      day_today: 'bg-emerald-500/15 text-emerald-400',
+                    }}
                   />
-                  <div className="border-t border-border px-3 py-2">
-                    <label className="text-[0.65rem] text-muted-foreground font-medium uppercase tracking-wider">Time</label>
+                  <div className="border-t border-emerald-500/20 px-3 py-2">
+                    <label className="text-[0.65rem] text-emerald-400 font-medium uppercase tracking-wider">Time</label>
                     <input
                       type="time"
                       step="1"
@@ -2172,7 +2180,7 @@ const IncidentsPage = () => {
                         d.setHours(h || 0, m || 0, s || 0);
                         setDateTo(d);
                       }}
-                      className="w-full mt-1 text-xs px-2 py-1 rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500/40"
+                      className="w-full mt-1 text-xs px-2 py-1 rounded-md border border-emerald-500/30 bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500/40"
                     />
                   </div>
                 </PopoverContent>
