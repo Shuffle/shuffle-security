@@ -72,7 +72,7 @@ export const IngestionSourceButton = ({ app, onToggle }: IngestionSourceButtonPr
               sx={{ width: 18, height: 18, borderRadius: '50%', objectFit: 'contain' }}
             />
           ) : (
-            <DownloadIcon sx={{ fontSize: 16, color: isEnabled ? '#4ade80' : 'rgba(255,255,255,0.4)' }} />
+            <DownloadIcon sx={{ fontSize: 16, color: isEnabled ? (app.validated ? '#4ade80' : '#f59e0b') : 'rgba(255,255,255,0.4)' }} />
           )}
         </IconButton>
       </Tooltip>
