@@ -98,7 +98,7 @@ export const IngestionSourceButton = ({ app, onToggle }: IngestionSourceButtonPr
         <Typography variant="caption" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))', textTransform: 'capitalize', mb: 1, display: 'block' }}>
           {displayName}
           {!isEnabled && (
-            <Chip label="Not Active" size="small" sx={{ ml: 0.5, height: 18, fontSize: '0.65rem', bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }} />
+            <Chip label="Not Ingesting" size="small" sx={{ ml: 0.5, height: 18, fontSize: '0.65rem', bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }} />
           )}
         </Typography>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
@@ -130,11 +130,11 @@ export const IngestionSourceButton = ({ app, onToggle }: IngestionSourceButtonPr
               justifyContent: 'flex-start',
               textTransform: 'none',
               fontSize: '0.75rem',
-              color: isEnabled ? 'hsl(var(--destructive))' : '#22c55e',
+              color: isEnabled ? 'hsl(var(--destructive))' : (app.validated ? '#22c55e' : '#f59e0b'),
               px: 1,
               py: 0.5,
               borderRadius: 1,
-              '&:hover': { bgcolor: isEnabled ? 'hsl(var(--destructive) / 0.1)' : 'rgba(34, 197, 94, 0.1)' },
+              '&:hover': { bgcolor: isEnabled ? 'hsl(var(--destructive) / 0.1)' : (app.validated ? 'rgba(34, 197, 94, 0.1)' : 'rgba(245, 158, 11, 0.1)') },
             }}
           >
             {isEnabled ? 'Disable Sync' : 'Enable Sync'}
