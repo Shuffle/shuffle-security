@@ -46,6 +46,10 @@ import { IncidentsEmptyState } from '@/components/incidents/IncidentsEmptyState'
 import { IngestionSourceButton } from '@/components/incidents/IngestionSourceButton';
 import { WebhookIngestionButton, WebhookIngestionInfo } from '@/components/incidents/WebhookIngestionButton';
 
+import { format } from 'date-fns';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover as RadixPopover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import { toast } from 'sonner';
 import { resyncState } from '@/lib/resyncState';
 import { trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
@@ -337,6 +341,8 @@ const IncidentsPage = () => {
     org: isChildOrg && currentOrgId ? [currentOrgId] : null,
   }));
   const [negatedFilters, setNegatedFilters] = useState<Set<string>>(new Set());
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
+  const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [automationsDialogOpen, setAutomationsDialogOpen] = useState(false);
   const [categoryAutomations, setCategoryAutomations] = useState<CategoryAutomation[]>([]);
@@ -972,13 +978,24 @@ const IncidentsPage = () => {
       );
     }
 
+    // Date range filter
+    if (dateFrom) {
+      const fromMs = dateFrom.getTime();
+      result = result.filter(i => (i.createdTs || 0) >= fromMs);
+    }
+    if (dateTo) {
+      // Include the entire "to" day
+      const toMs = new Date(dateTo.getFullYear(), dateTo.getMonth(), dateTo.getDate(), 23, 59, 59, 999).getTime();
+      result = result.filter(i => (i.createdTs || 0) <= toMs);
+    }
+
     return result;
-  }, [filteredByAssignee, filters, negatedFilters, searchQuery]);
+  }, [filteredByAssignee, filters, negatedFilters, searchQuery, dateFrom, dateTo]);
 
   // Reset to page 1 when filters or search change
   useEffect(() => {
     setCurrentPage(1);
-  }, [filters, negatedFilters, searchQuery, showIrrelevant]);
+  }, [filters, negatedFilters, searchQuery, showIrrelevant, dateFrom, dateTo]);
 
   // Sort incidents
   const sortedIncidents = useMemo(() => {
@@ -1106,6 +1123,8 @@ const IncidentsPage = () => {
   const resetToDefaults = () => {
     setFilters({ severity: null, status: ['new', 'in_progress'], tlp: null, assignee: null, source: null, tag: null, org: (isChildOrg || isParentOrg) && currentOrgId ? [currentOrgId] : null });
     setNegatedFilters(new Set());
+    setDateFrom(undefined);
+    setDateTo(undefined);
     setSearchQuery('');
     setSelectedIds(new Set());
   };
@@ -1244,6 +1263,7 @@ const IncidentsPage = () => {
     !filters.source &&
     !filters.tag &&
     negatedFilters.size === 0 &&
+    !dateFrom && !dateTo &&
     (parentOrg
       ? (filters.org?.length === 1 && filters.org[0] === currentOrgId)
       : (!filters.org || filters.org.length === 0)) &&
@@ -2049,6 +2069,74 @@ const IncidentsPage = () => {
         
         {/* Stats sidebar - sticky on desktop */}
         <Box sx={{ display: { xs: 'none', lg: 'block' }, position: 'sticky', top: 72, alignSelf: 'start', maxHeight: 'calc(100vh - 96px)', overflowY: 'auto', order: { xs: -1, lg: 0 } }}>
+          {/* Date range filter */}
+          <Box sx={{ 
+            mb: 2, 
+            px: 1.5, 
+            py: 1, 
+            borderRadius: 2, 
+            backgroundColor: 'hsl(var(--card))', 
+            border: '1px solid', 
+            borderColor: (dateFrom || dateTo) ? 'rgba(99, 102, 241, 0.4)' : 'hsl(var(--border))',
+            transition: 'border-color 0.2s ease',
+          }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+              <CalendarTodayIcon sx={{ fontSize: 13, color: 'hsl(var(--muted-foreground))' }} />
+              <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontWeight: 600, fontSize: '0.7rem', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                Date Range
+              </Typography>
+              {(dateFrom || dateTo) && (
+                <Typography 
+                  variant="caption" 
+                  onClick={() => { setDateFrom(undefined); setDateTo(undefined); }}
+                  sx={{ ml: 'auto', color: '#818cf8', fontSize: '0.65rem', cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
+                >
+                  Clear
+                </Typography>
+              )}
+            </Box>
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+              <RadixPopover>
+                <PopoverTrigger asChild>
+                  <button
+                    className={`flex-1 text-left text-xs px-2 py-1.5 rounded-md border transition-colors ${dateFrom ? 'border-indigo-500/40 text-foreground' : 'border-border text-muted-foreground'} bg-background hover:border-indigo-500/30`}
+                  >
+                    {dateFrom ? format(dateFrom, 'MMM d, yyyy') : 'From'}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={dateFrom}
+                    onSelect={setDateFrom}
+                    disabled={(date) => dateTo ? date > dateTo : false}
+                    initialFocus
+                    className="p-3 pointer-events-auto"
+                  />
+                </PopoverContent>
+              </RadixPopover>
+              <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.7rem' }}>→</Typography>
+              <RadixPopover>
+                <PopoverTrigger asChild>
+                  <button
+                    className={`flex-1 text-left text-xs px-2 py-1.5 rounded-md border transition-colors ${dateTo ? 'border-indigo-500/40 text-foreground' : 'border-border text-muted-foreground'} bg-background hover:border-indigo-500/30`}
+                  >
+                    {dateTo ? format(dateTo, 'MMM d, yyyy') : 'To'}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <Calendar
+                    mode="single"
+                    selected={dateTo}
+                    onSelect={setDateTo}
+                    disabled={(date) => dateFrom ? date < dateFrom : false}
+                    initialFocus
+                    className="p-3 pointer-events-auto"
+                  />
+                </PopoverContent>
+              </RadixPopover>
+            </Box>
+          </Box>
           <IncidentStatsCards 
             incidents={activeIncidents}
             currentUsername={currentUsername}
