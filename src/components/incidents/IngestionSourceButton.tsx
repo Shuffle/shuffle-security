@@ -45,14 +45,20 @@ export const IngestionSourceButton = ({ app, onToggle }: IngestionSourceButtonPr
             width: 30,
             height: 30,
             border: '1px solid',
-            borderColor: isEnabled ? 'rgba(34, 197, 94, 0.20)' : 'transparent',
-            bgcolor: isEnabled ? 'rgba(34, 197, 94, 0.10)' : 'transparent',
+            borderColor: isEnabled
+              ? (app.validated ? 'rgba(34, 197, 94, 0.20)' : 'rgba(245, 158, 11, 0.25)')
+              : 'transparent',
+            bgcolor: isEnabled
+              ? (app.validated ? 'rgba(34, 197, 94, 0.10)' : 'rgba(245, 158, 11, 0.12)')
+              : 'transparent',
             borderRadius: 1,
             opacity: isEnabled ? 1 : 0.35,
             filter: isEnabled ? 'none' : 'grayscale(1)',
             transition: 'opacity 0.15s ease, filter 0.15s ease',
             '&:hover': {
-              bgcolor: isEnabled ? 'rgba(34, 197, 94, 0.18)' : 'rgba(255,255,255,0.1)',
+              bgcolor: isEnabled
+                ? (app.validated ? 'rgba(34, 197, 94, 0.18)' : 'rgba(245, 158, 11, 0.20)')
+                : 'rgba(255,255,255,0.1)',
               opacity: isEnabled ? 1 : 0.7,
               filter: 'none',
             },

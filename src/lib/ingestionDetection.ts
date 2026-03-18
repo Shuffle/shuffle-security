@@ -151,16 +151,14 @@ export function extractValidatedIngestionApps(
   const apps: ValidatedIngestionApp[] = [];
 
   for (const { app, bestImage, hasValidAuth } of dedupedApps) {
-    if (!hasValidAuth) continue;
     const category = getIngestionCategory(app.name, app.categories) || 'other';
-
     const enabled = enabledNames.has(normalizeAppName(app.name));
 
     apps.push({
       id: app.id,
       name: app.name,
       image: bestImage || app.large_image,
-      validated: true,
+      validated: hasValidAuth,
       enabled,
       category,
     });
