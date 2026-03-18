@@ -1653,6 +1653,102 @@ const IncidentsPage = () => {
               )}
             </Box>
 
+          <Tooltip title={(() => {
+            const workflowAuto = categoryAutomations?.find(a => a.type === 'workflow' && a.enabled);
+            const wfId = workflowAuto?.options?.find(o => o.key === 'workflow_id')?.value?.split(',')[0]?.trim();
+            return wfId ? "Click to open automation workflow" : "Automation for Incidents";
+          })()}>
+            <IconButton 
+              onClick={() => {
+                const workflowAuto = categoryAutomations?.find(a => a.type === 'workflow' && a.enabled);
+                const wfId = workflowAuto?.options?.find(o => o.key === 'workflow_id')?.value?.split(',')[0]?.trim();
+                if (wfId) {
+                  window.open(`https://shuffler.io/workflows/${wfId}`, '_blank');
+                } else {
+                  trackPredefinedEvent(GA_EVENTS.INCIDENT_AUTOMATION_CHANGE, 'open_dialog');
+                  setAutomationsDialogOpen(true);
+                }
+              }}
+              sx={{ 
+                width: 36,
+                height: 36,
+                color: categoryAutomations?.some(a => a.enabled) ? '#4ade80' : 'text.secondary',
+                border: '1px solid',
+                borderColor: categoryAutomations?.some(a => a.enabled) ? '#4ade80' : 'rgba(255,255,255,0.1)',
+                borderRadius: 1,
+                '&:hover': {
+                  borderColor: categoryAutomations?.some(a => a.enabled) ? '#4ade80' : 'rgba(255,255,255,0.2)',
+                },
+              }}
+            >
+              <RocketLaunchIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Refresh">
+            <IconButton 
+              onClick={() => { sessionStorage.removeItem('shuffle_auto_resync_done'); autoResyncQueueRef.current.clear(); fetchItems(); fetchSubOrgIncidents(); }} 
+              disabled={isLoading}
+              sx={{ 
+                width: 36,
+                height: 36,
+                color: 'text.secondary',
+                border: '1px solid',
+                borderColor: 'rgba(255,255,255,0.1)',
+                borderRadius: 1,
+                '&:hover': {
+                  borderColor: 'rgba(255,255,255,0.2)',
+                },
+              }}
+            >
+              <RefreshIcon fontSize="small" sx={isRefreshing ? { animation: 'spin 1s linear infinite', '@keyframes spin': { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } } } : undefined} />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Create Incident">
+            <IconButton 
+              onClick={() => setCreateDialogOpen(true)}
+              sx={{ 
+                width: 36,
+                height: 36,
+                color: 'text.secondary',
+                border: '1px solid',
+                borderColor: 'rgba(255,255,255,0.1)',
+                borderRadius: 1,
+                '&:hover': {
+                  borderColor: 'rgba(255,255,255,0.2)',
+                },
+              }}
+            >
+              <AddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      </Box>
+
+      {/* Warning banner when Ingest Tickets schedule is stopped */}
+      {ingestScheduleStopped && ingestWorkflowId && (
+        <Box sx={{
+          mb: 2,
+          px: 2,
+          py: 1.5,
+          borderRadius: 1.5,
+          bgcolor: 'hsla(var(--severity-medium) / 0.08)',
+          border: '1px solid hsla(var(--severity-medium) / 0.25)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.5,
+        }}>
+          <Box sx={{
+            width: 8,
+            height: 8,
+            borderRadius: '50%',
+            bgcolor: 'hsl(var(--severity-medium))',
+            flexShrink: 0,
+          }} />
+          <Typography sx={{ fontSize: '0.82rem', color: 'hsl(var(--foreground))', flex: 1 }}>
+            <strong>Automatic ingestion is paused</strong> — the "Ingest Tickets" workflow schedule has been stopped. Sources are shown as disabled until the schedule is re-enabled.
+          </Typography>
+        </Box>
+      )}
 
 
       {/* Floating Filter Bar - sticky */}
