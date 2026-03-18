@@ -56,8 +56,9 @@ export const IngestionSourceButton = ({ app, onToggle, incidentCount = 0, varian
             borderRadius: 1,
             opacity: isEnabled ? 1 : 0.35,
             filter: isEnabled ? 'none' : 'grayscale(1)',
-            transition: 'opacity 0.15s ease, filter 0.15s ease',
+            transition: 'transform 0.2s ease, opacity 0.15s ease, filter 0.15s ease',
             '&:hover': {
+              transform: 'scale(1.2)',
               bgcolor: isEnabled
                 ? (app.validated ? 'rgba(34, 197, 94, 0.18)' : 'rgba(245, 158, 11, 0.20)')
                 : 'rgba(255,255,255,0.1)',
