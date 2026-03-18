@@ -1694,6 +1694,7 @@ const IncidentsPage = () => {
                 </Tooltip>
               )}
             </Box>
+          )}
 
           <Tooltip title={(() => {
             const workflowAuto = categoryAutomations?.find(a => a.type === 'workflow' && a.enabled);
