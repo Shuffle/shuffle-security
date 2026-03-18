@@ -96,7 +96,7 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, on
           }}
         >
           {hasApps
-            ? 'Your ingestion sources are configured below. Incidents will appear here once alerts start flowing in.'
+            ? 'Your valid ingestion sources are visible below. Incidents will appear here once alerts start flowing in. Disabled apps show in grey. Click to enable them.'
             : 'Connect your security tools to start ingesting alerts and incidents automatically. Set up your sources in just a few minutes.'}
         </Typography>
 
