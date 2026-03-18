@@ -494,7 +494,8 @@ const IncidentDetailPage = () => {
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [showMergeDialog, setShowMergeDialog] = useState(false);
   const [publicAuthorization, setPublicAuthorization] = useState<string>('');
-  const TAB_NAMES = ['details', 'tasks', 'observables', 'correlations', 'raw', 'file', 'original', 'changes'] as const;
+  const TAB_NAMES = ['details', 'tasks', 'observables', 'correlations', 'raw', 'file', 'original'] as const;
+  const [activityFilter, setActivityFilter] = useState<'all' | 'revisions' | 'agent' | 'manual'>('all');
   const initialTab = (() => {
     const t = searchParams.get('tab');
     if (t) { const idx = TAB_NAMES.indexOf(t as any); return idx >= 0 ? idx : 0; }
@@ -634,11 +635,12 @@ const IncidentDetailPage = () => {
     }
   }, [activeTab, incidentFileId, fileLoaded, loadFileContent]);
 
+  // Auto-load revisions when incident finishes loading
   useEffect(() => {
-    if (activeTab === 7 && !revisionsLoaded) {
+    if (!loading && id && !revisionsLoaded) {
       loadRevisions();
     }
-  }, [activeTab, revisionsLoaded, loadRevisions]);
+  }, [loading, id, revisionsLoaded, loadRevisions]);
 
   const [forwardingApps, setForwardingApps] = useState<Array<{ id: string; name: string; large_image: string; categories: string[] }>>([]);
   const [forwardingAppsLoading, setForwardingAppsLoading] = useState(false);
@@ -2531,47 +2533,7 @@ const IncidentDetailPage = () => {
                   )}
                 </Box>
               ))}
-              {/* Changes tab — separate since it's index 7 */}
-              <Box
-                onClick={() => setActiveTab(7)}
-                sx={{
-                  px: 2,
-                  py: 1,
-                  borderRadius: 1.5,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  transition: 'all 0.2s ease',
-                  bgcolor: activeTab === 7 ? 'rgba(255, 102, 0, 0.15)' : 'transparent',
-                  color: activeTab === 7 ? '#ff6600' : 'text.secondary',
-                  fontWeight: activeTab === 7 ? 600 : 400,
-                  fontSize: '0.875rem',
-                  '&:hover': {
-                    bgcolor: activeTab === 7 ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255,255,255,0.05)',
-                  },
-                }}
-              >
-                Changes
-                {revisionsLoading ? (
-                  <CircularProgress size={12} sx={{ color: 'text.secondary' }} />
-                ) : revisions.length > 0 && (
-                  <Box
-                    component="span"
-                    sx={{
-                      fontSize: '0.7rem',
-                      fontWeight: 600,
-                      px: 0.75,
-                      py: 0.25,
-                      borderRadius: 1,
-                      bgcolor: activeTab === 7 ? 'rgba(255, 102, 0, 0.3)' : 'rgba(255,255,255,0.08)',
-                      color: activeTab === 7 ? '#ff6600' : 'text.secondary',
-                    }}
-                  >
-                    {revisions.length}
-                  </Box>
-                )}
-              </Box>
+              {/* Changes tab removed — revisions now in Activity sidebar */}
             </Box>
 
             {/* Right tab group island: Automation + Raw */}
@@ -4151,254 +4113,7 @@ const IncidentDetailPage = () => {
         </Box>
       )}
 
-      {activeTab === 7 && (
-        /* Changes Tab — Datastore Revisions */
-        <Box sx={{
-          bgcolor: 'rgba(255,255,255,0.02)',
-          borderRadius: 2,
-          border: '1px solid rgba(255,255,255,0.06)',
-          p: 2,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 1.5,
-        }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Box>
-              <Typography variant="subtitle2" sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <HistoryIcon sx={{ fontSize: 18, color: '#ff6600' }} />
-                Change History
-              </Typography>
-              <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem' }}>
-                Revisions tracked by the datastore for this incident.
-              </Typography>
-            </Box>
-            <Button
-              size="small"
-              variant="outlined"
-              onClick={() => { setRevisionsLoaded(false); }}
-              disabled={revisionsLoading}
-              sx={{
-                borderColor: 'rgba(255,255,255,0.2)',
-                color: 'text.secondary',
-                fontSize: '0.75rem',
-                height: 28,
-                '&:hover': { borderColor: 'rgba(255,255,255,0.4)' },
-              }}
-            >
-              {revisionsLoading ? <CircularProgress size={14} /> : 'Reload'}
-            </Button>
-          </Box>
-
-          {revisionsLoading && !revisionsLoaded ? (
-            <Box sx={{ p: 4, display: 'flex', justifyContent: 'center' }}>
-              <CircularProgress size={24} sx={{ color: '#ff6600' }} />
-            </Box>
-          ) : revisions.length === 0 ? (
-            <Box sx={{ p: 4, textAlign: 'center' }}>
-              <HistoryIcon sx={{ fontSize: 40, color: 'rgba(255,255,255,0.15)', mb: 1 }} />
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                No revisions found for this incident.
-              </Typography>
-            </Box>
-          ) : (() => {
-            // Compute diffs between consecutive revisions (current vs previous)
-            const parsedRevisions = revisions.map((rev) => {
-              try {
-                return typeof rev.value === 'string' ? JSON.parse(rev.value) : rev.value;
-              } catch { return null; }
-            });
-
-            const computeDiff = (current: any, previous: any): { added: string[]; removed: string[]; changed: { field: string; from: any; to: any }[] } => {
-              const diff: { added: string[]; removed: string[]; changed: { field: string; from: any; to: any }[] } = { added: [], removed: [], changed: [] };
-              if (!current || !previous) return diff;
-
-              const allKeys = new Set([...Object.keys(current), ...Object.keys(previous)]);
-              for (const key of allKeys) {
-                const inCurrent = key in current;
-                const inPrevious = key in previous;
-                if (inCurrent && !inPrevious) {
-                  diff.added.push(key);
-                } else if (!inCurrent && inPrevious) {
-                  diff.removed.push(key);
-                } else if (inCurrent && inPrevious) {
-                  const curVal = JSON.stringify(current[key]);
-                  const prevVal = JSON.stringify(previous[key]);
-                  if (curVal !== prevVal) {
-                    diff.changed.push({ field: key, from: previous[key], to: current[key] });
-                  }
-                }
-              }
-              return diff;
-            };
-
-            const truncateValue = (val: any, maxLen = 80): string => {
-              const str = typeof val === 'string' ? val : JSON.stringify(val);
-              return str.length > maxLen ? str.slice(0, maxLen) + '…' : str;
-            };
-
-            return (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              {revisions.map((rev, idx) => {
-                const editedDate = rev.edited ? new Date(rev.edited * 1000) : null;
-                const createdDate = rev.created ? new Date(rev.created * 1000) : null;
-                const displayDate = editedDate || createdDate;
-                const isLatest = idx === 0;
-                const isFirst = idx === revisions.length - 1;
-
-                // Diff: compare this revision against the next one (which is older)
-                const currentParsed = parsedRevisions[idx];
-                const previousParsed = idx < revisions.length - 1 ? parsedRevisions[idx + 1] : null;
-                const diff = previousParsed ? computeDiff(currentParsed, previousParsed) : null;
-                const totalChanges = diff ? diff.added.length + diff.removed.length + diff.changed.length : 0;
-
-                return (
-                  <Box
-                    key={rev.id || rev.key || idx}
-                    sx={{
-                      p: 2,
-                      bgcolor: isLatest ? 'rgba(255, 102, 0, 0.05)' : 'rgba(255,255,255,0.02)',
-                      border: '1px solid',
-                      borderColor: isLatest ? 'rgba(255, 102, 0, 0.2)' : 'rgba(255,255,255,0.06)',
-                      borderRadius: 1.5,
-                      transition: 'all 0.15s ease',
-                      '&:hover': {
-                        bgcolor: isLatest ? 'rgba(255, 102, 0, 0.08)' : 'rgba(255,255,255,0.04)',
-                      },
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <Box sx={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: '50%',
-                        bgcolor: isLatest ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255,255,255,0.06)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                      }}>
-                        <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, color: isLatest ? '#ff6600' : 'text.secondary' }}>
-                          {revisions.length - idx}
-                        </Typography>
-                      </Box>
-                      <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          {isLatest && (
-                            <Chip label="Latest" size="small" sx={{ height: 18, fontSize: '0.6rem', bgcolor: 'rgba(255, 102, 0, 0.15)', color: '#ff6600', fontWeight: 600 }} />
-                          )}
-                          {isFirst && !isLatest && (
-                            <Chip label="Initial" size="small" sx={{ height: 18, fontSize: '0.6rem', bgcolor: 'rgba(255,255,255,0.06)', color: 'text.secondary', fontWeight: 600 }} />
-                          )}
-                          {totalChanges > 0 && (
-                            <Chip label={`${totalChanges} change${totalChanges !== 1 ? 's' : ''}`} size="small" sx={{ height: 18, fontSize: '0.6rem', bgcolor: 'rgba(255, 102, 0, 0.1)', color: '#ff6600', fontWeight: 500 }} />
-                          )}
-                          {rev.updated_by && (
-                            <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem' }}>
-                              by {rev.updated_by}
-                            </Typography>
-                          )}
-                        </Box>
-                        {displayDate && (
-                          <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                            <AccessTimeIcon sx={{ fontSize: 12 }} />
-                            {displayDate.toLocaleString()}
-                          </Typography>
-                        )}
-                      </Box>
-                      {rev.value && (
-                        <Tooltip title="View revision data">
-                          <IconButton
-                            size="small"
-                            onClick={() => {
-                              try {
-                                const parsed = typeof rev.value === 'string' ? JSON.parse(rev.value) : rev.value;
-                                setRawJsonText(JSON.stringify(parsed, null, 2));
-                                setActiveTab(4);
-                              } catch {
-                                toast.error('Could not parse revision data');
-                              }
-                            }}
-                            sx={{ color: 'text.secondary', '&:hover': { color: '#ff6600' } }}
-                          >
-                            <VisibilityIcon sx={{ fontSize: 16 }} />
-                          </IconButton>
-                        </Tooltip>
-                      )}
-                    </Box>
-
-                    {/* Field-level diff */}
-                    {diff && totalChanges > 0 && (
-                      <Box sx={{ mt: 1.5, pl: 6, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                        {diff.changed.map(({ field, from, to }) => (
-                          <Box key={field} sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
-                            <Typography sx={{ fontSize: '0.68rem', fontWeight: 600, color: 'hsl(var(--foreground))', fontFamily: 'JetBrains Mono, monospace' }}>
-                              {field}
-                            </Typography>
-                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                              <Typography sx={{
-                                fontSize: '0.65rem', fontFamily: 'JetBrains Mono, monospace',
-                                color: 'hsl(var(--destructive))', bgcolor: 'hsl(var(--destructive) / 0.08)',
-                                px: 0.75, py: 0.25, borderRadius: 0.5, lineHeight: 1.4,
-                                textDecoration: 'line-through', opacity: 0.8,
-                              }}>
-                                {truncateValue(from)}
-                              </Typography>
-                              <Typography sx={{
-                                fontSize: '0.65rem', fontFamily: 'JetBrains Mono, monospace',
-                                color: 'hsl(var(--status-resolved))', bgcolor: 'hsl(var(--status-resolved) / 0.08)',
-                                px: 0.75, py: 0.25, borderRadius: 0.5, lineHeight: 1.4,
-                              }}>
-                                {truncateValue(to)}
-                              </Typography>
-                            </Box>
-                          </Box>
-                        ))}
-                        {diff.added.map((field) => (
-                          <Box key={field} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Typography sx={{
-                              fontSize: '0.68rem', fontWeight: 600, fontFamily: 'JetBrains Mono, monospace',
-                              color: 'hsl(var(--status-resolved))',
-                            }}>
-                              + {field}
-                            </Typography>
-                            {currentParsed?.[field] !== undefined && (
-                              <Typography sx={{
-                                fontSize: '0.65rem', fontFamily: 'JetBrains Mono, monospace',
-                                color: 'hsl(var(--status-resolved))', bgcolor: 'hsl(var(--status-resolved) / 0.08)',
-                                px: 0.75, py: 0.25, borderRadius: 0.5,
-                              }}>
-                                {truncateValue(currentParsed[field])}
-                              </Typography>
-                            )}
-                          </Box>
-                        ))}
-                        {diff.removed.map((field) => (
-                          <Box key={field} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Typography sx={{
-                              fontSize: '0.68rem', fontWeight: 600, fontFamily: 'JetBrains Mono, monospace',
-                              color: 'hsl(var(--destructive))',
-                            }}>
-                              − {field}
-                            </Typography>
-                          </Box>
-                        ))}
-                      </Box>
-                    )}
-                    {isFirst && !diff && (
-                      <Box sx={{ mt: 1, pl: 6 }}>
-                        <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.65rem', fontStyle: 'italic' }}>
-                          Initial revision — no previous version to compare
-                        </Typography>
-                      </Box>
-                    )}
-                  </Box>
-                );
-              })}
-            </Box>
-            );
-          })()}
-        </Box>
-      )}
+      {/* Changes tab content removed — revisions now in Activity sidebar */}
       </Box>{/* End isPublicView pointer-events wrapper */}
         </Box>
 
@@ -4422,30 +4137,43 @@ const IncidentDetailPage = () => {
               '& .MuiLinearProgress-bar': { bgcolor: 'hsl(var(--primary))' },
             }} />
           )}
-          {/* Activity Header */}
+          {/* Activity Header with filter chips */}
           <Box sx={{ 
             px: 2, 
             py: 1.5, 
             borderBottom: '1px solid hsl(var(--border))',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
           }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <HistoryIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
-              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Activity</Typography>
-              {activity.length > 0 && (
-                <Chip 
-                  label={activity.length} 
-                  size="small" 
-                  sx={{ 
-                    height: 18, 
-                    fontSize: '0.65rem',
-                    bgcolor: 'rgba(255, 102, 0, 0.15)',
-                    color: '#ff6600',
-                  }} 
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <HistoryIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Activity</Typography>
+              </Box>
+              {revisionsLoading && <CircularProgress size={14} sx={{ color: '#ff6600' }} />}
+            </Box>
+            {/* Filter chips */}
+            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+              {([
+                { key: 'all' as const, label: 'All', count: undefined as number | undefined },
+                { key: 'revisions' as const, label: 'Changes', count: revisions.length },
+                { key: 'agent' as const, label: 'Agent', count: agentRuns.length },
+                { key: 'manual' as const, label: 'Comments', count: activity.length },
+              ]).map(({ key, label, count }) => (
+                <Chip
+                  key={key}
+                  label={count !== undefined ? `${label} (${count})` : label}
+                  size="small"
+                  variant={activityFilter === key ? 'filled' : 'outlined'}
+                  onClick={() => setActivityFilter(key)}
+                  sx={{
+                    height: 24,
+                    fontSize: '0.7rem',
+                    borderColor: activityFilter === key ? '#ff6600' : 'rgba(255,255,255,0.12)',
+                    bgcolor: activityFilter === key ? 'rgba(255, 102, 0, 0.15)' : 'transparent',
+                    color: activityFilter === key ? '#ff6600' : 'text.secondary',
+                    '&:hover': { bgcolor: activityFilter === key ? 'rgba(255, 102, 0, 0.2)' : 'rgba(255,255,255,0.05)' },
+                  }}
                 />
-              )}
+              ))}
             </Box>
           </Box>
 
@@ -4512,131 +4240,299 @@ const IncidentDetailPage = () => {
             </Box>
           </Box>
 
-          {/* Activity Feed */}
+          {/* Unified Activity Feed */}
           <Box sx={{ 
             p: 1.5,
             display: 'flex',
             flexDirection: 'column',
             gap: 1,
+            overflow: 'auto',
           }}>
-            {/* Agent runs rendered with the same component as /agent page */}
-            {agentRuns.length > 0 && (
-              <Box sx={{ mb: 1 }}>
-                <AgentActivityFeed runs={agentRuns} />
-              </Box>
-            )}
+            {(() => {
+              // Build unified timeline items
+              type TimelineItem = 
+                | { type: 'revision'; timestamp: number; data: any; idx: number; parsedCurrent: any; parsedPrevious: any | null }
+                | { type: 'agent'; timestamp: number; data: typeof agentRuns[number] }
+                | { type: 'manual'; timestamp: number; data: ActivityItem };
 
-            {activity.length === 0 && agentRuns.length === 0 ? (
-              <Box sx={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                py: 4,
-                color: 'text.secondary',
-              }}>
-                <HistoryIcon sx={{ fontSize: 32, mb: 1, opacity: 0.5 }} />
-                <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
-                  No activity yet
-                </Typography>
-              </Box>
-            ) : (
-              [...activity].reverse().map((item) => {
-                // Check if user can delete this message (own message within 5 minutes)
-                const isOwnMessage = item.user === currentUsername;
-                const messageAge = Date.now() - item.timestamp;
-                const canDelete = isOwnMessage && item.type === 'comment' && messageAge < 5 * 60 * 1000; // 5 minutes
+              const items: TimelineItem[] = [];
+
+              // Parse revisions for diffs
+              const parsedRevisions = revisions.map((rev) => {
+                try {
+                  return typeof rev.value === 'string' ? JSON.parse(rev.value) : rev.value;
+                } catch { return null; }
+              });
+
+              // Add revisions
+              if (activityFilter === 'all' || activityFilter === 'revisions') {
+                revisions.forEach((rev, idx) => {
+                  const ts = (rev.edited || rev.created || 0) * 1000;
+                  items.push({
+                    type: 'revision',
+                    timestamp: ts,
+                    data: rev,
+                    idx,
+                    parsedCurrent: parsedRevisions[idx],
+                    parsedPrevious: idx < revisions.length - 1 ? parsedRevisions[idx + 1] : null,
+                  });
+                });
+              }
+
+              // Add agent runs
+              if (activityFilter === 'all' || activityFilter === 'agent') {
+                agentRuns.forEach((run) => {
+                  const ts = normalizeToMs(run.started_at);
+                  items.push({ type: 'agent', timestamp: ts, data: run });
+                });
+              }
+
+              // Add manual activity
+              if (activityFilter === 'all' || activityFilter === 'manual') {
+                activity.forEach((item) => {
+                  items.push({ type: 'manual', timestamp: item.timestamp, data: item });
+                });
+              }
+
+              // Sort newest first
+              items.sort((a, b) => b.timestamp - a.timestamp);
+
+              if (items.length === 0) {
+                return (
+                  <Box sx={{ 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    py: 4,
+                    color: 'text.secondary',
+                  }}>
+                    <HistoryIcon sx={{ fontSize: 32, mb: 1, opacity: 0.5 }} />
+                    <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
+                      No activity yet
+                    </Typography>
+                  </Box>
+                );
+              }
+
+              const computeDiff = (current: any, previous: any): { added: string[]; removed: string[]; changed: { field: string; from: any; to: any }[] } => {
+                const diff: { added: string[]; removed: string[]; changed: { field: string; from: any; to: any }[] } = { added: [], removed: [], changed: [] };
+                if (!current || !previous) return diff;
+                const allKeys = new Set([...Object.keys(current), ...Object.keys(previous)]);
+                for (const key of allKeys) {
+                  const inCurrent = key in current;
+                  const inPrevious = key in previous;
+                  if (inCurrent && !inPrevious) diff.added.push(key);
+                  else if (!inCurrent && inPrevious) diff.removed.push(key);
+                  else if (inCurrent && inPrevious && JSON.stringify(current[key]) !== JSON.stringify(previous[key])) {
+                    diff.changed.push({ field: key, from: previous[key], to: current[key] });
+                  }
+                }
+                return diff;
+              };
+
+              const truncateValue = (val: any, maxLen = 60): string => {
+                const str = typeof val === 'string' ? val : JSON.stringify(val);
+                return str.length > maxLen ? str.slice(0, maxLen) + '…' : str;
+              };
+
+              return items.map((item, i) => {
+                if (item.type === 'revision') {
+                  const rev = item.data;
+                  const isLatest = item.idx === 0;
+                  const isFirst = item.idx === revisions.length - 1;
+                  const diff = item.parsedPrevious ? computeDiff(item.parsedCurrent, item.parsedPrevious) : null;
+                  const totalChanges = diff ? diff.added.length + diff.removed.length + diff.changed.length : 0;
+
+                  return (
+                    <Box
+                      key={`rev-${rev.id || rev.key || item.idx}`}
+                      sx={{
+                        p: 1.5,
+                        borderRadius: 1.5,
+                        bgcolor: 'rgba(100, 149, 237, 0.04)',
+                        border: '1px solid rgba(100, 149, 237, 0.12)',
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                        <Avatar sx={{ width: 24, height: 24, bgcolor: 'rgba(100, 149, 237, 0.15)' }}>
+                          <HistoryIcon sx={{ fontSize: 14, color: '#6495ed' }} />
+                        </Avatar>
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexWrap: 'wrap' }}>
+                            <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.73rem' }}>
+                              Revision #{revisions.length - item.idx}
+                            </Typography>
+                            {isLatest && (
+                              <Chip label="Latest" size="small" sx={{ height: 16, fontSize: '0.58rem', bgcolor: 'rgba(255, 102, 0, 0.15)', color: '#ff6600', fontWeight: 600 }} />
+                            )}
+                            {isFirst && !isLatest && (
+                              <Chip label="Initial" size="small" sx={{ height: 16, fontSize: '0.58rem', bgcolor: 'rgba(255,255,255,0.06)', color: 'text.secondary', fontWeight: 600 }} />
+                            )}
+                            {totalChanges > 0 && (
+                              <Chip label={`${totalChanges} change${totalChanges !== 1 ? 's' : ''}`} size="small" sx={{ height: 16, fontSize: '0.58rem', bgcolor: 'rgba(255, 102, 0, 0.1)', color: '#ff6600' }} />
+                            )}
+                          </Box>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                            <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.65rem' }}>
+                              {item.timestamp ? formatRelativeTime(item.timestamp) : 'Unknown'}
+                            </Typography>
+                            {rev.updated_by && (
+                              <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.65rem' }}>
+                                by {rev.updated_by}
+                              </Typography>
+                            )}
+                          </Box>
+                        </Box>
+                        {rev.value && (
+                          <Tooltip title="View revision data">
+                            <IconButton
+                              size="small"
+                              onClick={() => {
+                                try {
+                                  const parsed = typeof rev.value === 'string' ? JSON.parse(rev.value) : rev.value;
+                                  setRawJsonText(JSON.stringify(parsed, null, 2));
+                                  setActiveTab(4);
+                                } catch {
+                                  toast.error('Could not parse revision data');
+                                }
+                              }}
+                              sx={{ color: 'text.secondary', width: 24, height: 24, '&:hover': { color: '#ff6600' } }}
+                            >
+                              <VisibilityIcon sx={{ fontSize: 14 }} />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                      </Box>
+
+                      {/* Compact diff */}
+                      {diff && totalChanges > 0 && (
+                        <Box sx={{ mt: 0.75, ml: 4, display: 'flex', flexDirection: 'column', gap: 0.25 }}>
+                          {diff.changed.map(({ field, from, to }) => (
+                            <Box key={field} sx={{ display: 'flex', flexDirection: 'column', gap: 0.15 }}>
+                              <Typography sx={{ fontSize: '0.63rem', fontWeight: 600, color: 'hsl(var(--foreground))', fontFamily: 'JetBrains Mono, monospace' }}>
+                                {field}
+                              </Typography>
+                              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                                <Typography sx={{
+                                  fontSize: '0.6rem', fontFamily: 'JetBrains Mono, monospace',
+                                  color: 'hsl(var(--destructive))', bgcolor: 'hsl(var(--destructive) / 0.08)',
+                                  px: 0.5, py: 0.15, borderRadius: 0.5, lineHeight: 1.4,
+                                  textDecoration: 'line-through', opacity: 0.8,
+                                }}>
+                                  {truncateValue(from)}
+                                </Typography>
+                                <Typography sx={{
+                                  fontSize: '0.6rem', fontFamily: 'JetBrains Mono, monospace',
+                                  color: 'hsl(var(--status-resolved))', bgcolor: 'hsl(var(--status-resolved) / 0.08)',
+                                  px: 0.5, py: 0.15, borderRadius: 0.5, lineHeight: 1.4,
+                                }}>
+                                  {truncateValue(to)}
+                                </Typography>
+                              </Box>
+                            </Box>
+                          ))}
+                          {diff.added.map((field) => (
+                            <Typography key={field} sx={{ fontSize: '0.63rem', fontWeight: 600, fontFamily: 'JetBrains Mono, monospace', color: 'hsl(var(--status-resolved))' }}>
+                              + {field}
+                            </Typography>
+                          ))}
+                          {diff.removed.map((field) => (
+                            <Typography key={field} sx={{ fontSize: '0.63rem', fontWeight: 600, fontFamily: 'JetBrains Mono, monospace', color: 'hsl(var(--destructive))' }}>
+                              − {field}
+                            </Typography>
+                          ))}
+                        </Box>
+                      )}
+                      {isFirst && !diff && (
+                        <Typography variant="caption" sx={{ ml: 4, color: 'text.disabled', fontSize: '0.6rem', fontStyle: 'italic' }}>
+                          Initial revision
+                        </Typography>
+                      )}
+                    </Box>
+                  );
+                }
+
+                if (item.type === 'agent') {
+                  return (
+                    <Box key={`agent-${item.data.execution_id}`}>
+                      <AgentActivityFeed runs={[item.data]} />
+                    </Box>
+                  );
+                }
+
+                // Manual activity
+                const actItem = item.data;
+                const isOwnMessage = actItem.user === currentUsername;
+                const messageAge = Date.now() - actItem.timestamp;
+                const canDelete = isOwnMessage && actItem.type === 'comment' && messageAge < 5 * 60 * 1000;
                 const timeRemaining = Math.max(0, Math.ceil((5 * 60 * 1000 - messageAge) / 60000));
-                
+
                 return (
                   <Box
-                    key={item.id}
+                    key={actItem.id}
                     sx={{
                       display: 'flex',
                       gap: 1.5,
                       p: 1.5,
                       borderRadius: 1.5,
-                      bgcolor: item.type === 'comment' ? 'rgba(255, 102, 0, 0.05)' : 'rgba(0,0,0,0.15)',
+                      bgcolor: actItem.type === 'comment' ? 'rgba(255, 102, 0, 0.05)' : 'rgba(0,0,0,0.15)',
                       border: '1px solid',
-                      borderColor: item.type === 'comment' ? 'rgba(255, 102, 0, 0.1)' : 'rgba(255,255,255,0.04)',
+                      borderColor: actItem.type === 'comment' ? 'rgba(255, 102, 0, 0.1)' : 'rgba(255,255,255,0.04)',
                       position: 'relative',
-                      '&:hover .delete-btn': {
-                        opacity: 1,
-                      },
+                      '&:hover .delete-btn': { opacity: 1 },
                     }}
                   >
                     <Avatar sx={{ 
                       width: 24, 
                       height: 24, 
-                      bgcolor: item.type === 'comment' ? 'rgba(255, 102, 0, 0.2)' : 'rgba(255,255,255,0.08)',
+                      bgcolor: actItem.type === 'comment' ? 'rgba(255, 102, 0, 0.2)' : 'rgba(255,255,255,0.08)',
                     }}>
-                      {getActivityIcon(item.type)}
+                      {getActivityIcon(actItem.type)}
                     </Avatar>
                     <Box sx={{ flex: 1, minWidth: 0 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.25 }}>
-                        <Typography variant="caption" sx={{ 
-                          fontWeight: 600, 
-                          fontSize: '0.75rem',
-                        }}>
-                          {item.user}
+                        <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.75rem' }}>
+                          {actItem.user}
                         </Typography>
                         <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.65rem' }}>
-                          {formatRelativeTime(item.timestamp)}
+                          {formatRelativeTime(actItem.timestamp)}
                         </Typography>
                       </Box>
                       <MentionText 
-                        text={item.content && /<[a-z][\s\S]*>/i.test(item.content) ? htmlToPlainText(item.content).trim() : item.content} 
+                        text={actItem.content && /<[a-z][\s\S]*>/i.test(actItem.content) ? htmlToPlainText(actItem.content).trim() : actItem.content} 
                         sx={{ fontSize: '0.8rem', color: 'text.secondary', whiteSpace: 'pre-wrap' }}
                       />
-                      {/* Display attachments if present */}
-                      {item.attachments && item.attachments.length > 0 && (
+                      {actItem.attachments && actItem.attachments.length > 0 && (
                         <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                          {item.attachments.map((att, i) => (
+                          {actItem.attachments.map((att, ai) => (
                             <Chip
-                              key={i}
+                              key={ai}
                               label={att.filename}
                               size="small"
-                              sx={{
-                                height: 20,
-                                fontSize: '0.65rem',
-                                bgcolor: 'rgba(59, 130, 246, 0.1)',
-                                color: '#3b82f6',
-                              }}
+                              sx={{ height: 20, fontSize: '0.65rem', bgcolor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}
                             />
                           ))}
                         </Box>
                       )}
                     </Box>
-                    {/* Delete button for own messages within 5 minutes */}
                     {canDelete && (
                       <Tooltip title={`Delete (${timeRemaining}m left)`} arrow>
                         <IconButton
                           className="delete-btn"
                           size="small"
                           onClick={() => {
-                            // Remove the message from activity
-                            setActivity(prev => prev.filter(a => a.id !== item.id));
-                            // Trigger save
+                            setActivity(prev => prev.filter(a => a.id !== actItem.id));
                             pendingSaveRef.current = true;
                             if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-                            saveTimeoutRef.current = setTimeout(() => {
-                              saveToDatastore();
-                            }, 500);
+                            saveTimeoutRef.current = setTimeout(() => { saveToDatastore(); }, 500);
                             toast.success('Message deleted');
                           }}
                           sx={{
-                            position: 'absolute',
-                            top: 4,
-                            right: 4,
-                            width: 20,
-                            height: 20,
-                            opacity: 0,
-                            transition: 'opacity 0.2s',
-                            bgcolor: 'rgba(239, 68, 68, 0.1)',
-                            color: '#ef4444',
-                            '&:hover': {
-                              bgcolor: 'rgba(239, 68, 68, 0.2)',
-                            },
+                            position: 'absolute', top: 4, right: 4, width: 20, height: 20,
+                            opacity: 0, transition: 'opacity 0.2s',
+                            bgcolor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444',
+                            '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.2)' },
                           }}
                         >
                           <DeleteIcon sx={{ fontSize: 12 }} />
@@ -4645,8 +4541,8 @@ const IncidentDetailPage = () => {
                     )}
                   </Box>
                 );
-              })
-            )}
+              });
+            })()}
           </Box>
         </Box>
       </Box>
