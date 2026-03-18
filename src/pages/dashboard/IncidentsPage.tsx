@@ -2208,15 +2208,6 @@ const IncidentsPage = () => {
               )}
 
 
-              {/* Sub-org loading indicator */}
-              {subOrgLoading.size > 0 && (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <CircularProgress size={14} sx={{ color: '#a78bfa' }} />
-                  <Typography variant="caption" sx={{ color: '#a78bfa', fontSize: '0.7rem' }}>
-                    Loading {subOrgLoading.size} sub-org{subOrgLoading.size > 1 ? 's' : ''}…
-                  </Typography>
-                </Box>
-              )}
 
               {/* Tag quick-filter chips removed — use tag chips on incident cards instead */}
 
