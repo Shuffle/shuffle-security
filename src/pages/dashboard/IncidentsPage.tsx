@@ -621,7 +621,40 @@ const IncidentsPage = () => {
     }, 3000);
   }, [ingestionApps, fetchIngestionApps]);
 
-  // Reusable sync trigger — executes the ingest workflow and polls for results
+  // Debounced handler for forward app toggles
+  const handleToggleForwardApp = useCallback((appName: string, enabled: boolean) => {
+    pendingForwardTogglesRef.current.set(appName, enabled);
+    setIsUpdatingForwardApps(true);
+    if (forwardDebounceTimerRef.current) clearTimeout(forwardDebounceTimerRef.current);
+    forwardDebounceTimerRef.current = setTimeout(async () => {
+      const toggles = new Map(pendingForwardTogglesRef.current);
+      pendingForwardTogglesRef.current.clear();
+      const activeNames = forwardApps
+        .filter(a => toggles.has(a.name) ? toggles.get(a.name) : a.enabled)
+        .map(a => a.name);
+      try {
+        await fetch(getApiUrl('/api/v2/workflows/generate'), {
+          method: 'POST',
+          credentials: 'include',
+          headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            label: 'Forward Tickets',
+            app_name: activeNames.join(','),
+            category: 'cases',
+          }),
+        });
+        toast.success('Forward destinations updated');
+        await fetchIngestionApps();
+      } catch (error) {
+        console.error('Failed to update forward destinations:', error);
+        toast.error('Failed to update forward destinations');
+        fetchIngestionApps();
+      } finally {
+        setIsUpdatingForwardApps(false);
+      }
+    }, 3000);
+  }, [forwardApps, fetchIngestionApps]);
+
   const triggerSync = useCallback(async () => {
     if (!ingestWorkflowId || isSyncing) return;
     setIsSyncing(true);
