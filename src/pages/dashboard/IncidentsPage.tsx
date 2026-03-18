@@ -588,7 +588,7 @@ const IncidentsPage = () => {
     } finally {
       setIngestionLoading(false);
     }
-  }, []);
+  }, [categoryAutomations]);
 
   useEffect(() => {
     fetchIngestionApps();
