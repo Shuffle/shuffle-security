@@ -1628,7 +1628,7 @@ const IncidentsPage = () => {
                 </Tooltip>
               </Typography>
               {forwardApps.slice(0, 5).map(app => (
-                <IngestionSourceButton key={app.name} app={app} onToggle={handleToggleForwardApp} incidentCount={incidentCountsBySource.get(normalizeAppName(app.name)) || 0} />
+                <IngestionSourceButton key={app.name} app={app} onToggle={handleToggleForwardApp} variant="forward" />
               ))}
               {forwardApps.length > 5 && (
                 <>
