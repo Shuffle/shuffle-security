@@ -635,12 +635,20 @@ const IncidentDetailPage = () => {
     }
   }, [activeTab, incidentFileId, fileLoaded, loadFileContent]);
 
-  // Auto-load revisions when incident finishes loading
+  // Auto-load revisions when incident finishes loading, then poll every 60s
   useEffect(() => {
     if (!loading && id && !revisionsLoaded) {
       loadRevisions();
     }
   }, [loading, id, revisionsLoaded, loadRevisions]);
+
+  useEffect(() => {
+    if (!id || loading) return;
+    const interval = setInterval(() => {
+      loadRevisions();
+    }, 60_000);
+    return () => clearInterval(interval);
+  }, [id, loading, loadRevisions]);
 
   const [forwardingApps, setForwardingApps] = useState<Array<{ id: string; name: string; large_image: string; categories: string[] }>>([]);
   const [forwardingAppsLoading, setForwardingAppsLoading] = useState(false);
