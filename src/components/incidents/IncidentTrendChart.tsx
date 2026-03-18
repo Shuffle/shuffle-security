@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback, useRef } from 'react';
 import { Box, Typography, Dialog, DialogContent, IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import {
@@ -9,6 +9,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip as RechartsTooltip,
+  ReferenceArea,
 } from 'recharts';
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 
@@ -21,6 +22,7 @@ interface IncidentTrendChartProps {
   incidents: Incident[];
   dateFrom?: Date;
   dateTo?: Date;
+  onDateRangeSelect?: (from: Date, to: Date) => void;
 }
 
 interface DayBucket {
@@ -49,7 +51,6 @@ const buildBuckets = (incidents: Incident[], from: Date, to: Date): DayBucket[] 
   const start = startOfDay(from);
   const end = endOfDay(to);
 
-  // Create day buckets
   let cursor = new Date(start);
   while (cursor <= end) {
     buckets.push({
@@ -62,7 +63,6 @@ const buildBuckets = (incidents: Incident[], from: Date, to: Date): DayBucket[] 
     cursor = new Date(cursor.getTime() + 86400000);
   }
 
-  // Fill buckets
   for (const inc of incidents) {
     if (!inc.createdTs || inc.createdTs < start.getTime() || inc.createdTs > end.getTime() + 86400000) continue;
     const dayStart = startOfDay(new Date(inc.createdTs)).getTime();
@@ -102,49 +102,105 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   );
 };
 
-const ChartContent = ({ data, height = 120 }: { data: DayBucket[]; height?: number }) => (
-  <ResponsiveContainer width="100%" height={height}>
-    <AreaChart data={data} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-      <defs>
-        {Object.entries(STATUS_COLORS).map(([key, color]) => (
-          <linearGradient key={key} id={`gradient-${key.replace(/\s/g, '')}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={color} stopOpacity={0.3} />
-            <stop offset="100%" stopColor={color} stopOpacity={0.02} />
-          </linearGradient>
-        ))}
-      </defs>
-      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} />
-      <XAxis
-        dataKey="date"
-        tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
-        tickLine={false}
-        axisLine={false}
-        interval="preserveStartEnd"
-      />
-      <YAxis
-        tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
-        tickLine={false}
-        axisLine={false}
-        allowDecimals={false}
-      />
-      <RechartsTooltip content={<CustomTooltip />} />
-      {Object.entries(STATUS_COLORS).map(([key, color]) => (
-        <Area
-          key={key}
-          type="monotone"
-          dataKey={key}
-          stroke={color}
-          strokeWidth={2}
-          fill={`url(#gradient-${key.replace(/\s/g, '')})`}
-          dot={false}
-          activeDot={{ r: 4, strokeWidth: 2, stroke: color, fill: 'hsl(var(--card))' }}
-        />
-      ))}
-    </AreaChart>
-  </ResponsiveContainer>
-);
+const ChartContent = ({ 
+  data, height = 120, interactive = false, onDateRangeSelect,
+}: { 
+  data: DayBucket[]; height?: number; interactive?: boolean;
+  onDateRangeSelect?: (from: Date, to: Date) => void;
+}) => {
+  const [refAreaLeft, setRefAreaLeft] = useState<string | null>(null);
+  const [refAreaRight, setRefAreaRight] = useState<string | null>(null);
+  const selectingRef = useRef(false);
 
-export const IncidentTrendChart = ({ incidents, dateFrom, dateTo }: IncidentTrendChartProps) => {
+  const handleMouseDown = useCallback((e: any) => {
+    if (!interactive || !e?.activeLabel) return;
+    selectingRef.current = true;
+    setRefAreaLeft(e.activeLabel);
+    setRefAreaRight(null);
+  }, [interactive]);
+
+  const handleMouseMove = useCallback((e: any) => {
+    if (!interactive || !selectingRef.current || !e?.activeLabel) return;
+    setRefAreaRight(e.activeLabel);
+  }, [interactive]);
+
+  const handleMouseUp = useCallback(() => {
+    if (!interactive || !selectingRef.current) return;
+    selectingRef.current = false;
+    if (refAreaLeft && refAreaRight && refAreaLeft !== refAreaRight && onDateRangeSelect) {
+      const leftBucket = data.find(d => d.date === refAreaLeft);
+      const rightBucket = data.find(d => d.date === refAreaRight);
+      if (leftBucket && rightBucket) {
+        const fromMs = Math.min(leftBucket.dateMs, rightBucket.dateMs);
+        const toMs = Math.max(leftBucket.dateMs, rightBucket.dateMs);
+        onDateRangeSelect(new Date(fromMs), endOfDay(new Date(toMs)));
+      }
+    }
+    setRefAreaLeft(null);
+    setRefAreaRight(null);
+  }, [interactive, refAreaLeft, refAreaRight, data, onDateRangeSelect]);
+
+  return (
+    <ResponsiveContainer width="100%" height={height}>
+      <AreaChart 
+        data={data} 
+        margin={{ top: 4, right: 4, left: -20, bottom: 0 }}
+        onMouseDown={interactive ? handleMouseDown : undefined}
+        onMouseMove={interactive ? handleMouseMove : undefined}
+        onMouseUp={interactive ? handleMouseUp : undefined}
+        style={interactive ? { cursor: 'crosshair' } : undefined}
+      >
+        <defs>
+          {Object.entries(STATUS_COLORS).map(([key, color]) => (
+            <linearGradient key={key} id={`gradient-${key.replace(/\s/g, '')}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={color} stopOpacity={0.3} />
+              <stop offset="100%" stopColor={color} stopOpacity={0.02} />
+            </linearGradient>
+          ))}
+        </defs>
+        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} />
+        <XAxis
+          dataKey="date"
+          tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+          tickLine={false}
+          axisLine={false}
+          interval="preserveStartEnd"
+        />
+        <YAxis
+          tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+          tickLine={false}
+          axisLine={false}
+          allowDecimals={false}
+        />
+        <RechartsTooltip content={<CustomTooltip />} />
+        {Object.entries(STATUS_COLORS).map(([key, color]) => (
+          <Area
+            key={key}
+            type="monotone"
+            dataKey={key}
+            stroke={color}
+            strokeWidth={2}
+            fill={`url(#gradient-${key.replace(/\s/g, '')})`}
+            dot={false}
+            activeDot={{ r: 4, strokeWidth: 2, stroke: color, fill: 'hsl(var(--card))' }}
+          />
+        ))}
+        {interactive && refAreaLeft && refAreaRight && (
+          <ReferenceArea
+            x1={refAreaLeft}
+            x2={refAreaRight}
+            strokeOpacity={0.3}
+            fill="hsl(var(--primary))"
+            fillOpacity={0.15}
+            stroke="hsl(var(--primary))"
+          />
+        )}
+      </AreaChart>
+    </ResponsiveContainer>
+  );
+};
+
+export const IncidentTrendChart = ({ incidents, dateFrom, dateTo, onDateRangeSelect }: IncidentTrendChartProps) => {
   const [modalOpen, setModalOpen] = useState(false);
 
   const data = useMemo(() => {
@@ -218,11 +274,18 @@ export const IncidentTrendChart = ({ incidents, dateFrom, dateTo }: IncidentTren
               <Typography variant="h6" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}>
                 Status Trend
               </Typography>
-              <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-                {dateFrom ? format(dateFrom, 'MMM d, yyyy') : format(subDays(new Date(), 30), 'MMM d, yyyy')}
-                {' → '}
-                {dateTo ? format(dateTo, 'MMM d, yyyy') : format(new Date(), 'MMM d, yyyy')}
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                  {dateFrom ? format(dateFrom, 'MMM d, yyyy') : format(subDays(new Date(), 30), 'MMM d, yyyy')}
+                  {' → '}
+                  {dateTo ? format(dateTo, 'MMM d, yyyy') : format(new Date(), 'MMM d, yyyy')}
+                </Typography>
+                {onDateRangeSelect && (
+                  <Typography variant="caption" sx={{ color: 'hsl(var(--primary))', fontSize: '0.65rem', opacity: 0.7 }}>
+                    • Click & drag to select range
+                  </Typography>
+                )}
+              </Box>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               <Box sx={{ display: 'flex', gap: 1.5 }}>
@@ -239,7 +302,15 @@ export const IncidentTrendChart = ({ incidents, dateFrom, dateTo }: IncidentTren
             </Box>
           </Box>
           {hasData ? (
-            <ChartContent data={data} height={350} />
+            <ChartContent 
+              data={data} 
+              height={350} 
+              interactive={!!onDateRangeSelect}
+              onDateRangeSelect={(from, to) => {
+                onDateRangeSelect?.(from, to);
+                setModalOpen(false);
+              }}
+            />
           ) : (
             <Box sx={{ height: 350, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Typography sx={{ color: 'hsl(var(--muted-foreground))' }}>No data in range</Typography>
