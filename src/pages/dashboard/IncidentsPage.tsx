@@ -1620,7 +1620,7 @@ const IncidentsPage = () => {
               </Typography>
               {/* Webhook counts as 1 of the 5 visible slots */}
               <WebhookIngestionButton webhook={webhookIngestion} onToggled={fetchIngestionApps} />
-              {ingestionApps.slice(0, 4).map(app => (
+              {ingestionApps.slice(0, 3).map(app => (
                 <IngestionSourceButton key={app.name} app={app} onToggle={handleToggleApp} incidentCount={incidentCountsBySource.get(normalizeAppName(app.name)) || 0} />
               ))}
               {ingestionApps.length > 4 && (
