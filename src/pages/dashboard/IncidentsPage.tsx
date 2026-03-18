@@ -659,6 +659,8 @@ const IncidentsPage = () => {
           body: JSON.stringify(body),
         });
         toast.success('Forward destinations updated');
+        // Re-fetch category config (which includes automations) so forward detection picks up the updated workflow reference
+        await fetchItems();
         await fetchIngestionApps();
       } catch (error) {
         console.error('Failed to update forward destinations:', error);
@@ -668,7 +670,7 @@ const IncidentsPage = () => {
         setIsUpdatingForwardApps(false);
       }
     }, 3000);
-  }, [forwardApps, fetchIngestionApps]);
+  }, [forwardApps, fetchIngestionApps, fetchItems]);
 
   const triggerSync = useCallback(async () => {
     if (!ingestWorkflowId || isSyncing) return;
