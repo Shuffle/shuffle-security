@@ -1681,7 +1681,6 @@ const IncidentsPage = () => {
             <Box className="automation-section-forward" sx={{ 
               position: 'relative',
               display: 'flex', 
-              maxWidth: 600,
               alignItems: 'center', 
               gap: 0.5,
               bgcolor: 'hsl(var(--muted) / 0.4)',
