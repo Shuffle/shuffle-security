@@ -2533,47 +2533,7 @@ const IncidentDetailPage = () => {
                   )}
                 </Box>
               ))}
-              {/* Changes tab — separate since it's index 7 */}
-              <Box
-                onClick={() => setActiveTab(7)}
-                sx={{
-                  px: 2,
-                  py: 1,
-                  borderRadius: 1.5,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  transition: 'all 0.2s ease',
-                  bgcolor: activeTab === 7 ? 'rgba(255, 102, 0, 0.15)' : 'transparent',
-                  color: activeTab === 7 ? '#ff6600' : 'text.secondary',
-                  fontWeight: activeTab === 7 ? 600 : 400,
-                  fontSize: '0.875rem',
-                  '&:hover': {
-                    bgcolor: activeTab === 7 ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255,255,255,0.05)',
-                  },
-                }}
-              >
-                Changes
-                {revisionsLoading ? (
-                  <CircularProgress size={12} sx={{ color: 'text.secondary' }} />
-                ) : revisions.length > 0 && (
-                  <Box
-                    component="span"
-                    sx={{
-                      fontSize: '0.7rem',
-                      fontWeight: 600,
-                      px: 0.75,
-                      py: 0.25,
-                      borderRadius: 1,
-                      bgcolor: activeTab === 7 ? 'rgba(255, 102, 0, 0.3)' : 'rgba(255,255,255,0.08)',
-                      color: activeTab === 7 ? '#ff6600' : 'text.secondary',
-                    }}
-                  >
-                    {revisions.length}
-                  </Box>
-                )}
-              </Box>
+              {/* Changes tab removed — revisions now in Activity sidebar */}
             </Box>
 
             {/* Right tab group island: Automation + Raw */}
