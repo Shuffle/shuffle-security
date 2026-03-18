@@ -358,6 +358,7 @@ const IncidentsPage = () => {
   const [isUpdatingApps, setIsUpdatingApps] = useState(false);
   const [isUpdatingForwardApps, setIsUpdatingForwardApps] = useState(false);
   const [ingestionLoading, setIngestionLoading] = useState(true);
+  const ingestionLoadedOnceRef = useRef(false);
   const pendingTogglesRef = useRef<Map<string, boolean>>(new Map());
   const pendingForwardTogglesRef = useRef<Map<string, boolean>>(new Map());
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
