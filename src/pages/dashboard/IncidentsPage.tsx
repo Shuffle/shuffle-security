@@ -1259,6 +1259,7 @@ const IncidentsPage = () => {
     !filters.source &&
     !filters.tag &&
     negatedFilters.size === 0 &&
+    !dateFrom && !dateTo &&
     (parentOrg
       ? (filters.org?.length === 1 && filters.org[0] === currentOrgId)
       : (!filters.org || filters.org.length === 0)) &&
