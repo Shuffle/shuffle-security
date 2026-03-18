@@ -1573,7 +1573,10 @@ const IncidentsPage = () => {
           >
           {/* Ingestion Sources - grouped in a subtle container with add button */}
           {(ingestionApps.length > 0 || webhookIngestion.exists || webhookIngestion.enabled) && (
-            <Box className="automation-section-ingest" sx={{ 
+            <Box className={`automation-section-ingest${ingestHovered ? ' is-hovered' : ''}`}
+              onMouseEnter={handleIngestEnter}
+              onMouseLeave={handleIngestLeave}
+              sx={{ 
               position: 'relative',
               display: 'flex', 
               alignItems: 'center', 
@@ -1607,18 +1610,17 @@ const IncidentsPage = () => {
                 overflow: 'hidden',
                 transition: 'max-width 0.25s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease',
               },
-              '&:hover .automation-overflow': {
-                opacity: 1,
-                pointerEvents: 'auto',
-                transitionDelay: '0.25s',
-              },
-              '&:hover': {
+              ...(ingestHovered && {
                 borderRadius: '6px 0 0 6px',
-              },
-              '&:hover .automation-overflow-count': {
-                maxWidth: 0,
-                opacity: 0,
-              },
+                '& .automation-overflow': {
+                  opacity: 1,
+                  pointerEvents: 'auto',
+                },
+                '& .automation-overflow-count': {
+                  maxWidth: 0,
+                  opacity: 0,
+                },
+              }),
             }}>
               <Typography className="automation-section-title" sx={{
                 position: 'absolute',
