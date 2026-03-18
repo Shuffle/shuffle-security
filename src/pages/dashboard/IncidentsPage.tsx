@@ -1516,7 +1516,7 @@ const IncidentsPage = () => {
               position: 'relative',
               // Default state
               '& .automation-section-ingest, & .automation-section-forward': {
-                transition: 'max-width 0.45s cubic-bezier(0.4,0,0.2,1), padding 0.45s cubic-bezier(0.4,0,0.2,1), border-color 0.3s ease',
+                transition: 'border-color 0.3s ease, background-color 0.3s ease',
                 overflow: 'visible',
                 clipPath: 'inset(-20px 0px -20px 0px)',
                 position: 'relative',
@@ -1525,19 +1525,16 @@ const IncidentsPage = () => {
                 transition: 'max-width 0.4s cubic-bezier(0.4,0,0.2,1) 0.15s, opacity 0.3s ease 0.15s',
                 overflow: 'hidden',
               },
-              // Hovering Ingest: grow over Forward using z-index
+              // Hovering either section: boost z-index and make bg opaque
               '&:has(.automation-section-ingest:hover) .automation-section-ingest': {
-                maxWidth: '800px !important',
                 zIndex: 10,
                 bgcolor: 'hsl(var(--muted))',
-                transition: 'max-width 0.45s cubic-bezier(0.4,0,0.2,1), padding 0.45s cubic-bezier(0.4,0,0.2,1), border-color 0.3s ease, background-color 0.2s ease',
+                clipPath: 'inset(-20px -500px -20px 0px)',
               },
-              // Hovering Forward: grow over Ingest using z-index
               '&:has(.automation-section-forward:hover) .automation-section-forward': {
-                maxWidth: '800px !important',
                 zIndex: 10,
                 bgcolor: 'hsl(var(--muted))',
-                transition: 'max-width 0.45s cubic-bezier(0.4,0,0.2,1), padding 0.45s cubic-bezier(0.4,0,0.2,1), border-color 0.3s ease, background-color 0.2s ease',
+                clipPath: 'inset(-20px 0px -20px -500px)',
               },
             }}
           >
@@ -1546,7 +1543,6 @@ const IncidentsPage = () => {
             <Box className="automation-section-ingest" sx={{ 
               position: 'relative',
               display: 'flex', 
-              maxWidth: 600,
               alignItems: 'center', 
               gap: 0.5,
               bgcolor: 'hsl(var(--muted) / 0.4)',
@@ -1556,10 +1552,20 @@ const IncidentsPage = () => {
               py: 0.5,
               '& .automation-overflow': {
                 display: 'flex',
-                maxWidth: 0,
+                alignItems: 'center',
+                gap: 0.5,
+                position: 'absolute',
+                left: '100%',
+                top: 0,
+                bottom: 0,
                 opacity: 0,
-                overflow: 'hidden',
-                transition: 'max-width 0.45s cubic-bezier(0.4,0,0.2,1), opacity 0.25s ease',
+                pl: 0.5,
+                bgcolor: 'hsl(var(--muted))',
+                borderRadius: '0 6px 6px 0',
+                border: '1px solid hsl(var(--border))',
+                borderLeft: 'none',
+                transition: 'opacity 0.3s ease',
+                pointerEvents: 'none',
               },
               '& .automation-overflow-count': {
                 maxWidth: 36,
@@ -1568,14 +1574,13 @@ const IncidentsPage = () => {
                 transition: 'max-width 0.25s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease',
               },
               '&:hover .automation-overflow': {
-                maxWidth: 520,
                 opacity: 1,
-                transitionDelay: '0.65s',
+                pointerEvents: 'auto',
+                transitionDelay: '0.25s',
               },
               '&:hover .automation-overflow-count': {
                 maxWidth: 0,
                 opacity: 0,
-                transitionDelay: '0.1s',
               },
             }}>
               <Typography sx={{
@@ -1610,7 +1615,7 @@ const IncidentsPage = () => {
                   <Typography className="automation-overflow-count" sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', fontWeight: 600, px: 0.25 }}>
                     +{ingestionApps.length - 3}
                   </Typography>
-                  <Box className="automation-overflow" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, maxWidth: 0, opacity: 0, overflow: 'hidden' }}>
+                  <Box className="automation-overflow" sx={{ px: 0.75, py: 0.5 }}>
                     {ingestionApps.slice(3).map(app => (
                       <IngestionSourceButton key={app.name} app={app} onToggle={handleToggleApp} incidentCount={incidentCountsBySource.get(normalizeAppName(app.name)) || 0} />
                     ))}
@@ -1676,7 +1681,6 @@ const IncidentsPage = () => {
             <Box className="automation-section-forward" sx={{ 
               position: 'relative',
               display: 'flex', 
-              maxWidth: 600,
               alignItems: 'center', 
               gap: 0.5,
               bgcolor: 'hsl(var(--muted) / 0.4)',
@@ -1686,10 +1690,20 @@ const IncidentsPage = () => {
               py: 0.5,
               '& .automation-overflow': {
                 display: 'flex',
-                maxWidth: 0,
+                alignItems: 'center',
+                gap: 0.5,
+                position: 'absolute',
+                right: '100%',
+                top: 0,
+                bottom: 0,
                 opacity: 0,
-                overflow: 'hidden',
-                transition: 'max-width 0.45s cubic-bezier(0.4,0,0.2,1), opacity 0.25s ease',
+                pr: 0.5,
+                bgcolor: 'hsl(var(--muted))',
+                borderRadius: '6px 0 0 6px',
+                border: '1px solid hsl(var(--border))',
+                borderRight: 'none',
+                transition: 'opacity 0.3s ease',
+                pointerEvents: 'none',
               },
               '& .automation-overflow-count': {
                 maxWidth: 36,
@@ -1698,14 +1712,13 @@ const IncidentsPage = () => {
                 transition: 'max-width 0.25s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease',
               },
               '&:hover .automation-overflow': {
-                maxWidth: 520,
                 opacity: 1,
-                transitionDelay: '0.65s',
+                pointerEvents: 'auto',
+                transitionDelay: '0.25s',
               },
               '&:hover .automation-overflow-count': {
                 maxWidth: 0,
                 opacity: 0,
-                transitionDelay: '0.1s',
               },
             }}>
               <Typography sx={{
@@ -1738,7 +1751,7 @@ const IncidentsPage = () => {
                   <Typography className="automation-overflow-count" sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', fontWeight: 600, px: 0.25 }}>
                     +{forwardApps.length - 4}
                   </Typography>
-                  <Box className="automation-overflow" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, maxWidth: 0, opacity: 0, overflow: 'hidden' }}>
+                  <Box className="automation-overflow" sx={{ px: 0.75, py: 0.5 }}>
                     {forwardApps.slice(4).map(app => (
                       <IngestionSourceButton key={app.name} app={app} onToggle={handleToggleForwardApp} variant="forward" />
                     ))}
