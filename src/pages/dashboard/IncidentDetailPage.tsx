@@ -2700,7 +2700,7 @@ const IncidentDetailPage = () => {
 
               {/* File tab */}
               {(() => {
-                const hasFile = !!incidentFileId;
+                const hasFile = !!incidentFileRef;
                 return (
                   <Tooltip title={hasFile ? 'The translation file that maps original data to OCSF' : 'No translation file linked to this incident'} arrow>
                     <Box
