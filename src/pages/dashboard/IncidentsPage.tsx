@@ -522,7 +522,7 @@ const IncidentsPage = () => {
           const forwardWorkflow = findForwardTicketsWorkflow(workflowList);
           if (forwardWorkflow) {
             // Also check if the Forward Tickets workflow is referenced in category automations' "Run workflow"
-            const workflowAuto = categoryAutomations?.find(a => a.type === 'workflow' && a.enabled);
+            const workflowAuto = categoryAutomations?.find(a => (a.type === 'workflow' || a.name === 'Run workflow') && a.enabled);
             const automationWorkflowIds = workflowAuto?.options?.find(o => o.key === 'workflow_id')?.value?.split(',').map(id => id.trim()).filter(Boolean) || [];
             const isReferencedInAutomations = automationWorkflowIds.includes(forwardWorkflow.id);
 
