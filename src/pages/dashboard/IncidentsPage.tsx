@@ -1642,7 +1642,7 @@ const IncidentsPage = () => {
 
           {/* Arrow between Ingest and Forward - hidden until workflows loaded */}
           {!ingestionLoading && (
-          <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', color: 'hsl(var(--muted-foreground))', mx: -0.25 }}>
+          <Box className="automation-arrow" sx={{ display: 'flex', alignItems: 'center', color: 'hsl(var(--muted-foreground))', mx: -0.25, maxWidth: 30, opacity: 1 }}>
             <ChevronRightIcon sx={{ fontSize: 18 }} />
           </Box>
           )}
