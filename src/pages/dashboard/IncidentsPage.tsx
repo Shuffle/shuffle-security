@@ -1697,8 +1697,29 @@ const IncidentsPage = () => {
               borderRadius: 1.5,
               px: 0.75,
               py: 0.5,
-              '&:hover .automation-overflow': { display: 'flex' },
-              '&:hover .automation-overflow-count': { display: 'none' },
+              '& .automation-overflow': {
+                display: 'flex',
+                maxWidth: 0,
+                opacity: 0,
+                overflow: 'hidden',
+                transition: 'max-width 0.45s cubic-bezier(0.4,0,0.2,1), opacity 0.25s ease',
+              },
+              '& .automation-overflow-count': {
+                maxWidth: 36,
+                opacity: 1,
+                overflow: 'hidden',
+                transition: 'max-width 0.25s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease',
+              },
+              '&:hover .automation-overflow': {
+                maxWidth: 520,
+                opacity: 1,
+                transitionDelay: '0.65s',
+              },
+              '&:hover .automation-overflow-count': {
+                maxWidth: 0,
+                opacity: 0,
+                transitionDelay: '0.1s',
+              },
             }}>
               <Typography sx={{
                 position: 'absolute',
