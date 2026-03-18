@@ -633,6 +633,13 @@ const IncidentDetailPage = () => {
       loadFileContent();
     }
   }, [activeTab, incidentFileId, fileLoaded, loadFileContent]);
+
+  useEffect(() => {
+    if (activeTab === 7 && !revisionsLoaded) {
+      loadRevisions();
+    }
+  }, [activeTab, revisionsLoaded, loadRevisions]);
+
   const [forwardingApps, setForwardingApps] = useState<Array<{ id: string; name: string; large_image: string; categories: string[] }>>([]);
   const [forwardingAppsLoading, setForwardingAppsLoading] = useState(false);
   const [sourceAppImage, setSourceAppImage] = useState<string | null>(null);
