@@ -4315,11 +4315,15 @@ const IncidentDetailPage = () => {
                 );
               }
 
+              // Fields that are already represented by other activity types (comments, metadata)
+              const NOISE_FIELDS = new Set(['activity', 'updated_by', 'edited_time', 'updated_at', 'last_updated', 'comments']);
+
               const computeDiff = (current: any, previous: any): { added: string[]; removed: string[]; changed: { field: string; from: any; to: any }[] } => {
                 const diff: { added: string[]; removed: string[]; changed: { field: string; from: any; to: any }[] } = { added: [], removed: [], changed: [] };
                 if (!current || !previous) return diff;
                 const allKeys = new Set([...Object.keys(current), ...Object.keys(previous)]);
                 for (const key of allKeys) {
+                  if (NOISE_FIELDS.has(key)) continue;
                   const inCurrent = key in current;
                   const inPrevious = key in previous;
                   if (inCurrent && !inPrevious) diff.added.push(key);
@@ -4343,6 +4347,9 @@ const IncidentDetailPage = () => {
                   const isFirst = item.idx === revisions.length - 1;
                   const diff = item.parsedPrevious ? computeDiff(item.parsedCurrent, item.parsedPrevious) : null;
                   const totalChanges = diff ? diff.added.length + diff.removed.length + diff.changed.length : 0;
+
+                  // Hide revisions where all changes were noise fields (unless it's the initial revision)
+                  if (!isFirst && diff && totalChanges === 0) return null;
 
                   return (
                     <Box
