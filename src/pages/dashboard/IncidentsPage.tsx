@@ -1419,7 +1419,7 @@ const IncidentsPage = () => {
               </Typography>
               <WebhookIngestionButton webhook={webhookIngestion} onToggled={fetchIngestionApps} />
               {ingestionApps.map(app => (
-                <IngestionSourceButton key={app.name} app={app} onToggle={handleToggleApp} />
+                <IngestionSourceButton key={app.name} app={app} onToggle={handleToggleApp} incidentCount={incidentCountsBySource.get(normalizeAppName(app.name)) || 0} />
               ))}
               <Tooltip title="Add ingestion source">
                 <IconButton
