@@ -974,8 +974,19 @@ const IncidentsPage = () => {
       );
     }
 
+    // Date range filter
+    if (dateFrom) {
+      const fromMs = dateFrom.getTime();
+      result = result.filter(i => (i.createdTs || 0) >= fromMs);
+    }
+    if (dateTo) {
+      // Include the entire "to" day
+      const toMs = new Date(dateTo.getFullYear(), dateTo.getMonth(), dateTo.getDate(), 23, 59, 59, 999).getTime();
+      result = result.filter(i => (i.createdTs || 0) <= toMs);
+    }
+
     return result;
-  }, [filteredByAssignee, filters, negatedFilters, searchQuery]);
+  }, [filteredByAssignee, filters, negatedFilters, searchQuery, dateFrom, dateTo]);
 
   // Reset to page 1 when filters or search change
   useEffect(() => {
