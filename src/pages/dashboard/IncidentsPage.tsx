@@ -613,7 +613,12 @@ const IncidentsPage = () => {
           }
         }, 10000);
       } else {
-        toast.error('Failed to trigger sync');
+        let errorMsg = 'Failed to trigger sync';
+        try {
+          const errorData = await resp.json();
+          if (errorData?.reason) errorMsg = errorData.reason;
+        } catch { /* ignore parse errors */ }
+        toast.error(errorMsg);
         setIsSyncing(false);
       }
     } catch {
