@@ -156,6 +156,7 @@ const AuthPage = ({ mode }: AuthPageProps) => {
             credentials: 'include',
             headers: {
               'Content-Type': 'application/json',
+              'Authorization': `Bearer ${sessionToken}`,
             },
           });
           
