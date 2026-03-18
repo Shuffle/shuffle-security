@@ -1243,6 +1243,7 @@ const IncidentsPage = () => {
     !filters.tlp && 
     !filters.source &&
     !filters.tag &&
+    negatedFilters.size === 0 &&
     (parentOrg
       ? (filters.org?.length === 1 && filters.org[0] === currentOrgId)
       : (!filters.org || filters.org.length === 0)) &&
