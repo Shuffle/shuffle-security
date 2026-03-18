@@ -281,7 +281,8 @@ const AppDetailPage = () => {
         if (!res.ok) throw new Error('Deactivate failed');
         setActivatedAppId(null);
       } else {
-        const configId = appInfo?.algoliaId || appname;
+        const configId = appInfo?.algoliaId;
+        if (!configId) throw new Error('App ID not resolved yet');
         const searchRes = await fetch(getApiUrl(`/api/v1/apps/${encodeURIComponent(configId!)}/config`), {
           credentials: 'include',
           headers: { ...getAuthHeader() },

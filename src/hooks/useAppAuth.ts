@@ -241,15 +241,15 @@ export function useAppAuth() {
     }
   }, [fetchAuthenticatedApps]);
 
-  const handleSaveAuth = useCallback(async (appId: string, credentials: Record<string, string>): Promise<boolean> => {
+  const handleSaveAuth = useCallback(async (appId: string, credentials: Record<string, string>, appName?: string): Promise<boolean> => {
     const fields = Object.entries(credentials)
       .filter(([key, value]) => key?.trim() && value?.trim())
       .map(([key, value]) => ({ key, value }));
 
     const payload = {
-      label: `Auth for ${appId.replace(/_/g, ' ')}`,
+      label: `Auth for ${(appName || appId).replace(/_/g, ' ')}`,
       app: {
-        name: appId,
+        name: appName || appId,
         id: appId,
         app_version: '1.0.0',
       },

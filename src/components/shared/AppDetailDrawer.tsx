@@ -307,7 +307,8 @@ export default function AppDetailDrawer({
         setActivatedAppId(null);
         toast.success(`${displayName} deactivated`);
       } else {
-        const configId = resolvedAlgoliaId || appName;
+        const configId = resolvedAlgoliaId;
+        if (!configId) throw new Error('App ID not resolved yet');
         console.log('[Activate] Fetching config for:', configId);
         const searchRes = await fetch(getApiUrl(`/api/v1/apps/${encodeURIComponent(configId)}/config`), {
           credentials: 'include', headers: { ...getAuthHeader() },
@@ -563,7 +564,7 @@ export default function AppDetailDrawer({
                     onToggle={() => setAuthExpanded(prev => !prev)}
                     onAuthChange={handleAuthChange}
                     onTestConnection={(appId, authId) => handleTestConnection(appName || appId, authId)}
-                    onSaveAuth={(appId, creds) => handleSaveAuth(appName || appId, creds)}
+                    onSaveAuth={(appId, creds) => handleSaveAuth(appId, creds, appName || undefined)}
                     apiAuthEntries={matchingEntries}
                     onRefreshAuth={refreshAuth}
                   />
