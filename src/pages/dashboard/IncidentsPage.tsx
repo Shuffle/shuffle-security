@@ -1629,7 +1629,7 @@ const IncidentsPage = () => {
                     +{ingestionApps.length - 4}
                   </Typography>
                   <Box className="automation-overflow" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, maxWidth: 0, opacity: 0, overflow: 'hidden' }}>
-                    {ingestionApps.slice(4).map(app => (
+                    {ingestionApps.slice(3).map(app => (
                       <IngestionSourceButton key={app.name} app={app} onToggle={handleToggleApp} incidentCount={incidentCountsBySource.get(normalizeAppName(app.name)) || 0} />
                     ))}
                   </Box>
