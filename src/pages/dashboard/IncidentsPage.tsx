@@ -47,6 +47,7 @@ import { IngestionSourceButton } from '@/components/incidents/IngestionSourceBut
 import { WebhookIngestionButton, WebhookIngestionInfo } from '@/components/incidents/WebhookIngestionButton';
 import { IncidentTrendChart } from '@/components/incidents/IncidentTrendChart';
 import { OrgTrendChart } from '@/components/incidents/OrgTrendChart';
+import { ToolTrendChart } from '@/components/incidents/ToolTrendChart';
 
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
@@ -2510,8 +2511,9 @@ const IncidentsPage = () => {
               }));
             }}
           />
-          {/* Incident trend chart */}
+          {/* Incident trend charts */}
           <IncidentTrendChart incidents={filteredIncidents} dateFrom={dateFrom} dateTo={dateTo} />
+          <ToolTrendChart incidents={filteredIncidents} dateFrom={dateFrom} dateTo={dateTo} />
           {/* Org trend chart - only when multiple orgs selected */}
           {Array.isArray(filters.org) && filters.org.length > 1 && (
             <OrgTrendChart incidents={filteredIncidents} dateFrom={dateFrom} dateTo={dateTo} />
