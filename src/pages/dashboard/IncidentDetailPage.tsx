@@ -4337,22 +4337,20 @@ const IncidentDetailPage = () => {
                 } catch { return null; }
               });
 
-              // Add revisions
-              if (activityFilter === 'all' || activityFilter === 'revisions') {
-                revisions.forEach((rev, idx) => {
-                  const ts = normalizeToMs(rev.edited ?? rev.created);
-                  items.push({
-                    type: 'revision',
-                    timestamp: ts,
-                    data: rev,
-                    idx,
-                    parsedCurrent: parsedRevisions[idx],
-                    parsedPrevious: idx < revisions.length - 1 ? parsedRevisions[idx + 1] : null,
-                  });
+              // Add revisions (always visible — they are the baseline timeline)
+              revisions.forEach((rev, idx) => {
+                const ts = normalizeToMs(rev.edited ?? rev.created);
+                items.push({
+                  type: 'revision',
+                  timestamp: ts,
+                  data: rev,
+                  idx,
+                  parsedCurrent: parsedRevisions[idx],
+                  parsedPrevious: idx < revisions.length - 1 ? parsedRevisions[idx + 1] : null,
                 });
-              }
+              });
 
-              // Add agent runs
+              // Add agent runs (visible in 'all' or 'agent' filter)
               if (activityFilter === 'all' || activityFilter === 'agent') {
                 agentRuns.forEach((run) => {
                   const ts = normalizeToMs(run.started_at);
@@ -4360,10 +4358,10 @@ const IncidentDetailPage = () => {
                 });
               }
 
-              // Add manual activity
+              // Add manual activity / comments (visible in 'all' or 'manual' filter)
               if (activityFilter === 'all' || activityFilter === 'manual') {
                 activity.forEach((item) => {
-                  items.push({ type: 'manual', timestamp: item.timestamp, data: item });
+                  items.push({ type: 'manual', timestamp: normalizeToMs(item.timestamp), data: item });
                 });
               }
 
