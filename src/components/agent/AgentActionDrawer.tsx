@@ -394,7 +394,7 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
           input: { text: agentInput.trim() },
           ...(selectedApp ? {
             tool_name: selectedApp.name,
-            tool_id: selectedApp.objectID || selectedApp.name,
+            tool_id: selectedApp.objectID,
           } : {}),
         },
       };
