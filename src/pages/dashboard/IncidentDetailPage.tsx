@@ -4348,6 +4348,9 @@ const IncidentDetailPage = () => {
                   const diff = item.parsedPrevious ? computeDiff(item.parsedCurrent, item.parsedPrevious) : null;
                   const totalChanges = diff ? diff.added.length + diff.removed.length + diff.changed.length : 0;
 
+                  // Hide revisions where all changes were noise fields (unless it's the initial revision)
+                  if (!isFirst && diff && totalChanges === 0) return null;
+
                   return (
                     <Box
                       key={`rev-${rev.id || rev.key || item.idx}`}
