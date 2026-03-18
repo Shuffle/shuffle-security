@@ -336,6 +336,7 @@ const IncidentsPage = () => {
     severity: null, status: null, tlp: null, assignee: null, source: null, tag: null,
     org: isChildOrg && currentOrgId ? [currentOrgId] : null,
   }));
+  const [negatedFilters, setNegatedFilters] = useState<Set<string>>(new Set());
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [automationsDialogOpen, setAutomationsDialogOpen] = useState(false);
   const [categoryAutomations, setCategoryAutomations] = useState<CategoryAutomation[]>([]);
