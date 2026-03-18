@@ -4428,8 +4428,7 @@ const IncidentDetailPage = () => {
                               onClick={() => {
                                 try {
                                   const parsed = typeof rev.value === 'string' ? JSON.parse(rev.value) : rev.value;
-                                  setRawJsonText(JSON.stringify(parsed, null, 2));
-                                  setActiveTab(4);
+                                  setRevisionDialogData(JSON.stringify(parsed, null, 2));
                                 } catch {
                                   toast.error('Could not parse revision data');
                                 }
