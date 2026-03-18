@@ -1529,13 +1529,15 @@ const IncidentsPage = () => {
               '&:has(.automation-section-ingest:hover) .automation-section-ingest': {
                 maxWidth: '800px !important',
                 zIndex: 10,
-                transition: 'max-width 0.45s cubic-bezier(0.4,0,0.2,1), padding 0.45s cubic-bezier(0.4,0,0.2,1), border-color 0.3s ease',
+                bgcolor: 'hsl(var(--muted))',
+                transition: 'max-width 0.45s cubic-bezier(0.4,0,0.2,1), padding 0.45s cubic-bezier(0.4,0,0.2,1), border-color 0.3s ease, background-color 0.2s ease',
               },
               // Hovering Forward: grow over Ingest using z-index
               '&:has(.automation-section-forward:hover) .automation-section-forward': {
                 maxWidth: '800px !important',
                 zIndex: 10,
-                transition: 'max-width 0.45s cubic-bezier(0.4,0,0.2,1), padding 0.45s cubic-bezier(0.4,0,0.2,1), border-color 0.3s ease',
+                bgcolor: 'hsl(var(--muted))',
+                transition: 'max-width 0.45s cubic-bezier(0.4,0,0.2,1), padding 0.45s cubic-bezier(0.4,0,0.2,1), border-color 0.3s ease, background-color 0.2s ease',
               },
             }}
           >
