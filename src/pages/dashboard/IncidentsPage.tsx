@@ -1552,10 +1552,20 @@ const IncidentsPage = () => {
               py: 0.5,
               '& .automation-overflow': {
                 display: 'flex',
-                maxWidth: 0,
+                alignItems: 'center',
+                gap: 0.5,
+                position: 'absolute',
+                left: '100%',
+                top: 0,
+                bottom: 0,
                 opacity: 0,
-                overflow: 'hidden',
-                transition: 'max-width 0.45s cubic-bezier(0.4,0,0.2,1), opacity 0.25s ease',
+                pl: 0.5,
+                bgcolor: 'hsl(var(--muted))',
+                borderRadius: '0 6px 6px 0',
+                border: '1px solid hsl(var(--border))',
+                borderLeft: 'none',
+                transition: 'opacity 0.3s ease',
+                pointerEvents: 'none',
               },
               '& .automation-overflow-count': {
                 maxWidth: 36,
@@ -1564,14 +1574,13 @@ const IncidentsPage = () => {
                 transition: 'max-width 0.25s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease',
               },
               '&:hover .automation-overflow': {
-                maxWidth: 520,
                 opacity: 1,
-                transitionDelay: '0.65s',
+                pointerEvents: 'auto',
+                transitionDelay: '0.25s',
               },
               '&:hover .automation-overflow-count': {
                 maxWidth: 0,
                 opacity: 0,
-                transitionDelay: '0.1s',
               },
             }}>
               <Typography sx={{
