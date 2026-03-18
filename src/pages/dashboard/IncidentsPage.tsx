@@ -1529,7 +1529,7 @@ const IncidentsPage = () => {
               ))}
               {ingestionApps.length > 4 && (
                 <>
-                  <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', fontWeight: 600, px: 0.25 }}>
+                  <Typography className="automation-overflow-count" sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', fontWeight: 600, px: 0.25 }}>
                     +{ingestionApps.length - 4}
                   </Typography>
                   <Box className="automation-overflow" sx={{ display: 'none', alignItems: 'center', gap: 0.5 }}>
