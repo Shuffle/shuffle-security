@@ -11,9 +11,10 @@ interface IngestionSourceButtonProps {
   app: ValidatedIngestionApp;
   onToggle: (appName: string, enabled: boolean) => void;
   incidentCount?: number;
+  variant?: 'ingest' | 'forward';
 }
 
-export const IngestionSourceButton = ({ app, onToggle, incidentCount = 0 }: IngestionSourceButtonProps) => {
+export const IngestionSourceButton = ({ app, onToggle, incidentCount = 0, variant = 'ingest' }: IngestionSourceButtonProps) => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [optimisticEnabled, setOptimisticEnabled] = useState<boolean | null>(null);
   const popoverOpen = Boolean(anchorEl);
@@ -99,12 +100,14 @@ export const IngestionSourceButton = ({ app, onToggle, incidentCount = 0 }: Inge
         <Typography variant="caption" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))', textTransform: 'capitalize', mb: 0.5, display: 'block' }}>
           {displayName}
           {!isEnabled && (
-            <Chip label="Not Ingesting" size="small" sx={{ ml: 0.5, height: 18, fontSize: '0.65rem', bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }} />
+            <Chip label={variant === 'forward' ? 'Not Forwarding' : 'Not Ingesting'} size="small" sx={{ ml: 0.5, height: 18, fontSize: '0.65rem', bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }} />
           )}
         </Typography>
+        {variant === 'ingest' && (
         <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', display: 'block', mb: 1, fontSize: '0.7rem' }}>
           {incidentCount} {incidentCount === 1 ? 'incident' : 'incidents'}
         </Typography>
+        )}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
           <Button
             size="small"
@@ -141,7 +144,7 @@ export const IngestionSourceButton = ({ app, onToggle, incidentCount = 0 }: Inge
               '&:hover': { bgcolor: isEnabled ? 'hsl(var(--destructive) / 0.1)' : (app.validated ? 'rgba(34, 197, 94, 0.1)' : 'rgba(245, 158, 11, 0.1)') },
             }}
           >
-            {isEnabled ? 'Disable Sync' : 'Enable Sync'}
+            {isEnabled ? (variant === 'forward' ? 'Disable Forwarding' : 'Disable Sync') : (variant === 'forward' ? 'Enable Forwarding' : 'Enable Sync')}
           </Button>
         </Box>
       </Popover>
