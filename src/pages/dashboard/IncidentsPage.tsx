@@ -1551,23 +1551,27 @@ const IncidentsPage = () => {
                 overflow: 'hidden',
               },
               // Hovering either section: boost z-index and make bg opaque, hide other title
-              '&:has(.automation-section-ingest.is-hovered) .automation-section-ingest': {
-                zIndex: 10,
-                bgcolor: 'hsl(var(--muted))',
-                clipPath: 'inset(-20px -500px -20px 0px)',
+              '&:has(.automation-section-ingest:hover), &:has(.automation-section-ingest.is-hovered)': {
+                '& .automation-section-ingest': {
+                  zIndex: 10,
+                  bgcolor: 'hsl(var(--muted))',
+                  clipPath: 'inset(-20px -500px -20px 0px)',
+                },
+                '& .automation-section-forward .automation-section-title': {
+                  opacity: 0,
+                  transition: 'opacity 0.2s ease',
+                },
               },
-              '&:has(.automation-section-ingest.is-hovered) .automation-section-forward .automation-section-title': {
-                opacity: 0,
-                transition: 'opacity 0.2s ease',
-              },
-              '&:has(.automation-section-forward.is-hovered) .automation-section-forward': {
-                zIndex: 10,
-                bgcolor: 'hsl(var(--muted))',
-                clipPath: 'inset(-20px 0px -20px -500px)',
-              },
-              '&:has(.automation-section-forward.is-hovered) .automation-section-ingest .automation-section-title': {
-                opacity: 0,
-                transition: 'opacity 0.2s ease',
+              '&:has(.automation-section-forward:hover), &:has(.automation-section-forward.is-hovered)': {
+                '& .automation-section-forward': {
+                  zIndex: 10,
+                  bgcolor: 'hsl(var(--muted))',
+                  clipPath: 'inset(-20px 0px -20px -500px)',
+                },
+                '& .automation-section-ingest .automation-section-title': {
+                  opacity: 0,
+                  transition: 'opacity 0.2s ease',
+                },
               },
             }}
           >
@@ -1610,17 +1614,18 @@ const IncidentsPage = () => {
                 overflow: 'hidden',
                 transition: 'max-width 0.25s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease',
               },
-              ...(ingestHovered && {
+              '&:hover .automation-overflow, &.is-hovered .automation-overflow': {
+                opacity: 1,
+                pointerEvents: 'auto',
+                transitionDelay: '0.25s',
+              },
+              '&:hover, &.is-hovered': {
                 borderRadius: '6px 0 0 6px',
-                '& .automation-overflow': {
-                  opacity: 1,
-                  pointerEvents: 'auto',
-                },
-                '& .automation-overflow-count': {
-                  maxWidth: 0,
-                  opacity: 0,
-                },
-              }),
+              },
+              '&:hover .automation-overflow-count, &.is-hovered .automation-overflow-count': {
+                maxWidth: 0,
+                opacity: 0,
+              },
             }}>
               <Typography className="automation-section-title" sx={{
                 position: 'absolute',
@@ -1754,17 +1759,18 @@ const IncidentsPage = () => {
                 overflow: 'hidden',
                 transition: 'max-width 0.25s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease',
               },
-              ...(forwardHovered && {
+              '&:hover .automation-overflow, &.is-hovered .automation-overflow': {
+                opacity: 1,
+                pointerEvents: 'auto',
+                transitionDelay: '0.25s',
+              },
+              '&:hover, &.is-hovered': {
                 borderRadius: '0 6px 6px 0',
-                '& .automation-overflow': {
-                  opacity: 1,
-                  pointerEvents: 'auto',
-                },
-                '& .automation-overflow-count': {
-                  maxWidth: 0,
-                  opacity: 0,
-                },
-              }),
+              },
+              '&:hover .automation-overflow-count, &.is-hovered .automation-overflow-count': {
+                maxWidth: 0,
+                opacity: 0,
+              },
             }}>
               <Typography className="automation-section-title" sx={{
                 position: 'absolute',
