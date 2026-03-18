@@ -212,7 +212,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
           if (response.ok) {
             const data = await response.json();
             const workflowList = Array.isArray(data) ? data : data.workflows || [];
-            setWorkflows(workflowList.map((w: any) => ({ id: w.id, name: w.name || w.id })));
+            setWorkflows(workflowList.filter((w: any) => !w.background_processing).map((w: any) => ({ id: w.id, name: w.name || w.id })));
           }
         } catch (error) {
           console.error('Failed to fetch workflows:', error);
