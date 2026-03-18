@@ -633,15 +633,20 @@ const IncidentsPage = () => {
         .filter(a => toggles.has(a.name) ? toggles.get(a.name) : a.enabled)
         .map(a => a.name);
       try {
+        const body: Record<string, string> = {
+          label: 'Forward Tickets',
+          category: 'cases',
+        };
+        if (activeNames.length > 0) {
+          body.app_name = activeNames.join(',');
+        } else {
+          body.action_name = 'remove';
+        }
         await fetch(getApiUrl('/api/v2/workflows/generate'), {
           method: 'POST',
           credentials: 'include',
           headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            label: 'Forward Tickets',
-            app_name: activeNames.join(','),
-            category: 'cases',
-          }),
+          body: JSON.stringify(body),
         });
         toast.success('Forward destinations updated');
         await fetchIngestionApps();
