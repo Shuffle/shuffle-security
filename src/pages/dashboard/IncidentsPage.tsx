@@ -1497,6 +1497,8 @@ const IncidentsPage = () => {
               borderRadius: 1.5,
               px: 0.75,
               py: 0.5,
+              '&:hover .automation-overflow': { display: 'flex' },
+              '&:hover .automation-overflow-count': { display: 'none' },
             }}>
               <Typography sx={{
                 position: 'absolute',
@@ -1520,10 +1522,23 @@ const IncidentsPage = () => {
                   <span style={{ cursor: 'help' }}>Ingest</span>
                 </Tooltip>
               </Typography>
+              {/* Webhook counts as 1 of the 5 visible slots */}
               <WebhookIngestionButton webhook={webhookIngestion} onToggled={fetchIngestionApps} />
-              {ingestionApps.map(app => (
+              {ingestionApps.slice(0, 4).map(app => (
                 <IngestionSourceButton key={app.name} app={app} onToggle={handleToggleApp} incidentCount={incidentCountsBySource.get(normalizeAppName(app.name)) || 0} />
               ))}
+              {ingestionApps.length > 4 && (
+                <>
+                  <Typography className="automation-overflow-count" sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', fontWeight: 600, px: 0.25 }}>
+                    +{ingestionApps.length - 4}
+                  </Typography>
+                  <Box className="automation-overflow" sx={{ display: 'none', alignItems: 'center', gap: 0.5 }}>
+                    {ingestionApps.slice(4).map(app => (
+                      <IngestionSourceButton key={app.name} app={app} onToggle={handleToggleApp} incidentCount={incidentCountsBySource.get(normalizeAppName(app.name)) || 0} />
+                    ))}
+                  </Box>
+                </>
+              )}
               <Tooltip title="Add ingestion source">
                 <IconButton
                   onClick={() => setAppSearchOpen(true)}
@@ -1571,6 +1586,11 @@ const IncidentsPage = () => {
             </Box>
           )}
 
+          {/* Arrow between Ingest and Forward */}
+          <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', color: 'hsl(var(--muted-foreground))', mx: -0.25 }}>
+            <ChevronRightIcon sx={{ fontSize: 18 }} />
+          </Box>
+
           {/* Forward Destinations - always visible */}
             <Box sx={{ 
               position: 'relative',
@@ -1582,6 +1602,8 @@ const IncidentsPage = () => {
               borderRadius: 1.5,
               px: 0.75,
               py: 0.5,
+              '&:hover .automation-overflow': { display: 'flex' },
+              '&:hover .automation-overflow-count': { display: 'none' },
             }}>
               <Typography sx={{
                 position: 'absolute',
@@ -1605,9 +1627,21 @@ const IncidentsPage = () => {
                   <span style={{ cursor: 'help' }}>Forward</span>
                 </Tooltip>
               </Typography>
-              {forwardApps.map(app => (
+              {forwardApps.slice(0, 5).map(app => (
                 <IngestionSourceButton key={app.name} app={app} onToggle={handleToggleForwardApp} incidentCount={incidentCountsBySource.get(normalizeAppName(app.name)) || 0} />
               ))}
+              {forwardApps.length > 5 && (
+                <>
+                  <Typography className="automation-overflow-count" sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', fontWeight: 600, px: 0.25 }}>
+                    +{forwardApps.length - 5}
+                  </Typography>
+                  <Box className="automation-overflow" sx={{ display: 'none', alignItems: 'center', gap: 0.5 }}>
+                    {forwardApps.slice(5).map(app => (
+                      <IngestionSourceButton key={app.name} app={app} onToggle={handleToggleForwardApp} incidentCount={incidentCountsBySource.get(normalizeAppName(app.name)) || 0} />
+                    ))}
+                  </Box>
+                </>
+              )}
               <Tooltip title="Add forward destination">
                 <IconButton
                   onClick={() => setForwardAppSearchOpen(true)}
