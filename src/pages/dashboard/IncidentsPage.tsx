@@ -47,6 +47,7 @@ import { IngestionSourceButton } from '@/components/incidents/IngestionSourceBut
 import { WebhookIngestionButton, WebhookIngestionInfo } from '@/components/incidents/WebhookIngestionButton';
 import { IncidentTrendChart } from '@/components/incidents/IncidentTrendChart';
 import { OrgTrendChart } from '@/components/incidents/OrgTrendChart';
+import { ToolTrendChart } from '@/components/incidents/ToolTrendChart';
 
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
