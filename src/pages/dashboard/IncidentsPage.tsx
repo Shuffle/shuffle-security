@@ -973,7 +973,7 @@ const IncidentsPage = () => {
     }
 
     return result;
-  }, [filteredByAssignee, filters, searchQuery]);
+  }, [filteredByAssignee, filters, negatedFilters, searchQuery]);
 
   // Reset to page 1 when filters or search change
   useEffect(() => {
