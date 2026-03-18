@@ -1592,7 +1592,7 @@ const IncidentsPage = () => {
                 opacity: 0,
               },
             }}>
-              <Typography sx={{
+              <Typography className="automation-section-title" sx={{
                 position: 'absolute',
                 top: -10,
                 left: '50%',
