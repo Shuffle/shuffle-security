@@ -1620,16 +1620,16 @@ const IncidentsPage = () => {
               </Typography>
               {/* Webhook counts as 1 of the 5 visible slots */}
               <WebhookIngestionButton webhook={webhookIngestion} onToggled={fetchIngestionApps} />
-              {ingestionApps.slice(0, 4).map(app => (
+              {ingestionApps.slice(0, 3).map(app => (
                 <IngestionSourceButton key={app.name} app={app} onToggle={handleToggleApp} incidentCount={incidentCountsBySource.get(normalizeAppName(app.name)) || 0} />
               ))}
-              {ingestionApps.length > 4 && (
+              {ingestionApps.length > 3 && (
                 <>
                   <Typography className="automation-overflow-count" sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', fontWeight: 600, px: 0.25 }}>
-                    +{ingestionApps.length - 4}
+                    +{ingestionApps.length - 3}
                   </Typography>
                   <Box className="automation-overflow" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, maxWidth: 0, opacity: 0, overflow: 'hidden' }}>
-                    {ingestionApps.slice(4).map(app => (
+                    {ingestionApps.slice(3).map(app => (
                       <IngestionSourceButton key={app.name} app={app} onToggle={handleToggleApp} incidentCount={incidentCountsBySource.get(normalizeAppName(app.name)) || 0} />
                     ))}
                   </Box>
