@@ -725,6 +725,19 @@ const IncidentsPage = () => {
     return deduped;
   }, [datastoreItems, validUsernames, subOrgItems]);
 
+  // Count incidents per source for current org only (used by ingestion source buttons)
+  const incidentCountsBySource = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const item of datastoreItems) {
+      const parsed = parseIncidentFromDatastore(item);
+      if (parsed?.source) {
+        const normalizedSource = parsed.source.toLowerCase().trim().replace(/[\s_\-]+/g, '_');
+        counts.set(normalizedSource, (counts.get(normalizedSource) || 0) + 1);
+      }
+    }
+    return counts;
+  }, [datastoreItems]);
+
   // Split into relevant and irrelevant
   const [relevantIncidents, irrelevantCount] = useMemo(() => {
     const relevant: DisplayIncident[] = [];
@@ -1406,7 +1419,7 @@ const IncidentsPage = () => {
               </Typography>
               <WebhookIngestionButton webhook={webhookIngestion} onToggled={fetchIngestionApps} />
               {ingestionApps.map(app => (
-                <IngestionSourceButton key={app.name} app={app} onToggle={handleToggleApp} />
+                <IngestionSourceButton key={app.name} app={app} onToggle={handleToggleApp} incidentCount={incidentCountsBySource.get(normalizeAppName(app.name)) || 0} />
               ))}
               <Tooltip title="Add ingestion source">
                 <IconButton

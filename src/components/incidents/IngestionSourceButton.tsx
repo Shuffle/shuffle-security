@@ -10,9 +10,10 @@ import { useAppDetail } from '@/context/AppDetailContext';
 interface IngestionSourceButtonProps {
   app: ValidatedIngestionApp;
   onToggle: (appName: string, enabled: boolean) => void;
+  incidentCount?: number;
 }
 
-export const IngestionSourceButton = ({ app, onToggle }: IngestionSourceButtonProps) => {
+export const IngestionSourceButton = ({ app, onToggle, incidentCount = 0 }: IngestionSourceButtonProps) => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [optimisticEnabled, setOptimisticEnabled] = useState<boolean | null>(null);
   const popoverOpen = Boolean(anchorEl);
@@ -95,11 +96,14 @@ export const IngestionSourceButton = ({ app, onToggle }: IngestionSourceButtonPr
           },
         }}
       >
-        <Typography variant="caption" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))', textTransform: 'capitalize', mb: 1, display: 'block' }}>
+        <Typography variant="caption" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))', textTransform: 'capitalize', mb: 0.5, display: 'block' }}>
           {displayName}
           {!isEnabled && (
             <Chip label="Not Ingesting" size="small" sx={{ ml: 0.5, height: 18, fontSize: '0.65rem', bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }} />
           )}
+        </Typography>
+        <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', display: 'block', mb: 1, fontSize: '0.7rem' }}>
+          {incidentCount} {incidentCount === 1 ? 'incident' : 'incidents'}
         </Typography>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
           <Button
