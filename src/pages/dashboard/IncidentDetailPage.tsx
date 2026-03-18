@@ -4157,7 +4157,7 @@ const IncidentDetailPage = () => {
                 Translation File
               </Typography>
               <Typography variant="caption" sx={{ color: 'text.secondary', fontFamily: 'monospace', fontSize: '0.7rem' }}>
-                {incidentFileRef}
+                {incidentFileRef}{!fileIdResolved ? ' (resolving…)' : resolvedFileId && resolvedFileId !== incidentFileRef ? ` → ${resolvedFileId}` : ''}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', gap: 1 }}>
