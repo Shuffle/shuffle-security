@@ -83,7 +83,7 @@ export const IngestionSourceButton = ({ app, onToggle, incidentCount = 0, varian
         open={popoverOpen}
         anchorEl={anchorEl}
         onClose={() => setAnchorEl(null)}
-        disablePortal
+        disablePortal={false}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         transformOrigin={{ vertical: 'top', horizontal: 'center' }}
         slotProps={{
