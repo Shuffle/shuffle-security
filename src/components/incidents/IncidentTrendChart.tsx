@@ -160,6 +160,7 @@ export const IncidentTrendChart = ({ incidents, dateFrom, dateTo }: IncidentTren
       <Box
         onClick={() => setModalOpen(true)}
         sx={{
+          mt: 2,
           mb: 2,
           px: 1.5,
           py: 1.5,
