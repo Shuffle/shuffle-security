@@ -144,7 +144,7 @@ export const IngestionSourceButton = ({ app, onToggle, incidentCount = 0, varian
               '&:hover': { bgcolor: isEnabled ? 'hsl(var(--destructive) / 0.1)' : (app.validated ? 'rgba(34, 197, 94, 0.1)' : 'rgba(245, 158, 11, 0.1)') },
             }}
           >
-            {isEnabled ? 'Disable Sync' : 'Enable Sync'}
+            {isEnabled ? (variant === 'forward' ? 'Disable Forwarding' : 'Disable Sync') : (variant === 'forward' ? 'Enable Forwarding' : 'Enable Sync')}
           </Button>
         </Box>
       </Popover>
