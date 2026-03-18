@@ -1123,7 +1123,18 @@ const IncidentsPage = () => {
   };
 
   const resetToDefaults = () => {
-    setFilters({ severity: null, status: ['new', 'in_progress'], tlp: null, assignee: null, source: null, tag: null, org: (isChildOrg || isParentOrg) && currentOrgId ? [currentOrgId] : null });
+    // Build the same org list that the auto-select effect uses on load
+    let defaultOrg: string[] | null = null;
+    if (isParentOrg) {
+      const allIds = [currentOrgId || '', ...subOrgs.filter(o => o.id !== currentOrgId).map(o => o.id)];
+      if (parentOrg && parentOrg.id !== currentOrgId && !allIds.includes(parentOrg.id)) {
+        allIds.unshift(parentOrg.id);
+      }
+      defaultOrg = allIds;
+    } else if (isChildOrg && currentOrgId) {
+      defaultOrg = [currentOrgId];
+    }
+    setFilters({ severity: null, status: ['new', 'in_progress'], tlp: null, assignee: null, source: null, tag: null, org: defaultOrg });
     setNegatedFilters(new Set());
     setDateFrom(undefined);
     setDateTo(undefined);
