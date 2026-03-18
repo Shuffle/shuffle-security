@@ -1551,23 +1551,27 @@ const IncidentsPage = () => {
                 overflow: 'hidden',
               },
               // Hovering either section: boost z-index and make bg opaque, hide other title
-              '&:has(.automation-section-ingest.is-hovered) .automation-section-ingest': {
-                zIndex: 10,
-                bgcolor: 'hsl(var(--muted))',
-                clipPath: 'inset(-20px -500px -20px 0px)',
+              '&:has(.automation-section-ingest:hover), &:has(.automation-section-ingest.is-hovered)': {
+                '& .automation-section-ingest': {
+                  zIndex: 10,
+                  bgcolor: 'hsl(var(--muted))',
+                  clipPath: 'inset(-20px -500px -20px 0px)',
+                },
+                '& .automation-section-forward .automation-section-title': {
+                  opacity: 0,
+                  transition: 'opacity 0.2s ease',
+                },
               },
-              '&:has(.automation-section-ingest.is-hovered) .automation-section-forward .automation-section-title': {
-                opacity: 0,
-                transition: 'opacity 0.2s ease',
-              },
-              '&:has(.automation-section-forward.is-hovered) .automation-section-forward': {
-                zIndex: 10,
-                bgcolor: 'hsl(var(--muted))',
-                clipPath: 'inset(-20px 0px -20px -500px)',
-              },
-              '&:has(.automation-section-forward.is-hovered) .automation-section-ingest .automation-section-title': {
-                opacity: 0,
-                transition: 'opacity 0.2s ease',
+              '&:has(.automation-section-forward:hover), &:has(.automation-section-forward.is-hovered)': {
+                '& .automation-section-forward': {
+                  zIndex: 10,
+                  bgcolor: 'hsl(var(--muted))',
+                  clipPath: 'inset(-20px 0px -20px -500px)',
+                },
+                '& .automation-section-ingest .automation-section-title': {
+                  opacity: 0,
+                  transition: 'opacity 0.2s ease',
+                },
               },
             }}
           >
