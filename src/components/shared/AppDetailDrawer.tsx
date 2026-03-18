@@ -555,7 +555,7 @@ export default function AppDetailDrawer({
                       : 'No authentication configured yet'
                     : `Connect your ${displayName} account`}
                 </Typography>
-                {isAuthenticated && algoliaApp && (
+                {isAuthenticated && algoliaApp && resolvedAlgoliaId && (
                   <AppAuthCard
                     app={algoliaApp}
                     authState={authState}
