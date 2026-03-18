@@ -174,7 +174,7 @@ export const IncidentTrendChart = ({ incidents, dateFrom, dateTo }: IncidentTren
       >
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
           <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontWeight: 600, fontSize: '0.7rem', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-            Trend
+            Status Trend
           </Typography>
           <Box sx={{ display: 'flex', gap: 1 }}>
             {Object.entries(STATUS_COLORS).map(([label, color]) => (
