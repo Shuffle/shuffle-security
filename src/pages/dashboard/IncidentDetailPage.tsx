@@ -496,6 +496,7 @@ const IncidentDetailPage = () => {
   const [publicAuthorization, setPublicAuthorization] = useState<string>('');
   const TAB_NAMES = ['details', 'tasks', 'observables', 'correlations', 'raw', 'file', 'original'] as const;
   const [activityFilter, setActivityFilter] = useState<'all' | 'revisions' | 'agent' | 'manual'>('all');
+  const [revisionDialogData, setRevisionDialogData] = useState<string | null>(null);
   const initialTab = (() => {
     const t = searchParams.get('tab');
     if (t) { const idx = TAB_NAMES.indexOf(t as any); return idx >= 0 ? idx : 0; }
@@ -4427,8 +4428,7 @@ const IncidentDetailPage = () => {
                               onClick={() => {
                                 try {
                                   const parsed = typeof rev.value === 'string' ? JSON.parse(rev.value) : rev.value;
-                                  setRawJsonText(JSON.stringify(parsed, null, 2));
-                                  setActiveTab(4);
+                                  setRevisionDialogData(JSON.stringify(parsed, null, 2));
                                 } catch {
                                   toast.error('Could not parse revision data');
                                 }
@@ -4583,6 +4583,48 @@ const IncidentDetailPage = () => {
         </Box>
       </Box>
 
+
+      {/* Revision Data Dialog */}
+      <Dialog
+        open={revisionDialogData !== null}
+        onClose={() => setRevisionDialogData(null)}
+        maxWidth="md"
+        fullWidth
+        slotProps={{
+          paper: {
+            sx: {
+              bgcolor: 'hsl(var(--background))',
+              border: '1px solid hsl(var(--border))',
+              borderRadius: 2,
+            },
+          },
+        }}
+      >
+        <DialogTitle sx={{ color: 'hsl(var(--foreground))', fontSize: '0.9rem', fontWeight: 600, pb: 0.5 }}>
+          Revision Data
+        </DialogTitle>
+        <DialogContent>
+          <Box
+            component="pre"
+            sx={{
+              bgcolor: 'hsl(var(--muted) / 0.3)',
+              border: '1px solid hsl(var(--border))',
+              borderRadius: 1.5,
+              p: 2,
+              overflow: 'auto',
+              maxHeight: '60vh',
+              fontSize: '0.75rem',
+              fontFamily: 'JetBrains Mono, monospace',
+              color: 'hsl(var(--foreground))',
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+              m: 0,
+            }}
+          >
+            {revisionDialogData}
+          </Box>
+        </DialogContent>
+      </Dialog>
 
       <ResolveIncidentDialog
         open={showResolveDialog}
