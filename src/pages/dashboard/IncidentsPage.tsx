@@ -1792,8 +1792,17 @@ const IncidentsPage = () => {
                 sx: { height: 36 },
               }}
               sx={{ width: { xs: 100, sm: 140 }, minWidth: 0, flexShrink: 1 }}
-            />
+      />
 
+      <AppSearchDrawer
+        open={forwardAppSearchOpen}
+        onClose={() => {
+          setForwardAppSearchOpen(false);
+          fetchIngestionApps();
+        }}
+        title="Add Forward Destination"
+        subtitle="Search and authenticate a tool to forward incidents to"
+      />
 
             {/* Selection count and bulk actions */}
             {selectedIds.size > 0 && (
