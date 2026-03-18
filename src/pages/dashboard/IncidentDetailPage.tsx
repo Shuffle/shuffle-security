@@ -4340,7 +4340,7 @@ const IncidentDetailPage = () => {
               // Add revisions
               if (activityFilter === 'all' || activityFilter === 'revisions') {
                 revisions.forEach((rev, idx) => {
-                  const ts = (rev.edited || rev.created || 0) * 1000;
+                  const ts = normalizeToMs(rev.edited ?? rev.created);
                   items.push({
                     type: 'revision',
                     timestamp: ts,
