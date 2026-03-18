@@ -43,20 +43,23 @@ interface StatCardProps {
   isLoading?: boolean;
 }
 
-const StatCard = ({ icon: Icon, iconColor, iconBg, value, label, trend, delay, onClick, clickable, isLoading }: StatCardProps) => (
+const StatCard = ({ icon: Icon, iconColor, iconBg, value, label, delay, onClick, clickable, isLoading }: StatCardProps) => (
   <motion.div
-    initial={{ opacity: 0, y: 10 }}
+    initial={{ opacity: 0, y: 6 }}
     animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.3, delay }}
+    transition={{ duration: 0.25, delay }}
   >
     <Box
       onClick={onClick}
       sx={{
-        p: 2.5,
-        borderRadius: 2,
+        px: 1.5,
+        py: 1,
+        borderRadius: 1.5,
         backgroundColor: 'hsl(var(--card))',
         border: '1px solid hsl(var(--border))',
-        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1.25,
         cursor: clickable ? 'pointer' : 'default',
         transition: 'all 0.2s ease',
         '&:hover': clickable ? {
@@ -65,55 +68,41 @@ const StatCard = ({ icon: Icon, iconColor, iconBg, value, label, trend, delay, o
         } : {},
       }}
     >
-      <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 1.5 }}>
-        <Box
-          sx={{
-            width: 40,
-            height: 40,
-            borderRadius: 2,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: iconBg,
-          }}
-        >
-          <Icon size={20} color={iconColor} />
-        </Box>
-        {trend && (
+      <Box
+        sx={{
+          width: 28,
+          height: 28,
+          borderRadius: 1.5,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: iconBg,
+          flexShrink: 0,
+        }}
+      >
+        <Icon size={14} color={iconColor} />
+      </Box>
+      <Box sx={{ minWidth: 0 }}>
+        {isLoading ? (
+          <Skeleton variant="text" width={32} height={22} sx={{ bgcolor: 'hsl(var(--muted) / 0.3)' }} />
+        ) : (
           <Typography
-            variant="caption"
             sx={{
-              color: trend.positive ? '#22c55e' : '#ef4444',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 0.5,
-              fontWeight: 500,
+              fontWeight: 700,
+              fontSize: '1rem',
+              lineHeight: 1.2,
+              color: 'hsl(var(--foreground))',
             }}
           >
-            {trend.positive ? '↑' : '↓'} {trend.value}
+            {value}
           </Typography>
         )}
-      </Box>
-      {isLoading ? (
-        <Skeleton variant="text" width={48} height={40} sx={{ bgcolor: 'hsl(var(--muted) / 0.3)', mb: 0.5 }} />
-      ) : (
         <Typography
-          variant="h4"
-          sx={{
-            fontWeight: 700,
-            color: 'hsl(var(--foreground))',
-            mb: 0.5,
-          }}
+          sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.65rem', lineHeight: 1.2 }}
         >
-          {value}
+          {label}
         </Typography>
-      )}
-      <Typography
-        variant="body2"
-        sx={{ color: 'hsl(var(--muted-foreground))' }}
-      >
-        {label}
-      </Typography>
+      </Box>
     </Box>
   </motion.div>
 );
