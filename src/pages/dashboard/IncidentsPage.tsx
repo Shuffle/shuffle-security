@@ -1522,6 +1522,9 @@ const IncidentsPage = () => {
                 clipPath: 'inset(-20px 0px -20px 0px)',
                 position: 'relative',
               },
+              '& .automation-section-title': {
+                transition: 'opacity 0.25s ease',
+              },
               '& .automation-arrow': {
                 transition: 'max-width 0.4s cubic-bezier(0.4,0,0.2,1) 0.15s, opacity 0.3s ease 0.15s',
                 overflow: 'hidden',
