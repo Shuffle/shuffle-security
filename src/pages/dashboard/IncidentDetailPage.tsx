@@ -639,8 +639,10 @@ const IncidentDetailPage = () => {
   const incidentFileId = useMemo(() => {
     const raw = incident?.rawOCSF;
     if (!raw?.shuffle_translation_file) return null;
-    const fileId = String(raw.shuffle_translation_file);
-    return /^file_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(fileId) ? fileId : null;
+    const fileId = String(raw.shuffle_translation_file).trim();
+    if (!fileId) return null;
+    // Accept file_UUID format or any non-empty identifier (e.g. action_name-hash)
+    return fileId;
   }, [incident?.rawOCSF]);
 
   // Check if unmapped_original exists in the raw OCSF data
