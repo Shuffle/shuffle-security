@@ -537,19 +537,62 @@ const IncidentDetailPage = () => {
       if (response.ok) {
         const result = await response.json();
         const rawRevisions: any[] = Array.isArray(result) ? result : (result.data || result.revisions || []);
-        // Deduplicate by revision id and sort newest first
-        const seen = new Set<string>();
-        const deduped = rawRevisions.filter(rev => {
-          const key = rev.id || `${rev.edited || rev.created || 0}`;
-          if (seen.has(key)) return false;
-          seen.add(key);
-          return true;
-        });
-        deduped.sort((a: any, b: any) => {
-          const tsA = a.edited || a.created || 0;
-          const tsB = b.edited || b.created || 0;
-          return tsB - tsA; // newest first
-        });
+
+        const NOISE_FIELDS = new Set(['activity', 'updated_by', 'edited_time', 'updated_at', 'last_updated', 'comments']);
+
+        const getMeaningfulSignature = (rev: any): string => {
+          let parsed: any = rev?.value;
+
+          if (typeof parsed === 'string') {
+            const decoded = decodeIfBase64(parsed);
+            try {
+              parsed = JSON.parse(decoded);
+            } catch {
+              try {
+                parsed = JSON.parse(parsed);
+              } catch {
+                // keep raw string if not JSON
+              }
+            }
+          }
+
+          if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+            const cleaned = { ...parsed } as Record<string, any>;
+            NOISE_FIELDS.forEach((field) => delete cleaned[field]);
+            return JSON.stringify(cleaned);
+          }
+
+          try {
+            return JSON.stringify(parsed);
+          } catch {
+            return String(parsed ?? '');
+          }
+        };
+
+        // Always sort revisions by normalized timestamp (newest first)
+        const sorted = [...rawRevisions].sort((a: any, b: any) =>
+          normalizeToMs(b.edited ?? b.created) - normalizeToMs(a.edited ?? a.created)
+        );
+
+        // Deduplicate by id/key and collapse consecutive semantically identical snapshots
+        const seenRevisionIds = new Set<string>();
+        const deduped: any[] = [];
+        let previousSignature: string | null = null;
+
+        for (const rev of sorted) {
+          const revisionId = rev?.id || rev?.key;
+          if (revisionId) {
+            if (seenRevisionIds.has(revisionId)) continue;
+            seenRevisionIds.add(revisionId);
+          }
+
+          const signature = getMeaningfulSignature(rev);
+          if (signature && signature === previousSignature) continue;
+
+          deduped.push(rev);
+          previousSignature = signature;
+        }
+
         setRevisions(deduped);
       } else {
         console.error('[Changes] Failed to load revisions:', response.status);
