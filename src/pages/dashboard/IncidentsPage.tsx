@@ -501,6 +501,7 @@ const IncidentsPage = () => {
 
         // Derive enabled apps from the Ingest Tickets workflow actions
         let workflowAppNames: Set<string> | undefined;
+        let forwardAppNames: Set<string> | undefined;
         if (workflowsResponse.ok) {
           const workflows = await workflowsResponse.json();
           const workflowList = Array.isArray(workflows) ? workflows : (workflows.workflows || []);
