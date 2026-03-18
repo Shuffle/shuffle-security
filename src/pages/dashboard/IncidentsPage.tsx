@@ -1666,8 +1666,91 @@ const IncidentsPage = () => {
             <strong>Automatic ingestion is paused</strong> — the "Ingest Tickets" workflow schedule has been stopped. Sources are shown as disabled until the schedule is re-enabled.
           </Typography>
         </Box>
-      )}
+          )}
 
+          {/* Forward Destinations */}
+          {(forwardApps.length > 0 || forwardWorkflowId) && (
+            <Box sx={{ 
+              position: 'relative',
+              display: { xs: 'none', md: 'flex' }, 
+              alignItems: 'center', 
+              gap: 0.5,
+              bgcolor: 'hsl(var(--muted) / 0.4)',
+              border: '1px solid hsl(var(--border))',
+              borderRadius: 1.5,
+              px: 0.75,
+              py: 0.5,
+            }}>
+              <Typography sx={{
+                position: 'absolute',
+                top: -10,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                fontSize: '0.55rem',
+                fontWeight: 600,
+                color: 'hsl(var(--muted-foreground))',
+                bgcolor: 'hsl(var(--muted))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: 10,
+                px: 1,
+                py: 0.15,
+                lineHeight: 1.3,
+                letterSpacing: '0.05em',
+                textTransform: 'uppercase',
+                whiteSpace: 'nowrap',
+              }}>
+                <Tooltip title="Apps configured to receive forwarded incidents. Toggle to control which tools incidents are sent to." placement="top" arrow>
+                  <span style={{ cursor: 'help' }}>Forward</span>
+                </Tooltip>
+              </Typography>
+              {forwardApps.map(app => (
+                <IngestionSourceButton key={app.name} app={app} onToggle={handleToggleForwardApp} incidentCount={incidentCountsBySource.get(normalizeAppName(app.name)) || 0} />
+              ))}
+              <Tooltip title="Add forward destination">
+                <IconButton
+                  onClick={() => setForwardAppSearchOpen(true)}
+                  size="small"
+                  sx={{
+                    width: 28,
+                    height: 28,
+                    color: 'hsl(var(--muted-foreground))',
+                    border: '1px dashed hsl(var(--border))',
+                    borderRadius: 1,
+                    '&:hover': {
+                      bgcolor: 'hsl(var(--muted))',
+                      borderStyle: 'solid',
+                      color: 'hsl(var(--primary))',
+                    },
+                  }}
+                >
+                  <AddIcon sx={{ fontSize: 16 }} />
+                </IconButton>
+              </Tooltip>
+              {forwardWorkflowId && (
+                <Tooltip title={isUpdatingForwardApps ? "Updating destinations…" : "Open workflow"}>
+                  <span>
+                    <IconButton
+                      size="small"
+                      onClick={() => window.open(`https://shuffler.io/workflows/${forwardWorkflowId}`, '_blank')}
+                      sx={{
+                        width: 28,
+                        height: 28,
+                        color: 'hsl(var(--muted-foreground))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: 1,
+                        '&:hover': {
+                          bgcolor: 'hsl(var(--muted))',
+                          color: 'hsl(var(--primary))',
+                        },
+                      }}
+                    >
+                      {isUpdatingForwardApps ? <CircularProgress size={14} color="inherit" /> : <PlayArrowIcon sx={{ fontSize: 16 }} />}
+                    </IconButton>
+                  </span>
+                </Tooltip>
+              )}
+            </Box>
+          )}
 
       {/* Floating Filter Bar - sticky */}
       <Card sx={{ mb: 3, position: 'sticky', top: 0, zIndex: 10, backgroundColor: 'hsl(var(--card))' }}>
