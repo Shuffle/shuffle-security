@@ -2199,7 +2199,7 @@ const IncidentsPage = () => {
             }}
           />
           {/* Incident trend chart */}
-          <IncidentTrendChart incidents={activeIncidents} dateFrom={dateFrom} dateTo={dateTo} />
+          <IncidentTrendChart incidents={filteredIncidents} dateFrom={dateFrom} dateTo={dateTo} />
           {/* Irrelevant incidents bar */}
           {irrelevantCount > 0 && (
             <Box
