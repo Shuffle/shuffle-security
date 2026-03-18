@@ -45,6 +45,7 @@ import { IncidentStatsCards } from '@/components/incidents/IncidentStatsCards';
 import { IncidentsEmptyState } from '@/components/incidents/IncidentsEmptyState';
 import { IngestionSourceButton } from '@/components/incidents/IngestionSourceButton';
 import { WebhookIngestionButton, WebhookIngestionInfo } from '@/components/incidents/WebhookIngestionButton';
+import { IncidentTrendChart } from '@/components/incidents/IncidentTrendChart';
 
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
