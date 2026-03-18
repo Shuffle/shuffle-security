@@ -1523,17 +1523,17 @@ const IncidentsPage = () => {
                 transition: 'max-width 0.4s cubic-bezier(0.4,0,0.2,1) 0.15s, opacity 0.3s ease 0.15s',
                 overflow: 'hidden',
               },
-              // Hovering Ingest: collapse Forward first (no delay), then grow Ingest (delayed)
+              // Hovering Ingest: grow Ingest immediately while collapsing Forward
               '&:has(.automation-section-ingest:hover) .automation-section-ingest': {
                 maxWidth: '800px !important',
-                transition: 'max-width 0.65s cubic-bezier(0.4,0,0.2,1) 0.6s, opacity 0.45s ease 0.6s, padding 0.65s cubic-bezier(0.4,0,0.2,1) 0.6s, border-color 0.45s ease 0.6s',
+                transition: 'max-width 0.55s cubic-bezier(0.4,0,0.2,1), opacity 0.4s ease, padding 0.55s cubic-bezier(0.4,0,0.2,1), border-color 0.4s ease',
               },
               '&:has(.automation-section-ingest:hover) .automation-section-forward': {
                 maxWidth: '0px !important',
                 opacity: '0 !important',
                 px: '0 !important',
                 borderColor: 'transparent !important',
-                transition: 'max-width 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.25s ease, padding 0.4s cubic-bezier(0.4,0,0.2,1), border-color 0.25s ease',
+                transition: 'max-width 0.45s cubic-bezier(0.4,0,0.2,1), opacity 0.25s ease, padding 0.45s cubic-bezier(0.4,0,0.2,1), border-color 0.25s ease',
               },
               '&:has(.automation-section-ingest:hover) .automation-arrow': {
                 maxWidth: '0px !important',
