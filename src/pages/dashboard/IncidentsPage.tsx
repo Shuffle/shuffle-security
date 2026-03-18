@@ -349,15 +349,21 @@ const IncidentsPage = () => {
   const [automationsDialogOpen, setAutomationsDialogOpen] = useState(false);
   const [categoryAutomations, setCategoryAutomations] = useState<CategoryAutomation[]>([]);
   const [ingestionApps, setIngestionApps] = useState<ValidatedIngestionApp[]>([]);
+  const [forwardApps, setForwardApps] = useState<ValidatedIngestionApp[]>([]);
   const [ingestWorkflowId, setIngestWorkflowId] = useState<string | null>(null);
+  const [forwardWorkflowId, setForwardWorkflowId] = useState<string | null>(null);
   const [ingestScheduleStopped, setIngestScheduleStopped] = useState(false);
   const [webhookIngestion, setWebhookIngestion] = useState<WebhookIngestionInfo>({ url: null, exists: false, enabled: false, workflowId: null });
   const [isSyncing, setIsSyncing] = useState(false);
   const [isUpdatingApps, setIsUpdatingApps] = useState(false);
+  const [isUpdatingForwardApps, setIsUpdatingForwardApps] = useState(false);
   const [ingestionLoading, setIngestionLoading] = useState(true);
   const pendingTogglesRef = useRef<Map<string, boolean>>(new Map());
+  const pendingForwardTogglesRef = useRef<Map<string, boolean>>(new Map());
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const forwardDebounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [appSearchOpen, setAppSearchOpen] = useState(false);
+  const [forwardAppSearchOpen, setForwardAppSearchOpen] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
