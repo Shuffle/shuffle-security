@@ -4292,9 +4292,9 @@ const IncidentDetailPage = () => {
                           {totalChanges > 0 && (
                             <Chip label={`${totalChanges} change${totalChanges !== 1 ? 's' : ''}`} size="small" sx={{ height: 18, fontSize: '0.6rem', bgcolor: 'rgba(255, 102, 0, 0.1)', color: '#ff6600', fontWeight: 500 }} />
                           )}
-                          {rev.user && (
+                          {(currentParsed?.updated_by || rev.user) && (
                             <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem' }}>
-                              by {rev.user}
+                              by {currentParsed?.updated_by || rev.user}
                             </Typography>
                           )}
                         </Box>
