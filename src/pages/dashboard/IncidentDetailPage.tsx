@@ -4153,11 +4153,11 @@ const IncidentDetailPage = () => {
             {/* Filter chips */}
             <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
               {([
-                { key: 'all', label: 'All' },
-                { key: 'revisions', label: 'Changes', count: revisions.length },
-                { key: 'agent', label: 'Agent', count: agentRuns.length },
-                { key: 'manual', label: 'Comments', count: activity.length },
-              ] as const).map(({ key, label, count }) => (
+                { key: 'all' as const, label: 'All', count: undefined as number | undefined },
+                { key: 'revisions' as const, label: 'Changes', count: revisions.length },
+                { key: 'agent' as const, label: 'Agent', count: agentRuns.length },
+                { key: 'manual' as const, label: 'Comments', count: activity.length },
+              ]).map(({ key, label, count }) => (
                 <Chip
                   key={key}
                   label={count !== undefined ? `${label} (${count})` : label}
