@@ -11,6 +11,7 @@ interface IngestionSourceButtonProps {
   app: ValidatedIngestionApp;
   onToggle: (appName: string, enabled: boolean) => void;
   incidentCount?: number;
+  variant?: 'ingest' | 'forward';
 }
 
 export const IngestionSourceButton = ({ app, onToggle, incidentCount = 0 }: IngestionSourceButtonProps) => {
