@@ -337,6 +337,8 @@ const IncidentsPage = () => {
     org: isChildOrg && currentOrgId ? [currentOrgId] : null,
   }));
   const [negatedFilters, setNegatedFilters] = useState<Set<string>>(new Set());
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
+  const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [automationsDialogOpen, setAutomationsDialogOpen] = useState(false);
   const [categoryAutomations, setCategoryAutomations] = useState<CategoryAutomation[]>([]);
