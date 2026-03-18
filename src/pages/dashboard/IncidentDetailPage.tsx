@@ -4175,7 +4175,7 @@ const IncidentDetailPage = () => {
             <Button
               size="small"
               variant="outlined"
-              onClick={() => { setRevisionsLoaded(false); loadRevisions(); }}
+              onClick={() => { setRevisionsLoaded(false); }}
               disabled={revisionsLoading}
               sx={{
                 borderColor: 'rgba(255,255,255,0.2)',
