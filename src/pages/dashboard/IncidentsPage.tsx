@@ -642,7 +642,7 @@ const IncidentsPage = () => {
         } else {
           body.action_name = 'remove';
         }
-        await fetch(getApiUrl('/api/v2/workflows/generate'), {
+        const genResp = await fetch(getApiUrl('/api/v2/workflows/generate'), {
           method: 'POST',
           credentials: 'include',
           headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
@@ -652,7 +652,27 @@ const IncidentsPage = () => {
         await fetchIngestionApps();
         // Only trigger sync if we still have active sources (remove means nothing to execute)
         if (activeNames.length > 0) {
-          triggerSync();
+          // Try to get the workflow ID from the generate response, then fall back to re-fetching
+          let wfId = ingestWorkflowId;
+          try {
+            const genData = await genResp.json();
+            if (genData?.id) wfId = genData.id;
+          } catch { /* ignore */ }
+          if (!wfId) {
+            // Re-fetch workflows to find the ID
+            try {
+              const wfResp = await fetch(getApiUrl('/api/v1/workflows'), {
+                credentials: 'include',
+                headers: getAuthHeader(),
+              });
+              const wfs = await wfResp.json();
+              const ingestWf = Array.isArray(wfs) && wfs.find((w: any) => w.name === 'Ingest Tickets');
+              if (ingestWf) wfId = ingestWf.id;
+            } catch { /* ignore */ }
+          }
+          if (wfId) {
+            triggerSync(wfId);
+          }
         }
       } catch (error) {
         console.error('Failed to update ingestion sources:', error);
