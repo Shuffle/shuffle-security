@@ -45,6 +45,7 @@ import { IncidentStatsCards } from '@/components/incidents/IncidentStatsCards';
 import { IncidentsEmptyState } from '@/components/incidents/IncidentsEmptyState';
 import { IngestionSourceButton } from '@/components/incidents/IngestionSourceButton';
 import { WebhookIngestionButton, WebhookIngestionInfo } from '@/components/incidents/WebhookIngestionButton';
+import { IncidentTrendChart } from '@/components/incidents/IncidentTrendChart';
 
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
@@ -2069,6 +2070,8 @@ const IncidentsPage = () => {
         
         {/* Stats sidebar - sticky on desktop */}
         <Box sx={{ display: { xs: 'none', lg: 'block' }, position: 'sticky', top: 72, alignSelf: 'start', maxHeight: 'calc(100vh - 96px)', overflowY: 'auto', order: { xs: -1, lg: 0 } }}>
+          {/* Incident trend chart */}
+          <IncidentTrendChart incidents={activeIncidents} dateFrom={dateFrom} dateTo={dateTo} />
           {/* Date range filter */}
           <Box sx={{ 
             mb: 2, 
