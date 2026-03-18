@@ -46,6 +46,10 @@ export const IngestionSourceButton = ({ app, onToggle, incidentCount = 0, varian
           sx={{
             width: 30,
             height: 30,
+            transition: 'transform 0.2s ease, opacity 0.15s ease, filter 0.15s ease',
+            '&:hover': {
+              transform: 'scale(1.2)',
+            },
             border: '1px solid',
             borderColor: isEnabled
               ? (app.validated ? 'rgba(34, 197, 94, 0.20)' : 'rgba(245, 158, 11, 0.25)')

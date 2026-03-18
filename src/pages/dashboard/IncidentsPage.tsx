@@ -1635,16 +1635,16 @@ const IncidentsPage = () => {
                   <span style={{ cursor: 'help' }}>Forward</span>
                 </Tooltip>
               </Typography>
-              {forwardApps.slice(0, 5).map(app => (
+              {forwardApps.slice(0, 4).map(app => (
                 <IngestionSourceButton key={app.name} app={app} onToggle={handleToggleForwardApp} variant="forward" />
               ))}
-              {forwardApps.length > 5 && (
+              {forwardApps.length > 4 && (
                 <>
                   <Typography className="automation-overflow-count" sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', fontWeight: 600, px: 0.25 }}>
-                    +{forwardApps.length - 5}
+                    +{forwardApps.length - 4}
                   </Typography>
                   <Box className="automation-overflow" sx={{ display: 'none', alignItems: 'center', gap: 0.5 }}>
-                    {forwardApps.slice(5).map(app => (
+                    {forwardApps.slice(4).map(app => (
                       <IngestionSourceButton key={app.name} app={app} onToggle={handleToggleForwardApp} variant="forward" />
                     ))}
                   </Box>
