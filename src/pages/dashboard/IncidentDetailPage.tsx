@@ -4180,7 +4180,7 @@ const IncidentDetailPage = () => {
                 size="small"
                 variant="outlined"
                 onClick={async () => {
-                  if (!incidentFileId) return;
+                  if (!resolvedFileId) return;
                   if (!fileJsonValid) {
                     toast.error('Cannot save: JSON is invalid');
                     return;
