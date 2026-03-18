@@ -1516,7 +1516,7 @@ const IncidentsPage = () => {
               position: 'relative',
               // Default state
               '& .automation-section-ingest, & .automation-section-forward': {
-                transition: 'max-width 0.45s cubic-bezier(0.4,0,0.2,1), padding 0.45s cubic-bezier(0.4,0,0.2,1), border-color 0.3s ease',
+                transition: 'border-color 0.3s ease, background-color 0.3s ease',
                 overflow: 'visible',
                 clipPath: 'inset(-20px 0px -20px 0px)',
                 position: 'relative',
@@ -1525,19 +1525,16 @@ const IncidentsPage = () => {
                 transition: 'max-width 0.4s cubic-bezier(0.4,0,0.2,1) 0.15s, opacity 0.3s ease 0.15s',
                 overflow: 'hidden',
               },
-              // Hovering Ingest: grow over Forward using z-index
+              // Hovering either section: boost z-index and make bg opaque
               '&:has(.automation-section-ingest:hover) .automation-section-ingest': {
-                maxWidth: '800px !important',
                 zIndex: 10,
                 bgcolor: 'hsl(var(--muted))',
-                transition: 'max-width 0.45s cubic-bezier(0.4,0,0.2,1), padding 0.45s cubic-bezier(0.4,0,0.2,1), border-color 0.3s ease, background-color 0.2s ease',
+                clipPath: 'inset(-20px -500px -20px 0px)',
               },
-              // Hovering Forward: grow over Ingest using z-index
               '&:has(.automation-section-forward:hover) .automation-section-forward': {
-                maxWidth: '800px !important',
                 zIndex: 10,
                 bgcolor: 'hsl(var(--muted))',
-                transition: 'max-width 0.45s cubic-bezier(0.4,0,0.2,1), padding 0.45s cubic-bezier(0.4,0,0.2,1), border-color 0.3s ease, background-color 0.2s ease',
+                clipPath: 'inset(-20px 0px -20px -500px)',
               },
             }}
           >
