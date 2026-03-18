@@ -2102,40 +2102,80 @@ const IncidentsPage = () => {
               <RadixPopover>
                 <PopoverTrigger asChild>
                   <button
-                    className={`flex-1 text-left text-xs px-2 py-1.5 rounded-md border transition-colors ${dateFrom ? 'border-indigo-500/40 text-foreground' : 'border-border text-muted-foreground'} bg-background hover:border-indigo-500/30`}
+                    className={`flex-1 text-left text-xs px-2 py-1.5 rounded-md border-2 transition-all ${dateFrom ? 'border-blue-500/60 bg-blue-500/10 text-foreground ring-1 ring-blue-500/20' : 'border-blue-500/20 text-muted-foreground hover:border-blue-500/40 hover:bg-blue-500/5'} bg-background`}
                   >
-                    {dateFrom ? format(dateFrom, 'MMM d, yyyy') : 'From'}
+                    {dateFrom ? format(dateFrom, dateFrom.getHours() || dateFrom.getMinutes() || dateFrom.getSeconds() ? 'MMM d, yyyy HH:mm:ss' : 'MMM d, yyyy') : 'From'}
                   </button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
                     selected={dateFrom}
-                    onSelect={setDateFrom}
+                    onSelect={(d) => {
+                      if (d && dateFrom) {
+                        d.setHours(dateFrom.getHours(), dateFrom.getMinutes(), dateFrom.getSeconds());
+                      }
+                      setDateFrom(d);
+                    }}
                     disabled={(date) => dateTo ? date > dateTo : false}
                     initialFocus
                     className="p-3 pointer-events-auto"
                   />
+                  <div className="border-t border-border px-3 py-2">
+                    <label className="text-[0.65rem] text-muted-foreground font-medium uppercase tracking-wider">Time</label>
+                    <input
+                      type="time"
+                      step="1"
+                      value={dateFrom ? format(dateFrom, 'HH:mm:ss') : '00:00:00'}
+                      onChange={(e) => {
+                        const [h, m, s] = e.target.value.split(':').map(Number);
+                        const d = dateFrom ? new Date(dateFrom) : new Date();
+                        d.setHours(h || 0, m || 0, s || 0);
+                        setDateFrom(d);
+                      }}
+                      className="w-full mt-1 text-xs px-2 py-1 rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-blue-500/40"
+                    />
+                  </div>
                 </PopoverContent>
               </RadixPopover>
               <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.7rem' }}>→</Typography>
               <RadixPopover>
                 <PopoverTrigger asChild>
                   <button
-                    className={`flex-1 text-left text-xs px-2 py-1.5 rounded-md border transition-colors ${dateTo ? 'border-indigo-500/40 text-foreground' : 'border-border text-muted-foreground'} bg-background hover:border-indigo-500/30`}
+                    className={`flex-1 text-left text-xs px-2 py-1.5 rounded-md border-2 transition-all ${dateTo ? 'border-emerald-500/60 bg-emerald-500/10 text-foreground ring-1 ring-emerald-500/20' : 'border-emerald-500/20 text-muted-foreground hover:border-emerald-500/40 hover:bg-emerald-500/5'} bg-background`}
                   >
-                    {dateTo ? format(dateTo, 'MMM d, yyyy') : 'To'}
+                    {dateTo ? format(dateTo, dateTo.getHours() || dateTo.getMinutes() || dateTo.getSeconds() ? 'MMM d, yyyy HH:mm:ss' : 'MMM d, yyyy') : 'To'}
                   </button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="end">
                   <Calendar
                     mode="single"
                     selected={dateTo}
-                    onSelect={setDateTo}
+                    onSelect={(d) => {
+                      if (d && dateTo) {
+                        d.setHours(dateTo.getHours(), dateTo.getMinutes(), dateTo.getSeconds());
+                      }
+                      setDateTo(d);
+                    }}
                     disabled={(date) => dateFrom ? date < dateFrom : false}
                     initialFocus
                     className="p-3 pointer-events-auto"
                   />
+                  <div className="border-t border-border px-3 py-2">
+                    <label className="text-[0.65rem] text-muted-foreground font-medium uppercase tracking-wider">Time</label>
+                    <input
+                      type="time"
+                      step="1"
+                      value={dateTo ? format(dateTo, 'HH:mm:ss') : '23:59:59'}
+                      onChange={(e) => {
+                        const [h, m, s] = e.target.value.split(':').map(Number);
+                        const d = dateTo ? new Date(dateTo) : new Date();
+                        d.setHours(h || 0, m || 0, s || 0);
+                        setDateTo(d);
+                      }}
+                      className="w-full mt-1 text-xs px-2 py-1 rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500/40"
+                    />
+                  </div>
                 </PopoverContent>
               </RadixPopover>
             </Box>
