@@ -927,23 +927,34 @@ const IncidentsPage = () => {
     let result = filteredByAssignee;
 
     if (filters.severity) {
-      result = result.filter(i => i.severity === filters.severity);
+      const neg = negatedFilters.has('severity');
+      result = result.filter(i => neg ? i.severity !== filters.severity : i.severity === filters.severity);
     }
     if (filters.status) {
+      const neg = negatedFilters.has('status');
       if (Array.isArray(filters.status)) {
-        result = result.filter(i => filters.status.includes(i.status));
+        result = result.filter(i => neg ? !filters.status!.includes(i.status) : filters.status!.includes(i.status));
       } else {
-        result = result.filter(i => i.status === filters.status);
+        result = result.filter(i => neg ? i.status !== filters.status : i.status === filters.status);
       }
     }
     if (filters.tlp) {
-      result = result.filter(i => i.tlp === filters.tlp);
+      const neg = negatedFilters.has('tlp');
+      result = result.filter(i => neg ? i.tlp !== filters.tlp : i.tlp === filters.tlp);
     }
     if (filters.source) {
-      result = result.filter(i => (i.source || '').toLowerCase() === filters.source!.toLowerCase());
+      const neg = negatedFilters.has('source');
+      result = result.filter(i => {
+        const match = (i.source || '').toLowerCase() === filters.source!.toLowerCase();
+        return neg ? !match : match;
+      });
     }
     if (filters.tag) {
-      result = result.filter(i => i.labels?.some(l => l.toLowerCase() === filters.tag!.toLowerCase()));
+      const neg = negatedFilters.has('tag');
+      result = result.filter(i => {
+        const match = i.labels?.some(l => l.toLowerCase() === filters.tag!.toLowerCase());
+        return neg ? !match : match;
+      });
     }
     const orgFilter = Array.isArray(filters.org) ? filters.org : filters.org ? [filters.org] : [];
     if (orgFilter.length > 0) {
