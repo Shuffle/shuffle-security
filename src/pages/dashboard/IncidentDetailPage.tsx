@@ -1991,23 +1991,30 @@ const IncidentDetailPage = () => {
           {/* Title and meta */}
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <TextField
-                value={editedTitle}
-                onChange={(e) => !isPublicView && setEditedTitle(e.target.value)}
-                variant="standard"
-                inputProps={{ readOnly: isPublicView }}
-                InputProps={{
-                  disableUnderline: true,
-                  sx: { 
-                    fontSize: '1.1rem', 
-                    fontWeight: 600,
-                    ...(!isPublicView && { '&:hover': { bgcolor: 'rgba(255,255,255,0.03)' } }),
-                    borderRadius: 1,
-                    px: 0.5,
-                  },
-                }}
-                sx={{ flex: 1 }}
-              />
+              {editedTitle && editedTitle !== id ? (
+                <TextField
+                  value={editedTitle}
+                  onChange={(e) => !isPublicView && setEditedTitle(e.target.value)}
+                  variant="standard"
+                  inputProps={{ readOnly: isPublicView }}
+                  InputProps={{
+                    disableUnderline: true,
+                    sx: { 
+                      fontSize: '1.1rem', 
+                      fontWeight: 600,
+                      ...(!isPublicView && { '&:hover': { bgcolor: 'rgba(255,255,255,0.03)' } }),
+                      borderRadius: 1,
+                      px: 0.5,
+                    },
+                  }}
+                  sx={{ flex: 1 }}
+                />
+              ) : (
+                <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75, color: '#f59e0b', fontStyle: 'italic', fontWeight: 500, fontSize: '1.1rem', px: 0.5 }}>
+                  <RefreshIcon sx={{ fontSize: 18 }} />
+                  Requires sync
+                </Box>
+              )}
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5, flexWrap: 'wrap', ...(isPublicView && { pointerEvents: 'none' }) }}>
               {/* Status dropdown */}
