@@ -1042,7 +1042,7 @@ const IncidentDetailPage = () => {
   useEffect(() => {
     if (autoResyncTriggeredRef.current || loading || !incident || isResyncing || isPublicView) return;
     // Only trigger if incident has no meaningful title and has a resyncable source
-    if (incident.title) return;
+    if (incident.title && incident.title !== incident.id) return;
     const source = incident.source || '';
     if (!source || source === 'Tenzir') return;
     // Check source is not a product id/uid (same guard as manual resync)
