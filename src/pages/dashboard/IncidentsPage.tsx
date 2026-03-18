@@ -650,8 +650,10 @@ const IncidentsPage = () => {
         });
         toast.success('Ingestion sources updated');
         await fetchIngestionApps();
-        // Auto-trigger sync after sources change
-        triggerSync();
+        // Only trigger sync if we still have active sources (remove means nothing to execute)
+        if (activeNames.length > 0) {
+          triggerSync();
+        }
       } catch (error) {
         console.error('Failed to update ingestion sources:', error);
         toast.error('Failed to update ingestion sources');
