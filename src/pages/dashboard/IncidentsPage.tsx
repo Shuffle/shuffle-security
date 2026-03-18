@@ -670,7 +670,7 @@ const IncidentsPage = () => {
         setIsUpdatingForwardApps(false);
       }
     }, 3000);
-  }, [forwardApps, fetchIngestionApps]);
+  }, [forwardApps, fetchIngestionApps, fetchItems]);
 
   const triggerSync = useCallback(async () => {
     if (!ingestWorkflowId || isSyncing) return;
