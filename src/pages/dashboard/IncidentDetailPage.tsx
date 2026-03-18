@@ -535,7 +535,21 @@ const IncidentDetailPage = () => {
       });
       if (response.ok) {
         const result = await response.json();
-        setRevisions(Array.isArray(result) ? result : (result.data || result.revisions || []));
+        const rawRevisions: any[] = Array.isArray(result) ? result : (result.data || result.revisions || []);
+        // Deduplicate by revision id and sort newest first
+        const seen = new Set<string>();
+        const deduped = rawRevisions.filter(rev => {
+          const key = rev.id || `${rev.edited || rev.created || 0}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+        deduped.sort((a: any, b: any) => {
+          const tsA = a.edited || a.created || 0;
+          const tsB = b.edited || b.created || 0;
+          return tsB - tsA; // newest first
+        });
+        setRevisions(deduped);
       } else {
         console.error('[Changes] Failed to load revisions:', response.status);
         setRevisions([]);
