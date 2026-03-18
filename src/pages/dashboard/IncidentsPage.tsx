@@ -1526,16 +1526,24 @@ const IncidentsPage = () => {
                 transition: 'max-width 0.4s cubic-bezier(0.4,0,0.2,1) 0.15s, opacity 0.3s ease 0.15s',
                 overflow: 'hidden',
               },
-              // Hovering either section: boost z-index and make bg opaque
+              // Hovering either section: boost z-index and make bg opaque, hide other title
               '&:has(.automation-section-ingest:hover) .automation-section-ingest': {
                 zIndex: 10,
                 bgcolor: 'hsl(var(--muted))',
                 clipPath: 'inset(-20px -500px -20px 0px)',
               },
+              '&:has(.automation-section-ingest:hover) .automation-section-forward .automation-section-title': {
+                opacity: 0,
+                transition: 'opacity 0.2s ease',
+              },
               '&:has(.automation-section-forward:hover) .automation-section-forward': {
                 zIndex: 10,
                 bgcolor: 'hsl(var(--muted))',
                 clipPath: 'inset(-20px 0px -20px -500px)',
+              },
+              '&:has(.automation-section-forward:hover) .automation-section-ingest .automation-section-title': {
+                opacity: 0,
+                transition: 'opacity 0.2s ease',
               },
             }}
           >
