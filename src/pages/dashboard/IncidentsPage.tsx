@@ -2069,6 +2069,74 @@ const IncidentsPage = () => {
         
         {/* Stats sidebar - sticky on desktop */}
         <Box sx={{ display: { xs: 'none', lg: 'block' }, position: 'sticky', top: 72, alignSelf: 'start', maxHeight: 'calc(100vh - 96px)', overflowY: 'auto', order: { xs: -1, lg: 0 } }}>
+          {/* Date range filter */}
+          <Box sx={{ 
+            mb: 2, 
+            px: 1.5, 
+            py: 1, 
+            borderRadius: 2, 
+            backgroundColor: 'hsl(var(--card))', 
+            border: '1px solid', 
+            borderColor: (dateFrom || dateTo) ? 'rgba(99, 102, 241, 0.4)' : 'hsl(var(--border))',
+            transition: 'border-color 0.2s ease',
+          }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+              <CalendarTodayIcon sx={{ fontSize: 13, color: 'hsl(var(--muted-foreground))' }} />
+              <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontWeight: 600, fontSize: '0.7rem', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                Date Range
+              </Typography>
+              {(dateFrom || dateTo) && (
+                <Typography 
+                  variant="caption" 
+                  onClick={() => { setDateFrom(undefined); setDateTo(undefined); }}
+                  sx={{ ml: 'auto', color: '#818cf8', fontSize: '0.65rem', cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
+                >
+                  Clear
+                </Typography>
+              )}
+            </Box>
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+              <RadixPopover>
+                <PopoverTrigger asChild>
+                  <button
+                    className={`flex-1 text-left text-xs px-2 py-1.5 rounded-md border transition-colors ${dateFrom ? 'border-indigo-500/40 text-foreground' : 'border-border text-muted-foreground'} bg-background hover:border-indigo-500/30`}
+                  >
+                    {dateFrom ? format(dateFrom, 'MMM d, yyyy') : 'From'}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={dateFrom}
+                    onSelect={setDateFrom}
+                    disabled={(date) => dateTo ? date > dateTo : false}
+                    initialFocus
+                    className="p-3 pointer-events-auto"
+                  />
+                </PopoverContent>
+              </RadixPopover>
+              <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.7rem' }}>→</Typography>
+              <RadixPopover>
+                <PopoverTrigger asChild>
+                  <button
+                    className={`flex-1 text-left text-xs px-2 py-1.5 rounded-md border transition-colors ${dateTo ? 'border-indigo-500/40 text-foreground' : 'border-border text-muted-foreground'} bg-background hover:border-indigo-500/30`}
+                  >
+                    {dateTo ? format(dateTo, 'MMM d, yyyy') : 'To'}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <Calendar
+                    mode="single"
+                    selected={dateTo}
+                    onSelect={setDateTo}
+                    disabled={(date) => dateFrom ? date < dateFrom : false}
+                    initialFocus
+                    className="p-3 pointer-events-auto"
+                  />
+                </PopoverContent>
+              </RadixPopover>
+            </Box>
+          </Box>
           <IncidentStatsCards 
             incidents={activeIncidents}
             currentUsername={currentUsername}
