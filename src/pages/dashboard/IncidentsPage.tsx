@@ -1395,7 +1395,7 @@ const IncidentsPage = () => {
                 textTransform: 'uppercase',
                 whiteSpace: 'nowrap',
               }}>
-                <Tooltip title="Apps with valid authentication appear here as ingestion sources. Toggle them to control which tools automatically pull in incidents." placement="top" arrow>
+                <Tooltip title="Only apps that have passed a 'Test Connection' check appear here. Toggle them to control which tools automatically pull in incidents." placement="top" arrow>
                   <span style={{ cursor: 'help' }}>Automation</span>
                 </Tooltip>
               </Typography>
