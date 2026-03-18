@@ -1649,9 +1649,10 @@ const IncidentsPage = () => {
 
           {/* Forward Destinations - visible after workflows loaded */}
           {!ingestionLoading && (
-            <Box sx={{ 
+            <Box className="automation-section-forward" sx={{ 
               position: 'relative',
-              display: { xs: 'none', md: 'flex' }, 
+              display: 'flex', 
+              maxWidth: 600,
               alignItems: 'center', 
               gap: 0.5,
               bgcolor: 'hsl(var(--muted) / 0.4)',
