@@ -216,7 +216,7 @@ export const IncidentTrendChart = ({ incidents, dateFrom, dateTo }: IncidentTren
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
             <Box>
               <Typography variant="h6" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}>
-                Incident Trend
+                Status Trend
               </Typography>
               <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
                 {dateFrom ? format(dateFrom, 'MMM d, yyyy') : format(subDays(new Date(), 30), 'MMM d, yyyy')}
