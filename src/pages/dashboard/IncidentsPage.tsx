@@ -1717,7 +1717,10 @@ const IncidentsPage = () => {
 
           {/* Forward Destinations - visible after workflows loaded */}
           {!ingestionLoading && (
-            <Box className="automation-section-forward" sx={{ 
+            <Box className={`automation-section-forward${forwardHovered ? ' is-hovered' : ''}`}
+              onMouseEnter={handleForwardEnter}
+              onMouseLeave={handleForwardLeave}
+              sx={{ 
               position: 'relative',
               display: 'flex', 
               alignItems: 'center', 
@@ -1751,18 +1754,17 @@ const IncidentsPage = () => {
                 overflow: 'hidden',
                 transition: 'max-width 0.25s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease',
               },
-              '&:hover .automation-overflow': {
-                opacity: 1,
-                pointerEvents: 'auto',
-                transitionDelay: '0.25s',
-              },
-              '&:hover': {
+              ...(forwardHovered && {
                 borderRadius: '0 6px 6px 0',
-              },
-              '&:hover .automation-overflow-count': {
-                maxWidth: 0,
-                opacity: 0,
-              },
+                '& .automation-overflow': {
+                  opacity: 1,
+                  pointerEvents: 'auto',
+                },
+                '& .automation-overflow-count': {
+                  maxWidth: 0,
+                  opacity: 0,
+                },
+              }),
             }}>
               <Typography className="automation-section-title" sx={{
                 position: 'absolute',
