@@ -725,8 +725,9 @@ const IncidentsPage = () => {
     }, 3000);
   }, [forwardApps, fetchIngestionApps, fetchItems]);
 
-  const triggerSync = useCallback(async () => {
-    if (!ingestWorkflowId || isSyncing) return;
+  const triggerSync = useCallback(async (overrideWorkflowId?: string) => {
+    const wfId = overrideWorkflowId || ingestWorkflowId;
+    if (!wfId || isSyncing) return;
     setIsSyncing(true);
     try {
       const resp = await fetch(getApiUrl(`/api/v1/workflows/${ingestWorkflowId}/execute`), {
