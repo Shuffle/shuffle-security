@@ -1201,7 +1201,7 @@ const IncidentsPage = () => {
   }, [selectedIds, selectedIncidentsList, currentUsername, fetchItems]);
 
   const getIncidentUrl = (incident: DisplayIncident) => {
-    const isInvalidData = (!incident.title || incident.title === 'Untitled Incident' || incident.title === 'Requires sync') && !incident.source;
+    const isInvalidData = (!incident.title || incident.title === 'Untitled Incident' || incident.title === 'Requires sync' || incident.title === incident.id) && !incident.source;
     const params = new URLSearchParams();
     if (isInvalidData) params.set('tab', 'raw');
     if (incident.sharedOrgs && incident.sharedOrgs.length > 1) {
