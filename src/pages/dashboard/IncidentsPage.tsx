@@ -2188,7 +2188,7 @@ const IncidentsPage = () => {
             </Box>
           </Box>
           <IncidentStatsCards 
-            incidents={activeIncidents}
+            incidents={filteredIncidents}
             currentUsername={currentUsername}
             isLoading={isLoading || !hasFetched}
             onFilterChange={(type, value) => {
