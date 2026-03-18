@@ -1511,46 +1511,46 @@ const IncidentsPage = () => {
               gap: 0,
               // Default restore transition (when hover ends)
               '& .automation-section-ingest, & .automation-section-forward': {
-                transition: 'max-width 0.5s cubic-bezier(0.4,0,0.2,1) 0.15s, opacity 0.4s ease 0.2s, padding 0.5s cubic-bezier(0.4,0,0.2,1) 0.15s, border-color 0.4s ease 0.2s',
+                transition: 'max-width 0.55s cubic-bezier(0.4,0,0.2,1) 0.2s, opacity 0.4s ease 0.25s, padding 0.55s cubic-bezier(0.4,0,0.2,1) 0.2s, border-color 0.4s ease 0.25s',
                 overflow: 'hidden',
               },
               '& .automation-arrow': {
-                transition: 'max-width 0.4s cubic-bezier(0.4,0,0.2,1) 0.1s, opacity 0.3s ease 0.15s',
+                transition: 'max-width 0.4s cubic-bezier(0.4,0,0.2,1) 0.15s, opacity 0.3s ease 0.15s',
                 overflow: 'hidden',
               },
-              // Hovering Ingest: collapse Forward first (fast), then grow Ingest (delayed)
+              // Hovering Ingest: collapse Forward first (no delay), then grow Ingest (delayed)
               '&:has(.automation-section-ingest:hover) .automation-section-ingest': {
                 maxWidth: '800px !important',
-                transition: 'max-width 0.6s cubic-bezier(0.4,0,0.2,1) 0.5s, opacity 0.4s ease 0.45s, padding 0.6s cubic-bezier(0.4,0,0.2,1) 0.5s, border-color 0.4s ease 0.45s',
+                transition: 'max-width 0.65s cubic-bezier(0.4,0,0.2,1) 0.6s, opacity 0.45s ease 0.6s, padding 0.65s cubic-bezier(0.4,0,0.2,1) 0.6s, border-color 0.45s ease 0.6s',
               },
               '&:has(.automation-section-ingest:hover) .automation-section-forward': {
                 maxWidth: '0px !important',
                 opacity: '0 !important',
                 px: '0 !important',
                 borderColor: 'transparent !important',
-                transition: 'max-width 0.35s cubic-bezier(0.4,0,0.2,1) 0.15s, opacity 0.25s ease 0.15s, padding 0.35s cubic-bezier(0.4,0,0.2,1) 0.15s, border-color 0.25s ease 0.15s',
+                transition: 'max-width 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.25s ease, padding 0.4s cubic-bezier(0.4,0,0.2,1), border-color 0.25s ease',
               },
               '&:has(.automation-section-ingest:hover) .automation-arrow': {
                 maxWidth: '0px !important',
                 opacity: '0 !important',
-                transition: 'max-width 0.3s cubic-bezier(0.4,0,0.2,1) 0.15s, opacity 0.2s ease 0.15s',
+                transition: 'max-width 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease',
               },
-              // Hovering Forward: collapse Ingest first (fast), then grow Forward (delayed)
+              // Hovering Forward: collapse Ingest first (no delay), then grow Forward (delayed)
               '&:has(.automation-section-forward:hover) .automation-section-forward': {
                 maxWidth: '800px !important',
-                transition: 'max-width 0.6s cubic-bezier(0.4,0,0.2,1) 0.5s, opacity 0.4s ease 0.45s, padding 0.6s cubic-bezier(0.4,0,0.2,1) 0.5s, border-color 0.4s ease 0.45s',
+                transition: 'max-width 0.65s cubic-bezier(0.4,0,0.2,1) 0.6s, opacity 0.45s ease 0.6s, padding 0.65s cubic-bezier(0.4,0,0.2,1) 0.6s, border-color 0.45s ease 0.6s',
               },
               '&:has(.automation-section-forward:hover) .automation-section-ingest': {
                 maxWidth: '0px !important',
                 opacity: '0 !important',
                 px: '0 !important',
                 borderColor: 'transparent !important',
-                transition: 'max-width 0.35s cubic-bezier(0.4,0,0.2,1) 0.15s, opacity 0.25s ease 0.15s, padding 0.35s cubic-bezier(0.4,0,0.2,1) 0.15s, border-color 0.25s ease 0.15s',
+                transition: 'max-width 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.25s ease, padding 0.4s cubic-bezier(0.4,0,0.2,1), border-color 0.25s ease',
               },
               '&:has(.automation-section-forward:hover) .automation-arrow': {
                 maxWidth: '0px !important',
                 opacity: '0 !important',
-                transition: 'max-width 0.3s cubic-bezier(0.4,0,0.2,1) 0.15s, opacity 0.2s ease 0.15s',
+                transition: 'max-width 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease',
               },
             }}
           >
