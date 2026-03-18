@@ -521,8 +521,18 @@ const IncidentsPage = () => {
           // Detect "Forward Tickets" workflow
           const forwardWorkflow = findForwardTicketsWorkflow(workflowList);
           if (forwardWorkflow) {
-            forwardAppNames = extractWorkflowAppNames(forwardWorkflow);
-            setForwardWorkflowId(forwardWorkflow.id);
+            // Also check if the Forward Tickets workflow is referenced in category automations' "Run workflow"
+            const workflowAuto = categoryAutomations?.find(a => a.type === 'workflow' && a.enabled);
+            const automationWorkflowIds = workflowAuto?.options?.find(o => o.key === 'workflow_id')?.value?.split(',').map(id => id.trim()).filter(Boolean) || [];
+            const isReferencedInAutomations = automationWorkflowIds.includes(forwardWorkflow.id);
+
+            if (isReferencedInAutomations) {
+              forwardAppNames = extractWorkflowAppNames(forwardWorkflow);
+              setForwardWorkflowId(forwardWorkflow.id);
+            } else {
+              // Workflow exists but not referenced in automations — treat as disabled
+              setForwardWorkflowId(null);
+            }
           } else {
             setForwardWorkflowId(null);
           }
@@ -578,7 +588,7 @@ const IncidentsPage = () => {
     } finally {
       setIngestionLoading(false);
     }
-  }, []);
+  }, [categoryAutomations]);
 
   useEffect(() => {
     fetchIngestionApps();
