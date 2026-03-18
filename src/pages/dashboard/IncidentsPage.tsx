@@ -1512,7 +1512,8 @@ const IncidentsPage = () => {
               // Default restore transition (when hover ends)
               '& .automation-section-ingest, & .automation-section-forward': {
                 transition: 'max-width 0.55s cubic-bezier(0.4,0,0.2,1) 0.2s, opacity 0.4s ease 0.25s, padding 0.55s cubic-bezier(0.4,0,0.2,1) 0.2s, border-color 0.4s ease 0.25s',
-                overflow: 'hidden',
+                overflowX: 'hidden',
+                overflowY: 'visible',
               },
               '& .automation-arrow': {
                 transition: 'max-width 0.4s cubic-bezier(0.4,0,0.2,1) 0.15s, opacity 0.3s ease 0.15s',
