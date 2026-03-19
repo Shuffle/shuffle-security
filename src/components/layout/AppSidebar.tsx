@@ -156,6 +156,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
   const location = useLocation();
   const { userInfo, setActiveOrg, logout } = useAuth();
   const [expandedItems, setExpandedItems] = useState<string[]>(['Incidents']);
+  const [changingOrg, setChangingOrg] = useState(false);
   const [agentDrawerOpen, setAgentDrawerOpen] = useState(false);
   const [toolMenuAnchor, setToolMenuAnchor] = useState<null | HTMLElement>(null);
   const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(null);
