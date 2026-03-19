@@ -1388,6 +1388,11 @@ const IncidentDetailPage = () => {
           }
         });
       }
+      // Update local incident state so OCSF tab reflects the latest saved data
+      setIncident(prev => prev ? { ...prev, rawOCSF: updatedData } : prev);
+      // Also update the raw JSON text if the user has the raw tab open
+      setRawJsonText(JSON.stringify(updatedData, null, 2));
+
       // Update the initial snapshot so future comparisons are against the saved state
       // Use cached JSON refs to avoid redundant serialization
       initialValuesRef.current = {
