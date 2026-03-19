@@ -4247,7 +4247,8 @@ const IncidentDetailPage = () => {
       </Box>{/* End isPublicView pointer-events wrapper */}
         </Box>
 
-        {/* Right Activity Sidebar - Shows at bottom on smaller screens */}
+        {/* Right Activity Sidebar - Hidden on Original/Translation/OCSF tabs */}
+        {activeTab !== 4 && activeTab !== 5 && activeTab !== 6 && (
         <Box sx={{ 
           width: { xs: '100%', lg: 380 },
           flexShrink: 0,
