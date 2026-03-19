@@ -2296,7 +2296,7 @@ const IncidentDetailPage = () => {
             <Tooltip title="Refresh">
               <IconButton 
                 size="small"
-                onClick={() => loadIncident(true)}
+                onClick={() => loadIncident(false)}
                 disabled={loading}
                 sx={{ 
                   border: '1px solid hsl(var(--border))',
