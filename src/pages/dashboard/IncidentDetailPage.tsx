@@ -1450,6 +1450,11 @@ const IncidentDetailPage = () => {
           console.warn('[SaveVerify] Verification error:', verifyErr);
         }
       }, 1500);
+
+      // Refresh revisions after a short delay so the Activity feed shows the new change
+      setTimeout(() => {
+        loadRevisions();
+      }, 3000);
     } catch (error) {
       toast.error('Failed to save changes');
     } finally {
