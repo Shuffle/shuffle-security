@@ -1450,12 +1450,17 @@ const IncidentDetailPage = () => {
           console.warn('[SaveVerify] Verification error:', verifyErr);
         }
       }, 1500);
+
+      // Refresh revisions after a short delay so the Activity feed shows the new change
+      setTimeout(() => {
+        loadRevisions();
+      }, 3000);
     } catch (error) {
       toast.error('Failed to save changes');
     } finally {
       setIsSaving(false);
     }
-  }, [incident, editedTitle, editedMessage, editedSeverity, editedAssignee, editedStatus, editedTlp, editedReferences, editedObservables, editedCustomFields, editedLabels, activity, tasks, addItem, getItem, sharedOrgs]);
+  }, [incident, editedTitle, editedMessage, editedSeverity, editedAssignee, editedStatus, editedTlp, editedReferences, editedObservables, editedCustomFields, editedLabels, activity, tasks, addItem, getItem, sharedOrgs, loadRevisions]);
 
   // Cache stringified complex values to avoid re-serializing on every render
   const tasksJsonRef = useRef('');
