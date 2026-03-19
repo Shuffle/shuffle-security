@@ -489,6 +489,7 @@ const IncidentDetailPage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [showResolveDialog, setShowResolveDialog] = useState(false);
   const [isResyncing, setIsResyncing] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [actionsMenuAnchor, setActionsMenuAnchor] = useState<null | HTMLElement>(null);
   const [showForwardDialog, setShowForwardDialog] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
@@ -2296,8 +2297,12 @@ const IncidentDetailPage = () => {
             <Tooltip title="Refresh">
               <IconButton 
                 size="small"
-                onClick={() => loadIncident(true)}
-                disabled={loading}
+                onClick={async () => {
+                  setIsRefreshing(true);
+                  await loadIncident(false);
+                  setIsRefreshing(false);
+                }}
+                disabled={loading || isRefreshing}
                 sx={{ 
                   border: '1px solid hsl(var(--border))',
                   borderRadius: 1,
@@ -2305,7 +2310,7 @@ const IncidentDetailPage = () => {
                   height: 32,
                 }}
               >
-                <RefreshIcon fontSize="small" sx={{ animation: loading ? 'spin 1s linear infinite' : 'none', '@keyframes spin': { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } } }} />
+                <RefreshIcon fontSize="small" sx={{ animation: isRefreshing ? 'spin 1s linear infinite' : 'none', '@keyframes spin': { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } } }} />
               </IconButton>
             </Tooltip>
 
