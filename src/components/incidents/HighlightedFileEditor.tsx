@@ -59,7 +59,8 @@ const editorTheme = EditorView.theme(
       padding: '0 14px',
     },
     '.cm-scroller': {
-      minHeight: '480px',
+      minHeight: '320px',
+      maxHeight: '70vh',
       overflow: 'auto',
     },
     '.cm-focused .cm-selectionBackground, .cm-selectionBackground, ::selection': {
