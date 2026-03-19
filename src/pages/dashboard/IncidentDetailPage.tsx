@@ -489,6 +489,7 @@ const IncidentDetailPage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [showResolveDialog, setShowResolveDialog] = useState(false);
   const [isResyncing, setIsResyncing] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [actionsMenuAnchor, setActionsMenuAnchor] = useState<null | HTMLElement>(null);
   const [showForwardDialog, setShowForwardDialog] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
