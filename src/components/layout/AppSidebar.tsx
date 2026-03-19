@@ -224,6 +224,29 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
 
   return (
     <>
+      {/* Full-screen overlay when changing org */}
+      {changingOrg && (
+        <Box
+          sx={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9999,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 2,
+            backgroundColor: 'hsla(var(--background) / 0.85)',
+            backdropFilter: 'blur(4px)',
+          }}
+        >
+          <CircularProgress size={32} sx={{ color: 'hsl(var(--primary))' }} />
+          <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+            Changing organization…
+          </Typography>
+        </Box>
+      )}
+
       {/* Toggle button - fixed position outside sidebar to avoid clipping */}
       <IconButton 
         onClick={onToggle} 
