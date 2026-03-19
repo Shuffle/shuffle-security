@@ -18,6 +18,7 @@ import {
   TextField,
   Menu,
   MenuItem,
+  CircularProgress,
 } from '@mui/material';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import PeopleIcon from '@mui/icons-material/People';
@@ -156,6 +157,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
   const location = useLocation();
   const { userInfo, setActiveOrg, logout } = useAuth();
   const [expandedItems, setExpandedItems] = useState<string[]>(['Incidents']);
+  const [changingOrg, setChangingOrg] = useState(false);
   const [agentDrawerOpen, setAgentDrawerOpen] = useState(false);
   const [toolMenuAnchor, setToolMenuAnchor] = useState<null | HTMLElement>(null);
   const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(null);
@@ -216,12 +218,36 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
 
   const handleOrgChange = async (org: { id: string; name: string } | null) => {
     if (org) {
+      setChangingOrg(true);
       await setActiveOrg(org.id);
     }
   };
 
   return (
     <>
+      {/* Full-screen overlay when changing org */}
+      {changingOrg && (
+        <Box
+          sx={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9999,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 2,
+            backgroundColor: 'hsla(var(--background) / 0.85)',
+            backdropFilter: 'blur(4px)',
+          }}
+        >
+          <CircularProgress size={32} sx={{ color: 'hsl(var(--primary))' }} />
+          <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+            Changing organization…
+          </Typography>
+        </Box>
+      )}
+
       {/* Toggle button - fixed position outside sidebar to avoid clipping */}
       <IconButton 
         onClick={onToggle} 
