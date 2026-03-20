@@ -39,6 +39,19 @@ const ENTITY_MAP: [RegExp, string][] = [
   [/&reg;/gi, '®'],
   [/&trade;/gi, '™'],
   [/&bull;/gi, '•'],
+  [/&ldquo;/gi, '\u201C'],
+  [/&rdquo;/gi, '\u201D'],
+  [/&lsquo;/gi, '\u2018'],
+  [/&rsquo;/gi, '\u2019'],
+  [/&laquo;/gi, '«'],
+  [/&raquo;/gi, '»'],
+  [/&deg;/gi, '°'],
+  [/&micro;/gi, 'µ'],
+  [/&para;/gi, '¶'],
+  [/&sect;/gi, '§'],
+  [/&times;/gi, '×'],
+  [/&divide;/gi, '÷'],
+  [/&plusmn;/gi, '±'],
 ];
 
 export function htmlToPlainText(html: string): string {
