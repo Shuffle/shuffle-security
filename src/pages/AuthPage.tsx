@@ -214,7 +214,7 @@ const AuthPage = ({ mode }: AuthPageProps) => {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#1a1a1a' }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
       <LandingNavbar />
       <Box
         sx={{
@@ -235,8 +235,9 @@ const AuthPage = ({ mode }: AuthPageProps) => {
         >
           <Card
             sx={{
-              bgcolor: '#212121',
-              border: '1px solid rgba(255,255,255,0.08)',
+              bgcolor: 'background.paper',
+              border: '1px solid',
+              borderColor: 'divider',
               borderRadius: 2,
             }}
           >
