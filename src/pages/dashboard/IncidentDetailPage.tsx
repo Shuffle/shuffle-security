@@ -3273,32 +3273,22 @@ const IncidentDetailPage = () => {
                     <Typography variant="caption" sx={{ color: 'text.secondary' }}>Description</Typography>
                     {hasHtmlDescription && !isEditingDescription && (
                       <Box sx={{ display: 'flex', gap: 0.25 }}>
-                        <Chip
-                          label="Rendered"
-                          size="small"
-                          onClick={() => setShowRawDescription(false)}
-                          sx={{
-                            height: 20,
-                            fontSize: '0.65rem',
-                            cursor: 'pointer',
-                            bgcolor: !showRawDescription ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255,255,255,0.05)',
-                            color: !showRawDescription ? '#ff6600' : 'text.secondary',
-                            '&:hover': { bgcolor: !showRawDescription ? 'rgba(255, 102, 0, 0.2)' : 'rgba(255,255,255,0.1)' },
-                          }}
-                        />
-                        <Chip
-                          label="Raw"
-                          size="small"
-                          onClick={() => setShowRawDescription(true)}
-                          sx={{
-                            height: 20,
-                            fontSize: '0.65rem',
-                            cursor: 'pointer',
-                            bgcolor: showRawDescription ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255,255,255,0.05)',
-                            color: showRawDescription ? '#ff6600' : 'text.secondary',
-                            '&:hover': { bgcolor: showRawDescription ? 'rgba(255, 102, 0, 0.2)' : 'rgba(255,255,255,0.1)' },
-                          }}
-                        />
+                        {(['rendered', 'readable', 'raw'] as const).map((view) => (
+                          <Chip
+                            key={view}
+                            label={view === 'readable' ? 'Clean' : view.charAt(0).toUpperCase() + view.slice(1)}
+                            size="small"
+                            onClick={() => setDescriptionView(view)}
+                            sx={{
+                              height: 20,
+                              fontSize: '0.65rem',
+                              cursor: 'pointer',
+                              bgcolor: descriptionView === view ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255,255,255,0.05)',
+                              color: descriptionView === view ? '#ff6600' : 'text.secondary',
+                              '&:hover': { bgcolor: descriptionView === view ? 'rgba(255, 102, 0, 0.2)' : 'rgba(255,255,255,0.1)' },
+                            }}
+                          />
+                        ))}
                       </Box>
                     )}
                   </Box>
