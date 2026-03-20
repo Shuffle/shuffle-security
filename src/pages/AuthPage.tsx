@@ -406,7 +406,7 @@ const AuthPage = ({ mode }: AuthPageProps) => {
                         mb: 1,
                         fontSize: '0.875rem',
                         fontWeight: 500,
-                        color: '#fff',
+                        color: 'text.primary',
                       }}
                     >
                       Confirm Password
