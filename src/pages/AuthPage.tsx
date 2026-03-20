@@ -511,7 +511,7 @@ const AuthPage = ({ mode }: AuthPageProps) => {
                 <Link
                   to={isLogin ? '/register' : '/login'}
                   style={{
-                    color: '#FF6600',
+                    color: 'hsl(var(--primary))',
                     textDecoration: 'none',
                     fontWeight: 500,
                   }}
