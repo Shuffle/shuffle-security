@@ -6,6 +6,94 @@
 
 @layer base {
   :root {
+    /* Core backgrounds - Light theme (default) */
+    --background: 0 0% 98%;
+    --background-elevated: 0 0% 100%;
+    --background-surface: 0 0% 96%;
+    
+    --foreground: 0 0% 9%;
+    --foreground-muted: 0 0% 40%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 9%;
+
+    /* Primary - Shuffle Orange */
+    --primary: 24 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 24 100% 60%;
+
+    /* Secondary */
+    --secondary: 0 0% 94%;
+    --secondary-foreground: 0 0% 9%;
+
+    --muted: 0 0% 94%;
+    --muted-foreground: 0 0% 45%;
+
+    --accent: 24 100% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Severity colors */
+    --severity-critical: 0 84% 60%;
+    --severity-high: 25 95% 53%;
+    --severity-medium: 45 93% 47%;
+    --severity-low: 142 71% 45%;
+    --severity-info: 210 100% 56%;
+
+    /* Infrastructure category colors */
+    --infra-case-mgmt: 24 90% 55%;
+    --infra-siem: 45 93% 47%;
+    --infra-network: 210 100% 56%;
+    --infra-edr: 0 84% 60%;
+    --infra-communication: 142 71% 45%;
+    --infra-email: 280 70% 60%;
+    --infra-threat-intel: 190 80% 50%;
+    --infra-asset-mgmt: 25 95% 53%;
+    --infra-iam: 330 75% 55%;
+    --infra-cloud: 200 75% 50%;
+
+    /* Status colors */
+    --status-open: 24 100% 50%;
+    --status-in-progress: 45 93% 47%;
+    --status-resolved: 142 71% 45%;
+    --status-closed: 0 0% 50%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 89%;
+    --border-subtle: 0 0% 92%;
+    --input: 0 0% 94%;
+    --ring: 24 100% 50%;
+
+    --radius: 0.5rem;
+
+    /* Gradients - Light theme */
+    --gradient-hero: linear-gradient(135deg, hsl(0 0% 98%) 0%, hsl(0 0% 96%) 50%, hsl(0 0% 98%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(0 0% 98%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(24 100% 50%) 0%, hsl(24 100% 60%) 100%);
+    --gradient-glow: radial-gradient(ellipse at center, hsl(24 100% 50% / 0.08) 0%, transparent 70%);
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.08), 0 2px 4px -2px hsl(0 0% 0% / 0.05);
+    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.08), 0 4px 6px -4px hsl(0 0% 0% / 0.05);
+    --shadow-glow: 0 0 20px hsl(24 100% 50% / 0.15);
+
+    /* Sidebar */
+    --sidebar-background: 0 0% 97%;
+    --sidebar-foreground: 0 0% 9%;
+    --sidebar-primary: 24 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 94%;
+    --sidebar-accent-foreground: 0 0% 9%;
+    --sidebar-border: 0 0% 89%;
+    --sidebar-ring: 24 100% 50%;
+  }
+
+  .dark {
     /* Core backgrounds - Shuffle dark theme */
     --background: 0 0% 10%;
     --background-elevated: 0 0% 13%;
@@ -67,8 +155,6 @@
     --border-subtle: 0 0% 16%;
     --input: 0 0% 18%;
     --ring: 24 100% 50%;
-
-    --radius: 0.5rem;
 
     /* Gradients - Shuffle orange theme */
     --gradient-hero: linear-gradient(135deg, hsl(0 0% 10%) 0%, hsl(0 0% 14%) 50%, hsl(0 0% 10%) 100%);

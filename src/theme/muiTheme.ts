@@ -1,88 +1,35 @@
 import { createTheme } from '@mui/material/styles';
 
-export const muiTheme = createTheme({
-  palette: {
-    mode: 'dark',
-    primary: {
-      main: '#FF6600',
-      light: '#FF8533',
-      dark: '#CC5200',
-      contrastText: '#ffffff',
-    },
-    secondary: {
-      main: '#64748b',
-      light: '#94a3b8',
-      dark: '#475569',
-    },
-    error: {
-      main: '#ef4444',
-      light: '#f87171',
-      dark: '#dc2626',
-    },
-    warning: {
-      main: '#f59e0b',
-      light: '#fbbf24',
-      dark: '#d97706',
-    },
-    success: {
-      main: '#22c55e',
-      light: '#4ade80',
-      dark: '#16a34a',
-    },
-    info: {
-      main: '#3b82f6',
-      light: '#60a5fa',
-      dark: '#2563eb',
-    },
-    background: {
-      default: '#1a1a1a',
-      paper: '#212121',
-    },
-    text: {
-      primary: '#ffffff',
-      secondary: 'rgba(255,255,255,0.6)',
-      disabled: 'rgba(255,255,255,0.3)',
-    },
-    divider: 'rgba(255, 255, 255, 0.08)',
-  },
+const getCommon = () => ({
   typography: {
     fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-    h1: {
-      fontWeight: 700,
-      letterSpacing: '-0.02em',
-    },
-    h2: {
-      fontWeight: 700,
-      letterSpacing: '-0.01em',
-    },
-    h3: {
-      fontWeight: 600,
-    },
-    h4: {
-      fontWeight: 600,
-    },
-    h5: {
-      fontWeight: 600,
-    },
-    h6: {
-      fontWeight: 600,
-    },
-    button: {
-      fontWeight: 600,
-      textTransform: 'none',
-    },
+    h1: { fontWeight: 700, letterSpacing: '-0.02em' },
+    h2: { fontWeight: 700, letterSpacing: '-0.01em' },
+    h3: { fontWeight: 600 },
+    h4: { fontWeight: 600 },
+    h5: { fontWeight: 600 },
+    h6: { fontWeight: 600 },
+    button: { fontWeight: 600, textTransform: 'none' as const },
   },
-  shape: {
-    borderRadius: 8,
-  },
-  components: {
+  shape: { borderRadius: 8 },
+});
+
+const getComponents = (mode: 'light' | 'dark') => {
+  const isDark = mode === 'dark';
+  const border = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)';
+  const cardBg = isDark
+    ? 'linear-gradient(145deg, #262626 0%, #1f1f1f 100%)'
+    : 'linear-gradient(145deg, #ffffff 0%, #f8f8f8 100%)';
+  const drawerBg = isDark ? '#181818' : '#f5f5f5';
+  const tooltipBg = isDark ? '#111111' : '#ffffff';
+  const tooltipColor = isDark ? '#ffffff' : '#1a1a1a';
+  const tableHeadBg = isDark ? 'rgba(33, 33, 33, 0.5)' : 'rgba(245, 245, 245, 0.8)';
+  const appBarBg = isDark ? 'rgba(26, 26, 26, 0.9)' : 'rgba(255, 255, 255, 0.9)';
+
+  return {
     MuiButton: {
       styleOverrides: {
-        root: {
-          borderRadius: 8,
-          padding: '10px 24px',
-          fontWeight: 600,
-        },
+        root: { borderRadius: 8, padding: '10px 24px', fontWeight: 600 },
         containedPrimary: {
           background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
           boxShadow: '0 4px 14px rgba(255, 102, 0, 0.25)',
@@ -102,84 +49,72 @@ export const muiTheme = createTheme({
     },
     MuiCard: {
       styleOverrides: {
-        root: {
-          backgroundImage: 'linear-gradient(145deg, #262626 0%, #1f1f1f 100%)',
-          borderRadius: 12,
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-        },
+        root: { backgroundImage: cardBg, borderRadius: 12, border: `1px solid ${border}` },
       },
     },
-    MuiChip: {
-      styleOverrides: {
-        root: {
-          fontWeight: 500,
-        },
-      },
-    },
+    MuiChip: { styleOverrides: { root: { fontWeight: 500 } } },
     MuiAppBar: {
-      styleOverrides: {
-        root: {
-          backgroundColor: 'rgba(26, 26, 26, 0.9)',
-          backdropFilter: 'blur(12px)',
-        },
-      },
+      styleOverrides: { root: { backgroundColor: appBarBg, backdropFilter: 'blur(12px)' } },
     },
     MuiDrawer: {
-      styleOverrides: {
-        paper: {
-          backgroundColor: '#181818',
-          borderRight: '1px solid rgba(255, 255, 255, 0.08)',
-        },
-      },
+      styleOverrides: { paper: { backgroundColor: drawerBg, borderRight: `1px solid ${border}` } },
     },
     MuiDialog: {
-      styleOverrides: {
-        paper: {
-          backgroundImage: 'linear-gradient(145deg, #262626 0%, #1f1f1f 100%)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-        },
-      },
+      styleOverrides: { paper: { backgroundImage: cardBg, border: `1px solid ${border}` } },
     },
     MuiMenu: {
-      styleOverrides: {
-        paper: {
-          backgroundImage: 'linear-gradient(145deg, #262626 0%, #1f1f1f 100%)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-        },
-      },
+      styleOverrides: { paper: { backgroundImage: cardBg, border: `1px solid ${border}` } },
     },
     MuiPopover: {
-      styleOverrides: {
-        paper: {
-          backgroundImage: 'linear-gradient(145deg, #262626 0%, #1f1f1f 100%)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-        },
-      },
+      styleOverrides: { paper: { backgroundImage: cardBg, border: `1px solid ${border}` } },
     },
     MuiTableCell: {
       styleOverrides: {
-        root: {
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-        },
-        head: {
-          fontWeight: 600,
-          backgroundColor: 'rgba(33, 33, 33, 0.5)',
-        },
+        root: { borderBottom: `1px solid ${border}` },
+        head: { fontWeight: 600, backgroundColor: tableHeadBg },
       },
     },
     MuiTooltip: {
       styleOverrides: {
         tooltip: {
-          backgroundColor: '#111111',
-          color: '#ffffff',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
+          backgroundColor: tooltipBg,
+          color: tooltipColor,
+          border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
           fontSize: '0.75rem',
           maxWidth: 280,
         },
-        arrow: {
-          color: '#111111',
-        },
+        arrow: { color: tooltipBg },
       },
     },
-  },
-});
+  };
+};
+
+export const createMuiTheme = (mode: 'light' | 'dark') => {
+  const isDark = mode === 'dark';
+  return createTheme({
+    ...getCommon(),
+    palette: {
+      mode,
+      primary: { main: '#FF6600', light: '#FF8533', dark: '#CC5200', contrastText: '#ffffff' },
+      secondary: { main: '#64748b', light: '#94a3b8', dark: '#475569' },
+      error: { main: '#ef4444', light: '#f87171', dark: '#dc2626' },
+      warning: { main: '#f59e0b', light: '#fbbf24', dark: '#d97706' },
+      success: { main: '#22c55e', light: '#4ade80', dark: '#16a34a' },
+      info: { main: '#3b82f6', light: '#60a5fa', dark: '#2563eb' },
+      background: {
+        default: isDark ? '#1a1a1a' : '#fafafa',
+        paper: isDark ? '#212121' : '#ffffff',
+      },
+      text: {
+        primary: isDark ? '#ffffff' : '#1a1a1a',
+        secondary: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+        disabled: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
+      },
+      divider: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
+    },
+    components: getComponents(mode),
+  });
+};
+
+// Default export for backward compat
+export const muiTheme = createMuiTheme('dark');
