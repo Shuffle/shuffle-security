@@ -1038,6 +1038,47 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
             User Account
           </MenuItem>
           <Divider sx={{ borderColor: 'hsl(var(--border))', my: 0.5 }} />
+          {/* Theme Toggle */}
+          <Box sx={{ px: 1.5, py: 0.75 }}>
+            <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', px: 0.5, mb: 0.5, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Theme
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 0.5, bgcolor: 'hsl(var(--muted))', borderRadius: 1, p: 0.5 }}>
+              {([
+                { value: 'light' as const, icon: <Sun size={14} />, label: 'Light' },
+                { value: 'dark' as const, icon: <Moon size={14} />, label: 'Dark' },
+                { value: 'system' as const, icon: <Monitor size={14} />, label: 'System' },
+              ]).map(({ value, icon, label }) => (
+                <Box
+                  key={value}
+                  onClick={() => setTheme(value)}
+                  sx={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 0.5,
+                    py: 0.5,
+                    borderRadius: 0.75,
+                    cursor: 'pointer',
+                    fontSize: '0.7rem',
+                    fontWeight: currentTheme === value ? 600 : 400,
+                    color: currentTheme === value ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))',
+                    bgcolor: currentTheme === value ? 'hsl(var(--card))' : 'transparent',
+                    boxShadow: currentTheme === value ? 'var(--shadow-sm)' : 'none',
+                    transition: 'all 0.15s ease',
+                    '&:hover': {
+                      color: 'hsl(var(--foreground))',
+                    },
+                  }}
+                >
+                  {icon}
+                  {label}
+                </Box>
+              ))}
+            </Box>
+          </Box>
+          <Divider sx={{ borderColor: 'hsl(var(--border))', my: 0.5 }} />
           <MenuItem
             onClick={() => {
               setUserMenuAnchor(null);
