@@ -203,7 +203,8 @@ const TemplatesPage = () => {
                   width: 36,
                   height: 36,
                   color: 'text.secondary',
-                  border: '1px solid rgba(255,255,255,0.1)',
+                  border: '1px solid',
+                  borderColor: 'divider',
                   borderRadius: 1,
                 }}
               >
@@ -215,7 +216,7 @@ const TemplatesPage = () => {
             variant="contained" 
             startIcon={<AddIcon />}
             onClick={handleOpenCreate}
-            sx={{ height: 36, bgcolor: '#ff6600', '&:hover': { bgcolor: '#e55c00' } }}
+            sx={{ height: 36 }}
           >
             New Template
           </Button>
@@ -227,9 +228,10 @@ const TemplatesPage = () => {
         <Box sx={{ 
           textAlign: 'center', 
           py: 8,
-          bgcolor: 'rgba(0,0,0,0.2)',
+          bgcolor: 'action.hover',
           borderRadius: 2,
-          border: '1px dashed rgba(255,255,255,0.1)',
+          border: '1px dashed',
+          borderColor: 'divider',
         }}>
           <AssignmentIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 2 }} />
           <Typography variant="h6" sx={{ color: 'text.secondary', mb: 1 }}>
@@ -271,8 +273,8 @@ const TemplatesPage = () => {
                     transition: 'all 0.2s',
                     '&:hover': {
                       transform: 'translateY(-4px)',
-                      boxShadow: '0 12px 24px -12px rgba(0, 0, 0, 0.4)',
-                      borderColor: 'rgba(255, 102, 0, 0.3)',
+                      boxShadow: (theme) => theme.shadows[6],
+                      borderColor: 'primary.main',
                     },
                   }}
                   onClick={() => handleOpenEdit(template)}
@@ -308,7 +310,7 @@ const TemplatesPage = () => {
                               e.stopPropagation();
                               handleOpenDelete(template);
                             }}
-                            sx={{ '&:hover': { color: '#ef4444' } }}
+                            sx={{ '&:hover': { color: 'error.main' } }}
                           >
                             <DeleteIcon fontSize="small" />
                           </IconButton>

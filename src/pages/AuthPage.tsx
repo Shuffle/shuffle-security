@@ -475,13 +475,13 @@ const AuthPage = ({ mode }: AuthPageProps) => {
                   disabled={loading}
                   sx={{
                     py: 1.5,
-                    bgcolor: 'action.hover',
-                    color: 'text.primary',
+                    bgcolor: 'primary.main',
+                    color: 'primary.contrastText',
                     fontWeight: 600,
                     textTransform: 'none',
                     fontSize: '1rem',
                     '&:hover': {
-                      bgcolor: 'action.selected',
+                      bgcolor: 'primary.dark',
                     },
                     '&.Mui-disabled': {
                       bgcolor: 'action.disabledBackground',

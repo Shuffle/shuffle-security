@@ -79,7 +79,7 @@ export const LandingNavbar = () => {
                   variant="h6"
                   sx={{
                     fontWeight: 700,
-                    color: '#FFFFFF',
+                    color: 'text.primary',
                   }}
                 >
                   Security

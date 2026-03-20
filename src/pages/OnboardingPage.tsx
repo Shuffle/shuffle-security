@@ -945,9 +945,10 @@ const OnboardingPage = () => {
           >
             <Box
               sx={{
-                background: 'rgba(33, 33, 33, 0.6)',
+                backgroundColor: 'background.paper',
                 backdropFilter: 'blur(20px)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
+                border: '1px solid',
+                borderColor: 'divider',
                 borderRadius: 4,
                 p: { xs: 2, sm: 3, md: 4 },
                 minHeight: 400,
@@ -1098,8 +1099,8 @@ const OnboardingPage = () => {
                     boxShadow: '0 6px 20px rgba(255, 102, 0, 0.35)',
                   },
                   '&.Mui-disabled': {
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    color: 'rgba(255, 255, 255, 0.3)',
+                    background: 'hsl(var(--muted))',
+                    color: 'hsl(var(--muted-foreground))',
                   },
                 }}
               >

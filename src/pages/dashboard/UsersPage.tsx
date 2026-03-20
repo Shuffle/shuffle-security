@@ -1097,8 +1097,9 @@ const UsersPage = () => {
         fullWidth
         PaperProps={{
           sx: {
-            background: 'linear-gradient(180deg, #262626 0%, #1f1f1f 100%)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
+            backgroundColor: 'background.paper',
+            border: '1px solid',
+            borderColor: 'divider',
           },
         }}
       >

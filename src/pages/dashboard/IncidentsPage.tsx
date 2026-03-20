@@ -1445,8 +1445,8 @@ const IncidentsPage = () => {
                 disabled={isLoading}
                 sx={{ 
                   width: 36, height: 36, color: 'text.secondary',
-                  border: '1px solid', borderColor: 'rgba(255,255,255,0.1)', borderRadius: 1,
-                  '&:hover': { borderColor: 'rgba(255,255,255,0.2)' },
+                  border: '1px solid', borderColor: 'divider', borderRadius: 1,
+                  '&:hover': { borderColor: 'text.secondary' },
                 }}
               >
                 <RefreshIcon fontSize="small" sx={isRefreshing ? { animation: 'spin 1s linear infinite', '@keyframes spin': { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } } } : undefined} />
@@ -1457,8 +1457,8 @@ const IncidentsPage = () => {
                 onClick={() => setCreateDialogOpen(true)}
                 sx={{ 
                   width: 36, height: 36, color: 'text.secondary',
-                  border: '1px solid', borderColor: 'rgba(255,255,255,0.1)', borderRadius: 1,
-                  '&:hover': { borderColor: 'rgba(255,255,255,0.2)' },
+                  border: '1px solid', borderColor: 'divider', borderRadius: 1,
+                  '&:hover': { borderColor: 'text.secondary' },
                 }}
               >
                 <AddIcon fontSize="small" />
@@ -1906,10 +1906,10 @@ const IncidentsPage = () => {
                 height: 36,
                 color: categoryAutomations?.some(a => a.enabled) ? '#4ade80' : 'text.secondary',
                 border: '1px solid',
-                borderColor: categoryAutomations?.some(a => a.enabled) ? '#4ade80' : 'rgba(255,255,255,0.1)',
+                borderColor: categoryAutomations?.some(a => a.enabled) ? 'success.main' : 'divider',
                 borderRadius: 1,
                 '&:hover': {
-                  borderColor: categoryAutomations?.some(a => a.enabled) ? '#4ade80' : 'rgba(255,255,255,0.2)',
+                  borderColor: categoryAutomations?.some(a => a.enabled) ? 'success.main' : 'text.secondary',
                 },
               }}
             >
@@ -1925,10 +1925,10 @@ const IncidentsPage = () => {
                 height: 36,
                 color: 'text.secondary',
                 border: '1px solid',
-                borderColor: 'rgba(255,255,255,0.1)',
+                borderColor: 'divider',
                 borderRadius: 1,
                 '&:hover': {
-                  borderColor: 'rgba(255,255,255,0.2)',
+                  borderColor: 'text.secondary',
                 },
               }}
             >
@@ -1943,10 +1943,10 @@ const IncidentsPage = () => {
                 height: 36,
                 color: 'text.secondary',
                 border: '1px solid',
-                borderColor: 'rgba(255,255,255,0.1)',
+                borderColor: 'divider',
                 borderRadius: 1,
                 '&:hover': {
-                  borderColor: 'rgba(255,255,255,0.2)',
+                  borderColor: 'text.secondary',
                 },
               }}
             >
