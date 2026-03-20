@@ -193,21 +193,21 @@ const AuthPage = ({ mode }: AuthPageProps) => {
 
   const inputSx = {
     '& .MuiOutlinedInput-root': {
-      bgcolor: '#2a2a2a',
+      bgcolor: 'background.paper',
       '& fieldset': {
-        borderColor: 'rgba(255,255,255,0.1)',
+        borderColor: 'divider',
       },
       '&:hover fieldset': {
-        borderColor: '#FF6600',
+        borderColor: 'primary.main',
       },
       '&.Mui-focused fieldset': {
-        borderColor: '#FF6600',
+        borderColor: 'primary.main',
       },
     },
     '& .MuiInputBase-input': {
-      color: '#fff',
+      color: 'text.primary',
       '&::placeholder': {
-        color: 'rgba(255,255,255,0.4)',
+        color: 'text.disabled',
         opacity: 1,
       },
     },
