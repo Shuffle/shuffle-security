@@ -322,10 +322,11 @@ const AuthPage = ({ mode }: AuthPageProps) => {
                   severity="error"
                   sx={{
                     mb: 3,
-                    bgcolor: 'rgba(244,67,54,0.1)',
-                    color: '#f44336',
-                    border: '1px solid rgba(244,67,54,0.3)',
-                    '& .MuiAlert-icon': { color: '#f44336' },
+                    bgcolor: (t) => `${t.palette.error.main}14`,
+                    color: 'error.main',
+                    border: '1px solid',
+                    borderColor: (t) => `${t.palette.error.main}4D`,
+                    '& .MuiAlert-icon': { color: 'error.main' },
                   }}
                 >
                   {error}
