@@ -2876,13 +2876,14 @@ const IncidentDetailPage = () => {
                     top: '100%', 
                     right: 0, 
                     mt: 1, 
-                    bgcolor: '#2a2a2a', 
-                    border: '1px solid rgba(255,255,255,0.1)',
+                    bgcolor: 'background.paper', 
+                    border: '1px solid',
+                    borderColor: 'divider',
                     borderRadius: 1,
                     py: 1,
                     minWidth: 200,
                     zIndex: 10,
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                    boxShadow: 6,
                   }}>
                     <Typography variant="caption" sx={{ px: 2, color: 'text.secondary', display: 'block', mb: 0.5 }}>
                       Apply Template
@@ -3317,15 +3318,16 @@ const IncidentDetailPage = () => {
               <Box 
                 sx={{ 
                   p: 1.5, 
-                  bgcolor: 'rgba(255, 255, 255, 0.95)', 
+                  bgcolor: (t) => t.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.95)' : 'rgba(255, 255, 255, 1)', 
                   borderRadius: 1,
-                  border: '1px solid rgba(255,255,255,0.1)',
+                  border: '1px solid',
+                  borderColor: 'divider',
                   minHeight: 120,
                   maxHeight: 450,
                   overflow: 'auto',
-                  color: '#1a1a1a',
+                  color: 'text.primary',
                   '& img': { maxWidth: '100%', height: 'auto' },
-                  '& a': { color: '#1a73e8', textDecoration: 'underline' },
+                  '& a': { color: 'primary.main', textDecoration: 'underline' },
                   '& table': { borderCollapse: 'collapse', maxWidth: '100%' },
                   '& td, & th': { padding: '4px 8px' },
                   '& *': { maxWidth: '100%', boxSizing: 'border-box' },

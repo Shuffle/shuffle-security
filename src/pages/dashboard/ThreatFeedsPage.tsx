@@ -265,13 +265,13 @@ const ThreatFeedsPage = () => {
               sx={{ 
                 whiteSpace: 'nowrap',
                 ml: 0.5,
-                ...(automationEnabled ? {
-                  borderColor: '#22c55e',
-                  color: '#22c55e',
+              ...(automationEnabled ? {
+                  borderColor: 'success.main',
+                  color: 'success.main',
                 } : {
-                  bgcolor: '#f97316',
-                  color: '#fff',
-                  '&:hover': { bgcolor: '#ea580c' },
+                  bgcolor: 'warning.main',
+                  color: 'warning.contrastText',
+                  '&:hover': { bgcolor: 'warning.dark' },
                 }),
               }}
             >
@@ -312,10 +312,10 @@ const ThreatFeedsPage = () => {
                         size="small"
                         sx={{
                           '& .MuiSwitch-switchBase.Mui-checked': {
-                            color: '#22c55e',
+                            color: 'success.main',
                           },
                           '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                            backgroundColor: '#22c55e',
+                            backgroundColor: 'success.main',
                           },
                         }}
                       />

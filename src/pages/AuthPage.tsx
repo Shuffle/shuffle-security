@@ -72,13 +72,13 @@ const AuthPage = ({ mode }: AuthPageProps) => {
       <Box 
         sx={{ 
           minHeight: '100vh', 
-          bgcolor: '#1a1a1a',
+          bgcolor: 'background.default',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
         }}
       >
-        <CircularProgress sx={{ color: '#FF6600' }} />
+        <CircularProgress sx={{ color: 'primary.main' }} />
       </Box>
     );
   }
@@ -193,28 +193,28 @@ const AuthPage = ({ mode }: AuthPageProps) => {
 
   const inputSx = {
     '& .MuiOutlinedInput-root': {
-      bgcolor: '#2a2a2a',
+      bgcolor: 'background.paper',
       '& fieldset': {
-        borderColor: 'rgba(255,255,255,0.1)',
+        borderColor: 'divider',
       },
       '&:hover fieldset': {
-        borderColor: '#FF6600',
+        borderColor: 'primary.main',
       },
       '&.Mui-focused fieldset': {
-        borderColor: '#FF6600',
+        borderColor: 'primary.main',
       },
     },
     '& .MuiInputBase-input': {
-      color: '#fff',
+      color: 'text.primary',
       '&::placeholder': {
-        color: 'rgba(255,255,255,0.4)',
+        color: 'text.disabled',
         opacity: 1,
       },
     },
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#1a1a1a' }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
       <LandingNavbar />
       <Box
         sx={{
@@ -235,8 +235,9 @@ const AuthPage = ({ mode }: AuthPageProps) => {
         >
           <Card
             sx={{
-              bgcolor: '#212121',
-              border: '1px solid rgba(255,255,255,0.08)',
+              bgcolor: 'background.paper',
+              border: '1px solid',
+              borderColor: 'divider',
               borderRadius: 2,
             }}
           >
@@ -265,7 +266,7 @@ const AuthPage = ({ mode }: AuthPageProps) => {
                   variant="h5"
                   sx={{
                     fontWeight: 600,
-                    color: '#fff',
+                    color: 'text.primary',
                     mb: 1,
                   }}
                 >
@@ -274,7 +275,7 @@ const AuthPage = ({ mode }: AuthPageProps) => {
                 <Typography
                   variant="body2"
                   sx={{
-                    color: 'rgba(255,255,255,0.5)',
+                    color: 'text.secondary',
                     lineHeight: 1.6,
                   }}
                 >
@@ -290,10 +291,10 @@ const AuthPage = ({ mode }: AuthPageProps) => {
                   severity="success"
                   sx={{
                     mb: 3,
-                    bgcolor: 'rgba(76,175,80,0.1)',
-                    color: '#4caf50',
-                    border: '1px solid rgba(76,175,80,0.3)',
-                    '& .MuiAlert-icon': { color: '#4caf50' },
+                    bgcolor: 'success.main',
+                    color: 'success.contrastText',
+                    opacity: 0.9,
+                    '& .MuiAlert-icon': { color: 'inherit' },
                   }}
                 >
                   Login successful! Redirecting...
@@ -305,10 +306,11 @@ const AuthPage = ({ mode }: AuthPageProps) => {
                   severity="info"
                   sx={{
                     mb: 3,
-                    bgcolor: 'rgba(255,102,0,0.1)',
-                    color: '#FF6600',
-                    border: '1px solid rgba(255,102,0,0.3)',
-                    '& .MuiAlert-icon': { color: '#FF6600' },
+                    bgcolor: (t) => `${t.palette.primary.main}14`,
+                    color: 'primary.main',
+                    border: '1px solid',
+                    borderColor: (t) => `${t.palette.primary.main}4D`,
+                    '& .MuiAlert-icon': { color: 'primary.main' },
                   }}
                 >
                   Two-factor authentication required
@@ -320,10 +322,11 @@ const AuthPage = ({ mode }: AuthPageProps) => {
                   severity="error"
                   sx={{
                     mb: 3,
-                    bgcolor: 'rgba(244,67,54,0.1)',
-                    color: '#f44336',
-                    border: '1px solid rgba(244,67,54,0.3)',
-                    '& .MuiAlert-icon': { color: '#f44336' },
+                    bgcolor: (t) => `${t.palette.error.main}14`,
+                    color: 'error.main',
+                    border: '1px solid',
+                    borderColor: (t) => `${t.palette.error.main}4D`,
+                    '& .MuiAlert-icon': { color: 'error.main' },
                   }}
                 >
                   {error}
@@ -339,7 +342,7 @@ const AuthPage = ({ mode }: AuthPageProps) => {
                       mb: 1,
                       fontSize: '0.875rem',
                       fontWeight: 500,
-                      color: '#fff',
+                      color: 'text.primary',
                     }}
                   >
                     Email
@@ -364,7 +367,7 @@ const AuthPage = ({ mode }: AuthPageProps) => {
                       mb: 1,
                       fontSize: '0.875rem',
                       fontWeight: 500,
-                      color: '#fff',
+                      color: 'text.primary',
                     }}
                   >
                     Password
@@ -383,7 +386,7 @@ const AuthPage = ({ mode }: AuthPageProps) => {
                           <IconButton
                             onClick={() => setShowPassword(!showPassword)}
                             edge="end"
-                            sx={{ color: 'rgba(255,255,255,0.5)' }}
+                            sx={{ color: 'text.secondary' }}
                           >
                             {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
                           </IconButton>
@@ -403,7 +406,7 @@ const AuthPage = ({ mode }: AuthPageProps) => {
                         mb: 1,
                         fontSize: '0.875rem',
                         fontWeight: 500,
-                        color: '#fff',
+                        color: 'text.primary',
                       }}
                     >
                       Confirm Password
@@ -430,7 +433,7 @@ const AuthPage = ({ mode }: AuthPageProps) => {
                         mb: 1,
                         fontSize: '0.875rem',
                         fontWeight: 500,
-                        color: '#fff',
+                        color: 'text.primary',
                       }}
                     >
                       MFA Code
@@ -456,7 +459,7 @@ const AuthPage = ({ mode }: AuthPageProps) => {
                       sx={{
                         display: 'block',
                         mt: 1,
-                        color: 'rgba(255,255,255,0.5)',
+                        color: 'text.secondary',
                       }}
                     >
                       Enter the code from your authenticator app
@@ -472,17 +475,17 @@ const AuthPage = ({ mode }: AuthPageProps) => {
                   disabled={loading}
                   sx={{
                     py: 1.5,
-                    bgcolor: '#494949',
-                    color: '#fff',
+                    bgcolor: 'action.hover',
+                    color: 'text.primary',
                     fontWeight: 600,
                     textTransform: 'none',
                     fontSize: '1rem',
                     '&:hover': {
-                      bgcolor: '#5a5a5a',
+                      bgcolor: 'action.selected',
                     },
                     '&.Mui-disabled': {
-                      bgcolor: '#3a3a3a',
-                      color: 'rgba(255,255,255,0.3)',
+                      bgcolor: 'action.disabledBackground',
+                      color: 'text.disabled',
                     },
                   }}
                 >
@@ -501,14 +504,14 @@ const AuthPage = ({ mode }: AuthPageProps) => {
                 sx={{
                   textAlign: 'center',
                   mt: 4,
-                  color: 'rgba(255,255,255,0.5)',
+                  color: 'text.secondary',
                 }}
               >
                 {isLogin ? "Don't have an account yet? " : 'Already have an account? '}
                 <Link
                   to={isLogin ? '/register' : '/login'}
                   style={{
-                    color: '#FF6600',
+                    color: 'hsl(var(--primary))',
                     textDecoration: 'none',
                     fontWeight: 500,
                   }}
@@ -519,16 +522,16 @@ const AuthPage = ({ mode }: AuthPageProps) => {
 
               {/* Developer API Key Section - only in Lovable preview */}
               {isLogin && window.location.hostname.includes('lovable.app') && (
-                <Box sx={{ mt: 4, pt: 3, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                <Box sx={{ mt: 4, pt: 3, borderTop: '1px solid', borderColor: 'divider' }}>
                   <Typography
                     variant="body2"
                     onClick={() => setShowApiKeyInput(!showApiKeyInput)}
                     sx={{
                       textAlign: 'center',
-                      color: 'rgba(255,255,255,0.4)',
+                      color: 'text.disabled',
                       cursor: 'pointer',
                       fontSize: '0.75rem',
-                      '&:hover': { color: 'rgba(255,255,255,0.6)' },
+                      '&:hover': { color: 'text.secondary' },
                     }}
                   >
                     {showApiKeyInput ? '▼ Hide API Key Login' : '▶ Developer: Use API Key'}
@@ -546,13 +549,13 @@ const AuthPage = ({ mode }: AuthPageProps) => {
                         sx={{
                           mb: 1.5,
                           '& .MuiOutlinedInput-root': {
-                            bgcolor: '#2a2a2a',
+                            bgcolor: 'background.paper',
                             fontSize: '0.875rem',
-                            '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
-                            '&:hover fieldset': { borderColor: '#FF6600' },
-                            '&.Mui-focused fieldset': { borderColor: '#FF6600' },
+                            '& fieldset': { borderColor: 'divider' },
+                            '&:hover fieldset': { borderColor: 'primary.main' },
+                            '&.Mui-focused fieldset': { borderColor: 'primary.main' },
                           },
-                          '& .MuiInputBase-input': { color: '#fff' },
+                          '& .MuiInputBase-input': { color: 'text.primary' },
                         }}
                       />
                       <Button
@@ -613,10 +616,10 @@ const AuthPage = ({ mode }: AuthPageProps) => {
                           }
                         }}
                         sx={{
-                          bgcolor: 'rgba(255,102,0,0.2)',
-                          color: '#FF6600',
+                          bgcolor: (t) => `${t.palette.primary.main}33`,
+                          color: 'primary.main',
                           textTransform: 'none',
-                          '&:hover': { bgcolor: 'rgba(255,102,0,0.3)' },
+                          '&:hover': { bgcolor: (t) => `${t.palette.primary.main}4D` },
                         }}
                       >
                         {loading ? <CircularProgress size={18} color="inherit" /> : 'Save API Key & Login'}

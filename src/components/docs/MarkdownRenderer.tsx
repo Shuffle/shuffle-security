@@ -113,7 +113,7 @@ export const MarkdownRenderer = ({ slug = 'index' }: MarkdownRendererProps) => {
           fontFamily: 'JetBrains Mono, monospace',
         },
         '& pre': {
-          backgroundColor: '#0D0D0D',
+          backgroundColor: (t) => t.palette.mode === 'dark' ? '#0D0D0D' : '#f5f5f5',
           border: '1px solid',
           borderColor: 'divider',
           borderRadius: 2,

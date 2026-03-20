@@ -201,16 +201,16 @@ export default function AppsPage() {
                     key={category.id}
                     sx={{
                       p: 2.5,
-                      backgroundColor: isActive ? 'rgba(255, 102, 0, 0.1)' : 'rgba(255, 255, 255, 0.03)',
+                      backgroundColor: isActive ? 'rgba(255, 102, 0, 0.1)' : 'action.hover',
                       border: '1px solid',
-                      borderColor: isActive ? '#FF6600' : 'rgba(255, 255, 255, 0.08)',
+                      borderColor: isActive ? 'primary.main' : 'divider',
                       borderRadius: 3,
                       cursor: 'pointer',
                       transition: 'all 0.3s ease',
                       textAlign: 'center',
                       '&:hover': {
                         borderColor: 'rgba(255, 102, 0, 0.5)',
-                        backgroundColor: isActive ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                        backgroundColor: isActive ? 'rgba(255, 102, 0, 0.15)' : 'action.selected',
                       },
                     }}
                     onClick={() => handleCategoryClick(category.id, category.searchTerm)}
@@ -220,9 +220,9 @@ export default function AppsPage() {
                         width: 40,
                         height: 40,
                         borderRadius: '50%',
-                        backgroundColor: isActive ? 'rgba(255, 102, 0, 0.2)' : 'rgba(255, 255, 255, 0.08)',
+                        backgroundColor: isActive ? 'rgba(255, 102, 0, 0.2)' : 'action.hover',
                         border: '2px solid',
-                        borderColor: isActive ? '#FF6600' : 'rgba(255, 255, 255, 0.15)',
+                        borderColor: isActive ? 'primary.main' : 'divider',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -231,17 +231,17 @@ export default function AppsPage() {
                         transition: 'all 0.3s ease',
                       }}
                     >
-                      <category.icon size={18} color={isActive ? '#FF6600' : 'rgba(255, 255, 255, 0.6)'} />
+                      <category.icon size={18} color={isActive ? '#FF6600' : undefined} />
                     </Box>
                     <Typography
                       variant="subtitle2"
-                      sx={{ color: 'white', fontWeight: 600, mb: 0.25 }}
+                      sx={{ color: 'text.primary', fontWeight: 600, mb: 0.25 }}
                     >
                       {category.label}
                     </Typography>
                     <Typography
                       variant="caption"
-                      sx={{ color: 'rgba(255, 255, 255, 0.4)', display: 'block', fontSize: '0.7rem' }}
+                      sx={{ color: 'text.secondary', display: 'block', fontSize: '0.7rem' }}
                     >
                       {category.description}
                     </Typography>
@@ -253,20 +253,20 @@ export default function AppsPage() {
             {/* Singul Search Component */}
             <Box
               sx={{
-                '--singul-input-bg': 'rgba(255, 255, 255, 0.03)',
-                '--singul-input-border': '1px solid rgba(255, 255, 255, 0.1)',
-                '--singul-input-color': '#ffffff',
-                '--singul-input-focus-border': '#FF6600',
-                '--singul-input-focus-shadow': '0 0 0 3px rgba(255, 102, 0, 0.15)',
-                '--singul-placeholder-color': 'rgba(255, 255, 255, 0.4)',
-                '--singul-icon-color': 'rgba(255, 255, 255, 0.4)',
-                '--singul-dropdown-bg': '#1a1a1a',
-                '--singul-dropdown-border': '1px solid rgba(255, 255, 255, 0.1)',
-                '--singul-item-border': '1px solid rgba(255, 255, 255, 0.06)',
+                '--singul-input-bg': 'hsl(var(--input))',
+                '--singul-input-border': '1px solid hsl(var(--border))',
+                '--singul-input-color': 'hsl(var(--foreground))',
+                '--singul-input-focus-border': 'hsl(var(--primary))',
+                '--singul-input-focus-shadow': '0 0 0 3px hsla(var(--primary) / 0.15)',
+                '--singul-placeholder-color': 'hsl(var(--muted-foreground))',
+                '--singul-icon-color': 'hsl(var(--muted-foreground))',
+                '--singul-dropdown-bg': 'hsl(var(--background))',
+                '--singul-dropdown-border': '1px solid hsl(var(--border))',
+                '--singul-item-border': '1px solid hsl(var(--border-subtle))',
                 '--singul-item-hover-bg': 'rgba(255, 102, 0, 0.1)',
-                '--singul-app-name-color': '#ffffff',
-                '--singul-app-description-color': 'rgba(255, 255, 255, 0.5)',
-                '--singul-empty-state-color': 'rgba(255, 255, 255, 0.4)',
+                '--singul-app-name-color': 'hsl(var(--foreground))',
+                '--singul-app-description-color': 'hsl(var(--muted-foreground))',
+                '--singul-empty-state-color': 'hsl(var(--muted-foreground))',
                 '--singul-grid-gap': '16px',
                 '& .singul-results-container': {
                   maxHeight: '600px',
