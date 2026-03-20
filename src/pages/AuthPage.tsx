@@ -504,7 +504,7 @@ const AuthPage = ({ mode }: AuthPageProps) => {
                 sx={{
                   textAlign: 'center',
                   mt: 4,
-                  color: 'rgba(255,255,255,0.5)',
+                  color: 'text.secondary',
                 }}
               >
                 {isLogin ? "Don't have an account yet? " : 'Already have an account? '}
