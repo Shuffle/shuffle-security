@@ -273,8 +273,8 @@ export const TicketingSystemSearch = ({
           appCategory: {
             marginTop: '8px',
             padding: '2px 8px',
-            backgroundColor: 'rgba(255, 255, 255, 0.05)',
-            color: 'rgba(255, 255, 255, 0.4)',
+            backgroundColor: 'hsl(var(--muted))',
+            color: 'hsl(var(--muted-foreground))',
             fontSize: '10px',
             fontWeight: 600,
             textTransform: 'uppercase' as const,
@@ -284,20 +284,20 @@ export const TicketingSystemSearch = ({
             width: 'fit-content',
           },
           checkbox: {
-            border: '2px solid rgba(255, 255, 255, 0.2)',
+            border: '2px solid hsl(var(--border))',
           },
           checkboxChecked: {
-            backgroundColor: '#FF6600',
-            borderColor: '#FF6600',
+            backgroundColor: 'hsl(var(--primary))',
+            borderColor: 'hsl(var(--primary))',
           },
           emptyState: {
             padding: '32px',
-            color: 'rgba(255, 255, 255, 0.4)',
+            color: 'hsl(var(--muted-foreground))',
             textAlign: 'center' as const,
             fontSize: '14px',
-            backgroundColor: 'rgba(255, 255, 255, 0.03)',
+            backgroundColor: 'hsl(var(--muted))',
             borderRadius: '12px',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
+            border: '1px solid hsl(var(--border))',
             gridColumn: '1 / -1',
           },
         }}
