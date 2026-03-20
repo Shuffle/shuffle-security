@@ -188,7 +188,6 @@ export const PrimaryToolStep = ({
                   transition: 'all 0.2s ease',
                   position: 'relative',
                   '&:hover': {
-                    borderColor: isSelected ? '#FF6600' : 'rgba(255, 102, 0, 0.4)',
                     borderColor: isSelected ? 'hsl(var(--primary))' : 'hsl(var(--primary) / 0.4)',
                     backgroundColor: isSelected 
                       ? 'hsl(var(--primary) / 0.15)' 
