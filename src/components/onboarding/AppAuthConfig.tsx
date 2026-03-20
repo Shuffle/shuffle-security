@@ -712,13 +712,13 @@ export const AppAuthCard = ({
                 renderValue={(selected) => selected.length === 0 ? 'Select Scopes' : `${selected.length} scope(s) selected`}
                 displayEmpty
                 sx={{
-                  backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                  backgroundColor: 'action.hover',
                   borderRadius: 2,
-                  color: 'white',
-                  '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.1)' },
-                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.2)' },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#FF6600' },
-                  '& .MuiSvgIcon-root': { color: 'rgba(255, 255, 255, 0.5)' },
+                  color: 'text.primary',
+                  '& .MuiOutlinedInput-notchedOutline': { borderColor: 'divider' },
+                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'text.disabled' },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' },
+                  '& .MuiSvgIcon-root': { color: 'text.secondary' },
                 }}
                 MenuProps={{
                   PaperProps: {
