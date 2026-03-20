@@ -3327,7 +3327,7 @@ const IncidentDetailPage = () => {
                   overflow: 'auto',
                   color: 'text.primary',
                   '& img': { maxWidth: '100%', height: 'auto' },
-                  '& a': { color: '#1a73e8', textDecoration: 'underline' },
+                  '& a': { color: 'primary.main', textDecoration: 'underline' },
                   '& table': { borderCollapse: 'collapse', maxWidth: '100%' },
                   '& td, & th': { padding: '4px 8px' },
                   '& *': { maxWidth: '100%', boxSizing: 'border-box' },
