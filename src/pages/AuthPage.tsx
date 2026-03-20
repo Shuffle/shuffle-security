@@ -72,13 +72,13 @@ const AuthPage = ({ mode }: AuthPageProps) => {
       <Box 
         sx={{ 
           minHeight: '100vh', 
-          bgcolor: '#1a1a1a',
+          bgcolor: 'background.default',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
         }}
       >
-        <CircularProgress sx={{ color: '#FF6600' }} />
+        <CircularProgress sx={{ color: 'primary.main' }} />
       </Box>
     );
   }
