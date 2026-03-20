@@ -154,8 +154,8 @@ export const AddAppModal = ({ open, onClose, initialQuery, categoryLabel }: AddA
       <DialogContent
         className="max-w-2xl p-0 overflow-hidden border-0"
         style={{
-          background: 'linear-gradient(180deg, #1a1a1a 0%, #111111 100%)',
-          border: '1px solid rgba(255,255,255,0.1)',
+          background: 'hsl(var(--card))',
+          border: '1px solid hsl(var(--border))',
           borderRadius: '16px',
           maxHeight: '85vh',
           display: 'flex',
