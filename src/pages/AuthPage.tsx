@@ -266,7 +266,7 @@ const AuthPage = ({ mode }: AuthPageProps) => {
                   variant="h5"
                   sx={{
                     fontWeight: 600,
-                    color: '#fff',
+                    color: 'text.primary',
                     mb: 1,
                   }}
                 >
