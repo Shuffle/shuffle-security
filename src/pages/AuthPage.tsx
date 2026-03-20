@@ -306,10 +306,11 @@ const AuthPage = ({ mode }: AuthPageProps) => {
                   severity="info"
                   sx={{
                     mb: 3,
-                    bgcolor: 'rgba(255,102,0,0.1)',
-                    color: '#FF6600',
-                    border: '1px solid rgba(255,102,0,0.3)',
-                    '& .MuiAlert-icon': { color: '#FF6600' },
+                    bgcolor: (t) => `${t.palette.primary.main}14`,
+                    color: 'primary.main',
+                    border: '1px solid',
+                    borderColor: (t) => `${t.palette.primary.main}4D`,
+                    '& .MuiAlert-icon': { color: 'primary.main' },
                   }}
                 >
                   Two-factor authentication required
