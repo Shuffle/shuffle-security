@@ -157,6 +157,7 @@ const sortOrgsWithHierarchy = (orgs: Array<{ id: string; name: string; creator_o
 export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
   const location = useLocation();
   const { userInfo, setActiveOrg, logout } = useAuth();
+  const { theme: currentTheme, setTheme } = useTheme();
   const [expandedItems, setExpandedItems] = useState<string[]>(['Incidents']);
   const [changingOrg, setChangingOrg] = useState(false);
   const [agentDrawerOpen, setAgentDrawerOpen] = useState(false);

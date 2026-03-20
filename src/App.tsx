@@ -1,11 +1,12 @@
-import { useEffect } from 'react';
-import { ThemeProvider, CssBaseline, Box } from '@mui/material';
+import { useEffect, useMemo } from 'react';
+import { ThemeProvider as MuiThemeProvider, CssBaseline, Box } from '@mui/material';
 import { AppDetailProvider } from '@/context/AppDetailContext';
 import { trackReferralParams } from '@/lib/analytics';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
 import { Toaster } from 'sonner';
-import { muiTheme } from '@/theme/muiTheme';
+import { createMuiTheme } from '@/theme/muiTheme';
+import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import Index from './pages/Index';
@@ -54,19 +55,21 @@ const ConditionalDashboardLayout = () => {
 
 const queryClient = new QueryClient();
 
-const App = () => {
-  useEffect(() => { trackReferralParams(); }, []);
+/** Inner app that reads theme context */
+const ThemedApp = () => {
+  const { resolvedTheme } = useTheme();
+  const muiTheme = useMemo(() => createMuiTheme(resolvedTheme), [resolvedTheme]);
+
   return (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider theme={muiTheme}>
+    <MuiThemeProvider theme={muiTheme}>
       <CssBaseline />
       <Toaster 
         position="bottom-right" 
-        theme="dark"
+        theme={resolvedTheme}
         toastOptions={{
           style: {
-            background: 'linear-gradient(180deg, #262626 0%, #1f1f1f 100%)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
+            background: 'hsl(var(--card))',
+            border: '1px solid hsl(var(--border))',
             color: 'hsl(var(--foreground))',
           },
         }}
@@ -132,8 +135,18 @@ const App = () => {
           </Routes>
         </BrowserRouter>
       </AuthProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
+    </MuiThemeProvider>
+  );
+};
+
+const App = () => {
+  useEffect(() => { trackReferralParams(); }, []);
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <ThemedApp />
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 };
 
