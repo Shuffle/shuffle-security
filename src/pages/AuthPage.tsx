@@ -291,10 +291,10 @@ const AuthPage = ({ mode }: AuthPageProps) => {
                   severity="success"
                   sx={{
                     mb: 3,
-                    bgcolor: 'rgba(76,175,80,0.1)',
-                    color: '#4caf50',
-                    border: '1px solid rgba(76,175,80,0.3)',
-                    '& .MuiAlert-icon': { color: '#4caf50' },
+                    bgcolor: 'success.main',
+                    color: 'success.contrastText',
+                    opacity: 0.9,
+                    '& .MuiAlert-icon': { color: 'inherit' },
                   }}
                 >
                   Login successful! Redirecting...
