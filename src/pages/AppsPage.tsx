@@ -201,16 +201,16 @@ export default function AppsPage() {
                     key={category.id}
                     sx={{
                       p: 2.5,
-                      backgroundColor: isActive ? 'rgba(255, 102, 0, 0.1)' : 'rgba(255, 255, 255, 0.03)',
+                      backgroundColor: isActive ? 'rgba(255, 102, 0, 0.1)' : 'action.hover',
                       border: '1px solid',
-                      borderColor: isActive ? '#FF6600' : 'rgba(255, 255, 255, 0.08)',
+                      borderColor: isActive ? 'primary.main' : 'divider',
                       borderRadius: 3,
                       cursor: 'pointer',
                       transition: 'all 0.3s ease',
                       textAlign: 'center',
                       '&:hover': {
                         borderColor: 'rgba(255, 102, 0, 0.5)',
-                        backgroundColor: isActive ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                        backgroundColor: isActive ? 'rgba(255, 102, 0, 0.15)' : 'action.selected',
                       },
                     }}
                     onClick={() => handleCategoryClick(category.id, category.searchTerm)}
