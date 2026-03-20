@@ -386,7 +386,7 @@ const AuthPage = ({ mode }: AuthPageProps) => {
                           <IconButton
                             onClick={() => setShowPassword(!showPassword)}
                             edge="end"
-                            sx={{ color: 'rgba(255,255,255,0.5)' }}
+                            sx={{ color: 'text.secondary' }}
                           >
                             {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
                           </IconButton>
