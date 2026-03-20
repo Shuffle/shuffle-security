@@ -3271,7 +3271,7 @@ const IncidentDetailPage = () => {
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Typography variant="caption" sx={{ color: 'text.secondary' }}>Description</Typography>
-                    {hasHtmlDescription && !isEditingDescription && (
+                    {(hasHtmlDescription || editedMessage) && !isEditingDescription && (
                       <Box sx={{ display: 'flex', gap: 0.25 }}>
                         {(['rendered', 'readable', 'raw'] as const).map((view) => (
                           <Chip
