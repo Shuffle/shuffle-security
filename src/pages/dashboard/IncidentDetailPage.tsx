@@ -3263,152 +3263,152 @@ const IncidentDetailPage = () => {
       {activeTab === 0 && (
         /* Details Tab */
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {/* Metadata Section - now includes Description */}
-          <Section title="Metadata" icon={DescriptionIcon} defaultOpen={true}>
-            <Box sx={{ display: 'flex', gap: 4, flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
-              {/* Description on the left */}
-              <Box sx={{ flex: '1 1 50%', minWidth: 0 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>Description</Typography>
-                    {(hasHtmlDescription || editedMessage) && !isEditingDescription && (
-                      <Box sx={{ display: 'flex', gap: 0.25 }}>
-                        {(['rendered', 'readable', 'raw'] as const).map((view) => (
-                          <Chip
-                            key={view}
-                            label={view === 'readable' ? 'Clean' : view.charAt(0).toUpperCase() + view.slice(1)}
-                            size="small"
-                            onClick={() => setDescriptionView(view)}
-                            sx={{
-                              height: 20,
-                              fontSize: '0.65rem',
-                              cursor: 'pointer',
-                              bgcolor: descriptionView === view ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255,255,255,0.05)',
-                              color: descriptionView === view ? '#ff6600' : 'text.secondary',
-                              '&:hover': { bgcolor: descriptionView === view ? 'rgba(255, 102, 0, 0.2)' : 'rgba(255,255,255,0.1)' },
-                            }}
-                          />
-                        ))}
-                      </Box>
-                    )}
-                  </Box>
-                  <IconButton 
-                    size="small" 
-                    onClick={() => setIsEditingDescription(!isEditingDescription)}
-                    sx={{ 
-                      color: isEditingDescription ? '#FF6600' : 'text.secondary',
-                      '&:hover': { color: '#FF6600' },
-                    }}
-                  >
-                    {isEditingDescription ? <CheckCircleIcon sx={{ fontSize: 16 }} /> : <EditIcon sx={{ fontSize: 16 }} />}
-                  </IconButton>
-                </Box>
-                {isEditingDescription ? (
-                  <Box sx={{ maxHeight: 350, overflow: 'auto' }}>
-                    <MentionInput
-                      value={editedMessage}
-                      onChange={setEditedMessage}
-                      fullWidth
-                      multiline
-                      minRows={4}
-                      maxRows={12}
-                      placeholder="Add a description... (type @ to mention)"
-                      size="small"
-                      sx={inputSx}
-                    />
-                  </Box>
-                ) : descriptionView === 'rendered' && hasHtmlDescription ? (
-                  <Box 
-                    sx={{ 
-                      p: 1.5, 
-                      bgcolor: 'rgba(255, 255, 255, 0.95)', 
-                      borderRadius: 1,
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      minHeight: 120,
-                      maxHeight: 450,
-                      overflow: 'auto',
-                      color: '#1a1a1a',
-                      '& img': { maxWidth: '100%', height: 'auto' },
-                      '& a': { color: '#1a73e8', textDecoration: 'underline' },
-                      '& table': { borderCollapse: 'collapse', maxWidth: '100%' },
-                      '& td, & th': { padding: '4px 8px' },
-                      '& *': { maxWidth: '100%', boxSizing: 'border-box' },
-                      fontSize: '0.875rem',
-                      lineHeight: 1.6,
-                    }}
-                    dangerouslySetInnerHTML={{ __html: sanitizedDescriptionHtml }}
-                  />
-                ) : descriptionView === 'readable' || (descriptionView === 'rendered' && !hasHtmlDescription) ? (
-                  <Box 
-                    sx={{ 
-                      p: 2, 
-                      bgcolor: 'rgba(0, 0, 0, 0.2)', 
-                      borderRadius: 1,
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      minHeight: 120,
-                      maxHeight: 450,
-                      overflow: 'auto',
-                    }}
-                  >
-                    <Typography variant="body2" sx={{ 
-                      color: 'text.primary', 
-                      whiteSpace: 'pre-wrap',
-                      fontSize: '0.85rem',
-                      lineHeight: 1.75,
-                      letterSpacing: '0.01em',
-                    }}>
-                      {(() => {
-                        if (hasHtmlDescription) {
-                          const tmp = document.createElement('div');
-                          tmp.innerHTML = sanitizedDescriptionHtml;
-                          tmp.querySelectorAll('br').forEach(el => el.replaceWith('\n'));
-                          tmp.querySelectorAll('p, div, tr, li, h1, h2, h3, h4, h5, h6').forEach(el => {
-                            el.prepend(document.createTextNode('\n'));
-                            el.append(document.createTextNode('\n'));
-                          });
-                          const text = (tmp.textContent || '').replace(/\n{3,}/g, '\n\n').trim();
-                          return text || 'No description.';
-                        }
-                        return editedMessage || 'No description.';
-                      })()}
-                    </Typography>
-                  </Box>
-                ) : (
-                  <Box 
-                    sx={{ 
-                      p: 1.5, 
-                      bgcolor: 'rgba(0, 0, 0, 0.2)', 
-                      borderRadius: 1,
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      minHeight: 120,
-                      maxHeight: 350,
-                      overflow: 'auto',
-                      whiteSpace: 'pre-wrap',
-                      cursor: 'pointer',
-                      '&:hover': { borderColor: 'rgba(255,255,255,0.2)' },
-                    }}
-                    onClick={() => setIsEditingDescription(true)}
-                  >
-                    {editedMessage ? (
-                      <Typography variant="body2" sx={{ color: 'text.primary', whiteSpace: 'pre-wrap' }}>
-                        {editedMessage}
-                      </Typography>
-                    ) : (
-                      <Typography variant="body2" sx={{ color: 'text.disabled', fontStyle: 'italic' }}>
-                        No description. Click to add one.
-                      </Typography>
-                    )}
+          {/* Description Section */}
+          <Section title="Description" icon={DescriptionIcon} defaultOpen={true}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                {(hasHtmlDescription || editedMessage) && !isEditingDescription && (
+                  <Box sx={{ display: 'flex', gap: 0.25 }}>
+                    {(['rendered', 'readable', 'raw'] as const).map((view) => (
+                      <Chip
+                        key={view}
+                        label={view === 'readable' ? 'Clean' : view.charAt(0).toUpperCase() + view.slice(1)}
+                        size="small"
+                        onClick={() => setDescriptionView(view)}
+                        sx={{
+                          height: 20,
+                          fontSize: '0.65rem',
+                          cursor: 'pointer',
+                          bgcolor: descriptionView === view ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255,255,255,0.05)',
+                          color: descriptionView === view ? '#ff6600' : 'text.secondary',
+                          '&:hover': { bgcolor: descriptionView === view ? 'rgba(255, 102, 0, 0.2)' : 'rgba(255,255,255,0.1)' },
+                        }}
+                      />
+                    ))}
                   </Box>
                 )}
               </Box>
+              <IconButton 
+                size="small" 
+                onClick={() => setIsEditingDescription(!isEditingDescription)}
+                sx={{ 
+                  color: isEditingDescription ? '#FF6600' : 'text.secondary',
+                  '&:hover': { color: '#FF6600' },
+                }}
+              >
+                {isEditingDescription ? <CheckCircleIcon sx={{ fontSize: 16 }} /> : <EditIcon sx={{ fontSize: 16 }} />}
+              </IconButton>
+            </Box>
+            {isEditingDescription ? (
+              <Box sx={{ maxHeight: 350, overflow: 'auto' }}>
+                <MentionInput
+                  value={editedMessage}
+                  onChange={setEditedMessage}
+                  fullWidth
+                  multiline
+                  minRows={4}
+                  maxRows={12}
+                  placeholder="Add a description... (type @ to mention)"
+                  size="small"
+                  sx={inputSx}
+                />
+              </Box>
+            ) : descriptionView === 'rendered' && hasHtmlDescription ? (
+              <Box 
+                sx={{ 
+                  p: 1.5, 
+                  bgcolor: 'rgba(255, 255, 255, 0.95)', 
+                  borderRadius: 1,
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  minHeight: 120,
+                  maxHeight: 450,
+                  overflow: 'auto',
+                  color: '#1a1a1a',
+                  '& img': { maxWidth: '100%', height: 'auto' },
+                  '& a': { color: '#1a73e8', textDecoration: 'underline' },
+                  '& table': { borderCollapse: 'collapse', maxWidth: '100%' },
+                  '& td, & th': { padding: '4px 8px' },
+                  '& *': { maxWidth: '100%', boxSizing: 'border-box' },
+                  fontSize: '0.875rem',
+                  lineHeight: 1.6,
+                }}
+                dangerouslySetInnerHTML={{ __html: sanitizedDescriptionHtml }}
+              />
+            ) : descriptionView === 'readable' || (descriptionView === 'rendered' && !hasHtmlDescription) ? (
+              <Box 
+                sx={{ 
+                  p: 2, 
+                  bgcolor: 'rgba(0, 0, 0, 0.2)', 
+                  borderRadius: 1,
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  minHeight: 120,
+                  maxHeight: 450,
+                  overflow: 'auto',
+                }}
+              >
+                <Typography variant="body2" sx={{ 
+                  color: 'text.primary', 
+                  whiteSpace: 'pre-wrap',
+                  fontSize: '0.85rem',
+                  lineHeight: 1.75,
+                  letterSpacing: '0.01em',
+                }}>
+                  {(() => {
+                    if (hasHtmlDescription) {
+                      const tmp = document.createElement('div');
+                      tmp.innerHTML = sanitizedDescriptionHtml;
+                      tmp.querySelectorAll('br').forEach(el => el.replaceWith('\n'));
+                      tmp.querySelectorAll('p, div, tr, li, h1, h2, h3, h4, h5, h6').forEach(el => {
+                        el.prepend(document.createTextNode('\n'));
+                        el.append(document.createTextNode('\n'));
+                      });
+                      const text = (tmp.textContent || '').replace(/\n{3,}/g, '\n\n').trim();
+                      return text || 'No description.';
+                    }
+                    return editedMessage || 'No description.';
+                  })()}
+                </Typography>
+              </Box>
+            ) : (
+              <Box 
+                sx={{ 
+                  p: 1.5, 
+                  bgcolor: 'rgba(0, 0, 0, 0.2)', 
+                  borderRadius: 1,
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  minHeight: 120,
+                  maxHeight: 350,
+                  overflow: 'auto',
+                  whiteSpace: 'pre-wrap',
+                  cursor: 'pointer',
+                  '&:hover': { borderColor: 'rgba(255,255,255,0.2)' },
+                }}
+                onClick={() => setIsEditingDescription(true)}
+              >
+                {editedMessage ? (
+                  <Typography variant="body2" sx={{ color: 'text.primary', whiteSpace: 'pre-wrap' }}>
+                    {editedMessage}
+                  </Typography>
+                ) : (
+                  <Typography variant="body2" sx={{ color: 'text.disabled', fontStyle: 'italic' }}>
+                    No description. Click to add one.
+                  </Typography>
+                )}
+              </Box>
+            )}
+          </Section>
 
-              {/* Metadata fields on the right */}
-              <Box sx={{ flex: '0 0 220px', maxWidth: 260, display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+          {/* Metadata Section */}
+          <Section title="Metadata" icon={DescriptionIcon} defaultOpen={true}>
+            <Box sx={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
                 <Box>
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>ID</Typography>
                   <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.75rem', wordBreak: 'break-all' }}>{incident.id}</Typography>
                 </Box>
-                <Box sx={{ minWidth: 0 }}>
+              </Box>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+                <Box>
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>Source</Typography>
                   <Box 
                     sx={{ 
@@ -3430,7 +3430,8 @@ const IncidentDetailPage = () => {
                     <Typography variant="body2" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: incident.source ? '#06b6d4' : undefined }}>{incident.source || <Typography component="span" variant="body2" sx={{ color: 'text.disabled', fontStyle: 'italic' }}>Unknown</Typography>}</Typography>
                   </Box>
                 </Box>
-                {/* TLP */}
+              </Box>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
                 <Box>
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>TLP</Typography>
                   <FormControl size="small" variant="standard" fullWidth>
@@ -3457,81 +3458,88 @@ const IncidentDetailPage = () => {
                     </Select>
                   </FormControl>
                 </Box>
+              </Box>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
                 <Box>
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>Created</Typography>
                   <Typography variant="body2">{incident.created}</Typography>
                 </Box>
-                {incident.edited && (
+              </Box>
+              {incident.edited && (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
                   <Box>
                     <Typography variant="caption" sx={{ color: 'text.secondary' }}>Last Updated</Typography>
                     <Typography variant="body2">{incident.edited}</Typography>
                   </Box>
-                )}
+                </Box>
+              )}
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
                 <Box>
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>Age</Typography>
                   <Typography variant="body2">{metrics?.age}</Typography>
                 </Box>
-                {/* Labels */}
-                <Box>
-                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>Labels</Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap', mt: 0.5 }}>
-                    {editedLabels.map((label, idx) => (
-                      <Chip
-                        key={idx}
-                        label={label}
-                        size="small"
-                        onDelete={() => {
-                          autoProgressStatus();
-                          setEditedLabels(editedLabels.filter((_, i) => i !== idx));
-                        }}
-                        sx={{
-                          height: 22,
-                          fontSize: '0.7rem',
-                          fontWeight: 500,
-                          bgcolor: 'rgba(6, 182, 212, 0.12)',
-                          color: '#06b6d4',
-                          '& .MuiChip-deleteIcon': { fontSize: 14, color: '#06b6d4', '&:hover': { color: '#67e8f9' } },
-                        }}
-                      />
-                    ))}
-                    <Box
-                      component="form"
-                      onSubmit={(e: React.FormEvent) => {
-                        e.preventDefault();
-                        const trimmed = newLabelInput.trim();
-                        if (trimmed && !editedLabels.includes(trimmed)) {
-                          autoProgressStatus();
-                          setEditedLabels([...editedLabels, trimmed]);
-                          setNewLabelInput('');
-                        }
-                      }}
-                      sx={{ display: 'inline-flex' }}
-                    >
-                      <TextField
-                        value={newLabelInput}
-                        onChange={(e) => setNewLabelInput(e.target.value)}
-                        placeholder="+ Add"
-                        variant="outlined"
-                        size="small"
-                        InputProps={{
-                          sx: {
-                            fontSize: '0.7rem',
-                            height: 24,
-                            bgcolor: 'rgba(0,0,0,0.2)',
-                            '& fieldset': { borderColor: 'rgba(255,255,255,0.1)', borderStyle: 'dashed' },
-                            '&:hover fieldset': { borderColor: 'rgba(6, 182, 212, 0.3)' },
-                            '&.Mui-focused fieldset': { borderColor: '#06b6d4' },
-                          },
-                        }}
-                        sx={{ width: 80 }}
-                      />
-                    </Box>
-                  </Box>
+              </Box>
+            </Box>
+
+            {/* Labels */}
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>Labels</Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap', mt: 0.5 }}>
+                {editedLabels.map((label, idx) => (
+                  <Chip
+                    key={idx}
+                    label={label}
+                    size="small"
+                    onDelete={() => {
+                      autoProgressStatus();
+                      setEditedLabels(editedLabels.filter((_, i) => i !== idx));
+                    }}
+                    sx={{
+                      height: 22,
+                      fontSize: '0.7rem',
+                      fontWeight: 500,
+                      bgcolor: 'rgba(6, 182, 212, 0.12)',
+                      color: '#06b6d4',
+                      '& .MuiChip-deleteIcon': { fontSize: 14, color: '#06b6d4', '&:hover': { color: '#67e8f9' } },
+                    }}
+                  />
+                ))}
+                <Box
+                  component="form"
+                  onSubmit={(e: React.FormEvent) => {
+                    e.preventDefault();
+                    const trimmed = newLabelInput.trim();
+                    if (trimmed && !editedLabels.includes(trimmed)) {
+                      autoProgressStatus();
+                      setEditedLabels([...editedLabels, trimmed]);
+                      setNewLabelInput('');
+                    }
+                  }}
+                  sx={{ display: 'inline-flex' }}
+                >
+                  <TextField
+                    value={newLabelInput}
+                    onChange={(e) => setNewLabelInput(e.target.value)}
+                    placeholder="+ Add"
+                    variant="outlined"
+                    size="small"
+                    InputProps={{
+                      sx: {
+                        fontSize: '0.7rem',
+                        height: 24,
+                        bgcolor: 'rgba(0,0,0,0.2)',
+                        '& fieldset': { borderColor: 'rgba(255,255,255,0.1)', borderStyle: 'dashed' },
+                        '&:hover fieldset': { borderColor: 'rgba(6, 182, 212, 0.3)' },
+                        '&.Mui-focused fieldset': { borderColor: '#06b6d4' },
+                      },
+                    }}
+                    sx={{ width: 80 }}
+                  />
                 </Box>
               </Box>
             </Box>
 
-            {/* Attachments - inline like task attachments */}
+            {/* Attachments */}
             <Box sx={{ mt: 2 }}>
               <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 1 }}>
                 Attachments
@@ -3543,7 +3551,6 @@ const IncidentDetailPage = () => {
                 labels={[incident.id]}
               />
             </Box>
-
           </Section>
 
           {/* Metrics Section */}
