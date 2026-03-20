@@ -48,7 +48,7 @@ export const TicketingSystemSearch = ({
       <Typography
         variant="h5"
         sx={{
-          color: 'white',
+          color: 'hsl(var(--foreground))',
           fontWeight: 700,
           mb: 1,
         }}
@@ -200,46 +200,46 @@ export const TicketingSystemSearch = ({
             width: '100%',
           },
           inputWrapper: {
-            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+            backgroundColor: 'hsl(var(--background))',
             borderRadius: '12px',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
+            border: '1px solid hsl(var(--border))',
           },
           input: {
             backgroundColor: 'transparent',
-            color: 'white',
+            color: 'hsl(var(--foreground))',
             border: 'none',
             borderRadius: '12px',
             padding: '12px 16px',
             fontSize: '14px',
           },
           searchIcon: {
-            color: 'rgba(255, 255, 255, 0.4)',
+            color: 'hsl(var(--muted-foreground))',
           },
           spinner: {
-            borderColor: 'rgba(255, 255, 255, 0.2)',
-            borderTopColor: '#FF6600',
+            borderColor: 'hsl(var(--border))',
+            borderTopColor: 'hsl(var(--primary))',
           },
           resultsContainer: {
             marginTop: '16px',
             gap: '12px',
           },
           dropdownItem: {
-            backgroundColor: 'rgba(255, 255, 255, 0.03)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
+            backgroundColor: 'hsl(var(--card))',
+            border: '1px solid hsl(var(--border))',
             borderRadius: '12px',
             padding: '16px',
-            color: 'white',
+            color: 'hsl(var(--foreground))',
             cursor: 'pointer',
             transition: 'all 0.3s ease',
           },
           dropdownItemHover: {
-            borderColor: 'rgba(255, 102, 0, 0.5)',
-            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+            borderColor: 'hsl(var(--primary) / 0.5)',
+            backgroundColor: 'hsl(var(--muted) / 0.5)',
             transform: 'translateY(-2px)',
           },
           selectedItem: {
-            backgroundColor: 'rgba(255, 102, 0, 0.1)',
-            borderColor: '#FF6600',
+            backgroundColor: 'hsl(var(--primary) / 0.1)',
+            borderColor: 'hsl(var(--primary))',
           },
           appInfo: {
             display: 'flex',
@@ -250,7 +250,7 @@ export const TicketingSystemSearch = ({
             width: '40px',
             height: '40px',
             borderRadius: '8px',
-            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+            backgroundColor: 'hsl(var(--muted) / 0.5)',
             objectFit: 'contain' as const,
             padding: '4px',
           },
@@ -263,11 +263,11 @@ export const TicketingSystemSearch = ({
           appName: {
             fontSize: '14px',
             fontWeight: 600,
-            color: 'white',
+            color: 'hsl(var(--foreground))',
           },
           appDescription: {
             fontSize: '12px',
-            color: 'rgba(255, 255, 255, 0.5)',
+            color: 'hsl(var(--muted-foreground))',
             lineHeight: 1.4,
           },
           appCategory: {
@@ -308,7 +308,7 @@ export const TicketingSystemSearch = ({
         <Box sx={{ mt: 4 }}>
           <Typography
             variant="body2"
-            sx={{ color: 'rgba(255, 255, 255, 0.5)', mb: 2 }}
+            sx={{ color: 'hsl(var(--muted-foreground))', mb: 2 }}
           >
             Selected integrations ({selectedApps.length}):
           </Typography>
@@ -328,7 +328,7 @@ export const TicketingSystemSearch = ({
                         height: 24, 
                         borderRadius: '50%',
                         objectFit: 'contain',
-                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                        backgroundColor: 'hsl(var(--muted) / 0.6)',
                       }}
                     />
                   ) : undefined
@@ -337,16 +337,16 @@ export const TicketingSystemSearch = ({
                   onAppsChange(selectedApps.filter(a => a.objectID !== app.objectID));
                 }}
                 sx={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                  color: 'rgba(255, 255, 255, 0.9)',
+                  backgroundColor: 'hsl(var(--muted) / 0.5)',
+                  border: '1px solid hsl(var(--border))',
+                  color: 'hsl(var(--foreground))',
                   fontWeight: 500,
                   '& .MuiChip-avatar': {
                     marginLeft: '4px',
                   },
                   '& .MuiChip-deleteIcon': {
-                    color: 'rgba(255, 255, 255, 0.5)',
-                    '&:hover': { color: 'white' },
+                    color: 'hsl(var(--muted-foreground))',
+                    '&:hover': { color: 'hsl(var(--foreground))' },
                   },
                 }}
               />

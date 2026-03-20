@@ -30,60 +30,60 @@ import { useAppAuthFlow } from '@/hooks/useAppAuthFlow';
 const singulStyles = {
   container: { width: '100%' },
   inputWrapper: {
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    backgroundColor: 'hsl(var(--background))',
     borderRadius: '12px',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
+    border: '1px solid hsl(var(--border))',
   },
   input: {
     backgroundColor: 'transparent',
-    color: 'white',
+    color: 'hsl(var(--foreground))',
     border: 'none',
     borderRadius: '12px',
     padding: '12px 16px',
     fontSize: '14px',
   },
-  searchIcon: { color: 'rgba(255, 255, 255, 0.4)' },
+  searchIcon: { color: 'hsl(var(--muted-foreground))' },
   spinner: {
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    borderTopColor: '#FF6600',
+    borderColor: 'hsl(var(--border))',
+    borderTopColor: 'hsl(var(--primary))',
   },
   resultsContainer: { marginTop: '12px', gap: '10px' },
   dropdownItem: {
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
+    backgroundColor: 'hsl(var(--card))',
+    border: '1px solid hsl(var(--border))',
     borderRadius: '12px',
     padding: '14px',
-    color: 'white',
+    color: 'hsl(var(--foreground))',
     cursor: 'pointer',
     transition: 'all 0.2s ease',
   },
   dropdownItemHover: {
-    borderColor: 'rgba(255, 102, 0, 0.5)',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderColor: 'hsl(var(--primary) / 0.5)',
+    backgroundColor: 'hsl(var(--muted) / 0.5)',
   },
   selectedItem: {
-    backgroundColor: 'rgba(255, 102, 0, 0.1)',
-    borderColor: '#FF6600',
+    backgroundColor: 'hsl(var(--primary) / 0.1)',
+    borderColor: 'hsl(var(--primary))',
   },
   appIcon: {
     width: '36px',
     height: '36px',
     borderRadius: '8px',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: 'hsl(var(--muted) / 0.5)',
     objectFit: 'contain' as const,
     padding: '4px',
   },
-  appName: { fontSize: '13px', fontWeight: 600, color: 'white' },
+  appName: { fontSize: '13px', fontWeight: 600, color: 'hsl(var(--foreground))' },
   appDescription: {
     fontSize: '11px',
-    color: 'rgba(255, 255, 255, 0.5)',
+    color: 'hsl(var(--muted-foreground))',
     lineHeight: 1.4,
   },
   appCategory: {
     marginTop: '6px',
     padding: '2px 8px',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    color: 'rgba(255, 255, 255, 0.4)',
+    backgroundColor: 'hsl(var(--muted) / 0.5)',
+    color: 'hsl(var(--muted-foreground))',
     fontSize: '10px',
     fontWeight: 600,
     textTransform: 'uppercase' as const,
@@ -91,16 +91,16 @@ const singulStyles = {
     display: 'inline-block',
     width: 'fit-content',
   },
-  checkbox: { border: '2px solid rgba(255, 255, 255, 0.2)' },
-  checkboxChecked: { backgroundColor: '#FF6600', borderColor: '#FF6600' },
+  checkbox: { border: '2px solid hsl(var(--border))' },
+  checkboxChecked: { backgroundColor: 'hsl(var(--primary))', borderColor: 'hsl(var(--primary))' },
   emptyState: {
     padding: '24px',
-    color: 'rgba(255, 255, 255, 0.4)',
+    color: 'hsl(var(--muted-foreground))',
     textAlign: 'center' as const,
     fontSize: '13px',
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    backgroundColor: 'hsl(var(--muted) / 0.35)',
     borderRadius: '12px',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
+    border: '1px solid hsl(var(--border))',
     gridColumn: '1 / -1',
   },
 };
@@ -178,19 +178,19 @@ export const AddAppModal = ({ open, onClose, initialQuery, categoryLabel }: AddA
             <IconButton
               size="small"
               onClick={handleBack}
-              sx={{ color: 'rgba(255,255,255,0.5)', '&:hover': { color: 'white' } }}
+              sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--foreground))' } }}
             >
               <ArrowBackIcon fontSize="small" />
             </IconButton>
           )}
 
           <Box sx={{ flex: 1 }}>
-            <Typography sx={{ color: 'white', fontWeight: 700, fontSize: '1rem', lineHeight: 1.2 }}>
+            <Typography sx={{ color: 'hsl(var(--foreground))', fontWeight: 700, fontSize: '1rem', lineHeight: 1.2 }}>
               {phase === 'search'
                 ? `Add ${categoryLabel} Integration`
                 : selectedApp?.name.replace(/_/g, ' ')}
             </Typography>
-            <Typography sx={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem' }}>
+            <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem' }}>
               {phase === 'search'
                 ? `Search and select a ${categoryLabel.toLowerCase()} tool to configure`
                 : 'Configure authentication'}
@@ -200,7 +200,7 @@ export const AddAppModal = ({ open, onClose, initialQuery, categoryLabel }: AddA
           <IconButton
             size="small"
             onClick={onClose}
-            sx={{ color: 'rgba(255,255,255,0.4)', '&:hover': { color: 'white' } }}
+            sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--foreground))' } }}
           >
             <CloseIcon fontSize="small" />
           </IconButton>
@@ -246,7 +246,7 @@ export const AddAppModal = ({ open, onClose, initialQuery, categoryLabel }: AddA
               >
                 {authLoading ? (
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', py: 6 }}>
-                    <CircularProgress size={28} sx={{ color: '#FF6600' }} />
+                    <CircularProgress size={28} sx={{ color: 'hsl(var(--primary))' }} />
                   </Box>
                 ) : selectedApp ? (
                   <AppAuthCard

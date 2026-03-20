@@ -29,7 +29,7 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, on
   if (isLoading) {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', py: 12, gap: 2 }}>
-        <CircularProgress size={32} sx={{ color: '#FF6600' }} />
+        <CircularProgress size={32} sx={{ color: 'hsl(var(--primary))' }} />
         <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
           Loading sources…
         </Typography>
@@ -62,15 +62,15 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, on
             width: 80,
             height: 80,
             borderRadius: '20px',
-            backgroundColor: 'rgba(255, 102, 0, 0.08)',
-            border: '1px solid rgba(255, 102, 0, 0.15)',
+            backgroundColor: 'hsl(var(--primary) / 0.08)',
+            border: '1px solid hsl(var(--primary) / 0.15)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             mb: 4,
           }}
         >
-          <InboxIcon sx={{ fontSize: 36, color: '#FF6600', opacity: 0.8 }} />
+          <InboxIcon sx={{ fontSize: 36, color: 'hsl(var(--primary))', opacity: 0.8 }} />
         </Box>
 
         {/* Title */}

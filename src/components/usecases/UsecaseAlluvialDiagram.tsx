@@ -403,9 +403,9 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, disa
               }}
               sx={{
                 justifyContent: 'flex-start', textTransform: 'none', fontSize: '0.75rem',
-                color: webhookEnabled ? 'hsl(var(--destructive))' : '#22c55e',
+                  color: webhookEnabled ? 'hsl(var(--destructive))' : 'hsl(var(--severity-low))',
                 px: 1, py: 0.5, borderRadius: 1,
-                '&:hover': { bgcolor: webhookEnabled ? 'hsl(var(--destructive) / 0.1)' : 'rgba(34, 197, 94, 0.1)' },
+                  '&:hover': { bgcolor: webhookEnabled ? 'hsl(var(--destructive) / 0.1)' : 'hsl(var(--severity-low) / 0.1)' },
               }}
             >
               {webhookEnabled ? 'Disable Webhook' : 'Enable Webhook'}
@@ -443,9 +443,9 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, disa
                   onClick={handleToggle}
                   sx={{
                     justifyContent: 'flex-start', textTransform: 'none', fontSize: '0.75rem',
-                    color: isEnabled ? 'hsl(var(--destructive))' : '#22c55e',
+                      color: isEnabled ? 'hsl(var(--destructive))' : 'hsl(var(--severity-low))',
                     px: 1, py: 0.5, borderRadius: 1,
-                    '&:hover': { bgcolor: isEnabled ? 'hsl(var(--destructive) / 0.1)' : 'rgba(34, 197, 94, 0.1)' },
+                      '&:hover': { bgcolor: isEnabled ? 'hsl(var(--destructive) / 0.1)' : 'hsl(var(--severity-low) / 0.1)' },
                   }}
                 >
                   {isEnabled ? (side === 'right' ? 'Disable Forwarding' : 'Disable Sync') : (side === 'right' ? 'Enable Forwarding' : 'Enable Sync')}
@@ -564,9 +564,9 @@ export function ShufflePipelinesBanner() {
           height: 22,
           fontSize: '0.65rem',
           fontWeight: 700,
-          backgroundColor: 'hsla(25, 100%, 50%, 0.15)',
-          color: '#FF6600',
-          border: '1px solid hsla(25, 100%, 50%, 0.3)',
+          backgroundColor: 'hsl(var(--primary) / 0.15)',
+          color: 'hsl(var(--primary))',
+          border: '1px solid hsl(var(--primary) / 0.3)',
           flexShrink: 0,
         }}
       />

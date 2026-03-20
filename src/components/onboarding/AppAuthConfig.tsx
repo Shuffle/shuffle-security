@@ -602,14 +602,14 @@ export const AppAuthCard = ({
                   }}
                   sx={{
                     py: 1.5,
-                    borderColor: 'rgba(255, 102, 0, 0.4)',
-                    color: 'white',
+                     borderColor: 'hsl(var(--primary) / 0.4)',
+                     color: 'hsl(var(--foreground))',
                     fontWeight: 600,
                     textTransform: 'none',
                     fontSize: '1rem',
                     '&:hover': {
-                      borderColor: '#FF6600',
-                      backgroundColor: 'rgba(255, 102, 0, 0.08)',
+                       borderColor: 'hsl(var(--primary))',
+                       backgroundColor: 'hsl(var(--primary) / 0.08)',
                     },
                   }}
                 >
@@ -618,9 +618,9 @@ export const AppAuthCard = ({
 
                 {/* OR Divider */}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Divider sx={{ flex: 1, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
-                  <Typography sx={{ color: 'rgba(255, 255, 255, 0.4)', fontSize: '0.875rem' }}>OR configure manually</Typography>
-                  <Divider sx={{ flex: 1, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+                  <Divider sx={{ flex: 1, borderColor: 'hsl(var(--border))' }} />
+                  <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.875rem' }}>OR configure manually</Typography>
+                  <Divider sx={{ flex: 1, borderColor: 'hsl(var(--border))' }} />
                 </Box>
               </Box>
             </Collapse>
@@ -633,13 +633,13 @@ export const AppAuthCard = ({
                   onAuthChange(app.objectID, {});
                 }}
                 sx={{
-                  color: 'rgba(255, 255, 255, 0.4)',
+                  color: 'hsl(var(--muted-foreground))',
                   textTransform: 'none',
                   fontSize: '0.8rem',
                   alignSelf: 'flex-start',
                   p: 0,
                   minWidth: 0,
-                  '&:hover': { color: 'rgba(255, 255, 255, 0.7)', backgroundColor: 'transparent' },
+                  '&:hover': { color: 'hsl(var(--foreground))', backgroundColor: 'transparent' },
                 }}
               >
                 ← Use Quick Connect instead
@@ -650,8 +650,8 @@ export const AppAuthCard = ({
 
         {/* Manual OAuth2 Fields */}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)' }}>
-            Redirect URL: <Typography component="span" sx={{ color: '#FF6600', fontWeight: 600 }}>
+          <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+            Redirect URL: <Typography component="span" sx={{ color: 'hsl(var(--primary))', fontWeight: 600 }}>
               {auth.redirect_uri || 'https://shuffler.io/set_authentication'}
             </Typography>
           </Typography>
@@ -665,14 +665,14 @@ export const AppAuthCard = ({
             size="small"
             sx={{
               '& .MuiOutlinedInput-root': {
-                backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                backgroundColor: 'hsl(var(--background))',
                 borderRadius: 2,
-                '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.1)' },
-                '&:hover fieldset': { borderColor: 'rgba(255, 255, 255, 0.2)' },
-                '&.Mui-focused fieldset': { borderColor: '#FF6600' },
+                '& fieldset': { borderColor: 'hsl(var(--border))' },
+                '&:hover fieldset': { borderColor: 'hsl(var(--border) / 0.8)' },
+                '&.Mui-focused fieldset': { borderColor: 'hsl(var(--primary))' },
               },
-              '& .MuiInputBase-input': { color: 'white' },
-              '& .MuiInputLabel-root': { color: 'rgba(255, 255, 255, 0.5)' },
+              '& .MuiInputBase-input': { color: 'hsl(var(--foreground))' },
+              '& .MuiInputLabel-root': { color: 'hsl(var(--muted-foreground))' },
             }}
           />
 
@@ -686,14 +686,14 @@ export const AppAuthCard = ({
             size="small"
             sx={{
               '& .MuiOutlinedInput-root': {
-                backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                backgroundColor: 'hsl(var(--background))',
                 borderRadius: 2,
-                '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.1)' },
-                '&:hover fieldset': { borderColor: 'rgba(255, 255, 255, 0.2)' },
-                '&.Mui-focused fieldset': { borderColor: '#FF6600' },
+                '& fieldset': { borderColor: 'hsl(var(--border))' },
+                '&:hover fieldset': { borderColor: 'hsl(var(--border) / 0.8)' },
+                '&.Mui-focused fieldset': { borderColor: 'hsl(var(--primary))' },
               },
-              '& .MuiInputBase-input': { color: 'white' },
-              '& .MuiInputLabel-root': { color: 'rgba(255, 255, 255, 0.5)' },
+              '& .MuiInputBase-input': { color: 'hsl(var(--foreground))' },
+              '& .MuiInputLabel-root': { color: 'hsl(var(--muted-foreground))' },
             }}
           />
 
@@ -732,12 +732,12 @@ export const AppAuthCard = ({
                 }}
               >
                 {availableScopes.map((scope) => (
-                  <MenuItem key={scope} value={scope} sx={{ color: 'white' }}>
+                  <MenuItem key={scope} value={scope} sx={{ color: 'hsl(var(--foreground))' }}>
                     <Checkbox 
                       checked={selectedScopes.indexOf(scope) > -1}
-                      sx={{ color: 'rgba(255, 255, 255, 0.5)', '&.Mui-checked': { color: '#FF6600' } }}
+                      sx={{ color: 'hsl(var(--muted-foreground))', '&.Mui-checked': { color: 'hsl(var(--primary))' } }}
                     />
-                    <ListItemText primary={scope} sx={{ '& .MuiTypography-root': { color: 'white' } }} />
+                    <ListItemText primary={scope} sx={{ '& .MuiTypography-root': { color: 'hsl(var(--foreground))' } }} />
                   </MenuItem>
                 ))}
               </Select>
@@ -872,13 +872,13 @@ export const AppAuthCard = ({
     <motion.div variants={itemVariants} style={{ width: '100%', maxWidth: '100%' }}>
       <Card
         sx={{
-          background: 'rgba(33, 33, 33, 0.6)',
+          background: 'hsl(var(--card) / 0.9)',
           border: '2px solid',
           borderColor: isTested
-            ? 'rgba(34, 197, 94, 0.5)'
+            ? 'hsl(var(--severity-low) / 0.5)'
             : authState.status === 'error'
-            ? 'rgba(239, 68, 68, 0.3)'
-            : 'rgba(255, 152, 0, 0.3)',
+            ? 'hsl(var(--destructive) / 0.3)'
+            : 'hsl(var(--severity-medium) / 0.3)',
           borderRadius: 3,
           backdropFilter: 'blur(10px)',
           overflow: 'hidden',
@@ -897,7 +897,7 @@ export const AppAuthCard = ({
             cursor: 'pointer',
             p: { xs: 2, sm: 3 },
             '&:last-child': { pb: { xs: 2, sm: 3 } },
-            '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.02)' },
+            '&:hover': { backgroundColor: 'hsl(var(--muted) / 0.35)' },
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, minWidth: 0 }}>
@@ -911,7 +911,7 @@ export const AppAuthCard = ({
                   height: { xs: 40, sm: 48 },
                   borderRadius: 2,
                   objectFit: 'contain',
-                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  backgroundColor: 'hsl(var(--muted) / 0.5)',
                   p: 1,
                   flexShrink: 0,
                 }}
@@ -924,7 +924,7 @@ export const AppAuthCard = ({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  background: 'rgba(255, 255, 255, 0.05)',
+                  background: 'hsl(var(--muted) / 0.5)',
                   borderRadius: 2,
                   fontSize: '1.5rem',
                   flexShrink: 0,
@@ -936,7 +936,7 @@ export const AppAuthCard = ({
             <Box sx={{ minWidth: 0, flex: 1 }}>
               <Typography 
                 sx={{ 
-                  color: 'white', 
+                  color: 'hsl(var(--foreground))', 
                   fontWeight: 600, 
                   fontSize: { xs: '0.9rem', sm: '1rem' },
                   overflow: 'hidden',
@@ -950,7 +950,7 @@ export const AppAuthCard = ({
                 <Typography 
                   variant="caption" 
                   sx={{ 
-                    color: 'rgba(255, 255, 255, 0.4)',
+                    color: 'hsl(var(--muted-foreground))',
                     display: { xs: 'none', md: 'block' },
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
@@ -977,8 +977,8 @@ export const AppAuthCard = ({
                 label="Auth not required"
                 size="small"
                 sx={{
-                  backgroundColor: 'rgba(59, 130, 246, 0.15)',
-                  color: '#3b82f6',
+                  backgroundColor: 'hsl(var(--severity-info) / 0.15)',
+                  color: 'hsl(var(--severity-info))',
                   fontWeight: 500,
                   fontSize: { xs: '0.6rem', sm: '0.65rem' },
                   height: { xs: 22, sm: 24 },
@@ -991,8 +991,8 @@ export const AppAuthCard = ({
                   label={isConfigured ? 'Configured' : 'Not configured'}
                   size="small"
                   sx={{
-                    backgroundColor: isConfigured ? 'rgba(245, 158, 11, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                    color: isConfigured ? '#f59e0b' : '#ef4444',
+                    backgroundColor: isConfigured ? 'hsl(var(--severity-medium) / 0.15)' : 'hsl(var(--destructive) / 0.15)',
+                    color: isConfigured ? 'hsl(var(--severity-medium))' : 'hsl(var(--destructive))',
                     fontWeight: 500,
                     fontSize: { xs: '0.6rem', sm: '0.65rem' },
                     height: { xs: 22, sm: 24 },
@@ -1008,8 +1008,8 @@ export const AppAuthCard = ({
                     label={isTested ? 'Tested' : 'Not tested'}
                     size="small"
                     sx={{
-                      backgroundColor: isTested ? 'rgba(34, 197, 94, 0.15)' : 'rgba(156, 163, 175, 0.15)',
-                      color: isTested ? '#22c55e' : '#9ca3af',
+                      backgroundColor: isTested ? 'hsl(var(--severity-low) / 0.15)' : 'hsl(var(--muted) / 0.8)',
+                      color: isTested ? 'hsl(var(--severity-low))' : 'hsl(var(--muted-foreground))',
                       fontWeight: 500,
                       fontSize: { xs: '0.6rem', sm: '0.65rem' },
                       height: { xs: 22, sm: 24 },
@@ -1027,10 +1027,10 @@ export const AppAuthCard = ({
                   handleOpenDocs();
                 }}
                 sx={{
-                  color: 'rgba(255, 255, 255, 0.4)',
+                  color: 'hsl(var(--muted-foreground))',
                   '&:hover': { 
-                    color: '#60a5fa',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    color: 'hsl(var(--severity-info))',
+                    backgroundColor: 'hsl(var(--severity-info) / 0.1)',
                   },
                 }}
               >
@@ -1040,7 +1040,7 @@ export const AppAuthCard = ({
             <IconButton
               size="small"
               sx={{
-                color: 'rgba(255, 255, 255, 0.4)',
+                color: 'hsl(var(--muted-foreground))',
                 transform: isExpanded ? 'rotate(180deg)' : 'none',
                 transition: 'transform 0.3s ease',
               }}
@@ -1056,13 +1056,13 @@ export const AppAuthCard = ({
               px: { xs: 2, sm: 3 },
               pb: { xs: 2, sm: 3 },
               pt: 2,
-              borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+              borderTop: '1px solid hsl(var(--border))',
             }}
           >
             {/* Auth Selection Dropdown - always at top */}
             {apiAuthEntries.length > 0 && (
               <Box sx={{ mb: 3 }}>
-                <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', mb: 1 }}>
+                <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))', mb: 1 }}>
                   Select authentication
                 </Typography>
                 <FormControl fullWidth size="small">
@@ -1078,13 +1078,13 @@ export const AppAuthCard = ({
                       }
                     }}
                     sx={{
-                      backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                      backgroundColor: 'hsl(var(--background))',
                       borderRadius: 2,
-                      color: 'white',
-                      '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.2)' },
-                      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.3)' },
-                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#FF6600' },
-                      '& .MuiSvgIcon-root': { color: 'rgba(255, 255, 255, 0.5)' },
+                      color: 'hsl(var(--foreground))',
+                      '& .MuiOutlinedInput-notchedOutline': { borderColor: 'hsl(var(--border))' },
+                      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'hsl(var(--border) / 0.8)' },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'hsl(var(--primary))' },
+                      '& .MuiSvgIcon-root': { color: 'hsl(var(--muted-foreground))' },
                     }}
                     MenuProps={{
                       PaperProps: {
@@ -1121,7 +1121,7 @@ export const AppAuthCard = ({
                       const lastValidDate = authEntry.validation?.last_valid;
                       
                       return (
-                        <MenuItem key={entryId} value={entryId} sx={{ color: 'white', py: 1 }}>
+                        <MenuItem key={entryId} value={entryId} sx={{ color: 'hsl(var(--foreground))', py: 1 }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%', minWidth: 0 }}>
                             <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
                               <Tooltip 
@@ -1135,8 +1135,8 @@ export const AppAuthCard = ({
                                   sx={{
                                     height: 20,
                                     fontSize: '0.6rem',
-                                    backgroundColor: isActive ? 'rgba(245, 158, 11, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                                    color: isActive ? '#f59e0b' : '#ef4444',
+                                    backgroundColor: isActive ? 'hsl(var(--severity-medium) / 0.15)' : 'hsl(var(--destructive) / 0.15)',
+                                    color: isActive ? 'hsl(var(--severity-medium))' : 'hsl(var(--destructive))',
                                   }}
                                 />
                               </Tooltip>
@@ -1151,8 +1151,8 @@ export const AppAuthCard = ({
                                   sx={{
                                     height: 20,
                                     fontSize: '0.6rem',
-                                    backgroundColor: isValid ? 'rgba(34, 197, 94, 0.15)' : 'rgba(156, 163, 175, 0.15)',
-                                    color: isValid ? '#22c55e' : '#9ca3af',
+                                    backgroundColor: isValid ? 'hsl(var(--severity-low) / 0.15)' : 'hsl(var(--muted) / 0.8)',
+                                    color: isValid ? 'hsl(var(--severity-low))' : 'hsl(var(--muted-foreground))',
                                   }}
                                 />
                               </Tooltip>
@@ -1164,8 +1164,8 @@ export const AppAuthCard = ({
                                     height: 20,
                                     fontSize: '0.6rem',
                                     fontWeight: 700,
-                                    backgroundColor: 'rgba(99, 102, 241, 0.15)',
-                                    color: '#818cf8',
+                                    backgroundColor: 'hsl(var(--infra-email) / 0.15)',
+                                    color: 'hsl(var(--infra-email))',
                                   }}
                                 />
                               )}
@@ -1190,13 +1190,13 @@ export const AppAuthCard = ({
                                     setDeleteConfirmAuthId(entryId);
                                   }}
                                   sx={{
-                                    color: 'rgba(255, 255, 255, 0.3)',
+                                    color: 'hsl(var(--muted-foreground))',
                                     p: 0.5,
                                     ml: 0.5,
                                     flexShrink: 0,
                                     '&:hover': {
-                                      color: '#ef4444',
-                                      backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                      color: 'hsl(var(--destructive))',
+                                      backgroundColor: 'hsl(var(--destructive) / 0.1)',
                                     },
                                   }}
                                 >
@@ -1208,8 +1208,8 @@ export const AppAuthCard = ({
                         </MenuItem>
                       );
                     })}
-                    <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)', my: 1 }} />
-                    <MenuItem value={ADD_NEW_AUTH} sx={{ color: '#FF6600', fontWeight: 600 }}>
+                    <Divider sx={{ borderColor: 'hsl(var(--border))', my: 1 }} />
+                    <MenuItem value={ADD_NEW_AUTH} sx={{ color: 'hsl(var(--primary))', fontWeight: 600 }}>
                       + Add new authentication
                     </MenuItem>
                   </Select>
@@ -1229,11 +1229,11 @@ export const AppAuthCard = ({
                     },
                   }}
                 >
-                  <DialogTitle sx={{ color: 'white', fontWeight: 600, pb: 1 }}>
+                  <DialogTitle sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, pb: 1 }}>
                     Delete Authentication
                   </DialogTitle>
                   <DialogContent>
-                    <Typography sx={{ color: 'rgba(255, 255, 255, 0.6)', mb: 3 }}>
+                    <Typography sx={{ color: 'hsl(var(--muted-foreground))', mb: 3 }}>
                       Are you sure you want to delete this authentication? This action cannot be undone.
                     </Typography>
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1.5 }}>
@@ -1243,12 +1243,12 @@ export const AppAuthCard = ({
                         onClick={() => setDeleteConfirmAuthId(null)}
                         disabled={deleting}
                         sx={{
-                          borderColor: 'rgba(255, 255, 255, 0.2)',
-                          color: 'rgba(255, 255, 255, 0.7)',
+                          borderColor: 'hsl(var(--border))',
+                          color: 'hsl(var(--muted-foreground))',
                           textTransform: 'none',
                           '&:hover': {
-                            borderColor: 'rgba(255, 255, 255, 0.4)',
-                            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                            borderColor: 'hsl(var(--border) / 0.8)',
+                            backgroundColor: 'hsl(var(--muted) / 0.5)',
                           },
                         }}
                       >
@@ -1262,14 +1262,14 @@ export const AppAuthCard = ({
                         }}
                         disabled={deleting}
                         sx={{
-                          backgroundColor: '#ef4444',
-                          color: 'white',
+                          backgroundColor: 'hsl(var(--destructive))',
+                          color: 'hsl(var(--destructive-foreground))',
                           textTransform: 'none',
                           fontWeight: 600,
-                          '&:hover': { backgroundColor: '#dc2626' },
+                          '&:hover': { backgroundColor: 'hsl(var(--destructive) / 0.9)' },
                           '&.Mui-disabled': {
-                            backgroundColor: 'rgba(239, 68, 68, 0.3)',
-                            color: 'rgba(255, 255, 255, 0.5)',
+                            backgroundColor: 'hsl(var(--destructive) / 0.3)',
+                            color: 'hsl(var(--destructive-foreground) / 0.5)',
                           },
                         }}
                       >

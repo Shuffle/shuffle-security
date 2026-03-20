@@ -143,7 +143,7 @@ export const MentionInput = ({ value, onChange, onSubmit, ...props }: MentionInp
           side="top"
           align="start" 
           sideOffset={4}
-          className="w-64 p-1 bg-neutral-900 border border-white/15 shadow-xl max-h-64 overflow-y-auto overflow-x-hidden"
+          className="w-64 max-h-64 overflow-y-auto overflow-x-hidden border border-border bg-popover p-1 text-popover-foreground shadow-xl"
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
           <Typography 
@@ -157,7 +157,7 @@ export const MentionInput = ({ value, onChange, onSubmit, ...props }: MentionInp
               fontSize: '0.7rem',
               position: 'sticky',
               top: 0,
-              bgcolor: '#171717',
+              bgcolor: 'hsl(var(--popover))',
               zIndex: 1,
             }}
           >
@@ -176,9 +176,9 @@ export const MentionInput = ({ value, onChange, onSubmit, ...props }: MentionInp
                 py: 0.75,
                 borderRadius: 0.75,
                 cursor: 'pointer',
-                bgcolor: idx === selectedIndex ? 'rgba(255, 102, 0, 0.15)' : 'transparent',
+                bgcolor: idx === selectedIndex ? 'hsl(var(--primary) / 0.15)' : 'transparent',
                 '&:hover': {
-                  bgcolor: idx === selectedIndex ? 'rgba(255, 102, 0, 0.2)' : 'rgba(255,255,255,0.05)',
+                  bgcolor: idx === selectedIndex ? 'hsl(var(--primary) / 0.2)' : 'hsl(var(--muted) / 0.5)',
                 },
               }}
             >
@@ -186,8 +186,8 @@ export const MentionInput = ({ value, onChange, onSubmit, ...props }: MentionInp
                 sx={{
                   width: 22,
                   height: 22,
-                  bgcolor: user.isAI ? 'rgba(34, 197, 94, 0.2)' : 'rgba(255, 102, 0, 0.2)',
-                  color: user.isAI ? '#22c55e' : '#ff6600',
+                  bgcolor: user.isAI ? 'hsl(var(--severity-low) / 0.2)' : 'hsl(var(--primary) / 0.2)',
+                  color: user.isAI ? 'hsl(var(--severity-low))' : 'hsl(var(--primary))',
                 }}
               >
                 {user.isAI ? <AgentIcon size={12} /> : <PersonIcon sx={{ fontSize: 12 }} />}
@@ -197,7 +197,7 @@ export const MentionInput = ({ value, onChange, onSubmit, ...props }: MentionInp
                   variant="body2" 
                   sx={{ 
                     fontWeight: idx === selectedIndex ? 600 : 400,
-                    color: idx === selectedIndex ? '#ff6600' : 'text.primary',
+                    color: idx === selectedIndex ? 'hsl(var(--primary))' : 'text.primary',
                     fontSize: '0.8rem',
                   }}
                 >

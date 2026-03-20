@@ -307,7 +307,7 @@ export const MergeIncidentDialog = ({
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] flex flex-col gap-0 p-0">
         <DialogHeader className="px-6 pt-6 pb-4">
           <DialogTitle className="flex items-center gap-2">
-            <MergeIcon sx={{ fontSize: 20, color: '#ff6600' }} />
+            <MergeIcon sx={{ fontSize: 20, color: 'hsl(var(--primary))' }} />
             {step === 'select' ? 'Merge Incident' : 'Confirm Merge'}
           </DialogTitle>
           <DialogDescription>
@@ -347,7 +347,7 @@ export const MergeIncidentDialog = ({
             <Box sx={{ flex: 1, overflowY: 'auto', px: 3, pb: 2, minHeight: 200, maxHeight: 400 }}>
               {loading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-                  <CircularProgress size={28} sx={{ color: '#ff6600' }} />
+                  <CircularProgress size={28} sx={{ color: 'hsl(var(--primary))' }} />
                 </Box>
               ) : filtered.length === 0 ? (
                 <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center', py: 6 }}>
@@ -374,10 +374,10 @@ export const MergeIncidentDialog = ({
                           borderRadius: 2,
                           cursor: isMerged ? 'not-allowed' : 'pointer',
                           opacity: isMerged ? 0.5 : 1,
-                          border: isSelected ? '1px solid #ff6600' : '1px solid transparent',
-                          bgcolor: isSelected ? 'rgba(255, 102, 0, 0.08)' : 'transparent',
+                          border: isSelected ? '1px solid hsl(var(--primary))' : '1px solid transparent',
+                          bgcolor: isSelected ? 'hsl(var(--primary) / 0.08)' : 'transparent',
                           '&:hover': isMerged ? {} : {
-                            bgcolor: isSelected ? 'rgba(255, 102, 0, 0.12)' : 'rgba(255,255,255,0.03)',
+                            bgcolor: isSelected ? 'hsl(var(--primary) / 0.12)' : 'hsl(var(--muted) / 0.4)',
                           },
                           transition: 'all 0.15s',
                         }}
@@ -395,10 +395,10 @@ export const MergeIncidentDialog = ({
                               {inc.id.substring(0, 12)}…
                             </Typography>
                             {inc.source && (
-                              <Chip label={inc.source} size="small" sx={{ height: 18, fontSize: '0.65rem', bgcolor: 'rgba(255,255,255,0.06)' }} />
+                              <Chip label={inc.source} size="small" sx={{ height: 18, fontSize: '0.65rem', bgcolor: 'hsl(var(--muted) / 0.5)' }} />
                             )}
                             {isMerged && (
-                              <Chip label="Merged" size="small" sx={{ height: 18, fontSize: '0.65rem', bgcolor: 'rgba(255,255,255,0.06)' }} />
+                              <Chip label="Merged" size="small" sx={{ height: 18, fontSize: '0.65rem', bgcolor: 'hsl(var(--muted) / 0.5)' }} />
                             )}
                           </Box>
                         </Box>
@@ -406,16 +406,16 @@ export const MergeIncidentDialog = ({
                         {/* Stats */}
                         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexShrink: 0 }}>
                           {inc.taskCount > 0 && (
-                            <Chip label={`${inc.taskCount} tasks`} size="small" sx={{ height: 20, fontSize: '0.65rem', bgcolor: 'rgba(255,255,255,0.06)' }} />
+                            <Chip label={`${inc.taskCount} tasks`} size="small" sx={{ height: 20, fontSize: '0.65rem', bgcolor: 'hsl(var(--muted) / 0.5)' }} />
                           )}
                           {inc.observableCount > 0 && (
-                            <Chip label={`${inc.observableCount} IOCs`} size="small" sx={{ height: 20, fontSize: '0.65rem', bgcolor: 'rgba(255,255,255,0.06)' }} />
+                            <Chip label={`${inc.observableCount} IOCs`} size="small" sx={{ height: 20, fontSize: '0.65rem', bgcolor: 'hsl(var(--muted) / 0.5)' }} />
                           )}
                         </Box>
 
                         {/* Selected indicator */}
                         {isSelected && (
-                          <CheckCircleIcon sx={{ fontSize: 20, color: '#ff6600', flexShrink: 0 }} />
+                          <CheckCircleIcon sx={{ fontSize: 20, color: 'hsl(var(--primary))', flexShrink: 0 }} />
                         )}
                       </Box>
                     );
@@ -449,8 +449,8 @@ export const MergeIncidentDialog = ({
                 gap: 2,
                 p: 2,
                 borderRadius: 2,
-                bgcolor: 'rgba(255,255,255,0.02)',
-                border: '1px solid rgba(255,255,255,0.06)',
+                bgcolor: 'hsl(var(--muted) / 0.35)',
+                border: '1px solid hsl(var(--border))',
               }}>
                 {/* Source (current) */}
                 <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -466,7 +466,7 @@ export const MergeIncidentDialog = ({
                 </Box>
 
                 {/* Arrow */}
-                <ArrowForwardIcon sx={{ color: '#ff6600', fontSize: 28, flexShrink: 0 }} />
+                <ArrowForwardIcon sx={{ color: 'hsl(var(--primary))', fontSize: 28, flexShrink: 0 }} />
 
                 {/* Target */}
                 <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -476,14 +476,14 @@ export const MergeIncidentDialog = ({
                   <Typography variant="body2" sx={{ fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {selectedTarget.title}
                   </Typography>
-                  <Typography variant="caption" sx={{ color: '#22c55e' }}>
+                  <Typography variant="caption" sx={{ color: 'hsl(var(--severity-low))' }}>
                     Will receive merged data
                   </Typography>
                 </Box>
               </Box>
 
               {/* What will be merged */}
-              <Box sx={{ mt: 2, p: 2, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <Box sx={{ mt: 2, p: 2, borderRadius: 2, bgcolor: 'hsl(var(--muted) / 0.35)', border: '1px solid hsl(var(--border))' }}>
                 <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
                   What will be merged:
                 </Typography>
@@ -497,7 +497,7 @@ export const MergeIncidentDialog = ({
                     'Description — appended below target description',
                   ].map((item, i) => (
                     <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <CheckCircleIcon sx={{ fontSize: 14, color: '#22c55e' }} />
+                      <CheckCircleIcon sx={{ fontSize: 14, color: 'hsl(var(--severity-low))' }} />
                       <Typography variant="caption" sx={{ color: 'text.secondary' }}>{item}</Typography>
                     </Box>
                   ))}
@@ -509,14 +509,14 @@ export const MergeIncidentDialog = ({
                 mt: 2,
                 p: 1.5,
                 borderRadius: 2,
-                bgcolor: 'rgba(245, 158, 11, 0.08)',
-                border: '1px solid rgba(245, 158, 11, 0.2)',
+                bgcolor: 'hsl(var(--severity-medium) / 0.08)',
+                border: '1px solid hsl(var(--severity-medium) / 0.2)',
                 display: 'flex',
                 alignItems: 'flex-start',
                 gap: 1,
               }}>
-                <WarningAmberIcon sx={{ fontSize: 18, color: '#f59e0b', mt: 0.25 }} />
-                <Typography variant="caption" sx={{ color: '#f59e0b' }}>
+                <WarningAmberIcon sx={{ fontSize: 18, color: 'hsl(var(--severity-medium))', mt: 0.25 }} />
+                <Typography variant="caption" sx={{ color: 'hsl(var(--severity-medium))' }}>
                   The current incident will be marked as "Merged" and will reference the target. The target's severity, assignee, and status will be kept as-is.
                 </Typography>
               </Box>

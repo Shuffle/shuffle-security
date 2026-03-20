@@ -41,20 +41,20 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
 const RISK_CONFIG: Record<RiskLevel, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
   low: {
     label: 'Low Risk',
-    color: 'hsl(142, 71%, 45%)',
-    bg: 'rgba(34, 197, 94, 0.1)',
+    color: 'hsl(var(--severity-low))',
+    bg: 'hsl(var(--severity-low) / 0.1)',
     icon: <ShieldCheck size={14} />,
   },
   medium: {
     label: 'Medium Risk',
-    color: 'hsl(45, 93%, 47%)',
-    bg: 'rgba(234, 179, 8, 0.1)',
+    color: 'hsl(var(--severity-medium))',
+    bg: 'hsl(var(--severity-medium) / 0.1)',
     icon: <ShieldAlert size={14} />,
   },
   high: {
     label: 'High Risk',
-    color: 'hsl(0, 84%, 60%)',
-    bg: 'rgba(239, 68, 68, 0.1)',
+    color: 'hsl(var(--severity-high))',
+    bg: 'hsl(var(--severity-high) / 0.1)',
     icon: <ShieldOff size={14} />,
   },
 };
@@ -193,10 +193,10 @@ const AgentPermissionsPage = () => {
               sx={{
                 fontWeight: 600,
                 bgcolor: enabledPermissions === totalPermissions
-                  ? 'rgba(34, 197, 94, 0.15)'
-                  : 'rgba(255, 102, 0, 0.15)',
+                  ? 'hsl(var(--severity-low) / 0.15)'
+                  : 'hsl(var(--primary) / 0.15)',
                 color: enabledPermissions === totalPermissions
-                  ? 'hsl(142, 71%, 45%)'
+                  ? 'hsl(var(--severity-low))'
                   : 'hsl(var(--primary))',
               }}
             />
@@ -357,14 +357,14 @@ const AgentPermissionsPage = () => {
                           fontSize: '0.75rem',
                           fontWeight: 500,
                           bgcolor: stats.allEnabled
-                            ? 'rgba(34, 197, 94, 0.12)'
+                            ? 'hsl(var(--severity-low) / 0.12)'
                             : stats.noneEnabled
-                            ? 'rgba(239, 68, 68, 0.12)'
-                            : 'rgba(255, 102, 0, 0.12)',
+                            ? 'hsl(var(--severity-high) / 0.12)'
+                            : 'hsl(var(--primary) / 0.12)',
                           color: stats.allEnabled
-                            ? 'hsl(142, 71%, 45%)'
+                            ? 'hsl(var(--severity-low))'
                             : stats.noneEnabled
-                            ? 'hsl(0, 84%, 60%)'
+                            ? 'hsl(var(--severity-high))'
                             : 'hsl(var(--primary))',
                         }}
                       />

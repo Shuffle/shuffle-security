@@ -418,12 +418,12 @@ export const IncidentCardView = ({
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
                   {resyncingIds.has(incident.id) ? (
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, minWidth: 0 }}>
-                      <CircularProgress size={14} sx={{ color: '#ff6600', flexShrink: 0 }} />
+                      <CircularProgress size={14} sx={{ color: 'hsl(var(--primary))', flexShrink: 0 }} />
                       <Typography
                         variant="body1"
                         sx={{
                           fontWeight: 600,
-                          color: '#ff6600',
+                          color: 'hsl(var(--primary))',
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap',
@@ -446,7 +446,7 @@ export const IncidentCardView = ({
                     >
                       {incident.title && incident.title.trim() !== 'Untitled Incident' && incident.title.trim() !== 'Requires sync' && incident.title.trim() !== incident.id && incident.title.trim() ? incident.title.trim() : (
                         incident.source ? (
-                          <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, color: '#f59e0b', fontStyle: 'italic', fontWeight: 500 }}>
+                          <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, color: 'hsl(var(--severity-medium))', fontStyle: 'italic', fontWeight: 500 }}>
                             <RefreshIcon sx={{ fontSize: 14 }} />
                             Requires sync
                           </Box>
@@ -486,7 +486,7 @@ export const IncidentCardView = ({
                             sx={{ 
                               cursor: 'default', 
                               fontStyle: 'italic',
-                              color: isStale ? '#f59e0b' : 'hsl(var(--muted-foreground))',
+                              color: isStale ? 'hsl(var(--severity-medium))' : 'hsl(var(--muted-foreground))',
                               fontWeight: isStale ? 600 : 400,
                             }}
                           >
@@ -533,13 +533,13 @@ export const IncidentCardView = ({
                           onFilterChange?.('assignee', incident.assignee || '');
                         }}
                         sx={{
-                          backgroundColor: 'rgba(251, 146, 60, 0.12)',
-                          color: '#fb923c',
+                          backgroundColor: 'hsl(var(--primary) / 0.12)',
+                          color: 'hsl(var(--primary))',
                           fontWeight: 500,
                           fontSize: '0.65rem',
                           height: 22,
                           cursor: 'pointer',
-                          '&:hover': { backgroundColor: 'rgba(251, 146, 60, 0.22)' },
+                          '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.22)' },
                         }}
                       />
                     </>
@@ -583,13 +583,13 @@ export const IncidentCardView = ({
                         label={`${incident.sharedOrgs.length} orgs`}
                         size="small"
                         sx={{
-                          backgroundColor: 'rgba(168, 85, 247, 0.12)',
-                          color: 'rgb(192, 132, 252)',
+                          backgroundColor: 'hsl(var(--infra-email) / 0.12)',
+                          color: 'hsl(var(--infra-email))',
                           fontWeight: 500,
                           fontSize: '0.65rem',
                           height: 22,
-                          border: '1px solid rgba(168, 85, 247, 0.25)',
-                          '& .MuiChip-icon': { color: 'rgb(192, 132, 252)', ml: 0.5 },
+                          border: '1px solid hsl(var(--infra-email) / 0.25)',
+                          '& .MuiChip-icon': { color: 'hsl(var(--infra-email))', ml: 0.5 },
                         }}
                       />
                     </>
@@ -637,12 +637,12 @@ export const IncidentCardView = ({
                           onFilterChange?.('tag', label);
                         }}
                         sx={{
-                          backgroundColor: 'rgba(6, 182, 212, 0.12)',
-                          color: '#06b6d4',
+                          backgroundColor: 'hsl(var(--severity-info) / 0.12)',
+                          color: 'hsl(var(--severity-info))',
                           fontWeight: 500,
                           fontSize: '0.65rem',
                           height: 22,
-                          '& .MuiChip-icon': { color: '#06b6d4', ml: 0.5 },
+                          '& .MuiChip-icon': { color: 'hsl(var(--severity-info))', ml: 0.5 },
                         }}
                       />
                     ))}
@@ -652,8 +652,8 @@ export const IncidentCardView = ({
                           label={`+${incident.labels.length - 3}`}
                           size="small"
                           sx={{
-                           backgroundColor: 'rgba(6, 182, 212, 0.08)',
-                            color: '#06b6d4',
+                           backgroundColor: 'hsl(var(--severity-info) / 0.08)',
+                            color: 'hsl(var(--severity-info))',
                             fontWeight: 500,
                             fontSize: '0.65rem',
                             height: 22,
@@ -693,13 +693,13 @@ export const IncidentCardView = ({
                         onFilterChange?.('status', incident.status);
                       }}
                       sx={{
-                        backgroundColor: 'rgba(245, 158, 11, 0.15)',
-                        color: '#f59e0b',
+                        backgroundColor: 'hsl(var(--severity-medium) / 0.15)',
+                        color: 'hsl(var(--severity-medium))',
                         fontWeight: 500,
                         fontSize: '0.7rem',
                         height: 24,
                         cursor: 'pointer',
-                        border: '1px dashed rgba(245, 158, 11, 0.4)',
+                        border: '1px dashed hsl(var(--severity-medium) / 0.4)',
                         '&:hover': { opacity: 0.8 },
                       }}
                     />
@@ -793,7 +793,7 @@ export const IncidentCardView = ({
                   variant="caption"
                   onClick={onResetOrgFilter}
                   sx={{
-                    color: '#FF6600',
+                    color: 'hsl(var(--primary))',
                     cursor: 'pointer',
                     fontWeight: 600,
                     '&:hover': { textDecoration: 'underline' },

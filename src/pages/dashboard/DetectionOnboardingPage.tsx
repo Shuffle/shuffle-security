@@ -2312,13 +2312,13 @@ const DetectionOnboardingPage = () => {
                         }}
                       >
                         {testSteps.pipelineRequest === 'running' && (
-                          <CircularProgress size={10} sx={{ color: 'white' }} />
+                          <CircularProgress size={10} sx={{ color: 'hsl(var(--primary-foreground))' }} />
                         )}
                         {testSteps.pipelineRequest === 'success' && (
-                          <Typography sx={{ fontSize: '0.6rem', color: 'white' }}>✓</Typography>
+                          <Typography sx={{ fontSize: '0.6rem', color: 'hsl(var(--primary-foreground))' }}>✓</Typography>
                         )}
                         {testSteps.pipelineRequest === 'failed' && (
-                          <Typography sx={{ fontSize: '0.6rem', color: 'white' }}>✗</Typography>
+                          <Typography sx={{ fontSize: '0.6rem', color: 'hsl(var(--primary-foreground))' }}>✗</Typography>
                         )}
                       </Box>
                       <Typography sx={{ 
@@ -2349,13 +2349,13 @@ const DetectionOnboardingPage = () => {
                         }}
                       >
                         {testSteps.pipelineStarted === 'running' && (
-                          <CircularProgress size={10} sx={{ color: 'white' }} />
+                          <CircularProgress size={10} sx={{ color: 'hsl(var(--primary-foreground))' }} />
                         )}
                         {testSteps.pipelineStarted === 'success' && (
-                          <Typography sx={{ fontSize: '0.6rem', color: 'white' }}>✓</Typography>
+                          <Typography sx={{ fontSize: '0.6rem', color: 'hsl(var(--primary-foreground))' }}>✓</Typography>
                         )}
                         {testSteps.pipelineStarted === 'failed' && (
-                          <Typography sx={{ fontSize: '0.6rem', color: 'white' }}>✗</Typography>
+                          <Typography sx={{ fontSize: '0.6rem', color: 'hsl(var(--primary-foreground))' }}>✗</Typography>
                         )}
                       </Box>
                       <Typography sx={{ 
@@ -2387,13 +2387,13 @@ const DetectionOnboardingPage = () => {
                         }}
                       >
                         {testSteps.workflowTriggered === 'running' && (
-                          <CircularProgress size={10} sx={{ color: 'white' }} />
+                          <CircularProgress size={10} sx={{ color: 'hsl(var(--primary-foreground))' }} />
                         )}
                         {testSteps.workflowTriggered === 'success' && (
-                          <Typography sx={{ fontSize: '0.6rem', color: 'white' }}>✓</Typography>
+                          <Typography sx={{ fontSize: '0.6rem', color: 'hsl(var(--primary-foreground))' }}>✓</Typography>
                         )}
                         {testSteps.workflowTriggered === 'failed' && (
-                          <Typography sx={{ fontSize: '0.6rem', color: 'white' }}>✗</Typography>
+                          <Typography sx={{ fontSize: '0.6rem', color: 'hsl(var(--primary-foreground))' }}>✗</Typography>
                         )}
                       </Box>
                       <Typography sx={{ 

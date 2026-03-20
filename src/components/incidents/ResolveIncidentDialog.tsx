@@ -75,15 +75,15 @@ export const ResolveIncidentDialog = React.forwardRef<HTMLDivElement, ResolveInc
       fullWidth
       PaperProps={{
         sx: {
-          background: 'linear-gradient(180deg, #262626 0%, #1f1f1f 100%)',
-          border: '1px solid rgba(255,255,255,0.08)',
+          background: 'hsl(var(--card))',
+          border: '1px solid hsl(var(--border))',
           borderRadius: 2,
         },
       }}
     >
       <DialogTitle sx={{ pb: 1 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <CheckCircleIcon sx={{ color: '#22c55e' }} />
+          <CheckCircleIcon sx={{ color: 'hsl(var(--severity-low))' }} />
           <Typography variant="h6">Resolve Incident</Typography>
         </Box>
       </DialogTitle>
@@ -130,8 +130,9 @@ export const ResolveIncidentDialog = React.forwardRef<HTMLDivElement, ResolveInc
           disabled={!reason || isLoading}
           startIcon={<CheckCircleIcon />}
           sx={{
-            bgcolor: '#22c55e',
-            '&:hover': { bgcolor: '#16a34a' },
+            bgcolor: 'hsl(var(--severity-low))',
+            color: 'hsl(var(--primary-foreground))',
+            '&:hover': { bgcolor: 'hsl(var(--severity-low) / 0.9)' },
           }}
         >
           {isLoading ? 'Resolving...' : 'Resolve Incident'}

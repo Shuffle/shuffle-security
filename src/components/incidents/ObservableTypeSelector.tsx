@@ -131,11 +131,11 @@ export const ObservableTypeSelector = ({
             py: 0.75,
             borderRadius: 1,
             border: '1px solid',
-            borderColor: open ? 'primary.main' : 'rgba(255,255,255,0.15)',
-            bgcolor: 'rgba(0,0,0,0.2)',
+            borderColor: open ? 'primary.main' : 'hsl(var(--border))',
+            bgcolor: 'hsl(var(--background))',
             cursor: 'pointer',
             minWidth: 140,
-            '&:hover': { borderColor: 'rgba(255,255,255,0.3)' },
+            '&:hover': { borderColor: 'hsl(var(--border) / 0.8)' },
           }}
         >
           <Typography variant="body2" sx={{ flex: 1 }}>
@@ -167,7 +167,7 @@ export const ObservableTypeSelector = ({
             }}
           >
             {/* Search Input */}
-            <Box sx={{ p: 1.5, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+            <Box sx={{ p: 1.5, borderBottom: '1px solid hsl(var(--border))' }}>
               <TextField
                 inputRef={inputRef}
                 size="small"
@@ -191,8 +191,8 @@ export const ObservableTypeSelector = ({
                 }}
                 sx={{
                   '& .MuiOutlinedInput-root': {
-                    bgcolor: 'rgba(0,0,0,0.2)',
-                    '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
+                    bgcolor: 'hsl(var(--background))',
+                    '& fieldset': { borderColor: 'hsl(var(--border))' },
                   },
                 }}
               />
@@ -200,7 +200,7 @@ export const ObservableTypeSelector = ({
 
             {/* Create New Option */}
             {canCreate && (
-              <Box sx={{ p: 1, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+              <Box sx={{ p: 1, borderBottom: '1px solid hsl(var(--border))' }}>
                 <Button
                   fullWidth
                   size="small"
@@ -210,9 +210,9 @@ export const ObservableTypeSelector = ({
                   sx={{
                     justifyContent: 'flex-start',
                     textTransform: 'none',
-                    color: '#22c55e',
-                    bgcolor: 'rgba(34, 197, 94, 0.1)',
-                    '&:hover': { bgcolor: 'rgba(34, 197, 94, 0.2)' },
+                    color: 'hsl(var(--severity-low))',
+                    bgcolor: 'hsl(var(--severity-low) / 0.1)',
+                    '&:hover': { bgcolor: 'hsl(var(--severity-low) / 0.2)' },
                   }}
                 >
                   Create "{searchQuery.trim()}"
@@ -233,8 +233,8 @@ export const ObservableTypeSelector = ({
                       sx={{
                         px: 1.5,
                         py: 0.75,
-                        bgcolor: 'rgba(255,255,255,0.02)',
-                        borderBottom: '1px solid rgba(255,255,255,0.04)',
+                        bgcolor: 'hsl(var(--muted) / 0.35)',
+                        borderBottom: '1px solid hsl(var(--border) / 0.7)',
                         display: 'flex',
                         alignItems: 'center',
                         gap: 1,
@@ -262,8 +262,8 @@ export const ObservableTypeSelector = ({
                           display: 'flex',
                           alignItems: 'center',
                           gap: 1,
-                          bgcolor: value === type.name ? 'rgba(255, 102, 0, 0.1)' : 'transparent',
-                          '&:hover': { bgcolor: 'rgba(255,255,255,0.05)' },
+                          bgcolor: value === type.name ? 'hsl(var(--primary) / 0.1)' : 'transparent',
+                          '&:hover': { bgcolor: 'hsl(var(--muted) / 0.5)' },
                         }}
                       >
                         <Typography variant="body2" sx={{ fontWeight: value === type.name ? 600 : 400, flex: 1 }}>

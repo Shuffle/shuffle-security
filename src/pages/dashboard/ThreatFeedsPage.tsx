@@ -166,9 +166,9 @@ const ThreatFeedsPage = () => {
             label={`${enabledCount} active`} 
             size="small" 
             sx={{ 
-              bgcolor: enabledCount > 0 ? 'rgba(34, 197, 94, 0.15)' : 'transparent',
-              color: enabledCount > 0 ? '#22c55e' : 'text.secondary',
-              borderColor: enabledCount > 0 ? '#22c55e' : undefined,
+              bgcolor: enabledCount > 0 ? 'hsl(var(--severity-low) / 0.15)' : 'transparent',
+              color: enabledCount > 0 ? 'hsl(var(--severity-low))' : 'text.secondary',
+              borderColor: enabledCount > 0 ? 'hsl(var(--severity-low))' : undefined,
             }} 
             variant="outlined"
           />
@@ -228,7 +228,7 @@ const ThreatFeedsPage = () => {
           sx={{ 
             mb: 2, 
             '& .MuiAlert-icon': { 
-              color: automationEnabled ? '#22c55e' : undefined 
+              color: automationEnabled ? 'hsl(var(--severity-low))' : undefined 
             },
             '& .MuiAlert-message': { width: '100%' },
           }}
@@ -282,7 +282,7 @@ const ThreatFeedsPage = () => {
       )}
 
       {/* Info Card */}
-      <Card sx={{ mb: 2, p: 2, bgcolor: 'rgba(255, 102, 0, 0.05)', border: '1px solid rgba(255, 102, 0, 0.2)' }}>
+      <Card sx={{ mb: 2, p: 2, bgcolor: 'hsl(var(--primary) / 0.05)', border: '1px solid hsl(var(--primary) / 0.2)' }}>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           Threat feeds are external intelligence sources that provide indicators of compromise (IOCs) such as malicious IPs, domains, and file hashes. 
           Enable feeds to automatically enrich incidents with threat intelligence data.

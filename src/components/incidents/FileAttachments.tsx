@@ -324,8 +324,8 @@ export const FileAttachments = ({
             onDelete={() => handleDelete(attachment)}
             onClick={() => handleOpen(attachment)}
             sx={{
-              bgcolor: 'rgba(255,255,255,0.05)',
-              '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' },
+              bgcolor: 'hsl(var(--muted) / 0.5)',
+              '&:hover': { bgcolor: 'hsl(var(--muted) / 0.8)' },
               '& .MuiChip-icon': { color: 'text.secondary' },
             }}
           />
@@ -338,9 +338,9 @@ export const FileAttachments = ({
             disabled={uploading}
             sx={{
               color: 'text.secondary',
-              border: '1px dashed rgba(255,255,255,0.2)',
+              border: '1px dashed hsl(var(--border))',
               borderRadius: 1,
-              '&:hover': { borderColor: '#ff6600', color: '#ff6600' },
+              '&:hover': { borderColor: 'hsl(var(--primary))', color: 'hsl(var(--primary))' },
             }}
           >
             {uploading ? (
@@ -397,10 +397,10 @@ export const FileAttachments = ({
                     gap: 1.5,
                     p: 1.5,
                     borderRadius: 1,
-                    bgcolor: 'rgba(255,255,255,0.03)',
-                    border: '1px solid rgba(255,255,255,0.08)',
+                    bgcolor: 'hsl(var(--muted) / 0.35)',
+                    border: '1px solid hsl(var(--border))',
                     cursor: 'pointer',
-                    '&:hover': { bgcolor: 'rgba(255,255,255,0.06)' },
+                    '&:hover': { bgcolor: 'hsl(var(--muted) / 0.55)' },
                   }}
                 >
                   <Box sx={{ color: 'text.secondary' }}>
@@ -440,7 +440,7 @@ export const FileAttachments = ({
                       onClick={(e) => { e.stopPropagation(); handleDelete(attachment); }}
                       sx={{ 
                         color: 'text.disabled',
-                        '&:hover': { color: '#ef4444' },
+                        '&:hover': { color: 'hsl(var(--destructive))' },
                       }}
                     >
                       <DeleteIcon sx={{ fontSize: 16 }} />
@@ -462,12 +462,12 @@ export const FileAttachments = ({
           gap: 1,
           p: 2,
           borderRadius: 1,
-          border: '1px dashed rgba(255,255,255,0.15)',
+          border: '1px dashed hsl(var(--border))',
           cursor: uploading ? 'default' : 'pointer',
           transition: 'all 0.2s ease',
           '&:hover': {
-            borderColor: uploading ? 'rgba(255,255,255,0.15)' : '#ff6600',
-            bgcolor: uploading ? 'transparent' : 'rgba(255, 102, 0, 0.05)',
+            borderColor: uploading ? 'hsl(var(--border))' : 'hsl(var(--primary))',
+            bgcolor: uploading ? 'transparent' : 'hsl(var(--primary) / 0.05)',
           },
         }}
       >

@@ -41,9 +41,9 @@ export const AppHeader = ({ title = 'Dashboard' }: AppHeaderProps) => {
       position="sticky"
       elevation={0}
       sx={{
-        backgroundColor: 'rgba(15, 23, 42, 0.85)',
+        backgroundColor: 'hsl(var(--background) / 0.92)',
         backdropFilter: 'blur(12px)',
-        borderBottom: '1px solid rgba(148, 163, 184, 0.1)',
+        borderBottom: '1px solid hsl(var(--border))',
       }}
     >
       <Toolbar sx={{ justifyContent: 'space-between' }}>
@@ -56,7 +56,7 @@ export const AppHeader = ({ title = 'Dashboard' }: AppHeaderProps) => {
             sx={{
               display: 'flex',
               alignItems: 'center',
-              backgroundColor: 'rgba(148, 163, 184, 0.08)',
+              backgroundColor: 'hsl(var(--muted) / 0.5)',
               borderRadius: 2,
               px: 2,
               py: 0.5,
@@ -109,7 +109,9 @@ export const AppHeader = ({ title = 'Dashboard' }: AppHeaderProps) => {
               sx: {
                 mt: 1,
                 minWidth: 200,
-                backgroundImage: 'linear-gradient(145deg, #1e293b 0%, #162032 100%)',
+                backgroundImage: 'none',
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
               },
             }}
           >
@@ -121,7 +123,7 @@ export const AppHeader = ({ title = 'Dashboard' }: AppHeaderProps) => {
                 john.doe@company.com
               </Typography>
             </Box>
-            <Divider sx={{ borderColor: 'rgba(148, 163, 184, 0.1)' }} />
+            <Divider sx={{ borderColor: 'hsl(var(--border))' }} />
             <MenuItem component={Link} to="/settings">
               <ListItemIcon>
                 <PersonIcon fontSize="small" />
@@ -134,7 +136,7 @@ export const AppHeader = ({ title = 'Dashboard' }: AppHeaderProps) => {
               </ListItemIcon>
               Settings
             </MenuItem>
-            <Divider sx={{ borderColor: 'rgba(148, 163, 184, 0.1)' }} />
+            <Divider sx={{ borderColor: 'hsl(var(--border))' }} />
             <MenuItem component={Link} to="/">
               <ListItemIcon>
                 <LogoutIcon fontSize="small" />

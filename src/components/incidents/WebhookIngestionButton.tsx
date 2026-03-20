@@ -185,11 +185,11 @@ export const WebhookIngestionButton = ({ webhook, onToggled }: WebhookIngestionB
             justifyContent: 'flex-start',
             textTransform: 'none',
             fontSize: '0.75rem',
-            color: isEnabled ? 'hsl(var(--destructive))' : '#22c55e',
+            color: isEnabled ? 'hsl(var(--destructive))' : 'hsl(var(--severity-low))',
             px: 1,
             py: 0.5,
             borderRadius: 1,
-            '&:hover': { bgcolor: isEnabled ? 'hsl(var(--destructive) / 0.1)' : 'rgba(34, 197, 94, 0.1)' },
+            '&:hover': { bgcolor: isEnabled ? 'hsl(var(--destructive) / 0.1)' : 'hsl(var(--severity-low) / 0.1)' },
           }}
         >
           {isEnabled ? 'Disable Webhook' : 'Enable Webhook'}
