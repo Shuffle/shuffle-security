@@ -459,7 +459,7 @@ const AuthPage = ({ mode }: AuthPageProps) => {
                       sx={{
                         display: 'block',
                         mt: 1,
-                        color: 'rgba(255,255,255,0.5)',
+                        color: 'text.secondary',
                       }}
                     >
                       Enter the code from your authenticator app
