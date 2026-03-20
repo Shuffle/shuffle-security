@@ -142,7 +142,7 @@ export default function AppDetailDrawer({
     const searchName = appName.replace(/_/g, ' ');
 
     (async () => {
-      // Algolia
+      // Algolia lookup
       let algoliaId: string | null = null;
       try {
         const { algoliasearch } = await import('algoliasearch');
@@ -167,45 +167,51 @@ export default function AppDetailDrawer({
         }
       } catch {}
 
-      // Config API — use Algolia objectID
+      // Config API + activation check in parallel (not sequential)
       if (API_CONFIG.apiKey && algoliaId) {
-        try {
-          const response = await fetch(
-            getApiUrl(`/api/v1/apps/${encodeURIComponent(algoliaId)}/config`),
-            { credentials: 'include', headers: { ...getAuthHeader() } }
-          );
-          if (response.ok) {
-            const data = await response.json();
-            if (data?.name) {
-              setAppInfo(prev => ({ ...prev, ...data, large_image: data.large_image || prev?.large_image || '' }));
+        // Fire config fetch immediately — don't wait for /api/v1/apps
+        const configPromise = (async () => {
+          try {
+            const response = await fetch(
+              getApiUrl(`/api/v1/apps/${encodeURIComponent(algoliaId!)}/config`),
+              { credentials: 'include', headers: { ...getAuthHeader() } }
+            );
+            if (response.ok) {
+              const data = await response.json();
+              if (data?.name) {
+                setAppInfo(prev => ({ ...prev, ...data, large_image: data.large_image || prev?.large_image || '' }));
+              }
+              return data;
             }
-          }
-        } catch {}
+          } catch {}
+          return null;
+        })();
 
-        // Activation status
-        try {
-          const res = await fetch(getApiUrl('/api/v1/apps'), {
-            credentials: 'include',
-            headers: { ...getAuthHeader() },
-          });
-          if (res.ok) {
-            const apps = await res.json();
-            if (Array.isArray(apps)) {
-              const match = apps.find((a: any) =>
-                (a.name || '').toLowerCase().replace(/[\s_\-]+/g, '_') === normalizedName && a.activated
+        // Check activation via /api/v1/apps/authentication (lighter, already cached by sidebar)
+        const activationPromise = (async () => {
+          try {
+            const res = await fetch(getApiUrl('/api/v1/apps/authentication'), {
+              credentials: 'include',
+              headers: { ...getAuthHeader() },
+            });
+            if (res.ok) {
+              const data = await res.json();
+              const auths = Array.isArray(data) ? data : (data?.data || []);
+              const match = auths.find((a: any) =>
+                (a.app?.name || '').toLowerCase().replace(/[\s_\-]+/g, '_') === normalizedName
               );
-              setIsActivated(!!match);
-              setActivatedAppId(match?.id || null);
-            } else {
-              // API returned non-array (e.g. wrapped in {data: [...]})
-              setIsActivated(false);
+              if (match) {
+                setIsActivated(true);
+                setActivatedAppId(match.app?.id || null);
+                return;
+              }
             }
-          } else {
-            setIsActivated(false);
-          }
-        } catch {
+          } catch {}
+          // Fallback: check via the config response
           setIsActivated(false);
-        }
+        })();
+
+        await Promise.all([configPromise, activationPromise]);
       }
 
       setAppLoading(false);
