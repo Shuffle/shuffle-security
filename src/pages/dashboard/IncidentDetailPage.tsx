@@ -483,7 +483,7 @@ const IncidentDetailPage = () => {
   
   // Description editing state
   const [isEditingDescription, setIsEditingDescription] = useState(false);
-  const [descriptionView, setDescriptionView] = useState<'rendered' | 'readable' | 'raw'>('raw');
+  const [descriptionView, setDescriptionView] = useState<'rendered' | 'readable' | 'raw'>('readable');
   const [rawDescriptionHtml, setRawDescriptionHtml] = useState('');
   
   const [isSaving, setIsSaving] = useState(false);
@@ -3271,7 +3271,7 @@ const IncidentDetailPage = () => {
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Typography variant="caption" sx={{ color: 'text.secondary' }}>Description</Typography>
-                    {hasHtmlDescription && !isEditingDescription && (
+                    {(hasHtmlDescription || editedMessage) && !isEditingDescription && (
                       <Box sx={{ display: 'flex', gap: 0.25 }}>
                         {(['rendered', 'readable', 'raw'] as const).map((view) => (
                           <Chip
@@ -3317,7 +3317,7 @@ const IncidentDetailPage = () => {
                       sx={inputSx}
                     />
                   </Box>
-                ) : hasHtmlDescription && descriptionView === 'rendered' ? (
+                ) : descriptionView === 'rendered' && hasHtmlDescription ? (
                   <Box 
                     sx={{ 
                       p: 1.5, 
@@ -3338,7 +3338,7 @@ const IncidentDetailPage = () => {
                     }}
                     dangerouslySetInnerHTML={{ __html: sanitizedDescriptionHtml }}
                   />
-                ) : hasHtmlDescription && descriptionView === 'readable' ? (
+                ) : descriptionView === 'readable' || (descriptionView === 'rendered' && !hasHtmlDescription) ? (
                   <Box 
                     sx={{ 
                       p: 2, 
@@ -3356,20 +3356,20 @@ const IncidentDetailPage = () => {
                       fontSize: '0.85rem',
                       lineHeight: 1.75,
                       letterSpacing: '0.01em',
-                      '& + &': { mt: 1 },
                     }}>
                       {(() => {
-                        const tmp = document.createElement('div');
-                        tmp.innerHTML = sanitizedDescriptionHtml;
-                        // Replace block elements with newlines for structure
-                        tmp.querySelectorAll('br').forEach(el => el.replaceWith('\n'));
-                        tmp.querySelectorAll('p, div, tr, li, h1, h2, h3, h4, h5, h6').forEach(el => {
-                          el.prepend(document.createTextNode('\n'));
-                          el.append(document.createTextNode('\n'));
-                        });
-                        // Extract text and clean up excessive whitespace
-                        const text = (tmp.textContent || '').replace(/\n{3,}/g, '\n\n').trim();
-                        return text || 'No description.';
+                        if (hasHtmlDescription) {
+                          const tmp = document.createElement('div');
+                          tmp.innerHTML = sanitizedDescriptionHtml;
+                          tmp.querySelectorAll('br').forEach(el => el.replaceWith('\n'));
+                          tmp.querySelectorAll('p, div, tr, li, h1, h2, h3, h4, h5, h6').forEach(el => {
+                            el.prepend(document.createTextNode('\n'));
+                            el.append(document.createTextNode('\n'));
+                          });
+                          const text = (tmp.textContent || '').replace(/\n{3,}/g, '\n\n').trim();
+                          return text || 'No description.';
+                        }
+                        return editedMessage || 'No description.';
                       })()}
                     </Typography>
                   </Box>
