@@ -3318,9 +3318,10 @@ const IncidentDetailPage = () => {
               <Box 
                 sx={{ 
                   p: 1.5, 
-                  bgcolor: 'rgba(255, 255, 255, 0.95)', 
+                  bgcolor: (t) => t.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.95)' : 'rgba(255, 255, 255, 1)', 
                   borderRadius: 1,
-                  border: '1px solid rgba(255,255,255,0.1)',
+                  border: '1px solid',
+                  borderColor: 'divider',
                   minHeight: 120,
                   maxHeight: 450,
                   overflow: 'auto',
