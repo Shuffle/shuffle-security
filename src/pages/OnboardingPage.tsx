@@ -1059,9 +1059,9 @@ const OnboardingPage = () => {
                 component={Link}
                 to="/incidents"
                 sx={{
-                  color: 'rgba(255, 255, 255, 0.5)',
+                  color: 'text.secondary',
                   textDecoration: 'none',
-                  '&:hover': { color: 'white', backgroundColor: 'rgba(255, 255, 255, 0.05)' },
+                  '&:hover': { color: 'text.primary', backgroundColor: 'action.hover' },
                 }}
               >
                 Skip for now
