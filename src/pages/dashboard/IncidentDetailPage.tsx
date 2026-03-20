@@ -4057,13 +4057,14 @@ const IncidentDetailPage = () => {
                 onClick={() => {
                   if (incident?.rawOCSF) {
                     const severityOption = severityOptions.find(s => s.value === editedSeverity);
-                    const statusLabel = editedStatus === 'new' ? 'New' : editedStatus === 'in_progress' ? 'In Progress' : editedStatus === 'on_hold' ? 'On Hold' : 'Resolved';
+                    const { label: statusLabel, id: statusId } = getOCSFStatus(editedStatus);
                     const existingFindingInfo = incident.rawOCSF?.finding_info_list?.[0] || (incident.rawOCSF as any)?.finding_info;
                     const liveSnapshot = {
                       ...incident.rawOCSF,
                       desc: editedMessage || editedTitle,
                       severity_id: severityOption?.id || 3,
                       severity: severityOption?.label || 'Medium',
+                      status_id: statusId,
                       status: statusLabel,
                       assignee: editedAssignee.trim() || '',
                       types: editedLabels,
