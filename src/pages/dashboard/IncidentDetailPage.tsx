@@ -4094,11 +4094,11 @@ const IncidentDetailPage = () => {
                   }
                 }}
                 sx={{
-                  borderColor: 'rgba(255,255,255,0.2)',
+                  borderColor: 'divider',
                   color: 'text.secondary',
                   fontSize: '0.75rem',
                   height: 28,
-                  '&:hover': { borderColor: 'rgba(255,255,255,0.4)' },
+                  '&:hover': { borderColor: 'text.secondary' },
                 }}
               >
                 Reload
@@ -4130,11 +4130,11 @@ const IncidentDetailPage = () => {
                 }}
                 disabled={isSaving || !rawJsonValid}
                 sx={{
-                  borderColor: 'rgba(255,255,255,0.2)',
-                  color: '#ff6600',
+                  borderColor: 'divider',
+                  color: 'primary.main',
                   fontSize: '0.75rem',
                   height: 28,
-                  '&:hover': { borderColor: '#ff6600', bgcolor: 'rgba(255, 102, 0, 0.08)' },
+                  '&:hover': { borderColor: 'primary.main', bgcolor: 'action.hover' },
                 }}
               >
                 Save
@@ -4156,17 +4156,18 @@ const IncidentDetailPage = () => {
       {activeTab === 6 && unmappedOriginal && (
         /* Original Data Tab */
         <Box sx={{
-          bgcolor: 'rgba(255,255,255,0.02)',
+          bgcolor: 'action.hover',
           borderRadius: 2,
-          border: '1px solid rgba(255,255,255,0.06)',
+          border: '1px solid',
+          borderColor: 'divider',
           p: 2,
           display: 'flex',
           flexDirection: 'column',
           gap: 1.5,
         }}>
-          <Box sx={{ position: 'sticky', top: 0, zIndex: 10, bgcolor: 'hsl(var(--card))', mx: -2, px: 2, py: 1.5, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <Box sx={{ position: 'sticky', top: 0, zIndex: 10, bgcolor: 'hsl(var(--card))', mx: -2, px: 2, py: 1.5, borderBottom: '1px solid hsl(var(--border))' }}>
             <Typography variant="subtitle2" sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
-              <DescriptionIcon sx={{ fontSize: 18, color: '#ff6600' }} />
+              <DescriptionIcon sx={{ fontSize: 18, color: 'primary.main' }} />
               Original Data
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem' }}>
@@ -4185,18 +4186,19 @@ const IncidentDetailPage = () => {
       {activeTab === 5 && (
         /* File Editor Tab */
         <Box sx={{
-          bgcolor: 'rgba(255,255,255,0.02)',
+          bgcolor: 'action.hover',
           borderRadius: 2,
-          border: '1px solid rgba(255,255,255,0.06)',
+          border: '1px solid',
+          borderColor: 'divider',
           p: 2,
           display: 'flex',
           flexDirection: 'column',
           gap: 1.5,
         }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10, bgcolor: 'hsl(var(--card))', mx: -2, px: 2, py: 1.5, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10, bgcolor: 'hsl(var(--card))', mx: -2, px: 2, py: 1.5, borderBottom: '1px solid hsl(var(--border))' }}>
             <Box>
               <Typography variant="subtitle2" sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <DescriptionIcon sx={{ fontSize: 18, color: '#ff6600' }} />
+                <DescriptionIcon sx={{ fontSize: 18, color: 'primary.main' }} />
                 Translation File
               </Typography>
               <Typography variant="caption" sx={{ color: 'text.secondary', fontFamily: 'monospace', fontSize: '0.7rem' }}>
@@ -4210,11 +4212,11 @@ const IncidentDetailPage = () => {
                 onClick={() => { setFileLoaded(false); loadFileContent(); }}
                 disabled={fileLoading}
                 sx={{
-                  borderColor: 'rgba(255,255,255,0.2)',
+                  borderColor: 'divider',
                   color: 'text.secondary',
                   fontSize: '0.75rem',
                   height: 28,
-                  '&:hover': { borderColor: 'rgba(255,255,255,0.4)' },
+                  '&:hover': { borderColor: 'text.secondary' },
                 }}
               >
                 {fileLoading ? <CircularProgress size={14} /> : 'Reload'}
@@ -4246,11 +4248,11 @@ const IncidentDetailPage = () => {
                 }}
                 disabled={fileSaving || fileLoading || !fileJsonValid}
                 sx={{
-                  borderColor: 'rgba(255,255,255,0.2)',
-                  color: '#ff6600',
+                  borderColor: 'divider',
+                  color: 'primary.main',
                   fontSize: '0.75rem',
                   height: 28,
-                  '&:hover': { borderColor: '#ff6600', bgcolor: 'rgba(255, 102, 0, 0.08)' },
+                  '&:hover': { borderColor: 'primary.main', bgcolor: 'action.hover' },
                 }}
               >
                 {fileSaving ? <CircularProgress size={14} /> : 'Save'}

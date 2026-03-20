@@ -96,20 +96,20 @@ export const WebhookIngestionButton = ({ webhook, onToggled }: WebhookIngestionB
             width: 30,
             height: 30,
             border: '1px solid',
-            borderColor: isEnabled ? 'rgba(34, 197, 94, 0.20)' : 'transparent',
-            bgcolor: isEnabled ? 'rgba(34, 197, 94, 0.10)' : 'transparent',
+            borderColor: isEnabled ? 'success.main' : 'divider',
+            bgcolor: isEnabled ? 'success.light' : 'background.paper',
             borderRadius: 1,
             opacity: isEnabled ? 1 : 0.35,
             filter: isEnabled ? 'none' : 'grayscale(1)',
             transition: 'opacity 0.15s ease, filter 0.15s ease',
             '&:hover': {
-              bgcolor: isEnabled ? 'rgba(34, 197, 94, 0.18)' : 'rgba(255,255,255,0.1)',
+              bgcolor: isEnabled ? 'success.light' : 'action.hover',
               opacity: isEnabled ? 1 : 0.7,
               filter: 'none',
             },
           }}
         >
-          <WebhookIcon sx={{ fontSize: 16, color: isEnabled ? '#4ade80' : 'rgba(255,255,255,0.4)' }} />
+          <WebhookIcon sx={{ fontSize: 16, color: isEnabled ? 'success.main' : 'text.disabled' }} />
         </IconButton>
       </Tooltip>
       <Popover
@@ -171,7 +171,7 @@ export const WebhookIngestionButton = ({ webhook, onToggled }: WebhookIngestionB
               }}
             />
             <IconButton size="small" onClick={handleCopy} sx={{ p: 0.5, color: 'hsl(var(--muted-foreground))' }}>
-              {copied ? <CheckIcon sx={{ fontSize: 14, color: '#4ade80' }} /> : <ContentCopyIcon sx={{ fontSize: 14 }} />}
+              {copied ? <CheckIcon sx={{ fontSize: 14, color: 'success.main' }} /> : <ContentCopyIcon sx={{ fontSize: 14 }} />}
             </IconButton>
           </Box>
         )}

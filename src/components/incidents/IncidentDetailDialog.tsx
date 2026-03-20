@@ -292,15 +292,15 @@ export const IncidentDetailDialog = ({ open, incident, onClose, onResolve, onUpd
 
   const inputSx = {
     '& .MuiOutlinedInput-root': {
-      bgcolor: 'rgba(0, 0, 0, 0.2)',
+      bgcolor: 'background.paper',
       '& fieldset': {
-        borderColor: 'rgba(255,255,255,0.1)',
+        borderColor: 'divider',
       },
       '&:hover fieldset': {
-        borderColor: 'rgba(255,255,255,0.2)',
+        borderColor: 'text.secondary',
       },
       '&.Mui-focused fieldset': {
-        borderColor: '#FF6600',
+        borderColor: 'primary.main',
       },
     },
   };

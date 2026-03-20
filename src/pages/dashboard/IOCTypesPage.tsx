@@ -523,7 +523,7 @@ const IOCTypesPage = () => {
               <Box sx={{ 
                 p: 2, 
                 borderRadius: 1, 
-                bgcolor: 'rgba(0,0,0,0.2)',
+                bgcolor: 'background.paper',
                 border: '1px solid',
                 borderColor: dialogTestResult === true ? 'success.main' : dialogTestResult === false ? 'error.main' : 'divider',
               }}>

@@ -107,8 +107,9 @@ const ImageThumbnail = ({
           height: 64,
           borderRadius: 1,
           overflow: 'hidden',
-          bgcolor: 'rgba(255,255,255,0.05)',
-          border: '1px solid rgba(255,255,255,0.08)',
+          bgcolor: 'action.hover',
+          border: '1px solid',
+          borderColor: 'divider',
           cursor: 'pointer',
           flexShrink: 0,
           '&:hover .overlay': { opacity: 1 },
@@ -161,7 +162,7 @@ const ImageThumbnail = ({
           <IconButton 
             size="small" 
             onClick={(e) => { e.stopPropagation(); onDelete(); }}
-            sx={{ color: '#ef4444', p: 0.5 }}
+            sx={{ color: 'error.main', p: 0.5 }}
           >
             <DeleteIcon sx={{ fontSize: 14 }} />
           </IconButton>
