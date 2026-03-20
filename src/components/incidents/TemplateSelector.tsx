@@ -90,7 +90,7 @@ export const TemplateSelector = ({ onApplyTemplate, currentUsername = '' }: Temp
           },
         }}
       >
-        <Box sx={{ px: 2, py: 1, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <Box sx={{ px: 2, py: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
           <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
             Apply Case Template
           </Typography>
