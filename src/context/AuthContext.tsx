@@ -132,8 +132,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const setActiveOrg = useCallback(async (orgId: string) => {
     try {
-      // Reset region URL immediately — the new org may have a different region
+      // Reset region URL and theme immediately — the new org may have different settings
       resetRegionUrl();
+      localStorage.removeItem('shuffle-theme');
 
       const response = await fetch(getApiUrl('/api/v1/orgs/' + orgId + '/change'), {
         method: 'POST',
