@@ -2876,13 +2876,14 @@ const IncidentDetailPage = () => {
                     top: '100%', 
                     right: 0, 
                     mt: 1, 
-                    bgcolor: '#2a2a2a', 
-                    border: '1px solid rgba(255,255,255,0.1)',
+                    bgcolor: 'background.paper', 
+                    border: '1px solid',
+                    borderColor: 'divider',
                     borderRadius: 1,
                     py: 1,
                     minWidth: 200,
                     zIndex: 10,
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                    boxShadow: 6,
                   }}>
                     <Typography variant="caption" sx={{ px: 2, color: 'text.secondary', display: 'block', mb: 0.5 }}>
                       Apply Template
