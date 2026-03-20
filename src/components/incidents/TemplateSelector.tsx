@@ -82,8 +82,9 @@ export const TemplateSelector = ({ onApplyTemplate, currentUsername = '' }: Temp
         onClose={handleClose}
         PaperProps={{
           sx: {
-            bgcolor: '#2a2a2a',
-            border: '1px solid rgba(255,255,255,0.1)',
+            bgcolor: 'background.paper',
+            border: '1px solid',
+            borderColor: 'divider',
             minWidth: 280,
             maxHeight: 400,
           },
