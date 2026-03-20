@@ -138,3 +138,15 @@ export const getStatusDisplay = (status: string) => {
     unknown: true,
   };
 };
+
+/**
+ * Resolve a canonical status key to its OCSF label and status_id.
+ * Falls back to preserving the original status string with id=0 for unknown statuses,
+ * so we never silently convert to "Resolved" or any other incorrect default.
+ */
+export const getOCSFStatus = (canonicalStatus: string): { label: string; id: number } => {
+  const config = statusConfig[canonicalStatus];
+  if (config) return { label: config.label, id: config.id };
+  // Unknown status — preserve the raw string, don't force a mapping
+  return { label: canonicalStatus.replace(/_/g, ' '), id: 0 };
+};

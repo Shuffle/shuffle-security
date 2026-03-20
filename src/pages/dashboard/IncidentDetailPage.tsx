@@ -125,7 +125,7 @@ interface DisplayIncident {
 }
 
 // Status and severity colors now imported from shared config
-import { statusConfig, severityColors } from '@/config/incidentConfig';
+import { statusConfig, severityColors, getOCSFStatus } from '@/config/incidentConfig';
 
 /**
  * Normalize any timestamp (Unix seconds, ms, µs, ns, ISO string, numeric string) to ms epoch.
@@ -1316,11 +1316,10 @@ const IncidentDetailPage = () => {
     pendingSaveRef.current = false;
     
     const severityOption = severityOptions.find(s => s.value === editedSeverity);
-    const statusId = statusConfig[editedStatus]?.id || 1;
+    const { label: statusLabel, id: statusId } = getOCSFStatus(editedStatus);
     
     // Get existing finding info from list (new) or direct (legacy)
     const existingFindingInfo = incident.rawOCSF?.finding_info_list?.[0] || (incident.rawOCSF as any)?.finding_info;
-    const statusLabel = editedStatus === 'new' ? 'New' : editedStatus === 'in_progress' ? 'In Progress' : editedStatus === 'on_hold' ? 'On Hold' : 'Resolved';
     
     // CRITICAL: Never use undefined - always use empty values to prevent field deletion
     const updatedData = incident.rawOCSF ? {
@@ -4058,13 +4057,14 @@ const IncidentDetailPage = () => {
                 onClick={() => {
                   if (incident?.rawOCSF) {
                     const severityOption = severityOptions.find(s => s.value === editedSeverity);
-                    const statusLabel = editedStatus === 'new' ? 'New' : editedStatus === 'in_progress' ? 'In Progress' : editedStatus === 'on_hold' ? 'On Hold' : 'Resolved';
+                    const { label: statusLabel, id: statusId } = getOCSFStatus(editedStatus);
                     const existingFindingInfo = incident.rawOCSF?.finding_info_list?.[0] || (incident.rawOCSF as any)?.finding_info;
                     const liveSnapshot = {
                       ...incident.rawOCSF,
                       desc: editedMessage || editedTitle,
                       severity_id: severityOption?.id || 3,
                       severity: severityOption?.label || 'Medium',
+                      status_id: statusId,
                       status: statusLabel,
                       assignee: editedAssignee.trim() || '',
                       types: editedLabels,
