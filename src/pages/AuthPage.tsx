@@ -257,7 +257,7 @@ const AuthPage = ({ mode }: AuthPageProps) => {
           alignItems: 'center',
           justifyContent: 'center',
           p: 3,
-          pt: 12,
+          mt: -6,
         }}
       >
         <motion.div
