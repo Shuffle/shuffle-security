@@ -112,8 +112,9 @@ const AuthPage = ({ mode }: AuthPageProps) => {
       }
 
       let response: Response;
+      const apiUrl = getApiUrl(`/api/v1${endpoint}`);
       try {
-        response = await fetch(getApiUrl(`/api/v1${endpoint}`), {
+        response = await fetch(apiUrl, {
           method: 'POST',
           credentials: 'include',
           headers: {
@@ -122,8 +123,19 @@ const AuthPage = ({ mode }: AuthPageProps) => {
           body: JSON.stringify(body),
         });
       } catch (fetchError) {
-        // Network error, CORS error, or connection refused
-        throw new Error('Network error: Unable to connect to server. Please check your connection and CORS settings.');
+        // fetch() throws TypeError on network/CORS errors — distinguish them
+        const backendOrigin = new URL(apiUrl).origin;
+        const isCrossOrigin = backendOrigin !== window.location.origin;
+        if (isCrossOrigin) {
+          throw new Error(
+            `CORS error: The browser blocked the request to ${backendOrigin}. ` +
+            `The backend must allow requests from ${window.location.origin}. ` +
+            `Check that the server's CORS configuration includes this origin.`
+          );
+        }
+        throw new Error(
+          'Network error: Unable to reach the server. Please check your connection and that the backend is running.'
+        );
       }
 
       let data: any;
@@ -160,9 +172,31 @@ const AuthPage = ({ mode }: AuthPageProps) => {
           });
           
           if (!verifyResponse.ok) {
-            throw new Error('Token verification failed');
+            // Login API returned a token but the session cookie wasn't set
+            const backendOrigin = new URL(getApiUrl('')).origin;
+            const isCrossOrigin = backendOrigin !== window.location.origin;
+            if (isCrossOrigin) {
+              throw new Error(
+                `Login succeeded but the session cookie was not set. ` +
+                `This usually means the backend at ${backendOrigin} is not configured to set cookies for ${window.location.origin}. ` +
+                `Check the backend's cookie domain and SameSite settings.`
+              );
+            }
+            throw new Error('Login succeeded but session verification failed. Please try again.');
           }
         } catch (verifyError) {
+          if (verifyError instanceof Error && verifyError.message.includes('cookie')) {
+            throw verifyError; // Re-throw our specific cookie error
+          }
+          // getinfo fetch itself failed (network/CORS)
+          const backendOrigin = new URL(getApiUrl('')).origin;
+          const isCrossOrigin = backendOrigin !== window.location.origin;
+          if (isCrossOrigin) {
+            throw new Error(
+              `Login succeeded but session verification failed due to a cross-origin issue. ` +
+              `The backend at ${backendOrigin} must allow credentials from ${window.location.origin}.`
+            );
+          }
           throw new Error('Login succeeded but failed to verify session. Please try again.');
         }
         
