@@ -176,7 +176,7 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [priorityCategory]);
 
   // Fetch on mount
   useEffect(() => {
