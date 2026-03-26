@@ -4,7 +4,7 @@
  */
 
 import { useState } from 'react';
-import { Box, Typography, IconButton, Drawer, Avatar } from '@mui/material';
+import { Box, Typography, IconButton, Drawer, Avatar, Tooltip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SingulJS } from '@/lib/singul-local';
