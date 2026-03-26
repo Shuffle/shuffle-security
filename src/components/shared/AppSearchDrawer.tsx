@@ -93,6 +93,11 @@ const singulStyles = {
   },
 };
 
+interface ConnectionPathApp {
+  name: string;
+  icon: string;
+}
+
 interface AppSearchDrawerProps {
   open: boolean;
   onClose: () => void;
@@ -113,6 +118,8 @@ interface AppSearchDrawerProps {
   onAddToCanvas?: (appInfo: { name: string; icon: string; algoliaId: string | null }) => void;
   /** When set, apps matching this category are sorted to the top in user's apps */
   priorityCategory?: string;
+  /** Apps currently in the connection path diagram — shown first in the drawer */
+  connectionPathApps?: ConnectionPathApp[];
 }
 
 export default function AppSearchDrawer({
