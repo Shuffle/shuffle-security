@@ -1017,11 +1017,17 @@ export default function UsecaseAlluvialDiagram({
       return [...samples, ...guestNodes].filter(a => !hiddenApps.has(a.name.toLowerCase()));
     }
     if (highlightCategory) {
-      // Show validated case_management apps, mark forwarding-enabled ones
-      // Include apps that match category OR were manually added to destination
+      // Show only user's apps that match the target category (+ manually added ones)
       const caseMgmtApps = allApps.filter(a =>
         !isShuffleInternalApp(a.name) && (matchesCategory(a.name, targetCategory) || manualDestApps.has(normalizeAppName(a.name))) && !hiddenApps.has(a.name.toLowerCase())
       );
+
+      // If user has no matching apps, fall back to samples
+      if (caseMgmtApps.length === 0) {
+        const samples = getSampleApps(targetCategory);
+        return samples.filter(a => !hiddenApps.has(a.name.toLowerCase()));
+      }
+
       if (forwardAppNames && forwardAppNames.size > 0) {
         const enabledApps = caseMgmtApps
           .filter(a => forwardAppNames.has(normalizeAppName(a.name)))
