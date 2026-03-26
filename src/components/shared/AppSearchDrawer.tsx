@@ -236,13 +236,13 @@ export default function AppSearchDrawer({
                       gap: 1.5,
                       p: 1.5,
                       borderRadius: '10px',
-                      border: '1px solid hsl(var(--primary) / 0.3)',
-                      backgroundColor: 'hsl(var(--primary) / 0.06)',
+                      border: '1px solid hsl(var(--border))',
+                      backgroundColor: 'hsl(var(--input))',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
                       '&:hover': {
-                        borderColor: 'hsl(var(--primary) / 0.6)',
-                        backgroundColor: 'hsl(var(--primary) / 0.12)',
+                        borderColor: 'hsl(var(--primary) / 0.5)',
+                        backgroundColor: 'hsl(var(--accent) / 0.08)',
                       },
                     }}
                   >
