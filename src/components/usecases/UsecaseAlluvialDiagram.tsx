@@ -1014,7 +1014,7 @@ export default function UsecaseAlluvialDiagram({
       // Show validated case_management apps, mark forwarding-enabled ones
       // Include apps that match category OR were manually added to destination
       const caseMgmtApps = allApps.filter(a =>
-        a.hasValidAuth && !isShuffleInternalApp(a.name) && (matchesCategory(a.name, targetCategory) || manualDestApps.has(normalizeAppName(a.name))) && !hiddenApps.has(a.name.toLowerCase())
+        !isShuffleInternalApp(a.name) && (matchesCategory(a.name, targetCategory) || manualDestApps.has(normalizeAppName(a.name))) && !hiddenApps.has(a.name.toLowerCase())
       );
       if (forwardAppNames && forwardAppNames.size > 0) {
         const enabledApps = caseMgmtApps
