@@ -97,6 +97,7 @@ interface ConnectionPathApp {
   name: string;
   icon: string;
   hasValidAuth?: boolean;
+  isActiveOnly?: boolean;
 }
 
 interface AppSearchDrawerProps {
