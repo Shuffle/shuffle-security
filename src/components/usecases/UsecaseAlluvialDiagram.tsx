@@ -1434,6 +1434,12 @@ export default function UsecaseAlluvialDiagram({
         subtitle="Search and authenticate an integration"
         showPipelinesBanner={isSiemSource && searchOpen === 'left'}
         priorityCategory={searchOpen === 'left' ? (highlightCategory || sourceCategory) : targetCategory}
+        connectionPathApps={(() => {
+          const apps = searchOpen === 'left' ? sourceApps : targetApps;
+          return apps
+            .filter(a => a.id !== 'webhook-ingestion' && a.name !== 'Webhook')
+            .map(a => ({ name: a.name, icon: a.icon }));
+        })()}
         onAddToCanvas={isLoggedIn ? ({ name: addedAppName, icon: addedIcon, algoliaId }) => {
           const side = searchOpen || 'right';
 

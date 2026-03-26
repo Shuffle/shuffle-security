@@ -4,7 +4,7 @@
  */
 
 import { useState } from 'react';
-import { Box, Typography, IconButton, Drawer } from '@mui/material';
+import { Box, Typography, IconButton, Drawer, Avatar } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SingulJS } from '@/lib/singul-local';
@@ -93,6 +93,11 @@ const singulStyles = {
   },
 };
 
+interface ConnectionPathApp {
+  name: string;
+  icon: string;
+}
+
 interface AppSearchDrawerProps {
   open: boolean;
   onClose: () => void;
@@ -113,6 +118,8 @@ interface AppSearchDrawerProps {
   onAddToCanvas?: (appInfo: { name: string; icon: string; algoliaId: string | null }) => void;
   /** When set, apps matching this category are sorted to the top in user's apps */
   priorityCategory?: string;
+  /** Apps currently in the connection path diagram — shown first in the drawer */
+  connectionPathApps?: ConnectionPathApp[];
 }
 
 export default function AppSearchDrawer({
@@ -129,6 +136,7 @@ export default function AppSearchDrawer({
   onDetailClose,
   onAddToCanvas,
   priorityCategory,
+  connectionPathApps,
 }: AppSearchDrawerProps) {
   const [detailAppName, setDetailAppName] = useState<string | null>(null);
 
@@ -207,6 +215,48 @@ export default function AppSearchDrawer({
           {API_CONFIG.apiKey && (
             <Box sx={{ mb: 2.5 }}>
               <IntegrationStatus collapsed={false} showAll hideAddButton priorityCategory={priorityCategory} />
+            </Box>
+          )}
+
+          {/* Connection path apps — shown first */}
+          {connectionPathApps && connectionPathApps.length > 0 && (
+            <Box sx={{ mb: 2.5 }}>
+              <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.7rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>
+                In this usecase
+              </Typography>
+              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1 }}>
+                {connectionPathApps.map((app) => (
+                  <Box
+                    key={app.name}
+                    onClick={() => handleAppSelected({ app: { name: app.name, image_url: app.icon, categories: [] } } as any)}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1.5,
+                      p: 1.5,
+                      borderRadius: '10px',
+                      border: '1px solid hsl(var(--primary) / 0.3)',
+                      backgroundColor: 'hsl(var(--primary) / 0.06)',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        borderColor: 'hsl(var(--primary) / 0.6)',
+                        backgroundColor: 'hsl(var(--primary) / 0.12)',
+                      },
+                    }}
+                  >
+                    <Avatar
+                      src={app.icon}
+                      alt={app.name}
+                      sx={{ width: 28, height: 28, borderRadius: '6px', backgroundColor: 'hsl(var(--muted))' }}
+                      variant="rounded"
+                    />
+                    <Typography sx={{ color: 'hsl(var(--foreground))', fontSize: '0.8rem', fontWeight: 600 }}>
+                      {app.name.replace(/_/g, ' ')}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
             </Box>
           )}
 
