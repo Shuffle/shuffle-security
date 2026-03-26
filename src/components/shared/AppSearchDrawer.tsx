@@ -292,11 +292,11 @@ export default function AppSearchDrawer({
                 authToken={API_CONFIG.apiKey || ''}
                 apiKey={API_CONFIG.apiKey || undefined}
                 apiBaseUrl={API_CONFIG.baseUrl}
-                placeholder="Search integrations..."
+                placeholder={initialQuery ? `Search ${initialQuery} integrations...` : 'Search integrations...'}
                 layout="grid"
                 gridColumns={2}
                 inline={true}
-                initialQuery={initialQuery}
+                initialQuery=""
                 hitsPerPage={12}
                 showDescription={false}
                 showCategories={true}
