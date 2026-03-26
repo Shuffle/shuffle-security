@@ -143,7 +143,7 @@ export const IngestionSourceButton = ({ app, onToggle, incidentCount = 0, varian
               px: 1,
               py: 0.5,
               borderRadius: 1,
-              '&:hover': { bgcolor: isEnabled ? 'hsl(var(--destructive) / 0.1)' : (app.validated ? 'rgba(34, 197, 94, 0.1)' : 'rgba(245, 158, 11, 0.1)') },
+              '&:hover': { bgcolor: isEnabled ? 'hsl(var(--destructive) / 0.1)' : (app.validated ? 'hsl(var(--severity-low) / 0.1)' : 'hsl(var(--severity-medium) / 0.1)') },
             }}
           >
             {isEnabled ? (variant === 'forward' ? 'Disable Forwarding' : 'Disable Sync') : (variant === 'forward' ? 'Enable Forwarding' : 'Enable Sync')}
