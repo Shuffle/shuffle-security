@@ -136,6 +136,7 @@ export default function AppSearchDrawer({
   onDetailClose,
   onAddToCanvas,
   priorityCategory,
+  connectionPathApps,
 }: AppSearchDrawerProps) {
   const [detailAppName, setDetailAppName] = useState<string | null>(null);
 
