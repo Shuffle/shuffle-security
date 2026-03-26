@@ -156,6 +156,13 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
       }
 
       dedupedIntegrations.sort((a, b) => {
+        // Priority category apps first
+        if (priorityCategory) {
+          const aMatch = matchesPriorityCategory(a.name, priorityCategory);
+          const bMatch = matchesPriorityCategory(b.name, priorityCategory);
+          if (aMatch && !bMatch) return -1;
+          if (!aMatch && bMatch) return 1;
+        }
         if (a.hasValidAuth && !b.hasValidAuth) return -1;
         if (!a.hasValidAuth && b.hasValidAuth) return 1;
         if (!a.isActiveOnly && b.isActiveOnly) return -1;
