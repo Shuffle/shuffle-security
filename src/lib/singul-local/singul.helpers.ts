@@ -114,6 +114,8 @@ export interface SingulJSProps {
   inline?: boolean;
   /** Initial search query to run on mount */
   initialQuery?: string;
+  /** Search query to run on mount without filling the input (placeholder-style filter) */
+  initialFilterQuery?: string;
   /** Number of results per search (default: 15) */
   hitsPerPage?: number;
   
