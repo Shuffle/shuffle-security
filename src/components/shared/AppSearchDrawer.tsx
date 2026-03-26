@@ -96,6 +96,7 @@ const singulStyles = {
 interface ConnectionPathApp {
   name: string;
   icon: string;
+  hasValidAuth?: boolean;
 }
 
 interface AppSearchDrawerProps {
@@ -245,15 +246,34 @@ export default function AppSearchDrawer({
                       },
                     }}
                   >
-                    <Avatar
-                      src={app.icon}
-                      alt={app.name}
-                      sx={{ width: 28, height: 28, borderRadius: '6px', backgroundColor: 'hsl(var(--muted))' }}
-                      variant="rounded"
-                    />
-                    <Typography sx={{ color: 'hsl(var(--foreground))', fontSize: '0.8rem', fontWeight: 600 }}>
-                      {app.name.replace(/_/g, ' ')}
-                    </Typography>
+                    <Box sx={{ position: 'relative' }}>
+                      <Avatar
+                        src={app.icon}
+                        alt={app.name}
+                        sx={{ width: 28, height: 28, borderRadius: '6px', backgroundColor: 'hsl(var(--muted))' }}
+                        variant="rounded"
+                      />
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          bottom: -2,
+                          right: -2,
+                          width: 8,
+                          height: 8,
+                          borderRadius: '50%',
+                          backgroundColor: app.hasValidAuth ? 'hsl(var(--severity-low))' : 'hsl(var(--muted-foreground))',
+                          border: '1.5px solid hsl(var(--card))',
+                        }}
+                      />
+                    </Box>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography sx={{ color: 'hsl(var(--foreground))', fontSize: '0.8rem', fontWeight: 600 }}>
+                        {app.name.replace(/_/g, ' ')}
+                      </Typography>
+                      <Typography sx={{ color: app.hasValidAuth ? 'hsl(var(--severity-low))' : 'hsl(var(--muted-foreground))', fontSize: '0.65rem' }}>
+                        {app.hasValidAuth ? 'Authenticated' : 'Not authenticated'}
+                      </Typography>
+                    </Box>
                   </Box>
                 ))}
               </Box>
