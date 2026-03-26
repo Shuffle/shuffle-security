@@ -262,7 +262,7 @@ export default function AppSearchDrawer({
                           width: 8,
                           height: 8,
                           borderRadius: '50%',
-                          backgroundColor: app.hasValidAuth ? 'hsl(var(--severity-low))' : 'hsl(var(--severity-medium))',
+                          backgroundColor: app.hasValidAuth ? 'hsl(var(--severity-low))' : app.isActiveOnly ? 'hsl(var(--destructive))' : 'hsl(var(--severity-medium))',
                           border: '1.5px solid hsl(var(--card))',
                         }}
                       />
