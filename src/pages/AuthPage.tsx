@@ -555,7 +555,7 @@ const AuthPage = ({ mode }: AuthPageProps) => {
               </Typography>
 
               {/* Developer API Key Section - only in Lovable preview */}
-              {isLogin && window.location.hostname.includes('lovable.app') && (
+              {isLogin && isDevEnvironment() && (
                 <Box sx={{ mt: 4, pt: 3, borderTop: '1px solid', borderColor: 'divider' }}>
                   <Typography
                     variant="body2"
