@@ -12,6 +12,7 @@ import { Link } from 'react-router-dom';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { deduplicateAuthApps, backfillAppImages, type AuthAppEntry } from '@/lib/utils';
 import { useAppDetail } from '@/context/AppDetailContext';
+import { SIEM_PATTERNS, CASES_PATTERNS, EDR_PATTERNS, EMAIL_APP_PATTERNS } from '@/lib/ingestionDetection';
 
 interface Integration {
   id: string;
