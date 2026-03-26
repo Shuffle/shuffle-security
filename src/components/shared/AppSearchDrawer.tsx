@@ -4,7 +4,7 @@
  */
 
 import { useState } from 'react';
-import { Box, Typography, IconButton, Drawer, Avatar } from '@mui/material';
+import { Box, Typography, IconButton, Drawer, Avatar, Tooltip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SingulJS } from '@/lib/singul-local';
@@ -226,32 +226,22 @@ export default function AppSearchDrawer({
               <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.7rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>
                 In this usecase
               </Typography>
-              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1 }}>
+              <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
                 {connectionPathApps.map((app) => (
-                  <Box
-                    key={app.name}
-                    onClick={() => handleAppSelected({ app: { name: app.name, image_url: app.icon, categories: [] } } as any)}
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1.5,
-                      p: 1.5,
-                      borderRadius: '10px',
-                      border: '1px solid hsl(var(--border))',
-                      backgroundColor: 'hsl(var(--input))',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      '&:hover': {
-                        borderColor: 'hsl(var(--primary) / 0.5)',
-                        backgroundColor: 'hsl(var(--accent) / 0.08)',
-                      },
-                    }}
-                  >
-                    <Box sx={{ position: 'relative' }}>
+                  <Tooltip key={app.name} title={app.name.replace(/_/g, ' ')} arrow placement="bottom">
+                    <Box
+                      onClick={() => handleAppSelected({ app: { name: app.name, image_url: app.icon, categories: [] } } as any)}
+                      sx={{
+                        position: 'relative',
+                        cursor: 'pointer',
+                        transition: 'transform 0.15s ease',
+                        '&:hover': { transform: 'scale(1.1)' },
+                      }}
+                    >
                       <Avatar
                         src={app.icon}
                         alt={app.name}
-                        sx={{ width: 28, height: 28, borderRadius: '6px', backgroundColor: 'hsl(var(--muted))' }}
+                        sx={{ width: 32, height: 32, borderRadius: '8px', backgroundColor: 'hsl(var(--muted))' }}
                         variant="rounded"
                       />
                       <Box
@@ -259,23 +249,15 @@ export default function AppSearchDrawer({
                           position: 'absolute',
                           bottom: -2,
                           right: -2,
-                          width: 8,
-                          height: 8,
+                          width: 9,
+                          height: 9,
                           borderRadius: '50%',
                           backgroundColor: app.hasValidAuth ? 'hsl(var(--severity-low))' : app.isActiveOnly ? 'hsl(var(--destructive))' : 'hsl(var(--severity-medium))',
                           border: '1.5px solid hsl(var(--card))',
                         }}
                       />
                     </Box>
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Typography sx={{ color: 'hsl(var(--foreground))', fontSize: '0.8rem', fontWeight: 600 }}>
-                        {app.name.replace(/_/g, ' ')}
-                      </Typography>
-                      <Typography sx={{ color: app.hasValidAuth ? 'hsl(var(--severity-low))' : app.isActiveOnly ? 'hsl(var(--destructive))' : 'hsl(var(--severity-medium))', fontSize: '0.65rem' }}>
-                        {app.hasValidAuth ? 'Authenticated' : app.isActiveOnly ? 'Not authenticated' : 'Not validated'}
-                      </Typography>
-                    </Box>
-                  </Box>
+                  </Tooltip>
                 ))}
               </Box>
             </Box>
