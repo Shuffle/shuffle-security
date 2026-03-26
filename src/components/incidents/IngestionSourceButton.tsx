@@ -48,10 +48,10 @@ export const IngestionSourceButton = ({ app, onToggle, incidentCount = 0, varian
             height: 30,
             border: '1px solid',
             borderColor: isEnabled
-              ? (app.validated ? 'rgba(34, 197, 94, 0.20)' : 'rgba(245, 158, 11, 0.25)')
+              ? (app.validated ? 'hsl(var(--severity-low) / 0.20)' : 'hsl(var(--severity-medium) / 0.25)')
               : 'transparent',
             bgcolor: isEnabled
-              ? (app.validated ? 'rgba(34, 197, 94, 0.10)' : 'rgba(245, 158, 11, 0.12)')
+              ? (app.validated ? 'hsl(var(--severity-low) / 0.10)' : 'hsl(var(--severity-medium) / 0.12)')
               : 'transparent',
             borderRadius: 1,
             opacity: isEnabled ? 1 : 0.35,
@@ -60,7 +60,7 @@ export const IngestionSourceButton = ({ app, onToggle, incidentCount = 0, varian
             '&:hover': {
               transform: 'scale(1.2)',
               bgcolor: isEnabled
-                ? (app.validated ? 'rgba(34, 197, 94, 0.18)' : 'rgba(245, 158, 11, 0.20)')
+                ? (app.validated ? 'hsl(var(--severity-low) / 0.18)' : 'hsl(var(--severity-medium) / 0.20)')
                 : 'rgba(255,255,255,0.1)',
               opacity: isEnabled ? 1 : 0.7,
               filter: 'none',
@@ -75,7 +75,7 @@ export const IngestionSourceButton = ({ app, onToggle, incidentCount = 0, varian
               sx={{ width: 18, height: 18, borderRadius: '50%', objectFit: 'contain' }}
             />
           ) : (
-            <DownloadIcon sx={{ fontSize: 16, color: isEnabled ? (app.validated ? '#4ade80' : '#f59e0b') : 'rgba(255,255,255,0.4)' }} />
+            <DownloadIcon sx={{ fontSize: 16, color: isEnabled ? (app.validated ? 'hsl(var(--severity-low))' : 'hsl(var(--severity-medium))') : 'rgba(255,255,255,0.4)' }} />
           )}
         </IconButton>
       </Tooltip>
@@ -139,11 +139,11 @@ export const IngestionSourceButton = ({ app, onToggle, incidentCount = 0, varian
               justifyContent: 'flex-start',
               textTransform: 'none',
               fontSize: '0.75rem',
-              color: isEnabled ? 'hsl(var(--destructive))' : (app.validated ? '#22c55e' : '#f59e0b'),
+              color: isEnabled ? 'hsl(var(--destructive))' : (app.validated ? 'hsl(var(--severity-low))' : 'hsl(var(--severity-medium))'),
               px: 1,
               py: 0.5,
               borderRadius: 1,
-              '&:hover': { bgcolor: isEnabled ? 'hsl(var(--destructive) / 0.1)' : (app.validated ? 'rgba(34, 197, 94, 0.1)' : 'rgba(245, 158, 11, 0.1)') },
+              '&:hover': { bgcolor: isEnabled ? 'hsl(var(--destructive) / 0.1)' : (app.validated ? 'hsl(var(--severity-low) / 0.1)' : 'hsl(var(--severity-medium) / 0.1)') },
             }}
           >
             {isEnabled ? (variant === 'forward' ? 'Disable Forwarding' : 'Disable Sync') : (variant === 'forward' ? 'Enable Forwarding' : 'Enable Sync')}

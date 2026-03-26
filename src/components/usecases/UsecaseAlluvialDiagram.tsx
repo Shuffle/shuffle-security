@@ -124,8 +124,9 @@ function getSampleApps(categoryId: string): AppNode[] {
 // ── Status dot color ───────────────────────────────────────────────────────────
 
 function getStatusColor(app: AppNode): string {
-  if (app.isActiveOnly) return 'hsl(var(--destructive))';
-  return app.hasValidAuth ? 'hsl(var(--severity-low))' : 'hsl(var(--muted-foreground))';
+  if (app.hasValidAuth) return 'hsl(var(--severity-low))';       // Green — validated
+  if (app.isActiveOnly) return 'hsl(var(--destructive))';        // Red — activated, no auth
+  return 'hsl(var(--severity-medium))';                          // Yellow — auth exists, not validated
 }
 
 // ── App bubble component ───────────────────────────────────────────────────────
@@ -1438,7 +1439,7 @@ export default function UsecaseAlluvialDiagram({
           const apps = searchOpen === 'left' ? sourceApps : targetApps;
           return apps
             .filter(a => a.id !== 'webhook-ingestion' && a.name !== 'Webhook')
-            .map(a => ({ name: a.name, icon: a.icon, hasValidAuth: a.hasValidAuth }));
+            .map(a => ({ name: a.name, icon: a.icon, hasValidAuth: a.hasValidAuth, isActiveOnly: a.isActiveOnly }));
         })()}
         onAddToCanvas={isLoggedIn ? ({ name: addedAppName, icon: addedIcon, algoliaId }) => {
           const side = searchOpen || 'right';
