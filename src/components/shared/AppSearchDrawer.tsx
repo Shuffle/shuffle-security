@@ -111,6 +111,8 @@ interface AppSearchDrawerProps {
   onDetailClose?: (appName: string) => void;
   /** When set, replaces Activate with "+ Add" in the detail drawer */
   onAddToCanvas?: (appInfo: { name: string; icon: string; algoliaId: string | null }) => void;
+  /** When set, apps matching this category are sorted to the top in user's apps */
+  priorityCategory?: string;
 }
 
 export default function AppSearchDrawer({
@@ -126,6 +128,7 @@ export default function AppSearchDrawer({
   onSelectOverride,
   onDetailClose,
   onAddToCanvas,
+  priorityCategory,
 }: AppSearchDrawerProps) {
   const [detailAppName, setDetailAppName] = useState<string | null>(null);
 
@@ -203,7 +206,7 @@ export default function AppSearchDrawer({
           {/* Your Apps — reuse IntegrationStatus */}
           {API_CONFIG.apiKey && (
             <Box sx={{ mb: 2.5 }}>
-              <IntegrationStatus collapsed={false} showAll hideAddButton />
+              <IntegrationStatus collapsed={false} showAll hideAddButton priorityCategory={priorityCategory} />
             </Box>
           )}
 

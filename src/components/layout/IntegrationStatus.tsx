@@ -12,6 +12,7 @@ import { Link } from 'react-router-dom';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { deduplicateAuthApps, backfillAppImages, type AuthAppEntry } from '@/lib/utils';
 import { useAppDetail } from '@/context/AppDetailContext';
+import { SIEM_PATTERNS, CASES_PATTERNS, EDR_PATTERNS, EMAIL_APP_PATTERNS } from '@/lib/ingestionDetection';
 
 interface Integration {
   id: string;
@@ -39,6 +40,22 @@ interface IntegrationStatusProps {
   showAll?: boolean;
   /** Hide the Add Integration button */
   hideAddButton?: boolean;
+  /** When set, apps matching this category are sorted to the top */
+  priorityCategory?: string;
+}
+
+const PRIORITY_CATEGORY_PATTERNS: Record<string, string[]> = {
+  siem: SIEM_PATTERNS,
+  case_management: CASES_PATTERNS,
+  edr: EDR_PATTERNS,
+  email: EMAIL_APP_PATTERNS,
+};
+
+function matchesPriorityCategory(appName: string, categoryId: string): boolean {
+  const patterns = PRIORITY_CATEGORY_PATTERNS[categoryId];
+  if (!patterns) return false;
+  const lower = appName.toLowerCase();
+  return patterns.some(p => lower.includes(p));
 }
 
 /** Fire this event from anywhere to make all IntegrationStatus instances re-fetch. */
@@ -46,7 +63,7 @@ export const refreshAllIntegrationStatus = () => {
   window.dispatchEvent(new CustomEvent('integrations-changed'));
 };
 
-export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize = 26, onDisable, disabledApps, showAll, hideAddButton }: IntegrationStatusProps) => {
+export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize = 26, onDisable, disabledApps, showAll, hideAddButton, priorityCategory }: IntegrationStatusProps) => {
   const [allIntegrations, setAllIntegrations] = useState<Integration[]>([]);
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -139,6 +156,13 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
       }
 
       dedupedIntegrations.sort((a, b) => {
+        // Priority category apps first
+        if (priorityCategory) {
+          const aMatch = matchesPriorityCategory(a.name, priorityCategory);
+          const bMatch = matchesPriorityCategory(b.name, priorityCategory);
+          if (aMatch && !bMatch) return -1;
+          if (!aMatch && bMatch) return 1;
+        }
         if (a.hasValidAuth && !b.hasValidAuth) return -1;
         if (!a.hasValidAuth && b.hasValidAuth) return 1;
         if (!a.isActiveOnly && b.isActiveOnly) return -1;
@@ -152,7 +176,7 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [priorityCategory]);
 
   // Fetch on mount
   useEffect(() => {

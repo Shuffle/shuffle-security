@@ -1433,6 +1433,7 @@ export default function UsecaseAlluvialDiagram({
         title={`Add ${searchOpen === 'left' ? (sourceLabel) : (targetMeta?.label || targetCategory)} Tool`}
         subtitle="Search and authenticate an integration"
         showPipelinesBanner={isSiemSource && searchOpen === 'left'}
+        priorityCategory={searchOpen === 'left' ? (highlightCategory || sourceCategory) : targetCategory}
         onAddToCanvas={isLoggedIn ? ({ name: addedAppName, icon: addedIcon, algoliaId }) => {
           const side = searchOpen || 'right';
 
