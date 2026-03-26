@@ -40,6 +40,22 @@ interface IntegrationStatusProps {
   showAll?: boolean;
   /** Hide the Add Integration button */
   hideAddButton?: boolean;
+  /** When set, apps matching this category are sorted to the top */
+  priorityCategory?: string;
+}
+
+const PRIORITY_CATEGORY_PATTERNS: Record<string, string[]> = {
+  siem: SIEM_PATTERNS,
+  case_management: CASES_PATTERNS,
+  edr: EDR_PATTERNS,
+  email: EMAIL_APP_PATTERNS,
+};
+
+function matchesPriorityCategory(appName: string, categoryId: string): boolean {
+  const patterns = PRIORITY_CATEGORY_PATTERNS[categoryId];
+  if (!patterns) return false;
+  const lower = appName.toLowerCase();
+  return patterns.some(p => lower.includes(p));
 }
 
 /** Fire this event from anywhere to make all IntegrationStatus instances re-fetch. */
