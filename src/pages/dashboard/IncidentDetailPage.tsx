@@ -471,6 +471,9 @@ const IncidentDetailPage = () => {
   const [editedTlp, setEditedTlp] = useState('TLP:AMBER');
   const [editedReferences, setEditedReferences] = useState<string[]>([]);
   const [newReference, setNewReference] = useState('');
+  const [editedStakeholders, setEditedStakeholders] = useState<Stakeholder[]>([]);
+  const [showAddStakeholder, setShowAddStakeholder] = useState(false);
+  const [newStakeholder, setNewStakeholder] = useState<Omit<Stakeholder, 'id'>>({ name: '', type: 'technical' });
   const [editedObservables, setEditedObservables] = useState<Observable[]>([]);
   const [newObservableType, setNewObservableType] = useState('ip');
   const [newObservableValue, setNewObservableValue] = useState('');
