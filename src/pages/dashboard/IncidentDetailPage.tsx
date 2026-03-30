@@ -1387,6 +1387,7 @@ const IncidentDetailPage = () => {
       assignee: editedAssignee.trim() || '',
       tlp: editedTlp,
       references: editedReferences,
+      stakeholders: editedStakeholders,
       observables: editedObservables,
       customFields: editedCustomFields,
       activity: activity,
