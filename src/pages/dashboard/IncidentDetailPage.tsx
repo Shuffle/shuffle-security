@@ -977,6 +977,7 @@ const IncidentDetailPage = () => {
           []
         );
         setEditedObservables(parsed.observables || []);
+        setEditedStakeholders(parsed.stakeholders || []);
         const customAttrs = parsed.rawOCSF?.metadata?.extensions?.custom_attributes;
         // Support both customFields and custom_fields naming at various levels
         let loadedCustomFields: any = 
