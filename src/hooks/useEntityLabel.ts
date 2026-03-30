@@ -74,6 +74,34 @@ export function getEntityPreference(): EntityValue {
   return getSnapshot();
 }
 
+/** Save automation visibility preference */
+export async function setShowAutomation(show: boolean) {
+  localStorage.setItem(LOCAL_AUTOMATION_KEY, String(show));
+  listeners.forEach(cb => cb());
+
+  try {
+    let existing: Record<string, unknown> = {};
+    try {
+      const result = await getDatastoreItem(DATASTORE_KEY, DATASTORE_CATEGORIES.CONFIGURATION);
+      if (result.success && result.item?.value) {
+        existing = typeof result.item.value === 'string' ? JSON.parse(result.item.value) : result.item.value;
+      }
+    } catch { /* empty */ }
+    await setDatastoreItem(DATASTORE_KEY, { ...existing, show_automation: show }, DATASTORE_CATEGORIES.CONFIGURATION);
+  } catch { /* local cache is already set */ }
+}
+
+/** Hook to read automation visibility preference */
+export function useShowAutomation(): boolean {
+  const value = useSyncExternalStore(subscribe, getAutomationSnapshot);
+
+  useEffect(() => {
+    if (!_fetchedFromServer) loadEntityPreference();
+  }, []);
+
+  return value;
+}
+
 /** Returns the preferred entity labels and base path.
  *  If currently on an alias route (/alerts, /tickets, /jobs), uses that route's labels instead. */
 export function useEntityLabel() {
