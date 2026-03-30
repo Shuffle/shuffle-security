@@ -2814,9 +2814,9 @@ const IncidentDetailPage = () => {
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {/* Tasks Section - inline, no collapsible wrapper */}
           <Box sx={{ 
-            bgcolor: 'rgba(255,255,255,0.02)', 
+            bgcolor: 'hsl(var(--card))', 
             borderRadius: 2, 
-            border: '1px solid rgba(255,255,255,0.06)',
+            border: '1px solid hsl(var(--border))',
             p: 2.5,
           }}>
             {/* Progress bar */}
