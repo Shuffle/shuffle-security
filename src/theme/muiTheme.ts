@@ -102,7 +102,7 @@ export const createMuiTheme = (mode: 'light' | 'dark') => {
       success: { main: '#22c55e', light: '#4ade80', dark: '#16a34a' },
       info: { main: '#3b82f6', light: '#60a5fa', dark: '#2563eb' },
       background: {
-        default: isDark ? '#1a1a1a' : '#f0f0f0',
+        default: isDark ? '#1a1a1a' : '#fafafa',
         paper: isDark ? '#212121' : '#ffffff',
       },
       text: {
