@@ -241,6 +241,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isLoading,
         refreshUserInfo,
         setActiveOrg,
+        orgMismatchWarning,
+        dismissOrgMismatch,
       }}
     >
       {children}
