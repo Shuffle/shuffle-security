@@ -41,7 +41,7 @@ import { toast } from 'sonner';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 import { useAuth } from '@/context/AuthContext';
 import { setDatastoreItem, getDatastoreItem, DATASTORE_CATEGORIES } from '@/services/datastore';
-import { ENTITY_OPTIONS, EntityValue, setEntityPreference, useEntityPreference } from '@/hooks/useEntityLabel';
+import { ENTITY_OPTIONS, EntityValue, setEntityPreference, useEntityPreference, useShowAutomation, setShowAutomation } from '@/hooks/useEntityLabel';
 import { WeeklyScheduleTimeline, AI_AGENT_SCHEDULE } from '@/components/users/WeeklyScheduleTimeline';
 import { ScheduleImportDialog } from '@/components/users/ScheduleImportDialog';
 
