@@ -371,9 +371,9 @@ const Section = forwardRef<HTMLDivElement, {
   
   return (
     <Box ref={ref} sx={{ 
-      bgcolor: 'rgba(255,255,255,0.02)', 
+      bgcolor: 'hsl(var(--card))', 
       borderRadius: 2, 
-      border: '1px solid rgba(255,255,255,0.06)',
+      border: '1px solid hsl(var(--border))',
       overflow: 'hidden',
     }}>
       <Box 
@@ -385,7 +385,7 @@ const Section = forwardRef<HTMLDivElement, {
           px: 2.5, 
           py: 2,
           cursor: 'pointer',
-          '&:hover': { bgcolor: 'rgba(255,255,255,0.02)' },
+          '&:hover': { bgcolor: 'hsl(var(--muted))' },
         }}
       >
         <Icon sx={{ fontSize: 20, color: 'text.secondary' }} />
