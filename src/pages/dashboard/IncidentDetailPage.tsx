@@ -476,6 +476,9 @@ const IncidentDetailPage = () => {
   const [editedStakeholders, setEditedStakeholders] = useState<Stakeholder[]>([]);
   const [showAddStakeholder, setShowAddStakeholder] = useState(false);
   const [newStakeholder, setNewStakeholder] = useState<Omit<Stakeholder, 'id'>>({ name: '', type: 'technical' });
+  const [stakeholderSearch, setStakeholderSearch] = useState('');
+  const [showStakeholderSuggestions, setShowStakeholderSuggestions] = useState(false);
+  const [knownStakeholders, setKnownStakeholders] = useState<Stakeholder[]>([]);
   const [editedObservables, setEditedObservables] = useState<Observable[]>([]);
   const [newObservableType, setNewObservableType] = useState('ip');
   const [newObservableValue, setNewObservableValue] = useState('');
