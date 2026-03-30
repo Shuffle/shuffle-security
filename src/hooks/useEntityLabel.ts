@@ -12,6 +12,7 @@ export const ENTITY_OPTIONS = [
 export type EntityValue = (typeof ENTITY_OPTIONS)[number]['value'];
 
 const LOCAL_CACHE_KEY = 'shuffle-entity-label';
+const LOCAL_AUTOMATION_KEY = 'shuffle-show-automation';
 const DATASTORE_KEY = 'org_settings';
 const DEFAULT: EntityValue = 'incidents';
 
@@ -20,6 +21,10 @@ const listeners = new Set<() => void>();
 function subscribe(cb: () => void) { listeners.add(cb); return () => { listeners.delete(cb); }; }
 function getSnapshot(): EntityValue {
   return (localStorage.getItem(LOCAL_CACHE_KEY) as EntityValue) || DEFAULT;
+}
+function getAutomationSnapshot(): boolean {
+  const val = localStorage.getItem(LOCAL_AUTOMATION_KEY);
+  return val === null ? true : val === 'true';
 }
 
 let _fetchedFromServer = false;
