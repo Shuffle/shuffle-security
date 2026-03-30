@@ -1600,6 +1600,49 @@ const IncidentDetailPage = () => {
     };
   }, [incident]);
 
+  // Load known stakeholders from all incidents for autocomplete
+  useEffect(() => {
+    const loadKnownStakeholders = async () => {
+      try {
+        const res = await fetch(
+          getApiUrl(`/api/v1/datastores/${DATASTORE_CATEGORIES.INCIDENTS}?limit=200`),
+          { credentials: 'include', headers: { ...getAuthHeader(), 'Content-Type': 'application/json' } }
+        );
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data)) {
+          const all: Stakeholder[] = [];
+          const seen = new Set<string>();
+          for (const item of data.data) {
+            try {
+              const parsed = typeof item.value === 'string' ? JSON.parse(item.value) : item.value;
+              const shs = parsed?.stakeholders || parsed?.metadata?.extensions?.custom_attributes?.stakeholders || [];
+              for (const s of shs) {
+                const key = `${s.name}::${s.email || ''}`;
+                if (!seen.has(key)) {
+                  seen.add(key);
+                  all.push(s);
+                }
+              }
+            } catch { /* skip */ }
+          }
+          setKnownStakeholders(all);
+        }
+      } catch { /* silent */ }
+    };
+    loadKnownStakeholders();
+  }, []);
+
+  // Filter suggestions based on search input
+  const stakeholderSuggestions = useMemo(() => {
+    if (!stakeholderSearch.trim()) return [];
+    const q = stakeholderSearch.toLowerCase();
+    return knownStakeholders.filter(s => 
+      s.name.toLowerCase().includes(q) || 
+      (s.email && s.email.toLowerCase().includes(q)) ||
+      (s.role && s.role.toLowerCase().includes(q))
+    );
+  }, [stakeholderSearch, knownStakeholders]);
+
   // Auto-transition status to "in_progress" when any action is taken
   const autoProgressStatus = useCallback(() => {
     if (editedStatus === 'new') {
