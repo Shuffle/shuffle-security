@@ -331,6 +331,7 @@ interface Filters {
 
 const IncidentsPage = () => {
   const { plural: entityPlural, singular: entitySingular, basePath: entityBasePath } = useEntityLabel();
+  const showAutomation = useShowAutomation();
   const { userInfo } = useAuth();
   const currentUsername = userInfo?.username || '';
   const { users, loading: usersLoading } = useUsers();
