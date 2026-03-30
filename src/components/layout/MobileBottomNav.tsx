@@ -70,3 +70,5 @@ const MobileBottomNavInner = () => {
     </Box>
   );
 };
+
+export const MobileBottomNav = MobileBottomNavInner;
