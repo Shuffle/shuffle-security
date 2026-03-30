@@ -38,8 +38,11 @@ export async function loadEntityPreference() {
       const val = data?.entity_label;
       if (val && ENTITY_OPTIONS.some(o => o.value === val)) {
         localStorage.setItem(LOCAL_CACHE_KEY, val);
-        listeners.forEach(cb => cb());
       }
+      if (data?.show_automation !== undefined) {
+        localStorage.setItem(LOCAL_AUTOMATION_KEY, String(data.show_automation));
+      }
+      listeners.forEach(cb => cb());
     }
     _fetchedFromServer = true;
   } catch {
