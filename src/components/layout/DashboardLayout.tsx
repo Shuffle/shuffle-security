@@ -81,6 +81,24 @@ export const DashboardLayout = ({ children, defaultCollapsed }: DashboardLayoutP
           }}
         >
           <Box sx={{ p: { xs: 1.5, sm: 2, md: 3 }, width: '100%', maxWidth: '100%' }}>
+            {orgMismatchWarning && (
+              <Alert
+                severity="warning"
+                sx={{ mb: 2 }}
+                action={
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Button color="inherit" size="small" onClick={dismissOrgMismatch}>
+                      Dismiss
+                    </Button>
+                    <Button color="warning" size="small" variant="outlined" onClick={() => window.location.reload()}>
+                      Refresh
+                    </Button>
+                  </Box>
+                }
+              >
+                Your active organization has changed in another tab. Refresh to sync.
+              </Alert>
+            )}
             {children || <Outlet />}
           </Box>
         </Box>
