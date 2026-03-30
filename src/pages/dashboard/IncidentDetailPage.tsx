@@ -1493,10 +1493,12 @@ const IncidentDetailPage = () => {
   const obsJsonRef = useRef('');
   const cfJsonRef = useRef('');
   const labelsJsonRef = useRef('');
+  const stakeholdersJsonRef = useRef('');
   useEffect(() => { tasksJsonRef.current = JSON.stringify(tasks); }, [tasks]);
   useEffect(() => { refsJsonRef.current = JSON.stringify(editedReferences); }, [editedReferences]);
   useEffect(() => { obsJsonRef.current = JSON.stringify(editedObservables); }, [editedObservables]);
   useEffect(() => { labelsJsonRef.current = JSON.stringify(editedLabels); }, [editedLabels]);
+  useEffect(() => { stakeholdersJsonRef.current = JSON.stringify(editedStakeholders); }, [editedStakeholders]);
   useEffect(() => {
     const start = performance.now();
     cfJsonRef.current = JSON.stringify(editedCustomFields);
