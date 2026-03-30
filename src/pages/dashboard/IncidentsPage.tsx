@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef, useSyncExternalStore } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useEntityLabel } from '@/hooks/useEntityLabel';
+import { useEntityLabel, useShowAutomation } from '@/hooks/useEntityLabel';
 import AppSearchDrawer from '@/components/shared/AppSearchDrawer';
 import {
   Box,
@@ -331,6 +331,7 @@ interface Filters {
 
 const IncidentsPage = () => {
   const { plural: entityPlural, singular: entitySingular, basePath: entityBasePath } = useEntityLabel();
+  const showAutomation = useShowAutomation();
   const { userInfo } = useAuth();
   const currentUsername = userInfo?.username || '';
   const { users, loading: usersLoading } = useUsers();
@@ -1569,6 +1570,7 @@ const IncidentsPage = () => {
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
           {/* Ingestion + Forward pipeline container */}
+          {showAutomation && (
           <Box
             className="automation-pipeline"
             sx={{
@@ -1895,8 +1897,9 @@ const IncidentsPage = () => {
             </Box>
           )}
           </Box>
+          )}
 
-
+          {showAutomation && (
           <Tooltip title={(() => {
             const workflowAuto = categoryAutomations?.find(a => a.type === 'workflow' && a.enabled);
             const wfId = workflowAuto?.options?.find(o => o.key === 'workflow_id')?.value?.split(',')[0]?.trim();
@@ -1928,6 +1931,7 @@ const IncidentsPage = () => {
               <RocketLaunchIcon fontSize="small" />
             </IconButton>
           </Tooltip>
+          )}
           <Tooltip title="Refresh">
             <IconButton 
               onClick={() => { sessionStorage.removeItem('shuffle_auto_resync_done'); autoResyncQueueRef.current.clear(); fetchItems(); fetchSubOrgIncidents(); }} 

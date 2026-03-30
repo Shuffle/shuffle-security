@@ -12,6 +12,7 @@ export const ENTITY_OPTIONS = [
 export type EntityValue = (typeof ENTITY_OPTIONS)[number]['value'];
 
 const LOCAL_CACHE_KEY = 'shuffle-entity-label';
+const LOCAL_AUTOMATION_KEY = 'shuffle-show-automation';
 const DATASTORE_KEY = 'org_settings';
 const DEFAULT: EntityValue = 'incidents';
 
@@ -20,6 +21,10 @@ const listeners = new Set<() => void>();
 function subscribe(cb: () => void) { listeners.add(cb); return () => { listeners.delete(cb); }; }
 function getSnapshot(): EntityValue {
   return (localStorage.getItem(LOCAL_CACHE_KEY) as EntityValue) || DEFAULT;
+}
+function getAutomationSnapshot(): boolean {
+  const val = localStorage.getItem(LOCAL_AUTOMATION_KEY);
+  return val === null ? true : val === 'true';
 }
 
 let _fetchedFromServer = false;
@@ -33,8 +38,11 @@ export async function loadEntityPreference() {
       const val = data?.entity_label;
       if (val && ENTITY_OPTIONS.some(o => o.value === val)) {
         localStorage.setItem(LOCAL_CACHE_KEY, val);
-        listeners.forEach(cb => cb());
       }
+      if (data?.show_automation !== undefined) {
+        localStorage.setItem(LOCAL_AUTOMATION_KEY, String(data.show_automation));
+      }
+      listeners.forEach(cb => cb());
     }
     _fetchedFromServer = true;
   } catch {
@@ -64,6 +72,34 @@ export async function setEntityPreference(value: EntityValue) {
 
 export function getEntityPreference(): EntityValue {
   return getSnapshot();
+}
+
+/** Save automation visibility preference */
+export async function setShowAutomation(show: boolean) {
+  localStorage.setItem(LOCAL_AUTOMATION_KEY, String(show));
+  listeners.forEach(cb => cb());
+
+  try {
+    let existing: Record<string, unknown> = {};
+    try {
+      const result = await getDatastoreItem(DATASTORE_KEY, DATASTORE_CATEGORIES.CONFIGURATION);
+      if (result.success && result.item?.value) {
+        existing = typeof result.item.value === 'string' ? JSON.parse(result.item.value) : result.item.value;
+      }
+    } catch { /* empty */ }
+    await setDatastoreItem(DATASTORE_KEY, { ...existing, show_automation: show }, DATASTORE_CATEGORIES.CONFIGURATION);
+  } catch { /* local cache is already set */ }
+}
+
+/** Hook to read automation visibility preference */
+export function useShowAutomation(): boolean {
+  const value = useSyncExternalStore(subscribe, getAutomationSnapshot);
+
+  useEffect(() => {
+    if (!_fetchedFromServer) loadEntityPreference();
+  }, []);
+
+  return value;
 }
 
 /** Returns the preferred entity labels and base path.
