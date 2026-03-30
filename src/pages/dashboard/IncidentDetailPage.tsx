@@ -438,6 +438,7 @@ const IncidentDetailPage = () => {
   const { id: rawId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { plural: entityPlural, singular: entitySingular, basePath: entityBasePath } = useEntityLabel();
   const { userInfo } = useAuth();
   const { openApp } = useAppDetail();
   const currentUsername = userInfo?.username || '';
