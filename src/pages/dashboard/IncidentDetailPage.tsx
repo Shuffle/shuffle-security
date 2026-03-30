@@ -794,6 +794,7 @@ const IncidentDetailPage = () => {
     observables: string;
     customFields: string;
     tasks: string;
+    stakeholders: string;
     labels: string;
   } | null>(null);
   
