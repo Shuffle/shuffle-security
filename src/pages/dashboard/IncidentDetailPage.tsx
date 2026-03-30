@@ -1549,7 +1549,7 @@ const IncidentDetailPage = () => {
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [incident, editedTitle, editedMessage, editedSeverity, editedAssignee, editedStatus, editedTlp, editedReferences, editedObservables, editedCustomFields, editedLabels, tasks, saveToDatastore]);
+  }, [incident, editedTitle, editedMessage, editedSeverity, editedAssignee, editedStatus, editedTlp, editedReferences, editedObservables, editedCustomFields, editedLabels, editedStakeholders, tasks, saveToDatastore]);
 
   // Metrics calculation with MTTD and MTTR
   const metrics = useMemo(() => {
