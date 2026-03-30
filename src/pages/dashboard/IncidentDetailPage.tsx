@@ -1062,6 +1062,7 @@ const IncidentDetailPage = () => {
           references: refsStr,
           observables: obsStr,
           customFields: cfStr,
+          stakeholders: stakeholdersStr,
           tasks: tasksStr,
           labels: labelsStr,
         };
