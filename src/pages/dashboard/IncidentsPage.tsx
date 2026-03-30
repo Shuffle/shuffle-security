@@ -1560,7 +1560,7 @@ const IncidentsPage = () => {
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Typography variant="h5" sx={{ fontWeight: 600, fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
-            Incidents
+            {entityPlural}
           </Typography>
           {(isLoading || subOrgLoading.size > 0) && <CircularProgress size={20} />}
           {error && (
