@@ -1049,6 +1049,7 @@ const IncidentDetailPage = () => {
         // Pre-stringify here (once) so auto-save comparisons are cheap
         const refsStr = JSON.stringify(parsed.references || []);
         const obsStr = JSON.stringify(parsed.observables || []);
+        const stakeholdersStr = JSON.stringify(parsed.stakeholders || []);
         const tasksStr = JSON.stringify(normalizedTasks);
         const labelsStr = JSON.stringify(parsed.labels || []);
         initialValuesRef.current = {
