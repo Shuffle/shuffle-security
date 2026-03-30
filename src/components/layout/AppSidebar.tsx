@@ -44,6 +44,7 @@ import { SHUFFLE_AUTOMATION_URL } from '@/config/api';
 import { IntegrationStatus } from './IntegrationStatus';
 import { SidebarSearchDialog } from './SidebarSearchDialog';
 import AgentPermissionsDrawer from '@/components/agent/AgentPermissionsDrawer';
+import { useEntityPreference } from '@/hooks/useEntityLabel';
 
 const drawerWidth = 260;
 const collapsedWidth = 64;
