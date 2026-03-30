@@ -1464,7 +1464,7 @@ const IncidentsPage = () => {
                 <RefreshIcon fontSize="small" sx={isRefreshing ? { animation: 'spin 1s linear infinite', '@keyframes spin': { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } } } : undefined} />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Create Incident">
+            <Tooltip title={`Create ${entitySingular}`}>
               <IconButton 
                 onClick={() => setCreateDialogOpen(true)}
                 sx={{ 
