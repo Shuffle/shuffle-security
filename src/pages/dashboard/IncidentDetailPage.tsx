@@ -2127,7 +2127,7 @@ const IncidentDetailPage = () => {
         {/* Back link */}
         <Box 
           component={Link}
-          to="/incidents"
+          to={entityBasePath}
           sx={{ 
             display: 'inline-flex', 
             alignItems: 'center', 
@@ -2139,7 +2139,7 @@ const IncidentDetailPage = () => {
           }}
         >
           <ArrowBackIcon sx={{ fontSize: 18 }} />
-          <Typography variant="body2">Back to Incidents</Typography>
+          <Typography variant="body2">Back to {entityPlural}</Typography>
         </Box>
 
         {/* Multi-org / Cross-org banner */}
