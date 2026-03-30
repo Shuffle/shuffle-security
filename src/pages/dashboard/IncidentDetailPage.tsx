@@ -289,6 +289,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
         editedTs: item.edited ? parseTimestamp(item.edited) : undefined,
         tlp: tlpLabel,
         references: ocsf.references,
+        stakeholders: customAttrs?.stakeholders || (data as any).stakeholders || [],
         observables: customAttrs?.observables || (data as any).observables,
         // Support both customFields and custom_fields naming
         customFields: customAttrs?.customFields || (customAttrs as any)?.custom_fields || (data as any).customFields || (data as any).custom_fields,
