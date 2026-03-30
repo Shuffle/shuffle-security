@@ -349,6 +349,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
       tlp: data.tlp,
       pap: data.pap,
       references: data.references || [],
+      stakeholders: data.stakeholders || [],
       observables: data.observables || [],
       customFields: data.customFields || {},
       relatedFindings: data.relatedFindings || [],
