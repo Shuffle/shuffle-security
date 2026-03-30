@@ -7,9 +7,9 @@
 @layer base {
   :root {
     /* Core backgrounds - Light theme (default) */
-    --background: 0 0% 98%;
+    --background: 0 0% 94%;
     --background-elevated: 0 0% 100%;
-    --background-surface: 0 0% 96%;
+    --background-surface: 0 0% 92%;
     
     --foreground: 0 0% 9%;
     --foreground-muted: 0 0% 40%;
