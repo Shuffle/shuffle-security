@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import shuffleInfraLogo from '@/assets/shuffle-infrastructure-logo.png';
 import { useLocation, Link } from 'react-router-dom';
 import {
@@ -44,6 +44,7 @@ import { SHUFFLE_AUTOMATION_URL } from '@/config/api';
 import { IntegrationStatus } from './IntegrationStatus';
 import { SidebarSearchDialog } from './SidebarSearchDialog';
 import AgentPermissionsDrawer from '@/components/agent/AgentPermissionsDrawer';
+import { useEntityPreference } from '@/hooks/useEntityLabel';
 
 const drawerWidth = 260;
 const collapsedWidth = 64;
@@ -63,11 +64,11 @@ interface NavItem {
   children?: NavChild[];
 }
 
-const navItems: NavItem[] = [
+const buildNavItems = (entityLabel: string, entityPath: string): NavItem[] => [
   { 
-    label: 'Incidents', 
+    label: entityLabel, 
     icon: <WarningAmberIcon />,
-    path: '/incidents',
+    path: entityPath,
     children: [
       { label: 'Threat Feeds', path: '/incidents/threat-feeds', icon: <RssFeedIcon fontSize="small" /> },
       { label: 'IOC Types', path: '/incidents/ioc-types', icon: <FingerprintIcon fontSize="small" /> },
@@ -158,7 +159,9 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
   const location = useLocation();
   const { userInfo, setActiveOrg, logout } = useAuth();
   const { theme: currentTheme, setTheme } = useTheme();
-  const [expandedItems, setExpandedItems] = useState<string[]>(['Incidents']);
+  const { plural: entityPlural, basePath: entityBasePath } = useEntityPreference();
+  const navItems = useMemo(() => buildNavItems(entityPlural, entityBasePath), [entityPlural, entityBasePath]);
+  const [expandedItems, setExpandedItems] = useState<string[]>([entityPlural]);
   const [changingOrg, setChangingOrg] = useState(false);
   const [agentDrawerOpen, setAgentDrawerOpen] = useState(false);
   const [toolMenuAnchor, setToolMenuAnchor] = useState<null | HTMLElement>(null);
