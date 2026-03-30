@@ -1600,29 +1600,33 @@ const IncidentDetailPage = () => {
     };
   }, [incident]);
 
-  // Load known stakeholders from all incidents for autocomplete
+  // Load known stakeholders from the users datastore for autocomplete
   useEffect(() => {
     const loadKnownStakeholders = async () => {
       try {
         const res = await fetch(
-          getApiUrl(`/api/v1/datastores/${DATASTORE_CATEGORIES.INCIDENTS}?limit=200`),
+          getApiUrl(`/api/v1/datastores/${DATASTORE_CATEGORIES.USERS}?limit=500`),
           { credentials: 'include', headers: { ...getAuthHeader(), 'Content-Type': 'application/json' } }
         );
         const data = await res.json();
         if (data.success && Array.isArray(data.data)) {
           const all: Stakeholder[] = [];
-          const seen = new Set<string>();
           for (const item of data.data) {
             try {
               const parsed = typeof item.value === 'string' ? JSON.parse(item.value) : item.value;
-              const shs = parsed?.stakeholders || parsed?.metadata?.extensions?.custom_attributes?.stakeholders || [];
-              for (const s of shs) {
-                const key = `${s.name}::${s.email || ''}`;
-                if (!seen.has(key)) {
-                  seen.add(key);
-                  all.push(s);
-                }
-              }
+              // Only show external stakeholders (not internal platform users)
+              const customAttrs = parsed?.metadata?.extensions?.custom_attributes;
+              const isExternal = customAttrs?.external === true;
+              if (!isExternal) continue;
+              all.push({
+                id: item.key || parsed?.user?.uid || `sh-${Date.now()}`,
+                name: parsed?.user?.name || item.key,
+                email: customAttrs?.email || '',
+                type: customAttrs?.stakeholder_type || 'technical',
+                role: parsed?.actor?.user?.type || '',
+                location: customAttrs?.location || '',
+                phone: customAttrs?.phone || '',
+              });
             } catch { /* skip */ }
           }
           setKnownStakeholders(all);
@@ -1630,6 +1634,52 @@ const IncidentDetailPage = () => {
       } catch { /* silent */ }
     };
     loadKnownStakeholders();
+  }, []);
+
+  // Save a stakeholder to the users datastore (OCSF format)
+  const saveStakeholderToRegistry = useCallback(async (s: Stakeholder) => {
+    const key = s.email || s.name.toLowerCase().replace(/\s+/g, '_');
+    const ocsfUser = {
+      class_uid: 3002,
+      class_name: 'Authentication',
+      category_uid: 3,
+      is_mfa: false,
+      user: {
+        name: s.name,
+        uid: key,
+      },
+      org: {
+        name: '',
+      },
+      actor: {
+        user: {
+          type: s.role || '',
+        },
+      },
+      status: 'Success',
+      status_id: 1,
+      metadata: {
+        version: '1.0.0',
+        product: {
+          name: 'Shuffle',
+          vendor_name: 'Shuffle',
+        },
+        extensions: {
+          custom_attributes: {
+            external: true,
+            stakeholder_type: s.type,
+            email: s.email || '',
+            location: s.location || '',
+            phone: s.phone || '',
+          },
+        },
+      },
+    };
+    try {
+      await setDatastoreItem(key, ocsfUser, DATASTORE_CATEGORIES.USERS);
+    } catch (err) {
+      console.warn('[Stakeholder] Failed to save to registry:', err);
+    }
   }, []);
 
   // Filter suggestions based on search input
@@ -3937,6 +3987,7 @@ const IncidentDetailPage = () => {
                         phone: newStakeholder.phone || undefined,
                       };
                       setEditedStakeholders([...editedStakeholders, stakeholder]);
+                      saveStakeholderToRegistry(stakeholder);
                       setNewStakeholder({ name: '', type: 'technical' });
                       setShowAddStakeholder(false);
                       setStakeholderSearch('');
