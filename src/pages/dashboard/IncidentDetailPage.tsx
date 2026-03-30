@@ -115,6 +115,7 @@ interface DisplayIncident {
   tlp?: string;
   pap?: string;
   references?: string[];
+  stakeholders?: Stakeholder[];
   observables?: Observable[];
   customFields?: Record<string, string | number | boolean>;
   relatedFindings?: string[];
