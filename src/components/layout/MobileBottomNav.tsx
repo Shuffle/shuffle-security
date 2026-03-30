@@ -4,13 +4,17 @@ import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import RadarIcon from '@mui/icons-material/Radar';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { Activity } from 'lucide-react';
+import { useEntityPreference } from '@/hooks/useEntityLabel';
 
-const navItems = [
-  { label: 'Incidents', icon: <WarningAmberIcon sx={{ fontSize: 22 }} />, path: '/incidents' },
-  { label: 'Automation', icon: <Activity size={20} />, path: '/usecases' },
-  { label: 'Detection', icon: <RadarIcon sx={{ fontSize: 22 }} />, path: '/detection' },
-  { label: 'Settings', icon: <SettingsIcon sx={{ fontSize: 22 }} />, path: '/settings' },
-];
+const MobileBottomNavInner = () => {
+  const { plural: entityPlural, basePath: entityBasePath } = useEntityPreference();
+
+  const navItems = [
+    { label: entityPlural, icon: <WarningAmberIcon sx={{ fontSize: 22 }} />, path: entityBasePath },
+    { label: 'Automation', icon: <Activity size={20} />, path: '/usecases' },
+    { label: 'Detection', icon: <RadarIcon sx={{ fontSize: 22 }} />, path: '/detection' },
+    { label: 'Settings', icon: <SettingsIcon sx={{ fontSize: 22 }} />, path: '/settings' },
+  ];
 
 export const MobileBottomNav = () => {
   const location = useLocation();
