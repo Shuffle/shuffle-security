@@ -3987,6 +3987,7 @@ const IncidentDetailPage = () => {
                         phone: newStakeholder.phone || undefined,
                       };
                       setEditedStakeholders([...editedStakeholders, stakeholder]);
+                      saveStakeholderToRegistry(stakeholder);
                       setNewStakeholder({ name: '', type: 'technical' });
                       setShowAddStakeholder(false);
                       setStakeholderSearch('');
