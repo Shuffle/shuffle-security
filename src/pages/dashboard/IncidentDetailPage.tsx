@@ -39,6 +39,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import SecurityIcon from '@mui/icons-material/Security';
 import LinkIcon from '@mui/icons-material/Link';
+import PeopleIcon from '@mui/icons-material/People';
 import SettingsIcon from '@mui/icons-material/Settings';
 import DescriptionIcon from '@mui/icons-material/Description';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
