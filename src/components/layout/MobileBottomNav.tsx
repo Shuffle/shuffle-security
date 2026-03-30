@@ -16,7 +16,6 @@ const MobileBottomNavInner = () => {
     { label: 'Settings', icon: <SettingsIcon sx={{ fontSize: 22 }} />, path: '/settings' },
   ];
 
-export const MobileBottomNav = () => {
   const location = useLocation();
 
   const isActive = (path: string) => {
