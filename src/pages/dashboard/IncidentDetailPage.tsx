@@ -2605,9 +2605,9 @@ const IncidentDetailPage = () => {
               alignItems: 'center',
               gap: 0.5, 
               p: 0.5, 
-              bgcolor: 'rgba(255,255,255,0.03)', 
+              bgcolor: 'hsl(var(--card))', 
               borderRadius: 2,
-              border: '1px solid rgba(255,255,255,0.06)',
+              border: '1px solid hsl(var(--border))',
               overflowX: 'auto',
               WebkitOverflowScrolling: 'touch',
               '&::-webkit-scrollbar': { display: 'none' },
@@ -2671,9 +2671,9 @@ const IncidentDetailPage = () => {
               alignItems: 'center', 
               gap: 0.5, 
               p: 0.5,
-              bgcolor: 'rgba(255,255,255,0.03)',
+              bgcolor: 'hsl(var(--card))',
               borderRadius: 2,
-              border: '1px solid rgba(255,255,255,0.06)',
+              border: '1px solid hsl(var(--border))',
               flexShrink: 0,
             }}>
               {/* Original tab - always visible, disabled when no data */}
@@ -2814,9 +2814,9 @@ const IncidentDetailPage = () => {
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {/* Tasks Section - inline, no collapsible wrapper */}
           <Box sx={{ 
-            bgcolor: 'rgba(255,255,255,0.02)', 
+            bgcolor: 'hsl(var(--card))', 
             borderRadius: 2, 
-            border: '1px solid rgba(255,255,255,0.06)',
+            border: '1px solid hsl(var(--border))',
             p: 2.5,
           }}>
             {/* Progress bar */}
@@ -3704,9 +3704,9 @@ const IncidentDetailPage = () => {
       {activeTab === 2 && (
         /* Observables Tab */
         <Box sx={{ 
-          bgcolor: 'rgba(255,255,255,0.02)', 
+          bgcolor: 'hsl(var(--card))', 
           borderRadius: 2, 
-          border: '1px solid rgba(255,255,255,0.06)',
+          border: '1px solid hsl(var(--border))',
           p: 2.5,
         }}>
           {/* Auto-ingestion note */}
@@ -3862,9 +3862,9 @@ const IncidentDetailPage = () => {
       {activeTab === 3 && (
         /* Correlations Tab */
         <Box sx={{
-          bgcolor: 'rgba(255,255,255,0.02)', 
+          bgcolor: 'hsl(var(--card))', 
           borderRadius: 2, 
-          border: '1px solid rgba(255,255,255,0.06)',
+          border: '1px solid hsl(var(--border))',
           p: 2.5,
         }}>
           {correlationsLoading ? (
