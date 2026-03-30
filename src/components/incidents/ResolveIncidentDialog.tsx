@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -12,12 +12,16 @@ import {
   TextField,
   Box,
   Typography,
+  Switch,
+  FormControlLabel,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { useCustomFields, CustomField } from '@/hooks/useCustomFields';
 
 export interface ResolutionData {
   reason: string;
   notes: string;
+  customFieldValues?: Record<string, string>;
 }
 
 const RESOLUTION_REASONS = [
@@ -37,6 +41,8 @@ interface ResolveIncidentDialogProps {
   onResolve: (data: ResolutionData) => void;
   incidentTitle: string;
   isLoading?: boolean;
+  /** Current incident's custom field values — fields that already have a value are hidden */
+  incidentCustomFields?: Record<string, string>;
 }
 
 export const ResolveIncidentDialog = React.forwardRef<HTMLDivElement, ResolveIncidentDialogProps>(({
@@ -45,19 +51,126 @@ export const ResolveIncidentDialog = React.forwardRef<HTMLDivElement, ResolveInc
   onResolve,
   incidentTitle,
   isLoading = false,
+  incidentCustomFields = {},
 }, _ref) => {
   const [reason, setReason] = useState('');
   const [notes, setNotes] = useState('');
+  const [customValues, setCustomValues] = useState<Record<string, string>>({});
+  const { fields: allCustomFields } = useCustomFields();
+
+  // Filter to only required fields that don't already have a value on the incident
+  const missingRequiredFields = allCustomFields.filter(
+    (f) => f.required && !incidentCustomFields?.[f.key]?.trim()
+  );
+
+  // Reset state when dialog opens
+  useEffect(() => {
+    if (open) {
+      setReason('');
+      setNotes('');
+      setCustomValues({});
+    }
+  }, [open]);
+
+  const allRequiredFilled = missingRequiredFields.every((f) => {
+    const val = customValues[f.key];
+    if (f.type === 'boolean') return true; // booleans always have a value
+    return val && val.trim().length > 0;
+  });
+
+  const canResolve = !!reason && allRequiredFilled;
 
   const handleResolve = () => {
-    if (!reason) return;
-    onResolve({ reason, notes: notes.trim() });
+    if (!canResolve) return;
+    onResolve({
+      reason,
+      notes: notes.trim(),
+      customFieldValues: missingRequiredFields.length > 0 ? customValues : undefined,
+    });
   };
 
   const handleClose = () => {
     setReason('');
     setNotes('');
+    setCustomValues({});
     onClose();
+  };
+
+  const updateCustomValue = (key: string, value: string) => {
+    setCustomValues((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const renderCustomField = (field: CustomField) => {
+    const value = customValues[field.key] || '';
+
+    switch (field.type) {
+      case 'select':
+        return (
+          <FormControl fullWidth sx={{ mb: 2, ...inputSx }} key={field.key}>
+            <InputLabel>{field.name} *</InputLabel>
+            <Select
+              value={value}
+              onChange={(e) => updateCustomValue(field.key, e.target.value)}
+              label={`${field.name} *`}
+            >
+              {(field.options || []).map((opt) => (
+                <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        );
+      case 'boolean':
+        return (
+          <FormControlLabel
+            key={field.key}
+            sx={{ mb: 2, ml: 0 }}
+            control={
+              <Switch
+                checked={value === 'true'}
+                onChange={(e) => updateCustomValue(field.key, String(e.target.checked))}
+              />
+            }
+            label={field.name}
+          />
+        );
+      case 'number':
+        return (
+          <TextField
+            key={field.key}
+            fullWidth
+            type="number"
+            label={`${field.name} *`}
+            value={value}
+            onChange={(e) => updateCustomValue(field.key, e.target.value)}
+            sx={{ mb: 2, ...inputSx }}
+          />
+        );
+      case 'date':
+        return (
+          <TextField
+            key={field.key}
+            fullWidth
+            type="date"
+            label={`${field.name} *`}
+            value={value}
+            onChange={(e) => updateCustomValue(field.key, e.target.value)}
+            InputLabelProps={{ shrink: true }}
+            sx={{ mb: 2, ...inputSx }}
+          />
+        );
+      default:
+        return (
+          <TextField
+            key={field.key}
+            fullWidth
+            label={`${field.name} *`}
+            placeholder={field.description || ''}
+            value={value}
+            onChange={(e) => updateCustomValue(field.key, e.target.value)}
+            sx={{ mb: 2, ...inputSx }}
+          />
+        );
+    }
   };
 
   const inputSx = {
@@ -108,6 +221,15 @@ export const ResolveIncidentDialog = React.forwardRef<HTMLDivElement, ResolveInc
           </Select>
         </FormControl>
 
+        {missingRequiredFields.length > 0 && (
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+              Required fields must be filled before resolving
+            </Typography>
+            {missingRequiredFields.map(renderCustomField)}
+          </Box>
+        )}
+
         <TextField
           fullWidth
           multiline
@@ -127,7 +249,7 @@ export const ResolveIncidentDialog = React.forwardRef<HTMLDivElement, ResolveInc
         <Button
           variant="contained"
           onClick={handleResolve}
-          disabled={!reason || isLoading}
+          disabled={!canResolve || isLoading}
           startIcon={<CheckCircleIcon />}
           sx={{
             bgcolor: 'hsl(var(--severity-low))',

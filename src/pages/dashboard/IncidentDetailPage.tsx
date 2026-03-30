@@ -4794,6 +4794,13 @@ const IncidentDetailPage = () => {
         onResolve={handleResolve}
         incidentTitle={incident?.title || ''}
         isLoading={isSaving}
+        incidentCustomFields={
+          incident?.customFields
+            ? Object.fromEntries(
+                Object.entries(incident.customFields).map(([k, v]) => [k, String(v ?? '')])
+              )
+            : {}
+        }
       />
 
       {/* Forward Dialog */}
