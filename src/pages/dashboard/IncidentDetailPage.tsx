@@ -3853,47 +3853,8 @@ const IncidentDetailPage = () => {
             ) : null;
           })()}
 
-          {/* References */}
-          <Section 
-            title="References" 
-            icon={LinkIcon} 
-            defaultOpen={editedReferences.length > 0}
-            badge={editedReferences.length > 0 ? editedReferences.length : undefined}
-          >
-            <Box sx={{ display: 'flex', gap: 1, mb: 1.5 }}>
-              <TextField
-                size="small"
-                value={newReference}
-                onChange={(e) => setNewReference(e.target.value)}
-                placeholder="https://example.com/reference"
-                fullWidth
-                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddReference())}
-                sx={inputSx}
-              />
-              <IconButton onClick={handleAddReference} disabled={!newReference.trim()} sx={{ bgcolor: 'hsl(var(--muted))' }}>
-                <AddIcon />
-              </IconButton>
-            </Box>
-            {editedReferences.length > 0 ? (
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                {editedReferences.map((ref, idx) => (
-                  <Chip
-                    key={idx}
-                    label={ref.length > 50 ? ref.substring(0, 50) + '...' : ref}
-                    size="small"
-                    icon={<LinkIcon sx={{ fontSize: 14 }} />}
-                    onDelete={() => handleRemoveReference(idx)}
-                    onClick={() => window.open(ref, '_blank')}
-                    sx={{ cursor: 'pointer' }}
-                  />
-                ))}
-              </Box>
-            ) : (
-              <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
-                No references added
-              </Typography>
-            )}
-          </Section>
+
+
 
           {/* Stakeholders - Always visible, prominent */}
           <Box sx={{ 
