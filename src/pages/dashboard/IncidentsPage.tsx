@@ -1897,8 +1897,9 @@ const IncidentsPage = () => {
             </Box>
           )}
           </Box>
+          )}
 
-
+          {showAutomation && (
           <Tooltip title={(() => {
             const workflowAuto = categoryAutomations?.find(a => a.type === 'workflow' && a.enabled);
             const wfId = workflowAuto?.options?.find(o => o.key === 'workflow_id')?.value?.split(',')[0]?.trim();
@@ -1930,6 +1931,7 @@ const IncidentsPage = () => {
               <RocketLaunchIcon fontSize="small" />
             </IconButton>
           </Tooltip>
+          )}
           <Tooltip title="Refresh">
             <IconButton 
               onClick={() => { sessionStorage.removeItem('shuffle_auto_resync_done'); autoResyncQueueRef.current.clear(); fetchItems(); fetchSubOrgIncidents(); }} 
