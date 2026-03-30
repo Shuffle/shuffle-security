@@ -4034,7 +4034,6 @@ const IncidentDetailPage = () => {
           </Section>
         </Box>
       )}
-      )}
 
       {activeTab === 2 && (
         /* Observables Tab */
