@@ -1447,8 +1447,8 @@ const IncidentsPage = () => {
       >
         {/* Header */}
         <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="h5" sx={{ fontWeight: 600 }}>
-            Incidents
+           <Typography variant="h5" sx={{ fontWeight: 600 }}>
+            {entityPlural}
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Tooltip title="Refresh">
