@@ -1430,6 +1430,7 @@ const IncidentDetailPage = () => {
         observables: obsJsonRef.current,
         customFields: cfJsonRef.current,
         tasks: tasksJsonRef.current,
+        stakeholders: stakeholdersJsonRef.current,
         labels: labelsJsonRef.current,
       };
 
