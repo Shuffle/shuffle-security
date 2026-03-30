@@ -1355,7 +1355,8 @@ const IncidentDetailPage = () => {
       status: statusLabel,
       assignee: editedAssignee.trim() || '',
       types: editedLabels, // OCSF types[] field for labels
-      observables: editedObservables, // Always include, even if empty array
+      observables: editedObservables,
+      stakeholders: editedStakeholders,
       // Store tasks and activity at top level (primary location)
       tasks: tasks, // Always include, even if empty array
       activity: activity, // Always include, even if empty array
