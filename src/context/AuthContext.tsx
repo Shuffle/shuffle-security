@@ -123,6 +123,40 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     verifyAuth();
   }, [fetchUserInfo]);
 
+  // Re-check org on tab focus to detect out-of-band org switches
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState !== 'visible') return;
+
+      try {
+        const response = await fetch(getApiUrl('/api/v1/getinfo'), {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            ...getAuthHeader(),
+            'Content-Type': 'application/json',
+          },
+        });
+        const data = await response.json();
+        if (response.ok && data.success === true) {
+          const remoteOrgId = data.active_org?.id;
+          const localOrgId = userInfo?.active_org?.id;
+          if (remoteOrgId && localOrgId && remoteOrgId !== localOrgId) {
+            console.warn(`[Auth] Org mismatch detected: local=${localOrgId}, remote=${remoteOrgId}`);
+            setOrgMismatchWarning(true);
+          }
+        }
+      } catch (err) {
+        console.error('[Auth] Visibility getinfo check failed:', err);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [isAuthenticated, userInfo?.active_org?.id]);
+
   const login = useCallback(async (token: string) => {
     // Clear any existing API key — session login and API key auth are mutually exclusive
     API_CONFIG.setApiKey(null);
