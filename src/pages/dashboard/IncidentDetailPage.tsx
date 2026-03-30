@@ -102,6 +102,17 @@ import HighlightedFileEditor from '@/components/incidents/HighlightedFileEditor'
 
 // TaskTemplate interface is now imported from useCaseTemplates
 
+export interface Stakeholder {
+  id: string;
+  name: string;
+  email?: string;
+  type: 'technical' | 'business';
+  role?: string;
+  location?: string;
+  phone?: string;
+}
+
+
 interface DisplayIncident {
   id: string;
   title?: string;
