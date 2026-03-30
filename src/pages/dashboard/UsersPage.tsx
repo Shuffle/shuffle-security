@@ -106,6 +106,31 @@ interface User {
 const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const generateId = () => Math.random().toString(36).substring(2, 12);
 
+const TerminologySelector = () => {
+  const { value } = useEntityPreference();
+  return (
+    <Box sx={{ display: 'flex', gap: 1 }}>
+      {ENTITY_OPTIONS.map((opt) => (
+        <Chip
+          key={opt.value}
+          label={opt.plural}
+          onClick={() => setEntityPreference(opt.value)}
+          variant={value === opt.value ? 'filled' : 'outlined'}
+          sx={{
+            fontWeight: value === opt.value ? 600 : 400,
+            bgcolor: value === opt.value ? 'hsl(var(--primary))' : 'transparent',
+            color: value === opt.value ? 'hsl(var(--primary-foreground))' : 'hsl(var(--foreground))',
+            borderColor: 'hsl(var(--border))',
+            '&:hover': {
+              bgcolor: value === opt.value ? 'hsl(var(--primary))' : 'hsl(var(--primary) / 0.1)',
+            },
+          }}
+        />
+      ))}
+    </Box>
+  );
+};
+
 // Generate a default schedule (Mon-Fri 9-17, for the next year)
 const createDefaultSchedule = (): ScheduleEntry => ({
   id: generateId(),
