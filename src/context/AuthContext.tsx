@@ -28,6 +28,8 @@ interface AuthContextType {
   isLoading: boolean;
   refreshUserInfo: () => Promise<void>;
   setActiveOrg: (orgId: string) => Promise<void>;
+  orgMismatchWarning: boolean;
+  dismissOrgMismatch: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
