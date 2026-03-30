@@ -1398,21 +1398,31 @@ const IncidentsPage = () => {
     await fetchItems();
   }, [selectedIds, incidents, currentUsername, fetchItems]);
 
-  const isDefaultFilter = !filters.severity && 
-    !filters.tlp && 
-    !filters.source &&
-    !filters.tag &&
-    negatedFilters.size === 0 &&
-    !dateFrom && !dateTo &&
-    (parentOrg
-      ? (filters.org?.length === 1 && filters.org[0] === currentOrgId)
-      : (!filters.org || filters.org.length === 0)) &&
-    filters.assignee === null && 
-    !searchQuery.trim() &&
-    Array.isArray(filters.status) && 
-    filters.status.length === 2 && 
-    filters.status.includes('new') && 
-    filters.status.includes('in_progress');
+  const isDefaultFilter = useMemo(() => {
+    if (filters.severity || filters.tlp || filters.source || filters.tag) return false;
+    if (negatedFilters.size > 0 || dateFrom || dateTo) return false;
+    if (filters.assignee !== null || searchQuery.trim()) return false;
+    if (!Array.isArray(filters.status) || filters.status.length !== 2 || !filters.status.includes('new') || !filters.status.includes('in_progress')) return false;
+
+    // Org filter check
+    if (isParentOrg) {
+      // Default = all orgs selected
+      const allIds = new Set([
+        currentOrgId || '',
+        ...subOrgs.filter(o => o.id !== currentOrgId).map(o => o.id),
+      ]);
+      if (parentOrg && parentOrg.id !== currentOrgId) allIds.add(parentOrg.id);
+      const currentOrgs = new Set(filters.org || []);
+      if (currentOrgs.size !== allIds.size) return false;
+      for (const id of allIds) { if (!currentOrgs.has(id)) return false; }
+    } else if (isChildOrg) {
+      if (!filters.org || filters.org.length !== 1 || filters.org[0] !== currentOrgId) return false;
+    } else {
+      if (filters.org && filters.org.length > 0) return false;
+    }
+
+    return true;
+  }, [filters, negatedFilters, dateFrom, dateTo, searchQuery, isParentOrg, isChildOrg, currentOrgId, subOrgs, parentOrg]);
 
   // Collect unique tags across all active incidents for the filter UI
   const allTags = useMemo(() => {
