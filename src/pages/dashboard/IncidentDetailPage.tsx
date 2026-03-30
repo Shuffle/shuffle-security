@@ -3689,14 +3689,18 @@ const IncidentDetailPage = () => {
             ) : null;
           })()}
 
-          {/* References */}
+          {/* References & Stakeholders */}
           <Section 
-            title="References" 
-            icon={LinkIcon} 
-            defaultOpen={editedReferences.length > 0}
-            badge={editedReferences.length > 0 ? editedReferences.length : undefined}
+            title="References & Stakeholders" 
+            icon={PeopleIcon} 
+            defaultOpen={editedReferences.length > 0 || editedStakeholders.length > 0}
+            badge={(editedReferences.length + editedStakeholders.length) > 0 ? editedReferences.length + editedStakeholders.length : undefined}
           >
-            <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+            {/* Reference Links */}
+            <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1, display: 'block' }}>
+              Reference Links
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 1, mb: 1.5 }}>
               <TextField
                 size="small"
                 value={newReference}
@@ -3706,17 +3710,18 @@ const IncidentDetailPage = () => {
                 onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddReference())}
                 sx={inputSx}
               />
-              <IconButton onClick={handleAddReference} disabled={!newReference.trim()} sx={{ bgcolor: 'rgba(255,255,255,0.05)' }}>
+              <IconButton onClick={handleAddReference} disabled={!newReference.trim()} sx={{ bgcolor: 'hsl(var(--muted))' }}>
                 <AddIcon />
               </IconButton>
             </Box>
             {editedReferences.length > 0 ? (
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2.5 }}>
                 {editedReferences.map((ref, idx) => (
                   <Chip
                     key={idx}
                     label={ref.length > 50 ? ref.substring(0, 50) + '...' : ref}
                     size="small"
+                    icon={<LinkIcon sx={{ fontSize: 14 }} />}
                     onDelete={() => handleRemoveReference(idx)}
                     onClick={() => window.open(ref, '_blank')}
                     sx={{ cursor: 'pointer' }}
@@ -3724,10 +3729,196 @@ const IncidentDetailPage = () => {
                 ))}
               </Box>
             ) : (
-              <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
+              <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic', mb: 2.5 }}>
                 No references added
               </Typography>
             )}
+
+            <Divider sx={{ mb: 2 }} />
+
+            {/* Stakeholders */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+              <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Stakeholders
+              </Typography>
+              {!isPublicView && (
+                <IconButton size="small" onClick={() => setShowAddStakeholder(!showAddStakeholder)} sx={{ bgcolor: 'hsl(var(--muted))' }}>
+                  <AddIcon sx={{ fontSize: 16 }} />
+                </IconButton>
+              )}
+            </Box>
+
+            {/* Add stakeholder form */}
+            <Collapse in={showAddStakeholder}>
+              <Box sx={{ 
+                p: 2, mb: 2, borderRadius: 1.5, 
+                bgcolor: 'hsl(var(--muted))', 
+                border: '1px solid hsl(var(--border))',
+                display: 'flex', flexDirection: 'column', gap: 1.5,
+              }}>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <TextField
+                    size="small"
+                    label="Name"
+                    value={newStakeholder.name}
+                    onChange={(e) => setNewStakeholder(s => ({ ...s, name: e.target.value }))}
+                    fullWidth
+                    sx={inputSx}
+                  />
+                  <FormControl size="small" sx={{ minWidth: 130 }}>
+                    <InputLabel>Type</InputLabel>
+                    <Select
+                      value={newStakeholder.type}
+                      label="Type"
+                      onChange={(e) => setNewStakeholder(s => ({ ...s, type: e.target.value as 'technical' | 'business' }))}
+                    >
+                      <MenuItem value="technical">Technical</MenuItem>
+                      <MenuItem value="business">Business</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Box>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <TextField
+                    size="small"
+                    label="Email"
+                    value={newStakeholder.email || ''}
+                    onChange={(e) => setNewStakeholder(s => ({ ...s, email: e.target.value }))}
+                    fullWidth
+                    sx={inputSx}
+                  />
+                  <TextField
+                    size="small"
+                    label="Role"
+                    value={newStakeholder.role || ''}
+                    onChange={(e) => setNewStakeholder(s => ({ ...s, role: e.target.value }))}
+                    fullWidth
+                    sx={inputSx}
+                    placeholder="e.g. CISO, Dev Lead"
+                  />
+                </Box>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <TextField
+                    size="small"
+                    label="Location"
+                    value={newStakeholder.location || ''}
+                    onChange={(e) => setNewStakeholder(s => ({ ...s, location: e.target.value }))}
+                    fullWidth
+                    sx={inputSx}
+                  />
+                  <TextField
+                    size="small"
+                    label="Phone"
+                    value={newStakeholder.phone || ''}
+                    onChange={(e) => setNewStakeholder(s => ({ ...s, phone: e.target.value }))}
+                    fullWidth
+                    sx={inputSx}
+                  />
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                  <Button size="small" onClick={() => { setShowAddStakeholder(false); setNewStakeholder({ name: '', type: 'technical' }); }}>
+                    Cancel
+                  </Button>
+                  <Button 
+                    size="small" 
+                    variant="contained"
+                    disabled={!newStakeholder.name.trim()}
+                    onClick={() => {
+                      const stakeholder: Stakeholder = {
+                        ...newStakeholder,
+                        id: `sh-${Date.now()}`,
+                        email: newStakeholder.email || undefined,
+                        role: newStakeholder.role || undefined,
+                        location: newStakeholder.location || undefined,
+                        phone: newStakeholder.phone || undefined,
+                      };
+                      setEditedStakeholders([...editedStakeholders, stakeholder]);
+                      setNewStakeholder({ name: '', type: 'technical' });
+                      setShowAddStakeholder(false);
+                      autoProgressStatus();
+                    }}
+                  >
+                    Add
+                  </Button>
+                </Box>
+              </Box>
+            </Collapse>
+
+            {/* Technical Contacts */}
+            {(() => {
+              const technical = editedStakeholders.filter(s => s.type === 'technical');
+              const business = editedStakeholders.filter(s => s.type === 'business');
+              return (
+                <>
+                  {technical.length > 0 && (
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="caption" sx={{ fontWeight: 500, color: 'text.secondary', mb: 0.5, display: 'block' }}>
+                        Technical Contacts
+                      </Typography>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                        {technical.map((s) => (
+                          <Box key={s.id} sx={{ 
+                            display: 'flex', alignItems: 'center', gap: 1, px: 1.5, py: 1, 
+                            borderRadius: 1, bgcolor: 'hsl(var(--muted))', border: '1px solid hsl(var(--border))',
+                          }}>
+                            <Avatar sx={{ width: 28, height: 28, fontSize: '0.75rem', bgcolor: 'hsl(var(--severity-info))' }}>
+                              {s.name.charAt(0).toUpperCase()}
+                            </Avatar>
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                              <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.2 }}>{s.name}</Typography>
+                              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                {[s.role, s.email, s.location].filter(Boolean).join(' · ')}
+                              </Typography>
+                            </Box>
+                            {!isPublicView && (
+                              <IconButton size="small" onClick={() => setEditedStakeholders(editedStakeholders.filter(x => x.id !== s.id))}>
+                                <DeleteIcon sx={{ fontSize: 16 }} />
+                              </IconButton>
+                            )}
+                          </Box>
+                        ))}
+                      </Box>
+                    </Box>
+                  )}
+
+                  {business.length > 0 && (
+                    <Box sx={{ mb: 1 }}>
+                      <Typography variant="caption" sx={{ fontWeight: 500, color: 'text.secondary', mb: 0.5, display: 'block' }}>
+                        Business Contacts
+                      </Typography>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                        {business.map((s) => (
+                          <Box key={s.id} sx={{ 
+                            display: 'flex', alignItems: 'center', gap: 1, px: 1.5, py: 1, 
+                            borderRadius: 1, bgcolor: 'hsl(var(--muted))', border: '1px solid hsl(var(--border))',
+                          }}>
+                            <Avatar sx={{ width: 28, height: 28, fontSize: '0.75rem', bgcolor: 'hsl(var(--severity-medium))' }}>
+                              {s.name.charAt(0).toUpperCase()}
+                            </Avatar>
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                              <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.2 }}>{s.name}</Typography>
+                              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                {[s.role, s.email, s.location].filter(Boolean).join(' · ')}
+                              </Typography>
+                            </Box>
+                            {!isPublicView && (
+                              <IconButton size="small" onClick={() => setEditedStakeholders(editedStakeholders.filter(x => x.id !== s.id))}>
+                                <DeleteIcon sx={{ fontSize: 16 }} />
+                              </IconButton>
+                            )}
+                          </Box>
+                        ))}
+                      </Box>
+                    </Box>
+                  )}
+
+                  {editedStakeholders.length === 0 && (
+                    <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
+                      No stakeholders added
+                    </Typography>
+                  )}
+                </>
+              );
+            })()}
           </Section>
         </Box>
       )}
