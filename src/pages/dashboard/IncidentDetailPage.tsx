@@ -99,6 +99,7 @@ import { isAIAssignee, deduplicateTasks, htmlToPlainText, decodeHtmlEntities, de
 import { useIncidentAgentRuns } from '@/hooks/useIncidentAgentRuns';
 import AgentActivityFeed from '@/components/agent/AgentActivityFeed';
 import HighlightedFileEditor from '@/components/incidents/HighlightedFileEditor';
+import EmailThreadPanel, { isEmailContent } from '@/components/incidents/EmailThreadPanel';
 
 // TaskTemplate interface is now imported from useCaseTemplates
 
