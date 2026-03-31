@@ -41,7 +41,7 @@ import { toast } from 'sonner';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 import { useAuth } from '@/context/AuthContext';
 import { setDatastoreItem, getDatastoreItem, DATASTORE_CATEGORIES } from '@/services/datastore';
-import { ENTITY_OPTIONS, EntityValue, setEntityPreference, useEntityPreference, useShowAutomation, setShowAutomation } from '@/hooks/useEntityLabel';
+import { useEntityPreference } from '@/hooks/useEntityLabel';
 import { WeeklyScheduleTimeline, AI_AGENT_SCHEDULE } from '@/components/users/WeeklyScheduleTimeline';
 import { ScheduleImportDialog } from '@/components/users/ScheduleImportDialog';
 
@@ -106,72 +106,6 @@ interface User {
 const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const generateId = () => Math.random().toString(36).substring(2, 12);
 
-const TerminologySelector = () => {
-  const { value } = useEntityPreference();
-  return (
-    <Box sx={{ display: 'flex', gap: 1 }}>
-      {ENTITY_OPTIONS.map((opt) => (
-        <Chip
-          key={opt.value}
-          label={opt.plural}
-          onClick={() => setEntityPreference(opt.value)}
-          variant={value === opt.value ? 'filled' : 'outlined'}
-          sx={{
-            fontWeight: value === opt.value ? 600 : 400,
-            bgcolor: value === opt.value ? 'hsl(var(--primary))' : 'transparent',
-            color: value === opt.value ? 'hsl(var(--primary-foreground))' : 'hsl(var(--foreground))',
-            borderColor: 'hsl(var(--border))',
-            '&:hover': {
-              bgcolor: value === opt.value ? 'hsl(var(--primary))' : 'hsl(var(--primary) / 0.1)',
-            },
-          }}
-        />
-      ))}
-    </Box>
-  );
-};
-
-const AutomationToggle = () => {
-  const showAutomation = useShowAutomation();
-  return (
-    <Paper
-      sx={{
-        mt: 2,
-        p: 2.5,
-        bgcolor: 'hsl(var(--card))',
-        border: '1px solid hsl(var(--border))',
-        borderRadius: 2,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: 2,
-      }}
-    >
-      <Box>
-        <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-          Show Automation Pipeline
-        </Typography>
-        <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-          Display ingest/forward sources and automation controls on the main page
-        </Typography>
-      </Box>
-      <Chip
-        label={showAutomation ? 'Enabled' : 'Disabled'}
-        onClick={() => setShowAutomation(!showAutomation)}
-        variant="filled"
-        sx={{
-          fontWeight: 600,
-          bgcolor: showAutomation ? 'hsl(var(--primary))' : 'hsl(var(--muted))',
-          color: showAutomation ? 'hsl(var(--primary-foreground))' : 'hsl(var(--muted-foreground))',
-          '&:hover': {
-            bgcolor: showAutomation ? 'hsl(var(--primary) / 0.9)' : 'hsl(var(--muted) / 0.8)',
-          },
-        }}
-      />
-    </Paper>
-  );
-};
 
 // Generate a default schedule (Mon-Fri 9-17, for the next year)
 const createDefaultSchedule = (): ScheduleEntry => ({
@@ -624,34 +558,6 @@ const UsersPage = () => {
           ))}
         </Box>
 
-        {/* Terminology Preference */}
-        <Paper
-          sx={{
-            mt: 3,
-            p: 2.5,
-            bgcolor: 'hsl(var(--card))',
-            border: '1px solid hsl(var(--border))',
-            borderRadius: 2,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: 2,
-          }}
-        >
-          <Box>
-            <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-              Terminology
-            </Typography>
-            <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-              Choose what to call your security work items across the platform
-            </Typography>
-          </Box>
-          <TerminologySelector />
-        </Paper>
-
-        {/* Automation Visibility */}
-        <AutomationToggle />
       </Box>
 
       {error && (

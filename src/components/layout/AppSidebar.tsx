@@ -1026,6 +1026,22 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
           </MenuItem>
           <MenuItem
             component={Link}
+            to="/preferences"
+            onClick={() => setUserMenuAnchor(null)}
+            sx={{
+              py: 1.25,
+              px: 2,
+              gap: 1.5,
+              fontSize: '0.875rem',
+              color: 'hsl(var(--foreground))',
+              '&:hover': { backgroundColor: 'hsl(var(--muted))' },
+            }}
+          >
+            <TuneIcon sx={{ fontSize: 18, color: 'hsl(var(--muted-foreground))' }} />
+            Org Preferences
+          </MenuItem>
+          <MenuItem
+            component={Link}
             to="/settings"
             onClick={() => setUserMenuAnchor(null)}
             sx={{
