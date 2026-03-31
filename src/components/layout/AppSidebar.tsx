@@ -40,6 +40,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import LogoutIcon from '@mui/icons-material/Logout';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import TuneIcon from '@mui/icons-material/Tune';
 import { SHUFFLE_AUTOMATION_URL } from '@/config/api';
 import { IntegrationStatus } from './IntegrationStatus';
 import { SidebarSearchDialog } from './SidebarSearchDialog';

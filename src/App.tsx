@@ -129,6 +129,7 @@ const ThemedApp = () => {
               <Route path="/users" element={<UsersPage />} />
               <Route path="/organizations" element={<OrganizationsPage />} />
               <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/preferences" element={<OrgPreferencesPage />} />
             </Route>
 
             {/* App detail & usecase detail: uses sidebar when authenticated, standalone when guest */}
