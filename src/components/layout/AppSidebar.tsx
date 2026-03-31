@@ -1039,6 +1039,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
           >
             <TuneIcon sx={{ fontSize: 18, color: 'hsl(var(--muted-foreground))' }} />
             Org Preferences
+          </MenuItem>
           <MenuItem
             component={Link}
             to="/settings"
