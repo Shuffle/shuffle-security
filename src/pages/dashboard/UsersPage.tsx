@@ -558,34 +558,6 @@ const UsersPage = () => {
           ))}
         </Box>
 
-        {/* Terminology Preference */}
-        <Paper
-          sx={{
-            mt: 3,
-            p: 2.5,
-            bgcolor: 'hsl(var(--card))',
-            border: '1px solid hsl(var(--border))',
-            borderRadius: 2,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: 2,
-          }}
-        >
-          <Box>
-            <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-              Terminology
-            </Typography>
-            <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-              Choose what to call your security work items across the platform
-            </Typography>
-          </Box>
-          <TerminologySelector />
-        </Paper>
-
-        {/* Automation Visibility */}
-        <AutomationToggle />
       </Box>
 
       {error && (
