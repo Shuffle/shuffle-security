@@ -66,14 +66,32 @@ const getIncidentKey = (run: AgentRun): string | null => {
 };
 
 /** Get a human-readable description of what the AI did or needs */
-const getAIDescription = (run: AgentRun): string => {
+const getAIDescription = (run: AgentRun, context: 'attention' | 'general' = 'general'): string => {
   const status = run.status?.toUpperCase() || '';
   const output = getAgentRunOutput(run);
   const failureInfo = (status === 'FAILED' || status === 'ABORTED') ? getFailureInfo(run) : null;
 
+  // For attention items, be explicit about what the user must do
+  if (context === 'attention') {
+    if (status === 'WAITING') {
+      const reason = output ? output.replace(/[#*`]/g, '').trim() : '';
+      if (reason) return `Approval needed: ${reason.length > 140 ? reason.slice(0, 140) + '…' : reason}`;
+      return 'The AI agent requires your approval before it can continue processing this incident. Review the proposed action and approve or reject it.';
+    }
+    if (isFailed(status)) {
+      const reason = failureInfo?.reason || output?.replace(/[#*`]/g, '').trim() || '';
+      if (reason) return `Failed: ${reason.length > 140 ? reason.slice(0, 140) + '…' : reason}`;
+      return 'The AI agent encountered an error and could not complete this task. Manual investigation is required.';
+    }
+    if (hasOutputWarning(run)) {
+      const detail = output ? output.replace(/[#*`]/g, '').trim() : '';
+      if (detail) return `Needs review: ${detail.length > 140 ? detail.slice(0, 140) + '…' : detail}`;
+      return 'The AI agent flagged uncertainty in its analysis. Please review the output and confirm or correct its findings.';
+    }
+  }
+
   if (failureInfo?.reason) return failureInfo.reason;
   if (output) {
-    // Truncate long outputs
     const clean = output.replace(/[#*`]/g, '').trim();
     return clean.length > 150 ? clean.slice(0, 150) + '…' : clean;
   }
@@ -82,12 +100,26 @@ const getAIDescription = (run: AgentRun): string => {
   return getRunSubtitle(run);
 };
 
-/** Get the CTA label for attention items */
-const getAttentionCTA = (run: AgentRun): { label: string; icon: React.ReactNode } => {
+const isFailed = (status: string) => status === 'FAILED' || status === 'ABORTED';
+
+/** Get the CTA label for attention items — be specific about what the user should do */
+const getAttentionCTA = (run: AgentRun): { label: string; icon: React.ReactNode; secondary?: string } => {
   const status = run.status?.toUpperCase() || '';
-  if (status === 'FAILED' || status === 'ABORTED') return { label: 'Investigate', icon: <Search size={14} /> };
-  if (status === 'WAITING') return { label: 'Review & Approve', icon: <Eye size={14} /> };
-  if (hasOutputWarning(run)) return { label: 'Review Output', icon: <Eye size={14} /> };
+  if (status === 'WAITING') return {
+    label: 'Approve & Continue',
+    icon: <CheckCircle size={14} />,
+    secondary: 'Review what the agent wants to do and give approval',
+  };
+  if (isFailed(status)) return {
+    label: 'Investigate Failure',
+    icon: <Search size={14} />,
+    secondary: 'Check the error details and decide on next steps',
+  };
+  if (hasOutputWarning(run)) return {
+    label: 'Review & Confirm',
+    icon: <Eye size={14} />,
+    secondary: 'The agent is unsure — verify its findings',
+  };
   return { label: 'Review', icon: <Eye size={14} /> };
 };
 
