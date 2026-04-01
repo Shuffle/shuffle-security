@@ -704,15 +704,12 @@ const DashboardPage = () => {
         )}
       </Box>
     </Box>
-
-    {/* Action summary dialog */}
-    <AgentActionSummaryDialog
-      open={!!summaryRun}
-      onClose={() => setSummaryRun(null)}
-      run={summaryRun}
-      entityBasePath={entityBasePath}
-    />
+    </>
   );
+};
+
+// Wrap return in fragment — find the opening return
+
 };
 
 export default DashboardPage;
