@@ -28,6 +28,7 @@ import {
   Search,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import AgentActionSummaryDialog from '@/components/agent/AgentActionSummaryDialog';
 import AgentIcon from '@/components/agent/AgentIcon';
 import { useAgentActivity } from '@/hooks/useAgentActivity';
 import { parseDatastoreReference, isIncidentReference, getAgentRunOutput, getIncidentTitleFromRun, getIncidentSeverityFromRun } from '@/lib/agentParsers';
