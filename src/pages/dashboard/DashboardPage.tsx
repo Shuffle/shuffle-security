@@ -634,28 +634,16 @@ const DashboardPage = () => {
           </Box>
         ) : (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            {needsAttention.map((run) => {
-              const sev = getIncidentSeverityFromRun(run);
-              const borderToken = sev.level !== 'unknown' ? sev.colorToken : '--severity-high';
-              return (
+            {needsAttention.map((run) => (
               <motion.div
                 key={run.execution_id}
                 initial={{ opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.2 }}
               >
-                <Box
-                  sx={{
-                    borderLeft: `3px solid hsl(var(${borderToken}))`,
-                    borderRadius: 2,
-                    overflow: 'hidden',
-                  }}
-                >
-                  <AttentionRunRow run={run} entityBasePath={entityBasePath} />
-                </Box>
+                <AttentionRunRow run={run} entityBasePath={entityBasePath} />
               </motion.div>
-              );
-            })}
+            ))}
           </Box>
         )}
       </Box>
