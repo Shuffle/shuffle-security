@@ -184,6 +184,14 @@ export const getIncidentSeverityFromRun = (run: AgentRun): SeverityInfo => {
             if (sev) return sev;
           } catch { /* ignore */ }
         }
+        // Also try regex on raw original_input text
+        const sev = extractSeverityFromText(parsed.original_input);
+        if (sev) return sev;
+      }
+      // Check all result strings for nested severity
+      if (typeof parsed === 'object' && parsed !== null) {
+        const deepSev = deepFindSeverity(parsed);
+        if (deepSev) return deepSev;
       }
     } catch {
       // Try regex on raw text
@@ -192,7 +200,35 @@ export const getIncidentSeverityFromRun = (run: AgentRun): SeverityInfo => {
     }
   }
 
+  // Also check all results beyond the first
+  if (run.results && run.results.length > 1) {
+    for (let i = 1; i < run.results.length; i++) {
+      const result = run.results[i]?.result;
+      if (!result || typeof result !== 'string') continue;
+      const sev = extractSeverityFromText(result);
+      if (sev) return sev;
+    }
+  }
+
   return SEVERITY_MAP.unknown;
+};
+
+/** Recursively search an object for severity fields (max 3 levels deep) */
+const deepFindSeverity = (obj: Record<string, any>, depth = 0): SeverityInfo | null => {
+  if (depth > 3) return null;
+  const direct = extractSeverityFromObj(obj);
+  if (direct) return direct;
+  for (const val of Object.values(obj)) {
+    if (val && typeof val === 'object' && !Array.isArray(val)) {
+      const sev = deepFindSeverity(val as Record<string, any>, depth + 1);
+      if (sev) return sev;
+    }
+    if (typeof val === 'string' && val.includes('severity')) {
+      const sev = extractSeverityFromText(val);
+      if (sev) return sev;
+    }
+  }
+  return null;
 };
 
 /** Extract severity from a parsed JSON object */
