@@ -338,19 +338,17 @@ const AttentionRunRow = ({ run, entityBasePath }: { run: AgentRun; entityBasePat
           }}>
             {incidentTitle || getRunTitle(run)}
           </Typography>
-          {severity.level !== 'unknown' && (
-            <Chip
-              label={severity.label}
-              size="small"
-              sx={{
-                height: 20,
-                fontSize: '0.68rem',
-                fontWeight: 600,
-                backgroundColor: `hsl(var(${severity.colorToken}) / 0.12)`,
-                color: `hsl(var(${severity.colorToken}))`,
-              }}
-            />
-          )}
+          <Chip
+            label={severity.label}
+            size="small"
+            sx={{
+              height: 20,
+              fontSize: '0.68rem',
+              fontWeight: 600,
+              backgroundColor: `hsl(var(${severity.colorToken}) / 0.12)`,
+              color: `hsl(var(${severity.colorToken}))`,
+            }}
+          />
           {runFailed && (
             <Chip
               label={status === 'ABORTED' ? 'Aborted' : 'Failed'}
