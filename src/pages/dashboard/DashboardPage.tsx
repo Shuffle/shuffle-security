@@ -188,8 +188,6 @@ const StatCard = ({ icon, iconColor, iconBg, value, label, delay, isLoading }: S
 // ── Run row (standard) ─────────────────────────────────────────────────────────
 
 const RunRow = ({ run, entityBasePath }: { run: AgentRun; entityBasePath: string }) => {
-  const statusCfg = STATUS_CONFIG[run.status?.toUpperCase() || ''] || STATUS_CONFIG.WAITING;
-  const iconColor = getRunIconColor(run);
   const duration = formatDuration(run);
   const incidentKey = getIncidentKey(run);
   const incidentTitle = getIncidentTitleFromRun(run);
@@ -203,7 +201,7 @@ const RunRow = ({ run, entityBasePath }: { run: AgentRun; entityBasePath: string
         alignItems: 'center',
         gap: 2,
         px: 2.5,
-        py: 1.5,
+        py: 2,
         borderRadius: 2,
         border: '1px solid hsl(var(--border))',
         backgroundColor: 'hsl(var(--card))',
@@ -211,21 +209,6 @@ const RunRow = ({ run, entityBasePath }: { run: AgentRun; entityBasePath: string
         '&:hover': { borderColor: 'hsl(var(--primary) / 0.4)' },
       }}
     >
-      {/* Icon */}
-      <Box sx={{
-        width: 36,
-        height: 36,
-        borderRadius: '50%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        bgcolor: `${iconColor}15`,
-        color: iconColor,
-        flexShrink: 0,
-      }}>
-        {getRunIcon(run)}
-      </Box>
-
       {/* Content */}
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -250,21 +233,33 @@ const RunRow = ({ run, entityBasePath }: { run: AgentRun; entityBasePath: string
               color: `hsl(var(${severity.colorToken}))`,
             }}
           />
-          <Box sx={{ color: statusCfg.color, display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-            {statusCfg.icon}
-          </Box>
+          <Chip
+            icon={<CheckCircle size={12} />}
+            label="Resolved"
+            size="small"
+            sx={{
+              height: 20,
+              fontSize: '0.68rem',
+              fontWeight: 600,
+              backgroundColor: 'hsl(var(--severity-low) / 0.12)',
+              color: 'hsl(var(--severity-low))',
+              '& .MuiChip-icon': { color: 'inherit' },
+            }}
+          />
         </Box>
         <Typography sx={{
           fontSize: '0.78rem',
           color: 'hsl(var(--muted-foreground))',
+          mt: 0.5,
+          lineHeight: 1.5,
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical',
           overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-          mt: 0.25,
         }}>
           {description}
         </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.25 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
           <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', opacity: 0.7 }}>
             {run.started_at ? getTimeAgo(run.started_at) : '—'}
           </Typography>
@@ -277,18 +272,32 @@ const RunRow = ({ run, entityBasePath }: { run: AgentRun; entityBasePath: string
         </Box>
       </Box>
 
-      {/* Link to incident */}
+      {/* Open incident */}
       {incidentKey && (
-        <Tooltip title="View incident">
-          <IconButton
-            component={Link}
-            to={`${entityBasePath}/${incidentKey}`}
-            size="small"
-            sx={{ color: 'hsl(var(--muted-foreground))' }}
-          >
-            <ArrowRight size={16} />
-          </IconButton>
-        </Tooltip>
+        <Button
+          component={Link}
+          to={`${entityBasePath}/${incidentKey}`}
+          size="small"
+          variant="outlined"
+          endIcon={<ArrowRight size={14} />}
+          sx={{
+            fontSize: '0.75rem',
+            textTransform: 'none',
+            fontWeight: 500,
+            borderColor: 'hsl(var(--border))',
+            color: 'hsl(var(--foreground))',
+            px: 1.5,
+            py: 0.5,
+            whiteSpace: 'nowrap',
+            flexShrink: 0,
+            '&:hover': {
+              borderColor: 'hsl(var(--primary) / 0.5)',
+              backgroundColor: 'hsl(var(--primary) / 0.08)',
+            },
+          }}
+        >
+          Open Incident
+        </Button>
       )}
     </Box>
   );
