@@ -11,6 +11,7 @@ import {
   Chip,
   IconButton,
   Tooltip,
+  Button,
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { motion } from 'framer-motion';
@@ -22,12 +23,15 @@ import {
   XCircle,
   Clock,
   ArrowRight,
+  Eye,
+  RotateCcw,
+  Search,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import AgentIcon from '@/components/agent/AgentIcon';
 import { useAgentActivity } from '@/hooks/useAgentActivity';
-import { parseDatastoreReference, isIncidentReference } from '@/lib/agentParsers';
-import { hasOutputWarning, parseRunResult } from '@/components/agent/AgentRunResultViewer';
+import { parseDatastoreReference, isIncidentReference, getAgentRunOutput, getIncidentTitleFromRun } from '@/lib/agentParsers';
+import { hasOutputWarning, parseRunResult, getFailureInfo } from '@/components/agent/AgentRunResultViewer';
 import {
   getRunTitle,
   getRunSubtitle,
@@ -43,11 +47,8 @@ import { useEntityPreference } from '@/hooks/useEntityLabel';
 /** Determine if a run needs user attention */
 const needsUserInput = (run: AgentRun): boolean => {
   const status = run.status?.toUpperCase() || '';
-  // Failed / aborted always need attention
   if (status === 'FAILED' || status === 'ABORTED') return true;
-  // Runs flagged "unsure" — agent couldn't fully resolve
   if (hasOutputWarning(run)) return true;
-  // Waiting status
   if (status === 'WAITING') return true;
   return false;
 };
@@ -62,6 +63,32 @@ const isIncidentRun = (run: AgentRun): boolean => {
 const getIncidentKey = (run: AgentRun): string | null => {
   const ref = parseDatastoreReference(run);
   return ref && isIncidentReference(ref) ? ref.key : null;
+};
+
+/** Get a human-readable description of what the AI did or needs */
+const getAIDescription = (run: AgentRun): string => {
+  const status = run.status?.toUpperCase() || '';
+  const output = getAgentRunOutput(run);
+  const failureInfo = (status === 'FAILED' || status === 'ABORTED') ? getFailureInfo(run) : null;
+
+  if (failureInfo?.reason) return failureInfo.reason;
+  if (output) {
+    // Truncate long outputs
+    const clean = output.replace(/[#*`]/g, '').trim();
+    return clean.length > 150 ? clean.slice(0, 150) + '…' : clean;
+  }
+  if (status === 'WAITING') return 'Waiting for approval to proceed';
+  if (status === 'EXECUTING' || status === 'RUNNING') return 'Currently processing…';
+  return getRunSubtitle(run);
+};
+
+/** Get the CTA label for attention items */
+const getAttentionCTA = (run: AgentRun): { label: string; icon: React.ReactNode } => {
+  const status = run.status?.toUpperCase() || '';
+  if (status === 'FAILED' || status === 'ABORTED') return { label: 'Investigate', icon: <Search size={14} /> };
+  if (status === 'WAITING') return { label: 'Review & Approve', icon: <Eye size={14} /> };
+  if (hasOutputWarning(run)) return { label: 'Review Output', icon: <Eye size={14} /> };
+  return { label: 'Review', icon: <Eye size={14} /> };
 };
 
 // ── Stat card ──────────────────────────────────────────────────────────────────
@@ -125,15 +152,15 @@ const StatCard = ({ icon, iconColor, iconBg, value, label, delay, isLoading }: S
   </motion.div>
 );
 
-// ── Run row ────────────────────────────────────────────────────────────────────
+// ── Run row (standard) ─────────────────────────────────────────────────────────
 
 const RunRow = ({ run, entityBasePath }: { run: AgentRun; entityBasePath: string }) => {
   const statusCfg = STATUS_CONFIG[run.status?.toUpperCase() || ''] || STATUS_CONFIG.WAITING;
   const iconColor = getRunIconColor(run);
   const duration = formatDuration(run);
-  const isUnsure = hasOutputWarning(run);
-  const isFailed = run.status?.toUpperCase() === 'FAILED' || run.status?.toUpperCase() === 'ABORTED';
   const incidentKey = getIncidentKey(run);
+  const incidentTitle = getIncidentTitleFromRun(run);
+  const description = getAIDescription(run);
 
   return (
     <Box
@@ -170,30 +197,27 @@ const RunRow = ({ run, entityBasePath }: { run: AgentRun; entityBasePath: string
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Typography sx={{
             fontSize: '0.85rem',
-            fontWeight: 500,
+            fontWeight: 600,
             color: 'hsl(var(--foreground))',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
           }}>
-            {getRunTitle(run)}
+            {incidentTitle || getRunTitle(run)}
           </Typography>
-          {isUnsure ? (
-            <HelpCircle size={15} style={{ color: 'hsl(var(--severity-medium))', flexShrink: 0 }} />
-          ) : (
-            <Box sx={{ color: statusCfg.color, display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-              {statusCfg.icon}
-            </Box>
-          )}
+          <Box sx={{ color: statusCfg.color, display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+            {statusCfg.icon}
+          </Box>
         </Box>
         <Typography sx={{
-          fontSize: '0.75rem',
+          fontSize: '0.78rem',
           color: 'hsl(var(--muted-foreground))',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
           whiteSpace: 'nowrap',
+          mt: 0.25,
         }}>
-          {getRunSubtitle(run)}
+          {description}
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.25 }}>
           <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', opacity: 0.7 }}>
@@ -208,7 +232,7 @@ const RunRow = ({ run, entityBasePath }: { run: AgentRun; entityBasePath: string
         </Box>
       </Box>
 
-      {/* Link to incident if applicable */}
+      {/* Link to incident */}
       {incidentKey && (
         <Tooltip title="View incident">
           <IconButton
@@ -221,6 +245,190 @@ const RunRow = ({ run, entityBasePath }: { run: AgentRun; entityBasePath: string
           </IconButton>
         </Tooltip>
       )}
+    </Box>
+  );
+};
+
+// ── Attention row (enhanced with CTAs) ─────────────────────────────────────────
+
+const AttentionRunRow = ({ run, entityBasePath }: { run: AgentRun; entityBasePath: string }) => {
+  const iconColor = getRunIconColor(run);
+  const incidentKey = getIncidentKey(run);
+  const incidentTitle = getIncidentTitleFromRun(run);
+  const description = getAIDescription(run);
+  const duration = formatDuration(run);
+  const cta = getAttentionCTA(run);
+  const status = run.status?.toUpperCase() || '';
+  const isFailed = status === 'FAILED' || status === 'ABORTED';
+  const isUnsure = hasOutputWarning(run);
+
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 1.5,
+        px: 2.5,
+        py: 2,
+        borderRadius: 2,
+        border: '1px solid hsl(var(--border))',
+        backgroundColor: 'hsl(var(--card))',
+        transition: 'border-color 0.15s ease',
+        '&:hover': { borderColor: 'hsl(var(--primary) / 0.4)' },
+      }}
+    >
+      {/* Top: icon + title + status */}
+      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+        <Box sx={{
+          width: 36,
+          height: 36,
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          bgcolor: `${iconColor}15`,
+          color: iconColor,
+          flexShrink: 0,
+          mt: 0.25,
+        }}>
+          {getRunIcon(run)}
+        </Box>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography sx={{
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              color: 'hsl(var(--foreground))',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}>
+              {incidentTitle || getRunTitle(run)}
+            </Typography>
+            {isFailed && (
+              <Chip
+                label={status === 'ABORTED' ? 'Aborted' : 'Failed'}
+                size="small"
+                sx={{
+                  height: 20,
+                  fontSize: '0.68rem',
+                  fontWeight: 600,
+                  backgroundColor: 'hsl(var(--severity-critical) / 0.12)',
+                  color: 'hsl(var(--severity-critical))',
+                }}
+              />
+            )}
+            {isUnsure && (
+              <Chip
+                icon={<HelpCircle size={12} />}
+                label="Unsure"
+                size="small"
+                sx={{
+                  height: 20,
+                  fontSize: '0.68rem',
+                  fontWeight: 600,
+                  backgroundColor: 'hsl(var(--severity-medium) / 0.12)',
+                  color: 'hsl(var(--severity-medium))',
+                  '& .MuiChip-icon': { color: 'inherit' },
+                }}
+              />
+            )}
+            {status === 'WAITING' && (
+              <Chip
+                icon={<Clock size={12} />}
+                label="Waiting"
+                size="small"
+                sx={{
+                  height: 20,
+                  fontSize: '0.68rem',
+                  fontWeight: 600,
+                  backgroundColor: 'hsl(var(--severity-info) / 0.12)',
+                  color: 'hsl(var(--severity-info))',
+                  '& .MuiChip-icon': { color: 'inherit' },
+                }}
+              />
+            )}
+          </Box>
+
+          {/* Description of what AI needs / did */}
+          <Typography sx={{
+            fontSize: '0.78rem',
+            color: isFailed ? 'hsl(var(--severity-critical) / 0.85)' : 'hsl(var(--muted-foreground))',
+            mt: 0.5,
+            lineHeight: 1.5,
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+          }}>
+            {description}
+          </Typography>
+
+          {/* Timestamp */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+            <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', opacity: 0.7 }}>
+              {run.started_at ? getTimeAgo(run.started_at) : '—'}
+            </Typography>
+            {duration && (
+              <>
+                <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', opacity: 0.4 }}>·</Typography>
+                <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', opacity: 0.7 }}>{duration}</Typography>
+              </>
+            )}
+          </Box>
+        </Box>
+      </Box>
+
+      {/* CTAs */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 6.5 }}>
+        <Button
+          component={Link}
+          to={`/agent?search=${run.execution_id}`}
+          size="small"
+          variant="outlined"
+          startIcon={cta.icon}
+          sx={{
+            fontSize: '0.75rem',
+            textTransform: 'none',
+            fontWeight: 500,
+            borderColor: 'hsl(var(--border))',
+            color: 'hsl(var(--foreground))',
+            px: 1.5,
+            py: 0.5,
+            '&:hover': {
+              borderColor: 'hsl(var(--primary) / 0.5)',
+              backgroundColor: 'hsl(var(--primary) / 0.08)',
+            },
+          }}
+        >
+          {cta.label}
+        </Button>
+        {incidentKey && (
+          <Button
+            component={Link}
+            to={`${entityBasePath}/${incidentKey}`}
+            size="small"
+            variant="contained"
+            endIcon={<ArrowRight size={14} />}
+            sx={{
+              fontSize: '0.75rem',
+              textTransform: 'none',
+              fontWeight: 500,
+              backgroundColor: 'hsl(var(--primary))',
+              color: 'hsl(var(--primary-foreground))',
+              px: 1.5,
+              py: 0.5,
+              boxShadow: 'none',
+              '&:hover': {
+                backgroundColor: 'hsl(var(--primary) / 0.9)',
+                boxShadow: 'none',
+              },
+            }}
+          >
+            View Incident
+          </Button>
+        )}
+      </Box>
     </Box>
   );
 };
@@ -393,7 +601,7 @@ const DashboardPage = () => {
                     overflow: 'hidden',
                   }}
                 >
-                  <RunRow run={run} entityBasePath={entityBasePath} />
+                  <AttentionRunRow run={run} entityBasePath={entityBasePath} />
                 </Box>
               </motion.div>
             ))}

@@ -87,3 +87,55 @@ export const getAgentRunOutput = (run: AgentRun): string | null => {
 
   return null;
 };
+
+/**
+ * Extract the incident title from an agent run's original_input or execution_argument.
+ * The input may contain embedded JSON with finding.title or title fields.
+ */
+export const getIncidentTitleFromRun = (run: AgentRun): string | null => {
+  const sources = [
+    run.results?.[0]?.result,
+    run.execution_argument,
+  ];
+
+  for (const source of sources) {
+    if (!source || typeof source !== 'string') continue;
+    try {
+      const parsed = JSON.parse(source);
+      // Check nested original_input JSON
+      const input = parsed?.original_input;
+      if (input && typeof input === 'string') {
+        const title = extractTitleFromText(input);
+        if (title) return title;
+      }
+      // Direct title fields
+      if (parsed?.finding?.title) return parsed.finding.title;
+      if (parsed?.title) return parsed.title;
+    } catch {
+      // Try regex on raw text
+      const title = extractTitleFromText(source);
+      if (title) return title;
+    }
+  }
+
+  return null;
+};
+
+/** Try to extract a title from raw datastore text */
+const extractTitleFromText = (text: string): string | null => {
+  // Look for JSON with finding.title or title
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (jsonMatch) {
+    try {
+      const obj = JSON.parse(jsonMatch[0]);
+      if (obj?.finding?.title) return obj.finding.title;
+      if (obj?.title) return obj.title;
+    } catch {
+      // ignore
+    }
+  }
+  // Look for "title": "..." pattern
+  const titleMatch = text.match(/"title"\s*:\s*"([^"]+)"/);
+  if (titleMatch) return titleMatch[1];
+  return null;
+};
