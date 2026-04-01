@@ -469,10 +469,10 @@ const AttentionRunRow = ({ run, entityBasePath }: { run: AgentRun; entityBasePat
               }}
             >
               Open Incident
-          </Button>
-        )}
+            </Button>
+          )}
+        </Box>
       </Box>
-    </Box>
   );
 };
 
