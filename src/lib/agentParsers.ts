@@ -139,3 +139,106 @@ const extractTitleFromText = (text: string): string | null => {
   if (titleMatch) return titleMatch[1];
   return null;
 };
+
+/** Severity levels and their theme token mappings */
+export type IncidentSeverity = 'critical' | 'high' | 'medium' | 'low' | 'info' | 'unknown';
+
+export interface SeverityInfo {
+  level: IncidentSeverity;
+  label: string;
+  colorToken: string; // CSS variable name like --severity-critical
+}
+
+const SEVERITY_MAP: Record<IncidentSeverity, SeverityInfo> = {
+  critical: { level: 'critical', label: 'Critical', colorToken: '--severity-critical' },
+  high: { level: 'high', label: 'High', colorToken: '--severity-high' },
+  medium: { level: 'medium', label: 'Medium', colorToken: '--severity-medium' },
+  low: { level: 'low', label: 'Low', colorToken: '--severity-low' },
+  info: { level: 'info', label: 'Info', colorToken: '--severity-info' },
+  unknown: { level: 'unknown', label: 'Unknown', colorToken: '--muted-foreground' },
+};
+
+/**
+ * Extract severity from an agent run's embedded incident data.
+ * Looks for severity_id (OCSF), severity, or priority fields.
+ */
+export const getIncidentSeverityFromRun = (run: AgentRun): SeverityInfo => {
+  const sources = [
+    run.results?.[0]?.result,
+    run.execution_argument,
+  ];
+
+  for (const source of sources) {
+    if (!source || typeof source !== 'string') continue;
+    try {
+      const parsed = JSON.parse(source);
+      const severity = extractSeverityFromObj(parsed);
+      if (severity) return severity;
+      // Check nested original_input
+      if (parsed?.original_input && typeof parsed.original_input === 'string') {
+        const jsonMatch = parsed.original_input.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          try {
+            const nested = JSON.parse(jsonMatch[0]);
+            const sev = extractSeverityFromObj(nested);
+            if (sev) return sev;
+          } catch { /* ignore */ }
+        }
+      }
+    } catch {
+      // Try regex on raw text
+      const sev = extractSeverityFromText(source);
+      if (sev) return sev;
+    }
+  }
+
+  return SEVERITY_MAP.unknown;
+};
+
+/** Extract severity from a parsed JSON object */
+const extractSeverityFromObj = (obj: Record<string, any>): SeverityInfo | null => {
+  // OCSF severity_id: 1=info, 2=low, 3=medium, 4=high, 5=critical
+  const sevId = obj?.severity_id ?? obj?.finding?.severity_id;
+  if (typeof sevId === 'number') {
+    if (sevId >= 5) return SEVERITY_MAP.critical;
+    if (sevId === 4) return SEVERITY_MAP.high;
+    if (sevId === 3) return SEVERITY_MAP.medium;
+    if (sevId === 2) return SEVERITY_MAP.low;
+    if (sevId <= 1) return SEVERITY_MAP.info;
+  }
+
+  // String severity field
+  const sevStr = (obj?.severity ?? obj?.finding?.severity ?? obj?.priority ?? '') as string;
+  if (typeof sevStr === 'string' && sevStr) {
+    return normalizeSeverity(sevStr);
+  }
+
+  return null;
+};
+
+/** Extract severity from raw text via regex */
+const extractSeverityFromText = (text: string): SeverityInfo | null => {
+  const match = text.match(/"(?:severity|priority)"\s*:\s*"([^"]+)"/i);
+  if (match) return normalizeSeverity(match[1]);
+  const idMatch = text.match(/"severity_id"\s*:\s*(\d)/);
+  if (idMatch) {
+    const id = parseInt(idMatch[1]);
+    if (id >= 5) return SEVERITY_MAP.critical;
+    if (id === 4) return SEVERITY_MAP.high;
+    if (id === 3) return SEVERITY_MAP.medium;
+    if (id === 2) return SEVERITY_MAP.low;
+    return SEVERITY_MAP.info;
+  }
+  return null;
+};
+
+/** Normalize a severity string to our known levels */
+const normalizeSeverity = (raw: string): SeverityInfo => {
+  const lower = raw.toLowerCase().trim();
+  if (lower.includes('critical') || lower === '5' || lower === 'fatal') return SEVERITY_MAP.critical;
+  if (lower.includes('high') || lower === '4' || lower === 'urgent') return SEVERITY_MAP.high;
+  if (lower.includes('medium') || lower.includes('moderate') || lower === '3') return SEVERITY_MAP.medium;
+  if (lower.includes('low') || lower === '2') return SEVERITY_MAP.low;
+  if (lower.includes('info') || lower === '1' || lower === '0') return SEVERITY_MAP.info;
+  return SEVERITY_MAP.unknown;
+};

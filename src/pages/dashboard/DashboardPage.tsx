@@ -30,7 +30,7 @@ import {
 import { Link } from 'react-router-dom';
 import AgentIcon from '@/components/agent/AgentIcon';
 import { useAgentActivity } from '@/hooks/useAgentActivity';
-import { parseDatastoreReference, isIncidentReference, getAgentRunOutput, getIncidentTitleFromRun } from '@/lib/agentParsers';
+import { parseDatastoreReference, isIncidentReference, getAgentRunOutput, getIncidentTitleFromRun, getIncidentSeverityFromRun } from '@/lib/agentParsers';
 import { hasOutputWarning, parseRunResult, getFailureInfo } from '@/components/agent/AgentRunResultViewer';
 import {
   getRunTitle,
@@ -193,6 +193,7 @@ const RunRow = ({ run, entityBasePath }: { run: AgentRun; entityBasePath: string
   const incidentKey = getIncidentKey(run);
   const incidentTitle = getIncidentTitleFromRun(run);
   const description = getAIDescription(run);
+  const severity = getIncidentSeverityFromRun(run);
 
   return (
     <Box
@@ -237,6 +238,19 @@ const RunRow = ({ run, entityBasePath }: { run: AgentRun; entityBasePath: string
           }}>
             {incidentTitle || getRunTitle(run)}
           </Typography>
+          {severity.level !== 'unknown' && (
+            <Chip
+              label={severity.label}
+              size="small"
+              sx={{
+                height: 20,
+                fontSize: '0.68rem',
+                fontWeight: 600,
+                backgroundColor: `hsl(var(${severity.colorToken}) / 0.12)`,
+                color: `hsl(var(${severity.colorToken}))`,
+              }}
+            />
+          )}
           <Box sx={{ color: statusCfg.color, display: 'flex', alignItems: 'center', flexShrink: 0 }}>
             {statusCfg.icon}
           </Box>
@@ -293,6 +307,7 @@ const AttentionRunRow = ({ run, entityBasePath }: { run: AgentRun; entityBasePat
   const status = run.status?.toUpperCase() || '';
   const runFailed = status === 'FAILED' || status === 'ABORTED';
   const isUnsure = hasOutputWarning(run);
+  const severity = getIncidentSeverityFromRun(run);
 
   return (
     <Box
@@ -337,6 +352,19 @@ const AttentionRunRow = ({ run, entityBasePath }: { run: AgentRun; entityBasePat
             }}>
               {incidentTitle || getRunTitle(run)}
             </Typography>
+            {severity.level !== 'unknown' && (
+              <Chip
+                label={severity.label}
+                size="small"
+                sx={{
+                  height: 20,
+                  fontSize: '0.68rem',
+                  fontWeight: 600,
+                  backgroundColor: `hsl(var(${severity.colorToken}) / 0.12)`,
+                  color: `hsl(var(${severity.colorToken}))`,
+                }}
+              />
+            )}
             {runFailed && (
               <Chip
                 label={status === 'ABORTED' ? 'Aborted' : 'Failed'}
@@ -631,7 +659,10 @@ const DashboardPage = () => {
           </Box>
         ) : (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            {needsAttention.map((run) => (
+            {needsAttention.map((run) => {
+              const sev = getIncidentSeverityFromRun(run);
+              const borderToken = sev.level !== 'unknown' ? sev.colorToken : '--severity-high';
+              return (
               <motion.div
                 key={run.execution_id}
                 initial={{ opacity: 0, x: -8 }}
@@ -640,7 +671,7 @@ const DashboardPage = () => {
               >
                 <Box
                   sx={{
-                    borderLeft: '3px solid hsl(var(--severity-high))',
+                    borderLeft: `3px solid hsl(var(${borderToken}))`,
                     borderRadius: 2,
                     overflow: 'hidden',
                   }}
@@ -648,7 +679,8 @@ const DashboardPage = () => {
                   <AttentionRunRow run={run} entityBasePath={entityBasePath} />
                 </Box>
               </motion.div>
-            ))}
+              );
+            })}
           </Box>
         )}
       </Box>
