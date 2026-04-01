@@ -193,6 +193,7 @@ const RunRow = ({ run, entityBasePath }: { run: AgentRun; entityBasePath: string
   const incidentKey = getIncidentKey(run);
   const incidentTitle = getIncidentTitleFromRun(run);
   const description = getAIDescription(run);
+  const severity = getIncidentSeverityFromRun(run);
 
   return (
     <Box
