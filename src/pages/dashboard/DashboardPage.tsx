@@ -306,7 +306,11 @@ const AttentionRunRow = ({ run, entityBasePath }: { run: AgentRun; entityBasePat
   const status = run.status?.toUpperCase() || '';
   const runFailed = status === 'FAILED' || status === 'ABORTED';
   const isUnsure = hasOutputWarning(run);
-  const severity = getIncidentSeverityFromRun(run);
+  const rawSeverity = getIncidentSeverityFromRun(run);
+  // Default attention items to High when severity can't be determined
+  const severity = rawSeverity.level === 'unknown'
+    ? { level: 'high' as const, label: 'High', colorToken: '--severity-high' }
+    : rawSeverity;
 
   return (
     <Box
