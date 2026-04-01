@@ -196,7 +196,7 @@ export const getIncidentSeverityFromRun = (run: AgentRun): SeverityInfo => {
 };
 
 /** Extract severity from a parsed JSON object */
-const extractSeverityFromObj = (obj: Record<string, unknown>): SeverityInfo | null => {
+const extractSeverityFromObj = (obj: Record<string, any>): SeverityInfo | null => {
   // OCSF severity_id: 1=info, 2=low, 3=medium, 4=high, 5=critical
   const sevId = obj?.severity_id ?? obj?.finding?.severity_id;
   if (typeof sevId === 'number') {
