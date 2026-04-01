@@ -108,6 +108,7 @@ const ThemedApp = () => {
                 </ProtectedRoute>
               }
             >
+              <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/incidents" element={<IncidentsPage />} />
               <Route path="/incidents/:id" element={<IncidentDetailPage />} />
               <Route path="/alerts" element={<IncidentsPage />} />

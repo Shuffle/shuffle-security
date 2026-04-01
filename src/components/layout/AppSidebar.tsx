@@ -65,6 +65,7 @@ interface NavItem {
 }
 
 const buildNavItems = (entityLabel: string, entityPath: string): NavItem[] => [
+  { label: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/dashboard' },
   { 
     label: entityLabel, 
     icon: <WarningAmberIcon />,
