@@ -473,7 +473,6 @@ const AttentionRunRow = ({ run, entityBasePath }: { run: AgentRun; entityBasePat
             Open Incident
           </Button>
           )}
-        </Box>
       </Box>
     </Box>
   );
