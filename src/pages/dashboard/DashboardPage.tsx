@@ -337,7 +337,7 @@ const AttentionRunRow = ({ run, entityBasePath }: { run: AgentRun; entityBasePat
             }}>
               {incidentTitle || getRunTitle(run)}
             </Typography>
-            {isFailed && (
+            {runFailed && (
               <Chip
                 label={status === 'ABORTED' ? 'Aborted' : 'Failed'}
                 size="small"
@@ -385,7 +385,7 @@ const AttentionRunRow = ({ run, entityBasePath }: { run: AgentRun; entityBasePat
           {/* Description of what AI needs / did */}
           <Typography sx={{
             fontSize: '0.78rem',
-            color: isFailed ? 'hsl(var(--severity-critical) / 0.85)' : 'hsl(var(--muted-foreground))',
+            color: runFailed ? 'hsl(var(--severity-critical) / 0.85)' : 'hsl(var(--muted-foreground))',
             mt: 0.5,
             lineHeight: 1.5,
             display: '-webkit-box',
