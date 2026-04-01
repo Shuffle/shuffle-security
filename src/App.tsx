@@ -34,6 +34,7 @@ import UsecasesPage from '@/pages/dashboard/UsecasesPage';
 import AppDetailPage from '@/pages/dashboard/AppDetailPage';
 import DocsPage from '@/pages/docs/DocsPage';
 import PipelinesPage from '@/pages/dashboard/PipelinesPage';
+import DashboardPage from '@/pages/dashboard/DashboardPage';
 
 import AppsPage from '@/pages/AppsPage';
 import NotFound from './pages/NotFound';
