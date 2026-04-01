@@ -412,43 +412,31 @@ const AttentionRunRow = ({ run, entityBasePath }: { run: AgentRun; entityBasePat
       </Box>
 
       {/* CTAs */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 6.5 }}>
-        <Button
-          component={Link}
-          to={`/agent?search=${run.execution_id}`}
-          size="small"
-          variant="outlined"
-          startIcon={cta.icon}
-          sx={{
-            fontSize: '0.75rem',
-            textTransform: 'none',
-            fontWeight: 500,
-            borderColor: 'hsl(var(--border))',
-            color: 'hsl(var(--foreground))',
-            px: 1.5,
-            py: 0.5,
-            '&:hover': {
-              borderColor: 'hsl(var(--primary) / 0.5)',
-              backgroundColor: 'hsl(var(--primary) / 0.08)',
-            },
-          }}
-        >
-          {cta.label}
-        </Button>
-        {incidentKey && (
+      <Box sx={{ ml: 6.5 }}>
+        {cta.secondary && (
+          <Typography sx={{
+            fontSize: '0.73rem',
+            color: 'hsl(var(--muted-foreground))',
+            mb: 1,
+            fontStyle: 'italic',
+          }}>
+            {cta.secondary}
+          </Typography>
+        )}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Button
             component={Link}
-            to={`${entityBasePath}/${incidentKey}`}
+            to={incidentKey ? `${entityBasePath}/${incidentKey}` : `/agent?search=${run.execution_id}`}
             size="small"
             variant="contained"
-            endIcon={<ArrowRight size={14} />}
+            startIcon={cta.icon}
             sx={{
               fontSize: '0.75rem',
               textTransform: 'none',
-              fontWeight: 500,
+              fontWeight: 600,
               backgroundColor: 'hsl(var(--primary))',
               color: 'hsl(var(--primary-foreground))',
-              px: 1.5,
+              px: 2,
               py: 0.5,
               boxShadow: 'none',
               '&:hover': {
@@ -457,7 +445,30 @@ const AttentionRunRow = ({ run, entityBasePath }: { run: AgentRun; entityBasePat
               },
             }}
           >
-            View Incident
+            {cta.label}
+          </Button>
+          {incidentKey && (
+            <Button
+              component={Link}
+              to={`${entityBasePath}/${incidentKey}`}
+              size="small"
+              variant="outlined"
+              endIcon={<ArrowRight size={14} />}
+              sx={{
+                fontSize: '0.75rem',
+                textTransform: 'none',
+                fontWeight: 500,
+                borderColor: 'hsl(var(--border))',
+                color: 'hsl(var(--foreground))',
+                px: 1.5,
+                py: 0.5,
+                '&:hover': {
+                  borderColor: 'hsl(var(--primary) / 0.5)',
+                  backgroundColor: 'hsl(var(--primary) / 0.08)',
+                },
+              }}
+            >
+              Open Incident
           </Button>
         )}
       </Box>
