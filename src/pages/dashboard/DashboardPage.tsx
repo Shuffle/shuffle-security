@@ -483,6 +483,7 @@ const DashboardPage = () => {
   const { runs, isLoading, stats, refresh } = useAgentActivity();
   const { singular: entitySingular, basePath: entityBasePath } = useEntityPreference();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [summaryRun, setSummaryRun] = useState<AgentRun | null>(null);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
