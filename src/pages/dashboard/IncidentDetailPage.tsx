@@ -2122,6 +2122,118 @@ const IncidentDetailPage = () => {
           </Typography>
         </Box>
       )}
+
+      {/* Agent action required banner — shown when navigating from dashboard */}
+      {(() => {
+        const agentActionId = searchParams.get('agent_action');
+        if (!agentActionId || !agentRuns?.length) return null;
+        const matchedRun = agentRuns.find((r: any) => r.execution_id === agentActionId);
+        if (!matchedRun) return null;
+
+        const status = matchedRun.status?.toUpperCase() || '';
+        const isWaiting = status === 'WAITING';
+        const isFailed = status === 'FAILED' || status === 'ABORTED';
+
+        // Determine what to show
+        let bannerTitle = 'Action Required';
+        let bannerDescription = 'The AI agent needs your input on this incident.';
+        let bannerColor = '--severity-high';
+        let bannerIcon = <AutoFixHighIcon sx={{ fontSize: 20 }} />;
+        let actionSteps: string[] = [];
+
+        if (isWaiting) {
+          bannerTitle = 'Approval Required';
+          bannerDescription = 'The AI agent is waiting for your approval before it can continue processing this incident.';
+          bannerColor = '--severity-info';
+          actionSteps = [
+            'Review the agent\'s proposed action in the Activity feed below.',
+            'Verify the action is appropriate for this incident.',
+            'Approve or reject the action to let the agent proceed.',
+          ];
+        } else if (isFailed) {
+          bannerTitle = 'Agent Failed — Manual Action Needed';
+          bannerDescription = 'The AI agent encountered an error while processing this incident. You need to investigate and take manual action.';
+          bannerColor = '--severity-critical';
+          actionSteps = [
+            'Check the Agent activity in the feed below for error details.',
+            'Manually perform the action the agent could not complete.',
+            'Update the incident status accordingly.',
+          ];
+        } else {
+          bannerTitle = 'Review Required';
+          bannerDescription = 'The AI agent flagged uncertainty in its analysis of this incident. Please review and confirm.';
+          bannerColor = '--severity-medium';
+          actionSteps = [
+            'Review the agent\'s findings in the Activity feed below.',
+            'Verify the analysis against the incident data.',
+            'Confirm or correct the agent\'s conclusions.',
+          ];
+        }
+
+        return (
+          <Box sx={{
+            mb: 2,
+            px: 3,
+            py: 2.5,
+            borderRadius: 2,
+            backgroundColor: `hsl(var(${bannerColor}) / 0.06)`,
+            border: `1px solid hsl(var(${bannerColor}) / 0.2)`,
+          }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
+              <Box sx={{ color: `hsl(var(${bannerColor}))`, display: 'flex' }}>
+                {bannerIcon}
+              </Box>
+              <Typography sx={{
+                fontWeight: 600,
+                fontSize: '0.95rem',
+                color: `hsl(var(${bannerColor}))`,
+              }}>
+                {bannerTitle}
+              </Typography>
+            </Box>
+            <Typography sx={{
+              fontSize: '0.84rem',
+              color: 'hsl(var(--foreground))',
+              mb: 1.5,
+              lineHeight: 1.5,
+            }}>
+              {bannerDescription}
+            </Typography>
+            <Box component="ol" sx={{ m: 0, pl: 2.5, mb: 1 }}>
+              {actionSteps.map((step, i) => (
+                <Box component="li" key={i} sx={{ mb: 0.5 }}>
+                  <Typography sx={{
+                    fontSize: '0.82rem',
+                    color: 'hsl(var(--muted-foreground))',
+                    lineHeight: 1.5,
+                  }}>
+                    {step}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+            <Button
+              size="small"
+              onClick={() => {
+                // Remove the param so banner can be dismissed
+                const newParams = new URLSearchParams(searchParams);
+                newParams.delete('agent_action');
+                const paramStr = newParams.toString();
+                window.history.replaceState(null, '', `${window.location.pathname}${paramStr ? '?' + paramStr : ''}`);
+              }}
+              sx={{
+                fontSize: '0.75rem',
+                textTransform: 'none',
+                color: 'hsl(var(--muted-foreground))',
+                mt: 0.5,
+              }}
+            >
+              Dismiss
+            </Button>
+          </Box>
+        );
+      })()}
+
       {/* Compact Header */}
       <Box sx={{ mb: 2 }}>
         {/* Back link */}
