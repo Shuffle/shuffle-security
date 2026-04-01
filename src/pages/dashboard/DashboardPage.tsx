@@ -298,7 +298,6 @@ const RunRow = ({ run, entityBasePath }: { run: AgentRun; entityBasePath: string
 // ── Attention row (enhanced with CTAs) ─────────────────────────────────────────
 
 const AttentionRunRow = ({ run, entityBasePath }: { run: AgentRun; entityBasePath: string }) => {
-  const iconColor = getRunIconColor(run);
   const incidentKey = getIncidentKey(run);
   const incidentTitle = getIncidentTitleFromRun(run);
   const description = getAIDescription(run, 'attention');
@@ -313,8 +312,8 @@ const AttentionRunRow = ({ run, entityBasePath }: { run: AgentRun; entityBasePat
     <Box
       sx={{
         display: 'flex',
-        flexDirection: 'column',
-        gap: 1.5,
+        alignItems: 'center',
+        gap: 2,
         px: 2.5,
         py: 2,
         borderRadius: 2,
@@ -324,182 +323,156 @@ const AttentionRunRow = ({ run, entityBasePath }: { run: AgentRun; entityBasePat
         '&:hover': { borderColor: 'hsl(var(--primary) / 0.4)' },
       }}
     >
-      {/* Top: icon + title + status */}
-      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-        <Box sx={{
-          width: 36,
-          height: 36,
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          bgcolor: `${iconColor}15`,
-          color: iconColor,
-          flexShrink: 0,
-          mt: 0.25,
-        }}>
-          {getRunIcon(run)}
-        </Box>
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography sx={{
-              fontSize: '0.85rem',
-              fontWeight: 600,
-              color: 'hsl(var(--foreground))',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}>
-              {incidentTitle || getRunTitle(run)}
-            </Typography>
-            {severity.level !== 'unknown' && (
-              <Chip
-                label={severity.label}
-                size="small"
-                sx={{
-                  height: 20,
-                  fontSize: '0.68rem',
-                  fontWeight: 600,
-                  backgroundColor: `hsl(var(${severity.colorToken}) / 0.12)`,
-                  color: `hsl(var(${severity.colorToken}))`,
-                }}
-              />
-            )}
-            {runFailed && (
-              <Chip
-                label={status === 'ABORTED' ? 'Aborted' : 'Failed'}
-                size="small"
-                sx={{
-                  height: 20,
-                  fontSize: '0.68rem',
-                  fontWeight: 600,
-                  backgroundColor: 'hsl(var(--severity-critical) / 0.12)',
-                  color: 'hsl(var(--severity-critical))',
-                }}
-              />
-            )}
-            {isUnsure && (
-              <Chip
-                icon={<HelpCircle size={12} />}
-                label="Unsure"
-                size="small"
-                sx={{
-                  height: 20,
-                  fontSize: '0.68rem',
-                  fontWeight: 600,
-                  backgroundColor: 'hsl(var(--severity-medium) / 0.12)',
-                  color: 'hsl(var(--severity-medium))',
-                  '& .MuiChip-icon': { color: 'inherit' },
-                }}
-              />
-            )}
-            {status === 'WAITING' && (
-              <Chip
-                icon={<Clock size={12} />}
-                label="Waiting"
-                size="small"
-                sx={{
-                  height: 20,
-                  fontSize: '0.68rem',
-                  fontWeight: 600,
-                  backgroundColor: 'hsl(var(--severity-info) / 0.12)',
-                  color: 'hsl(var(--severity-info))',
-                  '& .MuiChip-icon': { color: 'inherit' },
-                }}
-              />
-            )}
-          </Box>
-
-          {/* Description of what AI needs / did */}
+      {/* Content */}
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Typography sx={{
-            fontSize: '0.78rem',
-            color: runFailed ? 'hsl(var(--severity-critical) / 0.85)' : 'hsl(var(--muted-foreground))',
-            mt: 0.5,
-            lineHeight: 1.5,
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
+            fontSize: '0.85rem',
+            fontWeight: 600,
+            color: 'hsl(var(--foreground))',
             overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
           }}>
-            {description}
+            {incidentTitle || getRunTitle(run)}
           </Typography>
+          {severity.level !== 'unknown' && (
+            <Chip
+              label={severity.label}
+              size="small"
+              sx={{
+                height: 20,
+                fontSize: '0.68rem',
+                fontWeight: 600,
+                backgroundColor: `hsl(var(${severity.colorToken}) / 0.12)`,
+                color: `hsl(var(${severity.colorToken}))`,
+              }}
+            />
+          )}
+          {runFailed && (
+            <Chip
+              label={status === 'ABORTED' ? 'Aborted' : 'Failed'}
+              size="small"
+              sx={{
+                height: 20,
+                fontSize: '0.68rem',
+                fontWeight: 600,
+                backgroundColor: 'hsl(var(--severity-critical) / 0.12)',
+                color: 'hsl(var(--severity-critical))',
+              }}
+            />
+          )}
+          {isUnsure && (
+            <Chip
+              icon={<HelpCircle size={12} />}
+              label="Unsure"
+              size="small"
+              sx={{
+                height: 20,
+                fontSize: '0.68rem',
+                fontWeight: 600,
+                backgroundColor: 'hsl(var(--severity-medium) / 0.12)',
+                color: 'hsl(var(--severity-medium))',
+                '& .MuiChip-icon': { color: 'inherit' },
+              }}
+            />
+          )}
+          {status === 'WAITING' && (
+            <Chip
+              icon={<Clock size={12} />}
+              label="Waiting"
+              size="small"
+              sx={{
+                height: 20,
+                fontSize: '0.68rem',
+                fontWeight: 600,
+                backgroundColor: 'hsl(var(--severity-info) / 0.12)',
+                color: 'hsl(var(--severity-info))',
+                '& .MuiChip-icon': { color: 'inherit' },
+              }}
+            />
+          )}
+        </Box>
 
-          {/* Timestamp */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-            <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', opacity: 0.7 }}>
-              {run.started_at ? getTimeAgo(run.started_at) : '—'}
-            </Typography>
-            {duration && (
-              <>
-                <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', opacity: 0.4 }}>·</Typography>
-                <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', opacity: 0.7 }}>{duration}</Typography>
-              </>
-            )}
-          </Box>
+        {/* Description */}
+        <Typography sx={{
+          fontSize: '0.78rem',
+          color: runFailed ? 'hsl(var(--severity-critical) / 0.85)' : 'hsl(var(--muted-foreground))',
+          mt: 0.5,
+          lineHeight: 1.5,
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical',
+          overflow: 'hidden',
+        }}>
+          {description}
+        </Typography>
+
+        {/* Timestamp */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+          <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', opacity: 0.7 }}>
+            {run.started_at ? getTimeAgo(run.started_at) : '—'}
+          </Typography>
+          {duration && (
+            <>
+              <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', opacity: 0.4 }}>·</Typography>
+              <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', opacity: 0.7 }}>{duration}</Typography>
+            </>
+          )}
         </Box>
       </Box>
 
-      {/* CTAs */}
-      <Box sx={{ ml: 6.5 }}>
-        {cta.secondary && (
-          <Typography sx={{
-            fontSize: '0.73rem',
-            color: 'hsl(var(--muted-foreground))',
-            mb: 1,
-            fontStyle: 'italic',
-          }}>
-            {cta.secondary}
-          </Typography>
-        )}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      {/* CTAs on the right */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
+        <Button
+          component={Link}
+          to={incidentKey ? `${entityBasePath}/${incidentKey}` : `/agent?search=${run.execution_id}`}
+          size="small"
+          variant="contained"
+          startIcon={cta.icon}
+          sx={{
+            fontSize: '0.75rem',
+            textTransform: 'none',
+            fontWeight: 600,
+            backgroundColor: 'hsl(var(--primary))',
+            color: 'hsl(var(--primary-foreground))',
+            px: 2,
+            py: 0.5,
+            boxShadow: 'none',
+            whiteSpace: 'nowrap',
+            '&:hover': {
+              backgroundColor: 'hsl(var(--primary) / 0.9)',
+              boxShadow: 'none',
+            },
+          }}
+        >
+          {cta.label}
+        </Button>
+        {incidentKey && (
           <Button
             component={Link}
-            to={incidentKey ? `${entityBasePath}/${incidentKey}` : `/agent?search=${run.execution_id}`}
+            to={`${entityBasePath}/${incidentKey}`}
             size="small"
-            variant="contained"
-            startIcon={cta.icon}
+            variant="outlined"
+            endIcon={<ArrowRight size={14} />}
             sx={{
               fontSize: '0.75rem',
               textTransform: 'none',
-              fontWeight: 600,
-              backgroundColor: 'hsl(var(--primary))',
-              color: 'hsl(var(--primary-foreground))',
-              px: 2,
+              fontWeight: 500,
+              borderColor: 'hsl(var(--border))',
+              color: 'hsl(var(--foreground))',
+              px: 1.5,
               py: 0.5,
-              boxShadow: 'none',
+              whiteSpace: 'nowrap',
               '&:hover': {
-                backgroundColor: 'hsl(var(--primary) / 0.9)',
-                boxShadow: 'none',
+                borderColor: 'hsl(var(--primary) / 0.5)',
+                backgroundColor: 'hsl(var(--primary) / 0.08)',
               },
             }}
           >
-            {cta.label}
+            Open Incident
           </Button>
-          {incidentKey && (
-            <Button
-              component={Link}
-              to={`${entityBasePath}/${incidentKey}`}
-              size="small"
-              variant="outlined"
-              endIcon={<ArrowRight size={14} />}
-              sx={{
-                fontSize: '0.75rem',
-                textTransform: 'none',
-                fontWeight: 500,
-                borderColor: 'hsl(var(--border))',
-                color: 'hsl(var(--foreground))',
-                px: 1.5,
-                py: 0.5,
-                '&:hover': {
-                  borderColor: 'hsl(var(--primary) / 0.5)',
-                  backgroundColor: 'hsl(var(--primary) / 0.08)',
-                },
-              }}
-            >
-              Open Incident
-            </Button>
           )}
-        </Box>
       </Box>
     </Box>
   );
@@ -659,28 +632,16 @@ const DashboardPage = () => {
           </Box>
         ) : (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            {needsAttention.map((run) => {
-              const sev = getIncidentSeverityFromRun(run);
-              const borderToken = sev.level !== 'unknown' ? sev.colorToken : '--severity-high';
-              return (
+            {needsAttention.map((run) => (
               <motion.div
                 key={run.execution_id}
                 initial={{ opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.2 }}
               >
-                <Box
-                  sx={{
-                    borderLeft: `3px solid hsl(var(${borderToken}))`,
-                    borderRadius: 2,
-                    overflow: 'hidden',
-                  }}
-                >
-                  <AttentionRunRow run={run} entityBasePath={entityBasePath} />
-                </Box>
+                <AttentionRunRow run={run} entityBasePath={entityBasePath} />
               </motion.div>
-              );
-            })}
+            ))}
           </Box>
         )}
       </Box>
