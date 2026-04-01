@@ -238,6 +238,19 @@ const RunRow = ({ run, entityBasePath }: { run: AgentRun; entityBasePath: string
           }}>
             {incidentTitle || getRunTitle(run)}
           </Typography>
+          {severity.level !== 'unknown' && (
+            <Chip
+              label={severity.label}
+              size="small"
+              sx={{
+                height: 20,
+                fontSize: '0.68rem',
+                fontWeight: 600,
+                backgroundColor: `hsl(var(${severity.colorToken}) / 0.12)`,
+                color: `hsl(var(${severity.colorToken}))`,
+              }}
+            />
+          )}
           <Box sx={{ color: statusCfg.color, display: 'flex', alignItems: 'center', flexShrink: 0 }}>
             {statusCfg.icon}
           </Box>
