@@ -298,7 +298,6 @@ const RunRow = ({ run, entityBasePath }: { run: AgentRun; entityBasePath: string
 // ── Attention row (enhanced with CTAs) ─────────────────────────────────────────
 
 const AttentionRunRow = ({ run, entityBasePath }: { run: AgentRun; entityBasePath: string }) => {
-  const iconColor = getRunIconColor(run);
   const incidentKey = getIncidentKey(run);
   const incidentTitle = getIncidentTitleFromRun(run);
   const description = getAIDescription(run, 'attention');
