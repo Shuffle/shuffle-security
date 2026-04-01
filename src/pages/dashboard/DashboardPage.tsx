@@ -705,12 +705,15 @@ const DashboardPage = () => {
         )}
       </Box>
     </Box>
+
+    <AgentActionSummaryDialog
+      open={!!summaryRun}
+      onClose={() => setSummaryRun(null)}
+      run={summaryRun}
+      entityBasePath={entityBasePath}
+    />
     </>
   );
-};
-
-// Wrap return in fragment — find the opening return
-
 };
 
 export default DashboardPage;
