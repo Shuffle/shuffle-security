@@ -473,6 +473,7 @@ const AttentionRunRow = ({ run, entityBasePath }: { run: AgentRun; entityBasePat
           )}
         </Box>
       </Box>
+    </Box>
   );
 };
 
