@@ -873,6 +873,7 @@ const DashboardPage = () => {
           label="Needs Your Input"
           delay={0}
           isLoading={isLoading && notificationsLoading}
+          onClick={() => document.getElementById('section-attention')?.scrollIntoView({ behavior: 'smooth' })}
         />
         <StatCard
           icon={<Loader2 size={18} />}
@@ -882,6 +883,7 @@ const DashboardPage = () => {
           label="Currently Running"
           delay={0.05}
           isLoading={isLoading}
+          onClick={() => document.getElementById('section-running')?.scrollIntoView({ behavior: 'smooth' })}
         />
         <StatCard
           icon={<CheckCircle size={18} />}
@@ -891,6 +893,7 @@ const DashboardPage = () => {
           label="Completed"
           delay={0.1}
           isLoading={isLoading}
+          onClick={() => document.getElementById('section-completed')?.scrollIntoView({ behavior: 'smooth' })}
         />
         <StatCard
           icon={<Clock size={18} />}
