@@ -99,6 +99,8 @@ const buildFromNotification = (n: AgentNotification, entityBasePath: string): Un
     timeline.push({ label: 'Proposed action', detail: n.action, status: 'pending' });
   }
 
+  const hasQuestions = n.questions && n.questions.length > 0;
+
   return {
     title: n.title || 'Agent Notification',
     severity: null,
@@ -108,7 +110,9 @@ const buildFromNotification = (n: AgentNotification, entityBasePath: string): Un
     timeline,
     pendingAction: n.action || n.description || null,
     incidentLink: incidentId ? `${entityBasePath}/${n.incident_id}` : null,
-    isApproval: !n.questions || n.questions.length === 0,
+    isApproval: !hasQuestions,
+    isQuestion: !!hasQuestions,
+    questions: hasQuestions ? n.questions! : [],
     notification: n,
   };
 };
