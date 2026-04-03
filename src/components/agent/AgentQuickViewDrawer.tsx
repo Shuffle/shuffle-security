@@ -469,8 +469,43 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
           </Box>
         )}
 
-        {/* Proposed Next Action — after timeline */}
-        {data.pendingAction && (
+        {/* Questions — when agent needs user input instead of approval */}
+        {data.isQuestion && data.questions.length > 0 && (
+          <Box>
+            <SectionLabel>Agent Needs Your Input</SectionLabel>
+            <Box sx={{
+              px: 2.5, py: 2, borderRadius: 2,
+              backgroundColor: 'hsl(var(--severity-info) / 0.06)',
+              border: '1px solid hsl(var(--severity-info) / 0.25)',
+              borderLeft: '3px solid hsl(var(--severity-info))',
+              display: 'flex', flexDirection: 'column', gap: 2,
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                <HelpCircle size={14} style={{ color: 'hsl(var(--severity-info))' }} />
+                <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: 'hsl(var(--severity-info))', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Questions to answer
+                </Typography>
+              </Box>
+              {data.questions.map((question, idx) => (
+                <Box key={idx}>
+                  <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: 'hsl(var(--foreground))', mb: 0.75 }}>
+                    {idx + 1}. {question}
+                  </Typography>
+                  <TextField
+                    fullWidth multiline minRows={2} maxRows={4}
+                    placeholder="Type your answer…"
+                    value={questionAnswers[idx] || ''}
+                    onChange={(e) => setQuestionAnswers(prev => ({ ...prev, [idx]: e.target.value }))}
+                    sx={textFieldSx}
+                  />
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        )}
+
+        {/* Proposed Next Action — only for approval items, not questions */}
+        {data.pendingAction && !data.isQuestion && (
           <Box>
             <SectionLabel>Proposed Next Action</SectionLabel>
             <Box sx={{
