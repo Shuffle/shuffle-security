@@ -671,6 +671,7 @@ const DashboardPage = () => {
   const [quickViewNotification, setQuickViewNotification] = useState<AgentNotification | null>(null);
   const [attentionPage, setAttentionPage] = useState(0);
   const [completedPage, setCompletedPage] = useState(0);
+  const [attentionFilter, setAttentionFilter] = useState<'all' | 'failed' | 'approval' | 'question'>('all');
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
