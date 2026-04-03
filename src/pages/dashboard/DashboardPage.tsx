@@ -928,10 +928,8 @@ const DashboardPage = () => {
       {/* Sticky compact stat bar */}
       <Box
         sx={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
+          position: 'sticky',
+          top: -32,
           zIndex: 1100,
           transform: isSticky ? 'translateY(0)' : 'translateY(-100%)',
           opacity: isSticky ? 1 : 0,
@@ -939,8 +937,10 @@ const DashboardPage = () => {
           backgroundColor: 'hsl(var(--background) / 0.92)',
           backdropFilter: 'blur(12px)',
           borderBottom: '1px solid hsl(var(--border))',
-          px: 3,
+          mx: -4,
+          px: 4,
           py: 1,
+          mb: isSticky ? 2 : -6,
         }}
       >
         <Box sx={{ maxWidth: 1400, mx: 'auto', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1.5 }}>
