@@ -925,21 +925,18 @@ const DashboardPage = () => {
         />
       </Box>
 
-      {/* Sticky compact stat bar */}
+      {/* Sticky compact stat bar — appears when scrolled past the original cards */}
+      {isSticky && (
       <Box
         sx={{
-          position: 'fixed',
+          position: 'sticky',
           top: 0,
-          left: 0,
-          right: 0,
           zIndex: 1100,
-          transform: isSticky ? 'translateY(0)' : 'translateY(-100%)',
-          opacity: isSticky ? 1 : 0,
-          transition: 'transform 0.25s ease, opacity 0.25s ease',
           backgroundColor: 'hsl(var(--background) / 0.92)',
           backdropFilter: 'blur(12px)',
           borderBottom: '1px solid hsl(var(--border))',
-          px: 3,
+          mx: { xs: -1.5, sm: -2, md: -3 },
+          px: { xs: 1.5, sm: 2, md: 3 },
           py: 1,
         }}
       >
@@ -989,6 +986,7 @@ const DashboardPage = () => {
           />
         </Box>
       </Box>
+      )}
 
       {/* Needs Attention Section */}
       <Box id="section-attention" sx={{ mb: 4 }}>
