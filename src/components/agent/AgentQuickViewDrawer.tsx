@@ -336,6 +336,9 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
             {data.isApproval && (
               <Chip icon={<Clock size={12} />} label="Approval Needed" size="small" sx={statusChipSx('--severity-info')} />
             )}
+            {data.isQuestion && (
+              <Chip icon={<HelpCircle size={12} />} label="Pending Question" size="small" sx={statusChipSx('--severity-info')} />
+            )}
           </Box>
           {/* Timestamp */}
           <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--muted-foreground))', mt: 0.75 }}>
