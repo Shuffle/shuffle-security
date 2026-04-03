@@ -293,7 +293,7 @@ interface NotificationRowProps {
   notification: AgentNotification;
   entityBasePath: string;
   onApprove: (n: AgentNotification) => void;
-  onConfigure: (n: AgentNotification) => void;
+  onQuickView: (n: AgentNotification) => void;
   onAnswer: (n: AgentNotification) => void;
 }
 
