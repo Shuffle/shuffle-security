@@ -323,9 +323,6 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
       {/* Content */}
       <Box sx={{ px: 3, py: 3, display: 'flex', flexDirection: 'column', gap: 3, flex: 1, overflow: 'auto' }}>
 
-        {/* Agent Decision Timeline — shown first */}
-        {data.timeline.length > 0 && (
-
         {/* Agent Decision Timeline */}
         {data.timeline.length > 0 && (
           <Box>
