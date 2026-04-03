@@ -364,8 +364,41 @@ const NotificationRow = ({ notification, entityBasePath, onApprove, onQuickView,
           WebkitBoxOrient: 'vertical',
           overflow: 'hidden',
         }}>
-          {notification.action || notification.description}
+          {notification.description}
         </Typography>
+
+        {isApproval && notification.action && notification.action !== notification.description && (
+          <Box sx={{
+            mt: 1,
+            px: 1.5,
+            py: 1,
+            borderRadius: 1.5,
+            backgroundColor: 'hsl(var(--severity-info) / 0.06)',
+            border: '1px solid hsl(var(--severity-info) / 0.15)',
+          }}>
+            <Typography sx={{
+              fontSize: '0.72rem',
+              fontWeight: 600,
+              color: 'hsl(var(--severity-info))',
+              textTransform: 'uppercase',
+              letterSpacing: '0.03em',
+              mb: 0.25,
+            }}>
+              Proposed Action
+            </Typography>
+            <Typography sx={{
+              fontSize: '0.78rem',
+              color: 'hsl(var(--foreground))',
+              lineHeight: 1.5,
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+            }}>
+              {notification.action}
+            </Typography>
+          </Box>
+        )}
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
           <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', opacity: 0.7 }}>
