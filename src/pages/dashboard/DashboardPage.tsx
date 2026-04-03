@@ -925,22 +925,19 @@ const DashboardPage = () => {
         />
       </Box>
 
-      {/* Sticky compact stat bar */}
+      {/* Sticky compact stat bar — appears when scrolled past the original cards */}
+      {isSticky && (
       <Box
         sx={{
           position: 'sticky',
-          top: -32,
+          top: 0,
           zIndex: 1100,
-          transform: isSticky ? 'translateY(0)' : 'translateY(-100%)',
-          opacity: isSticky ? 1 : 0,
-          transition: 'transform 0.25s ease, opacity 0.25s ease',
           backgroundColor: 'hsl(var(--background) / 0.92)',
           backdropFilter: 'blur(12px)',
           borderBottom: '1px solid hsl(var(--border))',
-          mx: -4,
-          px: 4,
+          mx: { xs: -1.5, sm: -2, md: -3 },
+          px: { xs: 1.5, sm: 2, md: 3 },
           py: 1,
-          mb: isSticky ? 2 : -6,
         }}
       >
         <Box sx={{ maxWidth: 1400, mx: 'auto', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1.5 }}>
