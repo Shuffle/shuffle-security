@@ -174,14 +174,15 @@ const buildFromRun = (run: AgentRun, entityBasePath: string): UnifiedData => {
     }
   }
 
-  // Extract proposed next action from the agent's output for failed/unsure runs
+  // Extract proposed next action — must be a remediation, NOT the error description
   let pendingAction: string | null = null;
   if ((runFailed || isUnsure) && output) {
     const cleanOutput = output.replace(/[#*`]/g, '').trim();
-    // Try to find a recommended/proposed action in the output
+    // Try to find explicit recommendations in the output
     const actionPatterns = [
-      /(?:recommend|suggest|propos|next step|remediat|action|resolution|fix)[:\s]*(.+)/i,
-      /(?:should|need to|try|consider)[:\s]*(.+)/i,
+      /(?:recommend|suggest|propos|next step|remediat|resolution|fix)[:\s]+(.+)/i,
+      /(?:should|need to|try|consider)[:\s]+(.+)/i,
+      /(?:action[:\s]|plan[:\s]|to resolve)[:\s]*(.+)/i,
     ];
     for (const pattern of actionPatterns) {
       const match = cleanOutput.match(pattern);
@@ -191,9 +192,16 @@ const buildFromRun = (run: AgentRun, entityBasePath: string): UnifiedData => {
         break;
       }
     }
-    // Fallback: use the full output as the proposed action context
+    // Fallback: generate a contextual remediation based on failure info
     if (!pendingAction) {
-      pendingAction = cleanOutput.length > 200 ? cleanOutput.slice(0, 200) + '…' : cleanOutput;
+      const workflowName = run.workflow?.name || 'the workflow';
+      if (failureInfo?.node) {
+        pendingAction = `Re-run node '${failureInfo.node}' in ${workflowName} with corrected parameters, or disable the failing node and route to a fallback path.`;
+      } else if (runFailed) {
+        pendingAction = `Investigate and re-execute ${workflowName} after reviewing the error logs and correcting the root cause.`;
+      } else {
+        pendingAction = `Review the flagged output of ${workflowName} and confirm whether the result is valid or needs manual intervention.`;
+      }
     }
   }
 
