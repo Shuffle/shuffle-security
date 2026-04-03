@@ -1147,6 +1147,7 @@ const DashboardPage = () => {
       entityBasePath={entityBasePath}
       onApprove={handleApprove}
       onConfigureApprove={handleConfigureApprove}
+      onSubmitAnswers={handleSubmitAnswers}
     />
     </>
   );

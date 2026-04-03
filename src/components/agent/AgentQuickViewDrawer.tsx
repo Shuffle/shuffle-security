@@ -26,6 +26,7 @@ import {
   MoreHorizontal,
   Zap,
   Shield,
+  Send,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { AgentNotification } from '@/services/notifications';
@@ -52,6 +53,7 @@ interface Props {
   entityBasePath: string;
   onApprove?: (notification: AgentNotification) => void;
   onConfigureApprove?: (notificationId: string, modifiedAction?: string) => void;
+  onSubmitAnswers?: (notificationId: string, answers: Record<number, string>) => void;
 }
 
 /** Build a unified data shape from either a notification or a run */
@@ -65,6 +67,8 @@ interface UnifiedData {
   pendingAction: string | null;
   incidentLink: string | null;
   isApproval: boolean;
+  isQuestion: boolean;
+  questions: string[];
   notification: AgentNotification | null;
 }
 
@@ -96,6 +100,8 @@ const buildFromNotification = (n: AgentNotification, entityBasePath: string): Un
     timeline.push({ label: 'Proposed action', detail: n.action, status: 'pending' });
   }
 
+  const hasQuestions = n.questions && n.questions.length > 0;
+
   return {
     title: n.title || 'Agent Notification',
     severity: null,
@@ -105,7 +111,9 @@ const buildFromNotification = (n: AgentNotification, entityBasePath: string): Un
     timeline,
     pendingAction: n.action || n.description || null,
     incidentLink: incidentId ? `${entityBasePath}/${n.incident_id}` : null,
-    isApproval: !n.questions || n.questions.length === 0,
+    isApproval: !hasQuestions,
+    isQuestion: !!hasQuestions,
+    questions: hasQuestions ? n.questions! : [],
     notification: n,
   };
 };
@@ -225,6 +233,8 @@ const buildFromRun = (run: AgentRun, entityBasePath: string): UnifiedData => {
     pendingAction,
     incidentLink: incidentKey ? `${entityBasePath}/${incidentKey}?agent_action=${run.execution_id}` : null,
     isApproval: false,
+    isQuestion: false,
+    questions: [],
     notification: null,
   };
 };
@@ -232,10 +242,11 @@ const buildFromRun = (run: AgentRun, entityBasePath: string): UnifiedData => {
 // ── Visible timeline count before expand ──
 const VISIBLE_TIMELINE_COUNT = 3;
 
-const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, onConfigureApprove }: Props) => {
+const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, onConfigureApprove, onSubmitAnswers }: Props) => {
   const [isConfiguring, setIsConfiguring] = useState(false);
   const [modifiedAction, setModifiedAction] = useState('');
   const [timelineExpanded, setTimelineExpanded] = useState(false);
+  const [questionAnswers, setQuestionAnswers] = useState<Record<number, string>>({});
 
   if (!item) return null;
 
@@ -247,7 +258,14 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
     setIsConfiguring(false);
     setModifiedAction('');
     setTimelineExpanded(false);
+    setQuestionAnswers({});
     onClose();
+  };
+
+  const handleSubmitAnswers = () => {
+    if (data.notification) onSubmitAnswers?.(data.notification.id, questionAnswers);
+    setQuestionAnswers({});
+    handleClose();
   };
 
   const handleApprove = () => {
@@ -317,6 +335,9 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
             })()}
             {data.isApproval && (
               <Chip icon={<Clock size={12} />} label="Approval Needed" size="small" sx={statusChipSx('--severity-info')} />
+            )}
+            {data.isQuestion && (
+              <Chip icon={<HelpCircle size={12} />} label="Pending Question" size="small" sx={statusChipSx('--severity-info')} />
             )}
           </Box>
           {/* Timestamp */}
@@ -452,8 +473,43 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
           </Box>
         )}
 
-        {/* Proposed Next Action — after timeline */}
-        {data.pendingAction && (
+        {/* Questions — when agent needs user input instead of approval */}
+        {data.isQuestion && data.questions.length > 0 && (
+          <Box>
+            <SectionLabel>Agent Needs Your Input</SectionLabel>
+            <Box sx={{
+              px: 2.5, py: 2, borderRadius: 2,
+              backgroundColor: 'hsl(var(--severity-info) / 0.06)',
+              border: '1px solid hsl(var(--severity-info) / 0.25)',
+              borderLeft: '3px solid hsl(var(--severity-info))',
+              display: 'flex', flexDirection: 'column', gap: 2,
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                <HelpCircle size={14} style={{ color: 'hsl(var(--severity-info))' }} />
+                <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: 'hsl(var(--severity-info))', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Questions to answer
+                </Typography>
+              </Box>
+              {data.questions.map((question, idx) => (
+                <Box key={idx}>
+                  <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: 'hsl(var(--foreground))', mb: 0.75 }}>
+                    {idx + 1}. {question}
+                  </Typography>
+                  <TextField
+                    fullWidth multiline minRows={2} maxRows={4}
+                    placeholder="Type your answer…"
+                    value={questionAnswers[idx] || ''}
+                    onChange={(e) => setQuestionAnswers(prev => ({ ...prev, [idx]: e.target.value }))}
+                    sx={textFieldSx}
+                  />
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        )}
+
+        {/* Proposed Next Action — only for approval items, not questions */}
+        {data.pendingAction && !data.isQuestion && (
           <Box>
             <SectionLabel>Proposed Next Action</SectionLabel>
             <Box sx={{
@@ -509,6 +565,17 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
 
       {/* Footer actions */}
       <Box sx={footerSx}>
+        {data.isQuestion && data.notification && (
+          <Button
+            onClick={handleSubmitAnswers}
+            fullWidth variant="contained"
+            disabled={!data.questions.every((_, i) => questionAnswers[i]?.trim())}
+            startIcon={<Send size={15} />}
+            sx={approveButtonSx}
+          >
+            Submit Answers
+          </Button>
+        )}
         {data.isApproval && data.notification && (
           <Box sx={{ display: 'flex', gap: 1 }}>
             <Button onClick={handleApprove} fullWidth variant="contained" startIcon={<CheckCircle size={15} />}
