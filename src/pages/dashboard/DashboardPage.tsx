@@ -1064,7 +1064,7 @@ const DashboardPage = () => {
       )}
 
       {/* Recent Activity */}
-      <Box>
+      <Box id="section-completed">
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
           <Typography sx={{ fontWeight: 600, fontSize: '1rem', color: 'hsl(var(--foreground))' }}>
             Recent Completed
