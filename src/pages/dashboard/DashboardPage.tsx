@@ -914,7 +914,7 @@ const DashboardPage = () => {
                     notification={item.notification}
                     entityBasePath={entityBasePath}
                     onApprove={handleApprove}
-                    onConfigure={setConfigureNotification}
+                    onQuickView={setQuickViewNotification}
                     onAnswer={setQuestionNotification}
                   />
                 </motion.div>
