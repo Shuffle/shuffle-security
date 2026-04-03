@@ -3,7 +3,7 @@
  * Highlights runs needing user approval/input prominently.
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import {
   Box,
   Typography,
