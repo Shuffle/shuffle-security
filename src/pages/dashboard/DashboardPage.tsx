@@ -693,6 +693,8 @@ const AttentionRunRow = ({ run, entityBasePath, onViewDetails }: { run: AgentRun
 
 // ── Page ───────────────────────────────────────────────────────────────────────
 
+const ITEMS_PER_PAGE = 10;
+
 const DashboardPage = () => {
   const { runs, isLoading, stats, refresh } = useAgentActivity();
   const { notifications, isLoading: notificationsLoading, refresh: refreshNotifications } = useAgentNotifications();
@@ -701,6 +703,8 @@ const DashboardPage = () => {
   const [summaryRun, setSummaryRun] = useState<AgentRun | null>(null);
   const [questionNotification, setQuestionNotification] = useState<AgentNotification | null>(null);
   const [configureNotification, setConfigureNotification] = useState<AgentNotification | null>(null);
+  const [attentionPage, setAttentionPage] = useState(0);
+  const [completedPage, setCompletedPage] = useState(0);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -757,12 +761,24 @@ const DashboardPage = () => {
     return {
       needsAttention: attention,
       incidentRuns: incidents,
-      recentCompleted: completed.slice(0, 10),
+      recentCompleted: completed,
       activeRuns: active,
     };
   }, [runs]);
 
-  const totalAttentionCount = notifications.length + needsAttention.length;
+  // Combine attention items: notifications first, then run-based
+  const allAttentionItems = useMemo(() => {
+    const notifItems = notifications.map(n => ({ type: 'notification' as const, notification: n }));
+    const runItems = needsAttention.map(r => ({ type: 'run' as const, run: r }));
+    return [...notifItems, ...runItems];
+  }, [notifications, needsAttention]);
+
+  const totalAttentionCount = allAttentionItems.length;
+  const attentionTotalPages = Math.ceil(totalAttentionCount / ITEMS_PER_PAGE);
+  const paginatedAttention = allAttentionItems.slice(attentionPage * ITEMS_PER_PAGE, (attentionPage + 1) * ITEMS_PER_PAGE);
+
+  const completedTotalPages = Math.ceil(recentCompleted.length / ITEMS_PER_PAGE);
+  const paginatedCompleted = recentCompleted.slice(completedPage * ITEMS_PER_PAGE, (completedPage + 1) * ITEMS_PER_PAGE);
 
   return (
     <>
@@ -882,36 +898,72 @@ const DashboardPage = () => {
             </Typography>
           </Box>
         ) : (
+          <>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            {/* Notification-based items first (approvals & questions) */}
-            {notifications.map((notification) => (
-              <motion.div
-                key={notification.id}
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <NotificationRow
-                  notification={notification}
-                  entityBasePath={entityBasePath}
-                  onApprove={handleApprove}
-                  onConfigure={setConfigureNotification}
-                  onAnswer={setQuestionNotification}
-                />
-              </motion.div>
-            ))}
-            {/* Agent run-based items (failed, unsure, etc.) */}
-            {needsAttention.map((run) => (
-              <motion.div
-                key={run.execution_id}
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <AttentionRunRow run={run} entityBasePath={entityBasePath} onViewDetails={setSummaryRun} />
-              </motion.div>
-            ))}
+            {paginatedAttention.map((item) =>
+              item.type === 'notification' ? (
+                <motion.div
+                  key={item.notification.id}
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <NotificationRow
+                    notification={item.notification}
+                    entityBasePath={entityBasePath}
+                    onApprove={handleApprove}
+                    onConfigure={setConfigureNotification}
+                    onAnswer={setQuestionNotification}
+                  />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key={item.run.execution_id}
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <AttentionRunRow run={item.run} entityBasePath={entityBasePath} onViewDetails={setSummaryRun} />
+                </motion.div>
+              )
+            )}
           </Box>
+          {attentionTotalPages > 1 && (
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mt: 2 }}>
+              <Button
+                size="small"
+                disabled={attentionPage === 0}
+                onClick={() => setAttentionPage(p => p - 1)}
+                sx={{
+                  fontSize: '0.75rem',
+                  textTransform: 'none',
+                  color: 'hsl(var(--foreground))',
+                  minWidth: 32,
+                  '&.Mui-disabled': { color: 'hsl(var(--muted-foreground) / 0.4)' },
+                }}
+              >
+                Previous
+              </Button>
+              <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
+                {attentionPage + 1} / {attentionTotalPages}
+              </Typography>
+              <Button
+                size="small"
+                disabled={attentionPage >= attentionTotalPages - 1}
+                onClick={() => setAttentionPage(p => p + 1)}
+                sx={{
+                  fontSize: '0.75rem',
+                  textTransform: 'none',
+                  color: 'hsl(var(--foreground))',
+                  minWidth: 32,
+                  '&.Mui-disabled': { color: 'hsl(var(--muted-foreground) / 0.4)' },
+                }}
+              >
+                Next
+              </Button>
+            </Box>
+          )}
+          </>
         )}
       </Box>
 
@@ -964,11 +1016,48 @@ const DashboardPage = () => {
             No completed runs yet.
           </Typography>
         ) : (
+          <>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            {recentCompleted.map((run) => (
+            {paginatedCompleted.map((run) => (
               <RunRow key={run.execution_id} run={run} entityBasePath={entityBasePath} />
             ))}
           </Box>
+          {completedTotalPages > 1 && (
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mt: 2 }}>
+              <Button
+                size="small"
+                disabled={completedPage === 0}
+                onClick={() => setCompletedPage(p => p - 1)}
+                sx={{
+                  fontSize: '0.75rem',
+                  textTransform: 'none',
+                  color: 'hsl(var(--foreground))',
+                  minWidth: 32,
+                  '&.Mui-disabled': { color: 'hsl(var(--muted-foreground) / 0.4)' },
+                }}
+              >
+                Previous
+              </Button>
+              <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
+                {completedPage + 1} / {completedTotalPages}
+              </Typography>
+              <Button
+                size="small"
+                disabled={completedPage >= completedTotalPages - 1}
+                onClick={() => setCompletedPage(p => p + 1)}
+                sx={{
+                  fontSize: '0.75rem',
+                  textTransform: 'none',
+                  color: 'hsl(var(--foreground))',
+                  minWidth: 32,
+                  '&.Mui-disabled': { color: 'hsl(var(--muted-foreground) / 0.4)' },
+                }}
+              >
+                Next
+              </Button>
+            </Box>
+          )}
+          </>
         )}
       </Box>
     </Box>
