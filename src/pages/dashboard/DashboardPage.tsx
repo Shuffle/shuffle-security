@@ -411,10 +411,10 @@ const NotificationRow = ({ notification, entityBasePath, onApprove, onQuickView,
               Approve
             </Button>
             <Button
-              onClick={() => onConfigure(notification)}
+              onClick={() => onQuickView(notification)}
               size="small"
               variant="outlined"
-              startIcon={<Settings size={14} />}
+              startIcon={<Eye size={14} />}
               sx={{
                 fontSize: '0.75rem',
                 textTransform: 'none',
@@ -430,7 +430,7 @@ const NotificationRow = ({ notification, entityBasePath, onApprove, onQuickView,
                 },
               }}
             >
-              Configure
+              Quick View
             </Button>
           </>
         ) : (
