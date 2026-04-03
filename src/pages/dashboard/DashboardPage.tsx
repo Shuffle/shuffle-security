@@ -1084,6 +1084,15 @@ const DashboardPage = () => {
       notification={configureNotification}
       onApprove={handleConfigureApprove}
     />
+
+    <AgentQuickViewDrawer
+      open={!!quickViewNotification}
+      onClose={() => setQuickViewNotification(null)}
+      notification={quickViewNotification}
+      entityBasePath={entityBasePath}
+      onApprove={handleApprove}
+      onConfigureApprove={handleConfigureApprove}
+    />
     </>
   );
 };
