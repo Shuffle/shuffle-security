@@ -719,10 +719,8 @@ const DashboardPage = () => {
   const { notifications, isLoading: notificationsLoading, refresh: refreshNotifications } = useAgentNotifications();
   const { singular: entitySingular, basePath: entityBasePath } = useEntityPreference();
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [summaryRun, setSummaryRun] = useState<AgentRun | null>(null);
   const [questionNotification, setQuestionNotification] = useState<AgentNotification | null>(null);
-  const [configureNotification, setConfigureNotification] = useState<AgentNotification | null>(null);
-  const [quickViewNotification, setQuickViewNotification] = useState<AgentNotification | null>(null);
+  const [quickViewItem, setQuickViewItem] = useState<QuickViewItem | null>(null);
   const [attentionPage, setAttentionPage] = useState(0);
   const [completedPage, setCompletedPage] = useState(0);
   const [attentionFilter, setAttentionFilter] = useState<'all' | 'failed' | 'approval' | 'question'>('all');
