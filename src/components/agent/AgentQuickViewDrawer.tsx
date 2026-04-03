@@ -1,6 +1,6 @@
 /**
- * Quick View Drawer — slides in from the right to show notification or run details,
- * with Approve / Configure actions for approvals, and findings/resolution for completed runs.
+ * Quick View Drawer — unified layout for all item types (notifications & runs).
+ * Shows: title, severity, timestamp, error explanation, action timeline, and pending action.
  */
 
 import { useState } from 'react';
@@ -14,19 +14,32 @@ import {
   Chip,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { CheckCircle, Settings, ArrowRight, Clock, AlertTriangle, HelpCircle, XCircle } from 'lucide-react';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import {
+  CheckCircle,
+  Settings,
+  ArrowRight,
+  Clock,
+  AlertTriangle,
+  HelpCircle,
+  XCircle,
+  MoreHorizontal,
+  Zap,
+  Shield,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { AgentNotification } from '@/services/notifications';
-import type { AgentRun } from '@/services/agentActivity';
+import type { AgentRun, AgentDecision } from '@/services/agentActivity';
 import {
   parseDatastoreReference,
   isIncidentReference,
   getAgentRunOutput,
   getIncidentTitleFromRun,
   getIncidentSeverityFromRun,
+  type SeverityInfo,
 } from '@/lib/agentParsers';
 import { hasOutputWarning, getFailureInfo } from '@/components/agent/AgentRunResultViewer';
-import { getTimeAgo, formatDuration } from '@/components/agent/AgentRunHeader';
+import { getTimeAgo, formatDuration, getRunTitle } from '@/components/agent/AgentRunHeader';
 
 export type QuickViewItem =
   | { type: 'notification'; notification: AgentNotification }
@@ -41,121 +54,415 @@ interface Props {
   onConfigureApprove?: (notificationId: string, modifiedAction?: string) => void;
 }
 
+/** Build a unified data shape from either a notification or a run */
+interface UnifiedData {
+  title: string;
+  severity: SeverityInfo | null;
+  severityRaw: string | null;
+  timestamp: string;
+  errorExplanation: string | null;
+  timeline: TimelineEntry[];
+  pendingAction: string | null;
+  incidentLink: string | null;
+  isApproval: boolean;
+  notification: AgentNotification | null;
+}
+
+interface TimelineEntry {
+  label: string;
+  detail?: string;
+  status: 'completed' | 'failed' | 'pending' | 'active';
+  tool?: string;
+}
+
+const SEVERITY_TOKEN_MAP: Record<string, string> = {
+  critical: '--severity-critical',
+  high: '--severity-high',
+  medium: '--severity-medium',
+  low: '--severity-low',
+  info: '--severity-info',
+  unknown: '--muted-foreground',
+};
+
+const buildFromNotification = (n: AgentNotification, entityBasePath: string): UnifiedData => {
+  const incidentId = n.incident_id || n.reference_url;
+
+  // Build timeline from available data
+  const timeline: TimelineEntry[] = [];
+  if (n.description) {
+    timeline.push({ label: 'Issue detected', detail: n.description, status: 'completed' });
+  }
+  if (n.action) {
+    timeline.push({ label: 'Proposed action', detail: n.action, status: 'pending' });
+  }
+
+  return {
+    title: n.title || 'Agent Notification',
+    severity: null,
+    severityRaw: n.severity || null,
+    timestamp: n.created_at ? new Date(n.created_at * 1000).toLocaleString() : '—',
+    errorExplanation: n.description || null,
+    timeline,
+    pendingAction: n.action || n.description || null,
+    incidentLink: incidentId ? `${entityBasePath}/${n.incident_id}` : null,
+    isApproval: !n.questions || n.questions.length === 0,
+    notification: n,
+  };
+};
+
+const buildFromRun = (run: AgentRun, entityBasePath: string): UnifiedData => {
+  const status = run.status?.toUpperCase() || '';
+  const runFailed = status === 'FAILED' || status === 'ABORTED';
+  const isUnsure = hasOutputWarning(run);
+  const isCompleted = status === 'FINISHED' || status === 'SUCCESS';
+  const incidentTitle = getIncidentTitleFromRun(run);
+  const output = getAgentRunOutput(run);
+  const failureInfo = runFailed ? getFailureInfo(run) : null;
+  const severity = getIncidentSeverityFromRun(run);
+  const ref = parseDatastoreReference(run);
+  const incidentKey = ref && isIncidentReference(ref) ? ref.key : null;
+
+  // Error explanation
+  let errorExplanation: string | null = null;
+  if (runFailed) {
+    errorExplanation = failureInfo?.reason || (output ? output.replace(/[#*`]/g, '').trim() : 'The agent encountered an error and could not complete this task.');
+  } else if (isUnsure) {
+    errorExplanation = output ? output.replace(/[#*`]/g, '').trim() : 'The agent flagged uncertainty in its analysis.';
+  } else if (isCompleted && output) {
+    errorExplanation = null; // no error for completed
+  }
+
+  // Build timeline from decisions or results
+  const timeline: TimelineEntry[] = [];
+
+  if (run.decisions && run.decisions.length > 0) {
+    for (const d of run.decisions) {
+      timeline.push({
+        label: d.title || d.action || 'Action',
+        detail: d.description || d.result || undefined,
+        status: d.status?.toLowerCase() === 'failed' ? 'failed' : 'completed',
+        tool: d.tool,
+      });
+    }
+  } else if (run.results && run.results.length > 0) {
+    for (const r of run.results) {
+      const appName = r.action?.app_name || r.action?.label || 'Action';
+      let detail: string | undefined;
+      if (r.result) {
+        try {
+          const parsed = JSON.parse(r.result);
+          detail = parsed?.output || parsed?.message || undefined;
+        } catch {
+          // skip
+        }
+      }
+      timeline.push({
+        label: appName,
+        detail: detail ? (detail.length > 120 ? detail.slice(0, 120) + '…' : detail) : undefined,
+        status: r.status?.toLowerCase() === 'failed' ? 'failed' : 'completed',
+      });
+    }
+  }
+
+  // If no timeline entries, create a generic one
+  if (timeline.length === 0) {
+    if (run.workflow?.name) {
+      timeline.push({ label: `Workflow: ${run.workflow.name}`, status: isCompleted ? 'completed' : runFailed ? 'failed' : 'active' });
+    }
+    if (output) {
+      timeline.push({ label: 'Agent output', detail: output.replace(/[#*`]/g, '').trim(), status: isCompleted ? 'completed' : 'active' });
+    }
+  }
+
+  return {
+    title: incidentTitle || run.workflow?.name || getRunTitle(run),
+    severity,
+    severityRaw: null,
+    timestamp: run.started_at ? new Date(run.started_at).toLocaleString() : '—',
+    errorExplanation,
+    timeline,
+    pendingAction: null,
+    incidentLink: incidentKey ? `${entityBasePath}/${incidentKey}?agent_action=${run.execution_id}` : null,
+    isApproval: false,
+    notification: null,
+  };
+};
+
+// ── Visible timeline count before expand ──
+const VISIBLE_TIMELINE_COUNT = 3;
+
 const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, onConfigureApprove }: Props) => {
   const [isConfiguring, setIsConfiguring] = useState(false);
   const [modifiedAction, setModifiedAction] = useState('');
+  const [timelineExpanded, setTimelineExpanded] = useState(false);
 
   if (!item) return null;
+
+  const data = item.type === 'notification'
+    ? buildFromNotification(item.notification, entityBasePath)
+    : buildFromRun(item.run, entityBasePath);
 
   const handleClose = () => {
     setIsConfiguring(false);
     setModifiedAction('');
+    setTimelineExpanded(false);
     onClose();
   };
 
-  // ── Notification (approval) view ──
-  if (item.type === 'notification') {
-    const notification = item.notification;
-    const actionDescription = notification.action || notification.description || '';
-    const timeAgo = notification.created_at
-      ? new Date(notification.created_at * 1000).toLocaleString()
-      : '—';
-    const incidentId = notification.incident_id || notification.reference_url;
+  const handleApprove = () => {
+    if (data.notification) onApprove?.(data.notification);
+    handleClose();
+  };
 
-    const handleApprove = () => {
-      onApprove?.(notification);
-      handleClose();
-    };
+  const handleConfigureSubmit = () => {
+    if (data.notification) onConfigureApprove?.(data.notification.id, modifiedAction);
+    setModifiedAction('');
+    setIsConfiguring(false);
+    onClose();
+  };
 
-    const handleConfigureSubmit = () => {
-      onConfigureApprove?.(notification.id, modifiedAction);
-      setModifiedAction('');
-      setIsConfiguring(false);
-      onClose();
-    };
+  // Determine severity chip data
+  const sevToken = data.severity
+    ? data.severity.colorToken
+    : data.severityRaw
+      ? (SEVERITY_TOKEN_MAP[data.severityRaw.toLowerCase()] || '--severity-high')
+      : null;
+  const sevLabel = data.severity?.label || data.severityRaw || null;
 
-    return (
-      <Drawer anchor="right" open={open} onClose={handleClose} PaperProps={{ sx: drawerPaperSx }}>
-        <DrawerHeader onClose={handleClose} />
-        <Box sx={{ px: 3, py: 3, display: 'flex', flexDirection: 'column', gap: 3, flex: 1, overflow: 'auto' }}>
-          {/* Title */}
-          <Box>
-            <SectionLabel>Title</SectionLabel>
-            <Typography sx={{ fontSize: '0.9rem', fontWeight: 600, color: 'hsl(var(--foreground))', lineHeight: 1.5 }}>
-              {notification.title}
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
-              {notification.severity && (
-                <Chip label={notification.severity} size="small" sx={severityChipSx} />
-              )}
-              <Chip
-                icon={<Clock size={12} />}
-                label="Approval Needed"
-                size="small"
-                sx={infoChipSx}
-              />
-            </Box>
-            <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--muted-foreground))', mt: 1 }}>
-              {timeAgo}
-            </Typography>
+  // Timeline: show last N items, with expand for older ones
+  const totalTimeline = data.timeline.length;
+  const hasHiddenItems = totalTimeline > VISIBLE_TIMELINE_COUNT && !timelineExpanded;
+  const visibleTimeline = hasHiddenItems
+    ? data.timeline.slice(totalTimeline - VISIBLE_TIMELINE_COUNT)
+    : data.timeline;
+  const hiddenCount = totalTimeline - VISIBLE_TIMELINE_COUNT;
+
+  return (
+    <Drawer anchor="right" open={open} onClose={handleClose} PaperProps={{ sx: drawerPaperSx }}>
+      {/* Header — title instead of "Quick View" */}
+      <Box sx={{
+        px: 3, py: 2.5,
+        borderBottom: '1px solid hsl(var(--border))',
+        display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 2,
+      }}>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography sx={{
+            fontWeight: 600, fontSize: '1rem', color: 'hsl(var(--foreground))',
+            lineHeight: 1.4, wordBreak: 'break-word',
+          }}>
+            {data.title}
+          </Typography>
+          {/* Severity & status chips */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 1, flexWrap: 'wrap' }}>
+            {sevLabel && sevToken && (
+              <Chip label={sevLabel} size="small" sx={{
+                height: 20, fontSize: '0.68rem', fontWeight: 600,
+                backgroundColor: `hsl(var(${sevToken}) / 0.12)`,
+                color: `hsl(var(${sevToken}))`,
+              }} />
+            )}
+            {item.type === 'run' && (() => {
+              const s = item.run.status?.toUpperCase() || '';
+              if (s === 'FAILED' || s === 'ABORTED') return (
+                <Chip icon={<XCircle size={12} />} label={s === 'ABORTED' ? 'Aborted' : 'Failed'} size="small" sx={statusChipSx('--severity-critical')} />
+              );
+              if (hasOutputWarning(item.run)) return (
+                <Chip icon={<HelpCircle size={12} />} label="Unsure" size="small" sx={statusChipSx('--severity-medium')} />
+              );
+              if (s === 'FINISHED' || s === 'SUCCESS') return (
+                <Chip icon={<CheckCircle size={12} />} label="Resolved" size="small" sx={statusChipSx('--severity-low')} />
+              );
+              return null;
+            })()}
+            {data.isApproval && (
+              <Chip icon={<Clock size={12} />} label="Approval Needed" size="small" sx={statusChipSx('--severity-info')} />
+            )}
           </Box>
-
-          {/* Description */}
-          {notification.description && (
-            <Box>
-              <SectionLabel>What Happened</SectionLabel>
-              <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--foreground))', lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                {notification.description}
-              </Typography>
-            </Box>
-          )}
-
-          {/* Proposed action */}
-          {notification.action && (
-            <Box>
-              <SectionLabel>Proposed Action</SectionLabel>
-              <Box sx={actionBoxSx}>
-                <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--foreground))', lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                  {notification.action}
-                </Typography>
-              </Box>
-            </Box>
-          )}
-
-          {/* Configure section */}
-          {isConfiguring && (
-            <Box>
-              <SectionLabel>Modify Action</SectionLabel>
-              <Typography sx={{ fontSize: '0.78rem', color: 'hsl(var(--muted-foreground))', mb: 1.5 }}>
-                Provide an alternative action for the agent to execute instead.
-              </Typography>
-              <TextField
-                fullWidth multiline minRows={3} maxRows={6}
-                placeholder="Describe the modified action…"
-                value={modifiedAction}
-                onChange={(e) => setModifiedAction(e.target.value)}
-                sx={textFieldSx}
-              />
-              <Box sx={{ display: 'flex', gap: 1, mt: 1.5 }}>
-                <Button onClick={() => { setIsConfiguring(false); setModifiedAction(''); }} size="small"
-                  sx={{ fontSize: '0.78rem', textTransform: 'none', color: 'hsl(var(--muted-foreground))' }}>
-                  Cancel
-                </Button>
-                <Button onClick={handleConfigureSubmit} size="small" variant="contained" disabled={!modifiedAction.trim()}
-                  startIcon={<Settings size={14} />}
-                  sx={{ fontSize: '0.78rem', textTransform: 'none', fontWeight: 600, backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))', boxShadow: 'none', '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.9)', boxShadow: 'none' } }}>
-                  Submit Modified Action
-                </Button>
-              </Box>
-            </Box>
-          )}
+          {/* Timestamp */}
+          <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--muted-foreground))', mt: 0.75 }}>
+            {data.timestamp}
+          </Typography>
         </Box>
+        <IconButton onClick={handleClose} size="small" sx={{ color: 'hsl(var(--muted-foreground))', mt: -0.5 }}>
+          <CloseIcon fontSize="small" />
+        </IconButton>
+      </Box>
 
-        {/* Footer */}
-        <Box sx={footerSx}>
+      {/* Content */}
+      <Box sx={{ px: 3, py: 3, display: 'flex', flexDirection: 'column', gap: 3, flex: 1, overflow: 'auto' }}>
+
+        {/* Error explanation */}
+        {data.errorExplanation && (
+          <Box>
+            <SectionLabel>What Happened</SectionLabel>
+            <Box sx={{
+              px: 2.5, py: 2, borderRadius: 2,
+              backgroundColor: 'hsl(var(--severity-critical) / 0.05)',
+              border: '1px solid hsl(var(--severity-critical) / 0.12)',
+            }}>
+              <Typography sx={{
+                fontSize: '0.85rem', color: 'hsl(var(--foreground))',
+                lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+              }}>
+                {data.errorExplanation}
+              </Typography>
+            </Box>
+          </Box>
+        )}
+
+        {/* Agent Decision Timeline */}
+        {data.timeline.length > 0 && (
+          <Box>
+            <SectionLabel>Agent Decisions</SectionLabel>
+            <Box sx={{ position: 'relative', pl: 2.5 }}>
+              {/* Vertical line */}
+              <Box sx={{
+                position: 'absolute', left: 8, top: 4, bottom: 4, width: 2,
+                backgroundColor: 'hsl(var(--border))', borderRadius: 1,
+              }} />
+
+              {/* Expand button for hidden items */}
+              {hasHiddenItems && (
+                <Box
+                  onClick={() => setTimelineExpanded(true)}
+                  sx={{
+                    display: 'flex', alignItems: 'center', gap: 1, mb: 1.5,
+                    cursor: 'pointer', position: 'relative',
+                    '&:hover .expand-label': { color: 'hsl(var(--primary))' },
+                  }}
+                >
+                  <Box sx={{
+                    width: 18, height: 18, borderRadius: '50%', ml: -1.25,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    backgroundColor: 'hsl(var(--muted))',
+                    border: '2px solid hsl(var(--background))',
+                    zIndex: 1,
+                  }}>
+                    <MoreHorizontal size={10} style={{ color: 'hsl(var(--muted-foreground))' }} />
+                  </Box>
+                  <Typography className="expand-label" sx={{
+                    fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))',
+                    fontWeight: 500, transition: 'color 0.15s',
+                  }}>
+                    Show {hiddenCount} earlier {hiddenCount === 1 ? 'action' : 'actions'}
+                  </Typography>
+                </Box>
+              )}
+
+              {/* Timeline entries */}
+              {visibleTimeline.map((entry, i) => {
+                const isLast = i === visibleTimeline.length - 1;
+                const isPending = entry.status === 'pending';
+                const isFailed = entry.status === 'failed';
+
+                return (
+                  <Box key={i} sx={{ display: 'flex', gap: 1.5, mb: isLast ? 0 : 2, position: 'relative' }}>
+                    {/* Dot */}
+                    <Box sx={{
+                      width: 18, height: 18, borderRadius: '50%', flexShrink: 0, ml: -1.25,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      backgroundColor: isPending
+                        ? 'hsl(var(--severity-info) / 0.15)'
+                        : isFailed
+                          ? 'hsl(var(--severity-critical) / 0.15)'
+                          : 'hsl(var(--severity-low) / 0.15)',
+                      border: isPending
+                        ? '2px solid hsl(var(--severity-info))'
+                        : isFailed
+                          ? '2px solid hsl(var(--severity-critical))'
+                          : '2px solid hsl(var(--severity-low))',
+                      zIndex: 1,
+                    }}>
+                      {isPending ? <Clock size={9} style={{ color: 'hsl(var(--severity-info))' }} />
+                        : isFailed ? <XCircle size={9} style={{ color: 'hsl(var(--severity-critical))' }} />
+                        : <CheckCircle size={9} style={{ color: 'hsl(var(--severity-low))' }} />}
+                    </Box>
+
+                    {/* Content */}
+                    <Box sx={{
+                      flex: 1, minWidth: 0,
+                      ...(isPending && {
+                        px: 2, py: 1.5, borderRadius: 2,
+                        backgroundColor: 'hsl(var(--severity-info) / 0.06)',
+                        border: '1px solid hsl(var(--severity-info) / 0.2)',
+                      }),
+                    }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                        <Typography sx={{
+                          fontSize: '0.8rem', fontWeight: isPending ? 600 : 500,
+                          color: isPending ? 'hsl(var(--severity-info))' : 'hsl(var(--foreground))',
+                        }}>
+                          {entry.label}
+                        </Typography>
+                        {entry.tool && (
+                          <Chip label={entry.tool} size="small" sx={{
+                            height: 16, fontSize: '0.62rem',
+                            backgroundColor: 'hsl(var(--muted))',
+                            color: 'hsl(var(--muted-foreground))',
+                          }} />
+                        )}
+                        {isPending && (
+                          <Chip label="Needs Approval" size="small" sx={{
+                            height: 18, fontSize: '0.62rem', fontWeight: 600,
+                            backgroundColor: 'hsl(var(--severity-info) / 0.15)',
+                            color: 'hsl(var(--severity-info))',
+                          }} />
+                        )}
+                      </Box>
+                      {entry.detail && (
+                        <Typography sx={{
+                          fontSize: '0.78rem', color: 'hsl(var(--muted-foreground))',
+                          mt: 0.25, lineHeight: 1.5,
+                          display: '-webkit-box', WebkitLineClamp: 3,
+                          WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                          wordBreak: 'break-word',
+                        }}>
+                          {entry.detail}
+                        </Typography>
+                      )}
+                    </Box>
+                  </Box>
+                );
+              })}
+            </Box>
+          </Box>
+        )}
+
+        {/* Configure section */}
+        {isConfiguring && (
+          <Box>
+            <SectionLabel>Modify Action</SectionLabel>
+            <Typography sx={{ fontSize: '0.78rem', color: 'hsl(var(--muted-foreground))', mb: 1.5 }}>
+              Provide an alternative action for the agent to execute instead.
+            </Typography>
+            <TextField
+              fullWidth multiline minRows={3} maxRows={6}
+              placeholder="Describe the modified action…"
+              value={modifiedAction}
+              onChange={(e) => setModifiedAction(e.target.value)}
+              sx={textFieldSx}
+            />
+            <Box sx={{ display: 'flex', gap: 1, mt: 1.5 }}>
+              <Button onClick={() => { setIsConfiguring(false); setModifiedAction(''); }} size="small"
+                sx={{ fontSize: '0.78rem', textTransform: 'none', color: 'hsl(var(--muted-foreground))' }}>
+                Cancel
+              </Button>
+              <Button onClick={handleConfigureSubmit} size="small" variant="contained" disabled={!modifiedAction.trim()}
+                startIcon={<Settings size={14} />}
+                sx={{ fontSize: '0.78rem', textTransform: 'none', fontWeight: 600, backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))', boxShadow: 'none', '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.9)', boxShadow: 'none' } }}>
+                Submit Modified Action
+              </Button>
+            </Box>
+          </Box>
+        )}
+      </Box>
+
+      {/* Footer actions */}
+      <Box sx={footerSx}>
+        {data.isApproval && data.notification && (
           <Box sx={{ display: 'flex', gap: 1 }}>
             <Button onClick={handleApprove} fullWidth variant="contained" startIcon={<CheckCircle size={15} />}
-              sx={{ ...approveButtonSx }}>
+              sx={approveButtonSx}>
               Approve
             </Button>
             {!isConfiguring && (
@@ -165,121 +472,10 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
               </Button>
             )}
           </Box>
-          {incidentId && (
-            <Button component={Link} to={`${entityBasePath}/${notification.incident_id}`} fullWidth variant="outlined"
-              endIcon={<ArrowRight size={14} />} sx={outlineButtonSx}>
-              View Full Incident
-            </Button>
-          )}
-        </Box>
-      </Drawer>
-    );
-  }
-
-  // ── Run view (failed/unsure or completed) ──
-  const run = item.run;
-  const status = run.status?.toUpperCase() || '';
-  const runFailed = status === 'FAILED' || status === 'ABORTED';
-  const isUnsure = hasOutputWarning(run);
-  const isCompleted = status === 'FINISHED' || status === 'SUCCESS';
-  const incidentTitle = getIncidentTitleFromRun(run);
-  const output = getAgentRunOutput(run);
-  const failureInfo = runFailed ? getFailureInfo(run) : null;
-  const severity = getIncidentSeverityFromRun(run);
-  const duration = formatDuration(run);
-  const ref = parseDatastoreReference(run);
-  const incidentKey = ref && isIncidentReference(ref) ? ref.key : null;
-  const timeAgo = run.started_at ? getTimeAgo(run.started_at) : '—';
-
-  // For completed runs, extract the clean output as findings
-  const findings = output ? output.replace(/[#*`]/g, '').trim() : null;
-  const failureReason = failureInfo?.reason || (runFailed && output ? output.replace(/[#*`]/g, '').trim() : null);
-
-  return (
-    <Drawer anchor="right" open={open} onClose={handleClose} PaperProps={{ sx: drawerPaperSx }}>
-      <DrawerHeader onClose={handleClose} />
-      <Box sx={{ px: 3, py: 3, display: 'flex', flexDirection: 'column', gap: 3, flex: 1, overflow: 'auto' }}>
-        {/* Title */}
-        <Box>
-          <SectionLabel>Title</SectionLabel>
-          <Typography sx={{ fontSize: '0.9rem', fontWeight: 600, color: 'hsl(var(--foreground))', lineHeight: 1.5 }}>
-            {incidentTitle || run.workflow?.name || 'Agent Run'}
-          </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
-            <Chip label={severity.label} size="small"
-              sx={{ height: 20, fontSize: '0.68rem', fontWeight: 600, backgroundColor: `hsl(var(${severity.colorToken}) / 0.12)`, color: `hsl(var(${severity.colorToken}))` }} />
-            {runFailed && (
-              <Chip icon={<XCircle size={12} />} label={status === 'ABORTED' ? 'Aborted' : 'Failed'} size="small"
-                sx={{ height: 20, fontSize: '0.68rem', fontWeight: 600, backgroundColor: 'hsl(var(--severity-critical) / 0.12)', color: 'hsl(var(--severity-critical))', '& .MuiChip-icon': { color: 'inherit' } }} />
-            )}
-            {isUnsure && (
-              <Chip icon={<HelpCircle size={12} />} label="Unsure" size="small"
-                sx={{ height: 20, fontSize: '0.68rem', fontWeight: 600, backgroundColor: 'hsl(var(--severity-medium) / 0.12)', color: 'hsl(var(--severity-medium))', '& .MuiChip-icon': { color: 'inherit' } }} />
-            )}
-            {isCompleted && (
-              <Chip icon={<CheckCircle size={12} />} label="Resolved" size="small"
-                sx={{ height: 20, fontSize: '0.68rem', fontWeight: 600, backgroundColor: 'hsl(var(--severity-low) / 0.12)', color: 'hsl(var(--severity-low))', '& .MuiChip-icon': { color: 'inherit' } }} />
-            )}
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
-            <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--muted-foreground))' }}>{timeAgo}</Typography>
-            {duration && (
-              <>
-                <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--muted-foreground))', opacity: 0.4 }}>·</Typography>
-                <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--muted-foreground))' }}>{duration}</Typography>
-              </>
-            )}
-          </Box>
-        </Box>
-
-        {/* Failure reason (for failed/unsure) */}
-        {(runFailed || isUnsure) && failureReason && (
-          <Box>
-            <SectionLabel>{runFailed ? 'Failure Reason' : 'Issue Detected'}</SectionLabel>
-            <Box sx={{
-              px: 2.5, py: 2, borderRadius: 2,
-              backgroundColor: 'hsl(var(--severity-critical) / 0.06)',
-              border: '1px solid hsl(var(--severity-critical) / 0.15)',
-            }}>
-              <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--foreground))', lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                {failureReason}
-              </Typography>
-            </Box>
-          </Box>
         )}
-
-        {/* Action taken (for completed runs) */}
-        {isCompleted && run.workflow?.name && (
-          <Box>
-            <SectionLabel>Action Taken</SectionLabel>
-            <Box sx={actionBoxSx}>
-              <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--foreground))', lineHeight: 1.6 }}>
-                Executed workflow "{run.workflow.name}"
-                {run.workflow?.actions?.length ? ` (${run.workflow.actions.length} actions)` : ''}
-              </Typography>
-            </Box>
-          </Box>
-        )}
-
-        {/* Findings / Resolution */}
-        {findings && (
-          <Box>
-            <SectionLabel>{isCompleted ? 'Findings & Resolution' : 'Agent Output'}</SectionLabel>
-            <Typography sx={{
-              fontSize: '0.85rem', color: 'hsl(var(--foreground))', lineHeight: 1.6,
-              whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-            }}>
-              {findings}
-            </Typography>
-          </Box>
-        )}
-      </Box>
-
-      {/* Footer */}
-      <Box sx={footerSx}>
-        {incidentKey && (
-          <Button component={Link} to={`${entityBasePath}/${incidentKey}?agent_action=${run.execution_id}`}
-            fullWidth variant="outlined" endIcon={<ArrowRight size={14} />} sx={outlineButtonSx}>
+        {data.incidentLink && (
+          <Button component={Link} to={data.incidentLink} fullWidth variant="outlined"
+            endIcon={<ArrowRight size={14} />} sx={outlineButtonSx}>
             View Full Incident
           </Button>
         )}
@@ -290,15 +486,6 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
 
 // ── Shared sub-components & styles ──
 
-const DrawerHeader = ({ onClose }: { onClose: () => void }) => (
-  <Box sx={{ px: 3, py: 2.5, borderBottom: '1px solid hsl(var(--border))', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-    <Typography sx={{ fontWeight: 600, fontSize: '1rem', color: 'hsl(var(--foreground))' }}>Quick View</Typography>
-    <IconButton onClick={onClose} size="small" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-      <CloseIcon fontSize="small" />
-    </IconButton>
-  </Box>
-);
-
 const SectionLabel = ({ children }: { children: React.ReactNode }) => (
   <Typography sx={{
     fontSize: '0.72rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))',
@@ -308,30 +495,18 @@ const SectionLabel = ({ children }: { children: React.ReactNode }) => (
   </Typography>
 );
 
+const statusChipSx = (token: string) => ({
+  height: 20, fontSize: '0.68rem', fontWeight: 600,
+  backgroundColor: `hsl(var(${token}) / 0.12)`,
+  color: `hsl(var(${token}))`,
+  '& .MuiChip-icon': { color: 'inherit' },
+});
+
 const drawerPaperSx = {
   width: { xs: '100%', sm: 440 },
   bgcolor: 'hsl(var(--background))',
   backgroundImage: 'none',
   borderLeft: '1px solid hsl(var(--border))',
-};
-
-const actionBoxSx = {
-  px: 2.5, py: 2, borderRadius: 2,
-  backgroundColor: 'hsl(var(--severity-info) / 0.06)',
-  border: '1px solid hsl(var(--severity-info) / 0.15)',
-};
-
-const severityChipSx = {
-  height: 20, fontSize: '0.68rem', fontWeight: 600,
-  backgroundColor: 'hsl(var(--severity-high) / 0.12)',
-  color: 'hsl(var(--severity-high))',
-};
-
-const infoChipSx = {
-  height: 20, fontSize: '0.68rem', fontWeight: 600,
-  backgroundColor: 'hsl(var(--severity-info) / 0.12)',
-  color: 'hsl(var(--severity-info))',
-  '& .MuiChip-icon': { color: 'inherit' },
 };
 
 const footerSx = {
