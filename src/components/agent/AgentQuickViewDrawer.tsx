@@ -561,6 +561,17 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
 
       {/* Footer actions */}
       <Box sx={footerSx}>
+        {data.isQuestion && data.notification && (
+          <Button
+            onClick={handleSubmitAnswers}
+            fullWidth variant="contained"
+            disabled={!data.questions.every((_, i) => questionAnswers[i]?.trim())}
+            startIcon={<Send size={15} />}
+            sx={approveButtonSx}
+          >
+            Submit Answers
+          </Button>
+        )}
         {data.isApproval && data.notification && (
           <Box sx={{ display: 'flex', gap: 1 }}>
             <Button onClick={handleApprove} fullWidth variant="contained" startIcon={<CheckCircle size={15} />}
