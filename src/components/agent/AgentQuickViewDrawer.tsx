@@ -52,6 +52,7 @@ interface Props {
   entityBasePath: string;
   onApprove?: (notification: AgentNotification) => void;
   onConfigureApprove?: (notificationId: string, modifiedAction?: string) => void;
+  onSubmitAnswers?: (notificationId: string, answers: Record<number, string>) => void;
 }
 
 /** Build a unified data shape from either a notification or a run */
