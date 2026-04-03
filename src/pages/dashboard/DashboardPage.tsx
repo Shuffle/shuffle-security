@@ -898,36 +898,72 @@ const DashboardPage = () => {
             </Typography>
           </Box>
         ) : (
+          <>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            {/* Notification-based items first (approvals & questions) */}
-            {notifications.map((notification) => (
-              <motion.div
-                key={notification.id}
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <NotificationRow
-                  notification={notification}
-                  entityBasePath={entityBasePath}
-                  onApprove={handleApprove}
-                  onConfigure={setConfigureNotification}
-                  onAnswer={setQuestionNotification}
-                />
-              </motion.div>
-            ))}
-            {/* Agent run-based items (failed, unsure, etc.) */}
-            {needsAttention.map((run) => (
-              <motion.div
-                key={run.execution_id}
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <AttentionRunRow run={run} entityBasePath={entityBasePath} onViewDetails={setSummaryRun} />
-              </motion.div>
-            ))}
+            {paginatedAttention.map((item) =>
+              item.type === 'notification' ? (
+                <motion.div
+                  key={item.notification.id}
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <NotificationRow
+                    notification={item.notification}
+                    entityBasePath={entityBasePath}
+                    onApprove={handleApprove}
+                    onConfigure={setConfigureNotification}
+                    onAnswer={setQuestionNotification}
+                  />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key={item.run.execution_id}
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <AttentionRunRow run={item.run} entityBasePath={entityBasePath} onViewDetails={setSummaryRun} />
+                </motion.div>
+              )
+            )}
           </Box>
+          {attentionTotalPages > 1 && (
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mt: 2 }}>
+              <Button
+                size="small"
+                disabled={attentionPage === 0}
+                onClick={() => setAttentionPage(p => p - 1)}
+                sx={{
+                  fontSize: '0.75rem',
+                  textTransform: 'none',
+                  color: 'hsl(var(--foreground))',
+                  minWidth: 32,
+                  '&.Mui-disabled': { color: 'hsl(var(--muted-foreground) / 0.4)' },
+                }}
+              >
+                Previous
+              </Button>
+              <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
+                {attentionPage + 1} / {attentionTotalPages}
+              </Typography>
+              <Button
+                size="small"
+                disabled={attentionPage >= attentionTotalPages - 1}
+                onClick={() => setAttentionPage(p => p + 1)}
+                sx={{
+                  fontSize: '0.75rem',
+                  textTransform: 'none',
+                  color: 'hsl(var(--foreground))',
+                  minWidth: 32,
+                  '&.Mui-disabled': { color: 'hsl(var(--muted-foreground) / 0.4)' },
+                }}
+              >
+                Next
+              </Button>
+            </Box>
+          )}
+          </>
         )}
       </Box>
 
