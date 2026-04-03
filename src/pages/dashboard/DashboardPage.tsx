@@ -3,7 +3,7 @@
  * Highlights runs needing user approval/input prominently.
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import {
   Box,
   Typography,
@@ -120,9 +120,10 @@ interface StatCardProps {
   delay: number;
   isLoading?: boolean;
   onClick?: () => void;
+  compact?: boolean;
 }
 
-const StatCard = ({ icon, iconColor, iconBg, value, label, delay, isLoading, onClick }: StatCardProps) => (
+const StatCard = ({ icon, iconColor, iconBg, value, label, delay, isLoading, onClick, compact }: StatCardProps) => (
   <motion.div
     initial={{ opacity: 0, y: 6 }}
     animate={{ opacity: 1, y: 0 }}
@@ -131,24 +132,24 @@ const StatCard = ({ icon, iconColor, iconBg, value, label, delay, isLoading, onC
     <Box
       onClick={onClick}
       sx={{
-        px: 2.5,
-        py: 2,
-        borderRadius: 2,
+        px: compact ? 1.5 : 2.5,
+        py: compact ? 0.75 : 2,
+        borderRadius: compact ? 1.5 : 2,
         backgroundColor: 'hsl(var(--card))',
         border: '1px solid hsl(var(--border))',
         display: 'flex',
         alignItems: 'center',
-        gap: 2,
+        gap: compact ? 1 : 2,
         cursor: onClick ? 'pointer' : 'default',
-        transition: 'border-color 0.2s ease',
+        transition: 'all 0.2s ease',
         '&:hover': onClick ? { borderColor: iconColor } : {},
       }}
     >
       <Box
         sx={{
-          width: 40,
-          height: 40,
-          borderRadius: 2,
+          width: compact ? 28 : 40,
+          height: compact ? 28 : 40,
+          borderRadius: compact ? 1 : 2,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -157,17 +158,17 @@ const StatCard = ({ icon, iconColor, iconBg, value, label, delay, isLoading, onC
           flexShrink: 0,
         }}
       >
-        {icon}
+        {compact ? <Box sx={{ '& > *': { width: 14, height: 14 } }}>{icon}</Box> : icon}
       </Box>
       <Box>
         {isLoading ? (
-          <Skeleton variant="text" width={40} height={28} sx={{ bgcolor: 'hsl(var(--muted) / 0.3)' }} />
+          <Skeleton variant="text" width={compact ? 28 : 40} height={compact ? 20 : 28} sx={{ bgcolor: 'hsl(var(--muted) / 0.3)' }} />
         ) : (
-          <Typography sx={{ fontWeight: 700, fontSize: '1.25rem', lineHeight: 1.2, color: 'hsl(var(--foreground))' }}>
+          <Typography sx={{ fontWeight: 700, fontSize: compact ? '0.875rem' : '1.25rem', lineHeight: 1.2, color: 'hsl(var(--foreground))' }}>
             {value}
           </Typography>
         )}
-        <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem', lineHeight: 1.3 }}>
+        <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: compact ? '0.6rem' : '0.75rem', lineHeight: 1.3 }}>
           {label}
         </Typography>
       </Box>
@@ -729,6 +730,24 @@ const DashboardPage = () => {
   const [attentionPage, setAttentionPage] = useState(0);
   const [completedPage, setCompletedPage] = useState(0);
   const [attentionFilter, setAttentionFilter] = useState<'all' | 'failed' | 'approval' | 'question'>('all');
+  const [isSticky, setIsSticky] = useState(false);
+  const statCardsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (statCardsRef.current) {
+        const rect = statCardsRef.current.getBoundingClientRect();
+        setIsSticky(rect.top < 0);
+      }
+    };
+    const scrollContainer = document.querySelector('main') || window;
+    scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      scrollContainer.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -863,8 +882,8 @@ const DashboardPage = () => {
         AI Agent overview — see what's happening and what needs your attention.
       </Typography>
 
-      {/* Stat cards */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2, mb: 4 }}>
+      {/* Stat cards - original position (used as scroll sentinel) */}
+      <Box ref={statCardsRef} sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2, mb: 4 }}>
         <StatCard
           icon={<AlertTriangle size={18} />}
           iconColor="hsl(var(--severity-high))"
@@ -904,6 +923,71 @@ const DashboardPage = () => {
           delay={0.15}
           isLoading={isLoading}
         />
+      </Box>
+
+      {/* Sticky compact stat bar */}
+      <Box
+        sx={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1100,
+          transform: isSticky ? 'translateY(0)' : 'translateY(-100%)',
+          opacity: isSticky ? 1 : 0,
+          transition: 'transform 0.25s ease, opacity 0.25s ease',
+          backgroundColor: 'hsl(var(--background) / 0.92)',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid hsl(var(--border))',
+          px: 3,
+          py: 1,
+        }}
+      >
+        <Box sx={{ maxWidth: 1400, mx: 'auto', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1.5 }}>
+          <StatCard
+            icon={<AlertTriangle size={18} />}
+            iconColor="hsl(var(--severity-high))"
+            iconBg="hsl(var(--severity-high) / 0.12)"
+            value={totalAttentionCount}
+            label="Needs Your Input"
+            delay={0}
+            isLoading={isLoading && notificationsLoading}
+            onClick={() => document.getElementById('section-attention')?.scrollIntoView({ behavior: 'smooth' })}
+            compact
+          />
+          <StatCard
+            icon={<Loader2 size={18} />}
+            iconColor="hsl(var(--severity-medium))"
+            iconBg="hsl(var(--severity-medium) / 0.12)"
+            value={activeRuns.length}
+            label="Currently Running"
+            delay={0}
+            isLoading={isLoading}
+            onClick={() => document.getElementById('section-running')?.scrollIntoView({ behavior: 'smooth' })}
+            compact
+          />
+          <StatCard
+            icon={<CheckCircle size={18} />}
+            iconColor="hsl(var(--severity-low))"
+            iconBg="hsl(var(--severity-low) / 0.12)"
+            value={stats.successCount}
+            label="Completed"
+            delay={0}
+            isLoading={isLoading}
+            onClick={() => document.getElementById('section-completed')?.scrollIntoView({ behavior: 'smooth' })}
+            compact
+          />
+          <StatCard
+            icon={<Clock size={18} />}
+            iconColor="hsl(var(--primary))"
+            iconBg="hsl(var(--primary) / 0.12)"
+            value={stats.avgDuration > 0 ? `${stats.avgDuration.toFixed(0)}s` : '—'}
+            label="Avg Duration"
+            delay={0}
+            isLoading={isLoading}
+            compact
+          />
+        </Box>
       </Box>
 
       {/* Needs Attention Section */}
