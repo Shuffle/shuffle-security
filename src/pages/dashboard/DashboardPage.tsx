@@ -730,6 +730,24 @@ const DashboardPage = () => {
   const [attentionPage, setAttentionPage] = useState(0);
   const [completedPage, setCompletedPage] = useState(0);
   const [attentionFilter, setAttentionFilter] = useState<'all' | 'failed' | 'approval' | 'question'>('all');
+  const [isSticky, setIsSticky] = useState(false);
+  const statCardsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (statCardsRef.current) {
+        const rect = statCardsRef.current.getBoundingClientRect();
+        setIsSticky(rect.top < 0);
+      }
+    };
+    const scrollContainer = document.querySelector('main') || window;
+    scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      scrollContainer.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
