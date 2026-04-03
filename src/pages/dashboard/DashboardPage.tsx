@@ -120,9 +120,10 @@ interface StatCardProps {
   delay: number;
   isLoading?: boolean;
   onClick?: () => void;
+  compact?: boolean;
 }
 
-const StatCard = ({ icon, iconColor, iconBg, value, label, delay, isLoading, onClick }: StatCardProps) => (
+const StatCard = ({ icon, iconColor, iconBg, value, label, delay, isLoading, onClick, compact }: StatCardProps) => (
   <motion.div
     initial={{ opacity: 0, y: 6 }}
     animate={{ opacity: 1, y: 0 }}
@@ -131,24 +132,24 @@ const StatCard = ({ icon, iconColor, iconBg, value, label, delay, isLoading, onC
     <Box
       onClick={onClick}
       sx={{
-        px: 2.5,
-        py: 2,
-        borderRadius: 2,
+        px: compact ? 1.5 : 2.5,
+        py: compact ? 0.75 : 2,
+        borderRadius: compact ? 1.5 : 2,
         backgroundColor: 'hsl(var(--card))',
         border: '1px solid hsl(var(--border))',
         display: 'flex',
         alignItems: 'center',
-        gap: 2,
+        gap: compact ? 1 : 2,
         cursor: onClick ? 'pointer' : 'default',
-        transition: 'border-color 0.2s ease',
+        transition: 'all 0.2s ease',
         '&:hover': onClick ? { borderColor: iconColor } : {},
       }}
     >
       <Box
         sx={{
-          width: 40,
-          height: 40,
-          borderRadius: 2,
+          width: compact ? 28 : 40,
+          height: compact ? 28 : 40,
+          borderRadius: compact ? 1 : 2,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -157,17 +158,17 @@ const StatCard = ({ icon, iconColor, iconBg, value, label, delay, isLoading, onC
           flexShrink: 0,
         }}
       >
-        {icon}
+        {compact ? <Box sx={{ '& > *': { width: 14, height: 14 } }}>{icon}</Box> : icon}
       </Box>
       <Box>
         {isLoading ? (
-          <Skeleton variant="text" width={40} height={28} sx={{ bgcolor: 'hsl(var(--muted) / 0.3)' }} />
+          <Skeleton variant="text" width={compact ? 28 : 40} height={compact ? 20 : 28} sx={{ bgcolor: 'hsl(var(--muted) / 0.3)' }} />
         ) : (
-          <Typography sx={{ fontWeight: 700, fontSize: '1.25rem', lineHeight: 1.2, color: 'hsl(var(--foreground))' }}>
+          <Typography sx={{ fontWeight: 700, fontSize: compact ? '0.875rem' : '1.25rem', lineHeight: 1.2, color: 'hsl(var(--foreground))' }}>
             {value}
           </Typography>
         )}
-        <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem', lineHeight: 1.3 }}>
+        <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: compact ? '0.6rem' : '0.75rem', lineHeight: 1.3 }}>
           {label}
         </Typography>
       </Box>
