@@ -13,6 +13,7 @@ import {
   Tooltip,
   Button,
 } from '@mui/material';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { motion } from 'framer-motion';
 import {
@@ -258,30 +259,20 @@ const RunRow = ({ run, entityBasePath }: { run: AgentRun; entityBasePath: string
       </Box>
 
       {incidentKey && (
-        <Button
-          component={Link}
-          to={`${entityBasePath}/${incidentKey}`}
-          size="small"
-          variant="outlined"
-          endIcon={<ArrowRight size={14} />}
-          sx={{
-            fontSize: '0.75rem',
-            textTransform: 'none',
-            fontWeight: 500,
-            borderColor: 'hsl(var(--border))',
-            color: 'hsl(var(--foreground))',
-            px: 1.5,
-            py: 0.5,
-            whiteSpace: 'nowrap',
-            flexShrink: 0,
-            '&:hover': {
-              borderColor: 'hsl(var(--primary) / 0.5)',
-              backgroundColor: 'hsl(var(--primary) / 0.08)',
-            },
-          }}
-        >
-          Open Incident
-        </Button>
+        <Tooltip title="Open incident">
+          <IconButton
+            component={Link}
+            to={`${entityBasePath}/${incidentKey}`}
+            size="small"
+            sx={{
+              color: 'hsl(var(--muted-foreground))',
+              flexShrink: 0,
+              '&:hover': { color: 'hsl(var(--primary))', backgroundColor: 'hsl(var(--primary) / 0.08)' },
+            }}
+          >
+            <OpenInNewIcon sx={{ fontSize: 18 }} />
+          </IconButton>
+        </Tooltip>
       )}
     </Box>
   );
@@ -460,54 +451,36 @@ const NotificationRow = ({ notification, entityBasePath, onApprove, onQuickView,
         )}
 
         {notification.incident_id && (
-          <Button
-            component={Link}
-            to={`${entityBasePath}/${notification.incident_id}`}
-            size="small"
-            variant="outlined"
-            endIcon={<ArrowRight size={14} />}
-            sx={{
-              fontSize: '0.75rem',
-              textTransform: 'none',
-              fontWeight: 500,
-              borderColor: 'hsl(var(--border))',
-              color: 'hsl(var(--foreground))',
-              px: 1.5,
-              py: 0.5,
-              whiteSpace: 'nowrap',
-              '&:hover': {
-                borderColor: 'hsl(var(--primary) / 0.5)',
-                backgroundColor: 'hsl(var(--primary) / 0.08)',
-              },
-            }}
-          >
-            Open Incident
-          </Button>
+          <Tooltip title="Open incident">
+            <IconButton
+              component={Link}
+              to={`${entityBasePath}/${notification.incident_id}`}
+              size="small"
+              sx={{
+                color: 'hsl(var(--muted-foreground))',
+                flexShrink: 0,
+                '&:hover': { color: 'hsl(var(--primary))', backgroundColor: 'hsl(var(--primary) / 0.08)' },
+              }}
+            >
+              <OpenInNewIcon sx={{ fontSize: 18 }} />
+            </IconButton>
+          </Tooltip>
         )}
         {notification.reference_url && !notification.incident_id && (
-          <Button
-            component={Link}
-            to={notification.reference_url}
-            size="small"
-            variant="outlined"
-            endIcon={<ArrowRight size={14} />}
-            sx={{
-              fontSize: '0.75rem',
-              textTransform: 'none',
-              fontWeight: 500,
-              borderColor: 'hsl(var(--border))',
-              color: 'hsl(var(--foreground))',
-              px: 1.5,
-              py: 0.5,
-              whiteSpace: 'nowrap',
-              '&:hover': {
-                borderColor: 'hsl(var(--primary) / 0.5)',
-                backgroundColor: 'hsl(var(--primary) / 0.08)',
-              },
-            }}
-          >
-            Open Incident
-          </Button>
+          <Tooltip title="Open incident">
+            <IconButton
+              component={Link}
+              to={notification.reference_url}
+              size="small"
+              sx={{
+                color: 'hsl(var(--muted-foreground))',
+                flexShrink: 0,
+                '&:hover': { color: 'hsl(var(--primary))', backgroundColor: 'hsl(var(--primary) / 0.08)' },
+              }}
+            >
+              <OpenInNewIcon sx={{ fontSize: 18 }} />
+            </IconButton>
+          </Tooltip>
         )}
       </Box>
     </Box>
@@ -663,29 +636,20 @@ const AttentionRunRow = ({ run, entityBasePath, onViewDetails }: { run: AgentRun
           Review
         </Button>
         {incidentKey && (
-          <Button
-            component={Link}
-            to={`${entityBasePath}/${incidentKey}?agent_action=${run.execution_id}`}
-            size="small"
-            variant="outlined"
-            endIcon={<ArrowRight size={14} />}
-            sx={{
-              fontSize: '0.75rem',
-              textTransform: 'none',
-              fontWeight: 500,
-              borderColor: 'hsl(var(--border))',
-              color: 'hsl(var(--foreground))',
-              px: 1.5,
-              py: 0.5,
-              whiteSpace: 'nowrap',
-              '&:hover': {
-                borderColor: 'hsl(var(--primary) / 0.5)',
-                backgroundColor: 'hsl(var(--primary) / 0.08)',
-              },
-            }}
-          >
-            Open Incident
-          </Button>
+          <Tooltip title="Open incident">
+            <IconButton
+              component={Link}
+              to={`${entityBasePath}/${incidentKey}?agent_action=${run.execution_id}`}
+              size="small"
+              sx={{
+                color: 'hsl(var(--muted-foreground))',
+                flexShrink: 0,
+                '&:hover': { color: 'hsl(var(--primary))', backgroundColor: 'hsl(var(--primary) / 0.08)' },
+              }}
+            >
+              <OpenInNewIcon sx={{ fontSize: 18 }} />
+            </IconButton>
+          </Tooltip>
         )}
       </Box>
     </Box>
