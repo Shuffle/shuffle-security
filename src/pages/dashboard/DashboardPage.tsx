@@ -671,6 +671,7 @@ const DashboardPage = () => {
   const [quickViewNotification, setQuickViewNotification] = useState<AgentNotification | null>(null);
   const [attentionPage, setAttentionPage] = useState(0);
   const [completedPage, setCompletedPage] = useState(0);
+  const [attentionFilter, setAttentionFilter] = useState<'all' | 'failed' | 'approval' | 'question'>('all');
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -739,9 +740,35 @@ const DashboardPage = () => {
     return [...notifItems, ...runItems];
   }, [notifications, needsAttention]);
 
+  // Filter attention items
+  const filteredAttentionItems = useMemo(() => {
+    if (attentionFilter === 'all') return allAttentionItems;
+    return allAttentionItems.filter(item => {
+      if (attentionFilter === 'approval') {
+        return item.type === 'notification' && isApprovalNotification(item.notification);
+      }
+      if (attentionFilter === 'question') {
+        return item.type === 'notification' && !isApprovalNotification(item.notification);
+      }
+      if (attentionFilter === 'failed') {
+        if (item.type === 'run') return true; // all attention runs are failed/unsure
+        return false;
+      }
+      return true;
+    });
+  }, [allAttentionItems, attentionFilter]);
+
+  // Count per filter for badges
+  const attentionCounts = useMemo(() => ({
+    failed: allAttentionItems.filter(i => i.type === 'run').length,
+    approval: allAttentionItems.filter(i => i.type === 'notification' && isApprovalNotification(i.notification)).length,
+    question: allAttentionItems.filter(i => i.type === 'notification' && !isApprovalNotification(i.notification)).length,
+  }), [allAttentionItems]);
+
   const totalAttentionCount = allAttentionItems.length;
-  const attentionTotalPages = Math.ceil(totalAttentionCount / ITEMS_PER_PAGE);
-  const paginatedAttention = allAttentionItems.slice(attentionPage * ITEMS_PER_PAGE, (attentionPage + 1) * ITEMS_PER_PAGE);
+  const filteredAttentionCount = filteredAttentionItems.length;
+  const attentionTotalPages = Math.ceil(filteredAttentionCount / ITEMS_PER_PAGE);
+  const paginatedAttention = filteredAttentionItems.slice(attentionPage * ITEMS_PER_PAGE, (attentionPage + 1) * ITEMS_PER_PAGE);
 
   const completedTotalPages = Math.ceil(recentCompleted.length / ITEMS_PER_PAGE);
   const paginatedCompleted = recentCompleted.slice(completedPage * ITEMS_PER_PAGE, (completedPage + 1) * ITEMS_PER_PAGE);
@@ -841,13 +868,39 @@ const DashboardPage = () => {
           )}
         </Box>
 
-        {(isLoading && notificationsLoading) && totalAttentionCount === 0 ? (
+        {/* Filter chips */}
+        <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+          {([
+            { key: 'all' as const, label: 'All', count: totalAttentionCount },
+            { key: 'failed' as const, label: 'Failed / Unsure', count: attentionCounts.failed },
+            { key: 'approval' as const, label: 'Needs Approval', count: attentionCounts.approval },
+            { key: 'question' as const, label: 'Pending Question', count: attentionCounts.question },
+          ]).map(f => (
+            <Chip
+              key={f.key}
+              label={`${f.label}${f.count > 0 ? ` (${f.count})` : ''}`}
+              size="small"
+              variant={attentionFilter === f.key ? 'filled' : 'outlined'}
+              onClick={() => { setAttentionFilter(f.key); setAttentionPage(0); }}
+              sx={{
+                fontSize: '0.75rem',
+                height: 28,
+                borderColor: attentionFilter === f.key ? 'hsl(var(--primary))' : 'hsl(var(--border))',
+                bgcolor: attentionFilter === f.key ? 'hsl(var(--primary) / 0.15)' : 'transparent',
+                color: attentionFilter === f.key ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
+                '&:hover': { bgcolor: 'hsl(var(--muted))' },
+              }}
+            />
+          ))}
+        </Box>
+
+        {(isLoading && notificationsLoading) && filteredAttentionCount === 0 ? (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
             {[0, 1, 2].map(i => (
               <Skeleton key={i} variant="rounded" height={72} sx={{ borderRadius: 2, bgcolor: 'hsl(var(--muted) / 0.3)' }} />
             ))}
           </Box>
-        ) : totalAttentionCount === 0 ? (
+        ) : filteredAttentionCount === 0 ? (
           <Box
             sx={{
               px: 3,
