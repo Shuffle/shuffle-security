@@ -693,6 +693,8 @@ const AttentionRunRow = ({ run, entityBasePath, onViewDetails }: { run: AgentRun
 
 // ── Page ───────────────────────────────────────────────────────────────────────
 
+const ITEMS_PER_PAGE = 10;
+
 const DashboardPage = () => {
   const { runs, isLoading, stats, refresh } = useAgentActivity();
   const { notifications, isLoading: notificationsLoading, refresh: refreshNotifications } = useAgentNotifications();
@@ -701,6 +703,8 @@ const DashboardPage = () => {
   const [summaryRun, setSummaryRun] = useState<AgentRun | null>(null);
   const [questionNotification, setQuestionNotification] = useState<AgentNotification | null>(null);
   const [configureNotification, setConfigureNotification] = useState<AgentNotification | null>(null);
+  const [attentionPage, setAttentionPage] = useState(0);
+  const [completedPage, setCompletedPage] = useState(0);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
