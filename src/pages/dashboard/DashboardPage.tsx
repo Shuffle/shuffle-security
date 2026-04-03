@@ -1016,11 +1016,48 @@ const DashboardPage = () => {
             No completed runs yet.
           </Typography>
         ) : (
+          <>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            {recentCompleted.map((run) => (
+            {paginatedCompleted.map((run) => (
               <RunRow key={run.execution_id} run={run} entityBasePath={entityBasePath} />
             ))}
           </Box>
+          {completedTotalPages > 1 && (
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mt: 2 }}>
+              <Button
+                size="small"
+                disabled={completedPage === 0}
+                onClick={() => setCompletedPage(p => p - 1)}
+                sx={{
+                  fontSize: '0.75rem',
+                  textTransform: 'none',
+                  color: 'hsl(var(--foreground))',
+                  minWidth: 32,
+                  '&.Mui-disabled': { color: 'hsl(var(--muted-foreground) / 0.4)' },
+                }}
+              >
+                Previous
+              </Button>
+              <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
+                {completedPage + 1} / {completedTotalPages}
+              </Typography>
+              <Button
+                size="small"
+                disabled={completedPage >= completedTotalPages - 1}
+                onClick={() => setCompletedPage(p => p + 1)}
+                sx={{
+                  fontSize: '0.75rem',
+                  textTransform: 'none',
+                  color: 'hsl(var(--foreground))',
+                  minWidth: 32,
+                  '&.Mui-disabled': { color: 'hsl(var(--muted-foreground) / 0.4)' },
+                }}
+              >
+                Next
+              </Button>
+            </Box>
+          )}
+          </>
         )}
       </Box>
     </Box>
