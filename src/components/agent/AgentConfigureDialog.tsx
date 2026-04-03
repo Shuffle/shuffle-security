@@ -113,6 +113,9 @@ const AgentConfigureDialog = ({ open, onClose, notification, onApprove }: Props)
               whiteSpace: 'pre-wrap',
               wordBreak: 'break-word',
             }}>
+              <Typography component="span" sx={{ fontWeight: 600, fontSize: 'inherit', color: 'hsl(var(--foreground))' }}>
+                Agent wants to:
+              </Typography>{' '}
               {actionDescription}
             </Typography>
           </Box>
