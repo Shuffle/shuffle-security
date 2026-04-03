@@ -241,10 +241,11 @@ const buildFromRun = (run: AgentRun, entityBasePath: string): UnifiedData => {
 // ── Visible timeline count before expand ──
 const VISIBLE_TIMELINE_COUNT = 3;
 
-const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, onConfigureApprove }: Props) => {
+const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, onConfigureApprove, onSubmitAnswers }: Props) => {
   const [isConfiguring, setIsConfiguring] = useState(false);
   const [modifiedAction, setModifiedAction] = useState('');
   const [timelineExpanded, setTimelineExpanded] = useState(false);
+  const [questionAnswers, setQuestionAnswers] = useState<Record<number, string>>({});
 
   if (!item) return null;
 
