@@ -323,50 +323,8 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
       {/* Content */}
       <Box sx={{ px: 3, py: 3, display: 'flex', flexDirection: 'column', gap: 3, flex: 1, overflow: 'auto' }}>
 
-        {/* Error explanation */}
-        {data.errorExplanation && (
-          <Box>
-            <SectionLabel>What Happened</SectionLabel>
-            <Box sx={{
-              px: 2.5, py: 2, borderRadius: 2,
-              backgroundColor: 'hsl(var(--severity-critical) / 0.05)',
-              border: '1px solid hsl(var(--severity-critical) / 0.12)',
-            }}>
-              <Typography sx={{
-                fontSize: '0.85rem', color: 'hsl(var(--foreground))',
-                lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-              }}>
-                {data.errorExplanation}
-              </Typography>
-            </Box>
-          </Box>
-        )}
-
-        {/* Proposed Next Action — highlighted prominently */}
-        {data.pendingAction && (
-          <Box>
-            <SectionLabel>Proposed Next Action</SectionLabel>
-            <Box sx={{
-              px: 2.5, py: 2, borderRadius: 2,
-              backgroundColor: 'hsl(var(--severity-info) / 0.06)',
-              border: '1px solid hsl(var(--severity-info) / 0.25)',
-              borderLeft: '3px solid hsl(var(--severity-info))',
-            }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.75 }}>
-                <Zap size={14} style={{ color: 'hsl(var(--severity-info))' }} />
-                <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: 'hsl(var(--severity-info))', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  Agent recommends
-                </Typography>
-              </Box>
-              <Typography sx={{
-                fontSize: '0.85rem', color: 'hsl(var(--foreground))',
-                lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-              }}>
-                {data.pendingAction}
-              </Typography>
-            </Box>
-          </Box>
-        )}
+        {/* Agent Decision Timeline — shown first */}
+        {data.timeline.length > 0 && (
 
         {/* Agent Decision Timeline */}
         {data.timeline.length > 0 && (
