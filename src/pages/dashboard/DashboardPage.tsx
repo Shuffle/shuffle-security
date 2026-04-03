@@ -1048,7 +1048,7 @@ const DashboardPage = () => {
 
       {/* Currently Running */}
       {activeRuns.length > 0 && (
-        <Box sx={{ mb: 4 }}>
+        <Box id="section-running" sx={{ mb: 4 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
             <Loader2 size={18} style={{ color: 'hsl(var(--severity-medium))', animation: 'spin 2s linear infinite' }} />
             <Typography sx={{ fontWeight: 600, fontSize: '1rem', color: 'hsl(var(--foreground))' }}>
