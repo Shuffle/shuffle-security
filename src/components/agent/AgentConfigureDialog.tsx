@@ -87,45 +87,8 @@ const AgentConfigureDialog = ({ open, onClose, notification, onApprove }: Props)
           </IconButton>
         </Box>
 
-        {/* Error / context */}
-        {notification.description && (
-          <Box sx={{ px: 3, pt: 2.5 }}>
-            <Typography sx={{
-              fontSize: '0.78rem',
-              fontWeight: 600,
-              color: 'hsl(var(--muted-foreground))',
-              textTransform: 'uppercase',
-              letterSpacing: '0.04em',
-              mb: 1,
-            }}>
-              What Happened
-            </Typography>
-            <Box sx={{
-              px: 2.5,
-              py: 2,
-              borderRadius: 2,
-              backgroundColor: 'hsl(var(--severity-high) / 0.06)',
-              border: '1px solid hsl(var(--severity-high) / 0.15)',
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: 1,
-            }}>
-              <AlertTriangle size={15} style={{ color: 'hsl(var(--severity-high))', flexShrink: 0, marginTop: 2 }} />
-              <Typography sx={{
-                fontSize: '0.85rem',
-                color: 'hsl(var(--foreground))',
-                lineHeight: 1.6,
-                whiteSpace: 'pre-wrap',
-                wordBreak: 'break-word',
-              }}>
-                {notification.description}
-              </Typography>
-            </Box>
-          </Box>
-        )}
-
         {/* Proposed action */}
-        <Box sx={{ px: 3, pt: 2 }}>
+        <Box sx={{ px: 3, pt: 2.5 }}>
           <Typography sx={{
             fontSize: '0.78rem',
             fontWeight: 600,
