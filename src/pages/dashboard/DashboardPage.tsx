@@ -372,7 +372,15 @@ const NotificationRow = ({ notification, entityBasePath, onApprove, onConfigure,
           WebkitBoxOrient: 'vertical',
           overflow: 'hidden',
         }}>
-          {notification.description}
+          {isApproval
+            ? <>
+                <Typography component="span" sx={{ fontWeight: 600, fontSize: 'inherit', color: 'hsl(var(--foreground))' }}>
+                  Agent wants to:
+                </Typography>{' '}
+                {notification.action || notification.description}
+              </>
+            : notification.description
+          }
         </Typography>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
