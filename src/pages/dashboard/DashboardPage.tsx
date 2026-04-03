@@ -362,26 +362,47 @@ const NotificationRow = ({ notification, entityBasePath, onApprove, onConfigure,
           />
         </Box>
 
-        <Typography sx={{
-          fontSize: '0.78rem',
-          color: 'hsl(var(--muted-foreground))',
-          mt: 0.5,
-          lineHeight: 1.5,
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical',
-          overflow: 'hidden',
-        }}>
-          {isApproval
-            ? <>
-                <Typography component="span" sx={{ fontWeight: 600, fontSize: 'inherit', color: 'hsl(var(--foreground))' }}>
-                  Agent wants to:
-                </Typography>{' '}
-                {notification.action || notification.description}
-              </>
-            : notification.description
-          }
-        </Typography>
+        {/* Error / context */}
+        {isApproval && notification.description && (
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.75, mt: 0.5 }}>
+            <AlertTriangle size={13} style={{ color: 'hsl(var(--severity-high))', flexShrink: 0, marginTop: 2 }} />
+            <Typography sx={{
+              fontSize: '0.78rem',
+              color: 'hsl(var(--severity-high))',
+              lineHeight: 1.5,
+              display: '-webkit-box',
+              WebkitLineClamp: 1,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+            }}>
+              {notification.description}
+            </Typography>
+          </Box>
+        )}
+
+        {/* Proposed action */}
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.75, mt: 0.5 }}>
+          {isApproval && <ArrowRight size={13} style={{ color: 'hsl(var(--primary))', flexShrink: 0, marginTop: 2 }} />}
+          <Typography sx={{
+            fontSize: '0.78rem',
+            color: 'hsl(var(--muted-foreground))',
+            lineHeight: 1.5,
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+          }}>
+            {isApproval
+              ? <>
+                  <Typography component="span" sx={{ fontWeight: 600, fontSize: 'inherit', color: 'hsl(var(--foreground))' }}>
+                    Agent wants to:
+                  </Typography>{' '}
+                  {notification.action || notification.description}
+                </>
+              : notification.description
+            }
+          </Typography>
+        </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
           <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', opacity: 0.7 }}>
