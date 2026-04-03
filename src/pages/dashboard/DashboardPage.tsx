@@ -761,12 +761,24 @@ const DashboardPage = () => {
     return {
       needsAttention: attention,
       incidentRuns: incidents,
-      recentCompleted: completed.slice(0, 10),
+      recentCompleted: completed,
       activeRuns: active,
     };
   }, [runs]);
 
-  const totalAttentionCount = notifications.length + needsAttention.length;
+  // Combine attention items: notifications first, then run-based
+  const allAttentionItems = useMemo(() => {
+    const notifItems = notifications.map(n => ({ type: 'notification' as const, notification: n }));
+    const runItems = needsAttention.map(r => ({ type: 'run' as const, run: r }));
+    return [...notifItems, ...runItems];
+  }, [notifications, needsAttention]);
+
+  const totalAttentionCount = allAttentionItems.length;
+  const attentionTotalPages = Math.ceil(totalAttentionCount / ITEMS_PER_PAGE);
+  const paginatedAttention = allAttentionItems.slice(attentionPage * ITEMS_PER_PAGE, (attentionPage + 1) * ITEMS_PER_PAGE);
+
+  const completedTotalPages = Math.ceil(recentCompleted.length / ITEMS_PER_PAGE);
+  const paginatedCompleted = recentCompleted.slice(completedPage * ITEMS_PER_PAGE, (completedPage + 1) * ITEMS_PER_PAGE);
 
   return (
     <>
