@@ -768,7 +768,7 @@ const DashboardPage = () => {
   const totalAttentionCount = allAttentionItems.length;
   const filteredAttentionCount = filteredAttentionItems.length;
   const attentionTotalPages = Math.ceil(filteredAttentionCount / ITEMS_PER_PAGE);
-  const paginatedAttention = allAttentionItems.slice(attentionPage * ITEMS_PER_PAGE, (attentionPage + 1) * ITEMS_PER_PAGE);
+  const paginatedAttention = filteredAttentionItems.slice(attentionPage * ITEMS_PER_PAGE, (attentionPage + 1) * ITEMS_PER_PAGE);
 
   const completedTotalPages = Math.ceil(recentCompleted.length / ITEMS_PER_PAGE);
   const paginatedCompleted = recentCompleted.slice(completedPage * ITEMS_PER_PAGE, (completedPage + 1) * ITEMS_PER_PAGE);
