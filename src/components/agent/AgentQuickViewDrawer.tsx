@@ -257,7 +257,14 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
     setIsConfiguring(false);
     setModifiedAction('');
     setTimelineExpanded(false);
+    setQuestionAnswers({});
     onClose();
+  };
+
+  const handleSubmitAnswers = () => {
+    if (data.notification) onSubmitAnswers?.(data.notification.id, questionAnswers);
+    setQuestionAnswers({});
+    handleClose();
   };
 
   const handleApprove = () => {
