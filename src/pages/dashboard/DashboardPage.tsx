@@ -122,13 +122,14 @@ interface StatCardProps {
   onClick?: () => void;
 }
 
-const StatCard = ({ icon, iconColor, iconBg, value, label, delay, isLoading }: StatCardProps) => (
+const StatCard = ({ icon, iconColor, iconBg, value, label, delay, isLoading, onClick }: StatCardProps) => (
   <motion.div
     initial={{ opacity: 0, y: 6 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.25, delay }}
   >
     <Box
+      onClick={onClick}
       sx={{
         px: 2.5,
         py: 2,
@@ -138,6 +139,9 @@ const StatCard = ({ icon, iconColor, iconBg, value, label, delay, isLoading }: S
         display: 'flex',
         alignItems: 'center',
         gap: 2,
+        cursor: onClick ? 'pointer' : 'default',
+        transition: 'border-color 0.2s ease',
+        '&:hover': onClick ? { borderColor: iconColor } : {},
       }}
     >
       <Box
