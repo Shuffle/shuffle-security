@@ -126,8 +126,8 @@
     /* Severity colors */
     --severity-critical: 0 84% 60%;
     --severity-high: 25 95% 53%;
-    --severity-medium: 45 93% 47%;
-    --severity-low: 142 71% 45%;
+    --severity-medium: 45 93% 50%;
+    --severity-low: 75 65% 45%;
     --severity-info: 210 100% 56%;
 
     /* Infrastructure category colors */
