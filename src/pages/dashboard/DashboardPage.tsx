@@ -1133,13 +1133,6 @@ const DashboardPage = () => {
       </Box>
     </Box>
 
-    <AgentActionSummaryDialog
-      open={!!summaryRun}
-      onClose={() => setSummaryRun(null)}
-      run={summaryRun}
-      entityBasePath={entityBasePath}
-    />
-
     <AgentQuestionDialog
       open={!!questionNotification}
       onClose={() => setQuestionNotification(null)}
@@ -1147,17 +1140,10 @@ const DashboardPage = () => {
       onSubmit={handleSubmitAnswers}
     />
 
-    <AgentConfigureDialog
-      open={!!configureNotification}
-      onClose={() => setConfigureNotification(null)}
-      notification={configureNotification}
-      onApprove={handleConfigureApprove}
-    />
-
     <AgentQuickViewDrawer
-      open={!!quickViewNotification}
-      onClose={() => setQuickViewNotification(null)}
-      notification={quickViewNotification}
+      open={!!quickViewItem}
+      onClose={() => setQuickViewItem(null)}
+      item={quickViewItem}
       entityBasePath={entityBasePath}
       onApprove={handleApprove}
       onConfigureApprove={handleConfigureApprove}
