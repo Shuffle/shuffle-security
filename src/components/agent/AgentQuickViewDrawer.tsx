@@ -174,14 +174,15 @@ const buildFromRun = (run: AgentRun, entityBasePath: string): UnifiedData => {
     }
   }
 
-  // Extract proposed next action from the agent's output for failed/unsure runs
+  // Extract proposed next action — must be a remediation, NOT the error description
   let pendingAction: string | null = null;
   if ((runFailed || isUnsure) && output) {
     const cleanOutput = output.replace(/[#*`]/g, '').trim();
-    // Try to find a recommended/proposed action in the output
+    // Try to find explicit recommendations in the output
     const actionPatterns = [
-      /(?:recommend|suggest|propos|next step|remediat|action|resolution|fix)[:\s]*(.+)/i,
-      /(?:should|need to|try|consider)[:\s]*(.+)/i,
+      /(?:recommend|suggest|propos|next step|remediat|resolution|fix)[:\s]+(.+)/i,
+      /(?:should|need to|try|consider)[:\s]+(.+)/i,
+      /(?:action[:\s]|plan[:\s]|to resolve)[:\s]*(.+)/i,
     ];
     for (const pattern of actionPatterns) {
       const match = cleanOutput.match(pattern);
@@ -191,9 +192,17 @@ const buildFromRun = (run: AgentRun, entityBasePath: string): UnifiedData => {
         break;
       }
     }
-    // Fallback: use the full output as the proposed action context
+    // Fallback: generate a contextual remediation based on failure info
     if (!pendingAction) {
-      pendingAction = cleanOutput.length > 200 ? cleanOutput.slice(0, 200) + '…' : cleanOutput;
+      const workflowName = run.workflow?.name || 'the workflow';
+      const nodeMatch = failureInfo?.reason?.match(/node[:\s]*'([^']+)'/i) || failureInfo?.reason?.match(/node[:\s]*"([^"]+)"/i);
+      if (nodeMatch) {
+        pendingAction = `Re-run node '${nodeMatch[1]}' in ${workflowName} with corrected parameters, or disable the failing node and route to a fallback path.`;
+      } else if (runFailed) {
+        pendingAction = `Investigate and re-execute ${workflowName} after reviewing the error logs and correcting the root cause.`;
+      } else {
+        pendingAction = `Review the flagged output of ${workflowName} and confirm whether the result is valid or needs manual intervention.`;
+      }
     }
   }
 
@@ -323,51 +332,6 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
       {/* Content */}
       <Box sx={{ px: 3, py: 3, display: 'flex', flexDirection: 'column', gap: 3, flex: 1, overflow: 'auto' }}>
 
-        {/* Error explanation */}
-        {data.errorExplanation && (
-          <Box>
-            <SectionLabel>What Happened</SectionLabel>
-            <Box sx={{
-              px: 2.5, py: 2, borderRadius: 2,
-              backgroundColor: 'hsl(var(--severity-critical) / 0.05)',
-              border: '1px solid hsl(var(--severity-critical) / 0.12)',
-            }}>
-              <Typography sx={{
-                fontSize: '0.85rem', color: 'hsl(var(--foreground))',
-                lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-              }}>
-                {data.errorExplanation}
-              </Typography>
-            </Box>
-          </Box>
-        )}
-
-        {/* Proposed Next Action — highlighted prominently */}
-        {data.pendingAction && (
-          <Box>
-            <SectionLabel>Proposed Next Action</SectionLabel>
-            <Box sx={{
-              px: 2.5, py: 2, borderRadius: 2,
-              backgroundColor: 'hsl(var(--severity-info) / 0.06)',
-              border: '1px solid hsl(var(--severity-info) / 0.25)',
-              borderLeft: '3px solid hsl(var(--severity-info))',
-            }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.75 }}>
-                <Zap size={14} style={{ color: 'hsl(var(--severity-info))' }} />
-                <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: 'hsl(var(--severity-info))', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  Agent recommends
-                </Typography>
-              </Box>
-              <Typography sx={{
-                fontSize: '0.85rem', color: 'hsl(var(--foreground))',
-                lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-              }}>
-                {data.pendingAction}
-              </Typography>
-            </Box>
-          </Box>
-        )}
-
         {/* Agent Decision Timeline */}
         {data.timeline.length > 0 && (
           <Box>
@@ -484,6 +448,32 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
                   </Box>
                 );
               })}
+            </Box>
+          </Box>
+        )}
+
+        {/* Proposed Next Action — after timeline */}
+        {data.pendingAction && (
+          <Box>
+            <SectionLabel>Proposed Next Action</SectionLabel>
+            <Box sx={{
+              px: 2.5, py: 2, borderRadius: 2,
+              backgroundColor: 'hsl(var(--severity-info) / 0.06)',
+              border: '1px solid hsl(var(--severity-info) / 0.25)',
+              borderLeft: '3px solid hsl(var(--severity-info))',
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.75 }}>
+                <Zap size={14} style={{ color: 'hsl(var(--severity-info))' }} />
+                <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: 'hsl(var(--severity-info))', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Agent recommends
+                </Typography>
+              </Box>
+              <Typography sx={{
+                fontSize: '0.85rem', color: 'hsl(var(--foreground))',
+                lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+              }}>
+                {data.pendingAction}
+              </Typography>
             </Box>
           </Box>
         )}
