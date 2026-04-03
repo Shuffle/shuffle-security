@@ -415,10 +415,11 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
                 const isFailed = entry.status === 'failed';
 
                 return (
-                  <Box key={i} sx={{ display: 'flex', gap: 1.5, mb: isLast ? 0 : 2, position: 'relative' }}>
-                    {/* Dot */}
+                  <Box key={i} sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, mb: isLast ? 0 : 2, position: 'relative' }}>
+                    {/* Dot — centered on the vertical line */}
                     <Box sx={{
-                      width: 18, height: 18, borderRadius: '50%', flexShrink: 0, ml: -1.25,
+                      width: 18, height: 18, borderRadius: '50%', flexShrink: 0,
+                      position: 'relative', left: '-1px',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       backgroundColor: isPending
                         ? 'hsl(var(--severity-info) / 0.15)'
