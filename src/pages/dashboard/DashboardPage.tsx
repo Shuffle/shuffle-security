@@ -31,10 +31,8 @@ import {
   MessageSquare,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import AgentActionSummaryDialog from '@/components/agent/AgentActionSummaryDialog';
 import AgentQuestionDialog from '@/components/agent/AgentQuestionDialog';
-import AgentConfigureDialog from '@/components/agent/AgentConfigureDialog';
-import AgentQuickViewDrawer from '@/components/agent/AgentQuickViewDrawer';
+import AgentQuickViewDrawer, { type QuickViewItem } from '@/components/agent/AgentQuickViewDrawer';
 import AgentIcon from '@/components/agent/AgentIcon';
 import { useAgentActivity } from '@/hooks/useAgentActivity';
 import { useAgentNotifications } from '@/hooks/useNotifications';
