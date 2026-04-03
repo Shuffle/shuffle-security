@@ -373,9 +373,9 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
           <Box>
             <SectionLabel>Agent Decisions</SectionLabel>
             <Box sx={{ position: 'relative', pl: 2.5 }}>
-              {/* Vertical line */}
+              {/* Vertical line — aligned to center of dots (left: 8px = center of 18px dot at ml:-1.25 from pl:2.5) */}
               <Box sx={{
-                position: 'absolute', left: 8, top: 4, bottom: 4, width: 2,
+                position: 'absolute', left: '8px', top: 0, bottom: 0, width: 2,
                 backgroundColor: 'hsl(var(--border))', borderRadius: 1,
               }} />
 
@@ -384,17 +384,18 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
                 <Box
                   onClick={() => setTimelineExpanded(true)}
                   sx={{
-                    display: 'flex', alignItems: 'center', gap: 1, mb: 1.5,
+                    display: 'flex', alignItems: 'center', gap: 1, mb: 2,
                     cursor: 'pointer', position: 'relative',
                     '&:hover .expand-label': { color: 'hsl(var(--primary))' },
                   }}
                 >
                   <Box sx={{
-                    width: 18, height: 18, borderRadius: '50%', ml: -1.25,
+                    width: 18, height: 18, borderRadius: '50%', ml: '-1.25rem',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     backgroundColor: 'hsl(var(--muted))',
                     border: '2px solid hsl(var(--background))',
-                    zIndex: 1,
+                    zIndex: 1, flexShrink: 0,
+                    position: 'relative', left: 'calc(8px - 9px + 1.25rem)',
                   }}>
                     <MoreHorizontal size={10} style={{ color: 'hsl(var(--muted-foreground))' }} />
                   </Box>
@@ -402,7 +403,7 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
                     fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))',
                     fontWeight: 500, transition: 'color 0.15s',
                   }}>
-                    Show {hiddenCount} earlier {hiddenCount === 1 ? 'action' : 'actions'}
+                    See {hiddenCount} previous {hiddenCount === 1 ? 'decision' : 'decisions'}
                   </Typography>
                 </Box>
               )}
