@@ -26,11 +26,17 @@ import {
   Eye,
   RotateCcw,
   Search,
+  Settings,
+  MessageSquare,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import AgentActionSummaryDialog from '@/components/agent/AgentActionSummaryDialog';
+import AgentQuestionDialog from '@/components/agent/AgentQuestionDialog';
+import AgentConfigureDialog from '@/components/agent/AgentConfigureDialog';
 import AgentIcon from '@/components/agent/AgentIcon';
 import { useAgentActivity } from '@/hooks/useAgentActivity';
+import { useAgentNotifications } from '@/hooks/useNotifications';
+import { isApprovalNotification, approveAgentAction, type AgentNotification } from '@/services/notifications';
 import { parseDatastoreReference, isIncidentReference, getAgentRunOutput, getIncidentTitleFromRun, getIncidentSeverityFromRun } from '@/lib/agentParsers';
 import { hasOutputWarning, parseRunResult, getFailureInfo } from '@/components/agent/AgentRunResultViewer';
 import {
@@ -44,6 +50,7 @@ import {
 } from '@/components/agent/AgentRunHeader';
 import type { AgentRun } from '@/services/agentActivity';
 import { useEntityPreference } from '@/hooks/useEntityLabel';
+import { toast } from 'sonner';
 
 /** Determine if a run needs user attention */
 const needsUserInput = (run: AgentRun): boolean => {
@@ -72,7 +79,6 @@ const getAIDescription = (run: AgentRun, context: 'attention' | 'general' = 'gen
   const output = getAgentRunOutput(run);
   const failureInfo = (status === 'FAILED' || status === 'ABORTED') ? getFailureInfo(run) : null;
 
-  // For attention items, be explicit about what the user must do
   if (context === 'attention') {
     if (status === 'WAITING') {
       const reason = output ? output.replace(/[#*`]/g, '').trim() : '';
@@ -102,27 +108,6 @@ const getAIDescription = (run: AgentRun, context: 'attention' | 'general' = 'gen
 };
 
 const isFailed = (status: string) => status === 'FAILED' || status === 'ABORTED';
-
-/** Get the CTA label for attention items — be specific about what the user should do */
-const getAttentionCTA = (run: AgentRun): { label: string; icon: React.ReactNode; secondary?: string } => {
-  const status = run.status?.toUpperCase() || '';
-  if (status === 'WAITING') return {
-    label: 'Approve & Continue',
-    icon: <CheckCircle size={14} />,
-    secondary: 'Review what the agent wants to do and give approval',
-  };
-  if (isFailed(status)) return {
-    label: 'Investigate Failure',
-    icon: <Search size={14} />,
-    secondary: 'Check the error details and decide on next steps',
-  };
-  if (hasOutputWarning(run)) return {
-    label: 'Review & Confirm',
-    icon: <Eye size={14} />,
-    secondary: 'The agent is unsure — verify its findings',
-  };
-  return { label: 'Review', icon: <Eye size={14} /> };
-};
 
 // ── Stat card ──────────────────────────────────────────────────────────────────
 
@@ -185,7 +170,7 @@ const StatCard = ({ icon, iconColor, iconBg, value, label, delay, isLoading }: S
   </motion.div>
 );
 
-// ── Run row (standard) ─────────────────────────────────────────────────────────
+// ── Run row (standard — for completed and running) ─────────────────────────────
 
 const RunRow = ({ run, entityBasePath }: { run: AgentRun; entityBasePath: string }) => {
   const duration = formatDuration(run);
@@ -209,7 +194,6 @@ const RunRow = ({ run, entityBasePath }: { run: AgentRun; entityBasePath: string
         '&:hover': { borderColor: 'hsl(var(--primary) / 0.4)' },
       }}
     >
-      {/* Content */}
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Typography sx={{
@@ -272,7 +256,6 @@ const RunRow = ({ run, entityBasePath }: { run: AgentRun; entityBasePath: string
         </Box>
       </Box>
 
-      {/* Open incident */}
       {incidentKey && (
         <Button
           component={Link}
@@ -303,19 +286,244 @@ const RunRow = ({ run, entityBasePath }: { run: AgentRun; entityBasePath: string
   );
 };
 
-// ── Attention row (enhanced with CTAs) ─────────────────────────────────────────
+// ── Notification row (for agent_question notifications) ────────────────────────
+
+interface NotificationRowProps {
+  notification: AgentNotification;
+  entityBasePath: string;
+  onApprove: (n: AgentNotification) => void;
+  onConfigure: (n: AgentNotification) => void;
+  onAnswer: (n: AgentNotification) => void;
+}
+
+const NotificationRow = ({ notification, entityBasePath, onApprove, onConfigure, onAnswer }: NotificationRowProps) => {
+  const isApproval = isApprovalNotification(notification);
+  const timeAgo = notification.created_at
+    ? getTimeAgo(new Date(notification.created_at * 1000).toISOString())
+    : '—';
+
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 2,
+        px: 2.5,
+        py: 2,
+        borderRadius: 2,
+        border: '1px solid hsl(var(--border))',
+        backgroundColor: 'hsl(var(--card))',
+        transition: 'border-color 0.15s ease',
+        '&:hover': { borderColor: 'hsl(var(--primary) / 0.4)' },
+      }}
+    >
+      {/* Content */}
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography sx={{
+            fontSize: '0.85rem',
+            fontWeight: 600,
+            color: 'hsl(var(--foreground))',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}>
+            {notification.title}
+          </Typography>
+          {notification.severity && (
+            <Chip
+              label={notification.severity}
+              size="small"
+              sx={{
+                height: 20,
+                fontSize: '0.68rem',
+                fontWeight: 600,
+                backgroundColor: 'hsl(var(--severity-high) / 0.12)',
+                color: 'hsl(var(--severity-high))',
+              }}
+            />
+          )}
+          <Chip
+            icon={isApproval ? <Clock size={12} /> : <HelpCircle size={12} />}
+            label={isApproval ? 'Approval Needed' : 'Questions'}
+            size="small"
+            sx={{
+              height: 20,
+              fontSize: '0.68rem',
+              fontWeight: 600,
+              backgroundColor: isApproval
+                ? 'hsl(var(--severity-info) / 0.12)'
+                : 'hsl(var(--severity-medium) / 0.12)',
+              color: isApproval
+                ? 'hsl(var(--severity-info))'
+                : 'hsl(var(--severity-medium))',
+              '& .MuiChip-icon': { color: 'inherit' },
+            }}
+          />
+        </Box>
+
+        <Typography sx={{
+          fontSize: '0.78rem',
+          color: 'hsl(var(--muted-foreground))',
+          mt: 0.5,
+          lineHeight: 1.5,
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical',
+          overflow: 'hidden',
+        }}>
+          {notification.description}
+        </Typography>
+
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+          <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', opacity: 0.7 }}>
+            {timeAgo}
+          </Typography>
+        </Box>
+      </Box>
+
+      {/* CTAs */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
+        {isApproval ? (
+          <>
+            <Button
+              onClick={() => onApprove(notification)}
+              size="small"
+              variant="contained"
+              startIcon={<CheckCircle size={14} />}
+              sx={{
+                fontSize: '0.75rem',
+                textTransform: 'none',
+                fontWeight: 600,
+                backgroundColor: 'hsl(var(--severity-low))',
+                color: 'hsl(var(--primary-foreground))',
+                px: 2,
+                py: 0.5,
+                boxShadow: 'none',
+                whiteSpace: 'nowrap',
+                '&:hover': {
+                  backgroundColor: 'hsl(var(--severity-low) / 0.9)',
+                  boxShadow: 'none',
+                },
+              }}
+            >
+              Approve
+            </Button>
+            <Button
+              onClick={() => onConfigure(notification)}
+              size="small"
+              variant="outlined"
+              startIcon={<Settings size={14} />}
+              sx={{
+                fontSize: '0.75rem',
+                textTransform: 'none',
+                fontWeight: 500,
+                borderColor: 'hsl(var(--border))',
+                color: 'hsl(var(--foreground))',
+                px: 1.5,
+                py: 0.5,
+                whiteSpace: 'nowrap',
+                '&:hover': {
+                  borderColor: 'hsl(var(--primary) / 0.5)',
+                  backgroundColor: 'hsl(var(--primary) / 0.08)',
+                },
+              }}
+            >
+              Configure
+            </Button>
+          </>
+        ) : (
+          <Button
+            onClick={() => onAnswer(notification)}
+            size="small"
+            variant="contained"
+            startIcon={<MessageSquare size={14} />}
+            sx={{
+              fontSize: '0.75rem',
+              textTransform: 'none',
+              fontWeight: 600,
+              backgroundColor: 'hsl(var(--primary))',
+              color: 'hsl(var(--primary-foreground))',
+              px: 2,
+              py: 0.5,
+              boxShadow: 'none',
+              whiteSpace: 'nowrap',
+              '&:hover': {
+                backgroundColor: 'hsl(var(--primary) / 0.9)',
+                boxShadow: 'none',
+              },
+            }}
+          >
+            Answer Questions
+          </Button>
+        )}
+
+        {notification.incident_id && (
+          <Button
+            component={Link}
+            to={`${entityBasePath}/${notification.incident_id}`}
+            size="small"
+            variant="outlined"
+            endIcon={<ArrowRight size={14} />}
+            sx={{
+              fontSize: '0.75rem',
+              textTransform: 'none',
+              fontWeight: 500,
+              borderColor: 'hsl(var(--border))',
+              color: 'hsl(var(--foreground))',
+              px: 1.5,
+              py: 0.5,
+              whiteSpace: 'nowrap',
+              '&:hover': {
+                borderColor: 'hsl(var(--primary) / 0.5)',
+                backgroundColor: 'hsl(var(--primary) / 0.08)',
+              },
+            }}
+          >
+            Open Incident
+          </Button>
+        )}
+        {notification.reference_url && !notification.incident_id && (
+          <Button
+            component={Link}
+            to={notification.reference_url}
+            size="small"
+            variant="outlined"
+            endIcon={<ArrowRight size={14} />}
+            sx={{
+              fontSize: '0.75rem',
+              textTransform: 'none',
+              fontWeight: 500,
+              borderColor: 'hsl(var(--border))',
+              color: 'hsl(var(--foreground))',
+              px: 1.5,
+              py: 0.5,
+              whiteSpace: 'nowrap',
+              '&:hover': {
+                borderColor: 'hsl(var(--primary) / 0.5)',
+                backgroundColor: 'hsl(var(--primary) / 0.08)',
+              },
+            }}
+          >
+            Open Incident
+          </Button>
+        )}
+      </Box>
+    </Box>
+  );
+};
+
+// ── Attention row (for agent runs that failed/need review) ─────────────────────
 
 const AttentionRunRow = ({ run, entityBasePath, onViewDetails }: { run: AgentRun; entityBasePath: string; onViewDetails: (run: AgentRun) => void }) => {
   const incidentKey = getIncidentKey(run);
   const incidentTitle = getIncidentTitleFromRun(run);
   const description = getAIDescription(run, 'attention');
   const duration = formatDuration(run);
-  const cta = getAttentionCTA(run);
   const status = run.status?.toUpperCase() || '';
   const runFailed = status === 'FAILED' || status === 'ABORTED';
   const isUnsure = hasOutputWarning(run);
   const rawSeverity = getIncidentSeverityFromRun(run);
-  // Default attention items to High when severity can't be determined
   const severity = rawSeverity.level === 'unknown'
     ? { level: 'high' as const, label: 'High', colorToken: '--severity-high' }
     : rawSeverity;
@@ -335,7 +543,6 @@ const AttentionRunRow = ({ run, entityBasePath, onViewDetails }: { run: AgentRun
         '&:hover': { borderColor: 'hsl(var(--primary) / 0.4)' },
       }}
     >
-      {/* Content */}
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Typography sx={{
@@ -404,7 +611,6 @@ const AttentionRunRow = ({ run, entityBasePath, onViewDetails }: { run: AgentRun
           )}
         </Box>
 
-        {/* Description */}
         <Typography sx={{
           fontSize: '0.78rem',
           color: runFailed ? 'hsl(var(--severity-critical) / 0.85)' : 'hsl(var(--muted-foreground))',
@@ -418,7 +624,6 @@ const AttentionRunRow = ({ run, entityBasePath, onViewDetails }: { run: AgentRun
           {description}
         </Typography>
 
-        {/* Timestamp */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
           <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', opacity: 0.7 }}>
             {run.started_at ? getTimeAgo(run.started_at) : '—'}
@@ -432,13 +637,12 @@ const AttentionRunRow = ({ run, entityBasePath, onViewDetails }: { run: AgentRun
         </Box>
       </Box>
 
-      {/* CTAs on the right */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
         <Button
           onClick={() => onViewDetails(run)}
           size="small"
           variant="contained"
-          startIcon={cta.icon}
+          startIcon={<Eye size={14} />}
           sx={{
             fontSize: '0.75rem',
             textTransform: 'none',
@@ -455,7 +659,7 @@ const AttentionRunRow = ({ run, entityBasePath, onViewDetails }: { run: AgentRun
             },
           }}
         >
-          {cta.label}
+          Review
         </Button>
         {incidentKey && (
           <Button
@@ -481,7 +685,7 @@ const AttentionRunRow = ({ run, entityBasePath, onViewDetails }: { run: AgentRun
           >
             Open Incident
           </Button>
-          )}
+        )}
       </Box>
     </Box>
   );
@@ -491,17 +695,51 @@ const AttentionRunRow = ({ run, entityBasePath, onViewDetails }: { run: AgentRun
 
 const DashboardPage = () => {
   const { runs, isLoading, stats, refresh } = useAgentActivity();
+  const { notifications, isLoading: notificationsLoading, refresh: refreshNotifications } = useAgentNotifications();
   const { singular: entitySingular, basePath: entityBasePath } = useEntityPreference();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [summaryRun, setSummaryRun] = useState<AgentRun | null>(null);
+  const [questionNotification, setQuestionNotification] = useState<AgentNotification | null>(null);
+  const [configureNotification, setConfigureNotification] = useState<AgentNotification | null>(null);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await refresh();
+    await Promise.all([refresh(), refreshNotifications()]);
     setTimeout(() => setIsRefreshing(false), 600);
   };
 
-  // Categorise runs
+  const handleApprove = async (notification: AgentNotification) => {
+    try {
+      await approveAgentAction(notification.id);
+      toast.success('Action approved — the agent will continue.');
+      refreshNotifications();
+    } catch {
+      toast.error('Failed to approve action.');
+    }
+  };
+
+  const handleConfigureApprove = async (notificationId: string, modifiedAction?: string) => {
+    try {
+      // For now, approve the notification (modified action could be sent in a future API extension)
+      await approveAgentAction(notificationId);
+      toast.success(modifiedAction ? 'Modified action submitted.' : 'Action approved.');
+      refreshNotifications();
+    } catch {
+      toast.error('Failed to approve action.');
+    }
+  };
+
+  const handleSubmitAnswers = async (notificationId: string, answers: Record<number, string>) => {
+    try {
+      await approveAgentAction(notificationId);
+      toast.success('Answers submitted — the agent will continue.');
+      refreshNotifications();
+    } catch {
+      toast.error('Failed to submit answers.');
+    }
+  };
+
+  // Categorise runs (excluding WAITING since those are now handled by notifications)
   const { needsAttention, incidentRuns, recentCompleted, activeRuns } = useMemo(() => {
     const attention: AgentRun[] = [];
     const incidents: AgentRun[] = [];
@@ -524,6 +762,8 @@ const DashboardPage = () => {
     };
   }, [runs]);
 
+  const totalAttentionCount = notifications.length + needsAttention.length;
+
   return (
     <>
     <Box sx={{ maxWidth: 1400, mx: 'auto', p: 4 }}>
@@ -533,7 +773,7 @@ const DashboardPage = () => {
           <Typography variant="h4" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
             Dashboard
           </Typography>
-          {isLoading && !isRefreshing && (
+          {(isLoading || notificationsLoading) && !isRefreshing && (
             <Loader2 size={18} style={{ color: 'hsl(var(--muted-foreground))', animation: 'spin 1s linear infinite' }} />
           )}
         </Box>
@@ -563,10 +803,10 @@ const DashboardPage = () => {
           icon={<AlertTriangle size={18} />}
           iconColor="hsl(var(--severity-high))"
           iconBg="hsl(var(--severity-high) / 0.12)"
-          value={needsAttention.length}
+          value={totalAttentionCount}
           label="Needs Your Input"
           delay={0}
-          isLoading={isLoading}
+          isLoading={isLoading && notificationsLoading}
         />
         <StatCard
           icon={<Loader2 size={18} />}
@@ -604,9 +844,9 @@ const DashboardPage = () => {
           <Typography sx={{ fontWeight: 600, fontSize: '1rem', color: 'hsl(var(--foreground))' }}>
             Needs Your Attention
           </Typography>
-          {needsAttention.length > 0 && (
+          {totalAttentionCount > 0 && (
             <Chip
-              label={needsAttention.length}
+              label={totalAttentionCount}
               size="small"
               sx={{
                 height: 22,
@@ -619,13 +859,13 @@ const DashboardPage = () => {
           )}
         </Box>
 
-        {isLoading && needsAttention.length === 0 ? (
+        {(isLoading && notificationsLoading) && totalAttentionCount === 0 ? (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
             {[0, 1, 2].map(i => (
               <Skeleton key={i} variant="rounded" height={72} sx={{ borderRadius: 2, bgcolor: 'hsl(var(--muted) / 0.3)' }} />
             ))}
           </Box>
-        ) : needsAttention.length === 0 ? (
+        ) : totalAttentionCount === 0 ? (
           <Box
             sx={{
               px: 3,
@@ -643,6 +883,24 @@ const DashboardPage = () => {
           </Box>
         ) : (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            {/* Notification-based items first (approvals & questions) */}
+            {notifications.map((notification) => (
+              <motion.div
+                key={notification.id}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <NotificationRow
+                  notification={notification}
+                  entityBasePath={entityBasePath}
+                  onApprove={handleApprove}
+                  onConfigure={setConfigureNotification}
+                  onAnswer={setQuestionNotification}
+                />
+              </motion.div>
+            ))}
+            {/* Agent run-based items (failed, unsure, etc.) */}
             {needsAttention.map((run) => (
               <motion.div
                 key={run.execution_id}
@@ -720,6 +978,20 @@ const DashboardPage = () => {
       onClose={() => setSummaryRun(null)}
       run={summaryRun}
       entityBasePath={entityBasePath}
+    />
+
+    <AgentQuestionDialog
+      open={!!questionNotification}
+      onClose={() => setQuestionNotification(null)}
+      notification={questionNotification}
+      onSubmit={handleSubmitAnswers}
+    />
+
+    <AgentConfigureDialog
+      open={!!configureNotification}
+      onClose={() => setConfigureNotification(null)}
+      notification={configureNotification}
+      onApprove={handleConfigureApprove}
     />
     </>
   );
