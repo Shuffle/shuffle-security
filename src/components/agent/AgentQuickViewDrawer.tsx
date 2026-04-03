@@ -26,6 +26,7 @@ import {
   MoreHorizontal,
   Zap,
   Shield,
+  Send,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { AgentNotification } from '@/services/notifications';
