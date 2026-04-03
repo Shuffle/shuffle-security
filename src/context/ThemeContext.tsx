@@ -62,8 +62,9 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
           credentials: 'include',
           headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
         });
+        if (!res.ok) throw new Error('getinfo failed');
         const data = await res.json();
-        if (data.success && (data.theme === 'dark' || data.theme === 'light')) {
+        if (data && data.success && (data.theme === 'dark' || data.theme === 'light')) {
           // Only apply API theme if user hasn't manually set one
           const saved = localStorage.getItem(THEME_STORAGE_KEY);
           if (!saved) {
