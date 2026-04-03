@@ -740,8 +740,34 @@ const DashboardPage = () => {
     return [...notifItems, ...runItems];
   }, [notifications, needsAttention]);
 
+  // Filter attention items
+  const filteredAttentionItems = useMemo(() => {
+    if (attentionFilter === 'all') return allAttentionItems;
+    return allAttentionItems.filter(item => {
+      if (attentionFilter === 'approval') {
+        return item.type === 'notification' && isApprovalNotification(item.notification);
+      }
+      if (attentionFilter === 'question') {
+        return item.type === 'notification' && !isApprovalNotification(item.notification);
+      }
+      if (attentionFilter === 'failed') {
+        if (item.type === 'run') return true; // all attention runs are failed/unsure
+        return false;
+      }
+      return true;
+    });
+  }, [allAttentionItems, attentionFilter]);
+
+  // Count per filter for badges
+  const attentionCounts = useMemo(() => ({
+    failed: allAttentionItems.filter(i => i.type === 'run').length,
+    approval: allAttentionItems.filter(i => i.type === 'notification' && isApprovalNotification(i.notification)).length,
+    question: allAttentionItems.filter(i => i.type === 'notification' && !isApprovalNotification(i.notification)).length,
+  }), [allAttentionItems]);
+
   const totalAttentionCount = allAttentionItems.length;
-  const attentionTotalPages = Math.ceil(totalAttentionCount / ITEMS_PER_PAGE);
+  const filteredAttentionCount = filteredAttentionItems.length;
+  const attentionTotalPages = Math.ceil(filteredAttentionCount / ITEMS_PER_PAGE);
   const paginatedAttention = allAttentionItems.slice(attentionPage * ITEMS_PER_PAGE, (attentionPage + 1) * ITEMS_PER_PAGE);
 
   const completedTotalPages = Math.ceil(recentCompleted.length / ITEMS_PER_PAGE);
