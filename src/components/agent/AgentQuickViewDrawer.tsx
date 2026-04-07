@@ -333,9 +333,6 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
               );
               return null;
             })()}
-            {data.isApproval && (
-              <Chip icon={<Clock size={12} />} label="Approval Needed" size="small" sx={statusChipSx('--severity-info')} />
-            )}
             {data.isQuestion && (
               <Chip icon={<HelpCircle size={12} />} label="Pending Question" size="small" sx={statusChipSx('--severity-info')} />
             )}
@@ -457,14 +454,6 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
                             color: 'hsl(var(--muted-foreground))',
                           }} />
                         )}
-                        {isPending && (
-                          <Chip label="Needs Approval" size="small" sx={{
-                            height: 18, fontSize: '0.62rem', fontWeight: 600,
-                            background: 'var(--agent-gradient)',
-                            color: '#fff',
-                            '& .MuiChip-label': { color: '#fff' },
-                          }} />
-                        )}
                       </Box>
                       {entry.detail && (
                         <Typography sx={{
@@ -527,10 +516,7 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
             <Box sx={{
               px: 2.5, py: 2, borderRadius: 2,
               background: 'var(--agent-gradient-subtle)',
-              border: '1px solid transparent',
-              borderImage: 'var(--agent-gradient-border) 1',
-              borderLeft: '3px solid',
-              borderLeftColor: 'var(--agent-mid)',
+              borderLeft: '3px solid var(--agent-mid)',
             }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.75 }}>
                 <Zap size={14} style={{ color: 'var(--agent-mid)' }} />
