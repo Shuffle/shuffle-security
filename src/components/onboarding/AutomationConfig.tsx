@@ -269,10 +269,10 @@ const SourceChip = ({ label, apps, activeCount, totalCount, hasAnyActive, option
   
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, px: 1.5, py: 0.75, borderRadius: 2,
-      background: hasAnyActive ? 'rgba(34, 197, 94, 0.1)' : 'rgba(255, 255, 255, 0.05)',
-      border: '1px solid', borderColor: hasAnyActive ? 'rgba(34, 197, 94, 0.3)' : 'rgba(255, 255, 255, 0.1)',
+      background: hasAnyActive ? 'rgba(34, 197, 94, 0.1)' : 'hsl(var(--muted))',
+      border: '1px solid', borderColor: hasAnyActive ? 'rgba(34, 197, 94, 0.3)' : 'hsl(var(--border))',
     }}>
-      <Typography variant="caption" sx={{ color: hasAnyActive ? '#22c55e' : 'rgba(255, 255, 255, 0.4)', fontWeight: 500 }}>
+      <Typography variant="caption" sx={{ color: hasAnyActive ? '#22c55e' : 'hsl(var(--muted-foreground))', fontWeight: 500 }}>
         {label}{hasAny && <Box component="span" sx={{ ml: 0.5, opacity: 0.8 }}>({activeCount}/{totalCount})</Box>}
       </Typography>
       {activeApps.length > 0 && (
@@ -806,7 +806,7 @@ export const AutomationConfig = ({
                 ? 'rgba(255, 102, 0, 0.06)'
                 : !app.isValidated
                   ? 'rgba(255, 152, 0, 0.04)'
-                  : 'rgba(0, 0, 0, 0.2)',
+                  : 'hsl(var(--muted))',
             border: '1px solid',
             borderColor: enabled 
               ? 'rgba(34, 197, 94, 0.4)' 
@@ -822,7 +822,7 @@ export const AutomationConfig = ({
                 ? 'rgba(34, 197, 94, 0.1)' 
                 : !app.isValidated
                   ? 'rgba(255, 152, 0, 0.1)'
-                  : 'rgba(0, 0, 0, 0.3)',
+                  : 'hsl(var(--background))',
               borderColor: !app.isValidated && !enabled
                 ? 'rgba(255, 152, 0, 0.4)'
                 : undefined,
@@ -868,7 +868,7 @@ export const AutomationConfig = ({
             </Box>
             <Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                <Typography variant="body2" sx={{ color: 'white' }}>
+                <Typography variant="body2" sx={{ color: 'hsl(var(--foreground))' }}>
                   {readableAppName(app.name)}
                 </Typography>
                 {app.isSelected && (
@@ -921,7 +921,7 @@ export const AutomationConfig = ({
                   fontSize: '0.6rem',
                   fontWeight: 600,
                   background: isConfiguring ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255, 152, 0, 0.12)',
-                  color: isConfiguring ? '#FF6600' : '#ff9800',
+                  color: isConfiguring ? 'hsl(var(--primary))' : '#ff9800',
                   border: '1px solid',
                   borderColor: isConfiguring ? 'rgba(255, 102, 0, 0.4)' : 'rgba(255, 152, 0, 0.3)',
                   '& .MuiChip-label': { px: 0.75 },
@@ -979,14 +979,14 @@ export const AutomationConfig = ({
                   sx={{
                     background: 'rgba(33, 33, 33, 0.6)',
                     border: '1px solid',
-                    borderColor: state.enabled && !isDisabled ? `${option.color}50` : 'rgba(255, 255, 255, 0.08)',
+                    borderColor: state.enabled && !isDisabled ? `${option.color}50` : 'hsl(var(--border))',
                     borderRadius: 3,
                     backdropFilter: 'blur(10px)',
                     transition: 'all 0.3s ease',
                     opacity: isDisabled ? 0.5 : 1,
                     cursor: (!isExpanded && (hasExpandableTools || (hasConfig && state.enabled))) ? 'pointer' : 'default',
                     '&:hover': {
-                      borderColor: isDisabled ? 'rgba(255, 255, 255, 0.08)' : (state.enabled ? option.color : 'rgba(255, 102, 0, 0.3)'),
+                      borderColor: isDisabled ? 'hsl(var(--border))' : (state.enabled ? option.color : 'hsl(var(--primary) / 0.3)'),
                       transform: isDisabled ? 'none' : 'translateY(-2px)',
                     },
                   }}
@@ -1013,7 +1013,7 @@ export const AutomationConfig = ({
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
                           <Typography
                             variant="subtitle1"
-                            sx={{ color: 'white', fontWeight: 600 }}
+                            sx={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}
                           >
                             {option.name}
                           </Typography>
@@ -1051,7 +1051,7 @@ export const AutomationConfig = ({
                         <Typography
                           variant="body2"
                           sx={{ 
-                            color: 'rgba(255, 255, 255, 0.5)', 
+                            color: 'hsl(var(--muted-foreground))', 
                             lineHeight: 1.4, 
                           }}
                         >
@@ -1086,13 +1086,13 @@ export const AutomationConfig = ({
                               p: 0.5,
                               borderRadius: 1,
                               '&:hover': {
-                                background: 'rgba(255, 255, 255, 0.1)',
+                                background: 'hsl(var(--border))',
                               },
                             }}
                           >
                             <ExpandMoreIcon
                               sx={{
-                                color: 'rgba(255, 255, 255, 0.5)',
+                                color: 'hsl(var(--muted-foreground))',
                                 transform: isExpanded ? 'rotate(180deg)' : 'none',
                                 transition: 'transform 0.3s ease',
                                 fontSize: 20,
@@ -1123,7 +1123,7 @@ export const AutomationConfig = ({
                         <Box sx={{ mt: 2, pl: 7 }}>
                           <Typography
                             variant="caption"
-                            sx={{ color: 'rgba(255, 255, 255, 0.4)', mb: 1.5, display: 'block' }}
+                            sx={{ color: 'hsl(var(--muted-foreground))', mb: 1.5, display: 'block' }}
                           >
                             Toggle individual tools:
                           </Typography>
@@ -1145,18 +1145,18 @@ export const AutomationConfig = ({
                                           px: 1,
                                           borderRadius: 1.5,
                                           border: '1px dashed rgba(255, 255, 255, 0.12)',
-                                          background: 'rgba(255, 255, 255, 0.02)',
+                                          background: 'hsl(var(--background-surface))',
                                           transition: 'all 0.2s ease',
                                           '&:hover': {
-                                            background: 'rgba(255, 255, 255, 0.05)',
-                                            borderColor: 'rgba(255, 255, 255, 0.2)',
+                                            background: 'hsl(var(--muted))',
+                                            borderColor: 'hsl(var(--border))',
                                           },
                                         }}
                                       >
                                         <Typography
                                           variant="caption"
                                           sx={{ 
-                                            color: 'rgba(255, 255, 255, 0.4)', 
+                                            color: 'hsl(var(--muted-foreground))', 
                                             fontWeight: 600,
                                             textTransform: 'uppercase',
                                             letterSpacing: 0.5,
@@ -1199,7 +1199,7 @@ export const AutomationConfig = ({
                                         </Box>
                                         <ExpandMoreIcon
                                           sx={{
-                                            color: 'rgba(255, 255, 255, 0.3)',
+                                            color: 'hsl(var(--muted-foreground))',
                                             transform: otherExpanded[option.id] ? 'rotate(180deg)' : 'none',
                                             transition: 'transform 0.2s ease',
                                             fontSize: 16,
@@ -1218,7 +1218,7 @@ export const AutomationConfig = ({
                                       <Typography
                                         variant="caption"
                                         sx={{ 
-                                          color: 'rgba(255, 255, 255, 0.5)', 
+                                          color: 'hsl(var(--muted-foreground))', 
                                           fontWeight: 600,
                                           textTransform: 'uppercase',
                                           letterSpacing: 0.5,
@@ -1245,9 +1245,9 @@ export const AutomationConfig = ({
                                     py: 0.75,
                                     px: 1.5,
                                     borderRadius: 1.5,
-                                    background: 'rgba(0, 0, 0, 0.2)',
+                                    background: 'hsl(var(--muted))',
                                     '&:hover': {
-                                      background: 'rgba(0, 0, 0, 0.3)',
+                                      background: 'hsl(var(--background))',
                                     },
                                   }}
                                 >
@@ -1264,7 +1264,7 @@ export const AutomationConfig = ({
                                     >
                                       {app.name[0]}
                                     </Avatar>
-                                    <Typography variant="body2" sx={{ color: 'white' }}>
+                                    <Typography variant="body2" sx={{ color: 'hsl(var(--foreground))' }}>
                                       {readableAppName(app.name)}
                                     </Typography>
                                   </Box>
@@ -1297,7 +1297,7 @@ export const AutomationConfig = ({
                             <Typography
                               variant="caption"
                               sx={{ 
-                                color: 'rgba(255, 255, 255, 0.5)', 
+                                color: 'hsl(var(--muted-foreground))', 
                                 fontWeight: 600,
                                 textTransform: 'uppercase',
                                 letterSpacing: 0.5,
@@ -1315,7 +1315,7 @@ export const AutomationConfig = ({
                                 size="small"
                                 onClick={() => initThreatFeeds()}
                                 sx={{ 
-                                  color: 'rgba(255, 255, 255, 0.4)',
+                                  color: 'hsl(var(--muted-foreground))',
                                   '&:hover': { color: '#ff6600' },
                                 }}
                               >
@@ -1338,7 +1338,7 @@ export const AutomationConfig = ({
                                   borderRadius: 1.5,
                                   background: feed.enabled 
                                     ? 'rgba(239, 68, 68, 0.08)' 
-                                    : 'rgba(0, 0, 0, 0.2)',
+                                    : 'hsl(var(--muted))',
                                   border: '1px solid',
                                   borderColor: feed.enabled 
                                     ? 'rgba(239, 68, 68, 0.25)' 
@@ -1399,13 +1399,13 @@ export const AutomationConfig = ({
                                 ) : (
                                   <>
                                     <Box sx={{ flex: 1, minWidth: 0 }}>
-                                      <Typography variant="body2" sx={{ color: 'white', fontWeight: 500 }}>
+                                      <Typography variant="body2" sx={{ color: 'hsl(var(--foreground))', fontWeight: 500 }}>
                                         {feed.name}
                                       </Typography>
                                       <Typography 
                                         variant="caption" 
                                         sx={{ 
-                                          color: 'rgba(255, 255, 255, 0.5)', 
+                                          color: 'hsl(var(--muted-foreground))', 
                                           fontFamily: 'monospace',
                                           fontSize: '0.65rem',
                                           display: 'block',
@@ -1422,7 +1422,7 @@ export const AutomationConfig = ({
                                         <IconButton
                                           size="small"
                                           onClick={() => setEditingFeed(feed)}
-                                          sx={{ color: 'rgba(255,255,255,0.4)', '&:hover': { color: 'white' } }}
+                                          sx={{ color: 'rgba(255,255,255,0.4)', '&:hover': { color: 'hsl(var(--foreground))' } }}
                                         >
                                           <EditIcon sx={{ fontSize: 16 }} />
                                         </IconButton>
@@ -1462,10 +1462,10 @@ export const AutomationConfig = ({
                               p: 1.5, 
                               borderRadius: 1.5, 
                               border: '1px dashed rgba(255, 255, 255, 0.15)',
-                              background: 'rgba(0, 0, 0, 0.15)',
+                              background: 'hsl(var(--muted))',
                             }}
                           >
-                            <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.4)', mb: 1, display: 'block' }}>
+                            <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', mb: 1, display: 'block' }}>
                               Add new threat feed URL
                             </Typography>
                             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
@@ -1516,8 +1516,8 @@ export const AutomationConfig = ({
                                   }
                                 }}
                                 sx={{ 
-                                  borderColor: 'rgba(255, 255, 255, 0.2)',
-                                  color: 'rgba(255, 255, 255, 0.7)',
+                                  borderColor: 'hsl(var(--border))',
+                                  color: 'hsl(var(--foreground))',
                                   '&:hover': {
                                     borderColor: option.color,
                                     color: option.color,
@@ -1547,14 +1547,14 @@ export const AutomationConfig = ({
                               fullWidth
                               sx={{
                                 '& .MuiOutlinedInput-root': {
-                                  backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                                  backgroundColor: 'hsl(var(--background))',
                                   borderRadius: 2,
-                                  '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.1)' },
-                                  '&:hover fieldset': { borderColor: 'rgba(255, 255, 255, 0.2)' },
+                                  '& fieldset': { borderColor: 'hsl(var(--border))' },
+                                  '&:hover fieldset': { borderColor: 'hsl(var(--border))' },
                                   '&.Mui-focused fieldset': { borderColor: option.color },
                                 },
-                                '& .MuiInputBase-input': { color: 'white' },
-                                '& .MuiInputLabel-root': { color: 'rgba(255, 255, 255, 0.5)' },
+                                '& .MuiInputBase-input': { color: 'hsl(var(--foreground))' },
+                                '& .MuiInputLabel-root': { color: 'hsl(var(--muted-foreground))' },
                               }}
                             />
                           ))}
@@ -1580,7 +1580,7 @@ export const AutomationConfig = ({
         <Typography
           variant="h5"
           sx={{
-            color: 'white',
+            color: 'hsl(var(--foreground))',
             fontWeight: 700,
             mb: 0.5,
           }}
@@ -1589,7 +1589,7 @@ export const AutomationConfig = ({
         </Typography>
         <Typography
           variant="body1"
-          sx={{ color: 'rgba(255, 255, 255, 0.5)' }}
+          sx={{ color: 'hsl(var(--muted-foreground))' }}
         >
           Review your connected tools, configure automation, and you're all set.
         </Typography>

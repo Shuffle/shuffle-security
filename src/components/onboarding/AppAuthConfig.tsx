@@ -779,15 +779,15 @@ export const AppAuthCard = ({
               size="small"
               sx={{
                 '& .MuiOutlinedInput-root': {
-                  backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                  backgroundColor: 'hsl(var(--muted))',
                   borderRadius: 2,
-                  '& fieldset': { borderColor: fieldErrors[fieldKey] ? '#ef4444' : 'rgba(255, 255, 255, 0.1)' },
-                  '&:hover fieldset': { borderColor: fieldErrors[fieldKey] ? '#ef4444' : 'rgba(255, 255, 255, 0.2)' },
-                  '&.Mui-focused fieldset': { borderColor: fieldErrors[fieldKey] ? '#ef4444' : '#FF6600' },
+                  '& fieldset': { borderColor: fieldErrors[fieldKey] ? '#ef4444' : 'hsl(var(--border))' },
+                  '&:hover fieldset': { borderColor: fieldErrors[fieldKey] ? '#ef4444' : 'hsl(var(--border))' },
+                  '&.Mui-focused fieldset': { borderColor: fieldErrors[fieldKey] ? '#ef4444' : 'hsl(var(--primary))' },
                 },
-                '& .MuiInputBase-input': { color: 'white' },
-                '& .MuiInputLabel-root': { color: 'rgba(255, 255, 255, 0.5)' },
-                '& .MuiFormHelperText-root': { color: fieldErrors[fieldKey] ? '#ef4444' : 'rgba(255, 255, 255, 0.4)' },
+                '& .MuiInputBase-input': { color: 'hsl(var(--foreground))' },
+                '& .MuiInputLabel-root': { color: 'hsl(var(--muted-foreground))' },
+                '& .MuiFormHelperText-root': { color: fieldErrors[fieldKey] ? '#ef4444' : 'hsl(var(--muted-foreground))' },
               }}
             />
           );
@@ -1284,9 +1284,9 @@ export const AppAuthCard = ({
                   <Box sx={{ 
                     mt: 2, 
                     p: 0,
-                    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                    backgroundColor: 'hsl(var(--muted))',
                     borderRadius: 3,
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    border: '1px solid hsl(var(--border))',
                     overflow: 'hidden',
                   }}>
                     {/* Active authentication header */}
@@ -1296,8 +1296,8 @@ export const AppAuthCard = ({
                       gap: 1.5,
                       px: { xs: 2, sm: 2.5 },
                       py: 1.5,
-                      borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
-                      backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                      borderBottom: '1px solid hsl(var(--border))',
+                      backgroundColor: 'hsl(var(--background-surface))',
                     }}>
                       <Box sx={{
                         width: 8,
@@ -1319,7 +1319,7 @@ export const AppAuthCard = ({
                           : '0 0 8px rgba(156, 163, 175, 0.4)',
                       }} />
                       <Typography sx={{ 
-                        color: 'rgba(255, 255, 255, 0.5)', 
+                        color: 'hsl(var(--muted-foreground))', 
                         fontSize: '0.75rem',
                         fontWeight: 500,
                         textTransform: 'uppercase',
@@ -1402,7 +1402,7 @@ export const AppAuthCard = ({
                         </Box>
                         <Box sx={{ minWidth: 0 }}>
                           <Typography sx={{ 
-                            color: 'white', 
+                            color: 'hsl(var(--foreground))', 
                             fontWeight: 600, 
                             fontSize: { xs: '0.9rem', sm: '0.95rem' },
                             overflow: 'hidden',
@@ -1423,7 +1423,7 @@ export const AppAuthCard = ({
                               ? '#22c55e'
                               : isConfigured
                               ? '#f59e0b' // Yellow for configured but not tested
-                              : 'rgba(255, 255, 255, 0.4)', 
+                              : 'hsl(var(--muted-foreground))', 
                             fontSize: '0.75rem',
                             mt: 0.25,
                             fontWeight: (localTestStatus !== 'untested' || isTested || isConfigured) ? 500 : 400,
@@ -1459,7 +1459,7 @@ export const AppAuthCard = ({
                         }
                         sx={{
                           borderColor: authState.status === 'testing' ? 'transparent' : 'rgba(255, 102, 0, 0.5)',
-                          color: authState.status === 'testing' ? 'rgba(255, 255, 255, 0.9)' : '#FF6600',
+                          color: authState.status === 'testing' ? 'hsl(var(--foreground))' : 'hsl(var(--primary))',
                           background: authState.status === 'testing' 
                             ? 'linear-gradient(90deg, rgba(255, 102, 0, 0.3) 0%, rgba(255, 102, 0, 0.5) 50%, rgba(255, 102, 0, 0.3) 100%)'
                             : 'transparent',
@@ -1479,12 +1479,12 @@ export const AppAuthCard = ({
                             '100%': { backgroundPosition: '-200% 0' },
                           },
                           '&:hover': {
-                            borderColor: '#FF6600',
+                            borderColor: 'hsl(var(--primary))',
                             backgroundColor: authState.status === 'testing' ? undefined : 'rgba(255, 102, 0, 0.08)',
                           },
                           '&.Mui-disabled': {
-                            color: authState.status === 'testing' ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.3)',
-                            borderColor: authState.status === 'testing' ? 'transparent' : 'rgba(255, 255, 255, 0.1)',
+                            color: authState.status === 'testing' ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))',
+                            borderColor: authState.status === 'testing' ? 'transparent' : 'hsl(var(--border))',
                           },
                         }}
                       >
@@ -1624,9 +1624,9 @@ export const AppAuthCard = ({
             {(apiAuthEntries.length === 0 || showAddNewForm) && (
               <Box sx={{ 
                 p: 3, 
-                backgroundColor: 'rgba(0, 0, 0, 0.2)', 
+                backgroundColor: 'hsl(var(--muted))', 
                 borderRadius: 2,
-                border: '1px solid rgba(255, 255, 255, 0.08)',
+                border: '1px solid hsl(var(--border))',
               }}>
                 {/* Show credential error notice if switched due to 401/403 */}
                 {isCredentialError && (
@@ -1648,14 +1648,14 @@ export const AppAuthCard = ({
                     </Typography>
                   </Alert>
                 )}
-                <Typography variant="subtitle2" sx={{ color: '#FF6600', fontWeight: 600, mb: 2 }}>
+                <Typography variant="subtitle2" sx={{ color: 'hsl(var(--primary))', fontWeight: 600, mb: 2 }}>
                   {apiAuthEntries.length === 0 ? 'Configure Authentication' : 'Add New Authentication'}
                 </Typography>
                 
                 {loading ? (
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', py: 4 }}>
-                    <CircularProgress size={32} sx={{ color: '#FF6600' }} />
-                    <Typography sx={{ ml: 2, color: 'rgba(255, 255, 255, 0.5)' }}>
+                    <CircularProgress size={32} sx={{ color: 'hsl(var(--primary))' }} />
+                    <Typography sx={{ ml: 2, color: 'hsl(var(--muted-foreground))' }}>
                       Loading configuration...
                     </Typography>
                   </Box>
@@ -1767,8 +1767,8 @@ export const AppAuthCard = ({
                           }}
                           disabled={saving || !isFormValid()}
                           sx={{
-                            borderColor: isFormValid() ? 'rgba(255, 102, 0, 0.5)' : 'rgba(255, 255, 255, 0.1)',
-                            color: isFormValid() ? '#FF6600' : 'rgba(255, 255, 255, 0.3)',
+                            borderColor: isFormValid() ? 'hsl(var(--primary) / 0.5)' : 'hsl(var(--border))',
+                            color: isFormValid() ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
                             fontWeight: 600,
                             textTransform: 'none',
                             fontSize: '0.9rem',
@@ -1777,12 +1777,12 @@ export const AppAuthCard = ({
                             borderRadius: 2,
                             transition: 'all 0.2s ease',
                             '&:hover': {
-                              borderColor: '#FF6600',
-                              backgroundColor: 'rgba(255, 102, 0, 0.08)',
+                              borderColor: 'hsl(var(--primary))',
+                              backgroundColor: 'hsl(var(--primary) / 0.08)',
                             },
                             '&.Mui-disabled': {
-                              borderColor: 'rgba(255, 255, 255, 0.1)',
-                              color: 'rgba(255, 255, 255, 0.3)',
+                              borderColor: 'hsl(var(--border))',
+                              color: 'hsl(var(--muted-foreground))',
                             },
                           }}
                         >
@@ -1886,8 +1886,8 @@ export const AppAuthCard = ({
                             }}
                             disabled={!allFilled}
                             sx={{
-                              borderColor: allFilled ? 'rgba(255, 102, 0, 0.5)' : 'rgba(255, 255, 255, 0.1)',
-                              color: allFilled ? '#FF6600' : 'rgba(255, 255, 255, 0.3)',
+                              borderColor: allFilled ? 'hsl(var(--primary) / 0.5)' : 'hsl(var(--border))',
+                              color: allFilled ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
                               fontWeight: 600,
                               textTransform: 'none',
                               fontSize: '0.9rem',
@@ -1896,12 +1896,12 @@ export const AppAuthCard = ({
                               borderRadius: 2,
                               transition: 'all 0.2s ease',
                               '&:hover': {
-                                borderColor: '#FF6600',
-                                backgroundColor: 'rgba(255, 102, 0, 0.08)',
+                                borderColor: 'hsl(var(--primary))',
+                                backgroundColor: 'hsl(var(--primary) / 0.08)',
                               },
                               '&.Mui-disabled': {
-                                borderColor: 'rgba(255, 255, 255, 0.1)',
-                                color: 'rgba(255, 255, 255, 0.3)',
+                                borderColor: 'hsl(var(--border))',
+                                color: 'hsl(var(--muted-foreground))',
                               },
                             }}
                           >
@@ -1939,8 +1939,8 @@ export const AppAuthCard = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-            color: 'white',
+            borderBottom: '1px solid hsl(var(--border))',
+            color: 'hsl(var(--foreground))',
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -1956,38 +1956,38 @@ export const AppAuthCard = ({
               {app.name.replace(/_/g, ' ')} Documentation
             </Typography>
           </Box>
-          <IconButton onClick={() => setDocsOpen(false)} sx={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+          <IconButton onClick={() => setDocsOpen(false)} sx={{ color: 'hsl(var(--muted-foreground))' }}>
             <CloseIcon />
           </IconButton>
         </DialogTitle>
         <DialogContent sx={{ pt: 3 }}>
           {docsLoading ? (
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', py: 6 }}>
-              <CircularProgress size={32} sx={{ color: '#FF6600' }} />
-              <Typography sx={{ ml: 2, color: 'rgba(255, 255, 255, 0.5)' }}>
+              <CircularProgress size={32} sx={{ color: 'hsl(var(--primary))' }} />
+              <Typography sx={{ ml: 2, color: 'hsl(var(--muted-foreground))' }}>
                 Loading documentation...
               </Typography>
             </Box>
           ) : (
             <Box
               sx={{
-                color: 'rgba(255, 255, 255, 0.8)',
-                '& h1, & h2, & h3, & h4': { color: 'white', mt: 3, mb: 2 },
+                color: 'hsl(var(--foreground))',
+                '& h1, & h2, & h3, & h4': { color: 'hsl(var(--foreground))', mt: 3, mb: 2 },
                 '& p': { mb: 2, lineHeight: 1.7 },
                 '& code': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  backgroundColor: 'hsl(var(--muted))',
                   px: 1,
                   py: 0.5,
                   borderRadius: 1,
                   fontSize: '0.875rem',
                 },
                 '& pre': {
-                  backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                  backgroundColor: 'hsl(var(--background))',
                   p: 2,
                   borderRadius: 2,
                   overflow: 'auto',
                 },
-                '& a': { color: '#FF6600' },
+                '& a': { color: 'hsl(var(--primary))' },
                 '& ul, & ol': { pl: 3, mb: 2 },
                 '& li': { mb: 1 },
               }}
@@ -2084,7 +2084,7 @@ export const AppAuthConfig = ({
         severity="info"
         sx={{
           backgroundColor: 'rgba(255, 102, 0, 0.1)',
-          color: '#FF6600',
+          color: 'hsl(var(--primary))',
           border: '1px solid rgba(255, 102, 0, 0.3)',
           borderRadius: 2,
         }}
@@ -2103,7 +2103,7 @@ export const AppAuthConfig = ({
       <Typography
         variant="h5"
         sx={{
-          color: 'white',
+          color: 'hsl(var(--foreground))',
           fontWeight: 700,
           mb: 1,
           fontSize: { xs: '1.25rem', sm: '1.5rem' },
@@ -2113,7 +2113,7 @@ export const AppAuthConfig = ({
       </Typography>
       <Typography
         variant="body1"
-        sx={{ mb: 2, color: 'rgba(255, 255, 255, 0.5)', fontSize: { xs: '0.875rem', sm: '1rem' } }}
+        sx={{ mb: 2, color: 'hsl(var(--muted-foreground))', fontSize: { xs: '0.875rem', sm: '1rem' } }}
       >
         Set up credentials for each integration. Apps with orange borders need configuration.
       </Typography>

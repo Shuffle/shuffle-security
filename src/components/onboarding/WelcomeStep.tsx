@@ -66,7 +66,7 @@ export const WelcomeStep = ({ onSelect, selectedChallenge }: WelcomeStepProps) =
             px: 2,
             py: 0.75,
             mb: 3,
-            backgroundColor: 'rgba(255, 102, 0, 0.1)',
+            backgroundColor: 'hsl(var(--primary) / 0.1)',
             border: '1px solid rgba(255, 102, 0, 0.3)',
             borderRadius: '100px',
           }}
@@ -77,7 +77,7 @@ export const WelcomeStep = ({ onSelect, selectedChallenge }: WelcomeStepProps) =
           >
             <Sparkles size={16} color="#FF6600" />
           </motion.div>
-          <Typography variant="caption" sx={{ color: '#FF6600', fontWeight: 600, letterSpacing: '0.5px' }}>
+          <Typography variant="caption" sx={{ color: 'hsl(var(--primary))', fontWeight: 600, letterSpacing: '0.5px' }}>
             WELCOME TO SHUFFLE
           </Typography>
         </Box>
@@ -93,7 +93,7 @@ export const WelcomeStep = ({ onSelect, selectedChallenge }: WelcomeStepProps) =
           sx={{
             fontWeight: 800,
             mb: 2,
-            color: 'white',
+            color: 'hsl(var(--foreground))',
             fontSize: { xs: '1.75rem', sm: '2.25rem', md: '2.75rem' },
             lineHeight: 1.2,
           }}
@@ -103,7 +103,7 @@ export const WelcomeStep = ({ onSelect, selectedChallenge }: WelcomeStepProps) =
           <Box
             component="span"
             sx={{
-              background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 50%, #FFB380 100%)',
+              background: 'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-glow)) 50%, hsl(var(--primary-glow)) 100%)',
               backgroundClip: 'text',
               WebkitBackgroundClip: 'text',
               color: 'transparent',
@@ -187,7 +187,7 @@ export const WelcomeStep = ({ onSelect, selectedChallenge }: WelcomeStepProps) =
                     left: 0,
                     right: 0,
                     height: 3,
-                    background: 'linear-gradient(90deg, #FF6600, #FF8533)',
+                    background: 'linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary-glow)))',
                   } : {},
                 }}
               >
@@ -249,7 +249,7 @@ export const WelcomeStep = ({ onSelect, selectedChallenge }: WelcomeStepProps) =
                         width: 24,
                         height: 24,
                         borderRadius: '50%',
-                        backgroundColor: '#FF6600',
+                        backgroundColor: 'hsl(var(--primary))',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
