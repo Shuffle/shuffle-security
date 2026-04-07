@@ -631,14 +631,35 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                       {item.icon}
                     </ListItemIcon>
                     {!visuallyCollapsed && (
-                      <ListItemText
-                        primary={item.label}
-                        primaryTypographyProps={{
-                          fontSize: '0.875rem',
-                          fontWeight: isActive(item.path) ? 500 : 400,
-                          color: 'hsl(var(--foreground))',
-                        }}
-                      />
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1 }}>
+                        <ListItemText
+                          primary={item.label}
+                          primaryTypographyProps={{
+                            fontSize: '0.875rem',
+                            fontWeight: isActive(item.path) ? 500 : 400,
+                            color: 'hsl(var(--foreground))',
+                          }}
+                        />
+                        {item.label === 'Dashboard' && (
+                          <Typography
+                            sx={{
+                              fontSize: '0.6rem',
+                              fontWeight: 700,
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.04em',
+                              px: 0.8,
+                              py: 0.2,
+                              borderRadius: '4px',
+                              backgroundColor: 'hsla(var(--primary) / 0.12)',
+                              color: 'hsl(var(--primary))',
+                              lineHeight: 1.4,
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            Support
+                          </Typography>
+                        )}
+                      </Box>
                     )}
                   </ListItemButton>
                 </ListItem>
