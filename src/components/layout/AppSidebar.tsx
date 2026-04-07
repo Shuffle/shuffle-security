@@ -64,8 +64,8 @@ interface NavItem {
   children?: NavChild[];
 }
 
-const buildNavItems = (entityLabel: string, entityPath: string): NavItem[] => [
-  { label: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/dashboard' },
+const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: boolean): NavItem[] => [
+  ...(isSupport ? [{ label: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/dashboard' }] : []),
   { 
     label: entityLabel, 
     icon: <WarningAmberIcon />,
@@ -161,7 +161,8 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
   const { userInfo, setActiveOrg, logout } = useAuth();
   const { theme: currentTheme, setTheme } = useTheme();
   const { plural: entityPlural, basePath: entityBasePath } = useEntityPreference();
-  const navItems = useMemo(() => buildNavItems(entityPlural, entityBasePath), [entityPlural, entityBasePath]);
+  const isSupport = userInfo?.support === true;
+  const navItems = useMemo(() => buildNavItems(entityPlural, entityBasePath, isSupport), [entityPlural, entityBasePath, isSupport]);
   const [expandedItems, setExpandedItems] = useState<string[]>([entityPlural]);
   const [changingOrg, setChangingOrg] = useState(false);
   const [agentDrawerOpen, setAgentDrawerOpen] = useState(false);
