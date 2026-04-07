@@ -460,8 +460,9 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
                         {isPending && (
                           <Chip label="Needs Approval" size="small" sx={{
                             height: 18, fontSize: '0.62rem', fontWeight: 600,
-                            backgroundColor: 'hsl(var(--severity-info) / 0.15)',
-                            color: 'hsl(var(--severity-info))',
+                            background: 'var(--agent-gradient)',
+                            color: '#fff',
+                            '& .MuiChip-label': { color: '#fff' },
                           }} />
                         )}
                       </Box>
@@ -525,13 +526,20 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
             <SectionLabel>Proposed Next Action</SectionLabel>
             <Box sx={{
               px: 2.5, py: 2, borderRadius: 2,
-              backgroundColor: 'hsl(var(--severity-info) / 0.06)',
-              border: '1px solid hsl(var(--severity-info) / 0.25)',
-              borderLeft: '3px solid hsl(var(--severity-info))',
+              background: 'var(--agent-gradient-subtle)',
+              border: '1px solid transparent',
+              borderImage: 'var(--agent-gradient-border) 1',
+              borderLeft: '3px solid',
+              borderLeftColor: 'var(--agent-mid)',
             }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.75 }}>
-                <Zap size={14} style={{ color: 'hsl(var(--severity-info))' }} />
-                <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: 'hsl(var(--severity-info))', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                <Zap size={14} style={{ color: 'var(--agent-mid)' }} />
+                <Typography sx={{
+                  fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em',
+                  background: 'var(--agent-gradient)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}>
                   Agent recommends
                 </Typography>
               </Box>
@@ -644,10 +652,10 @@ const footerSx = {
 
 const approveButtonSx = {
   fontSize: '0.8rem', textTransform: 'none', fontWeight: 600,
-  backgroundColor: 'hsl(var(--severity-low))',
-  color: 'hsl(var(--primary-foreground))',
+  background: 'var(--agent-gradient)',
+  color: '#fff',
   py: 1, boxShadow: 'none',
-  '&:hover': { backgroundColor: 'hsl(var(--severity-low) / 0.9)', boxShadow: 'none' },
+  '&:hover': { background: 'var(--agent-gradient)', opacity: 0.9, boxShadow: 'none' },
 };
 
 const outlineButtonSx = {
