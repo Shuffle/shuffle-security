@@ -450,60 +450,6 @@ const DataFlowDetailPage = () => {
         )}
       </Box>
 
-      {/* Two-column layout: Description + Agentic */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3, mb: 3 }}>
-        {/* Why This Matters */}
-        <Box sx={{
-          p: 3.5,
-          borderRadius: 3,
-          border: '1px solid hsl(var(--border))',
-          bgcolor: 'hsl(var(--card))',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 2,
-        }}>
-          <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-            Why This Matters
-          </Typography>
-          <Typography sx={{ fontSize: '0.9rem', color: 'hsla(var(--foreground) / 0.85)', lineHeight: 1.85 }}>
-            {flow.description}
-          </Typography>
-        </Box>
-
-        {/* Agentic Mode */}
-        <Box sx={{
-          p: 3.5,
-          borderRadius: 3,
-          border: `1px solid hsla(var(${headerColor}) / 0.25)`,
-          bgcolor: `hsla(var(${headerColor}) / 0.03)`,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 2,
-        }}>
-          <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-            Agentic Mode
-          </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Bot size={15} style={{ color: `hsl(var(${headerColor}))` }} />
-            <Typography sx={{ fontSize: '0.78rem', fontWeight: 700, color: `hsl(var(${headerColor}))` }}>
-              AI Agent Behavior
-            </Typography>
-          </Box>
-          <Typography sx={{ fontSize: '0.9rem', color: 'hsla(var(--foreground) / 0.85)', lineHeight: 1.85 }}>
-            {flow.agenticDescription}
-          </Typography>
-        </Box>
-      </Box>
-
-      {/* Source & Target category details */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3, mb: 3 }}>
-        {sourceDetails && (
-          <CategoryCard category={sourceDetails} role="Source" />
-        )}
-        {targetDetails && (
-          <CategoryCard category={targetDetails} role="Target" />
-        )}
-      </Box>
 
 
 
