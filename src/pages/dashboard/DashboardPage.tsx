@@ -1,6 +1,6 @@
 /**
- * Dashboard Page — Overview of AI Agent activity on incidents.
- * Highlights runs needing user approval/input prominently.
+ * Dashboard Page — Overview of AI Agent notifications.
+ * Currently only loads /notifications?type=agent_question.
  */
 
 import { useState, useMemo, useEffect, useRef } from 'react';
@@ -21,93 +21,18 @@ import {
   CheckCircle,
   Loader2,
   HelpCircle,
-  XCircle,
   Clock,
-  ArrowRight,
   Eye,
-  RotateCcw,
-  Search,
-  
   MessageSquare,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import AgentQuestionDialog from '@/components/agent/AgentQuestionDialog';
 import AgentQuickViewDrawer, { type QuickViewItem } from '@/components/agent/AgentQuickViewDrawer';
-import AgentIcon from '@/components/agent/AgentIcon';
-import { useAgentActivity } from '@/hooks/useAgentActivity';
 import { useAgentNotifications } from '@/hooks/useNotifications';
 import { isApprovalNotification, approveAgentAction, type AgentNotification } from '@/services/notifications';
-import { parseDatastoreReference, isIncidentReference, getAgentRunOutput, getIncidentTitleFromRun, getIncidentSeverityFromRun } from '@/lib/agentParsers';
-import { hasOutputWarning, parseRunResult, getFailureInfo } from '@/components/agent/AgentRunResultViewer';
-import {
-  getRunTitle,
-  getRunSubtitle,
-  getTimeAgo,
-  formatDuration,
-  getRunIcon,
-  getRunIconColor,
-  STATUS_CONFIG,
-} from '@/components/agent/AgentRunHeader';
-import type { AgentRun } from '@/services/agentActivity';
+import { getTimeAgo } from '@/components/agent/AgentRunHeader';
 import { useEntityPreference } from '@/hooks/useEntityLabel';
 import { toast } from 'sonner';
-
-/** Determine if a run needs user attention */
-const needsUserInput = (run: AgentRun): boolean => {
-  const status = run.status?.toUpperCase() || '';
-  if (status === 'FAILED' || status === 'ABORTED') return true;
-  if (hasOutputWarning(run)) return true;
-  if (status === 'WAITING') return true;
-  return false;
-};
-
-/** Determine if a run is related to incidents */
-const isIncidentRun = (run: AgentRun): boolean => {
-  const ref = parseDatastoreReference(run);
-  return ref ? isIncidentReference(ref) : false;
-};
-
-/** Get incident key from run if it references one */
-const getIncidentKey = (run: AgentRun): string | null => {
-  const ref = parseDatastoreReference(run);
-  return ref && isIncidentReference(ref) ? ref.key : null;
-};
-
-/** Get a human-readable description of what the AI did or needs */
-const getAIDescription = (run: AgentRun, context: 'attention' | 'general' = 'general'): string => {
-  const status = run.status?.toUpperCase() || '';
-  const output = getAgentRunOutput(run);
-  const failureInfo = (status === 'FAILED' || status === 'ABORTED') ? getFailureInfo(run) : null;
-
-  if (context === 'attention') {
-    if (status === 'WAITING') {
-      const reason = output ? output.replace(/[#*`]/g, '').trim() : '';
-      if (reason) return `Approval needed: ${reason.length > 140 ? reason.slice(0, 140) + '…' : reason}`;
-      return 'The AI agent requires your approval before it can continue processing this incident. Review the proposed action and approve or reject it.';
-    }
-    if (isFailed(status)) {
-      const reason = failureInfo?.reason || output?.replace(/[#*`]/g, '').trim() || '';
-      if (reason) return `Failed: ${reason.length > 140 ? reason.slice(0, 140) + '…' : reason}`;
-      return 'The AI agent encountered an error and could not complete this task. Manual investigation is required.';
-    }
-    if (hasOutputWarning(run)) {
-      const detail = output ? output.replace(/[#*`]/g, '').trim() : '';
-      if (detail) return `Needs review: ${detail.length > 140 ? detail.slice(0, 140) + '…' : detail}`;
-      return 'The AI agent flagged uncertainty in its analysis. Please review the output and confirm or correct its findings.';
-    }
-  }
-
-  if (failureInfo?.reason) return failureInfo.reason;
-  if (output) {
-    const clean = output.replace(/[#*`]/g, '').trim();
-    return clean.length > 150 ? clean.slice(0, 150) + '…' : clean;
-  }
-  if (status === 'WAITING') return 'Waiting for approval to proceed';
-  if (status === 'EXECUTING' || status === 'RUNNING') return 'Currently processing…';
-  return getRunSubtitle(run);
-};
-
-const isFailed = (status: string) => status === 'FAILED' || status === 'ABORTED';
 
 // ── Stat card ──────────────────────────────────────────────────────────────────
 
@@ -176,137 +101,7 @@ const StatCard = ({ icon, iconColor, iconBg, value, label, delay, isLoading, onC
   </motion.div>
 );
 
-// ── Run row (standard — for completed and running) ─────────────────────────────
-
-const RunRow = ({ run, entityBasePath, onQuickView }: { run: AgentRun; entityBasePath: string; onQuickView: (run: AgentRun) => void }) => {
-  const duration = formatDuration(run);
-  const incidentKey = getIncidentKey(run);
-  const incidentTitle = getIncidentTitleFromRun(run);
-  const description = getAIDescription(run);
-  const severity = getIncidentSeverityFromRun(run);
-
-  return (
-    <Box
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 2,
-        px: 2.5,
-        py: 2,
-        borderRadius: 2,
-        border: '1px solid hsl(var(--border))',
-        backgroundColor: 'hsl(var(--card))',
-        transition: 'border-color 0.15s ease',
-        '&:hover': { borderColor: 'hsl(var(--primary) / 0.4)' },
-      }}
-    >
-      <Box sx={{ flex: 1, minWidth: 0 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography sx={{
-            fontSize: '0.85rem',
-            fontWeight: 600,
-            color: 'hsl(var(--foreground))',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}>
-            {incidentTitle || getRunTitle(run)}
-          </Typography>
-          <Chip
-            label={severity.label}
-            size="small"
-            sx={{
-              height: 20,
-              fontSize: '0.68rem',
-              fontWeight: 600,
-              backgroundColor: `hsl(var(${severity.colorToken}) / 0.12)`,
-              color: `hsl(var(${severity.colorToken}))`,
-            }}
-          />
-          <Chip
-            icon={<CheckCircle size={12} />}
-            label="Resolved"
-            size="small"
-            sx={{
-              height: 20,
-              fontSize: '0.68rem',
-              fontWeight: 600,
-              backgroundColor: 'hsl(var(--severity-low) / 0.12)',
-              color: 'hsl(var(--severity-low))',
-              '& .MuiChip-icon': { color: 'inherit' },
-            }}
-          />
-        </Box>
-        <Typography sx={{
-          fontSize: '0.78rem',
-          color: 'hsl(var(--muted-foreground))',
-          mt: 0.5,
-          lineHeight: 1.5,
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical',
-          overflow: 'hidden',
-        }}>
-          {description}
-        </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-          <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', opacity: 0.7 }}>
-            {run.started_at ? getTimeAgo(run.started_at) : '—'}
-          </Typography>
-          {duration && (
-            <>
-              <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', opacity: 0.4 }}>·</Typography>
-              <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', opacity: 0.7 }}>{duration}</Typography>
-            </>
-          )}
-        </Box>
-      </Box>
-
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
-        <Button
-          onClick={() => onQuickView(run)}
-          size="small"
-          variant="outlined"
-          startIcon={<Eye size={14} />}
-          sx={{
-            fontSize: '0.75rem',
-            textTransform: 'none',
-            fontWeight: 500,
-            borderColor: 'hsl(var(--border))',
-            color: 'hsl(var(--foreground))',
-            px: 1.5,
-            py: 0.5,
-            whiteSpace: 'nowrap',
-            '&:hover': {
-              borderColor: 'hsl(var(--primary) / 0.5)',
-              backgroundColor: 'hsl(var(--primary) / 0.08)',
-            },
-          }}
-        >
-          Quick View
-        </Button>
-        {incidentKey && (
-          <Tooltip title="Open incident">
-            <IconButton
-              component={Link}
-              to={`${entityBasePath}/${incidentKey}`}
-              size="small"
-              sx={{
-                color: 'hsl(var(--muted-foreground))',
-                flexShrink: 0,
-                '&:hover': { color: 'hsl(var(--primary))', backgroundColor: 'hsl(var(--primary) / 0.08)' },
-              }}
-            >
-              <OpenInNewIcon sx={{ fontSize: 18 }} />
-            </IconButton>
-          </Tooltip>
-        )}
-      </Box>
-    </Box>
-  );
-};
-
-// ── Notification row (for agent_question notifications) ────────────────────────
+// ── Notification row ───────────────────────────────────────────────────────────
 
 interface NotificationRowProps {
   notification: AgentNotification;
@@ -547,189 +342,18 @@ const NotificationRow = ({ notification, entityBasePath, onApprove, onQuickView,
   );
 };
 
-// ── Attention row (for agent runs that failed/need review) ─────────────────────
-
-const AttentionRunRow = ({ run, entityBasePath, onViewDetails }: { run: AgentRun; entityBasePath: string; onViewDetails: (run: AgentRun) => void }) => {
-  const incidentKey = getIncidentKey(run);
-  const incidentTitle = getIncidentTitleFromRun(run);
-  const description = getAIDescription(run, 'attention');
-  const duration = formatDuration(run);
-  const status = run.status?.toUpperCase() || '';
-  const runFailed = status === 'FAILED' || status === 'ABORTED';
-  const isUnsure = hasOutputWarning(run);
-  const rawSeverity = getIncidentSeverityFromRun(run);
-  const severity = rawSeverity.level === 'unknown'
-    ? { level: 'high' as const, label: 'High', colorToken: '--severity-high' }
-    : rawSeverity;
-
-  return (
-    <Box
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 2,
-        px: 2.5,
-        py: 2,
-        borderRadius: 2,
-        border: '1px solid hsl(var(--border))',
-        backgroundColor: 'hsl(var(--card))',
-        transition: 'border-color 0.15s ease',
-        '&:hover': { borderColor: 'hsl(var(--primary) / 0.4)' },
-      }}
-    >
-      <Box sx={{ flex: 1, minWidth: 0 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography sx={{
-            fontSize: '0.85rem',
-            fontWeight: 600,
-            color: 'hsl(var(--foreground))',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}>
-            {incidentTitle || getRunTitle(run)}
-          </Typography>
-          <Chip
-            label={severity.label}
-            size="small"
-            sx={{
-              height: 20,
-              fontSize: '0.68rem',
-              fontWeight: 600,
-              backgroundColor: `hsl(var(${severity.colorToken}) / 0.12)`,
-              color: `hsl(var(${severity.colorToken}))`,
-            }}
-          />
-          {runFailed && (
-            <Chip
-              label={status === 'ABORTED' ? 'Aborted' : 'Failed'}
-              size="small"
-              sx={{
-                height: 20,
-                fontSize: '0.68rem',
-                fontWeight: 600,
-                backgroundColor: 'hsl(var(--severity-critical) / 0.12)',
-                color: 'hsl(var(--severity-critical))',
-              }}
-            />
-          )}
-          {isUnsure && (
-            <Chip
-              icon={<HelpCircle size={12} />}
-              label="Unsure"
-              size="small"
-              sx={{
-                height: 20,
-                fontSize: '0.68rem',
-                fontWeight: 600,
-                backgroundColor: 'hsl(var(--severity-medium) / 0.12)',
-                color: 'hsl(var(--severity-medium))',
-                '& .MuiChip-icon': { color: 'inherit' },
-              }}
-            />
-          )}
-          {status === 'WAITING' && (
-            <Chip
-              icon={<Clock size={12} />}
-              label="Waiting"
-              size="small"
-              sx={{
-                height: 20,
-                fontSize: '0.68rem',
-                fontWeight: 600,
-                background: 'var(--agent-gradient)',
-                color: '#fff',
-                '& .MuiChip-icon': { color: '#fff' },
-                '& .MuiChip-label': { color: '#fff' },
-              }}
-            />
-          )}
-        </Box>
-
-        <Typography sx={{
-          fontSize: '0.78rem',
-          color: runFailed ? 'hsl(var(--severity-critical) / 0.85)' : 'hsl(var(--muted-foreground))',
-          mt: 0.5,
-          lineHeight: 1.5,
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical',
-          overflow: 'hidden',
-        }}>
-          {description}
-        </Typography>
-
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-          <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', opacity: 0.7 }}>
-            {run.started_at ? getTimeAgo(run.started_at) : '—'}
-          </Typography>
-          {duration && (
-            <>
-              <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', opacity: 0.4 }}>·</Typography>
-              <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', opacity: 0.7 }}>{duration}</Typography>
-            </>
-          )}
-        </Box>
-      </Box>
-
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
-        <Button
-          onClick={() => onViewDetails(run)}
-          size="small"
-          variant="outlined"
-          startIcon={<Eye size={14} />}
-          sx={{
-            fontSize: '0.75rem',
-            textTransform: 'none',
-            fontWeight: 500,
-            borderColor: 'hsl(var(--border))',
-            color: 'hsl(var(--foreground))',
-            px: 1.5,
-            py: 0.5,
-            whiteSpace: 'nowrap',
-            '&:hover': {
-              borderColor: 'hsl(var(--primary) / 0.5)',
-              backgroundColor: 'hsl(var(--primary) / 0.08)',
-            },
-          }}
-        >
-          Quick View
-        </Button>
-        {incidentKey && (
-          <Tooltip title="Open incident">
-            <IconButton
-              component={Link}
-              to={`${entityBasePath}/${incidentKey}?agent_action=${run.execution_id}`}
-              size="small"
-              sx={{
-                color: 'hsl(var(--muted-foreground))',
-                flexShrink: 0,
-                '&:hover': { color: 'hsl(var(--primary))', backgroundColor: 'hsl(var(--primary) / 0.08)' },
-              }}
-            >
-              <OpenInNewIcon sx={{ fontSize: 18 }} />
-            </IconButton>
-          </Tooltip>
-        )}
-      </Box>
-    </Box>
-  );
-};
-
 // ── Page ───────────────────────────────────────────────────────────────────────
 
 const ITEMS_PER_PAGE = 10;
 
 const DashboardPage = () => {
-  const { runs, isLoading, stats, refresh } = useAgentActivity();
-  const { notifications, isLoading: notificationsLoading, refresh: refreshNotifications } = useAgentNotifications();
+  const { notifications, isLoading, refresh: refreshNotifications } = useAgentNotifications();
   const { singular: entitySingular, basePath: entityBasePath } = useEntityPreference();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [questionNotification, setQuestionNotification] = useState<AgentNotification | null>(null);
   const [quickViewItem, setQuickViewItem] = useState<QuickViewItem | null>(null);
-  const [attentionPage, setAttentionPage] = useState(0);
-  const [completedPage, setCompletedPage] = useState(0);
-  const [attentionFilter, setAttentionFilter] = useState<'all' | 'failed' | 'approval' | 'question'>('all');
+  const [currentPage, setCurrentPage] = useState(0);
+  const [filter, setFilter] = useState<'all' | 'approval' | 'question'>('all');
   const [isSticky, setIsSticky] = useState(false);
   const statCardsRef = useRef<HTMLDivElement>(null);
 
@@ -751,7 +375,7 @@ const DashboardPage = () => {
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await Promise.all([refresh(), refreshNotifications()]);
+    await refreshNotifications();
     setTimeout(() => setIsRefreshing(false), 600);
   };
 
@@ -767,7 +391,6 @@ const DashboardPage = () => {
 
   const handleConfigureApprove = async (notificationId: string, modifiedAction?: string) => {
     try {
-      // For now, approve the notification (modified action could be sent in a future API extension)
       await approveAgentAction(notificationId);
       toast.success(modifiedAction ? 'Modified action submitted.' : 'Action approved.');
       refreshNotifications();
@@ -786,68 +409,60 @@ const DashboardPage = () => {
     }
   };
 
-  // Categorise runs (excluding WAITING since those are now handled by notifications)
-  const { needsAttention, incidentRuns, recentCompleted, activeRuns } = useMemo(() => {
-    const attention: AgentRun[] = [];
-    const incidents: AgentRun[] = [];
-    const completed: AgentRun[] = [];
-    const active: AgentRun[] = [];
+  // Counts
+  const approvalCount = notifications.filter(n => isApprovalNotification(n)).length;
+  const questionCount = notifications.filter(n => !isApprovalNotification(n)).length;
+  const totalCount = notifications.length;
 
-    for (const run of runs) {
-      const status = run.status?.toUpperCase() || '';
-      if (needsUserInput(run)) attention.push(run);
-      if (isIncidentRun(run)) incidents.push(run);
-      if (status === 'EXECUTING' || status === 'RUNNING') active.push(run);
-      if (status === 'FINISHED' || status === 'SUCCESS') completed.push(run);
-    }
+  // Filter
+  const filteredNotifications = useMemo(() => {
+    if (filter === 'all') return notifications;
+    if (filter === 'approval') return notifications.filter(n => isApprovalNotification(n));
+    if (filter === 'question') return notifications.filter(n => !isApprovalNotification(n));
+    return notifications;
+  }, [notifications, filter]);
 
-    return {
-      needsAttention: attention,
-      incidentRuns: incidents,
-      recentCompleted: completed,
-      activeRuns: active,
-    };
-  }, [runs]);
+  const filteredCount = filteredNotifications.length;
+  const totalPages = Math.ceil(filteredCount / ITEMS_PER_PAGE);
+  const paginated = filteredNotifications.slice(currentPage * ITEMS_PER_PAGE, (currentPage + 1) * ITEMS_PER_PAGE);
 
-  // Combine attention items: notifications first, then run-based
-  const allAttentionItems = useMemo(() => {
-    const notifItems = notifications.map(n => ({ type: 'notification' as const, notification: n }));
-    const runItems = needsAttention.map(r => ({ type: 'run' as const, run: r }));
-    return [...notifItems, ...runItems];
-  }, [notifications, needsAttention]);
-
-  // Filter attention items
-  const filteredAttentionItems = useMemo(() => {
-    if (attentionFilter === 'all') return allAttentionItems;
-    return allAttentionItems.filter(item => {
-      if (attentionFilter === 'approval') {
-        return item.type === 'notification' && isApprovalNotification(item.notification);
-      }
-      if (attentionFilter === 'question') {
-        return item.type === 'notification' && !isApprovalNotification(item.notification);
-      }
-      if (attentionFilter === 'failed') {
-        if (item.type === 'run') return true; // all attention runs are failed/unsure
-        return false;
-      }
-      return true;
-    });
-  }, [allAttentionItems, attentionFilter]);
-
-  // Count per filter for badges
-  const attentionCounts = useMemo(() => ({
-    failed: allAttentionItems.filter(i => i.type === 'run').length,
-    approval: allAttentionItems.filter(i => i.type === 'notification' && isApprovalNotification(i.notification)).length,
-    question: allAttentionItems.filter(i => i.type === 'notification' && !isApprovalNotification(i.notification)).length,
-  }), [allAttentionItems]);
-
-  const totalAttentionCount = allAttentionItems.length;
-  const filteredAttentionCount = filteredAttentionItems.length;
-  const attentionTotalPages = Math.ceil(filteredAttentionCount / ITEMS_PER_PAGE);
-  const paginatedAttention = filteredAttentionItems.slice(attentionPage * ITEMS_PER_PAGE, (attentionPage + 1) * ITEMS_PER_PAGE);
-
-  const completedTotalPages = Math.ceil(recentCompleted.length / ITEMS_PER_PAGE);
-  const paginatedCompleted = recentCompleted.slice(completedPage * ITEMS_PER_PAGE, (completedPage + 1) * ITEMS_PER_PAGE);
+  const statCards = (compact = false) => (
+    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: compact ? 1.5 : 2 }}>
+      <StatCard
+        icon={<AlertTriangle size={18} />}
+        iconColor="hsl(var(--severity-high))"
+        iconBg="hsl(var(--severity-high) / 0.12)"
+        value={totalCount}
+        label="Total Notifications"
+        delay={0}
+        isLoading={isLoading}
+        onClick={() => { setFilter('all'); setCurrentPage(0); }}
+        compact={compact}
+      />
+      <StatCard
+        icon={<Clock size={18} />}
+        iconColor="hsl(var(--primary))"
+        iconBg="hsl(var(--primary) / 0.12)"
+        value={approvalCount}
+        label="Needs Approval"
+        delay={compact ? 0 : 0.05}
+        isLoading={isLoading}
+        onClick={() => { setFilter('approval'); setCurrentPage(0); }}
+        compact={compact}
+      />
+      <StatCard
+        icon={<HelpCircle size={18} />}
+        iconColor="hsl(var(--severity-medium))"
+        iconBg="hsl(var(--severity-medium) / 0.12)"
+        value={questionCount}
+        label="Pending Questions"
+        delay={compact ? 0 : 0.1}
+        isLoading={isLoading}
+        onClick={() => { setFilter('question'); setCurrentPage(0); }}
+        compact={compact}
+      />
+    </Box>
+  );
 
   return (
     <>
@@ -858,7 +473,7 @@ const DashboardPage = () => {
           <Typography variant="h4" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
             Dashboard
           </Typography>
-          {(isLoading || notificationsLoading) && !isRefreshing && (
+          {isLoading && !isRefreshing && (
             <Loader2 size={18} style={{ color: 'hsl(var(--muted-foreground))', animation: 'spin 1s linear infinite' }} />
           )}
         </Box>
@@ -879,125 +494,45 @@ const DashboardPage = () => {
         </Tooltip>
       </Box>
       <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.875rem', mb: 4 }}>
-        AI Agent overview — see what's happening and what needs your attention.
+        AI Agent notifications — see what needs your attention.
       </Typography>
 
-      {/* Stat cards - original position (used as scroll sentinel) */}
-      <Box ref={statCardsRef} sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2, mb: 4 }}>
-        <StatCard
-          icon={<AlertTriangle size={18} />}
-          iconColor="hsl(var(--severity-high))"
-          iconBg="hsl(var(--severity-high) / 0.12)"
-          value={totalAttentionCount}
-          label="Needs Your Input"
-          delay={0}
-          isLoading={isLoading && notificationsLoading}
-          onClick={() => document.getElementById('section-attention')?.scrollIntoView({ behavior: 'smooth' })}
-        />
-        <StatCard
-          icon={<Loader2 size={18} />}
-          iconColor="hsl(var(--severity-medium))"
-          iconBg="hsl(var(--severity-medium) / 0.12)"
-          value={activeRuns.length}
-          label="Currently Running"
-          delay={0.05}
-          isLoading={isLoading}
-          onClick={() => document.getElementById('section-running')?.scrollIntoView({ behavior: 'smooth' })}
-        />
-        <StatCard
-          icon={<CheckCircle size={18} />}
-          iconColor="hsl(var(--severity-low))"
-          iconBg="hsl(var(--severity-low) / 0.12)"
-          value={stats.successCount}
-          label="Completed"
-          delay={0.1}
-          isLoading={isLoading}
-          onClick={() => document.getElementById('section-completed')?.scrollIntoView({ behavior: 'smooth' })}
-        />
-        <StatCard
-          icon={<Clock size={18} />}
-          iconColor="hsl(var(--primary))"
-          iconBg="hsl(var(--primary) / 0.12)"
-          value={stats.avgDuration > 0 ? `${stats.avgDuration.toFixed(0)}s` : '—'}
-          label="Avg Duration"
-          delay={0.15}
-          isLoading={isLoading}
-        />
+      {/* Stat cards */}
+      <Box ref={statCardsRef} sx={{ mb: 4 }}>
+        {statCards()}
       </Box>
 
-      {/* Sticky compact stat bar — appears when scrolled past the original cards */}
+      {/* Sticky compact stat bar */}
       {isSticky && (
-      <Box
-        sx={{
-          position: 'sticky',
-          top: 0,
-          zIndex: 1100,
-          backgroundColor: 'hsl(var(--background) / 0.92)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid hsl(var(--border))',
-          mx: { xs: -1.5, sm: -2, md: -3 },
-          px: { xs: 1.5, sm: 2, md: 3 },
-          py: 1,
-        }}
-      >
-        <Box sx={{ maxWidth: 1400, mx: 'auto', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1.5 }}>
-          <StatCard
-            icon={<AlertTriangle size={18} />}
-            iconColor="hsl(var(--severity-high))"
-            iconBg="hsl(var(--severity-high) / 0.12)"
-            value={totalAttentionCount}
-            label="Needs Your Input"
-            delay={0}
-            isLoading={isLoading && notificationsLoading}
-            onClick={() => document.getElementById('section-attention')?.scrollIntoView({ behavior: 'smooth' })}
-            compact
-          />
-          <StatCard
-            icon={<Loader2 size={18} />}
-            iconColor="hsl(var(--severity-medium))"
-            iconBg="hsl(var(--severity-medium) / 0.12)"
-            value={activeRuns.length}
-            label="Currently Running"
-            delay={0}
-            isLoading={isLoading}
-            onClick={() => document.getElementById('section-running')?.scrollIntoView({ behavior: 'smooth' })}
-            compact
-          />
-          <StatCard
-            icon={<CheckCircle size={18} />}
-            iconColor="hsl(var(--severity-low))"
-            iconBg="hsl(var(--severity-low) / 0.12)"
-            value={stats.successCount}
-            label="Completed"
-            delay={0}
-            isLoading={isLoading}
-            onClick={() => document.getElementById('section-completed')?.scrollIntoView({ behavior: 'smooth' })}
-            compact
-          />
-          <StatCard
-            icon={<Clock size={18} />}
-            iconColor="hsl(var(--primary))"
-            iconBg="hsl(var(--primary) / 0.12)"
-            value={stats.avgDuration > 0 ? `${stats.avgDuration.toFixed(0)}s` : '—'}
-            label="Avg Duration"
-            delay={0}
-            isLoading={isLoading}
-            compact
-          />
+        <Box
+          sx={{
+            position: 'sticky',
+            top: 0,
+            zIndex: 1100,
+            backgroundColor: 'hsl(var(--background) / 0.92)',
+            backdropFilter: 'blur(12px)',
+            borderBottom: '1px solid hsl(var(--border))',
+            mx: { xs: -1.5, sm: -2, md: -3 },
+            px: { xs: 1.5, sm: 2, md: 3 },
+            py: 1,
+          }}
+        >
+          <Box sx={{ maxWidth: 1400, mx: 'auto' }}>
+            {statCards(true)}
+          </Box>
         </Box>
-      </Box>
       )}
 
-      {/* Needs Attention Section */}
-      <Box id="section-attention" sx={{ mb: 4 }}>
+      {/* Notifications list */}
+      <Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
           <AlertTriangle size={18} style={{ color: 'hsl(var(--severity-high))' }} />
           <Typography sx={{ fontWeight: 600, fontSize: '1rem', color: 'hsl(var(--foreground))' }}>
             Needs Your Attention
           </Typography>
-          {totalAttentionCount > 0 && (
+          {totalCount > 0 && (
             <Chip
-              label={totalAttentionCount}
+              label={totalCount}
               size="small"
               sx={{
                 height: 22,
@@ -1013,36 +548,35 @@ const DashboardPage = () => {
         {/* Filter chips */}
         <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
           {([
-            { key: 'all' as const, label: 'All', count: totalAttentionCount },
-            { key: 'failed' as const, label: 'Failed / Unsure', count: attentionCounts.failed },
-            { key: 'approval' as const, label: 'Needs Approval', count: attentionCounts.approval },
-            { key: 'question' as const, label: 'Pending Question', count: attentionCounts.question },
+            { key: 'all' as const, label: 'All', count: totalCount },
+            { key: 'approval' as const, label: 'Needs Approval', count: approvalCount },
+            { key: 'question' as const, label: 'Pending Question', count: questionCount },
           ]).map(f => (
             <Chip
               key={f.key}
               label={`${f.label}${f.count > 0 ? ` (${f.count})` : ''}`}
               size="small"
-              variant={attentionFilter === f.key ? 'filled' : 'outlined'}
-              onClick={() => { setAttentionFilter(f.key); setAttentionPage(0); }}
+              variant={filter === f.key ? 'filled' : 'outlined'}
+              onClick={() => { setFilter(f.key); setCurrentPage(0); }}
               sx={{
                 fontSize: '0.75rem',
                 height: 28,
-                borderColor: attentionFilter === f.key ? 'hsl(var(--primary))' : 'hsl(var(--border))',
-                bgcolor: attentionFilter === f.key ? 'hsl(var(--primary) / 0.15)' : 'transparent',
-                color: attentionFilter === f.key ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
+                borderColor: filter === f.key ? 'hsl(var(--primary))' : 'hsl(var(--border))',
+                bgcolor: filter === f.key ? 'hsl(var(--primary) / 0.15)' : 'transparent',
+                color: filter === f.key ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
                 '&:hover': { bgcolor: 'hsl(var(--muted))' },
               }}
             />
           ))}
         </Box>
 
-        {(isLoading && notificationsLoading) && filteredAttentionCount === 0 ? (
+        {isLoading && filteredCount === 0 ? (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
             {[0, 1, 2].map(i => (
               <Skeleton key={i} variant="rounded" height={72} sx={{ borderRadius: 2, bgcolor: 'hsl(var(--muted) / 0.3)' }} />
             ))}
           </Box>
-        ) : filteredAttentionCount === 0 ? (
+        ) : filteredCount === 0 ? (
           <Box
             sx={{
               px: 3,
@@ -1055,46 +589,35 @@ const DashboardPage = () => {
           >
             <CheckCircle size={28} style={{ color: 'hsl(var(--severity-low))', marginBottom: 8 }} />
             <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.875rem' }}>
-              All clear — the agent is handling everything autonomously.
+              All clear — no notifications requiring your attention.
             </Typography>
           </Box>
         ) : (
           <>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            {paginatedAttention.map((item) =>
-              item.type === 'notification' ? (
-                <motion.div
-                  key={item.notification.id}
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <NotificationRow
-                    notification={item.notification}
-                    entityBasePath={entityBasePath}
-                    onApprove={handleApprove}
-                    onQuickView={(n) => setQuickViewItem({ type: 'notification', notification: n })}
-                    onAnswer={setQuestionNotification}
-                  />
-                </motion.div>
-              ) : (
-                <motion.div
-                  key={item.run.execution_id}
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <AttentionRunRow run={item.run} entityBasePath={entityBasePath} onViewDetails={(r) => setQuickViewItem({ type: 'run', run: r })} />
-                </motion.div>
-              )
-            )}
+            {paginated.map((notification) => (
+              <motion.div
+                key={notification.id}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <NotificationRow
+                  notification={notification}
+                  entityBasePath={entityBasePath}
+                  onApprove={handleApprove}
+                  onQuickView={(n) => setQuickViewItem({ type: 'notification', notification: n })}
+                  onAnswer={setQuestionNotification}
+                />
+              </motion.div>
+            ))}
           </Box>
-          {attentionTotalPages > 1 && (
+          {totalPages > 1 && (
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mt: 2 }}>
               <Button
                 size="small"
-                disabled={attentionPage === 0}
-                onClick={() => setAttentionPage(p => p - 1)}
+                disabled={currentPage === 0}
+                onClick={() => setCurrentPage(p => p - 1)}
                 sx={{
                   fontSize: '0.75rem',
                   textTransform: 'none',
@@ -1106,106 +629,12 @@ const DashboardPage = () => {
                 Previous
               </Button>
               <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
-                {attentionPage + 1} / {attentionTotalPages}
+                {currentPage + 1} / {totalPages}
               </Typography>
               <Button
                 size="small"
-                disabled={attentionPage >= attentionTotalPages - 1}
-                onClick={() => setAttentionPage(p => p + 1)}
-                sx={{
-                  fontSize: '0.75rem',
-                  textTransform: 'none',
-                  color: 'hsl(var(--foreground))',
-                  minWidth: 32,
-                  '&.Mui-disabled': { color: 'hsl(var(--muted-foreground) / 0.4)' },
-                }}
-              >
-                Next
-              </Button>
-            </Box>
-          )}
-          </>
-        )}
-      </Box>
-
-      {/* Currently Running */}
-      {activeRuns.length > 0 && (
-        <Box id="section-running" sx={{ mb: 4 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-            <Loader2 size={18} style={{ color: 'hsl(var(--severity-medium))', animation: 'spin 2s linear infinite' }} />
-            <Typography sx={{ fontWeight: 600, fontSize: '1rem', color: 'hsl(var(--foreground))' }}>
-              Currently Running
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            {activeRuns.map((run) => (
-              <RunRow key={run.execution_id} run={run} entityBasePath={entityBasePath} onQuickView={(r) => setQuickViewItem({ type: 'run', run: r })} />
-            ))}
-          </Box>
-        </Box>
-      )}
-
-      {/* Recent Activity */}
-      <Box id="section-completed">
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-          <Typography sx={{ fontWeight: 600, fontSize: '1rem', color: 'hsl(var(--foreground))' }}>
-            Recent Completed
-          </Typography>
-          <Chip
-            label="View all activity →"
-            component={Link}
-            to="/agent"
-            clickable
-            size="small"
-            sx={{
-              height: 26,
-              fontSize: '0.75rem',
-              backgroundColor: 'hsl(var(--muted))',
-              color: 'hsl(var(--muted-foreground))',
-              '&:hover': { backgroundColor: 'hsl(var(--muted) / 0.8)' },
-            }}
-          />
-        </Box>
-        {isLoading && recentCompleted.length === 0 ? (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            {[0, 1, 2].map(i => (
-              <Skeleton key={i} variant="rounded" height={72} sx={{ borderRadius: 2, bgcolor: 'hsl(var(--muted) / 0.3)' }} />
-            ))}
-          </Box>
-        ) : recentCompleted.length === 0 ? (
-          <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.85rem', py: 3, textAlign: 'center' }}>
-            No completed runs yet.
-          </Typography>
-        ) : (
-          <>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            {paginatedCompleted.map((run) => (
-              <RunRow key={run.execution_id} run={run} entityBasePath={entityBasePath} onQuickView={(r) => setQuickViewItem({ type: 'run', run: r })} />
-            ))}
-          </Box>
-          {completedTotalPages > 1 && (
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mt: 2 }}>
-              <Button
-                size="small"
-                disabled={completedPage === 0}
-                onClick={() => setCompletedPage(p => p - 1)}
-                sx={{
-                  fontSize: '0.75rem',
-                  textTransform: 'none',
-                  color: 'hsl(var(--foreground))',
-                  minWidth: 32,
-                  '&.Mui-disabled': { color: 'hsl(var(--muted-foreground) / 0.4)' },
-                }}
-              >
-                Previous
-              </Button>
-              <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
-                {completedPage + 1} / {completedTotalPages}
-              </Typography>
-              <Button
-                size="small"
-                disabled={completedPage >= completedTotalPages - 1}
-                onClick={() => setCompletedPage(p => p + 1)}
+                disabled={currentPage >= totalPages - 1}
+                onClick={() => setCurrentPage(p => p + 1)}
                 sx={{
                   fontSize: '0.75rem',
                   textTransform: 'none',
