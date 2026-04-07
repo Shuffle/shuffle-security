@@ -809,7 +809,7 @@ const OnboardingPage = () => {
           transform: 'translateX(-50%)',
           width: '150%',
           height: '80%',
-          background: 'radial-gradient(ellipse at center, rgba(255, 102, 0, 0.06) 0%, transparent 60%)',
+          background: 'radial-gradient(ellipse at center, hsl(var(--primary) / 0.06) 0%, transparent 60%)',
           pointerEvents: 'none',
           zIndex: 0,
         }}
@@ -822,8 +822,8 @@ const OnboardingPage = () => {
           right: 0,
           bottom: 0,
           backgroundImage: `
-            linear-gradient(rgba(255, 102, 0, 0.02) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255, 102, 0, 0.02) 1px, transparent 1px)
+            linear-gradient(hsl(var(--primary) / 0.02) 1px, transparent 1px),
+            linear-gradient(90deg, hsl(var(--primary) / 0.02) 1px, transparent 1px)
           `,
           backgroundSize: '60px 60px',
           pointerEvents: 'none',
@@ -869,7 +869,7 @@ const OnboardingPage = () => {
                     flexShrink: 0,
                     '&:hover': {
                       '& .step-label': {
-                        color: index === activeStep ? 'white' : 'rgba(255, 255, 255, 0.7)',
+                        color: index === activeStep ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))',
                       },
                     },
                   }}
@@ -886,14 +886,14 @@ const OnboardingPage = () => {
                         index < activeStep
                           ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)'
                           : index === activeStep
-                          ? 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)'
-                          : 'rgba(255, 255, 255, 0.05)',
+                          ? 'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-glow)) 100%)'
+                          : 'hsl(var(--muted))',
                       border: '2px solid',
                       borderColor:
-                        index <= activeStep ? 'transparent' : 'rgba(255, 255, 255, 0.1)',
+                        index <= activeStep ? 'transparent' : 'hsl(var(--border))',
                       transition: 'all 0.3s ease',
-                      color: index <= activeStep ? 'white' : 'rgba(255, 255, 255, 0.4)',
-                      boxShadow: index === activeStep ? '0 0 20px rgba(255, 102, 0, 0.4)' : 'none',
+                      color: index <= activeStep ? 'hsl(var(--primary-foreground))' : 'hsl(var(--muted-foreground))',
+                      boxShadow: index === activeStep ? '0 0 20px hsl(var(--primary) / 0.4)' : 'none',
                       flexShrink: 0,
                     }}
                   >
@@ -903,7 +903,7 @@ const OnboardingPage = () => {
                     className="step-label"
                     variant="body2"
                     sx={{
-                      color: index === activeStep ? 'white' : 'rgba(255, 255, 255, 0.4)',
+                      color: index === activeStep ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))',
                       fontWeight: index === activeStep ? 600 : 400,
                       display: { xs: 'none', md: 'block' },
                       transition: 'color 0.2s ease',
@@ -920,7 +920,7 @@ const OnboardingPage = () => {
                         background:
                           index < activeStep
                             ? 'linear-gradient(90deg, #22c55e, #16a34a)'
-                            : 'rgba(255, 255, 255, 0.1)',
+                            : 'hsl(var(--border))',
                         borderRadius: 1,
                         display: { xs: 'block', md: 'block' },
                         flexShrink: 0,
@@ -1089,14 +1089,14 @@ const OnboardingPage = () => {
                 disabled={!canProceed()}
                 endIcon={<ArrowForwardIcon />}
                 sx={{
-                  background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
-                  boxShadow: '0 4px 14px rgba(255, 102, 0, 0.25)',
+                  background: 'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-glow)) 100%)',
+                  boxShadow: '0 4px 14px hsl(var(--primary) / 0.25)',
                   px: 4,
                   py: 1.5,
                   fontWeight: 600,
                   '&:hover': {
-                    background: 'linear-gradient(135deg, #FF8533 0%, #FF9955 100%)',
-                    boxShadow: '0 6px 20px rgba(255, 102, 0, 0.35)',
+                    background: 'linear-gradient(135deg, hsl(var(--primary-glow)) 0%, hsl(var(--primary-glow)) 100%)',
+                    boxShadow: '0 6px 20px hsl(var(--primary) / 0.35)',
                   },
                   '&.Mui-disabled': {
                     background: 'hsl(var(--muted))',
