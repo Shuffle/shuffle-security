@@ -10,7 +10,7 @@
  * If the user switches orgs, it resets to the default until getinfo is called again.
  */
 
-const DEV_BACKEND = 'https://shuffler.io';
+const DEV_BACKEND = 'https://tunnel.schemaless.org';
 const PROD_BACKEND = 'https://shuffler.io';
 
 // Base URL for Shuffle Automation dashboard (used in tool switcher)
