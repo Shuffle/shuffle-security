@@ -211,12 +211,12 @@ const AgentConfigureDialog = ({ open, onClose, notification, onApprove }: Props)
                 fontSize: '0.8rem',
                 textTransform: 'none',
                 fontWeight: 600,
-                backgroundColor: 'hsl(var(--severity-low))',
+                backgroundColor: 'hsl(var(--primary))',
                 color: 'hsl(var(--primary-foreground))',
                 px: 2.5,
                 boxShadow: 'none',
                 '&:hover': {
-                  backgroundColor: 'hsl(var(--severity-low) / 0.9)',
+                  backgroundColor: 'hsl(var(--primary) / 0.9)',
                   boxShadow: 'none',
                 },
               }}

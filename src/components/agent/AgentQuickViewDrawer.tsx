@@ -637,10 +637,10 @@ const footerSx = {
 
 const approveButtonSx = {
   fontSize: '0.8rem', textTransform: 'none', fontWeight: 600,
-  background: 'var(--agent-gradient)',
-  color: '#fff',
+  backgroundColor: 'hsl(var(--primary))',
+  color: 'hsl(var(--primary-foreground))',
   py: 1, boxShadow: 'none',
-  '&:hover': { background: 'var(--agent-gradient)', opacity: 0.9, boxShadow: 'none' },
+  '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.9)', boxShadow: 'none' },
 };
 
 const outlineButtonSx = {
