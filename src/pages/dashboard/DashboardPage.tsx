@@ -363,24 +363,21 @@ const NotificationRow = ({ notification, entityBasePath, onApprove, onQuickView,
               }}
             />
           )}
-          <Chip
-            icon={isApproval ? <Clock size={12} /> : <HelpCircle size={12} />}
-            label={isApproval ? 'Approval Needed' : 'Questions'}
-            size="small"
-            sx={{
-              height: 20,
-              fontSize: '0.68rem',
-              fontWeight: 600,
-              background: isApproval
-                ? 'var(--agent-gradient)'
-                : 'hsl(var(--severity-medium) / 0.12)',
-              color: isApproval
-                ? '#fff'
-                : 'hsl(var(--severity-medium))',
-              '& .MuiChip-icon': { color: 'inherit' },
-              '& .MuiChip-label': isApproval ? { color: '#fff' } : {},
-            }}
-          />
+          {!isApproval && (
+            <Chip
+              icon={<HelpCircle size={12} />}
+              label="Questions"
+              size="small"
+              sx={{
+                height: 20,
+                fontSize: '0.68rem',
+                fontWeight: 600,
+                backgroundColor: 'hsl(var(--severity-medium) / 0.12)',
+                color: 'hsl(var(--severity-medium))',
+                '& .MuiChip-icon': { color: 'inherit' },
+              }}
+            />
+          )}
         </Box>
 
         <Typography sx={{
