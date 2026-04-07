@@ -135,6 +135,12 @@
     --severity-medium: 45 93% 47%;
     --severity-low: 142 71% 45%;
     --severity-info: 210 100% 56%;
+    --agent-gradient: linear-gradient(135deg, #FF8544, #EC517C, #9C5AF2);
+    --agent-gradient-subtle: linear-gradient(135deg, rgba(255,133,68,0.12), rgba(236,81,124,0.12), rgba(156,90,242,0.12));
+    --agent-gradient-border: linear-gradient(135deg, rgba(255,133,68,0.35), rgba(236,81,124,0.35), rgba(156,90,242,0.35));
+    --agent-start: #FF8544;
+    --agent-mid: #EC517C;
+    --agent-end: #9C5AF2;
 
     /* Infrastructure category colors */
     --infra-case-mgmt: 24 90% 55%;
