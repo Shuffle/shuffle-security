@@ -436,7 +436,7 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
 
                     {/* Content */}
                     <Box sx={{
-                      flex: 1, minWidth: 0,
+                      minWidth: 0,
                       ...(isPending && {
                         px: 2, py: 1.5, borderRadius: 2,
                         backgroundColor: 'hsl(var(--severity-info) / 0.06)',
