@@ -794,7 +794,7 @@ const OnboardingPage = () => {
       sx={{
         minHeight: '100vh',
         position: 'relative',
-        backgroundColor: 'hsl(0 0% 10%)',
+        backgroundColor: 'hsl(var(--background))',
         overflowX: 'hidden',
         display: 'flex',
         flexDirection: 'column',
@@ -839,9 +839,9 @@ const OnboardingPage = () => {
           left: 0,
           right: 0,
           zIndex: 100,
-          backgroundColor: 'hsla(0, 0%, 10%, 0.95)',
+          backgroundColor: 'hsl(var(--background) / 0.95)',
           backdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          borderBottom: '1px solid hsl(var(--border))',
           py: 3,
         }}
       >
@@ -1047,9 +1047,9 @@ const OnboardingPage = () => {
           left: 0,
           right: 0,
           zIndex: 100,
-          backgroundColor: 'hsla(0, 0%, 10%, 0.95)',
+          backgroundColor: 'hsl(var(--background) / 0.95)',
           backdropFilter: 'blur(20px)',
-          borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+          borderTop: '1px solid hsl(var(--border))',
           py: 2,
         }}
       >
