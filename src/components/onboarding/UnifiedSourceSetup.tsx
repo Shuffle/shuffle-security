@@ -86,7 +86,7 @@ const singulStyles = {
     backgroundColor: 'hsl(var(--accent) / 0.08)',
   },
   selectedItem: {
-    backgroundColor: 'rgba(255, 102, 0, 0.1)',
+    backgroundColor: 'hsl(var(--primary) / 0.1)',
     borderColor: 'hsl(var(--primary))',
   },
   appIcon: {

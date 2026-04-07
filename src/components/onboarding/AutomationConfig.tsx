@@ -1051,7 +1051,7 @@ export const AutomationConfig = ({
                         <Typography
                           variant="body2"
                           sx={{ 
-                            color: 'rgba(255, 255, 255, 0.5)', 
+                            color: 'hsl(var(--muted-foreground))', 
                             lineHeight: 1.4, 
                           }}
                         >
@@ -1092,7 +1092,7 @@ export const AutomationConfig = ({
                           >
                             <ExpandMoreIcon
                               sx={{
-                                color: 'rgba(255, 255, 255, 0.5)',
+                                color: 'hsl(var(--muted-foreground))',
                                 transform: isExpanded ? 'rotate(180deg)' : 'none',
                                 transition: 'transform 0.3s ease',
                                 fontSize: 20,
@@ -1218,7 +1218,7 @@ export const AutomationConfig = ({
                                       <Typography
                                         variant="caption"
                                         sx={{ 
-                                          color: 'rgba(255, 255, 255, 0.5)', 
+                                          color: 'hsl(var(--muted-foreground))', 
                                           fontWeight: 600,
                                           textTransform: 'uppercase',
                                           letterSpacing: 0.5,
@@ -1297,7 +1297,7 @@ export const AutomationConfig = ({
                             <Typography
                               variant="caption"
                               sx={{ 
-                                color: 'rgba(255, 255, 255, 0.5)', 
+                                color: 'hsl(var(--muted-foreground))', 
                                 fontWeight: 600,
                                 textTransform: 'uppercase',
                                 letterSpacing: 0.5,
@@ -1405,7 +1405,7 @@ export const AutomationConfig = ({
                                       <Typography 
                                         variant="caption" 
                                         sx={{ 
-                                          color: 'rgba(255, 255, 255, 0.5)', 
+                                          color: 'hsl(var(--muted-foreground))', 
                                           fontFamily: 'monospace',
                                           fontSize: '0.65rem',
                                           display: 'block',
@@ -1554,7 +1554,7 @@ export const AutomationConfig = ({
                                   '&.Mui-focused fieldset': { borderColor: option.color },
                                 },
                                 '& .MuiInputBase-input': { color: 'white' },
-                                '& .MuiInputLabel-root': { color: 'rgba(255, 255, 255, 0.5)' },
+                                '& .MuiInputLabel-root': { color: 'hsl(var(--muted-foreground))' },
                               }}
                             />
                           ))}
@@ -1589,7 +1589,7 @@ export const AutomationConfig = ({
         </Typography>
         <Typography
           variant="body1"
-          sx={{ color: 'rgba(255, 255, 255, 0.5)' }}
+          sx={{ color: 'hsl(var(--muted-foreground))' }}
         >
           Review your connected tools, configure automation, and you're all set.
         </Typography>

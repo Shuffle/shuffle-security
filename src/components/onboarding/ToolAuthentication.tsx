@@ -109,8 +109,8 @@ export const ToolAuthentication = ({
       <Alert
         severity="info"
         sx={{
-          backgroundColor: 'rgba(255, 102, 0, 0.1)',
-          color: '#FF6600',
+          backgroundColor: 'hsl(var(--primary) / 0.1)',
+          color: 'hsl(var(--primary))',
           border: '1px solid rgba(255, 102, 0, 0.3)',
           borderRadius: 2,
         }}
@@ -317,11 +317,11 @@ export const ToolAuthentication = ({
                           disabled={authState.status === 'testing'}
                           sx={{
                             alignSelf: 'flex-start',
-                            background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
+                            background: 'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-glow)) 100%)',
                             boxShadow: '0 4px 14px rgba(255, 102, 0, 0.25)',
                             fontWeight: 600,
                             '&:hover': {
-                              background: 'linear-gradient(135deg, #FF8533 0%, #FF9955 100%)',
+                              background: 'linear-gradient(135deg, hsl(var(--primary-glow)) 0%, hsl(var(--primary-glow)) 100%)',
                             },
                             '&.Mui-disabled': {
                               background: 'hsl(var(--muted))',
