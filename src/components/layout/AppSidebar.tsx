@@ -660,7 +660,6 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                           </Typography>
                         )}
                       </Box>
-                      />
                     )}
                   </ListItemButton>
                 </ListItem>
