@@ -868,7 +868,7 @@ export const AutomationConfig = ({
             </Box>
             <Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                <Typography variant="body2" sx={{ color: 'white' }}>
+                <Typography variant="body2" sx={{ color: 'hsl(var(--foreground))' }}>
                   {readableAppName(app.name)}
                 </Typography>
                 {app.isSelected && (
@@ -921,7 +921,7 @@ export const AutomationConfig = ({
                   fontSize: '0.6rem',
                   fontWeight: 600,
                   background: isConfiguring ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255, 152, 0, 0.12)',
-                  color: isConfiguring ? '#FF6600' : '#ff9800',
+                  color: isConfiguring ? 'hsl(var(--primary))' : '#ff9800',
                   border: '1px solid',
                   borderColor: isConfiguring ? 'rgba(255, 102, 0, 0.4)' : 'rgba(255, 152, 0, 0.3)',
                   '& .MuiChip-label': { px: 0.75 },
@@ -1013,7 +1013,7 @@ export const AutomationConfig = ({
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
                           <Typography
                             variant="subtitle1"
-                            sx={{ color: 'white', fontWeight: 600 }}
+                            sx={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}
                           >
                             {option.name}
                           </Typography>
@@ -1264,7 +1264,7 @@ export const AutomationConfig = ({
                                     >
                                       {app.name[0]}
                                     </Avatar>
-                                    <Typography variant="body2" sx={{ color: 'white' }}>
+                                    <Typography variant="body2" sx={{ color: 'hsl(var(--foreground))' }}>
                                       {readableAppName(app.name)}
                                     </Typography>
                                   </Box>
@@ -1399,7 +1399,7 @@ export const AutomationConfig = ({
                                 ) : (
                                   <>
                                     <Box sx={{ flex: 1, minWidth: 0 }}>
-                                      <Typography variant="body2" sx={{ color: 'white', fontWeight: 500 }}>
+                                      <Typography variant="body2" sx={{ color: 'hsl(var(--foreground))', fontWeight: 500 }}>
                                         {feed.name}
                                       </Typography>
                                       <Typography 
@@ -1422,7 +1422,7 @@ export const AutomationConfig = ({
                                         <IconButton
                                           size="small"
                                           onClick={() => setEditingFeed(feed)}
-                                          sx={{ color: 'rgba(255,255,255,0.4)', '&:hover': { color: 'white' } }}
+                                          sx={{ color: 'rgba(255,255,255,0.4)', '&:hover': { color: 'hsl(var(--foreground))' } }}
                                         >
                                           <EditIcon sx={{ fontSize: 16 }} />
                                         </IconButton>
@@ -1553,7 +1553,7 @@ export const AutomationConfig = ({
                                   '&:hover fieldset': { borderColor: 'hsl(var(--border))' },
                                   '&.Mui-focused fieldset': { borderColor: option.color },
                                 },
-                                '& .MuiInputBase-input': { color: 'white' },
+                                '& .MuiInputBase-input': { color: 'hsl(var(--foreground))' },
                                 '& .MuiInputLabel-root': { color: 'hsl(var(--muted-foreground))' },
                               }}
                             />
@@ -1580,7 +1580,7 @@ export const AutomationConfig = ({
         <Typography
           variant="h5"
           sx={{
-            color: 'white',
+            color: 'hsl(var(--foreground))',
             fontWeight: 700,
             mb: 0.5,
           }}

@@ -93,7 +93,7 @@ export const WelcomeStep = ({ onSelect, selectedChallenge }: WelcomeStepProps) =
           sx={{
             fontWeight: 800,
             mb: 2,
-            color: 'white',
+            color: 'hsl(var(--foreground))',
             fontSize: { xs: '1.75rem', sm: '2.25rem', md: '2.75rem' },
             lineHeight: 1.2,
           }}
