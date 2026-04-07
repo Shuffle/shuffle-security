@@ -787,7 +787,7 @@ export const AppAuthCard = ({
                 },
                 '& .MuiInputBase-input': { color: 'hsl(var(--foreground))' },
                 '& .MuiInputLabel-root': { color: 'hsl(var(--muted-foreground))' },
-                '& .MuiFormHelperText-root': { color: fieldErrors[fieldKey] ? '#ef4444' : 'rgba(255, 255, 255, 0.4)' },
+                '& .MuiFormHelperText-root': { color: fieldErrors[fieldKey] ? '#ef4444' : 'hsl(var(--muted-foreground))' },
               }}
             />
           );
@@ -1423,7 +1423,7 @@ export const AppAuthCard = ({
                               ? '#22c55e'
                               : isConfigured
                               ? '#f59e0b' // Yellow for configured but not tested
-                              : 'rgba(255, 255, 255, 0.4)', 
+                              : 'hsl(var(--muted-foreground))', 
                             fontSize: '0.75rem',
                             mt: 0.25,
                             fontWeight: (localTestStatus !== 'untested' || isTested || isConfigured) ? 500 : 400,
@@ -1459,7 +1459,7 @@ export const AppAuthCard = ({
                         }
                         sx={{
                           borderColor: authState.status === 'testing' ? 'transparent' : 'rgba(255, 102, 0, 0.5)',
-                          color: authState.status === 'testing' ? 'rgba(255, 255, 255, 0.9)' : '#FF6600',
+                          color: authState.status === 'testing' ? 'hsl(var(--foreground))' : 'hsl(var(--primary))',
                           background: authState.status === 'testing' 
                             ? 'linear-gradient(90deg, rgba(255, 102, 0, 0.3) 0%, rgba(255, 102, 0, 0.5) 50%, rgba(255, 102, 0, 0.3) 100%)'
                             : 'transparent',
@@ -1483,8 +1483,8 @@ export const AppAuthCard = ({
                             backgroundColor: authState.status === 'testing' ? undefined : 'rgba(255, 102, 0, 0.08)',
                           },
                           '&.Mui-disabled': {
-                            color: authState.status === 'testing' ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.3)',
-                            borderColor: authState.status === 'testing' ? 'transparent' : 'rgba(255, 255, 255, 0.1)',
+                            color: authState.status === 'testing' ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))',
+                            borderColor: authState.status === 'testing' ? 'transparent' : 'hsl(var(--border))',
                           },
                         }}
                       >
@@ -1767,8 +1767,8 @@ export const AppAuthCard = ({
                           }}
                           disabled={saving || !isFormValid()}
                           sx={{
-                            borderColor: isFormValid() ? 'rgba(255, 102, 0, 0.5)' : 'rgba(255, 255, 255, 0.1)',
-                            color: isFormValid() ? '#FF6600' : 'rgba(255, 255, 255, 0.3)',
+                            borderColor: isFormValid() ? 'hsl(var(--primary) / 0.5)' : 'hsl(var(--border))',
+                            color: isFormValid() ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
                             fontWeight: 600,
                             textTransform: 'none',
                             fontSize: '0.9rem',
@@ -1886,8 +1886,8 @@ export const AppAuthCard = ({
                             }}
                             disabled={!allFilled}
                             sx={{
-                              borderColor: allFilled ? 'rgba(255, 102, 0, 0.5)' : 'rgba(255, 255, 255, 0.1)',
-                              color: allFilled ? '#FF6600' : 'rgba(255, 255, 255, 0.3)',
+                              borderColor: allFilled ? 'hsl(var(--primary) / 0.5)' : 'hsl(var(--border))',
+                              color: allFilled ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
                               fontWeight: 600,
                               textTransform: 'none',
                               fontSize: '0.9rem',
@@ -1939,7 +1939,7 @@ export const AppAuthCard = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+            borderBottom: '1px solid hsl(var(--border))',
             color: 'hsl(var(--foreground))',
           }}
         >
