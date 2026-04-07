@@ -371,13 +371,14 @@ const NotificationRow = ({ notification, entityBasePath, onApprove, onQuickView,
               height: 20,
               fontSize: '0.68rem',
               fontWeight: 600,
-              backgroundColor: isApproval
-                ? 'hsl(var(--severity-info) / 0.12)'
+              background: isApproval
+                ? 'var(--agent-gradient)'
                 : 'hsl(var(--severity-medium) / 0.12)',
               color: isApproval
-                ? 'hsl(var(--severity-info))'
+                ? '#fff'
                 : 'hsl(var(--severity-medium))',
               '& .MuiChip-icon': { color: 'inherit' },
+              '& .MuiChip-label': isApproval ? { color: '#fff' } : {},
             }}
           />
         </Box>
@@ -401,13 +402,16 @@ const NotificationRow = ({ notification, entityBasePath, onApprove, onQuickView,
             px: 1.5,
             py: 1,
             borderRadius: 1.5,
-            backgroundColor: 'hsl(var(--severity-info) / 0.06)',
-            border: '1px solid hsl(var(--severity-info) / 0.15)',
+            background: 'var(--agent-gradient-subtle)',
+            border: '1px solid transparent',
+            borderImage: 'var(--agent-gradient-border) 1',
           }}>
             <Typography sx={{
               fontSize: '0.72rem',
               fontWeight: 600,
-              color: 'hsl(var(--severity-info))',
+              background: 'var(--agent-gradient)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
               textTransform: 'uppercase',
               letterSpacing: '0.03em',
               mb: 0.25,
@@ -638,9 +642,10 @@ const AttentionRunRow = ({ run, entityBasePath, onViewDetails }: { run: AgentRun
                 height: 20,
                 fontSize: '0.68rem',
                 fontWeight: 600,
-                backgroundColor: 'hsl(var(--severity-info) / 0.12)',
-                color: 'hsl(var(--severity-info))',
-                '& .MuiChip-icon': { color: 'inherit' },
+                background: 'var(--agent-gradient)',
+                color: '#fff',
+                '& .MuiChip-icon': { color: '#fff' },
+                '& .MuiChip-label': { color: '#fff' },
               }}
             />
           )}
