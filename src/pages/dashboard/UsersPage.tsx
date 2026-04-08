@@ -645,9 +645,9 @@ const UsersPage = () => {
               sx={{ 
                 p: 3, 
                 mb: 3,
-                bgcolor: 'linear-gradient(135deg, hsl(270 50% 15%) 0%, hsl(270 40% 12%) 100%)',
-                background: 'linear-gradient(135deg, hsl(270 50% 15%) 0%, hsl(270 40% 12%) 100%)',
-                border: '1px solid hsl(270 50% 30% / 0.3)',
+                bgcolor: 'hsl(var(--card))',
+                background: 'linear-gradient(135deg, hsl(var(--primary) / 0.08) 0%, hsl(var(--accent) / 0.12) 100%)',
+                border: '1px solid hsl(var(--border))',
                 borderRadius: 2,
                 display: 'flex',
                 alignItems: 'center',
@@ -671,10 +671,10 @@ const UsersPage = () => {
                 label="Always Active" 
                 size="small"
                 sx={{ 
-                  bgcolor: '#9333ea30',
-                  color: '#c084fc',
+                  bgcolor: 'hsl(var(--primary) / 0.15)',
+                  color: 'hsl(var(--primary))',
                   fontWeight: 600,
-                  border: '1px solid #9333ea40',
+                  border: '1px solid hsl(var(--primary) / 0.25)',
                   px: 1,
                 }} 
               />
