@@ -58,6 +58,7 @@ export const useDatastore = ({ category, orgId: overrideOrgId }: UseDatastoreOpt
     setError(null);
     try {
       const response = await getDatastoreByCategory(category, cursorParam);
+      console.log(`[useDatastore] fetchItems category=${category} success=${response.success} dataLength=${response.data?.length} error=${response.error}`);
       if (response.success && response.data) {
         if (cursorParam) {
           // Appending to existing items (pagination)
