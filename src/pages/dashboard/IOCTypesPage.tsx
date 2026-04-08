@@ -93,11 +93,20 @@ const IOCTypesPage = () => {
   useEffect(() => {
     const parsed: IOCType[] = items.map(item => {
       try {
-        return JSON.parse(item.value) as IOCType;
+        const obj = JSON.parse(item.value) as IOCType;
+        // Fix double-escaped regex patterns from datastore
+        if (obj.regex && obj.regex.includes('\\\\')) {
+          console.warn(`[IOC] Fixing double-escaped regex for ${obj.name}: ${obj.regex}`);
+          obj.regex = obj.regex.replace(/\\\\/g, '\\');
+        }
+        return obj;
       } catch {
         return { name: item.key, regex: item.value, description: '' };
       }
     });
+    if (parsed.length > 0) {
+      console.log('[IOC] Sample parsed regex:', parsed[0].name, parsed[0].regex);
+    }
     setIocTypes(parsed);
   }, [items]);
 
