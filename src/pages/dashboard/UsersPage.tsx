@@ -1167,6 +1167,8 @@ const UsersPage = () => {
         existingUsers={users}
         onImport={handleImportSchedules}
       />
+      </>
+      )}
     </Box>
   );
 };
