@@ -124,7 +124,12 @@ const fetchIOCTypes = async (): Promise<IOCType[]> => {
   if (response.success && response.data && response.data.length > 0) {
     return response.data.map(item => {
       try {
-        return JSON.parse(item.value) as IOCType;
+        const obj = JSON.parse(item.value) as IOCType;
+        // Fix double-escaped regex patterns from datastore serialization
+        if (obj.regex && obj.regex.includes('\\\\')) {
+          obj.regex = obj.regex.replace(/\\\\/g, '\\');
+        }
+        return obj;
       } catch {
         return { name: item.key, regex: item.value, description: '' } as IOCType;
       }
