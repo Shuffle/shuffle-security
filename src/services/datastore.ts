@@ -258,13 +258,6 @@ export const getDatastoreItemPublic = async (
   return { success: true, item: data };
 };
 
-const truncateResponsePreview = (value: string | null | undefined, maxLength = 280): string | undefined => {
-  if (!value) return undefined;
-  const normalized = value.replace(/\s+/g, ' ').trim();
-  if (!normalized) return undefined;
-  return normalized.length > maxLength ? `${normalized.slice(0, maxLength)}…` : normalized;
-};
-
 /**
  * Try to extract valid datastore items from a response body string,
  * even if the HTTP status was non-2xx (some backend servers return 400 with valid data).
