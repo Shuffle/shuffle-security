@@ -22,7 +22,10 @@ import {
   Stack,
   Collapse,
   LinearProgress,
+  Tabs,
+  Tab,
 } from '@mui/material';
+import TenantManagement from '@/components/tenants/TenantManagement';
 import {
   Add as AddIcon,
   Edit as EditIcon,
