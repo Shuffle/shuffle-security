@@ -259,6 +259,39 @@ export const getDatastoreItemPublic = async (
 };
 
 /**
+ * Try to extract valid datastore items from a response body string,
+ * even if the HTTP status was non-2xx (some backend servers return 400 with valid data).
+ */
+const tryExtractItemsFromBody = (rawBody: string): { items: DatastoreItem[]; categoryConfig?: CategoryConfig; cursor?: string; totalAmount?: number; shape: DatastoreDiagnostics['responseShape'] } | null => {
+  try {
+    const data = rawBody ? JSON.parse(rawBody) : null;
+    if (!data || typeof data !== 'object') return null;
+
+    const items = Array.isArray(data) ? data : data.keys || data.data || [];
+    if (!Array.isArray(items) || items.length === 0) return null;
+
+    // Basic validation: at least one item should have a key
+    if (!items.some((i: any) => i && typeof i === 'object' && typeof i.key === 'string')) return null;
+
+    const shape: DatastoreDiagnostics['responseShape'] = Array.isArray(data)
+      ? 'array'
+      : Array.isArray(data?.keys) ? 'keys'
+      : Array.isArray(data?.data) ? 'data'
+      : 'unknown';
+
+    return {
+      items,
+      categoryConfig: data.category_config,
+      cursor: data.cursor,
+      totalAmount: data.total_amount,
+      shape,
+    };
+  } catch {
+    return null;
+  }
+};
+
+/**
  * Get all items in a category with optional cursor-based pagination
  */
 export const getDatastoreByCategory = async (
@@ -289,14 +322,14 @@ export const getDatastoreByCategory = async (
   }
 
   const requestUrl = getApiUrl(url);
-  const baseDiagnostics = {
+  const baseDiagnostics: DatastoreDiagnostics = {
     operation: 'list',
     category,
     orgId,
     url: requestUrl,
     cursor,
     timestamp: new Date().toISOString(),
-  } satisfies DatastoreDiagnostics;
+  };
 
   let response: Response;
 
@@ -313,20 +346,97 @@ export const getDatastoreByCategory = async (
       }
     );
   } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to request datastore items',
-      diagnostics: {
-        ...baseDiagnostics,
-        errorStage: 'request',
-      },
-    };
+    // Network error — retry once
+    try {
+      response = await fetch(
+        requestUrl,
+        {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeader(),
+          },
+        }
+      );
+    } catch (retryError) {
+      return {
+        success: false,
+        error: retryError instanceof Error ? retryError.message : 'Failed to request datastore items',
+        diagnostics: {
+          ...baseDiagnostics,
+          errorStage: 'request',
+        },
+      };
+    }
   }
 
   const contentType = response.headers.get('content-type');
+  const rawBody = await response.text();
 
   if (!response.ok) {
-    const bodyPreview = truncateResponsePreview(await response.text().catch(() => ''));
+    // Some backend servers return 400 but still include valid data in the body.
+    // Try to extract items before treating as a hard failure.
+    const extracted = tryExtractItemsFromBody(rawBody);
+    if (extracted && extracted.items.length > 0) {
+      console.warn(`[Datastore] ${response.status} response for category=${category} but body contained ${extracted.items.length} valid items — treating as success`);
+      return {
+        success: true,
+        data: extracted.items,
+        categoryConfig: extracted.categoryConfig,
+        cursor: extracted.cursor,
+        totalAmount: extracted.totalAmount,
+        diagnostics: {
+          ...baseDiagnostics,
+          status: response.status,
+          statusText: response.statusText,
+          contentType,
+          responseShape: extracted.shape,
+          itemCount: extracted.items.length,
+          totalAmount: extracted.totalAmount ?? null,
+        },
+      };
+    }
+
+    // No valid data in body — retry once for transient server errors
+    if (response.status >= 400 && response.status < 500) {
+      try {
+        const retryResponse = await fetch(
+          requestUrl,
+          {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+              ...getAuthHeader(),
+            },
+          }
+        );
+        const retryBody = await retryResponse.text();
+        const retryExtracted = tryExtractItemsFromBody(retryBody);
+        if (retryResponse.ok || (retryExtracted && retryExtracted.items.length > 0)) {
+          const items = retryExtracted?.items || [];
+          console.warn(`[Datastore] Retry succeeded for category=${category} (status=${retryResponse.status}, items=${items.length})`);
+          return {
+            success: true,
+            data: items,
+            categoryConfig: retryExtracted?.categoryConfig,
+            cursor: retryExtracted?.cursor,
+            totalAmount: retryExtracted?.totalAmount,
+            diagnostics: {
+              ...baseDiagnostics,
+              status: retryResponse.status,
+              statusText: retryResponse.statusText,
+              contentType: retryResponse.headers.get('content-type'),
+              responseShape: retryExtracted?.shape || 'unknown',
+              itemCount: items.length,
+              totalAmount: retryExtracted?.totalAmount ?? null,
+            },
+          };
+        }
+      } catch { /* retry failed, fall through to error */ }
+    }
+
     return {
       success: false,
       error: `Failed to get datastore items: ${response.status} ${response.statusText}`.trim(),
@@ -335,13 +445,11 @@ export const getDatastoreByCategory = async (
         status: response.status,
         statusText: response.statusText,
         contentType,
-        bodyPreview,
+        bodyPreview: truncateResponsePreview(rawBody),
         errorStage: 'response',
       },
     };
   }
-
-  const rawBody = await response.text();
 
   try {
     const data = rawBody ? JSON.parse(rawBody) : {};
