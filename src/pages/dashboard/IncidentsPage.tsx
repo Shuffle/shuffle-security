@@ -16,6 +16,7 @@ import {
   Tooltip,
   Checkbox,
   Autocomplete,
+  Alert,
 } from '@mui/material';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
@@ -39,7 +40,7 @@ import { deduplicateTasks, decodeHtmlEntities } from '@/lib/utils';
 import { ResolveIncidentDialog, ResolutionData, RESOLUTION_REASONS } from '@/components/incidents/ResolveIncidentDialog';
 import { CategoryAutomationsDialog } from '@/components/incidents/CategoryAutomationsDialog';
 import { extractValidatedIngestionApps, ValidatedIngestionApp, findIngestTicketsWorkflow, findForwardTicketsWorkflow, extractWorkflowAppNames, normalizeAppName, isWorkflowScheduleStopped } from '@/lib/ingestionDetection';
-import { getApiUrl, getAuthHeader, isDevEnvironment } from '@/config/api';
+import { API_CONFIG, getApiUrl, getAuthHeader, isDevEnvironment } from '@/config/api';
 import DownloadIcon from '@mui/icons-material/Download';
 import { IncidentCardView } from '@/components/incidents/IncidentCardView';
 import { IncidentStatsCards } from '@/components/incidents/IncidentStatsCards';
@@ -334,6 +335,7 @@ const IncidentsPage = () => {
   const showAutomation = useShowAutomation();
   const { userInfo } = useAuth();
   const currentUsername = userInfo?.username || '';
+  const isSupport = userInfo?.support === true;
   const { users, loading: usersLoading } = useUsers();
   const currentOrgId = userInfo?.active_org?.id;
   const currentOrgName = userInfo?.active_org?.name || 'Current';
@@ -402,9 +404,48 @@ const IncidentsPage = () => {
   const [sortBy, setSortBy] = useState<SortKey>('created');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
-  const { items: datastoreItems, isLoading, isRefreshing, hasFetched, error, fetchItems, addItem, hasMore, fetchNextPage, categoryConfig, totalAmount } = useDatastore({
+  const { items: datastoreItems, isLoading, isRefreshing, hasFetched, error, lastDiagnostics, fetchItems, addItem, hasMore, fetchNextPage, categoryConfig, totalAmount } = useDatastore({
     category: DATASTORE_CATEGORIES.INCIDENTS,
   });
+
+  const supportIncidentDebugRows = useMemo<Array<[string, string]>>(() => {
+    if (!isSupport || !error) return [];
+
+    const fallbackRequestUrl = currentOrgId
+      ? getApiUrl(`/api/v1/orgs/${currentOrgId}/list_cache?category=${encodeURIComponent(DATASTORE_CATEGORIES.INCIDENTS)}&top=1000`)
+      : 'Unknown';
+
+    return [
+      ['Hook error', error],
+      ['Org', currentOrgId ? `${currentOrgName} (${currentOrgId})` : currentOrgName],
+      ['API base', API_CONFIG.baseUrl],
+      ['Request URL', lastDiagnostics?.url || fallbackRequestUrl],
+      ['HTTP', lastDiagnostics?.status != null ? `${lastDiagnostics.status}${lastDiagnostics.statusText ? ` ${lastDiagnostics.statusText}` : ''}` : 'No status captured'],
+      ['Failure stage', lastDiagnostics?.errorStage || 'unknown'],
+      ['Content-Type', lastDiagnostics?.contentType || 'unknown'],
+      ['Response shape', lastDiagnostics?.responseShape || 'unknown'],
+      ['Items parsed', lastDiagnostics?.itemCount != null ? String(lastDiagnostics.itemCount) : 'n/a'],
+      ['Page state', `hasFetched=${hasFetched}, loading=${isLoading}, refreshing=${isRefreshing}, cachedItems=${datastoreItems.length}`],
+    ];
+  }, [isSupport, error, currentOrgId, currentOrgName, lastDiagnostics, hasFetched, isLoading, isRefreshing, datastoreItems.length]);
+
+  useEffect(() => {
+    if (!isSupport || !error) return;
+
+    console.error('[IncidentsPage] Failed to load incidents', {
+      error,
+      orgId: currentOrgId ?? null,
+      orgName: currentOrgName,
+      apiBaseUrl: API_CONFIG.baseUrl,
+      diagnostics: lastDiagnostics,
+      pageState: {
+        hasFetched,
+        isLoading,
+        isRefreshing,
+        cachedItems: datastoreItems.length,
+      },
+    });
+  }, [isSupport, error, currentOrgId, currentOrgName, lastDiagnostics, hasFetched, isLoading, isRefreshing, datastoreItems.length]);
 
   // Sub-org incident fetching for multi-tenant view
   const [subOrgItems, setSubOrgItems] = useState<Map<string, { orgName: string; orgImage?: string; items: typeof datastoreItems }>>(new Map());
@@ -1512,9 +1553,54 @@ const IncidentsPage = () => {
             <Typography variant="h5" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))', mb: 1.5 }}>
               Failed to load incidents
             </Typography>
-            <Typography variant="body1" sx={{ color: 'hsl(var(--muted-foreground))', mb: 5, lineHeight: 1.7, maxWidth: 420 }}>
+            <Typography variant="body1" sx={{ color: 'hsl(var(--muted-foreground))', mb: isSupport ? 3 : 5, lineHeight: 1.7, maxWidth: 420 }}>
               There was a problem connecting to the server. Check your network connection and try again.
             </Typography>
+            {isSupport && error && (
+              <Alert severity="info" sx={{ width: '100%', mb: 4, borderRadius: 2, textAlign: 'left', alignItems: 'flex-start' }}>
+                <Typography variant="body2" sx={{ fontWeight: 700, color: 'hsl(var(--foreground))', mb: 1.5 }}>
+                  Support debug output
+                </Typography>
+                <Box sx={{ display: 'grid', gap: 1, width: '100%' }}>
+                  {supportIncidentDebugRows.map(([label, value]) => (
+                    <Box key={label} sx={{ display: 'grid', gridTemplateColumns: '120px minmax(0, 1fr)', gap: 1.5, alignItems: 'start' }}>
+                      <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        {label}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: 'hsl(var(--foreground))', wordBreak: 'break-word' }}>
+                        {value}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+                {lastDiagnostics?.bodyPreview && (
+                  <Box sx={{ mt: 2, width: '100%' }}>
+                    <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      Response preview
+                    </Typography>
+                    <Box
+                      component="pre"
+                      sx={{
+                        mt: 0.75,
+                        mb: 0,
+                        p: 1.5,
+                        borderRadius: 1.5,
+                        bgcolor: 'hsl(var(--muted))',
+                        border: '1px solid hsl(var(--border))',
+                        color: 'hsl(var(--foreground))',
+                        fontSize: '0.75rem',
+                        lineHeight: 1.55,
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word',
+                        overflowX: 'auto',
+                      }}
+                    >
+                      {lastDiagnostics.bodyPreview}
+                    </Box>
+                  </Box>
+                )}
+              </Alert>
+            )}
             <Button
               variant="contained"
               size="large"
