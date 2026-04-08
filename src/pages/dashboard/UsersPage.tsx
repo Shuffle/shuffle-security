@@ -136,6 +136,7 @@ const cardVariants = {
 };
 
 const UsersPage = () => {
+  const [activeTab, setActiveTab] = useState(0);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
