@@ -22,7 +22,10 @@ import {
   Stack,
   Collapse,
   LinearProgress,
+  Tabs,
+  Tab,
 } from '@mui/material';
+import TenantManagement from '@/components/tenants/TenantManagement';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -133,6 +136,7 @@ const cardVariants = {
 };
 
 const UsersPage = () => {
+  const [activeTab, setActiveTab] = useState(0);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -466,7 +470,47 @@ const UsersPage = () => {
 
   return (
     <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1400, mx: 'auto' }}>
-      {/* Header */}
+      {/* Org Admin Header */}
+      <Typography 
+        variant="h4" 
+        sx={{ 
+          fontWeight: 700, 
+          color: 'hsl(var(--foreground))',
+          letterSpacing: '-0.02em',
+          mb: 1,
+        }}
+      >
+        Org Admin
+      </Typography>
+      <Typography variant="body1" sx={{ color: 'hsl(var(--muted-foreground))', mb: 3 }}>
+        Manage your team members and tenant organizations
+      </Typography>
+
+      {/* Tabs */}
+      <Tabs
+        value={activeTab}
+        onChange={(_, v) => setActiveTab(v)}
+        sx={{
+          mb: 4,
+          '& .MuiTabs-indicator': { bgcolor: 'hsl(var(--primary))' },
+          '& .MuiTab-root': {
+            color: 'hsl(var(--muted-foreground))',
+            textTransform: 'none',
+            fontWeight: 500,
+            fontSize: '0.9rem',
+            '&.Mui-selected': { color: 'hsl(var(--foreground))' },
+          },
+        }}
+      >
+        <Tab label="User Management" />
+        <Tab label="Tenant Management" />
+      </Tabs>
+
+      {activeTab === 1 ? (
+        <TenantManagement />
+      ) : (
+      <>
+      {/* User Management Content */}
       <Box sx={{ mb: 5 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2 }}>
           <Box>
@@ -1123,6 +1167,8 @@ const UsersPage = () => {
         existingUsers={users}
         onImport={handleImportSchedules}
       />
+      </>
+      )}
     </Box>
   );
 };
