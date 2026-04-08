@@ -46,6 +46,24 @@ export interface DatastoreResponse {
   cursor?: string;
   totalAmount?: number;
   error?: string;
+  diagnostics?: DatastoreDiagnostics;
+}
+
+export interface DatastoreDiagnostics {
+  operation: string;
+  category?: string;
+  orgId?: string | null;
+  url?: string;
+  cursor?: string;
+  status?: number;
+  statusText?: string;
+  contentType?: string | null;
+  responseShape?: 'array' | 'keys' | 'data' | 'unknown';
+  itemCount?: number;
+  totalAmount?: number | null;
+  bodyPreview?: string;
+  errorStage?: 'request' | 'response' | 'parse' | 'unknown';
+  timestamp: string;
 }
 
 /**
@@ -68,6 +86,13 @@ const normalizeDatastoreKey = (key: string): string => {
   if (!key?.includes('::')) return key;
   const parts = key.split('::').filter(Boolean);
   return parts.length > 0 ? parts[parts.length - 1] : key;
+};
+
+const truncateResponsePreview = (value: string | null | undefined, maxLength = 280): string | undefined => {
+  if (!value) return undefined;
+  const normalized = value.replace(/\s+/g, ' ').trim();
+  if (!normalized) return undefined;
+  return normalized.length > maxLength ? `${normalized.slice(0, maxLength)}…` : normalized;
 };
 
 /**
@@ -242,7 +267,18 @@ export const getDatastoreByCategory = async (
 ): Promise<DatastoreResponse> => {
   const orgId = getOrgId();
   if (!orgId) {
-    return { success: false, error: 'No organization ID found' };
+    return {
+      success: false,
+      error: 'No organization ID found',
+      diagnostics: {
+        operation: 'list',
+        category,
+        orgId: null,
+        cursor,
+        errorStage: 'request',
+        timestamp: new Date().toISOString(),
+      },
+    };
   }
 
   // Use higher limit for incidents, default 100 for others
@@ -252,31 +288,102 @@ export const getDatastoreByCategory = async (
     url += `&cursor=${encodeURIComponent(cursor)}`;
   }
 
-  const response = await fetch(
-    getApiUrl(url),
-    {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        ...getAuthHeader(),
-      },
-    }
-  );
+  const requestUrl = getApiUrl(url);
+  const baseDiagnostics = {
+    operation: 'list',
+    category,
+    orgId,
+    url: requestUrl,
+    cursor,
+    timestamp: new Date().toISOString(),
+  } satisfies DatastoreDiagnostics;
 
-  if (!response.ok) {
-    return { success: false, error: `Failed to get datastore items: ${response.statusText}` };
+  let response: Response;
+
+  try {
+    response = await fetch(
+      requestUrl,
+      {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeader(),
+        },
+      }
+    );
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to request datastore items',
+      diagnostics: {
+        ...baseDiagnostics,
+        errorStage: 'request',
+      },
+    };
   }
 
-  const data = await response.json();
-  // API returns items in 'keys' array, category config, and cursor for pagination
-  return { 
-    success: true, 
-    data: Array.isArray(data) ? data : data.keys || data.data || [],
-    categoryConfig: data.category_config,
-    cursor: data.cursor,
-    totalAmount: data.total_amount,
-  };
+  const contentType = response.headers.get('content-type');
+
+  if (!response.ok) {
+    const bodyPreview = truncateResponsePreview(await response.text().catch(() => ''));
+    return {
+      success: false,
+      error: `Failed to get datastore items: ${response.status} ${response.statusText}`.trim(),
+      diagnostics: {
+        ...baseDiagnostics,
+        status: response.status,
+        statusText: response.statusText,
+        contentType,
+        bodyPreview,
+        errorStage: 'response',
+      },
+    };
+  }
+
+  const rawBody = await response.text();
+
+  try {
+    const data = rawBody ? JSON.parse(rawBody) : {};
+    const responseShape: DatastoreDiagnostics['responseShape'] = Array.isArray(data)
+      ? 'array'
+      : Array.isArray(data?.keys)
+        ? 'keys'
+        : Array.isArray(data?.data)
+          ? 'data'
+          : 'unknown';
+    const items = Array.isArray(data) ? data : data.keys || data.data || [];
+
+    return {
+      success: true,
+      data: items,
+      categoryConfig: data.category_config,
+      cursor: data.cursor,
+      totalAmount: data.total_amount,
+      diagnostics: {
+        ...baseDiagnostics,
+        status: response.status,
+        statusText: response.statusText,
+        contentType,
+        responseShape,
+        itemCount: Array.isArray(items) ? items.length : 0,
+        totalAmount: data.total_amount ?? null,
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? `Failed to parse datastore response: ${error.message}` : 'Failed to parse datastore response',
+      diagnostics: {
+        ...baseDiagnostics,
+        status: response.status,
+        statusText: response.statusText,
+        contentType,
+        bodyPreview: truncateResponsePreview(rawBody),
+        errorStage: 'parse',
+      },
+    };
+  }
 };
 
 /**

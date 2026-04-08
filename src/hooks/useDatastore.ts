@@ -11,6 +11,7 @@ import {
   getDatastoreByCategory,
   deleteDatastoreItem,
   DatastoreItem,
+  DatastoreDiagnostics,
   CategoryConfig,
 } from '@/services/datastore';
 
@@ -25,6 +26,7 @@ interface UseDatastoreReturn {
   isRefreshing: boolean;
   hasFetched: boolean;
   error: string | null;
+  lastDiagnostics: DatastoreDiagnostics | null;
   cursor: string | null;
   hasMore: boolean;
   totalAmount: number | null;
@@ -44,6 +46,7 @@ export const useDatastore = ({ category, orgId: overrideOrgId }: UseDatastoreOpt
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [hasFetched, setHasFetched] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastDiagnostics, setLastDiagnostics] = useState<DatastoreDiagnostics | null>(null);
   const [cursor, setCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [categoryConfig, setCategoryConfig] = useState<CategoryConfig | null>(null);
@@ -56,9 +59,18 @@ export const useDatastore = ({ category, orgId: overrideOrgId }: UseDatastoreOpt
     }
     setIsRefreshing(true);
     setError(null);
+    setLastDiagnostics(null);
     try {
       const response = await getDatastoreByCategory(category, cursorParam);
+      setLastDiagnostics(response.diagnostics || null);
       console.log(`[useDatastore] fetchItems category=${category} success=${response.success} dataLength=${response.data?.length} error=${response.error}`);
+      if (!response.success) {
+        console.error('[useDatastore] fetchItems failed', {
+          category,
+          error: response.error,
+          diagnostics: response.diagnostics,
+        });
+      }
       if (response.success && response.data) {
         if (cursorParam) {
           // Appending to existing items (pagination)
@@ -87,12 +99,20 @@ export const useDatastore = ({ category, orgId: overrideOrgId }: UseDatastoreOpt
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
+      setLastDiagnostics({
+        operation: 'list',
+        category,
+        orgId: overrideOrgId || null,
+        cursor: cursorParam,
+        errorStage: 'unknown',
+        timestamp: new Date().toISOString(),
+      });
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
       setHasFetched(true);
     }
-  }, [category, hasFetched]);
+  }, [category, hasFetched, overrideOrgId]);
 
   const fetchNextPage = useCallback(async () => {
     if (cursor && !isLoading) {
@@ -182,6 +202,7 @@ export const useDatastore = ({ category, orgId: overrideOrgId }: UseDatastoreOpt
     isRefreshing,
     hasFetched,
     error,
+    lastDiagnostics,
     cursor,
     hasMore,
     totalAmount,
