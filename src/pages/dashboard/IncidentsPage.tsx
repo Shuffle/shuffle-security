@@ -29,6 +29,7 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { useDatastore } from '@/hooks/useDatastore';
 import { useAuth } from '@/context/AuthContext';
 import { useSubOrgs } from '@/hooks/useSubOrgs';
@@ -472,6 +473,7 @@ const IncidentsPage = () => {
   // Sub-org incident fetching for multi-tenant view
   const [subOrgItems, setSubOrgItems] = useState<Map<string, { orgName: string; orgImage?: string; items: typeof datastoreItems }>>(new Map());
   const [subOrgLoading, setSubOrgLoading] = useState<Set<string>>(new Set());
+  const [subOrgFailed, setSubOrgFailed] = useState<Set<string>>(new Set());
 
   // Fetch incidents from all sub-orgs in parallel
   const fetchSubOrgIncidents = useCallback(async () => {
@@ -505,23 +507,30 @@ const IncidentsPage = () => {
           },
         });
 
-        if (!response.ok) return { orgId: org.id, orgName: org.name, orgImage: org.image, items: [] };
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
         const data = await response.json();
         const items = Array.isArray(data) ? data : (data.keys || data.data || []);
-        return { orgId: org.id, orgName: org.name, orgImage: org.image, items };
+        return { orgId: org.id, orgName: org.name, orgImage: org.image, items, failed: false };
       })
     );
 
     const newMap = new Map<string, { orgName: string; orgImage?: string; items: typeof datastoreItems }>();
-    results.forEach((result) => {
+    const failedIds = new Set<string>();
+    results.forEach((result, idx) => {
+      const org = orgsToFetch[idx];
       if (result.status === 'fulfilled' && result.value) {
         const { orgId, orgName, orgImage, items } = result.value;
         newMap.set(orgId, { orgName, orgImage, items });
+      } else {
+        // Mark as failed but still add with empty items so org appears in the list
+        failedIds.add(org.id);
+        newMap.set(org.id, { orgName: org.name, orgImage: org.image, items: [] });
       }
     });
 
     setSubOrgItems(newMap);
+    setSubOrgFailed(failedIds);
     setSubOrgLoading(new Set());
   }, [subOrgs, parentOrg, currentOrgId]);
 
@@ -2436,6 +2445,7 @@ const IncidentsPage = () => {
                     ? datastoreItems.length
                     : subOrgItems.get(option.id)?.items.length || 0;
                   const isOrgLoading = subOrgLoading.has(option.id);
+                  const isOrgFailed = subOrgFailed.has(option.id);
                   const isSubOrg = option.id !== currentOrgId && (!parentOrg || option.id !== parentOrg.id);
                   return (
                     <li {...props} key={option.id} style={{ paddingLeft: isSubOrg ? 48 : 16 }}>
@@ -2447,12 +2457,17 @@ const IncidentsPage = () => {
                             <Box sx={{ width: 20, height: 20, borderRadius: '4px', bgcolor: 'hsl(var(--muted) / 0.5)', flexShrink: 0 }} />
                           )}
                           <Typography sx={{ fontSize: '0.82rem' }}>{option.name}</Typography>
+                          {isOrgFailed && (
+                            <Tooltip title="Failed to load incidents from this org" placement="right">
+                              <WarningAmberIcon sx={{ fontSize: 14, color: 'hsl(var(--severity-medium))' }} />
+                            </Tooltip>
+                          )}
                         </Box>
                         {isOrgLoading ? (
                           <CircularProgress size={12} sx={{ color: '#a78bfa', ml: 1 }} />
                         ) : (
-                          <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', ml: 1 }}>
-                            {count}
+                          <Typography sx={{ fontSize: '0.7rem', color: isOrgFailed ? 'hsl(var(--severity-medium))' : 'hsl(var(--muted-foreground))', ml: 1 }}>
+                            {isOrgFailed ? '!' : count}
                           </Typography>
                         )}
                       </Box>
