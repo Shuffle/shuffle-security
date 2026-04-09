@@ -357,67 +357,6 @@ export const CreateIncidentDialog = ({ open, onClose, onSubmit }: CreateIncident
       </DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 1 }}>
-          {/* Template Selection */}
-          {templates.length > 0 && (
-            <Box sx={{ 
-              p: 2, 
-              bgcolor: 'rgba(255, 102, 0, 0.05)', 
-              borderRadius: 2, 
-              border: '1px solid rgba(255, 102, 0, 0.2)',
-            }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-                <PlaylistAddCheckIcon sx={{ fontSize: 18, color: '#ff6600' }} />
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  Apply Template
-                </Typography>
-                <Typography variant="caption" sx={{ color: 'text.secondary', ml: 'auto' }}>
-                  Optional
-                </Typography>
-              </Box>
-              <FormControl fullWidth size="small">
-                <Select
-                  value={selectedTemplateId}
-                  onChange={(e) => handleTemplateSelect(e.target.value)}
-                  displayEmpty
-                  sx={{ bgcolor: 'background.paper' }}
-                >
-                  <MenuItem value="">
-                    <em>No template (start blank)</em>
-                  </MenuItem>
-                  {templates.map((template) => (
-                    <MenuItem key={template.id} value={template.id}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                        <Typography variant="body2">{template.name}</Typography>
-                        <Typography variant="caption" sx={{ color: 'text.secondary', ml: 'auto' }}>
-                          {template.tasks.length} tasks
-                        </Typography>
-                      </Box>
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              {selectedTemplateId && tasks.length > 0 && (
-                <Box sx={{ mt: 1.5, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {tasks.slice(0, 3).map((task) => (
-                    <Chip 
-                      key={task.id} 
-                      label={task.title} 
-                      size="small" 
-                      sx={{ fontSize: '0.7rem', height: 22 }} 
-                    />
-                  ))}
-                  {tasks.length > 3 && (
-                    <Chip 
-                      label={`+${tasks.length - 3} more`} 
-                      size="small" 
-                      sx={{ fontSize: '0.7rem', height: 22, bgcolor: 'rgba(255,255,255,0.1)' }} 
-                    />
-                  )}
-                </Box>
-              )}
-            </Box>
-          )}
-
           {/* Title */}
           <TextField
             label="Title"
@@ -439,198 +378,285 @@ export const CreateIncidentDialog = ({ open, onClose, onSubmit }: CreateIncident
             placeholder="Detailed description of the incident..."
           />
 
-          {/* Source + Severity */}
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <TextField
-              label="Source / Product"
-              value={source}
-              onChange={(e) => setSource(e.target.value)}
-              fullWidth
-              placeholder="e.g., SIEM, EDR, Firewall"
-            />
-            <TextField
-              select
-              label="Severity"
-              value={severityId}
-              onChange={(e) => setSeverityId(Number(e.target.value))}
-              fullWidth
-            >
-              {severityOptions.map((opt) => (
-                <MenuItem key={opt.id} value={opt.id}>
-                  {opt.label}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Box>
-
-          {/* TLP + Confidence */}
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <TextField
-              select
-              label="TLP"
-              value={tlp}
-              onChange={(e) => setTlp(Number(e.target.value))}
-              fullWidth
-            >
-              {tlpLevels.map((opt) => (
-                <MenuItem key={opt.value} value={opt.value}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: opt.color, border: opt.color === '#ffffff' ? '1px solid #666' : 'none' }} />
-                    {opt.label}
-                  </Box>
-                </MenuItem>
-              ))}
-            </TextField>
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.5, display: 'block' }}>
-                Confidence: {confidence}%
-              </Typography>
-              <Slider
-                value={confidence}
-                onChange={(_, value) => setConfidence(value as number)}
-                min={0}
-                max={100}
-                valueLabelDisplay="auto"
-                sx={{ mt: 1 }}
-              />
-            </Box>
-          </Box>
-
-          {/* Assignee */}
-          <FormControl fullWidth>
-            <InputLabel>Assignee</InputLabel>
-            <Select
-              value={assignee}
-              label="Assignee"
-              onChange={(e) => setAssignee(e.target.value)}
-              disabled={usersLoading}
-              endAdornment={usersLoading ? <CircularProgress size={20} sx={{ mr: 2 }} /> : null}
-              MenuProps={{
-                PaperProps: {
-                  sx: {
-                    bgcolor: 'hsl(var(--popover))',
-                    border: '1px solid hsl(var(--border))',
-                    zIndex: 9999,
-                  },
-                },
-              }}
-            >
-              <MenuItem value="">
-                <em>Unassigned</em>
+          {/* Severity */}
+          <TextField
+            select
+            label="Severity"
+            value={severityId}
+            onChange={(e) => setSeverityId(Number(e.target.value))}
+            fullWidth
+          >
+            {severityOptions.map((opt) => (
+              <MenuItem key={opt.id} value={opt.id}>
+                {opt.label}
               </MenuItem>
-              {users.map((user) => (
-                <MenuItem key={user.id} value={user.username}>
-                  {user.username}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+            ))}
+          </TextField>
 
-          {/* URL References */}
-          <Box>
-            <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary' }}>
-              URL References
+          {/* Advanced Options Toggle */}
+          <Box
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.5,
+              cursor: 'pointer',
+              color: 'hsl(var(--muted-foreground))',
+              '&:hover': { color: 'hsl(var(--foreground))' },
+            }}
+          >
+            <ExpandMoreIcon sx={{
+              fontSize: 20,
+              transform: showAdvanced ? 'rotate(180deg)' : 'rotate(0deg)',
+              transition: 'transform 0.2s',
+            }} />
+            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+              Advanced options
             </Typography>
-            <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
-              <TextField
-                size="small"
-                value={newReference}
-                onChange={(e) => setNewReference(e.target.value)}
-                placeholder="https://example.com/reference"
-                fullWidth
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAddReference();
-                  }
-                }}
-              />
-              <IconButton 
-                onClick={handleAddReference} 
-                size="small" 
-                sx={{ bgcolor: 'rgba(255,255,255,0.05)', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
-                disabled={!newReference.trim()}
-              >
-                <AddIcon />
-              </IconButton>
-            </Box>
-            {references.length > 0 && (
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                {references.map((ref, idx) => (
-                  <Chip
-                    key={idx}
-                    label={ref.length > 40 ? ref.substring(0, 40) + '...' : ref}
-                    size="small"
-                    onDelete={() => handleRemoveReference(idx)}
-                    sx={{ maxWidth: '100%' }}
-                  />
-                ))}
-              </Box>
-            )}
           </Box>
 
-          {/* Observables */}
-          <Box>
-            <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary' }}>
-              Observables (IOCs)
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 1, mb: 1, alignItems: 'center' }}>
-              <ObservableTypeSelector
-                value={newObservableType}
-                onChange={setNewObservableType}
-                iocTypes={iocTypes}
-              />
-              <TextField
-                size="small"
-                value={newObservableValue}
-                onChange={(e) => setNewObservableValue(e.target.value)}
-                placeholder="Value..."
-                fullWidth
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAddObservable();
-                  }
-                }}
-              />
-              <IconButton 
-                onClick={handleAddObservable} 
-                size="small" 
-                sx={{ bgcolor: 'rgba(255,255,255,0.05)', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
-                disabled={!newObservableValue.trim()}
-              >
-                <AddIcon />
-              </IconButton>
-            </Box>
-            {observables.length > 0 && (
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                {observables.map((obs, idx) => (
-                  <Chip
-                    key={idx}
-                    label={`${obs.type}: ${obs.value}`}
+          <Collapse in={showAdvanced}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+              {/* Template Selection */}
+              {templates.length > 0 && (
+                <Box sx={{ 
+                  p: 2, 
+                  bgcolor: 'rgba(255, 102, 0, 0.05)', 
+                  borderRadius: 2, 
+                  border: '1px solid rgba(255, 102, 0, 0.2)',
+                }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+                    <PlaylistAddCheckIcon sx={{ fontSize: 18, color: '#ff6600' }} />
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                      Apply Template
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: 'text.secondary', ml: 'auto' }}>
+                      Optional
+                    </Typography>
+                  </Box>
+                  <FormControl fullWidth size="small">
+                    <Select
+                      value={selectedTemplateId}
+                      onChange={(e) => handleTemplateSelect(e.target.value)}
+                      displayEmpty
+                      sx={{ bgcolor: 'background.paper' }}
+                    >
+                      <MenuItem value="">
+                        <em>No template (start blank)</em>
+                      </MenuItem>
+                      {templates.map((template) => (
+                        <MenuItem key={template.id} value={template.id}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+                            <Typography variant="body2">{template.name}</Typography>
+                            <Typography variant="caption" sx={{ color: 'text.secondary', ml: 'auto' }}>
+                              {template.tasks.length} tasks
+                            </Typography>
+                          </Box>
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  {selectedTemplateId && tasks.length > 0 && (
+                    <Box sx={{ mt: 1.5, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {tasks.slice(0, 3).map((task) => (
+                        <Chip 
+                          key={task.id} 
+                          label={task.title} 
+                          size="small" 
+                          sx={{ fontSize: '0.7rem', height: 22 }} 
+                        />
+                      ))}
+                      {tasks.length > 3 && (
+                        <Chip 
+                          label={`+${tasks.length - 3} more`} 
+                          size="small" 
+                          sx={{ fontSize: '0.7rem', height: 22, bgcolor: 'rgba(255,255,255,0.1)' }} 
+                        />
+                      )}
+                    </Box>
+                  )}
+                </Box>
+              )}
+
+              {/* Source + TLP */}
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <TextField
+                  label="Source / Product"
+                  value={source}
+                  onChange={(e) => setSource(e.target.value)}
+                  fullWidth
+                  placeholder="e.g., SIEM, EDR, Firewall"
+                />
+                <TextField
+                  select
+                  label="TLP"
+                  value={tlp}
+                  onChange={(e) => setTlp(Number(e.target.value))}
+                  fullWidth
+                >
+                  {tlpLevels.map((opt) => (
+                    <MenuItem key={opt.value} value={opt.value}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: opt.color, border: opt.color === '#ffffff' ? '1px solid #666' : 'none' }} />
+                        {opt.label}
+                      </Box>
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Box>
+
+              {/* Confidence */}
+              <Box>
+                <Typography variant="caption" sx={{ color: 'text.secondary', mb: 0.5, display: 'block' }}>
+                  Confidence: {confidence}%
+                </Typography>
+                <Slider
+                  value={confidence}
+                  onChange={(_, value) => setConfidence(value as number)}
+                  min={0}
+                  max={100}
+                  valueLabelDisplay="auto"
+                  sx={{ mt: 1 }}
+                />
+              </Box>
+
+              {/* Assignee */}
+              <FormControl fullWidth>
+                <InputLabel>Assignee</InputLabel>
+                <Select
+                  value={assignee}
+                  label="Assignee"
+                  onChange={(e) => setAssignee(e.target.value)}
+                  disabled={usersLoading}
+                  endAdornment={usersLoading ? <CircularProgress size={20} sx={{ mr: 2 }} /> : null}
+                  MenuProps={{
+                    PaperProps: {
+                      sx: {
+                        bgcolor: 'hsl(var(--popover))',
+                        border: '1px solid hsl(var(--border))',
+                        zIndex: 9999,
+                      },
+                    },
+                  }}
+                >
+                  <MenuItem value="">
+                    <em>Unassigned</em>
+                  </MenuItem>
+                  {users.map((user) => (
+                    <MenuItem key={user.id} value={user.username}>
+                      {user.username}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              {/* URL References */}
+              <Box>
+                <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary' }}>
+                  URL References
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                  <TextField
                     size="small"
-                    onDelete={() => handleRemoveObservable(idx)}
-                    sx={{ 
-                      bgcolor: 'rgba(255, 102, 0, 0.15)',
-                      '& .MuiChip-label': { fontFamily: 'monospace', fontSize: '0.75rem' }
+                    value={newReference}
+                    onChange={(e) => setNewReference(e.target.value)}
+                    placeholder="https://example.com/reference"
+                    fullWidth
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddReference();
+                      }
                     }}
                   />
-                ))}
+                  <IconButton 
+                    onClick={handleAddReference} 
+                    size="small" 
+                    sx={{ bgcolor: 'rgba(255,255,255,0.05)', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
+                    disabled={!newReference.trim()}
+                  >
+                    <AddIcon />
+                  </IconButton>
+                </Box>
+                {references.length > 0 && (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {references.map((ref, idx) => (
+                      <Chip
+                        key={idx}
+                        label={ref.length > 40 ? ref.substring(0, 40) + '...' : ref}
+                        size="small"
+                        onDelete={() => handleRemoveReference(idx)}
+                        sx={{ maxWidth: '100%' }}
+                      />
+                    ))}
+                  </Box>
+                )}
               </Box>
-            )}
-          </Box>
 
-          {/* Custom Fields */}
-          {customFields.length > 0 && (
-            <Box>
-              <Typography variant="subtitle2" sx={{ mb: 1.5, color: 'text.secondary' }}>
-                Custom Fields
-              </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {customFields.map((field) => renderCustomField(field))}
+              {/* Observables */}
+              <Box>
+                <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary' }}>
+                  Observables (IOCs)
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1, mb: 1, alignItems: 'center' }}>
+                  <ObservableTypeSelector
+                    value={newObservableType}
+                    onChange={setNewObservableType}
+                    iocTypes={iocTypes}
+                  />
+                  <TextField
+                    size="small"
+                    value={newObservableValue}
+                    onChange={(e) => setNewObservableValue(e.target.value)}
+                    placeholder="Value..."
+                    fullWidth
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddObservable();
+                      }
+                    }}
+                  />
+                  <IconButton 
+                    onClick={handleAddObservable} 
+                    size="small" 
+                    sx={{ bgcolor: 'rgba(255,255,255,0.05)', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
+                    disabled={!newObservableValue.trim()}
+                  >
+                    <AddIcon />
+                  </IconButton>
+                </Box>
+                {observables.length > 0 && (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {observables.map((obs, idx) => (
+                      <Chip
+                        key={idx}
+                        label={`${obs.type}: ${obs.value}`}
+                        size="small"
+                        onDelete={() => handleRemoveObservable(idx)}
+                        sx={{ 
+                          bgcolor: 'rgba(255, 102, 0, 0.15)',
+                          '& .MuiChip-label': { fontFamily: 'monospace', fontSize: '0.75rem' }
+                        }}
+                      />
+                    ))}
+                  </Box>
+                )}
               </Box>
+
+              {/* Custom Fields */}
+              {customFields.length > 0 && (
+                <Box>
+                  <Typography variant="subtitle2" sx={{ mb: 1.5, color: 'text.secondary' }}>
+                    Custom Fields
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    {customFields.map((field) => renderCustomField(field))}
+                  </Box>
+                </Box>
+              )}
             </Box>
-          )}
+          </Collapse>
         </Box>
       </DialogContent>
       <DialogActions sx={{ p: 2, pt: 1 }}>
