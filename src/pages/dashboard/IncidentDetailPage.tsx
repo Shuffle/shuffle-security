@@ -132,7 +132,7 @@ interface DisplayIncident {
   references?: string[];
   stakeholders?: Stakeholder[];
   observables?: Observable[];
-  enrichments?: Array<{ type: string; value: string }>;
+  enrichments?: Array<{ type: string; value?: string; data?: string }>;
   customFields?: Record<string, string | number | boolean>;
   relatedFindings?: string[];
   activity?: ActivityItem[];
@@ -488,7 +488,7 @@ const IncidentDetailPage = () => {
   const [showStakeholderSuggestions, setShowStakeholderSuggestions] = useState(false);
   const [knownStakeholders, setKnownStakeholders] = useState<Stakeholder[]>([]);
   const [editedObservables, setEditedObservables] = useState<Observable[]>([]);
-  const [enrichments, setEnrichments] = useState<Array<{ type: string; value: string }>>([]);
+  const [enrichments, setEnrichments] = useState<Array<{ type: string; value?: string; data?: string }>>([]);
   const [newObservableType, setNewObservableType] = useState('ip');
   const [newObservableValue, setNewObservableValue] = useState('');
   const [editedCustomFields, setEditedCustomFields] = useState<Record<string, string | number | boolean>>({});
