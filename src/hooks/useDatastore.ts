@@ -61,41 +61,66 @@ export const useDatastore = ({ category, orgId: overrideOrgId }: UseDatastoreOpt
     setError(null);
     setLastDiagnostics(null);
     try {
-      const response = await getDatastoreByCategory(category, cursorParam);
-      setLastDiagnostics(response.diagnostics || null);
-      console.log(`[useDatastore] fetchItems category=${category} success=${response.success} dataLength=${response.data?.length} error=${response.error}`);
-      if (!response.success) {
-        console.error('[useDatastore] fetchItems failed', {
-          category,
-          error: response.error,
-          diagnostics: response.diagnostics,
-        });
-      }
-      if (response.success && response.data) {
-        if (cursorParam) {
-          // Appending to existing items (pagination)
-          setItems(prev => [...prev, ...response.data!]);
-        } else {
-          // Fresh fetch — only update if data actually changed to avoid scroll reset
-          setItems(prev => {
-            const newData = response.data!;
-            // Quick equality check: same length and same keys in same order
-            if (prev.length === newData.length && prev.every((item, i) => item.key === newData[i].key && item.edited === newData[i].edited)) {
-              return prev; // No change — keep same reference
-            }
-            return newData;
+      // Fetch all pages automatically by following cursors
+      let allItems: DatastoreItem[] = [];
+      let currentCursor: string | undefined = cursorParam;
+      let lastResponse: Awaited<ReturnType<typeof getDatastoreByCategory>> | null = null;
+      const MAX_PAGES = 20; // Safety limit to prevent infinite loops
+      let page = 0;
+
+      do {
+        page++;
+        const response = await getDatastoreByCategory(category, currentCursor);
+        lastResponse = response;
+        setLastDiagnostics(response.diagnostics || null);
+        console.log(`[useDatastore] fetchItems category=${category} page=${page} success=${response.success} dataLength=${response.data?.length} cursor=${response.cursor || 'none'}`);
+
+        if (!response.success) {
+          console.error('[useDatastore] fetchItems failed', {
+            category,
+            error: response.error,
+            diagnostics: response.diagnostics,
           });
+          break;
         }
-        setCursor(response.cursor || null);
-        setHasMore(!!response.cursor);
+
+        if (response.data) {
+          allItems = [...allItems, ...response.data];
+        }
+
         if (response.categoryConfig) {
           setCategoryConfig(response.categoryConfig);
         }
         if (response.totalAmount != null) {
           setTotalAmount(response.totalAmount);
         }
+
+        currentCursor = response.cursor || undefined;
+      } while (currentCursor && page < MAX_PAGES);
+
+      if (lastResponse?.success && allItems.length > 0) {
+        if (cursorParam) {
+          // Manual pagination call — append
+          setItems(prev => [...prev, ...allItems]);
+        } else {
+          // Fresh fetch — only update if data actually changed to avoid scroll reset
+          setItems(prev => {
+            if (prev.length === allItems.length && prev.every((item, i) => item.key === allItems[i].key && item.edited === allItems[i].edited)) {
+              return prev;
+            }
+            return allItems;
+          });
+        }
+        setCursor(currentCursor || null);
+        setHasMore(!!currentCursor);
+      } else if (lastResponse?.success && allItems.length === 0) {
+        if (!cursorParam) {
+          setItems([]);
+        }
+        setCursor(null);
+        setHasMore(false);
       } else {
-        setError(response.error || 'Failed to fetch items');
+        setError(lastResponse?.error || 'Failed to fetch items');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
