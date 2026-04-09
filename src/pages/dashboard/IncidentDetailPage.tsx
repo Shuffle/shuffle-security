@@ -990,6 +990,7 @@ const IncidentDetailPage = () => {
           []
         );
         setEditedObservables(parsed.observables || []);
+        setEnrichments(parsed.enrichments || []);
         setEditedStakeholders(parsed.stakeholders || []);
         const customAttrs = parsed.rawOCSF?.metadata?.extensions?.custom_attributes;
         // Support both customFields and custom_fields naming at various levels
@@ -4171,13 +4172,13 @@ const IncidentDetailPage = () => {
           </Box>
 
           {/* Enrichments section */}
-          {parsedIncident?.enrichments && parsedIncident.enrichments.length > 0 && (
+          {enrichments.length > 0 && (
             <Box sx={{ mb: 2 }}>
               <Typography variant="caption" sx={{ fontWeight: 600, color: 'hsl(var(--muted-foreground))', mb: 1, display: 'block', textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '0.65rem' }}>
-                Enrichments ({parsedIncident.enrichments.length})
+                Enrichments ({enrichments.length})
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
-                {parsedIncident.enrichments.map((enr, idx) => (
+                {enrichments.map((enr, idx) => (
                   <Box
                     key={idx}
                     sx={{
