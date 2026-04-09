@@ -19,13 +19,19 @@ const DEFAULT: EntityValue = 'incidents';
 
 // Sidebar tab keys that can be toggled (Incidents always visible)
 export const SIDEBAR_TAB_OPTIONS = [
-  { key: 'threat_feeds', label: 'Threat Feeds' },
-  { key: 'ioc_types', label: 'IOC Types' },
-  { key: 'templates', label: 'Templates' },
-  { key: 'custom_fields', label: 'Custom Fields' },
-  { key: 'detection', label: 'Detection' },
-  { key: 'automation', label: 'Automation' },
-  { key: 'documentation', label: 'Documentation' },
+  // Incidents children
+  { key: 'threat_feeds', label: 'Threat Feeds', parent: 'incidents' },
+  { key: 'ioc_types', label: 'IOC Types', parent: 'incidents' },
+  { key: 'templates', label: 'Templates', parent: 'incidents' },
+  { key: 'custom_fields', label: 'Custom Fields', parent: 'incidents' },
+  // Detection (top-level toggle + children)
+  { key: 'detection', label: 'Detection', parent: null },
+  { key: 'detection_rules', label: 'Rules', parent: 'detection' },
+  { key: 'detection_pipelines', label: 'Pipelines', parent: 'detection' },
+  { key: 'detection_mitre', label: 'ATT&CK', parent: 'detection' },
+  // Standalone top-level items
+  { key: 'automation', label: 'Automation', parent: null },
+  { key: 'documentation', label: 'Documentation', parent: null },
 ] as const;
 
 export type SidebarTabKey = (typeof SIDEBAR_TAB_OPTIONS)[number]['key'];
@@ -37,6 +43,9 @@ const DEFAULT_SIDEBAR_TABS: Record<SidebarTabKey, boolean> = {
   templates: true,
   custom_fields: true,
   detection: true,
+  detection_rules: true,
+  detection_pipelines: true,
+  detection_mitre: true,
   automation: true,
   documentation: true,
 };
