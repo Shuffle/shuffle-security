@@ -2376,9 +2376,7 @@ const IncidentsPage = () => {
                     { id: currentOrgId || '', name: currentOrgName, image: currentOrgImage },
                     ...subOrgs.filter(org => org.id !== currentOrgId).map(o => ({ id: o.id, name: o.name, image: o.image })),
                   ];
-                  if (parentOrg && parentOrg.id !== currentOrgId && !realOrgs.some(o => o.id === parentOrg.id)) {
-                    realOrgs.unshift({ id: parentOrg.id, name: parentOrg.name, image: parentOrg.image });
-                  }
+                  // Don't add parent org — we only fetch downward (children)
                   return [
                     { id: '__all__', name: 'All orgs' },
                     { id: '__none__', name: 'Current Org' },
@@ -2408,9 +2406,6 @@ const IncidentsPage = () => {
                       currentOrgId || '',
                       ...subOrgs.filter(o => o.id !== currentOrgId).map(o => o.id),
                     ];
-                    if (parentOrg && parentOrg.id !== currentOrgId && !allIds.includes(parentOrg.id)) {
-                      allIds.unshift(parentOrg.id);
-                    }
                     setFilters(prev => ({ ...prev, org: allIds }));
                     return;
                   }
