@@ -1485,7 +1485,7 @@ const IncidentsPage = () => {
         currentOrgId || '',
         ...subOrgs.filter(o => o.id !== currentOrgId).map(o => o.id),
       ]);
-      if (parentOrg && parentOrg.id !== currentOrgId) allIds.add(parentOrg.id);
+      
       const currentOrgs = new Set(filters.org || []);
       if (currentOrgs.size !== allIds.size) return false;
       for (const id of allIds) { if (!currentOrgs.has(id)) return false; }
