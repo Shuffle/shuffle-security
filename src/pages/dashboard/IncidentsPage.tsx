@@ -1731,7 +1731,7 @@ const IncidentsPage = () => {
             }}
           >
           {/* Ingestion Sources - grouped in a subtle container with add button */}
-          {(ingestionApps.length > 0 || webhookIngestion.exists || webhookIngestion.enabled) && (
+          {!ingestionLoading && (
             <Box className={`automation-section-ingest${ingestHovered ? ' is-hovered' : ''}`}
               onMouseEnter={handleIngestEnter}
               onMouseLeave={handleIngestLeave}
