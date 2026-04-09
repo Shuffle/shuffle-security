@@ -237,7 +237,7 @@ const resolveCreatedTs = (data: any, itemCreated?: number): number => {
   return normalizeToMs(itemCreated);
 };
 
-const parseIncidentFromDatastore = (item: { key: string; value: string; created?: number; edited?: number }): DisplayIncident | null => {
+const parseIncidentFromDatastore = (item: { key: string; value: string; created?: number; edited?: number; enrichments?: Array<{ type: string; value: string }> }): DisplayIncident | null => {
   const parseStart = performance.now();
   try {
     const jsonStart = performance.now();
