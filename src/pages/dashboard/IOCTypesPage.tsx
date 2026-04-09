@@ -160,6 +160,13 @@ const IOCTypesPage = () => {
     await removeItem(name);
   };
 
+  const handleToggleEnabled = async (type: IOCType) => {
+    const updated = { ...type, enabled: !type.enabled };
+    await addItem(type.name, updated);
+  };
+
+  const enabledCount = useMemo(() => iocTypes.filter(t => t.enabled).length, [iocTypes]);
+
   // Test regex pattern
   const testRegex = (pattern: string, value: string): boolean | null => {
     if (!pattern || !value) return null;
