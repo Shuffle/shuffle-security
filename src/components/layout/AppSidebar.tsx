@@ -98,7 +98,7 @@ interface AppSidebarProps {
 
 // Region flag mapping based on region_url
 const getRegionFlag = (regionUrl?: string): { flag: string; code: string } => {
-  if (!regionUrl) return { flag: '🌐', code: '' };
+  if (!regionUrl) return { flag: '🇬🇧', code: 'UK' };
   
   const url = regionUrl.toLowerCase();
   
@@ -130,12 +130,8 @@ const getRegionFlag = (regionUrl?: string): { flag: string; code: string } => {
   if (url.includes('uk.') || url.includes('uk-') || url.includes('london')) {
     return { flag: '🇬🇧', code: 'UK' };
   }
-  // Base shuffler.io (no region prefix) is UK-hosted
-  if (url === 'https://shuffler.io' || url === 'https://shuffler.io/') {
-    return { flag: '🇬🇧', code: 'UK' };
-  }
-  // Truly unrecognized — show globe
-  return { flag: '🌐', code: '' };
+  // Default to UK for base shuffler.io or any unrecognized region
+  return { flag: '🇬🇧', code: 'UK' };
 };
 
 // Sort orgs with parent-child hierarchy
