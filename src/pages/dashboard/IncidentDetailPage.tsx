@@ -132,6 +132,7 @@ interface DisplayIncident {
   references?: string[];
   stakeholders?: Stakeholder[];
   observables?: Observable[];
+  enrichments?: Array<{ type: string; value: string }>;
   customFields?: Record<string, string | number | boolean>;
   relatedFindings?: string[];
   activity?: ActivityItem[];
@@ -294,6 +295,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
         references: ocsf.references,
         stakeholders: (customAttrs as any)?.stakeholders || (data as any).stakeholders || [],
         observables: customAttrs?.observables || (data as any).observables,
+        enrichments: Array.isArray((data as any).enrichments) ? (data as any).enrichments : [],
         // Support both customFields and custom_fields naming
         customFields: customAttrs?.customFields || (customAttrs as any)?.custom_fields || (data as any).customFields || (data as any).custom_fields,
         relatedFindings: ocsf.related_events,
@@ -328,6 +330,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
         pap,
         references: findingInfo?.references,
         observables: legacyData.observables,
+        enrichments: Array.isArray(legacyData.enrichments) ? legacyData.enrichments : [],
         customFields,
         relatedFindings: legacyData.related_findings,
         activity: activity || [],
@@ -354,6 +357,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
       references: data.references || [],
       stakeholders: data.stakeholders || [],
       observables: data.observables || [],
+      enrichments: Array.isArray(data.enrichments) ? data.enrichments : [],
       customFields: data.customFields || {},
       relatedFindings: data.relatedFindings || [],
       activity: data.activity || [],
@@ -484,6 +488,7 @@ const IncidentDetailPage = () => {
   const [showStakeholderSuggestions, setShowStakeholderSuggestions] = useState(false);
   const [knownStakeholders, setKnownStakeholders] = useState<Stakeholder[]>([]);
   const [editedObservables, setEditedObservables] = useState<Observable[]>([]);
+  const [enrichments, setEnrichments] = useState<Array<{ type: string; value: string }>>([]);
   const [newObservableType, setNewObservableType] = useState('ip');
   const [newObservableValue, setNewObservableValue] = useState('');
   const [editedCustomFields, setEditedCustomFields] = useState<Record<string, string | number | boolean>>({});
@@ -985,6 +990,7 @@ const IncidentDetailPage = () => {
           []
         );
         setEditedObservables(parsed.observables || []);
+        setEnrichments(parsed.enrichments || []);
         setEditedStakeholders(parsed.stakeholders || []);
         const customAttrs = parsed.rawOCSF?.metadata?.extensions?.custom_attributes;
         // Support both customFields and custom_fields naming at various levels
@@ -1146,6 +1152,7 @@ const IncidentDetailPage = () => {
         setEditedTlp(reParsed.tlp || 'TLP:AMBER');
         setEditedReferences(Array.isArray(reParsed.references) ? reParsed.references : []);
         setEditedObservables(reParsed.observables || []);
+        setEnrichments(reParsed.enrichments || []);
         setEditedStakeholders(reParsed.stakeholders || []);
         setEditedLabels(reParsed.labels || []);
         setActivity(reParsed.activity || []);
@@ -4164,6 +4171,46 @@ const IncidentDetailPage = () => {
               Automatic observable extraction is not yet fully enabled. You can add observables manually below.
             </Typography>
           </Box>
+
+          {/* Enrichments section */}
+          {enrichments.length > 0 && (
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="caption" sx={{ fontWeight: 600, color: 'hsl(var(--muted-foreground))', mb: 1, display: 'block', textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '0.65rem' }}>
+                Enrichments ({enrichments.length})
+              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+                {enrichments.map((enr, idx) => (
+                  <Box
+                    key={idx}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 2,
+                      p: 1.5,
+                      borderRadius: 1,
+                      bgcolor: 'rgba(139, 92, 246, 0.06)',
+                      border: '1px solid rgba(139, 92, 246, 0.18)',
+                    }}
+                  >
+                    <Chip
+                      label={enr.type}
+                      size="small"
+                      sx={{
+                        fontWeight: 600,
+                        fontSize: '0.7rem',
+                        bgcolor: 'rgba(139, 92, 246, 0.15)',
+                        color: '#8b5cf6',
+                      }}
+                    />
+                    <Typography variant="body2" sx={{ flex: 1, fontFamily: 'monospace', fontSize: '0.8rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
+                      {enr.value}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+          )}
+
           {/* Add Observable input */}
           <Box sx={{ display: 'flex', gap: 1, mb: 2, alignItems: 'center' }}>
             <ObservableTypeSelector
