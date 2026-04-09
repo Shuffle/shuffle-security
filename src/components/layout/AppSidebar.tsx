@@ -160,8 +160,10 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
     detection_mitre: '/detection/mitre',
   };
   const tabKeyToNavLabel: Record<string, string> = {
+    dashboard: 'Dashboard',
     detection: 'Detection',
     automation: 'Automation',
+    vulnerabilities: 'Vulnerabilities',
     documentation: 'Documentation',
   };
 
