@@ -748,12 +748,14 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                       input: {
                         ...params.InputProps,
                         startAdornment: selectedOrg ? (
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, ml: 0.5 }}>
-                            <span style={{ fontSize: '14px' }}>{region.flag}</span>
-                            <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
-                              {region.code}
-                            </Typography>
-                          </Box>
+                          <Tooltip title={!region.code ? `Region URL: ${fullOrgData?.region_url || selectedOrg?.region_url || 'none'}` : region.code} placement="bottom">
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, ml: 0.5, cursor: !region.code ? 'help' : 'default' }}>
+                              <span style={{ fontSize: '14px' }}>{region.flag}</span>
+                              <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
+                                {region.code || '?'}
+                              </Typography>
+                            </Box>
+                          </Tooltip>
                         ) : null,
                       },
                     }}
@@ -828,10 +830,14 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                     }}
                   >
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <span style={{ fontSize: '14px' }}>{region.flag}</span>
-                      <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', minWidth: 28 }}>
-                        {region.code}
-                      </Typography>
+                      <Tooltip title={!region.code ? `Region URL: ${option.region_url || 'none'}` : ''} placement="left">
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, cursor: !region.code ? 'help' : 'default' }}>
+                          <span style={{ fontSize: '14px' }}>{region.flag}</span>
+                          <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', minWidth: 28 }}>
+                            {region.code || '?'}
+                          </Typography>
+                        </Box>
+                      </Tooltip>
                       <Typography sx={{ 
                         fontSize: '0.875rem', 
                         fontWeight: isCurrentOrg ? 600 : 400,
