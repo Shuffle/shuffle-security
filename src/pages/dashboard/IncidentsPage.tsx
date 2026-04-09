@@ -212,8 +212,30 @@ const resolveCreatedTs = (data: any, itemCreated?: number): number => {
   return normalizeToMs(itemCreated);
 };
 
+const MAX_INCIDENT_VALUE_LENGTH = 5_000_000; // 5MB safety limit per item
+
 const parseIncidentFromDatastore = (item: { key: string; value: string; created?: number; edited?: number }): DisplayIncident | null => {
   try {
+    // Skip items with excessively large values to prevent JSON parse hangs/crashes
+    if (item.value && item.value.length > MAX_INCIDENT_VALUE_LENGTH) {
+      console.warn(`[Incidents] Skipping oversized incident ${item.key} (${(item.value.length / 1024 / 1024).toFixed(1)}MB)`);
+      // Return a minimal stub so the incident is still visible in the list
+      return {
+        id: item.key,
+        title: `[Large incident – ${(item.value.length / 1024 / 1024).toFixed(1)}MB]`,
+        source: 'unknown',
+        severity: 'medium',
+        status: 'new',
+        assignee: null,
+        created: item.created ? formatTimestamp(item.created) : 'Unknown',
+        createdTs: item.created ? parseTimestamp(item.created) : 0,
+        originCreatedTs: item.created ? parseTimestamp(item.created) : 0,
+        taskCount: 0,
+        tasks: [],
+        labels: [],
+      };
+    }
+
     const data = JSON.parse(item.value);
     
     // Check if this is new OCSF format (has finding_uid at root)
