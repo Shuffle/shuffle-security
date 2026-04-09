@@ -175,7 +175,7 @@ export const useIOCTypes = () => {
     const { setDatastoreItems, DATASTORE_CATEGORIES } = await import('@/services/datastore');
     const dsItems = DEFAULT_IOC_TYPES.map(ioc => ({
       key: ioc.name,
-      value: ioc,
+      value: { ...ioc, enabled: ioc.enabled ?? DEFAULT_ENABLED_IOCS.has(ioc.name) },
     }));
     await setDatastoreItems(dsItems, DATASTORE_CATEGORIES.IOCS);
     invalidate();
