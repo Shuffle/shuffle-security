@@ -4314,6 +4314,37 @@ const IncidentDetailPage = () => {
               No observables added. Add IOCs, IPs, domains, hashes, or other indicators.
             </Typography>
           )}
+
+          {/* Enrichments section */}
+          {enrichments.length > 0 && (
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="caption" sx={{ fontWeight: 600, color: 'hsl(var(--muted-foreground))', mb: 1, display: 'block', textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '0.65rem' }}>
+                Enrichments ({enrichments.length})
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
+                {enrichments.map((enr, idx) => (
+                  <Chip
+                    key={idx}
+                    label={`${enr.type}: ${enr.value}`}
+                    size="small"
+                    sx={{
+                      fontFamily: 'monospace',
+                      fontSize: '0.75rem',
+                      fontWeight: 500,
+                      bgcolor: 'hsl(var(--muted))',
+                      color: 'hsl(var(--foreground))',
+                      border: '1px solid hsl(var(--border))',
+                      maxWidth: '100%',
+                      '& .MuiChip-label': {
+                        whiteSpace: 'normal',
+                        wordBreak: 'break-all',
+                      },
+                    }}
+                  />
+                ))}
+              </Box>
+            </Box>
+          )}
         </Box>
       )}
 
