@@ -879,9 +879,9 @@ export const AutomationConfig = ({
                       height: 16,
                       fontSize: '0.55rem',
                       fontWeight: 600,
-                      background: 'rgba(59, 130, 246, 0.2)',
-                      color: '#60a5fa',
-                      border: '1px solid rgba(59, 130, 246, 0.3)',
+                      background: 'hsl(var(--primary) / 0.15)',
+                      color: 'hsl(var(--primary))',
+                      border: '1px solid hsl(var(--primary) / 0.3)',
                       '& .MuiChip-label': { px: 0.75 },
                     }}
                   />
@@ -1041,11 +1041,11 @@ export const AutomationConfig = ({
                                   sx={{ height: 20, fontSize: '0.6rem' }}
                                 />
                               )}
-                              <CheckCircleIcon sx={{ fontSize: 14, color: '#22c55e', ml: 0.5 }} />
+                              <CheckCircleIcon sx={{ fontSize: 14, color: 'hsl(var(--severity-low))', ml: 0.5 }} />
                             </Box>
                           )}
                           {hasIngestionSources && (
-                            <CheckCircleIcon sx={{ fontSize: 14, color: '#22c55e' }} />
+                            <CheckCircleIcon sx={{ fontSize: 14, color: 'hsl(var(--severity-low))' }} />
                           )}
                         </Box>
                         <Typography
@@ -1178,8 +1178,8 @@ export const AutomationConfig = ({
                                                   fontSize: '0.5rem',
                                                   border: '2px solid',
                                                   borderColor: app.isValidated 
-                                                    ? 'rgba(34, 197, 94, 0.4)' 
-                                                    : 'rgba(255, 152, 0, 0.4)',
+                                                    ? 'hsl(var(--severity-low) / 0.4)' 
+                                                    : 'hsl(var(--severity-medium) / 0.4)',
                                                   backgroundColor: 'hsl(var(--card))',
                                                   ml: idx > 0 ? -0.5 : 0,
                                                 }}
@@ -1337,11 +1337,11 @@ export const AutomationConfig = ({
                                   px: 1.5,
                                   borderRadius: 1.5,
                                   background: feed.enabled 
-                                    ? 'rgba(239, 68, 68, 0.08)' 
+                                    ? 'hsl(var(--destructive) / 0.08)' 
                                     : 'hsl(var(--muted))',
                                   border: '1px solid',
                                   borderColor: feed.enabled 
-                                    ? 'rgba(239, 68, 68, 0.25)' 
+                                    ? 'hsl(var(--destructive) / 0.25)' 
                                     : 'transparent',
                                   opacity: feed.enabled ? 1 : 0.6,
                                   transition: 'all 0.2s ease',
