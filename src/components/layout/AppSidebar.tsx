@@ -177,8 +177,42 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
   const { userInfo, setActiveOrg, logout } = useAuth();
   const { theme: currentTheme, setTheme } = useTheme();
   const { plural: entityPlural, basePath: entityBasePath } = useEntityPreference();
+  const sidebarTabs = useSidebarTabs();
   const isSupport = userInfo?.support === true;
-  const navItems = useMemo(() => buildNavItems(entityPlural, entityBasePath, isSupport), [entityPlural, entityBasePath, isSupport]);
+
+  // Map sidebar tab keys to nav item labels/child paths for filtering
+  const tabKeyToChildPath: Record<string, string> = {
+    threat_feeds: '/incidents/threat-feeds',
+    ioc_types: '/incidents/ioc-types',
+    templates: '/templates',
+    custom_fields: '/incidents/custom-fields',
+  };
+  const tabKeyToNavLabel: Record<string, string> = {
+    detection: 'Detection',
+    automation: 'Automation',
+    documentation: 'Documentation',
+  };
+
+  const navItems = useMemo(() => {
+    const items = buildNavItems(entityPlural, entityBasePath, isSupport);
+    return items
+      .filter(item => {
+        // Check if this top-level item should be hidden
+        const hideKey = Object.entries(tabKeyToNavLabel).find(([, label]) => label === item.label)?.[0] as SidebarTabKey | undefined;
+        if (hideKey && !sidebarTabs[hideKey]) return false;
+        return true;
+      })
+      .map(item => {
+        if (!item.children) return item;
+        // Filter children based on tab visibility
+        const filteredChildren = item.children.filter(child => {
+          const hideKey = Object.entries(tabKeyToChildPath).find(([, path]) => path === child.path)?.[0] as SidebarTabKey | undefined;
+          if (hideKey && !sidebarTabs[hideKey]) return false;
+          return true;
+        });
+        return { ...item, children: filteredChildren };
+      });
+  }, [entityPlural, entityBasePath, isSupport, sidebarTabs]);
   const [expandedItems, setExpandedItems] = useState<string[]>([entityPlural]);
   const [changingOrg, setChangingOrg] = useState(false);
   const [agentDrawerOpen, setAgentDrawerOpen] = useState(false);
