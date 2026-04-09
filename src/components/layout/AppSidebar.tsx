@@ -545,7 +545,31 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                       {!visuallyCollapsed && (
                         <>
                           <ListItemText
-                            primary={item.label}
+                            primary={
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <span>{item.label}</span>
+                                {item.label === 'Vulnerabilities' && (
+                                  <Typography
+                                    component="span"
+                                    sx={{
+                                      fontSize: '0.6rem',
+                                      fontWeight: 700,
+                                      textTransform: 'uppercase',
+                                      letterSpacing: '0.04em',
+                                      px: 0.8,
+                                      py: 0.2,
+                                      borderRadius: '4px',
+                                      backgroundColor: 'hsla(var(--primary) / 0.12)',
+                                      color: 'hsl(var(--primary))',
+                                      lineHeight: 1.4,
+                                      whiteSpace: 'nowrap',
+                                    }}
+                                  >
+                                    Support
+                                  </Typography>
+                                )}
+                              </Box>
+                            }
                             primaryTypographyProps={{ 
                               fontSize: '0.875rem', 
                               fontWeight: isActive(item.path) ? 500 : 400,
