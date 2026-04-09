@@ -27,6 +27,7 @@ import {
   DialogTitle,
   DialogContent,
   Paper,
+  Popover,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -810,6 +811,8 @@ const IncidentDetailPage = () => {
   const [sourceAppImage, setSourceAppImage] = useState<string | null>(null);
   const [correlations, setCorrelations] = useState<Array<{ key: string; amount: number; ref: string[] }>>([]);
   const [correlationsLoading, setCorrelationsLoading] = useState(false);
+  const [obsCorrelations, setObsCorrelations] = useState<Record<string, { loading: boolean; data: Array<{ key: string; amount: number; ref: string[] }> }>>({});
+  const [obsCorrelationAnchor, setObsCorrelationAnchor] = useState<{ el: HTMLElement; obsKey: string } | null>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingSaveRef = useRef(false);
   // Track the initial normalized values so auto-save doesn't fire on load
@@ -1365,7 +1368,54 @@ const IncidentDetailPage = () => {
     fetchCorrelations();
   }, [id, loading]);
 
-  // Auto-save with debounce
+  // Fetch per-observable correlations when observables tab is active
+  useEffect(() => {
+    if (activeTab !== 2 || loading) return;
+    const manualObs = editedObservables.filter(o => !o.archived);
+    const enrichObs = enrichments.map(e => ({ type: e.type || 'unknown', value: e.value || e.data || '' }));
+    const allObs = [...manualObs, ...enrichObs].filter(o => o.value);
+    // Limit to 20
+    const toFetch = allObs.slice(0, 20);
+    if (toFetch.length === 0) return;
+
+    const noiseKeys = new Set([
+      'new', 'in_progress', 'resolved', 'escalated', 'closed', 'open', 'pending',
+      'critical', 'high', 'medium', 'low', 'informational', 'info', 'warning', 'error',
+      'unknown', 'none', 'null', 'undefined', 'true', 'false',
+      id?.toLowerCase(),
+    ].filter(Boolean));
+
+    toFetch.forEach(async (obs) => {
+      const obsKey = `${obs.type}::${obs.value}`;
+      // Skip if already fetched or loading
+      if (obsCorrelations[obsKey]?.data?.length > 0 || obsCorrelations[obsKey]?.loading) return;
+
+      setObsCorrelations(prev => ({ ...prev, [obsKey]: { loading: true, data: [] } }));
+      try {
+        const resp = await fetch(getApiUrl('/api/v2/correlations'), {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeader(), ...crossOrgHeaders },
+          body: JSON.stringify({
+            type: 'value',
+            key: obs.value,
+          }),
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          const corrData = Array.isArray(data) ? data : (data.correlations || data.data || []);
+          const filtered = corrData.filter((c: { key: string }) => !noiseKeys.has(c.key.toLowerCase()));
+          setObsCorrelations(prev => ({ ...prev, [obsKey]: { loading: false, data: filtered } }));
+        } else {
+          setObsCorrelations(prev => ({ ...prev, [obsKey]: { loading: false, data: [] } }));
+        }
+      } catch {
+        setObsCorrelations(prev => ({ ...prev, [obsKey]: { loading: false, data: [] } }));
+      }
+    });
+  }, [activeTab, loading, editedObservables, enrichments, id]);
+
+
   const saveToDatastore = useCallback(async () => {
     if (!incident?.id) return;
     
@@ -4297,6 +4347,29 @@ const IncidentDetailPage = () => {
                         <Typography variant="body2" sx={{ flex: 1, fontFamily: 'monospace', fontSize: '0.8rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
                           {obs.value}
                         </Typography>
+                        {/* Correlation badge */}
+                        {(() => {
+                          const obsKey = `${obs.type}::${obs.value}`;
+                          const corr = obsCorrelations[obsKey];
+                          if (corr?.loading) return <CircularProgress size={14} sx={{ mx: 0.5 }} />;
+                          if (!corr?.data?.length) return null;
+                          return (
+                            <Chip
+                              label={`${corr.data.length} corr`}
+                              size="small"
+                              onClick={(e) => setObsCorrelationAnchor({ el: e.currentTarget, obsKey })}
+                              sx={{
+                                height: 20,
+                                fontSize: '0.6rem',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                bgcolor: 'rgba(59, 130, 246, 0.12)',
+                                color: '#3b82f6',
+                                '&:hover': { bgcolor: 'rgba(59, 130, 246, 0.25)' },
+                              }}
+                            />
+                          );
+                        })()}
                         <Tooltip title={`Run ${actionName} via threat intel apps`} arrow>
                           <IconButton
                             size="small"
@@ -4388,6 +4461,73 @@ const IncidentDetailPage = () => {
               </Box>
             );
           })()}
+
+          {/* Observable correlation popover */}
+          <Popover
+            open={!!obsCorrelationAnchor}
+            anchorEl={obsCorrelationAnchor?.el}
+            onClose={() => setObsCorrelationAnchor(null)}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+            transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+            slotProps={{ paper: { sx: { bgcolor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 2, maxWidth: 400, maxHeight: 320, overflow: 'auto' } } }}
+          >
+            {obsCorrelationAnchor && (() => {
+              const corr = obsCorrelations[obsCorrelationAnchor.obsKey];
+              const [type, ...valueParts] = obsCorrelationAnchor.obsKey.split('::');
+              const value = valueParts.join('::');
+              return (
+                <Box sx={{ p: 2 }}>
+                  <Typography variant="caption" sx={{ fontWeight: 600, textTransform: 'uppercase', color: 'hsl(var(--muted-foreground))', letterSpacing: '0.05em', fontSize: '0.65rem' }}>
+                    Correlations for {type}: {value}
+                  </Typography>
+                  <Box sx={{ mt: 1.5, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    {corr?.data?.map((c, i) => (
+                      <Box key={i} sx={{ p: 1, borderRadius: 1, bgcolor: 'rgba(0,0,0,0.15)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.8rem', wordBreak: 'break-all' }}>
+                          {c.key}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.65rem' }}>
+                          Found in {c.amount} location{c.amount !== 1 ? 's' : ''}
+                        </Typography>
+                        {c.ref?.length > 0 && (
+                          <Box sx={{ mt: 0.5, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                            {c.ref.slice(0, 5).map((ref, ri) => {
+                              // Check if ref looks like an incident ID (contains category prefix)
+                              const isIncident = ref.includes('incident') || ref.includes('security');
+                              const refId = ref.split('::').pop() || ref;
+                              return isIncident ? (
+                                <Chip
+                                  key={ri}
+                                  label={refId.slice(0, 12) + (refId.length > 12 ? '…' : '')}
+                                  size="small"
+                                  component={Link}
+                                  to={`/incidents/${refId}`}
+                                  clickable
+                                  sx={{ height: 20, fontSize: '0.6rem', bgcolor: 'rgba(59,130,246,0.12)', color: '#3b82f6' }}
+                                />
+                              ) : (
+                                <Chip
+                                  key={ri}
+                                  label={ref.length > 30 ? ref.slice(0, 30) + '…' : ref}
+                                  size="small"
+                                  sx={{ height: 20, fontSize: '0.6rem', bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }}
+                                />
+                              );
+                            })}
+                            {c.ref.length > 5 && (
+                              <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.6rem', alignSelf: 'center' }}>
+                                +{c.ref.length - 5} more
+                              </Typography>
+                            )}
+                          </Box>
+                        )}
+                      </Box>
+                    ))}
+                  </Box>
+                </Box>
+              );
+            })()}
+          </Popover>
         </Box>
       )}
 
