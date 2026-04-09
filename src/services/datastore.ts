@@ -315,7 +315,7 @@ export const getDatastoreByCategory = async (
   }
 
   // Use higher limit for incidents, default 100 for others
-  const limit = category === DATASTORE_CATEGORIES.INCIDENTS ? 1000 : 100;
+  const limit = 100;
   let url = `/api/v1/orgs/${orgId}/list_cache?category=${encodeURIComponent(category)}&top=${limit}`;
   if (cursor) {
     url += `&cursor=${encodeURIComponent(cursor)}`;
