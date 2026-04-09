@@ -404,8 +404,8 @@ const IOCTypesPage = () => {
                   
                   return [
                     // Category header row
-                    <TableRow key={`header-${category.id}`} sx={{ bgcolor: 'rgba(255,255,255,0.02)' }}>
-                      <TableCell colSpan={Object.keys(testResults).length > 0 ? 6 : 5} sx={{ py: 1 }}>
+                    <TableRow key={`header-${category.id}`} sx={{ bgcolor: 'hsl(var(--muted) / 0.3)' }}>
+                      <TableCell colSpan={Object.keys(testResults).length > 0 ? 7 : 6} sx={{ py: 1 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: category.color }} />
                           <Typography variant="subtitle2" sx={{ fontWeight: 600, color: category.color }}>
@@ -417,7 +417,15 @@ const IOCTypesPage = () => {
                     </TableRow>,
                     // Types in category
                     ...typesInCategory.map((type) => (
-                      <TableRow key={type.name} hover>
+                      <TableRow key={type.name} hover sx={{ opacity: type.enabled ? 1 : 0.5 }}>
+                        <TableCell sx={{ py: 0.5 }}>
+                          <Switch
+                            size="small"
+                            checked={!!type.enabled}
+                            onChange={() => handleToggleEnabled(type)}
+                            color="success"
+                          />
+                        </TableCell>
                         <TableCell>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <Chip label={type.name} size="small" sx={{ fontWeight: 500 }} />
