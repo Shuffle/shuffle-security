@@ -295,7 +295,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
         references: ocsf.references,
         stakeholders: (customAttrs as any)?.stakeholders || (data as any).stakeholders || [],
         observables: customAttrs?.observables || (data as any).observables,
-        enrichments: Array.isArray(item.enrichments) ? item.enrichments : [],
+        enrichments: deduplicateEnrichments(item.enrichments, (data as any).enrichments),
         // Support both customFields and custom_fields naming
         customFields: customAttrs?.customFields || (customAttrs as any)?.custom_fields || (data as any).customFields || (data as any).custom_fields,
         relatedFindings: ocsf.related_events,
