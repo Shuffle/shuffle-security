@@ -25,6 +25,7 @@ import {
   Tooltip,
   ToggleButton,
   ToggleButtonGroup,
+  Switch,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import AddIcon from '@mui/icons-material/Add';
@@ -36,7 +37,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { useDatastore } from '@/hooks/useDatastore';
-import { DEFAULT_IOC_TYPES, IOCType, IOC_CATEGORIES, IOCCategory } from '@/hooks/useIOCTypes';
+import { DEFAULT_IOC_TYPES, IOCType, IOC_CATEGORIES, IOCCategory, DEFAULT_ENABLED_IOCS } from '@/hooks/useIOCTypes';
 import { DATASTORE_CATEGORIES } from '@/services/datastore';
 
 const CATEGORY = DATASTORE_CATEGORIES.IOCS;
