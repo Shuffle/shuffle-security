@@ -13,8 +13,33 @@ export type EntityValue = (typeof ENTITY_OPTIONS)[number]['value'];
 
 const LOCAL_CACHE_KEY = 'shuffle-entity-label';
 const LOCAL_AUTOMATION_KEY = 'shuffle-show-automation';
+const LOCAL_SIDEBAR_TABS_KEY = 'shuffle-sidebar-tabs';
 const DATASTORE_KEY = 'org_settings';
 const DEFAULT: EntityValue = 'incidents';
+
+// Sidebar tab keys that can be toggled (Incidents always visible)
+export const SIDEBAR_TAB_OPTIONS = [
+  { key: 'threat_feeds', label: 'Threat Feeds' },
+  { key: 'ioc_types', label: 'IOC Types' },
+  { key: 'templates', label: 'Templates' },
+  { key: 'custom_fields', label: 'Custom Fields' },
+  { key: 'detection', label: 'Detection' },
+  { key: 'automation', label: 'Automation' },
+  { key: 'documentation', label: 'Documentation' },
+] as const;
+
+export type SidebarTabKey = (typeof SIDEBAR_TAB_OPTIONS)[number]['key'];
+
+// All tabs visible by default
+const DEFAULT_SIDEBAR_TABS: Record<SidebarTabKey, boolean> = {
+  threat_feeds: true,
+  ioc_types: true,
+  templates: true,
+  custom_fields: true,
+  detection: true,
+  automation: true,
+  documentation: true,
+};
 
 // Shared external store so all consumers react to changes instantly
 const listeners = new Set<() => void>();
@@ -25,6 +50,13 @@ function getSnapshot(): EntityValue {
 function getAutomationSnapshot(): boolean {
   const val = localStorage.getItem(LOCAL_AUTOMATION_KEY);
   return val === null ? true : val === 'true';
+}
+function getSidebarTabsSnapshot(): Record<SidebarTabKey, boolean> {
+  try {
+    const val = localStorage.getItem(LOCAL_SIDEBAR_TABS_KEY);
+    if (val) return { ...DEFAULT_SIDEBAR_TABS, ...JSON.parse(val) };
+  } catch { /* empty */ }
+  return DEFAULT_SIDEBAR_TABS;
 }
 
 let _fetchedFromServer = false;
@@ -41,6 +73,9 @@ export async function loadEntityPreference() {
       }
       if (data?.show_automation !== undefined) {
         localStorage.setItem(LOCAL_AUTOMATION_KEY, String(data.show_automation));
+      }
+      if (data?.sidebar_tabs !== undefined) {
+        localStorage.setItem(LOCAL_SIDEBAR_TABS_KEY, JSON.stringify(data.sidebar_tabs));
       }
       listeners.forEach(cb => cb());
     }
@@ -137,4 +172,32 @@ export function useEntityPreference() {
     const pref = ENTITY_OPTIONS.find(o => o.value === preference) || ENTITY_OPTIONS[0];
     return { singular: pref.singular, plural: pref.plural, basePath: pref.path, value: pref.value };
   }, [preference]);
+}
+
+/** Save sidebar tab visibility */
+export async function setSidebarTabVisibility(tabs: Record<SidebarTabKey, boolean>) {
+  localStorage.setItem(LOCAL_SIDEBAR_TABS_KEY, JSON.stringify(tabs));
+  listeners.forEach(cb => cb());
+
+  try {
+    let existing: Record<string, unknown> = {};
+    try {
+      const result = await getDatastoreItem(DATASTORE_KEY, DATASTORE_CATEGORIES.CONFIGURATION);
+      if (result.success && result.item?.value) {
+        existing = typeof result.item.value === 'string' ? JSON.parse(result.item.value) : result.item.value;
+      }
+    } catch { /* empty */ }
+    await setDatastoreItem(DATASTORE_KEY, { ...existing, sidebar_tabs: tabs }, DATASTORE_CATEGORIES.CONFIGURATION);
+  } catch { /* local cache is already set */ }
+}
+
+/** Hook to read sidebar tab visibility */
+export function useSidebarTabs(): Record<SidebarTabKey, boolean> {
+  const value = useSyncExternalStore(subscribe, getSidebarTabsSnapshot);
+
+  useEffect(() => {
+    if (!_fetchedFromServer) loadEntityPreference();
+  }, []);
+
+  return value;
 }

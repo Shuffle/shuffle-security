@@ -3,6 +3,8 @@ import {
   Typography,
   Paper,
   Chip,
+  Switch,
+  FormControlLabel,
 } from '@mui/material';
 import {
   ENTITY_OPTIONS,
@@ -10,6 +12,10 @@ import {
   useEntityPreference,
   useShowAutomation,
   setShowAutomation,
+  SIDEBAR_TAB_OPTIONS,
+  useSidebarTabs,
+  setSidebarTabVisibility,
+  SidebarTabKey,
 } from '@/hooks/useEntityLabel';
 
 const TerminologySelector = () => {
@@ -31,6 +37,45 @@ const TerminologySelector = () => {
               bgcolor: value === opt.value ? 'hsl(var(--primary))' : 'hsl(var(--primary) / 0.1)',
             },
           }}
+        />
+      ))}
+    </Box>
+  );
+};
+
+const SidebarTabsSelector = () => {
+  const tabs = useSidebarTabs();
+
+  const handleToggle = (key: SidebarTabKey) => {
+    setSidebarTabVisibility({ ...tabs, [key]: !tabs[key] });
+  };
+
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+      {SIDEBAR_TAB_OPTIONS.map((opt) => (
+        <FormControlLabel
+          key={opt.key}
+          control={
+            <Switch
+              checked={tabs[opt.key]}
+              onChange={() => handleToggle(opt.key)}
+              size="small"
+              sx={{
+                '& .MuiSwitch-switchBase.Mui-checked': {
+                  color: 'hsl(var(--primary))',
+                },
+                '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                  backgroundColor: 'hsl(var(--primary))',
+                },
+              }}
+            />
+          }
+          label={
+            <Typography variant="body2" sx={{ color: 'hsl(var(--foreground))' }}>
+              {opt.label}
+            </Typography>
+          }
+          sx={{ ml: 0 }}
         />
       ))}
     </Box>
@@ -110,6 +155,31 @@ const OrgPreferencesPage = () => {
               },
             }}
           />
+        </Paper>
+
+        {/* Sidebar Tabs */}
+        <Paper
+          sx={{
+            p: 2.5,
+            bgcolor: 'hsl(var(--card))',
+            border: '1px solid hsl(var(--border))',
+            borderRadius: 2,
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 2,
+          }}
+        >
+          <Box>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+              Sidebar Navigation
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+              Show or hide sections in the left sidebar. The main incidents tab is always visible.
+            </Typography>
+          </Box>
+          <SidebarTabsSelector />
         </Paper>
       </Box>
     </Box>
