@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Box, Typography, Chip, Button, Paper, IconButton, Tooltip } from '@mui/material';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Shield, Plus, RefreshCw, Search, Monitor, Users } from 'lucide-react';
@@ -6,7 +7,14 @@ import { usePageMeta } from '@/hooks/usePageMeta';
 
 const VulnerabilitiesPage = () => {
   usePageMeta({ title: 'Vulnerabilities', description: 'Track and manage vulnerabilities across assets and users' });
-  const [activeTab, setActiveTab] = useState('assets');
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab') === 'users' ? 'users' : 'assets';
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab === 'users' || tab === 'assets') setActiveTab(tab);
+  }, [searchParams]);
 
   return (
     <Box sx={{ p: 4, maxWidth: 1400, mx: 'auto' }}>
