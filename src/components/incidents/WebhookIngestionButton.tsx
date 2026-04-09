@@ -96,20 +96,20 @@ export const WebhookIngestionButton = ({ webhook, onToggled }: WebhookIngestionB
             width: 30,
             height: 30,
             border: '1px solid',
-            borderColor: isEnabled ? 'success.main' : 'divider',
-            bgcolor: isEnabled ? 'success.light' : 'background.paper',
+            borderColor: isEnabled ? 'rgba(34, 197, 94, 0.5)' : 'divider',
+            bgcolor: isEnabled ? 'rgba(34, 197, 94, 0.12)' : 'background.paper',
             borderRadius: 1,
             opacity: isEnabled ? 1 : 0.35,
             filter: isEnabled ? 'none' : 'grayscale(1)',
             transition: 'opacity 0.15s ease, filter 0.15s ease',
             '&:hover': {
-              bgcolor: isEnabled ? 'success.light' : 'action.hover',
+              bgcolor: isEnabled ? 'rgba(34, 197, 94, 0.18)' : 'action.hover',
               opacity: isEnabled ? 1 : 0.7,
               filter: 'none',
             },
           }}
         >
-          <WebhookIcon sx={{ fontSize: 16, color: isEnabled ? 'success.main' : 'text.disabled' }} />
+          <WebhookIcon sx={{ fontSize: 16, color: isEnabled ? '#22c55e' : 'text.disabled' }} />
         </IconButton>
       </Tooltip>
       <Popover
