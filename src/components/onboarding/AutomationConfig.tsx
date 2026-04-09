@@ -801,30 +801,30 @@ export const AutomationConfig = ({
             borderRadius: 1.5,
             cursor: !app.isValidated && onAuthChange ? 'pointer' : 'default',
             background: enabled 
-              ? 'rgba(34, 197, 94, 0.06)' 
+              ? 'hsl(var(--severity-low) / 0.06)' 
               : isConfiguring
-                ? 'rgba(255, 102, 0, 0.06)'
+                ? 'hsl(var(--primary) / 0.06)'
                 : !app.isValidated
-                  ? 'rgba(255, 152, 0, 0.04)'
+                  ? 'hsl(var(--severity-medium) / 0.04)'
                   : 'hsl(var(--muted))',
             border: '1px solid',
             borderColor: enabled 
-              ? 'rgba(34, 197, 94, 0.4)' 
+              ? 'hsl(var(--severity-low) / 0.4)' 
               : isConfiguring
-                ? 'rgba(255, 102, 0, 0.4)'
+                ? 'hsl(var(--primary) / 0.4)'
                 : !app.isValidated
-                  ? 'rgba(255, 152, 0, 0.2)'
+                  ? 'hsl(var(--severity-medium) / 0.2)'
                   : 'transparent',
             opacity: enabled ? 1 : app.isValidated ? 0.7 : 0.85,
             transition: 'all 0.2s ease',
             '&:hover': {
               background: enabled 
-                ? 'rgba(34, 197, 94, 0.1)' 
+                ? 'hsl(var(--severity-low) / 0.1)' 
                 : !app.isValidated
-                  ? 'rgba(255, 152, 0, 0.1)'
+                  ? 'hsl(var(--severity-medium) / 0.1)'
                   : 'hsl(var(--background))',
               borderColor: !app.isValidated && !enabled
-                ? 'rgba(255, 152, 0, 0.4)'
+                ? 'hsl(var(--severity-medium) / 0.4)'
                 : undefined,
             },
           }}
