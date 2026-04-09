@@ -14,6 +14,7 @@ export interface DatastoreItem {
   created?: number;
   edited?: number;
   public_authorization?: string;
+  enrichments?: Array<{ type: string; value: string }>;
 }
 
 export interface CategoryAutomation {

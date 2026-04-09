@@ -237,7 +237,7 @@ const resolveCreatedTs = (data: any, itemCreated?: number): number => {
   return normalizeToMs(itemCreated);
 };
 
-const parseIncidentFromDatastore = (item: { key: string; value: string; created?: number; edited?: number }): DisplayIncident | null => {
+const parseIncidentFromDatastore = (item: { key: string; value: string; created?: number; edited?: number; enrichments?: Array<{ type: string; value: string }> }): DisplayIncident | null => {
   const parseStart = performance.now();
   try {
     const jsonStart = performance.now();
@@ -295,7 +295,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
         references: ocsf.references,
         stakeholders: (customAttrs as any)?.stakeholders || (data as any).stakeholders || [],
         observables: customAttrs?.observables || (data as any).observables,
-        enrichments: Array.isArray((data as any).enrichments) ? (data as any).enrichments : [],
+        enrichments: Array.isArray(item.enrichments) ? item.enrichments : [],
         // Support both customFields and custom_fields naming
         customFields: customAttrs?.customFields || (customAttrs as any)?.custom_fields || (data as any).customFields || (data as any).custom_fields,
         relatedFindings: ocsf.related_events,
@@ -330,7 +330,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
         pap,
         references: findingInfo?.references,
         observables: legacyData.observables,
-        enrichments: Array.isArray(legacyData.enrichments) ? legacyData.enrichments : [],
+        enrichments: Array.isArray(item.enrichments) ? item.enrichments : [],
         customFields,
         relatedFindings: legacyData.related_findings,
         activity: activity || [],
@@ -357,7 +357,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
       references: data.references || [],
       stakeholders: data.stakeholders || [],
       observables: data.observables || [],
-      enrichments: Array.isArray(data.enrichments) ? data.enrichments : [],
+      enrichments: Array.isArray(item.enrichments) ? item.enrichments : [],
       customFields: data.customFields || {},
       relatedFindings: data.relatedFindings || [],
       activity: data.activity || [],
@@ -950,6 +950,7 @@ const IncidentDetailPage = () => {
         value: result.item.value,
         created: result.item.created,
         edited: result.item.edited,
+        enrichments: result.item.enrichments,
       };
       const parseStart = performance.now();
       const parsed = parseIncidentFromDatastore(itemData);
