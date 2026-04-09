@@ -1695,7 +1695,7 @@ const IncidentsPage = () => {
               '& .automation-section-ingest, & .automation-section-forward': {
                 transition: 'border-color 0.3s ease, background-color 0.3s ease',
                 overflow: 'visible',
-                clipPath: 'inset(-20px 0px -20px 0px)',
+                clipPath: 'inset(-24px 0px -20px 0px)',
                 position: 'relative',
               },
               '& .automation-section-title': {
