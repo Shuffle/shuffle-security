@@ -4342,7 +4342,7 @@ const IncidentDetailPage = () => {
                 {enrichments.map((enr, idx) => (
                   <Chip
                     key={idx}
-                    label={`${enr.type}: ${enr.value}`}
+                    label={`${enr.type}: ${enr.value || enr.data || ''}`}
                     size="small"
                     sx={{
                       fontFamily: 'monospace',
