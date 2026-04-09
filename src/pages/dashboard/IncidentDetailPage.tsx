@@ -237,7 +237,24 @@ const resolveCreatedTs = (data: any, itemCreated?: number): number => {
   return normalizeToMs(itemCreated);
 };
 
-const parseIncidentFromDatastore = (item: { key: string; value: string; created?: number; edited?: number; enrichments?: Array<{ type: string; value: string }> }): DisplayIncident | null => {
+/** Merge native (root-level) enrichments with OCSF-level enrichments, deduplicating by type+value */
+const deduplicateEnrichments = (
+  nativeEnrichments?: Array<{ type: string; value?: string; data?: string }>,
+  ocsfEnrichments?: Array<{ type: string; value?: string; data?: string }>
+): Array<{ type: string; value?: string; data?: string }> => {
+  const native = Array.isArray(nativeEnrichments) ? nativeEnrichments : [];
+  const ocsf = Array.isArray(ocsfEnrichments) ? ocsfEnrichments : [];
+  const all = [...native, ...ocsf];
+  const seen = new Set<string>();
+  return all.filter(e => {
+    const key = `${e.type}::${e.value || e.data || ''}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
+
+const parseIncidentFromDatastore = (item: { key: string; value: string; created?: number; edited?: number; enrichments?: Array<{ type: string; value?: string; data?: string }> }): DisplayIncident | null => {
   const parseStart = performance.now();
   try {
     const jsonStart = performance.now();
