@@ -132,6 +132,7 @@ interface DisplayIncident {
   references?: string[];
   stakeholders?: Stakeholder[];
   observables?: Observable[];
+  enrichments?: Array<{ type: string; value: string }>;
   customFields?: Record<string, string | number | boolean>;
   relatedFindings?: string[];
   activity?: ActivityItem[];
@@ -294,6 +295,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
         references: ocsf.references,
         stakeholders: (customAttrs as any)?.stakeholders || (data as any).stakeholders || [],
         observables: customAttrs?.observables || (data as any).observables,
+        enrichments: Array.isArray((data as any).enrichments) ? (data as any).enrichments : [],
         // Support both customFields and custom_fields naming
         customFields: customAttrs?.customFields || (customAttrs as any)?.custom_fields || (data as any).customFields || (data as any).custom_fields,
         relatedFindings: ocsf.related_events,
@@ -328,6 +330,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
         pap,
         references: findingInfo?.references,
         observables: legacyData.observables,
+        enrichments: Array.isArray(legacyData.enrichments) ? legacyData.enrichments : [],
         customFields,
         relatedFindings: legacyData.related_findings,
         activity: activity || [],
@@ -354,6 +357,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
       references: data.references || [],
       stakeholders: data.stakeholders || [],
       observables: data.observables || [],
+      enrichments: Array.isArray(data.enrichments) ? data.enrichments : [],
       customFields: data.customFields || {},
       relatedFindings: data.relatedFindings || [],
       activity: data.activity || [],
