@@ -14,6 +14,7 @@ export const EDR_PATTERNS = ['crowdstrike', 'sentinelone', 'carbon black', 'defe
 export const SIEM_PATTERNS = ['splunk', 'elastic', 'qradar', 'sentinel', 'chronicle', 'logrhythm', 'sumo logic', 'graylog', 'wazuh', 'siem', 'arcsight'];
 export const THREAT_INTEL_PATTERNS = ['virustotal', 'shodan', 'alienvault', 'otx', 'threatcrowd', 'urlscan', 'hybrid-analysis', 'abuseipdb', 'greynoise', 'urlhaus', 'malwarebazaar', 'threatfox', 'misp', 'opencti', 'recorded future', 'mandiant', 'crowdstrike intel', 'intel471', 'flashpoint', 'domaintools'];
 export const COMMUNICATION_PATTERNS_NAMES = ['slack', 'teams', 'discord', 'mattermost', 'telegram', 'webhook'];
+export const VULN_SCANNER_PATTERNS = ['qualys', 'tenable', 'nessus', 'rapid7', 'nexpose', 'snyk', 'sonarqube', 'trivy', 'grype', 'anchore', 'dependabot', 'aws_inspector', 'azure_defender', 'gcp_scc', 'scout', 'prowler', 'checkov', 'wiz', 'orca', 'lacework', 'prisma'];
 
 // ============================================================================
 // Detection helpers
@@ -23,6 +24,9 @@ export const isEmailApp = (appName: string): boolean =>
 
 export const isThreatIntelApp = (appName: string): boolean =>
   THREAT_INTEL_PATTERNS.some(pattern => appName.toLowerCase().includes(pattern));
+
+export const isVulnScannerApp = (appName: string): boolean =>
+  VULN_SCANNER_PATTERNS.some(pattern => appName.toLowerCase().includes(pattern));
 
 export const isIngestionApp = (appName: string): boolean => {
   const name = appName.toLowerCase();
