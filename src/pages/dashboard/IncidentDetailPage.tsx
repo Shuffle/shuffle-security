@@ -1368,7 +1368,54 @@ const IncidentDetailPage = () => {
     fetchCorrelations();
   }, [id, loading]);
 
-  // Auto-save with debounce
+  // Fetch per-observable correlations when observables tab is active
+  useEffect(() => {
+    if (activeTab !== 2 || loading) return;
+    const manualObs = editedObservables.filter(o => !o.archived);
+    const enrichObs = enrichments.map(e => ({ type: e.type || 'unknown', value: e.value || e.data || '' }));
+    const allObs = [...manualObs, ...enrichObs].filter(o => o.value);
+    // Limit to 20
+    const toFetch = allObs.slice(0, 20);
+    if (toFetch.length === 0) return;
+
+    const noiseKeys = new Set([
+      'new', 'in_progress', 'resolved', 'escalated', 'closed', 'open', 'pending',
+      'critical', 'high', 'medium', 'low', 'informational', 'info', 'warning', 'error',
+      'unknown', 'none', 'null', 'undefined', 'true', 'false',
+      id?.toLowerCase(),
+    ].filter(Boolean));
+
+    toFetch.forEach(async (obs) => {
+      const obsKey = `${obs.type}::${obs.value}`;
+      // Skip if already fetched or loading
+      if (obsCorrelations[obsKey]?.data?.length > 0 || obsCorrelations[obsKey]?.loading) return;
+
+      setObsCorrelations(prev => ({ ...prev, [obsKey]: { loading: true, data: [] } }));
+      try {
+        const resp = await fetch(getApiUrl('/api/v2/correlations'), {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeader(), ...crossOrgHeaders },
+          body: JSON.stringify({
+            type: 'value',
+            key: obs.value,
+          }),
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          const corrData = Array.isArray(data) ? data : (data.correlations || data.data || []);
+          const filtered = corrData.filter((c: { key: string }) => !noiseKeys.has(c.key.toLowerCase()));
+          setObsCorrelations(prev => ({ ...prev, [obsKey]: { loading: false, data: filtered } }));
+        } else {
+          setObsCorrelations(prev => ({ ...prev, [obsKey]: { loading: false, data: [] } }));
+        }
+      } catch {
+        setObsCorrelations(prev => ({ ...prev, [obsKey]: { loading: false, data: [] } }));
+      }
+    });
+  }, [activeTab, loading, editedObservables, enrichments, id]);
+
+
   const saveToDatastore = useCallback(async () => {
     if (!incident?.id) return;
     
