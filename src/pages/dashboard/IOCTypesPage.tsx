@@ -29,6 +29,7 @@ import {
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import AddIcon from '@mui/icons-material/Add';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import SearchIcon from '@mui/icons-material/Search';
@@ -310,6 +311,20 @@ const IOCTypesPage = () => {
             <Button variant="outlined" onClick={handleInitDefaults} disabled={isInitializing} sx={{ height: 36 }}>
               Initialize Defaults
             </Button>
+          )}
+          {iocTypes.length > 0 && (
+            <Tooltip title="Reset all IOC types to defaults" arrow>
+              <Button
+                variant="outlined"
+                color="warning"
+                startIcon={<RestartAltIcon />}
+                onClick={handleInitDefaults}
+                disabled={isInitializing}
+                sx={{ height: 36 }}
+              >
+                Reset
+              </Button>
+            </Tooltip>
           )}
           <Button variant="outlined" startIcon={<AddIcon />} onClick={() => handleOpenDialog()} sx={{ height: 36 }}>
             Add IOC Type
