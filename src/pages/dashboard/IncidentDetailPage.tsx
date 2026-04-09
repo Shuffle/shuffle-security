@@ -1152,6 +1152,7 @@ const IncidentDetailPage = () => {
         setEditedTlp(reParsed.tlp || 'TLP:AMBER');
         setEditedReferences(Array.isArray(reParsed.references) ? reParsed.references : []);
         setEditedObservables(reParsed.observables || []);
+        setEnrichments(reParsed.enrichments || []);
         setEditedStakeholders(reParsed.stakeholders || []);
         setEditedLabels(reParsed.labels || []);
         setActivity(reParsed.activity || []);
