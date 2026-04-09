@@ -1890,6 +1890,7 @@ const IncidentsPage = () => {
               onMouseLeave={handleForwardLeave}
               sx={{ 
               position: 'relative',
+              overflow: 'visible',
               display: 'flex', 
               alignItems: 'center', 
               gap: 0.5,
