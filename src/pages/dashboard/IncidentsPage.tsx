@@ -529,6 +529,7 @@ const IncidentsPage = () => {
     });
 
     setSubOrgItems(newMap);
+    setSubOrgFailed(failedIds);
     setSubOrgLoading(new Set());
   }, [subOrgs, parentOrg, currentOrgId]);
 
