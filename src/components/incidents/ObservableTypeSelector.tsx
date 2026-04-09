@@ -61,6 +61,10 @@ export const ObservableTypeSelector = ({
       const orderA = categoryOrder.indexOf(catA as IOCCategory);
       const orderB = categoryOrder.indexOf(catB as IOCCategory);
       if (orderA !== orderB) return orderA - orderB;
+      // Enabled types first within each category
+      const enabledA = a.enabled !== false ? 1 : 0;
+      const enabledB = b.enabled !== false ? 1 : 0;
+      if (enabledA !== enabledB) return enabledB - enabledA;
       return a.name.localeCompare(b.name);
     });
     
@@ -266,7 +270,7 @@ export const ObservableTypeSelector = ({
                           '&:hover': { bgcolor: 'hsl(var(--muted) / 0.5)' },
                         }}
                       >
-                        <Typography variant="body2" sx={{ fontWeight: value === type.name ? 600 : 400, flex: 1 }}>
+                        <Typography variant="body2" sx={{ fontWeight: value === type.name ? 600 : 400, flex: 1, opacity: type.enabled === false ? 0.5 : 1 }}>
                           {type.name}
                         </Typography>
                         {type.needsPattern && (
