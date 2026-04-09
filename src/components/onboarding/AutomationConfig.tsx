@@ -284,7 +284,7 @@ const SourceChip = ({ label, apps, activeCount, totalCount, hasAnyActive, option
               </Box>
             </Tooltip>
           ))}
-          {activeApps.length > 2 && <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.6rem', ml: 0.25 }}>+{activeApps.length - 2}</Typography>}
+          {activeApps.length > 2 && <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.6rem', ml: 0.25 }}>+{activeApps.length - 2}</Typography>}
         </Box>
       )}
     </Box>
@@ -862,7 +862,7 @@ export const AutomationConfig = ({
                     : app.hasAuthConfig
                       ? '#ff9800'
                       : '#ef4444',
-                  border: '2px solid rgba(33, 33, 33, 0.9)',
+                  border: '2px solid hsl(var(--card))',
                 }}
               />
             </Box>
@@ -904,7 +904,7 @@ export const AutomationConfig = ({
                     ? 'Pending validation' 
                     : 'Pending auth'}
                 {!app.isSelected && (
-                  <Box component="span" sx={{ color: 'rgba(255,255,255,0.4)', ml: 0.5 }}>
+                  <Box component="span" sx={{ color: 'hsl(var(--muted-foreground))', ml: 0.5 }}>
                     • Pre-existing
                   </Box>
                 )}
@@ -977,7 +977,7 @@ export const AutomationConfig = ({
                     }
                   }}
                   sx={{
-                    background: 'rgba(33, 33, 33, 0.6)',
+                    background: 'hsl(var(--card))',
                     border: '1px solid',
                     borderColor: state.enabled && !isDisabled ? `${option.color}50` : 'hsl(var(--border))',
                     borderRadius: 3,
@@ -1028,7 +1028,7 @@ export const AutomationConfig = ({
                                     width: 20,
                                     height: 20,
                                     fontSize: '0.6rem',
-                                    border: '1px solid rgba(255,255,255,0.2)',
+                                    border: '1px solid hsl(var(--border))',
                                   }}
                                 >
                                   {app.name[0]}
@@ -1144,7 +1144,7 @@ export const AutomationConfig = ({
                                           py: 0.75,
                                           px: 1,
                                           borderRadius: 1.5,
-                                          border: '1px dashed rgba(255, 255, 255, 0.12)',
+                                          border: '1px dashed hsl(var(--border))',
                                           background: 'hsl(var(--background-surface))',
                                           transition: 'all 0.2s ease',
                                           '&:hover': {
@@ -1180,7 +1180,7 @@ export const AutomationConfig = ({
                                                   borderColor: app.isValidated 
                                                     ? 'rgba(34, 197, 94, 0.4)' 
                                                     : 'rgba(255, 152, 0, 0.4)',
-                                                  backgroundColor: 'rgba(33, 33, 33, 0.9)',
+                                                  backgroundColor: 'hsl(var(--card))',
                                                   ml: idx > 0 ? -0.5 : 0,
                                                 }}
                                               >
@@ -1191,7 +1191,7 @@ export const AutomationConfig = ({
                                           {source.apps.length > 6 && (
                                             <Typography
                                               variant="caption"
-                                              sx={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.6rem', ml: 0.5 }}
+                                              sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.6rem', ml: 0.5 }}
                                             >
                                               +{source.apps.length - 6}
                                             </Typography>
@@ -1259,7 +1259,7 @@ export const AutomationConfig = ({
                                         width: 24,
                                         height: 24,
                                         fontSize: '0.7rem',
-                                        border: '1px solid rgba(255,255,255,0.2)',
+                                        border: '1px solid hsl(var(--border))',
                                       }}
                                     >
                                       {app.name[0]}
@@ -1356,7 +1356,7 @@ export const AutomationConfig = ({
                                       onChange={(e) => setEditingFeed({ ...editingFeed, name: e.target.value })}
                                       sx={{
                                         '& .MuiOutlinedInput-root': {
-                                          bgcolor: 'rgba(0,0,0,0.3)',
+                                          bgcolor: 'hsl(var(--muted))',
                                           fontSize: '0.85rem',
                                         },
                                       }}
@@ -1368,7 +1368,7 @@ export const AutomationConfig = ({
                                       onChange={(e) => setEditingFeed({ ...editingFeed, url: e.target.value })}
                                       sx={{
                                         '& .MuiOutlinedInput-root': {
-                                          bgcolor: 'rgba(0,0,0,0.3)',
+                                          bgcolor: 'hsl(var(--muted))',
                                           fontFamily: 'monospace',
                                           fontSize: '0.75rem',
                                         },
@@ -1422,7 +1422,7 @@ export const AutomationConfig = ({
                                         <IconButton
                                           size="small"
                                           onClick={() => setEditingFeed(feed)}
-                                          sx={{ color: 'rgba(255,255,255,0.4)', '&:hover': { color: 'hsl(var(--foreground))' } }}
+                                          sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--foreground))' } }}
                                         >
                                           <EditIcon sx={{ fontSize: 16 }} />
                                         </IconButton>
@@ -1431,7 +1431,7 @@ export const AutomationConfig = ({
                                         <IconButton
                                           size="small"
                                           onClick={() => deleteFeed(feed.id)}
-                                          sx={{ color: 'rgba(255,255,255,0.4)', '&:hover': { color: '#ef4444' } }}
+                                          sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: '#ef4444' } }}
                                         >
                                           <DeleteIcon sx={{ fontSize: 16 }} />
                                         </IconButton>
@@ -1461,7 +1461,7 @@ export const AutomationConfig = ({
                             sx={{ 
                               p: 1.5, 
                               borderRadius: 1.5, 
-                              border: '1px dashed rgba(255, 255, 255, 0.15)',
+                              border: '1px dashed hsl(var(--border))',
                               background: 'hsl(var(--muted))',
                             }}
                           >
@@ -1477,7 +1477,7 @@ export const AutomationConfig = ({
                                 sx={{
                                   minWidth: 150,
                                   '& .MuiOutlinedInput-root': {
-                                    bgcolor: 'rgba(0,0,0,0.3)',
+                                    bgcolor: 'hsl(var(--muted))',
                                     fontSize: '0.85rem',
                                   },
                                 }}
@@ -1491,7 +1491,7 @@ export const AutomationConfig = ({
                                   flex: 1,
                                   minWidth: 200,
                                   '& .MuiOutlinedInput-root': {
-                                    bgcolor: 'rgba(0,0,0,0.3)',
+                                    bgcolor: 'hsl(var(--muted))',
                                     fontFamily: 'monospace',
                                     fontSize: '0.75rem',
                                   },
