@@ -840,10 +840,10 @@ export const AutomationConfig = ({
                   fontSize: '0.7rem',
                   border: '2px solid',
                   borderColor: app.isValidated 
-                    ? 'rgba(34, 197, 94, 0.6)' 
+                    ? 'hsl(var(--severity-low) / 0.6)' 
                     : app.hasAuthConfig
-                      ? 'rgba(255, 152, 0, 0.6)'
-                      : 'rgba(239, 68, 68, 0.6)',
+                      ? 'hsl(var(--severity-medium) / 0.6)'
+                      : 'hsl(var(--destructive) / 0.6)',
                   opacity: app.isValidated ? 1 : 0.8,
                 }}
               >
@@ -858,10 +858,10 @@ export const AutomationConfig = ({
                   height: 10,
                   borderRadius: '50%',
                   backgroundColor: app.isValidated 
-                    ? '#22c55e' 
+                    ? 'hsl(var(--severity-low))' 
                     : app.hasAuthConfig
-                      ? '#ff9800'
-                      : '#ef4444',
+                      ? 'hsl(var(--severity-medium))'
+                      : 'hsl(var(--destructive))',
                   border: '2px solid hsl(var(--card))',
                 }}
               />
@@ -891,10 +891,10 @@ export const AutomationConfig = ({
                 variant="caption" 
                 sx={{ 
                   color: app.isValidated 
-                    ? '#22c55e' 
+                    ? 'hsl(var(--severity-low))' 
                     : app.hasAuthConfig 
-                      ? '#ff9800' 
-                      : '#ef4444',
+                      ? 'hsl(var(--severity-medium))' 
+                      : 'hsl(var(--destructive))',
                   fontSize: '0.65rem',
                 }}
               >
@@ -920,10 +920,10 @@ export const AutomationConfig = ({
                   height: 20,
                   fontSize: '0.6rem',
                   fontWeight: 600,
-                  background: isConfiguring ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255, 152, 0, 0.12)',
-                  color: isConfiguring ? 'hsl(var(--primary))' : '#ff9800',
+                  background: isConfiguring ? 'hsl(var(--primary) / 0.15)' : 'hsl(var(--severity-medium) / 0.12)',
+                  color: isConfiguring ? 'hsl(var(--primary))' : 'hsl(var(--severity-medium))',
                   border: '1px solid',
-                  borderColor: isConfiguring ? 'rgba(255, 102, 0, 0.4)' : 'rgba(255, 152, 0, 0.3)',
+                  borderColor: isConfiguring ? 'hsl(var(--primary) / 0.4)' : 'hsl(var(--severity-medium) / 0.3)',
                   '& .MuiChip-label': { px: 0.75 },
                 }}
               />
