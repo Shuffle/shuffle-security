@@ -13,8 +13,33 @@ export type EntityValue = (typeof ENTITY_OPTIONS)[number]['value'];
 
 const LOCAL_CACHE_KEY = 'shuffle-entity-label';
 const LOCAL_AUTOMATION_KEY = 'shuffle-show-automation';
+const LOCAL_SIDEBAR_TABS_KEY = 'shuffle-sidebar-tabs';
 const DATASTORE_KEY = 'org_settings';
 const DEFAULT: EntityValue = 'incidents';
+
+// Sidebar tab keys that can be toggled (Incidents always visible)
+export const SIDEBAR_TAB_OPTIONS = [
+  { key: 'threat_feeds', label: 'Threat Feeds' },
+  { key: 'ioc_types', label: 'IOC Types' },
+  { key: 'templates', label: 'Templates' },
+  { key: 'custom_fields', label: 'Custom Fields' },
+  { key: 'detection', label: 'Detection' },
+  { key: 'automation', label: 'Automation' },
+  { key: 'documentation', label: 'Documentation' },
+] as const;
+
+export type SidebarTabKey = (typeof SIDEBAR_TAB_OPTIONS)[number]['key'];
+
+// All tabs visible by default
+const DEFAULT_SIDEBAR_TABS: Record<SidebarTabKey, boolean> = {
+  threat_feeds: true,
+  ioc_types: true,
+  templates: true,
+  custom_fields: true,
+  detection: true,
+  automation: true,
+  documentation: true,
+};
 
 // Shared external store so all consumers react to changes instantly
 const listeners = new Set<() => void>();
