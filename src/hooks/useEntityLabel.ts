@@ -60,12 +60,23 @@ function getAutomationSnapshot(): boolean {
   const val = localStorage.getItem(LOCAL_AUTOMATION_KEY);
   return val === null ? true : val === 'true';
 }
+let _cachedSidebarTabs: Record<SidebarTabKey, boolean> = DEFAULT_SIDEBAR_TABS;
+let _cachedSidebarTabsRaw: string | null = null;
+
 function getSidebarTabsSnapshot(): Record<SidebarTabKey, boolean> {
+  const raw = localStorage.getItem(LOCAL_SIDEBAR_TABS_KEY);
+  if (raw === _cachedSidebarTabsRaw) return _cachedSidebarTabs;
+  _cachedSidebarTabsRaw = raw;
   try {
-    const val = localStorage.getItem(LOCAL_SIDEBAR_TABS_KEY);
-    if (val) return { ...DEFAULT_SIDEBAR_TABS, ...JSON.parse(val) };
-  } catch { /* empty */ }
-  return DEFAULT_SIDEBAR_TABS;
+    if (raw) {
+      _cachedSidebarTabs = { ...DEFAULT_SIDEBAR_TABS, ...JSON.parse(raw) };
+    } else {
+      _cachedSidebarTabs = DEFAULT_SIDEBAR_TABS;
+    }
+  } catch {
+    _cachedSidebarTabs = DEFAULT_SIDEBAR_TABS;
+  }
+  return _cachedSidebarTabs;
 }
 
 let _fetchedFromServer = false;
