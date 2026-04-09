@@ -258,6 +258,7 @@ const IOCTypesPage = () => {
           <Typography variant="h5" sx={{ fontWeight: 600 }}>IOC Types</Typography>
           {isLoading && <CircularProgress size={20} />}
           <Chip label={`${iocTypes.length} types`} size="small" variant="outlined" />
+          <Chip label={`${enabledCount} enabled`} size="small" sx={{ bgcolor: 'hsl(var(--severity-low) / 0.12)', color: 'hsl(var(--severity-low))' }} />
         </Box>
         <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
           {/* TODO Filter Toggle */}
@@ -387,6 +388,7 @@ const IOCTypesPage = () => {
             <Table>
               <TableHead>
                 <TableRow>
+                  <TableCell sx={{ width: 60 }}>Enabled</TableCell>
                   <TableCell>Name</TableCell>
                   <TableCell>Category</TableCell>
                   <TableCell>Regex Pattern</TableCell>
