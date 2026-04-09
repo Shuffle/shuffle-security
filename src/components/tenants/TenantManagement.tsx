@@ -96,6 +96,7 @@ const TenantManagement = () => {
 
   const OrgRow = ({ org, showSwitch = true }: { org: { id: string; name: string; image?: string; creator_org?: string; region_url?: string }; showSwitch?: boolean }) => {
     const isCurrent = org.id === currentOrgId;
+    const region = getRegionFlag(org.region_url);
     return (
       <TableRow hover sx={{ opacity: switchingOrgId === org.id ? 0.5 : 1 }}>
         <TableCell>
@@ -114,6 +115,14 @@ const TenantManagement = () => {
             {isCurrent && (
               <Chip label="Current" size="small" sx={{ height: 20, fontSize: '0.7rem', bgcolor: 'hsl(var(--primary) / 0.15)', color: 'hsl(var(--primary))' }} />
             )}
+          </Box>
+        </TableCell>
+        <TableCell>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <span>{region.flag}</span>
+            <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem' }}>
+              {region.code}
+            </Typography>
           </Box>
         </TableCell>
         <TableCell>
