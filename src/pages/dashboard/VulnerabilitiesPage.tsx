@@ -1,169 +1,400 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Box, Typography, Chip, Button, Paper, IconButton, Tooltip } from '@mui/material';
+import { Box, Typography, Chip, IconButton, Avatar } from '@mui/material';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Shield, Plus, RefreshCw, Search, Monitor, Users } from 'lucide-react';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Shield, Plus, RefreshCw, Monitor, Users, Search, Zap, ArrowRight, Wrench, Sparkles, ChevronRight, AlertTriangle, ExternalLink } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
+import { useVulnerabilities, Vulnerability, VulnSeverity, VulnCategory } from '@/hooks/useVulnerabilities';
+import { useAppAuth } from '@/hooks/useAppAuth';
+import { isVulnScannerApp } from '@/lib/ingestionDetection';
+import { askAI } from '@/services/ai';
+import { toast } from 'sonner';
+import { Input } from '@/components/ui/input';
+
+const SEVERITY_COLORS: Record<VulnSeverity, string> = {
+  critical: 'bg-red-500/10 text-red-500 border-red-500/20',
+  high: 'bg-orange-500/10 text-orange-500 border-orange-500/20',
+  medium: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
+  low: 'bg-green-500/10 text-green-500 border-green-500/20',
+  info: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
+};
+
+const SEVERITY_DOT_COLORS: Record<VulnSeverity, string> = {
+  critical: 'bg-red-500',
+  high: 'bg-orange-500',
+  medium: 'bg-yellow-500',
+  low: 'bg-green-500',
+  info: 'bg-blue-500',
+};
+
+const CATEGORY_LABELS: Record<VulnCategory, string> = {
+  software_cve: 'Software / CVE',
+  user_identity: 'User / Identity',
+  cloud_misconfig: 'Cloud Misconfig',
+  code_dependency: 'Code / Deps',
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  open: 'Open',
+  in_progress: 'In Progress',
+  resolved: 'Resolved',
+  accepted: 'Accepted',
+};
 
 const VulnerabilitiesPage = () => {
   usePageMeta({ title: 'Vulnerabilities', description: 'Track and manage vulnerabilities across assets and users' });
   const [searchParams] = useSearchParams();
   const initialTab = searchParams.get('tab') === 'users' ? 'users' : 'assets';
-  const [activeTab, setActiveTab] = useState(initialTab);
+  const [activeTab, setActiveTab] = useState<'assets' | 'users'>(initialTab);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [severityFilter, setSeverityFilter] = useState<string>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [aiScanOpen, setAiScanOpen] = useState(false);
+  const [aiScanLoading, setAiScanLoading] = useState(false);
+  const [aiScanResult, setAiScanResult] = useState<string | null>(null);
 
   useEffect(() => {
     const tab = searchParams.get('tab');
     if (tab === 'users' || tab === 'assets') setActiveTab(tab);
   }, [searchParams]);
 
+  const { vulnerabilities, severityCounts, isLoading, isRefreshing, refresh } = useVulnerabilities({ tab: activeTab });
+  const { authenticatedApps } = useAppAuth();
+
+  // Filter connected vuln scanner apps
+  const connectedScanners = (authenticatedApps || []).filter(a => a.app?.name && isVulnScannerApp(a.app.name) && (a.active || a.validation?.valid));
+
+  // Filtered vulnerabilities
+  const filtered = vulnerabilities.filter(v => {
+    if (searchQuery && !v.title.toLowerCase().includes(searchQuery.toLowerCase()) && !v.asset_name?.toLowerCase().includes(searchQuery.toLowerCase()) && !v.cve_id?.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    if (severityFilter !== 'all' && v.severity !== severityFilter) return false;
+    if (categoryFilter !== 'all' && v.category !== categoryFilter) return false;
+    if (statusFilter !== 'all' && v.status !== statusFilter) return false;
+    return true;
+  });
+
+  const handleAiScan = useCallback(async () => {
+    setAiScanLoading(true);
+    setAiScanResult(null);
+    setAiScanOpen(true);
+    try {
+      const resp = await askAI({
+        query: 'Analyze my connected apps and infrastructure for potential vulnerabilities, misconfigurations, and identity issues. List each finding with severity (critical/high/medium/low), affected asset or user, and a short description. Format as a numbered list.',
+      });
+      if (resp.success && resp.result) {
+        setAiScanResult(resp.result);
+      } else {
+        setAiScanResult(`AI scan failed: ${resp.error || 'Unknown error'}`);
+      }
+    } catch (err) {
+      setAiScanResult('AI scan failed. Please try again.');
+    } finally {
+      setAiScanLoading(false);
+    }
+  }, []);
+
+  const handleRemediate = () => {
+    toast.info('Remediation workflows coming soon', {
+      description: 'Automated remediation will let you run code on target machines to fix vulnerabilities.',
+    });
+  };
+
   return (
-    <Box sx={{ p: 4, maxWidth: 1400, mx: 'auto' }}>
+    <div className="p-6 max-w-[1400px] mx-auto space-y-6">
       {/* Header */}
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 4 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Shield size={28} style={{ color: 'hsl(var(--primary))' }} />
-          <Box>
-            <Typography variant="h5" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-              Vulnerabilities
-            </Typography>
-            <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-              Track and manage vulnerabilities across your assets and users
-            </Typography>
-          </Box>
-        </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Tooltip title="Refresh">
-            <IconButton size="small" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-              <RefreshCw size={18} />
-            </IconButton>
-          </Tooltip>
-          <Button
-            variant="contained"
-            startIcon={<Plus size={16} />}
-            size="small"
-            sx={{
-              backgroundColor: 'hsl(var(--primary))',
-              color: 'hsl(var(--primary-foreground))',
-              textTransform: 'none',
-              fontWeight: 500,
-              '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.9)' },
-            }}
-          >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Shield size={28} className="text-primary" />
+          <div>
+            <h1 className="text-xl font-semibold text-foreground">Vulnerabilities</h1>
+            <p className="text-sm text-muted-foreground">Track and manage vulnerabilities across your assets and users</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" onClick={() => refresh()} disabled={isRefreshing}>
+                  <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Refresh</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={handleAiScan}>
+            <Sparkles size={14} />
+            AI Scan
+          </Button>
+          <Button size="sm" className="gap-1.5">
+            <Plus size={14} />
             Add Source
           </Button>
-        </Box>
-      </Box>
+        </div>
+      </div>
 
       {/* Stats row */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 2, mb: 4 }}>
-        {[
-          { label: 'Critical', count: 0, color: 'hsl(var(--severity-critical, 0 84% 60%))' },
-          { label: 'High', count: 0, color: 'hsl(var(--severity-high, 25 95% 53%))' },
-          { label: 'Medium', count: 0, color: 'hsl(var(--severity-medium, 45 93% 47%))' },
-          { label: 'Low', count: 0, color: 'hsl(var(--severity-low, 142 76% 36%))' },
-        ].map((stat) => (
-          <Paper
-            key={stat.label}
-            elevation={0}
-            sx={{
-              p: 2.5,
-              borderRadius: 2,
-              border: '1px solid hsl(var(--border))',
-              backgroundColor: 'hsl(var(--card))',
-            }}
+      <div className="grid grid-cols-4 gap-3">
+        {(['critical', 'high', 'medium', 'low'] as VulnSeverity[]).map(sev => (
+          <div
+            key={sev}
+            className="rounded-lg border border-border bg-card p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+            onClick={() => setSeverityFilter(severityFilter === sev ? 'all' : sev)}
           >
-            <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))', mb: 0.5 }}>
-              {stat.label}
-            </Typography>
-            <Typography variant="h4" sx={{ fontWeight: 700, color: stat.color }}>
-              {stat.count}
-            </Typography>
-          </Paper>
+            <div className="flex items-center gap-2 mb-1">
+              <div className={`w-2 h-2 rounded-full ${SEVERITY_DOT_COLORS[sev]}`} />
+              <span className="text-sm text-muted-foreground capitalize">{sev}</span>
+            </div>
+            <span className="text-2xl font-bold text-foreground">{severityCounts[sev]}</span>
+          </div>
         ))}
-      </Box>
+      </div>
+
+      {/* Automation strip */}
+      <div className="rounded-lg border border-border bg-card p-4">
+        <div className="flex items-center gap-3 min-h-[40px]">
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider shrink-0">Sources</span>
+          <ArrowRight size={14} className="text-muted-foreground shrink-0" />
+          {connectedScanners.length > 0 ? (
+            <div className="flex items-center gap-2 flex-wrap">
+              {connectedScanners.slice(0, 4).map((scanner, i) => (
+                <div key={i} className="flex items-center gap-1.5 bg-muted rounded-md px-2 py-1">
+                  {scanner.app?.large_image && (
+                    <Avatar sx={{ width: 18, height: 18 }}>
+                      <img src={scanner.app.large_image} alt="" style={{ width: 18, height: 18 }} />
+                    </Avatar>
+                  )}
+                  <span className="text-xs text-foreground">{scanner.app?.name || 'Scanner'}</span>
+                </div>
+              ))}
+              {connectedScanners.length > 4 && (
+                <span className="text-xs text-muted-foreground">+{connectedScanners.length - 4} more</span>
+              )}
+            </div>
+          ) : (
+            <span className="text-xs text-muted-foreground italic">No scanners connected</span>
+          )}
+          <ArrowRight size={14} className="text-muted-foreground shrink-0" />
+          <div className="flex items-center gap-1.5 bg-primary/10 rounded-md px-2 py-1">
+            <Zap size={14} className="text-primary" />
+            <span className="text-xs font-medium text-primary">Shuffle</span>
+          </div>
+          <ArrowRight size={14} className="text-muted-foreground shrink-0" />
+          <div className="flex items-center gap-1.5 bg-muted rounded-md px-2 py-1">
+            <Shield size={14} className="text-muted-foreground" />
+            <span className="text-xs text-foreground">Vuln DB</span>
+          </div>
+        </div>
+      </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-4">
-          <TabsTrigger value="assets" className="gap-1.5">
-            <Monitor size={14} />
-            Assets
-          </TabsTrigger>
-          <TabsTrigger value="users" className="gap-1.5">
-            <Users size={14} />
-            Users
-          </TabsTrigger>
-        </TabsList>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'assets' | 'users')}>
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <TabsList>
+            <TabsTrigger value="assets" className="gap-1.5">
+              <Monitor size={14} />
+              Assets
+            </TabsTrigger>
+            <TabsTrigger value="users" className="gap-1.5">
+              <Users size={14} />
+              Users
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Filters */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="relative">
+              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search vulns..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="pl-8 h-8 w-[180px] text-sm"
+              />
+            </div>
+            <Select value={severityFilter} onValueChange={setSeverityFilter}>
+              <SelectTrigger className="h-8 w-[120px] text-xs">
+                <SelectValue placeholder="Severity" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Severity</SelectItem>
+                <SelectItem value="critical">Critical</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="low">Low</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="h-8 w-[140px] text-xs">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="software_cve">Software / CVE</SelectItem>
+                <SelectItem value="user_identity">User / Identity</SelectItem>
+                <SelectItem value="cloud_misconfig">Cloud Misconfig</SelectItem>
+                <SelectItem value="code_dependency">Code / Deps</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="h-8 w-[120px] text-xs">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="open">Open</SelectItem>
+                <SelectItem value="in_progress">In Progress</SelectItem>
+                <SelectItem value="resolved">Resolved</SelectItem>
+                <SelectItem value="accepted">Accepted</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
 
         <TabsContent value="assets">
-          <Paper
-            elevation={0}
-            sx={{
-              p: 6,
-              borderRadius: 2,
-              border: '1px solid hsl(var(--border))',
-              backgroundColor: 'hsl(var(--card))',
-              textAlign: 'center',
-            }}
-          >
-            <Monitor size={48} style={{ color: 'hsl(var(--muted-foreground))', margin: '0 auto 16px', opacity: 0.5 }} />
-            <Typography variant="h6" sx={{ color: 'hsl(var(--foreground))', mb: 1 }}>
-              No assets tracked yet
-            </Typography>
-            <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))', mb: 3, maxWidth: 480, mx: 'auto' }}>
-              Connect a vulnerability scanner or import assets to start tracking vulnerabilities across your infrastructure.
-            </Typography>
-            <Button
-              variant="outlined"
-              startIcon={<Plus size={16} />}
-              size="small"
-              sx={{
-                textTransform: 'none',
-                borderColor: 'hsl(var(--border))',
-                color: 'hsl(var(--foreground))',
-                '&:hover': { backgroundColor: 'hsl(var(--muted))' },
-              }}
-            >
-              Connect Scanner
-            </Button>
-          </Paper>
+          <VulnTable vulnerabilities={filtered} isLoading={isLoading} onRemediate={handleRemediate} emptyIcon={<Monitor size={48} className="text-muted-foreground/50 mx-auto mb-4" />} emptyTitle="No asset vulnerabilities found" emptyDescription="Connect a vulnerability scanner or run an AI scan to discover vulnerabilities across your infrastructure." />
         </TabsContent>
 
         <TabsContent value="users">
-          <Paper
-            elevation={0}
-            sx={{
-              p: 6,
-              borderRadius: 2,
-              border: '1px solid hsl(var(--border))',
-              backgroundColor: 'hsl(var(--card))',
-              textAlign: 'center',
-            }}
-          >
-            <Users size={48} style={{ color: 'hsl(var(--muted-foreground))', margin: '0 auto 16px', opacity: 0.5 }} />
-            <Typography variant="h6" sx={{ color: 'hsl(var(--foreground))', mb: 1 }}>
-              No user vulnerabilities found
-            </Typography>
-            <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))', mb: 3, maxWidth: 480, mx: 'auto' }}>
-              Set up automation to check identity platforms for compromised credentials, excessive permissions, and other user-related vulnerabilities.
-            </Typography>
-            <Button
-              variant="outlined"
-              startIcon={<Plus size={16} />}
-              size="small"
-              sx={{
-                textTransform: 'none',
-                borderColor: 'hsl(var(--border))',
-                color: 'hsl(var(--foreground))',
-                '&:hover': { backgroundColor: 'hsl(var(--muted))' },
-              }}
-            >
-              Set Up Automation
-            </Button>
-          </Paper>
+          <VulnTable vulnerabilities={filtered} isLoading={isLoading} onRemediate={handleRemediate} emptyIcon={<Users size={48} className="text-muted-foreground/50 mx-auto mb-4" />} emptyTitle="No user vulnerabilities found" emptyDescription="Set up automation to check identity platforms for compromised credentials, excessive permissions, and other user-related vulnerabilities." />
         </TabsContent>
       </Tabs>
-    </Box>
+
+      {/* AI Scan Dialog */}
+      <Dialog open={aiScanOpen} onOpenChange={setAiScanOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles size={18} className="text-primary" />
+              AI Vulnerability Scan
+            </DialogTitle>
+            <DialogDescription>
+              AI analyzes your connected apps and infrastructure for potential vulnerabilities.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4">
+            {aiScanLoading ? (
+              <div className="flex flex-col items-center py-12 gap-3">
+                <RefreshCw size={24} className="animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">Scanning your environment...</p>
+              </div>
+            ) : aiScanResult ? (
+              <div className="text-sm text-foreground whitespace-pre-wrap bg-muted/50 rounded-lg p-4 border border-border">
+                {aiScanResult}
+              </div>
+            ) : null}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+// --- VulnTable sub-component ---
+
+interface VulnTableProps {
+  vulnerabilities: Vulnerability[];
+  isLoading: boolean;
+  onRemediate: () => void;
+  emptyIcon: React.ReactNode;
+  emptyTitle: string;
+  emptyDescription: string;
+}
+
+const VulnTable = ({ vulnerabilities, isLoading, onRemediate, emptyIcon, emptyTitle, emptyDescription }: VulnTableProps) => {
+  if (isLoading) {
+    return (
+      <div className="rounded-lg border border-border bg-card p-12 text-center">
+        <RefreshCw size={24} className="animate-spin text-muted-foreground mx-auto mb-3" />
+        <p className="text-sm text-muted-foreground">Loading vulnerabilities...</p>
+      </div>
+    );
+  }
+
+  if (vulnerabilities.length === 0) {
+    return (
+      <div className="rounded-lg border border-border bg-card p-12 text-center">
+        {emptyIcon}
+        <h3 className="text-base font-medium text-foreground mb-1">{emptyTitle}</h3>
+        <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">{emptyDescription}</p>
+        <Button variant="outline" size="sm" className="gap-1.5">
+          <Plus size={14} />
+          Connect Scanner
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-lg border border-border bg-card overflow-hidden">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[100px]">Severity</TableHead>
+            <TableHead>Title</TableHead>
+            <TableHead className="w-[140px]">Category</TableHead>
+            <TableHead className="w-[150px]">Asset / User</TableHead>
+            <TableHead className="w-[100px]">Source</TableHead>
+            <TableHead className="w-[100px]">Status</TableHead>
+            <TableHead className="w-[110px]">First Seen</TableHead>
+            <TableHead className="w-[120px] text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {vulnerabilities.map(vuln => (
+            <TableRow key={vuln.id}>
+              <TableCell>
+                <Badge variant="outline" className={`text-xs capitalize ${SEVERITY_COLORS[vuln.severity]}`}>
+                  {vuln.severity}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-sm font-medium text-foreground">{vuln.title}</span>
+                  {vuln.cve_id && <span className="text-xs text-muted-foreground font-mono">{vuln.cve_id}</span>}
+                </div>
+              </TableCell>
+              <TableCell>
+                <span className="text-xs text-muted-foreground">{CATEGORY_LABELS[vuln.category] || vuln.category}</span>
+              </TableCell>
+              <TableCell>
+                <span className="text-sm text-foreground">{vuln.asset_name || vuln.asset_id || '—'}</span>
+              </TableCell>
+              <TableCell>
+                <span className="text-xs text-muted-foreground">{vuln.source || '—'}</span>
+              </TableCell>
+              <TableCell>
+                <span className="text-xs text-muted-foreground">{STATUS_LABELS[vuln.status] || vuln.status}</span>
+              </TableCell>
+              <TableCell>
+                <span className="text-xs text-muted-foreground">
+                  {vuln.first_seen ? new Date(vuln.first_seen).toLocaleDateString() : '—'}
+                </span>
+              </TableCell>
+              <TableCell className="text-right">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={onRemediate}>
+                        <Wrench size={12} />
+                        Remediate
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Run automated remediation on this vulnerability</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 };
 
