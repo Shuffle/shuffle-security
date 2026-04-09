@@ -4347,6 +4347,29 @@ const IncidentDetailPage = () => {
                         <Typography variant="body2" sx={{ flex: 1, fontFamily: 'monospace', fontSize: '0.8rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
                           {obs.value}
                         </Typography>
+                        {/* Correlation badge */}
+                        {(() => {
+                          const obsKey = `${obs.type}::${obs.value}`;
+                          const corr = obsCorrelations[obsKey];
+                          if (corr?.loading) return <CircularProgress size={14} sx={{ mx: 0.5 }} />;
+                          if (!corr?.data?.length) return null;
+                          return (
+                            <Chip
+                              label={`${corr.data.length} corr`}
+                              size="small"
+                              onClick={(e) => setObsCorrelationAnchor({ el: e.currentTarget, obsKey })}
+                              sx={{
+                                height: 20,
+                                fontSize: '0.6rem',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                bgcolor: 'rgba(59, 130, 246, 0.12)',
+                                color: '#3b82f6',
+                                '&:hover': { bgcolor: 'rgba(59, 130, 246, 0.25)' },
+                              }}
+                            />
+                          );
+                        })()}
                         <Tooltip title={`Run ${actionName} via threat intel apps`} arrow>
                           <IconButton
                             size="small"
