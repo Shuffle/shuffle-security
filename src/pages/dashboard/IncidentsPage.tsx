@@ -363,7 +363,9 @@ const IncidentsPage = () => {
   const currentOrgId = userInfo?.active_org?.id;
   const currentOrgName = userInfo?.active_org?.name || 'Current';
   const isChildOrg = !!userInfo?.active_org?.creator_org;
-  const { subOrgs, parentOrg, isParentOrg } = useSubOrgs(currentOrgId);
+  const { subOrgs, parentOrg, isParentOrg: hasRelatedOrgs } = useSubOrgs(currentOrgId);
+  // Only show multi-tenant view when we have sub-orgs to show (not just a parent)
+  const isParentOrg = subOrgs.length > 0;
 
   const [searchParams, setSearchParams] = useSearchParams();
   // Default child orgs to showing only their own incidents immediately
