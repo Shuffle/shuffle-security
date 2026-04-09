@@ -130,7 +130,11 @@ const getRegionFlag = (regionUrl?: string): { flag: string; code: string } => {
   if (url.includes('uk.') || url.includes('uk-') || url.includes('london')) {
     return { flag: '🇬🇧', code: 'UK' };
   }
-  // Default shuffler.io (no region prefix) — show globe
+  // Base shuffler.io (no region prefix) is UK-hosted
+  if (url === 'https://shuffler.io' || url === 'https://shuffler.io/') {
+    return { flag: '🇬🇧', code: 'UK' };
+  }
+  // Truly unrecognized — show globe
   return { flag: '🌐', code: '' };
 };
 
