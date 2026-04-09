@@ -363,7 +363,9 @@ const IncidentsPage = () => {
   const currentOrgId = userInfo?.active_org?.id;
   const currentOrgName = userInfo?.active_org?.name || 'Current';
   const isChildOrg = !!userInfo?.active_org?.creator_org;
-  const { subOrgs, parentOrg, isParentOrg } = useSubOrgs(currentOrgId);
+  const { subOrgs, parentOrg, isParentOrg: hasRelatedOrgs } = useSubOrgs(currentOrgId);
+  // Only show multi-tenant view when we have sub-orgs to show (not just a parent)
+  const isParentOrg = subOrgs.length > 0;
 
   const [searchParams, setSearchParams] = useSearchParams();
   // Default child orgs to showing only their own incidents immediately
@@ -476,14 +478,11 @@ const IncidentsPage = () => {
   const [subOrgFailed, setSubOrgFailed] = useState<Set<string>>(new Set());
 
   // Fetch incidents from all sub-orgs in parallel
+  // Only fetch child orgs when we ARE a parent. Don't fetch parent org incidents
+  // when we're in a child org — the parent API returns child incidents too, causing duplicates.
   const fetchSubOrgIncidents = useCallback(async () => {
-    // Build list of all orgs to fetch (sub-orgs + parent org, excluding current)
-    const orgsToFetch = [
-      ...subOrgs.filter(o => o.id !== currentOrgId),
-    ];
-    if (parentOrg && parentOrg.id !== currentOrgId && !orgsToFetch.some(o => o.id === parentOrg.id)) {
-      orgsToFetch.push(parentOrg);
-    }
+    // Only fetch sub-orgs (children), never the parent org
+    const orgsToFetch = subOrgs.filter(o => o.id !== currentOrgId);
     if (orgsToFetch.length === 0) return;
 
     const loadingIds = new Set(orgsToFetch.map(o => o.id));
@@ -548,12 +547,9 @@ const IncidentsPage = () => {
         currentOrgId || '',
         ...subOrgs.filter(o => o.id !== currentOrgId).map(o => o.id),
       ];
-      if (parentOrg && parentOrg.id !== currentOrgId && !allIds.includes(parentOrg.id)) {
-        allIds.unshift(parentOrg.id);
-      }
       setFilters(prev => ({ ...prev, org: allIds }));
     }
-  }, [isParentOrg, filters.org, currentOrgId, subOrgs, parentOrg]);
+  }, [isParentOrg, filters.org, currentOrgId, subOrgs]);
 
 
   const validUsernames = useMemo(() => {
@@ -1489,7 +1485,7 @@ const IncidentsPage = () => {
         currentOrgId || '',
         ...subOrgs.filter(o => o.id !== currentOrgId).map(o => o.id),
       ]);
-      if (parentOrg && parentOrg.id !== currentOrgId) allIds.add(parentOrg.id);
+      
       const currentOrgs = new Set(filters.org || []);
       if (currentOrgs.size !== allIds.size) return false;
       for (const id of allIds) { if (!currentOrgs.has(id)) return false; }
@@ -2380,9 +2376,7 @@ const IncidentsPage = () => {
                     { id: currentOrgId || '', name: currentOrgName, image: currentOrgImage },
                     ...subOrgs.filter(org => org.id !== currentOrgId).map(o => ({ id: o.id, name: o.name, image: o.image })),
                   ];
-                  if (parentOrg && parentOrg.id !== currentOrgId && !realOrgs.some(o => o.id === parentOrg.id)) {
-                    realOrgs.unshift({ id: parentOrg.id, name: parentOrg.name, image: parentOrg.image });
-                  }
+                  // Don't add parent org — we only fetch downward (children)
                   return [
                     { id: '__all__', name: 'All orgs' },
                     { id: '__none__', name: 'Current Org' },
@@ -2412,9 +2406,6 @@ const IncidentsPage = () => {
                       currentOrgId || '',
                       ...subOrgs.filter(o => o.id !== currentOrgId).map(o => o.id),
                     ];
-                    if (parentOrg && parentOrg.id !== currentOrgId && !allIds.includes(parentOrg.id)) {
-                      allIds.unshift(parentOrg.id);
-                    }
                     setFilters(prev => ({ ...prev, org: allIds }));
                     return;
                   }
@@ -2446,7 +2437,9 @@ const IncidentsPage = () => {
                     : subOrgItems.get(option.id)?.items.length || 0;
                   const isOrgLoading = subOrgLoading.has(option.id);
                   const isOrgFailed = subOrgFailed.has(option.id);
-                  const isSubOrg = option.id !== currentOrgId && (!parentOrg || option.id !== parentOrg.id);
+                  // Indent orgs that are children of another org in the list
+                  const orgData = subOrgs.find(o => o.id === option.id);
+                  const isSubOrg = orgData?.creator_org && orgData.creator_org !== option.id;
                   return (
                     <li {...props} key={option.id} style={{ paddingLeft: isSubOrg ? 48 : 16 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
