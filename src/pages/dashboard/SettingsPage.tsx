@@ -85,7 +85,7 @@ const SettingsPage = () => {
   };
 
   return (
-    <Box sx={{ p: 4, maxWidth: 900 }}>
+    <Box sx={{ p: 4, maxWidth: 900, mx: 'auto' }}>
       <Typography variant="h4" sx={{ fontWeight: 600, mb: 3, color: 'hsl(var(--foreground))' }}>
         Settings
       </Typography>
