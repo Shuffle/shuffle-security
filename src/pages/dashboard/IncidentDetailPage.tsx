@@ -811,6 +811,8 @@ const IncidentDetailPage = () => {
   const [sourceAppImage, setSourceAppImage] = useState<string | null>(null);
   const [correlations, setCorrelations] = useState<Array<{ key: string; amount: number; ref: string[] }>>([]);
   const [correlationsLoading, setCorrelationsLoading] = useState(false);
+  const [obsCorrelations, setObsCorrelations] = useState<Record<string, { loading: boolean; data: Array<{ key: string; amount: number; ref: string[] }> }>>({});
+  const [obsCorrelationAnchor, setObsCorrelationAnchor] = useState<{ el: HTMLElement; obsKey: string } | null>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingSaveRef = useRef(false);
   // Track the initial normalized values so auto-save doesn't fire on load
