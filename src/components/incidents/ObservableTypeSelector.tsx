@@ -270,7 +270,7 @@ export const ObservableTypeSelector = ({
                           '&:hover': { bgcolor: 'hsl(var(--muted) / 0.5)' },
                         }}
                       >
-                        <Typography variant="body2" sx={{ fontWeight: value === type.name ? 600 : 400, flex: 1 }}>
+                        <Typography variant="body2" sx={{ fontWeight: value === type.name ? 600 : 400, flex: 1, opacity: type.enabled === false ? 0.5 : 1 }}>
                           {type.name}
                         </Typography>
                         {type.needsPattern && (
