@@ -18,7 +18,9 @@ import {
   FormControlLabel,
   Switch,
   Slider,
+  Collapse,
 } from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import AddIcon from '@mui/icons-material/Add';
 import PlaylistAddCheckIcon from '@mui/icons-material/PlaylistAddCheck';
 import { useUsers } from '@/hooks/useUsers';
