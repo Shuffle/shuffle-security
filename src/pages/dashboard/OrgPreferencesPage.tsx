@@ -250,9 +250,7 @@ const OrgPreferencesPage = () => {
             border: '1px solid hsl(var(--border))',
             borderRadius: 2,
             display: 'flex',
-            alignItems: 'flex-start',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
+            flexDirection: 'column',
             gap: 2,
           }}
         >
