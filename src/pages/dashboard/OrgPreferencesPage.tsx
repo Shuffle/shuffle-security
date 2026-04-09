@@ -62,6 +62,12 @@ const SidebarTabsSelector = () => {
   // Group items: top-level parents (null parent or 'incidents') with their children
   const sections = [
     {
+      title: 'Dashboard',
+      alwaysVisible: false,
+      key: 'dashboard' as SidebarTabKey,
+      children: [],
+    },
+    {
       title: 'Incidents',
       alwaysVisible: true,
       key: null as SidebarTabKey | null,
@@ -77,6 +83,12 @@ const SidebarTabsSelector = () => {
       title: 'Automation',
       alwaysVisible: false,
       key: 'automation' as SidebarTabKey,
+      children: [],
+    },
+    {
+      title: 'Vulnerabilities',
+      alwaysVisible: false,
+      key: 'vulnerabilities' as SidebarTabKey,
       children: [],
     },
     {
