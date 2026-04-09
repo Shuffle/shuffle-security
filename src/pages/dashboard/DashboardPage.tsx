@@ -1,9 +1,8 @@
 /**
- * Dashboard Page — Overview of AI Agent notifications.
- * Currently only loads /notifications?type=agent_question.
+ * Dashboard Page — CTA-focused setup guide + AI Agent notifications.
  */
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -12,6 +11,8 @@ import {
   IconButton,
   Tooltip,
   Button,
+  Avatar,
+  LinearProgress,
 } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -24,84 +25,152 @@ import {
   Clock,
   Eye,
   MessageSquare,
+  ChevronRight,
+  Plug,
+  KeyRound,
+  ArrowDownToLine,
+  Send,
+  Radar,
+  Shield,
+  Sparkles,
+  Check,
+  ArrowRight,
+  ExternalLink,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import AgentQuestionDialog from '@/components/agent/AgentQuestionDialog';
 import AgentQuickViewDrawer, { type QuickViewItem } from '@/components/agent/AgentQuickViewDrawer';
 import { useAgentNotifications } from '@/hooks/useNotifications';
 import { isApprovalNotification, approveAgentAction, type AgentNotification } from '@/services/notifications';
 import { getTimeAgo } from '@/components/agent/AgentRunHeader';
 import { useEntityPreference } from '@/hooks/useEntityLabel';
+import { useAppAuth } from '@/hooks/useAppAuth';
+import { useWorkflows } from '@/hooks/useWorkflows';
+import { findIngestTicketsWorkflow, findForwardTicketsWorkflow } from '@/lib/ingestionDetection';
 import { toast } from 'sonner';
 
-// ── Stat card ──────────────────────────────────────────────────────────────────
+// ── Setup Step ─────────────────────────────────────────────────────────────────
 
-interface StatCardProps {
+interface SetupStep {
+  id: string;
+  title: string;
+  description: string;
   icon: React.ReactNode;
-  iconColor: string;
-  iconBg: string;
-  value: string | number;
-  label: string;
-  delay: number;
-  isLoading?: boolean;
-  onClick?: () => void;
-  compact?: boolean;
+  status: 'complete' | 'action-needed' | 'not-started';
+  ctaLabel: string;
+  ctaPath: string;
+  priority: number; // lower = more important
+  detail?: string;
 }
 
-const StatCard = ({ icon, iconColor, iconBg, value, label, delay, isLoading, onClick, compact }: StatCardProps) => (
-  <motion.div
-    initial={{ opacity: 0, y: 6 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.25, delay }}
-  >
-    <Box
-      onClick={onClick}
-      sx={{
-        px: compact ? 1.5 : 2.5,
-        py: compact ? 0.75 : 2,
-        borderRadius: compact ? 1.5 : 2,
-        backgroundColor: 'hsl(var(--card))',
-        border: '1px solid hsl(var(--border))',
-        display: 'flex',
-        alignItems: 'center',
-        gap: compact ? 1 : 2,
-        cursor: onClick ? 'pointer' : 'default',
-        transition: 'all 0.2s ease',
-        '&:hover': onClick ? { borderColor: iconColor } : {},
-      }}
+const statusColors = {
+  'complete': { dot: 'hsl(var(--severity-low))', bg: 'hsl(var(--severity-low) / 0.08)', border: 'hsl(var(--severity-low) / 0.2)' },
+  'action-needed': { dot: 'hsl(var(--primary))', bg: 'hsl(var(--primary) / 0.08)', border: 'hsl(var(--primary) / 0.25)' },
+  'not-started': { dot: 'hsl(var(--muted-foreground))', bg: 'hsl(var(--muted) / 0.3)', border: 'hsl(var(--border))' },
+};
+
+const SetupStepCard = ({ step, index }: { step: SetupStep; index: number }) => {
+  const navigate = useNavigate();
+  const colors = statusColors[step.status];
+  const isComplete = step.status === 'complete';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, delay: index * 0.05 }}
     >
       <Box
+        onClick={() => !isComplete && navigate(step.ctaPath)}
         sx={{
-          width: compact ? 28 : 40,
-          height: compact ? 28 : 40,
-          borderRadius: compact ? 1 : 2,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: iconBg,
-          color: iconColor,
-          flexShrink: 0,
+          gap: 2,
+          px: 2.5,
+          py: 2,
+          borderRadius: 2,
+          border: `1px solid ${colors.border}`,
+          backgroundColor: colors.bg,
+          cursor: isComplete ? 'default' : 'pointer',
+          transition: 'all 0.2s ease',
+          '&:hover': isComplete ? {} : {
+            borderColor: 'hsl(var(--primary) / 0.5)',
+            backgroundColor: 'hsl(var(--primary) / 0.06)',
+          },
+          opacity: isComplete ? 0.65 : 1,
         }}
       >
-        {compact ? <Box sx={{ '& > *': { width: 14, height: 14 } }}>{icon}</Box> : icon}
-      </Box>
-      <Box>
-        {isLoading ? (
-          <Skeleton variant="text" width={compact ? 28 : 40} height={compact ? 20 : 28} sx={{ bgcolor: 'hsl(var(--muted) / 0.3)' }} />
-        ) : (
-          <Typography sx={{ fontWeight: 700, fontSize: compact ? '0.875rem' : '1.25rem', lineHeight: 1.2, color: 'hsl(var(--foreground))' }}>
-            {value}
-          </Typography>
-        )}
-        <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: compact ? '0.6rem' : '0.75rem', lineHeight: 1.3 }}>
-          {label}
-        </Typography>
-      </Box>
-    </Box>
-  </motion.div>
-);
+        {/* Icon */}
+        <Box
+          sx={{
+            width: 40,
+            height: 40,
+            borderRadius: 2,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: isComplete ? 'hsl(var(--severity-low) / 0.15)' : 'hsl(var(--primary) / 0.12)',
+            color: isComplete ? 'hsl(var(--severity-low))' : 'hsl(var(--primary))',
+            flexShrink: 0,
+          }}
+        >
+          {isComplete ? <Check size={20} /> : step.icon}
+        </Box>
 
-// ── Notification row ───────────────────────────────────────────────────────────
+        {/* Content */}
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography sx={{
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              color: 'hsl(var(--foreground))',
+              textDecoration: isComplete ? 'line-through' : 'none',
+            }}>
+              {step.title}
+            </Typography>
+            {isComplete && (
+              <Chip
+                label="Done"
+                size="small"
+                sx={{
+                  height: 20,
+                  fontSize: '0.65rem',
+                  fontWeight: 600,
+                  backgroundColor: 'hsl(var(--severity-low) / 0.15)',
+                  color: 'hsl(var(--severity-low))',
+                }}
+              />
+            )}
+          </Box>
+          <Typography sx={{
+            fontSize: '0.78rem',
+            color: 'hsl(var(--muted-foreground))',
+            mt: 0.25,
+          }}>
+            {step.description}
+          </Typography>
+          {step.detail && !isComplete && (
+            <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--primary))', mt: 0.5, fontWeight: 500 }}>
+              {step.detail}
+            </Typography>
+          )}
+        </Box>
+
+        {/* CTA */}
+        {!isComplete && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexShrink: 0 }}>
+            <Typography sx={{ fontSize: '0.78rem', fontWeight: 600, color: 'hsl(var(--primary))', whiteSpace: 'nowrap' }}>
+              {step.ctaLabel}
+            </Typography>
+            <ChevronRight size={16} style={{ color: 'hsl(var(--primary))' }} />
+          </Box>
+        )}
+      </Box>
+    </motion.div>
+  );
+};
+
+// ── Notification row ──────────────────────────────────────────────────────────
 
 interface NotificationRowProps {
   notification: AgentNotification;
@@ -132,7 +201,6 @@ const NotificationRow = ({ notification, entityBasePath, onApprove, onQuickView,
         '&:hover': { borderColor: 'hsl(var(--primary) / 0.4)' },
       }}
     >
-      {/* Content */}
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Typography sx={{
@@ -229,7 +297,6 @@ const NotificationRow = ({ notification, entityBasePath, onApprove, onQuickView,
         </Box>
       </Box>
 
-      {/* CTAs */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
         {isApproval ? (
           <>
@@ -347,31 +414,16 @@ const NotificationRow = ({ notification, entityBasePath, onApprove, onQuickView,
 const ITEMS_PER_PAGE = 10;
 
 const DashboardPage = () => {
+  const navigate = useNavigate();
   const { notifications, isLoading, refresh: refreshNotifications } = useAgentNotifications();
   const { singular: entitySingular, basePath: entityBasePath } = useEntityPreference();
+  const { authenticatedApps, loading: authLoading } = useAppAuth();
+  const { data: workflows, isLoading: workflowsLoading } = useWorkflows();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [questionNotification, setQuestionNotification] = useState<AgentNotification | null>(null);
   const [quickViewItem, setQuickViewItem] = useState<QuickViewItem | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [filter, setFilter] = useState<'all' | 'approval' | 'question'>('all');
-  const [isSticky, setIsSticky] = useState(false);
-  const statCardsRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (statCardsRef.current) {
-        const rect = statCardsRef.current.getBoundingClientRect();
-        setIsSticky(rect.top < 0);
-      }
-    };
-    const scrollContainer = document.querySelector('main') || window;
-    scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => {
-      scrollContainer.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -409,12 +461,134 @@ const DashboardPage = () => {
     }
   };
 
-  // Counts
+  // ── Derive setup step statuses ──────────────────────────────────────────────
+
+  const setupSteps = useMemo((): SetupStep[] => {
+    const activatedApps = authenticatedApps.filter(a => a.active);
+    const validatedApps = authenticatedApps.filter(a => a.validation?.valid);
+    const hasActivatedApps = activatedApps.length > 0;
+    const hasAuthenticatedApps = validatedApps.length > 0;
+
+    const workflowList = Array.isArray(workflows) ? workflows : [];
+    const ingestWorkflow = findIngestTicketsWorkflow(workflowList);
+    const forwardWorkflow = findForwardTicketsWorkflow(workflowList);
+    const hasIngest = !!ingestWorkflow;
+    const hasForward = !!forwardWorkflow;
+
+    // Detection: check for Tenzir-related workflows or pipelines
+    const hasDetection = workflowList.some(w =>
+      (w.tags || []).some((t: string) => t.toLowerCase().includes('tenzir') || t.toLowerCase().includes('detection')) ||
+      w.name?.toLowerCase().includes('sigma') ||
+      w.name?.toLowerCase().includes('detection')
+    );
+
+    // Vulnerability: check for vuln-scanner related workflows
+    const hasVulnSetup = workflowList.some(w =>
+      w.name?.toLowerCase().includes('vulnerabilit') ||
+      (w.tags || []).some((t: string) => t.toLowerCase().includes('vuln'))
+    );
+
+    const steps: SetupStep[] = [
+      {
+        id: 'activate-apps',
+        title: 'Activate apps',
+        description: 'Browse the app catalog and activate the tools your team uses.',
+        icon: <Plug size={20} />,
+        status: hasActivatedApps ? 'complete' : 'not-started',
+        ctaLabel: 'Browse Apps',
+        ctaPath: '/apps',
+        priority: 1,
+        detail: hasActivatedApps ? undefined : 'Start here — activate at least one app to unlock other steps.',
+      },
+      {
+        id: 'authenticate-apps',
+        title: 'Authenticate apps',
+        description: hasActivatedApps && !hasAuthenticatedApps
+          ? `You have ${activatedApps.length} app${activatedApps.length !== 1 ? 's' : ''} activated but none authenticated yet.`
+          : hasAuthenticatedApps
+          ? `${validatedApps.length} app${validatedApps.length !== 1 ? 's' : ''} authenticated and validated.`
+          : 'Add API keys or OAuth credentials so Shuffle can interact with your tools.',
+        icon: <KeyRound size={20} />,
+        status: hasAuthenticatedApps ? 'complete' : hasActivatedApps ? 'action-needed' : 'not-started',
+        ctaLabel: 'Set Up Auth',
+        ctaPath: '/apps',
+        priority: 2,
+        detail: hasActivatedApps && !hasAuthenticatedApps
+          ? `${activatedApps.length} activated — add credentials to connect.`
+          : undefined,
+      },
+      {
+        id: 'enable-ingest',
+        title: 'Enable incident ingestion',
+        description: hasIngest
+          ? 'Incident ingestion workflow is configured and pulling data.'
+          : 'Set up automatic ingestion to pull incidents from your connected tools.',
+        icon: <ArrowDownToLine size={20} />,
+        status: hasIngest ? 'complete' : hasAuthenticatedApps ? 'action-needed' : 'not-started',
+        ctaLabel: 'Configure',
+        ctaPath: '/incidents',
+        priority: 3,
+      },
+      {
+        id: 'enable-forward',
+        title: 'Enable incident forwarding',
+        description: hasForward
+          ? 'Forwarding workflow is configured — incidents are sent to external tools.'
+          : 'Forward enriched incidents to ticketing systems, SIEMs, or communication tools.',
+        icon: <Send size={20} />,
+        status: hasForward ? 'complete' : hasIngest ? 'action-needed' : 'not-started',
+        ctaLabel: 'Configure',
+        ctaPath: '/incidents',
+        priority: 4,
+      },
+      {
+        id: 'setup-detection',
+        title: 'Set up detection sensors',
+        description: hasDetection
+          ? 'Detection pipelines are configured and monitoring your environment.'
+          : 'Deploy detection pipelines to monitor logs, network traffic, and endpoints.',
+        icon: <Radar size={20} />,
+        status: hasDetection ? 'complete' : 'not-started',
+        ctaLabel: 'Set Up',
+        ctaPath: '/detection',
+        priority: 5,
+      },
+      {
+        id: 'setup-vulns',
+        title: 'Set up vulnerability ingestion',
+        description: hasVulnSetup
+          ? 'Vulnerability scanners are connected and feeding data.'
+          : 'Connect vulnerability scanners to track CVEs, misconfigs, and identity risks.',
+        icon: <Shield size={20} />,
+        status: hasVulnSetup ? 'complete' : 'not-started',
+        ctaLabel: 'Set Up',
+        ctaPath: '/vulnerabilities',
+        priority: 6,
+      },
+    ];
+
+    // Sort: action-needed first, then not-started, then complete
+    const statusOrder = { 'action-needed': 0, 'not-started': 1, 'complete': 2 };
+    steps.sort((a, b) => {
+      const sDiff = statusOrder[a.status] - statusOrder[b.status];
+      if (sDiff !== 0) return sDiff;
+      return a.priority - b.priority;
+    });
+
+    return steps;
+  }, [authenticatedApps, workflows]);
+
+  const completedCount = setupSteps.filter(s => s.status === 'complete').length;
+  const totalSteps = setupSteps.length;
+  const progressPercent = Math.round((completedCount / totalSteps) * 100);
+  const allComplete = completedCount === totalSteps;
+  const setupLoading = authLoading || workflowsLoading;
+
+  // Notification counts & filter
   const approvalCount = notifications.filter(n => isApprovalNotification(n)).length;
   const questionCount = notifications.filter(n => !isApprovalNotification(n)).length;
   const totalCount = notifications.length;
 
-  // Filter
   const filteredNotifications = useMemo(() => {
     if (filter === 'all') return notifications;
     if (filter === 'approval') return notifications.filter(n => isApprovalNotification(n));
@@ -426,54 +600,16 @@ const DashboardPage = () => {
   const totalPages = Math.ceil(filteredCount / ITEMS_PER_PAGE);
   const paginated = filteredNotifications.slice(currentPage * ITEMS_PER_PAGE, (currentPage + 1) * ITEMS_PER_PAGE);
 
-  const statCards = (compact = false) => (
-    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: compact ? 1.5 : 2 }}>
-      <StatCard
-        icon={<AlertTriangle size={18} />}
-        iconColor="hsl(var(--severity-high))"
-        iconBg="hsl(var(--severity-high) / 0.12)"
-        value={totalCount}
-        label="Total Notifications"
-        delay={0}
-        isLoading={isLoading}
-        onClick={() => { setFilter('all'); setCurrentPage(0); }}
-        compact={compact}
-      />
-      <StatCard
-        icon={<Clock size={18} />}
-        iconColor="hsl(var(--primary))"
-        iconBg="hsl(var(--primary) / 0.12)"
-        value={approvalCount}
-        label="Needs Approval"
-        delay={compact ? 0 : 0.05}
-        isLoading={isLoading}
-        onClick={() => { setFilter('approval'); setCurrentPage(0); }}
-        compact={compact}
-      />
-      <StatCard
-        icon={<HelpCircle size={18} />}
-        iconColor="hsl(var(--severity-medium))"
-        iconBg="hsl(var(--severity-medium) / 0.12)"
-        value={questionCount}
-        label="Pending Questions"
-        delay={compact ? 0 : 0.1}
-        isLoading={isLoading}
-        onClick={() => { setFilter('question'); setCurrentPage(0); }}
-        compact={compact}
-      />
-    </Box>
-  );
-
   return (
     <>
-    <Box sx={{ maxWidth: 1400, mx: 'auto', p: 4 }}>
+    <Box sx={{ maxWidth: 1100, mx: 'auto', p: { xs: 2, sm: 3, md: 4 } }}>
       {/* Header */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Typography variant="h4" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
             Dashboard
           </Typography>
-          {isLoading && !isRefreshing && (
+          {(isLoading || setupLoading) && !isRefreshing && (
             <Loader2 size={18} style={{ color: 'hsl(var(--muted-foreground))', animation: 'spin 1s linear infinite' }} />
           )}
         </Box>
@@ -494,41 +630,71 @@ const DashboardPage = () => {
         </Tooltip>
       </Box>
       <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.875rem', mb: 4 }}>
-        AI Agent notifications — see what needs your attention.
+        Get started by completing the setup steps below, then monitor agent activity.
       </Typography>
 
-      {/* Stat cards */}
-      <Box ref={statCardsRef} sx={{ mb: 4 }}>
-        {statCards()}
-      </Box>
-
-      {/* Sticky compact stat bar */}
-      {isSticky && (
-        <Box
-          sx={{
-            position: 'sticky',
-            top: 0,
-            zIndex: 1100,
-            backgroundColor: 'hsl(var(--background) / 0.92)',
-            backdropFilter: 'blur(12px)',
-            borderBottom: '1px solid hsl(var(--border))',
-            mx: { xs: -1.5, sm: -2, md: -3 },
-            px: { xs: 1.5, sm: 2, md: 3 },
-            py: 1,
-          }}
-        >
-          <Box sx={{ maxWidth: 1400, mx: 'auto' }}>
-            {statCards(true)}
+      {/* ── Setup Checklist ──────────────────────────────────────────────────── */}
+      <Box sx={{ mb: 5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Sparkles size={18} style={{ color: 'hsl(var(--primary))' }} />
+            <Typography sx={{ fontWeight: 600, fontSize: '1rem', color: 'hsl(var(--foreground))' }}>
+              Setup Guide
+            </Typography>
+            <Chip
+              label={`${completedCount}/${totalSteps}`}
+              size="small"
+              sx={{
+                height: 22,
+                fontSize: '0.72rem',
+                fontWeight: 600,
+                backgroundColor: allComplete ? 'hsl(var(--severity-low) / 0.15)' : 'hsl(var(--primary) / 0.15)',
+                color: allComplete ? 'hsl(var(--severity-low))' : 'hsl(var(--primary))',
+              }}
+            />
           </Box>
         </Box>
-      )}
 
-      {/* Notifications list */}
+        {/* Progress bar */}
+        <Box sx={{ mb: 2.5 }}>
+          <LinearProgress
+            variant={setupLoading ? 'indeterminate' : 'determinate'}
+            value={progressPercent}
+            sx={{
+              height: 6,
+              borderRadius: 3,
+              backgroundColor: 'hsl(var(--muted))',
+              '& .MuiLinearProgress-bar': {
+                borderRadius: 3,
+                backgroundColor: allComplete ? 'hsl(var(--severity-low))' : 'hsl(var(--primary))',
+                transition: 'transform 0.6s ease',
+              },
+            }}
+          />
+        </Box>
+
+        {/* Steps */}
+        {setupLoading ? (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            {[0, 1, 2].map(i => (
+              <Skeleton key={i} variant="rounded" height={68} sx={{ borderRadius: 2, bgcolor: 'hsl(var(--muted) / 0.3)' }} />
+            ))}
+          </Box>
+        ) : (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            {setupSteps.map((step, i) => (
+              <SetupStepCard key={step.id} step={step} index={i} />
+            ))}
+          </Box>
+        )}
+      </Box>
+
+      {/* ── Agent Notifications ──────────────────────────────────────────────── */}
       <Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
           <AlertTriangle size={18} style={{ color: 'hsl(var(--severity-high))' }} />
           <Typography sx={{ fontWeight: 600, fontSize: '1rem', color: 'hsl(var(--foreground))' }}>
-            Needs Your Attention
+            Agent Notifications
           </Typography>
           {totalCount > 0 && (
             <Chip
