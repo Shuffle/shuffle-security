@@ -106,9 +106,17 @@ const getRegionFlag = (regionUrl?: string): { flag: string; code: string } => {
   if (url.includes('california') || url.includes('us.') || url.includes('us-')) {
     return { flag: '🇺🇸', code: 'US' };
   }
+  // Frankfurt / Germany
+  if (url.includes('frankfurt') || url.includes('de.') || url.includes('de-')) {
+    return { flag: '🇩🇪', code: 'DE' };
+  }
   // EU-2 region
   if (url.includes('eu-2') || url.includes('eu2')) {
     return { flag: '🇪🇺', code: 'EU-2' };
+  }
+  // Generic EU
+  if (url.includes('eu.') || url.includes('eu-')) {
+    return { flag: '🇪🇺', code: 'EU' };
   }
   // Canada
   if (url.includes('ca.') || url.includes('canada')) {
@@ -118,8 +126,12 @@ const getRegionFlag = (regionUrl?: string): { flag: string; code: string } => {
   if (url.includes('au.') || url.includes('aus') || url.includes('australia')) {
     return { flag: '🇦🇺', code: 'AUS' };
   }
-  // Default to UK for shuffler.io
-  return { flag: '🇬🇧', code: 'UK' };
+  // UK
+  if (url.includes('uk.') || url.includes('uk-') || url.includes('london')) {
+    return { flag: '🇬🇧', code: 'UK' };
+  }
+  // Default shuffler.io (no region prefix) — show globe
+  return { flag: '🌐', code: '' };
 };
 
 // Sort orgs with parent-child hierarchy
