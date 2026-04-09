@@ -30,7 +30,9 @@ export const SIDEBAR_TAB_OPTIONS = [
   { key: 'detection_pipelines', label: 'Pipelines', parent: 'detection' },
   { key: 'detection_mitre', label: 'ATT&CK', parent: 'detection' },
   // Standalone top-level items
+  { key: 'dashboard', label: 'Dashboard', parent: null },
   { key: 'automation', label: 'Automation', parent: null },
+  { key: 'vulnerabilities', label: 'Vulnerabilities', parent: null },
   { key: 'documentation', label: 'Documentation', parent: null },
 ] as const;
 
@@ -46,7 +48,9 @@ const DEFAULT_SIDEBAR_TABS: Record<SidebarTabKey, boolean> = {
   detection_rules: true,
   detection_pipelines: true,
   detection_mitre: true,
+  dashboard: true,
   automation: true,
+  vulnerabilities: true,
   documentation: true,
 };
 
