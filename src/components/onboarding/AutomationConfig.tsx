@@ -269,10 +269,10 @@ const SourceChip = ({ label, apps, activeCount, totalCount, hasAnyActive, option
   
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, px: 1.5, py: 0.75, borderRadius: 2,
-      background: hasAnyActive ? 'rgba(34, 197, 94, 0.1)' : 'hsl(var(--muted))',
-      border: '1px solid', borderColor: hasAnyActive ? 'rgba(34, 197, 94, 0.3)' : 'hsl(var(--border))',
+      background: hasAnyActive ? 'hsl(var(--severity-low) / 0.1)' : 'hsl(var(--muted))',
+      border: '1px solid', borderColor: hasAnyActive ? 'hsl(var(--severity-low) / 0.3)' : 'hsl(var(--border))',
     }}>
-      <Typography variant="caption" sx={{ color: hasAnyActive ? '#22c55e' : 'hsl(var(--muted-foreground))', fontWeight: 500 }}>
+      <Typography variant="caption" sx={{ color: hasAnyActive ? 'hsl(var(--severity-low))' : 'hsl(var(--muted-foreground))', fontWeight: 500 }}>
         {label}{hasAny && <Box component="span" sx={{ ml: 0.5, opacity: 0.8 }}>({activeCount}/{totalCount})</Box>}
       </Typography>
       {activeApps.length > 0 && (
@@ -280,7 +280,7 @@ const SourceChip = ({ label, apps, activeCount, totalCount, hasAnyActive, option
           {activeApps.slice(0, 2).map((app) => (
             <Tooltip key={app.id} title={<Box><Typography variant="caption" sx={{ fontWeight: 600 }}>{readableAppName(app.name)}</Typography><Typography variant="caption" sx={{ display: 'block', opacity: 0.8 }}>Active{app.isSelected ? ' • This setup' : ' • Pre-existing'}</Typography></Box>} arrow placement="top">
               <Box sx={{ position: 'relative' }}>
-                <Avatar src={app.image} alt={readableAppName(app.name)} sx={{ width: 16, height: 16, fontSize: '0.5rem', border: '1px solid', borderColor: 'rgba(34, 197, 94, 0.5)' }}>{app.name[0]}</Avatar>
+                <Avatar src={app.image} alt={readableAppName(app.name)} sx={{ width: 16, height: 16, fontSize: '0.5rem', border: '1px solid', borderColor: 'hsl(var(--severity-low) / 0.5)' }}>{app.name[0]}</Avatar>
               </Box>
             </Tooltip>
           ))}
