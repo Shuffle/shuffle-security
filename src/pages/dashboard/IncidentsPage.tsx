@@ -897,7 +897,10 @@ const IncidentsPage = () => {
       if (!existing) {
         keyMap.set(rawKey, { best: inc, allOrgs: [incOrgInfo] });
       } else {
-        existing.allOrgs.push(incOrgInfo);
+        // Only add if this orgId isn't already tracked
+        if (!existing.allOrgs.some(o => o.orgId === incOrgInfo.orgId)) {
+          existing.allOrgs.push(incOrgInfo);
+        }
         // Keep the one with the latest edit timestamp
         const existingTs = existing.best.editedTs || existing.best.createdTs || 0;
         const newTs = inc.editedTs || inc.createdTs || 0;
