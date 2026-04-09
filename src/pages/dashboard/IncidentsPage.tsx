@@ -476,14 +476,11 @@ const IncidentsPage = () => {
   const [subOrgFailed, setSubOrgFailed] = useState<Set<string>>(new Set());
 
   // Fetch incidents from all sub-orgs in parallel
+  // Only fetch child orgs when we ARE a parent. Don't fetch parent org incidents
+  // when we're in a child org — the parent API returns child incidents too, causing duplicates.
   const fetchSubOrgIncidents = useCallback(async () => {
-    // Build list of all orgs to fetch (sub-orgs + parent org, excluding current)
-    const orgsToFetch = [
-      ...subOrgs.filter(o => o.id !== currentOrgId),
-    ];
-    if (parentOrg && parentOrg.id !== currentOrgId && !orgsToFetch.some(o => o.id === parentOrg.id)) {
-      orgsToFetch.push(parentOrg);
-    }
+    // Only fetch sub-orgs (children), never the parent org
+    const orgsToFetch = subOrgs.filter(o => o.id !== currentOrgId);
     if (orgsToFetch.length === 0) return;
 
     const loadingIds = new Set(orgsToFetch.map(o => o.id));
