@@ -33,6 +33,8 @@ import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import SearchIcon from '@mui/icons-material/Search';
+import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import BuildIcon from '@mui/icons-material/Build';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
@@ -164,6 +166,22 @@ const IOCTypesPage = () => {
   const handleToggleEnabled = async (type: IOCType) => {
     const updated = { ...type, enabled: !type.enabled };
     await addItem(type.name, updated);
+  };
+
+  const handleBulkEnable = async (enable: boolean) => {
+    setIsInitializing(true);
+    setInitProgress(10);
+    const { setDatastoreItems } = await import('@/services/datastore');
+    const bulkItems = iocTypes.map(ioc => ({
+      key: ioc.name,
+      value: { ...ioc, enabled: enable },
+    }));
+    setInitProgress(50);
+    await setDatastoreItems(bulkItems, CATEGORY);
+    setInitProgress(100);
+    await fetchItems();
+    setIsInitializing(false);
+    setInitProgress(0);
   };
 
   const enabledCount = useMemo(() => iocTypes.filter(t => t.enabled).length, [iocTypes]);
@@ -313,18 +331,44 @@ const IOCTypesPage = () => {
             </Button>
           )}
           {iocTypes.length > 0 && (
-            <Tooltip title="Reset all IOC types to defaults" arrow>
-              <Button
-                variant="outlined"
-                color="warning"
-                startIcon={<RestartAltIcon />}
-                onClick={handleInitDefaults}
-                disabled={isInitializing}
-                sx={{ height: 36 }}
-              >
-                Reset
-              </Button>
-            </Tooltip>
+            <>
+              <Tooltip title="Enable all IOC types" arrow>
+                <Button
+                  variant="outlined"
+                  color="success"
+                  startIcon={<CheckBoxIcon />}
+                  onClick={() => handleBulkEnable(true)}
+                  disabled={isInitializing || enabledCount === iocTypes.length}
+                  sx={{ height: 36 }}
+                >
+                  All
+                </Button>
+              </Tooltip>
+              <Tooltip title="Disable all IOC types" arrow>
+                <Button
+                  variant="outlined"
+                  color="error"
+                  startIcon={<CheckBoxOutlineBlankIcon />}
+                  onClick={() => handleBulkEnable(false)}
+                  disabled={isInitializing || enabledCount === 0}
+                  sx={{ height: 36 }}
+                >
+                  None
+                </Button>
+              </Tooltip>
+              <Tooltip title="Reset all IOC types to defaults" arrow>
+                <Button
+                  variant="outlined"
+                  color="warning"
+                  startIcon={<RestartAltIcon />}
+                  onClick={handleInitDefaults}
+                  disabled={isInitializing}
+                  sx={{ height: 36 }}
+                >
+                  Reset
+                </Button>
+              </Tooltip>
+            </>
           )}
           <Button variant="outlined" startIcon={<AddIcon />} onClick={() => handleOpenDialog()} sx={{ height: 36 }}>
             Add IOC Type
