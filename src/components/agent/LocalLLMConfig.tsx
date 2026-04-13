@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 
 const OPENAI_APP_NAME = 'OpenAI';
+const OPENAI_APP_ID = '5d19dd82517870c68d40cacad9b5ca91';
 
 export interface AgentLocalModel {
   url: string;
@@ -168,7 +169,7 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth, onSave, onTestResult }: LocalL
         label: 'Auth for OpenAI',
         app: {
           name: OPENAI_APP_NAME,
-          id: OPENAI_APP_NAME.toLowerCase(),
+          id: OPENAI_APP_ID,
           app_version: '1.0.0',
         },
         fields,
