@@ -722,6 +722,23 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
         )}
       </Box>
     </Drawer>
+
+    {/* App Search Drawer */}
+    <AppSearchDrawer
+      open={appSearchOpen}
+      onClose={() => setAppSearchOpen(false)}
+      title="Find Apps"
+      subtitle="Select apps to target with the agent"
+      onQuickSelect={(app) => {
+        // Prevent duplicates
+        setSelectedApps(prev =>
+          prev.some(a => a.name === app.name)
+            ? prev
+            : [...prev, app]
+        );
+      }}
+    />
+  </>
   );
 };
 
