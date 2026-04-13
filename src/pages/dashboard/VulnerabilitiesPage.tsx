@@ -420,6 +420,138 @@ const VulnerabilitiesPage = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Add Host Monitor Dialog */}
+      <Dialog open={addHostOpen} onOpenChange={setAddHostOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Laptop size={18} className="text-primary" />
+              Add Host Monitor
+            </DialogTitle>
+            <DialogDescription>
+              Deploy a lightweight monitor on a host to continuously check its security posture.
+            </DialogDescription>
+          </DialogHeader>
+
+          {addHostStep === 'config' ? (
+            <div className="space-y-5 mt-2">
+              {/* Host name */}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Host Name</Label>
+                <Input
+                  placeholder="e.g. prod-web-01, johns-macbook"
+                  value={hostName}
+                  onChange={e => setHostName(e.target.value)}
+                />
+              </div>
+
+              {/* Platform */}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Platform</Label>
+                <div className="flex gap-2">
+                  {([
+                    { value: 'linux' as const, label: 'Linux' },
+                    { value: 'macos' as const, label: 'macOS' },
+                    { value: 'windows' as const, label: 'Windows' },
+                  ]).map(p => (
+                    <Button
+                      key={p.value}
+                      variant={hostPlatform === p.value ? 'default' : 'outline'}
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => setHostPlatform(p.value)}
+                    >
+                      {p.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Checks */}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Checks to Enable</Label>
+                <div className="space-y-2">
+                  {HOST_CHECK_OPTIONS.map(check => (
+                    <label
+                      key={check.id}
+                      className="flex items-center gap-3 rounded-lg border border-border px-3 py-2.5 cursor-pointer hover:bg-muted/50 transition-colors"
+                    >
+                      <Checkbox
+                        checked={hostChecks[check.id]}
+                        onCheckedChange={(v) => setHostChecks(prev => ({ ...prev, [check.id]: !!v }))}
+                      />
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <span className="text-muted-foreground shrink-0">{check.icon}</span>
+                        <div className="min-w-0">
+                          <span className="text-sm font-medium text-foreground block">{check.label}</span>
+                          <span className="text-xs text-muted-foreground">{check.description}</span>
+                        </div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4 mt-2">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Laptop size={14} />
+                <span className="font-medium text-foreground">{hostName || 'my-host'}</span>
+                <span>·</span>
+                <span className="capitalize">{hostPlatform}</span>
+                <span>·</span>
+                <span>{Object.values(hostChecks).filter(Boolean).length} checks</span>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Run this on the target host</Label>
+                <div className="relative">
+                  <pre className="text-xs bg-muted rounded-lg p-4 pr-12 border border-border overflow-x-auto font-mono text-foreground whitespace-pre-wrap leading-relaxed">
+                    {getDeployCommand()}
+                  </pre>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2 right-2 h-7 w-7"
+                    onClick={handleCopyCommand}
+                  >
+                    {copied ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-primary/20 bg-primary/[0.04] px-3 py-2.5">
+                <p className="text-xs text-muted-foreground">
+                  <span className="font-medium text-foreground">What happens next:</span> The script installs a lightweight daemon that periodically runs the selected checks and reports results back to Shuffle. Results will appear in the Host Monitors table above.
+                </p>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="mt-2">
+            {addHostStep === 'config' ? (
+              <Button
+                size="sm"
+                onClick={() => setAddHostStep('deploy')}
+                disabled={Object.values(hostChecks).every(v => !v)}
+              >
+                Next: Deploy
+                <ChevronRight size={14} className="ml-1" />
+              </Button>
+            ) : (
+              <div className="flex gap-2 w-full justify-between">
+                <Button variant="outline" size="sm" onClick={() => setAddHostStep('config')}>
+                  Back
+                </Button>
+                <Button size="sm" onClick={() => { setAddHostOpen(false); toast.success('Host monitor configured', { description: 'Deploy the command on your target host to start monitoring.' }); }}>
+                  Done
+                </Button>
+              </div>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
