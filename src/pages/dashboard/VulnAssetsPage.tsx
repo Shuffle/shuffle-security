@@ -140,7 +140,7 @@ const VulnAssetsPage = () => {
     if (selectedGroup) {
       flags.push(`--queue=${selectedGroup.queue}`);
       if (selectedGroup.auth) flags.push(`--auth=${selectedGroup.auth}`);
-      if (selectedGroup.id) flags.push(`--id=${selectedGroup.id}`);
+      
       if (selectedGroup.org_id) flags.push(`--org_id=${selectedGroup.org_id}`);
     }
     if (hostChecks.installed_software) flags.push('--software_list_enabled=true');
