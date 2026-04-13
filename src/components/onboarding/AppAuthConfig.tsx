@@ -27,6 +27,7 @@ import {
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import LockIcon from '@mui/icons-material/Lock';
@@ -526,6 +527,53 @@ export const AppAuthCard = ({
   const [docsOpen, setDocsOpen] = useState(false);
   const [docsContent, setDocsContent] = useState<string>('');
   const [docsLoading, setDocsLoading] = useState(false);
+  const [editingLabel, setEditingLabel] = useState(false);
+  const [editLabelValue, setEditLabelValue] = useState('');
+  const [savingLabel, setSavingLabel] = useState(false);
+
+  const handleRenameAuth = async () => {
+    if (!selectedAuth || !editLabelValue.trim()) return;
+    setSavingLabel(true);
+    try {
+      // Build the auth body with all fields but replaced label
+      // Fill any sensitive fields with placeholder
+      const placeholder = 'Secret. Replaced during app execution!';
+      const authBody: Record<string, any> = {
+        ...selectedAuth,
+        label: editLabelValue.trim(),
+      };
+      // Ensure fields array values are placeholders
+      if (authBody.fields) {
+        const newFields: Record<string, any> = {};
+        for (const [key, val] of Object.entries(authBody.fields)) {
+          newFields[key] = typeof val === 'string' ? placeholder : val;
+        }
+        authBody.fields = newFields;
+      }
+
+      const response = await fetch(getApiUrl('/api/v1/apps/authentication'), {
+        method: 'PUT',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeader(),
+        },
+        body: JSON.stringify(authBody),
+      });
+
+      if (response.ok) {
+        setEditingLabel(false);
+        if (onRefreshAuth) await onRefreshAuth();
+        toast({ title: 'Label updated', description: `Renamed to "${editLabelValue.trim()}"` });
+      } else {
+        toast({ title: 'Failed to rename', description: 'Could not update the authentication label', variant: 'destructive' });
+      }
+    } catch (err) {
+      toast({ title: 'Error', description: 'Failed to rename authentication', variant: 'destructive' });
+    } finally {
+      setSavingLabel(false);
+    }
+  };
 
   const fetchDocs = async () => {
     setDocsLoading(true);
@@ -1399,18 +1447,97 @@ export const AppAuthCard = ({
                             fontSize: 20 
                           }} />
                         </Box>
-                        <Box sx={{ minWidth: 0 }}>
-                          <Typography sx={{ 
-                            color: 'hsl(var(--foreground))', 
-                            fontWeight: 600, 
-                            fontSize: { xs: '0.9rem', sm: '0.95rem' },
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                            lineHeight: 1.3,
-                          }}>
-                            {selectedAuth.label || 'Selected authentication'}
-                          </Typography>
+                        <Box sx={{ minWidth: 0, flex: 1 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            {editingLabel ? (
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }} onClick={e => e.stopPropagation()}>
+                                <TextField
+                                  value={editLabelValue}
+                                  onChange={e => setEditLabelValue(e.target.value)}
+                                  onKeyDown={e => {
+                                    if (e.key === 'Enter') handleRenameAuth();
+                                    if (e.key === 'Escape') setEditingLabel(false);
+                                  }}
+                                  size="small"
+                                  autoFocus
+                                  sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                      height: 28,
+                                      fontSize: '0.85rem',
+                                      fontWeight: 600,
+                                      color: 'hsl(var(--foreground))',
+                                      '& fieldset': { borderColor: 'hsl(var(--border))' },
+                                      '&.Mui-focused fieldset': { borderColor: 'hsl(var(--primary))' },
+                                    },
+                                    '& .MuiOutlinedInput-input': { py: 0.25, px: 1 },
+                                  }}
+                                />
+                                <Button
+                                  size="small"
+                                  variant="contained"
+                                  onClick={handleRenameAuth}
+                                  disabled={savingLabel || !editLabelValue.trim()}
+                                  sx={{
+                                    minWidth: 0,
+                                    px: 1.5,
+                                    py: 0.25,
+                                    fontSize: '0.7rem',
+                                    textTransform: 'none',
+                                    bgcolor: 'hsl(var(--primary))',
+                                    '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)' },
+                                  }}
+                                >
+                                  {savingLabel ? <CircularProgress size={12} sx={{ color: 'inherit' }} /> : 'Save'}
+                                </Button>
+                                <Button
+                                  size="small"
+                                  variant="text"
+                                  onClick={() => setEditingLabel(false)}
+                                  sx={{
+                                    minWidth: 0,
+                                    px: 1,
+                                    py: 0.25,
+                                    fontSize: '0.7rem',
+                                    textTransform: 'none',
+                                    color: 'hsl(var(--muted-foreground))',
+                                  }}
+                                >
+                                  Cancel
+                                </Button>
+                              </Box>
+                            ) : (
+                              <>
+                                <Typography sx={{ 
+                                  color: 'hsl(var(--foreground))', 
+                                  fontWeight: 600, 
+                                  fontSize: { xs: '0.9rem', sm: '0.95rem' },
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                  lineHeight: 1.3,
+                                }}>
+                                  {selectedAuth.label || 'Selected authentication'}
+                                </Typography>
+                                <Tooltip title="Rename authentication" arrow>
+                                  <IconButton
+                                    size="small"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setEditLabelValue(selectedAuth.label || '');
+                                      setEditingLabel(true);
+                                    }}
+                                    sx={{
+                                      p: 0.3,
+                                      color: 'hsl(var(--muted-foreground))',
+                                      '&:hover': { color: 'hsl(var(--primary))' },
+                                    }}
+                                  >
+                                    <EditIcon sx={{ fontSize: 14 }} />
+                                  </IconButton>
+                                </Tooltip>
+                              </>
+                            )}
+                          </Box>
                           <Typography sx={{ 
                             color: localTestStatus === 'success' 
                               ? '#22c55e' 
