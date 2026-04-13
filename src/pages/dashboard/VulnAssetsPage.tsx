@@ -436,7 +436,7 @@ const VulnAssetsPage = () => {
                   <FolderOpen size={13} className="text-muted-foreground" />
                   Monitoring Group
                 </Label>
-                <p className="text-xs text-muted-foreground">Each group uses a dedicated Orborus queue for host communication.</p>
+                <p className="text-xs text-muted-foreground">Each monitoring group uses a Runtime Location as the sensor group.</p>
                 {!isCreatingGroup ? (
                   <div className="flex gap-2">
                     <Select value={selectedGroupId} onValueChange={setSelectedGroupId} disabled={groupsLoading}>
@@ -478,7 +478,7 @@ const VulnAssetsPage = () => {
                         placeholder="e.g. Engineering"
                         className="h-8 text-sm"
                       />
-                      <p className="text-[0.65rem] text-muted-foreground">This will create an Orborus environment with the same name as the queue.</p>
+                      <p className="text-[0.65rem] text-muted-foreground">This will create a new Monitoring group with the same name as the queue.</p>
                     </div>
                     <div className="flex gap-2 justify-end pt-1">
                       <Button variant="ghost" size="sm" onClick={() => { setIsCreatingGroup(false); setNewGroupName(''); }}>
