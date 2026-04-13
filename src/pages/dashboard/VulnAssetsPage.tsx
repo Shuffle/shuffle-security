@@ -170,7 +170,11 @@ const VulnAssetsPage = () => {
   const selectedGroup = groups.find(g => g.id === selectedGroupId);
 
   // Aggregate all hosts across all sensor groups
-  const allHosts = groups.flatMap(g => g.hosts.map(h => ({ ...h, groupName: g.name, groupId: g.id })));
+  const allHostsRaw = groups.flatMap(g => g.hosts.map(h => ({ ...h, groupName: g.name, groupId: g.id })));
+  const allHosts = osSortAsc === null ? allHostsRaw : [...allHostsRaw].sort((a, b) => {
+    const cmp = (a.os || '').localeCompare(b.os || '');
+    return osSortAsc ? cmp : -cmp;
+  });
 
   const loadGroups = useCallback(async () => {
     setGroupsLoading(true);
