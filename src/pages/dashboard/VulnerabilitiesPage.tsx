@@ -61,6 +61,17 @@ const VulnerabilitiesPage = () => {
   const [aiScanOpen, setAiScanOpen] = useState(false);
   const [aiScanLoading, setAiScanLoading] = useState(false);
   const [aiScanResult, setAiScanResult] = useState<string | null>(null);
+  const [addHostOpen, setAddHostOpen] = useState(false);
+  const [addHostStep, setAddHostStep] = useState<'config' | 'deploy'>('config');
+  const [hostName, setHostName] = useState('');
+  const [hostPlatform, setHostPlatform] = useState<'linux' | 'macos' | 'windows'>('linux');
+  const [hostChecks, setHostChecks] = useState({
+    metadata: true,
+    hd_encrypted: true,
+    screenlock: true,
+    installed_software: true,
+  });
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const tab = searchParams.get('tab');
