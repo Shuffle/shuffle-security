@@ -445,7 +445,14 @@ const VulnAssetsPage = () => {
         ) : (
           <div className="border-t border-border">
             {/* Table header */}
-            <div className="grid grid-cols-[1.5fr_0.5fr_0.5fr_0.5fr_0.7fr_0.8fr] gap-2 px-5 py-2 border-b border-border bg-muted/30">
+            <div className="grid grid-cols-[2rem_1.5fr_0.5fr_0.5fr_0.5fr_0.7fr_0.8fr] gap-2 px-5 py-2 border-b border-border bg-muted/30">
+              <span
+                className="text-xs font-semibold text-muted-foreground cursor-pointer select-none flex items-center gap-1"
+                onClick={() => setOsSortAsc(prev => prev === null ? true : prev ? false : null)}
+                title="Sort by OS"
+              >
+                OS {osSortAsc === true ? '↑' : osSortAsc === false ? '↓' : ''}
+              </span>
               <span className="text-xs font-semibold text-muted-foreground">Hostname</span>
               <span className="text-xs font-semibold text-muted-foreground">Disk Enc.</span>
               <span className="text-xs font-semibold text-muted-foreground">Screenlock</span>
@@ -472,13 +479,15 @@ const VulnAssetsPage = () => {
               return (
                 <div key={host.uuid}>
                   <div
-                    className="grid grid-cols-[1.5fr_0.5fr_0.5fr_0.5fr_0.7fr_0.8fr] gap-2 px-5 py-3 border-b border-border last:border-b-0 hover:bg-muted/20 transition-colors items-center cursor-pointer"
+                    className="grid grid-cols-[2rem_1.5fr_0.5fr_0.5fr_0.5fr_0.7fr_0.8fr] gap-2 px-5 py-3 border-b border-border last:border-b-0 hover:bg-muted/20 transition-colors items-center cursor-pointer"
                     onClick={toggleExpanded}
                   >
+                    <div className="flex items-center justify-center">
+                      <OsIcon os={host.os} size={14} className="text-muted-foreground" />
+                    </div>
                     <div className="flex flex-col min-w-0">
                       <div className="flex items-center gap-2 min-w-0">
                         <ChevronRight size={14} className={`text-muted-foreground shrink-0 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
-                        <OsIcon os={host.os} size={14} className="text-muted-foreground shrink-0" />
                         <span className="text-sm font-medium text-foreground truncate">{host.hostname}</span>
                       </div>
                       {host.serial && (() => {
