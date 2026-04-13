@@ -29,6 +29,8 @@ interface MonitoringGroup {
   id: string;
   name: string;
   queue: string;
+  auth: string;
+  org_id: string;
 }
 
 /** Fetch environments from the API and filter for sensor_group: true */
