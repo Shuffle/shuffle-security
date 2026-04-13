@@ -62,11 +62,7 @@ const VulnerabilitiesPage = () => {
   const [aiScanLoading, setAiScanLoading] = useState(false);
   const [aiScanResult, setAiScanResult] = useState<string | null>(null);
   const [addHostOpen, setAddHostOpen] = useState(false);
-  const [addHostStep, setAddHostStep] = useState<'config' | 'deploy'>('config');
-  const [hostName, setHostName] = useState('');
-  const [hostPlatform, setHostPlatform] = useState<'linux' | 'macos' | 'windows'>('linux');
   const [hostChecks, setHostChecks] = useState({
-    metadata: true,
     hd_encrypted: true,
     screenlock: true,
     installed_software: true,
@@ -120,16 +116,11 @@ const VulnerabilitiesPage = () => {
   };
 
   const getDeployCommand = () => {
-    const checks = Object.entries(hostChecks)
-      .filter(([, v]) => v)
-      .map(([k]) => k)
-      .join(',');
-    return `curl -sSL https://shuffler.io/host-monitor/install.sh | sudo bash -s -- \\
-  --name "${hostName || 'my-host'}" \\
-  --platform ${hostPlatform} \\
-  --checks ${checks} \\
-  --org <your-org-id> \\
-  --auth <your-auth-token>`;
+    const flags = ['--sensor_mode=true'];
+    if (hostChecks.installed_software) flags.push('--software_list_enabled=true');
+    if (hostChecks.hd_encrypted) flags.push('--hd_encrypted_check=true');
+    if (hostChecks.screenlock) flags.push('--screenlock_check=true');
+    return `go run orborus.go ${flags.join(' ')}`;
   };
 
   const handleCopyCommand = () => {
@@ -139,16 +130,12 @@ const VulnerabilitiesPage = () => {
   };
 
   const handleOpenAddHost = () => {
-    setAddHostStep('config');
-    setHostName('');
-    setHostPlatform('linux');
-    setHostChecks({ metadata: true, hd_encrypted: true, screenlock: true, installed_software: true });
+    setHostChecks({ hd_encrypted: true, screenlock: true, installed_software: true });
     setCopied(false);
     setAddHostOpen(true);
   };
 
   const HOST_CHECK_OPTIONS = [
-    { id: 'metadata' as const, label: 'Host Metadata', description: 'OS version, hostname, IP, uptime', icon: <Info size={16} /> },
     { id: 'hd_encrypted' as const, label: 'HD Encrypted', description: 'Check if disk encryption is enabled (FileVault, BitLocker, LUKS)', icon: <HardDrive size={16} /> },
     { id: 'screenlock' as const, label: 'Screenlock Enabled', description: 'Verify automatic screen lock is configured', icon: <Lock size={16} /> },
     { id: 'installed_software' as const, label: 'Installed Software', description: 'Inventory of installed applications and versions', icon: <Package size={16} /> },
@@ -375,7 +362,7 @@ const VulnerabilitiesPage = () => {
         </div>
 
         {/* Checks overview */}
-        <div className="grid grid-cols-4 gap-0 divide-x divide-border">
+        <div className="grid grid-cols-3 gap-0 divide-x divide-border">
           {HOST_CHECK_OPTIONS.map(check => (
             <div key={check.id} className="px-4 py-4 flex flex-col items-center text-center gap-2">
               <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-muted-foreground">
@@ -434,40 +421,7 @@ const VulnerabilitiesPage = () => {
             </DialogDescription>
           </DialogHeader>
 
-          {addHostStep === 'config' ? (
-            <div className="space-y-5 mt-2">
-              {/* Host name */}
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium">Host Name</Label>
-                <Input
-                  placeholder="e.g. prod-web-01, johns-macbook"
-                  value={hostName}
-                  onChange={e => setHostName(e.target.value)}
-                />
-              </div>
-
-              {/* Platform */}
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium">Platform</Label>
-                <div className="flex gap-2">
-                  {([
-                    { value: 'linux' as const, label: 'Linux' },
-                    { value: 'macos' as const, label: 'macOS' },
-                    { value: 'windows' as const, label: 'Windows' },
-                  ]).map(p => (
-                    <Button
-                      key={p.value}
-                      variant={hostPlatform === p.value ? 'default' : 'outline'}
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => setHostPlatform(p.value)}
-                    >
-                      {p.label}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
+          <div className="space-y-5 mt-2">
               {/* Checks */}
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium">Checks to Enable</Label>
@@ -492,18 +446,8 @@ const VulnerabilitiesPage = () => {
                   ))}
                 </div>
               </div>
-            </div>
-          ) : (
-            <div className="space-y-4 mt-2">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Laptop size={14} />
-                <span className="font-medium text-foreground">{hostName || 'my-host'}</span>
-                <span>·</span>
-                <span className="capitalize">{hostPlatform}</span>
-                <span>·</span>
-                <span>{Object.values(hostChecks).filter(Boolean).length} checks</span>
-              </div>
 
+              {/* Deploy command */}
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium">Run this on the target host</Label>
                 <div className="relative">
@@ -523,32 +467,15 @@ const VulnerabilitiesPage = () => {
 
               <div className="rounded-lg border border-primary/20 bg-primary/[0.04] px-3 py-2.5">
                 <p className="text-xs text-muted-foreground">
-                  <span className="font-medium text-foreground">What happens next:</span> The script installs a lightweight daemon that periodically runs the selected checks and reports results back to Shuffle. Results will appear in the Host Monitors table above.
+                  <span className="font-medium text-foreground">What happens next:</span> The monitor runs the selected checks and reports results back to Shuffle. Host metadata is collected automatically.
                 </p>
               </div>
             </div>
-          )}
 
           <DialogFooter className="mt-2">
-            {addHostStep === 'config' ? (
-              <Button
-                size="sm"
-                onClick={() => setAddHostStep('deploy')}
-                disabled={Object.values(hostChecks).every(v => !v)}
-              >
-                Next: Deploy
-                <ChevronRight size={14} className="ml-1" />
-              </Button>
-            ) : (
-              <div className="flex gap-2 w-full justify-between">
-                <Button variant="outline" size="sm" onClick={() => setAddHostStep('config')}>
-                  Back
-                </Button>
-                <Button size="sm" onClick={() => { setAddHostOpen(false); toast.success('Host monitor configured', { description: 'Deploy the command on your target host to start monitoring.' }); }}>
-                  Done
-                </Button>
-              </div>
-            )}
+            <Button size="sm" onClick={() => { setAddHostOpen(false); toast.success('Host monitor configured', { description: 'Deploy the command on your target host to start monitoring.' }); }}>
+              Done
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
