@@ -445,18 +445,20 @@ const VulnAssetsPage = () => {
         ) : (
           <div className="border-t border-border">
             {/* Table header */}
-            <div className="grid grid-cols-[2rem_1.5fr_0.5fr_0.5fr_0.5fr_0.7fr_0.8fr] gap-2 px-5 py-2 border-b border-border bg-muted/30">
-              <span
-                className="text-xs font-semibold text-muted-foreground cursor-pointer select-none flex items-center gap-1"
-                onClick={() => setOsSortAsc(prev => prev === null ? true : prev ? false : null)}
-                title="Sort by OS"
-              >
-                OS {osSortAsc === true ? '↑' : osSortAsc === false ? '↓' : ''}
-              </span>
+            <div className="grid grid-cols-[2rem_1.5fr_2rem_2rem_2rem_2rem_2rem_0.7fr_0.8fr] gap-2 px-5 py-2 border-b border-border bg-muted/30 items-center">
+              <TooltipProvider delayDuration={200}>
+                <Tooltip><TooltipTrigger asChild>
+                  <span className="text-xs font-semibold text-muted-foreground cursor-pointer select-none flex items-center gap-1" onClick={() => setOsSortAsc(prev => prev === null ? true : prev ? false : null)} title="Sort by OS">
+                    OS {osSortAsc === true ? '↑' : osSortAsc === false ? '↓' : ''}
+                  </span>
+                </TooltipTrigger><TooltipContent>Operating System</TooltipContent></Tooltip>
+              </TooltipProvider>
               <span className="text-xs font-semibold text-muted-foreground">Hostname</span>
-              <span className="text-xs font-semibold text-muted-foreground">Disk Enc.</span>
-              <span className="text-xs font-semibold text-muted-foreground">Screenlock</span>
-              <span className="text-xs font-semibold text-muted-foreground">Software</span>
+              <TooltipProvider delayDuration={200}><Tooltip><TooltipTrigger asChild><span className="flex justify-center"><HardDrive size={13} className="text-muted-foreground" /></span></TooltipTrigger><TooltipContent>HD Encrypted</TooltipContent></Tooltip></TooltipProvider>
+              <TooltipProvider delayDuration={200}><Tooltip><TooltipTrigger asChild><span className="flex justify-center"><Lock size={13} className="text-muted-foreground" /></span></TooltipTrigger><TooltipContent>Screenlock</TooltipContent></Tooltip></TooltipProvider>
+              <TooltipProvider delayDuration={200}><Tooltip><TooltipTrigger asChild><span className="flex justify-center"><Package size={13} className="text-muted-foreground" /></span></TooltipTrigger><TooltipContent>Installed Software</TooltipContent></Tooltip></TooltipProvider>
+              <TooltipProvider delayDuration={200}><Tooltip><TooltipTrigger asChild><span className="flex justify-center"><Zap size={13} className="text-muted-foreground" /></span></TooltipTrigger><TooltipContent>Response Actions</TooltipContent></Tooltip></TooltipProvider>
+              <TooltipProvider delayDuration={200}><Tooltip><TooltipTrigger asChild><span className="flex justify-center"><Send size={13} className="text-muted-foreground" /></span></TooltipTrigger><TooltipContent>Log Forwarding</TooltipContent></Tooltip></TooltipProvider>
               <span className="text-xs font-semibold text-muted-foreground">Group</span>
               <span className="text-xs font-semibold text-muted-foreground">Last Check-in</span>
             </div>
