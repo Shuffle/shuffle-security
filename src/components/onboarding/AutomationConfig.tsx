@@ -44,6 +44,7 @@ import shuffleLogo from '@/assets/shuffle-logo.png';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { useThreatFeeds, DEFAULT_THREAT_FEEDS, ThreatFeed } from '@/hooks/useThreatFeeds';
 import { getAutomationLabels } from '@/config/usecases';
+import { useEnrichmentStatus } from '@/hooks/useEnrichmentStatus';
 
 /** Convert internal app names (e.g. "google_sheets") to readable form ("Google Sheets") */
 const readableAppName = (name: string): string =>
@@ -313,6 +314,7 @@ export const AutomationConfig = ({
   
   // Threat feeds management
   const { threatFeeds, saveFeed, deleteFeed, toggleFeed, initializeDefaults: initThreatFeeds } = useThreatFeeds();
+  const enrichmentStatus = useEnrichmentStatus();
   const [editingFeed, setEditingFeed] = useState<ThreatFeed | null>(null);
   const [newFeedUrl, setNewFeedUrl] = useState('');
   const [newFeedName, setNewFeedName] = useState('');
@@ -1101,10 +1103,20 @@ export const AutomationConfig = ({
                           </Box>
                         )}
                         <Switch
-                          checked={state.enabled && !isDisabled}
-                          onChange={() => toggleOption(option.id)}
+                          checked={option.id === 'threat_intel' ? enrichmentStatus.active : (state.enabled && !isDisabled)}
+                          onChange={() => {
+                            if (option.id === 'threat_intel') {
+                              if (!enrichmentStatus.active) {
+                                enrichmentStatus.enable();
+                              } else {
+                                toggleOption(option.id);
+                              }
+                            } else {
+                              toggleOption(option.id);
+                            }
+                          }}
                           onClick={(e) => e.stopPropagation()}
-                          disabled={isDisabled}
+                          disabled={isDisabled || (option.id === 'threat_intel' && enrichmentStatus.isEnabling)}
                           sx={{
                             '& .MuiSwitch-switchBase.Mui-checked': {
                               color: option.color,
