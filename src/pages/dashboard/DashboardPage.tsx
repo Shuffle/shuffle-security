@@ -73,9 +73,19 @@ const statusColors = {
   'not-started': { dot: 'hsl(var(--muted-foreground))', bg: 'hsl(var(--muted) / 0.3)', border: 'hsl(var(--border))' },
 };
 
-const SetupStepCard = ({ step, index }: { step: SetupStep; index: number }) => {
+const IGNORED_STEPS_KEY = 'shuffle_setup_ignored_steps';
+
+const SetupStepCard = ({ step, index, ignored, onIgnore, onRestore }: {
+  step: SetupStep;
+  index: number;
+  ignored?: boolean;
+  onIgnore?: (id: string) => void;
+  onRestore?: (id: string) => void;
+}) => {
   const navigate = useNavigate();
-  const colors = statusColors[step.status];
+  const colors = ignored
+    ? { dot: 'hsl(var(--muted-foreground))', bg: 'hsl(var(--muted) / 0.15)', border: 'hsl(var(--border))' }
+    : statusColors[step.status];
   const isComplete = step.status === 'complete';
 
   return (
@@ -85,7 +95,7 @@ const SetupStepCard = ({ step, index }: { step: SetupStep; index: number }) => {
       transition={{ duration: 0.25, delay: index * 0.05 }}
     >
       <Box
-        onClick={() => !isComplete && navigate(step.ctaPath)}
+        onClick={() => !isComplete && !ignored && navigate(step.ctaPath)}
         sx={{
           display: 'flex',
           alignItems: 'center',
@@ -95,13 +105,13 @@ const SetupStepCard = ({ step, index }: { step: SetupStep; index: number }) => {
           borderRadius: 2,
           border: `1px solid ${colors.border}`,
           backgroundColor: colors.bg,
-          cursor: isComplete ? 'default' : 'pointer',
+          cursor: isComplete || ignored ? 'default' : 'pointer',
           transition: 'all 0.2s ease',
-          '&:hover': isComplete ? {} : {
+          '&:hover': isComplete || ignored ? {} : {
             borderColor: 'hsl(var(--primary) / 0.5)',
             backgroundColor: 'hsl(var(--primary) / 0.06)',
           },
-          opacity: isComplete ? 0.65 : 1,
+          opacity: isComplete || ignored ? 0.5 : 1,
         }}
       >
         {/* Icon */}
@@ -113,12 +123,12 @@ const SetupStepCard = ({ step, index }: { step: SetupStep; index: number }) => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: isComplete ? 'hsl(var(--severity-low) / 0.15)' : 'hsl(var(--primary) / 0.12)',
-            color: isComplete ? 'hsl(var(--severity-low))' : 'hsl(var(--primary))',
+            backgroundColor: ignored ? 'hsl(var(--muted) / 0.3)' : isComplete ? 'hsl(var(--severity-low) / 0.15)' : 'hsl(var(--primary) / 0.12)',
+            color: ignored ? 'hsl(var(--muted-foreground))' : isComplete ? 'hsl(var(--severity-low))' : 'hsl(var(--primary))',
             flexShrink: 0,
           }}
         >
-          {isComplete ? <Check size={20} /> : step.icon}
+          {ignored ? <EyeOff size={20} /> : isComplete ? <Check size={20} /> : step.icon}
         </Box>
 
         {/* Content */}
@@ -127,12 +137,12 @@ const SetupStepCard = ({ step, index }: { step: SetupStep; index: number }) => {
             <Typography sx={{
               fontSize: '0.875rem',
               fontWeight: 600,
-              color: 'hsl(var(--foreground))',
-              textDecoration: isComplete ? 'line-through' : 'none',
+              color: ignored ? 'hsl(var(--muted-foreground))' : 'hsl(var(--foreground))',
+              textDecoration: isComplete || ignored ? 'line-through' : 'none',
             }}>
               {step.title}
             </Typography>
-            {isComplete && (
+            {isComplete && !ignored && (
               <Chip
                 label="Done"
                 size="small"
@@ -145,6 +155,19 @@ const SetupStepCard = ({ step, index }: { step: SetupStep; index: number }) => {
                 }}
               />
             )}
+            {ignored && (
+              <Chip
+                label="Ignored"
+                size="small"
+                sx={{
+                  height: 20,
+                  fontSize: '0.65rem',
+                  fontWeight: 600,
+                  backgroundColor: 'hsl(var(--muted) / 0.3)',
+                  color: 'hsl(var(--muted-foreground))',
+                }}
+              />
+            )}
           </Box>
           <Typography sx={{
             fontSize: '0.78rem',
@@ -153,22 +176,48 @@ const SetupStepCard = ({ step, index }: { step: SetupStep; index: number }) => {
           }}>
             {step.description}
           </Typography>
-          {step.detail && !isComplete && (
+          {step.detail && !isComplete && !ignored && (
             <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--primary))', mt: 0.5, fontWeight: 500 }}>
               {step.detail}
             </Typography>
           )}
         </Box>
 
-        {/* CTA */}
-        {!isComplete && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexShrink: 0 }}>
+        {/* Actions */}
+        {ignored ? (
+          <Tooltip title="Restore this step">
+            <IconButton
+              size="small"
+              onClick={(e) => { e.stopPropagation(); onRestore?.(step.id); }}
+              sx={{
+                color: 'hsl(var(--muted-foreground))',
+                '&:hover': { color: 'hsl(var(--primary))', backgroundColor: 'hsl(var(--primary) / 0.08)' },
+              }}
+            >
+              <Undo2 size={16} />
+            </IconButton>
+          </Tooltip>
+        ) : !isComplete ? (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
+            <Tooltip title="Ignore this step">
+              <IconButton
+                size="small"
+                onClick={(e) => { e.stopPropagation(); onIgnore?.(step.id); }}
+                sx={{
+                  color: 'hsl(var(--muted-foreground))',
+                  opacity: 0.5,
+                  '&:hover': { opacity: 1, color: 'hsl(var(--muted-foreground))' },
+                }}
+              >
+                <EyeOff size={14} />
+              </IconButton>
+            </Tooltip>
             <Typography sx={{ fontSize: '0.78rem', fontWeight: 600, color: 'hsl(var(--primary))', whiteSpace: 'nowrap' }}>
               {step.ctaLabel}
             </Typography>
             <ChevronRight size={16} style={{ color: 'hsl(var(--primary))' }} />
           </Box>
-        )}
+        ) : null}
       </Box>
     </motion.div>
   );
