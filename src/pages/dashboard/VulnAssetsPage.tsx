@@ -1,13 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Laptop, HardDrive, Lock, Package, Zap, Plus, Copy, Check, Activity, ChevronRight, Shield, FolderOpen } from 'lucide-react';
+import { Laptop, HardDrive, Lock, Package, Zap, Plus, Copy, Check, Activity, ChevronRight, Shield, FolderOpen, Loader2 } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { toast } from 'sonner';
+import { getApiUrl, shuffleFetch } from '@/config/api';
 
 const HOST_CHECK_OPTIONS = [
   { id: 'hd_encrypted' as const, label: 'HD Encrypted', description: 'Check if disk encryption is enabled (FileVault, BitLocker, LUKS)', icon: <HardDrive size={16} /> },
@@ -16,17 +17,54 @@ const HOST_CHECK_OPTIONS = [
   { id: 'response_actions' as const, label: 'Response Actions', description: 'Enable automated response actions on this host', icon: <Zap size={16} /> },
 ];
 
+interface OrbEnvironment {
+  Name: string;
+  Type: string;
+  id: string;
+  sensor_group?: boolean;
+  [key: string]: unknown;
+}
+
 interface MonitoringGroup {
   id: string;
   name: string;
   queue: string;
 }
 
-const DEFAULT_GROUPS: MonitoringGroup[] = [
-  { id: 'default', name: 'Default', queue: 'default' },
-  { id: 'engineering', name: 'Engineering', queue: 'engineering' },
-  { id: 'corp-devices', name: 'Corporate Devices', queue: 'corp-devices' },
-];
+/** Fetch environments from the API and filter for sensor_group: true */
+const fetchSensorGroups = async (): Promise<MonitoringGroup[]> => {
+  try {
+    const res = await shuffleFetch(getApiUrl('/api/v1/get_environments'));
+    if (!res.ok) return [];
+    const data = await res.json();
+    const envs: OrbEnvironment[] = Array.isArray(data) ? data : [];
+    return envs
+      .filter(e => e.sensor_group === true)
+      .map(e => ({ id: e.id || e.Name, name: e.Name, queue: e.Name }));
+  } catch {
+    return [];
+  }
+};
+
+/** Create a new environment with sensor_group: true */
+const createSensorGroupEnv = async (name: string): Promise<MonitoringGroup | null> => {
+  try {
+    const res = await shuffleFetch(getApiUrl('/api/v1/set_environments'), {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ Name: name, Type: 'onprem', sensor_group: true }),
+    });
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      throw new Error(errText || `HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    return { id: data.id || name, name, queue: name };
+  } catch (err) {
+    console.error('[VulnAssets] Failed to create sensor group env:', err);
+    return null;
+  }
+};
 
 const VulnAssetsPage = () => {
   usePageMeta({ title: 'Assets — Vulnerabilities', description: 'Monitor host compliance and security posture' });
@@ -41,13 +79,35 @@ const VulnAssetsPage = () => {
     response_actions: false,
   });
   const [copied, setCopied] = useState(false);
-  const [groups, setGroups] = useState<MonitoringGroup[]>(DEFAULT_GROUPS);
-  const [selectedGroupId, setSelectedGroupId] = useState<string>('default');
+
+  // Monitoring groups (from API)
+  const [groups, setGroups] = useState<MonitoringGroup[]>([]);
+  const [groupsLoading, setGroupsLoading] = useState(false);
+  const [selectedGroupId, setSelectedGroupId] = useState<string>('');
   const [isCreatingGroup, setIsCreatingGroup] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
-  const [newGroupQueue, setNewGroupQueue] = useState('');
+  const [creatingGroupLoading, setCreatingGroupLoading] = useState(false);
 
   const selectedGroup = groups.find(g => g.id === selectedGroupId);
+
+  const loadGroups = useCallback(async () => {
+    setGroupsLoading(true);
+    const fetched = await fetchSensorGroups();
+    setGroups(fetched);
+    // Auto-select first if nothing selected
+    if (fetched.length > 0) {
+      setSelectedGroupId(prev => {
+        if (prev && fetched.some(g => g.id === prev)) return prev;
+        return fetched[0].id;
+      });
+    }
+    setGroupsLoading(false);
+  }, []);
+
+  // Load groups on mount
+  useEffect(() => {
+    loadGroups();
+  }, [loadGroups]);
 
   const getDeployCommand = () => {
     const flags = ['--sensor_mode=true'];
@@ -70,23 +130,27 @@ const VulnAssetsPage = () => {
     setHostPlatform('linux');
     setHostChecks({ hd_encrypted: true, screenlock: true, installed_software: true, response_actions: false });
     setCopied(false);
-    setSelectedGroupId('default');
     setIsCreatingGroup(false);
     setNewGroupName('');
-    setNewGroupQueue('');
     setAddHostOpen(true);
+    // Refresh groups when opening
+    loadGroups();
   };
 
-  const handleCreateGroup = () => {
+  const handleCreateGroup = async () => {
     if (!newGroupName.trim()) return;
-    const queue = newGroupQueue.trim() || newGroupName.trim().toLowerCase().replace(/\s+/g, '-');
-    const id = queue;
-    const newGroup: MonitoringGroup = { id, name: newGroupName.trim(), queue };
-    setGroups(prev => [...prev, newGroup]);
-    setSelectedGroupId(id);
-    setIsCreatingGroup(false);
-    setNewGroupName('');
-    setNewGroupQueue('');
+    setCreatingGroupLoading(true);
+    const created = await createSensorGroupEnv(newGroupName.trim());
+    if (created) {
+      setGroups(prev => [...prev, created]);
+      setSelectedGroupId(created.id);
+      setIsCreatingGroup(false);
+      setNewGroupName('');
+      toast.success('Monitoring group created', { description: `Queue "${created.queue}" is ready.` });
+    } else {
+      toast.error('Failed to create monitoring group');
+    }
+    setCreatingGroupLoading(false);
   };
 
   return (
@@ -171,9 +235,18 @@ const VulnAssetsPage = () => {
                 <p className="text-xs text-muted-foreground">Each group uses a dedicated Orborus queue for host communication.</p>
                 {!isCreatingGroup ? (
                   <div className="flex gap-2">
-                    <Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
+                    <Select value={selectedGroupId} onValueChange={setSelectedGroupId} disabled={groupsLoading}>
                       <SelectTrigger className="flex-1">
-                        <SelectValue placeholder="Select a group" />
+                        {groupsLoading ? (
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Loader2 size={13} className="animate-spin" />
+                            <span className="text-sm">Loading…</span>
+                          </div>
+                        ) : groups.length === 0 ? (
+                          <span className="text-sm text-muted-foreground">No groups — create one</span>
+                        ) : (
+                          <SelectValue placeholder="Select a group" />
+                        )}
                       </SelectTrigger>
                       <SelectContent>
                         {groups.map(g => (
@@ -201,22 +274,14 @@ const VulnAssetsPage = () => {
                         placeholder="e.g. Engineering"
                         className="h-8 text-sm"
                       />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs">Orborus Queue</Label>
-                      <Input
-                        value={newGroupQueue}
-                        onChange={e => setNewGroupQueue(e.target.value)}
-                        placeholder={newGroupName ? newGroupName.toLowerCase().replace(/\s+/g, '-') : 'e.g. engineering'}
-                        className="h-8 text-sm font-mono"
-                      />
-                      <p className="text-[0.65rem] text-muted-foreground">Leave blank to auto-generate from the name.</p>
+                      <p className="text-[0.65rem] text-muted-foreground">This will create an Orborus environment with the same name as the queue.</p>
                     </div>
                     <div className="flex gap-2 justify-end pt-1">
-                      <Button variant="ghost" size="sm" onClick={() => { setIsCreatingGroup(false); setNewGroupName(''); setNewGroupQueue(''); }}>
+                      <Button variant="ghost" size="sm" onClick={() => { setIsCreatingGroup(false); setNewGroupName(''); }}>
                         Cancel
                       </Button>
-                      <Button size="sm" onClick={handleCreateGroup} disabled={!newGroupName.trim()}>
+                      <Button size="sm" onClick={handleCreateGroup} disabled={!newGroupName.trim() || creatingGroupLoading}>
+                        {creatingGroupLoading && <Loader2 size={13} className="animate-spin mr-1.5" />}
                         Create Group
                       </Button>
                     </div>
@@ -313,7 +378,7 @@ const VulnAssetsPage = () => {
               <Button
                 size="sm"
                 onClick={() => setAddHostStep('deploy')}
-                disabled={Object.values(hostChecks).every(v => !v)}
+                disabled={Object.values(hostChecks).every(v => !v) || (!selectedGroupId && groups.length > 0)}
               >
                 Next: Deploy
                 <ChevronRight size={14} className="ml-1" />
