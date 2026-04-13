@@ -4337,6 +4337,8 @@ const IncidentDetailPage = () => {
             const enrichObs = enrichments.map((enr, idx) => ({
               type: enr.type || 'unknown',
               value: enr.value || enr.data || '',
+              first_seen: enr.first_seen,
+              last_seen: enr.last_seen,
               _idx: idx,
               _source: 'enrichment' as const,
             }));
