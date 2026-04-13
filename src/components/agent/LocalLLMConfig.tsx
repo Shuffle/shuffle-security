@@ -169,7 +169,7 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth, onSave, onTestResult }: LocalL
         label: 'Auth for OpenAI',
         app: {
           name: OPENAI_APP_NAME,
-          id: OPENAI_APP_NAME.toLowerCase(),
+          id: OPENAI_APP_ID,
           app_version: '1.0.0',
         },
         fields,
