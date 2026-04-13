@@ -676,31 +676,17 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
               </Alert>
             )}
 
-            {runResult && (
+            {actionRun && (
               <Box sx={{
-                p: 2,
                 borderRadius: 2,
                 border: '1px solid hsl(var(--border))',
                 bgcolor: 'hsl(var(--background))',
+                overflow: 'hidden',
               }}>
-                <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>
+                <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', px: 2.5, pt: 2, pb: 0.5 }}>
                   Result
                 </Typography>
-                <Typography
-                  component="pre"
-                  sx={{
-                    fontSize: '0.78rem',
-                    color: 'hsl(var(--foreground))',
-                    whiteSpace: 'pre-wrap',
-                    wordBreak: 'break-word',
-                    fontFamily: "'JetBrains Mono', monospace",
-                    m: 0,
-                    maxHeight: 300,
-                    overflowY: 'auto',
-                  }}
-                >
-                  {runResult}
-                </Typography>
+                <AgentRunResultViewer run={actionRun} />
               </Box>
             )}
 
