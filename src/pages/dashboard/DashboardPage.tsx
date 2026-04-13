@@ -37,6 +37,8 @@ import {
   Check,
   ArrowRight,
   ExternalLink,
+  EyeOff,
+  Undo2,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import AgentQuestionDialog from '@/components/agent/AgentQuestionDialog';
