@@ -18,11 +18,24 @@ const HOST_CHECK_OPTIONS = [
   { id: 'log_forwarding' as const, label: 'Log Forwarding', description: 'Forward host logs to a remote endpoint for centralized collection', icon: <Send size={16} />, disabled: true },
 ];
 
+interface SensorHost {
+  arch: string;
+  automatic_screen_lock_enabled: boolean;
+  checkin: number;
+  elevated_access: boolean;
+  hostname: string;
+  os: string;
+  sensor_mode: boolean;
+  uuid: string;
+}
+
 interface OrbEnvironment {
   Name: string;
   Type: string;
   id: string;
   sensor_group?: boolean;
+  sensor_hosts?: SensorHost[];
+  archived?: boolean;
   [key: string]: unknown;
 }
 
@@ -32,6 +45,7 @@ interface MonitoringGroup {
   queue: string;
   auth: string;
   org_id: string;
+  hosts: SensorHost[];
 }
 
 /** Fetch environments from the API and filter for sensor_group: true */
@@ -46,7 +60,7 @@ const fetchSensorGroups = async (): Promise<{ groups: MonitoringGroup[]; allEnvs
     const envs: OrbEnvironment[] = Array.isArray(data) ? data.filter((e: OrbEnvironment) => !e.archived) : [];
     const groups = envs
       .filter(e => e.sensor_group === true)
-      .map(e => ({ id: e.id || e.Name, name: e.Name, queue: e.Name, auth: String(e.auth || ''), org_id: String(e.org_id || '') }));
+      .map(e => ({ id: e.id || e.Name, name: e.Name, queue: e.Name, auth: String(e.auth || ''), org_id: String(e.org_id || ''), hosts: Array.isArray(e.sensor_hosts) ? e.sensor_hosts : [] }));
     return { groups, allEnvs: envs };
   } catch {
     return { groups: [], allEnvs: [] };
@@ -82,10 +96,10 @@ const createSensorGroupEnv = async (name: string, allEnvs: OrbEnvironment[]): Pr
       const freshEnvs: OrbEnvironment[] = await envRes.json();
       const created = freshEnvs.find(e => e.Name === name && e.sensor_group === true);
       if (created) {
-        return { id: created.id || name, name: created.Name, queue: created.Name, auth: String(created.auth || ''), org_id: String(created.org_id || '') };
+        return { id: created.id || name, name: created.Name, queue: created.Name, auth: String(created.auth || ''), org_id: String(created.org_id || ''), hosts: Array.isArray(created.sensor_hosts) ? created.sensor_hosts : [] };
       }
     }
-    return { id: name, name, queue: name, auth: '', org_id: '' };
+    return { id: name, name, queue: name, auth: '', org_id: '', hosts: [] };
   } catch (err) {
     console.error('[VulnAssets] Failed to create sensor group env:', err);
     return null;
@@ -121,6 +135,9 @@ const VulnAssetsPage = () => {
   const [creatingGroupLoading, setCreatingGroupLoading] = useState(false);
 
   const selectedGroup = groups.find(g => g.id === selectedGroupId);
+
+  // Aggregate all hosts across all sensor groups
+  const allHosts = groups.flatMap(g => g.hosts.map(h => ({ ...h, groupName: g.name, groupId: g.id })));
 
   const loadGroups = useCallback(async () => {
     setGroupsLoading(true);
@@ -286,18 +303,59 @@ const VulnAssetsPage = () => {
           ))}
         </div>
 
-        {/* Empty host list */}
-        <div className="border-t border-border px-5 py-16 flex flex-col items-center text-center gap-4">
-          <Activity size={36} className="text-muted-foreground/25" />
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-foreground">No hosts monitored yet</p>
-            <p className="text-xs text-muted-foreground">Deploy a lightweight monitor on an endpoint to start checking compliance and posture.</p>
+        {allHosts.length === 0 ? (
+          <div className="border-t border-border px-5 py-16 flex flex-col items-center text-center gap-4">
+            <Activity size={36} className="text-muted-foreground/25" />
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground">No hosts monitored yet</p>
+              <p className="text-xs text-muted-foreground">Deploy a lightweight monitor on an endpoint to start checking compliance and posture.</p>
+            </div>
+            <Button size="lg" className="gap-2 mt-2" onClick={handleOpenAddHost}>
+              <Plus size={16} />
+              Add Host
+            </Button>
           </div>
-          <Button size="lg" className="gap-2 mt-2" onClick={handleOpenAddHost}>
-            <Plus size={16} />
-            Add Host
-          </Button>
-        </div>
+        ) : (
+          <div className="border-t border-border">
+            {/* Table header */}
+            <div className="grid grid-cols-[1.5fr_0.8fr_0.8fr_0.6fr_0.8fr_1fr] gap-2 px-5 py-2 border-b border-border bg-muted/30">
+              <span className="text-xs font-semibold text-muted-foreground">Hostname</span>
+              <span className="text-xs font-semibold text-muted-foreground">OS</span>
+              <span className="text-xs font-semibold text-muted-foreground">Arch</span>
+              <span className="text-xs font-semibold text-muted-foreground">Screenlock</span>
+              <span className="text-xs font-semibold text-muted-foreground">Group</span>
+              <span className="text-xs font-semibold text-muted-foreground">Last Check-in</span>
+            </div>
+            {/* Host rows */}
+            {allHosts.map(host => {
+              const checkinDate = host.checkin ? new Date(host.checkin * 1000) : null;
+              const isRecent = checkinDate ? (Date.now() - checkinDate.getTime()) < 5 * 60 * 1000 : false;
+              return (
+                <div
+                  key={host.uuid}
+                  className="grid grid-cols-[1.5fr_0.8fr_0.8fr_0.6fr_0.8fr_1fr] gap-2 px-5 py-3 border-b border-border last:border-b-0 hover:bg-muted/20 transition-colors items-center"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Laptop size={14} className="text-muted-foreground shrink-0" />
+                    <span className="text-sm font-medium text-foreground truncate">{host.hostname}</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground capitalize">{host.os || '—'}</span>
+                  <span className="text-xs text-muted-foreground">{host.arch || '—'}</span>
+                  <span className={`text-xs font-medium ${host.automatic_screen_lock_enabled ? 'text-green-500' : 'text-orange-500'}`}>
+                    {host.automatic_screen_lock_enabled ? 'On' : 'Off'}
+                  </span>
+                  <span className="text-xs text-muted-foreground truncate">{host.groupName}</span>
+                  <div className="flex items-center gap-1.5">
+                    <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${isRecent ? 'bg-green-500' : 'bg-muted-foreground/40'}`} />
+                    <span className="text-xs text-muted-foreground">
+                      {checkinDate ? checkinDate.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Add Host Monitor Dialog */}
