@@ -10,6 +10,32 @@ import { usePageMeta } from '@/hooks/usePageMeta';
 import { toast } from 'sonner';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 
+const OsIcon = ({ os, size = 14, className = '' }: { os: string; size?: number; className?: string }) => {
+  const lower = (os || '').toLowerCase();
+  if (lower.includes('darwin') || lower.includes('mac') || lower.includes('ios')) {
+    return (
+      <svg viewBox="0 0 24 24" width={size} height={size} className={className} fill="currentColor">
+        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+      </svg>
+    );
+  }
+  if (lower.includes('windows') || lower.includes('win')) {
+    return (
+      <svg viewBox="0 0 24 24" width={size} height={size} className={className} fill="currentColor">
+        <path d="M3 12V6.5l8-1.1V12H3zm10 0V5.2l8-1.2V12h-8zM3 13h8v6.7l-8-1.1V13zm10 0h8v6.9l-8 1.2V13z"/>
+      </svg>
+    );
+  }
+  if (lower.includes('linux') || lower.includes('ubuntu') || lower.includes('debian') || lower.includes('centos') || lower.includes('redhat') || lower.includes('fedora')) {
+    return (
+      <svg viewBox="0 0 24 24" width={size} height={size} className={className} fill="currentColor">
+        <path d="M12.5 2c-1.63 0-2.94 1.85-2.94 4.13 0 .74.12 1.43.32 2.05C7.47 9.01 5.5 10.64 5.5 12.5c0 1.39.86 2.62 2.18 3.44-.13.46-.2.95-.2 1.46 0 2.76 1.79 5 4 5s4-2.24 4-5c0-.51-.07-1-.2-1.46 1.32-.82 2.18-2.05 2.18-3.44 0-1.86-1.97-3.49-4.38-4.32.2-.62.32-1.31.32-2.05C13.4 3.85 12.09 2 12.5 2zm-1.5 5c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm3 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm-1.5 3c1.1 0 2 .67 2 1.5s-.9 1.5-2 1.5-2-.67-2-1.5.9-1.5 2-1.5z"/>
+      </svg>
+    );
+  }
+  return <Laptop size={size} className={className} />;
+};
+
 const HOST_CHECK_OPTIONS = [
   { id: 'hd_encrypted' as const, label: 'HD Encrypted', description: 'Check if disk encryption is enabled (FileVault, BitLocker, LUKS)', icon: <HardDrive size={16} />, disabled: false },
   { id: 'screenlock' as const, label: 'Screenlock Enabled', description: 'Verify automatic screen lock is configured', icon: <Lock size={16} />, disabled: false },
@@ -455,7 +481,7 @@ const VulnAssetsPage = () => {
                     <div className="flex flex-col min-w-0">
                       <div className="flex items-center gap-2 min-w-0">
                         <ChevronRight size={14} className={`text-muted-foreground shrink-0 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
-                        <Laptop size={14} className="text-muted-foreground shrink-0" />
+                        <OsIcon os={host.os} size={14} className="text-muted-foreground shrink-0" />
                         <span className="text-sm font-medium text-foreground truncate">{host.hostname}</span>
                       </div>
                       {host.serial && (
