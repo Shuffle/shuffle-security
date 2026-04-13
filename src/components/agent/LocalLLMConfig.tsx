@@ -3,6 +3,7 @@ import { Box, Typography } from '@mui/material';
 import { AppAuthCard } from '@/components/onboarding/AppAuthConfig';
 import type { AlgoliaSearchApp } from '@/lib/singul-local';
 import { useAppAuth } from '@/hooks/useAppAuth';
+import singulAgentIcon from '@/assets/singul-agent-icon.png';
 
 const OPENAI_APP_NAME = 'OpenAI';
 const OPENAI_APP_ID = '5d19dd82517870c68d40cacad9b5ca91';
@@ -14,7 +15,7 @@ const OPENAI_ALGOLIA_APP: AlgoliaSearchApp = {
   objectID: OPENAI_APP_ID,
   creator: '',
   app_version: '1.0.0',
-  image_url: '',
+  image_url: singulAgentIcon,
   time_edited: 0,
   generated: false,
   invalid: false,
