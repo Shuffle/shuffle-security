@@ -166,8 +166,8 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
   const [isRunning, setIsRunning] = useState(false);
   const [runResult, setRunResult] = useState<string | null>(null);
   const [runError, setRunError] = useState<string | null>(null);
-  const [selectedApps, setSelectedApps] = useState<AlgoliaSearchApp[]>([]);
-  const singulRef = useRef<SingulJSHandle>(null);
+  const [selectedApps, setSelectedApps] = useState<{ name: string; icon: string; categories: string[] }[]>([]);
+  const [appSearchOpen, setAppSearchOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Agent tools state
