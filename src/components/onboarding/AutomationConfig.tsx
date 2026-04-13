@@ -1116,7 +1116,7 @@ export const AutomationConfig = ({
                             }
                           }}
                           onClick={(e) => e.stopPropagation()}
-                          disabled={isDisabled}
+                          disabled={isDisabled || (option.id === 'threat_intel' && enrichmentStatus.isEnabling)}
                           sx={{
                             '& .MuiSwitch-switchBase.Mui-checked': {
                               color: option.color,
