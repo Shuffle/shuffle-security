@@ -473,6 +473,11 @@ const DashboardPage = () => {
   const { authenticatedApps, loading: authLoading } = useAppAuth();
   const { data: workflows, isLoading: workflowsLoading } = useWorkflows();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [ignoredSteps, setIgnoredSteps] = useState<string[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(IGNORED_STEPS_KEY) || '[]');
+    } catch { return []; }
+  });
   const [questionNotification, setQuestionNotification] = useState<AgentNotification | null>(null);
   const [quickViewItem, setQuickViewItem] = useState<QuickViewItem | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
