@@ -134,7 +134,7 @@ interface DisplayIncident {
   references?: string[];
   stakeholders?: Stakeholder[];
   observables?: Observable[];
-  enrichments?: Array<{ type: string; value?: string; data?: string }>;
+  enrichments?: Array<{ type: string; value?: string; data?: string; first_seen?: string | number; last_seen?: string | number }>;
   customFields?: Record<string, string | number | boolean>;
   relatedFindings?: string[];
   activity?: ActivityItem[];
