@@ -36,13 +36,19 @@ import AgentRunHeader from '@/components/agent/AgentRunHeader';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
+interface SelectedApp {
+  name: string;
+  icon: string;
+  categories: string[];
+}
+
 export interface AgentActionDrawerProps {
   open: boolean;
   onClose: () => void;
   /** When provided, the drawer shows this run's results (view mode). */
   run?: AgentRun | null;
   /** Optional initial app to target. */
-  initialApp?: AlgoliaSearchApp | null;
+  initialApp?: SelectedApp | null;
 }
 
 // ── Decision helpers ──────────────────────────────────────────────────────────
