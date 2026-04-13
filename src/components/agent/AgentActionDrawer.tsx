@@ -394,9 +394,11 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
 
     const result = await runAgent({
       input: agentInput.trim(),
-      ...(selectedApp ? {
-        toolName: selectedApp.name,
-        toolId: selectedApp.objectID,
+      ...(selectedApps.length === 1 ? {
+        toolName: selectedApps[0].name,
+      } : {}),
+      ...(selectedApps.length > 1 ? {
+        toolNames: selectedApps.map(a => a.name),
       } : {}),
     });
 
