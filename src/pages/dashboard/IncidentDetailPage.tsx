@@ -4523,6 +4523,115 @@ const IncidentDetailPage = () => {
                             </Typography>
                             <Typography variant="body2" sx={{ fontSize: '0.8rem', fontFamily: 'monospace', wordBreak: 'break-all' }}>{obs.value}</Typography>
                           </Box>
+                          {/* Inline correlations */}
+                          {(() => {
+                            const obsKey = `${obs.type}::${obs.value}`;
+                            const corr = obsCorrelations[obsKey];
+                            // Trigger fetch if not yet loaded
+                            if (!corr && obs.value) {
+                              const noiseKeys = new Set([
+                                'new', 'in_progress', 'resolved', 'escalated', 'closed', 'open', 'pending',
+                                'critical', 'high', 'medium', 'low', 'informational', 'info',
+                                id?.toLowerCase(),
+                              ].filter(Boolean));
+                              setObsCorrelations(prev => {
+                                if (prev[obsKey]) return prev;
+                                // Fire fetch
+                                fetch(getApiUrl('/api/v2/correlations'), {
+                                  method: 'POST',
+                                  credentials: 'include',
+                                  headers: { 'Content-Type': 'application/json', ...getAuthHeader(), ...crossOrgHeaders },
+                                  body: JSON.stringify({ type: 'value', key: obs.value }),
+                                }).then(async r => {
+                                  if (r.ok) {
+                                    const data = await r.json();
+                                    const corrData = Array.isArray(data) ? data : (data.correlations || data.data || []);
+                                    const filtered = corrData.filter((c: { key: string }) => !noiseKeys.has(c.key.toLowerCase()));
+                                    setObsCorrelations(p => ({ ...p, [obsKey]: { loading: false, data: filtered } }));
+                                  } else {
+                                    setObsCorrelations(p => ({ ...p, [obsKey]: { loading: false, data: [] } }));
+                                  }
+                                }).catch(() => {
+                                  setObsCorrelations(p => ({ ...p, [obsKey]: { loading: false, data: [] } }));
+                                });
+                                return { ...prev, [obsKey]: { loading: true, data: [] } };
+                              });
+                            }
+                            if (corr?.loading) {
+                              return (
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                                  <CircularProgress size={14} />
+                                  <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.65rem' }}>Loading correlations…</Typography>
+                                </Box>
+                              );
+                            }
+                            if (!corr?.data?.length) {
+                              return (
+                                <Box sx={{ mt: 0.5 }}>
+                                  <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.6rem', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                                    Correlations
+                                  </Typography>
+                                  <Typography variant="body2" sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', fontStyle: 'italic' }}>No correlations found</Typography>
+                                </Box>
+                              );
+                            }
+                            return (
+                              <Box sx={{ mt: 0.5 }}>
+                                <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.6rem', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                                  Correlations ({corr.data.length})
+                                </Typography>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mt: 0.5 }}>
+                                  {corr.data.slice(0, 8).map((c: any, ci: number) => (
+                                    <Box key={ci} sx={{ p: 0.75, borderRadius: 1, bgcolor: 'rgba(0,0,0,0.15)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                                      <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.75rem', wordBreak: 'break-all' }}>
+                                        {c.key}
+                                      </Typography>
+                                      <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.6rem' }}>
+                                        Found in {c.amount} location{c.amount !== 1 ? 's' : ''}
+                                      </Typography>
+                                      {c.ref?.length > 0 && (
+                                        <Box sx={{ mt: 0.5, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                          {c.ref.slice(0, 5).map((ref: string, ri: number) => {
+                                            const isIncident = ref.includes('incident') || ref.includes('security');
+                                            const refId = ref.split('::').pop() || ref;
+                                            return isIncident ? (
+                                              <Chip
+                                                key={ri}
+                                                label={refId.slice(0, 12) + (refId.length > 12 ? '…' : '')}
+                                                size="small"
+                                                component={Link}
+                                                to={`/incidents/${refId}`}
+                                                clickable
+                                                onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                                                sx={{ height: 20, fontSize: '0.6rem', bgcolor: 'rgba(59,130,246,0.12)', color: '#3b82f6' }}
+                                              />
+                                            ) : (
+                                              <Chip
+                                                key={ri}
+                                                label={ref.length > 30 ? ref.slice(0, 30) + '…' : ref}
+                                                size="small"
+                                                sx={{ height: 20, fontSize: '0.6rem', bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }}
+                                              />
+                                            );
+                                          })}
+                                          {c.ref.length > 5 && (
+                                            <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.6rem' }}>
+                                              +{c.ref.length - 5} more
+                                            </Typography>
+                                          )}
+                                        </Box>
+                                      )}
+                                    </Box>
+                                  ))}
+                                  {corr.data.length > 8 && (
+                                    <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.6rem' }}>
+                                      +{corr.data.length - 8} more correlations
+                                    </Typography>
+                                  )}
+                                </Box>
+                              </Box>
+                            );
+                          })()}
                         </Box>
                       )}
                       {mismatch && (
