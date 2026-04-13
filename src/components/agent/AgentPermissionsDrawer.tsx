@@ -259,18 +259,22 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
   }
   prevOpenRef.current = open;
 
-  // Pre-populate selectedApps from enabled tools when switching to Action tab
+  // Pre-populate selectedApps from enabled tools when switching to Action tab + auto-focus
   const prevTabRef = useRef(activeTab);
   useEffect(() => {
-    if (activeTab === 1 && prevTabRef.current !== 1 && agentTools.length > 0) {
-      const enabledAppObjects = agentTools
-        .filter(t => enabledTools.has(t.name))
-        .map(t => ({
-          name: t.name,
-          objectID: t.id,
-          image_url: t.image,
-        } as unknown as AlgoliaSearchApp));
-      setSelectedApps(enabledAppObjects);
+    if (activeTab === 1 && prevTabRef.current !== 1) {
+      if (agentTools.length > 0) {
+        const enabledAppObjects = agentTools
+          .filter(t => enabledTools.has(t.name))
+          .map(t => ({
+            name: t.name,
+            icon: t.image,
+            categories: [] as string[],
+          }));
+        setSelectedApps(enabledAppObjects);
+      }
+      // Auto-focus the input
+      setTimeout(() => inputRef.current?.focus(), 150);
     }
     prevTabRef.current = activeTab;
   }, [activeTab, agentTools, enabledTools]);
