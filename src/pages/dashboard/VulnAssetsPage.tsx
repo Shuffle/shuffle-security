@@ -20,12 +20,16 @@ const HOST_CHECK_OPTIONS = [
 
 interface SensorHost {
   arch: string;
-  automatic_screen_lock_enabled: boolean;
+  automatic_screen_lock_enabled: boolean | string;
   checkin: number;
   elevated_access: boolean;
+  hd_encrypted: boolean | string;
   hostname: string;
+  installed_software: { name: string; [key: string]: unknown }[];
+  log_forwarding: string;
   os: string;
   sensor_mode: boolean;
+  serial: string;
   uuid: string;
 }
 
