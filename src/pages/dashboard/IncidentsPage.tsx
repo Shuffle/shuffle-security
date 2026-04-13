@@ -487,10 +487,11 @@ const IncidentsPage = () => {
 
     const loadingIds = new Set(orgsToFetch.map(o => o.id));
     setSubOrgLoading(loadingIds);
+    setSubOrgFailed(new Set());
 
-    const results = await Promise.allSettled(
-      orgsToFetch.map(async (org) => {
-        // Use region-specific URL only for cloud domains (not dev/self-hosted)
+    // Fetch each org independently so results stream in as they complete
+    orgsToFetch.forEach(async (org) => {
+      try {
         const useRegionUrl = org.region_url && !isDevEnvironment();
         const baseUrl = useRegionUrl ? org.region_url!.replace(/\/+$/, '') : '';
         const url = baseUrl
@@ -510,27 +511,26 @@ const IncidentsPage = () => {
 
         const data = await response.json();
         const items = Array.isArray(data) ? data : (data.keys || data.data || []);
-        return { orgId: org.id, orgName: org.name, orgImage: org.image, items, failed: false };
-      })
-    );
-
-    const newMap = new Map<string, { orgName: string; orgImage?: string; items: typeof datastoreItems }>();
-    const failedIds = new Set<string>();
-    results.forEach((result, idx) => {
-      const org = orgsToFetch[idx];
-      if (result.status === 'fulfilled' && result.value) {
-        const { orgId, orgName, orgImage, items } = result.value;
-        newMap.set(orgId, { orgName, orgImage, items });
-      } else {
-        // Mark as failed but still add with empty items so org appears in the list
-        failedIds.add(org.id);
-        newMap.set(org.id, { orgName: org.name, orgImage: org.image, items: [] });
+        setSubOrgItems(prev => {
+          const next = new Map(prev);
+          next.set(org.id, { orgName: org.name, orgImage: org.image, items });
+          return next;
+        });
+      } catch {
+        setSubOrgFailed(prev => new Set(prev).add(org.id));
+        setSubOrgItems(prev => {
+          const next = new Map(prev);
+          next.set(org.id, { orgName: org.name, orgImage: org.image, items: [] });
+          return next;
+        });
+      } finally {
+        setSubOrgLoading(prev => {
+          const next = new Set(prev);
+          next.delete(org.id);
+          return next;
+        });
       }
     });
-
-    setSubOrgItems(newMap);
-    setSubOrgFailed(failedIds);
-    setSubOrgLoading(new Set());
   }, [subOrgs, parentOrg, currentOrgId]);
 
   // Fetch other org incidents when multi-tenant view is available
