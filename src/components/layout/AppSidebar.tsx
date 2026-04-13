@@ -75,6 +75,7 @@ const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: bool
     children: [
       { label: 'Templates', path: '/templates', icon: <DescriptionIcon fontSize="small" /> },
       { label: 'Custom Fields', path: '/incidents/custom-fields', icon: <TuneIcon fontSize="small" /> },
+      { label: 'Response Actions', path: '/incidents/response-actions', icon: <Shield size={16} /> },
     ],
   },
   { 
