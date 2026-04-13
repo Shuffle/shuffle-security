@@ -116,16 +116,11 @@ const VulnerabilitiesPage = () => {
   };
 
   const getDeployCommand = () => {
-    const checks = Object.entries(hostChecks)
-      .filter(([, v]) => v)
-      .map(([k]) => k)
-      .join(',');
-    return `curl -sSL https://shuffler.io/host-monitor/install.sh | sudo bash -s -- \\
-  --name "${hostName || 'my-host'}" \\
-  --platform ${hostPlatform} \\
-  --checks ${checks} \\
-  --org <your-org-id> \\
-  --auth <your-auth-token>`;
+    const flags = ['--sensor_mode=true'];
+    if (hostChecks.installed_software) flags.push('--software_list_enabled=true');
+    if (hostChecks.hd_encrypted) flags.push('--hd_encrypted_check=true');
+    if (hostChecks.screenlock) flags.push('--screenlock_check=true');
+    return `go run orborus.go ${flags.join(' ')}`;
   };
 
   const handleCopyCommand = () => {
@@ -135,16 +130,12 @@ const VulnerabilitiesPage = () => {
   };
 
   const handleOpenAddHost = () => {
-    setAddHostStep('config');
-    setHostName('');
-    setHostPlatform('linux');
-    setHostChecks({ metadata: true, hd_encrypted: true, screenlock: true, installed_software: true });
+    setHostChecks({ hd_encrypted: true, screenlock: true, installed_software: true });
     setCopied(false);
     setAddHostOpen(true);
   };
 
   const HOST_CHECK_OPTIONS = [
-    { id: 'metadata' as const, label: 'Host Metadata', description: 'OS version, hostname, IP, uptime', icon: <Info size={16} /> },
     { id: 'hd_encrypted' as const, label: 'HD Encrypted', description: 'Check if disk encryption is enabled (FileVault, BitLocker, LUKS)', icon: <HardDrive size={16} /> },
     { id: 'screenlock' as const, label: 'Screenlock Enabled', description: 'Verify automatic screen lock is configured', icon: <Lock size={16} /> },
     { id: 'installed_software' as const, label: 'Installed Software', description: 'Inventory of installed applications and versions', icon: <Package size={16} /> },
