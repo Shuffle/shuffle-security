@@ -296,7 +296,7 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
   const handleRunAgent = async () => {
     if (!agentInput.trim() || isRunning) return;
     setIsRunning(true);
-    setRunResult(null);
+    setActionRun(null);
     setRunError(null);
 
     const result = await runAgent({
@@ -310,7 +310,17 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
     });
 
     if (result.success) {
-      setRunResult(result.content);
+      const rawData = result.rawData as Record<string, any> | undefined;
+      setActionRun({
+        execution_id: rawData?.execution_id || crypto.randomUUID(),
+        workflow_id: rawData?.workflow_id || '',
+        status: rawData?.status || 'FINISHED',
+        started_at: new Date().toISOString(),
+        results: [{
+          result: typeof result.rawData === 'object' ? JSON.stringify(result.rawData) : result.content,
+          action: {},
+        }],
+      });
     } else {
       setRunError(result.error || 'Agent run failed.');
     }
@@ -319,7 +329,7 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
 
   const resetAction = () => {
     setAgentInput('');
-    setRunResult(null);
+    setActionRun(null);
     setRunError(null);
   };
 
