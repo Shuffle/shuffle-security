@@ -378,7 +378,7 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
   // Action mode state
   const [agentInput, setAgentInput] = useState('');
   const [isRunning, setIsRunning] = useState(false);
-  const [runResult, setRunResult] = useState<string | null>(null);
+  const [actionRun, setActionRun] = useState<AgentRun | null>(null);
   const [runError, setRunError] = useState<string | null>(null);
   const [selectedApps, setSelectedApps] = useState<SelectedApp[]>(initialApp ? [initialApp] : []);
   const [appSearchOpen, setAppSearchOpen] = useState(false);
@@ -389,7 +389,7 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
   const handleRunAgent = async () => {
     if (!agentInput.trim() || isRunning) return;
     setIsRunning(true);
-    setRunResult(null);
+    setActionRun(null);
     setRunError(null);
 
     const result = await runAgent({
@@ -403,7 +403,18 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
     });
 
     if (result.success) {
-      setRunResult(result.content);
+      // Build a minimal AgentRun so we can use AgentRunResultViewer
+      const rawData = result.rawData as Record<string, any> | undefined;
+      setActionRun({
+        execution_id: rawData?.execution_id || crypto.randomUUID(),
+        workflow_id: rawData?.workflow_id || '',
+        status: rawData?.status || 'FINISHED',
+        started_at: new Date().toISOString(),
+        results: [{
+          result: typeof result.rawData === 'object' ? JSON.stringify(result.rawData) : result.content,
+          action: {},
+        }],
+      });
     } else {
       setRunError(result.error || 'Agent run failed.');
     }
@@ -412,7 +423,7 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
 
   const reset = () => {
     setAgentInput('');
-    setRunResult(null);
+    setActionRun(null);
     setRunError(null);
   };
 
