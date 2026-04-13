@@ -494,7 +494,7 @@ const VulnAssetsPage = () => {
                         <SelectTrigger className="flex-1">
                           <SelectValue placeholder="Select a group" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="z-[9999]">
                           {groups.map(g => (
                             <SelectItem key={g.id} value={g.id}>
                               <div className="flex items-center gap-2">
