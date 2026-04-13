@@ -420,11 +420,13 @@ const VulnAssetsPage = () => {
         ) : (
           <div className="border-t border-border">
             {/* Table header */}
-            <div className="grid grid-cols-[1.5fr_0.8fr_0.8fr_0.6fr_0.8fr_1fr] gap-2 px-5 py-2 border-b border-border bg-muted/30">
+            <div className="grid grid-cols-[1.5fr_0.6fr_0.6fr_0.5fr_0.5fr_0.5fr_0.7fr_0.8fr] gap-2 px-5 py-2 border-b border-border bg-muted/30">
               <span className="text-xs font-semibold text-muted-foreground">Hostname</span>
               <span className="text-xs font-semibold text-muted-foreground">OS</span>
               <span className="text-xs font-semibold text-muted-foreground">Arch</span>
+              <span className="text-xs font-semibold text-muted-foreground">Disk Enc.</span>
               <span className="text-xs font-semibold text-muted-foreground">Screenlock</span>
+              <span className="text-xs font-semibold text-muted-foreground">Software</span>
               <span className="text-xs font-semibold text-muted-foreground">Group</span>
               <span className="text-xs font-semibold text-muted-foreground">Last Check-in</span>
             </div>
@@ -432,19 +434,36 @@ const VulnAssetsPage = () => {
             {allHosts.map(host => {
               const checkinDate = host.checkin ? new Date(host.checkin * 1000) : null;
               const isRecent = checkinDate ? (Date.now() - checkinDate.getTime()) < 5 * 60 * 1000 : false;
+              const hdEncrypted = host.hd_encrypted === true || host.hd_encrypted === 'true';
+              const screenlockOn = host.automatic_screen_lock_enabled === true || host.automatic_screen_lock_enabled === 'true';
+              const softwareCount = Array.isArray(host.installed_software) ? host.installed_software.length : 0;
               return (
                 <div
                   key={host.uuid}
-                  className="grid grid-cols-[1.5fr_0.8fr_0.8fr_0.6fr_0.8fr_1fr] gap-2 px-5 py-3 border-b border-border last:border-b-0 hover:bg-muted/20 transition-colors items-center"
+                  className="grid grid-cols-[1.5fr_0.6fr_0.6fr_0.5fr_0.5fr_0.5fr_0.7fr_0.8fr] gap-2 px-5 py-3 border-b border-border last:border-b-0 hover:bg-muted/20 transition-colors items-center"
                 >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <Laptop size={14} className="text-muted-foreground shrink-0" />
-                    <span className="text-sm font-medium text-foreground truncate">{host.hostname}</span>
+                  <div className="flex flex-col min-w-0">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Laptop size={14} className="text-muted-foreground shrink-0" />
+                      <span className="text-sm font-medium text-foreground truncate">{host.hostname}</span>
+                    </div>
+                    {host.serial && (
+                      <span className="text-[0.65rem] text-muted-foreground/70 font-mono truncate ml-[22px]" title={host.serial}>
+                        SN: {host.serial.split('\n')[0].trim().substring(0, 24)}
+                      </span>
+                    )}
                   </div>
                   <span className="text-xs text-muted-foreground capitalize">{host.os || '—'}</span>
                   <span className="text-xs text-muted-foreground">{host.arch || '—'}</span>
-                  <span className={`text-xs font-medium ${host.automatic_screen_lock_enabled ? 'text-green-500' : 'text-orange-500'}`}>
-                    {host.automatic_screen_lock_enabled ? 'On' : 'Off'}
+                  <span className={`text-xs font-medium flex items-center gap-1 ${hdEncrypted ? 'text-green-500' : 'text-orange-500'}`}>
+                    {hdEncrypted ? <ShieldCheck size={12} /> : <ShieldX size={12} />}
+                    {hdEncrypted ? 'Yes' : 'No'}
+                  </span>
+                  <span className={`text-xs font-medium ${screenlockOn ? 'text-green-500' : 'text-orange-500'}`}>
+                    {screenlockOn ? 'On' : 'Off'}
+                  </span>
+                  <span className="text-xs text-muted-foreground" title={softwareCount > 0 ? `${softwareCount} packages` : 'Not collected'}>
+                    {softwareCount > 0 ? `${softwareCount} pkgs` : '—'}
                   </span>
                   <span className="text-xs text-muted-foreground truncate">{host.groupName}</span>
                   <div className="flex items-center gap-1.5">
