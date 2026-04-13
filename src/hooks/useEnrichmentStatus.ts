@@ -10,7 +10,7 @@ export interface EnrichmentStatusCheck {
 }
 
 export interface EnrichmentStatus {
-  /** Overall: all three conditions are met */
+  /** Overall: all three conditions are met (includes optimistic override) */
   active: boolean;
   /** Individual check results */
   checks: EnrichmentStatusCheck[];
@@ -18,7 +18,9 @@ export interface EnrichmentStatus {
   isLoading: boolean;
   /** Enable all enrichment components */
   enable: () => Promise<void>;
-  /** Whether the enable action is in progress */
+  /** Disable enrichment */
+  disable: () => Promise<void>;
+  /** Whether an enable/disable action is in progress */
   isEnabling: boolean;
 }
 
