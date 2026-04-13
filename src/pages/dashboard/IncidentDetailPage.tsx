@@ -1574,7 +1574,12 @@ const IncidentDetailPage = () => {
       // Backend may update enrichments asynchronously after the save
       if (obsRefreshTimerRef.current) clearTimeout(obsRefreshTimerRef.current);
       setRefreshingObservables(true);
+      const refreshId = Date.now();
+      (obsRefreshTimerRef as any)._activeId = refreshId;
       obsRefreshTimerRef.current = setTimeout(async () => {
+        // Safety timeout: abort after 15s to prevent infinite spinner
+        const controller = new AbortController();
+        const safetyTimeout = setTimeout(() => controller.abort(), 15000);
         try {
           const refreshResult = isPublicView
             ? await getDatastoreItemPublic(incident.id, publicOrg!, publicAuth!)
@@ -1607,7 +1612,11 @@ const IncidentDetailPage = () => {
         } catch (err) {
           console.warn('[ObsRefresh] Failed to refresh observables:', err);
         } finally {
-          setRefreshingObservables(false);
+          clearTimeout(safetyTimeout);
+          // Only clear loading if this is still the active refresh
+          if ((obsRefreshTimerRef as any)._activeId === refreshId) {
+            setRefreshingObservables(false);
+          }
         }
       }, 7000);
       toast.error('Failed to save changes');
