@@ -69,10 +69,10 @@ export const DEFAULT_THREAT_FEEDS: ThreatFeed[] = [
     enabled: true,
   },
   {
-    id: 'bambenek_dga',
-    url: 'https://osint.bambenekconsulting.com/feeds/dga-feed-high.csv',
-    name: 'Bambenek DGA Feed',
-    description: 'High confidence DGA domain feed from Bambenek Consulting',
+    id: 'phishtank',
+    url: 'https://data.phishtank.com/data/online-valid.csv',
+    name: 'PhishTank Online Valid',
+    description: 'Verified active phishing URLs from PhishTank community',
     enabled: true,
   },
   {
