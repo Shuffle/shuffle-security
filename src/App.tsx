@@ -39,6 +39,7 @@ import PipelinesPage from '@/pages/dashboard/PipelinesPage';
 import DashboardPage from '@/pages/dashboard/DashboardPage';
 import VulnerabilitiesPage from '@/pages/dashboard/VulnerabilitiesPage';
 import VulnAssetsPage from '@/pages/dashboard/VulnAssetsPage';
+import AssetsPage from '@/pages/dashboard/AssetsPage';
 
 import AppsPage from '@/pages/AppsPage';
 import NotFound from './pages/NotFound';
@@ -146,6 +147,7 @@ const ThemedApp = () => {
               <Route path="/preferences" element={<OrgPreferencesPage />} />
               <Route path="/vulnerabilities" element={<SupportOnly><VulnerabilitiesPage /></SupportOnly>} />
               <Route path="/vulnerabilities/assets" element={<SupportOnly><VulnAssetsPage /></SupportOnly>} />
+              <Route path="/assets" element={<AssetsPage />} />
             </Route>
 
             {/* App detail & usecase detail: uses sidebar when authenticated, standalone when guest */}

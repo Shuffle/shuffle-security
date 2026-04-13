@@ -95,9 +95,14 @@ const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: bool
     icon: <Shield size={20} />,
     path: '/vulnerabilities',
     children: [
-      { label: 'Assets', path: '/vulnerabilities/assets', icon: <Monitor size={16} /> },
+      { label: 'Host Monitors', path: '/vulnerabilities/assets', icon: <Monitor size={16} /> },
     ],
   }] : []),
+  {
+    label: 'Assets',
+    icon: <Monitor size={20} />,
+    path: '/assets',
+  },
   { label: '__divider__', icon: <></> },
   { label: 'Agent', icon: <AgentIcon size={20} />, path: '/agent' },
   { label: 'Automation', icon: <Activity size={20} />, path: '/usecases' },
