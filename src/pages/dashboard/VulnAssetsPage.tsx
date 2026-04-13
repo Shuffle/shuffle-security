@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Laptop, HardDrive, Lock, Package, Zap, Plus, Copy, Check, Activity, ChevronRight, Shield, FolderOpen, Loader2 } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { toast } from 'sonner';
-import { getApiUrl, shuffleFetch } from '@/config/api';
+import { getApiUrl, getAuthHeader } from '@/config/api';
 
 const HOST_CHECK_OPTIONS = [
   { id: 'hd_encrypted' as const, label: 'HD Encrypted', description: 'Check if disk encryption is enabled (FileVault, BitLocker, LUKS)', icon: <HardDrive size={16} /> },
@@ -34,7 +34,14 @@ interface MonitoringGroup {
 /** Fetch environments from the API and filter for sensor_group: true */
 const fetchSensorGroups = async (): Promise<MonitoringGroup[]> => {
   try {
-    const res = await shuffleFetch(getApiUrl('/api/v1/get_environments'));
+    const res = await fetch(getApiUrl('/api/v1/get_environments'), {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader(),
+      },
+    });
     if (!res.ok) return [];
     const data = await res.json();
     const envs: OrbEnvironment[] = Array.isArray(data) ? data : [];
@@ -49,9 +56,13 @@ const fetchSensorGroups = async (): Promise<MonitoringGroup[]> => {
 /** Create a new environment with sensor_group: true */
 const createSensorGroupEnv = async (name: string): Promise<MonitoringGroup | null> => {
   try {
-    const res = await shuffleFetch(getApiUrl('/api/v1/set_environments'), {
+    const res = await fetch(getApiUrl('/api/v1/set_environments'), {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader(),
+      },
       body: JSON.stringify({ Name: name, Type: 'onprem', sensor_group: true }),
     });
     if (!res.ok) {
