@@ -44,6 +44,7 @@ import shuffleLogo from '@/assets/shuffle-logo.png';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { useThreatFeeds, DEFAULT_THREAT_FEEDS, ThreatFeed } from '@/hooks/useThreatFeeds';
 import { getAutomationLabels } from '@/config/usecases';
+import { useEnrichmentStatus } from '@/hooks/useEnrichmentStatus';
 
 /** Convert internal app names (e.g. "google_sheets") to readable form ("Google Sheets") */
 const readableAppName = (name: string): string =>
