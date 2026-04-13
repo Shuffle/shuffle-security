@@ -1931,6 +1931,53 @@ const IncidentDetailPage = () => {
     };
     await addItem(incident.id, updatedOCSF);
     toast.success('Comment added');
+
+    // Schedule observable/enrichment refresh ~7s after comment save
+    // Backend may extract IOCs from comment text and create enrichments
+    if (obsRefreshTimerRef.current) clearTimeout(obsRefreshTimerRef.current);
+    setRefreshingObservables(true);
+    const refreshId = Date.now();
+    (obsRefreshTimerRef as any)._activeId = refreshId;
+    obsRefreshTimerRef.current = setTimeout(async () => {
+      const safetyTimeout = setTimeout(() => {}, 15000);
+      try {
+        const refreshResult = isPublicView
+          ? await getDatastoreItemPublic(incident.id, publicOrg!, publicAuth!)
+          : await getItem(incident.id);
+        if (refreshResult) {
+          const refreshItem = typeof refreshResult === 'object' && 'item' in refreshResult ? refreshResult.item : refreshResult;
+          const refreshData = {
+            key: refreshItem?.key || incident.id,
+            value: refreshItem?.value,
+            created: refreshItem?.created,
+            edited: refreshItem?.edited,
+            enrichments: refreshItem?.enrichments,
+          };
+          const reParsed = parseIncidentFromDatastore(refreshData);
+          if (reParsed) {
+            const prevCount = editedObservables.filter(o => !o.archived).length + enrichments.length;
+            const newEnrichments = reParsed.enrichments || [];
+            const newObservables = reParsed.observables || [];
+            const newCount = newObservables.filter((o: any) => !o.archived).length + newEnrichments.length;
+            setEnrichments(newEnrichments);
+            if (newObservables.length > editedObservables.length) {
+              setEditedObservables(newObservables);
+            }
+            if (newCount > prevCount) {
+              toast.info(`${newCount - prevCount} new observable${newCount - prevCount > 1 ? 's' : ''} detected`, { duration: 4000 });
+            }
+            console.log(`[ObsRefresh/Comment] Refreshed observables: ${prevCount} → ${newCount}`);
+          }
+        }
+      } catch (err) {
+        console.warn('[ObsRefresh/Comment] Failed to refresh observables:', err);
+      } finally {
+        clearTimeout(safetyTimeout);
+        if ((obsRefreshTimerRef as any)._activeId === refreshId) {
+          setRefreshingObservables(false);
+        }
+      }
+    }, 7000);
   };
 
   const handleResolve = async (resolutionData: ResolutionData) => {
@@ -4613,19 +4660,10 @@ const IncidentDetailPage = () => {
                         <Typography variant="body2" sx={{ flex: 1, fontFamily: 'monospace', fontSize: '0.8rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
                           {obs.value}
                         </Typography>
-                        {hasTimestamps && (
-                          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0, gap: 0 }}>
-                            {firstSeen && (
-                              <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.55rem', whiteSpace: 'nowrap', lineHeight: 1.3 }}>
-                                F: {formatObsTime(firstSeen)}
-                              </Typography>
-                            )}
-                            {lastSeen && (
-                              <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.55rem', whiteSpace: 'nowrap', lineHeight: 1.3 }}>
-                                L: {formatObsTime(lastSeen)}
-                              </Typography>
-                            )}
-                          </Box>
+                        {firstSeen && (
+                          <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.55rem', whiteSpace: 'nowrap', lineHeight: 1.3 }}>
+                            {formatObsTime(firstSeen)}
+                          </Typography>
                         )}
                         {/* Correlation badge */}
                         {(() => {
