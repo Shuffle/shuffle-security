@@ -261,10 +261,16 @@ const VulnAssetsPage = () => {
               <p className="text-xs text-muted-foreground">Deploy lightweight monitors on endpoints to check compliance & posture</p>
             </div>
           </div>
-          <Button size="sm" variant="outline" className="gap-1.5" onClick={handleOpenAddHost}>
-            <Plus size={14} />
-            Add Host
-          </Button>
+          <div className="flex items-center gap-1.5">
+            <Button size="sm" variant="ghost" className="gap-1.5" onClick={() => loadGroups()}>
+              <RefreshCw size={14} />
+              Refresh
+            </Button>
+            <Button size="sm" variant="outline" className="gap-1.5" onClick={handleOpenAddHost}>
+              <Plus size={14} />
+              Add Host
+            </Button>
+          </div>
         </div>
 
         {/* Checks overview */}
