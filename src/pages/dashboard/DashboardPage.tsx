@@ -575,8 +575,17 @@ const DashboardPage = () => {
         ctaPath: '/vulnerabilities',
         priority: 5,
       },
+      {
+        id: 'setup-endpoints',
+        title: 'Set up endpoint monitoring',
+        description: 'Deploy lightweight host monitors to check compliance, encryption, and posture.',
+        icon: <Monitor size={20} />,
+        status: 'not-started',
+        ctaLabel: 'Set Up',
+        ctaPath: '/vulnerabilities/assets',
+        priority: 6,
+      },
     ];
-
     // Sort: action-needed first, then not-started, then complete
     const statusOrder = { 'action-needed': 0, 'not-started': 1, 'complete': 2 };
     steps.sort((a, b) => {
