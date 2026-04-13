@@ -417,6 +417,7 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
   };
 
   return (
+    <>
     <Drawer
       anchor="right"
       open={open}
