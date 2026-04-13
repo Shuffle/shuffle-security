@@ -1471,7 +1471,7 @@ export const AppAuthCard = ({
                           borderRadius: 2,
                           flexShrink: 0,
                           minWidth: 160,
-                          width: { xs: '100%', sm: 'auto' },
+                          width: '100%',
                           transition: 'all 0.3s ease',
                           '@keyframes shimmer': {
                             '0%': { backgroundPosition: '200% 0' },
