@@ -11,11 +11,11 @@ import { toast } from 'sonner';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 
 const HOST_CHECK_OPTIONS = [
-  { id: 'hd_encrypted' as const, label: 'HD Encrypted', description: 'Check if disk encryption is enabled (FileVault, BitLocker, LUKS)', icon: <HardDrive size={16} /> },
-  { id: 'screenlock' as const, label: 'Screenlock Enabled', description: 'Verify automatic screen lock is configured', icon: <Lock size={16} /> },
-  { id: 'installed_software' as const, label: 'Installed Software', description: 'Inventory of installed applications and versions', icon: <Package size={16} /> },
-  { id: 'response_actions' as const, label: 'Response Actions', description: 'Enable automated response actions on this host', icon: <Zap size={16} /> },
-  { id: 'log_forwarding' as const, label: 'Log Forwarding', description: 'Forward host logs to a remote endpoint for centralized collection', icon: <Send size={16} /> },
+  { id: 'hd_encrypted' as const, label: 'HD Encrypted', description: 'Check if disk encryption is enabled (FileVault, BitLocker, LUKS)', icon: <HardDrive size={16} />, disabled: false },
+  { id: 'screenlock' as const, label: 'Screenlock Enabled', description: 'Verify automatic screen lock is configured', icon: <Lock size={16} />, disabled: false },
+  { id: 'installed_software' as const, label: 'Installed Software', description: 'Inventory of installed applications and versions', icon: <Package size={16} />, disabled: false },
+  { id: 'response_actions' as const, label: 'Response Actions', description: 'Enable automated response actions on this host', icon: <Zap size={16} />, disabled: false },
+  { id: 'log_forwarding' as const, label: 'Log Forwarding', description: 'Forward host logs to a remote endpoint for centralized collection', icon: <Send size={16} />, disabled: true },
 ];
 
 interface OrbEnvironment {
@@ -379,16 +379,17 @@ const VulnAssetsPage = () => {
                   {HOST_CHECK_OPTIONS.map(check => (
                     <div key={check.id}>
                       <label
-                        className="flex items-center gap-3 rounded-lg border border-border px-3 py-2.5 cursor-pointer hover:bg-muted/50 transition-colors"
+                        className={`flex items-center gap-3 rounded-lg border border-border px-3 py-2.5 transition-colors ${check.disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-muted/50'}`}
                       >
                         <Checkbox
                           checked={hostChecks[check.id]}
+                          disabled={check.disabled}
                           onCheckedChange={(v) => setHostChecks(prev => ({ ...prev, [check.id]: !!v }))}
                         />
                         <div className="flex items-center gap-2 flex-1 min-w-0">
                           <span className="text-muted-foreground shrink-0">{check.icon}</span>
                           <div className="min-w-0">
-                            <span className="text-sm font-medium text-foreground block">{check.label}</span>
+                            <span className="text-sm font-medium text-foreground block">{check.label}{check.disabled ? ' (Coming soon)' : ''}</span>
                             <span className="text-xs text-muted-foreground">{check.description}</span>
                           </div>
                         </div>
