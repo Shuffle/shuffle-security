@@ -277,7 +277,7 @@ const DetectionOnboardingPage = () => {
           loading: false,
           checked: true,
           success: false,
-          message: 'Sensor is running but detection pipeline is not yet configured',
+          message: 'Pipeline sensor is running but detection pipeline is not yet configured',
         });
       }
 
@@ -449,7 +449,7 @@ const DetectionOnboardingPage = () => {
           loading: false,
           checked: true,
           success: false,
-          message: 'Failed to check sensor status',
+          message: 'Failed to check pipeline sensor status',
         });
         return;
       }
@@ -466,7 +466,7 @@ const DetectionOnboardingPage = () => {
           loading: false,
           checked: true,
           success: false,
-          message: 'No sensor selected',
+          message: 'No pipeline sensor selected',
         });
         return;
       }
@@ -477,13 +477,13 @@ const DetectionOnboardingPage = () => {
       
       let message = '';
       if (!isRunning) {
-        message = 'Sensor not running. Deploy it using the options above.';
+        message = 'Pipeline sensor not running. Deploy it using the options above.';
       } else if (pipelineReady) {
         message = pipelineCount > 0 
           ? `Detection ready with ${pipelineCount} pipeline${pipelineCount !== 1 ? 's' : ''} active`
           : 'Detection pipeline is enabled and ready';
       } else {
-        message = 'Sensor is running but detection pipeline is not yet configured';
+        message = 'Pipeline sensor is running but detection pipeline is not yet configured';
       }
       
       setSensorStatus({
@@ -502,7 +502,7 @@ const DetectionOnboardingPage = () => {
         loading: false,
         checked: true,
         success: false,
-        message: 'Error checking sensor status',
+        message: 'Error checking pipeline sensor status',
       });
     }
   };
