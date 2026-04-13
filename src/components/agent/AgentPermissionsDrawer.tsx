@@ -430,7 +430,7 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
             },
           }}
         >
-          <Tab label="Run Agent" icon={<Play size={14} />} iconPosition="start" sx={{ gap: 0.75 }} />
+          <Tab label="Run" icon={<Play size={14} />} iconPosition="start" sx={{ gap: 0.75 }} />
           <Tab label="Permissions" icon={<ShieldCheck size={14} />} iconPosition="start" sx={{ gap: 0.75 }} />
           <Tab
             label={
