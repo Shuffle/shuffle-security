@@ -62,6 +62,8 @@ const VulnerabilitiesPage = () => {
   const [aiScanLoading, setAiScanLoading] = useState(false);
   const [aiScanResult, setAiScanResult] = useState<string | null>(null);
   const [addHostOpen, setAddHostOpen] = useState(false);
+  const [addHostStep, setAddHostStep] = useState<'checks' | 'deploy'>('checks');
+  const [hostPlatform, setHostPlatform] = useState<'linux' | 'macos' | 'windows'>('linux');
   const [hostChecks, setHostChecks] = useState({
     hd_encrypted: true,
     screenlock: true,
@@ -130,6 +132,8 @@ const VulnerabilitiesPage = () => {
   };
 
   const handleOpenAddHost = () => {
+    setAddHostStep('checks');
+    setHostPlatform('linux');
     setHostChecks({ hd_encrypted: true, screenlock: true, installed_software: true });
     setCopied(false);
     setAddHostOpen(true);
@@ -421,8 +425,8 @@ const VulnerabilitiesPage = () => {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-5 mt-2">
-              {/* Checks */}
+          {addHostStep === 'checks' ? (
+            <div className="space-y-5 mt-2">
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium">Checks to Enable</Label>
                 <div className="space-y-2">
@@ -443,6 +447,30 @@ const VulnerabilitiesPage = () => {
                         </div>
                       </div>
                     </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-5 mt-2">
+              {/* Platform */}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Platform</Label>
+                <div className="flex gap-2">
+                  {([
+                    { value: 'linux' as const, label: 'Linux' },
+                    { value: 'macos' as const, label: 'macOS' },
+                    { value: 'windows' as const, label: 'Windows' },
+                  ]).map(p => (
+                    <Button
+                      key={p.value}
+                      variant={hostPlatform === p.value ? 'default' : 'outline'}
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => setHostPlatform(p.value)}
+                    >
+                      {p.label}
+                    </Button>
                   ))}
                 </div>
               </div>
@@ -471,11 +499,28 @@ const VulnerabilitiesPage = () => {
                 </p>
               </div>
             </div>
+          )}
 
           <DialogFooter className="mt-2">
-            <Button size="sm" onClick={() => { setAddHostOpen(false); toast.success('Host monitor configured', { description: 'Deploy the command on your target host to start monitoring.' }); }}>
-              Done
-            </Button>
+            {addHostStep === 'checks' ? (
+              <Button
+                size="sm"
+                onClick={() => setAddHostStep('deploy')}
+                disabled={Object.values(hostChecks).every(v => !v)}
+              >
+                Next: Deploy
+                <ChevronRight size={14} className="ml-1" />
+              </Button>
+            ) : (
+              <div className="flex gap-2 w-full justify-between">
+                <Button variant="outline" size="sm" onClick={() => setAddHostStep('checks')}>
+                  Back
+                </Button>
+                <Button size="sm" onClick={() => { setAddHostOpen(false); toast.success('Host monitor configured', { description: 'Deploy the command on your target host to start monitoring.' }); }}>
+                  Done
+                </Button>
+              </div>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
