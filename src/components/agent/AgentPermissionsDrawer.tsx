@@ -252,17 +252,20 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
     setToolsPopover(null);
   };
 
-  // Reset tab every time drawer opens
+  // Reset tab every time drawer opens & pre-populate action tab if needed
   const prevOpenRef = useRef(open);
   if (open && !prevOpenRef.current) {
     setActiveTab(initialTab ?? 0);
   }
+  const justOpened = open && !prevOpenRef.current;
   prevOpenRef.current = open;
 
   // Pre-populate selectedApps from enabled tools when switching to Action tab + auto-focus
   const prevTabRef = useRef(activeTab);
   useEffect(() => {
-    if (activeTab === 0 && prevTabRef.current !== 0) {
+    const switchedToAction = activeTab === 0 && prevTabRef.current !== 0;
+    const openedOnAction = justOpened && (initialTab ?? 0) === 0;
+    if (switchedToAction || openedOnAction) {
       if (agentTools.length > 0) {
         const enabledAppObjects = agentTools
           .filter(t => enabledTools.has(t.name))
@@ -277,7 +280,7 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
       setTimeout(() => inputRef.current?.focus(), 150);
     }
     prevTabRef.current = activeTab;
-  }, [activeTab, agentTools, enabledTools]);
+  }, [activeTab, agentTools, enabledTools, open]);
 
   const toggleExpand = (categoryId: string) => {
     setExpandedCategories(prev =>
