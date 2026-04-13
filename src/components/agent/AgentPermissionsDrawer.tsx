@@ -294,70 +294,20 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
     setRunResult(null);
     setRunError(null);
 
-    try {
-      const payload: Record<string, unknown> = {
-        jsonrpc: '2.0',
-        id: crypto.randomUUID(),
-        method: 'tools/call',
-        params: {
-          input: { text: agentInput.trim() },
-          ...(selectedApps.length > 0 ? {
-            tool_names: selectedApps.map(a => a.name),
-            tool_ids: selectedApps.map(a => a.objectID || a.name),
-          } : {}),
-        },
-      };
+    const result = await runAgent({
+      input: agentInput.trim(),
+      ...(selectedApps.length > 0 ? {
+        toolNames: selectedApps.map(a => a.name),
+        toolIds: selectedApps.map(a => a.objectID || a.name),
+      } : {}),
+    });
 
-      const response = await fetch(getApiUrl('/api/v1/agent'), {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeader(),
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const rawText = await response.text();
-      const contentType = response.headers.get('content-type');
-
-      if (!response.ok) {
-        setRunError(`Error ${response.status}: ${rawText || response.statusText}`);
-      } else if (!contentType?.includes('application/json')) {
-        if (rawText.trim().startsWith('<!') || rawText.includes('<html')) {
-          setRunError('Received an unexpected HTML response. This may indicate an auth redirect or server issue.');
-        } else {
-          setRunResult(rawText);
-        }
-      } else {
-        const data = JSON.parse(rawText);
-        let content = '';
-        if (typeof data === 'string') {
-          content = data;
-        } else if (data?.result) {
-          if (typeof data.result === 'object' && data.result !== null) {
-            if (data.result.message) content = data.result.message;
-            const rest = { ...data.result };
-            delete rest.message;
-            if (Object.keys(rest).length > 0) {
-              const extra = JSON.stringify(rest, null, 2);
-              content = content ? `${content}\n\n${extra}` : extra;
-            }
-          } else {
-            content = String(data.result);
-          }
-        } else if (data?.message) {
-          content = data.message;
-        } else {
-          content = JSON.stringify(data, null, 2);
-        }
-        setRunResult(content || 'No output returned.');
-      }
-    } catch (err) {
-      setRunError(`Network error — could not reach the agent. ${err instanceof Error ? err.message : ''}`);
-    } finally {
-      setIsRunning(false);
+    if (result.success) {
+      setRunResult(result.content);
+    } else {
+      setRunError(result.error || 'Agent run failed.');
     }
+    setIsRunning(false);
   };
 
   const resetAction = () => {
