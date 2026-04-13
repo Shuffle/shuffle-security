@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useEnrichmentStatus } from '@/hooks/useEnrichmentStatus';
 import {
   Box,
   Card,
@@ -46,6 +47,7 @@ import { DATASTORE_CATEGORIES } from '@/services/datastore';
 const CATEGORY = DATASTORE_CATEGORIES.IOCS;
 
 const IOCTypesPage = () => {
+  const enrichmentStatus = useEnrichmentStatus();
   const { items, isLoading, error, fetchItems, addItem, removeItem } = useDatastore({ category: CATEGORY });
   const [iocTypes, setIocTypes] = useState<IOCType[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -266,12 +268,31 @@ const IOCTypesPage = () => {
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-      {/* Auto-ingestion note */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, px: 2, py: 1.5, borderRadius: 2, bgcolor: 'rgba(251, 146, 60, 0.08)', border: '1px solid rgba(251, 146, 60, 0.18)' }}>
-        <Typography variant="body2" sx={{ color: '#fb923c', fontWeight: 500 }}>
-          Automatic observable ingestion is not yet fully enabled. IOC types defined here will be used for manual tagging. Automated extraction is coming soon.
-        </Typography>
-      </Box>
+      {/* Enrichment status banner */}
+      {!enrichmentStatus.isLoading && !enrichmentStatus.active && (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, px: 1.5, py: 1, borderRadius: 1.5, bgcolor: 'rgba(251, 146, 60, 0.08)', border: '1px solid rgba(251, 146, 60, 0.18)', flexWrap: 'wrap' }}>
+          <Typography variant="caption" sx={{ color: '#fb923c', fontWeight: 500, mr: 1 }}>
+            Automatic observable extraction is not yet fully enabled.
+          </Typography>
+          {enrichmentStatus.checks.map((c) => (
+            <Chip
+              key={c.label}
+              label={c.label}
+              size="small"
+              icon={c.active ? <CheckCircleIcon sx={{ fontSize: 14 }} /> : undefined}
+              sx={{
+                height: 22,
+                fontSize: '0.7rem',
+                fontWeight: 500,
+                bgcolor: c.active ? 'hsl(var(--severity-low) / 0.12)' : 'hsl(var(--destructive) / 0.10)',
+                color: c.active ? 'hsl(var(--severity-low))' : 'hsl(var(--destructive))',
+                border: '1px solid',
+                borderColor: c.active ? 'hsl(var(--severity-low) / 0.25)' : 'hsl(var(--destructive) / 0.20)',
+              }}
+            />
+          ))}
+        </Box>
+      )}
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Typography variant="h5" sx={{ fontWeight: 600 }}>IOC Types</Typography>
