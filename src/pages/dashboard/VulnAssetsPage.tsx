@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Laptop, HardDrive, Lock, Package, Zap, Plus, Copy, Check, Activity, ChevronRight, Shield, FolderOpen, Loader2 } from 'lucide-react';
+import { Laptop, HardDrive, Lock, Package, Zap, Plus, Copy, Check, Activity, ChevronRight, Shield, FolderOpen, Loader2, CheckCircle2 } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { toast } from 'sonner';
 import { getApiUrl, getAuthHeader } from '@/config/api';
@@ -104,6 +104,9 @@ const VulnAssetsPage = () => {
     response_actions: false,
   });
   const [copied, setCopied] = useState(false);
+  const [sensorDetected, setSensorDetected] = useState(false);
+  const [sensorPolling, setSensorPolling] = useState(false);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Monitoring groups (from API)
   const [groups, setGroups] = useState<MonitoringGroup[]>([]);
@@ -156,11 +159,56 @@ const VulnAssetsPage = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // Poll for sensor checkin when on deploy step
+  const startSensorPolling = useCallback(() => {
+    if (pollRef.current) clearInterval(pollRef.current);
+    setSensorDetected(false);
+    setSensorPolling(true);
+    const checkSensor = async () => {
+      try {
+        const res = await fetch(getApiUrl('/api/v1/getenvironments'), {
+          credentials: 'include',
+          headers: { ...getAuthHeader() },
+        });
+        if (!res.ok) return;
+        const envs: OrbEnvironment[] = await res.json();
+        const env = envs.find(e => (e.id === selectedGroupId || e.Name === selectedGroup?.name) && e.sensor_group === true);
+        if (env && env.checkin) {
+          const now = Math.floor(Date.now() / 1000);
+          const checkin = typeof env.checkin === 'number' ? env.checkin : 0;
+          if (checkin > 0 && (now - checkin) < 300) {
+            setSensorDetected(true);
+            setSensorPolling(false);
+            if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+          }
+        }
+      } catch { /* continue polling */ }
+    };
+    checkSensor();
+    pollRef.current = setInterval(checkSensor, 5000);
+  }, [selectedGroupId, selectedGroup?.name]);
+
+  const stopSensorPolling = useCallback(() => {
+    if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+    setSensorPolling(false);
+  }, []);
+
+  // Start/stop polling based on step
+  useEffect(() => {
+    if (addHostStep === 'deploy' && addHostOpen) {
+      startSensorPolling();
+    } else {
+      stopSensorPolling();
+    }
+    return () => stopSensorPolling();
+  }, [addHostStep, addHostOpen, startSensorPolling, stopSensorPolling]);
+
   const handleOpenAddHost = () => {
     setAddHostStep('checks');
     setHostPlatform('linux');
     setHostChecks({ hd_encrypted: true, screenlock: true, installed_software: true, response_actions: false });
     setCopied(false);
+    setSensorDetected(false);
     setIsCreatingGroup(false);
     setNewGroupName('');
     setAddHostOpen(true);
@@ -400,6 +448,27 @@ const VulnAssetsPage = () => {
                   <span className="font-medium text-foreground">What happens next:</span> The monitor runs the selected checks and reports results back to Shuffle. Host metadata is collected automatically.
                 </p>
               </div>
+
+              {/* Sensor detection status */}
+              <div className={`rounded-lg border px-3 py-3 flex items-center gap-3 ${sensorDetected ? 'border-[hsl(var(--severity-low))]/30 bg-[hsl(var(--severity-low))]/[0.06]' : 'border-border bg-muted/30'}`}>
+                {sensorDetected ? (
+                  <>
+                    <CheckCircle2 size={18} className="text-[hsl(var(--severity-low))] shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Sensor detected!</p>
+                      <p className="text-xs text-muted-foreground">A host has checked in to this monitoring group.</p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <Loader2 size={18} className="animate-spin text-muted-foreground shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Waiting for sensor…</p>
+                      <p className="text-xs text-muted-foreground">Run the command above on your target host. This will update automatically when a connection is detected.</p>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           )}
 
@@ -418,9 +487,11 @@ const VulnAssetsPage = () => {
                 <Button variant="outline" size="sm" onClick={() => setAddHostStep('checks')}>
                   Back
                 </Button>
-                <Button size="sm" onClick={() => { setAddHostOpen(false); toast.success('Host monitor configured', { description: `Group "${selectedGroup?.name}" — deploy the command on your target host.` }); }}>
-                  Done
-                </Button>
+                {sensorDetected && (
+                  <Button size="sm" onClick={() => { setAddHostOpen(false); toast.success('Host monitor connected', { description: `Sensor active in group "${selectedGroup?.name}".` }); }}>
+                    Done
+                  </Button>
+                )}
               </div>
             )}
           </DialogFooter>
