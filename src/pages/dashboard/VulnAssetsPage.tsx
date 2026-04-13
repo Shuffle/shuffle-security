@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Laptop, HardDrive, Lock, Package, Zap, Plus, Copy, Check, Activity, ChevronRight, Radar, FolderOpen, Loader2, CheckCircle2, Send, RefreshCw, ShieldCheck, ShieldX } from 'lucide-react';
+import { Laptop, HardDrive, Lock, Package, Zap, Plus, Copy, Check, Activity, ChevronRight, ChevronDown, Radar, FolderOpen, Loader2, CheckCircle2, Send, RefreshCw, ShieldCheck, ShieldX, Cpu, Hash, Clock, Globe } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { toast } from 'sonner';
 import { getApiUrl, getAuthHeader } from '@/config/api';
@@ -138,6 +138,7 @@ const VulnAssetsPage = () => {
   const [newGroupName, setNewGroupName] = useState('');
   const [creatingGroupLoading, setCreatingGroupLoading] = useState(false);
   const [syncGroupId, setSyncGroupId] = useState<string>('');
+  const [expandedHosts, setExpandedHosts] = useState<Set<string>>(new Set());
   const selectedGroup = groups.find(g => g.id === selectedGroupId);
 
   // Aggregate all hosts across all sensor groups
@@ -437,41 +438,148 @@ const VulnAssetsPage = () => {
               const hdEncrypted = host.hd_encrypted === true || host.hd_encrypted === 'true';
               const screenlockOn = host.automatic_screen_lock_enabled === true || host.automatic_screen_lock_enabled === 'true';
               const softwareCount = Array.isArray(host.installed_software) ? host.installed_software.length : 0;
+              const isExpanded = expandedHosts.has(host.uuid);
+              const toggleExpanded = () => {
+                setExpandedHosts(prev => {
+                  const next = new Set(prev);
+                  if (next.has(host.uuid)) next.delete(host.uuid);
+                  else next.add(host.uuid);
+                  return next;
+                });
+              };
               return (
-                <div
-                  key={host.uuid}
-                  className="grid grid-cols-[1.5fr_0.6fr_0.6fr_0.5fr_0.5fr_0.5fr_0.7fr_0.8fr] gap-2 px-5 py-3 border-b border-border last:border-b-0 hover:bg-muted/20 transition-colors items-center"
-                >
-                  <div className="flex flex-col min-w-0">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <Laptop size={14} className="text-muted-foreground shrink-0" />
-                      <span className="text-sm font-medium text-foreground truncate">{host.hostname}</span>
+                <div key={host.uuid}>
+                  <div
+                    className="grid grid-cols-[1.5fr_0.6fr_0.6fr_0.5fr_0.5fr_0.5fr_0.7fr_0.8fr] gap-2 px-5 py-3 border-b border-border last:border-b-0 hover:bg-muted/20 transition-colors items-center cursor-pointer"
+                    onClick={toggleExpanded}
+                  >
+                    <div className="flex flex-col min-w-0">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <ChevronRight size={14} className={`text-muted-foreground shrink-0 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                        <Laptop size={14} className="text-muted-foreground shrink-0" />
+                        <span className="text-sm font-medium text-foreground truncate">{host.hostname}</span>
+                      </div>
+                      {host.serial && (
+                        <span className="text-[0.65rem] text-muted-foreground/70 font-mono truncate ml-[30px]" title={host.serial}>
+                          SN: {host.serial.split('\n')[0].trim().substring(0, 24)}
+                        </span>
+                      )}
                     </div>
-                    {host.serial && (
-                      <span className="text-[0.65rem] text-muted-foreground/70 font-mono truncate ml-[22px]" title={host.serial}>
-                        SN: {host.serial.split('\n')[0].trim().substring(0, 24)}
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-xs text-muted-foreground capitalize">{host.os || '—'}</span>
-                  <span className="text-xs text-muted-foreground">{host.arch || '—'}</span>
-                  <span className={`text-xs font-medium flex items-center gap-1 ${hdEncrypted ? 'text-green-500' : 'text-orange-500'}`}>
-                    {hdEncrypted ? <ShieldCheck size={12} /> : <ShieldX size={12} />}
-                    {hdEncrypted ? 'Yes' : 'No'}
-                  </span>
-                  <span className={`text-xs font-medium ${screenlockOn ? 'text-green-500' : 'text-orange-500'}`}>
-                    {screenlockOn ? 'On' : 'Off'}
-                  </span>
-                  <span className="text-xs text-muted-foreground" title={softwareCount > 0 ? `${softwareCount} packages` : 'Not collected'}>
-                    {softwareCount > 0 ? `${softwareCount} pkgs` : '—'}
-                  </span>
-                  <span className="text-xs text-muted-foreground truncate">{host.groupName}</span>
-                  <div className="flex items-center gap-1.5">
-                    <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${isRecent ? 'bg-green-500' : 'bg-muted-foreground/40'}`} />
-                    <span className="text-xs text-muted-foreground">
-                      {checkinDate ? checkinDate.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
+                    <span className="text-xs text-muted-foreground capitalize">{host.os || '—'}</span>
+                    <span className="text-xs text-muted-foreground">{host.arch || '—'}</span>
+                    <span className={`text-xs font-medium flex items-center gap-1 ${hdEncrypted ? 'text-green-500' : 'text-orange-500'}`}>
+                      {hdEncrypted ? <ShieldCheck size={12} /> : <ShieldX size={12} />}
+                      {hdEncrypted ? 'Yes' : 'No'}
                     </span>
+                    <span className={`text-xs font-medium ${screenlockOn ? 'text-green-500' : 'text-orange-500'}`}>
+                      {screenlockOn ? 'On' : 'Off'}
+                    </span>
+                    <span className="text-xs text-muted-foreground" title={softwareCount > 0 ? `${softwareCount} packages` : 'Not collected'}>
+                      {softwareCount > 0 ? `${softwareCount} pkgs` : '—'}
+                    </span>
+                    <span className="text-xs text-muted-foreground truncate">{host.groupName}</span>
+                    <div className="flex items-center gap-1.5">
+                      <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${isRecent ? 'bg-green-500' : 'bg-muted-foreground/40'}`} />
+                      <span className="text-xs text-muted-foreground">
+                        {checkinDate ? checkinDate.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
+                      </span>
+                    </div>
                   </div>
+
+                  {/* Expanded detail panel */}
+                  {isExpanded && (
+                    <div className="border-b border-border bg-muted/10 px-5 py-4">
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1.5 text-muted-foreground">
+                            <Hash size={12} />
+                            <span className="text-[0.65rem] font-semibold uppercase tracking-wide">Serial Number</span>
+                          </div>
+                          <p className="text-xs font-mono text-foreground">{host.serial ? host.serial.split('\n')[0].trim() : '—'}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1.5 text-muted-foreground">
+                            <Cpu size={12} />
+                            <span className="text-[0.65rem] font-semibold uppercase tracking-wide">Architecture</span>
+                          </div>
+                          <p className="text-xs text-foreground">{host.os || '—'} / {host.arch || '—'}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1.5 text-muted-foreground">
+                            <Clock size={12} />
+                            <span className="text-[0.65rem] font-semibold uppercase tracking-wide">Last Check-in</span>
+                          </div>
+                          <p className="text-xs text-foreground">
+                            {checkinDate ? checkinDate.toLocaleString() : '—'}
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1.5 text-muted-foreground">
+                            <Globe size={12} />
+                            <span className="text-[0.65rem] font-semibold uppercase tracking-wide">UUID</span>
+                          </div>
+                          <p className="text-xs font-mono text-foreground truncate" title={host.uuid}>{host.uuid}</p>
+                        </div>
+                      </div>
+
+                      {/* Compliance summary */}
+                      <div className="flex flex-wrap gap-3 mb-4">
+                        <div className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium ${hdEncrypted ? 'border-green-500/30 bg-green-500/10 text-green-600 dark:text-green-400' : 'border-orange-500/30 bg-orange-500/10 text-orange-600 dark:text-orange-400'}`}>
+                          {hdEncrypted ? <ShieldCheck size={13} /> : <ShieldX size={13} />}
+                          Disk Encryption: {hdEncrypted ? 'Enabled' : 'Disabled'}
+                        </div>
+                        <div className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium ${screenlockOn ? 'border-green-500/30 bg-green-500/10 text-green-600 dark:text-green-400' : 'border-orange-500/30 bg-orange-500/10 text-orange-600 dark:text-orange-400'}`}>
+                          <Lock size={13} />
+                          Screen Lock: {screenlockOn ? 'Enabled' : 'Disabled'}
+                        </div>
+                        <div className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/30 px-2.5 py-1.5 text-xs font-medium text-muted-foreground">
+                          <Zap size={13} />
+                          Elevated Access: {host.elevated_access ? 'Yes' : 'No'}
+                        </div>
+                        {host.log_forwarding && (
+                          <div className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/30 px-2.5 py-1.5 text-xs font-medium text-muted-foreground">
+                            <Send size={13} />
+                            Log Forwarding: {host.log_forwarding}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Installed Software */}
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Package size={14} className="text-muted-foreground" />
+                          <span className="text-xs font-semibold text-foreground">Installed Software</span>
+                          {softwareCount > 0 && (
+                            <span className="text-[0.65rem] text-muted-foreground">({softwareCount} packages)</span>
+                          )}
+                        </div>
+                        {softwareCount === 0 ? (
+                          <p className="text-xs text-muted-foreground italic">No software inventory collected for this host.</p>
+                        ) : (
+                          <div className="rounded-md border border-border overflow-hidden max-h-[240px] overflow-y-auto">
+                            <table className="w-full text-xs">
+                              <thead className="bg-muted/40 sticky top-0">
+                                <tr>
+                                  <th className="text-left px-3 py-1.5 font-semibold text-muted-foreground">Name</th>
+                                  <th className="text-left px-3 py-1.5 font-semibold text-muted-foreground">Version</th>
+                                  <th className="text-left px-3 py-1.5 font-semibold text-muted-foreground">Source</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-border">
+                                {host.installed_software.map((sw, idx) => (
+                                  <tr key={idx} className="hover:bg-muted/20">
+                                    <td className="px-3 py-1.5 font-medium text-foreground">{sw.name || '—'}</td>
+                                    <td className="px-3 py-1.5 font-mono text-muted-foreground">{(sw.version as string) || '—'}</td>
+                                    <td className="px-3 py-1.5 text-muted-foreground">{(sw.source as string) || '—'}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
