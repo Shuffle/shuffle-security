@@ -34,6 +34,8 @@ export interface Observable {
   type: string;
   value: string;
   archived?: boolean;
+  first_seen?: string | number;
+  last_seen?: string | number;
 }
 
 // ============================================================================
