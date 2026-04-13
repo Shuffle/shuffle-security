@@ -1103,8 +1103,18 @@ export const AutomationConfig = ({
                           </Box>
                         )}
                         <Switch
-                          checked={state.enabled && !isDisabled}
-                          onChange={() => toggleOption(option.id)}
+                          checked={option.id === 'threat_intel' ? enrichmentStatus.active : (state.enabled && !isDisabled)}
+                          onChange={() => {
+                            if (option.id === 'threat_intel') {
+                              if (!enrichmentStatus.active) {
+                                enrichmentStatus.enable();
+                              } else {
+                                toggleOption(option.id);
+                              }
+                            } else {
+                              toggleOption(option.id);
+                            }
+                          }}
                           onClick={(e) => e.stopPropagation()}
                           disabled={isDisabled}
                           sx={{
