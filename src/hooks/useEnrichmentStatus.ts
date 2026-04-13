@@ -102,7 +102,8 @@ export const useEnrichmentStatus = (
           body: JSON.stringify({ label: 'Enable Threat feeds_webhook' }),
         }),
       ]);
-      // Refetch both queries to pick up updated state
+      // Wait 3 seconds for backend to propagate changes, then re-validate
+      await new Promise((resolve) => setTimeout(resolve, 3000));
       await Promise.allSettled([
         refetchWorkflows(),
         queryClient.invalidateQueries({ queryKey: ['enrichment-category-config'] }),
