@@ -301,9 +301,11 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
 
     const result = await runAgent({
       input: agentInput.trim(),
-      ...(selectedApps.length > 0 ? {
+      ...(selectedApps.length === 1 ? {
+        toolName: selectedApps[0].name,
+      } : {}),
+      ...(selectedApps.length > 1 ? {
         toolNames: selectedApps.map(a => a.name),
-        toolIds: selectedApps.map(a => a.objectID || a.name),
       } : {}),
     });
 
