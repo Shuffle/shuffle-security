@@ -10,13 +10,27 @@ export interface ThreatFeed {
   enabled: boolean;
 }
 
-// Default threat feed URLs
+// Default threat feed URLs (curated from MISP default feeds)
 export const DEFAULT_THREAT_FEEDS: ThreatFeed[] = [
   {
     id: 'sslbl_abuse',
     url: 'https://sslbl.abuse.ch/blacklist/sslblacklist.csv',
     name: 'SSL Blacklist (abuse.ch)',
-    description: 'SSL certificate blacklist from abuse.ch',
+    description: 'SSL certificate blacklist from abuse.ch – malicious SSL connections',
+    enabled: true,
+  },
+  {
+    id: 'feodo_ipblocklist',
+    url: 'https://feodotracker.abuse.ch/downloads/ipblocklist.csv',
+    name: 'Feodo IP Blocklist (abuse.ch)',
+    description: 'Botnet C&C server IPs tracked by Feodo Tracker',
+    enabled: true,
+  },
+  {
+    id: 'malware_bazaar',
+    url: 'https://bazaar.abuse.ch/export/txt/md5/recent/',
+    name: 'Malware Bazaar (abuse.ch)',
+    description: 'Recent malware sample hashes from MalwareBazaar',
     enabled: true,
   },
   {
@@ -27,10 +41,45 @@ export const DEFAULT_THREAT_FEEDS: ThreatFeed[] = [
     enabled: true,
   },
   {
+    id: 'circl_osint',
+    url: 'https://www.circl.lu/doc/misp/feed-osint',
+    name: 'CIRCL OSINT Feed',
+    description: 'CIRCL curated OSINT feed in MISP format',
+    enabled: true,
+  },
+  {
+    id: 'openphish',
+    url: 'https://raw.githubusercontent.com/openphish/public_feed/refs/heads/main/feed.txt',
+    name: 'OpenPhish URL List',
+    description: 'Curated list of active phishing URLs from OpenPhish',
+    enabled: true,
+  },
+  {
+    id: 'blocklist_de',
+    url: 'https://lists.blocklist.de/lists/all.txt',
+    name: 'Blocklist.de',
+    description: 'IPs reported for attacks on services (SSH, mail, web, etc.)',
+    enabled: true,
+  },
+  {
+    id: 'ipsum_level3',
+    url: 'https://raw.githubusercontent.com/stamparm/ipsum/master/levels/3.txt',
+    name: 'IPsum Level 3',
+    description: 'Aggregated malicious IP feed – low false positive rate',
+    enabled: true,
+  },
+  {
     id: 'bambenek_dga',
     url: 'https://osint.bambenekconsulting.com/feeds/dga-feed-high.csv',
     name: 'Bambenek DGA Feed',
     description: 'High confidence DGA domain feed from Bambenek Consulting',
+    enabled: true,
+  },
+  {
+    id: 'emergingthreats_compromised',
+    url: 'https://rules.emergingthreats.net/blockrules/compromised-ips.txt',
+    name: 'Emerging Threats Compromised IPs',
+    description: 'Known compromised IP addresses from Emerging Threats',
     enabled: true,
   },
 ];
