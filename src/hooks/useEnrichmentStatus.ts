@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useWorkflows } from './useWorkflows';
-import { CategoryConfig } from '@/services/datastore';
-import { DATASTORE_CATEGORIES } from '@/services/datastore';
+import { CategoryAutomation, CategoryConfig, DATASTORE_CATEGORIES } from '@/services/datastore';
+import { getApiUrl, getAuthHeader } from '@/config/api';
 
 export interface EnrichmentStatusCheck {
   label: string;
@@ -13,12 +14,42 @@ export interface EnrichmentStatus {
   active: boolean;
   /** Individual check results */
   checks: EnrichmentStatusCheck[];
-  /** Whether data is still loading (workflows) */
+  /** Whether data is still loading */
   isLoading: boolean;
 }
 
 const THREAT_FEEDS_WORKFLOW = 'Enable Threat feeds';
 const IOC_EXTRACTION_WORKFLOW = 'Realtime IOC extraction';
+
+/**
+ * Fetch the category config for shuffle-security_incidents.
+ * We do a minimal datastore list (limit=1) just to get category_config.
+ */
+const fetchIncidentsCategoryConfig = async (): Promise<CategoryConfig | null> => {
+  try {
+    const orgId = (() => {
+      try {
+        const info = localStorage.getItem('shuffle_user_info');
+        return info ? JSON.parse(info)?.active_org?.id : null;
+      } catch { return null; }
+    })();
+
+    const params = new URLSearchParams({ category: DATASTORE_CATEGORIES.INCIDENTS });
+    if (orgId) params.set('org_id', orgId);
+    // Limit to 1 item — we only need the category_config metadata
+    params.set('limit', '1');
+
+    const res = await fetch(
+      getApiUrl(`/api/v1/apps/categories/list?${params.toString()}`),
+      { credentials: 'include', headers: { ...getAuthHeader() } },
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.category_config || null;
+  } catch {
+    return null;
+  }
+};
 
 /**
  * Check if automatic enrichment is fully active.
@@ -28,12 +59,24 @@ const IOC_EXTRACTION_WORKFLOW = 'Realtime IOC extraction';
  * 2. A background_processing workflow named "Realtime IOC extraction" exists
  * 3. The "shuffle-security_incidents" category has the "Enrich" automation enabled
  *
- * @param categoryConfig - The CategoryConfig for shuffle-security_incidents (from useDatastore)
+ * @param categoryConfigOverride - Optionally pass an already-loaded CategoryConfig
+ *   to avoid a redundant fetch.
  */
 export const useEnrichmentStatus = (
-  categoryConfig: CategoryConfig | null | undefined,
+  categoryConfigOverride?: CategoryConfig | null,
 ): EnrichmentStatus => {
-  const { data: workflows, isLoading } = useWorkflows();
+  const { data: workflows, isLoading: wfLoading } = useWorkflows();
+
+  const { data: fetchedConfig, isLoading: cfgLoading } = useQuery<CategoryConfig | null>({
+    queryKey: ['enrichment-category-config'],
+    queryFn: fetchIncidentsCategoryConfig,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    enabled: categoryConfigOverride === undefined, // skip if override provided
+  });
+
+  const categoryConfig = categoryConfigOverride !== undefined ? categoryConfigOverride : fetchedConfig;
+  const isLoading = wfLoading || (categoryConfigOverride === undefined && cfgLoading);
 
   return useMemo(() => {
     const hasThreatFeeds = !!workflows?.some(
@@ -44,7 +87,7 @@ export const useEnrichmentStatus = (
       (w) => w.name === IOC_EXTRACTION_WORKFLOW && w.background_processing === true,
     );
 
-    const automations = categoryConfig?.automations || [];
+    const automations: CategoryAutomation[] = categoryConfig?.automations || [];
     const enrichAutomation = automations.find(
       (a) => a.type === 'enrich' || a.name === 'Enrich',
     );
@@ -78,7 +121,7 @@ export const checkEnrichmentStatus = (
   const hasIOCExtraction = workflows.some(
     (w) => w.name === IOC_EXTRACTION_WORKFLOW && w.background_processing === true,
   );
-  const automations = categoryConfig?.automations || [];
+  const automations: CategoryAutomation[] = categoryConfig?.automations || [];
   const enrichAutomation = automations.find(
     (a) => a.type === 'enrich' || a.name === 'Enrich',
   );
