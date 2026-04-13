@@ -378,7 +378,7 @@ const VulnAssetsPage = () => {
               <Button
                 size="sm"
                 onClick={() => setAddHostStep('deploy')}
-                disabled={Object.values(hostChecks).every(v => !v) || (!selectedGroupId && groups.length > 0)}
+                disabled={Object.values(hostChecks).every(v => !v) || !selectedGroupId}
               >
                 Next: Deploy
                 <ChevronRight size={14} className="ml-1" />
