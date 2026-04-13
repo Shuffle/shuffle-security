@@ -260,25 +260,43 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
   const justOpened = open && !prevOpenRef.current;
   prevOpenRef.current = open;
 
-  // Pre-populate selectedApps from enabled tools when switching to Action tab + auto-focus
+  // Pre-populate selectedApps from enabled tools when on Action tab
   const prevTabRef = useRef(activeTab);
+  const hasPopulatedRef = useRef(false);
+
+  // Reset populated flag when drawer closes
   useEffect(() => {
+    if (!open) hasPopulatedRef.current = false;
+  }, [open]);
+
+  useEffect(() => {
+    const onActionTab = activeTab === 0;
     const switchedToAction = activeTab === 0 && prevTabRef.current !== 0;
     const openedOnAction = justOpened && (initialTab ?? 0) === 0;
+
     if (switchedToAction || openedOnAction) {
-      if (agentTools.length > 0) {
-        const enabledAppObjects = agentTools
-          .filter(t => enabledTools.has(t.name))
-          .map(t => ({
-            name: t.name,
-            icon: t.image,
-            categories: [] as string[],
-          }));
-        setSelectedApps(enabledAppObjects);
-      }
-      // Auto-focus the input
+      hasPopulatedRef.current = false; // allow re-population
+    }
+
+    // Populate when on action tab, tools are loaded, and we haven't populated yet
+    if (onActionTab && agentTools.length > 0 && !hasPopulatedRef.current) {
+      const enabledAppObjects = agentTools
+        .filter(t => enabledTools.has(t.name))
+        .map(t => ({
+          name: t.name,
+          icon: t.image,
+          categories: [] as string[],
+        }));
+      setSelectedApps(enabledAppObjects);
+      hasPopulatedRef.current = true;
       setTimeout(() => inputRef.current?.focus(), 150);
     }
+
+    // Auto-focus on tab switch even if already populated
+    if (switchedToAction || openedOnAction) {
+      setTimeout(() => inputRef.current?.focus(), 150);
+    }
+
     prevTabRef.current = activeTab;
   }, [activeTab, agentTools, enabledTools, open]);
 
