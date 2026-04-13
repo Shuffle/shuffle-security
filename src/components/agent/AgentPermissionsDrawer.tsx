@@ -934,150 +934,94 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
               </Typography>
             </Box>
 
-            {/* Target MCPs selector — icon bar matching Permissions style */}
+            {/* Target MCPs (optional) */}
             <Box>
               <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>
                 Target MCPs (optional)
               </Typography>
 
-              <Box sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 0.5,
-                bgcolor: 'hsl(var(--muted) / 0.4)',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: 1.5,
-                px: 0.75,
-                py: 0.5,
-                flexWrap: 'wrap',
-              }}>
-                {selectedApps.map((app) => {
-                  const displayName = app.name?.replace(/_/g, ' ') || '';
-                  return (
-                    <Tooltip key={app.objectID || app.name} title={displayName} placement="bottom">
-                      <IconButton
-                        onClick={() => setSelectedApps(prev => prev.filter(a => a.name !== app.name))}
-                        size="small"
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1 }}>
+                {selectedApps.map((app) => (
+                  <Tooltip key={app.name} title={app.name?.replace(/_/g, ' ')} placement="bottom">
+                    <Box
+                      sx={{
+                        position: 'relative',
+                        width: 36,
+                        height: 36,
+                        borderRadius: '50%',
+                        border: '2px solid hsl(var(--border))',
+                        overflow: 'visible',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        bgcolor: 'hsl(var(--card))',
+                        cursor: 'pointer',
+                        transition: 'border-color 0.15s ease',
+                        '&:hover': {
+                          borderColor: 'hsl(var(--destructive))',
+                          '& .remove-badge': { opacity: 1 },
+                        },
+                      }}
+                      onClick={() => setSelectedApps(prev => prev.filter(a => a.name !== app.name))}
+                    >
+                      <Box
+                        component="img"
+                        src={app.icon || `https://shuffler.io/images/apps/${app.name}.png`}
+                        alt={app.name}
+                        sx={{ width: 26, height: 26, borderRadius: '50%', objectFit: 'contain' }}
+                      />
+                      <Box
+                        className="remove-badge"
                         sx={{
-                          width: 30,
-                          height: 30,
-                          border: '1px solid rgba(34, 197, 94, 0.20)',
-                          bgcolor: 'rgba(34, 197, 94, 0.10)',
-                          borderRadius: 1,
-                          transition: 'all 0.15s ease',
-                          '&:hover': {
-                            bgcolor: 'rgba(239, 68, 68, 0.15)',
-                            borderColor: 'rgba(239, 68, 68, 0.3)',
-                          },
+                          position: 'absolute',
+                          top: -4,
+                          right: -4,
+                          width: 14,
+                          height: 14,
+                          borderRadius: '50%',
+                          bgcolor: 'hsl(var(--destructive))',
+                          color: 'hsl(var(--destructive-foreground))',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '0.55rem',
+                          fontWeight: 700,
+                          opacity: 0,
+                          transition: 'opacity 0.15s ease',
                         }}
                       >
-                        <Box
-                          component="img"
-                          src={app.image_url || `https://shuffler.io/images/apps/${app.name}.png`}
-                          alt={app.name}
-                          sx={{ width: 18, height: 18, borderRadius: '50%', objectFit: 'contain' }}
-                        />
-                      </IconButton>
-                    </Tooltip>
-                  );
-                })}
-                <Tooltip title="Add MCP" placement="bottom">
-                  <IconButton
-                    onClick={(e) => setMcpSearchAnchor(mcpSearchAnchor ? null : e.currentTarget)}
-                    size="small"
+                        ✕
+                      </Box>
+                    </Box>
+                  </Tooltip>
+                ))}
+
+                {/* Add button */}
+                <Tooltip title="Add app" placement="bottom">
+                  <Box
+                    onClick={() => setAppSearchOpen(true)}
                     sx={{
-                      width: 28,
-                      height: 28,
+                      width: 36,
+                      height: 36,
+                      borderRadius: '50%',
+                      border: '2px dashed hsl(var(--border))',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
                       color: 'hsl(var(--muted-foreground))',
-                      border: '1px dashed hsl(var(--border))',
-                      borderRadius: 1,
+                      transition: 'all 0.15s ease',
                       '&:hover': {
-                        bgcolor: 'hsl(var(--muted))',
-                        borderStyle: 'solid',
+                        borderColor: 'hsl(var(--primary))',
                         color: 'hsl(var(--primary))',
+                        bgcolor: 'hsla(var(--primary) / 0.06)',
                       },
                     }}
                   >
-                    <AddIcon sx={{ fontSize: 16 }} />
-                  </IconButton>
+                    <AddIcon sx={{ fontSize: 18 }} />
+                  </Box>
                 </Tooltip>
               </Box>
-
-              {/* MCP search popover */}
-              <Popover
-                open={Boolean(mcpSearchAnchor)}
-                anchorEl={mcpSearchAnchor}
-                onClose={() => setMcpSearchAnchor(null)}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-                transformOrigin={{ vertical: 'top', horizontal: 'left' }}
-                slotProps={{
-                  paper: {
-                    sx: {
-                      mt: 0.5,
-                      bgcolor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: 1.5,
-                      width: 280,
-                      overflow: 'hidden',
-                      // Override singul CSS variables
-                      '--singul-input-bg': 'transparent',
-                      '--singul-input-color': 'hsl(var(--foreground))',
-                      '--singul-input-border': 'none',
-                      '--singul-input-shadow': 'none',
-                      '--singul-input-focus-shadow': 'none',
-                      '--singul-input-focus-border': 'transparent',
-                      '--singul-input-padding': '8px 12px',
-                      '--singul-input-font-size': '13px',
-                      '--singul-placeholder-color': 'hsl(var(--muted-foreground))',
-                      '--singul-icon-color': 'hsl(var(--muted-foreground))',
-                      '--singul-dropdown-bg': 'hsl(var(--card))',
-                      '--singul-dropdown-border': 'none',
-                      '--singul-dropdown-shadow': 'none',
-                      '--singul-dropdown-max-height': '200px',
-                      '--singul-item-padding': '6px 10px',
-                      '--singul-item-border': 'none',
-                      '--singul-item-hover-bg': 'hsl(var(--muted))',
-                      '--singul-app-icon-size': '24px',
-                      '--singul-app-icon-border': '1px solid hsl(var(--border))',
-                      '--singul-app-icon-border-radius': '6px',
-                      '--singul-app-name-color': 'hsl(var(--foreground))',
-                      '--singul-app-name-font-size': '12px',
-                      '--singul-app-description-color': 'hsl(var(--muted-foreground))',
-                      '--singul-empty-state-color': 'hsl(var(--muted-foreground))',
-                      '--singul-empty-state-font-size': '12px',
-                    } as any,
-                  },
-                }}
-              >
-                <Box sx={{
-                  '& .singul-results-container': {
-                    mt: 0,
-                    borderTop: '1px solid hsl(var(--border))',
-                    maxHeight: '200px',
-                  },
-                  '& .singul-app-icon': {
-                    bgcolor: 'transparent',
-                  },
-                }}>
-                  <SingulJS
-                    ref={singulRef}
-                    authToken=""
-                    placeholder="Search integrations…"
-                    layout="list"
-                    hitsPerPage={5}
-                    inline={true}
-                    showDescription={false}
-                    showCategories={false}
-                    hideAuthStatus={true}
-                    preventDefault={true}
-                    onAppSelected={(e) => {
-                      if (e?.app && !selectedApps.some(a => a.name === e.app.name)) {
-                        setSelectedApps(prev => [...prev, e.app]);
-                      }
-                    }}
-                  />
-                </Box>
-              </Popover>
             </Box>
 
             {runError && (
