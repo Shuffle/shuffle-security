@@ -160,7 +160,7 @@ const AgentActivityPage = () => {
             <Button
               size="small"
               startIcon={<Play size={14} />}
-              onClick={() => openDrawer(1)}
+              onClick={() => openDrawer(0)}
               sx={{
                 border: '1px solid hsl(var(--border))',
                 borderRadius: 1.5,
@@ -176,7 +176,7 @@ const AgentActivityPage = () => {
             <Button
               size="small"
               startIcon={<Settings size={14} />}
-              onClick={() => openDrawer(0)}
+              onClick={() => openDrawer(1)}
               sx={{
                 border: '1px solid hsl(var(--border))',
                 borderRadius: 1.5,

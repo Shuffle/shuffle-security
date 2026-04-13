@@ -262,7 +262,7 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
   // Pre-populate selectedApps from enabled tools when switching to Action tab + auto-focus
   const prevTabRef = useRef(activeTab);
   useEffect(() => {
-    if (activeTab === 1 && prevTabRef.current !== 1) {
+    if (activeTab === 0 && prevTabRef.current !== 0) {
       if (agentTools.length > 0) {
         const enabledAppObjects = agentTools
           .filter(t => enabledTools.has(t.name))
@@ -409,8 +409,8 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
             },
           }}
         >
+          <Tab label="Run Agent" icon={<Play size={14} />} iconPosition="start" sx={{ gap: 0.75 }} />
           <Tab label="Permissions" icon={<ShieldCheck size={14} />} iconPosition="start" sx={{ gap: 0.75 }} />
-          <Tab label="Action" icon={<Play size={14} />} iconPosition="start" sx={{ gap: 0.75 }} />
           <Tab
             label={
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -431,7 +431,7 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
 
       {/* Tab content */}
       <Box sx={{ flex: 1, overflowY: 'auto', px: 3, py: 2.5 }}>
-        {activeTab === 0 && (
+        {activeTab === 1 && (
           /* ── Permissions Tab ── */
           <>
             {isLoading ? (
@@ -864,7 +864,7 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
           </>
         )}
 
-        {activeTab === 1 && (
+        {activeTab === 0 && (
           /* ── Action Tab — inline action form ── */
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
             {/* Agent input (prompt) — prominent at the top */}
