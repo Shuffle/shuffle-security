@@ -97,6 +97,8 @@ const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: bool
       { label: 'Users', path: '/vulnerabilities?tab=users', icon: <PeopleIcon fontSize="small" /> },
     ],
   }] : []),
+  { label: '__divider__', icon: <></> },
+  { label: 'Agent', icon: <AgentIcon size={20} />, path: '/agent' },
   { label: 'Automation', icon: <Activity size={20} />, path: '/usecases' },
   { label: 'Documentation', icon: <BookOpen size={20} />, path: '/docs' },
 ];
