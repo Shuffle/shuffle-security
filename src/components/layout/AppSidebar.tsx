@@ -511,9 +511,11 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
 
       {/* Navigation Items */}
       <List sx={{ px: 1, py: 2, flexGrow: 1, overflowY: 'auto', overflowX: 'hidden' }}>
-        {navItems.map((item) => (
-          <Box key={item.label}>
-            {item.children ? (
+        {navItems.map((item, idx) => (
+          <Box key={item.label === '__divider__' ? `divider-${idx}` : item.label}>
+            {item.label === '__divider__' ? (
+              <Divider sx={{ borderColor: 'hsl(var(--border))', mx: visuallyCollapsed ? 1 : 1.5, my: 1 }} />
+            ) : item.children ? (
               <>
                 <Tooltip title={visuallyCollapsed ? item.label : ''} placement="right">
                   <ListItem disablePadding sx={{ mb: 0.5 }}>
