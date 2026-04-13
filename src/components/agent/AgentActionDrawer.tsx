@@ -613,7 +613,7 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
                   maxRows={6}
                   value={agentInput}
                   onChange={(e) => setAgentInput(e.target.value)}
-                  placeholder={selectedApp ? `Ask ${selectedApp.name.replace(/_/g, ' ')} something…` : 'Describe what you want the agent to do…'}
+                  placeholder={selectedApps.length === 1 ? `Ask ${selectedApps[0].name.replace(/_/g, ' ')} something…` : selectedApps.length > 1 ? `Ask ${selectedApps.length} apps something…` : 'Describe what you want the agent to do…'}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
                       e.preventDefault();
