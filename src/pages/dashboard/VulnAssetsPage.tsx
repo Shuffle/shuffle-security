@@ -34,7 +34,14 @@ interface MonitoringGroup {
 /** Fetch environments from the API and filter for sensor_group: true */
 const fetchSensorGroups = async (): Promise<MonitoringGroup[]> => {
   try {
-    const res = await shuffleFetch(getApiUrl('/api/v1/get_environments'));
+    const res = await fetch(getApiUrl('/api/v1/get_environments'), {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader(),
+      },
+    });
     if (!res.ok) return [];
     const data = await res.json();
     const envs: OrbEnvironment[] = Array.isArray(data) ? data : [];
@@ -49,9 +56,13 @@ const fetchSensorGroups = async (): Promise<MonitoringGroup[]> => {
 /** Create a new environment with sensor_group: true */
 const createSensorGroupEnv = async (name: string): Promise<MonitoringGroup | null> => {
   try {
-    const res = await shuffleFetch(getApiUrl('/api/v1/set_environments'), {
+    const res = await fetch(getApiUrl('/api/v1/set_environments'), {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader(),
+      },
       body: JSON.stringify({ Name: name, Type: 'onprem', sensor_group: true }),
     });
     if (!res.ok) {
