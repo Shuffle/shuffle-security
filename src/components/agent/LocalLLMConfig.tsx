@@ -30,6 +30,8 @@ export interface LocalLLMTestResult {
 interface LocalLLMConfigProps {
   /** Compact mode hides the description box */
   compact?: boolean;
+  /** Whether an OpenAI app auth was detected in the backend */
+  hasOpenAIAuth?: boolean;
   /** Called whenever the config is saved */
   onSave?: (model: AgentLocalModel) => void;
   /** Called when a test completes */
@@ -97,7 +99,7 @@ const labelSx = {
   mb: 1,
 };
 
-const LocalLLMConfig = ({ compact, onSave, onTestResult }: LocalLLMConfigProps) => {
+const LocalLLMConfig = ({ compact, hasOpenAIAuth, onSave, onTestResult }: LocalLLMConfigProps) => {
   const [localModel, setLocalModel] = useState<AgentLocalModel>(getLocalModel);
   const [saved, setSaved] = useState(false);
   const [testing, setTesting] = useState(false);
