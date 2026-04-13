@@ -354,9 +354,9 @@ const VulnAssetsPage = () => {
                   <div className="flex items-center gap-2">
                     <div className={`w-2 h-2 rounded-full shrink-0 ${dotColor}`} />
                     <span className="text-xs font-medium truncate max-w-[100px]">{syncGroup.name}</span>
-                    <span className="text-[0.6rem] text-muted-foreground">
-                      {statusLabel}{timeAgo ? ` · ${timeAgo}` : ''}
-                    </span>
+                    {timeAgo && (
+                      <span className="text-[0.6rem] text-muted-foreground">{timeAgo}</span>
+                    )}
                   </div>
                 </SelectTrigger>
                 <SelectContent align="end">
@@ -375,7 +375,7 @@ const VulnAssetsPage = () => {
                         : gStatus === 'offline'
                           ? 'bg-destructive'
                           : 'bg-muted-foreground/40';
-                    const gLabel = gStatus === 'healthy' ? 'Healthy' : gStatus === 'stale' ? 'Stale' : gStatus === 'offline' ? 'Offline' : 'No hosts';
+                    const gLabel = gStatus === 'stale' ? 'Stale' : gStatus === 'offline' ? 'Offline' : gStatus === 'none' ? 'No hosts' : '';
                     const gTime = gLatest
                       ? gAge < 60 ? `${Math.round(gAge)}s` : gAge < 3600 ? `${Math.round(gAge / 60)}m` : `${Math.round(gAge / 3600)}h`
                       : '';
