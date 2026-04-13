@@ -498,90 +498,90 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
         ) : (
           /* ── Action Mode: app selector + prompt ── */
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-            {/* App selector */}
+            {/* Target MCPs (optional) */}
             <Box>
               <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>
-                Target App (optional)
+                Target MCPs (optional)
               </Typography>
 
-              {selectedApp ? (
-                <Box sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1.5,
-                  p: 1.5,
-                  borderRadius: 2,
-                  border: '1px solid hsl(var(--border))',
-                  bgcolor: 'hsl(var(--card))',
-                }}>
-                  <Avatar
-                    src={selectedApp.image_url || `https://shuffler.io/images/apps/${selectedApp.name}.png`}
-                    sx={{ width: 28, height: 28, '& img': { objectFit: 'contain' } }}
-                  />
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: 'hsl(var(--foreground))', textTransform: 'capitalize' }}>
-                      {selectedApp.name?.replace(/_/g, ' ')}
-                    </Typography>
-                    {selectedApp.categories && selectedApp.categories.length > 0 && (
-                      <Typography sx={{ fontSize: '0.68rem', color: 'hsl(var(--muted-foreground))' }}>
-                        {selectedApp.categories.slice(0, 2).join(' · ')}
-                      </Typography>
-                    )}
-                  </Box>
-                  <IconButton
-                    size="small"
-                    onClick={() => setSelectedApp(null)}
-                    sx={{ color: 'hsl(var(--muted-foreground))', width: 24, height: 24 }}
-                  >
-                    <CloseIcon sx={{ fontSize: 14 }} />
-                  </IconButton>
-                </Box>
-              ) : (
-                <Box sx={{
-                  borderRadius: 2,
-                  border: '1px solid hsl(var(--border))',
-                  bgcolor: 'hsl(var(--background))',
-                  overflow: 'hidden',
-                  '& .singul-container': { background: 'transparent !important' },
-                  '& .singul-input': {
-                    background: 'transparent !important',
-                    color: 'hsl(var(--foreground)) !important',
-                    fontSize: '0.82rem !important',
-                    border: 'none !important',
-                    padding: '8px 12px !important',
-                  },
-                  '& .singul-results': {
-                    background: 'hsl(var(--card)) !important',
-                    border: '1px solid hsl(var(--border)) !important',
-                    maxHeight: '200px !important',
-                  },
-                  '& .singul-result-item': {
-                    color: 'hsl(var(--foreground)) !important',
-                    fontSize: '0.8rem !important',
-                  },
-                  '& .singul-result-item:hover': {
-                    background: 'hsla(var(--primary) / 0.08) !important',
-                  },
-                }}>
-                  <SingulJS
-                    ref={singulRef}
-                    authToken=""
-                    placeholder="Search integrations…"
-                    layout="list"
-                    hitsPerPage={8}
-                    inline={true}
-                    showDescription={false}
-                    showCategories={false}
-                    hideAuthStatus={true}
-                    preventDefault={true}
-                    onAppSelected={(e) => {
-                      if (e?.app) {
-                        setSelectedApp(e.app);
-                      }
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1 }}>
+                {selectedApps.map((app) => (
+                  <Box
+                    key={app.name}
+                    sx={{
+                      position: 'relative',
+                      width: 36,
+                      height: 36,
+                      borderRadius: '50%',
+                      border: '2px solid hsl(var(--border))',
+                      overflow: 'visible',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      bgcolor: 'hsl(var(--card))',
+                      cursor: 'pointer',
+                      transition: 'border-color 0.15s ease',
+                      '&:hover': {
+                        borderColor: 'hsl(var(--destructive))',
+                        '& .remove-badge': { opacity: 1 },
+                      },
                     }}
-                  />
+                    onClick={() => setSelectedApps(prev => prev.filter(a => a.name !== app.name))}
+                    title={`Remove ${app.name.replace(/_/g, ' ')}`}
+                  >
+                    <Avatar
+                      src={app.icon || `https://shuffler.io/images/apps/${app.name}.png`}
+                      sx={{ width: 26, height: 26, '& img': { objectFit: 'contain' } }}
+                    />
+                    <Box
+                      className="remove-badge"
+                      sx={{
+                        position: 'absolute',
+                        top: -4,
+                        right: -4,
+                        width: 14,
+                        height: 14,
+                        borderRadius: '50%',
+                        bgcolor: 'hsl(var(--destructive))',
+                        color: 'hsl(var(--destructive-foreground))',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '0.55rem',
+                        fontWeight: 700,
+                        opacity: 0,
+                        transition: 'opacity 0.15s ease',
+                      }}
+                    >
+                      ✕
+                    </Box>
+                  </Box>
+                ))}
+
+                {/* Add button */}
+                <Box
+                  onClick={() => setAppSearchOpen(true)}
+                  sx={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: '50%',
+                    border: '2px dashed hsl(var(--border))',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    color: 'hsl(var(--muted-foreground))',
+                    transition: 'all 0.15s ease',
+                    '&:hover': {
+                      borderColor: 'hsl(var(--primary))',
+                      color: 'hsl(var(--primary))',
+                      bgcolor: 'hsla(var(--primary) / 0.06)',
+                    },
+                  }}
+                >
+                  <AddRoundedIcon sx={{ fontSize: 18 }} />
                 </Box>
-              )}
+              </Box>
             </Box>
 
             {/* Agent input */}
