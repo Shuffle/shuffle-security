@@ -171,7 +171,7 @@ const AgentActivityPage = () => {
                 '&:hover': { bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--foreground))' },
               }}
             >
-              Run Action
+              Run Agent
             </Button>
             <Button
               size="small"
