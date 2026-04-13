@@ -4717,13 +4717,9 @@ const IncidentDetailPage = () => {
                                   toast.success(`Search completed for ${obs.type}: ${obs.value}`);
                                 } else {
                                   const reason = result?.reason || result?.error || result?.message || '';
-                                  const noApps = resp.status === 404 || resp.status === 400 || reason.toLowerCase().includes('no app') || reason.toLowerCase().includes('not found');
-                                  if (noApps) {
-                                    toast.info('No threat intel apps configured. Add one to run enrichments.');
-                                    setShowThreatIntelDrawer(true);
-                                  } else {
-                                    toast.error(`Search failed: ${reason || `HTTP ${resp.status}`}`);
-                                  }
+                                  // Any non-ok response from this endpoint means the user needs to configure threat intel apps
+                                  toast.info(reason || 'No threat intel apps configured. Add one to run enrichments.');
+                                  setShowThreatIntelDrawer(true);
                                 }
                               } catch (err) {
                                 console.error('[Observable] search error:', err);
