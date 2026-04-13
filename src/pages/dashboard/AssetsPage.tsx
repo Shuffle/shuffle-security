@@ -98,7 +98,7 @@ const AssetsPage = () => {
 
   const handleCreateAsset = useCallback(async (asset: OCSFDeviceInventory) => {
     const key = asset.metadata?.uid || asset.uid || `asset-${Date.now()}`;
-    const ok = await setDatastoreItem(DATASTORE_CATEGORIES.ASSETS, key, asset);
+    const ok = await setDatastoreItem(DATASTORE_CATEGORIES.ASSETS, key, JSON.stringify(asset));
     if (ok) {
       toast.success('Asset added', { description: asset.hostname });
       await fetchItems();
