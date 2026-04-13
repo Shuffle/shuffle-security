@@ -26,6 +26,7 @@ import TravelExploreIcon from '@mui/icons-material/TravelExplore';
 import SyncAltIcon from '@mui/icons-material/SyncAlt';
 import DownloadIcon from '@mui/icons-material/Download';
 import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
+import FingerprintIcon from '@mui/icons-material/Fingerprint';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -136,7 +137,7 @@ const baseEnrichmentOptions: (Omit<EnrichmentOption, 'connectedApps'> & { isDyna
     id: 'threat_intel',
     name: 'Automatic Enrichment',
     description: 'Enrich every new incident with IOC lookups, threat feed matches, and contextual intelligence — no manual steps.',
-    icon: <SecurityIcon />,
+    icon: <FingerprintIcon />,
     color: '#ef4444',
     category: 'enrichment',
     isDynamic: true,
