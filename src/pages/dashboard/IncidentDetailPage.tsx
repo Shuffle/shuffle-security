@@ -1943,15 +1943,14 @@ const IncidentDetailPage = () => {
       try {
         const refreshResult = isPublicView
           ? await getDatastoreItemPublic(incident.id, publicOrg!, publicAuth!)
-          : await getItem(incident.id);
-        if (refreshResult) {
-          const refreshItem = typeof refreshResult === 'object' && 'item' in refreshResult ? refreshResult.item : refreshResult;
+          : await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS, crossOrgId || undefined);
+        if (refreshResult.success && refreshResult.item) {
           const refreshData = {
-            key: refreshItem?.key || incident.id,
-            value: refreshItem?.value,
-            created: refreshItem?.created,
-            edited: refreshItem?.edited,
-            enrichments: refreshItem?.enrichments,
+            key: refreshResult.item.key || incident.id,
+            value: refreshResult.item.value,
+            created: refreshResult.item.created,
+            edited: refreshResult.item.edited,
+            enrichments: refreshResult.item.enrichments,
           };
           const reParsed = parseIncidentFromDatastore(refreshData);
           if (reParsed) {
