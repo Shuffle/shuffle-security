@@ -447,7 +447,11 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
             label={
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 Local LLM
-                {hasOpenAIAuth && <CheckCircle2 size={13} style={{ color: 'hsl(142, 71%, 45%)' }} />}
+                {hasOpenAIAuth && (
+                  <Tooltip title="OpenAI app authentication detected in your account" arrow>
+                    <CheckCircle2 size={13} style={{ color: 'hsl(142, 71%, 45%)', cursor: 'help' }} />
+                  </Tooltip>
+                )}
               </Box>
             }
             icon={<Server size={14} />}
@@ -1180,7 +1184,7 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
 
         {activeTab === 2 && (
           /* ── Local LLM Tab ── */
-          <LocalLLMConfig />
+          <LocalLLMConfig hasOpenAIAuth={hasOpenAIAuth} />
         )}
       </Box>
 

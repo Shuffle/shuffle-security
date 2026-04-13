@@ -30,6 +30,8 @@ export interface LocalLLMTestResult {
 interface LocalLLMConfigProps {
   /** Compact mode hides the description box */
   compact?: boolean;
+  /** Whether an OpenAI app auth was detected in the backend */
+  hasOpenAIAuth?: boolean;
   /** Called whenever the config is saved */
   onSave?: (model: AgentLocalModel) => void;
   /** Called when a test completes */
@@ -97,7 +99,7 @@ const labelSx = {
   mb: 1,
 };
 
-const LocalLLMConfig = ({ compact, onSave, onTestResult }: LocalLLMConfigProps) => {
+const LocalLLMConfig = ({ compact, hasOpenAIAuth, onSave, onTestResult }: LocalLLMConfigProps) => {
   const [localModel, setLocalModel] = useState<AgentLocalModel>(getLocalModel);
   const [saved, setSaved] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -140,6 +142,23 @@ const LocalLLMConfig = ({ compact, onSave, onTestResult }: LocalLLMConfigProps) 
             Configure a local or self-hosted OpenAI-compatible endpoint for agent operations.
           </Typography>
         </Box>
+      )}
+
+      {/* OpenAI auth status banner */}
+      {hasOpenAIAuth && (
+        <Alert
+          severity="success"
+          variant="outlined"
+          sx={{
+            borderColor: 'hsl(142, 71%, 45%, 0.3)',
+            bgcolor: 'hsl(142, 71%, 45%, 0.06)',
+            '& .MuiAlert-icon': { color: 'hsl(142, 71%, 45%)' },
+            '& .MuiAlert-message': { fontSize: '0.78rem', color: 'hsl(var(--foreground))' },
+            borderRadius: 2,
+          }}
+        >
+          An authenticated OpenAI app was detected in your account. The agent can use it as an LLM provider even without configuring a local endpoint below.
+        </Alert>
       )}
 
       {/* URL */}
