@@ -4362,51 +4362,82 @@ const IncidentDetailPage = () => {
             })()}
           </Box>
           
-          {/* Filter bar */}
+          {/* Filter & sort bar */}
           <Box sx={{ display: 'flex', gap: 1, mb: 2, alignItems: 'center', flexWrap: 'wrap' }}>
             <TextField
               size="small"
               value={obsFilterText}
               onChange={(e) => setObsFilterText(e.target.value)}
-              placeholder="Filter observables..."
-              sx={{ ...inputSx, minWidth: 180, flex: 1 }}
+              placeholder="Search observables..."
+              sx={{ ...inputSx, minWidth: 160, flex: 1, maxWidth: 280 }}
               InputProps={{
                 startAdornment: <SearchIcon sx={{ fontSize: 16, color: 'text.disabled', mr: 0.5 }} />,
               }}
             />
+            {/* Type multiselect dropdown */}
             {(() => {
-              // Collect unique types from current observables
               const manualTypes = editedObservables.filter(o => !o.archived).map(o => o.type);
               const enrichTypes = enrichments.map(e => e.type || 'unknown');
               const uniqueTypes = [...new Set([...manualTypes, ...enrichTypes])].sort();
               if (uniqueTypes.length <= 1) return null;
-              return uniqueTypes.map(t => {
-                const isActive = obsFilterTypes.includes(t);
-                return (
-                  <Chip
-                    key={t}
-                    label={t}
-                    size="small"
-                    onClick={() => setObsFilterTypes(prev => isActive ? prev.filter(x => x !== t) : [...prev, t])}
-                    sx={{
-                      fontWeight: 600,
-                      fontSize: '0.65rem',
-                      textTransform: 'uppercase',
-                      cursor: 'pointer',
-                      bgcolor: isActive ? 'hsl(var(--primary) / 0.2)' : 'rgba(255,255,255,0.05)',
-                      color: isActive ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
-                      border: isActive ? '1px solid hsl(var(--primary) / 0.4)' : '1px solid transparent',
-                      '&:hover': { bgcolor: isActive ? 'hsl(var(--primary) / 0.25)' : 'rgba(255,255,255,0.08)' },
-                    }}
-                  />
-                );
-              });
+              return (
+                <Select
+                  multiple
+                  displayEmpty
+                  value={obsFilterTypes}
+                  onChange={(e) => setObsFilterTypes(typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value as string[])}
+                  renderValue={(selected) => selected.length === 0 ? 'All types' : `${selected.length} type${selected.length > 1 ? 's' : ''}`}
+                  size="small"
+                  sx={{
+                    minWidth: 120,
+                    fontSize: '0.8rem',
+                    bgcolor: 'rgba(0,0,0,0.2)',
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.1)' },
+                    '& .MuiSelect-select': { py: 0.75, px: 1.5 },
+                  }}
+                  MenuProps={{ PaperProps: { sx: { bgcolor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' } } }}
+                >
+                  {uniqueTypes.map(t => (
+                    <MenuItem key={t} value={t} sx={{ fontSize: '0.8rem' }}>
+                      <Checkbox size="small" checked={obsFilterTypes.includes(t)} sx={{ p: 0.5, mr: 1 }} />
+                      <Typography variant="body2" sx={{ fontSize: '0.8rem', textTransform: 'uppercase' }}>{t}</Typography>
+                    </MenuItem>
+                  ))}
+                </Select>
+              );
             })()}
-            {(obsFilterTypes.length > 0 || obsFilterText) && (
+            {/* Sort dropdown */}
+            <Select
+              value={obsSortField}
+              onChange={(e) => setObsSortField(e.target.value as any)}
+              size="small"
+              sx={{
+                minWidth: 110,
+                fontSize: '0.75rem',
+                bgcolor: 'rgba(0,0,0,0.2)',
+                '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.1)' },
+                '& .MuiSelect-select': { py: 0.75, px: 1.5 },
+              }}
+              MenuProps={{ PaperProps: { sx: { bgcolor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' } } }}
+            >
+              <MenuItem value="first_seen" sx={{ fontSize: '0.8rem' }}>First seen</MenuItem>
+              <MenuItem value="last_seen" sx={{ fontSize: '0.8rem' }}>Last seen</MenuItem>
+              <MenuItem value="type" sx={{ fontSize: '0.8rem' }}>Type</MenuItem>
+              <MenuItem value="value" sx={{ fontSize: '0.8rem' }}>Value</MenuItem>
+            </Select>
+            <IconButton
+              size="small"
+              onClick={() => setObsSortDir(d => d === 'asc' ? 'desc' : 'asc')}
+              sx={{ p: 0.5, color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--primary))' } }}
+            >
+              {obsSortDir === 'desc' ? <ArrowDownwardIcon sx={{ fontSize: 16 }} /> : <ArrowUpwardIcon sx={{ fontSize: 16 }} />}
+            </IconButton>
+            {/* Clear filters */}
+            {(obsFilterTypes.length > 0 || obsFilterText || obsSortField !== 'first_seen' || obsSortDir !== 'desc') && (
               <Chip
-                label="Clear"
+                label="Clear filters"
                 size="small"
-                onClick={() => { setObsFilterTypes([]); setObsFilterText(''); }}
+                onDelete={() => { setObsFilterTypes([]); setObsFilterText(''); setObsSortField('first_seen'); setObsSortDir('desc'); }}
                 sx={{ fontSize: '0.65rem', cursor: 'pointer', color: 'hsl(var(--muted-foreground))', bgcolor: 'rgba(255,255,255,0.05)' }}
               />
             )}
@@ -4431,7 +4462,6 @@ const IncidentDetailPage = () => {
               const dedupKey = `${obs.type.toLowerCase()}::${obs.value.toLowerCase()}`;
               const existing = deduped.get(dedupKey);
               if (existing) {
-                // Merge: keep earliest first_seen, latest last_seen
                 const eFs = (existing as any).first_seen;
                 const oFs = (obs as any).first_seen;
                 const eLs = (existing as any).last_seen;
@@ -4442,15 +4472,22 @@ const IncidentDetailPage = () => {
                 deduped.set(dedupKey, { ...obs });
               }
             }
-            // Sort by last_seen descending (items with timestamps first, then the rest)
+            const toTs = (v: any) => !v ? 0 : typeof v === 'number' ? (v < 1e12 ? v * 1000 : v) : new Date(v).getTime() || 0;
             const allObsRaw = Array.from(deduped.values()).sort((a, b) => {
-              const toTs = (v: any) => !v ? 0 : typeof v === 'number' ? (v < 1e12 ? v * 1000 : v) : new Date(v).getTime() || 0;
-              const aLs = toTs(a.last_seen);
-              const bLs = toTs(b.last_seen);
-              // Items with timestamps always before items without
-              if (aLs && !bLs) return -1;
-              if (!aLs && bLs) return 1;
-              return bLs - aLs;
+              let cmp = 0;
+              if (obsSortField === 'first_seen' || obsSortField === 'last_seen') {
+                const aTs = toTs(a[obsSortField]);
+                const bTs = toTs(b[obsSortField]);
+                // Items with timestamps always before items without
+                if (aTs && !bTs) return -1;
+                if (!aTs && bTs) return 1;
+                cmp = aTs - bTs;
+              } else if (obsSortField === 'type') {
+                cmp = a.type.localeCompare(b.type);
+              } else {
+                cmp = a.value.localeCompare(b.value);
+              }
+              return obsSortDir === 'desc' ? -cmp : cmp;
             });
 
             // Apply filters
