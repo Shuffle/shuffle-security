@@ -72,8 +72,6 @@ const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: bool
     icon: <WarningAmberIcon />,
     path: entityPath,
     children: [
-      { label: 'Threat Feeds', path: '/incidents/threat-feeds', icon: <RssFeedIcon fontSize="small" /> },
-      { label: 'IOC Types', path: '/incidents/ioc-types', icon: <FingerprintIcon fontSize="small" /> },
       { label: 'Templates', path: '/templates', icon: <DescriptionIcon fontSize="small" /> },
       { label: 'Custom Fields', path: '/incidents/custom-fields', icon: <TuneIcon fontSize="small" /> },
     ],
@@ -86,6 +84,8 @@ const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: bool
       { label: 'Rules', path: '/detection/sigma', icon: <Braces size={16} /> },
       { label: 'Pipelines', path: '/detection/pipelines', icon: <Network size={16} /> },
       { label: 'ATT&CK', path: '/detection/mitre', icon: <Waypoints size={16} />, disabled: true },
+      { label: 'Threat Feeds', path: '/incidents/threat-feeds', icon: <RssFeedIcon fontSize="small" /> },
+      { label: 'IOC Types', path: '/incidents/ioc-types', icon: <FingerprintIcon fontSize="small" /> },
     ],
   },
   ...(isSupport ? [{ 
