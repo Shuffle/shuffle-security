@@ -516,7 +516,7 @@ const VulnerabilitiesPage = () => {
                     className="absolute top-2 right-2 h-7 w-7"
                     onClick={handleCopyCommand}
                   >
-                    {copied ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
+                    {copied ? <Check size={14} className="text-primary" /> : <Copy size={14} />}
                   </Button>
                 </div>
               </div>
