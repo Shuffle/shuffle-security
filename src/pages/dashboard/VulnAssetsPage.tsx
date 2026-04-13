@@ -45,7 +45,7 @@ const fetchSensorGroups = async (): Promise<{ groups: MonitoringGroup[]; allEnvs
     const envs: OrbEnvironment[] = Array.isArray(data) ? data.filter((e: OrbEnvironment) => !e.archived) : [];
     const groups = envs
       .filter(e => e.sensor_group === true)
-      .map(e => ({ id: e.id || e.Name, name: e.Name, queue: e.Name }));
+      .map(e => ({ id: e.id || e.Name, name: e.Name, queue: e.Name, auth: String(e.auth || ''), org_id: String(e.org_id || '') }));
     return { groups, allEnvs: envs };
   } catch {
     return { groups: [], allEnvs: [] };
