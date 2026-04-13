@@ -4575,9 +4575,18 @@ const IncidentDetailPage = () => {
                           {obs.value}
                         </Typography>
                         {hasTimestamps && (
-                          <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.6rem', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                            {firstSeen ? formatObsTime(firstSeen) : ''}
-                          </Typography>
+                          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0, gap: 0 }}>
+                            {firstSeen && (
+                              <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.55rem', whiteSpace: 'nowrap', lineHeight: 1.3 }}>
+                                F: {formatObsTime(firstSeen)}
+                              </Typography>
+                            )}
+                            {lastSeen && (
+                              <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.55rem', whiteSpace: 'nowrap', lineHeight: 1.3 }}>
+                                L: {formatObsTime(lastSeen)}
+                              </Typography>
+                            )}
+                          </Box>
                         )}
                         {/* Correlation badge */}
                         {(() => {
