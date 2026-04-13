@@ -4322,45 +4322,44 @@ const IncidentDetailPage = () => {
         }}>
           {/* Auto-enrichment status banner */}
           {!enrichmentStatus.isLoading && !enrichmentStatus.active && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, px: 1.5, py: 1, borderRadius: 1.5, bgcolor: 'rgba(251, 146, 60, 0.08)', border: '1px solid rgba(251, 146, 60, 0.18)', flexWrap: 'wrap' }}>
-              <Typography variant="caption" sx={{ color: '#fb923c', fontWeight: 500, mr: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2, px: 1.5, py: 1, borderRadius: 1.5, bgcolor: 'rgba(251, 146, 60, 0.08)', border: '1px solid rgba(251, 146, 60, 0.18)' }}>
+              <Typography variant="caption" sx={{ color: '#fb923c', fontWeight: 500, flex: 1 }}>
                 Automatic observable extraction is not yet fully enabled.
               </Typography>
-              {enrichmentStatus.checks.map((c) => (
-                <Chip
-                  key={c.label}
-                  label={c.label}
-                  size="small"
-                  icon={c.active ? <CheckCircleIcon sx={{ fontSize: 14 }} /> : undefined}
-                  sx={{
-                    height: 22,
-                    fontSize: '0.7rem',
-                    fontWeight: 500,
-                    bgcolor: c.active ? 'hsl(var(--severity-low) / 0.12)' : 'hsl(var(--destructive) / 0.10)',
-                    color: c.active ? 'hsl(var(--severity-low))' : 'hsl(var(--destructive))',
-                    border: '1px solid',
-                    borderColor: c.active ? 'hsl(var(--severity-low) / 0.25)' : 'hsl(var(--destructive) / 0.20)',
-                  }}
-                />
-              ))}
-              <Button
-                size="small"
-                variant="outlined"
-                disabled={enrichmentStatus.isEnabling}
-                onClick={enrichmentStatus.enable}
-                sx={{
-                  ml: 'auto',
-                  textTransform: 'none',
-                  fontSize: '0.7rem',
-                  height: 24,
-                  px: 1.5,
-                  color: '#fb923c',
-                  borderColor: 'rgba(251, 146, 60, 0.3)',
-                  '&:hover': { borderColor: '#fb923c', bgcolor: 'rgba(251, 146, 60, 0.08)' },
-                }}
+              <Tooltip
+                title={
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, py: 0.5 }}>
+                    {enrichmentStatus.checks.map((c) => (
+                      <Box key={c.label} sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                        <CheckCircleIcon sx={{ fontSize: 13, color: c.active ? 'hsl(var(--severity-low))' : 'hsl(var(--destructive))' }} />
+                        <Typography variant="caption" sx={{ fontSize: '0.7rem' }}>{c.label}</Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                }
+                arrow
               >
-                {enrichmentStatus.isEnabling ? <CircularProgress size={14} sx={{ color: '#fb923c' }} /> : 'Enable'}
-              </Button>
+                <Button
+                  size="small"
+                  variant="contained"
+                  disabled={enrichmentStatus.isEnabling}
+                  onClick={enrichmentStatus.enable}
+                  sx={{
+                    textTransform: 'none',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    height: 28,
+                    px: 2,
+                    bgcolor: '#fb923c',
+                    color: '#fff',
+                    boxShadow: 'none',
+                    '&:hover': { bgcolor: '#f97316', boxShadow: 'none' },
+                    '&.Mui-disabled': { bgcolor: 'rgba(251, 146, 60, 0.4)', color: '#fff' },
+                  }}
+                >
+                  {enrichmentStatus.isEnabling ? <CircularProgress size={14} sx={{ color: '#fff' }} /> : 'Enable'}
+                </Button>
+              </Tooltip>
             </Box>
           )}
 
