@@ -108,6 +108,22 @@ const VulnerabilitiesPage = () => {
 
   return (
     <div className="p-6 max-w-[1400px] mx-auto space-y-6">
+      {/* Coming Soon banner */}
+      <div className="flex items-center gap-3 px-4 py-3 rounded-lg border border-primary/30 bg-primary/[0.06]">
+        <div className="w-8 h-8 rounded-full flex items-center justify-center bg-primary/15 text-primary shrink-0">
+          <AlertTriangle size={16} />
+        </div>
+        <div>
+          <div className="flex items-center gap-2 mb-0.5">
+            <span className="text-sm font-semibold text-foreground">Coming Soon</span>
+            <span className="px-1.5 py-0.5 text-[0.55rem] font-bold tracking-wide uppercase rounded bg-primary/15 text-primary leading-none">PREVIEW</span>
+          </div>
+          <p className="text-xs text-muted-foreground leading-snug">
+            Vulnerability management is under active development. Data shown is for preview purposes only and may not reflect your actual environment.
+          </p>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
