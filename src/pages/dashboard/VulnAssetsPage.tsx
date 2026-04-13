@@ -303,18 +303,59 @@ const VulnAssetsPage = () => {
           ))}
         </div>
 
-        {/* Empty host list */}
-        <div className="border-t border-border px-5 py-16 flex flex-col items-center text-center gap-4">
-          <Activity size={36} className="text-muted-foreground/25" />
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-foreground">No hosts monitored yet</p>
-            <p className="text-xs text-muted-foreground">Deploy a lightweight monitor on an endpoint to start checking compliance and posture.</p>
+        {allHosts.length === 0 ? (
+          <div className="border-t border-border px-5 py-16 flex flex-col items-center text-center gap-4">
+            <Activity size={36} className="text-muted-foreground/25" />
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground">No hosts monitored yet</p>
+              <p className="text-xs text-muted-foreground">Deploy a lightweight monitor on an endpoint to start checking compliance and posture.</p>
+            </div>
+            <Button size="lg" className="gap-2 mt-2" onClick={handleOpenAddHost}>
+              <Plus size={16} />
+              Add Host
+            </Button>
           </div>
-          <Button size="lg" className="gap-2 mt-2" onClick={handleOpenAddHost}>
-            <Plus size={16} />
-            Add Host
-          </Button>
-        </div>
+        ) : (
+          <div className="border-t border-border">
+            {/* Table header */}
+            <div className="grid grid-cols-[1.5fr_0.8fr_0.8fr_0.6fr_0.8fr_1fr] gap-2 px-5 py-2 border-b border-border bg-muted/30">
+              <span className="text-xs font-semibold text-muted-foreground">Hostname</span>
+              <span className="text-xs font-semibold text-muted-foreground">OS</span>
+              <span className="text-xs font-semibold text-muted-foreground">Arch</span>
+              <span className="text-xs font-semibold text-muted-foreground">Screenlock</span>
+              <span className="text-xs font-semibold text-muted-foreground">Group</span>
+              <span className="text-xs font-semibold text-muted-foreground">Last Check-in</span>
+            </div>
+            {/* Host rows */}
+            {allHosts.map(host => {
+              const checkinDate = host.checkin ? new Date(host.checkin * 1000) : null;
+              const isRecent = checkinDate ? (Date.now() - checkinDate.getTime()) < 5 * 60 * 1000 : false;
+              return (
+                <div
+                  key={host.uuid}
+                  className="grid grid-cols-[1.5fr_0.8fr_0.8fr_0.6fr_0.8fr_1fr] gap-2 px-5 py-3 border-b border-border last:border-b-0 hover:bg-muted/20 transition-colors items-center"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Laptop size={14} className="text-muted-foreground shrink-0" />
+                    <span className="text-sm font-medium text-foreground truncate">{host.hostname}</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground capitalize">{host.os || '—'}</span>
+                  <span className="text-xs text-muted-foreground">{host.arch || '—'}</span>
+                  <span className={`text-xs font-medium ${host.automatic_screen_lock_enabled ? 'text-green-500' : 'text-orange-500'}`}>
+                    {host.automatic_screen_lock_enabled ? 'On' : 'Off'}
+                  </span>
+                  <span className="text-xs text-muted-foreground truncate">{host.groupName}</span>
+                  <div className="flex items-center gap-1.5">
+                    <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${isRecent ? 'bg-green-500' : 'bg-muted-foreground/40'}`} />
+                    <span className="text-xs text-muted-foreground">
+                      {checkinDate ? checkinDate.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Add Host Monitor Dialog */}
