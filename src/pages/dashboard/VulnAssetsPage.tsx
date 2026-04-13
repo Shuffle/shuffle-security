@@ -149,6 +149,17 @@ const VulnAssetsPage = () => {
         if (prev && fetched.some(g => g.id === prev)) return prev;
         return fetched[0].id;
       });
+      // Auto-select sync group: prefer one with a check-in < 10min
+      setSyncGroupId(prev => {
+        if (prev && fetched.some(g => g.id === prev)) return prev;
+        const now = Date.now() / 1000;
+        const recent = fetched.find(g => {
+          if (g.hosts.length === 0) return false;
+          const latest = Math.max(...g.hosts.map(h => h.checkin || 0));
+          return (now - latest) < 600;
+        });
+        return recent ? recent.id : fetched[0].id;
+      });
     }
     setGroupsLoading(false);
   }, []);
