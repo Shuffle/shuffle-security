@@ -68,6 +68,7 @@ const VulnerabilitiesPage = () => {
     hd_encrypted: true,
     screenlock: true,
     installed_software: true,
+    response_actions: false,
   });
   const [copied, setCopied] = useState(false);
 
@@ -122,6 +123,7 @@ const VulnerabilitiesPage = () => {
     if (hostChecks.installed_software) flags.push('--software_list_enabled=true');
     if (hostChecks.hd_encrypted) flags.push('--hd_encrypted_check=true');
     if (hostChecks.screenlock) flags.push('--screenlock_check=true');
+    if (hostChecks.response_actions) flags.push('--response_actions_enabled=true');
     return `go run orborus.go ${flags.join(' ')}`;
   };
 
@@ -134,7 +136,7 @@ const VulnerabilitiesPage = () => {
   const handleOpenAddHost = () => {
     setAddHostStep('checks');
     setHostPlatform('linux');
-    setHostChecks({ hd_encrypted: true, screenlock: true, installed_software: true });
+    setHostChecks({ hd_encrypted: true, screenlock: true, installed_software: true, response_actions: false });
     setCopied(false);
     setAddHostOpen(true);
   };
@@ -143,6 +145,7 @@ const VulnerabilitiesPage = () => {
     { id: 'hd_encrypted' as const, label: 'HD Encrypted', description: 'Check if disk encryption is enabled (FileVault, BitLocker, LUKS)', icon: <HardDrive size={16} /> },
     { id: 'screenlock' as const, label: 'Screenlock Enabled', description: 'Verify automatic screen lock is configured', icon: <Lock size={16} /> },
     { id: 'installed_software' as const, label: 'Installed Software', description: 'Inventory of installed applications and versions', icon: <Package size={16} /> },
+    { id: 'response_actions' as const, label: 'Response Actions', description: 'Enable automated response actions on this host', icon: <Zap size={16} /> },
   ];
 
   return (
@@ -366,7 +369,7 @@ const VulnerabilitiesPage = () => {
         </div>
 
         {/* Checks overview */}
-        <div className="grid grid-cols-3 gap-0 divide-x divide-border">
+        <div className="grid grid-cols-4 gap-0 divide-x divide-border">
           {HOST_CHECK_OPTIONS.map(check => (
             <div key={check.id} className="px-4 py-4 flex flex-col items-center text-center gap-2">
               <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-muted-foreground">
