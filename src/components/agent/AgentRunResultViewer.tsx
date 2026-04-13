@@ -23,9 +23,18 @@ const deepParseJsonStrings = (obj: any, depth = 0): any => {
   if (depth > 5) return obj;
   if (typeof obj === 'string') {
     const trimmed = obj.trim();
-    if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+    if (
+      (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+      (trimmed.startsWith('[') && trimmed.endsWith(']')) ||
+      (trimmed.startsWith('"') && trimmed.endsWith('"'))
+    ) {
       try {
-        return deepParseJsonStrings(JSON.parse(trimmed), depth + 1);
+        const parsed = JSON.parse(trimmed);
+        // Only promote if we got an object/array (not a plain string)
+        if (typeof parsed === 'object' && parsed !== null) {
+          return deepParseJsonStrings(parsed, depth + 1);
+        }
+        return parsed;
       } catch {
         return obj;
       }
