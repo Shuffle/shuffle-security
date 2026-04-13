@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Shield, Plus, RefreshCw, Monitor, Users, Search, Zap, ArrowRight, Wrench, Sparkles, ChevronRight, AlertTriangle, ExternalLink, Laptop, HardDrive, Lock, Package, Info, Copy, Check, Activity } from 'lucide-react';
+import { Shield, Plus, RefreshCw, Monitor, Users, Search, Zap, ArrowRight, Wrench, Sparkles, ChevronRight, AlertTriangle, ExternalLink } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useVulnerabilities, Vulnerability, VulnSeverity, VulnCategory } from '@/hooks/useVulnerabilities';
 import { useAppAuth } from '@/hooks/useAppAuth';
@@ -16,8 +16,6 @@ import { isVulnScannerApp } from '@/lib/ingestionDetection';
 import { askAI } from '@/services/ai';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 
 const SEVERITY_COLORS: Record<VulnSeverity, string> = {
   critical: 'bg-red-500/10 text-red-500 border-red-500/20',
@@ -61,16 +59,6 @@ const VulnerabilitiesPage = () => {
   const [aiScanOpen, setAiScanOpen] = useState(false);
   const [aiScanLoading, setAiScanLoading] = useState(false);
   const [aiScanResult, setAiScanResult] = useState<string | null>(null);
-  const [addHostOpen, setAddHostOpen] = useState(false);
-  const [addHostStep, setAddHostStep] = useState<'checks' | 'deploy'>('checks');
-  const [hostPlatform, setHostPlatform] = useState<'linux' | 'macos' | 'windows'>('linux');
-  const [hostChecks, setHostChecks] = useState({
-    hd_encrypted: true,
-    screenlock: true,
-    installed_software: true,
-    response_actions: false,
-  });
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const tab = searchParams.get('tab');
