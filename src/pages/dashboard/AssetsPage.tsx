@@ -31,7 +31,7 @@ const deviceIcon = (typeId: number, size = 18) => {
     case 6: return <HardDrive size={size} />;
     case 9: case 10: case 11: case 12: case 13: case 14: case 15:
       return <Wifi size={size} />;
-    default: return <ComputerIcon sx={{ fontSize: size }} />;
+    default: return <MonitorSmartphone size={size} />;
   }
 };
 
@@ -115,7 +115,7 @@ const AssetsPage = () => {
       {/* Header */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Shield size={28} className="text-primary" />
+          <HardDrive size={28} className="text-primary" />
           <Box>
             <Typography variant="h5" sx={{ fontWeight: 600, lineHeight: 1.2 }}>Assets</Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
@@ -126,10 +126,10 @@ const AssetsPage = () => {
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Tooltip title="Refresh">
             <IconButton size="small" onClick={() => fetchItems()}>
-              <RefreshIcon fontSize="small" />
+              <RefreshCw size={16} />
             </IconButton>
           </Tooltip>
-          <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={() => setCreateOpen(true)}>
+          <Button variant="contained" size="small" startIcon={<Plus size={16} />} onClick={() => setCreateOpen(true)}>
             Add Asset
           </Button>
         </Box>
@@ -145,7 +145,7 @@ const AssetsPage = () => {
           onChange={e => setSearch(e.target.value)}
           InputProps={{
             startAdornment: (
-              <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment>
+              <InputAdornment position="start"><Search size={16} /></InputAdornment>
             ),
           }}
           sx={{ maxWidth: 480 }}
@@ -163,12 +163,12 @@ const AssetsPage = () => {
       {hasFetched && assets.length === 0 && !isLoading && (
         <Card variant="outlined" sx={{ textAlign: 'center', py: 10 }}>
           <CardContent>
-            <ComputerIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 2 }} />
+            <MonitorSmartphone size={48} className="text-muted-foreground mb-4" />
             <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>No assets yet</Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
               Add devices manually or let host monitors auto-register them.
             </Typography>
-            <Button variant="contained" startIcon={<AddIcon />} onClick={() => setCreateOpen(true)}>
+            <Button variant="contained" startIcon={<Plus size={16} />} onClick={() => setCreateOpen(true)}>
               Add Asset
             </Button>
           </CardContent>
