@@ -136,7 +136,7 @@ const baseEnrichmentOptions: (Omit<EnrichmentOption, 'connectedApps'> & { isDyna
     id: 'threat_intel',
     name: 'Automatic Enrichment',
     description: 'Enrich every new incident with IOC lookups, threat feed matches, and contextual intelligence — no manual steps.',
-    icon: <SecurityIcon />,
+    icon: <FingerprintIcon />,
     color: '#ef4444',
     category: 'enrichment',
     isDynamic: true,
