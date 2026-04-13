@@ -78,15 +78,6 @@ const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: bool
       { label: 'Custom Fields', path: '/incidents/custom-fields', icon: <TuneIcon fontSize="small" /> },
     ],
   },
-  ...(isSupport ? [{ 
-    label: 'Vulnerabilities', 
-    icon: <Shield size={20} />,
-    path: '/vulnerabilities',
-    children: [
-      { label: 'Assets', path: '/vulnerabilities?tab=assets', icon: <Monitor size={16} /> },
-      { label: 'Users', path: '/vulnerabilities?tab=users', icon: <PeopleIcon fontSize="small" /> },
-    ],
-  }] : []),
   { 
     label: 'Detection', 
     icon: <RadarIcon />,
@@ -97,6 +88,15 @@ const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: bool
       { label: 'ATT&CK', path: '/detection/mitre', icon: <Waypoints size={16} />, disabled: true },
     ],
   },
+  ...(isSupport ? [{ 
+    label: 'Vulnerabilities', 
+    icon: <Shield size={20} />,
+    path: '/vulnerabilities',
+    children: [
+      { label: 'Assets', path: '/vulnerabilities?tab=assets', icon: <Monitor size={16} /> },
+      { label: 'Users', path: '/vulnerabilities?tab=users', icon: <PeopleIcon fontSize="small" /> },
+    ],
+  }] : []),
   { label: 'Automation', icon: <Activity size={20} />, path: '/usecases' },
   { label: 'Documentation', icon: <BookOpen size={20} />, path: '/docs' },
 ];
