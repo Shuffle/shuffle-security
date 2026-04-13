@@ -107,6 +107,7 @@ import { useIncidentAgentRuns } from '@/hooks/useIncidentAgentRuns';
 import AgentActivityFeed from '@/components/agent/AgentActivityFeed';
 import HighlightedFileEditor from '@/components/incidents/HighlightedFileEditor';
 import EmailThreadPanel, { isEmailContent } from '@/components/incidents/EmailThreadPanel';
+import { useEnrichmentStatus } from '@/hooks/useEnrichmentStatus';
 
 // TaskTemplate interface is now imported from useCaseTemplates
 
@@ -694,6 +695,8 @@ const IncidentDetailPage = () => {
     });
   }, [rawDescriptionHtml]);
   const hasHtmlDescription = sanitizedDescriptionHtml.length > 0;
+
+  const enrichmentStatus = useEnrichmentStatus();
 
 
   const incidentFileRef = useMemo(() => {
@@ -4317,12 +4320,31 @@ const IncidentDetailPage = () => {
           border: '1px solid hsl(var(--border))',
           p: 2.5,
         }}>
-          {/* Auto-ingestion note */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, px: 1.5, py: 1, borderRadius: 1.5, bgcolor: 'rgba(251, 146, 60, 0.08)', border: '1px solid rgba(251, 146, 60, 0.18)' }}>
-            <Typography variant="caption" sx={{ color: '#fb923c', fontWeight: 500 }}>
-              Automatic observable extraction is not yet fully enabled. You can add observables manually below.
-            </Typography>
-          </Box>
+          {/* Auto-enrichment status banner */}
+          {!enrichmentStatus.isLoading && !enrichmentStatus.active && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, px: 1.5, py: 1, borderRadius: 1.5, bgcolor: 'rgba(251, 146, 60, 0.08)', border: '1px solid rgba(251, 146, 60, 0.18)', flexWrap: 'wrap' }}>
+              <Typography variant="caption" sx={{ color: '#fb923c', fontWeight: 500, mr: 1 }}>
+                Automatic observable extraction is not yet fully enabled.
+              </Typography>
+              {enrichmentStatus.checks.map((c) => (
+                <Chip
+                  key={c.label}
+                  label={c.label}
+                  size="small"
+                  icon={c.active ? <CheckCircleIcon sx={{ fontSize: 14 }} /> : undefined}
+                  sx={{
+                    height: 22,
+                    fontSize: '0.7rem',
+                    fontWeight: 500,
+                    bgcolor: c.active ? 'hsl(var(--severity-low) / 0.12)' : 'hsl(var(--destructive) / 0.10)',
+                    color: c.active ? 'hsl(var(--severity-low))' : 'hsl(var(--destructive))',
+                    border: '1px solid',
+                    borderColor: c.active ? 'hsl(var(--severity-low) / 0.25)' : 'hsl(var(--destructive) / 0.20)',
+                  }}
+                />
+              ))}
+            </Box>
+          )}
 
           {/* Add Observable input */}
           <Box sx={{ display: 'flex', gap: 1, mb: 2, alignItems: 'center' }}>
