@@ -513,6 +513,8 @@ const IncidentDetailPage = () => {
   const obsRefreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [newObservableType, setNewObservableType] = useState('ip');
   const [newObservableValue, setNewObservableValue] = useState('');
+  const [obsFilterTypes, setObsFilterTypes] = useState<string[]>([]);
+  const [obsFilterText, setObsFilterText] = useState('');
   const [editedCustomFields, setEditedCustomFields] = useState<Record<string, string | number | boolean>>({});
   const [editedLabels, setEditedLabels] = useState<string[]>([]);
   const [newLabelInput, setNewLabelInput] = useState('');
