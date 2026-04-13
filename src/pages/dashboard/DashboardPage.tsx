@@ -439,7 +439,7 @@ const DashboardPage = () => {
           const envs = await res.json();
           const now = Math.floor(Date.now() / 1000);
           const running = Array.isArray(envs) && envs.some(
-            (e: any) => e.Type === 'onprem' && e.checkin > 0 && (now - e.checkin) < 300
+            (e: any) => e.Type === 'onprem' && e.checkin > 0 && (now - e.checkin) < 300 && e.data_lake?.enabled === true
           );
           setHasRunningSensor(running);
         } else {
