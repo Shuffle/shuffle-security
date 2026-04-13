@@ -46,7 +46,8 @@ import { getTimeAgo } from '@/components/agent/AgentRunHeader';
 import { useEntityPreference } from '@/hooks/useEntityLabel';
 import { useAppAuth } from '@/hooks/useAppAuth';
 import { useWorkflows } from '@/hooks/useWorkflows';
-import { findIngestTicketsWorkflow, findForwardTicketsWorkflow } from '@/lib/ingestionDetection';
+import { findIngestTicketsWorkflow } from '@/lib/ingestionDetection';
+import { getApiUrl, getAuthHeader } from '@/config/api';
 import { toast } from 'sonner';
 
 // ── Setup Step ─────────────────────────────────────────────────────────────────
