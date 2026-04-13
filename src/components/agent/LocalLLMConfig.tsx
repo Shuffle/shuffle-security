@@ -250,7 +250,7 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth, onSave, onTestResult }: LocalL
           variant="outlined"
           startIcon={testing ? <CircularProgress size={14} sx={{ color: 'inherit' }} /> : <Zap size={14} />}
           onClick={handleTest}
-          disabled={testing}
+          disabled={testing || !localModel.url.trim()}
           sx={{
             textTransform: 'none',
             fontSize: '0.82rem',
