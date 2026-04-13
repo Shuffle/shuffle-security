@@ -4360,6 +4360,56 @@ const IncidentDetailPage = () => {
             })()}
           </Box>
           
+          {/* Filter bar */}
+          <Box sx={{ display: 'flex', gap: 1, mb: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+            <TextField
+              size="small"
+              value={obsFilterText}
+              onChange={(e) => setObsFilterText(e.target.value)}
+              placeholder="Filter observables..."
+              sx={{ ...inputSx, minWidth: 180, flex: 1 }}
+              InputProps={{
+                startAdornment: <SearchIcon sx={{ fontSize: 16, color: 'text.disabled', mr: 0.5 }} />,
+              }}
+            />
+            {(() => {
+              // Collect unique types from current observables
+              const manualTypes = editedObservables.filter(o => !o.archived).map(o => o.type);
+              const enrichTypes = enrichments.map(e => e.type || 'unknown');
+              const uniqueTypes = [...new Set([...manualTypes, ...enrichTypes])].sort();
+              if (uniqueTypes.length <= 1) return null;
+              return uniqueTypes.map(t => {
+                const isActive = obsFilterTypes.includes(t);
+                return (
+                  <Chip
+                    key={t}
+                    label={t}
+                    size="small"
+                    onClick={() => setObsFilterTypes(prev => isActive ? prev.filter(x => x !== t) : [...prev, t])}
+                    sx={{
+                      fontWeight: 600,
+                      fontSize: '0.65rem',
+                      textTransform: 'uppercase',
+                      cursor: 'pointer',
+                      bgcolor: isActive ? 'hsl(var(--primary) / 0.2)' : 'rgba(255,255,255,0.05)',
+                      color: isActive ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
+                      border: isActive ? '1px solid hsl(var(--primary) / 0.4)' : '1px solid transparent',
+                      '&:hover': { bgcolor: isActive ? 'hsl(var(--primary) / 0.25)' : 'rgba(255,255,255,0.08)' },
+                    }}
+                  />
+                );
+              });
+            })()}
+            {(obsFilterTypes.length > 0 || obsFilterText) && (
+              <Chip
+                label="Clear"
+                size="small"
+                onClick={() => { setObsFilterTypes([]); setObsFilterText(''); }}
+                sx={{ fontSize: '0.65rem', cursor: 'pointer', color: 'hsl(var(--muted-foreground))', bgcolor: 'rgba(255,255,255,0.05)' }}
+              />
+            )}
+          </Box>
+
           {/* Unified observables list (manual + enrichments) */}
           {(() => {
             const manualObs = editedObservables
@@ -4390,16 +4440,37 @@ const IncidentDetailPage = () => {
                 deduped.set(dedupKey, { ...obs });
               }
             }
-            const allObs = Array.from(deduped.values()).sort((a, b) => {
-              const aLs = typeof (a as any).last_seen === 'number' ? (a as any).last_seen : (a as any).last_seen ? new Date((a as any).last_seen).getTime() : 0;
-              const bLs = typeof (b as any).last_seen === 'number' ? (b as any).last_seen : (b as any).last_seen ? new Date((b as any).last_seen).getTime() : 0;
-              return bLs - aLs; // newest first
+            // Sort by last_seen descending (items with timestamps first, then the rest)
+            const allObsRaw = Array.from(deduped.values()).sort((a, b) => {
+              const toTs = (v: any) => !v ? 0 : typeof v === 'number' ? (v < 1e12 ? v * 1000 : v) : new Date(v).getTime() || 0;
+              const aLs = toTs(a.last_seen);
+              const bLs = toTs(b.last_seen);
+              // Items with timestamps always before items without
+              if (aLs && !bLs) return -1;
+              if (!aLs && bLs) return 1;
+              return bLs - aLs;
             });
+
+            // Apply filters
+            const filterLower = obsFilterText.toLowerCase();
+            const allObs = allObsRaw.filter(obs => {
+              if (obsFilterTypes.length > 0 && !obsFilterTypes.includes(obs.type)) return false;
+              if (filterLower && !obs.value.toLowerCase().includes(filterLower) && !obs.type.toLowerCase().includes(filterLower)) return false;
+              return true;
+            });
+
+            if (allObsRaw.length === 0) {
+              return (
+                <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic', textAlign: 'center', py: 4 }}>
+                  No observables added. Add IOCs, IPs, domains, hashes, or other indicators.
+                </Typography>
+              );
+            }
 
             if (allObs.length === 0) {
               return (
                 <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic', textAlign: 'center', py: 4 }}>
-                  No observables added. Add IOCs, IPs, domains, hashes, or other indicators.
+                  No observables match the current filter. {allObsRaw.length} total.
                 </Typography>
               );
             }
