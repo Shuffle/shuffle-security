@@ -323,6 +323,7 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
   };
 
   return (
+    <>
     <Drawer
       anchor="right"
       open={open}
