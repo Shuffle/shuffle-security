@@ -1674,6 +1674,9 @@ const IncidentDetailPage = () => {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
+      if (obsRefreshTimerRef.current) {
+        clearTimeout(obsRefreshTimerRef.current);
+      }
     };
   }, [incident, editedTitle, editedMessage, editedSeverity, editedAssignee, editedStatus, editedTlp, editedReferences, editedObservables, editedCustomFields, editedLabels, editedStakeholders, tasks, saveToDatastore]);
 
