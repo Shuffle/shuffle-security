@@ -4356,7 +4356,7 @@ const IncidentDetailPage = () => {
               _source: 'enrichment' as const,
             }));
             // Deduplicate by type+value (case-insensitive), prefer enrichment data, merge timestamps
-            const deduped = new Map<string, typeof manualObs[0] & { first_seen?: string | number; last_seen?: string | number }>();
+            const deduped = new Map<string, any>();
             for (const obs of [...manualObs, ...enrichObs]) {
               const dedupKey = `${obs.type.toLowerCase()}::${obs.value.toLowerCase()}`;
               const existing = deduped.get(dedupKey);
