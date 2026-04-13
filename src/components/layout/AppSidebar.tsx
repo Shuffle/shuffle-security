@@ -84,7 +84,7 @@ const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: bool
     children: [
       { label: 'Rules', path: '/detection/sigma', icon: <Braces size={16} /> },
       { label: 'Pipelines', path: '/detection/pipelines', icon: <Network size={16} /> },
-      { label: 'ATT&CK', path: '/detection/mitre', icon: <Waypoints size={16} />, disabled: true },
+      { label: 'ATT&CK', path: '/detection/mitre', icon: <Waypoints size={16} />, supportOnly: true },
       { label: 'Threat Feeds', path: '/incidents/threat-feeds', icon: <RssFeedIcon fontSize="small" /> },
       { label: 'IOC Types', path: '/incidents/ioc-types', icon: <FingerprintIcon fontSize="small" /> },
     ],
