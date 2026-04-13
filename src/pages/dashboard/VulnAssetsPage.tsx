@@ -417,18 +417,20 @@ const VulnAssetsPage = () => {
           </div>
         </div>
 
-        {/* Checks overview */}
-        <div className="grid grid-cols-5 gap-0 divide-x divide-border">
-          {HOST_CHECK_OPTIONS.map(check => (
-            <div key={check.id} className="px-4 py-4 flex flex-col items-center text-center gap-2">
-              <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-muted-foreground">
-                {check.icon}
+        {/* Checks overview - only show when no hosts monitored */}
+        {allHosts.length === 0 && (
+          <div className="grid grid-cols-5 gap-0 divide-x divide-border">
+            {HOST_CHECK_OPTIONS.map(check => (
+              <div key={check.id} className="px-4 py-4 flex flex-col items-center text-center gap-2">
+                <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-muted-foreground">
+                  {check.icon}
+                </div>
+                <span className="text-xs font-medium text-foreground">{check.label}</span>
+                <span className="text-[0.65rem] text-muted-foreground leading-tight">{check.description}</span>
               </div>
-              <span className="text-xs font-medium text-foreground">{check.label}</span>
-              <span className="text-[0.65rem] text-muted-foreground leading-tight">{check.description}</span>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         {allHosts.length === 0 ? (
           <div className="border-t border-border px-5 py-16 flex flex-col items-center text-center gap-4">
