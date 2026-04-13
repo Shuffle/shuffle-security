@@ -1091,6 +1091,22 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
       {/* View-only Action Drawer for viewing run results */}
       <AgentActionDrawer open={viewDrawerOpen} onClose={() => setViewDrawerOpen(false)} run={viewRun} />
     </Drawer>
+
+    {/* App Search Drawer for Action tab */}
+    <AppSearchDrawer
+      open={appSearchOpen}
+      onClose={() => setAppSearchOpen(false)}
+      title="Find Apps"
+      subtitle="Select apps to target with the agent"
+      onQuickSelect={(app) => {
+        setSelectedApps(prev =>
+          prev.some(a => a.name === app.name)
+            ? prev
+            : [...prev, app]
+        );
+      }}
+    />
+  </>
   );
 };
 
