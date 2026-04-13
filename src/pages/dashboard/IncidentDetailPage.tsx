@@ -4695,7 +4695,7 @@ const IncidentDetailPage = () => {
                             onClick={async (e) => {
                               e.stopPropagation();
                               try {
-                                const resp = await fetch(getApiUrl('/api/v1/apps/categories/run'), {
+                              const resp = await fetch(getApiUrl('/api/v1/apps/categories/run'), {
                                   method: 'POST',
                                   credentials: 'include',
                                   headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
@@ -4707,8 +4707,18 @@ const IncidentDetailPage = () => {
                                 });
                                 if (resp.ok) {
                                   const result = await resp.json();
+                                  // Check if no apps were found/executed
+                                  if (result?.success === false || (Array.isArray(result) && result.length === 0) || result?.reason?.toLowerCase()?.includes('no app')) {
+                                    toast.info('No threat intel apps configured. Add one to run enrichments.');
+                                    setShowThreatIntelDrawer(true);
+                                    return;
+                                  }
                                   console.log(`[Observable] ${actionName} result:`, result);
                                   toast.success(`Search completed for ${obs.type}: ${obs.value}`);
+                                } else if (resp.status === 404 || resp.status === 400) {
+                                  // No matching apps available
+                                  toast.info('No threat intel apps configured. Add one to run enrichments.');
+                                  setShowThreatIntelDrawer(true);
                                 } else {
                                   toast.error(`Search failed: ${resp.statusText}`);
                                 }
