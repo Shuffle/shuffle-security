@@ -59,8 +59,7 @@ import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { runAgent } from '@/services/agentRun';
 import { deduplicateAuthApps, backfillAppImages } from '@/lib/utils';
-import { SingulJS } from '@/lib/singul-local';
-import type { AlgoliaSearchApp, SingulJSHandle } from '@/lib/singul-local';
+import AppSearchDrawer from '@/components/shared/AppSearchDrawer';
 import { InputBase, Avatar } from '@mui/material';
 import type { AgentRun } from '@/services/agentActivity';
 
