@@ -34,7 +34,7 @@ import FingerprintIcon from '@mui/icons-material/Fingerprint';
 import TuneIcon from '@mui/icons-material/Tune';
 import RssFeedIcon from '@mui/icons-material/RssFeed';
 import RadarIcon from '@mui/icons-material/Radar';
-import { Braces, Waypoints, Network, Activity, BookOpen, Sun, Moon, Monitor, LayoutDashboard, Shield } from 'lucide-react';
+import { Braces, Waypoints, Network, Activity, BookOpen, Sun, Moon, Monitor, LayoutDashboard, Shield, HardDrive, Radar } from 'lucide-react';
 import AgentIcon from '@/components/agent/AgentIcon';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -95,14 +95,14 @@ const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: bool
     icon: <Shield size={20} />,
     path: '/vulnerabilities',
     children: [
-      { label: 'Host Monitors', path: '/vulnerabilities/assets', icon: <Monitor size={16} /> },
+      { label: 'Assets', path: '/assets', icon: <HardDrive size={16} /> },
+      { label: 'Monitors', path: '/vulnerabilities/assets', icon: <Radar size={16} /> },
     ],
-  }] : []),
-  {
+  }] : [{
     label: 'Assets',
-    icon: <Monitor size={20} />,
+    icon: <HardDrive size={20} />,
     path: '/assets',
-  },
+  }]),
   { label: '__divider__', icon: <></> },
   { label: 'Agent', icon: <AgentIcon size={20} />, path: '/agent' },
   { label: 'Automation', icon: <Activity size={20} />, path: '/usecases' },
