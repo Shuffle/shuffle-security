@@ -1109,7 +1109,7 @@ export const AutomationConfig = ({
                               if (!enrichmentStatus.active) {
                                 enrichmentStatus.enable();
                               } else {
-                                toggleOption(option.id);
+                                enrichmentStatus.disable();
                               }
                             } else {
                               toggleOption(option.id);
