@@ -4705,8 +4705,8 @@ const IncidentDetailPage = () => {
                                     fields: [{ key: 'ioc', value: obs.value }],
                                   }),
                                 });
+                                const result = await resp.json().catch(() => null);
                                 if (resp.ok) {
-                                  const result = await resp.json();
                                   // Check if no apps were found/executed
                                   if (result?.success === false || (Array.isArray(result) && result.length === 0) || result?.reason?.toLowerCase()?.includes('no app')) {
                                     toast.info('No threat intel apps configured. Add one to run enrichments.');
@@ -4715,12 +4715,15 @@ const IncidentDetailPage = () => {
                                   }
                                   console.log(`[Observable] ${actionName} result:`, result);
                                   toast.success(`Search completed for ${obs.type}: ${obs.value}`);
-                                } else if (resp.status === 404 || resp.status === 400) {
-                                  // No matching apps available
-                                  toast.info('No threat intel apps configured. Add one to run enrichments.');
-                                  setShowThreatIntelDrawer(true);
                                 } else {
-                                  toast.error(`Search failed: ${resp.statusText}`);
+                                  const reason = result?.reason || result?.error || result?.message || '';
+                                  const noApps = resp.status === 404 || resp.status === 400 || reason.toLowerCase().includes('no app') || reason.toLowerCase().includes('not found');
+                                  if (noApps) {
+                                    toast.info('No threat intel apps configured. Add one to run enrichments.');
+                                    setShowThreatIntelDrawer(true);
+                                  } else {
+                                    toast.error(`Search failed: ${reason || `HTTP ${resp.status}`}`);
+                                  }
                                 }
                               } catch (err) {
                                 console.error('[Observable] search error:', err);
