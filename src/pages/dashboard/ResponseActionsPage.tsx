@@ -351,7 +351,7 @@ const PermissionsPanel = () => {
   );
 };
 
-const SensorsPanel = () => {
+const HostMonitorsPanel = () => {
   return (
     <Paper
       sx={{
@@ -363,11 +363,10 @@ const SensorsPanel = () => {
     >
       <Radio size={40} className="text-muted-foreground/30 mx-auto mb-3" />
       <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))', mb: 1 }}>
-        Sensor Permissions
+        Host Monitor Permissions
       </Typography>
       <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))', maxWidth: 420, mx: 'auto' }}>
-        Configure what actions your detection sensors (EDR, SIEM, Firewall) are allowed to perform autonomously.
-        This uses the same permission model as your Detection pipeline.
+        Configure what actions your host monitors (EDR, endpoint agents) are allowed to perform autonomously on individual hosts.
       </Typography>
       <Chip
         label="Coming Soon"
@@ -396,7 +395,7 @@ const ResponseActionsPage = () => {
             Response Actions
           </Typography>
           <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-            Control what automated response actions are allowed across AI Agents and Sensors.
+            Control what automated response actions are allowed across AI Agents and Host Monitors.
           </Typography>
         </Box>
 
@@ -417,11 +416,11 @@ const ResponseActionsPage = () => {
           }}
         >
           <Tab icon={<Bot size={16} />} iconPosition="start" label="AI Agents" />
-          <Tab icon={<Radio size={16} />} iconPosition="start" label="Sensors" />
+          <Tab icon={<Radio size={16} />} iconPosition="start" label="Host Monitors" />
         </Tabs>
 
         {activeTab === 0 && <PermissionsPanel />}
-        {activeTab === 1 && <SensorsPanel />}
+        {activeTab === 1 && <HostMonitorsPanel />}
       </Box>
     </motion.div>
   );
