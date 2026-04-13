@@ -425,6 +425,32 @@ const DashboardPage = () => {
   const [quickViewItem, setQuickViewItem] = useState<QuickViewItem | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [filter, setFilter] = useState<'all' | 'approval' | 'question'>('all');
+  const [hasRunningSensor, setHasRunningSensor] = useState<boolean | null>(null);
+
+  // Check for running detection sensors
+  useEffect(() => {
+    const checkSensors = async () => {
+      try {
+        const res = await fetch(getApiUrl('/api/v1/getenvironments'), {
+          credentials: 'include',
+          headers: { ...getAuthHeader() },
+        });
+        if (res.ok) {
+          const envs = await res.json();
+          const now = Math.floor(Date.now() / 1000);
+          const running = Array.isArray(envs) && envs.some(
+            (e: any) => e.Type === 'onprem' && e.checkin > 0 && (now - e.checkin) < 300
+          );
+          setHasRunningSensor(running);
+        } else {
+          setHasRunningSensor(false);
+        }
+      } catch {
+        setHasRunningSensor(false);
+      }
+    };
+    checkSensors();
+  }, []);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
