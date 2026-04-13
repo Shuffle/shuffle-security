@@ -133,7 +133,7 @@ const VulnAssetsPage = () => {
   const [isCreatingGroup, setIsCreatingGroup] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
   const [creatingGroupLoading, setCreatingGroupLoading] = useState(false);
-
+  const [syncGroupId, setSyncGroupId] = useState<string>('');
   const selectedGroup = groups.find(g => g.id === selectedGroupId);
 
   // Aggregate all hosts across all sensor groups
@@ -148,6 +148,17 @@ const VulnAssetsPage = () => {
       setSelectedGroupId(prev => {
         if (prev && fetched.some(g => g.id === prev)) return prev;
         return fetched[0].id;
+      });
+      // Auto-select sync group: prefer one with a check-in < 10min
+      setSyncGroupId(prev => {
+        if (prev && fetched.some(g => g.id === prev)) return prev;
+        const now = Date.now() / 1000;
+        const recent = fetched.find(g => {
+          if (g.hosts.length === 0) return false;
+          const latest = Math.max(...g.hosts.map(h => h.checkin || 0));
+          return (now - latest) < 600;
+        });
+        return recent ? recent.id : fetched[0].id;
       });
     }
     setGroupsLoading(false);
@@ -265,62 +276,92 @@ const VulnAssetsPage = () => {
           </div>
         </div>
 
-        {/* Monitoring Group Validator */}
-        {groups.length > 0 && (
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-medium text-muted-foreground mr-1">Group Sync</span>
-            {groups.map(g => {
-              const latestCheckin = g.hosts.length > 0
-                ? Math.max(...g.hosts.map(h => h.checkin || 0))
-                : 0;
-              const checkinAge = latestCheckin ? (Date.now() / 1000) - latestCheckin : Infinity;
-              // Green: <5min, Yellow: <30min, Red: >30min or no hosts
-              const status = g.hosts.length === 0
-                ? 'none'
-                : checkinAge < 300
-                  ? 'healthy'
-                  : checkinAge < 1800
-                    ? 'stale'
-                    : 'offline';
-              const dotColor = status === 'healthy'
-                ? 'bg-green-500'
-                : status === 'stale'
-                  ? 'bg-yellow-500'
-                  : status === 'offline'
-                    ? 'bg-destructive'
-                    : 'bg-muted-foreground/40';
-              const statusLabel = status === 'healthy'
-                ? 'Syncing'
-                : status === 'stale'
-                  ? 'Stale'
-                  : status === 'offline'
-                    ? 'Offline'
-                    : 'No hosts';
-              const timeAgo = latestCheckin
-                ? checkinAge < 60
-                  ? `${Math.round(checkinAge)}s ago`
-                  : checkinAge < 3600
-                    ? `${Math.round(checkinAge / 60)}m ago`
-                    : `${Math.round(checkinAge / 3600)}h ago`
-                : '';
-              return (
-                <div
-                  key={g.id}
-                  className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2"
-                  title={`${g.name}: ${statusLabel}${timeAgo ? ` (last: ${timeAgo})` : ''} — ${g.hosts.length} host(s)`}
-                >
-                  <div className={`w-2 h-2 rounded-full shrink-0 ${dotColor}`} />
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-xs font-medium text-foreground truncate max-w-[120px]">{g.name}</span>
-                    <span className="text-[0.6rem] text-muted-foreground leading-tight">
+        {/* Monitoring Group Validator Dropdown */}
+        {groups.length > 0 && (() => {
+          const syncGroup = groups.find(g => g.id === syncGroupId) || groups[0];
+          const latestCheckin = syncGroup.hosts.length > 0
+            ? Math.max(...syncGroup.hosts.map(h => h.checkin || 0))
+            : 0;
+          const checkinAge = latestCheckin ? (Date.now() / 1000) - latestCheckin : Infinity;
+          const status = syncGroup.hosts.length === 0
+            ? 'none'
+            : checkinAge < 300
+              ? 'healthy'
+              : checkinAge < 1800
+                ? 'stale'
+                : 'offline';
+          const dotColor = status === 'healthy'
+            ? 'bg-green-500'
+            : status === 'stale'
+              ? 'bg-yellow-500'
+              : status === 'offline'
+                ? 'bg-destructive'
+                : 'bg-muted-foreground/40';
+          const statusLabel = status === 'healthy'
+            ? 'Syncing'
+            : status === 'stale'
+              ? 'Stale'
+              : status === 'offline'
+                ? 'Offline'
+                : 'No hosts';
+          const timeAgo = latestCheckin
+            ? checkinAge < 60
+              ? `${Math.round(checkinAge)}s ago`
+              : checkinAge < 3600
+                ? `${Math.round(checkinAge / 60)}m ago`
+                : `${Math.round(checkinAge / 3600)}h ago`
+            : '';
+
+          return (
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-muted-foreground">Group Sync</span>
+              <Select value={syncGroupId} onValueChange={setSyncGroupId}>
+                <SelectTrigger className="w-auto min-w-[180px] h-9 gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full shrink-0 ${dotColor}`} />
+                    <span className="text-xs font-medium truncate max-w-[100px]">{syncGroup.name}</span>
+                    <span className="text-[0.6rem] text-muted-foreground">
                       {statusLabel}{timeAgo ? ` · ${timeAgo}` : ''}
                     </span>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                </SelectTrigger>
+                <SelectContent align="end">
+                  {groups.map(g => {
+                    const gLatest = g.hosts.length > 0
+                      ? Math.max(...g.hosts.map(h => h.checkin || 0))
+                      : 0;
+                    const gAge = gLatest ? (Date.now() / 1000) - gLatest : Infinity;
+                    const gStatus = g.hosts.length === 0
+                      ? 'none'
+                      : gAge < 300 ? 'healthy' : gAge < 1800 ? 'stale' : 'offline';
+                    const gDot = gStatus === 'healthy'
+                      ? 'bg-green-500'
+                      : gStatus === 'stale'
+                        ? 'bg-yellow-500'
+                        : gStatus === 'offline'
+                          ? 'bg-destructive'
+                          : 'bg-muted-foreground/40';
+                    const gLabel = gStatus === 'healthy' ? 'Syncing' : gStatus === 'stale' ? 'Stale' : gStatus === 'offline' ? 'Offline' : 'No hosts';
+                    const gTime = gLatest
+                      ? gAge < 60 ? `${Math.round(gAge)}s` : gAge < 3600 ? `${Math.round(gAge / 60)}m` : `${Math.round(gAge / 3600)}h`
+                      : '';
+                    return (
+                      <SelectItem key={g.id} value={g.id}>
+                        <div className="flex items-center gap-2">
+                          <div className={`w-2 h-2 rounded-full shrink-0 ${gDot}`} />
+                          <span className="text-sm">{g.name}</span>
+                          <span className="text-xs text-muted-foreground ml-auto">
+                            {gLabel}{gTime ? ` · ${gTime}` : ''} · {g.hosts.length} host{g.hosts.length !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Host Monitors section */}
