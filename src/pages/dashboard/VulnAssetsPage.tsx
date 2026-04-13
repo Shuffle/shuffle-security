@@ -32,45 +32,57 @@ interface MonitoringGroup {
 }
 
 /** Fetch environments from the API and filter for sensor_group: true */
-const fetchSensorGroups = async (): Promise<MonitoringGroup[]> => {
+const fetchSensorGroups = async (): Promise<{ groups: MonitoringGroup[]; allEnvs: OrbEnvironment[] }> => {
   try {
-    const res = await fetch(getApiUrl('/api/v1/get_environments'), {
-      method: 'GET',
+    const res = await fetch(getApiUrl('/api/v1/getenvironments'), {
       credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        ...getAuthHeader(),
-      },
+      headers: { ...getAuthHeader() },
     });
-    if (!res.ok) return [];
+    if (!res.ok) return { groups: [], allEnvs: [] };
     const data = await res.json();
-    const envs: OrbEnvironment[] = Array.isArray(data) ? data : [];
-    return envs
+    const envs: OrbEnvironment[] = Array.isArray(data) ? data.filter((e: OrbEnvironment) => !e.archived) : [];
+    const groups = envs
       .filter(e => e.sensor_group === true)
       .map(e => ({ id: e.id || e.Name, name: e.Name, queue: e.Name }));
+    return { groups, allEnvs: envs };
   } catch {
-    return [];
+    return { groups: [], allEnvs: [] };
   }
 };
 
-/** Create a new environment with sensor_group: true */
-const createSensorGroupEnv = async (name: string): Promise<MonitoringGroup | null> => {
+/** Create a new sensor group environment by sending ALL environments + the new one */
+const createSensorGroupEnv = async (name: string, allEnvs: OrbEnvironment[]): Promise<MonitoringGroup | null> => {
   try {
-    const res = await fetch(getApiUrl('/api/v1/set_environments'), {
+    const updatedEnvs = [
+      ...allEnvs,
+      { Name: name, Type: 'onprem', sensor_group: true },
+    ];
+    const res = await fetch(getApiUrl('/api/v1/setenvironments'), {
       method: 'PUT',
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         ...getAuthHeader(),
       },
-      body: JSON.stringify({ Name: name, Type: 'onprem', sensor_group: true }),
+      body: JSON.stringify(updatedEnvs),
     });
     if (!res.ok) {
       const errText = await res.text().catch(() => '');
       throw new Error(errText || `HTTP ${res.status}`);
     }
-    const data = await res.json();
-    return { id: data.id || name, name, queue: name };
+    // Re-fetch to get the created env with its server-assigned id
+    const envRes = await fetch(getApiUrl('/api/v1/getenvironments'), {
+      credentials: 'include',
+      headers: { ...getAuthHeader() },
+    });
+    if (envRes.ok) {
+      const freshEnvs: OrbEnvironment[] = await envRes.json();
+      const created = freshEnvs.find(e => e.Name === name && e.sensor_group === true);
+      if (created) {
+        return { id: created.id || name, name: created.Name, queue: created.Name };
+      }
+    }
+    return { id: name, name, queue: name };
   } catch (err) {
     console.error('[VulnAssets] Failed to create sensor group env:', err);
     return null;
