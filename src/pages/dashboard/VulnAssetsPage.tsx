@@ -29,6 +29,8 @@ interface MonitoringGroup {
   id: string;
   name: string;
   queue: string;
+  auth: string;
+  org_id: string;
 }
 
 /** Fetch environments from the API and filter for sensor_group: true */
@@ -43,7 +45,7 @@ const fetchSensorGroups = async (): Promise<{ groups: MonitoringGroup[]; allEnvs
     const envs: OrbEnvironment[] = Array.isArray(data) ? data.filter((e: OrbEnvironment) => !e.archived) : [];
     const groups = envs
       .filter(e => e.sensor_group === true)
-      .map(e => ({ id: e.id || e.Name, name: e.Name, queue: e.Name }));
+      .map(e => ({ id: e.id || e.Name, name: e.Name, queue: e.Name, auth: String(e.auth || ''), org_id: String(e.org_id || '') }));
     return { groups, allEnvs: envs };
   } catch {
     return { groups: [], allEnvs: [] };
@@ -79,10 +81,10 @@ const createSensorGroupEnv = async (name: string, allEnvs: OrbEnvironment[]): Pr
       const freshEnvs: OrbEnvironment[] = await envRes.json();
       const created = freshEnvs.find(e => e.Name === name && e.sensor_group === true);
       if (created) {
-        return { id: created.id || name, name: created.Name, queue: created.Name };
+        return { id: created.id || name, name: created.Name, queue: created.Name, auth: String(created.auth || ''), org_id: String(created.org_id || '') };
       }
     }
-    return { id: name, name, queue: name };
+    return { id: name, name, queue: name, auth: '', org_id: '' };
   } catch (err) {
     console.error('[VulnAssets] Failed to create sensor group env:', err);
     return null;
@@ -135,7 +137,12 @@ const VulnAssetsPage = () => {
 
   const getDeployCommand = () => {
     const flags = ['--sensor_mode=true'];
-    if (selectedGroup) flags.push(`--queue=${selectedGroup.queue}`);
+    if (selectedGroup) {
+      flags.push(`--queue=${selectedGroup.queue}`);
+      if (selectedGroup.auth) flags.push(`--auth=${selectedGroup.auth}`);
+      if (selectedGroup.id) flags.push(`--id=${selectedGroup.id}`);
+      if (selectedGroup.org_id) flags.push(`--org_id=${selectedGroup.org_id}`);
+    }
     if (hostChecks.installed_software) flags.push('--software_list_enabled=true');
     if (hostChecks.hd_encrypted) flags.push('--hd_encrypted_check=true');
     if (hostChecks.screenlock) flags.push('--screenlock_check=true');
