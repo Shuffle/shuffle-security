@@ -1335,13 +1335,12 @@ export const AppAuthCard = ({
                       </Typography>
                     </Box>
 
-                    {/* Main content area */}
+                    {/* Main content area — always stacked vertically for drawer contexts */}
                     <Box sx={{ 
                       display: 'flex', 
-                      flexDirection: { xs: 'column', sm: 'row' },
-                      alignItems: { xs: 'stretch', sm: 'center' }, 
-                      justifyContent: 'space-between', 
-                      gap: { xs: 2, sm: 3 },
+                      flexDirection: 'column',
+                      alignItems: 'stretch', 
+                      gap: 2,
                       p: { xs: 2, sm: 2.5 },
                     }}>
                       {/* Auth name with icon */}
