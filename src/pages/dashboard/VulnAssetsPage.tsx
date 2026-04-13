@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Laptop, HardDrive, Lock, Package, Zap, Plus, Copy, Check, Activity, ChevronRight, Shield, FolderOpen, Loader2 } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { toast } from 'sonner';
-import { getApiUrl, shuffleFetch } from '@/config/api';
+import { getApiUrl, getAuthHeader } from '@/config/api';
 
 const HOST_CHECK_OPTIONS = [
   { id: 'hd_encrypted' as const, label: 'HD Encrypted', description: 'Check if disk encryption is enabled (FileVault, BitLocker, LUKS)', icon: <HardDrive size={16} /> },
