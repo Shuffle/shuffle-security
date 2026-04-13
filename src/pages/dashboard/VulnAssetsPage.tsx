@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -521,7 +522,23 @@ const VulnAssetsPage = () => {
                             <Hash size={12} />
                             <span className="text-[0.65rem] font-semibold uppercase tracking-wide">Serial Number</span>
                           </div>
-                          <p className="text-xs font-mono text-foreground">{host.serial ? host.serial.split('\n')[0].trim() : '—'}</p>
+                          {host.serial ? (() => {
+                            const raw = host.serial.trim();
+                            const snMatch = raw.match(/Serial\s*Number\s*\(?\w*\)?\s*:\s*(\S+)/i);
+                            const display = snMatch ? snMatch[1] : raw.split('\n')[0].trim().substring(0, 24);
+                            return (
+                              <TooltipProvider delayDuration={200}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <p className="text-xs font-mono text-foreground cursor-help">{display}</p>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="bottom" align="start" className="max-w-sm">
+                                    <pre className="text-[0.65rem] font-mono whitespace-pre-wrap">{raw}</pre>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            );
+                          })() : <p className="text-xs font-mono text-foreground">—</p>}
                         </div>
                         <div className="space-y-1">
                           <div className="flex items-center gap-1.5 text-muted-foreground">
