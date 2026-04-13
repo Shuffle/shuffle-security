@@ -97,6 +97,8 @@ const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: bool
       { label: 'Users', path: '/vulnerabilities?tab=users', icon: <PeopleIcon fontSize="small" /> },
     ],
   }] : []),
+  { label: '__divider__', icon: <></> },
+  { label: 'Agent', icon: <AgentIcon size={20} />, path: '/agent' },
   { label: 'Automation', icon: <Activity size={20} />, path: '/usecases' },
   { label: 'Documentation', icon: <BookOpen size={20} />, path: '/docs' },
 ];
@@ -189,7 +191,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
   }, [entityPlural, entityBasePath, isSupport, sidebarTabs]);
   const [expandedItems, setExpandedItems] = useState<string[]>([entityPlural]);
   const [changingOrg, setChangingOrg] = useState(false);
-  const [agentDrawerOpen, setAgentDrawerOpen] = useState(false);
+  
   const [toolMenuAnchor, setToolMenuAnchor] = useState<null | HTMLElement>(null);
   const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(null);
   const [hoverExpanded, setHoverExpanded] = useState(false);
@@ -509,9 +511,11 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
 
       {/* Navigation Items */}
       <List sx={{ px: 1, py: 2, flexGrow: 1, overflowY: 'auto', overflowX: 'hidden' }}>
-        {navItems.map((item) => (
-          <Box key={item.label}>
-            {item.children ? (
+        {navItems.map((item, idx) => (
+          <Box key={item.label === '__divider__' ? `divider-${idx}` : item.label}>
+            {item.label === '__divider__' ? (
+              <Divider sx={{ borderColor: 'hsl(var(--border))', mx: visuallyCollapsed ? 1 : 1.5, my: 1 }} />
+            ) : item.children ? (
               <>
                 <Tooltip title={visuallyCollapsed ? item.label : ''} placement="right">
                   <ListItem disablePadding sx={{ mb: 0.5 }}>
@@ -721,41 +725,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
         <Divider sx={{ borderColor: 'hsl(var(--border))', mx: visuallyCollapsed ? 1 : 2, mb: 1 }} />
         <IntegrationStatus collapsed={visuallyCollapsed} />
         
-        {/* Agent Permissions Button */}
-        <Box sx={{ px: visuallyCollapsed ? 0 : 1, py: 0.5 }}>
-          <Tooltip title={visuallyCollapsed ? 'Agent Permissions' : ''} placement="right">
-            <Box
-              onClick={() => setAgentDrawerOpen(true)}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1.5,
-                px: visuallyCollapsed ? 0 : 1.5,
-                py: 0.75,
-                borderRadius: 1,
-                cursor: 'pointer',
-                justifyContent: visuallyCollapsed ? 'center' : 'flex-start',
-                color: 'hsl(var(--muted-foreground))',
-                transition: 'all 0.15s ease',
-                '&:hover': {
-                  backgroundColor: 'hsl(var(--muted))',
-                  color: 'hsl(var(--primary))',
-                },
-              }}
-            >
-              <AgentIcon size={16} />
-              {!visuallyCollapsed && (
-                <Typography sx={{ fontSize: '0.75rem', fontWeight: 500 }}>
-                  Agent Permissions
-                </Typography>
-              )}
-            </Box>
-          </Tooltip>
-        </Box>
       </Box>
-
-      {/* Agent Permissions Drawer */}
-      <AgentPermissionsDrawer open={agentDrawerOpen} onClose={() => setAgentDrawerOpen(false)} />
 
       {/* Bottom Section */}
       <Box sx={{ mt: 'auto' }}>
