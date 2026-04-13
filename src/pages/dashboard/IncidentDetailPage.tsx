@@ -515,6 +515,8 @@ const IncidentDetailPage = () => {
   const [newObservableValue, setNewObservableValue] = useState('');
   const [obsFilterTypes, setObsFilterTypes] = useState<string[]>([]);
   const [obsFilterText, setObsFilterText] = useState('');
+  const [obsSortField, setObsSortField] = useState<'first_seen' | 'last_seen' | 'type' | 'value'>('first_seen');
+  const [obsSortDir, setObsSortDir] = useState<'asc' | 'desc'>('desc');
   const [editedCustomFields, setEditedCustomFields] = useState<Record<string, string | number | boolean>>({});
   const [editedLabels, setEditedLabels] = useState<string[]>([]);
   const [newLabelInput, setNewLabelInput] = useState('');
