@@ -11,8 +11,9 @@ import {
   IconButton,
   Tooltip,
   CircularProgress,
+  Alert,
 } from '@mui/material';
-import { Monitor, Server, Smartphone, Laptop, Tablet, Wifi, HardDrive, Search, Plus, RefreshCw, MonitorSmartphone } from 'lucide-react';
+import { Monitor, Server, Smartphone, Laptop, Tablet, Wifi, HardDrive, Search, Plus, RefreshCw, MonitorSmartphone, Package } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useDatastore } from '@/hooks/useDatastore';
 import { DATASTORE_CATEGORIES, setDatastoreItem } from '@/services/datastore';
@@ -111,29 +112,46 @@ const AssetsPage = () => {
   };
 
   return (
-    <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1400, mx: 'auto' }}>
+    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1400, mx: 'auto' }}>
       {/* Header */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <HardDrive size={28} className="text-primary" />
-          <Box>
-            <Typography variant="h5" sx={{ fontWeight: 600, lineHeight: 1.2 }}>Assets</Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              Manage and monitor devices across your environment
-            </Typography>
-          </Box>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 600, lineHeight: 1.2 }}>Assets</Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
+            Manage and monitor devices across your environment
+          </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Tooltip title="Refresh">
-            <IconButton size="small" onClick={() => fetchItems()}>
+            <IconButton size="small" onClick={() => fetchItems()} sx={{ height: 36, width: 36 }}>
               <RefreshCw size={16} />
             </IconButton>
           </Tooltip>
-          <Button variant="contained" size="small" startIcon={<Plus size={16} />} onClick={() => setCreateOpen(true)}>
+          <Button variant="contained" size="small" startIcon={<Plus size={16} />} onClick={() => setCreateOpen(true)} sx={{ height: 36 }}>
             Add Asset
           </Button>
         </Box>
       </Box>
+
+      {/* Software Inventory Reminder */}
+      <Alert
+        icon={<Package size={18} />}
+        severity="info"
+        sx={{
+          mb: 3,
+          backgroundColor: 'hsl(var(--primary) / 0.08)',
+          border: '1px solid hsl(var(--primary) / 0.2)',
+          color: 'hsl(var(--foreground))',
+          '& .MuiAlert-icon': { color: 'hsl(var(--primary))' },
+        }}
+      >
+        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+          Software Inventory coming soon
+        </Typography>
+        <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+          Collect installed packages via <code>pip list</code>, <code>npm list -g</code>, <code>docker images</code>, and other language ecosystems.
+        </Typography>
+      </Alert>
 
       {/* Search */}
       <Box sx={{ mb: 3 }}>
