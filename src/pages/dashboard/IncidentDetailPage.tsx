@@ -1842,7 +1842,20 @@ const IncidentDetailPage = () => {
   const handleAddObservable = () => {
     if (newObservableValue.trim()) {
       autoProgressStatus();
-      setEditedObservables([...editedObservables, { type: newObservableType, value: newObservableValue.trim() }]);
+      const trimmed = newObservableValue.trim();
+      const existingIdx = editedObservables.findIndex(
+        o => !o.archived && o.type === newObservableType && o.value.toLowerCase() === trimmed.toLowerCase()
+      );
+      if (existingIdx >= 0) {
+        // Merge: update last_seen on existing observable
+        const updated = [...editedObservables];
+        updated[existingIdx] = { ...updated[existingIdx], last_seen: Date.now() };
+        setEditedObservables(updated);
+        toast.info(`Observable already exists — updated last seen`);
+      } else {
+        const now = Date.now();
+        setEditedObservables([...editedObservables, { type: newObservableType, value: trimmed, first_seen: now, last_seen: now }]);
+      }
       setNewObservableValue('');
     }
   };
@@ -4342,7 +4355,28 @@ const IncidentDetailPage = () => {
               _idx: idx,
               _source: 'enrichment' as const,
             }));
-            const allObs = [...manualObs, ...enrichObs];
+            // Deduplicate by type+value (case-insensitive), prefer enrichment data, merge timestamps
+            const deduped = new Map<string, any>();
+            for (const obs of [...manualObs, ...enrichObs]) {
+              const dedupKey = `${obs.type.toLowerCase()}::${obs.value.toLowerCase()}`;
+              const existing = deduped.get(dedupKey);
+              if (existing) {
+                // Merge: keep earliest first_seen, latest last_seen
+                const eFs = (existing as any).first_seen;
+                const oFs = (obs as any).first_seen;
+                const eLs = (existing as any).last_seen;
+                const oLs = (obs as any).last_seen;
+                if (oFs && (!eFs || oFs < eFs)) (existing as any).first_seen = oFs;
+                if (oLs && (!eLs || oLs > eLs)) (existing as any).last_seen = oLs;
+              } else {
+                deduped.set(dedupKey, { ...obs });
+              }
+            }
+            const allObs = Array.from(deduped.values()).sort((a, b) => {
+              const aLs = typeof (a as any).last_seen === 'number' ? (a as any).last_seen : (a as any).last_seen ? new Date((a as any).last_seen).getTime() : 0;
+              const bLs = typeof (b as any).last_seen === 'number' ? (b as any).last_seen : (b as any).last_seen ? new Date((b as any).last_seen).getTime() : 0;
+              return bLs - aLs; // newest first
+            });
 
             if (allObs.length === 0) {
               return (
