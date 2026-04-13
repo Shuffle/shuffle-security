@@ -291,6 +291,24 @@ const IOCTypesPage = () => {
               }}
             />
           ))}
+          <Button
+            size="small"
+            variant="outlined"
+            disabled={enrichmentStatus.isEnabling}
+            onClick={enrichmentStatus.enable}
+            sx={{
+              ml: 'auto',
+              textTransform: 'none',
+              fontSize: '0.7rem',
+              height: 24,
+              px: 1.5,
+              color: '#fb923c',
+              borderColor: 'rgba(251, 146, 60, 0.3)',
+              '&:hover': { borderColor: '#fb923c', bgcolor: 'rgba(251, 146, 60, 0.08)' },
+            }}
+          >
+            {enrichmentStatus.isEnabling ? <CircularProgress size={14} sx={{ color: '#fb923c' }} /> : 'Enable'}
+          </Button>
         </Box>
       )}
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
