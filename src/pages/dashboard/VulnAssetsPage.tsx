@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Laptop, HardDrive, Lock, Package, Zap, Plus, Copy, Check, Activity, ChevronRight, Shield, FolderOpen, Loader2, CheckCircle2, Send, RefreshCw } from 'lucide-react';
+import { Laptop, HardDrive, Lock, Package, Zap, Plus, Copy, Check, Activity, ChevronRight, Radar, FolderOpen, Loader2, CheckCircle2, Send, RefreshCw } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { toast } from 'sonner';
 import { getApiUrl, getAuthHeader } from '@/config/api';
@@ -258,9 +258,9 @@ const VulnAssetsPage = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Shield size={28} className="text-primary" />
+          <Radar size={28} className="text-primary" />
           <div>
-            <h1 className="text-xl font-semibold text-foreground">Assets</h1>
+            <h1 className="text-xl font-semibold text-foreground">Monitors</h1>
             <p className="text-sm text-muted-foreground">Monitor host compliance and security posture across your endpoints</p>
           </div>
         </div>
