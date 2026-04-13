@@ -56,6 +56,7 @@ interface NavChild {
   path: string;
   icon: React.ReactNode;
   disabled?: boolean;
+  supportOnly?: boolean;
 }
 
 interface NavItem {
@@ -83,7 +84,7 @@ const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: bool
     children: [
       { label: 'Rules', path: '/detection/sigma', icon: <Braces size={16} /> },
       { label: 'Pipelines', path: '/detection/pipelines', icon: <Network size={16} /> },
-      { label: 'ATT&CK', path: '/detection/mitre', icon: <Waypoints size={16} />, disabled: true },
+      { label: 'ATT&CK', path: '/detection/mitre', icon: <Waypoints size={16} />, supportOnly: true },
       { label: 'Threat Feeds', path: '/incidents/threat-feeds', icon: <RssFeedIcon fontSize="small" /> },
       { label: 'IOC Types', path: '/incidents/ioc-types', icon: <FingerprintIcon fontSize="small" /> },
     ],
@@ -182,6 +183,8 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
         if (!item.children) return item;
         // Filter children based on tab visibility
         const filteredChildren = item.children.filter(child => {
+          // Hide support-only children for non-support users
+          if (child.supportOnly && !isSupport) return false;
           const hideKey = Object.entries(tabKeyToChildPath).find(([, path]) => path === child.path)?.[0] as SidebarTabKey | undefined;
           if (hideKey && !sidebarTabs[hideKey]) return false;
           return true;
@@ -639,7 +642,30 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                               {child.icon}
                             </ListItemIcon>
                             <ListItemText
-                              primary={child.label}
+                              primary={
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                                  <span>{child.label}</span>
+                                  {child.supportOnly && (
+                                    <Typography
+                                      component="span"
+                                      sx={{
+                                        fontSize: '0.6rem',
+                                        fontWeight: 600,
+                                        color: 'hsl(var(--primary))',
+                                        backgroundColor: 'hsl(var(--primary) / 0.1)',
+                                        px: 0.6,
+                                        py: 0.15,
+                                        borderRadius: 0.5,
+                                        lineHeight: 1.2,
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.03em',
+                                      }}
+                                    >
+                                      Support
+                                    </Typography>
+                                  )}
+                                </Box>
+                              }
                               primaryTypographyProps={{
                                 fontSize: '0.875rem',
                                 fontWeight: isActive(child.path) ? 500 : 400,
