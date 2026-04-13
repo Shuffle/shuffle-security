@@ -856,36 +856,32 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
         {activeTab === 1 && (
           /* ── Action Tab — inline action form ── */
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-            {/* Agent input (prompt) — at the top */}
+            {/* Agent input (prompt) — prominent at the top */}
             <Box>
-              <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>
-                Prompt
-              </Typography>
               <Box sx={{
                 display: 'flex',
                 alignItems: 'flex-end',
                 gap: 1,
-                borderRadius: 2,
-                border: '1px solid hsl(var(--border))',
+                borderRadius: 2.5,
+                border: '1.5px solid hsl(var(--border))',
                 bgcolor: 'hsl(var(--card))',
-                px: 1.5,
-                py: 1,
+                px: 2,
+                py: 1.5,
+                minHeight: 56,
                 transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
                 '&:focus-within': {
-                  borderColor: 'hsla(var(--primary) / 0.5)',
-                  boxShadow: '0 0 0 3px hsla(var(--primary) / 0.08)',
+                  borderColor: 'hsl(var(--primary))',
+                  boxShadow: '0 0 0 3px hsla(var(--primary) / 0.12)',
                 },
               }}>
-                <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--primary))', fontWeight: 600, userSelect: 'none', fontFamily: "'JetBrains Mono', monospace", lineHeight: '24px' }}>
-                  ›
-                </Typography>
                 <InputBase
                   inputRef={inputRef}
+                  autoFocus
                   multiline
                   maxRows={6}
                   value={agentInput}
                   onChange={(e) => setAgentInput(e.target.value)}
-                  placeholder={selectedApps.length > 0 ? `Ask about ${selectedApps.map(a => a.name.replace(/_/g, ' ')).join(', ')}…` : 'Describe what you want the agent to do…'}
+                  placeholder={selectedApps.length > 0 ? `Ask about ${selectedApps.map(a => a.name.replace(/_/g, ' ')).join(', ')}…` : 'What should the agent do?'}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
                       e.preventDefault();
@@ -894,11 +890,11 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
                   }}
                   fullWidth
                   sx={{
-                    fontSize: '0.82rem',
+                    fontSize: '0.9rem',
                     color: 'hsl(var(--foreground))',
                     '& textarea::placeholder': {
                       color: 'hsl(var(--muted-foreground))',
-                      opacity: 0.7,
+                      opacity: 0.6,
                     },
                   }}
                 />
@@ -911,9 +907,9 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    width: 30,
-                    height: 30,
-                    borderRadius: '8px',
+                    width: 34,
+                    height: 34,
+                    borderRadius: '10px',
                     flexShrink: 0,
                     cursor: agentInput.trim() && !isRunning ? 'pointer' : 'default',
                     bgcolor: agentInput.trim() && !isRunning ? 'hsl(var(--primary))' : 'hsl(var(--muted))',
@@ -923,9 +919,9 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
                   }}
                 >
                   {isRunning ? (
-                    <CircularProgress size={14} sx={{ color: 'inherit' }} />
+                    <CircularProgress size={16} sx={{ color: 'inherit' }} />
                   ) : (
-                    <PlayArrowRoundedIcon sx={{ fontSize: 18 }} />
+                    <PlayArrowRoundedIcon sx={{ fontSize: 20 }} />
                   )}
                 </Box>
               </Box>
