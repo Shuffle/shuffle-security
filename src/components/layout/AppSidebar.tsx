@@ -183,6 +183,8 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
         if (!item.children) return item;
         // Filter children based on tab visibility
         const filteredChildren = item.children.filter(child => {
+          // Hide support-only children for non-support users
+          if (child.supportOnly && !isSupport) return false;
           const hideKey = Object.entries(tabKeyToChildPath).find(([, path]) => path === child.path)?.[0] as SidebarTabKey | undefined;
           if (hideKey && !sidebarTabs[hideKey]) return false;
           return true;
