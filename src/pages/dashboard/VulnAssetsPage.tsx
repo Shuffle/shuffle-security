@@ -328,13 +328,6 @@ const VulnAssetsPage = () => {
               : status === 'offline'
                 ? 'bg-destructive'
                 : 'bg-muted-foreground/40';
-          const statusLabel = status === 'healthy'
-            ? 'Healthy'
-            : status === 'stale'
-              ? 'Stale'
-              : status === 'offline'
-                ? 'Offline'
-                : 'No hosts';
           const timeAgo = latestCheckin
             ? checkinAge < 60
               ? `${Math.round(checkinAge)}s ago`
