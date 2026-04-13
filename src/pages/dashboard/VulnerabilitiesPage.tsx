@@ -369,7 +369,7 @@ const VulnerabilitiesPage = () => {
         </div>
 
         {/* Checks overview */}
-        <div className="grid grid-cols-3 gap-0 divide-x divide-border">
+        <div className="grid grid-cols-4 gap-0 divide-x divide-border">
           {HOST_CHECK_OPTIONS.map(check => (
             <div key={check.id} className="px-4 py-4 flex flex-col items-center text-center gap-2">
               <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-muted-foreground">
