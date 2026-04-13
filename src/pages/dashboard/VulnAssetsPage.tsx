@@ -96,9 +96,16 @@ const VulnAssetsPage = () => {
         </div>
 
         {/* Empty host list */}
-        <div className="border-t border-border px-5 py-6 text-center">
-          <Activity size={28} className="text-muted-foreground/25 mx-auto mb-2" />
-          <p className="text-xs text-muted-foreground">No hosts monitored yet. Add a host to start checking compliance.</p>
+        <div className="border-t border-border px-5 py-16 flex flex-col items-center text-center gap-4">
+          <Activity size={36} className="text-muted-foreground/25" />
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-foreground">No hosts monitored yet</p>
+            <p className="text-xs text-muted-foreground">Deploy a lightweight monitor on an endpoint to start checking compliance and posture.</p>
+          </div>
+          <Button size="lg" className="gap-2 mt-2" onClick={handleOpenAddHost}>
+            <Plus size={16} />
+            Add Host
+          </Button>
         </div>
       </div>
 
