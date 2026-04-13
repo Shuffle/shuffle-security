@@ -642,7 +642,30 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                               {child.icon}
                             </ListItemIcon>
                             <ListItemText
-                              primary={child.label}
+                              primary={
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                                  <span>{child.label}</span>
+                                  {child.supportOnly && (
+                                    <Typography
+                                      component="span"
+                                      sx={{
+                                        fontSize: '0.6rem',
+                                        fontWeight: 600,
+                                        color: 'hsl(var(--primary))',
+                                        backgroundColor: 'hsl(var(--primary) / 0.1)',
+                                        px: 0.6,
+                                        py: 0.15,
+                                        borderRadius: 0.5,
+                                        lineHeight: 1.2,
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.03em',
+                                      }}
+                                    >
+                                      Support
+                                    </Typography>
+                                  )}
+                                </Box>
+                              }
                               primaryTypographyProps={{
                                 fontSize: '0.875rem',
                                 fontWeight: isActive(child.path) ? 500 : 400,
