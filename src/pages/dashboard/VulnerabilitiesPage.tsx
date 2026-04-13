@@ -144,14 +144,23 @@ const VulnerabilitiesPage = () => {
               <TooltipContent>Refresh</TooltipContent>
             </Tooltip>
           </TooltipProvider>
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={handleAiScan}>
+          <Button variant="outline" size="sm" className="gap-1.5 opacity-50 cursor-not-allowed" disabled>
             <Sparkles size={14} />
             AI Scan
           </Button>
-          <Button size="sm" className="gap-1.5">
-            <Plus size={14} />
-            Add Source
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="sm" className="gap-1.5">
+                  <Plus size={14} />
+                  Add Source
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-[220px] text-center">
+                <p className="text-xs">VMS tools, GitHub, Docker, Asset & IAM platforms, and more</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
 
