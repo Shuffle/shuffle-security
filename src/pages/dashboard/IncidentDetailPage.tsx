@@ -6053,6 +6053,16 @@ const IncidentDetailPage = () => {
           loadIncident(false);
         }}
       />
+
+      {/* Threat Intel App Search Drawer */}
+      <AppSearchDrawer
+        open={showThreatIntelDrawer}
+        onClose={() => setShowThreatIntelDrawer(false)}
+        initialQuery="threat intel"
+        title="Threat Intel Apps"
+        subtitle="Enable and authenticate an app to run IOC lookups"
+        priorityCategory="Threat Intel"
+      />
     </motion.div>
   );
 };
