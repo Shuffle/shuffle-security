@@ -1390,20 +1390,27 @@ const IncidentDetailPage = () => {
 
     toFetch.forEach(async (obs) => {
       const obsKey = `${obs.type}::${obs.value}`;
-      // Skip if already fetched or loading
-      if (obsCorrelations[obsKey]?.data?.length > 0 || obsCorrelations[obsKey]?.loading) return;
+      // Skip if already fetched (with data or empty) or currently loading
+      if (obsCorrelations[obsKey] !== undefined) return;
 
-      setObsCorrelations(prev => ({ ...prev, [obsKey]: { loading: true, data: [] } }));
+      setObsCorrelations(prev => {
+        if (prev[obsKey] !== undefined) return prev;
+        return { ...prev, [obsKey]: { loading: true, data: [] } };
+      });
       try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
         const resp = await fetch(getApiUrl('/api/v2/correlations'), {
           method: 'POST',
           credentials: 'include',
+          signal: controller.signal,
           headers: { 'Content-Type': 'application/json', ...getAuthHeader(), ...crossOrgHeaders },
           body: JSON.stringify({
             type: 'value',
             key: obs.value,
           }),
         });
+        clearTimeout(timeout);
         if (resp.ok) {
           const data = await resp.json();
           const corrData = Array.isArray(data) ? data : (data.correlations || data.data || []);
