@@ -144,6 +144,23 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth, onSave, onTestResult }: LocalL
         </Box>
       )}
 
+      {/* OpenAI auth status banner */}
+      {hasOpenAIAuth && (
+        <Alert
+          severity="success"
+          variant="outlined"
+          sx={{
+            borderColor: 'hsl(142, 71%, 45%, 0.3)',
+            bgcolor: 'hsl(142, 71%, 45%, 0.06)',
+            '& .MuiAlert-icon': { color: 'hsl(142, 71%, 45%)' },
+            '& .MuiAlert-message': { fontSize: '0.78rem', color: 'hsl(var(--foreground))' },
+            borderRadius: 2,
+          }}
+        >
+          An authenticated OpenAI app was detected in your account. The agent can use it as an LLM provider even without configuring a local endpoint below.
+        </Alert>
+      )}
+
       {/* URL */}
       <Box>
         <Typography sx={labelSx}>URL</Typography>
