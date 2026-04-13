@@ -59,8 +59,7 @@ import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { runAgent } from '@/services/agentRun';
 import { deduplicateAuthApps, backfillAppImages } from '@/lib/utils';
-import { SingulJS } from '@/lib/singul-local';
-import type { AlgoliaSearchApp, SingulJSHandle } from '@/lib/singul-local';
+import AppSearchDrawer from '@/components/shared/AppSearchDrawer';
 import { InputBase, Avatar } from '@mui/material';
 import type { AgentRun } from '@/services/agentActivity';
 
@@ -166,8 +165,8 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
   const [isRunning, setIsRunning] = useState(false);
   const [runResult, setRunResult] = useState<string | null>(null);
   const [runError, setRunError] = useState<string | null>(null);
-  const [selectedApps, setSelectedApps] = useState<AlgoliaSearchApp[]>([]);
-  const singulRef = useRef<SingulJSHandle>(null);
+  const [selectedApps, setSelectedApps] = useState<{ name: string; icon: string; categories: string[] }[]>([]);
+  const [appSearchOpen, setAppSearchOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Agent tools state
@@ -180,7 +179,7 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
   });
   const [toolsLoading, setToolsLoading] = useState(false);
   const [toolsPopover, setToolsPopover] = useState<{ anchor: HTMLElement; tool: AgentTool } | null>(null);
-  const [mcpSearchAnchor, setMcpSearchAnchor] = useState<HTMLElement | null>(null);
+  
 
   // OpenAI auth status for Local LLM tab indicator
   const [hasOpenAIAuth, setHasOpenAIAuth] = useState(false);
@@ -259,18 +258,22 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
   }
   prevOpenRef.current = open;
 
-  // Pre-populate selectedApps from enabled tools when switching to Action tab
+  // Pre-populate selectedApps from enabled tools when switching to Action tab + auto-focus
   const prevTabRef = useRef(activeTab);
   useEffect(() => {
-    if (activeTab === 1 && prevTabRef.current !== 1 && agentTools.length > 0) {
-      const enabledAppObjects = agentTools
-        .filter(t => enabledTools.has(t.name))
-        .map(t => ({
-          name: t.name,
-          objectID: t.id,
-          image_url: t.image,
-        } as unknown as AlgoliaSearchApp));
-      setSelectedApps(enabledAppObjects);
+    if (activeTab === 1 && prevTabRef.current !== 1) {
+      if (agentTools.length > 0) {
+        const enabledAppObjects = agentTools
+          .filter(t => enabledTools.has(t.name))
+          .map(t => ({
+            name: t.name,
+            icon: t.image,
+            categories: [] as string[],
+          }));
+        setSelectedApps(enabledAppObjects);
+      }
+      // Auto-focus the input
+      setTimeout(() => inputRef.current?.focus(), 150);
     }
     prevTabRef.current = activeTab;
   }, [activeTab, agentTools, enabledTools]);
@@ -297,9 +300,11 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
 
     const result = await runAgent({
       input: agentInput.trim(),
-      ...(selectedApps.length > 0 ? {
+      ...(selectedApps.length === 1 ? {
+        toolName: selectedApps[0].name,
+      } : {}),
+      ...(selectedApps.length > 1 ? {
         toolNames: selectedApps.map(a => a.name),
-        toolIds: selectedApps.map(a => a.objectID || a.name),
       } : {}),
     });
 
@@ -318,6 +323,7 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
   };
 
   return (
+    <>
     <Drawer
       anchor="right"
       open={open}
@@ -850,36 +856,32 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
         {activeTab === 1 && (
           /* ── Action Tab — inline action form ── */
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-            {/* Agent input (prompt) — at the top */}
+            {/* Agent input (prompt) — prominent at the top */}
             <Box>
-              <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>
-                Prompt
-              </Typography>
               <Box sx={{
                 display: 'flex',
                 alignItems: 'flex-end',
                 gap: 1,
-                borderRadius: 2,
-                border: '1px solid hsl(var(--border))',
+                borderRadius: 2.5,
+                border: '1.5px solid hsl(var(--border))',
                 bgcolor: 'hsl(var(--card))',
-                px: 1.5,
-                py: 1,
+                px: 2,
+                py: 1.5,
+                minHeight: 56,
                 transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
                 '&:focus-within': {
-                  borderColor: 'hsla(var(--primary) / 0.5)',
-                  boxShadow: '0 0 0 3px hsla(var(--primary) / 0.08)',
+                  borderColor: 'hsl(var(--primary))',
+                  boxShadow: '0 0 0 3px hsla(var(--primary) / 0.12)',
                 },
               }}>
-                <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--primary))', fontWeight: 600, userSelect: 'none', fontFamily: "'JetBrains Mono', monospace", lineHeight: '24px' }}>
-                  ›
-                </Typography>
                 <InputBase
                   inputRef={inputRef}
+                  autoFocus
                   multiline
                   maxRows={6}
                   value={agentInput}
                   onChange={(e) => setAgentInput(e.target.value)}
-                  placeholder={selectedApps.length > 0 ? `Ask about ${selectedApps.map(a => a.name.replace(/_/g, ' ')).join(', ')}…` : 'Describe what you want the agent to do…'}
+                  placeholder={selectedApps.length > 0 ? `Ask about ${selectedApps.map(a => a.name.replace(/_/g, ' ')).join(', ')}…` : 'What should the agent do?'}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
                       e.preventDefault();
@@ -888,11 +890,11 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
                   }}
                   fullWidth
                   sx={{
-                    fontSize: '0.82rem',
+                    fontSize: '0.9rem',
                     color: 'hsl(var(--foreground))',
                     '& textarea::placeholder': {
                       color: 'hsl(var(--muted-foreground))',
-                      opacity: 0.7,
+                      opacity: 0.6,
                     },
                   }}
                 />
@@ -905,9 +907,9 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    width: 30,
-                    height: 30,
-                    borderRadius: '8px',
+                    width: 34,
+                    height: 34,
+                    borderRadius: '10px',
                     flexShrink: 0,
                     cursor: agentInput.trim() && !isRunning ? 'pointer' : 'default',
                     bgcolor: agentInput.trim() && !isRunning ? 'hsl(var(--primary))' : 'hsl(var(--muted))',
@@ -917,9 +919,9 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
                   }}
                 >
                   {isRunning ? (
-                    <CircularProgress size={14} sx={{ color: 'inherit' }} />
+                    <CircularProgress size={16} sx={{ color: 'inherit' }} />
                   ) : (
-                    <PlayArrowRoundedIcon sx={{ fontSize: 18 }} />
+                    <PlayArrowRoundedIcon sx={{ fontSize: 20 }} />
                   )}
                 </Box>
               </Box>
@@ -928,150 +930,94 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
               </Typography>
             </Box>
 
-            {/* Target MCPs selector — icon bar matching Permissions style */}
+            {/* Target MCPs (optional) */}
             <Box>
               <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>
                 Target MCPs (optional)
               </Typography>
 
-              <Box sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 0.5,
-                bgcolor: 'hsl(var(--muted) / 0.4)',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: 1.5,
-                px: 0.75,
-                py: 0.5,
-                flexWrap: 'wrap',
-              }}>
-                {selectedApps.map((app) => {
-                  const displayName = app.name?.replace(/_/g, ' ') || '';
-                  return (
-                    <Tooltip key={app.objectID || app.name} title={displayName} placement="bottom">
-                      <IconButton
-                        onClick={() => setSelectedApps(prev => prev.filter(a => a.name !== app.name))}
-                        size="small"
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1 }}>
+                {selectedApps.map((app) => (
+                  <Tooltip key={app.name} title={app.name?.replace(/_/g, ' ')} placement="bottom">
+                    <Box
+                      sx={{
+                        position: 'relative',
+                        width: 36,
+                        height: 36,
+                        borderRadius: '50%',
+                        border: '2px solid hsl(var(--border))',
+                        overflow: 'visible',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        bgcolor: 'hsl(var(--card))',
+                        cursor: 'pointer',
+                        transition: 'border-color 0.15s ease',
+                        '&:hover': {
+                          borderColor: 'hsl(var(--destructive))',
+                          '& .remove-badge': { opacity: 1 },
+                        },
+                      }}
+                      onClick={() => setSelectedApps(prev => prev.filter(a => a.name !== app.name))}
+                    >
+                      <Box
+                        component="img"
+                        src={app.icon || `https://shuffler.io/images/apps/${app.name}.png`}
+                        alt={app.name}
+                        sx={{ width: 26, height: 26, borderRadius: '50%', objectFit: 'contain' }}
+                      />
+                      <Box
+                        className="remove-badge"
                         sx={{
-                          width: 30,
-                          height: 30,
-                          border: '1px solid rgba(34, 197, 94, 0.20)',
-                          bgcolor: 'rgba(34, 197, 94, 0.10)',
-                          borderRadius: 1,
-                          transition: 'all 0.15s ease',
-                          '&:hover': {
-                            bgcolor: 'rgba(239, 68, 68, 0.15)',
-                            borderColor: 'rgba(239, 68, 68, 0.3)',
-                          },
+                          position: 'absolute',
+                          top: -4,
+                          right: -4,
+                          width: 14,
+                          height: 14,
+                          borderRadius: '50%',
+                          bgcolor: 'hsl(var(--destructive))',
+                          color: 'hsl(var(--destructive-foreground))',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '0.55rem',
+                          fontWeight: 700,
+                          opacity: 0,
+                          transition: 'opacity 0.15s ease',
                         }}
                       >
-                        <Box
-                          component="img"
-                          src={app.image_url || `https://shuffler.io/images/apps/${app.name}.png`}
-                          alt={app.name}
-                          sx={{ width: 18, height: 18, borderRadius: '50%', objectFit: 'contain' }}
-                        />
-                      </IconButton>
-                    </Tooltip>
-                  );
-                })}
-                <Tooltip title="Add MCP" placement="bottom">
-                  <IconButton
-                    onClick={(e) => setMcpSearchAnchor(mcpSearchAnchor ? null : e.currentTarget)}
-                    size="small"
+                        ✕
+                      </Box>
+                    </Box>
+                  </Tooltip>
+                ))}
+
+                {/* Add button */}
+                <Tooltip title="Add app" placement="bottom">
+                  <Box
+                    onClick={() => setAppSearchOpen(true)}
                     sx={{
-                      width: 28,
-                      height: 28,
+                      width: 36,
+                      height: 36,
+                      borderRadius: '50%',
+                      border: '2px dashed hsl(var(--border))',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
                       color: 'hsl(var(--muted-foreground))',
-                      border: '1px dashed hsl(var(--border))',
-                      borderRadius: 1,
+                      transition: 'all 0.15s ease',
                       '&:hover': {
-                        bgcolor: 'hsl(var(--muted))',
-                        borderStyle: 'solid',
+                        borderColor: 'hsl(var(--primary))',
                         color: 'hsl(var(--primary))',
+                        bgcolor: 'hsla(var(--primary) / 0.06)',
                       },
                     }}
                   >
-                    <AddIcon sx={{ fontSize: 16 }} />
-                  </IconButton>
+                    <AddIcon sx={{ fontSize: 18 }} />
+                  </Box>
                 </Tooltip>
               </Box>
-
-              {/* MCP search popover */}
-              <Popover
-                open={Boolean(mcpSearchAnchor)}
-                anchorEl={mcpSearchAnchor}
-                onClose={() => setMcpSearchAnchor(null)}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-                transformOrigin={{ vertical: 'top', horizontal: 'left' }}
-                slotProps={{
-                  paper: {
-                    sx: {
-                      mt: 0.5,
-                      bgcolor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: 1.5,
-                      width: 280,
-                      overflow: 'hidden',
-                      // Override singul CSS variables
-                      '--singul-input-bg': 'transparent',
-                      '--singul-input-color': 'hsl(var(--foreground))',
-                      '--singul-input-border': 'none',
-                      '--singul-input-shadow': 'none',
-                      '--singul-input-focus-shadow': 'none',
-                      '--singul-input-focus-border': 'transparent',
-                      '--singul-input-padding': '8px 12px',
-                      '--singul-input-font-size': '13px',
-                      '--singul-placeholder-color': 'hsl(var(--muted-foreground))',
-                      '--singul-icon-color': 'hsl(var(--muted-foreground))',
-                      '--singul-dropdown-bg': 'hsl(var(--card))',
-                      '--singul-dropdown-border': 'none',
-                      '--singul-dropdown-shadow': 'none',
-                      '--singul-dropdown-max-height': '200px',
-                      '--singul-item-padding': '6px 10px',
-                      '--singul-item-border': 'none',
-                      '--singul-item-hover-bg': 'hsl(var(--muted))',
-                      '--singul-app-icon-size': '24px',
-                      '--singul-app-icon-border': '1px solid hsl(var(--border))',
-                      '--singul-app-icon-border-radius': '6px',
-                      '--singul-app-name-color': 'hsl(var(--foreground))',
-                      '--singul-app-name-font-size': '12px',
-                      '--singul-app-description-color': 'hsl(var(--muted-foreground))',
-                      '--singul-empty-state-color': 'hsl(var(--muted-foreground))',
-                      '--singul-empty-state-font-size': '12px',
-                    } as any,
-                  },
-                }}
-              >
-                <Box sx={{
-                  '& .singul-results-container': {
-                    mt: 0,
-                    borderTop: '1px solid hsl(var(--border))',
-                    maxHeight: '200px',
-                  },
-                  '& .singul-app-icon': {
-                    bgcolor: 'transparent',
-                  },
-                }}>
-                  <SingulJS
-                    ref={singulRef}
-                    authToken=""
-                    placeholder="Search integrations…"
-                    layout="list"
-                    hitsPerPage={5}
-                    inline={true}
-                    showDescription={false}
-                    showCategories={false}
-                    hideAuthStatus={true}
-                    preventDefault={true}
-                    onAppSelected={(e) => {
-                      if (e?.app && !selectedApps.some(a => a.name === e.app.name)) {
-                        setSelectedApps(prev => [...prev, e.app]);
-                      }
-                    }}
-                  />
-                </Box>
-              </Popover>
             </Box>
 
             {runError && (
@@ -1142,6 +1088,22 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
       {/* View-only Action Drawer for viewing run results */}
       <AgentActionDrawer open={viewDrawerOpen} onClose={() => setViewDrawerOpen(false)} run={viewRun} />
     </Drawer>
+
+    {/* App Search Drawer for Action tab */}
+    <AppSearchDrawer
+      open={appSearchOpen}
+      onClose={() => setAppSearchOpen(false)}
+      title="Find Apps"
+      subtitle="Select apps to target with the agent"
+      onQuickSelect={(app) => {
+        setSelectedApps(prev =>
+          prev.some(a => a.name === app.name)
+            ? prev
+            : [...prev, app]
+        );
+      }}
+    />
+  </>
   );
 };
 
