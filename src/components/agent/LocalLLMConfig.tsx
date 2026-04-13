@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -7,13 +7,14 @@ import {
   CircularProgress,
   Collapse,
   Alert,
+  Skeleton,
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import { ShieldCheck, Wifi, WifiOff, Zap } from 'lucide-react';
 import { toast } from 'sonner';
+import { getApiUrl, getAuthHeader } from '@/config/api';
 
-
-const AGENT_LOCAL_MODEL_KEY = 'agent_local_model';
+const OPENAI_APP_NAME = 'OpenAI';
 
 export interface AgentLocalModel {
   url: string;
@@ -39,19 +40,19 @@ interface LocalLLMConfigProps {
   onTestResult?: (result: LocalLLMTestResult) => void;
 }
 
-/** Load saved local model config from localStorage */
+/** Legacy: Load saved local model config from localStorage (for migration) */
 export const getLocalModel = (): AgentLocalModel => {
   try {
-    const stored = localStorage.getItem(AGENT_LOCAL_MODEL_KEY);
+    const stored = localStorage.getItem('agent_local_model');
     return stored ? JSON.parse(stored) : { url: '', apikey: '', model: '' };
   } catch {
     return { url: '', apikey: '', model: '' };
   }
 };
 
-/** Save local model config to localStorage */
-export const saveLocalModelConfig = (model: AgentLocalModel) => {
-  localStorage.setItem(AGENT_LOCAL_MODEL_KEY, JSON.stringify(model));
+/** @deprecated Use app auth system instead */
+export const saveLocalModelConfig = (_model: AgentLocalModel) => {
+  // No-op: saving is now done via the app auth API
 };
 
 /** Test by sending a quick AI query via the shared askAI service */
@@ -101,10 +102,52 @@ const labelSx = {
 };
 
 const LocalLLMConfig = ({ compact, hasOpenAIAuth, onSave, onTestResult }: LocalLLMConfigProps) => {
-  const [localModel, setLocalModel] = useState<AgentLocalModel>(getLocalModel);
+  const [localModel, setLocalModel] = useState<AgentLocalModel>({ url: '', apikey: '', model: '' });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<LocalLLMTestResult | null>(null);
+  const [existingAuthId, setExistingAuthId] = useState<string | null>(null);
+
+  // Load existing OpenAI auth from the app auth API
+  const loadExistingAuth = useCallback(async () => {
+    setLoading(true);
+    try {
+      const resp = await fetch(getApiUrl('/api/v1/apps/authentication'), {
+        credentials: 'include',
+        headers: { ...getAuthHeader() },
+      });
+      if (resp.ok) {
+        const result = await resp.json();
+        const authData = Array.isArray(result) ? result : (result.data || []);
+        const openaiEntry = authData.find(
+          (a: any) => a.app?.name?.toLowerCase() === 'openai' && a.active
+        );
+        if (openaiEntry) {
+          setExistingAuthId(openaiEntry.id);
+          // Extract fields into our model
+          const fields = openaiEntry.fields || [];
+          const urlField = fields.find((f: any) => f.key === 'url');
+          const apikeyField = fields.find((f: any) => f.key === 'apikey' || f.key === 'api_key');
+          const modelField = fields.find((f: any) => f.key === 'model');
+          setLocalModel({
+            url: urlField?.value || '',
+            apikey: apikeyField?.value || '',
+            model: modelField?.value || '',
+          });
+        }
+      }
+    } catch (err) {
+      console.warn('[LocalLLMConfig] Failed to load existing auth:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadExistingAuth();
+  }, [loadExistingAuth]);
 
   const handleChange = (field: keyof AgentLocalModel, value: string) => {
     setLocalModel(prev => ({ ...prev, [field]: value }));
@@ -112,12 +155,58 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth, onSave, onTestResult }: LocalL
     setTestResult(null);
   };
 
-  const handleSave = () => {
-    saveLocalModelConfig(localModel);
-    setSaved(true);
-    onSave?.(localModel);
-    toast.success('Local LLM config saved');
-    setTimeout(() => setSaved(false), 2000);
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const fields = [
+        { key: 'url', value: localModel.url },
+        { key: 'apikey', value: localModel.apikey },
+        { key: 'model', value: localModel.model },
+      ].filter(f => f.value.trim());
+
+      const payload: Record<string, any> = {
+        label: 'Auth for OpenAI',
+        app: {
+          name: OPENAI_APP_NAME,
+          id: OPENAI_APP_NAME.toLowerCase(),
+          app_version: '1.0.0',
+        },
+        fields,
+        active: true,
+      };
+
+      // If we have an existing auth ID, include it so it updates rather than creating a duplicate
+      if (existingAuthId) {
+        payload.id = existingAuthId;
+      }
+
+      const resp = await fetch(getApiUrl('/api/v1/apps/authentication'), {
+        method: 'PUT',
+        credentials: 'include',
+        headers: {
+          ...getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (resp.ok) {
+        const result = await resp.json();
+        if (result.id) setExistingAuthId(result.id);
+        setSaved(true);
+        onSave?.(localModel);
+        toast.success('OpenAI authentication saved');
+        setTimeout(() => setSaved(false), 2000);
+      } else {
+        const errData = await resp.json().catch(() => null);
+        toast.error(errData?.reason || 'Failed to save authentication');
+      }
+    } catch (err) {
+      console.error('[LocalLLMConfig] Save failed:', err);
+      toast.error('Failed to save authentication');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleTest = async () => {
@@ -128,6 +217,17 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth, onSave, onTestResult }: LocalL
     onTestResult?.(result);
     setTesting(false);
   };
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+        <Skeleton variant="rounded" height={60} sx={{ borderRadius: 2 }} />
+        <Skeleton variant="rounded" height={44} sx={{ borderRadius: 2 }} />
+        <Skeleton variant="rounded" height={44} sx={{ borderRadius: 2 }} />
+        <Skeleton variant="rounded" height={44} sx={{ borderRadius: 2 }} />
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
@@ -141,7 +241,7 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth, onSave, onTestResult }: LocalL
           bgcolor: 'hsla(var(--muted) / 0.3)',
         }}>
           <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.5 }}>
-            Configure a local or self-hosted OpenAI-compatible endpoint for agent operations.
+            Configure an OpenAI-compatible endpoint for agent operations. Credentials are saved securely via the app authentication system.
           </Typography>
         </Box>
       )}
@@ -159,7 +259,7 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth, onSave, onTestResult }: LocalL
             borderRadius: 2,
           }}
         >
-          An authenticated OpenAI app was detected in your account. The agent can use it as an LLM provider even without configuring a local endpoint below.
+          An authenticated OpenAI app was detected in your account. The agent can use it as an LLM provider.
         </Alert>
       )}
 
@@ -169,7 +269,7 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth, onSave, onTestResult }: LocalL
         <InputBase
           value={localModel.url}
           onChange={(e) => handleChange('url', e.target.value)}
-          placeholder="http://localhost:11434/v1"
+          placeholder="https://api.openai.com/v1"
           fullWidth
           sx={inputSx}
         />
@@ -181,7 +281,7 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth, onSave, onTestResult }: LocalL
         <InputBase
           value={localModel.apikey}
           onChange={(e) => handleChange('apikey', e.target.value)}
-          placeholder="sk-... (optional for local models)"
+          placeholder="sk-..."
           type="password"
           fullWidth
           sx={inputSx}
@@ -194,7 +294,7 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth, onSave, onTestResult }: LocalL
         <InputBase
           value={localModel.model}
           onChange={(e) => handleChange('model', e.target.value)}
-          placeholder="llama3, mistral, gpt-4o..."
+          placeholder="gpt-4o, llama3, mistral..."
           fullWidth
           sx={inputSx}
         />
@@ -230,8 +330,9 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth, onSave, onTestResult }: LocalL
       <Box sx={{ display: 'flex', gap: 1.5 }}>
         <Button
           variant="contained"
-          startIcon={saved ? <ShieldCheck size={14} /> : <SaveIcon sx={{ fontSize: 14 }} />}
+          startIcon={saving ? <CircularProgress size={14} sx={{ color: 'inherit' }} /> : saved ? <ShieldCheck size={14} /> : <SaveIcon sx={{ fontSize: 14 }} />}
           onClick={handleSave}
+          disabled={saving || (!localModel.url.trim() && !localModel.apikey.trim())}
           sx={{
             bgcolor: saved ? 'hsl(var(--severity-low))' : 'hsl(var(--primary))',
             color: saved ? '#fff' : 'hsl(var(--primary-foreground))',
@@ -246,7 +347,7 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth, onSave, onTestResult }: LocalL
             },
           }}
         >
-          {saved ? 'Saved' : 'Save'}
+          {saving ? 'Saving…' : saved ? 'Saved' : 'Save'}
         </Button>
         <Button
           variant="outlined"
