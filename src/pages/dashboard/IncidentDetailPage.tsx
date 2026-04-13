@@ -516,6 +516,7 @@ const IncidentDetailPage = () => {
   const [expandedObsKey, setExpandedObsKey] = useState<string | null>(null);
   const [refreshingObservables, setRefreshingObservables] = useState(false);
   const obsRefreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [showThreatIntelDrawer, setShowThreatIntelDrawer] = useState(false);
   const [newObservableType, setNewObservableType] = useState('ip');
   const [newObservableValue, setNewObservableValue] = useState('');
   const [obsFilterTypes, setObsFilterTypes] = useState<string[]>([]);
