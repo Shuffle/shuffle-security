@@ -134,7 +134,7 @@ interface DisplayIncident {
   references?: string[];
   stakeholders?: Stakeholder[];
   observables?: Observable[];
-  enrichments?: Array<{ type: string; value?: string; data?: string }>;
+  enrichments?: Array<{ type: string; value?: string; data?: string; first_seen?: string | number; last_seen?: string | number }>;
   customFields?: Record<string, string | number | boolean>;
   relatedFindings?: string[];
   activity?: ActivityItem[];
@@ -507,7 +507,8 @@ const IncidentDetailPage = () => {
   const [showStakeholderSuggestions, setShowStakeholderSuggestions] = useState(false);
   const [knownStakeholders, setKnownStakeholders] = useState<Stakeholder[]>([]);
   const [editedObservables, setEditedObservables] = useState<Observable[]>([]);
-  const [enrichments, setEnrichments] = useState<Array<{ type: string; value?: string; data?: string }>>([]);
+  const [enrichments, setEnrichments] = useState<Array<{ type: string; value?: string; data?: string; first_seen?: string | number; last_seen?: string | number }>>([]);
+  const [expandedObsKey, setExpandedObsKey] = useState<string | null>(null);
   const [refreshingObservables, setRefreshingObservables] = useState(false);
   const obsRefreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [newObservableType, setNewObservableType] = useState('ip');
@@ -4336,6 +4337,8 @@ const IncidentDetailPage = () => {
             const enrichObs = enrichments.map((enr, idx) => ({
               type: enr.type || 'unknown',
               value: enr.value || enr.data || '',
+              first_seen: enr.first_seen,
+              last_seen: enr.last_seen,
               _idx: idx,
               _source: 'enrichment' as const,
             }));
@@ -4364,9 +4367,19 @@ const IncidentDetailPage = () => {
                       }).slice(0, 3)
                     : [];
                   const actionName = `search_ioc_${obs.type.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+                  const obsRowKey = `${obs._source}-${obs._idx}`;
+                  const isExpanded = expandedObsKey === obsRowKey;
+                  const firstSeen = (obs as any).first_seen;
+                  const lastSeen = (obs as any).last_seen;
+                  const hasTimestamps = firstSeen || lastSeen;
+                  const formatObsTime = (ts: string | number | undefined) => {
+                    if (!ts) return '—';
+                    const d = typeof ts === 'number' ? new Date(ts < 1e12 ? ts * 1000 : ts) : new Date(ts);
+                    return isNaN(d.getTime()) ? String(ts) : d.toLocaleString();
+                  };
                   return (
                     <Box
-                      key={`${obs._source}-${obs._idx}`}
+                      key={obsRowKey}
                       sx={{
                         display: 'flex',
                         flexDirection: 'column',
@@ -4374,8 +4387,12 @@ const IncidentDetailPage = () => {
                         p: 1.5,
                         borderRadius: 1,
                         bgcolor: 'rgba(0,0,0,0.2)',
-                        border: mismatch ? '1px solid rgba(251, 146, 60, 0.3)' : '1px solid rgba(255,255,255,0.06)',
+                        border: mismatch ? '1px solid rgba(251, 146, 60, 0.3)' : isExpanded ? '1px solid hsl(var(--primary) / 0.3)' : '1px solid rgba(255,255,255,0.06)',
+                        cursor: 'pointer',
+                        transition: 'border-color 0.15s ease',
+                        '&:hover': { borderColor: 'hsl(var(--primary) / 0.2)' },
                       }}
+                      onClick={() => setExpandedObsKey(isExpanded ? null : obsRowKey)}
                     >
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <Chip
@@ -4392,6 +4409,11 @@ const IncidentDetailPage = () => {
                         <Typography variant="body2" sx={{ flex: 1, fontFamily: 'monospace', fontSize: '0.8rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
                           {obs.value}
                         </Typography>
+                        {hasTimestamps && (
+                          <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.6rem', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                            {firstSeen ? formatObsTime(firstSeen) : ''}
+                          </Typography>
+                        )}
                         {/* Correlation badge */}
                         {(() => {
                           const obsKey = `${obs.type}::${obs.value}`;
@@ -4402,7 +4424,7 @@ const IncidentDetailPage = () => {
                             <Chip
                               label={`${corr.data.length} corr`}
                               size="small"
-                              onClick={(e) => setObsCorrelationAnchor({ el: e.currentTarget, obsKey })}
+                              onClick={(e) => { e.stopPropagation(); setObsCorrelationAnchor({ el: e.currentTarget, obsKey }); }}
                               sx={{
                                 height: 20,
                                 fontSize: '0.6rem',
@@ -4418,7 +4440,8 @@ const IncidentDetailPage = () => {
                         <Tooltip title={`Run ${actionName} via threat intel apps`} arrow>
                           <IconButton
                             size="small"
-                            onClick={async () => {
+                            onClick={async (e) => {
+                              e.stopPropagation();
                               try {
                                 const resp = await fetch(getApiUrl('/api/v1/apps/categories/run'), {
                                   method: 'POST',
@@ -4454,7 +4477,7 @@ const IncidentDetailPage = () => {
                         {obs._source === 'manual' && (
                           <IconButton
                             size="small"
-                            onClick={() => handleRemoveObservable(obs._idx)}
+                            onClick={(e) => { e.stopPropagation(); handleRemoveObservable(obs._idx); }}
                             sx={{
                               p: 0.5,
                               color: 'text.disabled',
@@ -4465,6 +4488,43 @@ const IncidentDetailPage = () => {
                           </IconButton>
                         )}
                       </Box>
+                      {/* Expanded detail panel */}
+                      {isExpanded && (
+                        <Box sx={{ mt: 1, pt: 1, borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+                          <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+                            <Box>
+                              <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.6rem', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                                Type
+                              </Typography>
+                              <Typography variant="body2" sx={{ fontSize: '0.8rem', fontWeight: 500 }}>{obs.type}</Typography>
+                            </Box>
+                            <Box>
+                              <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.6rem', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                                Source
+                              </Typography>
+                              <Typography variant="body2" sx={{ fontSize: '0.8rem', fontWeight: 500 }}>{obs._source === 'manual' ? 'Manual' : 'Enrichment'}</Typography>
+                            </Box>
+                            <Box>
+                              <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.6rem', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                                First seen
+                              </Typography>
+                              <Typography variant="body2" sx={{ fontSize: '0.8rem', fontWeight: 500 }}>{formatObsTime(firstSeen)}</Typography>
+                            </Box>
+                            <Box>
+                              <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.6rem', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                                Last seen
+                              </Typography>
+                              <Typography variant="body2" sx={{ fontSize: '0.8rem', fontWeight: 500 }}>{formatObsTime(lastSeen)}</Typography>
+                            </Box>
+                          </Box>
+                          <Box>
+                            <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.6rem', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                              Value
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontSize: '0.8rem', fontFamily: 'monospace', wordBreak: 'break-all' }}>{obs.value}</Typography>
+                          </Box>
+                        </Box>
+                      )}
                       {mismatch && (
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, pl: 0.5 }}>
                           <Typography variant="caption" sx={{ color: '#fb923c', fontSize: '0.65rem' }}>
@@ -4480,7 +4540,8 @@ const IncidentDetailPage = () => {
                                   key={st.name}
                                   label={`Change to ${st.name}`}
                                   size="small"
-                                  onClick={() => {
+                                  onClick={(e) => {
+                                    e.stopPropagation();
                                     const updated = [...editedObservables];
                                     updated[obs._idx] = { ...updated[obs._idx], type: st.name };
                                     setEditedObservables(updated);
