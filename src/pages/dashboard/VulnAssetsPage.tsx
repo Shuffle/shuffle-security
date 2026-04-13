@@ -96,10 +96,10 @@ const createSensorGroupEnv = async (name: string, allEnvs: OrbEnvironment[]): Pr
       const freshEnvs: OrbEnvironment[] = await envRes.json();
       const created = freshEnvs.find(e => e.Name === name && e.sensor_group === true);
       if (created) {
-        return { id: created.id || name, name: created.Name, queue: created.Name, auth: String(created.auth || ''), org_id: String(created.org_id || '') };
+        return { id: created.id || name, name: created.Name, queue: created.Name, auth: String(created.auth || ''), org_id: String(created.org_id || ''), hosts: Array.isArray(created.sensor_hosts) ? created.sensor_hosts : [] };
       }
     }
-    return { id: name, name, queue: name, auth: '', org_id: '' };
+    return { id: name, name, queue: name, auth: '', org_id: '', hosts: [] };
   } catch (err) {
     console.error('[VulnAssets] Failed to create sensor group env:', err);
     return null;
