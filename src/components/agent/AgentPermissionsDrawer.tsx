@@ -968,86 +968,65 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
                 Target MCPs (optional)
               </Typography>
 
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1 }}>
+              <Box sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.5,
+                bgcolor: 'hsl(var(--muted) / 0.4)',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: 1.5,
+                px: 0.75,
+                py: 0.5,
+                flexWrap: 'wrap',
+              }}>
                 {selectedApps.map((app) => (
                   <Tooltip key={app.name} title={app.name?.replace(/_/g, ' ')} placement="bottom">
-                    <Box
+                    <IconButton
+                      onClick={() => setSelectedApps(prev => prev.filter(a => a.name !== app.name))}
+                      size="small"
                       sx={{
-                        position: 'relative',
-                        width: 36,
-                        height: 36,
-                        borderRadius: '50%',
-                        border: '2px solid hsl(var(--border))',
-                        overflow: 'visible',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        bgcolor: 'hsl(var(--card))',
-                        cursor: 'pointer',
-                        transition: 'border-color 0.15s ease',
+                        width: 30,
+                        height: 30,
+                        border: '1px solid rgba(34, 197, 94, 0.20)',
+                        bgcolor: 'rgba(34, 197, 94, 0.10)',
+                        borderRadius: 1,
+                        transition: 'all 0.15s ease',
                         '&:hover': {
-                          borderColor: 'hsl(var(--destructive))',
-                          '& .remove-badge': { opacity: 1 },
+                          bgcolor: 'hsl(var(--destructive) / 0.15)',
+                          borderColor: 'hsl(var(--destructive) / 0.4)',
                         },
                       }}
-                      onClick={() => setSelectedApps(prev => prev.filter(a => a.name !== app.name))}
                     >
                       <Box
                         component="img"
                         src={app.icon || `https://shuffler.io/images/apps/${app.name}.png`}
                         alt={app.name}
-                        sx={{ width: 26, height: 26, borderRadius: '50%', objectFit: 'contain' }}
+                        sx={{ width: 18, height: 18, borderRadius: '50%', objectFit: 'contain' }}
                       />
-                      <Box
-                        className="remove-badge"
-                        sx={{
-                          position: 'absolute',
-                          top: -4,
-                          right: -4,
-                          width: 14,
-                          height: 14,
-                          borderRadius: '50%',
-                          bgcolor: 'hsl(var(--destructive))',
-                          color: 'hsl(var(--destructive-foreground))',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '0.55rem',
-                          fontWeight: 700,
-                          opacity: 0,
-                          transition: 'opacity 0.15s ease',
-                        }}
-                      >
-                        ✕
-                      </Box>
-                    </Box>
+                    </IconButton>
                   </Tooltip>
                 ))}
 
                 {/* Add button */}
                 <Tooltip title="Add app" placement="bottom">
-                  <Box
+                  <IconButton
                     onClick={() => setAppSearchOpen(true)}
+                    size="small"
                     sx={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: '50%',
-                      border: '2px dashed hsl(var(--border))',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
+                      width: 28,
+                      height: 28,
                       color: 'hsl(var(--muted-foreground))',
-                      transition: 'all 0.15s ease',
+                      border: '1px dashed hsl(var(--border))',
+                      borderRadius: 1,
                       '&:hover': {
-                        borderColor: 'hsl(var(--primary))',
+                        bgcolor: 'hsl(var(--muted))',
+                        borderStyle: 'solid',
                         color: 'hsl(var(--primary))',
-                        bgcolor: 'hsla(var(--primary) / 0.06)',
                       },
                     }}
                   >
-                    <AddIcon sx={{ fontSize: 18 }} />
-                  </Box>
+                    <AddIcon sx={{ fontSize: 16 }} />
+                  </IconButton>
                 </Tooltip>
               </Box>
             </Box>
