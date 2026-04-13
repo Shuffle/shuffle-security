@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import { ShieldCheck, Wifi, WifiOff, Zap } from 'lucide-react';
+import { toast } from 'sonner';
 
 
 const AGENT_LOCAL_MODEL_KEY = 'agent_local_model';
@@ -115,6 +116,7 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth, onSave, onTestResult }: LocalL
     saveLocalModelConfig(localModel);
     setSaved(true);
     onSave?.(localModel);
+    toast.success('Local LLM config saved');
     setTimeout(() => setSaved(false), 2000);
   };
 
