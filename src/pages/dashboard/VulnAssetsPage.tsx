@@ -581,8 +581,8 @@ const VulnAssetsPage = () => {
     if (hostChecks.log_forwarding && logForwardingEndpoint.trim()) parts.push(`log_forwarding=${logForwardingEndpoint.trim()}`);
 
     if (hostPlatform === 'windows') {
-      const flags = parts.map(p => `--${p}`);
-      return `go run orborus.go ${flags.join(' ')}`;
+      parts.push('os=windows');
+      return `Invoke-WebRequest -Uri '${baseUrl}/api/v1/orborus?${parts.join('&')}' -UseBasicParsing | Invoke-Expression`;
     }
 
     return `curl '${baseUrl}/api/v1/orborus?${parts.join('&')}' | sh`;
