@@ -905,7 +905,7 @@ const VulnAssetsPage = () => {
                                       onChange={e => setCustomAction(e.target.value)}
                                       className="h-7 text-xs flex-1 font-mono"
                                       disabled={isRunning}
-                                      autoFocus
+                                      ref={el => { if (el) requestAnimationFrame(() => el.focus()); }}
                                       onKeyDown={e => {
                                         if (e.key === 'Enter' && customAction.trim() && !isRunning) {
                                           executeHostAction(customAction.trim(), customAction.trim(), host.hostname, host.groupName, host.uuid);
