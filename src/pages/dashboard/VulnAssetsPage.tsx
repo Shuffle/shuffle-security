@@ -169,9 +169,10 @@ const VulnAssetsPage = () => {
   const [syncGroupId, setSyncGroupId] = useState<string>('');
   const [expandedHosts, setExpandedHosts] = useState<Set<string>>(new Set());
   const [osSortAsc, setOsSortAsc] = useState<boolean | null>(null);
-  const [actionExecuting, setActionExecuting] = useState<string | null>(null); // host uuid being acted on
+  const [actionExecuting, setActionExecuting] = useState<Set<string>>(new Set()); // host uuids being acted on
   const [customAction, setCustomAction] = useState('');
-  const [actionDebug, setActionDebug] = useState<{
+
+  type ActionDebugEntry = {
     hostUuid: string;
     actionName: string;
     hostname: string;
@@ -182,7 +183,26 @@ const VulnAssetsPage = () => {
     startedAt: number;
     finishedAt?: number;
     error?: string;
-  } | null>(null);
+  };
+  const [actionDebugMap, setActionDebugMap] = useState<Map<string, ActionDebugEntry>>(new Map());
+
+  const setHostDebug = (hostUuid: string, entry: ActionDebugEntry | null) => {
+    setActionDebugMap(prev => {
+      const next = new Map(prev);
+      if (entry) next.set(hostUuid, entry);
+      else next.delete(hostUuid);
+      return next;
+    });
+  };
+  const updateHostDebug = (hostUuid: string, update: Partial<ActionDebugEntry>) => {
+    setActionDebugMap(prev => {
+      const existing = prev.get(hostUuid);
+      if (!existing) return prev;
+      const next = new Map(prev);
+      next.set(hostUuid, { ...existing, ...update });
+      return next;
+    });
+  };
   const selectedGroup = groups.find(g => g.id === selectedGroupId);
 
   // Get host-actionable permissions from defaults
