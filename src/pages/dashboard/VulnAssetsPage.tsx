@@ -289,13 +289,16 @@ const VulnAssetsPage = () => {
       localStorage.setItem(key, JSON.stringify(stored));
     } catch { /* ignore */ }
   };
-  const updateHostDebug = (hostUuid: string, update: Partial<ActionDebugEntry>) => {
+  const updateHostDebug = (hostUuid: string, targetEntryId: string, update: Partial<ActionDebugEntry>) => {
     setActionHistoryMap(prev => {
       const history = prev.get(hostUuid);
       if (!history || history.length === 0) return prev;
+      const idx = history.findIndex(e => e.entryId === targetEntryId);
+      if (idx < 0) return prev;
       const next = new Map(prev);
-      const latest = { ...history[history.length - 1], ...update };
-      next.set(hostUuid, [...history.slice(0, -1), latest]);
+      const latest = { ...history[idx], ...update };
+      const updated = [...history];
+      updated[idx] = latest;
 
       // Update the persisted entry in localStorage (was already added on push)
       if (latest.status === 'success' || latest.status === 'error') {
