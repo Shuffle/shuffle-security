@@ -645,9 +645,16 @@ const VulnAssetsPage = () => {
     return () => stopSensorPolling();
   }, [addHostStep, addHostOpen, startSensorPolling, stopSensorPolling]);
 
+  const detectPlatform = (): 'linux' | 'macos' | 'windows' => {
+    const ua = navigator.userAgent.toLowerCase();
+    if (ua.includes('mac')) return 'macos';
+    if (ua.includes('win')) return 'windows';
+    return 'linux';
+  };
+
   const handleOpenAddHost = () => {
     setAddHostStep('checks');
-    setHostPlatform('linux');
+    setHostPlatform(detectPlatform());
     setHostChecks({ hd_encrypted: true, screenlock: true, installed_software: true, response_actions: false, log_forwarding: false });
     setLogForwardingEndpoint('');
     setCopied(false);
