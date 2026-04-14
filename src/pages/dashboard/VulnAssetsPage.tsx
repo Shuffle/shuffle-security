@@ -147,7 +147,7 @@ const VulnAssetsPage = () => {
 
   const [addHostOpen, setAddHostOpen] = useState(false);
   const [addHostStep, setAddHostStep] = useState<'checks' | 'deploy'>('checks');
-  const [hostPlatform, setHostPlatform] = useState<'unix' | 'windows'>('unix');
+  const [hostPlatform, setHostPlatform] = useState<'linux' | 'macos' | 'windows'>('linux');
   const [installMode, setInstallMode] = useState<'easy' | 'custom'>('easy');
   const [hostChecks, setHostChecks] = useState({
     hd_encrypted: true,
@@ -648,10 +648,11 @@ const VulnAssetsPage = () => {
     return () => stopSensorPolling();
   }, [addHostStep, addHostOpen, startSensorPolling, stopSensorPolling]);
 
-  const detectPlatform = (): 'unix' | 'windows' => {
+  const detectPlatform = (): 'linux' | 'macos' | 'windows' => {
     const ua = navigator.userAgent.toLowerCase();
     if (ua.includes('win')) return 'windows';
-    return 'unix';
+    if (ua.includes('mac')) return 'macos';
+    return 'linux';
   };
 
   const handleOpenAddHost = () => {
@@ -1461,7 +1462,8 @@ const VulnAssetsPage = () => {
                 <Label className="text-xs font-medium">Platform</Label>
                 <div className="flex gap-2">
                   {([
-                    { value: 'unix' as const, label: 'Linux / macOS' },
+                    { value: 'linux' as const, label: 'Linux' },
+                    { value: 'macos' as const, label: 'macOS' },
                     { value: 'windows' as const, label: 'Windows' },
                   ]).map(p => (
                     <Button
@@ -1573,7 +1575,7 @@ const VulnAssetsPage = () => {
                     <Label className="text-xs font-medium">3. Run as a background service</Label>
                     <p className="text-xs text-muted-foreground">
                       To keep the monitor running persistently, set up the command above as a service.{' '}
-                      {hostPlatform === 'unix' ? (
+                      {hostPlatform !== 'windows' ? (
                         <a href="https://www.freedesktop.org/software/systemd/man/systemd.service.html" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
                           systemd docs →
                         </a>
