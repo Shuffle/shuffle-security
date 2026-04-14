@@ -344,7 +344,8 @@ const VulnAssetsPage = () => {
     abortControllersRef.current.delete(hostUuid);
     // Immediately update UI
     updateHostDebug(hostUuid, { status: 'error', finishedAt: Date.now(), error: 'Aborted by user' });
-    setActionExecuting(prev => { const next = new Set(prev); next.delete(hostUuid); return next; });
+    // Don't remove from actionExecuting immediately — keep popover open to show debug info.
+    // It will be cleared when actionDebugMap is reset on next action or popover close.
   };
 
   // Aggregate all hosts across all sensor groups
