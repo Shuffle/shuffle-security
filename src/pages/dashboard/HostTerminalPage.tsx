@@ -541,12 +541,14 @@ const HostTerminalPage = () => {
           const isExpanded = expandedEntries.has(entry.entryId);
           const isLoading = loadingEntries.has(entry.entryId);
           const canReload = !isRunning && !!entry.executionId && !!entry.authorization;
+          // historyIndex 0 = most recent (last entry), 1 = second-to-last, etc.
+          const isHistorySelected = historyIndex >= 0 && i === (actionHistory.length - 1 - historyIndex);
 
           return (
-            <div key={entry.entryId} className={`border-b border-border/50 last:border-b-0 ${isLatest ? 'bg-primary/5 ring-1 ring-inset ring-primary/20' : ''}`}>
+            <div key={entry.entryId} className={`border-b border-border/50 last:border-b-0 ${isLatest ? 'bg-primary/5 ring-1 ring-inset ring-primary/20' : ''} ${isHistorySelected ? 'ring-1 ring-inset ring-primary/40' : ''}`}>
               <button
                 type="button"
-                className={`w-full text-left px-6 py-2.5 flex items-center gap-3 transition-colors hover:bg-muted/30 ${isLatest ? 'bg-primary/10' : isRunning ? 'bg-muted/30' : 'bg-muted/10'}`}
+                className={`w-full text-left px-6 py-2.5 flex items-center gap-3 transition-colors hover:bg-muted/30 ${isHistorySelected ? 'bg-primary/15' : isLatest ? 'bg-primary/10' : isRunning ? 'bg-muted/30' : 'bg-muted/10'}`}
                 onClick={() => {
                   if (isRunning) return;
                   if (hasOutput) {
