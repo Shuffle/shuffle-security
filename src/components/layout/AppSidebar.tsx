@@ -68,7 +68,7 @@ interface NavItem {
 }
 
 const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: boolean): NavItem[] => [
-  ...(isSupport ? [{ label: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/dashboard' }] : []),
+  { label: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/dashboard', supportOnly: true },
   { 
     label: entityLabel, 
     icon: <WarningAmberIcon />,
@@ -716,7 +716,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                             color: 'hsl(var(--foreground))',
                           }}
                         />
-                        {item.label === 'Dashboard' && (
+                        {item.supportOnly && (
                           <Typography
                             sx={{
                               fontSize: '0.6rem',
