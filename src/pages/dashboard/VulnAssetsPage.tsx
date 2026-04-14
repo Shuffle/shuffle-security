@@ -190,24 +190,31 @@ const VulnAssetsPage = () => {
     /** Whether the action result reported success */
     actionSuccess?: boolean;
   };
-  const [actionDebugMap, setActionDebugMap] = useState<Map<string, ActionDebugEntry>>(new Map());
+  const [actionHistoryMap, setActionHistoryMap] = useState<Map<string, ActionDebugEntry[]>>(new Map());
   const abortControllersRef = useRef<Map<string, AbortController>>(new Map());
   const pollingActiveRef = useRef<Map<string, boolean>>(new Map());
 
-  const setHostDebug = (hostUuid: string, entry: ActionDebugEntry | null) => {
-    setActionDebugMap(prev => {
+  /** Get the latest (current) debug entry for a host */
+  const getLatestDebug = (hostUuid: string): ActionDebugEntry | undefined => {
+    const history = actionHistoryMap.get(hostUuid);
+    return history?.[history.length - 1];
+  };
+
+  const pushHostDebug = (hostUuid: string, entry: ActionDebugEntry) => {
+    setActionHistoryMap(prev => {
       const next = new Map(prev);
-      if (entry) next.set(hostUuid, entry);
-      else next.delete(hostUuid);
+      const existing = next.get(hostUuid) || [];
+      next.set(hostUuid, [...existing, entry]);
       return next;
     });
   };
   const updateHostDebug = (hostUuid: string, update: Partial<ActionDebugEntry>) => {
-    setActionDebugMap(prev => {
-      const existing = prev.get(hostUuid);
-      if (!existing) return prev;
+    setActionHistoryMap(prev => {
+      const history = prev.get(hostUuid);
+      if (!history || history.length === 0) return prev;
       const next = new Map(prev);
-      next.set(hostUuid, { ...existing, ...update });
+      const latest = { ...history[history.length - 1], ...update };
+      next.set(hostUuid, [...history.slice(0, -1), latest]);
       return next;
     });
   };
