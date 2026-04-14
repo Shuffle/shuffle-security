@@ -1446,9 +1446,9 @@ const VulnAssetsPage = () => {
                   ]).map(m => (
                     <Button
                       key={m.value}
-                      variant={installMode === m.value ? 'default' : 'outline'}
+                      variant="outline"
                       size="sm"
-                      className="flex-1"
+                      className={`flex-1 ${installMode === m.value ? 'border-primary text-primary' : ''}`}
                       onClick={() => setInstallMode(m.value)}
                     >
                       {m.label}
@@ -1468,9 +1468,9 @@ const VulnAssetsPage = () => {
                   ]).map(p => (
                     <Button
                       key={p.value}
-                      variant={hostPlatform === p.value ? 'default' : 'outline'}
+                      variant="outline"
                       size="sm"
-                      className="flex-1"
+                      className={`flex-1 ${hostPlatform === p.value ? 'border-primary text-primary' : ''}`}
                       onClick={() => setHostPlatform(p.value)}
                     >
                       {p.label}
