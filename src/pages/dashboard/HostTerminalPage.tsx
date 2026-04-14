@@ -32,6 +32,7 @@ type ActionDebugEntry = {
   finishedAt?: number;
   error?: string;
   executionId?: string;
+  authorization?: string;
   actionOutput?: string;
   actionSuccess?: boolean;
 };
@@ -42,6 +43,7 @@ type StoredEntry = {
   startedAt: number;
   finishedAt?: number;
   executionId?: string;
+  authorization?: string;
   actionOutput?: string;
   error?: string;
 };
@@ -64,6 +66,7 @@ const saveSession = (hostUuid: string, entries: ActionDebugEntry[]) => {
       startedAt: e.startedAt,
       finishedAt: e.finishedAt,
       executionId: e.executionId,
+      authorization: e.authorization,
     }));
   // Merge with existing (avoid duplicates by startedAt)
   const existing = getStoredSession(hostUuid);
@@ -270,7 +273,7 @@ const HostTerminalPage = () => {
         (parsed as Record<string, unknown>).execution_id
       ) {
         const execId = (parsed as Record<string, unknown>).execution_id as string;
-        updateMyEntry({ status: 'polling', responseStatus: resp.status, responseBody: text, executionId: execId });
+        updateMyEntry({ status: 'polling', responseStatus: resp.status, responseBody: text, executionId: execId, authorization: ((parsed as any).authorization as string) || execId });
 
         const maxAttempts = 900;
         const intervalMs = 2000;
