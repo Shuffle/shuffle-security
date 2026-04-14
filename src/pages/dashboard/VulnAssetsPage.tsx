@@ -262,7 +262,7 @@ const VulnAssetsPage = () => {
         { name: 'sensor_group', value: groupName },
       ],
     };
-    setHostDebug(hostUuid, {
+    pushHostDebug(hostUuid, {
       hostUuid,
       actionName,
       hostname,
@@ -388,7 +388,7 @@ const VulnAssetsPage = () => {
     abortControllersRef.current.delete(hostUuid);
 
     // Send server-side abort if we have an execution_id
-    const debugEntry = actionDebugMap.get(hostUuid);
+    const debugEntry = getLatestDebug(hostUuid);
     if (debugEntry?.executionId) {
       fetch(getApiUrl(`/api/v1/workflows/${debugEntry.executionId}/executions/${debugEntry.executionId}/abort`), {
         method: 'GET',
@@ -798,7 +798,7 @@ const VulnAssetsPage = () => {
                         </PopoverTrigger>
                         <PopoverContent align="end" className="w-72 p-0" onClick={e => e.stopPropagation()}>
                           {/* Debug info if action running/completed for this host */}
-                          {(() => { const actionDebug = actionDebugMap.get(host.uuid); return actionDebug ? (
+                          {(() => { const hostHistory = actionHistoryMap.get(host.uuid) || []; const actionDebug = hostHistory[hostHistory.length - 1]; return actionDebug ? (
                             <div>
                               <div className="px-3 py-2 border-b border-border flex items-center gap-2">
                                 {(actionDebug.status === 'sending' || actionDebug.status === 'polling') && <Loader2 size={12} className="animate-spin text-primary" />}
@@ -869,7 +869,7 @@ const VulnAssetsPage = () => {
                               </div>
                               {(actionDebug.status === 'success' || actionDebug.status === 'error') && (
                                 <div className="px-3 py-2 border-t border-border">
-                                  <Button variant="ghost" size="sm" className="w-full h-7 text-xs" onClick={() => { setHostDebug(host.uuid, null); setActionExecuting(prev => { const next = new Set(prev); next.delete(host.uuid); return next; }); }}>
+                                  <Button variant="ghost" size="sm" className="w-full h-7 text-xs" onClick={() => { setActionExecuting(prev => { const next = new Set(prev); next.delete(host.uuid); return next; }); }}>
                                     Run another action
                                   </Button>
                                 </div>
