@@ -43,7 +43,7 @@ const HOST_CHECK_OPTIONS = [
   { id: 'hd_encrypted' as const, label: 'HD Encrypted', description: 'Check if disk encryption is enabled (FileVault, BitLocker, LUKS)', icon: <HardDrive size={16} />, disabled: false },
   { id: 'screenlock' as const, label: 'Screenlock Enabled', description: 'Verify automatic screen lock is configured with max 15 min idle time', icon: <Lock size={16} />, disabled: false },
   { id: 'installed_software' as const, label: 'Installed Software', description: 'Inventory of installed applications and versions', icon: <Package size={16} />, disabled: false },
-  { id: 'response_actions' as const, label: 'Response Actions', description: 'Enable automated response actions on this host', icon: <Zap size={16} />, disabled: true },
+  { id: 'response_actions' as const, label: 'Response Actions', description: 'Enable automated response actions on this host', icon: <Zap size={16} />, disabled: false },
   { id: 'log_forwarding' as const, label: 'Log Forwarding', description: 'Forward host logs to a remote endpoint for centralized collection', icon: <Send size={16} />, disabled: true },
 ];
 
@@ -153,6 +153,7 @@ const VulnAssetsPage = () => {
     log_forwarding: false,
   });
   const [logForwardingEndpoint, setLogForwardingEndpoint] = useState('');
+  const [responseActionMode, setResponseActionMode] = useState<'controlled' | 'full'>('controlled');
   const [copied, setCopied] = useState(false);
   const [sensorDetected, setSensorDetected] = useState(false);
   const [sensorPolling, setSensorPolling] = useState(false);
@@ -362,7 +363,10 @@ const VulnAssetsPage = () => {
     if (hostChecks.installed_software) flags.push('--software_list_enabled=true');
     if (hostChecks.hd_encrypted) flags.push('--hd_encrypted_check=true');
     if (hostChecks.screenlock) flags.push('--screenlock_check=true');
-    if (hostChecks.response_actions) flags.push('--response_actions_enabled=true');
+    if (hostChecks.response_actions) {
+      flags.push('--response_actions_enabled=true');
+      flags.push(`--response_actions_mode=${responseActionMode}`);
+    }
     if (hostChecks.log_forwarding && logForwardingEndpoint.trim()) flags.push(`--log_forwarding=${logForwardingEndpoint.trim()}`);
     return `go run orborus.go ${flags.join(' ')}`;
   };
@@ -1052,6 +1056,29 @@ const VulnAssetsPage = () => {
                           </div>
                         </div>
                       </label>
+                      {check.id === 'response_actions' && hostChecks.response_actions && (
+                        <div className="ml-9 mt-1.5 mb-1 space-y-1.5">
+                          <span className="text-xs text-muted-foreground">Control level</span>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              className={`flex-1 rounded-md border px-3 py-2 text-left transition-colors ${responseActionMode === 'controlled' ? 'border-primary bg-primary/10' : 'border-border hover:bg-muted/50'}`}
+                              onClick={() => setResponseActionMode('controlled')}
+                            >
+                              <span className="text-sm font-medium text-foreground block">Controlled</span>
+                              <span className="text-[0.65rem] text-muted-foreground">Predefined files are downloaded and executed</span>
+                            </button>
+                            <button
+                              type="button"
+                              className={`flex-1 rounded-md border px-3 py-2 text-left transition-colors ${responseActionMode === 'full' ? 'border-primary bg-primary/10' : 'border-border hover:bg-muted/50'}`}
+                              onClick={() => setResponseActionMode('full')}
+                            >
+                              <span className="text-sm font-medium text-foreground block">Full Control</span>
+                              <span className="text-[0.65rem] text-muted-foreground">Full remote command execution (RCE)</span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
                       {check.id === 'log_forwarding' && hostChecks.log_forwarding && (
                         <div className="ml-9 mt-1.5 mb-1">
                           <Input
