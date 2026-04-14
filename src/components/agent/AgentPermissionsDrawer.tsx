@@ -65,21 +65,7 @@ interface AgentPermissionsDrawerProps {
 
 const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsDrawerProps) => {
   const navigate = useNavigate();
-  const {
-    categories,
-    isLoading,
-    isSaving,
-    error,
-    totalPermissions,
-    enabledPermissions,
-    togglePermission,
-    toggleCategory,
-    resetToDefaults,
-  } = useAgentPermissions();
 
-  const [expandedCategories, setExpandedCategories] = useState<string[]>(
-    () => categories.map(c => c.id)
-  );
   const [activeTab, setActiveTab] = useState(0);
   const [viewRun, setViewRun] = useState<AgentRun | null>(null);
   const [viewDrawerOpen, setViewDrawerOpen] = useState(false);
