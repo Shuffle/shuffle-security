@@ -566,27 +566,26 @@ const VulnAssetsPage = () => {
 
   const getDeployCommand = () => {
     const baseUrl = API_CONFIG.baseUrl;
-    const params = new URLSearchParams();
-    params.set('base_url', baseUrl);
-    params.set('sensor_mode', 'true');
+    const parts: string[] = [];
+    parts.push(`base_url=${baseUrl}`);
+    parts.push('sensor_mode=true');
     if (selectedGroup) {
-      params.set('queue', selectedGroup.queue);
-      if (selectedGroup.auth) params.set('auth', selectedGroup.auth);
-      if (selectedGroup.org_id) params.set('org_id', selectedGroup.org_id);
+      parts.push(`queue=${selectedGroup.queue}`);
+      if (selectedGroup.auth) parts.push(`auth=${selectedGroup.auth}`);
+      if (selectedGroup.org_id) parts.push(`org_id=${selectedGroup.org_id}`);
     }
-    if (hostChecks.installed_software) params.set('software_list_enabled', 'true');
-    if (hostChecks.hd_encrypted) params.set('hd_encrypted_check', 'true');
-    if (hostChecks.screenlock) params.set('screenlock_check', 'true');
-    if (hostChecks.response_actions) params.set('response_actions', responseActionMode);
-    if (hostChecks.log_forwarding && logForwardingEndpoint.trim()) params.set('log_forwarding', logForwardingEndpoint.trim());
+    if (hostChecks.installed_software) parts.push('software_list_enabled=true');
+    if (hostChecks.hd_encrypted) parts.push('hd_encrypted_check=true');
+    if (hostChecks.screenlock) parts.push('screenlock_check=true');
+    if (hostChecks.response_actions) parts.push(`response_actions=${responseActionMode}`);
+    if (hostChecks.log_forwarding && logForwardingEndpoint.trim()) parts.push(`log_forwarding=${logForwardingEndpoint.trim()}`);
 
     if (hostPlatform === 'windows') {
-      // Windows: keep go run style for now
-      const flags = Array.from(params.entries()).map(([k, v]) => `--${k}=${v}`);
+      const flags = parts.map(p => `--${p}`);
       return `go run orborus.go ${flags.join(' ')}`;
     }
 
-    return `curl '${baseUrl}/api/v1/orborus?${params.toString()}' | sh`;
+    return `curl '${baseUrl}/api/v1/orborus?${parts.join('&')}' | sh`;
   };
 
   const handleCopyCommand = () => {
