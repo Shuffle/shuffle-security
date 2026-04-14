@@ -189,8 +189,50 @@ const PermissionsPanel = ({ compact = false }: PermissionsPanelProps) => {
     e.stopPropagation();
     fetchHosts();
     setSelectedHosts(new Set());
+    setExecuteResult(null);
     setHostPopover({ anchor: e.currentTarget as HTMLElement, perm });
   };
+
+  const executeOnHosts = useCallback(async () => {
+    if (!hostPopover || selectedHosts.size === 0) return;
+    setIsExecuting(true);
+    setExecuteResult(null);
+    try {
+      const hostnames = monitoredHosts
+        .filter(h => selectedHosts.has(h.uuid))
+        .map(h => h.hostname);
+
+      const resp = await fetch(getApiUrl('/api/v1/apps/sensors/run'), {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeader(),
+        },
+        body: JSON.stringify({
+          app_id: 'sensors',
+          app_name: 'sensors',
+          name: 'respond',
+          parameters: [
+            { name: 'action', value: hostPopover.perm.id },
+            { name: 'hosts', value: hostnames.join(',') },
+          ],
+        }),
+      });
+
+      if (resp.ok) {
+        setExecuteResult({ success: true, message: `Action sent to ${hostnames.length} host${hostnames.length > 1 ? 's' : ''}` });
+        setTimeout(() => setHostPopover(null), 1500);
+      } else {
+        const text = await resp.text().catch(() => '');
+        setExecuteResult({ success: false, message: text || `Request failed (${resp.status})` });
+      }
+    } catch (err) {
+      setExecuteResult({ success: false, message: err instanceof Error ? err.message : 'Request failed' });
+    } finally {
+      setIsExecuting(false);
+    }
+  }, [hostPopover, selectedHosts, monitoredHosts]);
 
   const toggleHostSelection = (uuid: string) => {
     setSelectedHosts(prev => {
