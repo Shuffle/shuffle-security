@@ -486,13 +486,6 @@ const VulnAssetsPage = () => {
     return osSortAsc ? cmp : -cmp;
   });
 
-  // Hydrate history from localStorage when hosts become available
-  const hostUuidsKey = allHostsRaw.map(h => h.uuid).join(',');
-  useEffect(() => {
-    if (allHostsRaw.length > 0) {
-      hydrateAllHosts(allHostsRaw.map(h => h.uuid));
-    }
-  }, [hostUuidsKey, hydrateAllHosts]);
 
   const loadGroups = useCallback(async () => {
     setGroupsLoading(true);
