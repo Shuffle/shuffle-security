@@ -231,11 +231,6 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
     );
   };
 
-  const getCategoryStats = (cat: AgentPermissionCategory) => {
-    const enabled = cat.permissions.filter(p => p.enabled).length;
-    const total = cat.permissions.length;
-    return { enabled, total, allEnabled: enabled === total, noneEnabled: enabled === 0 };
-  };
 
   const handleRunAgent = async () => {
     if (!agentInput.trim() || isRunning) return;
