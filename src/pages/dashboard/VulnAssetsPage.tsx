@@ -460,7 +460,7 @@ const VulnAssetsPage = () => {
         }
         // Timed out
         if (pollingActiveRef.current.get(hostUuid)) {
-          updateHostDebug(hostUuid, { status: 'error', finishedAt: Date.now(), error: 'Timed out waiting for execution result (30 min).' });
+          updateHostDebug(hostUuid, entryId, { status: 'error', finishedAt: Date.now(), error: 'Timed out waiting for execution result (30 min).' });
           toast.error('Action timed out', { description: 'No result after 30 minutes.' });
         }
       } else {
