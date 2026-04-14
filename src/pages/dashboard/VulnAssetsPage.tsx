@@ -187,7 +187,7 @@ const VulnAssetsPage = () => {
         setActionHistoryMap(prev => {
           if ((prev.get(hostUuid) || []).length > 0) return prev; // already has entries
           const next = new Map(prev);
-          next.set(hostUuid, stored.map((e: any, i: number) => ({
+          next.set(hostUuid, stored.map((e: any) => ({
             actionName: e.actionName || '',
             status: e.status || 'error',
             startedAt: e.startedAt || 0,
@@ -195,7 +195,10 @@ const VulnAssetsPage = () => {
             executionId: e.executionId,
             actionOutput: e.actionOutput,
             error: e.error,
-          })));
+            hostUuid,
+            hostname: '',
+            requestBody: {},
+          } as ActionDebugEntry)));
           return next;
         });
       }
