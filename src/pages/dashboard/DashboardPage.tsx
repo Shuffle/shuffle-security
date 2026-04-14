@@ -638,7 +638,7 @@ const DashboardPage = () => {
         icon: <Monitor size={20} />,
         status: 'not-started',
         ctaLabel: 'Set Up',
-        ctaPath: '/vulnerabilities/assets',
+        ctaPath: '/monitors',
         priority: 6,
       },
     ];

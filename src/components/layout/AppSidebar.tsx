@@ -96,7 +96,7 @@ const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: bool
     path: '/vulnerabilities',
     children: [
       { label: 'Assets', path: '/assets', icon: <HardDrive size={16} />, disabled: true },
-      { label: 'Monitors', path: '/vulnerabilities/assets', icon: <Radar size={16} /> },
+      { label: 'Monitors', path: '/monitors', icon: <Radar size={16} /> },
     ],
   }] : [{
     label: 'Assets',
