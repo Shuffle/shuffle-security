@@ -286,6 +286,7 @@ const VulnAssetsPage = () => {
             startedAt: latest.startedAt,
             finishedAt: latest.finishedAt,
             executionId: latest.executionId,
+            authorization: latest.authorization,
           };
           const alreadyStored = existing.some((e: any) => e.startedAt === entry.startedAt && e.actionName === entry.actionName);
           if (!alreadyStored) {
