@@ -1589,6 +1589,7 @@ const VulnAssetsPage = () => {
                           const bin = hostPlatform === 'windows' ? '.\\orborus.exe' : './orborus';
                           navigator.clipboard.writeText(`${bin} ${flags.join(' ')}`);
                           setCopied(true);
+                          activatePolling();
                           setTimeout(() => setCopied(false), 2000);
                         }}
                       >
