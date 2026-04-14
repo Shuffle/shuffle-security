@@ -45,8 +45,8 @@ const HOST_CHECK_OPTIONS = [
   { id: 'hd_encrypted' as const, label: 'HD Encrypted', description: 'Check if disk encryption is enabled (FileVault, BitLocker, LUKS)', icon: <HardDrive size={16} />, disabled: false },
   { id: 'screenlock' as const, label: 'Screenlock Enabled', description: 'Verify automatic screen lock is configured with max 15 min idle time', icon: <Lock size={16} />, disabled: false },
   { id: 'installed_software' as const, label: 'Installed Software', description: 'Inventory of installed applications and versions', icon: <Package size={16} />, disabled: false },
-  { id: 'response_actions' as const, label: 'Response Actions', description: 'Enable automated response actions on this host', icon: <Zap size={16} />, disabled: false },
   { id: 'log_forwarding' as const, label: 'Log Forwarding', description: 'Forward host logs to a remote endpoint for centralized collection', icon: <Send size={16} />, disabled: true },
+  { id: 'response_actions' as const, label: 'Response Actions', description: 'Enable automated response actions on this host', icon: <Zap size={16} />, disabled: false },
 ];
 
 interface SensorHost {
@@ -1358,7 +1358,7 @@ const VulnAssetsPage = () => {
                 <Label className="text-xs font-medium">Checks to Enable</Label>
                 <div className="grid grid-cols-2 gap-2">
                   {HOST_CHECK_OPTIONS.map(check => (
-                    <div key={check.id} className={check.id === 'response_actions' && hostChecks.response_actions ? 'col-span-2' : check.id === 'log_forwarding' && hostChecks.log_forwarding ? 'col-span-2' : ''}>
+                    <div key={check.id} className={check.id === 'response_actions' ? 'col-span-2' : check.id === 'log_forwarding' && hostChecks.log_forwarding ? 'col-span-2' : ''}>
                       <label
                         className={`flex items-center gap-3 rounded-lg border border-border px-3 py-2.5 transition-colors ${check.disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-muted/50'}`}
                       >
