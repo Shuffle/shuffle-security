@@ -15,6 +15,7 @@ export interface AgentPermission {
   risk: RiskLevel;
   enabled: boolean;
   category: string;
+  disabled?: boolean;
 }
 
 export interface AgentPermissionCategory {
@@ -22,6 +23,7 @@ export interface AgentPermissionCategory {
   label: string;
   icon: string; // lucide icon name
   permissions: AgentPermission[];
+  disabled?: boolean;
 }
 
 const DATASTORE_KEY = 'agent_permissions';
