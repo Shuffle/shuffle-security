@@ -684,6 +684,7 @@ const VulnAssetsPage = () => {
                     </div>
                     {/* Actions popover */}
                     <div className="flex items-center justify-end" onClick={e => e.stopPropagation()}>
+                      {responseActionsOn ? (
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary">
