@@ -308,31 +308,28 @@ const VulnAssetsPage = () => {
             updateHostDebug(hostUuid, { status: 'success', responseBody: pollText, finishedAt: Date.now() });
             toast.success('Action completed', { description: `"${actionName}" → ${hostname}` });
             return;
-          } catch (err) {
-            if (controller.signal.aborted) {
-              updateHostDebug(hostUuid, { status: 'error', finishedAt: Date.now(), error: 'Aborted by user' });
-              return;
-            }
+          } catch {
+            if (!pollingActiveRef.current.get(hostUuid)) return;
             continue;
           }
         }
         // Timed out
-        updateHostDebug(hostUuid, { status: 'error', finishedAt: Date.now(), error: 'Timed out waiting for execution result (30 min).' });
-        toast.error('Action timed out', { description: 'No result after 30 minutes.' });
+        if (pollingActiveRef.current.get(hostUuid)) {
+          updateHostDebug(hostUuid, { status: 'error', finishedAt: Date.now(), error: 'Timed out waiting for execution result (30 min).' });
+          toast.error('Action timed out', { description: 'No result after 30 minutes.' });
+        }
       } else {
         // Immediate result (no execution_id)
         updateHostDebug(hostUuid, { status: 'success', responseStatus: resp.status, responseBody: text, finishedAt: Date.now() });
         toast.success('Action sent', { description: `"${actionName}" → ${hostname}` });
       }
     } catch (err) {
-      if (controller.signal.aborted) {
-        updateHostDebug(hostUuid, { status: 'error', finishedAt: Date.now(), error: 'Aborted by user' });
-        return;
-      }
+      if (!pollingActiveRef.current.get(hostUuid)) return;
       const msg = err instanceof Error ? err.message : 'Request error';
       updateHostDebug(hostUuid, { status: 'error', finishedAt: Date.now(), error: msg });
       toast.error('Action failed', { description: msg });
     } finally {
+      pollingActiveRef.current.delete(hostUuid);
       abortControllersRef.current.delete(hostUuid);
       setActionExecuting(prev => { const next = new Set(prev); next.delete(hostUuid); return next; });
       loadGroups();
