@@ -112,9 +112,9 @@ const HostTerminalPage = () => {
 
   const executeHostAction = useCallback(async (actionId: string, actionName: string, isPredefined = false) => {
     if (!hostUuid) return;
-    const entryIndex = actionHistory.length; // will be the index of the new entry
+    const myId = ++entryIdCounter;
     const controller = new AbortController();
-    const abortKey = `${hostUuid}_${Date.now()}`;
+    const abortKey = `entry_${myId}`;
     abortControllersRef.current.set(abortKey, controller);
     pollingActiveRef.current.set(abortKey, true);
 
@@ -130,6 +130,7 @@ const HostTerminalPage = () => {
     };
 
     const newEntry: ActionDebugEntry = {
+      entryId: myId,
       hostUuid,
       actionName,
       hostname,
@@ -138,20 +139,11 @@ const HostTerminalPage = () => {
       startedAt: Date.now(),
     };
 
-    // We need to use functional setState to get the correct index
-    let myIndex = -1;
-    setActionHistory(prev => {
-      myIndex = prev.length;
-      return [...prev, newEntry];
-    });
-
-    // Small delay to let state settle
-    await new Promise(r => setTimeout(r, 50));
+    setActionHistory(prev => [...prev, newEntry]);
 
     const updateMyEntry = (update: Partial<ActionDebugEntry>) => {
       setActionHistory(prev => {
-        // Find the entry by startedAt + actionName to handle concurrent commands
-        const idx = prev.findIndex(e => e.startedAt === newEntry.startedAt && e.actionName === newEntry.actionName);
+        const idx = prev.findIndex(e => e.entryId === myId);
         if (idx < 0) return prev;
         return [...prev.slice(0, idx), { ...prev[idx], ...update }, ...prev.slice(idx + 1)];
       });
