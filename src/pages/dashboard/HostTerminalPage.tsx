@@ -558,6 +558,9 @@ const HostTerminalPage = () => {
                   }
                 }}
               >
+                {isHistorySelected && (
+                  <ArrowRight size={12} className="text-primary shrink-0 -ml-3" />
+                )}
                 {!isRunning && (hasOutput || canReload) && (
                   <span className="shrink-0 text-muted-foreground">
                     {isExpanded && hasOutput ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
