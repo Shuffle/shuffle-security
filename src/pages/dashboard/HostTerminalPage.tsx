@@ -145,10 +145,6 @@ const HostTerminalPage = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Host switcher state
-  const [allHosts, setAllHosts] = useState<HostOption[]>([]);
-  const [hostSearchQuery, setHostSearchQuery] = useState('');
-  const [hostSwitcherOpen, setHostSwitcherOpen] = useState(false);
 
   const hostActionablePerms = DEFAULT_AGENT_PERMISSIONS
     .flatMap(c => c.permissions)
