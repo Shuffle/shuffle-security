@@ -1251,7 +1251,7 @@ const VulnAssetsPage = () => {
 
       {/* Add Host Monitor Dialog */}
       <Dialog open={addHostOpen} onOpenChange={setAddHostOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Laptop size={18} className="text-primary" />
@@ -1332,7 +1332,7 @@ const VulnAssetsPage = () => {
               {/* Checks */}
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium">Checks to Enable</Label>
-                <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-2">
                   {HOST_CHECK_OPTIONS.map(check => (
                     <div key={check.id}>
                       <label
