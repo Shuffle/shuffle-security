@@ -190,7 +190,7 @@ const HostTerminalPage = () => {
         hostUuid,
         actionName: e.actionName,
         hostname,
-        status: e.status,
+        status: (e.status === 'success' || e.status === 'error') ? e.status : 'error',
         requestBody: {},
         startedAt: e.startedAt,
         finishedAt: e.finishedAt,
