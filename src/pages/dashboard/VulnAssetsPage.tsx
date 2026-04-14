@@ -1568,9 +1568,13 @@ const VulnAssetsPage = () => {
                     <Label className="text-xs font-medium">3. Run as a background service</Label>
                     <p className="text-xs text-muted-foreground">
                       To keep the monitor running persistently, set up the command above as a service.{' '}
-                      {hostPlatform !== 'windows' ? (
+                      {hostPlatform === 'linux' ? (
                         <a href="https://www.freedesktop.org/software/systemd/man/systemd.service.html" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
                           systemd docs →
+                        </a>
+                      ) : hostPlatform === 'macos' ? (
+                        <a href="https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/BPSystemStartup/Chapters/CreatingLaunchdJobs.html" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                          launchd docs →
                         </a>
                       ) : (
                         <a href="https://learn.microsoft.com/en-us/powershell/module/scheduledtasks/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
