@@ -6,10 +6,12 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Laptop, HardDrive, Lock, Package, Zap, Plus, Copy, Check, Activity, ChevronRight, ChevronDown, Radar, FolderOpen, Loader2, CheckCircle2, Send, RefreshCw, ShieldCheck, ShieldX, Cpu, Hash, Clock, Globe } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Laptop, HardDrive, Lock, Package, Zap, Plus, Copy, Check, Activity, ChevronRight, ChevronDown, Radar, FolderOpen, Loader2, CheckCircle2, Send, RefreshCw, ShieldCheck, ShieldX, Cpu, Hash, Clock, Globe, Play, Terminal } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { toast } from 'sonner';
 import { getApiUrl, getAuthHeader, API_CONFIG } from '@/config/api';
+import { DEFAULT_AGENT_PERMISSIONS } from '@/hooks/useAgentPermissions';
 
 const OsIcon = ({ os, size = 14, className = '' }: { os: string; size?: number; className?: string }) => {
   const lower = (os || '').toLowerCase();
@@ -167,7 +169,45 @@ const VulnAssetsPage = () => {
   const [syncGroupId, setSyncGroupId] = useState<string>('');
   const [expandedHosts, setExpandedHosts] = useState<Set<string>>(new Set());
   const [osSortAsc, setOsSortAsc] = useState<boolean | null>(null);
+  const [actionExecuting, setActionExecuting] = useState<string | null>(null);
+  const [customAction, setCustomAction] = useState('');
   const selectedGroup = groups.find(g => g.id === selectedGroupId);
+
+  // Get host-actionable permissions from defaults
+  const hostActionablePerms = DEFAULT_AGENT_PERMISSIONS
+    .flatMap(c => c.permissions)
+    .filter(p => p.hostActionable && !p.disabled);
+
+  const executeHostAction = async (actionId: string, actionName: string, hostname: string, groupName: string) => {
+    setActionExecuting(`${hostname}-${actionId}`);
+    try {
+      const resp = await fetch(getApiUrl('/api/v1/apps/sensors/run'), {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+        body: JSON.stringify({
+          app_id: 'sensors',
+          app_name: 'sensors',
+          name: 'run_action',
+          parameters: [
+            { name: 'action', value: actionId },
+            { name: 'hosts', value: hostname },
+            { name: 'sensor_group', value: groupName },
+          ],
+        }),
+      });
+      if (resp.ok) {
+        toast.success(`Action sent`, { description: `"${actionName}" → ${hostname}` });
+      } else {
+        const text = await resp.text().catch(() => '');
+        toast.error('Action failed', { description: text || `HTTP ${resp.status}` });
+      }
+    } catch (err) {
+      toast.error('Action failed', { description: err instanceof Error ? err.message : 'Request error' });
+    } finally {
+      setActionExecuting(null);
+    }
+  };
 
   // Aggregate all hosts across all sensor groups
   const allHostsRaw = groups.flatMap(g => g.hosts.map(h => ({ ...h, groupName: g.name, groupId: g.id })));
@@ -448,7 +488,7 @@ const VulnAssetsPage = () => {
         ) : (
           <div className="border-t border-border">
             {/* Table header */}
-            <div className="grid grid-cols-[2rem_1.5fr_2rem_2rem_2rem_2rem_2rem_0.7fr_0.8fr] gap-2 px-5 py-2 border-b border-border bg-muted/30 items-center">
+            <div className="grid grid-cols-[2rem_1.5fr_2rem_2rem_2rem_2rem_2rem_0.7fr_0.8fr_auto] gap-2 px-5 py-2 border-b border-border bg-muted/30 items-center">
               <TooltipProvider delayDuration={200}>
                 <Tooltip><TooltipTrigger asChild>
                   <span className="text-xs font-semibold text-muted-foreground cursor-pointer select-none flex items-center gap-1" onClick={() => setOsSortAsc(prev => prev === null ? true : prev ? false : null)} title="Sort by OS">
@@ -464,6 +504,7 @@ const VulnAssetsPage = () => {
               <TooltipProvider delayDuration={200}><Tooltip><TooltipTrigger asChild><span className="flex justify-center"><Send size={13} className="text-muted-foreground" /></span></TooltipTrigger><TooltipContent side="bottom" className="max-w-[200px]"><p className="font-semibold text-xs">Log Forwarding</p><p className="text-[0.65rem] text-muted-foreground">Forward host logs to a remote endpoint for centralized collection</p></TooltipContent></Tooltip></TooltipProvider>
               <span className="text-xs font-semibold text-muted-foreground">Group</span>
               <span className="text-xs font-semibold text-muted-foreground">Last Check-in</span>
+              <span className="text-xs font-semibold text-muted-foreground">Actions</span>
             </div>
             {/* Host rows */}
             {allHosts.map(host => {
@@ -498,7 +539,7 @@ const VulnAssetsPage = () => {
               return (
                 <div key={host.uuid}>
                   <div
-                    className="grid grid-cols-[2rem_1.5fr_2rem_2rem_2rem_2rem_2rem_0.7fr_0.8fr] gap-2 px-5 py-3 border-b border-border last:border-b-0 hover:bg-muted/20 transition-colors items-center cursor-pointer"
+                    className="grid grid-cols-[2rem_1.5fr_2rem_2rem_2rem_2rem_2rem_0.7fr_0.8fr_auto] gap-2 px-5 py-3 border-b border-border last:border-b-0 hover:bg-muted/20 transition-colors items-center cursor-pointer"
                     onClick={toggleExpanded}
                   >
                     <div className="flex items-center justify-center">
@@ -534,6 +575,68 @@ const VulnAssetsPage = () => {
                       <span className="text-xs text-muted-foreground">
                         {checkinDate ? checkinDate.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
                       </span>
+                    </div>
+                    {/* Actions popover */}
+                    <div className="flex items-center justify-end" onClick={e => e.stopPropagation()}>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary">
+                            <Play size={14} />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent align="end" className="w-64 p-0" onClick={e => e.stopPropagation()}>
+                          <div className="px-3 py-2 border-b border-border">
+                            <p className="text-xs font-semibold text-foreground">Run Action</p>
+                            <p className="text-[0.65rem] text-muted-foreground truncate">{host.hostname}</p>
+                          </div>
+                          <div className="py-1">
+                            {hostActionablePerms.map(perm => (
+                              <button
+                                key={perm.id}
+                                className="w-full text-left px-3 py-2 text-xs hover:bg-muted/50 transition-colors flex items-center gap-2 disabled:opacity-50"
+                                disabled={actionExecuting === `${host.uuid}-${perm.id}`}
+                                onClick={() => executeHostAction(perm.id, perm.name, host.hostname, host.groupName)}
+                              >
+                                <Zap size={12} className="text-muted-foreground shrink-0" />
+                                <span className="text-foreground font-medium">{perm.name}</span>
+                                {actionExecuting === `${host.uuid}-${perm.id}` && (
+                                  <Loader2 size={12} className="animate-spin ml-auto text-primary" />
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                          <div className="px-3 py-2 border-t border-border">
+                            <div className="flex gap-1.5">
+                              <Input
+                                placeholder="Custom action…"
+                                value={customAction}
+                                onChange={e => setCustomAction(e.target.value)}
+                                className="h-7 text-xs flex-1"
+                                onKeyDown={e => {
+                                  if (e.key === 'Enter' && customAction.trim()) {
+                                    executeHostAction(customAction.trim(), customAction.trim(), host.hostname, host.groupName);
+                                    setCustomAction('');
+                                  }
+                                }}
+                              />
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-7 w-7 shrink-0"
+                                disabled={!customAction.trim() || !!actionExecuting}
+                                onClick={() => {
+                                  if (customAction.trim()) {
+                                    executeHostAction(customAction.trim(), customAction.trim(), host.hostname, host.groupName);
+                                    setCustomAction('');
+                                  }
+                                }}
+                              >
+                                <Terminal size={12} />
+                              </Button>
+                            </div>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
                     </div>
                   </div>
 
