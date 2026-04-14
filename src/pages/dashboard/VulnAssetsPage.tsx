@@ -695,11 +695,12 @@ const VulnAssetsPage = () => {
                                 <div>
                                   <span className="text-[0.6rem] font-semibold text-muted-foreground uppercase tracking-wide">Status</span>
                                   <p className={`text-xs font-medium ${
-                                    actionDebug.status === 'sending' ? 'text-primary' :
+                                    (actionDebug.status === 'sending' || actionDebug.status === 'polling') ? 'text-primary' :
                                     actionDebug.status === 'success' ? 'text-green-500' : 'text-destructive'
                                   }`}>
                                     {actionDebug.status === 'sending' ? 'Sending request…' :
-                                     actionDebug.status === 'success' ? `Success (${actionDebug.responseStatus})` :
+                                     actionDebug.status === 'polling' ? 'Polling for result…' :
+                                     actionDebug.status === 'success' ? `Success${actionDebug.responseStatus ? ` (${actionDebug.responseStatus})` : ''}` :
                                      `Error${actionDebug.responseStatus ? ` (${actionDebug.responseStatus})` : ''}`}
                                   </p>
                                 </div>
