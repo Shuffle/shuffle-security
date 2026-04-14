@@ -78,7 +78,7 @@ const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: bool
       { label: 'Response Actions', path: '/incidents/response-actions', icon: <Shield size={16} />, supportOnly: true },
     ],
   },
-  { label: 'Monitors', icon: <Radar size={20} />, path: '/monitors' },
+  ...(isSupport ? [{ label: 'Monitors', icon: <Radar size={20} />, path: '/monitors' }] : []),
   { 
     label: 'Detection', 
     icon: <RadarIcon />,
