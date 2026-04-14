@@ -381,41 +381,42 @@ const VulnAssetsPage = () => {
           </div>
         </div>
 
-        {/* Monitoring Group Validator Dropdown */}
-        {groups.length > 0 && (() => {
-          const syncGroup = groups.find(g => g.id === syncGroupId) || groups[0];
-          const latestCheckin = syncGroup.hosts.length > 0
-            ? Math.max(...syncGroup.hosts.map(h => h.checkin || 0))
-            : 0;
-          const checkinAge = latestCheckin ? (Date.now() / 1000) - latestCheckin : Infinity;
-          const status = syncGroup.hosts.length === 0
-            ? 'none'
-            : checkinAge < 300
-              ? 'healthy'
-              : checkinAge < 1800
-                ? 'stale'
-                : 'offline';
-          const dotColor = status === 'healthy'
-            ? 'bg-green-500'
-            : status === 'stale'
-              ? 'bg-yellow-500'
-              : status === 'offline'
-                ? 'bg-destructive'
-                : 'bg-muted-foreground/40';
-          const timeAgo = latestCheckin
-            ? checkinAge < 60
-              ? `${Math.round(checkinAge)}s ago`
-              : checkinAge < 3600
-                ? `${Math.round(checkinAge / 60)}m ago`
-                : `${Math.round(checkinAge / 3600)}h ago`
-            : '';
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="ghost" className="gap-1.5" onClick={() => loadGroups()} disabled={groupsLoading}>
+            <RefreshCw size={14} className={groupsLoading ? 'animate-spin' : ''} />
+            Refresh
+          </Button>
 
-          return (
-            <div className="flex items-center gap-2">
-              <Button size="sm" variant="ghost" className="gap-1.5" onClick={() => loadGroups()}>
-                <RefreshCw size={14} />
-                Refresh
-              </Button>
+          {/* Monitoring Group Validator Dropdown — only when groups exist */}
+          {groups.length > 0 && (() => {
+            const syncGroup = groups.find(g => g.id === syncGroupId) || groups[0];
+            const latestCheckin = syncGroup.hosts.length > 0
+              ? Math.max(...syncGroup.hosts.map(h => h.checkin || 0))
+              : 0;
+            const checkinAge = latestCheckin ? (Date.now() / 1000) - latestCheckin : Infinity;
+            const status = syncGroup.hosts.length === 0
+              ? 'none'
+              : checkinAge < 300
+                ? 'healthy'
+                : checkinAge < 1800
+                  ? 'stale'
+                  : 'offline';
+            const dotColor = status === 'healthy'
+              ? 'bg-green-500'
+              : status === 'stale'
+                ? 'bg-yellow-500'
+                : status === 'offline'
+                  ? 'bg-destructive'
+                  : 'bg-muted-foreground/40';
+            const timeAgo = latestCheckin
+              ? checkinAge < 60
+                ? `${Math.round(checkinAge)}s ago`
+                : checkinAge < 3600
+                  ? `${Math.round(checkinAge / 60)}m ago`
+                  : `${Math.round(checkinAge / 3600)}h ago`
+              : '';
+
+            return (
               <Select value={syncGroupId} onValueChange={setSyncGroupId}>
                 <SelectTrigger className="w-auto min-w-[180px] h-9 gap-2">
                   <div className="flex items-center gap-2">
@@ -460,9 +461,9 @@ const VulnAssetsPage = () => {
                   })}
                 </SelectContent>
               </Select>
-            </div>
-          );
-        })()}
+            );
+          })()}
+        </div>
       </div>
 
       {/* Host Monitors section */}
