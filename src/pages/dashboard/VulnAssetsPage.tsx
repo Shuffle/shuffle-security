@@ -165,7 +165,7 @@ const VulnAssetsPage = () => {
   // Monitoring groups (from API)
   const [groups, setGroups] = useState<MonitoringGroup[]>([]);
   const [allEnvs, setAllEnvs] = useState<OrbEnvironment[]>([]);
-  const [groupsLoading, setGroupsLoading] = useState(false);
+  const [groupsLoading, setGroupsLoading] = useState(true);
   const [selectedGroupId, setSelectedGroupId] = useState<string>('');
   const [isCreatingGroup, setIsCreatingGroup] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
