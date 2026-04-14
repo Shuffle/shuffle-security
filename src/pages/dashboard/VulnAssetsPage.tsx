@@ -176,7 +176,7 @@ const VulnAssetsPage = () => {
   const [actionExecuting, setActionExecuting] = useState<Set<string>>(new Set()); // host uuids being acted on
   const [customAction, setCustomAction] = useState('');
   const [historyIndex, setHistoryIndex] = useState(-1);
-  const [fullscreenHost, setFullscreenHost] = useState<{uuid: string; hostname: string; groupName: string; mode: string} | null>(null);
+  
 
   const getCommandHistory = (hostUuid: string): string[] => {
     try {
