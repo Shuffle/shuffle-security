@@ -173,8 +173,18 @@ const VulnAssetsPage = () => {
   const [osSortAsc, setOsSortAsc] = useState<boolean | null>(null);
   const [actionExecuting, setActionExecuting] = useState<Set<string>>(new Set()); // host uuids being acted on
   const [customAction, setCustomAction] = useState('');
-  const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+
+  const getCommandHistory = (hostUuid: string): string[] => {
+    try {
+      return JSON.parse(localStorage.getItem(`cmd_history_${hostUuid}`) || '[]');
+    } catch { return []; }
+  };
+  const pushCommandHistory = (hostUuid: string, cmd: string) => {
+    const prev = getCommandHistory(hostUuid);
+    const next = [cmd, ...prev.filter(c => c !== cmd)].slice(0, 100);
+    localStorage.setItem(`cmd_history_${hostUuid}`, JSON.stringify(next));
+  };
 
   type ActionDebugEntry = {
     hostUuid: string;
@@ -909,16 +919,17 @@ const VulnAssetsPage = () => {
                                       disabled={isRunning}
                                       ref={el => { if (el) requestAnimationFrame(() => el.focus()); }}
                                       onKeyDown={e => {
-                                        if (e.key === 'Enter' && customAction.trim() && !isRunning) {
-                                          setCommandHistory(prev => [customAction.trim(), ...prev]);
+                                        const history = getCommandHistory(host.uuid);
+                                        if (e.key === 'Enter' && customAction.trim()) {
+                                          pushCommandHistory(host.uuid, customAction.trim());
                                           setHistoryIndex(-1);
                                           executeHostAction(customAction.trim(), customAction.trim(), host.hostname, host.groupName, host.uuid);
                                           setCustomAction('');
                                         } else if (e.key === 'ArrowUp') {
                                           e.preventDefault();
                                           setHistoryIndex(prev => {
-                                            const next = Math.min(prev + 1, commandHistory.length - 1);
-                                            if (next >= 0) setCustomAction(commandHistory[next]);
+                                            const next = Math.min(prev + 1, history.length - 1);
+                                            if (next >= 0) setCustomAction(history[next]);
                                             return next;
                                           });
                                         } else if (e.key === 'ArrowDown') {
@@ -926,7 +937,7 @@ const VulnAssetsPage = () => {
                                           setHistoryIndex(prev => {
                                             const next = prev - 1;
                                             if (next < 0) { setCustomAction(''); return -1; }
-                                            setCustomAction(commandHistory[next]);
+                                            setCustomAction(history[next]);
                                             return next;
                                           });
                                         }
