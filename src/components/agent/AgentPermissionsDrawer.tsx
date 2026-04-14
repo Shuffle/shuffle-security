@@ -22,37 +22,21 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import RestoreIcon from '@mui/icons-material/Restore';
 import CloseIcon from '@mui/icons-material/Close';
 import {
-  Radar,
   Zap,
-  Bell,
   Server,
   ShieldCheck,
-  ShieldAlert,
-  ShieldOff,
   Activity,
-  Search,
-  FileText,
   Globe,
   Ban,
-  MonitorOff,
-  UserX,
-  KeyRound,
   CheckCircle2,
-  Megaphone,
-  AlertTriangle,
-  Mail,
   Settings2,
-  Flame,
-  Database,
-  Terminal,
-  
   Play,
-  Lightbulb,
 } from 'lucide-react';
-import { useAgentPermissions, RiskLevel, AgentPermissionCategory } from '@/hooks/useAgentPermissions';
+import { useAgentPermissions } from '@/hooks/useAgentPermissions';
 import AgentActionDrawer from '@/components/agent/AgentActionDrawer';
 import AgentIcon from '@/components/agent/AgentIcon';
 import LocalLLMConfig from '@/components/agent/LocalLLMConfig';
+import PermissionsPanel from '@/components/agent/PermissionsPanel';
 import AddIcon from '@mui/icons-material/Add';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 
@@ -63,48 +47,6 @@ import AppSearchDrawer from '@/components/shared/AppSearchDrawer';
 import { InputBase, Avatar } from '@mui/material';
 import type { AgentRun } from '@/services/agentActivity';
 import AgentRunResultViewer from '@/components/agent/AgentRunResultViewer';
-
-// Per-permission icons for a more modern look
-const PERMISSION_ICONS: Record<string, React.ReactNode> = {
-  scan_vulnerabilities: <Search size={18} />,
-  analyze_logs: <FileText size={18} />,
-  enrich_observables: <Globe size={18} />,
-  tune_detection_rules: <Settings2 size={18} />,
-  block_ips: <Ban size={18} />,
-  isolate_systems: <MonitorOff size={18} />,
-  disable_accounts: <UserX size={18} />,
-  force_password_reset: <KeyRound size={18} />,
-  update_case_status: <FileText size={18} />,
-  suggest_remediation: <Lightbulb size={18} />,
-  manage_ioc_watchlists: <Database size={18} />,
-  send_alerts: <Megaphone size={18} />,
-  escalate_incidents: <AlertTriangle size={18} />,
-  email_reports: <Mail size={18} />,
-  read_configs: <Settings2 size={18} />,
-  modify_firewall: <Flame size={18} />,
-  endpoint_control: <Terminal size={18} />,
-};
-
-const RISK_CONFIG: Record<RiskLevel, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
-  low: {
-    label: 'LOW',
-    color: 'hsl(var(--severity-low))',
-    bg: 'hsla(var(--severity-low) / 0.12)',
-    icon: <ShieldCheck size={12} />,
-  },
-  medium: {
-    label: 'MEDIUM',
-    color: 'hsl(var(--severity-medium))',
-    bg: 'hsla(var(--severity-medium) / 0.12)',
-    icon: <ShieldAlert size={12} />,
-  },
-  high: {
-    label: 'HIGH',
-    color: 'hsl(var(--severity-critical))',
-    bg: 'hsla(var(--severity-critical) / 0.12)',
-    icon: <ShieldOff size={12} />,
-  },
-};
 
 const RISK_ICON_BG: Record<RiskLevel, string> = {
   low: 'hsla(var(--severity-low) / 0.15)',
