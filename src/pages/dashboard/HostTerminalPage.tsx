@@ -15,6 +15,7 @@ interface HostOption {
   groupName: string;
   mode: string;
   os: string;
+  checkin?: number;
 }
 
 let entryIdCounter = 0;
