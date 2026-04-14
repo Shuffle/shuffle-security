@@ -1462,6 +1462,141 @@ const VulnAssetsPage = () => {
                 </div>
               </div>
 
+              {/* Manual setup guide */}
+              <details className="group rounded-lg border border-border overflow-hidden">
+                <summary className="flex items-center gap-2 px-3 py-2.5 cursor-pointer hover:bg-muted/50 transition-colors text-sm font-medium text-foreground select-none">
+                  <ChevronRight size={14} className="text-muted-foreground transition-transform group-open:rotate-90" />
+                  Manual Setup Guide
+                  <span className="text-xs text-muted-foreground font-normal ml-auto">Set up as a background service</span>
+                </summary>
+                <div className="border-t border-border px-3 py-3 space-y-4 bg-muted/20">
+                  {/* Step 1 */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="flex items-center justify-center h-5 w-5 rounded-full bg-primary/15 text-primary text-[0.6rem] font-bold shrink-0">1</span>
+                      <span className="text-xs font-semibold text-foreground">Download the binary</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground ml-7">
+                      Download the latest release for your platform from{' '}
+                      <a href="https://github.com/Shuffle/orborus/releases" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                        github.com/Shuffle/orborus/releases
+                      </a>
+                    </p>
+                    <pre className="text-xs bg-muted rounded-md p-3 ml-7 border border-border font-mono text-foreground whitespace-pre-wrap break-all leading-relaxed">
+{hostPlatform === 'windows'
+  ? `# PowerShell\nInvoke-WebRequest -Uri "https://github.com/Shuffle/orborus/releases/latest/download/orborus-windows-amd64.exe" -OutFile "orborus.exe"`
+  : `# Linux/macOS (amd64)\ncurl -L -o orborus https://github.com/Shuffle/orborus/releases/latest/download/orborus-linux-amd64\nchmod +x orborus`}
+                    </pre>
+                  </div>
+
+                  {/* Step 2 */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="flex items-center justify-center h-5 w-5 rounded-full bg-primary/15 text-primary text-[0.6rem] font-bold shrink-0">2</span>
+                      <span className="text-xs font-semibold text-foreground">Run it manually (test)</span>
+                    </div>
+                    <pre className="text-xs bg-muted rounded-md p-3 ml-7 border border-border font-mono text-foreground whitespace-pre-wrap break-all leading-relaxed">
+{(() => {
+  const baseUrl = API_CONFIG.baseUrl;
+  const envLines: string[] = [];
+  envLines.push(`BASE_URL=${baseUrl}`);
+  envLines.push('SENSOR_MODE=true');
+  if (selectedGroup) {
+    envLines.push(`QUEUE=${selectedGroup.queue}`);
+    if (selectedGroup.org_id) envLines.push(`ORG_ID=${selectedGroup.org_id}`);
+    if (selectedGroup.auth) envLines.push(`AUTH=${selectedGroup.auth}`);
+  }
+  if (hostChecks.installed_software) envLines.push('SOFTWARE_LIST_ENABLED=true');
+  if (hostChecks.hd_encrypted) envLines.push('HD_ENCRYPTED_CHECK=true');
+  if (hostChecks.screenlock) envLines.push('SCREENLOCK_CHECK=true');
+  if (hostChecks.response_actions) envLines.push(`RESPONSE_ACTIONS=${responseActionMode}`);
+  if (hostChecks.log_forwarding && logForwardingEndpoint.trim()) envLines.push(`LOG_FORWARDING=${logForwardingEndpoint.trim()}`);
+
+  if (hostPlatform === 'windows') {
+    return envLines.map(l => `$env:${l.replace('=', '="')}""`).join('\n') + '\n./orborus.exe';
+  }
+  return envLines.map(l => `export ${l}`).join('\n') + '\n./orborus';
+})()}
+                    </pre>
+                  </div>
+
+                  {/* Step 3 */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="flex items-center justify-center h-5 w-5 rounded-full bg-primary/15 text-primary text-[0.6rem] font-bold shrink-0">3</span>
+                      <span className="text-xs font-semibold text-foreground">Create a background service</span>
+                    </div>
+                    {hostPlatform === 'unix' ? (
+                      <div className="ml-7 space-y-2">
+                        <p className="text-xs text-muted-foreground">Create a systemd service file:</p>
+                        <pre className="text-xs bg-muted rounded-md p-3 border border-border font-mono text-foreground whitespace-pre-wrap break-all leading-relaxed">
+{`sudo tee /etc/systemd/system/shuffle-monitor.service > /dev/null << 'EOF'
+[Unit]
+Description=Shuffle Host Monitor
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=10
+ExecStart=/usr/local/bin/orborus
+${(() => {
+  const lines: string[] = [];
+  lines.push(`Environment=BASE_URL=${API_CONFIG.baseUrl}`);
+  lines.push('Environment=SENSOR_MODE=true');
+  if (selectedGroup) {
+    lines.push(`Environment=QUEUE=${selectedGroup.queue}`);
+    if (selectedGroup.org_id) lines.push(`Environment=ORG_ID=${selectedGroup.org_id}`);
+    if (selectedGroup.auth) lines.push(`Environment=AUTH=${selectedGroup.auth}`);
+  }
+  if (hostChecks.installed_software) lines.push('Environment=SOFTWARE_LIST_ENABLED=true');
+  if (hostChecks.hd_encrypted) lines.push('Environment=HD_ENCRYPTED_CHECK=true');
+  if (hostChecks.screenlock) lines.push('Environment=SCREENLOCK_CHECK=true');
+  if (hostChecks.response_actions) lines.push(`Environment=RESPONSE_ACTIONS=${responseActionMode}`);
+  if (hostChecks.log_forwarding && logForwardingEndpoint.trim()) lines.push(`Environment=LOG_FORWARDING=${logForwardingEndpoint.trim()}`);
+  return lines.join('\n');
+})()}
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable --now shuffle-monitor`}
+                        </pre>
+                      </div>
+                    ) : (
+                      <div className="ml-7 space-y-2">
+                        <p className="text-xs text-muted-foreground">Create a Windows Service using NSSM or Task Scheduler:</p>
+                        <pre className="text-xs bg-muted rounded-md p-3 border border-border font-mono text-foreground whitespace-pre-wrap break-all leading-relaxed">
+{`# Option A: Using Task Scheduler (built-in)
+$action = New-ScheduledTaskAction -Execute "C:\\shuffle\\orborus.exe"
+$trigger = New-ScheduledTaskTrigger -AtStartup
+$settings = New-ScheduledTaskSettingsSet -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1)
+Register-ScheduledTask -TaskName "ShuffleMonitor" -Action $action -Trigger $trigger -Settings $settings -RunLevel Highest
+
+# Option B: Using NSSM (recommended)
+# Download NSSM from https://nssm.cc
+nssm install ShuffleMonitor "C:\\shuffle\\orborus.exe"
+${(() => {
+  const lines: string[] = [];
+  lines.push(`nssm set ShuffleMonitor AppEnvironmentExtra BASE_URL=${API_CONFIG.baseUrl}`);
+  lines.push('nssm set ShuffleMonitor AppEnvironmentExtra +SENSOR_MODE=true');
+  if (selectedGroup) {
+    lines.push(`nssm set ShuffleMonitor AppEnvironmentExtra +QUEUE=${selectedGroup.queue}`);
+    if (selectedGroup.org_id) lines.push(`nssm set ShuffleMonitor AppEnvironmentExtra +ORG_ID=${selectedGroup.org_id}`);
+    if (selectedGroup.auth) lines.push(`nssm set ShuffleMonitor AppEnvironmentExtra +AUTH=${selectedGroup.auth}`);
+  }
+  return lines.join('\n');
+})()}
+nssm start ShuffleMonitor`}
+                        </pre>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </details>
+
               <div className="rounded-lg border border-primary/20 bg-primary/[0.04] px-3 py-2.5">
                 <p className="text-xs text-muted-foreground">
                   <span className="font-medium text-foreground">What happens next:</span> The monitor runs the selected checks and reports results back to Shuffle. Host metadata is collected automatically.
