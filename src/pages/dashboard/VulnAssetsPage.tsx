@@ -571,6 +571,7 @@ const VulnAssetsPage = () => {
     parts.push('sensor_mode=true');
     if (selectedGroup) {
       parts.push(`queue=${selectedGroup.queue}`);
+      if (selectedGroup.auth) parts.push(`auth=${selectedGroup.auth}`);
       if (selectedGroup.org_id) parts.push(`org_id=${selectedGroup.org_id}`);
     }
     if (hostChecks.installed_software) parts.push('software_list_enabled=true');
@@ -579,15 +580,12 @@ const VulnAssetsPage = () => {
     if (hostChecks.response_actions) parts.push(`response_actions=${responseActionMode}`);
     if (hostChecks.log_forwarding && logForwardingEndpoint.trim()) parts.push(`log_forwarding=${logForwardingEndpoint.trim()}`);
 
-    const authHeader = selectedGroup?.auth ? `-H 'Authorization: Bearer ${selectedGroup.auth}'` : '';
-
     if (hostPlatform === 'windows') {
       parts.push('os=windows');
-      const headers = selectedGroup?.auth ? `-Headers @{Authorization="Bearer ${selectedGroup.auth}"}` : '';
-      return `Invoke-WebRequest -Uri '${baseUrl}/api/v1/orborus?${parts.join('&')}' ${headers} -UseBasicParsing | Invoke-Expression`.replace(/  +/g, ' ');
+      return `Invoke-WebRequest -Uri '${baseUrl}/api/v1/orborus?${parts.join('&')}' -UseBasicParsing | Invoke-Expression`;
     }
 
-    return `curl ${authHeader} '${baseUrl}/api/v1/orborus?${parts.join('&')}' | sh`.replace(/  +/g, ' ');
+    return `curl '${baseUrl}/api/v1/orborus?${parts.join('&')}' | sh`;
   };
 
   const handleCopyCommand = () => {
