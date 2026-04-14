@@ -363,10 +363,7 @@ const VulnAssetsPage = () => {
     if (hostChecks.installed_software) flags.push('--software_list_enabled=true');
     if (hostChecks.hd_encrypted) flags.push('--hd_encrypted_check=true');
     if (hostChecks.screenlock) flags.push('--screenlock_check=true');
-    if (hostChecks.response_actions) {
-      flags.push('--response_actions_enabled=true');
-      flags.push(`--response_actions_mode=${responseActionMode}`);
-    }
+    if (hostChecks.response_actions) flags.push(`--response_actions=${responseActionMode}`);
     if (hostChecks.log_forwarding && logForwardingEndpoint.trim()) flags.push(`--log_forwarding=${logForwardingEndpoint.trim()}`);
     return `go run orborus.go ${flags.join(' ')}`;
   };
