@@ -292,7 +292,7 @@ const HostTerminalPage = () => {
           const isRunning = entry.status === 'sending' || entry.status === 'polling';
 
           return (
-            <div key={`${entry.startedAt}-${entry.actionName}`} className={`border-b border-border/50 last:border-b-0 ${isLatest ? 'bg-primary/5 ring-1 ring-inset ring-primary/20' : ''}`}>
+            <div key={entry.entryId} className={`border-b border-border/50 last:border-b-0 ${isLatest ? 'bg-primary/5 ring-1 ring-inset ring-primary/20' : ''}`}>
               <div className={`px-6 py-2.5 flex items-center gap-3 ${isLatest ? 'bg-primary/10' : isRunning ? 'bg-muted/30' : 'bg-muted/10'}`}>
                 <span className="text-sm font-mono text-primary">$</span>
                 <span className="text-sm font-mono font-medium text-foreground flex-1 truncate">{entry.actionName}</span>
@@ -317,15 +317,14 @@ const HostTerminalPage = () => {
                     size="sm"
                     className="h-6 px-2 text-xs text-destructive hover:text-destructive"
                     onClick={() => {
-                      // Find and abort this specific entry's controller
-                      abortControllersRef.current.forEach((ctrl, key) => {
-                        if (key.startsWith(`${hostUuid}_`)) {
-                          pollingActiveRef.current.set(key, false);
-                          ctrl.abort();
-                        }
-                      });
+                      const abortKey = `entry_${entry.entryId}`;
+                      const ctrl = abortControllersRef.current.get(abortKey);
+                      if (ctrl) {
+                        pollingActiveRef.current.set(abortKey, false);
+                        ctrl.abort();
+                      }
                       setActionHistory(prev => prev.map(e =>
-                        e.startedAt === entry.startedAt && e.actionName === entry.actionName
+                        e.entryId === entry.entryId
                           ? { ...e, status: 'error' as const, finishedAt: Date.now(), error: 'Aborted by user' }
                           : e
                       ));
