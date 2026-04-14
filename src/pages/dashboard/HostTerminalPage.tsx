@@ -188,6 +188,7 @@ const HostTerminalPage = () => {
         startedAt: e.startedAt,
         finishedAt: e.finishedAt,
         executionId: e.executionId,
+        authorization: e.authorization,
         actionOutput: e.actionOutput,
         error: e.error,
       })));
