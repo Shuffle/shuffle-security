@@ -707,7 +707,9 @@ const VulnAssetsPage = () => {
               const hdEncrypted = host.hd_encrypted === true || host.hd_encrypted === 'true';
               const screenlockOn = host.automatic_screen_lock_enabled === true || host.automatic_screen_lock_enabled === 'true';
               const softwareCount = Array.isArray(host.installed_software) ? host.installed_software.length : 0;
-              const responseActionsOn = !!(host as any).response_actions;
+              const responseActionsRaw = (host as any).response_actions as string | undefined;
+              const responseActionsOn = !!responseActionsRaw;
+              const responseActionsMode = responseActionsRaw ? (responseActionsRaw.toLowerCase().includes('full') ? 'full' : 'controlled') : null;
               const logForwardingOn = !!host.log_forwarding;
               const isExpanded = expandedHosts.has(host.uuid);
               const toggleExpanded = () => {
@@ -718,12 +720,12 @@ const VulnAssetsPage = () => {
                   return next;
                 });
               };
-              const CheckDot = ({ on, tip }: { on: boolean; tip: string }) => (
+              const CheckDot = ({ on, tip, color }: { on: boolean; tip: string; color?: string }) => (
                 <TooltipProvider delayDuration={200}>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <span className="flex justify-center">
-                        <div className={`w-2.5 h-2.5 rounded-full ${on ? 'bg-green-500' : 'bg-muted-foreground/30'}`} />
+                        <div className={`w-2.5 h-2.5 rounded-full ${on ? (color || 'bg-green-500') : 'bg-muted-foreground/30'}`} />
                       </span>
                     </TooltipTrigger>
                     <TooltipContent>{tip}</TooltipContent>
@@ -761,7 +763,11 @@ const VulnAssetsPage = () => {
                     <CheckDot on={hdEncrypted} tip={hdEncrypted ? 'Disk encryption enabled' : 'Disk encryption not enabled'} />
                     <CheckDot on={screenlockOn} tip={screenlockOn ? 'Screenlock enabled' : 'Screenlock not enabled'} />
                     <CheckDot on={softwareCount > 0} tip={softwareCount > 0 ? `${softwareCount} packages installed` : 'Software not collected'} />
-                    <CheckDot on={responseActionsOn} tip={responseActionsOn ? 'Response actions enabled' : 'Response actions not enabled'} />
+                    <CheckDot
+                      on={responseActionsOn}
+                      tip={responseActionsOn ? `Response actions: ${responseActionsMode === 'full' ? 'Full control' : 'Controlled'}` : 'Response actions not enabled'}
+                      color={responseActionsMode === 'full' ? 'bg-[hsl(var(--severity-high))]' : 'bg-green-500'}
+                    />
                     <CheckDot on={logForwardingOn} tip={logForwardingOn ? `Log forwarding: ${host.log_forwarding}` : 'Log forwarding not enabled'} />
                     <span className="text-xs text-muted-foreground truncate">{host.groupName}</span>
                     <div className="flex items-center gap-1.5">
