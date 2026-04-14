@@ -175,7 +175,7 @@ const VulnAssetsPage = () => {
     hostUuid: string;
     actionName: string;
     hostname: string;
-    status: 'sending' | 'success' | 'error';
+    status: 'sending' | 'polling' | 'success' | 'error';
     requestBody: object;
     responseStatus?: number;
     responseBody?: string;
@@ -218,12 +218,70 @@ const VulnAssetsPage = () => {
         body: JSON.stringify(requestBody),
       });
       const text = await resp.text().catch(() => '');
-      if (resp.ok) {
-        setActionDebug(prev => prev ? { ...prev, status: 'success', responseStatus: resp.status, responseBody: text, finishedAt: Date.now() } : null);
-        toast.success(`Action sent`, { description: `"${actionName}" → ${hostname}` });
-      } else {
+      if (!resp.ok) {
         setActionDebug(prev => prev ? { ...prev, status: 'error', responseStatus: resp.status, responseBody: text, finishedAt: Date.now(), error: text || `HTTP ${resp.status}` } : null);
         toast.error('Action failed', { description: text || `HTTP ${resp.status}` });
+        return;
+      }
+
+      // Check if response is an execution stub that needs polling
+      let parsed: unknown = null;
+      try { parsed = JSON.parse(text); } catch { /* not JSON */ }
+
+      if (
+        parsed && typeof parsed === 'object' && parsed !== null &&
+        typeof (parsed as Record<string, unknown>).execution_id === 'string' &&
+        (parsed as Record<string, unknown>).execution_id
+      ) {
+        const execId = (parsed as Record<string, unknown>).execution_id as string;
+        setActionDebug(prev => prev ? { ...prev, status: 'polling', responseStatus: resp.status, responseBody: text } : null);
+
+        // Poll streams/results for the real output
+        const maxAttempts = 15;
+        const intervalMs = 2000;
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+          await new Promise(r => setTimeout(r, intervalMs));
+          try {
+            const pollResp = await fetch(getApiUrl('/api/v1/streams/results'), {
+              method: 'POST',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+              body: JSON.stringify({ execution_id: execId, authorization: execId }),
+            });
+            if (!pollResp.ok) {
+              if (pollResp.status >= 400 && pollResp.status < 500) {
+                setActionDebug(prev => prev ? { ...prev, status: 'error', responseBody: `Poll error ${pollResp.status}`, finishedAt: Date.now(), error: `HTTP ${pollResp.status}` } : null);
+                toast.error('Action failed', { description: `Poll error ${pollResp.status}` });
+                return;
+              }
+              continue; // server error, retry
+            }
+            const pollText = await pollResp.text();
+            if (!pollText || pollText === '{}' || pollText === 'null') continue;
+
+            let pollData: unknown = null;
+            try { pollData = JSON.parse(pollText); } catch { /* not JSON */ }
+
+            if (pollData && typeof pollData === 'object') {
+              const st = (pollData as Record<string, unknown>).status;
+              if (st === 'EXECUTING' || st === 'WAITING') continue;
+            }
+
+            // Got a real result
+            setActionDebug(prev => prev ? { ...prev, status: 'success', responseBody: pollText, finishedAt: Date.now() } : null);
+            toast.success('Action completed', { description: `"${actionName}" → ${hostname}` });
+            return;
+          } catch {
+            continue;
+          }
+        }
+        // Timed out
+        setActionDebug(prev => prev ? { ...prev, status: 'error', finishedAt: Date.now(), error: 'Timed out waiting for execution result.' } : null);
+        toast.error('Action timed out', { description: 'No result after 30 seconds.' });
+      } else {
+        // Immediate result (no execution_id)
+        setActionDebug(prev => prev ? { ...prev, status: 'success', responseStatus: resp.status, responseBody: text, finishedAt: Date.now() } : null);
+        toast.success('Action sent', { description: `"${actionName}" → ${hostname}` });
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Request error';
@@ -231,7 +289,6 @@ const VulnAssetsPage = () => {
       toast.error('Action failed', { description: msg });
     } finally {
       setActionExecuting(null);
-      // Refresh environments data after action
       loadGroups();
     }
   };
@@ -621,7 +678,7 @@ const VulnAssetsPage = () => {
                           {actionDebug && actionDebug.hostUuid === host.uuid ? (
                             <div>
                               <div className="px-3 py-2 border-b border-border flex items-center gap-2">
-                                {actionDebug.status === 'sending' && <Loader2 size={12} className="animate-spin text-primary" />}
+                                {(actionDebug.status === 'sending' || actionDebug.status === 'polling') && <Loader2 size={12} className="animate-spin text-primary" />}
                                 {actionDebug.status === 'success' && <CheckCircle2 size={12} className="text-green-500" />}
                                 {actionDebug.status === 'error' && <ShieldX size={12} className="text-destructive" />}
                                 <div className="flex-1 min-w-0">
@@ -638,11 +695,12 @@ const VulnAssetsPage = () => {
                                 <div>
                                   <span className="text-[0.6rem] font-semibold text-muted-foreground uppercase tracking-wide">Status</span>
                                   <p className={`text-xs font-medium ${
-                                    actionDebug.status === 'sending' ? 'text-primary' :
+                                    (actionDebug.status === 'sending' || actionDebug.status === 'polling') ? 'text-primary' :
                                     actionDebug.status === 'success' ? 'text-green-500' : 'text-destructive'
                                   }`}>
                                     {actionDebug.status === 'sending' ? 'Sending request…' :
-                                     actionDebug.status === 'success' ? `Success (${actionDebug.responseStatus})` :
+                                     actionDebug.status === 'polling' ? 'Polling for result…' :
+                                     actionDebug.status === 'success' ? `Success${actionDebug.responseStatus ? ` (${actionDebug.responseStatus})` : ''}` :
                                      `Error${actionDebug.responseStatus ? ` (${actionDebug.responseStatus})` : ''}`}
                                   </p>
                                 </div>
@@ -666,7 +724,7 @@ const VulnAssetsPage = () => {
                                   </div>
                                 )}
                               </div>
-                              {actionDebug.status !== 'sending' && (
+                              {actionDebug.status !== 'sending' && actionDebug.status !== 'polling' && (
                                 <div className="px-3 py-2 border-t border-border">
                                   <Button variant="ghost" size="sm" className="w-full h-7 text-xs" onClick={() => setActionDebug(null)}>
                                     Run another action
