@@ -169,9 +169,10 @@ const VulnAssetsPage = () => {
   const [syncGroupId, setSyncGroupId] = useState<string>('');
   const [expandedHosts, setExpandedHosts] = useState<Set<string>>(new Set());
   const [osSortAsc, setOsSortAsc] = useState<boolean | null>(null);
-  const [actionExecuting, setActionExecuting] = useState<string | null>(null); // host uuid being acted on
+  const [actionExecuting, setActionExecuting] = useState<Set<string>>(new Set()); // host uuids being acted on
   const [customAction, setCustomAction] = useState('');
-  const [actionDebug, setActionDebug] = useState<{
+
+  type ActionDebugEntry = {
     hostUuid: string;
     actionName: string;
     hostname: string;
@@ -182,7 +183,26 @@ const VulnAssetsPage = () => {
     startedAt: number;
     finishedAt?: number;
     error?: string;
-  } | null>(null);
+  };
+  const [actionDebugMap, setActionDebugMap] = useState<Map<string, ActionDebugEntry>>(new Map());
+
+  const setHostDebug = (hostUuid: string, entry: ActionDebugEntry | null) => {
+    setActionDebugMap(prev => {
+      const next = new Map(prev);
+      if (entry) next.set(hostUuid, entry);
+      else next.delete(hostUuid);
+      return next;
+    });
+  };
+  const updateHostDebug = (hostUuid: string, update: Partial<ActionDebugEntry>) => {
+    setActionDebugMap(prev => {
+      const existing = prev.get(hostUuid);
+      if (!existing) return prev;
+      const next = new Map(prev);
+      next.set(hostUuid, { ...existing, ...update });
+      return next;
+    });
+  };
   const selectedGroup = groups.find(g => g.id === selectedGroupId);
 
   // Get host-actionable permissions from defaults
@@ -191,7 +211,7 @@ const VulnAssetsPage = () => {
     .filter(p => p.hostActionable && !p.disabled);
 
   const executeHostAction = async (actionId: string, actionName: string, hostname: string, groupName: string, hostUuid: string) => {
-    setActionExecuting(hostUuid);
+    setActionExecuting(prev => new Set(prev).add(hostUuid));
     const requestBody = {
       app_id: 'sensors',
       app_name: 'sensors',
@@ -202,7 +222,7 @@ const VulnAssetsPage = () => {
         { name: 'sensor_group', value: groupName },
       ],
     };
-    setActionDebug({
+    setHostDebug(hostUuid, {
       hostUuid,
       actionName,
       hostname,
@@ -219,7 +239,7 @@ const VulnAssetsPage = () => {
       });
       const text = await resp.text().catch(() => '');
       if (!resp.ok) {
-        setActionDebug(prev => prev ? { ...prev, status: 'error', responseStatus: resp.status, responseBody: text, finishedAt: Date.now(), error: text || `HTTP ${resp.status}` } : null);
+        updateHostDebug(hostUuid, { status: 'error', responseStatus: resp.status, responseBody: text, finishedAt: Date.now(), error: text || `HTTP ${resp.status}` });
         toast.error('Action failed', { description: text || `HTTP ${resp.status}` });
         return;
       }
@@ -234,10 +254,10 @@ const VulnAssetsPage = () => {
         (parsed as Record<string, unknown>).execution_id
       ) {
         const execId = (parsed as Record<string, unknown>).execution_id as string;
-        setActionDebug(prev => prev ? { ...prev, status: 'polling', responseStatus: resp.status, responseBody: text } : null);
+        updateHostDebug(hostUuid, { status: 'polling', responseStatus: resp.status, responseBody: text });
 
-        // Poll streams/results for the real output
-        const maxAttempts = 15;
+        // Poll streams/results for the real output (30 min timeout)
+        const maxAttempts = 900; // 900 * 2s = 30 minutes
         const intervalMs = 2000;
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
           await new Promise(r => setTimeout(r, intervalMs));
@@ -250,11 +270,11 @@ const VulnAssetsPage = () => {
             });
             if (!pollResp.ok) {
               if (pollResp.status >= 400 && pollResp.status < 500) {
-                setActionDebug(prev => prev ? { ...prev, status: 'error', responseBody: `Poll error ${pollResp.status}`, finishedAt: Date.now(), error: `HTTP ${pollResp.status}` } : null);
+                updateHostDebug(hostUuid, { status: 'error', responseBody: `Poll error ${pollResp.status}`, finishedAt: Date.now(), error: `HTTP ${pollResp.status}` });
                 toast.error('Action failed', { description: `Poll error ${pollResp.status}` });
                 return;
               }
-              continue; // server error, retry
+              continue;
             }
             const pollText = await pollResp.text();
             if (!pollText || pollText === '{}' || pollText === 'null') continue;
@@ -268,7 +288,7 @@ const VulnAssetsPage = () => {
             }
 
             // Got a real result
-            setActionDebug(prev => prev ? { ...prev, status: 'success', responseBody: pollText, finishedAt: Date.now() } : null);
+            updateHostDebug(hostUuid, { status: 'success', responseBody: pollText, finishedAt: Date.now() });
             toast.success('Action completed', { description: `"${actionName}" → ${hostname}` });
             return;
           } catch {
@@ -276,19 +296,19 @@ const VulnAssetsPage = () => {
           }
         }
         // Timed out
-        setActionDebug(prev => prev ? { ...prev, status: 'error', finishedAt: Date.now(), error: 'Timed out waiting for execution result.' } : null);
-        toast.error('Action timed out', { description: 'No result after 30 seconds.' });
+        updateHostDebug(hostUuid, { status: 'error', finishedAt: Date.now(), error: 'Timed out waiting for execution result (30 min).' });
+        toast.error('Action timed out', { description: 'No result after 30 minutes.' });
       } else {
         // Immediate result (no execution_id)
-        setActionDebug(prev => prev ? { ...prev, status: 'success', responseStatus: resp.status, responseBody: text, finishedAt: Date.now() } : null);
+        updateHostDebug(hostUuid, { status: 'success', responseStatus: resp.status, responseBody: text, finishedAt: Date.now() });
         toast.success('Action sent', { description: `"${actionName}" → ${hostname}` });
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Request error';
-      setActionDebug(prev => prev ? { ...prev, status: 'error', finishedAt: Date.now(), error: msg } : null);
+      updateHostDebug(hostUuid, { status: 'error', finishedAt: Date.now(), error: msg });
       toast.error('Action failed', { description: msg });
     } finally {
-      setActionExecuting(null);
+      setActionExecuting(prev => { const next = new Set(prev); next.delete(hostUuid); return next; });
       loadGroups();
     }
   };
@@ -666,7 +686,7 @@ const VulnAssetsPage = () => {
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary">
-                            {actionExecuting === host.uuid ? (
+                            {actionExecuting.has(host.uuid) ? (
                               <Loader2 size={14} className="animate-spin text-primary" />
                             ) : (
                               <Play size={14} />
@@ -675,7 +695,7 @@ const VulnAssetsPage = () => {
                         </PopoverTrigger>
                         <PopoverContent align="end" className="w-72 p-0" onClick={e => e.stopPropagation()}>
                           {/* Debug info if action running/completed for this host */}
-                          {actionDebug && actionDebug.hostUuid === host.uuid ? (
+                          {(() => { const actionDebug = actionDebugMap.get(host.uuid); return actionDebug ? (
                             <div>
                               <div className="px-3 py-2 border-b border-border flex items-center gap-2">
                                 {(actionDebug.status === 'sending' || actionDebug.status === 'polling') && <Loader2 size={12} className="animate-spin text-primary" />}
@@ -726,7 +746,7 @@ const VulnAssetsPage = () => {
                               </div>
                               {actionDebug.status !== 'sending' && actionDebug.status !== 'polling' && (
                                 <div className="px-3 py-2 border-t border-border">
-                                  <Button variant="ghost" size="sm" className="w-full h-7 text-xs" onClick={() => setActionDebug(null)}>
+                                  <Button variant="ghost" size="sm" className="w-full h-7 text-xs" onClick={() => setHostDebug(host.uuid, null)}>
                                     Run another action
                                   </Button>
                                 </div>
@@ -743,7 +763,7 @@ const VulnAssetsPage = () => {
                                   <button
                                     key={perm.id}
                                     className="w-full text-left px-3 py-2 text-xs hover:bg-muted/50 transition-colors flex items-center gap-2 disabled:opacity-50"
-                                    disabled={actionExecuting === host.uuid}
+                                    disabled={actionExecuting.has(host.uuid)}
                                     onClick={() => executeHostAction(perm.id, perm.name, host.hostname, host.groupName, host.uuid)}
                                   >
                                     <Zap size={12} className="text-muted-foreground shrink-0" />
@@ -758,7 +778,7 @@ const VulnAssetsPage = () => {
                                     value={customAction}
                                     onChange={e => setCustomAction(e.target.value)}
                                     className="h-7 text-xs flex-1"
-                                    disabled={actionExecuting === host.uuid}
+                                    disabled={actionExecuting.has(host.uuid)}
                                     onKeyDown={e => {
                                       if (e.key === 'Enter' && customAction.trim()) {
                                         executeHostAction(customAction.trim(), customAction.trim(), host.hostname, host.groupName, host.uuid);
@@ -770,7 +790,7 @@ const VulnAssetsPage = () => {
                                     size="icon"
                                     variant="ghost"
                                     className="h-7 w-7 shrink-0"
-                                    disabled={!customAction.trim() || actionExecuting === host.uuid}
+                                    disabled={!customAction.trim() || actionExecuting.has(host.uuid)}
                                     onClick={() => {
                                       if (customAction.trim()) {
                                         executeHostAction(customAction.trim(), customAction.trim(), host.hostname, host.groupName, host.uuid);
@@ -783,7 +803,7 @@ const VulnAssetsPage = () => {
                                 </div>
                               </div>
                             </div>
-                          )}
+                          ); })()}
                         </PopoverContent>
                       </Popover>
                     </div>
