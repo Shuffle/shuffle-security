@@ -500,7 +500,13 @@ const VulnAssetsPage = () => {
 
   // Aggregate all hosts across all sensor groups
   const allHostsRaw = groups.flatMap(g => g.hosts.map(h => ({ ...h, groupName: g.name, groupId: g.id })));
-  const allHosts = !sortCol ? allHostsRaw : [...allHostsRaw].sort((a, b) => {
+  const defaultSort = (a: any, b: any) => {
+    // Most recent check-in first, then alphabetical hostname
+    const ca = a.checkin || 0, cb = b.checkin || 0;
+    if (cb !== ca) return cb - ca;
+    return (a.hostname || '').localeCompare(b.hostname || '');
+  };
+  const allHosts = !sortCol ? [...allHostsRaw].sort(defaultSort) : [...allHostsRaw].sort((a, b) => {
     let cmp = 0;
     switch (sortCol) {
       case 'os': cmp = (a.os || '').localeCompare(b.os || ''); break;
