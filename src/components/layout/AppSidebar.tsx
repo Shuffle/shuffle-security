@@ -555,7 +555,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                             primary={
                               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                 <span>{item.label}</span>
-                                {item.label === 'Vulnerabilities' && (
+                                {item.supportOnly && (
                                   <Typography
                                     component="span"
                                     sx={{
