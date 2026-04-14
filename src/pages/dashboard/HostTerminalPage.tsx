@@ -325,6 +325,10 @@ const HostTerminalPage = () => {
               actionSuccess: result.success,
               error: result.success ? undefined : (result.error || result.output || 'Action reported failure'),
             });
+            // Auto-expand when result arrives
+            if (result.output || result.error) {
+              setExpandedEntries(prev => new Set(prev).add(myId));
+            }
             if (!result.success) {
               toast.error('Action failed', { description: result.error || result.output || `"${actionName}" → ${hostname}` });
             }
