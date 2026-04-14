@@ -173,6 +173,8 @@ const VulnAssetsPage = () => {
   const [osSortAsc, setOsSortAsc] = useState<boolean | null>(null);
   const [actionExecuting, setActionExecuting] = useState<Set<string>>(new Set()); // host uuids being acted on
   const [customAction, setCustomAction] = useState('');
+  const [commandHistory, setCommandHistory] = useState<string[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
 
   type ActionDebugEntry = {
     hostUuid: string;
@@ -908,8 +910,25 @@ const VulnAssetsPage = () => {
                                       ref={el => { if (el) requestAnimationFrame(() => el.focus()); }}
                                       onKeyDown={e => {
                                         if (e.key === 'Enter' && customAction.trim() && !isRunning) {
+                                          setCommandHistory(prev => [customAction.trim(), ...prev]);
+                                          setHistoryIndex(-1);
                                           executeHostAction(customAction.trim(), customAction.trim(), host.hostname, host.groupName, host.uuid);
                                           setCustomAction('');
+                                        } else if (e.key === 'ArrowUp') {
+                                          e.preventDefault();
+                                          setHistoryIndex(prev => {
+                                            const next = Math.min(prev + 1, commandHistory.length - 1);
+                                            if (next >= 0) setCustomAction(commandHistory[next]);
+                                            return next;
+                                          });
+                                        } else if (e.key === 'ArrowDown') {
+                                          e.preventDefault();
+                                          setHistoryIndex(prev => {
+                                            const next = prev - 1;
+                                            if (next < 0) { setCustomAction(''); return -1; }
+                                            setCustomAction(commandHistory[next]);
+                                            return next;
+                                          });
                                         }
                                       }}
                                     />
