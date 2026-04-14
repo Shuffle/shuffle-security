@@ -90,12 +90,8 @@ const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: bool
       { label: 'Threat Feeds', path: '/incidents/threat-feeds', icon: <RssFeedIcon fontSize="small" /> },
       { label: 'IOC Types', path: '/incidents/ioc-types', icon: <FingerprintIcon fontSize="small" /> },
       ...(isSupport ? [{ label: 'Vulnerabilities', path: '/vulnerabilities', icon: <Shield size={16} /> }] : []),
+      { label: 'Assets', path: '/assets', icon: <HardDrive size={16} /> },
     ],
-  },
-  {
-    label: 'Assets',
-    icon: <HardDrive size={20} />,
-    path: '/assets',
   },
   { label: '__divider__', icon: <></> },
   { label: 'Agent', icon: <AgentIcon size={20} />, path: '/agent' },
