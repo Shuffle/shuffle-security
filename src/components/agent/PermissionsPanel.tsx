@@ -202,6 +202,7 @@ const PermissionsPanel = ({ compact = false }: PermissionsPanelProps) => {
     fetchHosts();
     setSelectedHosts(new Set());
     setExecuteResult(null);
+    setHostFilter('');
     setHostPopover({ anchor: e.currentTarget as HTMLElement, perm });
   };
 
