@@ -383,60 +383,100 @@ const PermissionsPanel = ({ compact = false }: PermissionsPanelProps) => {
             </Box>
           ) : (
             <>
+              {/* Filter input */}
+              <Box sx={{ px: 2, py: 1.5, borderBottom: '1px solid hsl(var(--border) / 0.3)' }}>
+                <Box sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  px: 1.5,
+                  py: 0.75,
+                  borderRadius: 1.5,
+                  border: '1px solid hsl(var(--border))',
+                  bgcolor: 'hsl(var(--muted) / 0.3)',
+                }}>
+                  <Search size={14} style={{ color: 'hsl(var(--muted-foreground))', flexShrink: 0 }} />
+                  <input
+                    type="text"
+                    placeholder="Filter hosts…"
+                    value={hostFilter}
+                    onChange={(e) => setHostFilter(e.target.value)}
+                    autoFocus
+                    style={{
+                      border: 'none',
+                      outline: 'none',
+                      background: 'transparent',
+                      color: 'hsl(var(--foreground))',
+                      fontSize: '0.8rem',
+                      width: '100%',
+                    }}
+                  />
+                </Box>
+              </Box>
+
               <Box sx={{ maxHeight: 240, overflowY: 'auto' }}>
-                {monitoredHosts.map((host) => {
-                  const isRecent = host.checkin > 0 && (Date.now() / 1000 - host.checkin) < 300;
-                  return (
-                    <Box
-                      key={host.uuid}
-                      onClick={() => toggleHostSelection(host.uuid)}
-                      sx={{
-                        px: 2.5,
-                        py: 1.25,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 1.5,
-                        cursor: 'pointer',
-                        borderBottom: '1px solid hsl(var(--border) / 0.3)',
-                        '&:hover': { bgcolor: 'hsl(var(--muted) / 0.3)' },
-                      }}
-                    >
-                      <Checkbox
-                        size="small"
-                        checked={selectedHosts.has(host.uuid)}
+                {monitoredHosts
+                  .filter(h => !hostFilter || h.hostname.toLowerCase().includes(hostFilter.toLowerCase()) || h.os.toLowerCase().includes(hostFilter.toLowerCase()) || h.groupName.toLowerCase().includes(hostFilter.toLowerCase()))
+                  .map((host) => {
+                    const status = getCheckinStatus(host.checkin);
+                    return (
+                      <Box
+                        key={host.uuid}
+                        onClick={() => toggleHostSelection(host.uuid)}
                         sx={{
-                          p: 0,
-                          color: 'hsl(var(--muted-foreground))',
-                          '&.Mui-checked': { color: 'hsl(var(--primary))' },
+                          px: 2.5,
+                          py: 1.25,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1.5,
+                          cursor: 'pointer',
+                          borderBottom: '1px solid hsl(var(--border) / 0.3)',
+                          '&:hover': { bgcolor: 'hsl(var(--muted) / 0.3)' },
                         }}
-                      />
-                      <Box sx={{ display: 'flex', alignItems: 'center', flexShrink: 0, color: 'hsl(var(--muted-foreground))' }}>
-                        <OsIcon os={host.os} size={16} />
+                      >
+                        <Checkbox
+                          size="small"
+                          checked={selectedHosts.has(host.uuid)}
+                          sx={{
+                            p: 0,
+                            color: 'hsl(var(--muted-foreground))',
+                            '&.Mui-checked': { color: 'hsl(var(--primary))' },
+                          }}
+                        />
+                        <Box sx={{ display: 'flex', alignItems: 'center', flexShrink: 0, color: 'hsl(var(--muted-foreground))' }}>
+                          <OsIcon os={host.os} size={16} />
+                        </Box>
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                          <Typography sx={{
+                            fontSize: '0.8rem',
+                            fontWeight: 500,
+                            color: 'hsl(var(--foreground))',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                          }}>
+                            {host.hostname}
+                          </Typography>
+                        </Box>
+                        <Tooltip title={status.label} placement="left">
+                          <Box sx={{
+                            width: 7,
+                            height: 7,
+                            borderRadius: '50%',
+                            bgcolor: status.color,
+                            flexShrink: 0,
+                          }} />
+                        </Tooltip>
                       </Box>
-                      <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Typography sx={{
-                          fontSize: '0.8rem',
-                          fontWeight: 500,
-                          color: 'hsl(var(--foreground))',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                        }}>
-                          {host.hostname}
-                        </Typography>
-                      </Box>
-                      {isRecent && (
-                        <Box sx={{
-                          width: 6,
-                          height: 6,
-                          borderRadius: '50%',
-                          bgcolor: 'hsl(var(--severity-low))',
-                          flexShrink: 0,
-                        }} />
-                      )}
-                    </Box>
-                  );
-                })}
+                    );
+                  })}
+                {monitoredHosts.length > 0 && hostFilter && monitoredHosts.filter(h => h.hostname.toLowerCase().includes(hostFilter.toLowerCase()) || h.os.toLowerCase().includes(hostFilter.toLowerCase()) || h.groupName.toLowerCase().includes(hostFilter.toLowerCase())).length === 0 && (
+                  <Box sx={{ px: 2.5, py: 2.5, textAlign: 'center' }}>
+                    <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
+                      No hosts match "{hostFilter}"
+                    </Typography>
+                  </Box>
+                )}
               </Box>
 
               <Box sx={{ px: 2.5, py: 1.5, borderTop: '1px solid hsl(var(--border))' }}>
