@@ -214,6 +214,14 @@ const HostTerminalPage = () => {
     inputRef.current?.focus();
   }, []);
 
+  const removeHistoryEntry = useCallback((entryId: number) => {
+    setActionHistory(prev => {
+      const updated = prev.filter(e => e.entryId !== entryId);
+      if (hostUuid) saveSession(hostUuid, updated);
+      return updated;
+    });
+    setExpandedEntries(prev => { const next = new Set(prev); next.delete(entryId); return next; });
+  }, [hostUuid]);
 
   const executeHostAction = useCallback(async (actionId: string, actionName: string, isPredefined = false) => {
     if (!hostUuid) return;
