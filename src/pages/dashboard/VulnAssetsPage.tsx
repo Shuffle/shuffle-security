@@ -184,6 +184,7 @@ const VulnAssetsPage = () => {
     startedAt: number;
     finishedAt?: number;
     error?: string;
+    executionId?: string;
   };
   const [actionDebugMap, setActionDebugMap] = useState<Map<string, ActionDebugEntry>>(new Map());
   const abortControllersRef = useRef<Map<string, AbortController>>(new Map());
@@ -263,7 +264,7 @@ const VulnAssetsPage = () => {
         (parsed as Record<string, unknown>).execution_id
       ) {
         const execId = (parsed as Record<string, unknown>).execution_id as string;
-        updateHostDebug(hostUuid, { status: 'polling', responseStatus: resp.status, responseBody: text });
+        updateHostDebug(hostUuid, { status: 'polling', responseStatus: resp.status, responseBody: text, executionId: execId });
 
         // Poll streams/results for the real output (30 min timeout)
         const maxAttempts = 900; // 900 * 2s = 30 minutes
@@ -342,10 +343,21 @@ const VulnAssetsPage = () => {
     const controller = abortControllersRef.current.get(hostUuid);
     if (controller) controller.abort();
     abortControllersRef.current.delete(hostUuid);
+
+    // Send server-side abort if we have an execution_id
+    const debugEntry = actionDebugMap.get(hostUuid);
+    if (debugEntry?.executionId) {
+      fetch(getApiUrl(`/api/v1/streams/results`), {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+        body: JSON.stringify({ execution_id: debugEntry.executionId, authorization: debugEntry.executionId, abort: true }),
+      }).catch(() => { /* best effort */ });
+    }
+
     // Immediately update UI
     updateHostDebug(hostUuid, { status: 'error', finishedAt: Date.now(), error: 'Aborted by user' });
     // Don't remove from actionExecuting immediately — keep popover open to show debug info.
-    // It will be cleared when actionDebugMap is reset on next action or popover close.
   };
 
   // Aggregate all hosts across all sensor groups
