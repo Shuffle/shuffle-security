@@ -64,10 +64,11 @@ interface NavItem {
   icon: React.ReactNode;
   path?: string;
   children?: NavChild[];
+  supportOnly?: boolean;
 }
 
 const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: boolean): NavItem[] => [
-  ...(isSupport ? [{ label: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/dashboard' }] : []),
+  { label: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/dashboard', supportOnly: true },
   { 
     label: entityLabel, 
     icon: <WarningAmberIcon />,
@@ -78,7 +79,7 @@ const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: bool
       { label: 'Response Actions', path: '/incidents/response-actions', icon: <Shield size={16} />, supportOnly: true },
     ],
   },
-  ...(isSupport ? [{ label: 'Monitors', icon: <Radar size={20} />, path: '/monitors' }] : []),
+  { label: 'Monitors', icon: <Radar size={20} />, path: '/monitors', supportOnly: true },
   { 
     label: 'Detection', 
     icon: <RadarIcon />,
@@ -89,7 +90,7 @@ const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: bool
       { label: 'ATT&CK', path: '/detection/mitre', icon: <Waypoints size={16} />, supportOnly: true },
       { label: 'Threat Feeds', path: '/incidents/threat-feeds', icon: <RssFeedIcon fontSize="small" /> },
       { label: 'IOC Types', path: '/incidents/ioc-types', icon: <FingerprintIcon fontSize="small" /> },
-      ...(isSupport ? [{ label: 'Vulnerabilities', path: '/vulnerabilities', icon: <Shield size={16} /> }] : []),
+      { label: 'Vulnerabilities', path: '/vulnerabilities', icon: <Shield size={16} />, supportOnly: true },
       { label: 'Assets', path: '/assets', icon: <HardDrive size={16} /> },
     ],
   },
@@ -169,6 +170,8 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
     const items = buildNavItems(entityPlural, entityBasePath, isSupport);
     return items
       .filter(item => {
+        // Hide support-only top-level items for non-support users
+        if (item.supportOnly && !isSupport) return false;
         // Check if this top-level item should be hidden
         const hideKey = Object.entries(tabKeyToNavLabel).find(([, label]) => label === item.label)?.[0] as SidebarTabKey | undefined;
         if (hideKey && !sidebarTabs[hideKey]) return false;
@@ -552,7 +555,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                             primary={
                               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                 <span>{item.label}</span>
-                                {item.label === 'Vulnerabilities' && (
+                                {item.supportOnly && (
                                   <Typography
                                     component="span"
                                     sx={{
@@ -713,7 +716,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                             color: 'hsl(var(--foreground))',
                           }}
                         />
-                        {item.label === 'Dashboard' && (
+                        {item.supportOnly && (
                           <Typography
                             sx={{
                               fontSize: '0.6rem',
