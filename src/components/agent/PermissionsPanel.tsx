@@ -406,32 +406,39 @@ const PermissionsPanel = ({ compact = false }: PermissionsPanelProps) => {
                 })}
               </Box>
 
-              <Box sx={{ px: 2.5, py: 1.5, borderTop: '1px solid hsl(var(--border))', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))' }}>
-                  {selectedHosts.size} selected
-                </Typography>
-                <Button
-                  size="small"
-                  variant="contained"
-                  disabled={selectedHosts.size === 0}
-                  startIcon={<Play size={12} />}
-                  onClick={() => {
-                    // TODO: Execute action on selected hosts
-                    setHostPopover(null);
-                  }}
-                  sx={{
-                    textTransform: 'none',
-                    fontSize: '0.75rem',
-                    bgcolor: 'hsl(var(--primary))',
-                    color: 'hsl(var(--primary-foreground))',
-                    borderRadius: 1.5,
-                    px: 2,
-                    '&:hover': { bgcolor: 'hsl(var(--primary))', filter: 'brightness(1.1)' },
-                    '&.Mui-disabled': { bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' },
-                  }}
-                >
-                  Run
-                </Button>
+              <Box sx={{ px: 2.5, py: 1.5, borderTop: '1px solid hsl(var(--border))' }}>
+                {executeResult && (
+                  <Alert
+                    severity={executeResult.success ? 'success' : 'error'}
+                    sx={{ mb: 1.5, fontSize: '0.75rem', py: 0.25 }}
+                  >
+                    {executeResult.message}
+                  </Alert>
+                )}
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))' }}>
+                    {selectedHosts.size} selected
+                  </Typography>
+                  <Button
+                    size="small"
+                    variant="contained"
+                    disabled={selectedHosts.size === 0 || isExecuting}
+                    startIcon={isExecuting ? <CircularProgress size={12} sx={{ color: 'inherit' }} /> : <Play size={12} />}
+                    onClick={executeOnHosts}
+                    sx={{
+                      textTransform: 'none',
+                      fontSize: '0.75rem',
+                      bgcolor: 'hsl(var(--primary))',
+                      color: 'hsl(var(--primary-foreground))',
+                      borderRadius: 1.5,
+                      px: 2,
+                      '&:hover': { bgcolor: 'hsl(var(--primary))', filter: 'brightness(1.1)' },
+                      '&.Mui-disabled': { bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' },
+                    }}
+                  >
+                    {isExecuting ? 'Running…' : 'Run'}
+                  </Button>
+                </Box>
               </Box>
             </>
           )}
