@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { ArrowLeft, CheckCircle2, ChevronDown, ChevronRight, Loader2, Play, RefreshCw, Search, ShieldX, Terminal, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, ChevronRight, Loader2, Play, RefreshCw, Search, ShieldX, Terminal, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 import { DEFAULT_AGENT_PERMISSIONS } from '@/hooks/useAgentPermissions';
@@ -541,12 +541,14 @@ const HostTerminalPage = () => {
           const isExpanded = expandedEntries.has(entry.entryId);
           const isLoading = loadingEntries.has(entry.entryId);
           const canReload = !isRunning && !!entry.executionId && !!entry.authorization;
+          // historyIndex 0 = most recent (last entry), 1 = second-to-last, etc.
+          const isHistorySelected = historyIndex >= 0 && i === (actionHistory.length - 1 - historyIndex);
 
           return (
-            <div key={entry.entryId} className={`border-b border-border/50 last:border-b-0 ${isLatest ? 'bg-primary/5 ring-1 ring-inset ring-primary/20' : ''}`}>
+            <div key={entry.entryId} className={`border-b border-border/50 last:border-b-0 ${isLatest ? 'bg-primary/5 ring-1 ring-inset ring-primary/20' : ''} ${isHistorySelected ? 'ring-1 ring-inset ring-primary/40' : ''}`}>
               <button
                 type="button"
-                className={`w-full text-left px-6 py-2.5 flex items-center gap-3 transition-colors hover:bg-muted/30 ${isLatest ? 'bg-primary/10' : isRunning ? 'bg-muted/30' : 'bg-muted/10'}`}
+                className={`w-full text-left px-6 py-2.5 flex items-center gap-3 transition-colors hover:bg-muted/30 ${isHistorySelected ? 'bg-primary/15' : isLatest ? 'bg-primary/10' : isRunning ? 'bg-muted/30' : 'bg-muted/10'}`}
                 onClick={() => {
                   if (isRunning) return;
                   if (hasOutput) {
@@ -556,6 +558,9 @@ const HostTerminalPage = () => {
                   }
                 }}
               >
+                {isHistorySelected && (
+                  <ArrowRight size={12} className="text-primary shrink-0 -ml-3" />
+                )}
                 {!isRunning && (hasOutput || canReload) && (
                   <span className="shrink-0 text-muted-foreground">
                     {isExpanded && hasOutput ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
@@ -662,18 +667,8 @@ const HostTerminalPage = () => {
             className="h-9 text-sm flex-1 font-mono"
             ref={inputRef}
             onKeyDown={e => {
-              // Merge in-memory actions (including running ones) with localStorage history
-              const storedHistory = getCommandHistory(hostUuid || '');
-              const inMemoryNames = actionHistory.map(e => e.actionName).filter(Boolean);
-              const seen = new Set<string>();
-              const history: string[] = [];
-              // Most recent in-memory first, then stored
-              for (let i = inMemoryNames.length - 1; i >= 0; i--) {
-                if (!seen.has(inMemoryNames[i])) { seen.add(inMemoryNames[i]); history.push(inMemoryNames[i]); }
-              }
-              for (const cmd of storedHistory) {
-                if (!seen.has(cmd)) { seen.add(cmd); history.push(cmd); }
-              }
+              // Full ordered history, every entry (no dedup), most recent first
+              const history = [...actionHistory].reverse().map(e => e.actionName).filter(Boolean);
               if (e.key === 'Enter' && customAction.trim()) {
                 setHistoryIndex(-1);
                 executeHostAction(customAction.trim(), customAction.trim());
