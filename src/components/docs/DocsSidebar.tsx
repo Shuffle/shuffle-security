@@ -14,6 +14,7 @@ import DnsIcon from '@mui/icons-material/Dns';
 import SensorsIcon from '@mui/icons-material/Sensors';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import ReportProblemIcon from '@mui/icons-material/ReportProblem';
+import RadarIcon from '@mui/icons-material/Radar';
 
 interface DocLink {
   label: string;
@@ -32,6 +33,7 @@ const docLinks: DocLink[] = [
   { label: 'Getting Started', slug: 'getting-started', icon: <SettingsIcon /> },
   { label: 'Incident Creation', slug: 'incident-creation', icon: <ReportProblemIcon /> },
   { label: 'Shuffle Pipelines', slug: 'shuffle-pipelines', icon: <SensorsIcon /> },
+  { label: 'Monitoring', slug: 'monitoring', icon: <RadarIcon /> },
   { label: 'Self-Hosting', slug: 'setup', icon: <DnsIcon /> },
 ];
 
