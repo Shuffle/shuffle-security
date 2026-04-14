@@ -891,13 +891,13 @@ const VulnAssetsPage = () => {
                               </div>
 
                               {/* Predefined action chips — pinned above input */}
-                              {!isRunning && (
+                              {(
                                 <div className="px-3 py-2 flex flex-wrap gap-1 border-t border-border/50 shrink-0">
                                   {hostActionablePerms.map(perm => (
                                     <button
                                       key={perm.id}
                                       className="px-2 py-1 text-[0.65rem] rounded-md border border-border hover:bg-muted/50 transition-colors disabled:opacity-50 text-foreground"
-                                      disabled={actionExecuting.has(host.uuid)}
+                                      disabled={false}
                                       onClick={() => executeHostAction(perm.id, perm.name, host.hostname, host.groupName, host.uuid, true)}
                                     >
                                       {perm.name}
@@ -907,7 +907,7 @@ const VulnAssetsPage = () => {
                               )}
 
                               {/* Command input — always visible for full mode, or when not running for controlled */}
-                              {(isFull || !isRunning) && (
+                              {(isFull || true) && (
                                 <div className="px-3 py-2 border-t border-border shrink-0">
                                   <div className="flex gap-1.5 items-center">
                                     <span className="text-[0.65rem] font-mono text-primary shrink-0">$</span>
@@ -916,7 +916,7 @@ const VulnAssetsPage = () => {
                                       value={customAction}
                                       onChange={e => setCustomAction(e.target.value)}
                                       className="h-7 text-xs flex-1 font-mono"
-                                      disabled={isRunning}
+                                      
                                       ref={el => { if (el) requestAnimationFrame(() => el.focus()); }}
                                       onKeyDown={e => {
                                         const history = getCommandHistory(host.uuid);
@@ -947,7 +947,7 @@ const VulnAssetsPage = () => {
                                       size="icon"
                                       variant="ghost"
                                       className="h-7 w-7 shrink-0"
-                                      disabled={!customAction.trim() || isRunning}
+                                      disabled={!customAction.trim()}
                                       onClick={() => {
                                         if (customAction.trim()) {
                                           executeHostAction(customAction.trim(), customAction.trim(), host.hostname, host.groupName, host.uuid);
