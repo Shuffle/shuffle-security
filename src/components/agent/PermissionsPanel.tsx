@@ -395,9 +395,9 @@ const PermissionsPanel = ({ compact = false }: PermissionsPanelProps) => {
                           '&.Mui-checked': { color: 'hsl(var(--primary))' },
                         }}
                       />
-                      <Typography sx={{ fontSize: '0.8rem', flexShrink: 0 }}>
-                        {getOsIcon(host.os)}
-                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', flexShrink: 0, color: 'hsl(var(--muted-foreground))' }}>
+                        <OsIcon os={host.os} size={16} />
+                      </Box>
                       <Box sx={{ flex: 1, minWidth: 0 }}>
                         <Typography sx={{
                           fontSize: '0.8rem',
