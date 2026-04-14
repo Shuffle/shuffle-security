@@ -849,6 +849,9 @@ const VulnAssetsPage = () => {
                                         <ShieldX size={10} className="text-destructive shrink-0" />
                                       )}
                                       <span className="text-[0.55rem] text-muted-foreground font-mono shrink-0">
+                                        {new Date(entry.startedAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                                      </span>
+                                      <span className="text-[0.55rem] text-muted-foreground font-mono shrink-0">
                                         {entry.finishedAt ? `${Math.round((entry.finishedAt - entry.startedAt) / 1000)}s` : ''}
                                       </span>
                                     </div>
