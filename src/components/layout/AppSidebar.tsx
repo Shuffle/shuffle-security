@@ -91,7 +91,7 @@ const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: bool
       { label: 'Threat Feeds', path: '/incidents/threat-feeds', icon: <RssFeedIcon fontSize="small" /> },
       { label: 'IOC Types', path: '/incidents/ioc-types', icon: <FingerprintIcon fontSize="small" /> },
       { label: 'Vulnerabilities', path: '/vulnerabilities', icon: <Shield size={16} />, supportOnly: true },
-      { label: 'Assets', path: '/assets', icon: <HardDrive size={16} /> },
+      { label: 'Assets', path: '/assets', icon: <HardDrive size={16} />, supportOnly: true },
     ],
   },
   { label: '__divider__', icon: <></> },
