@@ -121,9 +121,16 @@ const HostTerminalPage = () => {
   const location = useLocation();
   const hostState = location.state as { hostname?: string; groupName?: string; mode?: string } | null;
 
-  const hostname = hostState?.hostname || 'Unknown Host';
-  const groupName = hostState?.groupName || '';
-  const mode = hostState?.mode || 'full';
+  // Host switcher state
+  const [allHosts, setAllHosts] = useState<HostOption[]>([]);
+  const [hostSearchQuery, setHostSearchQuery] = useState('');
+  const [hostSwitcherOpen, setHostSwitcherOpen] = useState(false);
+
+  // Resolve host info from location.state first, then fall back to allHosts lookup
+  const resolvedHost = allHosts.find(h => h.uuid === hostUuid);
+  const hostname = hostState?.hostname || resolvedHost?.hostname || 'Unknown Host';
+  const groupName = hostState?.groupName || resolvedHost?.groupName || '';
+  const mode = hostState?.mode || resolvedHost?.mode || 'full';
   const isFull = mode === 'full';
 
   usePageMeta({ title: `Terminal · ${hostname}`, description: `Terminal session for ${hostname}` });
