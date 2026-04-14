@@ -8,7 +8,10 @@ import { getApiUrl, getAuthHeader } from '@/config/api';
 import { DEFAULT_AGENT_PERMISSIONS } from '@/hooks/useAgentPermissions';
 import { usePageMeta } from '@/hooks/usePageMeta';
 
+let entryIdCounter = 0;
+
 type ActionDebugEntry = {
+  entryId: number;
   hostUuid: string;
   actionName: string;
   hostname: string;
@@ -86,32 +89,14 @@ const HostTerminalPage = () => {
     inputRef.current?.focus();
   }, []);
 
-  const pushDebug = (entry: ActionDebugEntry) => {
-    setActionHistory(prev => [...prev, entry]);
-  };
 
-  const updateLatestDebug = (update: Partial<ActionDebugEntry>) => {
-    setActionHistory(prev => {
-      if (prev.length === 0) return prev;
-      const last = { ...prev[prev.length - 1], ...update };
-      return [...prev.slice(0, -1), last];
-    });
-  };
 
-  // We need a stable way to update a specific entry (not just latest) for concurrent commands
-  const updateDebugByIndex = (index: number, update: Partial<ActionDebugEntry>) => {
-    setActionHistory(prev => {
-      if (index < 0 || index >= prev.length) return prev;
-      const updated = { ...prev[index], ...update };
-      return [...prev.slice(0, index), updated, ...prev.slice(index + 1)];
-    });
-  };
 
   const executeHostAction = useCallback(async (actionId: string, actionName: string, isPredefined = false) => {
     if (!hostUuid) return;
-    const entryIndex = actionHistory.length; // will be the index of the new entry
+    const myId = ++entryIdCounter;
     const controller = new AbortController();
-    const abortKey = `${hostUuid}_${Date.now()}`;
+    const abortKey = `entry_${myId}`;
     abortControllersRef.current.set(abortKey, controller);
     pollingActiveRef.current.set(abortKey, true);
 
@@ -127,6 +112,7 @@ const HostTerminalPage = () => {
     };
 
     const newEntry: ActionDebugEntry = {
+      entryId: myId,
       hostUuid,
       actionName,
       hostname,
@@ -135,20 +121,11 @@ const HostTerminalPage = () => {
       startedAt: Date.now(),
     };
 
-    // We need to use functional setState to get the correct index
-    let myIndex = -1;
-    setActionHistory(prev => {
-      myIndex = prev.length;
-      return [...prev, newEntry];
-    });
-
-    // Small delay to let state settle
-    await new Promise(r => setTimeout(r, 50));
+    setActionHistory(prev => [...prev, newEntry]);
 
     const updateMyEntry = (update: Partial<ActionDebugEntry>) => {
       setActionHistory(prev => {
-        // Find the entry by startedAt + actionName to handle concurrent commands
-        const idx = prev.findIndex(e => e.startedAt === newEntry.startedAt && e.actionName === newEntry.actionName);
+        const idx = prev.findIndex(e => e.entryId === myId);
         if (idx < 0) return prev;
         return [...prev.slice(0, idx), { ...prev[idx], ...update }, ...prev.slice(idx + 1)];
       });
@@ -297,7 +274,7 @@ const HostTerminalPage = () => {
           const isRunning = entry.status === 'sending' || entry.status === 'polling';
 
           return (
-            <div key={`${entry.startedAt}-${entry.actionName}`} className={`border-b border-border/50 last:border-b-0 ${isLatest ? 'bg-primary/5 ring-1 ring-inset ring-primary/20' : ''}`}>
+            <div key={entry.entryId} className={`border-b border-border/50 last:border-b-0 ${isLatest ? 'bg-primary/5 ring-1 ring-inset ring-primary/20' : ''}`}>
               <div className={`px-6 py-2.5 flex items-center gap-3 ${isLatest ? 'bg-primary/10' : isRunning ? 'bg-muted/30' : 'bg-muted/10'}`}>
                 <span className="text-sm font-mono text-primary">$</span>
                 <span className="text-sm font-mono font-medium text-foreground flex-1 truncate">{entry.actionName}</span>
@@ -322,15 +299,14 @@ const HostTerminalPage = () => {
                     size="sm"
                     className="h-6 px-2 text-xs text-destructive hover:text-destructive"
                     onClick={() => {
-                      // Find and abort this specific entry's controller
-                      abortControllersRef.current.forEach((ctrl, key) => {
-                        if (key.startsWith(`${hostUuid}_`)) {
-                          pollingActiveRef.current.set(key, false);
-                          ctrl.abort();
-                        }
-                      });
+                      const abortKey = `entry_${entry.entryId}`;
+                      const ctrl = abortControllersRef.current.get(abortKey);
+                      if (ctrl) {
+                        pollingActiveRef.current.set(abortKey, false);
+                        ctrl.abort();
+                      }
                       setActionHistory(prev => prev.map(e =>
-                        e.startedAt === entry.startedAt && e.actionName === entry.actionName
+                        e.entryId === entry.entryId
                           ? { ...e, status: 'error' as const, finishedAt: Date.now(), error: 'Aborted by user' }
                           : e
                       ));
