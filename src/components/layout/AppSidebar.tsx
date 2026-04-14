@@ -78,6 +78,7 @@ const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: bool
       { label: 'Response Actions', path: '/incidents/response-actions', icon: <Shield size={16} />, supportOnly: true },
     ],
   },
+  { label: 'Monitors', icon: <Radar size={20} />, path: '/monitors' },
   { 
     label: 'Detection', 
     icon: <RadarIcon />,
@@ -96,7 +97,6 @@ const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: bool
     path: '/vulnerabilities',
     children: [
       { label: 'Assets', path: '/assets', icon: <HardDrive size={16} />, disabled: true },
-      { label: 'Monitors', path: '/monitors', icon: <Radar size={16} /> },
     ],
   }] : [{
     label: 'Assets',
