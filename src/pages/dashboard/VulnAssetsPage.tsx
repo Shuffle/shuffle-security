@@ -1518,25 +1518,21 @@ const VulnAssetsPage = () => {
                     <div className="relative">
                       <pre className="text-xs bg-muted rounded-lg p-4 pr-12 border border-border overflow-x-auto font-mono text-foreground whitespace-pre-wrap break-all leading-relaxed max-h-48">
 {(() => {
-  const baseUrl = API_CONFIG.baseUrl;
-  const envLines: string[] = [];
-  envLines.push(`BASE_URL=${baseUrl}`);
-  envLines.push('SENSOR_MODE=true');
+  const flags: string[] = [];
+  flags.push(`--base_url=${API_CONFIG.baseUrl}`);
+  flags.push('--sensor_mode=true');
   if (selectedGroup) {
-    envLines.push(`QUEUE=${selectedGroup.queue}`);
-    if (selectedGroup.org_id) envLines.push(`ORG_ID=${selectedGroup.org_id}`);
-    if (selectedGroup.auth) envLines.push(`AUTH=${selectedGroup.auth}`);
+    flags.push(`--queue=${selectedGroup.queue}`);
+    if (selectedGroup.org_id) flags.push(`--org_id=${selectedGroup.org_id}`);
+    if (selectedGroup.auth) flags.push(`--auth=${selectedGroup.auth}`);
   }
-  if (hostChecks.installed_software) envLines.push('SOFTWARE_LIST_ENABLED=true');
-  if (hostChecks.hd_encrypted) envLines.push('HD_ENCRYPTED_CHECK=true');
-  if (hostChecks.screenlock) envLines.push('SCREENLOCK_CHECK=true');
-  if (hostChecks.response_actions) envLines.push(`RESPONSE_ACTIONS=${responseActionMode}`);
-  if (hostChecks.log_forwarding && logForwardingEndpoint.trim()) envLines.push(`LOG_FORWARDING=${logForwardingEndpoint.trim()}`);
-
-  if (hostPlatform === 'windows') {
-    return envLines.map(l => `$env:${l.replace('=', '="')}"`).join('\n') + '\n\n./orborus.exe';
-  }
-  return envLines.map(l => `export ${l}`).join('\n') + '\n\n./orborus';
+  if (hostChecks.installed_software) flags.push('--software_list_enabled=true');
+  if (hostChecks.hd_encrypted) flags.push('--hd_encrypted_check=true');
+  if (hostChecks.screenlock) flags.push('--screenlock_check=true');
+  if (hostChecks.response_actions) flags.push(`--response_actions=${responseActionMode}`);
+  if (hostChecks.log_forwarding && logForwardingEndpoint.trim()) flags.push(`--log_forwarding=${logForwardingEndpoint.trim()}`);
+  const bin = hostPlatform === 'windows' ? '.\\orborus.exe' : './orborus';
+  return `${bin} ${flags.join(' \\\n  ')}`;
 })()}
                       </pre>
                       <Button
@@ -1544,24 +1540,21 @@ const VulnAssetsPage = () => {
                         size="icon"
                         className="absolute top-2 right-2 h-7 w-7"
                         onClick={() => {
-                          const baseUrl = API_CONFIG.baseUrl;
-                          const envLines: string[] = [];
-                          envLines.push(`BASE_URL=${baseUrl}`);
-                          envLines.push('SENSOR_MODE=true');
+                          const flags: string[] = [];
+                          flags.push(`--base_url=${API_CONFIG.baseUrl}`);
+                          flags.push('--sensor_mode=true');
                           if (selectedGroup) {
-                            envLines.push(`QUEUE=${selectedGroup.queue}`);
-                            if (selectedGroup.org_id) envLines.push(`ORG_ID=${selectedGroup.org_id}`);
-                            if (selectedGroup.auth) envLines.push(`AUTH=${selectedGroup.auth}`);
+                            flags.push(`--queue=${selectedGroup.queue}`);
+                            if (selectedGroup.org_id) flags.push(`--org_id=${selectedGroup.org_id}`);
+                            if (selectedGroup.auth) flags.push(`--auth=${selectedGroup.auth}`);
                           }
-                          if (hostChecks.installed_software) envLines.push('SOFTWARE_LIST_ENABLED=true');
-                          if (hostChecks.hd_encrypted) envLines.push('HD_ENCRYPTED_CHECK=true');
-                          if (hostChecks.screenlock) envLines.push('SCREENLOCK_CHECK=true');
-                          if (hostChecks.response_actions) envLines.push(`RESPONSE_ACTIONS=${responseActionMode}`);
-                          if (hostChecks.log_forwarding && logForwardingEndpoint.trim()) envLines.push(`LOG_FORWARDING=${logForwardingEndpoint.trim()}`);
-                          const cmd = hostPlatform === 'windows'
-                            ? envLines.map(l => `$env:${l.replace('=', '="')}"`).join('\n') + '\n\n./orborus.exe'
-                            : envLines.map(l => `export ${l}`).join('\n') + '\n\n./orborus';
-                          navigator.clipboard.writeText(cmd);
+                          if (hostChecks.installed_software) flags.push('--software_list_enabled=true');
+                          if (hostChecks.hd_encrypted) flags.push('--hd_encrypted_check=true');
+                          if (hostChecks.screenlock) flags.push('--screenlock_check=true');
+                          if (hostChecks.response_actions) flags.push(`--response_actions=${responseActionMode}`);
+                          if (hostChecks.log_forwarding && logForwardingEndpoint.trim()) flags.push(`--log_forwarding=${logForwardingEndpoint.trim()}`);
+                          const bin = hostPlatform === 'windows' ? '.\\orborus.exe' : './orborus';
+                          navigator.clipboard.writeText(`${bin} ${flags.join(' ')}`);
                           setCopied(true);
                           setTimeout(() => setCopied(false), 2000);
                         }}
