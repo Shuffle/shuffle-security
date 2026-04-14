@@ -692,6 +692,7 @@ const HostTerminalPage = () => {
             <Play size={14} />
           </Button>
         </div>
+        <p className="text-[0.65rem] text-muted-foreground/60 mt-1.5">History is stored locally in your browser. Other users cannot see it.</p>
       </div>
     </div>
   );
