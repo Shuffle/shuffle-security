@@ -215,11 +215,11 @@ const PermissionsPanel = ({ compact = false }: PermissionsPanelProps) => {
         body: JSON.stringify({
           app_id: 'sensors',
           app_name: 'sensors',
-          name: 'respond',
-          sensor_group: sensorGroup,
+          name: 'run_action',
           parameters: [
             { name: 'action', value: hostPopover.perm.id },
             { name: 'hosts', value: hostnames.join(',') },
+            { name: 'sensor_group', value: sensorGroup },
           ],
         }),
       });
