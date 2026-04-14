@@ -181,6 +181,12 @@ const VulnAssetsPage = () => {
   const getCommandHistory = (hostUuid: string): string[] => {
     try {
       const stored = JSON.parse(localStorage.getItem(`terminal_session_${hostUuid}`) || '[]');
+      // Fall back to old cmd_history_ key
+      if (!Array.isArray(stored) || stored.length === 0) {
+        const old = JSON.parse(localStorage.getItem(`cmd_history_${hostUuid}`) || '[]');
+        if (Array.isArray(old) && old.length > 0) return old;
+        return [];
+      }
       const seen = new Set<string>();
       const cmds: string[] = [];
       for (let i = stored.length - 1; i >= 0; i--) {
