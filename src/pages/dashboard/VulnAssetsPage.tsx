@@ -765,7 +765,7 @@ const VulnAssetsPage = () => {
                     <CheckDot on={softwareCount > 0} tip={softwareCount > 0 ? `${softwareCount} packages installed` : 'Software not collected'} />
                     <CheckDot
                       on={responseActionsOn}
-                      tip={responseActionsOn ? `Response actions: ${responseActionsMode === 'full' ? 'Full control' : 'Controlled'}` : 'Response actions not enabled'}
+                      tip={responseActionsOn ? `Response actions: ${responseActionsMode === 'full' ? 'Full control (RCE)' : 'Controlled'}` : 'Response actions not enabled'}
                       color={responseActionsMode === 'full' ? 'bg-[hsl(var(--severity-high))]' : 'bg-green-500'}
                     />
                     <CheckDot on={logForwardingOn} tip={logForwardingOn ? `Log forwarding: ${host.log_forwarding}` : 'Log forwarding not enabled'} />
