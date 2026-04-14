@@ -149,6 +149,8 @@ const PermissionsPanel = ({ compact = false }: PermissionsPanelProps) => {
   const [hostsLoaded, setHostsLoaded] = useState(false);
   const [hostPopover, setHostPopover] = useState<{ anchor: HTMLElement; perm: AgentPermission } | null>(null);
   const [selectedHosts, setSelectedHosts] = useState<Set<string>>(new Set());
+  const [isExecuting, setIsExecuting] = useState(false);
+  const [executeResult, setExecuteResult] = useState<{ success: boolean; message: string } | null>(null);
 
   // Fetch monitored hosts from environments API
   const fetchHosts = useCallback(async () => {
