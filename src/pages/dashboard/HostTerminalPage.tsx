@@ -84,14 +84,9 @@ const getCommandHistory = (hostUuid: string): string[] => {
       if (Array.isArray(old) && old.length > 0) return old;
     } catch { /* ignore */ }
   }
-  // Unique command names, most recent first
-  const seen = new Set<string>();
   const cmds: string[] = [];
   for (let i = stored.length - 1; i >= 0; i--) {
-    if (stored[i]?.actionName && !seen.has(stored[i].actionName)) {
-      seen.add(stored[i].actionName);
-      cmds.push(stored[i].actionName);
-    }
+    if (stored[i]?.actionName) cmds.push(stored[i].actionName);
   }
   return cmds;
 };
