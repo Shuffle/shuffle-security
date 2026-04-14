@@ -173,6 +173,8 @@ const VulnAssetsPage = () => {
   const [osSortAsc, setOsSortAsc] = useState<boolean | null>(null);
   const [actionExecuting, setActionExecuting] = useState<Set<string>>(new Set()); // host uuids being acted on
   const [customAction, setCustomAction] = useState('');
+  const [commandHistory, setCommandHistory] = useState<string[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
 
   type ActionDebugEntry = {
     hostUuid: string;
