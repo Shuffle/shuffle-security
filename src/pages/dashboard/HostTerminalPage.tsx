@@ -167,6 +167,7 @@ const HostTerminalPage = () => {
             groupName: env.Name,
             mode: modeStr,
             os: h.os || '',
+            checkin: h.checkin,
           }));
         });
         setAllHosts(hosts);
