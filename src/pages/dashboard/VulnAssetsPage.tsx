@@ -824,6 +824,9 @@ const VulnAssetsPage = () => {
                                   <p className="text-xs font-semibold text-foreground truncate">{host.hostname}</p>
                                   <p className="text-[0.6rem] text-muted-foreground">{responseActionsMode === 'full' ? 'Full control (RCE)' : 'Controlled'}</p>
                                 </div>
+                                <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0" onClick={() => setFullscreenHost({ uuid: host.uuid, hostname: host.hostname, groupName: host.groupName, mode: responseActionsMode || 'controlled' })}>
+                                  <Maximize2 size={10} />
+                                </Button>
                                 {isRunning && <Loader2 size={12} className="animate-spin text-primary shrink-0" />}
                               </div>
 
