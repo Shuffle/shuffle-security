@@ -218,12 +218,70 @@ const VulnAssetsPage = () => {
         body: JSON.stringify(requestBody),
       });
       const text = await resp.text().catch(() => '');
-      if (resp.ok) {
-        setActionDebug(prev => prev ? { ...prev, status: 'success', responseStatus: resp.status, responseBody: text, finishedAt: Date.now() } : null);
-        toast.success(`Action sent`, { description: `"${actionName}" → ${hostname}` });
-      } else {
+      if (!resp.ok) {
         setActionDebug(prev => prev ? { ...prev, status: 'error', responseStatus: resp.status, responseBody: text, finishedAt: Date.now(), error: text || `HTTP ${resp.status}` } : null);
         toast.error('Action failed', { description: text || `HTTP ${resp.status}` });
+        return;
+      }
+
+      // Check if response is an execution stub that needs polling
+      let parsed: unknown = null;
+      try { parsed = JSON.parse(text); } catch { /* not JSON */ }
+
+      if (
+        parsed && typeof parsed === 'object' && parsed !== null &&
+        typeof (parsed as Record<string, unknown>).execution_id === 'string' &&
+        (parsed as Record<string, unknown>).execution_id
+      ) {
+        const execId = (parsed as Record<string, unknown>).execution_id as string;
+        setActionDebug(prev => prev ? { ...prev, status: 'polling', responseStatus: resp.status, responseBody: text } : null);
+
+        // Poll streams/results for the real output
+        const maxAttempts = 15;
+        const intervalMs = 2000;
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+          await new Promise(r => setTimeout(r, intervalMs));
+          try {
+            const pollResp = await fetch(getApiUrl('/api/v1/streams/results'), {
+              method: 'POST',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+              body: JSON.stringify({ execution_id: execId, authorization: execId }),
+            });
+            if (!pollResp.ok) {
+              if (pollResp.status >= 400 && pollResp.status < 500) {
+                setActionDebug(prev => prev ? { ...prev, status: 'error', responseBody: `Poll error ${pollResp.status}`, finishedAt: Date.now(), error: `HTTP ${pollResp.status}` } : null);
+                toast.error('Action failed', { description: `Poll error ${pollResp.status}` });
+                return;
+              }
+              continue; // server error, retry
+            }
+            const pollText = await pollResp.text();
+            if (!pollText || pollText === '{}' || pollText === 'null') continue;
+
+            let pollData: unknown = null;
+            try { pollData = JSON.parse(pollText); } catch { /* not JSON */ }
+
+            if (pollData && typeof pollData === 'object') {
+              const st = (pollData as Record<string, unknown>).status;
+              if (st === 'EXECUTING' || st === 'WAITING') continue;
+            }
+
+            // Got a real result
+            setActionDebug(prev => prev ? { ...prev, status: 'success', responseBody: pollText, finishedAt: Date.now() } : null);
+            toast.success('Action completed', { description: `"${actionName}" → ${hostname}` });
+            return;
+          } catch {
+            continue;
+          }
+        }
+        // Timed out
+        setActionDebug(prev => prev ? { ...prev, status: 'error', finishedAt: Date.now(), error: 'Timed out waiting for execution result.' } : null);
+        toast.error('Action timed out', { description: 'No result after 30 seconds.' });
+      } else {
+        // Immediate result (no execution_id)
+        setActionDebug(prev => prev ? { ...prev, status: 'success', responseStatus: resp.status, responseBody: text, finishedAt: Date.now() } : null);
+        toast.success('Action sent', { description: `"${actionName}" → ${hostname}` });
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Request error';
@@ -231,7 +289,6 @@ const VulnAssetsPage = () => {
       toast.error('Action failed', { description: msg });
     } finally {
       setActionExecuting(null);
-      // Refresh environments data after action
       loadGroups();
     }
   };
