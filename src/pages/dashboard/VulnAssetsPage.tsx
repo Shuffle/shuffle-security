@@ -213,6 +213,10 @@ const VulnAssetsPage = () => {
     .filter(p => p.hostActionable && !p.disabled);
 
   const executeHostAction = async (actionId: string, actionName: string, hostname: string, groupName: string, hostUuid: string) => {
+    // Set up abort controller
+    const controller = new AbortController();
+    abortControllersRef.current.set(hostUuid, controller);
+
     setActionExecuting(prev => new Set(prev).add(hostUuid));
     const requestBody = {
       app_id: 'sensors',
@@ -238,6 +242,7 @@ const VulnAssetsPage = () => {
         credentials: 'include',
         headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
         body: JSON.stringify(requestBody),
+        signal: controller.signal,
       });
       const text = await resp.text().catch(() => '');
       if (!resp.ok) {
@@ -262,13 +267,22 @@ const VulnAssetsPage = () => {
         const maxAttempts = 900; // 900 * 2s = 30 minutes
         const intervalMs = 2000;
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
+          if (controller.signal.aborted) {
+            updateHostDebug(hostUuid, { status: 'error', finishedAt: Date.now(), error: 'Aborted by user' });
+            return;
+          }
           await new Promise(r => setTimeout(r, intervalMs));
+          if (controller.signal.aborted) {
+            updateHostDebug(hostUuid, { status: 'error', finishedAt: Date.now(), error: 'Aborted by user' });
+            return;
+          }
           try {
             const pollResp = await fetch(getApiUrl('/api/v1/streams/results'), {
               method: 'POST',
               credentials: 'include',
               headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
               body: JSON.stringify({ execution_id: execId, authorization: execId }),
+              signal: controller.signal,
             });
             if (!pollResp.ok) {
               if (pollResp.status >= 400 && pollResp.status < 500) {
@@ -293,7 +307,11 @@ const VulnAssetsPage = () => {
             updateHostDebug(hostUuid, { status: 'success', responseBody: pollText, finishedAt: Date.now() });
             toast.success('Action completed', { description: `"${actionName}" → ${hostname}` });
             return;
-          } catch {
+          } catch (err) {
+            if (controller.signal.aborted) {
+              updateHostDebug(hostUuid, { status: 'error', finishedAt: Date.now(), error: 'Aborted by user' });
+              return;
+            }
             continue;
           }
         }
@@ -306,13 +324,23 @@ const VulnAssetsPage = () => {
         toast.success('Action sent', { description: `"${actionName}" → ${hostname}` });
       }
     } catch (err) {
+      if (controller.signal.aborted) {
+        updateHostDebug(hostUuid, { status: 'error', finishedAt: Date.now(), error: 'Aborted by user' });
+        return;
+      }
       const msg = err instanceof Error ? err.message : 'Request error';
       updateHostDebug(hostUuid, { status: 'error', finishedAt: Date.now(), error: msg });
       toast.error('Action failed', { description: msg });
     } finally {
+      abortControllersRef.current.delete(hostUuid);
       setActionExecuting(prev => { const next = new Set(prev); next.delete(hostUuid); return next; });
       loadGroups();
     }
+  };
+
+  const abortHostAction = (hostUuid: string) => {
+    const controller = abortControllersRef.current.get(hostUuid);
+    if (controller) controller.abort();
   };
 
   // Aggregate all hosts across all sensor groups
