@@ -522,18 +522,43 @@ const HostTerminalPage = () => {
         {actionHistory.map((entry, i) => {
           const isLatest = entry.status !== 'sending' && entry.status !== 'polling' && i === actionHistory.map((e, idx) => e.status === 'success' || e.status === 'error' ? idx : -1).filter(x => x >= 0).pop();
           const isRunning = entry.status === 'sending' || entry.status === 'polling';
+          const hasOutput = !!(entry.actionOutput || entry.error);
+          const isExpanded = expandedEntries.has(entry.entryId);
+          const isLoading = loadingEntries.has(entry.entryId);
+          const canReload = !isRunning && !!entry.executionId && !!entry.authorization;
 
           return (
             <div key={entry.entryId} className={`border-b border-border/50 last:border-b-0 ${isLatest ? 'bg-primary/5 ring-1 ring-inset ring-primary/20' : ''}`}>
-              <div className={`px-6 py-2.5 flex items-center gap-3 ${isLatest ? 'bg-primary/10' : isRunning ? 'bg-muted/30' : 'bg-muted/10'}`}>
+              <button
+                type="button"
+                className={`w-full text-left px-6 py-2.5 flex items-center gap-3 transition-colors hover:bg-muted/30 ${isLatest ? 'bg-primary/10' : isRunning ? 'bg-muted/30' : 'bg-muted/10'}`}
+                onClick={() => {
+                  if (isRunning) return;
+                  if (hasOutput) {
+                    toggleExpanded(entry.entryId);
+                  } else if (canReload) {
+                    fetchEntryResult(entry);
+                  }
+                }}
+              >
+                {!isRunning && (hasOutput || canReload) && (
+                  <span className="shrink-0 text-muted-foreground">
+                    {isExpanded && hasOutput ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                  </span>
+                )}
                 <span className="text-sm font-mono text-primary">$</span>
                 <span className="text-sm font-mono font-medium text-foreground flex-1 truncate">{entry.actionName}</span>
-                {isRunning ? (
+                {isLoading ? (
+                  <Loader2 size={14} className="animate-spin text-primary shrink-0" />
+                ) : isRunning ? (
                   <Loader2 size={14} className="animate-spin text-primary shrink-0" />
                 ) : entry.status === 'success' ? (
                   <CheckCircle2 size={14} className="text-[hsl(var(--severity-low))] shrink-0" />
                 ) : (
                   <ShieldX size={14} className="text-destructive shrink-0" />
+                )}
+                {!hasOutput && canReload && !isLoading && (
+                  <RefreshCw size={12} className="text-muted-foreground shrink-0" />
                 )}
                 <span className="text-xs text-muted-foreground font-mono shrink-0">
                   {new Date(entry.startedAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
@@ -548,7 +573,8 @@ const HostTerminalPage = () => {
                     variant="ghost"
                     size="sm"
                     className="h-6 px-2 text-xs text-destructive hover:text-destructive"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       const abortKey = `entry_${entry.entryId}`;
                       const ctrl = abortControllersRef.current.get(abortKey);
                       if (ctrl) {
@@ -565,7 +591,7 @@ const HostTerminalPage = () => {
                     Stop
                   </Button>
                 )}
-              </div>
+              </button>
               {isRunning && (
                 <div className="px-6 py-1.5">
                   <span className="text-xs text-muted-foreground">
@@ -573,7 +599,7 @@ const HostTerminalPage = () => {
                   </span>
                 </div>
               )}
-              {(entry.actionOutput || entry.error) && (
+              {isExpanded && hasOutput && (
                 <div className="px-6 py-2.5">
                   {entry.actionOutput && (
                     <pre className="text-sm font-mono text-foreground/80 whitespace-pre-wrap break-words">{entry.actionOutput}</pre>
