@@ -648,10 +648,11 @@ const VulnAssetsPage = () => {
     return () => stopSensorPolling();
   }, [addHostStep, addHostOpen, startSensorPolling, stopSensorPolling]);
 
-  const detectPlatform = (): 'unix' | 'windows' => {
+  const detectPlatform = (): 'linux' | 'macos' | 'windows' => {
     const ua = navigator.userAgent.toLowerCase();
     if (ua.includes('win')) return 'windows';
-    return 'unix';
+    if (ua.includes('mac')) return 'macos';
+    return 'linux';
   };
 
   const handleOpenAddHost = () => {
