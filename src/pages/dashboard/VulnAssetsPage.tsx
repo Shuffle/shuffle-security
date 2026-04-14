@@ -470,7 +470,7 @@ const VulnAssetsPage = () => {
     } catch (err) {
       if (!pollingActiveRef.current.get(hostUuid)) return;
       const msg = err instanceof Error ? err.message : 'Request error';
-      updateHostDebug(hostUuid, { status: 'error', finishedAt: Date.now(), error: msg });
+      updateHostDebug(hostUuid, entryId, { status: 'error', finishedAt: Date.now(), error: msg });
       toast.error('Action failed', { description: msg });
     } finally {
       pollingActiveRef.current.delete(hostUuid);
