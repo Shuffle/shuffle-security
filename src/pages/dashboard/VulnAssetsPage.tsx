@@ -143,6 +143,7 @@ const createSensorGroupEnv = async (name: string, allEnvs: OrbEnvironment[]): Pr
 
 const VulnAssetsPage = () => {
   usePageMeta({ title: 'Assets — Vulnerabilities', description: 'Monitor host compliance and security posture' });
+  const navigate = useNavigate();
 
   const [addHostOpen, setAddHostOpen] = useState(false);
   const [addHostStep, setAddHostStep] = useState<'checks' | 'deploy'>('checks');
