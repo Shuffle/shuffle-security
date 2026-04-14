@@ -16,6 +16,8 @@ export interface AgentPermission {
   enabled: boolean;
   category: string;
   disabled?: boolean;
+  /** Whether this action can be executed on monitored hosts */
+  hostActionable?: boolean;
 }
 
 export interface AgentPermissionCategory {
