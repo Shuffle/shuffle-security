@@ -30,39 +30,6 @@ const DATASTORE_KEY = 'agent_permissions';
 
 export const DEFAULT_AGENT_PERMISSIONS: AgentPermissionCategory[] = [
   {
-    id: 'threat_detection',
-    label: 'Threat Detection',
-    icon: 'Radar',
-    disabled: true,
-    permissions: [
-      {
-        id: 'scan_vulnerabilities',
-        name: 'Scan for Vulnerabilities',
-        description: 'Run automated vulnerability scans on systems',
-        risk: 'low',
-        enabled: true,
-        category: 'threat_detection',
-      },
-      {
-        id: 'analyze_logs',
-        name: 'Analyze Security Logs',
-        description: 'Parse and analyze security event logs from SIEM',
-        risk: 'low',
-        enabled: true,
-        category: 'threat_detection',
-        disabled: true,
-      },
-      {
-        id: 'tune_detection_rules',
-        name: 'Tune Detection Rules',
-        description: 'Adjust thresholds, suppress false positives and refine detection logic',
-        risk: 'medium',
-        enabled: false,
-        category: 'threat_detection',
-      },
-    ],
-  },
-  {
     id: 'incident_response',
     label: 'Incident Response',
     icon: 'Zap',
@@ -74,6 +41,7 @@ export const DEFAULT_AGENT_PERMISSIONS: AgentPermissionCategory[] = [
         risk: 'medium',
         enabled: true,
         category: 'incident_response',
+        disabled: true,
       },
       {
         id: 'isolate_systems',
@@ -98,6 +66,7 @@ export const DEFAULT_AGENT_PERMISSIONS: AgentPermissionCategory[] = [
         risk: 'medium',
         enabled: true,
         category: 'incident_response',
+        disabled: true,
       },
       {
         id: 'update_case_status',
@@ -131,6 +100,39 @@ export const DEFAULT_AGENT_PERMISSIONS: AgentPermissionCategory[] = [
         enabled: false,
         category: 'incident_response',
         disabled: true,
+      },
+    ],
+  },
+  {
+    id: 'threat_detection',
+    label: 'Threat Detection',
+    icon: 'Radar',
+    disabled: true,
+    permissions: [
+      {
+        id: 'scan_vulnerabilities',
+        name: 'Scan for Vulnerabilities',
+        description: 'Run automated vulnerability scans on systems',
+        risk: 'low',
+        enabled: true,
+        category: 'threat_detection',
+      },
+      {
+        id: 'analyze_logs',
+        name: 'Analyze Security Logs',
+        description: 'Parse and analyze security event logs from SIEM',
+        risk: 'low',
+        enabled: true,
+        category: 'threat_detection',
+        disabled: true,
+      },
+      {
+        id: 'tune_detection_rules',
+        name: 'Tune Detection Rules',
+        description: 'Adjust thresholds, suppress false positives and refine detection logic',
+        risk: 'medium',
+        enabled: false,
+        category: 'threat_detection',
       },
     ],
   },
