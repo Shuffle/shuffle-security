@@ -211,7 +211,7 @@ const VulnAssetsPage = () => {
     .filter(p => p.hostActionable && !p.disabled);
 
   const executeHostAction = async (actionId: string, actionName: string, hostname: string, groupName: string, hostUuid: string) => {
-    setActionExecuting(hostUuid);
+    setActionExecuting(prev => new Set(prev).add(hostUuid));
     const requestBody = {
       app_id: 'sensors',
       app_name: 'sensors',
@@ -222,7 +222,7 @@ const VulnAssetsPage = () => {
         { name: 'sensor_group', value: groupName },
       ],
     };
-    setActionDebug({
+    setHostDebug(hostUuid, {
       hostUuid,
       actionName,
       hostname,
@@ -239,7 +239,7 @@ const VulnAssetsPage = () => {
       });
       const text = await resp.text().catch(() => '');
       if (!resp.ok) {
-        setActionDebug(prev => prev ? { ...prev, status: 'error', responseStatus: resp.status, responseBody: text, finishedAt: Date.now(), error: text || `HTTP ${resp.status}` } : null);
+        updateHostDebug(hostUuid, { status: 'error', responseStatus: resp.status, responseBody: text, finishedAt: Date.now(), error: text || `HTTP ${resp.status}` });
         toast.error('Action failed', { description: text || `HTTP ${resp.status}` });
         return;
       }
@@ -254,10 +254,10 @@ const VulnAssetsPage = () => {
         (parsed as Record<string, unknown>).execution_id
       ) {
         const execId = (parsed as Record<string, unknown>).execution_id as string;
-        setActionDebug(prev => prev ? { ...prev, status: 'polling', responseStatus: resp.status, responseBody: text } : null);
+        updateHostDebug(hostUuid, { status: 'polling', responseStatus: resp.status, responseBody: text });
 
-        // Poll streams/results for the real output
-        const maxAttempts = 15;
+        // Poll streams/results for the real output (30 min timeout)
+        const maxAttempts = 900; // 900 * 2s = 30 minutes
         const intervalMs = 2000;
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
           await new Promise(r => setTimeout(r, intervalMs));
@@ -270,11 +270,11 @@ const VulnAssetsPage = () => {
             });
             if (!pollResp.ok) {
               if (pollResp.status >= 400 && pollResp.status < 500) {
-                setActionDebug(prev => prev ? { ...prev, status: 'error', responseBody: `Poll error ${pollResp.status}`, finishedAt: Date.now(), error: `HTTP ${pollResp.status}` } : null);
+                updateHostDebug(hostUuid, { status: 'error', responseBody: `Poll error ${pollResp.status}`, finishedAt: Date.now(), error: `HTTP ${pollResp.status}` });
                 toast.error('Action failed', { description: `Poll error ${pollResp.status}` });
                 return;
               }
-              continue; // server error, retry
+              continue;
             }
             const pollText = await pollResp.text();
             if (!pollText || pollText === '{}' || pollText === 'null') continue;
@@ -288,7 +288,7 @@ const VulnAssetsPage = () => {
             }
 
             // Got a real result
-            setActionDebug(prev => prev ? { ...prev, status: 'success', responseBody: pollText, finishedAt: Date.now() } : null);
+            updateHostDebug(hostUuid, { status: 'success', responseBody: pollText, finishedAt: Date.now() });
             toast.success('Action completed', { description: `"${actionName}" → ${hostname}` });
             return;
           } catch {
@@ -296,19 +296,19 @@ const VulnAssetsPage = () => {
           }
         }
         // Timed out
-        setActionDebug(prev => prev ? { ...prev, status: 'error', finishedAt: Date.now(), error: 'Timed out waiting for execution result.' } : null);
-        toast.error('Action timed out', { description: 'No result after 30 seconds.' });
+        updateHostDebug(hostUuid, { status: 'error', finishedAt: Date.now(), error: 'Timed out waiting for execution result (30 min).' });
+        toast.error('Action timed out', { description: 'No result after 30 minutes.' });
       } else {
         // Immediate result (no execution_id)
-        setActionDebug(prev => prev ? { ...prev, status: 'success', responseStatus: resp.status, responseBody: text, finishedAt: Date.now() } : null);
+        updateHostDebug(hostUuid, { status: 'success', responseStatus: resp.status, responseBody: text, finishedAt: Date.now() });
         toast.success('Action sent', { description: `"${actionName}" → ${hostname}` });
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Request error';
-      setActionDebug(prev => prev ? { ...prev, status: 'error', finishedAt: Date.now(), error: msg } : null);
+      updateHostDebug(hostUuid, { status: 'error', finishedAt: Date.now(), error: msg });
       toast.error('Action failed', { description: msg });
     } finally {
-      setActionExecuting(null);
+      setActionExecuting(prev => { const next = new Set(prev); next.delete(hostUuid); return next; });
       loadGroups();
     }
   };
