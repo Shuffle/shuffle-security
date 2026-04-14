@@ -499,7 +499,9 @@ const VulnAssetsPage = () => {
     }
 
     // Immediately update UI
-    updateHostDebug(hostUuid, { status: 'error', finishedAt: Date.now(), error: 'Aborted by user' });
+    if (debugEntry?.entryId) {
+      updateHostDebug(hostUuid, debugEntry.entryId, { status: 'error', finishedAt: Date.now(), error: 'Aborted by user' });
+    }
     // Don't remove from actionExecuting immediately — keep popover open to show debug info.
   };
 
