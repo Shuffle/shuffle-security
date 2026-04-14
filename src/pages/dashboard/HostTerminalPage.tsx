@@ -76,11 +76,18 @@ const saveSession = (hostUuid: string, entries: ActionDebugEntry[]) => {
 
 const getCommandHistory = (hostUuid: string): string[] => {
   const stored = getStoredSession(hostUuid);
+  // Fall back to old cmd_history_ key if new one is empty
+  if (stored.length === 0) {
+    try {
+      const old = JSON.parse(localStorage.getItem(`cmd_history_${hostUuid}`) || '[]');
+      if (Array.isArray(old) && old.length > 0) return old;
+    } catch { /* ignore */ }
+  }
   // Unique command names, most recent first
   const seen = new Set<string>();
   const cmds: string[] = [];
   for (let i = stored.length - 1; i >= 0; i--) {
-    if (!seen.has(stored[i].actionName)) {
+    if (stored[i]?.actionName && !seen.has(stored[i].actionName)) {
       seen.add(stored[i].actionName);
       cmds.push(stored[i].actionName);
     }
