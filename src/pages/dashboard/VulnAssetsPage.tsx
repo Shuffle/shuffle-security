@@ -7,7 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Laptop, HardDrive, Lock, Package, Zap, Plus, Copy, Check, Activity, ChevronRight, ChevronDown, Radar, FolderOpen, Loader2, CheckCircle2, Send, RefreshCw, ShieldCheck, ShieldX, Cpu, Hash, Clock, Globe, Play, Terminal } from 'lucide-react';
+import { Laptop, HardDrive, Lock, Package, Zap, Plus, Copy, Check, Activity, ChevronRight, ChevronDown, Radar, FolderOpen, Loader2, CheckCircle2, Send, RefreshCw, ShieldCheck, ShieldX, Cpu, Hash, Clock, Globe, Play, Terminal, Square } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { toast } from 'sonner';
 import { getApiUrl, getAuthHeader, API_CONFIG } from '@/config/api';
@@ -186,6 +186,7 @@ const VulnAssetsPage = () => {
     error?: string;
   };
   const [actionDebugMap, setActionDebugMap] = useState<Map<string, ActionDebugEntry>>(new Map());
+  const abortControllersRef = useRef<Map<string, AbortController>>(new Map());
 
   const setHostDebug = (hostUuid: string, entry: ActionDebugEntry | null) => {
     setActionDebugMap(prev => {
@@ -212,6 +213,10 @@ const VulnAssetsPage = () => {
     .filter(p => p.hostActionable && !p.disabled);
 
   const executeHostAction = async (actionId: string, actionName: string, hostname: string, groupName: string, hostUuid: string) => {
+    // Set up abort controller
+    const controller = new AbortController();
+    abortControllersRef.current.set(hostUuid, controller);
+
     setActionExecuting(prev => new Set(prev).add(hostUuid));
     const requestBody = {
       app_id: 'sensors',
@@ -237,6 +242,7 @@ const VulnAssetsPage = () => {
         credentials: 'include',
         headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
         body: JSON.stringify(requestBody),
+        signal: controller.signal,
       });
       const text = await resp.text().catch(() => '');
       if (!resp.ok) {
@@ -261,13 +267,22 @@ const VulnAssetsPage = () => {
         const maxAttempts = 900; // 900 * 2s = 30 minutes
         const intervalMs = 2000;
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
+          if (controller.signal.aborted) {
+            updateHostDebug(hostUuid, { status: 'error', finishedAt: Date.now(), error: 'Aborted by user' });
+            return;
+          }
           await new Promise(r => setTimeout(r, intervalMs));
+          if (controller.signal.aborted) {
+            updateHostDebug(hostUuid, { status: 'error', finishedAt: Date.now(), error: 'Aborted by user' });
+            return;
+          }
           try {
             const pollResp = await fetch(getApiUrl('/api/v1/streams/results'), {
               method: 'POST',
               credentials: 'include',
               headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
               body: JSON.stringify({ execution_id: execId, authorization: execId }),
+              signal: controller.signal,
             });
             if (!pollResp.ok) {
               if (pollResp.status >= 400 && pollResp.status < 500) {
@@ -292,7 +307,11 @@ const VulnAssetsPage = () => {
             updateHostDebug(hostUuid, { status: 'success', responseBody: pollText, finishedAt: Date.now() });
             toast.success('Action completed', { description: `"${actionName}" → ${hostname}` });
             return;
-          } catch {
+          } catch (err) {
+            if (controller.signal.aborted) {
+              updateHostDebug(hostUuid, { status: 'error', finishedAt: Date.now(), error: 'Aborted by user' });
+              return;
+            }
             continue;
           }
         }
@@ -305,13 +324,23 @@ const VulnAssetsPage = () => {
         toast.success('Action sent', { description: `"${actionName}" → ${hostname}` });
       }
     } catch (err) {
+      if (controller.signal.aborted) {
+        updateHostDebug(hostUuid, { status: 'error', finishedAt: Date.now(), error: 'Aborted by user' });
+        return;
+      }
       const msg = err instanceof Error ? err.message : 'Request error';
       updateHostDebug(hostUuid, { status: 'error', finishedAt: Date.now(), error: msg });
       toast.error('Action failed', { description: msg });
     } finally {
+      abortControllersRef.current.delete(hostUuid);
       setActionExecuting(prev => { const next = new Set(prev); next.delete(hostUuid); return next; });
       loadGroups();
     }
+  };
+
+  const abortHostAction = (hostUuid: string) => {
+    const controller = abortControllersRef.current.get(hostUuid);
+    if (controller) controller.abort();
   };
 
   // Aggregate all hosts across all sensor groups
@@ -708,7 +737,7 @@ const VulnAssetsPage = () => {
                             <div>
                               <div className="px-3 py-2 border-b border-border flex items-center gap-2">
                                 {(actionDebug.status === 'sending' || actionDebug.status === 'polling') && <Loader2 size={12} className="animate-spin text-primary" />}
-                                {actionDebug.status === 'success' && <CheckCircle2 size={12} className="text-green-500" />}
+                                {actionDebug.status === 'success' && <CheckCircle2 size={12} className="text-[hsl(var(--severity-low))]" />}
                                 {actionDebug.status === 'error' && <ShieldX size={12} className="text-destructive" />}
                                 <div className="flex-1 min-w-0">
                                   <p className="text-xs font-semibold text-foreground truncate">{actionDebug.actionName}</p>
@@ -716,44 +745,58 @@ const VulnAssetsPage = () => {
                                 </div>
                                 {actionDebug.finishedAt && (
                                   <span className="text-[0.6rem] text-muted-foreground font-mono shrink-0">
-                                    {actionDebug.finishedAt - actionDebug.startedAt}ms
+                                    {Math.round((actionDebug.finishedAt - actionDebug.startedAt) / 1000)}s
                                   </span>
                                 )}
                               </div>
-                              <div className="px-3 py-2 space-y-2 max-h-64 overflow-y-auto">
-                                <div>
-                                  <span className="text-[0.6rem] font-semibold text-muted-foreground uppercase tracking-wide">Status</span>
-                                  <p className={`text-xs font-medium ${
-                                    (actionDebug.status === 'sending' || actionDebug.status === 'polling') ? 'text-primary' :
-                                    actionDebug.status === 'success' ? 'text-green-500' : 'text-destructive'
-                                  }`}>
-                                    {actionDebug.status === 'sending' ? 'Sending request…' :
-                                     actionDebug.status === 'polling' ? 'Polling for result…' :
-                                     actionDebug.status === 'success' ? `Success${actionDebug.responseStatus ? ` (${actionDebug.responseStatus})` : ''}` :
-                                     `Error${actionDebug.responseStatus ? ` (${actionDebug.responseStatus})` : ''}`}
-                                  </p>
-                                </div>
-                                <div>
-                                  <span className="text-[0.6rem] font-semibold text-muted-foreground uppercase tracking-wide">Request</span>
-                                  <pre className="text-[0.6rem] font-mono text-foreground bg-muted/40 rounded p-1.5 mt-0.5 overflow-x-auto max-h-24 whitespace-pre-wrap">
-                                    {JSON.stringify(actionDebug.requestBody, null, 2)}
-                                  </pre>
-                                </div>
-                                {actionDebug.responseBody !== undefined && (
-                                  <div>
-                                    <span className="text-[0.6rem] font-semibold text-muted-foreground uppercase tracking-wide">Response</span>
-                                    <pre className="text-[0.6rem] font-mono text-foreground bg-muted/40 rounded p-1.5 mt-0.5 overflow-x-auto max-h-24 whitespace-pre-wrap">
-                                      {actionDebug.responseBody || '(empty)'}
-                                    </pre>
-                                  </div>
+                              <div className="px-3 py-2 space-y-2">
+                                <p className={`text-xs font-medium ${
+                                  (actionDebug.status === 'sending' || actionDebug.status === 'polling') ? 'text-primary' :
+                                  actionDebug.status === 'success' ? 'text-[hsl(var(--severity-low))]' : 'text-destructive'
+                                }`}>
+                                  {actionDebug.status === 'sending' ? 'Sending request…' :
+                                   actionDebug.status === 'polling' ? 'Polling for result…' :
+                                   actionDebug.status === 'success' ? 'Completed successfully' :
+                                   'Failed'}
+                                </p>
+                                {/* Stop button while in progress */}
+                                {(actionDebug.status === 'sending' || actionDebug.status === 'polling') && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="w-full h-7 text-xs gap-1.5 text-destructive hover:text-destructive"
+                                    onClick={() => abortHostAction(host.uuid)}
+                                  >
+                                    <Square size={10} className="fill-current" />
+                                    Stop
+                                  </Button>
                                 )}
-                                {actionDebug.error && (
-                                  <div className="rounded border border-destructive/30 bg-destructive/5 px-2 py-1.5">
-                                    <span className="text-[0.65rem] text-destructive font-medium">{actionDebug.error}</span>
-                                  </div>
+                                {/* Show debug details only on error */}
+                                {actionDebug.status === 'error' && (
+                                  <>
+                                    {actionDebug.error && (
+                                      <div className="rounded border border-destructive/30 bg-destructive/5 px-2 py-1.5">
+                                        <span className="text-[0.65rem] text-destructive font-medium">{actionDebug.error}</span>
+                                      </div>
+                                    )}
+                                    <div>
+                                      <span className="text-[0.6rem] font-semibold text-muted-foreground uppercase tracking-wide">Request</span>
+                                      <pre className="text-[0.6rem] font-mono text-foreground bg-muted/40 rounded p-1.5 mt-0.5 overflow-x-auto max-h-24 whitespace-pre-wrap">
+                                        {JSON.stringify(actionDebug.requestBody, null, 2)}
+                                      </pre>
+                                    </div>
+                                    {actionDebug.responseBody !== undefined && (
+                                      <div>
+                                        <span className="text-[0.6rem] font-semibold text-muted-foreground uppercase tracking-wide">Response</span>
+                                        <pre className="text-[0.6rem] font-mono text-foreground bg-muted/40 rounded p-1.5 mt-0.5 overflow-x-auto max-h-24 whitespace-pre-wrap">
+                                          {actionDebug.responseBody || '(empty)'}
+                                        </pre>
+                                      </div>
+                                    )}
+                                  </>
                                 )}
                               </div>
-                              {actionDebug.status !== 'sending' && actionDebug.status !== 'polling' && (
+                              {(actionDebug.status === 'success' || actionDebug.status === 'error') && (
                                 <div className="px-3 py-2 border-t border-border">
                                   <Button variant="ghost" size="sm" className="w-full h-7 text-xs" onClick={() => setHostDebug(host.uuid, null)}>
                                     Run another action
