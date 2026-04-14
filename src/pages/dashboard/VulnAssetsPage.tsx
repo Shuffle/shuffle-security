@@ -990,7 +990,18 @@ const VulnAssetsPage = () => {
                                       
                                       ref={el => { if (el) requestAnimationFrame(() => el.focus()); }}
                                       onKeyDown={e => {
-                                        const history = getCommandHistory(host.uuid);
+                                        // Merge in-memory actions (including running) with localStorage
+                                        const storedHistory = getCommandHistory(host.uuid);
+                                        const hostEntries = actionHistoryMap.get(host.uuid) || [];
+                                        const inMemoryNames = hostEntries.map(e => e.actionName).filter(Boolean);
+                                        const seen = new Set<string>();
+                                        const history: string[] = [];
+                                        for (let i = inMemoryNames.length - 1; i >= 0; i--) {
+                                          if (!seen.has(inMemoryNames[i])) { seen.add(inMemoryNames[i]); history.push(inMemoryNames[i]); }
+                                        }
+                                        for (const cmd of storedHistory) {
+                                          if (!seen.has(cmd)) { seen.add(cmd); history.push(cmd); }
+                                        }
                                         if (e.key === 'Enter' && customAction.trim()) {
                                           pushCommandHistory(host.uuid, customAction.trim());
                                           setHistoryIndex(-1);

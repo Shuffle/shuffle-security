@@ -564,7 +564,18 @@ const HostTerminalPage = () => {
             className="h-9 text-sm flex-1 font-mono"
             ref={inputRef}
             onKeyDown={e => {
-              const history = getCommandHistory(hostUuid || '');
+              // Merge in-memory actions (including running ones) with localStorage history
+              const storedHistory = getCommandHistory(hostUuid || '');
+              const inMemoryNames = actionHistory.map(e => e.actionName).filter(Boolean);
+              const seen = new Set<string>();
+              const history: string[] = [];
+              // Most recent in-memory first, then stored
+              for (let i = inMemoryNames.length - 1; i >= 0; i--) {
+                if (!seen.has(inMemoryNames[i])) { seen.add(inMemoryNames[i]); history.push(inMemoryNames[i]); }
+              }
+              for (const cmd of storedHistory) {
+                if (!seen.has(cmd)) { seen.add(cmd); history.push(cmd); }
+              }
               if (e.key === 'Enter' && customAction.trim()) {
                 setHistoryIndex(-1);
                 executeHostAction(customAction.trim(), customAction.trim());
