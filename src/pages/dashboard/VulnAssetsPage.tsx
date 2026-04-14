@@ -819,26 +819,9 @@ const VulnAssetsPage = () => {
 
                               {/* Scrollable session log */}
                               <div className="flex-1 overflow-y-auto min-h-0">
-                                {/* Predefined actions (only if no history yet and not full mode) */}
-                                {finishedHistory.length === 0 && !isRunning && !isFull && (
-                                  <div className="py-1">
-                                    {hostActionablePerms.map(perm => (
-                                      <button
-                                        key={perm.id}
-                                        className="w-full text-left px-3 py-2 text-xs hover:bg-muted/50 transition-colors flex items-center gap-2 disabled:opacity-50"
-                                        disabled={actionExecuting.has(host.uuid)}
-                                        onClick={() => executeHostAction(perm.id, perm.name, host.hostname, host.groupName, host.uuid, true)}
-                                      >
-                                        <Zap size={12} className="text-muted-foreground shrink-0" />
-                                        <span className="text-foreground font-medium">{perm.name}</span>
-                                      </button>
-                                    ))}
-                                  </div>
-                                )}
-
-                                {/* Predefined action chips for full mode */}
-                                {finishedHistory.length === 0 && !isRunning && isFull && (
-                                  <div className="px-3 py-2 flex flex-wrap gap-1">
+                                {/* Predefined action chips — always visible */}
+                                {!isRunning && (
+                                  <div className="px-3 py-2 flex flex-wrap gap-1 border-b border-border/50">
                                     {hostActionablePerms.map(perm => (
                                       <button
                                         key={perm.id}
