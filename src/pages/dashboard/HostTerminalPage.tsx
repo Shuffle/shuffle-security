@@ -64,8 +64,6 @@ const saveSession = (hostUuid: string, entries: ActionDebugEntry[]) => {
       startedAt: e.startedAt,
       finishedAt: e.finishedAt,
       executionId: e.executionId,
-      actionOutput: e.actionOutput,
-      error: e.error,
     }));
   // Merge with existing (avoid duplicates by startedAt)
   const existing = getStoredSession(hostUuid);
