@@ -386,7 +386,7 @@ const PermissionsPanel = ({ compact = false }: PermissionsPanelProps) => {
                 variant="outlined"
                 onClick={() => {
                   setHostPopover(null);
-                  window.location.href = '/vulnerabilities/assets';
+                  window.location.href = '/monitors';
                 }}
                 sx={{
                   mt: 1.5,

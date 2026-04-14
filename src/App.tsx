@@ -146,7 +146,7 @@ const ThemedApp = () => {
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/preferences" element={<OrgPreferencesPage />} />
               <Route path="/vulnerabilities" element={<SupportOnly><VulnerabilitiesPage /></SupportOnly>} />
-              <Route path="/vulnerabilities/assets" element={<SupportOnly><VulnAssetsPage /></SupportOnly>} />
+              <Route path="/monitors" element={<SupportOnly><VulnAssetsPage /></SupportOnly>} />
               <Route path="/assets" element={<AssetsPage />} />
             </Route>
 
