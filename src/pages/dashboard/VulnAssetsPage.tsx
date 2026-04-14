@@ -678,7 +678,7 @@ const VulnAssetsPage = () => {
                           {actionDebug && actionDebug.hostUuid === host.uuid ? (
                             <div>
                               <div className="px-3 py-2 border-b border-border flex items-center gap-2">
-                                {actionDebug.status === 'sending' && <Loader2 size={12} className="animate-spin text-primary" />}
+                                {(actionDebug.status === 'sending' || actionDebug.status === 'polling') && <Loader2 size={12} className="animate-spin text-primary" />}
                                 {actionDebug.status === 'success' && <CheckCircle2 size={12} className="text-green-500" />}
                                 {actionDebug.status === 'error' && <ShieldX size={12} className="text-destructive" />}
                                 <div className="flex-1 min-w-0">
