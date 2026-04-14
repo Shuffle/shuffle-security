@@ -60,20 +60,24 @@ const getStoredSession = (hostUuid: string): StoredEntry[] => {
 };
 
 const saveSession = (hostUuid: string, entries: ActionDebugEntry[]) => {
-  const toStore = entries
-    .map(e => ({
-      entryId: `${e.startedAt}-${e.entryId}`,
-      actionName: e.actionName,
-      status: e.status as string,
-      startedAt: e.startedAt,
-      finishedAt: e.finishedAt,
-      executionId: e.executionId,
-      authorization: e.authorization,
-    }));
-  // Merge with existing (avoid duplicates by entryId)
+  const toStore: StoredEntry[] = entries.map(e => ({
+    entryId: `${e.startedAt}-${e.entryId}`,
+    actionName: e.actionName,
+    status: (e.status === 'success' || e.status === 'error') ? e.status : undefined,
+    startedAt: e.startedAt,
+    finishedAt: e.finishedAt,
+    executionId: e.executionId,
+    authorization: e.authorization,
+    actionOutput: e.actionOutput,
+    error: e.error,
+  }));
+  // Merge with existing — update in place if entryId matches, append if new
   const existing = getStoredSession(hostUuid);
-  const existingIds = new Set(existing.map(e => e.entryId || `${e.startedAt}`));
-  const merged = [...existing, ...toStore.filter(e => !existingIds.has(e.entryId))].slice(-MAX_STORED);
+  const existingMap = new Map(existing.map(e => [e.entryId || `${e.startedAt}`, e]));
+  for (const entry of toStore) {
+    existingMap.set(entry.entryId!, { ...existingMap.get(entry.entryId!) , ...entry });
+  }
+  const merged = Array.from(existingMap.values()).slice(-MAX_STORED);
   localStorage.setItem(HISTORY_KEY(hostUuid), JSON.stringify(merged));
 };
 
