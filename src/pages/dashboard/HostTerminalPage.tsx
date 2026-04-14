@@ -39,6 +39,7 @@ type ActionDebugEntry = {
 };
 
 type StoredEntry = {
+  entryId?: string;
   actionName: string;
   status: 'success' | 'error';
   startedAt: number;
