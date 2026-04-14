@@ -619,9 +619,19 @@ const VulnAssetsPage = () => {
         const envs: OrbEnvironment[] = await res.json();
         const env = envs.find(e => (e.id === selectedGroupId || e.Name === selectedGroup?.name) && e.sensor_group === true);
         if (env) {
-          const currentHostCount = Array.isArray(env.sensor_hosts) ? env.sensor_hosts.length : 0;
+          const hosts = Array.isArray(env.sensor_hosts) ? env.sensor_hosts : [];
+          const currentHostCount = hosts.length;
           const baseline = baselineHostCountRef.current ?? 0;
-          if (currentHostCount > baseline) {
+          const thirtyMinAgo = Date.now() / 1000 - 30 * 60;
+
+          // Detect new host OR existing host that recently checked in (within 30 min)
+          const hasNewHost = currentHostCount > baseline;
+          const hasRecentCheckin = hosts.some((h: any) => {
+            const lastCheckin = h.last_checkin || h.updated || 0;
+            return lastCheckin > thirtyMinAgo;
+          });
+
+          if (hasNewHost || hasRecentCheckin) {
             setSensorDetected(true);
             setSensorPolling(false);
             if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
