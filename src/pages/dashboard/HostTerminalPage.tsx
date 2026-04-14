@@ -506,7 +506,6 @@ const HostTerminalPage = () => {
             onKeyDown={e => {
               const history = getCommandHistory(hostUuid || '');
               if (e.key === 'Enter' && customAction.trim()) {
-                pushCommandHistory(hostUuid || '', customAction.trim());
                 setHistoryIndex(-1);
                 executeHostAction(customAction.trim(), customAction.trim());
                 setCustomAction('');
@@ -535,7 +534,7 @@ const HostTerminalPage = () => {
             disabled={!customAction.trim()}
             onClick={() => {
               if (customAction.trim()) {
-                pushCommandHistory(hostUuid || '', customAction.trim());
+                
                 executeHostAction(customAction.trim(), customAction.trim());
                 setCustomAction('');
               }
