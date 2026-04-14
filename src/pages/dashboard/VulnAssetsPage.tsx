@@ -819,22 +819,6 @@ const VulnAssetsPage = () => {
                                 className="flex-1 overflow-y-auto min-h-0"
                                 ref={(el) => { if (el) el.scrollTop = el.scrollHeight; }}
                               >
-                                {/* Predefined action chips — always visible */}
-                                {!isRunning && (
-                                  <div className="px-3 py-2 flex flex-wrap gap-1 border-b border-border/50">
-                                    {hostActionablePerms.map(perm => (
-                                      <button
-                                        key={perm.id}
-                                        className="px-2 py-1 text-[0.65rem] rounded-md border border-border hover:bg-muted/50 transition-colors disabled:opacity-50 text-foreground"
-                                        disabled={actionExecuting.has(host.uuid)}
-                                        onClick={() => executeHostAction(perm.id, perm.name, host.hostname, host.groupName, host.uuid, true)}
-                                      >
-                                        {perm.name}
-                                      </button>
-                                    ))}
-                                  </div>
-                                )}
-
                                 {/* Session history entries */}
                                 {finishedHistory.map((entry, i) => {
                                   const isLatest = i === finishedHistory.length - 1;
@@ -893,6 +877,22 @@ const VulnAssetsPage = () => {
                                   </div>
                                 )}
                               </div>
+
+                              {/* Predefined action chips — pinned above input */}
+                              {!isRunning && (
+                                <div className="px-3 py-2 flex flex-wrap gap-1 border-t border-border/50 shrink-0">
+                                  {hostActionablePerms.map(perm => (
+                                    <button
+                                      key={perm.id}
+                                      className="px-2 py-1 text-[0.65rem] rounded-md border border-border hover:bg-muted/50 transition-colors disabled:opacity-50 text-foreground"
+                                      disabled={actionExecuting.has(host.uuid)}
+                                      onClick={() => executeHostAction(perm.id, perm.name, host.hostname, host.groupName, host.uuid, true)}
+                                    >
+                                      {perm.name}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
 
                               {/* Command input — always visible for full mode, or when not running for controlled */}
                               {(isFull || !isRunning) && (
