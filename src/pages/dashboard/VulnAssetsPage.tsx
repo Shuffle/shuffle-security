@@ -280,6 +280,7 @@ const VulnAssetsPage = () => {
       const key = `terminal_session_${hostUuid}`;
       const stored = JSON.parse(localStorage.getItem(key) || '[]');
       const persistEntry = {
+        entryId: entry.entryId,
         actionName: entry.actionName,
         status: entry.status,
         startedAt: entry.startedAt,
