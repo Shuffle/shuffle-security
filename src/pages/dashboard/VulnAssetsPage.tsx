@@ -1516,7 +1516,7 @@ const VulnAssetsPage = () => {
                   <div className="space-y-1.5">
                     <Label className="text-xs font-medium">2. Run the monitor</Label>
                     <div className="relative">
-                      <pre className="text-xs bg-muted rounded-lg p-4 pr-12 border border-border overflow-x-auto font-mono text-foreground whitespace-nowrap leading-relaxed max-h-48">
+                      <pre className="text-xs bg-muted rounded-lg p-4 pr-12 border border-border font-mono text-foreground whitespace-pre-wrap break-all leading-relaxed">
 {(() => {
   const flags: string[] = [];
   flags.push(`--base_url=${API_CONFIG.baseUrl}`);
