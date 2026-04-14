@@ -33,6 +33,7 @@ export const DEFAULT_AGENT_PERMISSIONS: AgentPermissionCategory[] = [
     id: 'threat_detection',
     label: 'Threat Detection',
     icon: 'Radar',
+    disabled: true,
     permissions: [
       {
         id: 'scan_vulnerabilities',
@@ -49,14 +50,7 @@ export const DEFAULT_AGENT_PERMISSIONS: AgentPermissionCategory[] = [
         risk: 'low',
         enabled: true,
         category: 'threat_detection',
-      },
-      {
-        id: 'enrich_observables',
-        name: 'Enrich Observables',
-        description: 'Auto-enrich IPs, domains, hashes and URLs with threat intel context',
-        risk: 'low',
-        enabled: true,
-        category: 'threat_detection',
+        disabled: true,
       },
       {
         id: 'tune_detection_rules',
@@ -135,6 +129,7 @@ export const DEFAULT_AGENT_PERMISSIONS: AgentPermissionCategory[] = [
     id: 'monitoring_alerts',
     label: 'Monitoring & Alerts',
     icon: 'Bell',
+    disabled: true,
     permissions: [
       {
         id: 'send_alerts',
@@ -166,6 +161,7 @@ export const DEFAULT_AGENT_PERMISSIONS: AgentPermissionCategory[] = [
     id: 'system_access',
     label: 'System Access',
     icon: 'Server',
+    disabled: true,
     permissions: [
       {
         id: 'read_configs',
