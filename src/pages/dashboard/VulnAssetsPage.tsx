@@ -1516,7 +1516,7 @@ const VulnAssetsPage = () => {
                   <div className="space-y-1.5">
                     <Label className="text-xs font-medium">2. Run the monitor</Label>
                     <div className="relative">
-                      <pre className="text-xs bg-muted rounded-lg p-4 pr-12 border border-border overflow-x-auto font-mono text-foreground whitespace-pre-wrap break-all leading-relaxed max-h-48">
+                      <pre className="text-xs bg-muted rounded-lg p-4 pr-12 border border-border overflow-x-auto font-mono text-foreground whitespace-nowrap leading-relaxed max-h-48">
 {(() => {
   const flags: string[] = [];
   flags.push(`--base_url=${API_CONFIG.baseUrl}`);
@@ -1532,7 +1532,7 @@ const VulnAssetsPage = () => {
   if (hostChecks.response_actions) flags.push(`--response_actions=${responseActionMode}`);
   if (hostChecks.log_forwarding && logForwardingEndpoint.trim()) flags.push(`--log_forwarding=${logForwardingEndpoint.trim()}`);
   const bin = hostPlatform === 'windows' ? '.\\orborus.exe' : './orborus';
-  return `${bin} ${flags.join(' \\\n  ')}`;
+  return `${bin} ${flags.join(' ')}`;
 })()}
                       </pre>
                       <Button
