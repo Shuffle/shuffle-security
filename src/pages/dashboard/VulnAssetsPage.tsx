@@ -498,8 +498,12 @@ const VulnAssetsPage = () => {
     // Don't remove from actionExecuting immediately — keep popover open to show debug info.
   };
 
-  // Aggregate all hosts across all sensor groups
-  const allHostsRaw = groups.flatMap(g => g.hosts.map(h => ({ ...h, groupName: g.name, groupId: g.id })));
+  // Aggregate all hosts across all sensor groups, deduplicated by uuid
+  const allHostsRaw = Array.from(
+    groups.flatMap(g => g.hosts.map(h => ({ ...h, groupName: g.name, groupId: g.id })))
+      .reduce((map, h) => { if (!map.has(h.uuid)) map.set(h.uuid, h); return map; }, new Map<string, any>())
+      .values()
+  );
   const defaultSort = (a: any, b: any) => {
     // Most recent check-in first, then alphabetical hostname
     const ca = a.checkin || 0, cb = b.checkin || 0;
