@@ -16,6 +16,8 @@ export interface AgentPermission {
   enabled: boolean;
   category: string;
   disabled?: boolean;
+  /** Whether this action can be executed on monitored hosts */
+  hostActionable?: boolean;
 }
 
 export interface AgentPermissionCategory {
@@ -50,6 +52,7 @@ export const DEFAULT_AGENT_PERMISSIONS: AgentPermissionCategory[] = [
         risk: 'high',
         enabled: false,
         category: 'incident_response',
+        hostActionable: true,
       },
       {
         id: 'disable_accounts',
@@ -58,6 +61,7 @@ export const DEFAULT_AGENT_PERMISSIONS: AgentPermissionCategory[] = [
         risk: 'high',
         enabled: false,
         category: 'incident_response',
+        hostActionable: true,
       },
       {
         id: 'force_password_reset',
