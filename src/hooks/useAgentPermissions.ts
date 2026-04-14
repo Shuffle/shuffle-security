@@ -15,6 +15,7 @@ export interface AgentPermission {
   risk: RiskLevel;
   enabled: boolean;
   category: string;
+  disabled?: boolean;
 }
 
 export interface AgentPermissionCategory {
@@ -22,6 +23,7 @@ export interface AgentPermissionCategory {
   label: string;
   icon: string; // lucide icon name
   permissions: AgentPermission[];
+  disabled?: boolean;
 }
 
 const DATASTORE_KEY = 'agent_permissions';
@@ -31,6 +33,7 @@ export const DEFAULT_AGENT_PERMISSIONS: AgentPermissionCategory[] = [
     id: 'threat_detection',
     label: 'Threat Detection',
     icon: 'Radar',
+    disabled: true,
     permissions: [
       {
         id: 'scan_vulnerabilities',
@@ -47,14 +50,7 @@ export const DEFAULT_AGENT_PERMISSIONS: AgentPermissionCategory[] = [
         risk: 'low',
         enabled: true,
         category: 'threat_detection',
-      },
-      {
-        id: 'enrich_observables',
-        name: 'Enrich Observables',
-        description: 'Auto-enrich IPs, domains, hashes and URLs with threat intel context',
-        risk: 'low',
-        enabled: true,
-        category: 'threat_detection',
+        disabled: true,
       },
       {
         id: 'tune_detection_rules',
@@ -127,12 +123,22 @@ export const DEFAULT_AGENT_PERMISSIONS: AgentPermissionCategory[] = [
         enabled: false,
         category: 'incident_response',
       },
+      {
+        id: 'monitor_network_traffic',
+        name: 'Monitor Network Traffic',
+        description: 'Capture and analyze network traffic patterns for anomalies',
+        risk: 'medium',
+        enabled: false,
+        category: 'incident_response',
+        disabled: true,
+      },
     ],
   },
   {
     id: 'monitoring_alerts',
     label: 'Monitoring & Alerts',
     icon: 'Bell',
+    disabled: true,
     permissions: [
       {
         id: 'send_alerts',
@@ -164,6 +170,7 @@ export const DEFAULT_AGENT_PERMISSIONS: AgentPermissionCategory[] = [
     id: 'system_access',
     label: 'System Access',
     icon: 'Server',
+    disabled: true,
     permissions: [
       {
         id: 'read_configs',

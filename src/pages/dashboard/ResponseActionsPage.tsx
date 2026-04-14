@@ -238,24 +238,27 @@ const PermissionsPanel = () => {
                           : 'hsl(var(--primary))',
                       }}
                     />
-                    <Tooltip title={stats.allEnabled ? 'Disable all' : 'Enable all'}>
-                      <Switch
-                        size="small"
-                        checked={stats.allEnabled}
-                        onChange={(e) => {
-                          e.stopPropagation();
-                          toggleCategory(cat.id, !stats.allEnabled);
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        sx={{
-                          '& .MuiSwitch-switchBase.Mui-checked': {
-                            color: 'hsl(var(--primary))',
-                          },
-                          '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                            bgcolor: 'hsl(var(--primary))',
-                          },
-                        }}
-                      />
+                    <Tooltip title={cat.disabled ? 'Coming soon' : stats.allEnabled ? 'Disable all' : 'Enable all'}>
+                      <span>
+                        <Switch
+                          size="small"
+                          checked={stats.allEnabled}
+                          disabled={cat.disabled}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            toggleCategory(cat.id, !stats.allEnabled);
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          sx={{
+                            '& .MuiSwitch-switchBase.Mui-checked': {
+                              color: 'hsl(var(--primary))',
+                            },
+                            '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                              bgcolor: 'hsl(var(--primary))',
+                            },
+                          }}
+                        />
+                      </span>
                     </Tooltip>
                     <IconButton size="small" sx={{ color: 'hsl(var(--muted-foreground))' }}>
                       {isExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
@@ -322,6 +325,7 @@ const PermissionsPanel = () => {
                             <Switch
                               size="small"
                               checked={perm.enabled}
+                              disabled={cat.disabled || perm.disabled}
                               onChange={() => togglePermission(cat.id, perm.id)}
                               sx={{
                                 '& .MuiSwitch-switchBase.Mui-checked': {
