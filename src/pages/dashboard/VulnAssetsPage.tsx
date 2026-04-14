@@ -225,8 +225,7 @@ const VulnAssetsPage = () => {
       app_name: 'sensors',
       name: 'run_action',
       parameters: [
-        { name: 'action', value: actionId },
-        { name: 'action_type', value: isPredefined ? 'predefined' : 'rce' },
+        { name: 'action', value: isPredefined ? `script:${actionId}` : actionId },
         { name: 'hosts', value: hostname },
         { name: 'sensor_group', value: groupName },
       ],
