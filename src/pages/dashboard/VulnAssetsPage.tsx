@@ -169,8 +169,20 @@ const VulnAssetsPage = () => {
   const [syncGroupId, setSyncGroupId] = useState<string>('');
   const [expandedHosts, setExpandedHosts] = useState<Set<string>>(new Set());
   const [osSortAsc, setOsSortAsc] = useState<boolean | null>(null);
-  const [actionExecuting, setActionExecuting] = useState<string | null>(null);
+  const [actionExecuting, setActionExecuting] = useState<string | null>(null); // host uuid being acted on
   const [customAction, setCustomAction] = useState('');
+  const [actionDebug, setActionDebug] = useState<{
+    hostUuid: string;
+    actionName: string;
+    hostname: string;
+    status: 'sending' | 'success' | 'error';
+    requestBody: object;
+    responseStatus?: number;
+    responseBody?: string;
+    startedAt: number;
+    finishedAt?: number;
+    error?: string;
+  } | null>(null);
   const selectedGroup = groups.find(g => g.id === selectedGroupId);
 
   // Get host-actionable permissions from defaults
@@ -178,34 +190,49 @@ const VulnAssetsPage = () => {
     .flatMap(c => c.permissions)
     .filter(p => p.hostActionable && !p.disabled);
 
-  const executeHostAction = async (actionId: string, actionName: string, hostname: string, groupName: string) => {
-    setActionExecuting(`${hostname}-${actionId}`);
+  const executeHostAction = async (actionId: string, actionName: string, hostname: string, groupName: string, hostUuid: string) => {
+    setActionExecuting(hostUuid);
+    const requestBody = {
+      app_id: 'sensors',
+      app_name: 'sensors',
+      name: 'run_action',
+      parameters: [
+        { name: 'action', value: actionId },
+        { name: 'hosts', value: hostname },
+        { name: 'sensor_group', value: groupName },
+      ],
+    };
+    setActionDebug({
+      hostUuid,
+      actionName,
+      hostname,
+      status: 'sending',
+      requestBody,
+      startedAt: Date.now(),
+    });
     try {
       const resp = await fetch(getApiUrl('/api/v1/apps/sensors/run'), {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
-        body: JSON.stringify({
-          app_id: 'sensors',
-          app_name: 'sensors',
-          name: 'run_action',
-          parameters: [
-            { name: 'action', value: actionId },
-            { name: 'hosts', value: hostname },
-            { name: 'sensor_group', value: groupName },
-          ],
-        }),
+        body: JSON.stringify(requestBody),
       });
+      const text = await resp.text().catch(() => '');
       if (resp.ok) {
+        setActionDebug(prev => prev ? { ...prev, status: 'success', responseStatus: resp.status, responseBody: text, finishedAt: Date.now() } : null);
         toast.success(`Action sent`, { description: `"${actionName}" → ${hostname}` });
       } else {
-        const text = await resp.text().catch(() => '');
+        setActionDebug(prev => prev ? { ...prev, status: 'error', responseStatus: resp.status, responseBody: text, finishedAt: Date.now(), error: text || `HTTP ${resp.status}` } : null);
         toast.error('Action failed', { description: text || `HTTP ${resp.status}` });
       }
     } catch (err) {
-      toast.error('Action failed', { description: err instanceof Error ? err.message : 'Request error' });
+      const msg = err instanceof Error ? err.message : 'Request error';
+      setActionDebug(prev => prev ? { ...prev, status: 'error', finishedAt: Date.now(), error: msg } : null);
+      toast.error('Action failed', { description: msg });
     } finally {
       setActionExecuting(null);
+      // Refresh environments data after action
+      loadGroups();
     }
   };
 
@@ -578,65 +605,75 @@ const VulnAssetsPage = () => {
                     </div>
                     {/* Actions popover */}
                     <div className="flex items-center justify-end" onClick={e => e.stopPropagation()}>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary">
-                            <Play size={14} />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent align="end" className="w-64 p-0" onClick={e => e.stopPropagation()}>
-                          <div className="px-3 py-2 border-b border-border">
-                            <p className="text-xs font-semibold text-foreground">Run Action</p>
-                            <p className="text-[0.65rem] text-muted-foreground truncate">{host.hostname}</p>
-                          </div>
-                          <div className="py-1">
-                            {hostActionablePerms.map(perm => (
-                              <button
-                                key={perm.id}
-                                className="w-full text-left px-3 py-2 text-xs hover:bg-muted/50 transition-colors flex items-center gap-2 disabled:opacity-50"
-                                disabled={actionExecuting === `${host.uuid}-${perm.id}`}
-                                onClick={() => executeHostAction(perm.id, perm.name, host.hostname, host.groupName)}
-                              >
-                                <Zap size={12} className="text-muted-foreground shrink-0" />
-                                <span className="text-foreground font-medium">{perm.name}</span>
-                                {actionExecuting === `${host.uuid}-${perm.id}` && (
-                                  <Loader2 size={12} className="animate-spin ml-auto text-primary" />
-                                )}
-                              </button>
-                            ))}
-                          </div>
-                          <div className="px-3 py-2 border-t border-border">
-                            <div className="flex gap-1.5">
-                              <Input
-                                placeholder="Custom action…"
-                                value={customAction}
-                                onChange={e => setCustomAction(e.target.value)}
-                                className="h-7 text-xs flex-1"
-                                onKeyDown={e => {
-                                  if (e.key === 'Enter' && customAction.trim()) {
-                                    executeHostAction(customAction.trim(), customAction.trim(), host.hostname, host.groupName);
-                                    setCustomAction('');
-                                  }
-                                }}
-                              />
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-7 w-7 shrink-0"
-                                disabled={!customAction.trim() || !!actionExecuting}
-                                onClick={() => {
-                                  if (customAction.trim()) {
-                                    executeHostAction(customAction.trim(), customAction.trim(), host.hostname, host.groupName);
-                                    setCustomAction('');
-                                  }
-                                }}
-                              >
-                                <Terminal size={12} />
-                              </Button>
+                      {actionExecuting === host.uuid ? (
+                        <TooltipProvider delayDuration={200}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="h-7 w-7 flex items-center justify-center">
+                                <Loader2 size={14} className="animate-spin text-primary" />
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>Action in progress…</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ) : (
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" disabled={!!actionExecuting}>
+                              <Play size={14} />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent align="end" className="w-64 p-0" onClick={e => e.stopPropagation()}>
+                            <div className="px-3 py-2 border-b border-border">
+                              <p className="text-xs font-semibold text-foreground">Run Action</p>
+                              <p className="text-[0.65rem] text-muted-foreground truncate">{host.hostname}</p>
                             </div>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
+                            <div className="py-1">
+                              {hostActionablePerms.map(perm => (
+                                <button
+                                  key={perm.id}
+                                  className="w-full text-left px-3 py-2 text-xs hover:bg-muted/50 transition-colors flex items-center gap-2 disabled:opacity-50"
+                                  disabled={!!actionExecuting}
+                                  onClick={() => executeHostAction(perm.id, perm.name, host.hostname, host.groupName, host.uuid)}
+                                >
+                                  <Zap size={12} className="text-muted-foreground shrink-0" />
+                                  <span className="text-foreground font-medium">{perm.name}</span>
+                                </button>
+                              ))}
+                            </div>
+                            <div className="px-3 py-2 border-t border-border">
+                              <div className="flex gap-1.5">
+                                <Input
+                                  placeholder="Custom action…"
+                                  value={customAction}
+                                  onChange={e => setCustomAction(e.target.value)}
+                                  className="h-7 text-xs flex-1"
+                                  onKeyDown={e => {
+                                    if (e.key === 'Enter' && customAction.trim()) {
+                                      executeHostAction(customAction.trim(), customAction.trim(), host.hostname, host.groupName, host.uuid);
+                                      setCustomAction('');
+                                    }
+                                  }}
+                                />
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-7 w-7 shrink-0"
+                                  disabled={!customAction.trim() || !!actionExecuting}
+                                  onClick={() => {
+                                    if (customAction.trim()) {
+                                      executeHostAction(customAction.trim(), customAction.trim(), host.hostname, host.groupName, host.uuid);
+                                      setCustomAction('');
+                                    }
+                                  }}
+                                >
+                                  <Terminal size={12} />
+                                </Button>
+                              </div>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                      )}
                     </div>
                   </div>
 
@@ -780,6 +817,70 @@ const VulnAssetsPage = () => {
           </div>
         )}
       </div>
+
+      {/* Action Debug Panel */}
+      {actionDebug && (
+        <div className="rounded-lg border border-border bg-card overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-muted/30">
+            <div className="flex items-center gap-2">
+              {actionDebug.status === 'sending' && <Loader2 size={14} className="animate-spin text-primary" />}
+              {actionDebug.status === 'success' && <CheckCircle2 size={14} className="text-green-500" />}
+              {actionDebug.status === 'error' && <ShieldX size={14} className="text-destructive" />}
+              <span className="text-xs font-semibold text-foreground">
+                Action: {actionDebug.actionName}
+              </span>
+              <span className="text-[0.65rem] text-muted-foreground">→ {actionDebug.hostname}</span>
+              {actionDebug.finishedAt && (
+                <span className="text-[0.6rem] text-muted-foreground font-mono">
+                  ({actionDebug.finishedAt - actionDebug.startedAt}ms)
+                </span>
+              )}
+            </div>
+            <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setActionDebug(null)}>
+              Dismiss
+            </Button>
+          </div>
+          <div className="px-5 py-3 space-y-3">
+            {/* Status */}
+            <div className="flex items-center gap-2">
+              <span className="text-[0.65rem] font-semibold text-muted-foreground uppercase tracking-wide w-16 shrink-0">Status</span>
+              <span className={`text-xs font-medium ${
+                actionDebug.status === 'sending' ? 'text-primary' :
+                actionDebug.status === 'success' ? 'text-green-500' : 'text-destructive'
+              }`}>
+                {actionDebug.status === 'sending' ? 'Sending request…' :
+                 actionDebug.status === 'success' ? `Success (${actionDebug.responseStatus})` :
+                 `Error${actionDebug.responseStatus ? ` (${actionDebug.responseStatus})` : ''}`}
+              </span>
+            </div>
+
+            {/* Request */}
+            <div>
+              <span className="text-[0.65rem] font-semibold text-muted-foreground uppercase tracking-wide">Request Body</span>
+              <pre className="text-[0.65rem] font-mono text-foreground bg-muted/40 rounded-md p-2 mt-1 overflow-x-auto max-h-32 whitespace-pre-wrap">
+                {JSON.stringify(actionDebug.requestBody, null, 2)}
+              </pre>
+            </div>
+
+            {/* Response */}
+            {actionDebug.responseBody !== undefined && (
+              <div>
+                <span className="text-[0.65rem] font-semibold text-muted-foreground uppercase tracking-wide">Response</span>
+                <pre className="text-[0.65rem] font-mono text-foreground bg-muted/40 rounded-md p-2 mt-1 overflow-x-auto max-h-32 whitespace-pre-wrap">
+                  {actionDebug.responseBody || '(empty)'}
+                </pre>
+              </div>
+            )}
+
+            {/* Error */}
+            {actionDebug.error && (
+              <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2">
+                <span className="text-xs text-destructive font-medium">{actionDebug.error}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Add Host Monitor Dialog */}
       <Dialog open={addHostOpen} onOpenChange={setAddHostOpen}>
