@@ -1445,7 +1445,7 @@ const VulnAssetsPage = () => {
 
               {/* Deploy command */}
               <div className="space-y-1.5">
-                <Label className="text-xs font-medium">Run this on the target host</Label>
+                <Label className="text-xs font-medium">Run this on the monitoring targets</Label>
                 <div className="relative">
                   <pre className="text-xs bg-muted rounded-lg p-4 pr-12 border border-border overflow-x-auto font-mono text-foreground whitespace-pre-wrap break-all leading-relaxed max-h-40">
                     {getDeployCommand()}
