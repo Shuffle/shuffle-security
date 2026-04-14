@@ -1621,25 +1621,27 @@ const VulnAssetsPage = () => {
               )}
 
               {/* Sensor detection status */}
-              <div className={`rounded-lg border px-3 py-3 flex items-center gap-3 ${sensorDetected ? 'border-[hsl(var(--severity-low))]/30 bg-[hsl(var(--severity-low))]/[0.06]' : 'border-border bg-muted/30'}`}>
-                {sensorDetected ? (
-                  <>
-                    <CheckCircle2 size={18} className="text-[hsl(var(--severity-low))] shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium text-foreground">Sensor detected!</p>
-                      <p className="text-xs text-muted-foreground">A host has checked in and is reporting results to this monitoring group.</p>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <Loader2 size={18} className="animate-spin text-muted-foreground shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium text-foreground">Waiting for sensor…</p>
-                      <p className="text-xs text-muted-foreground">Run the command on your target host. Once connected, it will run the selected checks and report results back automatically.</p>
-                    </div>
-                  </>
-                )}
-              </div>
+              {(pollingActivated || sensorDetected) && (
+                <div className={`rounded-lg border px-3 py-3 flex items-center gap-3 ${sensorDetected ? 'border-[hsl(var(--severity-low))]/30 bg-[hsl(var(--severity-low))]/[0.06]' : 'border-border bg-muted/30'}`}>
+                  {sensorDetected ? (
+                    <>
+                      <CheckCircle2 size={18} className="text-[hsl(var(--severity-low))] shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Sensor detected!</p>
+                        <p className="text-xs text-muted-foreground">A host has checked in and is reporting results to this monitoring group.</p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <Loader2 size={18} className="animate-spin text-muted-foreground shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Waiting for sensor…</p>
+                        <p className="text-xs text-muted-foreground">Run the command on your target host. Once connected, it will run the selected checks and report results back automatically.</p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
