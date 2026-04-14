@@ -347,11 +347,10 @@ const VulnAssetsPage = () => {
     // Send server-side abort if we have an execution_id
     const debugEntry = actionDebugMap.get(hostUuid);
     if (debugEntry?.executionId) {
-      fetch(getApiUrl(`/api/v1/streams/results`), {
-        method: 'POST',
+      fetch(getApiUrl(`/api/v1/workflows/${debugEntry.executionId}/executions/${debugEntry.executionId}/abort`), {
+        method: 'GET',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
-        body: JSON.stringify({ execution_id: debugEntry.executionId, authorization: debugEntry.executionId, abort: true }),
+        headers: { ...getAuthHeader() },
       }).catch(() => { /* best effort */ });
     }
 
