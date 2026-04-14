@@ -817,7 +817,7 @@ const VulnAssetsPage = () => {
                                     key={perm.id}
                                     className="w-full text-left px-3 py-2 text-xs hover:bg-muted/50 transition-colors flex items-center gap-2 disabled:opacity-50"
                                     disabled={actionExecuting.has(host.uuid)}
-                                    onClick={() => executeHostAction(perm.id, perm.name, host.hostname, host.groupName, host.uuid)}
+                                    onClick={() => executeHostAction(perm.id, perm.name, host.hostname, host.groupName, host.uuid, true)}
                                   >
                                     <Zap size={12} className="text-muted-foreground shrink-0" />
                                     <span className="text-foreground font-medium">{perm.name}</span>
