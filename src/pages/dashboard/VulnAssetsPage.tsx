@@ -626,7 +626,7 @@ const VulnAssetsPage = () => {
               const hdEncrypted = host.hd_encrypted === true || host.hd_encrypted === 'true';
               const screenlockOn = host.automatic_screen_lock_enabled === true || host.automatic_screen_lock_enabled === 'true';
               const softwareCount = Array.isArray(host.installed_software) ? host.installed_software.length : 0;
-              const responseActionsOn = !!(host as any).response_actions_enabled;
+              const responseActionsOn = !!(host as any).response_actions;
               const logForwardingOn = !!host.log_forwarding;
               const isExpanded = expandedHosts.has(host.uuid);
               const toggleExpanded = () => {
@@ -902,8 +902,8 @@ const VulnAssetsPage = () => {
                             <Zap size={12} />
                             <span className="text-[0.65rem] font-semibold uppercase tracking-wide">Response Actions</span>
                           </div>
-                          <p className={`text-xs ${(host as any).response_actions_enabled ? 'text-foreground' : 'text-muted-foreground'}`}>
-                            {(host as any).response_actions_enabled ? 'Enabled' : 'Not enabled'}
+                          <p className={`text-xs ${(host as any).response_actions ? 'text-foreground' : 'text-muted-foreground'}`}>
+                            {(host as any).response_actions ? `Enabled (${(host as any).response_actions})` : 'Not enabled'}
                           </p>
                         </div>
                       </div>
