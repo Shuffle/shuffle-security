@@ -703,7 +703,7 @@ const HostTerminalPage = () => {
             <Play size={14} />
           </Button>
         </div>
-        <p className="text-[0.65rem] text-muted-foreground/60 mt-2.5 text-center">History is stored locally in your browser. Other users cannot see it.</p>
+        <p className="text-[0.65rem] text-muted-foreground/60 mt-2.5 text-center">No session is created — each command is standalone. History is stored locally in your browser.</p>
       </div>
     </div>
   );
