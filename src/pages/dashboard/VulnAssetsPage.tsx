@@ -1424,6 +1424,27 @@ const VulnAssetsPage = () => {
                 </div>
               )}
 
+              {/* Install mode toggle */}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Install Method</Label>
+                <div className="flex gap-2">
+                  {([
+                    { value: 'easy' as const, label: 'Easy Install' },
+                    { value: 'custom' as const, label: 'Custom Install' },
+                  ]).map(m => (
+                    <Button
+                      key={m.value}
+                      variant={installMode === m.value ? 'default' : 'outline'}
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => setInstallMode(m.value)}
+                    >
+                      {m.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
               {/* Platform */}
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium">Platform</Label>
@@ -1445,58 +1466,44 @@ const VulnAssetsPage = () => {
                 </div>
               </div>
 
-              {/* Deploy command */}
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium">Run this on the monitoring targets</Label>
-                <div className="relative">
-                  <pre className="text-xs bg-muted rounded-lg p-4 pr-12 border border-border overflow-x-auto font-mono text-foreground whitespace-pre-wrap break-all leading-relaxed max-h-40">
-                    {getDeployCommand()}
-                  </pre>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute top-2 right-2 h-7 w-7"
-                    onClick={handleCopyCommand}
-                  >
-                    {copied ? <Check size={14} className="text-primary" /> : <Copy size={14} />}
-                  </Button>
-                </div>
-              </div>
-
-              {/* Manual setup guide */}
-              <details className="group rounded-lg border border-border overflow-hidden">
-                <summary className="flex items-center gap-2 px-3 py-2.5 cursor-pointer hover:bg-muted/50 transition-colors text-sm font-medium text-foreground select-none">
-                  <ChevronRight size={14} className="text-muted-foreground transition-transform group-open:rotate-90" />
-                  Manual Setup Guide
-                  <span className="text-xs text-muted-foreground font-normal ml-auto">Set up as a background service</span>
-                </summary>
-                <div className="border-t border-border px-3 py-3 space-y-4 bg-muted/20">
-                  {/* Step 1 */}
+              {installMode === 'easy' ? (
+                <>
+                  {/* Easy: one-liner */}
                   <div className="space-y-1.5">
-                    <div className="flex items-center gap-2">
-                      <span className="flex items-center justify-center h-5 w-5 rounded-full bg-primary/15 text-primary text-[0.6rem] font-bold shrink-0">1</span>
-                      <span className="text-xs font-semibold text-foreground">Download the binary</span>
+                    <Label className="text-xs font-medium">Run this on the monitoring targets</Label>
+                    <div className="relative">
+                      <pre className="text-xs bg-muted rounded-lg p-4 pr-12 border border-border overflow-x-auto font-mono text-foreground whitespace-pre-wrap break-all leading-relaxed max-h-40">
+                        {getDeployCommand()}
+                      </pre>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-2 right-2 h-7 w-7"
+                        onClick={handleCopyCommand}
+                      >
+                        {copied ? <Check size={14} className="text-primary" /> : <Copy size={14} />}
+                      </Button>
                     </div>
-                    <p className="text-xs text-muted-foreground ml-7">
-                      Download the latest release for your platform from{' '}
+                    <p className="text-xs text-muted-foreground">Downloads, configures, and starts the monitor automatically.</p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Custom: binary download + env command */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">1. Download the binary</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Get the latest release from{' '}
                       <a href="https://github.com/Shuffle/orborus/releases" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
                         github.com/Shuffle/orborus/releases
                       </a>
                     </p>
-                    <pre className="text-xs bg-muted rounded-md p-3 ml-7 border border-border font-mono text-foreground whitespace-pre-wrap break-all leading-relaxed">
-{hostPlatform === 'windows'
-  ? `# PowerShell\nInvoke-WebRequest -Uri "https://github.com/Shuffle/orborus/releases/latest/download/orborus-windows-amd64.exe" -OutFile "orborus.exe"`
-  : `# Linux/macOS (amd64)\ncurl -L -o orborus https://github.com/Shuffle/orborus/releases/latest/download/orborus-linux-amd64\nchmod +x orborus`}
-                    </pre>
                   </div>
 
-                  {/* Step 2 */}
                   <div className="space-y-1.5">
-                    <div className="flex items-center gap-2">
-                      <span className="flex items-center justify-center h-5 w-5 rounded-full bg-primary/15 text-primary text-[0.6rem] font-bold shrink-0">2</span>
-                      <span className="text-xs font-semibold text-foreground">Run it manually (test)</span>
-                    </div>
-                    <pre className="text-xs bg-muted rounded-md p-3 ml-7 border border-border font-mono text-foreground whitespace-pre-wrap break-all leading-relaxed">
+                    <Label className="text-xs font-medium">2. Run the monitor</Label>
+                    <div className="relative">
+                      <pre className="text-xs bg-muted rounded-lg p-4 pr-12 border border-border overflow-x-auto font-mono text-foreground whitespace-pre-wrap break-all leading-relaxed max-h-48">
 {(() => {
   const baseUrl = API_CONFIG.baseUrl;
   const envLines: string[] = [];
@@ -1514,89 +1521,60 @@ const VulnAssetsPage = () => {
   if (hostChecks.log_forwarding && logForwardingEndpoint.trim()) envLines.push(`LOG_FORWARDING=${logForwardingEndpoint.trim()}`);
 
   if (hostPlatform === 'windows') {
-    return envLines.map(l => `$env:${l.replace('=', '="')}""`).join('\n') + '\n./orborus.exe';
+    return envLines.map(l => `$env:${l.replace('=', '="')}"`).join('\n') + '\n\n./orborus.exe';
   }
-  return envLines.map(l => `export ${l}`).join('\n') + '\n./orborus';
+  return envLines.map(l => `export ${l}`).join('\n') + '\n\n./orborus';
 })()}
-                    </pre>
-                  </div>
-
-                  {/* Step 3 */}
-                  <div className="space-y-1.5">
-                    <div className="flex items-center gap-2">
-                      <span className="flex items-center justify-center h-5 w-5 rounded-full bg-primary/15 text-primary text-[0.6rem] font-bold shrink-0">3</span>
-                      <span className="text-xs font-semibold text-foreground">Create a background service</span>
+                      </pre>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-2 right-2 h-7 w-7"
+                        onClick={() => {
+                          const baseUrl = API_CONFIG.baseUrl;
+                          const envLines: string[] = [];
+                          envLines.push(`BASE_URL=${baseUrl}`);
+                          envLines.push('SENSOR_MODE=true');
+                          if (selectedGroup) {
+                            envLines.push(`QUEUE=${selectedGroup.queue}`);
+                            if (selectedGroup.org_id) envLines.push(`ORG_ID=${selectedGroup.org_id}`);
+                            if (selectedGroup.auth) envLines.push(`AUTH=${selectedGroup.auth}`);
+                          }
+                          if (hostChecks.installed_software) envLines.push('SOFTWARE_LIST_ENABLED=true');
+                          if (hostChecks.hd_encrypted) envLines.push('HD_ENCRYPTED_CHECK=true');
+                          if (hostChecks.screenlock) envLines.push('SCREENLOCK_CHECK=true');
+                          if (hostChecks.response_actions) envLines.push(`RESPONSE_ACTIONS=${responseActionMode}`);
+                          if (hostChecks.log_forwarding && logForwardingEndpoint.trim()) envLines.push(`LOG_FORWARDING=${logForwardingEndpoint.trim()}`);
+                          const cmd = hostPlatform === 'windows'
+                            ? envLines.map(l => `$env:${l.replace('=', '="')}"`).join('\n') + '\n\n./orborus.exe'
+                            : envLines.map(l => `export ${l}`).join('\n') + '\n\n./orborus';
+                          navigator.clipboard.writeText(cmd);
+                          setCopied(true);
+                          setTimeout(() => setCopied(false), 2000);
+                        }}
+                      >
+                        {copied ? <Check size={14} className="text-primary" /> : <Copy size={14} />}
+                      </Button>
                     </div>
-                    {hostPlatform === 'unix' ? (
-                      <div className="ml-7 space-y-2">
-                        <p className="text-xs text-muted-foreground">Create a systemd service file:</p>
-                        <pre className="text-xs bg-muted rounded-md p-3 border border-border font-mono text-foreground whitespace-pre-wrap break-all leading-relaxed">
-{`sudo tee /etc/systemd/system/shuffle-monitor.service > /dev/null << 'EOF'
-[Unit]
-Description=Shuffle Host Monitor
-After=network.target
-
-[Service]
-Type=simple
-Restart=always
-RestartSec=10
-ExecStart=/usr/local/bin/orborus
-${(() => {
-  const lines: string[] = [];
-  lines.push(`Environment=BASE_URL=${API_CONFIG.baseUrl}`);
-  lines.push('Environment=SENSOR_MODE=true');
-  if (selectedGroup) {
-    lines.push(`Environment=QUEUE=${selectedGroup.queue}`);
-    if (selectedGroup.org_id) lines.push(`Environment=ORG_ID=${selectedGroup.org_id}`);
-    if (selectedGroup.auth) lines.push(`Environment=AUTH=${selectedGroup.auth}`);
-  }
-  if (hostChecks.installed_software) lines.push('Environment=SOFTWARE_LIST_ENABLED=true');
-  if (hostChecks.hd_encrypted) lines.push('Environment=HD_ENCRYPTED_CHECK=true');
-  if (hostChecks.screenlock) lines.push('Environment=SCREENLOCK_CHECK=true');
-  if (hostChecks.response_actions) lines.push(`Environment=RESPONSE_ACTIONS=${responseActionMode}`);
-  if (hostChecks.log_forwarding && logForwardingEndpoint.trim()) lines.push(`Environment=LOG_FORWARDING=${logForwardingEndpoint.trim()}`);
-  return lines.join('\n');
-})()}
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-sudo systemctl daemon-reload
-sudo systemctl enable --now shuffle-monitor`}
-                        </pre>
-                      </div>
-                    ) : (
-                      <div className="ml-7 space-y-2">
-                        <p className="text-xs text-muted-foreground">Create a Windows Service using NSSM or Task Scheduler:</p>
-                        <pre className="text-xs bg-muted rounded-md p-3 border border-border font-mono text-foreground whitespace-pre-wrap break-all leading-relaxed">
-{`# Option A: Using Task Scheduler (built-in)
-$action = New-ScheduledTaskAction -Execute "C:\\shuffle\\orborus.exe"
-$trigger = New-ScheduledTaskTrigger -AtStartup
-$settings = New-ScheduledTaskSettingsSet -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1)
-Register-ScheduledTask -TaskName "ShuffleMonitor" -Action $action -Trigger $trigger -Settings $settings -RunLevel Highest
-
-# Option B: Using NSSM (recommended)
-# Download NSSM from https://nssm.cc
-nssm install ShuffleMonitor "C:\\shuffle\\orborus.exe"
-${(() => {
-  const lines: string[] = [];
-  lines.push(`nssm set ShuffleMonitor AppEnvironmentExtra BASE_URL=${API_CONFIG.baseUrl}`);
-  lines.push('nssm set ShuffleMonitor AppEnvironmentExtra +SENSOR_MODE=true');
-  if (selectedGroup) {
-    lines.push(`nssm set ShuffleMonitor AppEnvironmentExtra +QUEUE=${selectedGroup.queue}`);
-    if (selectedGroup.org_id) lines.push(`nssm set ShuffleMonitor AppEnvironmentExtra +ORG_ID=${selectedGroup.org_id}`);
-    if (selectedGroup.auth) lines.push(`nssm set ShuffleMonitor AppEnvironmentExtra +AUTH=${selectedGroup.auth}`);
-  }
-  return lines.join('\n');
-})()}
-nssm start ShuffleMonitor`}
-                        </pre>
-                      </div>
-                    )}
                   </div>
-                </div>
-              </details>
+
+                  <div className="space-y-1">
+                    <Label className="text-xs font-medium">3. Run as a background service</Label>
+                    <p className="text-xs text-muted-foreground">
+                      To keep the monitor running persistently, set up the command above as a service.{' '}
+                      {hostPlatform === 'unix' ? (
+                        <a href="https://www.freedesktop.org/software/systemd/man/systemd.service.html" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                          systemd docs →
+                        </a>
+                      ) : (
+                        <a href="https://learn.microsoft.com/en-us/powershell/module/scheduledtasks/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                          Task Scheduler docs →
+                        </a>
+                      )}
+                    </p>
+                  </div>
+                </>
+              )}
 
               <div className="rounded-lg border border-primary/20 bg-primary/[0.04] px-3 py-2.5">
                 <p className="text-xs text-muted-foreground">
