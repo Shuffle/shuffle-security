@@ -64,7 +64,7 @@ const HostTerminalPage = () => {
   const mode = hostState?.mode || 'full';
   const isFull = mode === 'full';
 
-  usePageMeta({ title: `Terminal · ${hostname}` });
+  usePageMeta({ title: `Terminal · ${hostname}`, description: `Terminal session for ${hostname}` });
 
   const [customAction, setCustomAction] = useState('');
   const [historyIndex, setHistoryIndex] = useState(-1);
