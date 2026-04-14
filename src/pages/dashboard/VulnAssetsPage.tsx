@@ -239,6 +239,7 @@ const VulnAssetsPage = () => {
   };
 
   type ActionDebugEntry = {
+    entryId: string;
     hostUuid: string;
     actionName: string;
     hostname: string;
