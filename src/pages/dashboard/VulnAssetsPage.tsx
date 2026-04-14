@@ -169,7 +169,45 @@ const VulnAssetsPage = () => {
   const [syncGroupId, setSyncGroupId] = useState<string>('');
   const [expandedHosts, setExpandedHosts] = useState<Set<string>>(new Set());
   const [osSortAsc, setOsSortAsc] = useState<boolean | null>(null);
+  const [actionExecuting, setActionExecuting] = useState<string | null>(null);
+  const [customAction, setCustomAction] = useState('');
   const selectedGroup = groups.find(g => g.id === selectedGroupId);
+
+  // Get host-actionable permissions from defaults
+  const hostActionablePerms = DEFAULT_AGENT_PERMISSIONS
+    .flatMap(c => c.permissions)
+    .filter(p => p.hostActionable && !p.disabled);
+
+  const executeHostAction = async (actionId: string, actionName: string, hostname: string, groupName: string) => {
+    setActionExecuting(`${hostname}-${actionId}`);
+    try {
+      const resp = await fetch(getApiUrl('/api/v1/apps/sensors/run'), {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+        body: JSON.stringify({
+          app_id: 'sensors',
+          app_name: 'sensors',
+          name: 'run_action',
+          parameters: [
+            { name: 'action', value: actionId },
+            { name: 'hosts', value: hostname },
+            { name: 'sensor_group', value: groupName },
+          ],
+        }),
+      });
+      if (resp.ok) {
+        toast.success(`Action sent`, { description: `"${actionName}" → ${hostname}` });
+      } else {
+        const text = await resp.text().catch(() => '');
+        toast.error('Action failed', { description: text || `HTTP ${resp.status}` });
+      }
+    } catch (err) {
+      toast.error('Action failed', { description: err instanceof Error ? err.message : 'Request error' });
+    } finally {
+      setActionExecuting(null);
+    }
+  };
 
   // Aggregate all hosts across all sensor groups
   const allHostsRaw = groups.flatMap(g => g.hosts.map(h => ({ ...h, groupName: g.name, groupId: g.id })));
