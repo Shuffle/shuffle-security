@@ -441,7 +441,7 @@ const VulnAssetsPage = () => {
 
             // Got a real result — parse results[0].result for output/success/error
             const parsed = parseActionResult(pollData);
-            updateHostDebug(hostUuid, {
+            updateHostDebug(hostUuid, entryId, {
               status: parsed.success ? 'success' : 'error',
               responseBody: pollText,
               finishedAt: Date.now(),
