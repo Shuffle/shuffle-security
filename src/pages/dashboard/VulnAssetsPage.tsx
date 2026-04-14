@@ -153,6 +153,7 @@ const VulnAssetsPage = () => {
     log_forwarding: false,
   });
   const [logForwardingEndpoint, setLogForwardingEndpoint] = useState('');
+  const [responseActionMode, setResponseActionMode] = useState<'controlled' | 'full'>('controlled');
   const [copied, setCopied] = useState(false);
   const [sensorDetected, setSensorDetected] = useState(false);
   const [sensorPolling, setSensorPolling] = useState(false);
