@@ -374,11 +374,18 @@ const VulnAssetsPage = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Poll for sensor checkin when on deploy step
+  // Poll for NEW sensor hosts when on deploy step
+  const baselineHostCountRef = useRef<number | null>(null);
+
   const startSensorPolling = useCallback(() => {
     if (pollRef.current) clearInterval(pollRef.current);
     setSensorDetected(false);
     setSensorPolling(true);
+
+    // Capture baseline host count for the selected group at poll start
+    const currentGroup = groups.find(g => g.id === selectedGroupId);
+    baselineHostCountRef.current = currentGroup ? currentGroup.hosts.length : 0;
+
     const checkSensor = async () => {
       try {
         const res = await fetch(getApiUrl('/api/v1/getenvironments'), {
@@ -388,10 +395,10 @@ const VulnAssetsPage = () => {
         if (!res.ok) return;
         const envs: OrbEnvironment[] = await res.json();
         const env = envs.find(e => (e.id === selectedGroupId || e.Name === selectedGroup?.name) && e.sensor_group === true);
-        if (env && env.checkin) {
-          const now = Math.floor(Date.now() / 1000);
-          const checkin = typeof env.checkin === 'number' ? env.checkin : 0;
-          if (checkin > 0 && (now - checkin) < 300) {
+        if (env) {
+          const currentHostCount = Array.isArray(env.sensor_hosts) ? env.sensor_hosts.length : 0;
+          const baseline = baselineHostCountRef.current ?? 0;
+          if (currentHostCount > baseline) {
             setSensorDetected(true);
             setSensorPolling(false);
             if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
@@ -399,9 +406,9 @@ const VulnAssetsPage = () => {
         }
       } catch { /* continue polling */ }
     };
-    checkSensor();
+    // Don't check immediately — wait one interval so the baseline is stable
     pollRef.current = setInterval(checkSensor, 5000);
-  }, [selectedGroupId, selectedGroup?.name]);
+  }, [selectedGroupId, selectedGroup?.name, groups]);
 
   const stopSensorPolling = useCallback(() => {
     if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
