@@ -876,6 +876,7 @@ const VulnAssetsPage = () => {
                         </PopoverTrigger>
                         <PopoverContent align="end" className="w-[34rem] p-0" onClick={e => e.stopPropagation()}>
                           {(() => {
+                            hydrateHostHistory(host.uuid);
                             const hostHistory = actionHistoryMap.get(host.uuid) || [];
                             const actionDebug = hostHistory[hostHistory.length - 1];
                             const isRunning = actionDebug && (actionDebug.status === 'sending' || actionDebug.status === 'polling');
