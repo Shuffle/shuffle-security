@@ -289,13 +289,17 @@ const VulnAssetsPage = () => {
       localStorage.setItem(key, JSON.stringify(stored));
     } catch { /* ignore */ }
   };
-  const updateHostDebug = (hostUuid: string, update: Partial<ActionDebugEntry>) => {
+  const updateHostDebug = (hostUuid: string, targetEntryId: string, update: Partial<ActionDebugEntry>) => {
     setActionHistoryMap(prev => {
       const history = prev.get(hostUuid);
       if (!history || history.length === 0) return prev;
+      const idx = history.findIndex(e => e.entryId === targetEntryId);
+      if (idx < 0) return prev;
       const next = new Map(prev);
-      const latest = { ...history[history.length - 1], ...update };
-      next.set(hostUuid, [...history.slice(0, -1), latest]);
+      const latest = { ...history[idx], ...update };
+      const updated = [...history];
+      updated[idx] = latest;
+      next.set(hostUuid, updated);
 
       // Update the persisted entry in localStorage (was already added on push)
       if (latest.status === 'success' || latest.status === 'error') {
@@ -380,7 +384,7 @@ const VulnAssetsPage = () => {
       });
       const text = await resp.text().catch(() => '');
       if (!resp.ok) {
-        updateHostDebug(hostUuid, { status: 'error', responseStatus: resp.status, responseBody: text, finishedAt: Date.now(), error: text || `HTTP ${resp.status}` });
+        updateHostDebug(hostUuid, entryId, { status: 'error', responseStatus: resp.status, responseBody: text, finishedAt: Date.now(), error: text || `HTTP ${resp.status}` });
         toast.error('Action failed', { description: text || `HTTP ${resp.status}` });
         return;
       }
@@ -395,7 +399,7 @@ const VulnAssetsPage = () => {
         (parsed as Record<string, unknown>).execution_id
       ) {
         const execId = (parsed as Record<string, unknown>).execution_id as string;
-        updateHostDebug(hostUuid, { status: 'polling', responseStatus: resp.status, responseBody: text, executionId: execId, authorization: ((parsed as any).authorization as string) || execId });
+        updateHostDebug(hostUuid, entryId, { status: 'polling', responseStatus: resp.status, responseBody: text, executionId: execId, authorization: ((parsed as any).authorization as string) || execId });
 
         // Poll streams/results for the real output (30 min timeout)
         const maxAttempts = 900; // 900 * 2s = 30 minutes
@@ -418,7 +422,7 @@ const VulnAssetsPage = () => {
             });
             if (!pollResp.ok) {
               if (pollResp.status >= 400 && pollResp.status < 500) {
-                updateHostDebug(hostUuid, { status: 'error', responseBody: `Poll error ${pollResp.status}`, finishedAt: Date.now(), error: `HTTP ${pollResp.status}` });
+                updateHostDebug(hostUuid, entryId, { status: 'error', responseBody: `Poll error ${pollResp.status}`, finishedAt: Date.now(), error: `HTTP ${pollResp.status}` });
                 toast.error('Action failed', { description: `Poll error ${pollResp.status}` });
                 return;
               }
@@ -437,7 +441,7 @@ const VulnAssetsPage = () => {
 
             // Got a real result — parse results[0].result for output/success/error
             const parsed = parseActionResult(pollData);
-            updateHostDebug(hostUuid, {
+            updateHostDebug(hostUuid, entryId, {
               status: parsed.success ? 'success' : 'error',
               responseBody: pollText,
               finishedAt: Date.now(),
@@ -456,17 +460,17 @@ const VulnAssetsPage = () => {
         }
         // Timed out
         if (pollingActiveRef.current.get(hostUuid)) {
-          updateHostDebug(hostUuid, { status: 'error', finishedAt: Date.now(), error: 'Timed out waiting for execution result (30 min).' });
+          updateHostDebug(hostUuid, entryId, { status: 'error', finishedAt: Date.now(), error: 'Timed out waiting for execution result (30 min).' });
           toast.error('Action timed out', { description: 'No result after 30 minutes.' });
         }
       } else {
         // Immediate result (no execution_id)
-        updateHostDebug(hostUuid, { status: 'success', responseStatus: resp.status, responseBody: text, finishedAt: Date.now() });
+        updateHostDebug(hostUuid, entryId, { status: 'success', responseStatus: resp.status, responseBody: text, finishedAt: Date.now() });
       }
     } catch (err) {
       if (!pollingActiveRef.current.get(hostUuid)) return;
       const msg = err instanceof Error ? err.message : 'Request error';
-      updateHostDebug(hostUuid, { status: 'error', finishedAt: Date.now(), error: msg });
+      updateHostDebug(hostUuid, entryId, { status: 'error', finishedAt: Date.now(), error: msg });
       toast.error('Action failed', { description: msg });
     } finally {
       pollingActiveRef.current.delete(hostUuid);
@@ -495,7 +499,9 @@ const VulnAssetsPage = () => {
     }
 
     // Immediately update UI
-    updateHostDebug(hostUuid, { status: 'error', finishedAt: Date.now(), error: 'Aborted by user' });
+    if (debugEntry?.entryId) {
+      updateHostDebug(hostUuid, debugEntry.entryId, { status: 'error', finishedAt: Date.now(), error: 'Aborted by user' });
+    }
     // Don't remove from actionExecuting immediately — keep popover open to show debug info.
   };
 
