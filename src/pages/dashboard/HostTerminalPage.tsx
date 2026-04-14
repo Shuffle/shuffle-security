@@ -451,6 +451,8 @@ const HostTerminalPage = () => {
             </div>
           </PopoverContent>
         </Popover>
+          );
+        })()}
         <div className="flex-1" />
         {runningEntries.length > 0 && (
           <div className="flex items-center gap-2">
