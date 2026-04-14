@@ -818,6 +818,69 @@ const VulnAssetsPage = () => {
         )}
       </div>
 
+      {/* Action Debug Panel */}
+      {actionDebug && (
+        <div className="rounded-lg border border-border bg-card overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-muted/30">
+            <div className="flex items-center gap-2">
+              {actionDebug.status === 'sending' && <Loader2 size={14} className="animate-spin text-primary" />}
+              {actionDebug.status === 'success' && <CheckCircle2 size={14} className="text-green-500" />}
+              {actionDebug.status === 'error' && <ShieldX size={14} className="text-destructive" />}
+              <span className="text-xs font-semibold text-foreground">
+                Action: {actionDebug.actionName}
+              </span>
+              <span className="text-[0.65rem] text-muted-foreground">→ {actionDebug.hostname}</span>
+              {actionDebug.finishedAt && (
+                <span className="text-[0.6rem] text-muted-foreground font-mono">
+                  ({actionDebug.finishedAt - actionDebug.startedAt}ms)
+                </span>
+              )}
+            </div>
+            <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setActionDebug(null)}>
+              Dismiss
+            </Button>
+          </div>
+          <div className="px-5 py-3 space-y-3">
+            {/* Status */}
+            <div className="flex items-center gap-2">
+              <span className="text-[0.65rem] font-semibold text-muted-foreground uppercase tracking-wide w-16 shrink-0">Status</span>
+              <span className={`text-xs font-medium ${
+                actionDebug.status === 'sending' ? 'text-primary' :
+                actionDebug.status === 'success' ? 'text-green-500' : 'text-destructive'
+              }`}>
+                {actionDebug.status === 'sending' ? 'Sending request…' :
+                 actionDebug.status === 'success' ? `Success (${actionDebug.responseStatus})` :
+                 `Error${actionDebug.responseStatus ? ` (${actionDebug.responseStatus})` : ''}`}
+              </span>
+            </div>
+
+            {/* Request */}
+            <div>
+              <span className="text-[0.65rem] font-semibold text-muted-foreground uppercase tracking-wide">Request Body</span>
+              <pre className="text-[0.65rem] font-mono text-foreground bg-muted/40 rounded-md p-2 mt-1 overflow-x-auto max-h-32 whitespace-pre-wrap">
+                {JSON.stringify(actionDebug.requestBody, null, 2)}
+              </pre>
+            </div>
+
+            {/* Response */}
+            {actionDebug.responseBody !== undefined && (
+              <div>
+                <span className="text-[0.65rem] font-semibold text-muted-foreground uppercase tracking-wide">Response</span>
+                <pre className="text-[0.65rem] font-mono text-foreground bg-muted/40 rounded-md p-2 mt-1 overflow-x-auto max-h-32 whitespace-pre-wrap">
+                  {actionDebug.responseBody || '(empty)'}
+                </pre>
+              </div>
+            )}
+
+            {/* Error */}
+            {actionDebug.error && (
+              <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2">
+                <span className="text-xs text-destructive font-medium">{actionDebug.error}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )
       {/* Add Host Monitor Dialog */}
       <Dialog open={addHostOpen} onOpenChange={setAddHostOpen}>
         <DialogContent className="max-w-lg">
