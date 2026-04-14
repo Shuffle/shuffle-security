@@ -805,6 +805,7 @@ const VulnAssetsPage = () => {
                   else next.add(host.uuid);
                   return next;
                 });
+                setSoftwareFilter('');
               };
               const CheckDot = ({ on, tip, color }: { on: boolean; tip: string; color?: string }) => (
                 <TooltipProvider delayDuration={200}>
