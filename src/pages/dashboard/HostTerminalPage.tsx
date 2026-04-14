@@ -360,6 +360,52 @@ const HostTerminalPage = () => {
     abortControllersRef.current.clear();
   };
 
+  const toggleExpanded = (entryId: number) => {
+    setExpandedEntries(prev => {
+      const next = new Set(prev);
+      if (next.has(entryId)) next.delete(entryId); else next.add(entryId);
+      return next;
+    });
+  };
+
+  const fetchEntryResult = useCallback(async (entry: ActionDebugEntry) => {
+    if (!entry.executionId || !entry.authorization) {
+      toast.error('No execution ID available to reload');
+      return;
+    }
+    setLoadingEntries(prev => new Set(prev).add(entry.entryId));
+    try {
+      const resp = await fetch(getApiUrl('/api/v1/streams/results'), {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+        body: JSON.stringify({ execution_id: entry.executionId, authorization: entry.authorization }),
+      });
+      if (!resp.ok) {
+        toast.error('Failed to reload result', { description: `HTTP ${resp.status}` });
+        return;
+      }
+      const text = await resp.text();
+      if (!text || text === '{}' || text === 'null') {
+        toast.info('Result not available yet');
+        return;
+      }
+      let pollData: unknown = null;
+      try { pollData = JSON.parse(text); } catch { /* not JSON */ }
+      const result = parseActionResult(pollData);
+      setActionHistory(prev => prev.map(e =>
+        e.entryId === entry.entryId
+          ? { ...e, actionOutput: result.output || undefined, error: result.error || undefined, actionSuccess: result.success }
+          : e
+      ));
+      setExpandedEntries(prev => new Set(prev).add(entry.entryId));
+    } catch (err) {
+      toast.error('Failed to reload', { description: err instanceof Error ? err.message : 'Network error' });
+    } finally {
+      setLoadingEntries(prev => { const next = new Set(prev); next.delete(entry.entryId); return next; });
+    }
+  }, []);
+
   const finishedHistory = actionHistory.filter(e => e.status === 'success' || e.status === 'error');
   const runningEntries = actionHistory.filter(e => e.status === 'sending' || e.status === 'polling');
 
