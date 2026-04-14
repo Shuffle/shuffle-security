@@ -794,7 +794,7 @@ const VulnAssetsPage = () => {
                             )}
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent align="end" className="w-[26rem] p-0" onClick={e => e.stopPropagation()}>
+                        <PopoverContent align="end" className="w-[34rem] p-0" onClick={e => e.stopPropagation()}>
                           {(() => {
                             const hostHistory = actionHistoryMap.get(host.uuid) || [];
                             const actionDebug = hostHistory[hostHistory.length - 1];
@@ -803,7 +803,7 @@ const VulnAssetsPage = () => {
                             const isFull = responseActionsMode === 'full';
 
                             return (
-                            <div className="flex flex-col max-h-[28rem]">
+                            <div className="flex flex-col" style={{ maxHeight: 'min(70vh, 32rem)' }}>
                               {/* Header */}
                               <div className="px-3 py-2 border-b border-border flex items-center gap-2 shrink-0">
                                 <Terminal size={12} className="text-muted-foreground" />
@@ -815,7 +815,10 @@ const VulnAssetsPage = () => {
                               </div>
 
                               {/* Scrollable session log */}
-                              <div className="flex-1 overflow-y-auto min-h-0">
+                              <div
+                                className="flex-1 overflow-y-auto min-h-0"
+                                ref={(el) => { if (el) el.scrollTop = el.scrollHeight; }}
+                              >
                                 {/* Predefined action chips — always visible */}
                                 {!isRunning && (
                                   <div className="px-3 py-2 flex flex-wrap gap-1 border-b border-border/50">
