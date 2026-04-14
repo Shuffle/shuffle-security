@@ -48,25 +48,6 @@ import { InputBase, Avatar } from '@mui/material';
 import type { AgentRun } from '@/services/agentActivity';
 import AgentRunResultViewer from '@/components/agent/AgentRunResultViewer';
 
-const RISK_ICON_BG: Record<RiskLevel, string> = {
-  low: 'hsla(var(--severity-low) / 0.15)',
-  medium: 'hsla(var(--severity-medium) / 0.15)',
-  high: 'hsla(var(--severity-critical) / 0.15)',
-};
-
-const RISK_ICON_COLOR: Record<RiskLevel, string> = {
-  low: 'hsl(var(--severity-low))',
-  medium: 'hsl(var(--severity-medium))',
-  high: 'hsl(var(--severity-critical))',
-};
-
-const CATEGORY_ICONS: Record<string, React.ReactNode> = {
-  Radar: <Radar size={18} />,
-  Zap: <Zap size={18} />,
-  Bell: <Bell size={18} />,
-  Server: <Server size={18} />,
-};
-
 const AGENT_TOOLS_KEY = 'agent_enabled_tools';
 
 interface AgentTool {
