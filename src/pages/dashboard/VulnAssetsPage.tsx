@@ -763,7 +763,7 @@ const VulnAssetsPage = () => {
                                   <button
                                     key={perm.id}
                                     className="w-full text-left px-3 py-2 text-xs hover:bg-muted/50 transition-colors flex items-center gap-2 disabled:opacity-50"
-                                    disabled={actionExecuting === host.uuid}
+                                    disabled={actionExecuting.has(host.uuid)}
                                     onClick={() => executeHostAction(perm.id, perm.name, host.hostname, host.groupName, host.uuid)}
                                   >
                                     <Zap size={12} className="text-muted-foreground shrink-0" />
@@ -778,7 +778,7 @@ const VulnAssetsPage = () => {
                                     value={customAction}
                                     onChange={e => setCustomAction(e.target.value)}
                                     className="h-7 text-xs flex-1"
-                                    disabled={actionExecuting === host.uuid}
+                                    disabled={actionExecuting.has(host.uuid)}
                                     onKeyDown={e => {
                                       if (e.key === 'Enter' && customAction.trim()) {
                                         executeHostAction(customAction.trim(), customAction.trim(), host.hostname, host.groupName, host.uuid);
@@ -790,7 +790,7 @@ const VulnAssetsPage = () => {
                                     size="icon"
                                     variant="ghost"
                                     className="h-7 w-7 shrink-0"
-                                    disabled={!customAction.trim() || actionExecuting === host.uuid}
+                                    disabled={!customAction.trim() || actionExecuting.has(host.uuid)}
                                     onClick={() => {
                                       if (customAction.trim()) {
                                         executeHostAction(customAction.trim(), customAction.trim(), host.hostname, host.groupName, host.uuid);
@@ -803,7 +803,7 @@ const VulnAssetsPage = () => {
                                 </div>
                               </div>
                             </div>
-                          )}
+                          ); })()}
                         </PopoverContent>
                       </Popover>
                     </div>
