@@ -880,7 +880,8 @@ const VulnAssetsPage = () => {
             )}
           </div>
         </div>
-      )
+      )}
+
       {/* Add Host Monitor Dialog */}
       <Dialog open={addHostOpen} onOpenChange={setAddHostOpen}>
         <DialogContent className="max-w-lg">
