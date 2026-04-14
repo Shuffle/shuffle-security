@@ -185,6 +185,7 @@ const PermissionsPanel = ({ compact = false }: PermissionsPanelProps) => {
                   uuid: h.uuid || h.hostname,
                   checkin: h.checkin || 0,
                   groupName: env.Name || '',
+                  responseActions: h.response_actions || false,
                 });
               }
             });
