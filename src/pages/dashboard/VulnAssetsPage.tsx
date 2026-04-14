@@ -187,6 +187,7 @@ const VulnAssetsPage = () => {
   };
   const [actionDebugMap, setActionDebugMap] = useState<Map<string, ActionDebugEntry>>(new Map());
   const abortControllersRef = useRef<Map<string, AbortController>>(new Map());
+  const pollingActiveRef = useRef<Map<string, boolean>>(new Map());
 
   const setHostDebug = (hostUuid: string, entry: ActionDebugEntry | null) => {
     setActionDebugMap(prev => {
@@ -340,8 +341,15 @@ const VulnAssetsPage = () => {
   };
 
   const abortHostAction = (hostUuid: string) => {
+    // Immediately stop polling
+    pollingActiveRef.current.set(hostUuid, false);
+    // Abort any in-flight fetch
     const controller = abortControllersRef.current.get(hostUuid);
     if (controller) controller.abort();
+    abortControllersRef.current.delete(hostUuid);
+    // Immediately update UI
+    updateHostDebug(hostUuid, { status: 'error', finishedAt: Date.now(), error: 'Aborted by user' });
+    setActionExecuting(prev => { const next = new Set(prev); next.delete(hostUuid); return next; });
   };
 
   // Aggregate all hosts across all sensor groups
