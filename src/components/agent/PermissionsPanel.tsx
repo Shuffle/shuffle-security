@@ -231,6 +231,7 @@ const PermissionsPanel = ({ compact = false }: PermissionsPanelProps) => {
           name: 'run_action',
           parameters: [
             { name: 'action', value: hostPopover.perm.id },
+            { name: 'action_type', value: 'predefined' },
             { name: 'hosts', value: hostnames.join(',') },
             { name: 'sensor_group', value: sensorGroup },
           ],

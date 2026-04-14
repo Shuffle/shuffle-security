@@ -212,7 +212,7 @@ const VulnAssetsPage = () => {
     .flatMap(c => c.permissions)
     .filter(p => p.hostActionable && !p.disabled);
 
-  const executeHostAction = async (actionId: string, actionName: string, hostname: string, groupName: string, hostUuid: string) => {
+  const executeHostAction = async (actionId: string, actionName: string, hostname: string, groupName: string, hostUuid: string, isPredefined = false) => {
     // Set up abort controller
     const controller = new AbortController();
     abortControllersRef.current.set(hostUuid, controller);
@@ -224,6 +224,7 @@ const VulnAssetsPage = () => {
       name: 'run_action',
       parameters: [
         { name: 'action', value: actionId },
+        { name: 'action_type', value: isPredefined ? 'predefined' : 'rce' },
         { name: 'hosts', value: hostname },
         { name: 'sensor_group', value: groupName },
       ],
@@ -816,7 +817,7 @@ const VulnAssetsPage = () => {
                                     key={perm.id}
                                     className="w-full text-left px-3 py-2 text-xs hover:bg-muted/50 transition-colors flex items-center gap-2 disabled:opacity-50"
                                     disabled={actionExecuting.has(host.uuid)}
-                                    onClick={() => executeHostAction(perm.id, perm.name, host.hostname, host.groupName, host.uuid)}
+                                    onClick={() => executeHostAction(perm.id, perm.name, host.hostname, host.groupName, host.uuid, true)}
                                   >
                                     <Zap size={12} className="text-muted-foreground shrink-0" />
                                     <span className="text-foreground font-medium">{perm.name}</span>
