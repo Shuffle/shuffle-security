@@ -797,50 +797,30 @@ const VulnAssetsPage = () => {
                             )}
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent align="end" className="w-72 p-0" onClick={e => e.stopPropagation()}>
-                          {/* Debug info if action running/completed for this host */}
+                        <PopoverContent align="end" className="w-[26rem] p-0" onClick={e => e.stopPropagation()}>
                           {(() => {
                             const hostHistory = actionHistoryMap.get(host.uuid) || [];
                             const actionDebug = hostHistory[hostHistory.length - 1];
                             const isRunning = actionDebug && (actionDebug.status === 'sending' || actionDebug.status === 'polling');
                             const finishedHistory = hostHistory.filter(e => e.status === 'success' || e.status === 'error');
+                            const isFull = responseActionsMode === 'full';
 
                             return (
-                            <div>
-                              {/* Current running action */}
-                              {isRunning && actionDebug && (
-                                <>
-                                  <div className="px-3 py-2 border-b border-border flex items-center gap-2">
-                                    <Loader2 size={12} className="animate-spin text-primary" />
-                                    <div className="flex-1 min-w-0">
-                                      <p className="text-xs font-semibold text-foreground truncate">{actionDebug.actionName}</p>
-                                      <p className="text-[0.6rem] text-muted-foreground truncate">{actionDebug.hostname}</p>
-                                    </div>
-                                  </div>
-                                  <div className="px-3 py-2 space-y-2">
-                                    <p className="text-xs font-medium text-primary">
-                                      {actionDebug.status === 'sending' ? 'Sending request…' : 'Polling for result…'}
-                                    </p>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="w-full h-7 text-xs gap-1.5 text-destructive hover:text-destructive"
-                                      onClick={() => abortHostAction(host.uuid)}
-                                    >
-                                      <Square size={10} className="fill-current" />
-                                      Stop
-                                    </Button>
-                                  </div>
-                                </>
-                              )}
+                            <div className="flex flex-col max-h-[28rem]">
+                              {/* Header */}
+                              <div className="px-3 py-2 border-b border-border flex items-center gap-2 shrink-0">
+                                <Terminal size={12} className="text-muted-foreground" />
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-semibold text-foreground truncate">{host.hostname}</p>
+                                  <p className="text-[0.6rem] text-muted-foreground">{responseActionsMode === 'full' ? 'Full control (RCE)' : 'Controlled'}</p>
+                                </div>
+                                {isRunning && <Loader2 size={12} className="animate-spin text-primary shrink-0" />}
+                              </div>
 
-                              {/* Action menu (shown when not running) */}
-                              {!isRunning && (
-                                <>
-                                  <div className="px-3 py-2 border-b border-border">
-                                    <p className="text-xs font-semibold text-foreground">Run Action</p>
-                                    <p className="text-[0.65rem] text-muted-foreground truncate">{host.hostname}</p>
-                                  </div>
+                              {/* Scrollable session log */}
+                              <div className="flex-1 overflow-y-auto min-h-0">
+                                {/* Predefined actions (only if no history yet and not full mode) */}
+                                {finishedHistory.length === 0 && !isRunning && !isFull && (
                                   <div className="py-1">
                                     {hostActionablePerms.map(perm => (
                                       <button
@@ -854,82 +834,110 @@ const VulnAssetsPage = () => {
                                       </button>
                                     ))}
                                   </div>
-                                  <div className="px-3 py-2 border-t border-border">
-                                    <div className="flex gap-1.5">
-                                      <Input
-                                        placeholder="Custom action…"
-                                        value={customAction}
-                                        onChange={e => setCustomAction(e.target.value)}
-                                        className="h-7 text-xs flex-1"
+                                )}
+
+                                {/* Predefined action chips for full mode */}
+                                {finishedHistory.length === 0 && !isRunning && isFull && (
+                                  <div className="px-3 py-2 flex flex-wrap gap-1">
+                                    {hostActionablePerms.map(perm => (
+                                      <button
+                                        key={perm.id}
+                                        className="px-2 py-1 text-[0.65rem] rounded-md border border-border hover:bg-muted/50 transition-colors disabled:opacity-50 text-foreground"
                                         disabled={actionExecuting.has(host.uuid)}
-                                        onKeyDown={e => {
-                                          if (e.key === 'Enter' && customAction.trim()) {
-                                            executeHostAction(customAction.trim(), customAction.trim(), host.hostname, host.groupName, host.uuid);
-                                            setCustomAction('');
-                                          }
-                                        }}
-                                      />
-                                      <Button
-                                        size="icon"
-                                        variant="ghost"
-                                        className="h-7 w-7 shrink-0"
-                                        disabled={!customAction.trim() || actionExecuting.has(host.uuid)}
-                                        onClick={() => {
-                                          if (customAction.trim()) {
-                                            executeHostAction(customAction.trim(), customAction.trim(), host.hostname, host.groupName, host.uuid);
-                                            setCustomAction('');
-                                          }
-                                        }}
+                                        onClick={() => executeHostAction(perm.id, perm.name, host.hostname, host.groupName, host.uuid, true)}
                                       >
-                                        <Terminal size={12} />
+                                        {perm.name}
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+
+                                {/* Session history entries */}
+                                {finishedHistory.map((entry, i) => (
+                                  <div key={i} className="border-b border-border/50 last:border-b-0">
+                                    <div className="px-3 py-1.5 flex items-center gap-2 bg-muted/20">
+                                      <span className="text-[0.6rem] font-mono text-primary">$</span>
+                                      <span className="text-[0.65rem] font-mono font-medium text-foreground flex-1 truncate">{entry.actionName}</span>
+                                      {entry.status === 'success' ? (
+                                        <CheckCircle2 size={10} className="text-[hsl(var(--severity-low))] shrink-0" />
+                                      ) : (
+                                        <ShieldX size={10} className="text-destructive shrink-0" />
+                                      )}
+                                      <span className="text-[0.55rem] text-muted-foreground font-mono shrink-0">
+                                        {entry.finishedAt ? `${Math.round((entry.finishedAt - entry.startedAt) / 1000)}s` : ''}
+                                      </span>
+                                    </div>
+                                    {(entry.actionOutput || entry.error) && (
+                                      <div className="px-3 py-1.5">
+                                        {entry.actionOutput && (
+                                          <pre className="text-[0.6rem] font-mono text-foreground/80 whitespace-pre-wrap break-words max-h-28 overflow-y-auto">{entry.actionOutput}</pre>
+                                        )}
+                                        {entry.error && (
+                                          <pre className="text-[0.6rem] font-mono text-destructive whitespace-pre-wrap break-words">{entry.error}</pre>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+
+                                {/* Currently running entry */}
+                                {isRunning && actionDebug && (
+                                  <div className="border-b border-border/50">
+                                    <div className="px-3 py-1.5 flex items-center gap-2 bg-muted/20">
+                                      <span className="text-[0.6rem] font-mono text-primary">$</span>
+                                      <span className="text-[0.65rem] font-mono font-medium text-foreground flex-1 truncate">{actionDebug.actionName}</span>
+                                      <Loader2 size={10} className="animate-spin text-primary shrink-0" />
+                                    </div>
+                                    <div className="px-3 py-1.5 flex items-center justify-between">
+                                      <span className="text-[0.6rem] text-muted-foreground">
+                                        {actionDebug.status === 'sending' ? 'Sending…' : 'Waiting for result…'}
+                                      </span>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-5 px-2 text-[0.6rem] text-destructive hover:text-destructive"
+                                        onClick={() => abortHostAction(host.uuid)}
+                                      >
+                                        Stop
                                       </Button>
                                     </div>
                                   </div>
-                                </>
-                              )}
+                                )}
+                              </div>
 
-                              {/* History of previous runs */}
-                              {finishedHistory.length > 0 && (
-                                <div className="border-t border-border">
-                                  <div className="px-3 py-1.5">
-                                    <span className="text-[0.6rem] font-semibold text-muted-foreground uppercase tracking-wide">History</span>
-                                  </div>
-                                  <div className="max-h-48 overflow-y-auto">
-                                    {[...finishedHistory].reverse().map((entry, i) => (
-                                      <Collapsible key={i}>
-                                        <CollapsibleTrigger asChild>
-                                          <button className="w-full text-left px-3 py-1.5 hover:bg-muted/30 transition-colors flex items-center gap-2">
-                                            {entry.status === 'success' ? (
-                                              <CheckCircle2 size={10} className="text-[hsl(var(--severity-low))] shrink-0" />
-                                            ) : (
-                                              <ShieldX size={10} className="text-destructive shrink-0" />
-                                            )}
-                                            <span className="text-[0.65rem] font-medium text-foreground truncate flex-1">{entry.actionName}</span>
-                                            <span className="text-[0.55rem] text-muted-foreground font-mono shrink-0">
-                                              {entry.finishedAt ? `${Math.round((entry.finishedAt - entry.startedAt) / 1000)}s` : ''}
-                                            </span>
-                                            <ChevronRight size={10} className="text-muted-foreground shrink-0" />
-                                          </button>
-                                        </CollapsibleTrigger>
-                                        <CollapsibleContent>
-                                          <div className="px-3 pb-2 space-y-1.5">
-                                            {entry.actionOutput && (
-                                              <div className="rounded border border-border bg-muted/40 px-2 py-1.5">
-                                                <pre className="text-[0.6rem] font-mono text-foreground whitespace-pre-wrap break-words max-h-24 overflow-y-auto">{entry.actionOutput}</pre>
-                                              </div>
-                                            )}
-                                            {entry.error && (
-                                              <div className="rounded border border-destructive/30 bg-destructive/5 px-2 py-1.5">
-                                                <span className="text-[0.6rem] text-destructive font-medium">{entry.error}</span>
-                                              </div>
-                                            )}
-                                            {!entry.actionOutput && !entry.error && (
-                                              <span className="text-[0.6rem] text-muted-foreground">No output</span>
-                                            )}
-                                          </div>
-                                        </CollapsibleContent>
-                                      </Collapsible>
-                                    ))}
+                              {/* Command input — always visible for full mode, or when not running for controlled */}
+                              {(isFull || !isRunning) && (
+                                <div className="px-3 py-2 border-t border-border shrink-0">
+                                  <div className="flex gap-1.5 items-center">
+                                    <span className="text-[0.65rem] font-mono text-primary shrink-0">$</span>
+                                    <Input
+                                      placeholder={isFull ? 'Type command…' : 'Custom action…'}
+                                      value={customAction}
+                                      onChange={e => setCustomAction(e.target.value)}
+                                      className="h-7 text-xs flex-1 font-mono"
+                                      disabled={isRunning}
+                                      autoFocus={isFull}
+                                      onKeyDown={e => {
+                                        if (e.key === 'Enter' && customAction.trim() && !isRunning) {
+                                          executeHostAction(customAction.trim(), customAction.trim(), host.hostname, host.groupName, host.uuid);
+                                          setCustomAction('');
+                                        }
+                                      }}
+                                    />
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      className="h-7 w-7 shrink-0"
+                                      disabled={!customAction.trim() || isRunning}
+                                      onClick={() => {
+                                        if (customAction.trim()) {
+                                          executeHostAction(customAction.trim(), customAction.trim(), host.hostname, host.groupName, host.uuid);
+                                          setCustomAction('');
+                                        }
+                                      }}
+                                    >
+                                      <Play size={12} />
+                                    </Button>
                                   </div>
                                 </div>
                               )}
