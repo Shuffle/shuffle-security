@@ -148,6 +148,7 @@ const VulnAssetsPage = () => {
   const [addHostOpen, setAddHostOpen] = useState(false);
   const [addHostStep, setAddHostStep] = useState<'checks' | 'deploy'>('checks');
   const [hostPlatform, setHostPlatform] = useState<'unix' | 'windows'>('unix');
+  const [installMode, setInstallMode] = useState<'easy' | 'custom'>('easy');
   const [hostChecks, setHostChecks] = useState({
     hd_encrypted: true,
     screenlock: true,
