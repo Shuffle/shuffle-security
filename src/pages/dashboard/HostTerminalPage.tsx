@@ -333,6 +333,8 @@ const HostTerminalPage = () => {
                       setHostSwitcherOpen(false);
                       setHostSearchQuery('');
                       setActionHistory([]);
+                      setCustomAction('');
+                      setHistoryIndex(-1);
                       navigate(`/monitors/${h.uuid}/terminal`, {
                         state: { hostname: h.hostname, groupName: h.groupName, mode: h.mode },
                         replace: true,
