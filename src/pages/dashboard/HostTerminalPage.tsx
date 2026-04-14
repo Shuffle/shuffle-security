@@ -39,6 +39,7 @@ type ActionDebugEntry = {
 };
 
 type StoredEntry = {
+  entryId?: string;
   actionName: string;
   status: 'success' | 'error';
   startedAt: number;
@@ -61,6 +62,7 @@ const getStoredSession = (hostUuid: string): StoredEntry[] => {
 const saveSession = (hostUuid: string, entries: ActionDebugEntry[]) => {
   const toStore = entries
     .map(e => ({
+      entryId: `${e.startedAt}-${e.entryId}`,
       actionName: e.actionName,
       status: e.status as string,
       startedAt: e.startedAt,
@@ -68,10 +70,10 @@ const saveSession = (hostUuid: string, entries: ActionDebugEntry[]) => {
       executionId: e.executionId,
       authorization: e.authorization,
     }));
-  // Merge with existing (avoid duplicates by startedAt)
+  // Merge with existing (avoid duplicates by entryId)
   const existing = getStoredSession(hostUuid);
-  const existingTimes = new Set(existing.map(e => e.startedAt));
-  const merged = [...existing, ...toStore.filter(e => !existingTimes.has(e.startedAt))].slice(-MAX_STORED);
+  const existingIds = new Set(existing.map(e => e.entryId || `${e.startedAt}`));
+  const merged = [...existing, ...toStore.filter(e => !existingIds.has(e.entryId))].slice(-MAX_STORED);
   localStorage.setItem(HISTORY_KEY(hostUuid), JSON.stringify(merged));
 };
 
@@ -84,14 +86,9 @@ const getCommandHistory = (hostUuid: string): string[] => {
       if (Array.isArray(old) && old.length > 0) return old;
     } catch { /* ignore */ }
   }
-  // Unique command names, most recent first
-  const seen = new Set<string>();
   const cmds: string[] = [];
   for (let i = stored.length - 1; i >= 0; i--) {
-    if (stored[i]?.actionName && !seen.has(stored[i].actionName)) {
-      seen.add(stored[i].actionName);
-      cmds.push(stored[i].actionName);
-    }
+    if (stored[i]?.actionName) cmds.push(stored[i].actionName);
   }
   return cmds;
 };
