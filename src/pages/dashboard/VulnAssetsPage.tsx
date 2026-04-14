@@ -1462,7 +1462,8 @@ const VulnAssetsPage = () => {
                 <Label className="text-xs font-medium">Platform</Label>
                 <div className="flex gap-2">
                   {([
-                    { value: 'unix' as const, label: 'Linux / macOS' },
+                    { value: 'linux' as const, label: 'Linux' },
+                    { value: 'macos' as const, label: 'macOS' },
                     { value: 'windows' as const, label: 'Windows' },
                   ]).map(p => (
                     <Button
@@ -1574,7 +1575,7 @@ const VulnAssetsPage = () => {
                     <Label className="text-xs font-medium">3. Run as a background service</Label>
                     <p className="text-xs text-muted-foreground">
                       To keep the monitor running persistently, set up the command above as a service.{' '}
-                      {hostPlatform === 'unix' ? (
+                      {hostPlatform !== 'windows' ? (
                         <a href="https://www.freedesktop.org/software/systemd/man/systemd.service.html" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
                           systemd docs →
                         </a>
