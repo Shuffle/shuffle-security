@@ -290,25 +290,19 @@ const VulnAssetsPage = () => {
       const latest = { ...history[history.length - 1], ...update };
       next.set(hostUuid, [...history.slice(0, -1), latest]);
 
-      // Persist finished entries to terminal_session_ localStorage
+      // Update the persisted entry in localStorage (was already added on push)
       if (latest.status === 'success' || latest.status === 'error') {
         try {
           const key = `terminal_session_${hostUuid}`;
-          const existing = JSON.parse(localStorage.getItem(key) || '[]');
-          const entry = {
-            actionName: latest.actionName,
-            status: latest.status,
-            startedAt: latest.startedAt,
-            finishedAt: latest.finishedAt,
-            executionId: latest.executionId,
-            authorization: latest.authorization,
-          };
-          const alreadyStored = existing.some((e: any) => e.startedAt === entry.startedAt && e.actionName === entry.actionName);
-          if (!alreadyStored) {
-            existing.push(entry);
-            if (existing.length > 200) existing.splice(0, existing.length - 200);
-            localStorage.setItem(key, JSON.stringify(existing));
+          const stored = JSON.parse(localStorage.getItem(key) || '[]');
+          const idx = stored.findIndex((e: any) => e.startedAt === latest.startedAt && e.actionName === latest.actionName);
+          if (idx >= 0) {
+            stored[idx] = { ...stored[idx], status: latest.status, finishedAt: latest.finishedAt, executionId: latest.executionId, authorization: latest.authorization };
+          } else {
+            stored.push({ actionName: latest.actionName, status: latest.status, startedAt: latest.startedAt, finishedAt: latest.finishedAt, executionId: latest.executionId, authorization: latest.authorization });
+            if (stored.length > 200) stored.splice(0, stored.length - 200);
           }
+          localStorage.setItem(key, JSON.stringify(stored));
         } catch { /* ignore */ }
       }
 
