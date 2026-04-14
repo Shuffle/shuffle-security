@@ -650,15 +650,35 @@ const VulnAssetsPage = () => {
     setSensorPolling(false);
   }, []);
 
-  // Start/stop polling based on step
+  // Activate polling after user interaction or 30s timeout
+  const activatePolling = useCallback(() => {
+    if (!pollingActivated) setPollingActivated(true);
+  }, [pollingActivated]);
+
+  // Start 30s auto-activation timer when deploy step opens
   useEffect(() => {
     if (addHostStep === 'deploy' && addHostOpen) {
-      startSensorPolling();
+      activationTimerRef.current = setTimeout(() => {
+        setPollingActivated(true);
+      }, 30000);
     } else {
+      if (activationTimerRef.current) { clearTimeout(activationTimerRef.current); activationTimerRef.current = null; }
+      setPollingActivated(false);
+    }
+    return () => {
+      if (activationTimerRef.current) { clearTimeout(activationTimerRef.current); activationTimerRef.current = null; }
+    };
+  }, [addHostStep, addHostOpen]);
+
+  // Start/stop polling based on activation
+  useEffect(() => {
+    if (pollingActivated && addHostStep === 'deploy' && addHostOpen) {
+      startSensorPolling();
+    } else if (!pollingActivated) {
       stopSensorPolling();
     }
     return () => stopSensorPolling();
-  }, [addHostStep, addHostOpen, startSensorPolling, stopSensorPolling]);
+  }, [pollingActivated, addHostStep, addHostOpen, startSensorPolling, stopSensorPolling]);
 
   const detectPlatform = (): 'linux' | 'macos' | 'windows' => {
     const ua = navigator.userAgent.toLowerCase();
