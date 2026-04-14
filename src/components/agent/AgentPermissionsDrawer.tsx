@@ -32,7 +32,7 @@ import {
   Settings2,
   Play,
 } from 'lucide-react';
-import { useAgentPermissions } from '@/hooks/useAgentPermissions';
+
 import AgentActionDrawer from '@/components/agent/AgentActionDrawer';
 import AgentIcon from '@/components/agent/AgentIcon';
 import LocalLLMConfig from '@/components/agent/LocalLLMConfig';
