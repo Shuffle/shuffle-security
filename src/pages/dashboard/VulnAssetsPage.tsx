@@ -212,7 +212,7 @@ const VulnAssetsPage = () => {
     .flatMap(c => c.permissions)
     .filter(p => p.hostActionable && !p.disabled);
 
-  const executeHostAction = async (actionId: string, actionName: string, hostname: string, groupName: string, hostUuid: string) => {
+  const executeHostAction = async (actionId: string, actionName: string, hostname: string, groupName: string, hostUuid: string, isPredefined = false) => {
     // Set up abort controller
     const controller = new AbortController();
     abortControllersRef.current.set(hostUuid, controller);
@@ -224,6 +224,7 @@ const VulnAssetsPage = () => {
       name: 'run_action',
       parameters: [
         { name: 'action', value: actionId },
+        { name: 'action_type', value: isPredefined ? 'predefined' : 'rce' },
         { name: 'hosts', value: hostname },
         { name: 'sensor_group', value: groupName },
       ],
