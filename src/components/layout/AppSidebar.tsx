@@ -89,20 +89,14 @@ const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: bool
       { label: 'ATT&CK', path: '/detection/mitre', icon: <Waypoints size={16} />, supportOnly: true },
       { label: 'Threat Feeds', path: '/incidents/threat-feeds', icon: <RssFeedIcon fontSize="small" /> },
       { label: 'IOC Types', path: '/incidents/ioc-types', icon: <FingerprintIcon fontSize="small" /> },
+      ...(isSupport ? [{ label: 'Vulnerabilities', path: '/vulnerabilities', icon: <Shield size={16} /> }] : []),
     ],
   },
-  ...(isSupport ? [{ 
-    label: 'Vulnerabilities', 
-    icon: <Shield size={20} />,
-    path: '/vulnerabilities',
-    children: [
-      { label: 'Assets', path: '/assets', icon: <HardDrive size={16} />, disabled: true },
-    ],
-  }] : [{
+  {
     label: 'Assets',
     icon: <HardDrive size={20} />,
     path: '/assets',
-  }]),
+  },
   { label: '__divider__', icon: <></> },
   { label: 'Agent', icon: <AgentIcon size={20} />, path: '/agent' },
   { label: 'Automation', icon: <Activity size={20} />, path: '/usecases' },
