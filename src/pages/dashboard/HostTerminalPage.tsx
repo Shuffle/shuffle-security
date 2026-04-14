@@ -2,11 +2,20 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, CheckCircle2, Loader2, Play, ShieldX, Terminal } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ArrowLeft, CheckCircle2, ChevronDown, Loader2, Play, Search, ShieldX, Terminal } from 'lucide-react';
 import { toast } from 'sonner';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 import { DEFAULT_AGENT_PERMISSIONS } from '@/hooks/useAgentPermissions';
 import { usePageMeta } from '@/hooks/usePageMeta';
+
+interface HostOption {
+  uuid: string;
+  hostname: string;
+  groupName: string;
+  mode: string;
+  os: string;
+}
 
 let entryIdCounter = 0;
 
