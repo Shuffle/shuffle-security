@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -10,6 +10,8 @@ import {
   Button,
   Collapse,
   Alert,
+  Popover,
+  Checkbox,
 } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -39,8 +41,12 @@ import {
   AlertTriangle,
   Mail,
   Wifi,
+  Monitor,
+  Play,
+  Laptop,
 } from 'lucide-react';
-import { useAgentPermissions, RiskLevel, AgentPermissionCategory } from '@/hooks/useAgentPermissions';
+import { useAgentPermissions, RiskLevel, AgentPermissionCategory, AgentPermission } from '@/hooks/useAgentPermissions';
+import { getApiUrl, getAuthHeader } from '@/config/api';
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   Radar: <Radar size={20} />,
@@ -109,6 +115,13 @@ const RISK_ICON_COLOR: Record<RiskLevel, string> = {
   high: 'hsl(var(--severity-critical))',
 };
 
+interface MonitoredHost {
+  hostname: string;
+  os: string;
+  uuid: string;
+  checkin: number;
+}
+
 interface PermissionsPanelProps {
   /** Compact mode for sidebar/drawer usage */
   compact?: boolean;
@@ -131,6 +144,68 @@ const PermissionsPanel = ({ compact = false }: PermissionsPanelProps) => {
     () => categories.map(c => c.id)
   );
 
+  // Host action state
+  const [monitoredHosts, setMonitoredHosts] = useState<MonitoredHost[]>([]);
+  const [hostsLoaded, setHostsLoaded] = useState(false);
+  const [hostPopover, setHostPopover] = useState<{ anchor: HTMLElement; perm: AgentPermission } | null>(null);
+  const [selectedHosts, setSelectedHosts] = useState<Set<string>>(new Set());
+
+  // Fetch monitored hosts from environments API
+  const fetchHosts = useCallback(async () => {
+    if (hostsLoaded) return;
+    try {
+      const resp = await fetch(getApiUrl('/api/v1/getenvironments'), {
+        credentials: 'include',
+        headers: { ...getAuthHeader() },
+      });
+      if (resp.ok) {
+        const envs = await resp.json();
+        const hosts: MonitoredHost[] = [];
+        (Array.isArray(envs) ? envs : []).forEach((env: any) => {
+          if (env.sensor_group && Array.isArray(env.sensor_hosts)) {
+            env.sensor_hosts.forEach((h: any) => {
+              if (h.hostname) {
+                hosts.push({
+                  hostname: h.hostname,
+                  os: h.os || '',
+                  uuid: h.uuid || h.hostname,
+                  checkin: h.checkin || 0,
+                });
+              }
+            });
+          }
+        });
+        setMonitoredHosts(hosts);
+      }
+    } catch {
+      // silent
+    }
+    setHostsLoaded(true);
+  }, [hostsLoaded]);
+
+  const handleHostAction = (e: React.MouseEvent<HTMLElement>, perm: AgentPermission) => {
+    e.stopPropagation();
+    fetchHosts();
+    setSelectedHosts(new Set());
+    setHostPopover({ anchor: e.currentTarget as HTMLElement, perm });
+  };
+
+  const toggleHostSelection = (uuid: string) => {
+    setSelectedHosts(prev => {
+      const next = new Set(prev);
+      if (next.has(uuid)) next.delete(uuid); else next.add(uuid);
+      return next;
+    });
+  };
+
+  const getOsIcon = (os: string) => {
+    const lower = os.toLowerCase();
+    if (lower.includes('mac') || lower.includes('darwin')) return '🍎';
+    if (lower.includes('windows')) return '🪟';
+    if (lower.includes('linux')) return '🐧';
+    return '💻';
+  };
+
   const toggleExpand = (categoryId: string) => {
     setExpandedCategories(prev =>
       prev.includes(categoryId)
@@ -152,6 +227,174 @@ const PermissionsPanel = ({ compact = false }: PermissionsPanelProps) => {
       </Box>
     );
   }
+
+  // Shared host action button renderer
+  const renderHostActionButton = (perm: AgentPermission, isDisabled: boolean) => {
+    if (!perm.hostActionable || !perm.enabled) return null;
+    return (
+      <Tooltip title="Run on monitored hosts">
+        <IconButton
+          size="small"
+          disabled={isDisabled}
+          onClick={(e) => handleHostAction(e, perm)}
+          sx={{
+            width: 28,
+            height: 28,
+            flexShrink: 0,
+            border: '1px solid hsl(var(--border))',
+            borderRadius: 1,
+            color: 'hsl(var(--muted-foreground))',
+            '&:hover': {
+              bgcolor: 'hsl(var(--primary) / 0.1)',
+              borderColor: 'hsl(var(--primary) / 0.4)',
+              color: 'hsl(var(--primary))',
+            },
+          }}
+        >
+          <Monitor size={14} />
+        </IconButton>
+      </Tooltip>
+    );
+  };
+
+  // Shared host popover
+  const renderHostPopover = () => (
+    <Popover
+      open={!!hostPopover}
+      anchorEl={hostPopover?.anchor}
+      onClose={() => setHostPopover(null)}
+      anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+      slotProps={{
+        paper: {
+          sx: {
+            mt: 0.5,
+            bgcolor: 'hsl(var(--card))',
+            border: '1px solid hsl(var(--border))',
+            borderRadius: 2,
+            minWidth: 280,
+            maxWidth: 360,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+          },
+        },
+      }}
+    >
+      {hostPopover && (
+        <Box>
+          <Box sx={{ px: 2.5, py: 2, borderBottom: '1px solid hsl(var(--border))' }}>
+            <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+              {hostPopover.perm.name}
+            </Typography>
+            <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', mt: 0.25 }}>
+              Select hosts to run this action on
+            </Typography>
+          </Box>
+
+          {!hostsLoaded ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+              <CircularProgress size={20} sx={{ color: 'hsl(var(--primary))' }} />
+            </Box>
+          ) : monitoredHosts.length === 0 ? (
+            <Box sx={{ px: 2.5, py: 3, textAlign: 'center' }}>
+              <Laptop size={24} className="mx-auto mb-2 text-muted-foreground/40" />
+              <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))' }}>
+                No monitored hosts found
+              </Typography>
+              <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', mt: 0.5, opacity: 0.7 }}>
+                Deploy a sensor to start monitoring hosts
+              </Typography>
+            </Box>
+          ) : (
+            <>
+              <Box sx={{ maxHeight: 240, overflowY: 'auto' }}>
+                {monitoredHosts.map((host) => {
+                  const isRecent = host.checkin > 0 && (Date.now() / 1000 - host.checkin) < 300;
+                  return (
+                    <Box
+                      key={host.uuid}
+                      onClick={() => toggleHostSelection(host.uuid)}
+                      sx={{
+                        px: 2.5,
+                        py: 1.25,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1.5,
+                        cursor: 'pointer',
+                        borderBottom: '1px solid hsl(var(--border) / 0.3)',
+                        '&:hover': { bgcolor: 'hsl(var(--muted) / 0.3)' },
+                      }}
+                    >
+                      <Checkbox
+                        size="small"
+                        checked={selectedHosts.has(host.uuid)}
+                        sx={{
+                          p: 0,
+                          color: 'hsl(var(--muted-foreground))',
+                          '&.Mui-checked': { color: 'hsl(var(--primary))' },
+                        }}
+                      />
+                      <Typography sx={{ fontSize: '0.8rem', flexShrink: 0 }}>
+                        {getOsIcon(host.os)}
+                      </Typography>
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography sx={{
+                          fontSize: '0.8rem',
+                          fontWeight: 500,
+                          color: 'hsl(var(--foreground))',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}>
+                          {host.hostname}
+                        </Typography>
+                      </Box>
+                      {isRecent && (
+                        <Box sx={{
+                          width: 6,
+                          height: 6,
+                          borderRadius: '50%',
+                          bgcolor: 'hsl(var(--severity-low))',
+                          flexShrink: 0,
+                        }} />
+                      )}
+                    </Box>
+                  );
+                })}
+              </Box>
+
+              <Box sx={{ px: 2.5, py: 1.5, borderTop: '1px solid hsl(var(--border))', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))' }}>
+                  {selectedHosts.size} selected
+                </Typography>
+                <Button
+                  size="small"
+                  variant="contained"
+                  disabled={selectedHosts.size === 0}
+                  startIcon={<Play size={12} />}
+                  onClick={() => {
+                    // TODO: Execute action on selected hosts
+                    setHostPopover(null);
+                  }}
+                  sx={{
+                    textTransform: 'none',
+                    fontSize: '0.75rem',
+                    bgcolor: 'hsl(var(--primary))',
+                    color: 'hsl(var(--primary-foreground))',
+                    borderRadius: 1.5,
+                    px: 2,
+                    '&:hover': { bgcolor: 'hsl(var(--primary))', filter: 'brightness(1.1)' },
+                    '&.Mui-disabled': { bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' },
+                  }}
+                >
+                  Run
+                </Button>
+              </Box>
+            </>
+          )}
+        </Box>
+      )}
+    </Popover>
+  );
 
   if (compact) {
     return (
@@ -325,6 +568,9 @@ const PermissionsPanel = ({ compact = false }: PermissionsPanelProps) => {
                                 </Typography>
                               </Box>
 
+                              {/* Host action button */}
+                              {renderHostActionButton(perm, isPermDisabled)}
+
                               {/* Toggle */}
                               <Switch
                                 size="small"
@@ -356,6 +602,8 @@ const PermissionsPanel = ({ compact = false }: PermissionsPanelProps) => {
             );
           })}
         </Box>
+
+        {renderHostPopover()}
       </>
     );
   }
@@ -589,6 +837,10 @@ const PermissionsPanel = ({ compact = false }: PermissionsPanelProps) => {
                                 {perm.description}
                               </Typography>
                             </Box>
+
+                            {/* Host action button */}
+                            {renderHostActionButton(perm, isPermDisabled)}
+
                             <Switch
                               size="small"
                               checked={perm.enabled}
@@ -618,6 +870,8 @@ const PermissionsPanel = ({ compact = false }: PermissionsPanelProps) => {
           })}
         </AnimatePresence>
       </Box>
+
+      {renderHostPopover()}
     </>
   );
 };
