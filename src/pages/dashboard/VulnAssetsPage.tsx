@@ -1375,26 +1375,37 @@ const VulnAssetsPage = () => {
                         </div>
                       </label>
                       {check.id === 'response_actions' && hostChecks.response_actions && (
-                        <div className="mt-2 mb-1 ml-9 space-y-2">
-                          <span className="text-xs text-muted-foreground">Control level</span>
-                          <div className="flex gap-3">
-                            <button
-                              type="button"
-                              disabled
-                              className="flex-1 rounded-lg border border-border px-4 py-3 text-left opacity-40 cursor-not-allowed"
-                            >
-                              <span className="text-sm font-medium text-foreground block">Controlled</span>
-                              <span className="text-xs text-muted-foreground mt-0.5 block">(Coming soon)</span>
-                              <span className="text-xs text-muted-foreground mt-1 block">Predefined files are downloaded and executed</span>
-                            </button>
-                            <button
-                              type="button"
-                              className={`flex-1 rounded-lg border px-4 py-3 text-left transition-colors ${responseActionMode === 'full' ? 'border-primary bg-primary/10' : 'border-border hover:bg-muted/50'}`}
-                              onClick={() => setResponseActionMode('full')}
-                            >
-                              <span className="text-sm font-medium text-foreground block">Full Control</span>
-                              <span className="text-xs text-muted-foreground mt-1 block">Full remote command execution (RCE)</span>
-                            </button>
+                        <div className="mt-1.5 mb-1 ml-9 flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">Control level:</span>
+                          <div className="flex gap-1.5">
+                            <TooltipProvider delayDuration={200}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    type="button"
+                                    disabled
+                                    className="rounded-md border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground opacity-40 cursor-not-allowed"
+                                  >
+                                    Controlled
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent side="bottom"><p className="text-xs">Coming soon — Predefined files are downloaded and executed</p></TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                            <TooltipProvider delayDuration={200}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    type="button"
+                                    className={`rounded-md border px-2.5 py-1 text-xs font-medium transition-colors ${responseActionMode === 'full' ? 'border-primary bg-primary/10 text-foreground' : 'border-border text-muted-foreground hover:bg-muted/50'}`}
+                                    onClick={() => setResponseActionMode('full')}
+                                  >
+                                    Full Control
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent side="bottom"><p className="text-xs">Full remote command execution (RCE)</p></TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           </div>
                         </div>
                       )}
