@@ -1356,7 +1356,7 @@ const VulnAssetsPage = () => {
                 <Label className="text-xs font-medium">Checks to Enable</Label>
                 <div className="grid grid-cols-2 gap-2">
                   {HOST_CHECK_OPTIONS.map(check => (
-                    <div key={check.id}>
+                    <div key={check.id} className={check.id === 'response_actions' && hostChecks.response_actions ? 'col-span-2' : check.id === 'log_forwarding' && hostChecks.log_forwarding ? 'col-span-2' : ''}>
                       <label
                         className={`flex items-center gap-3 rounded-lg border border-border px-3 py-2.5 transition-colors ${check.disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-muted/50'}`}
                       >
@@ -1374,24 +1374,25 @@ const VulnAssetsPage = () => {
                         </div>
                       </label>
                       {check.id === 'response_actions' && hostChecks.response_actions && (
-                        <div className="ml-9 mt-1.5 mb-1 space-y-1.5">
+                        <div className="mt-2 mb-1 ml-9 space-y-2">
                           <span className="text-xs text-muted-foreground">Control level</span>
-                          <div className="flex gap-2">
+                          <div className="flex gap-3">
                             <button
                               type="button"
                               disabled
-                              className="flex-1 rounded-md border border-border px-3 py-2 text-left opacity-50 cursor-not-allowed"
+                              className="flex-1 rounded-lg border border-border px-4 py-3 text-left opacity-40 cursor-not-allowed"
                             >
-                              <span className="text-sm font-medium text-foreground block">Controlled <span className="text-[0.6rem] text-muted-foreground font-normal">(Coming soon)</span></span>
-                              <span className="text-[0.65rem] text-muted-foreground">Predefined files are downloaded and executed</span>
+                              <span className="text-sm font-medium text-foreground block">Controlled</span>
+                              <span className="text-xs text-muted-foreground mt-0.5 block">(Coming soon)</span>
+                              <span className="text-xs text-muted-foreground mt-1 block">Predefined files are downloaded and executed</span>
                             </button>
                             <button
                               type="button"
-                              className={`flex-1 rounded-md border px-3 py-2 text-left transition-colors ${responseActionMode === 'full' ? 'border-primary bg-primary/10' : 'border-border hover:bg-muted/50'}`}
+                              className={`flex-1 rounded-lg border px-4 py-3 text-left transition-colors ${responseActionMode === 'full' ? 'border-primary bg-primary/10' : 'border-border hover:bg-muted/50'}`}
                               onClick={() => setResponseActionMode('full')}
                             >
                               <span className="text-sm font-medium text-foreground block">Full Control</span>
-                              <span className="text-[0.65rem] text-muted-foreground">Full remote command execution (RCE)</span>
+                              <span className="text-xs text-muted-foreground mt-1 block">Full remote command execution (RCE)</span>
                             </button>
                           </div>
                         </div>
