@@ -169,8 +169,20 @@ const VulnAssetsPage = () => {
   const [syncGroupId, setSyncGroupId] = useState<string>('');
   const [expandedHosts, setExpandedHosts] = useState<Set<string>>(new Set());
   const [osSortAsc, setOsSortAsc] = useState<boolean | null>(null);
-  const [actionExecuting, setActionExecuting] = useState<string | null>(null);
+  const [actionExecuting, setActionExecuting] = useState<string | null>(null); // host uuid being acted on
   const [customAction, setCustomAction] = useState('');
+  const [actionDebug, setActionDebug] = useState<{
+    hostUuid: string;
+    actionName: string;
+    hostname: string;
+    status: 'sending' | 'success' | 'error';
+    requestBody: object;
+    responseStatus?: number;
+    responseBody?: string;
+    startedAt: number;
+    finishedAt?: number;
+    error?: string;
+  } | null>(null);
   const selectedGroup = groups.find(g => g.id === selectedGroupId);
 
   // Get host-actionable permissions from defaults
@@ -178,34 +190,49 @@ const VulnAssetsPage = () => {
     .flatMap(c => c.permissions)
     .filter(p => p.hostActionable && !p.disabled);
 
-  const executeHostAction = async (actionId: string, actionName: string, hostname: string, groupName: string) => {
-    setActionExecuting(`${hostname}-${actionId}`);
+  const executeHostAction = async (actionId: string, actionName: string, hostname: string, groupName: string, hostUuid: string) => {
+    setActionExecuting(hostUuid);
+    const requestBody = {
+      app_id: 'sensors',
+      app_name: 'sensors',
+      name: 'run_action',
+      parameters: [
+        { name: 'action', value: actionId },
+        { name: 'hosts', value: hostname },
+        { name: 'sensor_group', value: groupName },
+      ],
+    };
+    setActionDebug({
+      hostUuid,
+      actionName,
+      hostname,
+      status: 'sending',
+      requestBody,
+      startedAt: Date.now(),
+    });
     try {
       const resp = await fetch(getApiUrl('/api/v1/apps/sensors/run'), {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
-        body: JSON.stringify({
-          app_id: 'sensors',
-          app_name: 'sensors',
-          name: 'run_action',
-          parameters: [
-            { name: 'action', value: actionId },
-            { name: 'hosts', value: hostname },
-            { name: 'sensor_group', value: groupName },
-          ],
-        }),
+        body: JSON.stringify(requestBody),
       });
+      const text = await resp.text().catch(() => '');
       if (resp.ok) {
+        setActionDebug(prev => prev ? { ...prev, status: 'success', responseStatus: resp.status, responseBody: text, finishedAt: Date.now() } : null);
         toast.success(`Action sent`, { description: `"${actionName}" → ${hostname}` });
       } else {
-        const text = await resp.text().catch(() => '');
+        setActionDebug(prev => prev ? { ...prev, status: 'error', responseStatus: resp.status, responseBody: text, finishedAt: Date.now(), error: text || `HTTP ${resp.status}` } : null);
         toast.error('Action failed', { description: text || `HTTP ${resp.status}` });
       }
     } catch (err) {
-      toast.error('Action failed', { description: err instanceof Error ? err.message : 'Request error' });
+      const msg = err instanceof Error ? err.message : 'Request error';
+      setActionDebug(prev => prev ? { ...prev, status: 'error', finishedAt: Date.now(), error: msg } : null);
+      toast.error('Action failed', { description: msg });
     } finally {
       setActionExecuting(null);
+      // Refresh environments data after action
+      loadGroups();
     }
   };
 
