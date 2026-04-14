@@ -217,6 +217,7 @@ const VulnAssetsPage = () => {
     // Set up abort controller
     const controller = new AbortController();
     abortControllersRef.current.set(hostUuid, controller);
+    pollingActiveRef.current.set(hostUuid, true);
 
     setActionExecuting(prev => new Set(prev).add(hostUuid));
     const requestBody = {
@@ -269,15 +270,13 @@ const VulnAssetsPage = () => {
         const maxAttempts = 900; // 900 * 2s = 30 minutes
         const intervalMs = 2000;
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
-          if (controller.signal.aborted) {
-            updateHostDebug(hostUuid, { status: 'error', finishedAt: Date.now(), error: 'Aborted by user' });
-            return;
-          }
-          await new Promise(r => setTimeout(r, intervalMs));
-          if (controller.signal.aborted) {
-            updateHostDebug(hostUuid, { status: 'error', finishedAt: Date.now(), error: 'Aborted by user' });
-            return;
-          }
+          if (!pollingActiveRef.current.get(hostUuid)) return;
+          // Abortable sleep: resolve early if polling is stopped
+          await new Promise<void>(resolve => {
+            const timer = setTimeout(resolve, intervalMs);
+            controller.signal.addEventListener('abort', () => { clearTimeout(timer); resolve(); }, { once: true });
+          });
+          if (!pollingActiveRef.current.get(hostUuid)) return;
           try {
             const pollResp = await fetch(getApiUrl('/api/v1/streams/results'), {
               method: 'POST',
