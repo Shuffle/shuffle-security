@@ -89,26 +89,8 @@ const HostTerminalPage = () => {
     inputRef.current?.focus();
   }, []);
 
-  const pushDebug = (entry: ActionDebugEntry) => {
-    setActionHistory(prev => [...prev, entry]);
-  };
 
-  const updateLatestDebug = (update: Partial<ActionDebugEntry>) => {
-    setActionHistory(prev => {
-      if (prev.length === 0) return prev;
-      const last = { ...prev[prev.length - 1], ...update };
-      return [...prev.slice(0, -1), last];
-    });
-  };
 
-  // We need a stable way to update a specific entry (not just latest) for concurrent commands
-  const updateDebugByIndex = (index: number, update: Partial<ActionDebugEntry>) => {
-    setActionHistory(prev => {
-      if (index < 0 || index >= prev.length) return prev;
-      const updated = { ...prev[index], ...update };
-      return [...prev.slice(0, index), updated, ...prev.slice(index + 1)];
-    });
-  };
 
   const executeHostAction = useCallback(async (actionId: string, actionName: string, isPredefined = false) => {
     if (!hostUuid) return;
