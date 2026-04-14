@@ -879,7 +879,7 @@ const VulnAssetsPage = () => {
                             <Zap size={12} />
                             <span className="text-[0.65rem] font-semibold uppercase tracking-wide">Response Actions</span>
                           </div>
-                          <p className="text-xs text-foreground">
+                          <p className={`text-xs ${(host as any).response_actions_enabled ? 'text-foreground' : 'text-muted-foreground'}`}>
                             {(host as any).response_actions_enabled ? 'Enabled' : 'Not enabled'}
                           </p>
                         </div>
