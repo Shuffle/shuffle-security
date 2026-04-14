@@ -194,7 +194,8 @@ const VulnAssetsPage = () => {
         const stored = JSON.parse(localStorage.getItem(`terminal_session_${hostUuid}`) || '[]');
         if (Array.isArray(stored) && stored.length > 0) {
           const next = new Map(prev);
-          next.set(hostUuid, stored.map((e: any) => ({
+          next.set(hostUuid, stored.map((e: any, i: number) => ({
+            entryId: e.entryId || `${e.startedAt || i}-${Math.random().toString(36).slice(2, 8)}`,
             actionName: e.actionName || '',
             status: e.status || 'error',
             startedAt: e.startedAt || 0,
@@ -223,6 +224,7 @@ const VulnAssetsPage = () => {
         if (Array.isArray(old) && old.length > 0) return old;
         return [];
       }
+      // Return unique command names (most recent first) for autocomplete
       const seen = new Set<string>();
       const cmds: string[] = [];
       for (let i = stored.length - 1; i >= 0; i--) {
@@ -239,6 +241,7 @@ const VulnAssetsPage = () => {
   };
 
   type ActionDebugEntry = {
+    entryId: string;
     hostUuid: string;
     actionName: string;
     hostname: string;
@@ -278,6 +281,7 @@ const VulnAssetsPage = () => {
       const key = `terminal_session_${hostUuid}`;
       const stored = JSON.parse(localStorage.getItem(key) || '[]');
       const persistEntry = {
+        entryId: entry.entryId,
         actionName: entry.actionName,
         status: entry.status,
         startedAt: entry.startedAt,
@@ -303,11 +307,11 @@ const VulnAssetsPage = () => {
         try {
           const key = `terminal_session_${hostUuid}`;
           const stored = JSON.parse(localStorage.getItem(key) || '[]');
-          const idx = stored.findIndex((e: any) => e.startedAt === latest.startedAt && e.actionName === latest.actionName);
+          const idx = stored.findIndex((e: any) => e.entryId === latest.entryId);
           if (idx >= 0) {
             stored[idx] = { ...stored[idx], status: latest.status, finishedAt: latest.finishedAt, executionId: latest.executionId, authorization: latest.authorization };
           } else {
-            stored.push({ actionName: latest.actionName, status: latest.status, startedAt: latest.startedAt, finishedAt: latest.finishedAt, executionId: latest.executionId, authorization: latest.authorization });
+            stored.push({ entryId: latest.entryId, actionName: latest.actionName, status: latest.status, startedAt: latest.startedAt, finishedAt: latest.finishedAt, executionId: latest.executionId, authorization: latest.authorization });
             if (stored.length > 200) stored.splice(0, stored.length - 200);
           }
           localStorage.setItem(key, JSON.stringify(stored));
@@ -361,7 +365,9 @@ const VulnAssetsPage = () => {
         { name: 'sensor_group', value: groupName },
       ],
     };
+    const entryId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     pushHostDebug(hostUuid, {
+      entryId,
       hostUuid,
       actionName,
       hostname,
@@ -947,7 +953,7 @@ const VulnAssetsPage = () => {
                                 {finishedHistory.map((entry, i) => {
                                   const isLatest = i === finishedHistory.length - 1;
                                   return (
-                                  <div key={i} className={`border-b border-border/50 last:border-b-0 ${isLatest ? 'bg-primary/5 ring-1 ring-inset ring-primary/20' : ''}`}>
+                                  <div key={entry.entryId || i} className={`border-b border-border/50 last:border-b-0 ${isLatest ? 'bg-primary/5 ring-1 ring-inset ring-primary/20' : ''}`}>
                                     <div className={`px-3 py-1.5 flex items-center gap-2 ${isLatest ? 'bg-primary/10' : 'bg-muted/20'}`}>
                                       <span className="text-[0.6rem] font-mono text-primary">$</span>
                                       <span className="text-[0.65rem] font-mono font-medium text-foreground flex-1 truncate">{entry.actionName}</span>
