@@ -376,12 +376,23 @@ const HostTerminalPage = () => {
           <ArrowLeft size={16} />
         </Button>
         <Terminal size={18} className="text-primary" />
+        {(() => {
+          const currentHost = allHosts.find(h => h.uuid === hostUuid);
+          const checkinDate = currentHost?.checkin ? new Date(currentHost.checkin * 1000) : null;
+          const isRecent = checkinDate ? (Date.now() - checkinDate.getTime()) < 5 * 60 * 1000 : false;
+          return (
         <Popover open={hostSwitcherOpen} onOpenChange={setHostSwitcherOpen}>
           <PopoverTrigger asChild>
             <button className="flex items-center gap-2 min-w-0 text-left hover:bg-muted/50 rounded-md px-2 py-1 transition-colors">
               <div className="min-w-0">
-                <h1 className="text-base font-semibold text-foreground truncate">{hostname}</h1>
-                <p className="text-xs text-muted-foreground">{isFull ? 'Full control (RCE)' : 'Controlled'} · {groupName}</p>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-base font-semibold text-foreground truncate">{hostname}</h1>
+                  <div className={`w-2 h-2 rounded-full shrink-0 ${isRecent ? 'bg-[hsl(var(--severity-low))]' : 'bg-muted-foreground/40'}`} />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {isFull ? 'Full control (RCE)' : 'Controlled'} · {groupName}
+                  {checkinDate && <> · Last seen {checkinDate.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</>}
+                </p>
               </div>
               <ChevronDown size={14} className="text-muted-foreground shrink-0" />
             </button>
