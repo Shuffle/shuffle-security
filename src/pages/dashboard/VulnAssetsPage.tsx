@@ -465,7 +465,7 @@ const VulnAssetsPage = () => {
         }
       } else {
         // Immediate result (no execution_id)
-        updateHostDebug(hostUuid, { status: 'success', responseStatus: resp.status, responseBody: text, finishedAt: Date.now() });
+        updateHostDebug(hostUuid, entryId, { status: 'success', responseStatus: resp.status, responseBody: text, finishedAt: Date.now() });
       }
     } catch (err) {
       if (!pollingActiveRef.current.get(hostUuid)) return;
