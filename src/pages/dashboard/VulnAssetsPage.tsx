@@ -686,7 +686,7 @@ const VulnAssetsPage = () => {
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary">
-                            {actionExecuting === host.uuid ? (
+                            {actionExecuting.has(host.uuid) ? (
                               <Loader2 size={14} className="animate-spin text-primary" />
                             ) : (
                               <Play size={14} />
@@ -695,7 +695,7 @@ const VulnAssetsPage = () => {
                         </PopoverTrigger>
                         <PopoverContent align="end" className="w-72 p-0" onClick={e => e.stopPropagation()}>
                           {/* Debug info if action running/completed for this host */}
-                          {actionDebug && actionDebug.hostUuid === host.uuid ? (
+                          {(() => { const actionDebug = actionDebugMap.get(host.uuid); return actionDebug ? (
                             <div>
                               <div className="px-3 py-2 border-b border-border flex items-center gap-2">
                                 {(actionDebug.status === 'sending' || actionDebug.status === 'polling') && <Loader2 size={12} className="animate-spin text-primary" />}
@@ -746,7 +746,7 @@ const VulnAssetsPage = () => {
                               </div>
                               {actionDebug.status !== 'sending' && actionDebug.status !== 'polling' && (
                                 <div className="px-3 py-2 border-t border-border">
-                                  <Button variant="ghost" size="sm" className="w-full h-7 text-xs" onClick={() => setActionDebug(null)}>
+                                  <Button variant="ghost" size="sm" className="w-full h-7 text-xs" onClick={() => setHostDebug(host.uuid, null)}>
                                     Run another action
                                   </Button>
                                 </div>
