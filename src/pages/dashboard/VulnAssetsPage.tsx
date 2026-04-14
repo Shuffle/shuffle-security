@@ -149,11 +149,11 @@ const VulnAssetsPage = () => {
     hd_encrypted: true,
     screenlock: true,
     installed_software: true,
-    response_actions: false,
+    response_actions: true,
     log_forwarding: false,
   });
   const [logForwardingEndpoint, setLogForwardingEndpoint] = useState('');
-  const [responseActionMode, setResponseActionMode] = useState<'controlled' | 'full'>('controlled');
+  const [responseActionMode, setResponseActionMode] = useState<'controlled' | 'full'>('full');
   const [copied, setCopied] = useState(false);
   const [sensorDetected, setSensorDetected] = useState(false);
   const [sensorPolling, setSensorPolling] = useState(false);
@@ -1059,10 +1059,10 @@ const VulnAssetsPage = () => {
                           <div className="flex gap-2">
                             <button
                               type="button"
-                              className={`flex-1 rounded-md border px-3 py-2 text-left transition-colors ${responseActionMode === 'controlled' ? 'border-primary bg-primary/10' : 'border-border hover:bg-muted/50'}`}
-                              onClick={() => setResponseActionMode('controlled')}
+                              disabled
+                              className="flex-1 rounded-md border border-border px-3 py-2 text-left opacity-50 cursor-not-allowed"
                             >
-                              <span className="text-sm font-medium text-foreground block">Controlled</span>
+                              <span className="text-sm font-medium text-foreground block">Controlled <span className="text-[0.6rem] text-muted-foreground font-normal">(Coming soon)</span></span>
                               <span className="text-[0.65rem] text-muted-foreground">Predefined files are downloaded and executed</span>
                             </button>
                             <button
