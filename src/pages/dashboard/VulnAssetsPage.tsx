@@ -176,6 +176,7 @@ const VulnAssetsPage = () => {
   const [actionExecuting, setActionExecuting] = useState<Set<string>>(new Set()); // host uuids being acted on
   const [customAction, setCustomAction] = useState('');
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const [softwareFilter, setSoftwareFilter] = useState('');
 
   // Hydrate actionHistoryMap from localStorage for a single host (called lazily on popover open)
   const hydrateHost = useCallback((hostUuid: string) => {
@@ -804,6 +805,7 @@ const VulnAssetsPage = () => {
                   else next.add(host.uuid);
                   return next;
                 });
+                setSoftwareFilter('');
               };
               const CheckDot = ({ on, tip, color }: { on: boolean; tip: string; color?: string }) => (
                 <TooltipProvider delayDuration={200}>
@@ -1165,26 +1167,47 @@ const VulnAssetsPage = () => {
                         {softwareCount === 0 ? (
                           <p className="text-xs text-muted-foreground italic">No software inventory collected for this host.</p>
                         ) : (
-                          <div className="rounded-md border border-border overflow-hidden max-h-[240px] overflow-y-auto">
-                            <table className="w-full text-xs">
-                              <thead className="bg-muted/40 sticky top-0">
-                                <tr>
-                                  <th className="text-left px-3 py-1.5 font-semibold text-muted-foreground">Name</th>
-                                  <th className="text-left px-3 py-1.5 font-semibold text-muted-foreground">Version</th>
-                                  <th className="text-left px-3 py-1.5 font-semibold text-muted-foreground">Source</th>
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-border">
-                                {host.installed_software.filter((sw) => !sw.version || String(sw.version).length <= 100).map((sw, idx) => (
-                                  <tr key={idx} className="hover:bg-muted/20">
-                                    <td className="px-3 py-1.5 font-medium text-foreground">{sw.name || '—'}</td>
-                                    <td className="px-3 py-1.5 font-mono text-muted-foreground">{(sw.version as string) || '—'}</td>
-                                    <td className="px-3 py-1.5 text-muted-foreground">{(sw.source as string) || '—'}</td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
+                          <>
+                            <Input
+                              placeholder="Filter software..."
+                              value={softwareFilter}
+                              onChange={(e) => setSoftwareFilter(e.target.value)}
+                              className="h-7 text-xs mb-1"
+                            />
+                            {(() => {
+                              const filtered = host.installed_software
+                                .filter((sw) => !sw.version || String(sw.version).length <= 100)
+                                .filter((sw) => {
+                                  if (!softwareFilter) return true;
+                                  const q = softwareFilter.toLowerCase();
+                                  return (sw.name || '').toLowerCase().includes(q) || String(sw.version || '').toLowerCase().includes(q) || String(sw.source || '').toLowerCase().includes(q);
+                                });
+                              return (
+                                <div className="rounded-md border border-border overflow-hidden max-h-[240px] overflow-y-auto">
+                                  <table className="w-full text-xs">
+                                    <thead className="bg-muted/40 sticky top-0">
+                                      <tr>
+                                        <th className="text-left px-3 py-1.5 font-semibold text-muted-foreground">Name</th>
+                                        <th className="text-left px-3 py-1.5 font-semibold text-muted-foreground">Version</th>
+                                        <th className="text-left px-3 py-1.5 font-semibold text-muted-foreground">Source</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-border">
+                                      {filtered.length === 0 ? (
+                                        <tr><td colSpan={3} className="px-3 py-3 text-center text-muted-foreground italic">No matches</td></tr>
+                                      ) : filtered.map((sw, idx) => (
+                                        <tr key={idx} className="hover:bg-muted/20">
+                                          <td className="px-3 py-1.5 font-medium text-foreground">{sw.name || '—'}</td>
+                                          <td className="px-3 py-1.5 font-mono text-muted-foreground">{(sw.version as string) || '—'}</td>
+                                          <td className="px-3 py-1.5 text-muted-foreground">{(sw.source as string) || '—'}</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              );
+                            })()}
+                          </>
                         )}
                       </div>
                     </div>
