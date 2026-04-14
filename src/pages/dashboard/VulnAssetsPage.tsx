@@ -176,6 +176,7 @@ const VulnAssetsPage = () => {
   const [actionExecuting, setActionExecuting] = useState<Set<string>>(new Set()); // host uuids being acted on
   const [customAction, setCustomAction] = useState('');
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const [softwareFilter, setSoftwareFilter] = useState('');
 
   // Hydrate actionHistoryMap from localStorage for a single host (called lazily on popover open)
   const hydrateHost = useCallback((hostUuid: string) => {
