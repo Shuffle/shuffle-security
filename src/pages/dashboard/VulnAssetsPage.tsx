@@ -1440,13 +1440,6 @@ const VulnAssetsPage = () => {
         </DialogContent>
       </Dialog>
 
-  // Hydrate history from localStorage when hosts become available
-  useEffect(() => {
-    if (allHostsRaw.length > 0) {
-      hydrateAllHosts(allHostsRaw.map(h => h.uuid));
-    }
-  }, [allHostsRaw.length, hydrateAllHosts]);
-
 
     </div>
   );
