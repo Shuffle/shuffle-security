@@ -6,6 +6,7 @@ Welcome to the Shuffle Security documentation. This guide will help you understa
 
 - [Getting Started](/docs/getting-started) - Set up Shuffle Security with your Shuffle Core instance
 - [Shuffle Pipelines](/docs/shuffle-pipelines) - Learn how detection pipelines work with Tenzir
+- [Monitoring](/docs/monitoring) - Deploy endpoint agents and manage host compliance
 - [Self-Hosting](/docs/setup) - Deploy your own Shuffle Security instance
 - [Shuffle API Documentation](https://shuffler.io/docs/API) - Complete API reference
 
