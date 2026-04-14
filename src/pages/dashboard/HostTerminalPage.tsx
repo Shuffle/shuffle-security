@@ -165,6 +165,34 @@ const HostTerminalPage = () => {
     })();
   }, []);
 
+  // Load stored session on mount / host change
+  useEffect(() => {
+    if (!hostUuid) return;
+    const stored = getStoredSession(hostUuid);
+    if (stored.length > 0) {
+      setActionHistory(stored.map((e, i) => ({
+        entryId: ++entryIdCounter,
+        hostUuid,
+        actionName: e.actionName,
+        hostname,
+        status: e.status,
+        requestBody: {},
+        startedAt: e.startedAt,
+        finishedAt: e.finishedAt,
+        executionId: e.executionId,
+        actionOutput: e.actionOutput,
+        error: e.error,
+      })));
+    }
+  }, [hostUuid]);
+
+  // Save to localStorage when entries finish
+  useEffect(() => {
+    if (!hostUuid) return;
+    const hasFinished = actionHistory.some(e => e.status === 'success' || e.status === 'error');
+    if (hasFinished) saveSession(hostUuid, actionHistory);
+  }, [actionHistory, hostUuid]);
+
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [actionHistory]);
@@ -172,8 +200,6 @@ const HostTerminalPage = () => {
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
-
-
 
 
   const executeHostAction = useCallback(async (actionId: string, actionName: string, isPredefined = false) => {
