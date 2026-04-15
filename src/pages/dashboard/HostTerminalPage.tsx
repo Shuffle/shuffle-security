@@ -215,6 +215,13 @@ const HostTerminalPage = () => {
 
   useEffect(() => {
     inputRef.current?.focus();
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        setTimeout(() => inputRef.current?.focus(), 50);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, []);
 
   const removeHistoryEntry = useCallback((entryId: number) => {
