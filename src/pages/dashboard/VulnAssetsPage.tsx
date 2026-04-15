@@ -593,7 +593,7 @@ const VulnAssetsPage = () => {
     if (hostPlatform === 'windows') {
       parts.push('os=windows');
       const headers = selectedGroup?.auth ? `-H "Auth: ${selectedGroup.auth}"` : '';
-      return `curl -s "${downloadUrl}?${parts.join('&')}" ${headers} -o orborus_installer.ps1 && powershell -ExecutionPolicy Bypass -File .\\orborus_installer.ps1`.replace(/  +/g, ' ');
+      return `curl -s "${downloadUrl}?${parts.join('&')}" ${headers} -o orborus_installer.ps1; powershell -ExecutionPolicy Bypass -File .\\orborus_installer.ps1`.replace(/  +/g, ' ');
     }
 
     return `curl '${downloadUrl}?${parts.join('&')}' ${authHeader} | sh`.replace(/  +/g, ' ');
