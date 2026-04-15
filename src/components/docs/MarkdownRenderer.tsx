@@ -10,6 +10,7 @@ const docs: Record<string, () => Promise<{ default: string }>> = {
   'getting-started': () => import('@/docs/getting-started.md?raw'),
   'incident-creation': () => import('@/docs/incident-creation.md?raw'),
   'shuffle-pipelines': () => import('@/docs/shuffle-pipelines.md?raw'),
+  monitoring: () => import('@/docs/monitoring.md?raw'),
   setup: () => import('@/docs/setup.md?raw'),
 };
 
