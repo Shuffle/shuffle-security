@@ -33,7 +33,9 @@ Monitors use the Shuffle agent (`orborus`) deployed on each endpoint. The agent 
 
 ### Deployment
 
-Monitors are deployed by running the Shuffle agent on your endpoints:
+Monitors are deployed by running the Shuffle agent on your endpoints. For a detailed, step-by-step walkthrough with environment-specific commands, **we recommend following the deployment guide on the [Monitors page](/monitors)** — it generates the correct command for your setup automatically.
+
+The basic deployment command looks like this:
 
 ```bash
 go run orborus.go --base_url <YOUR_BACKEND_URL> --response_actions=full
@@ -50,13 +52,13 @@ The `--response_actions` flag controls the level of access:
 
 Once deployed, each host is evaluated against five compliance checks:
 
-| Check | Icon | What It Monitors |
-|-------|------|------------------|
-| **Encryption** | 💾 | Disk encryption status (BitLocker, FileVault, LUKS) |
-| **Screenlock** | 🔒 | Whether a 15-minute idle screenlock policy is enforced |
-| **Software** | 📦 | Installed software inventory |
-| **Response Actions** | ⚡ | Whether the host accepts remote commands |
-| **Log Forwarding** | 📤 | Whether logs are being forwarded to your SIEM |
+| Check | What It Monitors |
+|-------|------------------|
+| **Encryption** | Disk encryption status (BitLocker, FileVault, LUKS) |
+| **Screenlock** | Whether a 15-minute idle screenlock policy is enforced |
+| **Software** | Installed software inventory |
+| **Response Actions** | Whether the host accepts remote commands |
+| **Log Forwarding** | Whether logs are being forwarded to your SIEM |
 
 Each check is shown as a status dot in the host table — green for passing, orange for partial, and grey for disabled or unavailable.
 
@@ -86,9 +88,11 @@ Hosts are organized into monitoring groups. Use the **Group Sync** dropdown to s
 
 ---
 
-## Response Actions & Terminal
+## Code Execution
 
-Monitors with Response Actions enabled support direct command execution via an interactive terminal.
+One of the most powerful features of Monitors is the ability to **execute commands directly on any monitored endpoint** — no SSH, no VPN, no additional tooling required.
+
+When a host has Response Actions enabled, you get a fully interactive terminal that lets you run arbitrary commands on the remote machine in real-time. This turns every monitored endpoint into an actionable asset: investigate incidents, collect forensic data, deploy patches, or isolate compromised hosts — all from the Monitors page.
 
 ### Opening the Terminal
 
@@ -122,9 +126,11 @@ Commands can be:
 
 ## Setting Up Monitors
 
+The easiest way to get started is to use the guided setup wizard on the [Monitors page](/monitors). It walks you through every step and generates the correct deployment commands for your environment.
+
 ### Step 1: Deploy the Agent
 
-Run the deployment command on each endpoint you want to monitor. The Monitors page provides a setup wizard that generates the correct command for your environment.
+Run the deployment command on each endpoint you want to monitor.
 
 ### Step 2: Verify Connection
 
@@ -140,7 +146,7 @@ Once hosts are reporting, you can:
 - View compliance status at a glance
 - Expand rows for detailed telemetry
 - Search installed software
-- Execute response actions via the terminal
+- Execute commands via the terminal
 
 ---
 
