@@ -592,8 +592,8 @@ const VulnAssetsPage = () => {
 
     if (hostPlatform === 'windows') {
       parts.push('os=windows');
-      const headers = selectedGroup?.auth ? `-Headers @{Auth="${selectedGroup.auth}"}` : '';
-      return `Invoke-WebRequest -Uri '${downloadUrl}?${parts.join('&')}' ${headers} -UseBasicParsing | Invoke-Expression`.replace(/  +/g, ' ');
+      const headers = selectedGroup?.auth ? `-H "Auth: ${selectedGroup.auth}"` : '';
+      return `curl -s "${downloadUrl}?${parts.join('&')}" ${headers} -o orborus.exe && .\\orborus.exe`.replace(/  +/g, ' ');
     }
 
     return `curl '${downloadUrl}?${parts.join('&')}' ${authHeader} | sh`.replace(/  +/g, ' ');
