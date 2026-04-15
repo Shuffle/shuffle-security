@@ -123,15 +123,17 @@ const HostTerminalPage = () => {
 
   // Host switcher state
   const [allHosts, setAllHosts] = useState<HostOption[]>([]);
+  const [hostsLoaded, setHostsLoaded] = useState(false);
   const [hostSearchQuery, setHostSearchQuery] = useState('');
   const [hostSwitcherOpen, setHostSwitcherOpen] = useState(false);
 
   // Resolve host info from location.state first, then fall back to allHosts lookup
   const resolvedHost = allHosts.find(h => h.uuid === hostUuid);
-  const hostname = hostState?.hostname || resolvedHost?.hostname || 'Unknown Host';
+  const hostname = hostState?.hostname || resolvedHost?.hostname || (hostsLoaded ? 'Unknown Host' : '');
   const groupName = hostState?.groupName || resolvedHost?.groupName || '';
   const mode = hostState?.mode || resolvedHost?.mode || 'full';
   const isFull = mode === 'full';
+  const needsLoading = !hostState?.hostname && !hostsLoaded;
 
   usePageMeta({ title: `Terminal · ${hostname}`, description: `Terminal session for ${hostname}` });
 
@@ -158,7 +160,7 @@ const HostTerminalPage = () => {
           credentials: 'include',
           headers: { ...getAuthHeader() },
         });
-        if (!res.ok) return;
+        if (!res.ok) { setHostsLoaded(true); return; }
         const data = await res.json();
         const envs = Array.isArray(data) ? data.filter((e: any) => !e.archived && e.sensor_group === true) : [];
         const hosts: HostOption[] = envs.flatMap((env: any) => {
@@ -176,7 +178,9 @@ const HostTerminalPage = () => {
           }));
         });
         setAllHosts(hosts);
-      } catch { /* ignore */ }
+      } catch { /* ignore */ } finally {
+        setHostsLoaded(true);
+      }
     })();
   }, []);
 
@@ -437,6 +441,15 @@ const HostTerminalPage = () => {
       h.groupName.toLowerCase().includes(hostSearchQuery.toLowerCase())
     )
   );
+
+  if (needsLoading) {
+    return (
+      <div className="flex flex-col h-[calc(100vh-4rem)] items-center justify-center gap-3 text-muted-foreground">
+        <Loader2 size={24} className="animate-spin" />
+        <span className="text-sm">Loading host info…</span>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)]">
