@@ -95,7 +95,7 @@ const fetchSensorGroups = async (): Promise<{ groups: MonitoringGroup[]; allEnvs
     const envs: OrbEnvironment[] = Array.isArray(data) ? data.filter((e: OrbEnvironment) => !e.archived) : [];
     const groups = envs
       .filter(e => e.sensor_group === true)
-      .map(e => ({ id: e.id || e.Name, name: e.Name, queue: e.Name.replace(/\s+/g, '_'), auth: String(e.auth || ''), org_id: String(e.org_id || ''), hosts: Array.isArray(e.sensor_hosts) ? e.sensor_hosts : [] }));
+      .map(e => ({ id: e.id || e.Name, name: e.Name, queue: e.Name.replace(/\s+/g, '-'), auth: String(e.auth || ''), org_id: String(e.org_id || ''), hosts: Array.isArray(e.sensor_hosts) ? e.sensor_hosts : [] }));
     return { groups, allEnvs: envs };
   } catch {
     return { groups: [], allEnvs: [] };
@@ -131,10 +131,10 @@ const createSensorGroupEnv = async (name: string, allEnvs: OrbEnvironment[]): Pr
       const freshEnvs: OrbEnvironment[] = await envRes.json();
       const created = freshEnvs.find(e => e.Name === name && e.sensor_group === true);
       if (created) {
-        return { id: created.id || name, name: created.Name, queue: created.Name.replace(/\s+/g, '_'), auth: String(created.auth || ''), org_id: String(created.org_id || ''), hosts: Array.isArray(created.sensor_hosts) ? created.sensor_hosts : [] };
+        return { id: created.id || name, name: created.Name, queue: created.Name.replace(/\s+/g, '-'), auth: String(created.auth || ''), org_id: String(created.org_id || ''), hosts: Array.isArray(created.sensor_hosts) ? created.sensor_hosts : [] };
       }
     }
-    return { id: name, name, queue: name.replace(/\s+/g, '_'), auth: '', org_id: '', hosts: [] };
+    return { id: name, name, queue: name.replace(/\s+/g, '-'), auth: '', org_id: '', hosts: [] };
   } catch (err) {
     console.error('[VulnAssets] Failed to create sensor group env:', err);
     return null;
