@@ -160,7 +160,7 @@ const HostTerminalPage = () => {
           credentials: 'include',
           headers: { ...getAuthHeader() },
         });
-        if (!res.ok) return;
+        if (!res.ok) { setHostsLoaded(true); return; }
         const data = await res.json();
         const envs = Array.isArray(data) ? data.filter((e: any) => !e.archived && e.sensor_group === true) : [];
         const hosts: HostOption[] = envs.flatMap((env: any) => {
@@ -178,7 +178,9 @@ const HostTerminalPage = () => {
           }));
         });
         setAllHosts(hosts);
-      } catch { /* ignore */ }
+      } catch { /* ignore */ } finally {
+        setHostsLoaded(true);
+      }
     })();
   }, []);
 
