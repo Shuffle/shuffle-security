@@ -84,21 +84,21 @@ interface MonitoringGroup {
 }
 
 /** Fetch environments from the API and filter for sensor_group: true */
-const fetchSensorGroups = async (): Promise<{ groups: MonitoringGroup[]; allEnvs: OrbEnvironment[] }> => {
+const fetchSensorGroups = async (): Promise<{ groups: MonitoringGroup[]; allEnvs: OrbEnvironment[]; error?: string }> => {
   try {
     const res = await fetch(getApiUrl('/api/v1/getenvironments'), {
       credentials: 'include',
       headers: { ...getAuthHeader() },
     });
-    if (!res.ok) return { groups: [], allEnvs: [] };
+    if (!res.ok) return { groups: [], allEnvs: [], error: `Failed to load monitors (HTTP ${res.status})` };
     const data = await res.json();
     const envs: OrbEnvironment[] = Array.isArray(data) ? data.filter((e: OrbEnvironment) => !e.archived) : [];
     const groups = envs
       .filter(e => e.sensor_group === true)
       .map(e => ({ id: e.id || e.Name, name: e.Name, queue: e.Name.replace(/ +/g, '-'), auth: String(e.auth || ''), org_id: String(e.org_id || ''), hosts: Array.isArray(e.sensor_hosts) ? e.sensor_hosts : [] }));
     return { groups, allEnvs: envs };
-  } catch {
-    return { groups: [], allEnvs: [] };
+  } catch (err) {
+    return { groups: [], allEnvs: [], error: `Failed to load monitors — could not reach the API` };
   }
 };
 
@@ -169,6 +169,7 @@ const VulnAssetsPage = () => {
   const [groups, setGroups] = useState<MonitoringGroup[]>([]);
   const [allEnvs, setAllEnvs] = useState<OrbEnvironment[]>([]);
   const [groupsLoading, setGroupsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedGroupId, setSelectedGroupId] = useState<string>('');
   const [isCreatingGroup, setIsCreatingGroup] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
@@ -539,7 +540,11 @@ const VulnAssetsPage = () => {
 
   const loadGroups = useCallback(async () => {
     setGroupsLoading(true);
-    const { groups: fetched, allEnvs: envs } = await fetchSensorGroups();
+    setLoadError(null);
+    const { groups: fetched, allEnvs: envs, error } = await fetchSensorGroups();
+    if (error) {
+      setLoadError(error);
+    }
     setGroups(fetched);
     setAllEnvs(envs);
     if (fetched.length > 0) {
