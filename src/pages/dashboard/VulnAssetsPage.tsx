@@ -1420,8 +1420,21 @@ const VulnAssetsPage = () => {
                                           className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-muted/20 transition-colors"
                                         >
                                           {isExpanded ? <ChevronDown size={12} className="text-muted-foreground shrink-0" /> : <ChevronRight size={12} className="text-muted-foreground shrink-0" />}
+                                          <span className={`inline-flex items-center gap-1 text-[0.65rem] font-semibold px-1.5 py-0.5 rounded shrink-0 ${
+                                            proj.type === 'python' ? 'bg-blue-500/15 text-blue-500' :
+                                            proj.type === 'java' ? 'bg-red-500/15 text-red-500' :
+                                            proj.type === 'javascript' || proj.type === 'node' ? 'bg-yellow-500/15 text-yellow-600 dark:text-yellow-400' :
+                                            proj.type === 'go' ? 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400' :
+                                            proj.type === 'rust' ? 'bg-orange-500/15 text-orange-600 dark:text-orange-400' :
+                                            proj.type === 'ruby' ? 'bg-red-400/15 text-red-400' :
+                                            proj.type === 'php' ? 'bg-indigo-500/15 text-indigo-500' :
+                                            proj.type === 'dotnet' || proj.type === 'csharp' ? 'bg-purple-500/15 text-purple-500' :
+                                            'bg-muted text-muted-foreground'
+                                          }`}>
+                                            <FileCode size={10} />
+                                            {proj.type}
+                                          </span>
                                           <span className="text-xs font-mono font-medium text-foreground truncate flex-1">{proj.path}</span>
-                                          <span className="text-[0.65rem] px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0">{proj.type}</span>
                                           <span className="text-[0.65rem] text-muted-foreground shrink-0">{pkgCount} pkg{pkgCount !== 1 ? 's' : ''}</span>
                                         </button>
                                         {isExpanded && pkgCount > 0 && (
