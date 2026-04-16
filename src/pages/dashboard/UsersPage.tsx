@@ -135,8 +135,8 @@ const cardVariants = {
   show: { opacity: 1, y: 0 },
 };
 
-const UsersPage = () => {
-  const [activeTab, setActiveTab] = useState(0);
+const UsersPage = ({ embedded }: { embedded?: boolean }) => {
+  const [activeTab, setActiveTab] = useState(embedded ? 0 : 0);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
