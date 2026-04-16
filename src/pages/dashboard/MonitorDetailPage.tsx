@@ -357,59 +357,62 @@ const MonitorDetailPage = () => {
           )}
         </div>
 
-        {/* Installed Software */}
+        {/* Installed Software — collapsed by default */}
         <div className="space-y-2">
-          <div className="flex items-center gap-2">
+          <button onClick={() => setSoftwareOpen(!softwareOpen)} className="flex items-center gap-2 w-full text-left hover:bg-muted/20 rounded px-1 py-0.5 -mx-1 transition-colors">
+            {softwareOpen ? <ChevronDown size={14} className="text-muted-foreground" /> : <ChevronRight size={14} className="text-muted-foreground" />}
             <Package size={14} className="text-muted-foreground" />
             <span className="text-xs font-semibold text-foreground">Installed Software</span>
             {softwareCount > 0 && (
               <span className="text-[0.65rem] text-muted-foreground">({softwareCount} packages)</span>
             )}
-          </div>
-          {softwareCount === 0 ? (
-            <p className="text-xs text-muted-foreground italic">No software inventory collected for this host.</p>
-          ) : (
-            <>
-              <Input
-                placeholder="Filter software..."
-                value={softwareFilter}
-                onChange={(e) => setSoftwareFilter(e.target.value)}
-                className="h-7 text-xs mb-1"
-              />
-              {(() => {
-                const filtered = host.installed_software
-                  .filter((sw) => !sw.version || String(sw.version).length <= 100)
-                  .filter((sw) => {
-                    if (!softwareFilter) return true;
-                    const q = softwareFilter.toLowerCase();
-                    return (sw.name || '').toLowerCase().includes(q) || String(sw.version || '').toLowerCase().includes(q) || String(sw.source || '').toLowerCase().includes(q);
-                  });
-                return (
-                  <div className="rounded-md border border-border overflow-hidden max-h-[400px] overflow-y-auto">
-                    <table className="w-full text-xs">
-                      <thead className="bg-muted/40 sticky top-0">
-                        <tr>
-                          <th className="text-left px-3 py-1.5 font-semibold text-muted-foreground">Name</th>
-                          <th className="text-left px-3 py-1.5 font-semibold text-muted-foreground">Version</th>
-                          <th className="text-left px-3 py-1.5 font-semibold text-muted-foreground">Source</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border">
-                        {filtered.length === 0 ? (
-                          <tr><td colSpan={3} className="px-3 py-3 text-center text-muted-foreground italic">No matches</td></tr>
-                        ) : filtered.map((sw, idx) => (
-                          <tr key={idx} className="hover:bg-muted/20">
-                            <td className="px-3 py-1.5 font-medium text-foreground">{sw.name || '—'}</td>
-                            <td className="px-3 py-1.5 font-mono text-muted-foreground">{(sw.version as string) || '—'}</td>
-                            <td className="px-3 py-1.5 text-muted-foreground">{(sw.source as string) || '—'}</td>
+          </button>
+          {softwareOpen && (
+            softwareCount === 0 ? (
+              <p className="text-xs text-muted-foreground italic pl-7">No software inventory collected for this host.</p>
+            ) : (
+              <>
+                <Input
+                  placeholder="Filter software..."
+                  value={softwareFilter}
+                  onChange={(e) => setSoftwareFilter(e.target.value)}
+                  className="h-7 text-xs mb-1"
+                />
+                {(() => {
+                  const filtered = host.installed_software
+                    .filter((sw) => !sw.version || String(sw.version).length <= 100)
+                    .filter((sw) => {
+                      if (!softwareFilter) return true;
+                      const q = softwareFilter.toLowerCase();
+                      return (sw.name || '').toLowerCase().includes(q) || String(sw.version || '').toLowerCase().includes(q) || String(sw.source || '').toLowerCase().includes(q);
+                    });
+                  return (
+                    <div className="rounded-md border border-border overflow-hidden max-h-[400px] overflow-y-auto">
+                      <table className="w-full text-xs">
+                        <thead className="bg-muted/40 sticky top-0">
+                          <tr>
+                            <th className="text-left px-3 py-1.5 font-semibold text-muted-foreground">Name</th>
+                            <th className="text-left px-3 py-1.5 font-semibold text-muted-foreground">Version</th>
+                            <th className="text-left px-3 py-1.5 font-semibold text-muted-foreground">Source</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                );
-              })()}
-            </>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                          {filtered.length === 0 ? (
+                            <tr><td colSpan={3} className="px-3 py-3 text-center text-muted-foreground italic">No matches</td></tr>
+                          ) : filtered.map((sw, idx) => (
+                            <tr key={idx} className="hover:bg-muted/20">
+                              <td className="px-3 py-1.5 font-medium text-foreground">{sw.name || '—'}</td>
+                              <td className="px-3 py-1.5 font-mono text-muted-foreground">{(sw.version as string) || '—'}</td>
+                              <td className="px-3 py-1.5 text-muted-foreground">{(sw.source as string) || '—'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  );
+                })()}
+              </>
+            )
           )}
         </div>
 
