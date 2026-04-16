@@ -54,6 +54,13 @@ const MonitorDetailPage = () => {
   const [softwareFilter, setSoftwareFilter] = useState('');
   const [codeScanFilter, setCodeScanFilter] = useState('');
   const [expandedCodePaths, setExpandedCodePaths] = useState<Set<string>>(new Set());
+  const [softwareOpen, setSoftwareOpen] = useState(false);
+  const [codeScanOpen, setCodeScanOpen] = useState(false);
+  const [terminalOpen, setTerminalOpen] = useState(false);
+  const [customAction, setCustomAction] = useState('');
+  const [actionHistoryMap, setActionHistoryMap] = useState<Map<string, { actionName: string; startedAt: number; finishedAt?: number; actionOutput?: string; error?: string; success?: boolean }[]>>(new Map());
+  const [actionDebugMap, setActionDebugMap] = useState<Map<string, { actionName: string; status: string }>>(new Map());
+  const [runningHosts, setRunningHosts] = useState<Set<string>>(new Set());
 
   usePageMeta({ title: host ? `${host.hostname} — Monitor` : 'Monitor Detail', description: 'Host monitor detail view' });
 
