@@ -186,9 +186,90 @@ const MonitorDetailPage = () => {
             </p>
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={fetchHost} className="gap-1.5 h-8 shrink-0">
-          <RefreshCw size={13} /> Refresh
-        </Button>
+        <div className="flex items-center gap-2 shrink-0">
+          {responseActionsOn && (
+            <Popover open={terminalOpen} onOpenChange={setTerminalOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-1.5 h-8">
+                  <Terminal size={13} /> Run Action
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent side="bottom" align="end" className="w-[420px] p-0 border-border bg-card">
+                <div className="flex flex-col max-h-[350px]">
+                  {/* History */}
+                  <div className="flex-1 overflow-y-auto min-h-[60px]">
+                    {hostHistory.length === 0 && !isRunning && (
+                      <div className="px-3 py-6 text-center text-xs text-muted-foreground">No actions run yet</div>
+                    )}
+                    {hostHistory.map((entry, i) => (
+                      <div key={i} className="border-b border-border/50">
+                        <div className="px-3 py-1.5 flex items-center gap-2 bg-muted/20">
+                          <span className="text-[0.6rem] font-mono text-primary">$</span>
+                          <span className="text-[0.65rem] font-mono font-medium text-foreground flex-1 truncate">{entry.actionName}</span>
+                          {entry.success ? <ShieldCheck size={10} className="text-green-500 shrink-0" /> : <ShieldX size={10} className="text-destructive shrink-0" />}
+                          <span className="text-[0.55rem] text-muted-foreground font-mono shrink-0">
+                            {entry.finishedAt ? `${Math.round((entry.finishedAt - entry.startedAt) / 1000)}s` : ''}
+                          </span>
+                        </div>
+                        {(entry.actionOutput || entry.error) && (
+                          <div className="px-3 py-1.5">
+                            {entry.actionOutput && <pre className="text-[0.6rem] font-mono text-foreground/80 whitespace-pre-wrap break-words max-h-28 overflow-y-auto">{entry.actionOutput}</pre>}
+                            {entry.error && <pre className="text-[0.6rem] font-mono text-destructive whitespace-pre-wrap break-words">{entry.error}</pre>}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    {isRunning && actionDebug && (
+                      <div className="border-b border-border/50">
+                        <div className="px-3 py-1.5 flex items-center gap-2 bg-muted/20">
+                          <span className="text-[0.6rem] font-mono text-primary">$</span>
+                          <span className="text-[0.65rem] font-mono font-medium text-foreground flex-1 truncate">{actionDebug.actionName}</span>
+                          <Loader2 size={10} className="animate-spin text-primary shrink-0" />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  {/* Command input */}
+                  <div className="px-3 py-2 border-t border-border shrink-0">
+                    <div className="flex gap-1.5 items-center">
+                      <span className="text-[0.65rem] font-mono text-primary shrink-0">$</span>
+                      <Input
+                        placeholder="Type command…"
+                        value={customAction}
+                        onChange={e => setCustomAction(e.target.value)}
+                        className="h-7 text-xs flex-1 font-mono"
+                        ref={el => { if (el && terminalOpen) requestAnimationFrame(() => el.focus()); }}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' && customAction.trim()) {
+                            executeHostAction(customAction.trim());
+                            setCustomAction('');
+                          }
+                        }}
+                      />
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7 shrink-0"
+                        disabled={!customAction.trim() || isRunning}
+                        onClick={() => {
+                          if (customAction.trim()) {
+                            executeHostAction(customAction.trim());
+                            setCustomAction('');
+                          }
+                        }}
+                      >
+                        <Play size={12} />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          )}
+          <Button variant="outline" size="sm" onClick={fetchHost} className="gap-1.5 h-8 shrink-0">
+            <RefreshCw size={13} /> Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Detail panel — same as expanded view in VulnAssetsPage */}
