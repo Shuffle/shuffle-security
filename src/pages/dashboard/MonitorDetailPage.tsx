@@ -54,6 +54,13 @@ const MonitorDetailPage = () => {
   const [softwareFilter, setSoftwareFilter] = useState('');
   const [codeScanFilter, setCodeScanFilter] = useState('');
   const [expandedCodePaths, setExpandedCodePaths] = useState<Set<string>>(new Set());
+  const [softwareOpen, setSoftwareOpen] = useState(false);
+  const [codeScanOpen, setCodeScanOpen] = useState(false);
+  const [terminalOpen, setTerminalOpen] = useState(false);
+  const [customAction, setCustomAction] = useState('');
+  const [actionHistoryMap, setActionHistoryMap] = useState<Map<string, { actionName: string; startedAt: number; finishedAt?: number; actionOutput?: string; error?: string; success?: boolean }[]>>(new Map());
+  const [actionDebugMap, setActionDebugMap] = useState<Map<string, { actionName: string; status: string }>>(new Map());
+  const [runningHosts, setRunningHosts] = useState<Set<string>>(new Set());
 
   usePageMeta({ title: host ? `${host.hostname} — Monitor` : 'Monitor Detail', description: 'Host monitor detail view' });
 
@@ -117,6 +124,9 @@ const MonitorDetailPage = () => {
   const responseActionsRaw = (host as any).response_actions as string | undefined;
   const responseActionsOn = !!responseActionsRaw;
   const logForwardingOn = !!host.log_forwarding;
+  const isRunning = runningHosts.has(host.uuid);
+  const actionDebug = actionDebugMap.get(host.uuid);
+  const hostHistory = actionHistoryMap.get(host.uuid) || [];
 
   const relativeTime = (date: Date) => {
     const diff = Date.now() - date.getTime();
@@ -127,6 +137,34 @@ const MonitorDetailPage = () => {
     const hrs = Math.floor(mins / 60);
     if (hrs < 24) return `${hrs}h ago`;
     return `${Math.floor(hrs / 24)}d ago`;
+  };
+
+  const executeHostAction = async (actionName: string) => {
+    setRunningHosts(prev => new Set(prev).add(host.uuid));
+    setActionDebugMap(prev => new Map(prev).set(host.uuid, { actionName, status: 'sending' }));
+    const entry = { actionName, startedAt: Date.now(), actionOutput: undefined as string | undefined, error: undefined as string | undefined, success: undefined as boolean | undefined, finishedAt: undefined as number | undefined };
+    try {
+      const res = await fetch(getApiUrl('/api/v1/executeaction'), {
+        method: 'POST',
+        credentials: 'include',
+        headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: actionName, hostname: host.hostname, group: groupName, sensor_id: host.uuid }),
+      });
+      const data = await res.json();
+      entry.success = res.ok;
+      entry.actionOutput = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+    } catch (err: any) {
+      entry.success = false;
+      entry.error = err?.message || 'Unknown error';
+    }
+    entry.finishedAt = Date.now();
+    setActionHistoryMap(prev => {
+      const next = new Map(prev);
+      next.set(host.uuid, [...(next.get(host.uuid) || []), entry]);
+      return next;
+    });
+    setRunningHosts(prev => { const n = new Set(prev); n.delete(host.uuid); return n; });
+    setActionDebugMap(prev => { const n = new Map(prev); n.delete(host.uuid); return n; });
   };
 
   return (
@@ -148,9 +186,90 @@ const MonitorDetailPage = () => {
             </p>
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={fetchHost} className="gap-1.5 h-8 shrink-0">
-          <RefreshCw size={13} /> Refresh
-        </Button>
+        <div className="flex items-center gap-2 shrink-0">
+          {responseActionsOn && (
+            <Popover open={terminalOpen} onOpenChange={setTerminalOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-1.5 h-8">
+                  <Terminal size={13} /> Run Action
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent side="bottom" align="end" className="w-[420px] p-0 border-border bg-card">
+                <div className="flex flex-col max-h-[350px]">
+                  {/* History */}
+                  <div className="flex-1 overflow-y-auto min-h-[60px]">
+                    {hostHistory.length === 0 && !isRunning && (
+                      <div className="px-3 py-6 text-center text-xs text-muted-foreground">No actions run yet</div>
+                    )}
+                    {hostHistory.map((entry, i) => (
+                      <div key={i} className="border-b border-border/50">
+                        <div className="px-3 py-1.5 flex items-center gap-2 bg-muted/20">
+                          <span className="text-[0.6rem] font-mono text-primary">$</span>
+                          <span className="text-[0.65rem] font-mono font-medium text-foreground flex-1 truncate">{entry.actionName}</span>
+                          {entry.success ? <ShieldCheck size={10} className="text-green-500 shrink-0" /> : <ShieldX size={10} className="text-destructive shrink-0" />}
+                          <span className="text-[0.55rem] text-muted-foreground font-mono shrink-0">
+                            {entry.finishedAt ? `${Math.round((entry.finishedAt - entry.startedAt) / 1000)}s` : ''}
+                          </span>
+                        </div>
+                        {(entry.actionOutput || entry.error) && (
+                          <div className="px-3 py-1.5">
+                            {entry.actionOutput && <pre className="text-[0.6rem] font-mono text-foreground/80 whitespace-pre-wrap break-words max-h-28 overflow-y-auto">{entry.actionOutput}</pre>}
+                            {entry.error && <pre className="text-[0.6rem] font-mono text-destructive whitespace-pre-wrap break-words">{entry.error}</pre>}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    {isRunning && actionDebug && (
+                      <div className="border-b border-border/50">
+                        <div className="px-3 py-1.5 flex items-center gap-2 bg-muted/20">
+                          <span className="text-[0.6rem] font-mono text-primary">$</span>
+                          <span className="text-[0.65rem] font-mono font-medium text-foreground flex-1 truncate">{actionDebug.actionName}</span>
+                          <Loader2 size={10} className="animate-spin text-primary shrink-0" />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  {/* Command input */}
+                  <div className="px-3 py-2 border-t border-border shrink-0">
+                    <div className="flex gap-1.5 items-center">
+                      <span className="text-[0.65rem] font-mono text-primary shrink-0">$</span>
+                      <Input
+                        placeholder="Type command…"
+                        value={customAction}
+                        onChange={e => setCustomAction(e.target.value)}
+                        className="h-7 text-xs flex-1 font-mono"
+                        ref={el => { if (el && terminalOpen) requestAnimationFrame(() => el.focus()); }}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' && customAction.trim()) {
+                            executeHostAction(customAction.trim());
+                            setCustomAction('');
+                          }
+                        }}
+                      />
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7 shrink-0"
+                        disabled={!customAction.trim() || isRunning}
+                        onClick={() => {
+                          if (customAction.trim()) {
+                            executeHostAction(customAction.trim());
+                            setCustomAction('');
+                          }
+                        }}
+                      >
+                        <Play size={12} />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          )}
+          <Button variant="outline" size="sm" onClick={fetchHost} className="gap-1.5 h-8 shrink-0">
+            <RefreshCw size={13} /> Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Detail panel — same as expanded view in VulnAssetsPage */}
@@ -238,151 +357,157 @@ const MonitorDetailPage = () => {
           )}
         </div>
 
-        {/* Installed Software */}
+        {/* Installed Software — collapsed by default */}
         <div className="space-y-2">
-          <div className="flex items-center gap-2">
+          <button onClick={() => setSoftwareOpen(!softwareOpen)} className="flex items-center gap-2 w-full text-left hover:bg-muted/20 rounded px-1 py-0.5 -mx-1 transition-colors">
+            {softwareOpen ? <ChevronDown size={14} className="text-muted-foreground" /> : <ChevronRight size={14} className="text-muted-foreground" />}
             <Package size={14} className="text-muted-foreground" />
             <span className="text-xs font-semibold text-foreground">Installed Software</span>
             {softwareCount > 0 && (
               <span className="text-[0.65rem] text-muted-foreground">({softwareCount} packages)</span>
             )}
-          </div>
-          {softwareCount === 0 ? (
-            <p className="text-xs text-muted-foreground italic">No software inventory collected for this host.</p>
-          ) : (
-            <>
-              <Input
-                placeholder="Filter software..."
-                value={softwareFilter}
-                onChange={(e) => setSoftwareFilter(e.target.value)}
-                className="h-7 text-xs mb-1"
-              />
-              {(() => {
-                const filtered = host.installed_software
-                  .filter((sw) => !sw.version || String(sw.version).length <= 100)
-                  .filter((sw) => {
-                    if (!softwareFilter) return true;
-                    const q = softwareFilter.toLowerCase();
-                    return (sw.name || '').toLowerCase().includes(q) || String(sw.version || '').toLowerCase().includes(q) || String(sw.source || '').toLowerCase().includes(q);
-                  });
-                return (
-                  <div className="rounded-md border border-border overflow-hidden max-h-[400px] overflow-y-auto">
-                    <table className="w-full text-xs">
-                      <thead className="bg-muted/40 sticky top-0">
-                        <tr>
-                          <th className="text-left px-3 py-1.5 font-semibold text-muted-foreground">Name</th>
-                          <th className="text-left px-3 py-1.5 font-semibold text-muted-foreground">Version</th>
-                          <th className="text-left px-3 py-1.5 font-semibold text-muted-foreground">Source</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border">
-                        {filtered.length === 0 ? (
-                          <tr><td colSpan={3} className="px-3 py-3 text-center text-muted-foreground italic">No matches</td></tr>
-                        ) : filtered.map((sw, idx) => (
-                          <tr key={idx} className="hover:bg-muted/20">
-                            <td className="px-3 py-1.5 font-medium text-foreground">{sw.name || '—'}</td>
-                            <td className="px-3 py-1.5 font-mono text-muted-foreground">{(sw.version as string) || '—'}</td>
-                            <td className="px-3 py-1.5 text-muted-foreground">{(sw.source as string) || '—'}</td>
+          </button>
+          {softwareOpen && (
+            softwareCount === 0 ? (
+              <p className="text-xs text-muted-foreground italic pl-7">No software inventory collected for this host.</p>
+            ) : (
+              <>
+                <Input
+                  placeholder="Filter software..."
+                  value={softwareFilter}
+                  onChange={(e) => setSoftwareFilter(e.target.value)}
+                  className="h-7 text-xs mb-1"
+                />
+                {(() => {
+                  const filtered = host.installed_software
+                    .filter((sw) => !sw.version || String(sw.version).length <= 100)
+                    .filter((sw) => {
+                      if (!softwareFilter) return true;
+                      const q = softwareFilter.toLowerCase();
+                      return (sw.name || '').toLowerCase().includes(q) || String(sw.version || '').toLowerCase().includes(q) || String(sw.source || '').toLowerCase().includes(q);
+                    });
+                  return (
+                    <div className="rounded-md border border-border overflow-hidden max-h-[400px] overflow-y-auto">
+                      <table className="w-full text-xs">
+                        <thead className="bg-muted/40 sticky top-0">
+                          <tr>
+                            <th className="text-left px-3 py-1.5 font-semibold text-muted-foreground">Name</th>
+                            <th className="text-left px-3 py-1.5 font-semibold text-muted-foreground">Version</th>
+                            <th className="text-left px-3 py-1.5 font-semibold text-muted-foreground">Source</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                );
-              })()}
-            </>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                          {filtered.length === 0 ? (
+                            <tr><td colSpan={3} className="px-3 py-3 text-center text-muted-foreground italic">No matches</td></tr>
+                          ) : filtered.map((sw, idx) => (
+                            <tr key={idx} className="hover:bg-muted/20">
+                              <td className="px-3 py-1.5 font-medium text-foreground">{sw.name || '—'}</td>
+                              <td className="px-3 py-1.5 font-mono text-muted-foreground">{(sw.version as string) || '—'}</td>
+                              <td className="px-3 py-1.5 text-muted-foreground">{(sw.source as string) || '—'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  );
+                })()}
+              </>
+            )
           )}
         </div>
 
-        {/* Code Package Scanner */}
+        {/* Code Package Scanner — collapsed by default */}
         <div className="space-y-2">
-          <div className="flex items-center gap-2">
+          <button onClick={() => setCodeScanOpen(!codeScanOpen)} className="flex items-center gap-2 w-full text-left hover:bg-muted/20 rounded px-1 py-0.5 -mx-1 transition-colors">
+            {codeScanOpen ? <ChevronDown size={14} className="text-muted-foreground" /> : <ChevronRight size={14} className="text-muted-foreground" />}
             <FileCode size={14} className="text-muted-foreground" />
             <span className="text-xs font-semibold text-foreground">Code Package Scanner</span>
             {codeScanCount > 0 && (
               <span className="text-[0.65rem] text-muted-foreground">({codeScanCount} projects)</span>
             )}
-          </div>
-          {codeScanCount === 0 ? (
-            <p className="text-xs text-muted-foreground italic">No code package scanning data collected for this host.</p>
-          ) : (
-            <>
-              <Input
-                placeholder="Filter by path, type, or package name..."
-                value={codeScanFilter}
-                onChange={(e) => setCodeScanFilter(e.target.value)}
-                className="h-7 text-xs mb-1"
-              />
-              {(() => {
-                const q = codeScanFilter.toLowerCase();
-                const filtered = host.code_scanner!.filter((proj) => {
-                  if (!q) return true;
-                  if (proj.path.toLowerCase().includes(q)) return true;
-                  if (proj.type.toLowerCase().includes(q)) return true;
-                  return proj.packages?.some(p => p.name.toLowerCase().includes(q) || p.version.toLowerCase().includes(q));
-                });
-                return (
-                  <div className="rounded-md border border-border overflow-hidden max-h-[400px] overflow-y-auto">
-                    {filtered.length === 0 ? (
-                      <p className="px-3 py-3 text-center text-xs text-muted-foreground italic">No matches</p>
-                    ) : filtered.map((proj, pi) => {
-                      const isExpanded = expandedCodePaths.has(proj.path);
-                      const pkgCount = proj.packages?.length || 0;
-                      return (
-                        <div key={pi} className="border-b border-border last:border-b-0">
-                          <button
-                            onClick={() => setExpandedCodePaths(prev => {
-                              const next = new Set(prev);
-                              if (next.has(proj.path)) next.delete(proj.path); else next.add(proj.path);
-                              return next;
-                            })}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-muted/20 transition-colors"
-                          >
-                            {isExpanded ? <ChevronDown size={12} className="text-muted-foreground shrink-0" /> : <ChevronRight size={12} className="text-muted-foreground shrink-0" />}
-                            <span className={`inline-flex items-center gap-1 text-[0.65rem] font-semibold px-1.5 py-0.5 rounded shrink-0 ${
-                              proj.type === 'python' ? 'bg-blue-500/15 text-blue-500' :
-                              proj.type === 'java' ? 'bg-red-500/15 text-red-500' :
-                              proj.type === 'javascript' || proj.type === 'node' ? 'bg-yellow-500/15 text-yellow-600 dark:text-yellow-400' :
-                              proj.type === 'go' ? 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400' :
-                              proj.type === 'rust' ? 'bg-orange-500/15 text-orange-600 dark:text-orange-400' :
-                              proj.type === 'ruby' ? 'bg-red-400/15 text-red-400' :
-                              proj.type === 'php' ? 'bg-indigo-500/15 text-indigo-500' :
-                              proj.type === 'dotnet' || proj.type === 'csharp' ? 'bg-purple-500/15 text-purple-500' :
-                              'bg-muted text-muted-foreground'
-                            }`}>
-                              <FileCode size={10} />
-                              {proj.type}
-                            </span>
-                            <span className="text-xs font-mono font-medium text-foreground truncate flex-1">{proj.path}</span>
-                            <span className="text-[0.65rem] text-muted-foreground shrink-0">{pkgCount} pkg{pkgCount !== 1 ? 's' : ''}</span>
-                          </button>
-                          {isExpanded && pkgCount > 0 && (
-                            <div className="bg-muted/10">
-                              <table className="w-full text-xs">
-                                <thead className="bg-muted/40 sticky top-0">
-                                  <tr>
-                                    <th className="text-left px-3 py-1.5 font-semibold text-muted-foreground">Name</th>
-                                    <th className="text-left px-3 py-1.5 font-semibold text-muted-foreground">Version</th>
-                                  </tr>
-                                </thead>
-                                <tbody className="divide-y divide-border">
-                                  {proj.packages.map((pkg, ki) => (
-                                    <tr key={ki} className="hover:bg-muted/20">
-                                      <td className="px-3 py-1.5 font-medium text-foreground">{pkg.name || '—'}</td>
-                                      <td className="px-3 py-1.5 font-mono text-muted-foreground">{pkg.version || '—'}</td>
+          </button>
+          {codeScanOpen && (
+            codeScanCount === 0 ? (
+              <p className="text-xs text-muted-foreground italic pl-7">No code package scanning data collected for this host.</p>
+            ) : (
+              <>
+                <Input
+                  placeholder="Filter by path, type, or package name..."
+                  value={codeScanFilter}
+                  onChange={(e) => setCodeScanFilter(e.target.value)}
+                  className="h-7 text-xs mb-1"
+                />
+                {(() => {
+                  const q = codeScanFilter.toLowerCase();
+                  const filtered = host.code_scanner!.filter((proj) => {
+                    if (!q) return true;
+                    if (proj.path.toLowerCase().includes(q)) return true;
+                    if (proj.type.toLowerCase().includes(q)) return true;
+                    return proj.packages?.some(p => p.name.toLowerCase().includes(q) || p.version.toLowerCase().includes(q));
+                  });
+                  return (
+                    <div className="rounded-md border border-border overflow-hidden max-h-[400px] overflow-y-auto">
+                      {filtered.length === 0 ? (
+                        <p className="px-3 py-3 text-center text-xs text-muted-foreground italic">No matches</p>
+                      ) : filtered.map((proj, pi) => {
+                        const isExpanded = expandedCodePaths.has(proj.path);
+                        const pkgCount = proj.packages?.length || 0;
+                        return (
+                          <div key={pi} className="border-b border-border last:border-b-0">
+                            <button
+                              onClick={() => setExpandedCodePaths(prev => {
+                                const next = new Set(prev);
+                                if (next.has(proj.path)) next.delete(proj.path); else next.add(proj.path);
+                                return next;
+                              })}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-muted/20 transition-colors"
+                            >
+                              {isExpanded ? <ChevronDown size={12} className="text-muted-foreground shrink-0" /> : <ChevronRight size={12} className="text-muted-foreground shrink-0" />}
+                              <span className={`inline-flex items-center gap-1 text-[0.65rem] font-semibold px-1.5 py-0.5 rounded shrink-0 ${
+                                proj.type === 'python' ? 'bg-blue-500/15 text-blue-500' :
+                                proj.type === 'java' ? 'bg-red-500/15 text-red-500' :
+                                proj.type === 'javascript' || proj.type === 'node' ? 'bg-yellow-500/15 text-yellow-600 dark:text-yellow-400' :
+                                proj.type === 'go' ? 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400' :
+                                proj.type === 'rust' ? 'bg-orange-500/15 text-orange-600 dark:text-orange-400' :
+                                proj.type === 'ruby' ? 'bg-red-400/15 text-red-400' :
+                                proj.type === 'php' ? 'bg-indigo-500/15 text-indigo-500' :
+                                proj.type === 'dotnet' || proj.type === 'csharp' ? 'bg-purple-500/15 text-purple-500' :
+                                'bg-muted text-muted-foreground'
+                              }`}>
+                                <FileCode size={10} />
+                                {proj.type}
+                              </span>
+                              <span className="text-xs font-mono font-medium text-foreground truncate flex-1">{proj.path}</span>
+                              <span className="text-[0.65rem] text-muted-foreground shrink-0">{pkgCount} pkg{pkgCount !== 1 ? 's' : ''}</span>
+                            </button>
+                            {isExpanded && pkgCount > 0 && (
+                              <div className="bg-muted/10">
+                                <table className="w-full text-xs">
+                                  <thead className="bg-muted/40 sticky top-0">
+                                    <tr>
+                                      <th className="text-left px-3 py-1.5 font-semibold text-muted-foreground">Name</th>
+                                      <th className="text-left px-3 py-1.5 font-semibold text-muted-foreground">Version</th>
                                     </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })()}
-            </>
+                                  </thead>
+                                  <tbody className="divide-y divide-border">
+                                    {proj.packages.map((pkg, ki) => (
+                                      <tr key={ki} className="hover:bg-muted/20">
+                                        <td className="px-3 py-1.5 font-medium text-foreground">{pkg.name || '—'}</td>
+                                        <td className="px-3 py-1.5 font-mono text-muted-foreground">{pkg.version || '—'}</td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+              </>
+            )
           )}
         </div>
       </div>
