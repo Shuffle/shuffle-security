@@ -61,6 +61,7 @@ const MonitorDetailPage = () => {
   const [actionHistoryMap, setActionHistoryMap] = useState<Map<string, { actionName: string; startedAt: number; finishedAt?: number; actionOutput?: string; error?: string; success?: boolean }[]>>(new Map());
   const [actionDebugMap, setActionDebugMap] = useState<Map<string, { actionName: string; status: string }>>(new Map());
   const [runningHosts, setRunningHosts] = useState<Set<string>>(new Set());
+  const [, setTick] = useState(0);
 
   usePageMeta({ title: host ? `${host.hostname} — Monitor` : 'Monitor Detail', description: 'Host monitor detail view' });
 
@@ -93,6 +94,12 @@ const MonitorDetailPage = () => {
   }, [id]);
 
   useEffect(() => { fetchHost(); }, [fetchHost]);
+
+  // Tick every second to keep "Last check-in" live
+  useEffect(() => {
+    const iv = setInterval(() => setTick(t => t + 1), 1000);
+    return () => clearInterval(iv);
+  }, []);
 
   if (loading) {
     return (
