@@ -983,12 +983,48 @@ const VulnAssetsPage = () => {
                     />
                     <CheckDot on={logForwardingOn} tip={logForwardingOn ? `Active monitoring: ${host.log_forwarding}` : 'Active monitoring — not generally available yet'} />
                     <span className="text-xs text-muted-foreground truncate">{host.groupName}</span>
-                    <div className="flex items-center gap-1.5">
-                      <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${isRecent ? 'bg-green-500' : 'bg-muted-foreground/40'}`} />
-                      <span className="text-xs text-muted-foreground">
-                        {checkinDate ? checkinDate.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
-                      </span>
-                    </div>
+                    <TooltipProvider delayDuration={200}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center gap-1.5 cursor-help">
+                            <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${isRecent ? 'bg-green-500' : 'bg-muted-foreground/40'}`} />
+                            <span className="text-xs text-muted-foreground">
+                              {checkinDate ? checkinDate.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
+                            </span>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {checkinDate ? (() => {
+                            const now = Date.now();
+                            const diff = now - checkinDate.getTime();
+                            const seconds = Math.floor(diff / 1000);
+                            const mins = Math.floor(diff / 60000);
+                            const hrs = Math.floor(mins / 60);
+                            const days = Math.floor(hrs / 24);
+                            let relativeTime = '';
+                            if (seconds < 60) relativeTime = `${seconds} second${seconds !== 1 ? 's' : ''} ago`;
+                            else if (mins < 60) relativeTime = `${mins} minute${mins !== 1 ? 's' : ''} ago`;
+                            else if (hrs < 24) relativeTime = `${hrs} hour${hrs !== 1 ? 's' : ''} ago`;
+                            else relativeTime = `${days} day${days !== 1 ? 's' : ''} ago`;
+                            const exactTime = checkinDate.toLocaleString(undefined, {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              second: '2-digit',
+                              hour12: false
+                            });
+                            return (
+                              <div className="text-xs">
+                                <div className="font-semibold">{exactTime}</div>
+                                <div className="text-muted-foreground">({relativeTime})</div>
+                              </div>
+                            );
+                          })() : '—'}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                     {/* Actions popover */}
                     <div className="flex items-center justify-end" onClick={e => e.stopPropagation()}>
                       {responseActionsOn ? (
