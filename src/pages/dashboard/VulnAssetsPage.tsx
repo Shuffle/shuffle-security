@@ -905,8 +905,10 @@ const VulnAssetsPage = () => {
             {allHosts.map(host => {
               const checkinDate = host.checkin ? new Date(host.checkin * 1000) : null;
               const isRecent = checkinDate ? (Date.now() - checkinDate.getTime()) < 5 * 60 * 1000 : false;
-              const hdEncrypted = host.hd_encrypted === true || host.hd_encrypted === 'true';
-              const screenlockOn = host.automatic_screen_lock_enabled === true || host.automatic_screen_lock_enabled === 'true';
+              const hdState: 'on' | 'off' | 'empty' = (host.hd_encrypted === true || host.hd_encrypted === 'true') ? 'on' : (host.hd_encrypted === false || host.hd_encrypted === 'false' || host.hd_encrypted === 'FALSE') ? 'off' : 'empty';
+              const hdEncrypted = hdState === 'on';
+              const screenlockState: 'on' | 'off' | 'empty' = (host.automatic_screen_lock_enabled === true || host.automatic_screen_lock_enabled === 'true') ? 'on' : (host.automatic_screen_lock_enabled === false || host.automatic_screen_lock_enabled === 'false' || host.automatic_screen_lock_enabled === 'FALSE') ? 'off' : 'empty';
+              const screenlockOn = screenlockState === 'on';
               const softwareCount = Array.isArray(host.installed_software) ? host.installed_software.length : 0;
               const responseActionsRaw = (host as any).response_actions as string | undefined;
               const responseActionsOn = !!responseActionsRaw;
@@ -922,18 +924,21 @@ const VulnAssetsPage = () => {
                 });
                 setSoftwareFilter('');
               };
-              const CheckDot = ({ on, tip, color }: { on: boolean; tip: string; color?: string }) => (
+              const CheckDot = ({ on, tip, color, state }: { on: boolean; tip: string; color?: string; state?: 'on' | 'off' | 'empty' }) => {
+                const dotColor = state === 'off' ? 'bg-[hsl(var(--severity-critical))]' : on ? (color || 'bg-green-500') : 'bg-muted-foreground/30';
+                return (
                 <TooltipProvider delayDuration={200}>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <span className="flex justify-center">
-                        <div className={`w-2.5 h-2.5 rounded-full ${on ? (color || 'bg-green-500') : 'bg-muted-foreground/30'}`} />
+                        <div className={`w-2.5 h-2.5 rounded-full ${dotColor}`} />
                       </span>
                     </TooltipTrigger>
                     <TooltipContent>{tip}</TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               );
+              };
               return (
                 <div key={host.uuid}>
                   <div
@@ -962,8 +967,8 @@ const VulnAssetsPage = () => {
                         );
                       })()}
                     </div>
-                    <CheckDot on={hdEncrypted} tip={hdEncrypted ? 'Disk encryption enabled' : 'Disk encryption not enabled'} />
-                    <CheckDot on={screenlockOn} tip={screenlockOn ? 'Screenlock enabled' : 'Screenlock not enabled'} />
+                    <CheckDot on={hdEncrypted} state={hdState} tip={hdState === 'on' ? 'Disk encryption enabled' : hdState === 'off' ? 'Disk encryption disabled' : 'Disk encryption not checked'} />
+                    <CheckDot on={screenlockOn} state={screenlockState} tip={screenlockState === 'on' ? 'Screenlock enabled' : screenlockState === 'off' ? 'Screenlock disabled' : 'Screenlock not checked'} />
                     <CheckDot on={softwareCount > 0} tip={softwareCount > 0 ? `${softwareCount} packages installed` : 'Software not collected'} />
                     <CheckDot
                       on={responseActionsOn}
@@ -1241,13 +1246,13 @@ const VulnAssetsPage = () => {
 
                       {/* Compliance summary */}
                       <div className="flex flex-wrap gap-3 mb-4">
-                        <div className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium ${hdEncrypted ? 'border-green-500/30 bg-green-500/10 text-green-600 dark:text-green-400' : 'border-orange-500/30 bg-orange-500/10 text-orange-600 dark:text-orange-400'}`}>
-                          {hdEncrypted ? <ShieldCheck size={13} /> : <ShieldX size={13} />}
-                          Disk Encryption: {hdEncrypted ? 'Enabled' : 'Disabled'}
+                        <div className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium ${hdState === 'on' ? 'border-green-500/30 bg-green-500/10 text-green-600 dark:text-green-400' : hdState === 'off' ? 'border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400' : 'border-border bg-muted/30 text-muted-foreground'}`}>
+                          {hdState === 'on' ? <ShieldCheck size={13} /> : <ShieldX size={13} />}
+                          Disk Encryption: {hdState === 'on' ? 'Enabled' : hdState === 'off' ? 'Disabled' : 'Not checked'}
                         </div>
-                        <div className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium ${screenlockOn ? 'border-green-500/30 bg-green-500/10 text-green-600 dark:text-green-400' : 'border-orange-500/30 bg-orange-500/10 text-orange-600 dark:text-orange-400'}`}>
+                        <div className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium ${screenlockState === 'on' ? 'border-green-500/30 bg-green-500/10 text-green-600 dark:text-green-400' : screenlockState === 'off' ? 'border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400' : 'border-border bg-muted/30 text-muted-foreground'}`}>
                           <Lock size={13} />
-                          Screen Lock: {screenlockOn ? 'Enabled' : 'Disabled'}
+                          Screen Lock: {screenlockState === 'on' ? 'Enabled' : screenlockState === 'off' ? 'Disabled' : 'Not checked'}
                         </div>
                         <div className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/30 px-2.5 py-1.5 text-xs font-medium text-muted-foreground">
                           <Zap size={13} />
