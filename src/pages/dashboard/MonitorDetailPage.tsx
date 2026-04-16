@@ -95,6 +95,12 @@ const MonitorDetailPage = () => {
 
   useEffect(() => { fetchHost(); }, [fetchHost]);
 
+  // Tick every second to keep "Last check-in" live
+  useEffect(() => {
+    const iv = setInterval(() => setTick(t => t + 1), 1000);
+    return () => clearInterval(iv);
+  }, []);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
