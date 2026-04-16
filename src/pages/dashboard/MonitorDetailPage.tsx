@@ -61,6 +61,7 @@ const MonitorDetailPage = () => {
   const [actionHistoryMap, setActionHistoryMap] = useState<Map<string, { actionName: string; startedAt: number; finishedAt?: number; actionOutput?: string; error?: string; success?: boolean }[]>>(new Map());
   const [actionDebugMap, setActionDebugMap] = useState<Map<string, { actionName: string; status: string }>>(new Map());
   const [runningHosts, setRunningHosts] = useState<Set<string>>(new Set());
+  const [, setTick] = useState(0);
 
   usePageMeta({ title: host ? `${host.hostname} — Monitor` : 'Monitor Detail', description: 'Host monitor detail view' });
 
