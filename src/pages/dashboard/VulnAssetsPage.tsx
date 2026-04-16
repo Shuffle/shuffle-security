@@ -49,6 +49,9 @@ const HOST_CHECK_OPTIONS = [
   { id: 'response_actions' as const, label: 'Response Actions', description: 'Enable automated response actions on this host', icon: <Zap size={16} />, disabled: false },
 ];
 
+/** Single source of truth for active monitoring (formerly log forwarding) status */
+const isActiveMonitoringEnabled = (host: { log_forwarding?: string }): boolean => !!host.log_forwarding;
+
 interface SensorHost {
   arch: string;
   automatic_screen_lock_enabled: boolean | string;
