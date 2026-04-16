@@ -135,8 +135,8 @@ const cardVariants = {
   show: { opacity: 1, y: 0 },
 };
 
-const UsersPage = () => {
-  const [activeTab, setActiveTab] = useState(0);
+const UsersPage = ({ embedded }: { embedded?: boolean }) => {
+  const [activeTab, setActiveTab] = useState(embedded ? 0 : 0);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -471,6 +471,8 @@ const UsersPage = () => {
   return (
     <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1400, mx: 'auto' }}>
       {/* Org Admin Header */}
+    {!embedded && (
+      <>
       <Typography 
         variant="h4" 
         sx={{ 
@@ -505,8 +507,10 @@ const UsersPage = () => {
         <Tab label="User Management" />
         <Tab label="Tenant Management" />
       </Tabs>
+      </>
+    )}
 
-      {activeTab === 1 ? (
+      {!embedded && activeTab === 1 ? (
         <TenantManagement />
       ) : (
       <>

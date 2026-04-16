@@ -1,0 +1,357 @@
+import { useState, useEffect, useCallback } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import {
+  Box,
+  Typography,
+  Paper,
+  Button,
+  CircularProgress,
+  Alert,
+  Avatar,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Tabs,
+  Tab,
+} from '@mui/material';
+import { Save as SaveIcon } from '@mui/icons-material';
+import { toast } from 'sonner';
+import { getApiUrl, getAuthHeader } from '@/config/api';
+import { useAuth } from '@/context/AuthContext';
+import { getRegionFlag } from '@/lib/regionFlag';
+import UsersPage from './UsersPage';
+import TenantManagement from '@/components/tenants/TenantManagement';
+
+const REGION_OPTIONS = [
+  { value: '', label: 'Default (UK)' },
+  { value: 'https://uk.shuffler.io', label: 'UK' },
+  { value: 'https://us.shuffler.io', label: 'US' },
+  { value: 'https://frankfurt.shuffler.io', label: 'DE' },
+  { value: 'https://eu.shuffler.io', label: 'EU' },
+  { value: 'https://ca.shuffler.io', label: 'CA' },
+  { value: 'https://au.shuffler.io', label: 'AUS' },
+];
+
+interface OrgDetails {
+  id: string;
+  name: string;
+  description: string;
+  image: string;
+  region_url: string;
+}
+
+const AdminPage = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { userInfo, refreshUserInfo } = useAuth();
+  const orgId = userInfo?.active_org?.id;
+
+  // Determine active tab from path
+  const getTabFromPath = useCallback(() => {
+    if (location.pathname === '/admin/users') return 1;
+    if (location.pathname === '/admin/tenants') return 2;
+    return 0;
+  }, [location.pathname]);
+
+  const [activeTab, setActiveTab] = useState(getTabFromPath());
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const [orgName, setOrgName] = useState('');
+  const [orgDescription, setOrgDescription] = useState('');
+  const [orgImage, setOrgImage] = useState('');
+  const [orgRegionUrl, setOrgRegionUrl] = useState('');
+
+  // Sync tab with route
+  useEffect(() => {
+    setActiveTab(getTabFromPath());
+  }, [getTabFromPath]);
+
+  const handleTabChange = (_: unknown, newValue: number) => {
+    setActiveTab(newValue);
+    if (newValue === 0) navigate('/admin');
+    else if (newValue === 1) navigate('/admin/users');
+    else if (newValue === 2) navigate('/admin/tenants');
+  };
+
+  // Fetch org details
+  useEffect(() => {
+    if (!orgId) return;
+
+    const fetchOrg = async () => {
+      try {
+        const response = await fetch(getApiUrl(`/api/v1/orgs/${orgId}`), {
+          credentials: 'include',
+          headers: { ...getAuthHeader() },
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch organization details');
+
+        const data = await response.json();
+        setOrgName(data.name || '');
+        setOrgDescription(data.description || '');
+        setOrgImage(data.image || '');
+        setOrgRegionUrl(data.region_url || '');
+      } catch (err) {
+        // Fallback to userInfo
+        setOrgName(userInfo?.active_org?.name || '');
+        setOrgDescription('');
+        setOrgImage(userInfo?.active_org?.image || '');
+        setOrgRegionUrl(userInfo?.active_org?.region_url || '');
+        setError(err instanceof Error ? err.message : 'Failed to load');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrg();
+  }, [orgId, userInfo]);
+
+  const handleSave = async () => {
+    if (!orgId) return;
+    setSaving(true);
+
+    try {
+      const response = await fetch(getApiUrl(`/api/v1/orgs/${orgId}`), {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          ...getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: orgName,
+          description: orgDescription,
+          image: orgImage,
+          region_url: orgRegionUrl,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.reason || 'Failed to update organization');
+      }
+
+      toast.success('Organization updated successfully');
+      await refreshUserInfo();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to update');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      setOrgImage(result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveImage = () => {
+    setOrgImage('');
+  };
+
+  const regionFlag = getRegionFlag(orgRegionUrl);
+
+  return (
+    <Box sx={{ p: { xs: 0, sm: 0 }, maxWidth: 1200 }}>
+      <Typography variant="h4" sx={{ fontWeight: 600, mb: 1, color: 'hsl(var(--foreground))' }}>
+        Organization Admin
+      </Typography>
+      <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))', mb: 3 }}>
+        Manage your organization settings, users, and tenants.
+      </Typography>
+
+      <Tabs
+        value={activeTab}
+        onChange={handleTabChange}
+        sx={{
+          mb: 4,
+          '& .MuiTabs-indicator': { bgcolor: 'hsl(var(--primary))' },
+          '& .MuiTab-root': {
+            color: 'hsl(var(--muted-foreground))',
+            '&.Mui-selected': { color: 'hsl(var(--primary))' },
+          },
+        }}
+      >
+        <Tab label="Overview" />
+        <Tab label="Users" />
+        <Tab label="Tenants" />
+      </Tabs>
+
+      {activeTab === 0 && (
+        <>
+          {error && (
+            <Alert severity="warning" sx={{ mb: 3 }}>{error}</Alert>
+          )}
+
+          {loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+              <CircularProgress sx={{ color: 'hsl(var(--primary))' }} />
+            </Box>
+          ) : (
+            <Box sx={{ maxWidth: 700 }}>
+              {/* Image section */}
+              <Paper
+                sx={{
+                  p: 3,
+                  mb: 3,
+                  bgcolor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 3 }}>
+                  <Avatar
+                    src={orgImage && orgImage.startsWith('data:') ? orgImage : undefined}
+                    sx={{
+                      width: 100,
+                      height: 100,
+                      bgcolor: 'hsl(var(--primary))',
+                      color: 'hsl(var(--primary-foreground))',
+                      fontSize: '2rem',
+                      fontWeight: 600,
+                      borderRadius: 3,
+                    }}
+                    variant="rounded"
+                  >
+                    {orgName?.charAt(0)?.toUpperCase() || '?'}
+                  </Avatar>
+
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, pt: 1 }}>
+                    <Button
+                      variant="outlined"
+                      component="label"
+                      size="small"
+                      sx={{
+                        borderColor: 'hsl(var(--primary))',
+                        color: 'hsl(var(--primary))',
+                        '&:hover': { bgcolor: 'hsla(var(--primary) / 0.1)' },
+                      }}
+                    >
+                      Update
+                      <input
+                        type="file"
+                        hidden
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                      />
+                    </Button>
+                    {orgImage && (
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={handleRemoveImage}
+                        sx={{
+                          borderColor: 'hsl(var(--border))',
+                          color: 'hsl(var(--muted-foreground))',
+                          '&:hover': { bgcolor: 'hsl(var(--muted))' },
+                        }}
+                      >
+                        Remove
+                      </Button>
+                    )}
+                  </Box>
+                </Box>
+              </Paper>
+
+              {/* Name, Status, Region row */}
+              <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+                <TextField
+                  label="Name"
+                  value={orgName}
+                  onChange={(e) => setOrgName(e.target.value)}
+                  fullWidth
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      color: 'hsl(var(--foreground))',
+                      '& fieldset': { borderColor: 'hsl(var(--border))' },
+                      '&:hover fieldset': { borderColor: 'hsl(var(--primary))' },
+                    },
+                    '& .MuiInputLabel-root': { color: 'hsl(var(--muted-foreground))' },
+                  }}
+                />
+
+                <FormControl sx={{ minWidth: 160 }}>
+                  <InputLabel sx={{ color: 'hsl(var(--muted-foreground))' }}>Region</InputLabel>
+                  <Select
+                    value={orgRegionUrl}
+                    label="Region"
+                    onChange={(e) => setOrgRegionUrl(e.target.value)}
+                    sx={{
+                      color: 'hsl(var(--foreground))',
+                      '& fieldset': { borderColor: 'hsl(var(--border))' },
+                      '&:hover fieldset': { borderColor: 'hsl(var(--primary))' },
+                    }}
+                    renderValue={() => {
+                      const r = getRegionFlag(orgRegionUrl);
+                      return `${r.flag} ${r.code}`;
+                    }}
+                  >
+                    {REGION_OPTIONS.map((opt) => {
+                      const r = getRegionFlag(opt.value);
+                      return (
+                        <MenuItem key={opt.value} value={opt.value}>
+                          {r.flag} {opt.label}
+                        </MenuItem>
+                      );
+                    })}
+                  </Select>
+                </FormControl>
+              </Box>
+
+              {/* Description */}
+              <TextField
+                label="Description"
+                value={orgDescription}
+                onChange={(e) => setOrgDescription(e.target.value)}
+                multiline
+                rows={4}
+                fullWidth
+                placeholder="Org description"
+                sx={{
+                  mb: 3,
+                  '& .MuiOutlinedInput-root': {
+                    color: 'hsl(var(--foreground))',
+                    '& fieldset': { borderColor: 'hsl(var(--border))' },
+                    '&:hover fieldset': { borderColor: 'hsl(var(--primary))' },
+                  },
+                  '& .MuiInputLabel-root': { color: 'hsl(var(--muted-foreground))' },
+                }}
+              />
+
+              {/* Save button */}
+              <Button
+                variant="contained"
+                onClick={handleSave}
+                disabled={saving}
+                startIcon={saving ? <CircularProgress size={16} /> : <SaveIcon />}
+                sx={{
+                  bgcolor: 'hsl(var(--primary))',
+                  color: 'hsl(var(--primary-foreground))',
+                  height: 36,
+                  '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)' },
+                }}
+              >
+                {saving ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </Box>
+          )}
+        </>
+      )}
+
+      {activeTab === 1 && <UsersPage embedded />}
+      {activeTab === 2 && <TenantManagement />}
+    </Box>
+  );
+};
+
+export default AdminPage;
