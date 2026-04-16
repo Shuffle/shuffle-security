@@ -545,6 +545,7 @@ const VulnAssetsPage = () => {
       case 'hd': cmp = Number(a.hd_encrypted === true || a.hd_encrypted === 'true') - Number(b.hd_encrypted === true || b.hd_encrypted === 'true'); break;
       case 'screenlock': cmp = Number(a.automatic_screen_lock_enabled === true || a.automatic_screen_lock_enabled === 'true') - Number(b.automatic_screen_lock_enabled === true || b.automatic_screen_lock_enabled === 'true'); break;
       case 'software': cmp = (Array.isArray(a.installed_software) ? a.installed_software.length : 0) - (Array.isArray(b.installed_software) ? b.installed_software.length : 0); break;
+      case 'codescan': cmp = (Array.isArray(a.code_scanner) ? a.code_scanner.length : 0) - (Array.isArray(b.code_scanner) ? b.code_scanner.length : 0); break;
       case 'response': cmp = Number(!!(a as any).response_actions) - Number(!!(b as any).response_actions); break;
       case 'logfwd': cmp = Number(!!a.log_forwarding) - Number(!!b.log_forwarding); break;
       case 'group': cmp = ((a as any).groupName || '').localeCompare((b as any).groupName || ''); break;
@@ -901,7 +902,7 @@ const VulnAssetsPage = () => {
         ) : (
           <div className="border-t border-border">
             {/* Table header */}
-            <div className="grid grid-cols-[2rem_1.5fr_2rem_2rem_2rem_2rem_2rem_0.7fr_0.8fr_2.5rem] gap-2 px-5 py-2 border-b border-border bg-muted/30 items-center">
+            <div className="grid grid-cols-[2rem_1.5fr_2rem_2rem_2rem_2rem_2rem_2rem_0.7fr_0.8fr_2.5rem] gap-2 px-5 py-2 border-b border-border bg-muted/30 items-center">
               <TooltipProvider delayDuration={200}>
                 <Tooltip><TooltipTrigger asChild>
                   <span className="text-xs font-semibold text-muted-foreground cursor-pointer select-none flex items-center gap-1" onClick={() => toggleSort('os')}>
@@ -912,7 +913,8 @@ const VulnAssetsPage = () => {
               <span className="text-xs font-semibold text-muted-foreground cursor-pointer select-none" onClick={() => toggleSort('hostname')}>Hostname{sortArrow('hostname')}</span>
               <TooltipProvider delayDuration={200}><Tooltip><TooltipTrigger asChild><span className="flex justify-center cursor-pointer" onClick={() => toggleSort('hd')}><HardDrive size={13} className="text-muted-foreground" /></span></TooltipTrigger><TooltipContent side="bottom" className="max-w-[200px]"><p className="font-semibold text-xs">HD Encrypted{sortArrow('hd')}</p><p className="text-[0.65rem] text-muted-foreground">Click to sort</p></TooltipContent></Tooltip></TooltipProvider>
               <TooltipProvider delayDuration={200}><Tooltip><TooltipTrigger asChild><span className="flex justify-center cursor-pointer" onClick={() => toggleSort('screenlock')}><Lock size={13} className="text-muted-foreground" /></span></TooltipTrigger><TooltipContent side="bottom" className="max-w-[200px]"><p className="font-semibold text-xs">Screenlock{sortArrow('screenlock')}</p><p className="text-[0.65rem] text-muted-foreground">Click to sort</p></TooltipContent></Tooltip></TooltipProvider>
-              <TooltipProvider delayDuration={200}><Tooltip><TooltipTrigger asChild><span className="flex justify-center cursor-pointer" onClick={() => toggleSort('software')}><Package size={13} className="text-muted-foreground" /></span></TooltipTrigger><TooltipContent side="bottom" className="max-w-[200px]"><p className="font-semibold text-xs">Software{sortArrow('software')}</p><p className="text-[0.65rem] text-muted-foreground">Click to sort by count</p></TooltipContent></Tooltip></TooltipProvider>
+              <TooltipProvider delayDuration={200}><Tooltip><TooltipTrigger asChild><span className="flex justify-center cursor-pointer" onClick={() => toggleSort('software')}><Package size={13} className="text-muted-foreground" /></span></TooltipTrigger><TooltipContent side="bottom" className="max-w-[200px]"><p className="font-semibold text-xs">Installed Software{sortArrow('software')}</p><p className="text-[0.65rem] text-muted-foreground">Click to sort by count</p></TooltipContent></Tooltip></TooltipProvider>
+              <TooltipProvider delayDuration={200}><Tooltip><TooltipTrigger asChild><span className="flex justify-center cursor-pointer" onClick={() => toggleSort('codescan')}><FileCode size={13} className="text-muted-foreground" /></span></TooltipTrigger><TooltipContent side="bottom" className="max-w-[200px]"><p className="font-semibold text-xs">Code Package Scanner{sortArrow('codescan')}</p><p className="text-[0.65rem] text-muted-foreground">Click to sort by count</p></TooltipContent></Tooltip></TooltipProvider>
               <TooltipProvider delayDuration={200}><Tooltip><TooltipTrigger asChild><span className="flex justify-center cursor-pointer" onClick={() => toggleSort('response')}><Zap size={13} className="text-muted-foreground" /></span></TooltipTrigger><TooltipContent side="bottom" className="max-w-[200px]"><p className="font-semibold text-xs">Response Actions{sortArrow('response')}</p><p className="text-[0.65rem] text-muted-foreground">Click to sort</p></TooltipContent></Tooltip></TooltipProvider>
               <TooltipProvider delayDuration={200}><Tooltip><TooltipTrigger asChild><span className="flex justify-center cursor-pointer" onClick={() => toggleSort('logfwd')}><Send size={13} className="text-muted-foreground" /></span></TooltipTrigger><TooltipContent side="bottom" className="max-w-[200px]"><p className="font-semibold text-xs">Active Monitoring{sortArrow('logfwd')}</p><p className="text-[0.65rem] text-muted-foreground">Not generally available yet</p></TooltipContent></Tooltip></TooltipProvider>
               <span className="text-xs font-semibold text-muted-foreground cursor-pointer select-none" onClick={() => toggleSort('group')}>Group{sortArrow('group')}</span>
@@ -962,7 +964,7 @@ const VulnAssetsPage = () => {
               return (
                 <div key={host.uuid}>
                   <div
-                    className="grid grid-cols-[2rem_1.5fr_2rem_2rem_2rem_2rem_2rem_0.7fr_0.8fr_2.5rem] gap-2 px-5 py-3 border-b border-border last:border-b-0 hover:bg-muted/20 transition-colors items-center cursor-pointer"
+                    className="grid grid-cols-[2rem_1.5fr_2rem_2rem_2rem_2rem_2rem_2rem_0.7fr_0.8fr_2.5rem] gap-2 px-5 py-3 border-b border-border last:border-b-0 hover:bg-muted/20 transition-colors items-center cursor-pointer"
                     onClick={toggleExpanded}
                   >
                     <div className="flex items-center justify-center">
@@ -989,7 +991,11 @@ const VulnAssetsPage = () => {
                     </div>
                     <CheckDot on={hdEncrypted} state={hdState} tip={hdState === 'on' ? 'Disk encryption enabled' : hdState === 'off' ? 'Disk encryption disabled' : 'Disk encryption not checked'} />
                     <CheckDot on={screenlockOn} state={screenlockState} tip={screenlockState === 'on' ? 'Screenlock enabled' : screenlockState === 'off' ? 'Screenlock disabled' : 'Screenlock not checked'} />
-                    <CheckDot on={softwareCount > 0} tip={softwareCount > 0 ? `${softwareCount} packages installed` : 'Software not collected'} />
+                    <CheckDot on={softwareCount > 0} tip={softwareCount > 0 ? `${softwareCount} installed software` : 'Installed software not collected'} />
+                    {(() => {
+                      const codeScanCount = Array.isArray(host.code_scanner) ? host.code_scanner.length : 0;
+                      return <CheckDot on={codeScanCount > 0} tip={codeScanCount > 0 ? `${codeScanCount} code projects scanned` : 'Code package scanner not collected'} />;
+                    })()}
                     <CheckDot
                       on={responseActionsOn}
                       tip={responseActionsOn ? `Response actions: ${responseActionsMode === 'full' ? 'Full control (RCE)' : 'Controlled'}` : 'Response actions not enabled'}
