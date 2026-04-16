@@ -348,17 +348,10 @@ const AdminPage = () => {
         </>
       )}
 
-      {activeTab === 1 && <UsersPageContent />}
+      {activeTab === 1 && <UsersPage embedded />}
       {activeTab === 2 && <TenantManagement />}
     </Box>
   );
-};
-
-/** Re-exports the users content without the page title/tabs (those are now in AdminPage) */
-const UsersPageContent = () => {
-  // We render the full UsersPage but it has its own title/tabs — 
-  // Instead, render it directly. The UsersPage already handles user management.
-  return <UsersPage embedded />;
 };
 
 export default AdminPage;
