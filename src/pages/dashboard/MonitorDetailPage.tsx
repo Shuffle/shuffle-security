@@ -124,6 +124,9 @@ const MonitorDetailPage = () => {
   const responseActionsRaw = (host as any).response_actions as string | undefined;
   const responseActionsOn = !!responseActionsRaw;
   const logForwardingOn = !!host.log_forwarding;
+  const isRunning = runningHosts.has(host.uuid);
+  const actionDebug = actionDebugMap.get(host.uuid);
+  const hostHistory = actionHistoryMap.get(host.uuid) || [];
 
   const relativeTime = (date: Date) => {
     const diff = Date.now() - date.getTime();
@@ -134,6 +137,34 @@ const MonitorDetailPage = () => {
     const hrs = Math.floor(mins / 60);
     if (hrs < 24) return `${hrs}h ago`;
     return `${Math.floor(hrs / 24)}d ago`;
+  };
+
+  const executeHostAction = async (actionName: string) => {
+    setRunningHosts(prev => new Set(prev).add(host.uuid));
+    setActionDebugMap(prev => new Map(prev).set(host.uuid, { actionName, status: 'sending' }));
+    const entry = { actionName, startedAt: Date.now(), actionOutput: undefined as string | undefined, error: undefined as string | undefined, success: undefined as boolean | undefined, finishedAt: undefined as number | undefined };
+    try {
+      const res = await fetch(getApiUrl('/api/v1/executeaction'), {
+        method: 'POST',
+        credentials: 'include',
+        headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: actionName, hostname: host.hostname, group: groupName, sensor_id: host.uuid }),
+      });
+      const data = await res.json();
+      entry.success = res.ok;
+      entry.actionOutput = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+    } catch (err: any) {
+      entry.success = false;
+      entry.error = err?.message || 'Unknown error';
+    }
+    entry.finishedAt = Date.now();
+    setActionHistoryMap(prev => {
+      const next = new Map(prev);
+      next.set(host.uuid, [...(next.get(host.uuid) || []), entry]);
+      return next;
+    });
+    setRunningHosts(prev => { const n = new Set(prev); n.delete(host.uuid); return n; });
+    setActionDebugMap(prev => { const n = new Map(prev); n.delete(host.uuid); return n; });
   };
 
   return (
