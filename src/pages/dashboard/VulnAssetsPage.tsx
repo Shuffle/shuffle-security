@@ -597,9 +597,10 @@ const VulnAssetsPage = () => {
       parts.push(`queue=${selectedGroup.queue}`);
       if (selectedGroup.org_id) parts.push(`org_id=${selectedGroup.org_id}`);
     }
-    if (hostChecks.installed_software) parts.push('software_list_enabled=true');
-    if (hostChecks.hd_encrypted) parts.push('hd_encrypted_check=true');
-    if (hostChecks.screenlock) parts.push('screenlock_check=true');
+    parts.push(`software_list_enabled=${hostChecks.installed_software}`);
+    parts.push(`hd_encrypted_check=${hostChecks.hd_encrypted}`);
+    parts.push(`screenlock_check=${hostChecks.screenlock}`);
+    parts.push(`code_scanner_enabled=${hostChecks.code_scanner_enabled}`);
     if (hostChecks.response_actions) parts.push(`response_actions=${responseActionMode}`);
     if (hostChecks.log_forwarding && logForwardingEndpoint.trim()) parts.push(`log_forwarding=${logForwardingEndpoint.trim()}`);
 
