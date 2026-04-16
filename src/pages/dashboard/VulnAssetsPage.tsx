@@ -1569,7 +1569,7 @@ const VulnAssetsPage = () => {
                 <Label className="text-xs font-medium">Checks to Enable</Label>
                 <div className="grid grid-cols-2 gap-2">
                   {HOST_CHECK_OPTIONS.map(check => (
-                    <div key={check.id} className={check.id === 'response_actions' ? 'col-span-2' : check.id === 'log_forwarding' && hostChecks.log_forwarding ? 'col-span-2' : ''}>
+                    <div key={check.id}>
                       <label
                         className={`flex items-center gap-3 rounded-lg border border-border px-3 py-2.5 transition-colors ${check.disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-muted/50'}`}
                       >
