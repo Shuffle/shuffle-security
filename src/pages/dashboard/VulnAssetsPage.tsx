@@ -1046,7 +1046,7 @@ const VulnAssetsPage = () => {
                       </Tooltip>
                     </TooltipProvider>
                     {/* Actions popover */}
-                    <div className="flex items-center justify-end" onClick={e => e.stopPropagation()}>
+                    <div className="flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}>
                       {responseActionsOn ? (
                       <Popover onOpenChange={(open) => { if (open) hydrateHost(host.uuid); }}>
                         <PopoverTrigger asChild>
