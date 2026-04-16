@@ -45,9 +45,12 @@ const HOST_CHECK_OPTIONS = [
   { id: 'hd_encrypted' as const, label: 'HD Encrypted', description: 'Check if disk encryption is enabled (FileVault, BitLocker, LUKS)', icon: <HardDrive size={16} />, disabled: false },
   { id: 'screenlock' as const, label: 'Screenlock Enabled', description: 'Verify automatic screen lock is configured with max 15 min idle time', icon: <Lock size={16} />, disabled: false },
   { id: 'installed_software' as const, label: 'Installed Software', description: 'Inventory of installed applications and versions', icon: <Package size={16} />, disabled: false },
-  { id: 'log_forwarding' as const, label: 'Log Forwarding', description: 'Forward host logs to a remote endpoint for centralized collection', icon: <Send size={16} />, disabled: true },
+  { id: 'log_forwarding' as const, label: 'Active Monitoring', description: 'Active monitoring of host activity (not generally available yet)', icon: <Send size={16} />, disabled: true },
   { id: 'response_actions' as const, label: 'Response Actions', description: 'Enable automated response actions on this host', icon: <Zap size={16} />, disabled: false },
 ];
+
+/** Single source of truth for active monitoring (formerly log forwarding) status */
+const isActiveMonitoringEnabled = (host: { log_forwarding?: string }): boolean => !!host.log_forwarding;
 
 interface SensorHost {
   arch: string;
@@ -896,7 +899,7 @@ const VulnAssetsPage = () => {
               <TooltipProvider delayDuration={200}><Tooltip><TooltipTrigger asChild><span className="flex justify-center cursor-pointer" onClick={() => toggleSort('screenlock')}><Lock size={13} className="text-muted-foreground" /></span></TooltipTrigger><TooltipContent side="bottom" className="max-w-[200px]"><p className="font-semibold text-xs">Screenlock{sortArrow('screenlock')}</p><p className="text-[0.65rem] text-muted-foreground">Click to sort</p></TooltipContent></Tooltip></TooltipProvider>
               <TooltipProvider delayDuration={200}><Tooltip><TooltipTrigger asChild><span className="flex justify-center cursor-pointer" onClick={() => toggleSort('software')}><Package size={13} className="text-muted-foreground" /></span></TooltipTrigger><TooltipContent side="bottom" className="max-w-[200px]"><p className="font-semibold text-xs">Software{sortArrow('software')}</p><p className="text-[0.65rem] text-muted-foreground">Click to sort by count</p></TooltipContent></Tooltip></TooltipProvider>
               <TooltipProvider delayDuration={200}><Tooltip><TooltipTrigger asChild><span className="flex justify-center cursor-pointer" onClick={() => toggleSort('response')}><Zap size={13} className="text-muted-foreground" /></span></TooltipTrigger><TooltipContent side="bottom" className="max-w-[200px]"><p className="font-semibold text-xs">Response Actions{sortArrow('response')}</p><p className="text-[0.65rem] text-muted-foreground">Click to sort</p></TooltipContent></Tooltip></TooltipProvider>
-              <TooltipProvider delayDuration={200}><Tooltip><TooltipTrigger asChild><span className="flex justify-center cursor-pointer" onClick={() => toggleSort('logfwd')}><Send size={13} className="text-muted-foreground" /></span></TooltipTrigger><TooltipContent side="bottom" className="max-w-[200px]"><p className="font-semibold text-xs">Log Forwarding{sortArrow('logfwd')}</p><p className="text-[0.65rem] text-muted-foreground">Click to sort</p></TooltipContent></Tooltip></TooltipProvider>
+              <TooltipProvider delayDuration={200}><Tooltip><TooltipTrigger asChild><span className="flex justify-center cursor-pointer" onClick={() => toggleSort('logfwd')}><Send size={13} className="text-muted-foreground" /></span></TooltipTrigger><TooltipContent side="bottom" className="max-w-[200px]"><p className="font-semibold text-xs">Active Monitoring{sortArrow('logfwd')}</p><p className="text-[0.65rem] text-muted-foreground">Not generally available yet</p></TooltipContent></Tooltip></TooltipProvider>
               <span className="text-xs font-semibold text-muted-foreground cursor-pointer select-none" onClick={() => toggleSort('group')}>Group{sortArrow('group')}</span>
               <span className="text-xs font-semibold text-muted-foreground cursor-pointer select-none" onClick={() => toggleSort('checkin')}>Last Check-in{sortArrow('checkin')}</span>
               <span className="text-xs font-semibold text-muted-foreground">Actions</span>
@@ -913,7 +916,7 @@ const VulnAssetsPage = () => {
               const responseActionsRaw = (host as any).response_actions as string | undefined;
               const responseActionsOn = !!responseActionsRaw;
               const responseActionsMode = responseActionsRaw ? (responseActionsRaw.toLowerCase().includes('full') ? 'full' : 'controlled') : null;
-              const logForwardingOn = !!host.log_forwarding;
+              const logForwardingOn = isActiveMonitoringEnabled(host);
               const isExpanded = expandedHosts.has(host.uuid);
               const toggleExpanded = () => {
                 setExpandedHosts(prev => {
@@ -975,7 +978,7 @@ const VulnAssetsPage = () => {
                       tip={responseActionsOn ? `Response actions: ${responseActionsMode === 'full' ? 'Full control (RCE)' : 'Controlled'}` : 'Response actions not enabled'}
                       color={responseActionsMode === 'full' ? 'bg-[hsl(var(--severity-high))]' : 'bg-green-500'}
                     />
-                    <CheckDot on={logForwardingOn} tip={logForwardingOn ? `Log forwarding: ${host.log_forwarding}` : 'Log forwarding not enabled'} />
+                    <CheckDot on={logForwardingOn} tip={logForwardingOn ? `Active monitoring: ${host.log_forwarding}` : 'Active monitoring — not generally available yet'} />
                     <span className="text-xs text-muted-foreground truncate">{host.groupName}</span>
                     <div className="flex items-center gap-1.5">
                       <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${isRecent ? 'bg-green-500' : 'bg-muted-foreground/40'}`} />
@@ -1261,7 +1264,7 @@ const VulnAssetsPage = () => {
                         {host.log_forwarding && (
                           <div className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/30 px-2.5 py-1.5 text-xs font-medium text-muted-foreground">
                             <Send size={13} />
-                            Log Forwarding: {host.log_forwarding}
+                            Active Monitoring: {host.log_forwarding}
                           </div>
                         )}
                       </div>
