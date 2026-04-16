@@ -924,18 +924,21 @@ const VulnAssetsPage = () => {
                 });
                 setSoftwareFilter('');
               };
-              const CheckDot = ({ on, tip, color }: { on: boolean; tip: string; color?: string }) => (
+              const CheckDot = ({ on, tip, color, state }: { on: boolean; tip: string; color?: string; state?: 'on' | 'off' | 'empty' }) => {
+                const dotColor = state === 'off' ? 'bg-[hsl(var(--severity-critical))]' : on ? (color || 'bg-green-500') : 'bg-muted-foreground/30';
+                return (
                 <TooltipProvider delayDuration={200}>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <span className="flex justify-center">
-                        <div className={`w-2.5 h-2.5 rounded-full ${on ? (color || 'bg-green-500') : 'bg-muted-foreground/30'}`} />
+                        <div className={`w-2.5 h-2.5 rounded-full ${dotColor}`} />
                       </span>
                     </TooltipTrigger>
                     <TooltipContent>{tip}</TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               );
+              };
               return (
                 <div key={host.uuid}>
                   <div
