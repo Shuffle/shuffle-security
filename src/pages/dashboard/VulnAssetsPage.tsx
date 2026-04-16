@@ -1246,15 +1246,14 @@ const VulnAssetsPage = () => {
 
                       {/* Compliance summary */}
                       <div className="flex flex-wrap gap-3 mb-4">
-                        <div className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium ${hdEncrypted ? 'border-green-500/30 bg-green-500/10 text-green-600 dark:text-green-400' : 'border-orange-500/30 bg-orange-500/10 text-orange-600 dark:text-orange-400'}`}>
-                          {hdEncrypted ? <ShieldCheck size={13} /> : <ShieldX size={13} />}
-                          Disk Encryption: {hdEncrypted ? 'Enabled' : 'Disabled'}
+                        <div className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium ${hdState === 'on' ? 'border-green-500/30 bg-green-500/10 text-green-600 dark:text-green-400' : hdState === 'off' ? 'border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400' : 'border-border bg-muted/30 text-muted-foreground'}`}>
+                          {hdState === 'on' ? <ShieldCheck size={13} /> : <ShieldX size={13} />}
+                          Disk Encryption: {hdState === 'on' ? 'Enabled' : hdState === 'off' ? 'Disabled' : 'Not checked'}
                         </div>
-                        <div className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium ${screenlockOn ? 'border-green-500/30 bg-green-500/10 text-green-600 dark:text-green-400' : 'border-orange-500/30 bg-orange-500/10 text-orange-600 dark:text-orange-400'}`}>
+                        <div className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium ${screenlockState === 'on' ? 'border-green-500/30 bg-green-500/10 text-green-600 dark:text-green-400' : screenlockState === 'off' ? 'border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400' : 'border-border bg-muted/30 text-muted-foreground'}`}>
                           <Lock size={13} />
-                          Screen Lock: {screenlockOn ? 'Enabled' : 'Disabled'}
+                          Screen Lock: {screenlockState === 'on' ? 'Enabled' : screenlockState === 'off' ? 'Disabled' : 'Not checked'}
                         </div>
-                        <div className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/30 px-2.5 py-1.5 text-xs font-medium text-muted-foreground">
                           <Zap size={13} />
                           Elevated Access: {host.elevated_access ? 'Yes' : 'No'}
                         </div>
