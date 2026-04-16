@@ -65,6 +65,12 @@ const AdminPage = () => {
   const [orgImage, setOrgImage] = useState('');
   const [orgRegionUrl, setOrgRegionUrl] = useState('');
 
+  // Track original values to detect changes
+  const [originalName, setOriginalName] = useState('');
+  const [originalDescription, setOriginalDescription] = useState('');
+  const [originalImage, setOriginalImage] = useState('');
+  const [originalRegionUrl, setOriginalRegionUrl] = useState('');
+
   // Sync tab with route
   useEffect(() => {
     setActiveTab(getTabFromPath());
@@ -91,16 +97,36 @@ const AdminPage = () => {
         if (!response.ok) throw new Error('Failed to fetch organization details');
 
         const data = await response.json();
-        setOrgName(data.name || '');
-        setOrgDescription(data.description || '');
-        setOrgImage(data.image || '');
-        setOrgRegionUrl(data.region_url || '');
+        const name = data.name || '';
+        const description = data.description || '';
+        const image = data.image || '';
+        const regionUrl = data.region_url || '';
+        
+        setOrgName(name);
+        setOrgDescription(description);
+        setOrgImage(image);
+        setOrgRegionUrl(regionUrl);
+        
+        setOriginalName(name);
+        setOriginalDescription(description);
+        setOriginalImage(image);
+        setOriginalRegionUrl(regionUrl);
       } catch (err) {
         // Fallback to userInfo
-        setOrgName(userInfo?.active_org?.name || '');
+        const name = userInfo?.active_org?.name || '';
+        const image = userInfo?.active_org?.image || '';
+        const regionUrl = userInfo?.active_org?.region_url || '';
+        
+        setOrgName(name);
         setOrgDescription('');
-        setOrgImage(userInfo?.active_org?.image || '');
-        setOrgRegionUrl(userInfo?.active_org?.region_url || '');
+        setOrgImage(image);
+        setOrgRegionUrl(regionUrl);
+        
+        setOriginalName(name);
+        setOriginalDescription('');
+        setOriginalImage(image);
+        setOriginalRegionUrl(regionUrl);
+        
         setError(err instanceof Error ? err.message : 'Failed to load');
       } finally {
         setLoading(false);
@@ -115,6 +141,14 @@ const AdminPage = () => {
     setSaving(true);
 
     try {
+      // Build payload with only changed fields + org_id
+      const payload: Record<string, string> = { org_id: orgId };
+      
+      if (orgName !== originalName) payload.name = orgName;
+      if (orgDescription !== originalDescription) payload.description = orgDescription;
+      if (orgImage !== originalImage) payload.image = orgImage;
+      if (orgRegionUrl !== originalRegionUrl) payload.region_url = orgRegionUrl;
+
       const response = await fetch(getApiUrl(`/api/v1/orgs/${orgId}`), {
         method: 'POST',
         credentials: 'include',
@@ -122,18 +156,19 @@ const AdminPage = () => {
           ...getAuthHeader(),
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          name: orgName,
-          description: orgDescription,
-          image: orgImage,
-          region_url: orgRegionUrl,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
         throw new Error(data.reason || 'Failed to update organization');
       }
+
+      // Update original values to current values
+      setOriginalName(orgName);
+      setOriginalDescription(orgDescription);
+      setOriginalImage(orgImage);
+      setOriginalRegionUrl(orgRegionUrl);
 
       toast.success('Organization updated successfully');
       await refreshUserInfo();
