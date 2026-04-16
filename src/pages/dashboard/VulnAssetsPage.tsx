@@ -537,6 +537,9 @@ const VulnAssetsPage = () => {
     return sortAsc ? cmp : -cmp;
   });
 
+/** Single source of truth for active monitoring (formerly log forwarding) status */
+const isActiveMonitoringEnabled = (host: { log_forwarding?: string }): boolean => !!host.log_forwarding;
+
 
   const loadGroups = useCallback(async () => {
     setGroupsLoading(true);
