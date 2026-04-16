@@ -596,6 +596,7 @@ const VulnAssetsPage = () => {
 
     if (hostPlatform === 'windows') {
       parts.push('os=windows');
+      if (!winRunAsAdmin) parts.push('admin=false');
       const headers = selectedGroup?.auth ? `-H "Auth: ${selectedGroup.auth}"` : '';
       const authHeader = selectedGroup?.auth ? ` -Headers @{'Auth'='${selectedGroup.auth}'}` : '';
       return `powershell -ExecutionPolicy Bypass -Command "& {iex (irm '${downloadUrl}?${parts.join('&')}'${authHeader ? ` -Headers @{'Auth'='${selectedGroup.auth}'}` : ''})}"`.replace(/  +/g, ' ');
@@ -1537,7 +1538,15 @@ const VulnAssetsPage = () => {
                       {p.label}
                     </Button>
                   ))}
+              </div>
+
+              {/* Run as Admin toggle – Windows only */}
+              {hostPlatform === 'windows' && (
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-medium">Run as Administrator</Label>
+                  <Switch checked={winRunAsAdmin} onCheckedChange={setWinRunAsAdmin} />
                 </div>
+              )}
               </div>
 
               {installMode === 'easy' ? (
