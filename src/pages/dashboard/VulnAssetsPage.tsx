@@ -905,8 +905,10 @@ const VulnAssetsPage = () => {
             {allHosts.map(host => {
               const checkinDate = host.checkin ? new Date(host.checkin * 1000) : null;
               const isRecent = checkinDate ? (Date.now() - checkinDate.getTime()) < 5 * 60 * 1000 : false;
-              const hdEncrypted = host.hd_encrypted === true || host.hd_encrypted === 'true';
-              const screenlockOn = host.automatic_screen_lock_enabled === true || host.automatic_screen_lock_enabled === 'true';
+              const hdState: 'on' | 'off' | 'empty' = (host.hd_encrypted === true || host.hd_encrypted === 'true') ? 'on' : (host.hd_encrypted === false || host.hd_encrypted === 'false' || host.hd_encrypted === 'FALSE') ? 'off' : 'empty';
+              const hdEncrypted = hdState === 'on';
+              const screenlockState: 'on' | 'off' | 'empty' = (host.automatic_screen_lock_enabled === true || host.automatic_screen_lock_enabled === 'true') ? 'on' : (host.automatic_screen_lock_enabled === false || host.automatic_screen_lock_enabled === 'false' || host.automatic_screen_lock_enabled === 'FALSE') ? 'off' : 'empty';
+              const screenlockOn = screenlockState === 'on';
               const softwareCount = Array.isArray(host.installed_software) ? host.installed_software.length : 0;
               const responseActionsRaw = (host as any).response_actions as string | undefined;
               const responseActionsOn = !!responseActionsRaw;
