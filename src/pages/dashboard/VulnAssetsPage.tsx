@@ -53,6 +53,12 @@ const HOST_CHECK_OPTIONS = [
 /** Single source of truth for active monitoring (formerly log forwarding) status */
 const isActiveMonitoringEnabled = (host: { log_forwarding?: string }): boolean => !!host.log_forwarding;
 
+interface CodeScannerProject {
+  path: string;
+  type: string;
+  packages: { name: string; version: string }[];
+}
+
 interface SensorHost {
   arch: string;
   automatic_screen_lock_enabled: boolean | string;
@@ -61,6 +67,7 @@ interface SensorHost {
   hd_encrypted: boolean | string;
   hostname: string;
   installed_software: { name: string; [key: string]: unknown }[];
+  code_scanner?: CodeScannerProject[];
   log_forwarding: string;
   os: string;
   sensor_mode: boolean;
@@ -194,6 +201,8 @@ const VulnAssetsPage = () => {
   const [customAction, setCustomAction] = useState('');
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [softwareFilter, setSoftwareFilter] = useState('');
+  const [codeScanFilter, setCodeScanFilter] = useState('');
+  const [expandedCodePaths, setExpandedCodePaths] = useState<Set<string>>(new Set());
 
   // Hydrate actionHistoryMap from localStorage for a single host (called lazily on popover open)
   const hydrateHost = useCallback((hostUuid: string) => {
