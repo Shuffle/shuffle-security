@@ -52,13 +52,13 @@ The `--response_actions` flag controls the level of access:
 
 Once deployed, each host is evaluated against five compliance checks:
 
-| Check | What It Monitors |
-|-------|------------------|
-| **Encryption** | Disk encryption status (BitLocker, FileVault, LUKS) |
-| **Screenlock** | Whether a 15-minute idle screenlock policy is enforced |
-| **Software** | Installed software inventory |
-| **Response Actions** | Whether the host accepts remote commands |
-| **Active Monitoring** | Active monitoring of host activity (not generally available yet) |
+| Check | What It Collects | Source on Host |
+|-------|-------------------|----------------|
+| **Encryption** | Disk encryption status — whether BitLocker (Windows), FileVault (macOS), or LUKS/dm-crypt (Linux) is enabled on the primary disk | `manage-bde -status` (Windows), `fdesetup status` (macOS), `lsblk --fs` / `dmsetup status` (Linux) |
+| **Screenlock** | Whether an idle screenlock policy is enforced within 15 minutes — checks OS-level power/lock settings | Registry `HKCU\...\ScreenSaverIsSecure` + timeout (Windows), `sysadminctl -screenLock status` (macOS), `gsettings` / `xdg-screensaver` (Linux) |
+| **Software** | Full list of installed applications with name and version — used for vulnerability correlation and inventory audits | `wmic product` / registry uninstall keys (Windows), `system_profiler SPApplicationsDataType` (macOS), `dpkg -l` / `rpm -qa` (Linux) |
+| **Response Actions** | Whether the agent is authorized to accept and execute remote commands from Shuffle Core | Agent startup flag `--response_actions=full` — reports capability on each check-in |
+| **Active Monitoring** | Continuous monitoring of host activity such as process creation, file changes, and network connections *(not generally available yet)* | OS audit subsystem — e.g., `auditd` (Linux), ETW (Windows) |
 
 Each check is shown as a status dot in the host table — green for passing, orange for partial, and grey for disabled or unavailable.
 
