@@ -1374,6 +1374,85 @@ const VulnAssetsPage = () => {
                           </>
                         )}
                       </div>
+
+                      {/* Code Scanning */}
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <FileCode size={14} className="text-muted-foreground" />
+                          <span className="text-xs font-semibold text-foreground">Code Scanning</span>
+                          {Array.isArray(host.code_scanner) && host.code_scanner.length > 0 && (
+                            <span className="text-[0.65rem] text-muted-foreground">({host.code_scanner.length} projects)</span>
+                          )}
+                        </div>
+                        {!Array.isArray(host.code_scanner) || host.code_scanner.length === 0 ? (
+                          <p className="text-xs text-muted-foreground italic">No code scanning data collected for this host.</p>
+                        ) : (
+                          <>
+                            <Input
+                              placeholder="Filter by path, type, or package name..."
+                              value={codeScanFilter}
+                              onChange={(e) => setCodeScanFilter(e.target.value)}
+                              className="h-7 text-xs mb-1"
+                            />
+                            {(() => {
+                              const q = codeScanFilter.toLowerCase();
+                              const filtered = host.code_scanner.filter((proj) => {
+                                if (!q) return true;
+                                if (proj.path.toLowerCase().includes(q)) return true;
+                                if (proj.type.toLowerCase().includes(q)) return true;
+                                return proj.packages?.some(p => p.name.toLowerCase().includes(q) || p.version.toLowerCase().includes(q));
+                              });
+                              return (
+                                <div className="rounded-md border border-border overflow-hidden max-h-[340px] overflow-y-auto">
+                                  {filtered.length === 0 ? (
+                                    <p className="px-3 py-3 text-center text-xs text-muted-foreground italic">No matches</p>
+                                  ) : filtered.map((proj, pi) => {
+                                    const isExpanded = expandedCodePaths.has(proj.path);
+                                    const pkgCount = proj.packages?.length || 0;
+                                    return (
+                                      <div key={pi} className="border-b border-border last:border-b-0">
+                                        <button
+                                          onClick={() => setExpandedCodePaths(prev => {
+                                            const next = new Set(prev);
+                                            if (next.has(proj.path)) next.delete(proj.path); else next.add(proj.path);
+                                            return next;
+                                          })}
+                                          className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-muted/20 transition-colors"
+                                        >
+                                          {isExpanded ? <ChevronDown size={12} className="text-muted-foreground shrink-0" /> : <ChevronRight size={12} className="text-muted-foreground shrink-0" />}
+                                          <span className="text-xs font-mono font-medium text-foreground truncate flex-1">{proj.path}</span>
+                                          <span className="text-[0.65rem] px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0">{proj.type}</span>
+                                          <span className="text-[0.65rem] text-muted-foreground shrink-0">{pkgCount} pkg{pkgCount !== 1 ? 's' : ''}</span>
+                                        </button>
+                                        {isExpanded && pkgCount > 0 && (
+                                          <div className="bg-muted/10">
+                                            <table className="w-full text-xs">
+                                              <thead className="bg-muted/40 sticky top-0">
+                                                <tr>
+                                                  <th className="text-left px-3 py-1.5 font-semibold text-muted-foreground">Name</th>
+                                                  <th className="text-left px-3 py-1.5 font-semibold text-muted-foreground">Version</th>
+                                                </tr>
+                                              </thead>
+                                              <tbody className="divide-y divide-border">
+                                                {proj.packages.map((pkg, ki) => (
+                                                  <tr key={ki} className="hover:bg-muted/20">
+                                                    <td className="px-3 py-1.5 font-medium text-foreground">{pkg.name || '—'}</td>
+                                                    <td className="px-3 py-1.5 font-mono text-muted-foreground">{pkg.version || '—'}</td>
+                                                  </tr>
+                                                ))}
+                                              </tbody>
+                                            </table>
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              );
+                            })()}
+                          </>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
