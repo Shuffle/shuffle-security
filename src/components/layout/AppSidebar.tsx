@@ -1082,7 +1082,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
         >
           <MenuItem
             component={Link}
-            to="/users"
+            to="/admin"
             onClick={() => setUserMenuAnchor(null)}
             sx={{
               py: 1.25,

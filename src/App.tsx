@@ -26,6 +26,7 @@ import ThreatFeedsPage from '@/pages/dashboard/ThreatFeedsPage';
 import CustomFieldsPage from '@/pages/dashboard/CustomFieldsPage';
 import ResponseActionsPage from '@/pages/dashboard/ResponseActionsPage';
 import UsersPage from '@/pages/dashboard/UsersPage';
+import AdminPage from '@/pages/dashboard/AdminPage';
 import OrganizationsPage from '@/pages/dashboard/OrganizationsPage';
 import SettingsPage from '@/pages/dashboard/SettingsPage';
 import OrgPreferencesPage from '@/pages/dashboard/OrgPreferencesPage';
@@ -143,6 +144,9 @@ const ThemedApp = () => {
               <Route path="/infrastructure" element={<InfrastructurePage />} />
               <Route path="/infrastructure/flows/:flowId" element={<DataFlowDetailPage />} />
               <Route path="/users" element={<UsersPage />} />
+              <Route path="/admin" element={<AdminPage />} />
+              <Route path="/admin/users" element={<AdminPage />} />
+              <Route path="/admin/tenants" element={<AdminPage />} />
               <Route path="/organizations" element={<OrganizationsPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/preferences" element={<OrgPreferencesPage />} />
