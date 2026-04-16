@@ -1381,7 +1381,11 @@ const VulnAssetsPage = () => {
                                       {filtered.length === 0 ? (
                                         <tr><td colSpan={3} className="px-3 py-3 text-center text-muted-foreground italic">No matches</td></tr>
                                       ) : filtered.map((sw, idx) => (
-                                        <tr key={idx} className="hover:bg-muted/20">
+                                        <tr
+                                          key={idx}
+                                          className="hover:bg-muted/20 cursor-pointer"
+                                          onClick={() => sw.name && window.open(`/software/${encodeURIComponent(sw.name)}`, '_blank')}
+                                        >
                                           <td className="px-3 py-1.5 font-medium text-foreground">{sw.name || '—'}</td>
                                           <td className="px-3 py-1.5 font-mono text-muted-foreground">{(sw.version as string) || '—'}</td>
                                           <td className="px-3 py-1.5 text-muted-foreground">{(sw.source as string) || '—'}</td>
@@ -1469,7 +1473,11 @@ const VulnAssetsPage = () => {
                                               </thead>
                                               <tbody className="divide-y divide-border">
                                                 {proj.packages.map((pkg, ki) => (
-                                                  <tr key={ki} className="hover:bg-muted/20">
+                                                  <tr
+                                                    key={ki}
+                                                    className="hover:bg-muted/20 cursor-pointer"
+                                                    onClick={() => pkg.name && window.open(`/packages/${encodeURIComponent(pkg.name)}`, '_blank')}
+                                                  >
                                                     <td className="px-3 py-1.5 font-medium text-foreground">{pkg.name || '—'}</td>
                                                     <td className="px-3 py-1.5 font-mono text-muted-foreground">{pkg.version || '—'}</td>
                                                   </tr>
