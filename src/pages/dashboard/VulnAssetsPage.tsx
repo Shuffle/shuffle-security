@@ -967,8 +967,8 @@ const VulnAssetsPage = () => {
                         );
                       })()}
                     </div>
-                    <CheckDot on={hdEncrypted} tip={hdEncrypted ? 'Disk encryption enabled' : 'Disk encryption not enabled'} />
-                    <CheckDot on={screenlockOn} tip={screenlockOn ? 'Screenlock enabled' : 'Screenlock not enabled'} />
+                    <CheckDot on={hdEncrypted} state={hdState} tip={hdState === 'on' ? 'Disk encryption enabled' : hdState === 'off' ? 'Disk encryption disabled' : 'Disk encryption not checked'} />
+                    <CheckDot on={screenlockOn} state={screenlockState} tip={screenlockState === 'on' ? 'Screenlock enabled' : screenlockState === 'off' ? 'Screenlock disabled' : 'Screenlock not checked'} />
                     <CheckDot on={softwareCount > 0} tip={softwareCount > 0 ? `${softwareCount} packages installed` : 'Software not collected'} />
                     <CheckDot
                       on={responseActionsOn}
