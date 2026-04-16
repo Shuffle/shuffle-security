@@ -1382,13 +1382,13 @@ const VulnAssetsPage = () => {
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
                           <FileCode size={14} className="text-muted-foreground" />
-                          <span className="text-xs font-semibold text-foreground">Code Scanning</span>
+                          <span className="text-xs font-semibold text-foreground">Code Package Scanner</span>
                           {Array.isArray(host.code_scanner) && host.code_scanner.length > 0 && (
                             <span className="text-[0.65rem] text-muted-foreground">({host.code_scanner.length} projects)</span>
                           )}
                         </div>
                         {!Array.isArray(host.code_scanner) || host.code_scanner.length === 0 ? (
-                          <p className="text-xs text-muted-foreground italic">No code scanning data collected for this host.</p>
+                          <p className="text-xs text-muted-foreground italic">No code package scanning data collected for this host.</p>
                         ) : (
                           <>
                             <Input
