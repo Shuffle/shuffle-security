@@ -10,7 +10,7 @@ Traditional security tools give you visibility at the network or cloud layer, bu
 
 This gives your security team:
 
-- **Real-time compliance checks** — encryption status, screenlock policies, software inventory, log forwarding, and response action readiness
+- **Real-time compliance checks** — encryption status, screenlock policies, software inventory, active monitoring, and response action readiness
 - **Direct endpoint interaction** — execute commands and response actions on hosts without switching tools
 - **Centralized visibility** — see all monitored hosts across your environment in one place
 
@@ -58,7 +58,7 @@ Once deployed, each host is evaluated against five compliance checks:
 | **Screenlock** | Whether a 15-minute idle screenlock policy is enforced |
 | **Software** | Installed software inventory |
 | **Response Actions** | Whether the host accepts remote commands |
-| **Log Forwarding** | Whether logs are being forwarded to your SIEM |
+| **Active Monitoring** | Active monitoring of host activity (not generally available yet) |
 
 Each check is shown as a status dot in the host table — green for passing, orange for partial, and grey for disabled or unavailable.
 
