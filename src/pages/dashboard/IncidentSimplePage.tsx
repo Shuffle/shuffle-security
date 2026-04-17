@@ -125,21 +125,7 @@ const IncidentSimplePage = () => {
   // `value`), NOT inside the OCSF payload — capture it separately so the
   // Share dialog can build a working public link.
   const [publicAuthorization, setPublicAuthorization] = useState<string>('');
-  // Org-configured kanban lanes. Memoised lane keys keep the getLane call cheap.
-  const taskStatuses = useTaskStatuses();
-  const laneKeys = useMemo(() => taskStatuses.map((s) => s.key), [taskStatuses]);
   const [tasks, setTasks] = useState<IncidentTask[]>([]);
-  const [newTaskTitle, setNewTaskTitle] = useState('');
-  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
-  const [hoverLane, setHoverLane] = useState<LaneKey | null>(null);
-  // Insertion index within the hovered lane — `null` means "append at end".
-  // Used to render a drop indicator between cards and to compute the final
-  // ordering when the drop fires.
-  const [dropIndex, setDropIndex] = useState<number | null>(null);
-  // Single-task edit modal
-  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
-  // Delete confirmation
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Debounces network writes for meta-patch (severity / status / assignee).
   // The local state still updates instantly, but the actual fetch is coalesced
