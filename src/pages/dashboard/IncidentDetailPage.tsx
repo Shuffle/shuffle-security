@@ -3278,7 +3278,7 @@ const IncidentDetailPage = () => {
           tasks={tasks}
           onTasksChange={setTasks}
           incidentId={id || 'new'}
-          currentUser={username || 'You'}
+          currentUser={currentUsername || 'You'}
         />
       )}
 
