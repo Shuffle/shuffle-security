@@ -156,6 +156,7 @@ const HostTerminalPage = () => {
   const pollingActiveRef = useRef<Map<string, boolean>>(new Map());
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [pendingDisableRce, setPendingDisableRce] = useState<null | { actionId: string; actionName: string; isPredefined: boolean }>(null);
 
 
   const hostActionablePerms = DEFAULT_AGENT_PERMISSIONS
