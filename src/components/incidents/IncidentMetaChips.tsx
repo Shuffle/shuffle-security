@@ -30,6 +30,9 @@ export interface IncidentMetaChipsProps {
   /** Cap each chip's max width so long usernames / status labels don't blow
    *  out a tight header. Defaults to 180px on the assignee chip. */
   assigneeMaxWidth?: number;
+  /** Force everything onto a single line — no wrap, no bullet separators,
+   *  ellipsis on overflow. Used by the simplified view's narrow sidebar. */
+  singleLine?: boolean;
 }
 
 export const IncidentMetaChips = ({
@@ -42,6 +45,7 @@ export const IncidentMetaChips = ({
   onResolveRequest,
   readOnly = false,
   assigneeMaxWidth = 180,
+  singleLine = false,
 }: IncidentMetaChipsProps) => {
   const { users, loading: usersLoading } = useUsers();
 
@@ -52,13 +56,15 @@ export const IncidentMetaChips = ({
       sx={{
         display: 'flex',
         alignItems: 'center',
-        gap: 1,
-        flexWrap: 'wrap',
+        gap: singleLine ? 0.5 : 1,
+        flexWrap: singleLine ? 'nowrap' : 'wrap',
+        minWidth: 0,
+        ...(singleLine && { overflow: 'hidden' }),
         ...(readOnly && { pointerEvents: 'none' }),
       }}
     >
       {/* Status */}
-      <FormControl size="small" variant="standard">
+      <FormControl size="small" variant="standard" sx={{ flexShrink: 0, minWidth: 0 }}>
         <Select
           value={status}
           onChange={(e) => {
@@ -121,10 +127,12 @@ export const IncidentMetaChips = ({
         </Select>
       </FormControl>
 
-      <Typography variant="caption" sx={{ color: 'text.disabled' }}>•</Typography>
+      {!singleLine && (
+        <Typography variant="caption" sx={{ color: 'text.disabled' }}>•</Typography>
+      )}
 
       {/* Severity */}
-      <FormControl size="small" variant="standard">
+      <FormControl size="small" variant="standard" sx={{ flexShrink: 0, minWidth: 0 }}>
         <Select
           value={severity}
           onChange={(e) => onSeverityChange(e.target.value)}
@@ -155,10 +163,20 @@ export const IncidentMetaChips = ({
         </Select>
       </FormControl>
 
-      <Typography variant="caption" sx={{ color: 'text.disabled' }}>•</Typography>
+      {!singleLine && (
+        <Typography variant="caption" sx={{ color: 'text.disabled' }}>•</Typography>
+      )}
 
-      {/* Assignee */}
-      <FormControl size="small" variant="standard" sx={{ maxWidth: assigneeMaxWidth }}>
+      {/* Assignee — in singleLine, this shrinks first since usernames vary the most. */}
+      <FormControl
+        size="small"
+        variant="standard"
+        sx={{
+          maxWidth: assigneeMaxWidth,
+          minWidth: 0,
+          ...(singleLine && { flex: '1 1 0' }),
+        }}
+      >
         <Select
           value={assignee || ''}
           onChange={(e) => onAssigneeChange(e.target.value)}

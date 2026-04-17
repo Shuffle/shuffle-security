@@ -531,16 +531,64 @@ const IncidentSimplePage = () => {
         <Paper
           elevation={6}
           sx={{
+            // Top padding leaves room for the absolutely-positioned source app
+            // avatar, which sits half-overlapping the top edge of the paper
+            // (and visually overlaps the page top bar above it).
             p: leftCollapsed ? 1 : 3,
+            pt: leftCollapsed ? 1 : 5,
             borderRadius: 2,
-            position: { md: 'sticky' },
+            position: { xs: 'relative', md: 'sticky' },
             top: { md: 96 },
             bgcolor: 'hsl(var(--card))',
             border: '1px solid hsl(var(--border))',
             transition: 'padding 200ms ease',
-            overflow: 'hidden',
+            // overflow visible so the floating avatar can extend above the paper
+            overflow: 'visible',
           }}
         >
+          {/* Source app icon — absolutely positioned to overlap the top edge of
+              the sidebar (visually overlapping the page top bar above it).
+              A strong visual anchor for "where this came from". Hidden in the
+              collapsed rail since the rail already shows source-related icons. */}
+          {sourceAppImage && !leftCollapsed && (
+            <Tooltip title={incident.source || ''} placement="top">
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: -28,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: 64,
+                  height: 64,
+                  borderRadius: '50%',
+                  bgcolor: 'hsl(var(--card))',
+                  // Thicker ring + outer glow makes the avatar float above the
+                  // panel rather than appear glued to it.
+                  border: '2px solid hsl(var(--border))',
+                  boxShadow: '0 6px 18px hsl(0 0% 0% / 0.35)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  zIndex: 2,
+                  transition: 'transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease',
+                  '&:hover': {
+                    transform: 'translateX(-50%) scale(1.06)',
+                    borderColor: 'hsl(var(--primary) / 0.6)',
+                    boxShadow: '0 8px 22px hsl(var(--primary) / 0.3)',
+                  },
+                }}
+              >
+                <img
+                  src={sourceAppImage}
+                  alt={incident.source || ''}
+                  style={{ width: 44, height: 44, objectFit: 'contain' }}
+                />
+              </Box>
+            </Tooltip>
+          )}
+
           {/* Collapse toggle */}
           <Box
             sx={{
@@ -607,45 +655,9 @@ const IncidentSimplePage = () => {
           ) : (
             // ---- Expanded: full details ----
             <>
-              {/* Source app icon — centered circular avatar at the top of the
-                  sidebar. Acts as a visual anchor for "where this came from".
-                  Hovering scales it slightly and reveals a subtle ring; clicking
-                  opens the source app context if available. */}
-              {sourceAppImage && (
-                <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2, mt: 0.5 }}>
-                  <Tooltip title={incident.source || ''} placement="top">
-                    <Box
-                      sx={{
-                        width: 64,
-                        height: 64,
-                        borderRadius: '50%',
-                        bgcolor: 'hsl(var(--muted) / 0.4)',
-                        border: '2px solid hsl(var(--border))',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        overflow: 'hidden',
-                        cursor: 'pointer',
-                        transition: 'transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease',
-                        '&:hover': {
-                          transform: 'scale(1.06)',
-                          borderColor: 'hsl(var(--primary) / 0.6)',
-                          boxShadow: '0 4px 16px hsl(var(--primary) / 0.25)',
-                        },
-                      }}
-                    >
-                      <img
-                        src={sourceAppImage}
-                        alt={incident.source || ''}
-                        style={{ width: 44, height: 44, objectFit: 'contain' }}
-                      />
-                    </Box>
-                  </Tooltip>
-                </Box>
-              )}
-
-              {/* Editable status / severity / assignee chips — same component as /incidents */}
-              <Box sx={{ mb: 2 }}>
+              {/* Editable status / severity / assignee chips — same component as /incidents.
+                  singleLine + tight maxWidth keeps them on ONE row regardless of username length. */}
+              <Box sx={{ mb: 2, minWidth: 0 }}>
                 <IncidentMetaChips
                   status={incident.status}
                   severity={incident.severity}
@@ -654,7 +666,8 @@ const IncidentSimplePage = () => {
                   onSeverityChange={(v) => saveMetaPatch({ severity: v })}
                   onAssigneeChange={(v) => saveMetaPatch({ assignee: v })}
                   onResolveRequest={() => setShowResolveDialog(true)}
-                  assigneeMaxWidth={160}
+                  assigneeMaxWidth={140}
+                  singleLine
                 />
               </Box>
 
