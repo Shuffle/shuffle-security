@@ -132,7 +132,7 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
                     {(responseActionsRaw || '').toLowerCase().includes('full') ? 'Full control (RCE)' : 'Controlled'}
                   </p>
                 </TooltipTrigger>
-                <TooltipContent side="bottom" align="start" className="max-w-sm">
+                <TooltipContent side="bottom" align="start" className="z-[9999] max-w-sm">
                   <p className="text-[0.65rem] font-mono">response_actions = {String(responseActionsRaw)}</p>
                 </TooltipContent>
               </Tooltip>
