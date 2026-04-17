@@ -167,6 +167,9 @@ export async function loadEntityPreference() {
       if (data?.sidebar_tabs !== undefined) {
         localStorage.setItem(LOCAL_SIDEBAR_TABS_KEY, JSON.stringify(data.sidebar_tabs));
       }
+      if (data?.task_statuses !== undefined) {
+        localStorage.setItem(LOCAL_TASK_STATUSES_KEY, JSON.stringify(normalizeTaskStatuses(data.task_statuses)));
+      }
       listeners.forEach(cb => cb());
     }
     _fetchedFromServer = true;
