@@ -1204,8 +1204,7 @@ const IncidentSimplePage = () => {
       })()}
       {/* Delete confirmation — required so a stray click doesn't drop tasks */}
       <AlertDialog open={!!pendingDeleteId} onOpenChange={(o) => !o && setPendingDeleteId(null)}>
-        {/* z-[1500] so it stacks above the MUI TaskEditDialog (z-index 1400) */}
-        <AlertDialogOverlay className="z-[1500]" />
+        {/* z-[1500] so the confirm sits above the MUI TaskEditDialog (z-index 1400) */}
         <AlertDialogContent className="z-[1500]">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this task?</AlertDialogTitle>
