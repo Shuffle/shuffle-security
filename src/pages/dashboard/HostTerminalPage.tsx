@@ -678,6 +678,13 @@ const HostTerminalPage = () => {
 
       {/* Predefined action chips */}
       <div className="px-6 py-3 flex flex-wrap gap-1.5 border-t border-border/50 shrink-0">
+        <button
+          key="disable_rce"
+          className="px-3 py-1.5 text-xs rounded-md border border-destructive/40 text-destructive hover:bg-destructive/10 transition-colors"
+          onClick={() => executeHostAction('disable_rce', 'Disable RCE', true)}
+        >
+          Disable RCE
+        </button>
         {hostActionablePerms.map(perm => (
           <button
             key={perm.id}
