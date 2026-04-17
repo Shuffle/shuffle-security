@@ -37,6 +37,7 @@ import {
   getOCSFStatus,
 } from '@/config/incidentConfig';
 import { htmlToPlainText, decodeIfBase64, isAIAssignee } from '@/lib/utils';
+import { IncidentActionsMenu } from '@/components/incidents/IncidentActionsMenu';
 
 // ============================================================================
 // Kanban column definition — tasks are grouped into 3 lanes
