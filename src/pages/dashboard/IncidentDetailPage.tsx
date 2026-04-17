@@ -2871,6 +2871,16 @@ const IncidentDetailPage = () => {
                 <LinkIcon sx={{ fontSize: 16, mr: 1 }} />
                 Share
               </MenuItem>
+              {/* Simple view (kanban) */}
+              <MenuItem
+                onClick={() => {
+                  setActionsMenuAnchor(null);
+                  if (incident?.id) navigate(`/incidents-simple/${incident.id}`);
+                }}
+              >
+                <TaskAltIcon sx={{ fontSize: 16, mr: 1 }} />
+                Simple view
+              </MenuItem>
               {/* Visit Source */}
               <MenuItem disabled>
                 <LinkIcon sx={{ fontSize: 16, mr: 1 }} />
