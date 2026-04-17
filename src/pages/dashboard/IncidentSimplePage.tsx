@@ -565,49 +565,64 @@ const IncidentSimplePage = () => {
           ) : (
             // ---- Expanded: full details ----
             <>
-              <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
-                <Chip
-                  size="small"
-                  label={incident.severity.toUpperCase()}
-                  sx={{
-                    bgcolor: `${sevColor}22`,
-                    color: sevColor,
-                    fontWeight: 600,
-                    height: 24,
-                  }}
-                />
-                <Chip
-                  size="small"
-                  icon={<statusInfo.icon size={14} color={statusInfo.color} />}
-                  label={statusInfo.label}
-                  sx={{
-                    bgcolor: statusInfo.bg,
-                    color: statusInfo.color,
-                    fontWeight: 600,
-                    height: 24,
-                    '& .MuiChip-icon': { color: statusInfo.color },
-                  }}
+              {/* Editable status / severity / assignee chips — same component as /incidents */}
+              <Box sx={{ mb: 2 }}>
+                <IncidentMetaChips
+                  status={incident.status}
+                  severity={incident.severity}
+                  assignee={incident.assignee}
+                  onStatusChange={(v) => saveMetaPatch({ status: v })}
+                  onSeverityChange={(v) => saveMetaPatch({ severity: v })}
+                  onAssigneeChange={(v) => saveMetaPatch({ assignee: v })}
+                  onResolveRequest={() => setShowResolveDialog(true)}
+                  assigneeMaxWidth={160}
                 />
               </Box>
 
-              <Typography variant="h5" sx={{ fontWeight: 600, mb: 1, lineHeight: 1.3 }}>
-                {incident.title}
-              </Typography>
-
-              {incident.source && (
-                <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-                  Source · {incident.source}
-                </Typography>
-              )}
+              <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.25, mb: 1 }}>
+                {/* Source app image — replaces the text caption when we found one */}
+                {sourceAppImage ? (
+                  <Tooltip title={incident.source || ''} placement="top">
+                    <Box
+                      sx={{
+                        width: 36,
+                        height: 36,
+                        flexShrink: 0,
+                        borderRadius: 1,
+                        bgcolor: 'hsl(var(--muted) / 0.4)',
+                        border: '1px solid hsl(var(--border))',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <img
+                        src={sourceAppImage}
+                        alt={incident.source || ''}
+                        style={{ width: 28, height: 28, objectFit: 'contain' }}
+                      />
+                    </Box>
+                  </Tooltip>
+                ) : null}
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.3 }}>
+                    {incident.title}
+                  </Typography>
+                  {incident.source && !sourceAppImage && (
+                    <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                      Source · {incident.source}
+                    </Typography>
+                  )}
+                </Box>
+                {isSavingMeta && (
+                  <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                    Saving…
+                  </Typography>
+                )}
+              </Box>
 
               <Divider sx={{ my: 2 }} />
-
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                <PersonIcon sx={{ fontSize: 16, color: 'hsl(var(--muted-foreground))' }} />
-                <Typography variant="body2" sx={{ color: 'hsl(var(--foreground))' }}>
-                  {incident.assignee || 'Unassigned'}
-                </Typography>
-              </Box>
 
               <Typography
                 variant="caption"
