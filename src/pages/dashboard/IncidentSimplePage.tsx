@@ -18,6 +18,8 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import PersonIcon from '@mui/icons-material/Person';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { toast } from 'sonner';
 import { getDatastoreItem, setDatastoreItem, DATASTORE_CATEGORIES } from '@/services/datastore';
 import { useAuth } from '@/context/AuthContext';
@@ -91,6 +93,22 @@ const IncidentSimplePage = () => {
   const [hoverLane, setHoverLane] = useState<LaneKey | null>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const skipNextSaveRef = useRef(true);
+
+  // Persist left-panel collapsed state per-user across sessions.
+  const [leftCollapsed, setLeftCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('incidents-simple:leftCollapsed') === '1';
+    } catch {
+      return false;
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem('incidents-simple:leftCollapsed', leftCollapsed ? '1' : '0');
+    } catch {
+      /* ignore */
+    }
+  }, [leftCollapsed]);
 
   // ==========================================================================
   // Load incident from datastore
@@ -295,114 +313,188 @@ const IncidentSimplePage = () => {
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: { xs: '1fr', md: '380px 1fr' },
+          gridTemplateColumns: {
+            xs: '1fr',
+            md: leftCollapsed ? '64px 1fr' : '380px 1fr',
+          },
           gap: 3,
           alignItems: 'start',
+          transition: 'grid-template-columns 200ms ease',
         }}
       >
         {/* ====================================================================
-            LEFT: Floating paper with incident details
+            LEFT: Floating paper with incident details (collapsible horizontally)
             ==================================================================== */}
         <Paper
           elevation={6}
           sx={{
-            p: 3,
+            p: leftCollapsed ? 1 : 3,
             borderRadius: 2,
             position: { md: 'sticky' },
             top: { md: 96 },
             bgcolor: 'hsl(var(--card))',
             border: '1px solid hsl(var(--border))',
+            transition: 'padding 200ms ease',
+            overflow: 'hidden',
           }}
         >
-          <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
-            <Chip
-              size="small"
-              label={incident.severity.toUpperCase()}
-              sx={{
-                bgcolor: `${sevColor}22`,
-                color: sevColor,
-                fontWeight: 600,
-                height: 24,
-              }}
-            />
-            <Chip
-              size="small"
-              icon={<statusInfo.icon size={14} color={statusInfo.color} />}
-              label={statusInfo.label}
-              sx={{
-                bgcolor: statusInfo.bg,
-                color: statusInfo.color,
-                fontWeight: 600,
-                height: 24,
-                '& .MuiChip-icon': { color: statusInfo.color },
-              }}
-            />
-          </Box>
-
-          <Typography variant="h5" sx={{ fontWeight: 600, mb: 1, lineHeight: 1.3 }}>
-            {incident.title}
-          </Typography>
-
-          {incident.source && (
-            <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-              Source · {incident.source}
-            </Typography>
-          )}
-
-          <Divider sx={{ my: 2 }} />
-
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-            <PersonIcon sx={{ fontSize: 16, color: 'hsl(var(--muted-foreground))' }} />
-            <Typography variant="body2" sx={{ color: 'hsl(var(--foreground))' }}>
-              {incident.assignee || 'Unassigned'}
-            </Typography>
-          </Box>
-
-          <Typography
-            variant="caption"
-            sx={{ color: 'hsl(var(--muted-foreground))', display: 'block', mb: 0.5 }}
-          >
-            Description
-          </Typography>
+          {/* Collapse toggle */}
           <Box
             sx={{
-              maxHeight: 320,
-              overflowY: 'auto',
-              p: 1.5,
-              bgcolor: 'hsl(var(--muted) / 0.3)',
-              borderRadius: 1,
-              border: '1px solid hsl(var(--border))',
-              fontSize: 13,
-              lineHeight: 1.55,
-              whiteSpace: 'pre-wrap',
-              color: 'hsl(var(--foreground))',
+              display: 'flex',
+              justifyContent: leftCollapsed ? 'center' : 'flex-end',
+              mb: leftCollapsed ? 1 : 0,
             }}
           >
-            {incident.description || <em style={{ opacity: 0.6 }}>No description provided.</em>}
+            <Tooltip title={leftCollapsed ? 'Expand details' : 'Collapse details'}>
+              <IconButton
+                size="small"
+                onClick={() => setLeftCollapsed((v) => !v)}
+                sx={{ p: 0.5 }}
+              >
+                {leftCollapsed ? (
+                  <ChevronRightIcon fontSize="small" />
+                ) : (
+                  <ChevronLeftIcon fontSize="small" />
+                )}
+              </IconButton>
+            </Tooltip>
           </Box>
 
-          <Divider sx={{ my: 2 }} />
+          {leftCollapsed ? (
+            // ---- Minimised: just the essentials, vertically stacked ----
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.5 }}>
+              <Tooltip title={`Severity: ${incident.severity}`} placement="right">
+                <Box
+                  sx={{
+                    width: 12,
+                    height: 12,
+                    borderRadius: '50%',
+                    bgcolor: sevColor,
+                  }}
+                />
+              </Tooltip>
+              <Tooltip title={`Status: ${statusInfo.label}`} placement="right">
+                <Box
+                  sx={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: '50%',
+                    bgcolor: statusInfo.bg,
+                    color: statusInfo.color,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <statusInfo.icon size={14} />
+                </Box>
+              </Tooltip>
+              <Tooltip title={incident.assignee || 'Unassigned'} placement="right">
+                <PersonIcon sx={{ fontSize: 18, color: 'hsl(var(--muted-foreground))' }} />
+              </Tooltip>
+              <Tooltip title={`${tasksByLane.done.length}/${tasks.length} tasks done`} placement="right">
+                <Chip
+                  size="small"
+                  label={`${tasksByLane.done.length}/${tasks.length}`}
+                  sx={{ height: 22, fontSize: 11, fontWeight: 600 }}
+                />
+              </Tooltip>
+            </Box>
+          ) : (
+            // ---- Expanded: full details ----
+            <>
+              <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+                <Chip
+                  size="small"
+                  label={incident.severity.toUpperCase()}
+                  sx={{
+                    bgcolor: `${sevColor}22`,
+                    color: sevColor,
+                    fontWeight: 600,
+                    height: 24,
+                  }}
+                />
+                <Chip
+                  size="small"
+                  icon={<statusInfo.icon size={14} color={statusInfo.color} />}
+                  label={statusInfo.label}
+                  sx={{
+                    bgcolor: statusInfo.bg,
+                    color: statusInfo.color,
+                    fontWeight: 600,
+                    height: 24,
+                    '& .MuiChip-icon': { color: statusInfo.color },
+                  }}
+                />
+              </Box>
 
-          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            <Box>
-              <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', display: 'block' }}>
-                Tasks
+              <Typography variant="h5" sx={{ fontWeight: 600, mb: 1, lineHeight: 1.3 }}>
+                {incident.title}
               </Typography>
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                {tasksByLane.done.length}/{tasks.length}
+
+              {incident.source && (
+                <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                  Source · {incident.source}
+                </Typography>
+              )}
+
+              <Divider sx={{ my: 2 }} />
+
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                <PersonIcon sx={{ fontSize: 16, color: 'hsl(var(--muted-foreground))' }} />
+                <Typography variant="body2" sx={{ color: 'hsl(var(--foreground))' }}>
+                  {incident.assignee || 'Unassigned'}
+                </Typography>
+              </Box>
+
+              <Typography
+                variant="caption"
+                sx={{ color: 'hsl(var(--muted-foreground))', display: 'block', mb: 0.5 }}
+              >
+                Description
               </Typography>
-            </Box>
-            <Box sx={{ textAlign: 'right' }}>
-              <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', display: 'block' }}>
-                Created
-              </Typography>
-              <Typography variant="body2">
-                {incident.createdTs
-                  ? new Date(incident.createdTs).toLocaleDateString()
-                  : '—'}
-              </Typography>
-            </Box>
-          </Box>
+              <Box
+                sx={{
+                  maxHeight: 320,
+                  overflowY: 'auto',
+                  p: 1.5,
+                  bgcolor: 'hsl(var(--muted) / 0.3)',
+                  borderRadius: 1,
+                  border: '1px solid hsl(var(--border))',
+                  fontSize: 13,
+                  lineHeight: 1.55,
+                  whiteSpace: 'pre-wrap',
+                  color: 'hsl(var(--foreground))',
+                }}
+              >
+                {incident.description || <em style={{ opacity: 0.6 }}>No description provided.</em>}
+              </Box>
+
+              <Divider sx={{ my: 2 }} />
+
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Box>
+                  <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', display: 'block' }}>
+                    Tasks
+                  </Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                    {tasksByLane.done.length}/{tasks.length}
+                  </Typography>
+                </Box>
+                <Box sx={{ textAlign: 'right' }}>
+                  <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', display: 'block' }}>
+                    Created
+                  </Typography>
+                  <Typography variant="body2">
+                    {incident.createdTs
+                      ? new Date(incident.createdTs).toLocaleDateString()
+                      : '—'}
+                  </Typography>
+                </Box>
+              </Box>
+            </>
+          )}
         </Paper>
 
         {/* ====================================================================
