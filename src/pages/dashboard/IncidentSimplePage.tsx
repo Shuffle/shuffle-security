@@ -127,6 +127,10 @@ const IncidentSimplePage = () => {
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
   const [hoverLane, setHoverLane] = useState<LaneKey | null>(null);
+  // Single-task edit modal
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  // Delete confirmation
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const skipNextSaveRef = useRef(true);
 
