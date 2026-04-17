@@ -3,7 +3,7 @@
  * Provides a convenient interface for components to interact with the datastore
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import {
   setDatastoreItem,
   setDatastoreItems,
@@ -52,9 +52,13 @@ export const useDatastore = ({ category, orgId: overrideOrgId }: UseDatastoreOpt
   const [categoryConfig, setCategoryConfig] = useState<CategoryConfig | null>(null);
   const [totalAmount, setTotalAmount] = useState<number | null>(null);
 
+  // Track hasFetched in a ref so fetchItems' identity stays stable across renders.
+  // Without this, each fetch flips hasFetched -> recreates fetchItems -> retriggers caller's effects.
+  const hasFetchedRef = useRef(false);
+
   const fetchItems = useCallback(async (cursorParam?: string) => {
     // Only show full loading spinner on initial fetch to avoid UI flicker
-    if (!hasFetched) {
+    if (!hasFetchedRef.current) {
       setIsLoading(true);
     }
     setIsRefreshing(true);
@@ -136,8 +140,9 @@ export const useDatastore = ({ category, orgId: overrideOrgId }: UseDatastoreOpt
       setIsLoading(false);
       setIsRefreshing(false);
       setHasFetched(true);
+      hasFetchedRef.current = true;
     }
-  }, [category, hasFetched, overrideOrgId]);
+  }, [category, overrideOrgId]);
 
   const fetchNextPage = useCallback(async () => {
     if (cursor && !isLoading) {
