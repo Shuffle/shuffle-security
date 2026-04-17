@@ -64,7 +64,7 @@ export const IncidentMetaChips = ({
       }}
     >
       {/* Status */}
-      <FormControl size="small" variant="standard">
+      <FormControl size="small" variant="standard" sx={{ flexShrink: 0, minWidth: 0 }}>
         <Select
           value={status}
           onChange={(e) => {
