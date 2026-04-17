@@ -102,6 +102,15 @@ const IncidentSimplePage = () => {
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const skipNextSaveRef = useRef(true);
 
+  // Inline meta editing (severity / status / assignee). The detail page tracks
+  // these in separate "edited*" state — we mirror that here so the chips behave
+  // identically and writes are immediate (no debounce) for snappier feedback.
+  const [showResolveDialog, setShowResolveDialog] = useState(false);
+  const [isSavingMeta, setIsSavingMeta] = useState(false);
+
+  // App logo for the incident source — shared with the detail page.
+  const sourceAppImage = useSourceAppImage(incident?.source);
+
   // Persist left-panel collapsed state per-user across sessions.
   const [leftCollapsed, setLeftCollapsed] = useState<boolean>(() => {
     try {
