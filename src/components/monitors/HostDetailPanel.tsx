@@ -42,10 +42,10 @@ interface HostDetailPanelProps {
   collapsibleSections?: boolean;
 }
 
-const stateOf = (v: boolean | string | undefined): 'on' | 'off' | 'empty' => {
+const stateOf = (v: boolean | string | undefined): 'on' | 'off' => {
   if (v === true || v === 'true') return 'on';
-  if (v === false || v === 'false' || v === 'FALSE') return 'off';
-  return 'empty';
+  // Anything else (false, "false", undefined, null, empty string, missing field) → off
+  return 'off';
 };
 
 export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections = false }: HostDetailPanelProps) => {
