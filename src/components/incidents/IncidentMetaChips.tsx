@@ -127,10 +127,12 @@ export const IncidentMetaChips = ({
         </Select>
       </FormControl>
 
-      <Typography variant="caption" sx={{ color: 'text.disabled' }}>•</Typography>
+      {!singleLine && (
+        <Typography variant="caption" sx={{ color: 'text.disabled' }}>•</Typography>
+      )}
 
       {/* Severity */}
-      <FormControl size="small" variant="standard">
+      <FormControl size="small" variant="standard" sx={{ flexShrink: 0, minWidth: 0 }}>
         <Select
           value={severity}
           onChange={(e) => onSeverityChange(e.target.value)}
@@ -161,10 +163,20 @@ export const IncidentMetaChips = ({
         </Select>
       </FormControl>
 
-      <Typography variant="caption" sx={{ color: 'text.disabled' }}>•</Typography>
+      {!singleLine && (
+        <Typography variant="caption" sx={{ color: 'text.disabled' }}>•</Typography>
+      )}
 
-      {/* Assignee */}
-      <FormControl size="small" variant="standard" sx={{ maxWidth: assigneeMaxWidth }}>
+      {/* Assignee — in singleLine, this shrinks first since usernames vary the most. */}
+      <FormControl
+        size="small"
+        variant="standard"
+        sx={{
+          maxWidth: assigneeMaxWidth,
+          minWidth: 0,
+          ...(singleLine && { flex: '1 1 0' }),
+        }}
+      >
         <Select
           value={assignee || ''}
           onChange={(e) => onAssigneeChange(e.target.value)}
