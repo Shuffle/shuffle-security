@@ -871,6 +871,14 @@ const IncidentSimplePage = () => {
           </Box>
         </Box>
       </Box>
+
+      <ResolveIncidentDialog
+        open={showResolveDialog}
+        onClose={() => setShowResolveDialog(false)}
+        onResolve={handleResolve}
+        incidentTitle={incident.title}
+        isLoading={isSavingMeta}
+      />
     </Box>
   );
 };
