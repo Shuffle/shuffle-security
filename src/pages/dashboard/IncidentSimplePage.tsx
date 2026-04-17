@@ -501,6 +501,37 @@ const IncidentSimplePage = () => {
             Full view
           </Button>
         </Tooltip>
+        {/* Refresh — same UI/behaviour as the Refresh button on /incidents/<id> */}
+        <Tooltip title="Refresh">
+          <span>
+            <IconButton
+              size="small"
+              onClick={async () => {
+                setIsRefreshing(true);
+                await loadIncident(false);
+                setIsRefreshing(false);
+              }}
+              disabled={loading || isRefreshing}
+              sx={{
+                border: '1px solid hsl(var(--border))',
+                borderRadius: 1,
+                width: 36,
+                height: 36,
+              }}
+            >
+              <RefreshIcon
+                fontSize="small"
+                sx={{
+                  animation: isRefreshing ? 'spin 1s linear infinite' : 'none',
+                  '@keyframes spin': {
+                    '0%': { transform: 'rotate(0deg)' },
+                    '100%': { transform: 'rotate(360deg)' },
+                  },
+                }}
+              />
+            </IconButton>
+          </span>
+        </Tooltip>
         <IncidentActionsMenu
           incident={{
             id: incident.id,
