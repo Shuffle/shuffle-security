@@ -96,7 +96,7 @@ export const TaskDateTimePicker = ({ value, onChange }: TaskDateTimePickerProps)
           </Typography>
         </Box>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
+      <PopoverContent className="w-auto p-0 z-[9999]" align="start">
         <Box sx={{ p: 2, bgcolor: 'hsl(var(--popover))', borderRadius: 2 }}>
           <Calendar
             mode="single"
