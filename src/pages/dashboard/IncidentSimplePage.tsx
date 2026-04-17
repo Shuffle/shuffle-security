@@ -131,6 +131,9 @@ const IncidentSimplePage = () => {
   // Manual refresh — distinct from initial load so we don't show the skeleton.
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [incident, setIncident] = useState<IncidentSnapshot | null>(null);
+  // Org-configured kanban lanes. Memoised lane keys keep the getLane call cheap.
+  const taskStatuses = useTaskStatuses();
+  const laneKeys = useMemo(() => taskStatuses.map((s) => s.key), [taskStatuses]);
   const [tasks, setTasks] = useState<IncidentTask[]>([]);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
