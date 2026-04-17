@@ -48,6 +48,7 @@ import {
   RESOLUTION_REASONS,
 } from '@/components/incidents/ResolveIncidentDialog';
 import { TaskEditDialog } from '@/components/incidents/TaskEditDialog';
+import { TaskAssigneeChip } from '@/components/incidents/TaskAssigneeChip';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -142,6 +143,10 @@ const IncidentSimplePage = () => {
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
   const [hoverLane, setHoverLane] = useState<LaneKey | null>(null);
+  // Insertion index within the hovered lane — `null` means "append at end".
+  // Used to render a drop indicator between cards and to compute the final
+  // ordering when the drop fires.
+  const [dropIndex, setDropIndex] = useState<number | null>(null);
   // Single-task edit modal
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   // Delete confirmation
@@ -440,13 +445,59 @@ const IncidentSimplePage = () => {
     setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
   };
 
-  const handleDropToLane = (lane: LaneKey) => {
+  /**
+   * Drop a dragged task into a lane at the optional insertion index.
+   *
+   * The previous implementation only mutated `_lane`, which meant cards always
+   * appended to the end of the column. We now rebuild the global `tasks` array
+   * so the dragged task lands at the requested position relative to the
+   * lane's existing items — enabling manual reordering inside a single lane
+   * (e.g. prioritising "To Do" items) as well as cross-lane moves.
+   */
+  const handleDropToLane = (lane: LaneKey, insertIndex: number | null = null) => {
     if (!draggedTaskId) return;
-    setTasks((prev) =>
-      prev.map((t) => (t.id === draggedTaskId ? applyLane(t, lane) : t)),
-    );
+    setTasks((prev) => {
+      const dragged = prev.find((t) => t.id === draggedTaskId);
+      if (!dragged) return prev;
+      const updatedDragged = applyLane(dragged, lane);
+
+      // Tasks already in the target lane (excluding the dragged one) — drives
+      // the insertion-index math.
+      const laneItems = prev.filter(
+        (t) => t.id !== draggedTaskId && getLane(t, laneKeys) === lane,
+      );
+      const clampedIdx =
+        insertIndex === null
+          ? laneItems.length
+          : Math.max(0, Math.min(insertIndex, laneItems.length));
+      const targetAnchorId =
+        clampedIdx < laneItems.length ? laneItems[clampedIdx].id : null;
+
+      // Rebuild the global array, dropping the dragged task and re-inserting
+      // it at the right anchor. If we're appending, push it after the last
+      // item of the lane in the global order to keep neighbours predictable.
+      const without = prev.filter((t) => t.id !== draggedTaskId);
+      if (targetAnchorId) {
+        const out: IncidentTask[] = [];
+        for (const t of without) {
+          if (t.id === targetAnchorId) out.push(updatedDragged);
+          out.push(t);
+        }
+        return out;
+      }
+      // Append after the lane's last item (or at array end if the lane is empty).
+      if (laneItems.length === 0) return [...without, updatedDragged];
+      const lastLaneId = laneItems[laneItems.length - 1].id;
+      const out: IncidentTask[] = [];
+      for (const t of without) {
+        out.push(t);
+        if (t.id === lastLaneId) out.push(updatedDragged);
+      }
+      return out;
+    });
     setDraggedTaskId(null);
     setHoverLane(null);
+    setDropIndex(null);
   };
 
   const tasksByLane = useMemo(() => {
@@ -850,6 +901,41 @@ const IncidentSimplePage = () => {
             {taskStatuses.map((lane) => {
               const items = tasksByLane[lane.key] || [];
               const isHover = hoverLane === lane.key;
+              // Highlight the slot the user is hovering for clearer "this is
+              // where it'll land" feedback.
+              const activeDropIndex = isHover ? dropIndex : null;
+
+              // ----- Reusable drop slot --------------------------------------
+              // A 6px-tall hit area between cards. We render N+1 of them per
+              // lane (above each card and one trailing append-slot at the
+              // bottom). When hovered, it grows into a coloured indicator bar.
+              const renderDropSlot = (idx: number) => {
+                const active = activeDropIndex === idx && draggedTaskId !== null;
+                return (
+                  <Box
+                    key={`slot-${lane.key}-${idx}`}
+                    onDragOver={(e) => {
+                      if (!draggedTaskId) return;
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (hoverLane !== lane.key) setHoverLane(lane.key);
+                      if (dropIndex !== idx) setDropIndex(idx);
+                    }}
+                    onDrop={(e) => {
+                      e.stopPropagation();
+                      handleDropToLane(lane.key, idx);
+                    }}
+                    sx={{
+                      height: active ? 8 : 6,
+                      my: active ? 0.25 : 0,
+                      borderRadius: 999,
+                      bgcolor: active ? lane.color : 'transparent',
+                      transition: 'height 100ms, background-color 100ms',
+                    }}
+                  />
+                );
+              };
+
               return (
                 <Box
                   key={lane.key}
@@ -857,8 +943,15 @@ const IncidentSimplePage = () => {
                     e.preventDefault();
                     if (hoverLane !== lane.key) setHoverLane(lane.key);
                   }}
-                  onDragLeave={() => setHoverLane((p) => (p === lane.key ? null : p))}
-                  onDrop={() => handleDropToLane(lane.key)}
+                  onDragLeave={(e) => {
+                    // Only clear when the pointer truly leaves the lane —
+                    // dragging across child elements fires dragleave too.
+                    const related = e.relatedTarget as Node | null;
+                    if (related && e.currentTarget.contains(related)) return;
+                    setHoverLane((p) => (p === lane.key ? null : p));
+                    setDropIndex(null);
+                  }}
+                  onDrop={() => handleDropToLane(lane.key, dropIndex)}
                   sx={{
                     bgcolor: 'hsl(var(--card))',
                     border: '1px solid hsl(var(--border))',
@@ -899,7 +992,7 @@ const IncidentSimplePage = () => {
                     />
                   </Box>
 
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                     {items.length === 0 && (
                       <Typography
                         variant="caption"
@@ -913,69 +1006,90 @@ const IncidentSimplePage = () => {
                         Drop tasks here
                       </Typography>
                     )}
-                    {items.map((task) => {
+                    {items.map((task, idx) => {
                       const cat = taskCategories.find((c) => c.value === task.category);
                       return (
-                        <Box
-                          key={task.id}
-                          draggable
-                          onDragStart={() => setDraggedTaskId(task.id)}
-                          onDragEnd={() => {
-                            setDraggedTaskId(null);
-                            setHoverLane(null);
-                          }}
-                          onClick={() => setEditingTaskId(task.id)}
-                          sx={{
-                            p: 1.25,
-                            bgcolor: 'hsl(var(--background))',
-                            border: '1px solid hsl(var(--border))',
-                            borderRadius: 1.5,
-                            cursor: 'grab',
-                            opacity: draggedTaskId === task.id ? 0.4 : 1,
-                            transition: 'box-shadow 120ms, transform 120ms',
-                            '&:hover': {
-                              boxShadow: 2,
-                              borderColor: 'hsl(var(--primary) / 0.4)',
-                            },
-                            '&:active': { cursor: 'grabbing' },
-                          }}
-                        >
-                          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.5 }}>
-                            <DragIndicatorIcon
+                        <Box key={task.id}>
+                          {renderDropSlot(idx)}
+                          <Box
+                            draggable
+                            onDragStart={() => setDraggedTaskId(task.id)}
+                            onDragEnd={() => {
+                              setDraggedTaskId(null);
+                              setHoverLane(null);
+                              setDropIndex(null);
+                            }}
+                            onClick={() => setEditingTaskId(task.id)}
+                            sx={{
+                              p: 1.25,
+                              bgcolor: 'hsl(var(--background))',
+                              border: '1px solid hsl(var(--border))',
+                              borderRadius: 1.5,
+                              cursor: 'pointer',
+                              opacity: draggedTaskId === task.id ? 0.4 : 1,
+                              transition: 'box-shadow 120ms, transform 120ms, border-color 120ms',
+                              // Reveal the drag handle only on hover so cards
+                              // stay visually clean when at rest.
+                              '& .task-drag-handle': { opacity: 0 },
+                              '&:hover': {
+                                boxShadow: 2,
+                                borderColor: 'hsl(var(--primary) / 0.4)',
+                                '& .task-drag-handle': { opacity: 1 },
+                              },
+                              '&:active': { cursor: 'grabbing' },
+                            }}
+                          >
+                            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.5 }}>
+                              <DragIndicatorIcon
+                                className="task-drag-handle"
+                                sx={{
+                                  fontSize: 16,
+                                  color: 'hsl(var(--muted-foreground))',
+                                  mt: 0.25,
+                                  cursor: 'grab',
+                                  transition: 'opacity 120ms',
+                                }}
+                              />
+                              <Typography
+                                variant="body2"
+                                sx={{
+                                  flex: 1,
+                                  fontWeight: 500,
+                                  textDecoration: task.completed ? 'line-through' : 'none',
+                                  color: task.completed
+                                    ? 'hsl(var(--muted-foreground))'
+                                    : 'hsl(var(--foreground))',
+                                }}
+                              >
+                                {task.title}
+                              </Typography>
+                              <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                  // Stop propagation so the card's onClick doesn't
+                                  // also open the edit dialog underneath.
+                                  e.stopPropagation();
+                                  setPendingDeleteId(task.id);
+                                }}
+                                sx={{ p: 0.25 }}
+                              >
+                                <DeleteOutlineIcon sx={{ fontSize: 14 }} />
+                              </IconButton>
+                            </Box>
+                            {/* Meta row — category chip + inline assignee selector
+                                (same chip style as the incident header). The
+                                assignee select is editable in place; clicks
+                                don't bubble up to open the modal. */}
+                            <Box
                               sx={{
-                                fontSize: 16,
-                                color: 'hsl(var(--muted-foreground))',
-                                mt: 0.25,
-                              }}
-                            />
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                flex: 1,
-                                fontWeight: 500,
-                                textDecoration: task.completed ? 'line-through' : 'none',
-                                color: task.completed
-                                  ? 'hsl(var(--muted-foreground))'
-                                  : 'hsl(var(--foreground))',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 0.75,
+                                mt: 1,
+                                ml: 2.5,
+                                flexWrap: 'wrap',
                               }}
                             >
-                              {task.title}
-                            </Typography>
-                            <IconButton
-                              size="small"
-                              onClick={(e) => {
-                                // Stop propagation so the card's onClick doesn't
-                                // also open the edit dialog underneath.
-                                e.stopPropagation();
-                                setPendingDeleteId(task.id);
-                              }}
-                              sx={{ p: 0.25 }}
-                            >
-                              <DeleteOutlineIcon sx={{ fontSize: 14 }} />
-                            </IconButton>
-                          </Box>
-                          {(cat || task.assignee) && (
-                            <Box sx={{ display: 'flex', gap: 0.5, mt: 1, ml: 2.5, flexWrap: 'wrap' }}>
                               {cat && (
                                 <Chip
                                   size="small"
@@ -988,19 +1102,22 @@ const IncidentSimplePage = () => {
                                   }}
                                 />
                               )}
-                              {task.assignee && (
-                                <Chip
-                                  size="small"
-                                  icon={<PersonIcon sx={{ fontSize: 11 }} />}
-                                  label={task.assignee}
-                                  sx={{ height: 18, fontSize: 10 }}
+                              <Box sx={{ ml: 'auto', minWidth: 0 }}>
+                                <TaskAssigneeChip
+                                  value={task.assignee || ''}
+                                  onChange={(next) =>
+                                    handleTaskUpdate({ ...task, assignee: next })
+                                  }
+                                  maxWidth={130}
                                 />
-                              )}
+                              </Box>
                             </Box>
-                          )}
+                          </Box>
                         </Box>
                       );
                     })}
+                    {/* Trailing append-slot — drops past the last card go here */}
+                    {renderDropSlot(items.length)}
                   </Box>
                 </Box>
               );
@@ -1017,15 +1134,25 @@ const IncidentSimplePage = () => {
         isLoading={isSavingMeta}
       />
 
-      {/* Single-task editor — reuses the exact TaskEditor component as /incidents */}
-      <TaskEditDialog
-        open={!!editingTaskId}
-        onClose={() => setEditingTaskId(null)}
-        task={tasks.find((t) => t.id === editingTaskId) || null}
-        onTaskChange={handleTaskUpdate}
-        incidentId={incident.id}
-      />
-
+      {/* Single-task editor — reuses the exact TaskEditor component as /incidents.
+          Prev/Next walks through the same lane the user opened the task from
+          so triaging "all open To Do items" is one keystroke per task. */}
+      {(() => {
+        const editingTask = tasks.find((t) => t.id === editingTaskId) || null;
+        const lane = editingTask ? getLane(editingTask, laneKeys) : null;
+        const siblings = lane ? tasksByLane[lane] || [] : [];
+        return (
+          <TaskEditDialog
+            open={!!editingTaskId}
+            onClose={() => setEditingTaskId(null)}
+            task={editingTask}
+            onTaskChange={handleTaskUpdate}
+            incidentId={incident.id}
+            siblings={siblings}
+            onNavigate={(nextId) => setEditingTaskId(nextId)}
+          />
+        );
+      })()}
       {/* Delete confirmation — required so a stray click doesn't drop tasks */}
       <AlertDialog open={!!pendingDeleteId} onOpenChange={(o) => !o && setPendingDeleteId(null)}>
         <AlertDialogContent>
