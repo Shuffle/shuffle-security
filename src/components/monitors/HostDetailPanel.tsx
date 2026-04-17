@@ -124,9 +124,22 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
             <Zap size={12} />
             <span className="text-[0.65rem] font-semibold uppercase tracking-wide">Response Actions</span>
           </div>
-          <p className={`text-xs ${responseActionsOn ? 'text-foreground' : 'text-muted-foreground'}`}>
-            {responseActionsOn ? `Enabled (${responseActionsRaw})` : 'Not enabled'}
-          </p>
+          {responseActionsOn ? (
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <p className="text-xs text-foreground cursor-help">
+                    {(responseActionsRaw || '').toLowerCase().includes('full') ? 'Full control (RCE)' : 'Controlled'}
+                  </p>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" align="start" className="max-w-sm">
+                  <p className="text-[0.65rem] font-mono">response_actions = {String(responseActionsRaw)}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            <p className="text-xs text-muted-foreground">Not enabled</p>
+          )}
         </div>
       </div>
 
