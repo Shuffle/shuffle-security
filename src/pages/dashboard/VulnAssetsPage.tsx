@@ -378,7 +378,13 @@ const VulnAssetsPage = () => {
     .flatMap(c => c.permissions)
     .filter(p => p.hostActionable && !p.disabled);
 
-  const executeHostAction = async (actionId: string, actionName: string, hostname: string, groupName: string, hostUuid: string, isPredefined = false) => {
+  const executeHostAction = async (actionId: string, actionName: string, hostname: string, groupName: string, hostUuid: string, isPredefined = false, skipConfirm = false) => {
+    // Confirm gate for the irreversible disable_rce script
+    const normalized = (isPredefined ? `script:${actionId}` : actionId).trim().toLowerCase();
+    if (!skipConfirm && normalized === 'script:disable_rce') {
+      setPendingDisableRce({ actionId, actionName, hostname, groupName, hostUuid, isPredefined });
+      return;
+    }
     // Set up abort controller
     const controller = new AbortController();
     abortControllersRef.current.set(hostUuid, controller);
