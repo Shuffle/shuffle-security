@@ -20,6 +20,7 @@ import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import PersonIcon from '@mui/icons-material/Person';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import { toast } from 'sonner';
 import { getDatastoreItem, setDatastoreItem, DATASTORE_CATEGORIES } from '@/services/datastore';
 import { useAuth } from '@/context/AuthContext';
