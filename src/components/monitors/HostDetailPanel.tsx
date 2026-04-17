@@ -86,7 +86,7 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
                   <TooltipTrigger asChild>
                     <p className="text-xs font-mono text-foreground cursor-help">{display}</p>
                   </TooltipTrigger>
-                  <TooltipContent side="bottom" align="start" className="max-w-sm">
+                  <TooltipContent side="bottom" align="start" className="z-[9999] max-w-sm">
                     <pre className="text-[0.65rem] font-mono whitespace-pre-wrap">{raw}</pre>
                   </TooltipContent>
                 </Tooltip>
