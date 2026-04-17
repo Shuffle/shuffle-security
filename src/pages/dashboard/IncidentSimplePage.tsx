@@ -642,28 +642,29 @@ const IncidentSimplePage = () => {
             </Tooltip>
           )}
 
-          {/* Collapse toggle */}
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: leftCollapsed ? 'center' : 'flex-end',
-              mb: leftCollapsed ? 1 : 0,
-            }}
-          >
-            <Tooltip title={leftCollapsed ? 'Expand details' : 'Collapse details'}>
+          {/* Collapse toggle — absolute top-right in the expanded view so it
+              doesn't push meta chips down. In the collapsed rail it stays
+              inline (centered) since there's nothing to collide with.
+              Tooltip placement=right prevents clipping by the page top bar. */}
+          {leftCollapsed ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
+              <Tooltip title="Expand details" placement="right">
+                <IconButton size="small" onClick={() => setLeftCollapsed(false)} sx={{ p: 0.5 }}>
+                  <ChevronRightIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          ) : (
+            <Tooltip title="Collapse details" placement="right">
               <IconButton
                 size="small"
-                onClick={() => setLeftCollapsed((v) => !v)}
-                sx={{ p: 0.5 }}
+                onClick={() => setLeftCollapsed(true)}
+                sx={{ position: 'absolute', top: 8, right: 8, p: 0.5, zIndex: 3 }}
               >
-                {leftCollapsed ? (
-                  <ChevronRightIcon fontSize="small" />
-                ) : (
-                  <ChevronLeftIcon fontSize="small" />
-                )}
+                <ChevronLeftIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-          </Box>
+          )}
 
           {leftCollapsed ? (
             // ---- Minimised: just the essentials, vertically stacked ----
