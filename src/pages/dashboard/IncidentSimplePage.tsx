@@ -408,10 +408,20 @@ const IncidentSimplePage = () => {
     setNewTaskTitle('');
   };
 
-  const handleDeleteTask = (taskId: string) => {
+  // Soft-delete: marks task as disabled and filters it out of the visible list.
+  // Always called via the AlertDialog confirmation flow.
+  const confirmDeleteTask = () => {
+    if (!pendingDeleteId) return;
+    const id = pendingDeleteId;
     setTasks((prev) =>
-      prev.map((t) => (t.id === taskId ? { ...t, disabled: true } : t)).filter((t) => !t.disabled),
+      prev.map((t) => (t.id === id ? { ...t, disabled: true } : t)).filter((t) => !t.disabled),
     );
+    setPendingDeleteId(null);
+  };
+
+  // Update a single task in-place (used by TaskEditDialog).
+  const handleTaskUpdate = (updated: IncidentTask) => {
+    setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
   };
 
   const handleDropToLane = (lane: LaneKey) => {
