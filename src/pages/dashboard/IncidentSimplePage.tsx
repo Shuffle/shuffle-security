@@ -445,13 +445,59 @@ const IncidentSimplePage = () => {
     setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
   };
 
-  const handleDropToLane = (lane: LaneKey) => {
+  /**
+   * Drop a dragged task into a lane at the optional insertion index.
+   *
+   * The previous implementation only mutated `_lane`, which meant cards always
+   * appended to the end of the column. We now rebuild the global `tasks` array
+   * so the dragged task lands at the requested position relative to the
+   * lane's existing items — enabling manual reordering inside a single lane
+   * (e.g. prioritising "To Do" items) as well as cross-lane moves.
+   */
+  const handleDropToLane = (lane: LaneKey, insertIndex: number | null = null) => {
     if (!draggedTaskId) return;
-    setTasks((prev) =>
-      prev.map((t) => (t.id === draggedTaskId ? applyLane(t, lane) : t)),
-    );
+    setTasks((prev) => {
+      const dragged = prev.find((t) => t.id === draggedTaskId);
+      if (!dragged) return prev;
+      const updatedDragged = applyLane(dragged, lane);
+
+      // Tasks already in the target lane (excluding the dragged one) — drives
+      // the insertion-index math.
+      const laneItems = prev.filter(
+        (t) => t.id !== draggedTaskId && getLane(t, laneKeys) === lane,
+      );
+      const clampedIdx =
+        insertIndex === null
+          ? laneItems.length
+          : Math.max(0, Math.min(insertIndex, laneItems.length));
+      const targetAnchorId =
+        clampedIdx < laneItems.length ? laneItems[clampedIdx].id : null;
+
+      // Rebuild the global array, dropping the dragged task and re-inserting
+      // it at the right anchor. If we're appending, push it after the last
+      // item of the lane in the global order to keep neighbours predictable.
+      const without = prev.filter((t) => t.id !== draggedTaskId);
+      if (targetAnchorId) {
+        const out: IncidentTask[] = [];
+        for (const t of without) {
+          if (t.id === targetAnchorId) out.push(updatedDragged);
+          out.push(t);
+        }
+        return out;
+      }
+      // Append after the lane's last item (or at array end if the lane is empty).
+      if (laneItems.length === 0) return [...without, updatedDragged];
+      const lastLaneId = laneItems[laneItems.length - 1].id;
+      const out: IncidentTask[] = [];
+      for (const t of without) {
+        out.push(t);
+        if (t.id === lastLaneId) out.push(updatedDragged);
+      }
+      return out;
+    });
     setDraggedTaskId(null);
     setHoverLane(null);
+    setDropIndex(null);
   };
 
   const tasksByLane = useMemo(() => {
