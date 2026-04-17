@@ -165,14 +165,14 @@ const IncidentSimplePage = () => {
   // ==========================================================================
   // Load incident from datastore
   // ==========================================================================
-  const loadIncident = useCallback(async () => {
+  const loadIncident = useCallback(async (showLoading = true) => {
     if (!id) return;
-    setLoading(true);
+    if (showLoading) setLoading(true);
     try {
       const result = await getDatastoreItem(id, DATASTORE_CATEGORIES.INCIDENTS);
       if (!result.success || !result.item?.value) {
         toast.error('Incident not found');
-        setLoading(false);
+        if (showLoading) setLoading(false);
         return;
       }
       const data = JSON.parse(result.item.value);
