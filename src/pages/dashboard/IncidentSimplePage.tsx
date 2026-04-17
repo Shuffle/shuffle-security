@@ -273,6 +273,7 @@ const IncidentSimplePage = () => {
         if (!res.success) toast.error('Failed to save tasks');
       } catch (err) {
         console.error('[IncidentSimple] Save failed:', err);
+        toast.error('Failed to save tasks — check your connection');
       }
     }, 600);
     return () => {
