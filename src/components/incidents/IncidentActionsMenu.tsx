@@ -29,7 +29,7 @@ import { toast } from 'sonner';
 import { DATASTORE_CATEGORIES, getDatastoreItem, setDatastoreItem } from '@/services/datastore';
 import { useDatastore } from '@/hooks/useDatastore';
 import { useAuth } from '@/context/AuthContext';
-import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
+import { getApiUrl, getAuthHeader } from '@/config/api';
 import { resyncState } from '@/lib/resyncState';
 import {
   ResolveIncidentDialog,
