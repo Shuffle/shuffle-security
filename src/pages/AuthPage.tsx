@@ -203,10 +203,43 @@ const AuthPage = ({ mode }: AuthPageProps) => {
         setSuccess(true);
         setLoading(false);
         trackPredefinedEvent(GA_EVENTS.LOGIN_SUCCESS);
+        const wasFirstLogin = !hasLoggedInBefore;
         localStorage.setItem('shuffle_has_logged_in', 'true');
         await login(sessionToken);
+
+        // Determine post-login destination: honor explicit returnUrl if set.
+        // Otherwise, if no incidents exist for this org, send to /dashboard.
+        let destination = from;
+        const hasExplicitReturn = Boolean(location.state?.from?.pathname || returnUrl);
+        if (!hasExplicitReturn && !wasFirstLogin) {
+          try {
+            const infoRes = await fetch(getApiUrl('/api/v1/getinfo'), {
+              method: 'GET',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+            });
+            const infoData = await infoRes.json();
+            const orgId = infoData?.active_org?.id;
+            if (orgId) {
+              const incRes = await fetch(
+                getApiUrl(`/api/v1/orgs/${orgId}/list_cache?category=shuffle-security_incidents&top=1`),
+                { method: 'GET', credentials: 'include', headers: { 'Content-Type': 'application/json' } },
+              );
+              if (incRes.ok) {
+                const incData = await incRes.json();
+                const items = incData?.keys || incData?.list || incData?.items || [];
+                if (!Array.isArray(items) || items.length === 0) {
+                  destination = '/dashboard';
+                }
+              }
+            }
+          } catch (err) {
+            console.warn('Post-login incident check failed, using default destination', err);
+          }
+        }
+
         setTimeout(() => {
-          navigate(from, { replace: true });
+          navigate(destination, { replace: true });
         }, 1500);
         return;
       } else if (!isLogin) {
