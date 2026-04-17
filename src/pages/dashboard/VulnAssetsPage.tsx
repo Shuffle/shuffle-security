@@ -3,6 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -200,6 +210,7 @@ const VulnAssetsPage = () => {
   };
   const sortArrow = (col: string) => sortCol === col ? (sortAsc ? ' ↑' : ' ↓') : '';
   const [actionExecuting, setActionExecuting] = useState<Set<string>>(new Set()); // host uuids being acted on
+  const [pendingDisableRce, setPendingDisableRce] = useState<null | { actionId: string; actionName: string; hostname: string; groupName: string; hostUuid: string; isPredefined: boolean }>(null);
   const [customAction, setCustomAction] = useState('');
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [softwareFilter, setSoftwareFilter] = useState('');
@@ -367,7 +378,13 @@ const VulnAssetsPage = () => {
     .flatMap(c => c.permissions)
     .filter(p => p.hostActionable && !p.disabled);
 
-  const executeHostAction = async (actionId: string, actionName: string, hostname: string, groupName: string, hostUuid: string, isPredefined = false) => {
+  const executeHostAction = async (actionId: string, actionName: string, hostname: string, groupName: string, hostUuid: string, isPredefined = false, skipConfirm = false) => {
+    // Confirm gate for the irreversible disable_rce script
+    const normalized = (isPredefined ? `script:${actionId}` : actionId).trim().toLowerCase();
+    if (!skipConfirm && normalized === 'script:disable_rce') {
+      setPendingDisableRce({ actionId, actionName, hostname, groupName, hostUuid, isPredefined });
+      return;
+    }
     // Set up abort controller
     const controller = new AbortController();
     abortControllersRef.current.set(hostUuid, controller);
@@ -1887,6 +1904,30 @@ const VulnAssetsPage = () => {
       </Dialog>
 
 
+      <AlertDialog open={!!pendingDisableRce} onOpenChange={(o) => { if (!o) setPendingDisableRce(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Disable Remote Code Execution?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you 100% sure? This will disable RCE on <span className="font-mono text-foreground">{pendingDisableRce?.hostname}</span>.
+              You will <strong>not</strong> be able to turn it back on without restarting the agent on the host.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                const p = pendingDisableRce;
+                setPendingDisableRce(null);
+                if (p) executeHostAction(p.actionId, p.actionName, p.hostname, p.groupName, p.hostUuid, p.isPredefined, true);
+              }}
+            >
+              Yes, disable RCE
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

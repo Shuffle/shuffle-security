@@ -3,6 +3,16 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, ChevronRight, Loader2, Play, RefreshCw, Search, ShieldX, Terminal, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { getApiUrl, getAuthHeader } from '@/config/api';
@@ -146,6 +156,7 @@ const HostTerminalPage = () => {
   const pollingActiveRef = useRef<Map<string, boolean>>(new Map());
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [pendingDisableRce, setPendingDisableRce] = useState<null | { actionId: string; actionName: string; isPredefined: boolean }>(null);
 
 
   const hostActionablePerms = DEFAULT_AGENT_PERMISSIONS
@@ -237,8 +248,14 @@ const HostTerminalPage = () => {
     setExpandedEntries(prev => { const next = new Set(prev); next.delete(entryId); return next; });
   }, [hostUuid]);
 
-  const executeHostAction = useCallback(async (actionId: string, actionName: string, isPredefined = false) => {
+  const executeHostAction = useCallback(async (actionId: string, actionName: string, isPredefined = false, skipConfirm = false) => {
     if (!hostUuid) return;
+    // Confirm gate for the irreversible disable_rce script
+    const normalized = (isPredefined ? `script:${actionId}` : actionId).trim().toLowerCase();
+    if (!skipConfirm && normalized === 'script:disable_rce') {
+      setPendingDisableRce({ actionId, actionName, isPredefined });
+      return;
+    }
     const myId = ++entryIdCounter;
     const controller = new AbortController();
     const abortKey = `entry_${myId}`;
@@ -749,6 +766,31 @@ const HostTerminalPage = () => {
         </div>
         <p className="text-[0.65rem] text-muted-foreground/60 mt-2.5 text-center">No session is created — each command is standalone. History is stored locally in your browser.</p>
       </div>
+
+      <AlertDialog open={!!pendingDisableRce} onOpenChange={(o) => { if (!o) setPendingDisableRce(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Disable Remote Code Execution?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you 100% sure? This will disable RCE on <span className="font-mono text-foreground">{hostname}</span>.
+              You will <strong>not</strong> be able to turn it back on without restarting the agent on the host.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                const p = pendingDisableRce;
+                setPendingDisableRce(null);
+                if (p) executeHostAction(p.actionId, p.actionName, p.isPredefined, true);
+              }}
+            >
+              Yes, disable RCE
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
