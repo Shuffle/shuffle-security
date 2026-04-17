@@ -157,7 +157,21 @@ export const TaskEditDialog = ({
   const categoryInfo = taskCategories.find((c) => c.value === task.category);
   const showNav = !!siblings && siblings.length > 1 && !!onNavigate;
 
-  const update = (patch: Partial<IncidentTask>) => onTaskChange({ ...task, ...patch });
+  // Auto-assign the current user the moment they touch an unassigned task.
+  // Skip when the patch already sets the assignee (avoids overriding an
+  // explicit choice) or when the user just toggles completion.
+  const update = (patch: Partial<IncidentTask>) => {
+    const shouldAutoAssign =
+      !task.assignee &&
+      currentUsername &&
+      patch.assignee === undefined &&
+      !('completed' in patch);
+    onTaskChange({
+      ...task,
+      ...patch,
+      ...(shouldAutoAssign ? { assignee: currentUsername } : {}),
+    });
+  };
 
   const toggleComplete = () => {
     update({
