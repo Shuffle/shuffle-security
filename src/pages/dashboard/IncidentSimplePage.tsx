@@ -45,6 +45,17 @@ import {
   ResolutionData,
   RESOLUTION_REASONS,
 } from '@/components/incidents/ResolveIncidentDialog';
+import { TaskEditDialog } from '@/components/incidents/TaskEditDialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 // ============================================================================
 // Kanban column definition — tasks are grouped into 3 lanes
@@ -56,23 +67,40 @@ const LANES: { key: LaneKey; label: string; color: string }[] = [
   { key: 'done', label: 'Done', color: statusConfig.resolved.color },
 ];
 
-/** Determine which kanban lane a task belongs to. */
-const getLane = (task: IncidentTask): LaneKey => {
+/**
+ * Determine which kanban lane a task belongs to.
+ *
+ * Tasks don't have an explicit `status` field in the OCSF schema, so we derive
+ * lane membership from existing fields:
+ *  - `completed: true` → done
+ *  - explicit `_lane: 'in_progress'` marker (set when dragged) OR has assignee/aiWorking
+ *  - otherwise → todo
+ */
+const getLane = (task: IncidentTask & { _lane?: LaneKey }): LaneKey => {
   if (task.completed) return 'done';
+  if (task._lane === 'in_progress') return 'in_progress';
+  if (task._lane === 'todo') return 'todo';
   if (task.aiWorking || task.assignee) return 'in_progress';
   return 'todo';
 };
 
-/** Apply lane semantics to a task when it's moved between columns. */
-const applyLane = (task: IncidentTask, lane: LaneKey): IncidentTask => {
+/**
+ * Apply lane semantics to a task when it's moved between columns.
+ *
+ * We use an explicit `_lane` marker so dragging works deterministically even
+ * when the task has (or lacks) an assignee. Without this marker, an assigned
+ * task dragged back to "To Do" would immediately bounce to "In Progress"
+ * because `getLane` would re-derive it from the assignee.
+ */
+const applyLane = (task: IncidentTask & { _lane?: LaneKey }, lane: LaneKey): IncidentTask & { _lane?: LaneKey } => {
   if (lane === 'done') {
-    return { ...task, completed: true, completedAt: task.completedAt || Date.now() };
+    return { ...task, _lane: 'done', completed: true, completedAt: task.completedAt || Date.now() };
   }
   if (lane === 'in_progress') {
-    return { ...task, completed: false, completedAt: 0 };
+    return { ...task, _lane: 'in_progress', completed: false, completedAt: 0, aiWorking: false };
   }
-  // todo: clear assignee/aiWorking only if it was the reason it was in_progress
-  return { ...task, completed: false, completedAt: 0 };
+  // todo: explicitly clear the in-progress markers
+  return { ...task, _lane: 'todo', completed: false, completedAt: 0, aiWorking: false };
 };
 
 interface IncidentSnapshot {
@@ -99,6 +127,10 @@ const IncidentSimplePage = () => {
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
   const [hoverLane, setHoverLane] = useState<LaneKey | null>(null);
+  // Single-task edit modal
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  // Delete confirmation
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const skipNextSaveRef = useRef(true);
 
@@ -376,10 +408,20 @@ const IncidentSimplePage = () => {
     setNewTaskTitle('');
   };
 
-  const handleDeleteTask = (taskId: string) => {
+  // Soft-delete: marks task as disabled and filters it out of the visible list.
+  // Always called via the AlertDialog confirmation flow.
+  const confirmDeleteTask = () => {
+    if (!pendingDeleteId) return;
+    const id = pendingDeleteId;
     setTasks((prev) =>
-      prev.map((t) => (t.id === taskId ? { ...t, disabled: true } : t)).filter((t) => !t.disabled),
+      prev.map((t) => (t.id === id ? { ...t, disabled: true } : t)).filter((t) => !t.disabled),
     );
+    setPendingDeleteId(null);
+  };
+
+  // Update a single task in-place (used by TaskEditDialog).
+  const handleTaskUpdate = (updated: IncidentTask) => {
+    setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
   };
 
   const handleDropToLane = (lane: LaneKey) => {
@@ -793,6 +835,7 @@ const IncidentSimplePage = () => {
                             setDraggedTaskId(null);
                             setHoverLane(null);
                           }}
+                          onClick={() => setEditingTaskId(task.id)}
                           sx={{
                             p: 1.25,
                             bgcolor: 'hsl(var(--background))',
@@ -831,7 +874,12 @@ const IncidentSimplePage = () => {
                             </Typography>
                             <IconButton
                               size="small"
-                              onClick={() => handleDeleteTask(task.id)}
+                              onClick={(e) => {
+                                // Stop propagation so the card's onClick doesn't
+                                // also open the edit dialog underneath.
+                                e.stopPropagation();
+                                setPendingDeleteId(task.id);
+                              }}
                               sx={{ p: 0.25 }}
                             >
                               <DeleteOutlineIcon sx={{ fontSize: 14 }} />
@@ -879,6 +927,36 @@ const IncidentSimplePage = () => {
         incidentTitle={incident.title}
         isLoading={isSavingMeta}
       />
+
+      {/* Single-task editor — reuses the exact TaskEditor component as /incidents */}
+      <TaskEditDialog
+        open={!!editingTaskId}
+        onClose={() => setEditingTaskId(null)}
+        task={tasks.find((t) => t.id === editingTaskId) || null}
+        onTaskChange={handleTaskUpdate}
+        incidentId={incident.id}
+      />
+
+      {/* Delete confirmation — required so a stray click doesn't drop tasks */}
+      <AlertDialog open={!!pendingDeleteId} onOpenChange={(o) => !o && setPendingDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this task?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove the task from this incident. You can't undo this from the simple view.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteTask}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Box>
   );
 };
