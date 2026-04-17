@@ -17,6 +17,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { LandingNavbar } from '@/components/landing/LandingNavbar';
 import IncidentsPage from '@/pages/dashboard/IncidentsPage';
 import IncidentDetailPage from '@/pages/dashboard/IncidentDetailPage';
+import IncidentSimplePage from '@/pages/dashboard/IncidentSimplePage';
 import TemplatesPage from '@/pages/dashboard/TemplatesPage';
 import IOCTypesPage from '@/pages/dashboard/IOCTypesPage';
 import RulesPage from '@/pages/dashboard/RulesPage';
@@ -127,6 +128,8 @@ const ThemedApp = () => {
             >
               <Route path="/dashboard" element={<SupportOnly><DashboardPage /></SupportOnly>} />
               <Route path="/incidents" element={<IncidentsPage />} />
+              <Route path="/incidents-simple" element={<Navigate to="/incidents" replace />} />
+              <Route path="/incidents-simple/:id" element={<IncidentSimplePage />} />
               <Route path="/incidents/:id" element={<IncidentDetailPage />} />
               <Route path="/alerts" element={<IncidentsPage />} />
               <Route path="/alerts/:id" element={<IncidentDetailPage />} />
