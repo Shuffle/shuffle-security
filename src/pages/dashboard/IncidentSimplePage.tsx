@@ -123,6 +123,8 @@ const IncidentSimplePage = () => {
   const currentUser = userInfo?.username || 'You';
 
   const [loading, setLoading] = useState(true);
+  // Manual refresh — distinct from initial load so we don't show the skeleton.
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [incident, setIncident] = useState<IncidentSnapshot | null>(null);
   const [tasks, setTasks] = useState<IncidentTask[]>([]);
   const [newTaskTitle, setNewTaskTitle] = useState('');
