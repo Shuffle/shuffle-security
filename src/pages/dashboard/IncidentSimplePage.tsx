@@ -38,6 +38,13 @@ import {
 } from '@/config/incidentConfig';
 import { htmlToPlainText, decodeIfBase64, isAIAssignee } from '@/lib/utils';
 import { IncidentActionsMenu } from '@/components/incidents/IncidentActionsMenu';
+import { IncidentMetaChips } from '@/components/incidents/IncidentMetaChips';
+import { useSourceAppImage } from '@/hooks/useSourceAppImage';
+import {
+  ResolveIncidentDialog,
+  ResolutionData,
+  RESOLUTION_REASONS,
+} from '@/components/incidents/ResolveIncidentDialog';
 
 // ============================================================================
 // Kanban column definition — tasks are grouped into 3 lanes
