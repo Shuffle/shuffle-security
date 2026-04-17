@@ -147,7 +147,7 @@ export const HostActionPopover = ({
                         <p className="text-[0.6rem] text-muted-foreground cursor-help inline-block">{modeLabel}</p>
                       </TooltipTrigger>
                       <TooltipContent side="bottom" align="start" className="z-[9999] max-w-sm">
-                        <p className="text-[0.65rem] font-mono">response_actions = {String(responseActionsRaw)}</p>
+                        <p className="text-[0.65rem] font-mono">response_actions = {responseActionsRaw === undefined ? '(field not set)' : String(responseActionsRaw)}</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>

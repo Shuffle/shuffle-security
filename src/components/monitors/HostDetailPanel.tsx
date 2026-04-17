@@ -48,6 +48,14 @@ const stateOf = (v: boolean | string | undefined): 'on' | 'off' => {
   return 'off';
 };
 
+/** Format a raw API value for display in tooltips. Missing fields show "(field not set)". */
+const fmtRaw = (v: unknown): string => {
+  if (v === undefined) return '(field not set)';
+  if (v === null) return 'null';
+  if (v === '') return '"" (empty string)';
+  return String(v);
+};
+
 export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections = false }: HostDetailPanelProps) => {
   const [softwareFilter, setSoftwareFilter] = useState('');
   const [codeScanFilter, setCodeScanFilter] = useState('');
@@ -154,7 +162,7 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
               </div>
             </TooltipTrigger>
             <TooltipContent side="bottom" align="start" className="z-[9999] max-w-sm">
-              <p className="text-[0.65rem] font-mono">hd_encrypted = {String(host.hd_encrypted)}</p>
+              <p className="text-[0.65rem] font-mono">hd_encrypted = {fmtRaw(host.hd_encrypted)}</p>
             </TooltipContent>
           </Tooltip>
           <Tooltip>
@@ -165,7 +173,7 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
               </div>
             </TooltipTrigger>
             <TooltipContent side="bottom" align="start" className="z-[9999] max-w-sm">
-              <p className="text-[0.65rem] font-mono">automatic_screen_lock_enabled = {String(host.automatic_screen_lock_enabled)}</p>
+              <p className="text-[0.65rem] font-mono">automatic_screen_lock_enabled = {fmtRaw(host.automatic_screen_lock_enabled)}</p>
             </TooltipContent>
           </Tooltip>
           <Tooltip>
@@ -176,7 +184,7 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
               </div>
             </TooltipTrigger>
             <TooltipContent side="bottom" align="start" className="z-[9999] max-w-sm">
-              <p className="text-[0.65rem] font-mono">elevated_access = {String(host.elevated_access)}</p>
+              <p className="text-[0.65rem] font-mono">elevated_access = {fmtRaw(host.elevated_access)}</p>
             </TooltipContent>
           </Tooltip>
           {logForwardingOn && (
@@ -188,7 +196,7 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
                 </div>
               </TooltipTrigger>
               <TooltipContent side="bottom" align="start" className="z-[9999] max-w-sm">
-                <p className="text-[0.65rem] font-mono whitespace-pre-wrap">log_forwarding = {String(host.log_forwarding)}</p>
+                <p className="text-[0.65rem] font-mono whitespace-pre-wrap">log_forwarding = {fmtRaw(host.log_forwarding)}</p>
               </TooltipContent>
             </Tooltip>
           )}
