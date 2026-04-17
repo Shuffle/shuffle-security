@@ -602,7 +602,7 @@ const VulnAssetsPage = () => {
     parts.push(`hd_encrypted_check=${hostChecks.hd_encrypted}`);
     parts.push(`screenlock_check=${hostChecks.screenlock}`);
     parts.push(`code_scanner_enabled=${hostChecks.code_scanner_enabled}`);
-    if (hostChecks.response_actions) parts.push(`response_actions=${responseActionMode}`);
+    parts.push(`response_actions=${hostChecks.response_actions ? responseActionMode : 'false'}`);
     if (hostChecks.log_forwarding && logForwardingEndpoint.trim()) parts.push(`log_forwarding=${logForwardingEndpoint.trim()}`);
 
     const authHeader = selectedGroup?.auth ? `-H 'Auth: ${selectedGroup.auth}'` : '';
