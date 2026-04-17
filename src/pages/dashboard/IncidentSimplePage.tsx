@@ -41,6 +41,7 @@ import { htmlToPlainText, decodeIfBase64, isAIAssignee } from '@/lib/utils';
 import { IncidentActionsMenu } from '@/components/incidents/IncidentActionsMenu';
 import { IncidentMetaChips } from '@/components/incidents/IncidentMetaChips';
 import { useSourceAppImage } from '@/hooks/useSourceAppImage';
+import { useTaskStatuses } from '@/hooks/useEntityLabel';
 import {
   ResolveIncidentDialog,
   ResolutionData,
@@ -59,49 +60,53 @@ import {
 } from '@/components/ui/alert-dialog';
 
 // ============================================================================
-// Kanban column definition — tasks are grouped into 3 lanes
+// Kanban column definition — lanes are configured per-org via Org Preferences.
+// `done` is a reserved key that maps to `task.completed === true`. All other
+// lanes are stored on the task as a `_lane` marker. The first non-`done` lane
+// in the configured list is treated as the default for unmarked tasks.
 // ============================================================================
-type LaneKey = 'todo' | 'in_progress' | 'done';
-const LANES: { key: LaneKey; label: string; color: string }[] = [
-  { key: 'todo', label: 'To Do', color: statusConfig.new.color },
-  { key: 'in_progress', label: 'In Progress', color: statusConfig.in_progress.color },
-  { key: 'done', label: 'Done', color: statusConfig.resolved.color },
-];
+type LaneKey = string;
 
 /**
  * Determine which kanban lane a task belongs to.
  *
- * Tasks don't have an explicit `status` field in the OCSF schema, so we derive
- * lane membership from existing fields:
- *  - `completed: true` → done
- *  - explicit `_lane: 'in_progress'` marker (set when dragged) OR has assignee/aiWorking
- *  - otherwise → todo
+ * Tasks don't have an explicit `status` field in OCSF, so we derive lane
+ * membership from existing fields:
+ *  - `completed: true` → `done`
+ *  - explicit `_lane` marker that matches a configured key → that lane
+ *  - has `aiWorking` / `assignee` → second-from-top lane (the conventional
+ *    "in progress" slot) if present, else default
+ *  - otherwise → first lane (the conventional "to do" slot)
  */
-const getLane = (task: IncidentTask & { _lane?: LaneKey }): LaneKey => {
+const getLane = (
+  task: IncidentTask & { _lane?: LaneKey },
+  laneKeys: LaneKey[],
+): LaneKey => {
   if (task.completed) return 'done';
-  if (task._lane === 'in_progress') return 'in_progress';
-  if (task._lane === 'todo') return 'todo';
-  if (task.aiWorking || task.assignee) return 'in_progress';
-  return 'todo';
+  if (task._lane && laneKeys.includes(task._lane)) return task._lane;
+  const openLanes = laneKeys.filter((k) => k !== 'done');
+  // Heuristic for legacy tasks created before the lane marker existed.
+  if ((task.aiWorking || task.assignee) && openLanes.length > 1) {
+    return openLanes[1];
+  }
+  return openLanes[0] || laneKeys[0];
 };
 
 /**
  * Apply lane semantics to a task when it's moved between columns.
  *
- * We use an explicit `_lane` marker so dragging works deterministically even
- * when the task has (or lacks) an assignee. Without this marker, an assigned
- * task dragged back to "To Do" would immediately bounce to "In Progress"
- * because `getLane` would re-derive it from the assignee.
+ * The explicit `_lane` marker keeps drag deterministic — without it, an
+ * assigned task dragged back to "To Do" would immediately bounce because
+ * `getLane` would re-derive it from the assignee.
  */
-const applyLane = (task: IncidentTask & { _lane?: LaneKey }, lane: LaneKey): IncidentTask & { _lane?: LaneKey } => {
+const applyLane = (
+  task: IncidentTask & { _lane?: LaneKey },
+  lane: LaneKey,
+): IncidentTask & { _lane?: LaneKey } => {
   if (lane === 'done') {
     return { ...task, _lane: 'done', completed: true, completedAt: task.completedAt || Date.now() };
   }
-  if (lane === 'in_progress') {
-    return { ...task, _lane: 'in_progress', completed: false, completedAt: 0, aiWorking: false };
-  }
-  // todo: explicitly clear the in-progress markers
-  return { ...task, _lane: 'todo', completed: false, completedAt: 0, aiWorking: false };
+  return { ...task, _lane: lane, completed: false, completedAt: 0, aiWorking: false };
 };
 
 interface IncidentSnapshot {
@@ -126,6 +131,9 @@ const IncidentSimplePage = () => {
   // Manual refresh — distinct from initial load so we don't show the skeleton.
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [incident, setIncident] = useState<IncidentSnapshot | null>(null);
+  // Org-configured kanban lanes. Memoised lane keys keep the getLane call cheap.
+  const taskStatuses = useTaskStatuses();
+  const laneKeys = useMemo(() => taskStatuses.map((s) => s.key), [taskStatuses]);
   const [tasks, setTasks] = useState<IncidentTask[]>([]);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
@@ -437,14 +445,18 @@ const IncidentSimplePage = () => {
   };
 
   const tasksByLane = useMemo(() => {
-    const groups: Record<LaneKey, IncidentTask[]> = {
-      todo: [],
-      in_progress: [],
-      done: [],
-    };
-    for (const t of tasks) groups[getLane(t)].push(t);
+    // Build an empty bucket per configured lane so missing lanes still render.
+    const groups: Record<string, IncidentTask[]> = Object.fromEntries(
+      laneKeys.map((k) => [k, [] as IncidentTask[]]),
+    );
+    for (const t of tasks) {
+      const laneKey = getLane(t, laneKeys);
+      // Defensive — if a stale `_lane` value points to a removed lane, the
+      // task lands in the first lane (or `done` if it was completed).
+      (groups[laneKey] || groups[laneKeys[0]] || []).push(t);
+    }
     return groups;
-  }, [tasks]);
+  }, [tasks, laneKeys]);
 
   // ==========================================================================
   // Render
@@ -454,7 +466,7 @@ const IncidentSimplePage = () => {
       <Box sx={{ p: 4, display: 'flex', gap: 3 }}>
         <Skeleton variant="rounded" width={420} height={520} />
         <Box sx={{ flex: 1, display: 'flex', gap: 2 }}>
-          {LANES.map((l) => (
+          {taskStatuses.map((l) => (
             <Skeleton key={l.key} variant="rounded" sx={{ flex: 1, height: 520 }} />
           ))}
         </Box>
@@ -685,10 +697,10 @@ const IncidentSimplePage = () => {
               <Tooltip title={incident.assignee || 'Unassigned'} placement="right">
                 <PersonIcon sx={{ fontSize: 18, color: 'hsl(var(--muted-foreground))' }} />
               </Tooltip>
-              <Tooltip title={`${tasksByLane.done.length}/${tasks.length} tasks done`} placement="right">
+              <Tooltip title={`${(tasksByLane.done?.length || 0)}/${tasks.length} tasks done`} placement="right">
                 <Chip
                   size="small"
-                  label={`${tasksByLane.done.length}/${tasks.length}`}
+                  label={`${(tasksByLane.done?.length || 0)}/${tasks.length}`}
                   sx={{ height: 22, fontSize: 11, fontWeight: 600 }}
                 />
               </Tooltip>
@@ -763,7 +775,7 @@ const IncidentSimplePage = () => {
                     Tasks
                   </Typography>
                   <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                    {tasksByLane.done.length}/{tasks.length}
+                    {(tasksByLane.done?.length || 0)}/{tasks.length}
                   </Typography>
                 </Box>
                 <Box sx={{ textAlign: 'right' }}>
@@ -820,12 +832,17 @@ const IncidentSimplePage = () => {
           <Box
             sx={{
               display: 'grid',
-              gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
+              gridTemplateColumns: {
+                xs: '1fr',
+                // Auto-fit columns so 2/4/5/6+ configured lanes lay out cleanly
+                // without hardcoding `repeat(3, 1fr)`.
+                md: `repeat(${Math.max(taskStatuses.length, 1)}, minmax(0, 1fr))`,
+              },
               gap: 2,
             }}
           >
-            {LANES.map((lane) => {
-              const items = tasksByLane[lane.key];
+            {taskStatuses.map((lane) => {
+              const items = tasksByLane[lane.key] || [];
               const isHover = hoverLane === lane.key;
               return (
                 <Box

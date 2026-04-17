@@ -17,6 +17,7 @@ import {
   setSidebarTabVisibility,
   SidebarTabKey,
 } from '@/hooks/useEntityLabel';
+import { TaskStatusesEditor } from '@/components/settings/TaskStatusesEditor';
 
 const TerminologySelector = () => {
   const { value } = useEntityPreference();
@@ -275,6 +276,30 @@ const OrgPreferencesPage = () => {
             </Typography>
           </Box>
           <SidebarTabsSelector />
+        </Paper>
+
+        {/* Task Statuses (kanban lanes) */}
+        <Paper
+          sx={{
+            p: 2.5,
+            bgcolor: 'hsl(var(--card))',
+            border: '1px solid hsl(var(--border))',
+            borderRadius: 2,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+          }}
+        >
+          <Box>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+              Task Statuses
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+              Configure the kanban lanes for incident tasks. Drag to reorder, click the swatch to recolor.
+              The "Done" lane is required and represents completed tasks.
+            </Typography>
+          </Box>
+          <TaskStatusesEditor />
         </Paper>
       </Box>
     </Box>

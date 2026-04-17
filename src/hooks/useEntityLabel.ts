@@ -14,8 +14,32 @@ export type EntityValue = (typeof ENTITY_OPTIONS)[number]['value'];
 const LOCAL_CACHE_KEY = 'shuffle-entity-label';
 const LOCAL_AUTOMATION_KEY = 'shuffle-show-automation';
 const LOCAL_SIDEBAR_TABS_KEY = 'shuffle-sidebar-tabs';
+const LOCAL_TASK_STATUSES_KEY = 'shuffle-task-statuses';
 const DATASTORE_KEY = 'org_settings';
 const DEFAULT: EntityValue = 'incidents';
+
+// ---------------------------------------------------------------------------
+// Task statuses (kanban lanes on /incidents-simple/<id>)
+// ---------------------------------------------------------------------------
+// Stored as an ordered list. The `done` lane is special (it represents
+// `task.completed === true`) and must always exist — it can be renamed/recolored
+// but not removed. Other lanes can be added/removed/renamed by the org.
+
+export interface TaskStatusOption {
+  /** Stable key used by the kanban routing logic. The first non-`done` key
+   *  is treated as the default "todo" lane and the others act as in-progress
+   *  variants. `done` is a reserved special key that maps to `completed`. */
+  key: string;
+  label: string;
+  /** Tailwind/HSL hex — used for the lane header dot and hover ring. */
+  color: string;
+}
+
+export const DEFAULT_TASK_STATUSES: TaskStatusOption[] = [
+  { key: 'todo', label: 'To Do', color: '#3b82f6' },
+  { key: 'in_progress', label: 'In Progress', color: '#f59e0b' },
+  { key: 'done', label: 'Done', color: '#22c55e' },
+];
 
 // Sidebar tab keys that can be toggled (Incidents always visible)
 export const SIDEBAR_TAB_OPTIONS = [
@@ -83,6 +107,48 @@ function getSidebarTabsSnapshot(): Record<SidebarTabKey, boolean> {
   return _cachedSidebarTabs;
 }
 
+// Task statuses snapshot — also memoised by raw string so identity is stable
+// across renders (required by useSyncExternalStore to avoid render loops).
+let _cachedTaskStatuses: TaskStatusOption[] = DEFAULT_TASK_STATUSES;
+let _cachedTaskStatusesRaw: string | null = null;
+
+function normalizeTaskStatuses(arr: unknown): TaskStatusOption[] {
+  if (!Array.isArray(arr)) return DEFAULT_TASK_STATUSES;
+  const cleaned: TaskStatusOption[] = [];
+  for (const item of arr) {
+    if (
+      item &&
+      typeof item === 'object' &&
+      typeof (item as TaskStatusOption).key === 'string' &&
+      typeof (item as TaskStatusOption).label === 'string' &&
+      typeof (item as TaskStatusOption).color === 'string'
+    ) {
+      cleaned.push({
+        key: (item as TaskStatusOption).key,
+        label: (item as TaskStatusOption).label,
+        color: (item as TaskStatusOption).color,
+      });
+    }
+  }
+  // The `done` lane is required — if it was removed, restore it at the end.
+  if (!cleaned.some((s) => s.key === 'done')) {
+    cleaned.push(DEFAULT_TASK_STATUSES[DEFAULT_TASK_STATUSES.length - 1]);
+  }
+  return cleaned.length > 0 ? cleaned : DEFAULT_TASK_STATUSES;
+}
+
+function getTaskStatusesSnapshot(): TaskStatusOption[] {
+  const raw = localStorage.getItem(LOCAL_TASK_STATUSES_KEY);
+  if (raw === _cachedTaskStatusesRaw) return _cachedTaskStatuses;
+  _cachedTaskStatusesRaw = raw;
+  try {
+    _cachedTaskStatuses = raw ? normalizeTaskStatuses(JSON.parse(raw)) : DEFAULT_TASK_STATUSES;
+  } catch {
+    _cachedTaskStatuses = DEFAULT_TASK_STATUSES;
+  }
+  return _cachedTaskStatuses;
+}
+
 let _fetchedFromServer = false;
 
 /** Load org setting from datastore and sync to local cache */
@@ -100,6 +166,9 @@ export async function loadEntityPreference() {
       }
       if (data?.sidebar_tabs !== undefined) {
         localStorage.setItem(LOCAL_SIDEBAR_TABS_KEY, JSON.stringify(data.sidebar_tabs));
+      }
+      if (data?.task_statuses !== undefined) {
+        localStorage.setItem(LOCAL_TASK_STATUSES_KEY, JSON.stringify(normalizeTaskStatuses(data.task_statuses)));
       }
       listeners.forEach(cb => cb());
     }
@@ -218,6 +287,48 @@ export async function setSidebarTabVisibility(tabs: Record<SidebarTabKey, boolea
 /** Hook to read sidebar tab visibility */
 export function useSidebarTabs(): Record<SidebarTabKey, boolean> {
   const value = useSyncExternalStore(subscribe, getSidebarTabsSnapshot);
+
+  useEffect(() => {
+    if (!_fetchedFromServer) loadEntityPreference();
+  }, []);
+
+  return value;
+}
+
+// ---------------------------------------------------------------------------
+// Task statuses — kanban lanes for /incidents-simple/<id>
+// ---------------------------------------------------------------------------
+
+/** Save the org's task status configuration. The `done` lane is forced to
+ *  remain present (renamed/recoloured but never removed). */
+export async function setTaskStatuses(statuses: TaskStatusOption[]) {
+  const normalized = normalizeTaskStatuses(statuses);
+  localStorage.setItem(LOCAL_TASK_STATUSES_KEY, JSON.stringify(normalized));
+  _cachedTaskStatusesRaw = null;
+  listeners.forEach((cb) => cb());
+
+  try {
+    let existing: Record<string, unknown> = {};
+    try {
+      const result = await getDatastoreItem(DATASTORE_KEY, DATASTORE_CATEGORIES.CONFIGURATION);
+      if (result.success && result.item?.value) {
+        existing = typeof result.item.value === 'string' ? JSON.parse(result.item.value) : result.item.value;
+      }
+    } catch { /* empty */ }
+    await setDatastoreItem(
+      DATASTORE_KEY,
+      { ...existing, task_statuses: normalized },
+      DATASTORE_CATEGORIES.CONFIGURATION,
+    );
+  } catch {
+    // local cache already set
+  }
+}
+
+/** Hook to read the org's configured task statuses. Defaults to the built-in
+ *  three-lane setup (To Do / In Progress / Done). */
+export function useTaskStatuses(): TaskStatusOption[] {
+  const value = useSyncExternalStore(subscribe, getTaskStatusesSnapshot);
 
   useEffect(() => {
     if (!_fetchedFromServer) loadEntityPreference();
