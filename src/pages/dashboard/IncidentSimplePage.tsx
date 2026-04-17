@@ -901,6 +901,41 @@ const IncidentSimplePage = () => {
             {taskStatuses.map((lane) => {
               const items = tasksByLane[lane.key] || [];
               const isHover = hoverLane === lane.key;
+              // Highlight the slot the user is hovering for clearer "this is
+              // where it'll land" feedback.
+              const activeDropIndex = isHover ? dropIndex : null;
+
+              // ----- Reusable drop slot --------------------------------------
+              // A 6px-tall hit area between cards. We render N+1 of them per
+              // lane (above each card and one trailing append-slot at the
+              // bottom). When hovered, it grows into a coloured indicator bar.
+              const renderDropSlot = (idx: number) => {
+                const active = activeDropIndex === idx && draggedTaskId !== null;
+                return (
+                  <Box
+                    key={`slot-${lane.key}-${idx}`}
+                    onDragOver={(e) => {
+                      if (!draggedTaskId) return;
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (hoverLane !== lane.key) setHoverLane(lane.key);
+                      if (dropIndex !== idx) setDropIndex(idx);
+                    }}
+                    onDrop={(e) => {
+                      e.stopPropagation();
+                      handleDropToLane(lane.key, idx);
+                    }}
+                    sx={{
+                      height: active ? 8 : 6,
+                      my: active ? 0.25 : 0,
+                      borderRadius: 999,
+                      bgcolor: active ? lane.color : 'transparent',
+                      transition: 'height 100ms, background-color 100ms',
+                    }}
+                  />
+                );
+              };
+
               return (
                 <Box
                   key={lane.key}
@@ -908,8 +943,15 @@ const IncidentSimplePage = () => {
                     e.preventDefault();
                     if (hoverLane !== lane.key) setHoverLane(lane.key);
                   }}
-                  onDragLeave={() => setHoverLane((p) => (p === lane.key ? null : p))}
-                  onDrop={() => handleDropToLane(lane.key)}
+                  onDragLeave={(e) => {
+                    // Only clear when the pointer truly leaves the lane —
+                    // dragging across child elements fires dragleave too.
+                    const related = e.relatedTarget as Node | null;
+                    if (related && e.currentTarget.contains(related)) return;
+                    setHoverLane((p) => (p === lane.key ? null : p));
+                    setDropIndex(null);
+                  }}
+                  onDrop={() => handleDropToLane(lane.key, dropIndex)}
                   sx={{
                     bgcolor: 'hsl(var(--card))',
                     border: '1px solid hsl(var(--border))',
@@ -950,7 +992,7 @@ const IncidentSimplePage = () => {
                     />
                   </Box>
 
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                     {items.length === 0 && (
                       <Typography
                         variant="caption"
@@ -964,69 +1006,90 @@ const IncidentSimplePage = () => {
                         Drop tasks here
                       </Typography>
                     )}
-                    {items.map((task) => {
+                    {items.map((task, idx) => {
                       const cat = taskCategories.find((c) => c.value === task.category);
                       return (
-                        <Box
-                          key={task.id}
-                          draggable
-                          onDragStart={() => setDraggedTaskId(task.id)}
-                          onDragEnd={() => {
-                            setDraggedTaskId(null);
-                            setHoverLane(null);
-                          }}
-                          onClick={() => setEditingTaskId(task.id)}
-                          sx={{
-                            p: 1.25,
-                            bgcolor: 'hsl(var(--background))',
-                            border: '1px solid hsl(var(--border))',
-                            borderRadius: 1.5,
-                            cursor: 'grab',
-                            opacity: draggedTaskId === task.id ? 0.4 : 1,
-                            transition: 'box-shadow 120ms, transform 120ms',
-                            '&:hover': {
-                              boxShadow: 2,
-                              borderColor: 'hsl(var(--primary) / 0.4)',
-                            },
-                            '&:active': { cursor: 'grabbing' },
-                          }}
-                        >
-                          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.5 }}>
-                            <DragIndicatorIcon
+                        <Box key={task.id}>
+                          {renderDropSlot(idx)}
+                          <Box
+                            draggable
+                            onDragStart={() => setDraggedTaskId(task.id)}
+                            onDragEnd={() => {
+                              setDraggedTaskId(null);
+                              setHoverLane(null);
+                              setDropIndex(null);
+                            }}
+                            onClick={() => setEditingTaskId(task.id)}
+                            sx={{
+                              p: 1.25,
+                              bgcolor: 'hsl(var(--background))',
+                              border: '1px solid hsl(var(--border))',
+                              borderRadius: 1.5,
+                              cursor: 'pointer',
+                              opacity: draggedTaskId === task.id ? 0.4 : 1,
+                              transition: 'box-shadow 120ms, transform 120ms, border-color 120ms',
+                              // Reveal the drag handle only on hover so cards
+                              // stay visually clean when at rest.
+                              '& .task-drag-handle': { opacity: 0 },
+                              '&:hover': {
+                                boxShadow: 2,
+                                borderColor: 'hsl(var(--primary) / 0.4)',
+                                '& .task-drag-handle': { opacity: 1 },
+                              },
+                              '&:active': { cursor: 'grabbing' },
+                            }}
+                          >
+                            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.5 }}>
+                              <DragIndicatorIcon
+                                className="task-drag-handle"
+                                sx={{
+                                  fontSize: 16,
+                                  color: 'hsl(var(--muted-foreground))',
+                                  mt: 0.25,
+                                  cursor: 'grab',
+                                  transition: 'opacity 120ms',
+                                }}
+                              />
+                              <Typography
+                                variant="body2"
+                                sx={{
+                                  flex: 1,
+                                  fontWeight: 500,
+                                  textDecoration: task.completed ? 'line-through' : 'none',
+                                  color: task.completed
+                                    ? 'hsl(var(--muted-foreground))'
+                                    : 'hsl(var(--foreground))',
+                                }}
+                              >
+                                {task.title}
+                              </Typography>
+                              <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                  // Stop propagation so the card's onClick doesn't
+                                  // also open the edit dialog underneath.
+                                  e.stopPropagation();
+                                  setPendingDeleteId(task.id);
+                                }}
+                                sx={{ p: 0.25 }}
+                              >
+                                <DeleteOutlineIcon sx={{ fontSize: 14 }} />
+                              </IconButton>
+                            </Box>
+                            {/* Meta row — category chip + inline assignee selector
+                                (same chip style as the incident header). The
+                                assignee select is editable in place; clicks
+                                don't bubble up to open the modal. */}
+                            <Box
                               sx={{
-                                fontSize: 16,
-                                color: 'hsl(var(--muted-foreground))',
-                                mt: 0.25,
-                              }}
-                            />
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                flex: 1,
-                                fontWeight: 500,
-                                textDecoration: task.completed ? 'line-through' : 'none',
-                                color: task.completed
-                                  ? 'hsl(var(--muted-foreground))'
-                                  : 'hsl(var(--foreground))',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 0.75,
+                                mt: 1,
+                                ml: 2.5,
+                                flexWrap: 'wrap',
                               }}
                             >
-                              {task.title}
-                            </Typography>
-                            <IconButton
-                              size="small"
-                              onClick={(e) => {
-                                // Stop propagation so the card's onClick doesn't
-                                // also open the edit dialog underneath.
-                                e.stopPropagation();
-                                setPendingDeleteId(task.id);
-                              }}
-                              sx={{ p: 0.25 }}
-                            >
-                              <DeleteOutlineIcon sx={{ fontSize: 14 }} />
-                            </IconButton>
-                          </Box>
-                          {(cat || task.assignee) && (
-                            <Box sx={{ display: 'flex', gap: 0.5, mt: 1, ml: 2.5, flexWrap: 'wrap' }}>
                               {cat && (
                                 <Chip
                                   size="small"
@@ -1039,19 +1102,22 @@ const IncidentSimplePage = () => {
                                   }}
                                 />
                               )}
-                              {task.assignee && (
-                                <Chip
-                                  size="small"
-                                  icon={<PersonIcon sx={{ fontSize: 11 }} />}
-                                  label={task.assignee}
-                                  sx={{ height: 18, fontSize: 10 }}
+                              <Box sx={{ ml: 'auto', minWidth: 0 }}>
+                                <TaskAssigneeChip
+                                  value={task.assignee || ''}
+                                  onChange={(next) =>
+                                    handleTaskUpdate({ ...task, assignee: next })
+                                  }
+                                  maxWidth={130}
                                 />
-                              )}
+                              </Box>
                             </Box>
-                          )}
+                          </Box>
                         </Box>
                       );
                     })}
+                    {/* Trailing append-slot — drops past the last card go here */}
+                    {renderDropSlot(items.length)}
                   </Box>
                 </Box>
               );
