@@ -47,18 +47,7 @@ import {
   ResolutionData,
   RESOLUTION_REASONS,
 } from '@/components/incidents/ResolveIncidentDialog';
-import { TaskEditDialog } from '@/components/incidents/TaskEditDialog';
-import { TaskAssigneeChip } from '@/components/incidents/TaskAssigneeChip';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { TaskKanbanBoard } from '@/components/incidents/TaskKanbanBoard';
 
 // ============================================================================
 // Kanban column definition — lanes are configured per-org via Org Preferences.
