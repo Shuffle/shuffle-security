@@ -68,7 +68,7 @@ interface NavItem {
 }
 
 const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: boolean): NavItem[] => [
-  { label: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/dashboard', supportOnly: true },
+  { label: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/dashboard' },
   { 
     label: entityLabel, 
     icon: <WarningAmberIcon />,
@@ -78,7 +78,7 @@ const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: bool
       { label: 'Custom Fields', path: '/incidents/custom-fields', icon: <TuneIcon fontSize="small" /> },
     ],
   },
-  { label: 'Monitors', icon: <Radar size={20} />, path: '/monitors', supportOnly: true },
+  { label: 'Monitors', icon: <Radar size={20} />, path: '/monitors' },
   { 
     label: 'Detection', 
     icon: <RadarIcon />,
@@ -86,13 +86,13 @@ const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: bool
     children: [
       { label: 'Rules', path: '/detection/sigma', icon: <Braces size={16} /> },
       { label: 'Pipelines', path: '/detection/pipelines', icon: <Network size={16} /> },
-      { label: 'ATT&CK', path: '/detection/mitre', icon: <Waypoints size={16} />, supportOnly: true },
+      { label: 'ATT&CK', path: '/detection/mitre', icon: <Waypoints size={16} /> },
       { label: 'Threat Feeds', path: '/incidents/threat-feeds', icon: <RssFeedIcon fontSize="small" /> },
       { label: 'IOC Types', path: '/incidents/ioc-types', icon: <FingerprintIcon fontSize="small" /> },
-      { label: 'Vulnerabilities', path: '/vulnerabilities', icon: <Shield size={16} />, supportOnly: true },
-      { label: 'Assets', path: '/assets', icon: <HardDrive size={16} />, supportOnly: true },
-      { label: 'Response Actions', path: '/incidents/response-actions', icon: <Shield size={16} />, supportOnly: true },
-      { label: 'Users', path: '/users', icon: <Users size={16} />, supportOnly: true },
+      { label: 'Vulnerabilities', path: '/vulnerabilities', icon: <Shield size={16} /> },
+      { label: 'Assets', path: '/assets', icon: <HardDrive size={16} /> },
+      { label: 'Response Actions', path: '/incidents/response-actions', icon: <Shield size={16} /> },
+      { label: 'Users', path: '/users', icon: <Users size={16} /> },
     ],
   },
   { label: '__divider__', icon: <></> },
