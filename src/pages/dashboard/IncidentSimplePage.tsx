@@ -152,6 +152,11 @@ const IncidentSimplePage = () => {
   // Delete confirmation
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Debounces network writes for meta-patch (severity / status / assignee).
+  // The local state still updates instantly, but the actual fetch is coalesced
+  // so rapid changes (e.g. picking a different option twice) result in one
+  // request, not three. Mirrors the pattern used by the tasks-save effect.
+  const metaSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const skipNextSaveRef = useRef(true);
 
   // Inline meta editing (severity / status / assignee). The detail page tracks
