@@ -835,6 +835,7 @@ const IncidentSimplePage = () => {
                             setDraggedTaskId(null);
                             setHoverLane(null);
                           }}
+                          onClick={() => setEditingTaskId(task.id)}
                           sx={{
                             p: 1.25,
                             bgcolor: 'hsl(var(--background))',
@@ -873,7 +874,12 @@ const IncidentSimplePage = () => {
                             </Typography>
                             <IconButton
                               size="small"
-                              onClick={() => handleDeleteTask(task.id)}
+                              onClick={(e) => {
+                                // Stop propagation so the card's onClick doesn't
+                                // also open the edit dialog underneath.
+                                e.stopPropagation();
+                                setPendingDeleteId(task.id);
+                              }}
                               sx={{ p: 0.25 }}
                             >
                               <DeleteOutlineIcon sx={{ fontSize: 14 }} />
