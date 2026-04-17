@@ -12,7 +12,7 @@ import {
 } from '@mui/material';
 import { statusConfig, severityColors } from '@/config/incidentConfig';
 import { isAIAssignee } from '@/lib/utils';
-import { AgentIcon } from '@/components/agent/AgentIcon';
+import AgentIcon from '@/components/agent/AgentIcon';
 import { useUsers } from '@/hooks/useUsers';
 
 export interface IncidentMetaChipsProps {
@@ -43,7 +43,7 @@ export const IncidentMetaChips = ({
   readOnly = false,
   assigneeMaxWidth = 180,
 }: IncidentMetaChipsProps) => {
-  const { users, isLoading: usersLoading } = useUsers();
+  const { users, loading: usersLoading } = useUsers();
 
   const statusInfo = statusConfig[status];
 
