@@ -1,0 +1,677 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Box,
+  Typography,
+  IconButton,
+  Tooltip,
+  Menu,
+  MenuItem,
+  Divider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  Button,
+  CircularProgress,
+  Avatar,
+} from '@mui/material';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import LinkIcon from '@mui/icons-material/Link';
+import TaskAltIcon from '@mui/icons-material/TaskAlt';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import ForwardIcon from '@mui/icons-material/Forward';
+import CallMergeIcon from '@mui/icons-material/CallMerge';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import SettingsIcon from '@mui/icons-material/Settings';
+import CloseIcon from '@mui/icons-material/Close';
+import { toast } from 'sonner';
+
+import { DATASTORE_CATEGORIES, getDatastoreItem, setDatastoreItem } from '@/services/datastore';
+import { useDatastore } from '@/hooks/useDatastore';
+import { useAuth } from '@/context/AuthContext';
+import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
+import { resyncState } from '@/lib/resyncState';
+import {
+  ResolveIncidentDialog,
+  ResolutionData,
+  RESOLUTION_REASONS,
+} from '@/components/incidents/ResolveIncidentDialog';
+import { MergeIncidentDialog } from '@/components/incidents/MergeIncidentDialog';
+
+// ============================================================================
+// Shared incident "three dots" actions menu used by both the full incident
+// detail page and the simplified kanban view. Keeps Share, Resync, Forward,
+// Merge and Resolve fully working in one place so behaviour stays in sync.
+// ============================================================================
+
+export interface IncidentActionsMenuIncident {
+  id: string;
+  title: string;
+  source?: string;
+  status: string; // canonical status (e.g. "resolved")
+  rawOCSF?: any;
+  customFields?: Record<string, string | number | boolean | undefined>;
+}
+
+export interface IncidentActionsMenuProps {
+  incident: IncidentActionsMenuIncident;
+  /** Called after a save / mutation so the host page can refresh itself. */
+  onAfterChange?: () => void | Promise<void>;
+  /** Override default navigation after resolve (defaults to /incidents). */
+  onAfterResolve?: () => void;
+  /** Hide the menu entirely (used for the public read-only view). */
+  hidden?: boolean;
+  /** Cross-org id parsed from "orgId::incidentId" — propagates as Org-Id header. */
+  crossOrgId?: string | null;
+  /** Public sharing token (for the "Share" dialog public link). */
+  publicAuthorization?: string;
+  /** Optional list of orgs that share this incident (for cross-org save). */
+  sharedOrgs?: Array<{ id: string; name?: string; image?: string }>;
+  /** Show the "Simple view" entry. Hide when already in the simple view. */
+  showSimpleViewEntry?: boolean;
+  /** Show "Full view" entry instead of "Simple view". */
+  showFullViewEntry?: boolean;
+}
+
+const buttonSx = {
+  border: '1px solid hsl(var(--border))',
+  borderRadius: 1,
+  width: 32,
+  height: 32,
+} as const;
+
+export const IncidentActionsMenu = ({
+  incident,
+  onAfterChange,
+  onAfterResolve,
+  hidden = false,
+  crossOrgId = null,
+  publicAuthorization = '',
+  sharedOrgs = [],
+  showSimpleViewEntry = true,
+  showFullViewEntry = false,
+}: IncidentActionsMenuProps) => {
+  const navigate = useNavigate();
+  const { userInfo } = useAuth();
+  const currentUsername = userInfo?.username || '';
+
+  const crossOrgHeaders: Record<string, string> = crossOrgId ? { 'Org-Id': crossOrgId } : {};
+
+  const { addItem } = useDatastore({
+    category: DATASTORE_CATEGORIES.INCIDENTS,
+    orgId: crossOrgId || undefined,
+    autoFetch: false,
+  });
+
+  const [anchor, setAnchor] = useState<null | HTMLElement>(null);
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [showForwardDialog, setShowForwardDialog] = useState(false);
+  const [showMergeDialog, setShowMergeDialog] = useState(false);
+  const [showResolveDialog, setShowResolveDialog] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isResyncing, setIsResyncing] = useState(false);
+  const [forwardingApps, setForwardingApps] = useState<
+    Array<{ id: string; name: string; large_image: string; categories: string[] }>
+  >([]);
+  const [forwardingAppsLoading, setForwardingAppsLoading] = useState(false);
+
+  const isResolved = incident.status === 'resolved';
+  const orgId = userInfo?.active_org?.id || '';
+
+  // ---- Resync ---------------------------------------------------------------
+  const resyncDisabled =
+    isSaving ||
+    !incident?.source ||
+    incident?.source === 'Tenzir' ||
+    (() => {
+      const product = incident?.rawOCSF?.product || incident?.rawOCSF?.metadata?.product;
+      const name = product?.name;
+      const id = product?.id;
+      const uid = product?.uid;
+      return !!(name && (name === id || name === uid));
+    })();
+
+  const handleResync = async () => {
+    setAnchor(null);
+    if (!incident?.id) return;
+    const source = incident.source || '';
+    setIsResyncing(true);
+    resyncState.add(incident.id);
+    toast.success(source ? `Resyncing from ${source}…` : 'Resyncing…', { duration: 30000 });
+    try {
+      const preResult = await getDatastoreItem(
+        incident.id,
+        DATASTORE_CATEGORIES.INCIDENTS,
+        crossOrgId || undefined,
+      );
+      const previousEdited = preResult.item?.edited || 0;
+
+      const response = await fetch(getApiUrl('/api/v1/apps/categories/run'), {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeader(),
+          ...crossOrgHeaders,
+        },
+        body: JSON.stringify({
+          action: 'get_ticket',
+          category: 'cases',
+          fields: [{ key: 'id', value: incident.id }],
+          app_name: source,
+        }),
+      });
+      if (!response.ok) {
+        toast.error('Resync failed');
+        setIsResyncing(false);
+        resyncState.remove(incident.id);
+        return;
+      }
+      let pollCount = 0;
+      const pollInterval = setInterval(async () => {
+        pollCount++;
+        const postResult = await getDatastoreItem(
+          incident.id,
+          DATASTORE_CATEGORIES.INCIDENTS,
+          crossOrgId || undefined,
+        );
+        const newEdited = postResult.item?.edited || 0;
+        if (newEdited && newEdited !== previousEdited) {
+          clearInterval(pollInterval);
+          await onAfterChange?.();
+          setIsResyncing(false);
+          resyncState.remove(incident.id);
+          toast.success('Resync complete — update found');
+        } else if (pollCount >= 6) {
+          clearInterval(pollInterval);
+          await onAfterChange?.();
+          setIsResyncing(false);
+          resyncState.remove(incident.id);
+          toast.info('Resync complete — no changes detected');
+        }
+      }, 5000);
+    } catch {
+      toast.error('Resync failed');
+      setIsResyncing(false);
+      resyncState.remove(incident.id);
+    }
+  };
+
+  // ---- Forward --------------------------------------------------------------
+  const openForwardDialog = () => {
+    setAnchor(null);
+    setShowForwardDialog(true);
+    setForwardingAppsLoading(true);
+    fetch(getApiUrl('/api/v1/apps/authentication'), {
+      credentials: 'include',
+      headers: { ...getAuthHeader(), ...crossOrgHeaders },
+    })
+      .then((r) => r.json())
+      .then((result) => {
+        const authData = result.data || result;
+        if (Array.isArray(authData)) {
+          const seen = new Set<string>();
+          const apps = authData
+            .filter((a: any) => a.app?.name && a.validation?.valid)
+            .filter((a: any) => {
+              if (seen.has(a.app.name)) return false;
+              seen.add(a.app.name);
+              return true;
+            })
+            .map((a: any) => {
+              const rawCategories =
+                a.app?.categories ?? a.categories ?? a.app?.category ?? a.category ?? [];
+              const categories = Array.isArray(rawCategories)
+                ? rawCategories
+                : typeof rawCategories === 'string'
+                  ? [rawCategories]
+                  : typeof rawCategories === 'object' && rawCategories !== null
+                    ? Object.keys(rawCategories)
+                    : [];
+              return {
+                id: a.app.name,
+                name: (a.app.name || '')
+                  .replace(/_/g, ' ')
+                  .replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                large_image: a.app.large_image || '',
+                categories,
+              };
+            });
+          setForwardingApps(apps);
+        }
+      })
+      .catch(() => setForwardingApps([]))
+      .finally(() => setForwardingAppsLoading(false));
+  };
+
+  const handleForwardTo = async (app: {
+    id: string;
+    name: string;
+    categories: string[];
+  }) => {
+    setShowForwardDialog(false);
+    try {
+      const categories = (app.categories || []).map((c: string) => c.toLowerCase());
+      const isMessaging =
+        categories.includes('communication') ||
+        categories.includes('email') ||
+        app.id.toLowerCase() === 'gmail';
+      const ticketPayload = incident?.rawOCSF || incident || {};
+      const forwardBody: Record<string, any> = isMessaging
+        ? {
+            action: 'send_message',
+            category: 'cases',
+            key: incident?.id,
+            app_name: app.id,
+            body: ticketPayload,
+            fields: { body: ticketPayload },
+          }
+        : {
+            action: 'update_ticket',
+            category: 'cases',
+            key: incident?.id,
+            app_name: app.id,
+            fields: [{ key: 'key', value: JSON.stringify(ticketPayload) }],
+          };
+      const response = await fetch(getApiUrl('/api/v1/apps/categories/run'), {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader(), ...crossOrgHeaders },
+        body: JSON.stringify(forwardBody),
+      });
+      if (response.ok) {
+        toast.success(`Forwarded to ${app.name}`);
+      } else {
+        toast.error(`Failed to forward to ${app.name}`);
+      }
+    } catch {
+      toast.error(`Failed to forward to ${app.name}`);
+    }
+  };
+
+  // ---- Resolve --------------------------------------------------------------
+  const handleResolve = async (resolutionData: ResolutionData) => {
+    if (!incident) return;
+    setIsSaving(true);
+    const reasonLabel =
+      RESOLUTION_REASONS.find((r) => r.value === resolutionData.reason)?.label ||
+      resolutionData.reason;
+
+    // Read latest activity from the freshest copy of the incident so the simple
+    // view (which doesn't track activity locally) doesn't accidentally drop it.
+    let latestActivity: any[] = [];
+    try {
+      const latest = await getDatastoreItem(
+        incident.id,
+        DATASTORE_CATEGORIES.INCIDENTS,
+        crossOrgId || undefined,
+      );
+      const data = latest.item?.value ? JSON.parse(latest.item.value) : incident.rawOCSF || {};
+      latestActivity =
+        data?.activity ||
+        data?.metadata?.extensions?.custom_attributes?.activity ||
+        [];
+    } catch {
+      latestActivity = incident.rawOCSF?.activity || [];
+    }
+
+    const resolveActivity = {
+      id: `status-${Date.now()}`,
+      type: 'status' as const,
+      user: currentUsername,
+      timestamp: Date.now(),
+      content: `Resolved: ${reasonLabel}${resolutionData.notes ? ` - ${resolutionData.notes}` : ''}`,
+      details: {},
+      attachments: [],
+    };
+    const updatedActivity = [...latestActivity, resolveActivity];
+
+    const resolvedData = incident.rawOCSF
+      ? {
+          ...incident.rawOCSF,
+          status_id: 3,
+          status: 'Resolved',
+          status_detail: `${resolutionData.reason}${resolutionData.notes ? `: ${resolutionData.notes}` : ''}`,
+          activity: updatedActivity,
+          metadata: {
+            ...incident.rawOCSF.metadata,
+            extensions: {
+              ...incident.rawOCSF.metadata?.extensions,
+              custom_attributes: {
+                ...incident.rawOCSF.metadata?.extensions?.custom_attributes,
+              },
+            },
+          },
+        }
+      : {
+          id: incident.id,
+          title: incident.title,
+          source: incident.source,
+          status: 'resolved',
+          status_detail: `${resolutionData.reason}${resolutionData.notes ? `: ${resolutionData.notes}` : ''}`,
+          activity: updatedActivity,
+        };
+
+    try {
+      await addItem(incident.id, resolvedData);
+      // Sync to other orgs (fire-and-forget) when relevant
+      if (sharedOrgs.length > 0) {
+        Promise.allSettled(
+          sharedOrgs.map((org) =>
+            setDatastoreItem(incident.id, resolvedData, DATASTORE_CATEGORIES.INCIDENTS, org.id),
+          ),
+        );
+      }
+      toast.success('Incident resolved');
+      setShowResolveDialog(false);
+      if (onAfterResolve) {
+        onAfterResolve();
+      } else {
+        navigate('/incidents');
+      }
+    } catch {
+      toast.error('Failed to resolve incident');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (hidden) return null;
+
+  const customFieldsAsStrings = incident.customFields
+    ? Object.fromEntries(
+        Object.entries(incident.customFields).map(([k, v]) => [k, String(v ?? '')]),
+      )
+    : {};
+
+  const publicLink = `${window.location.origin}/incidents/${incident.id}?authorization=${publicAuthorization}&org=${orgId}`;
+
+  return (
+    <>
+      <Tooltip title="Actions">
+        <IconButton size="small" onClick={(e) => setAnchor(e.currentTarget)} sx={buttonSx}>
+          <MoreVertIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
+
+      <Menu
+        anchorEl={anchor}
+        open={Boolean(anchor)}
+        onClose={() => setAnchor(null)}
+        PaperProps={{
+          sx: {
+            bgcolor: 'hsl(var(--card))',
+            border: '1px solid hsl(var(--border))',
+            minWidth: 160,
+          },
+        }}
+      >
+        <MenuItem
+          onClick={() => {
+            setAnchor(null);
+            setShowShareDialog(true);
+          }}
+        >
+          <LinkIcon sx={{ fontSize: 16, mr: 1 }} />
+          Share
+        </MenuItem>
+
+        {showSimpleViewEntry && (
+          <MenuItem
+            onClick={() => {
+              setAnchor(null);
+              navigate(`/incidents-simple/${incident.id}`);
+            }}
+          >
+            <TaskAltIcon sx={{ fontSize: 16, mr: 1 }} />
+            Simple view
+          </MenuItem>
+        )}
+
+        {showFullViewEntry && (
+          <MenuItem
+            onClick={() => {
+              setAnchor(null);
+              navigate(`/incidents/${incident.id}`);
+            }}
+          >
+            <TaskAltIcon sx={{ fontSize: 16, mr: 1 }} />
+            Full view
+          </MenuItem>
+        )}
+
+        <MenuItem disabled>
+          <LinkIcon sx={{ fontSize: 16, mr: 1 }} />
+          Visit Source
+        </MenuItem>
+
+        <Divider />
+
+        <MenuItem disabled={resyncDisabled || isResyncing} onClick={handleResync}>
+          <RefreshIcon sx={{ fontSize: 16, mr: 1 }} />
+          Resync
+        </MenuItem>
+
+        <MenuItem disabled onClick={openForwardDialog}>
+          <ForwardIcon sx={{ fontSize: 16, mr: 1 }} />
+          Forward
+        </MenuItem>
+
+        <Divider />
+
+        <MenuItem
+          disabled={isSaving}
+          onClick={() => {
+            setAnchor(null);
+            setShowMergeDialog(true);
+          }}
+        >
+          <CallMergeIcon sx={{ fontSize: 16, mr: 1 }} />
+          Merge Into…
+        </MenuItem>
+
+        {!isResolved && <Divider />}
+        {!isResolved && (
+          <MenuItem
+            disabled={isSaving}
+            onClick={() => {
+              setAnchor(null);
+              setShowResolveDialog(true);
+            }}
+            sx={{ color: '#22c55e' }}
+          >
+            <CheckCircleIcon sx={{ fontSize: 16, mr: 1 }} />
+            Resolve
+          </MenuItem>
+        )}
+
+        {incident?.rawOCSF?.shuffle_execution_id && (
+          <MenuItem
+            onClick={() => {
+              setAnchor(null);
+              window.open(
+                `https://shuffler.io/workflows/${incident.rawOCSF.shuffle_execution_id}?execution_id=${incident.rawOCSF.shuffle_execution_id}`,
+                '_blank',
+              );
+            }}
+          >
+            <SettingsIcon sx={{ fontSize: 16, mr: 1 }} />
+            View Automation
+          </MenuItem>
+        )}
+      </Menu>
+
+      {/* ---- Share dialog ---- */}
+      <Dialog
+        open={showShareDialog}
+        onClose={() => setShowShareDialog(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: 'hsl(var(--card))',
+            border: '1px solid hsl(var(--border))',
+            borderRadius: 2,
+          },
+        }}
+      >
+        <DialogTitle sx={{ pb: 1 }}>
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            Share Incident
+          </Typography>
+          <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+            Anyone with this link can view the incident without logging in.
+          </Typography>
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ mt: 1 }}>
+            <Typography
+              variant="caption"
+              sx={{ color: 'hsl(var(--muted-foreground))', mb: 0.5, display: 'block' }}
+            >
+              Public link
+            </Typography>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                p: 1.5,
+                borderRadius: 1.5,
+                bgcolor: 'rgba(255,255,255,0.03)',
+                border: '1px solid hsl(var(--border))',
+              }}
+            >
+              <Typography
+                variant="body2"
+                sx={{
+                  flex: 1,
+                  fontFamily: 'monospace',
+                  fontSize: '0.75rem',
+                  color: 'hsl(var(--foreground))',
+                  wordBreak: 'break-all',
+                  minWidth: 0,
+                  userSelect: 'all',
+                }}
+              >
+                {publicLink}
+              </Typography>
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => {
+                  navigator.clipboard.writeText(publicLink);
+                  toast.success('Link copied to clipboard');
+                }}
+                sx={{
+                  flexShrink: 0,
+                  textTransform: 'none',
+                  borderColor: 'hsl(var(--border))',
+                  color: 'hsl(var(--foreground))',
+                  fontWeight: 600,
+                  fontSize: '0.75rem',
+                  '&:hover': {
+                    borderColor: 'hsl(var(--primary))',
+                    color: 'hsl(var(--primary))',
+                  },
+                }}
+              >
+                Copy
+              </Button>
+            </Box>
+            {!publicAuthorization && (
+              <Typography variant="caption" sx={{ color: '#fb923c', mt: 1, display: 'block' }}>
+                No public authorization token found for this incident. The link may not work for
+                unauthenticated users.
+              </Typography>
+            )}
+          </Box>
+        </DialogContent>
+      </Dialog>
+
+      {/* ---- Resolve dialog ---- */}
+      <ResolveIncidentDialog
+        open={showResolveDialog}
+        onClose={() => setShowResolveDialog(false)}
+        onResolve={handleResolve}
+        incidentTitle={incident?.title || ''}
+        isLoading={isSaving}
+        incidentCustomFields={customFieldsAsStrings}
+      />
+
+      {/* ---- Forward dialog ---- */}
+      <Dialog
+        open={showForwardDialog}
+        onClose={() => setShowForwardDialog(false)}
+        PaperProps={{
+          sx: {
+            bgcolor: 'hsl(var(--card))',
+            border: '1px solid hsl(var(--border))',
+            minWidth: 400,
+            maxWidth: 500,
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1 }}
+        >
+          <Typography variant="h6" sx={{ fontSize: '1rem' }}>
+            Forward Incident
+          </Typography>
+          <IconButton size="small" onClick={() => setShowForwardDialog(false)}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ pt: 1 }}>
+          <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
+            Choose a tool to forward this incident to.
+          </Typography>
+          {forwardingAppsLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <CircularProgress size={24} />
+            </Box>
+          ) : forwardingApps.length === 0 ? (
+            <Typography
+              variant="body2"
+              sx={{ color: 'text.disabled', textAlign: 'center', py: 4 }}
+            >
+              No authenticated tools available. Configure integrations in Settings.
+            </Typography>
+          ) : (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+              {forwardingApps.map((app) => (
+                <MenuItem
+                  key={app.id}
+                  onClick={() => handleForwardTo(app)}
+                  sx={{ borderRadius: 1, py: 1 }}
+                >
+                  <Avatar
+                    src={app.large_image}
+                    sx={{ width: 28, height: 28, mr: 1.5, borderRadius: 1 }}
+                    variant="rounded"
+                  >
+                    {app.name.charAt(0)}
+                  </Avatar>
+                  <Typography variant="body2">{app.name}</Typography>
+                </MenuItem>
+              ))}
+            </Box>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ---- Merge dialog ---- */}
+      <MergeIncidentDialog
+        open={showMergeDialog}
+        onClose={() => setShowMergeDialog(false)}
+        currentIncidentId={incident?.id || ''}
+        currentIncidentTitle={incident?.title || ''}
+        onMergeComplete={() => {
+          onAfterChange?.();
+        }}
+      />
+    </>
+  );
+};
+
+export default IncidentActionsMenu;
