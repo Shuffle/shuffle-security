@@ -131,6 +131,10 @@ const IncidentSimplePage = () => {
   // Manual refresh — distinct from initial load so we don't show the skeleton.
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [incident, setIncident] = useState<IncidentSnapshot | null>(null);
+  // Public sharing token lives on the datastore item envelope (sibling to
+  // `value`), NOT inside the OCSF payload — capture it separately so the
+  // Share dialog can build a working public link.
+  const [publicAuthorization, setPublicAuthorization] = useState<string>('');
   // Org-configured kanban lanes. Memoised lane keys keep the getLane call cheap.
   const taskStatuses = useTaskStatuses();
   const laneKeys = useMemo(() => taskStatuses.map((s) => s.key), [taskStatuses]);
@@ -215,6 +219,7 @@ const IncidentSimplePage = () => {
         rawOCSF: data,
       });
       setTasks(normalized);
+      setPublicAuthorization(result.item.public_authorization || '');
       // Skip the immediately-following auto-save triggered by this state hydration.
       skipNextSaveRef.current = true;
     } catch (err) {
@@ -554,7 +559,7 @@ const IncidentSimplePage = () => {
           }}
           showSimpleViewEntry={false}
           showFullViewEntry
-          publicAuthorization={incident.rawOCSF?.public_authorization || ''}
+          publicAuthorization={publicAuthorization}
           onAfterChange={() => loadIncident()}
         />
       </Box>
