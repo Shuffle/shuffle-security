@@ -150,32 +150,47 @@ function getTaskStatusesSnapshot(): TaskStatusOption[] {
 }
 
 let _fetchedFromServer = false;
+// In-flight request — multiple hooks mount in parallel on page load (entity
+// label, sidebar tabs, task statuses, automation toggle, etc.) and all called
+// `loadEntityPreference` before the first await resolved, causing N duplicate
+// /get_cache requests for the same `org_settings` key. Sharing the promise
+// collapses them into one.
+let _inflight: Promise<void> | null = null;
 
 /** Load org setting from datastore and sync to local cache */
-export async function loadEntityPreference() {
-  try {
-    const result = await getDatastoreItem(DATASTORE_KEY, DATASTORE_CATEGORIES.CONFIGURATION);
-    if (result.success && result.item?.value) {
-      const data = typeof result.item.value === 'string' ? JSON.parse(result.item.value) : result.item.value;
-      const val = data?.entity_label;
-      if (val && ENTITY_OPTIONS.some(o => o.value === val)) {
-        localStorage.setItem(LOCAL_CACHE_KEY, val);
+export async function loadEntityPreference(): Promise<void> {
+  if (_fetchedFromServer) return;
+  if (_inflight) return _inflight;
+
+  _inflight = (async () => {
+    try {
+      const result = await getDatastoreItem(DATASTORE_KEY, DATASTORE_CATEGORIES.CONFIGURATION);
+      if (result.success && result.item?.value) {
+        const data = typeof result.item.value === 'string' ? JSON.parse(result.item.value) : result.item.value;
+        const val = data?.entity_label;
+        if (val && ENTITY_OPTIONS.some(o => o.value === val)) {
+          localStorage.setItem(LOCAL_CACHE_KEY, val);
+        }
+        if (data?.show_automation !== undefined) {
+          localStorage.setItem(LOCAL_AUTOMATION_KEY, String(data.show_automation));
+        }
+        if (data?.sidebar_tabs !== undefined) {
+          localStorage.setItem(LOCAL_SIDEBAR_TABS_KEY, JSON.stringify(data.sidebar_tabs));
+        }
+        if (data?.task_statuses !== undefined) {
+          localStorage.setItem(LOCAL_TASK_STATUSES_KEY, JSON.stringify(normalizeTaskStatuses(data.task_statuses)));
+        }
+        listeners.forEach(cb => cb());
       }
-      if (data?.show_automation !== undefined) {
-        localStorage.setItem(LOCAL_AUTOMATION_KEY, String(data.show_automation));
-      }
-      if (data?.sidebar_tabs !== undefined) {
-        localStorage.setItem(LOCAL_SIDEBAR_TABS_KEY, JSON.stringify(data.sidebar_tabs));
-      }
-      if (data?.task_statuses !== undefined) {
-        localStorage.setItem(LOCAL_TASK_STATUSES_KEY, JSON.stringify(normalizeTaskStatuses(data.task_statuses)));
-      }
-      listeners.forEach(cb => cb());
+      _fetchedFromServer = true;
+    } catch {
+      // keep local cache; allow a future retry by clearing the inflight ref
+    } finally {
+      _inflight = null;
     }
-    _fetchedFromServer = true;
-  } catch {
-    // keep local cache
-  }
+  })();
+
+  return _inflight;
 }
 
 /** Save preference to both local cache and org datastore */
