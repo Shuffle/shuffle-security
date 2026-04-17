@@ -958,9 +958,10 @@ const VulnAssetsPage = () => {
               const screenlockState: 'on' | 'off' | 'empty' = (host.automatic_screen_lock_enabled === true || host.automatic_screen_lock_enabled === 'true') ? 'on' : (host.automatic_screen_lock_enabled === false || host.automatic_screen_lock_enabled === 'false' || host.automatic_screen_lock_enabled === 'FALSE') ? 'off' : 'empty';
               const screenlockOn = screenlockState === 'on';
               const softwareCount = Array.isArray(host.installed_software) ? host.installed_software.length : 0;
-              const responseActionsRaw = (host as any).response_actions as string | undefined;
-              const responseActionsOn = !!responseActionsRaw;
-              const responseActionsMode = responseActionsRaw ? (responseActionsRaw.toLowerCase().includes('full') ? 'full' : 'controlled') : null;
+              const responseActionsRaw = (host as any).response_actions as string | boolean | undefined;
+              const raLower = String(responseActionsRaw ?? '').toLowerCase().trim();
+              const responseActionsOn = responseActionsRaw !== undefined && responseActionsRaw !== null && raLower !== '' && raLower !== 'false' && raLower !== '0' && raLower !== 'no' && raLower !== 'off';
+              const responseActionsMode = responseActionsOn ? (raLower.includes('full') ? 'full' : 'controlled') : null;
               const logForwardingOn = isActiveMonitoringEnabled(host);
               const isExpanded = expandedHosts.has(host.uuid);
               const toggleExpanded = () => {
