@@ -617,7 +617,14 @@ const IncidentSimplePage = () => {
                 <img
                   src={sourceAppImage}
                   alt={incident.source || ''}
-                  style={{ width: 44, height: 44, objectFit: 'contain' }}
+                  // Fill the avatar — `cover` crops to the circle so square app
+                  // logos no longer float as a small tile inside a big ring.
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    display: 'block',
+                  }}
                 />
               </Box>
             </Tooltip>
