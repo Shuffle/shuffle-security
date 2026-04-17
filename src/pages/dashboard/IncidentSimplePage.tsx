@@ -229,6 +229,137 @@ const IncidentSimplePage = () => {
   }, [tasks]);
 
   // ==========================================================================
+  // Persist a metadata patch (severity/status/assignee) immediately. Mirrors
+  // the save shape used by IncidentDetailPage so both views stay schema-aligned.
+  // ==========================================================================
+  const saveMetaPatch = useCallback(
+    async (patch: { severity?: string; status?: string; assignee?: string }) => {
+      if (!incident) return;
+      setIsSavingMeta(true);
+
+      const nextSeverity = patch.severity ?? incident.severity;
+      const nextStatusKey = patch.status ?? incident.status;
+      const nextAssignee = patch.assignee ?? incident.assignee;
+
+      const sevOption = severityOptions.find((s) => s.value === nextSeverity);
+      const { label: statusLabel, id: statusId } = getOCSFStatus(nextStatusKey);
+
+      const updated = incident.rawOCSF
+        ? {
+            ...incident.rawOCSF,
+            severity_id: sevOption?.id ?? incident.rawOCSF.severity_id,
+            severity: sevOption?.label ?? incident.rawOCSF.severity,
+            status_id: statusId,
+            status: statusLabel,
+            assignee: nextAssignee || '',
+            metadata: {
+              ...incident.rawOCSF.metadata,
+              extensions: {
+                ...incident.rawOCSF.metadata?.extensions,
+                custom_attributes: {
+                  ...incident.rawOCSF.metadata?.extensions?.custom_attributes,
+                  assignee: nextAssignee || '',
+                },
+              },
+            },
+          }
+        : {
+            id: incident.id,
+            title: incident.title,
+            severity: nextSeverity,
+            status: nextStatusKey,
+            assignee: nextAssignee || '',
+          };
+
+      setIncident({
+        ...incident,
+        severity: nextSeverity,
+        status: nextStatusKey,
+        assignee: isAIAssignee(nextAssignee) ? 'AI Agent' : nextAssignee,
+        rawOCSF: updated,
+      });
+      // Suppress the next tasks-save effect — that hook re-fires on incident changes
+      skipNextSaveRef.current = true;
+
+      try {
+        const res = await setDatastoreItem(
+          incident.id,
+          updated,
+          DATASTORE_CATEGORIES.INCIDENTS,
+        );
+        if (!res.success) toast.error('Failed to save changes');
+      } catch (err) {
+        console.error('[IncidentSimple] Meta save failed:', err);
+        toast.error('Failed to save changes');
+      } finally {
+        setIsSavingMeta(false);
+      }
+    },
+    [incident],
+  );
+
+  // ==========================================================================
+  // Resolve flow — uses the same dialog as the detail page.
+  // ==========================================================================
+  const handleResolve = useCallback(
+    async (resolutionData: ResolutionData) => {
+      if (!incident) return;
+      setIsSavingMeta(true);
+      const reasonLabel =
+        RESOLUTION_REASONS.find((r) => r.value === resolutionData.reason)?.label ||
+        resolutionData.reason;
+      const existingActivity =
+        incident.rawOCSF?.activity ||
+        incident.rawOCSF?.metadata?.extensions?.custom_attributes?.activity ||
+        [];
+      const resolveActivity = {
+        id: `status-${Date.now()}`,
+        type: 'status' as const,
+        user: currentUser,
+        timestamp: Date.now(),
+        content: `Resolved: ${reasonLabel}${resolutionData.notes ? ` - ${resolutionData.notes}` : ''}`,
+        details: {},
+        attachments: [],
+      };
+      const updated = {
+        ...(incident.rawOCSF || { id: incident.id, title: incident.title }),
+        status_id: 3,
+        status: 'Resolved',
+        status_detail: `${resolutionData.reason}${resolutionData.notes ? `: ${resolutionData.notes}` : ''}`,
+        activity: [...existingActivity, resolveActivity],
+        metadata: {
+          ...incident.rawOCSF?.metadata,
+          extensions: {
+            ...incident.rawOCSF?.metadata?.extensions,
+            custom_attributes: {
+              ...incident.rawOCSF?.metadata?.extensions?.custom_attributes,
+            },
+          },
+        },
+      };
+      try {
+        const res = await setDatastoreItem(
+          incident.id,
+          updated,
+          DATASTORE_CATEGORIES.INCIDENTS,
+        );
+        if (!res.success) {
+          toast.error('Failed to resolve');
+          return;
+        }
+        toast.success('Incident resolved');
+        setShowResolveDialog(false);
+        navigate('/incidents');
+      } catch {
+        toast.error('Failed to resolve');
+      } finally {
+        setIsSavingMeta(false);
+      }
+    },
+    [incident, currentUser, navigate],
+  );
+
+  // ==========================================================================
   // Task mutations
   // ==========================================================================
   const handleAddTask = () => {
