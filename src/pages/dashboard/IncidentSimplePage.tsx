@@ -607,6 +607,43 @@ const IncidentSimplePage = () => {
           ) : (
             // ---- Expanded: full details ----
             <>
+              {/* Source app icon — centered circular avatar at the top of the
+                  sidebar. Acts as a visual anchor for "where this came from".
+                  Hovering scales it slightly and reveals a subtle ring; clicking
+                  opens the source app context if available. */}
+              {sourceAppImage && (
+                <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2, mt: 0.5 }}>
+                  <Tooltip title={incident.source || ''} placement="top">
+                    <Box
+                      sx={{
+                        width: 64,
+                        height: 64,
+                        borderRadius: '50%',
+                        bgcolor: 'hsl(var(--muted) / 0.4)',
+                        border: '2px solid hsl(var(--border))',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        overflow: 'hidden',
+                        cursor: 'pointer',
+                        transition: 'transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease',
+                        '&:hover': {
+                          transform: 'scale(1.06)',
+                          borderColor: 'hsl(var(--primary) / 0.6)',
+                          boxShadow: '0 4px 16px hsl(var(--primary) / 0.25)',
+                        },
+                      }}
+                    >
+                      <img
+                        src={sourceAppImage}
+                        alt={incident.source || ''}
+                        style={{ width: 44, height: 44, objectFit: 'contain' }}
+                      />
+                    </Box>
+                  </Tooltip>
+                </Box>
+              )}
+
               {/* Editable status / severity / assignee chips — same component as /incidents */}
               <Box sx={{ mb: 2 }}>
                 <IncidentMetaChips
@@ -621,32 +658,7 @@ const IncidentSimplePage = () => {
                 />
               </Box>
 
-              <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.25, mb: 1 }}>
-                {/* Source app image — replaces the text caption when we found one */}
-                {sourceAppImage ? (
-                  <Tooltip title={incident.source || ''} placement="top">
-                    <Box
-                      sx={{
-                        width: 36,
-                        height: 36,
-                        flexShrink: 0,
-                        borderRadius: 1,
-                        bgcolor: 'hsl(var(--muted) / 0.4)',
-                        border: '1px solid hsl(var(--border))',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        overflow: 'hidden',
-                      }}
-                    >
-                      <img
-                        src={sourceAppImage}
-                        alt={incident.source || ''}
-                        style={{ width: 28, height: 28, objectFit: 'contain' }}
-                      />
-                    </Box>
-                  </Tooltip>
-                ) : null}
+              <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 1 }}>
                 <Box sx={{ minWidth: 0, flex: 1 }}>
                   <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.3 }}>
                     {incident.title}
