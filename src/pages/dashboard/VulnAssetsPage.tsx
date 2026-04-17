@@ -1389,7 +1389,7 @@ const VulnAssetsPage = () => {
                           )}
                         </div>
                         {softwareCount === 0 ? (
-                          <p className="text-xs text-muted-foreground italic">No software inventory collected for this host.</p>
+                          <p className="text-xs text-muted-foreground italic mb-3">No software inventory collected for this host.</p>
                         ) : (
                           <>
                             <Input
