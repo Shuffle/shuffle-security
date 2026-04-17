@@ -162,7 +162,7 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
               </div>
             </TooltipTrigger>
             <TooltipContent side="bottom" align="start" className="z-[9999] max-w-sm">
-              <p className="text-[0.65rem] font-mono">hd_encrypted = {String(host.hd_encrypted)}</p>
+              <p className="text-[0.65rem] font-mono">hd_encrypted = {fmtRaw(host.hd_encrypted)}</p>
             </TooltipContent>
           </Tooltip>
           <Tooltip>
