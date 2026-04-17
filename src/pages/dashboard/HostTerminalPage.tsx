@@ -702,13 +702,18 @@ const HostTerminalPage = () => {
         >
           Disable RCE
         </button>
-        {hostActionablePerms.map(perm => (
+        {[
+          { id: 'isolate_host', name: 'Isolate Host' },
+          { id: 'disable_user', name: 'Disable User Accounts' },
+          { id: 'restart_now', name: 'Restart Endpoint' },
+        ].map(s => (
           <button
-            key={perm.id}
-            className="px-3 py-1.5 text-xs rounded-md border border-border hover:bg-muted/50 transition-colors text-foreground"
-            onClick={() => executeHostAction(perm.id, perm.name, true)}
+            key={s.id}
+            disabled
+            title="Not yet available on the endpoint"
+            className="px-3 py-1.5 text-xs rounded-md border border-border text-muted-foreground opacity-50 cursor-not-allowed"
           >
-            {perm.name}
+            {s.name}
           </button>
         ))}
       </div>
