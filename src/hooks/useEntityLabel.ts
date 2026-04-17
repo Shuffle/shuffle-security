@@ -14,8 +14,32 @@ export type EntityValue = (typeof ENTITY_OPTIONS)[number]['value'];
 const LOCAL_CACHE_KEY = 'shuffle-entity-label';
 const LOCAL_AUTOMATION_KEY = 'shuffle-show-automation';
 const LOCAL_SIDEBAR_TABS_KEY = 'shuffle-sidebar-tabs';
+const LOCAL_TASK_STATUSES_KEY = 'shuffle-task-statuses';
 const DATASTORE_KEY = 'org_settings';
 const DEFAULT: EntityValue = 'incidents';
+
+// ---------------------------------------------------------------------------
+// Task statuses (kanban lanes on /incidents-simple/<id>)
+// ---------------------------------------------------------------------------
+// Stored as an ordered list. The `done` lane is special (it represents
+// `task.completed === true`) and must always exist — it can be renamed/recolored
+// but not removed. Other lanes can be added/removed/renamed by the org.
+
+export interface TaskStatusOption {
+  /** Stable key used by the kanban routing logic. The first non-`done` key
+   *  is treated as the default "todo" lane and the others act as in-progress
+   *  variants. `done` is a reserved special key that maps to `completed`. */
+  key: string;
+  label: string;
+  /** Tailwind/HSL hex — used for the lane header dot and hover ring. */
+  color: string;
+}
+
+export const DEFAULT_TASK_STATUSES: TaskStatusOption[] = [
+  { key: 'todo', label: 'To Do', color: '#3b82f6' },
+  { key: 'in_progress', label: 'In Progress', color: '#f59e0b' },
+  { key: 'done', label: 'Done', color: '#22c55e' },
+];
 
 // Sidebar tab keys that can be toggled (Incidents always visible)
 export const SIDEBAR_TAB_OPTIONS = [
