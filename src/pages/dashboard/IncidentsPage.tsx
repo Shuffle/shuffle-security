@@ -380,6 +380,9 @@ const IncidentsPage = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [automationsDialogOpen, setAutomationsDialogOpen] = useState(false);
   const [categoryAutomations, setCategoryAutomations] = useState<CategoryAutomation[]>([]);
+  // Ref mirror so callbacks can read the latest value without being recreated
+  const categoryAutomationsRef = useRef<CategoryAutomation[]>([]);
+  useEffect(() => { categoryAutomationsRef.current = categoryAutomations; }, [categoryAutomations]);
   const [ingestionApps, setIngestionApps] = useState<ValidatedIngestionApp[]>([]);
   const [forwardApps, setForwardApps] = useState<ValidatedIngestionApp[]>([]);
   const [ingestWorkflowId, setIngestWorkflowId] = useState<string | null>(null);
@@ -621,7 +624,7 @@ const IncidentsPage = () => {
           const forwardWorkflow = findForwardTicketsWorkflow(workflowList);
           if (forwardWorkflow) {
             // Also check if the Forward Tickets workflow is referenced in category automations' "Run workflow"
-            const workflowAuto = categoryAutomations?.find(a => (a.type === 'workflow' || a.name === 'Run workflow') && a.enabled);
+            const workflowAuto = categoryAutomationsRef.current?.find(a => (a.type === 'workflow' || a.name === 'Run workflow') && a.enabled);
             const automationWorkflowIds = workflowAuto?.options?.find(o => o.key === 'workflow_id')?.value?.split(',').map(id => id.trim()).filter(Boolean) || [];
             const isReferencedInAutomations = automationWorkflowIds.includes(forwardWorkflow.id);
 
@@ -688,11 +691,13 @@ const IncidentsPage = () => {
       setIngestionLoading(false);
       ingestionLoadedOnceRef.current = true;
     }
-  }, [categoryAutomations]);
+  }, []);
 
   useEffect(() => {
     fetchIngestionApps();
-  }, [fetchIngestionApps]);
+    // Run only once on mount; fetchIngestionApps is now stable
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Debounced handler: collects app toggles for 3s then fires one generate call
   const handleToggleApp = useCallback((appName: string, enabled: boolean) => {
