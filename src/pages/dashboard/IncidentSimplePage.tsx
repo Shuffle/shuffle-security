@@ -38,6 +38,13 @@ import {
 } from '@/config/incidentConfig';
 import { htmlToPlainText, decodeIfBase64, isAIAssignee } from '@/lib/utils';
 import { IncidentActionsMenu } from '@/components/incidents/IncidentActionsMenu';
+import { IncidentMetaChips } from '@/components/incidents/IncidentMetaChips';
+import { useSourceAppImage } from '@/hooks/useSourceAppImage';
+import {
+  ResolveIncidentDialog,
+  ResolutionData,
+  RESOLUTION_REASONS,
+} from '@/components/incidents/ResolveIncidentDialog';
 
 // ============================================================================
 // Kanban column definition — tasks are grouped into 3 lanes
@@ -94,6 +101,15 @@ const IncidentSimplePage = () => {
   const [hoverLane, setHoverLane] = useState<LaneKey | null>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const skipNextSaveRef = useRef(true);
+
+  // Inline meta editing (severity / status / assignee). The detail page tracks
+  // these in separate "edited*" state — we mirror that here so the chips behave
+  // identically and writes are immediate (no debounce) for snappier feedback.
+  const [showResolveDialog, setShowResolveDialog] = useState(false);
+  const [isSavingMeta, setIsSavingMeta] = useState(false);
+
+  // App logo for the incident source — shared with the detail page.
+  const sourceAppImage = useSourceAppImage(incident?.source);
 
   // Persist left-panel collapsed state per-user across sessions.
   const [leftCollapsed, setLeftCollapsed] = useState<boolean>(() => {
@@ -211,6 +227,137 @@ const IncidentSimplePage = () => {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tasks]);
+
+  // ==========================================================================
+  // Persist a metadata patch (severity/status/assignee) immediately. Mirrors
+  // the save shape used by IncidentDetailPage so both views stay schema-aligned.
+  // ==========================================================================
+  const saveMetaPatch = useCallback(
+    async (patch: { severity?: string; status?: string; assignee?: string }) => {
+      if (!incident) return;
+      setIsSavingMeta(true);
+
+      const nextSeverity = patch.severity ?? incident.severity;
+      const nextStatusKey = patch.status ?? incident.status;
+      const nextAssignee = patch.assignee ?? incident.assignee;
+
+      const sevOption = severityOptions.find((s) => s.value === nextSeverity);
+      const { label: statusLabel, id: statusId } = getOCSFStatus(nextStatusKey);
+
+      const updated = incident.rawOCSF
+        ? {
+            ...incident.rawOCSF,
+            severity_id: sevOption?.id ?? incident.rawOCSF.severity_id,
+            severity: sevOption?.label ?? incident.rawOCSF.severity,
+            status_id: statusId,
+            status: statusLabel,
+            assignee: nextAssignee || '',
+            metadata: {
+              ...incident.rawOCSF.metadata,
+              extensions: {
+                ...incident.rawOCSF.metadata?.extensions,
+                custom_attributes: {
+                  ...incident.rawOCSF.metadata?.extensions?.custom_attributes,
+                  assignee: nextAssignee || '',
+                },
+              },
+            },
+          }
+        : {
+            id: incident.id,
+            title: incident.title,
+            severity: nextSeverity,
+            status: nextStatusKey,
+            assignee: nextAssignee || '',
+          };
+
+      setIncident({
+        ...incident,
+        severity: nextSeverity,
+        status: nextStatusKey,
+        assignee: isAIAssignee(nextAssignee) ? 'AI Agent' : nextAssignee,
+        rawOCSF: updated,
+      });
+      // Suppress the next tasks-save effect — that hook re-fires on incident changes
+      skipNextSaveRef.current = true;
+
+      try {
+        const res = await setDatastoreItem(
+          incident.id,
+          updated,
+          DATASTORE_CATEGORIES.INCIDENTS,
+        );
+        if (!res.success) toast.error('Failed to save changes');
+      } catch (err) {
+        console.error('[IncidentSimple] Meta save failed:', err);
+        toast.error('Failed to save changes');
+      } finally {
+        setIsSavingMeta(false);
+      }
+    },
+    [incident],
+  );
+
+  // ==========================================================================
+  // Resolve flow — uses the same dialog as the detail page.
+  // ==========================================================================
+  const handleResolve = useCallback(
+    async (resolutionData: ResolutionData) => {
+      if (!incident) return;
+      setIsSavingMeta(true);
+      const reasonLabel =
+        RESOLUTION_REASONS.find((r) => r.value === resolutionData.reason)?.label ||
+        resolutionData.reason;
+      const existingActivity =
+        incident.rawOCSF?.activity ||
+        incident.rawOCSF?.metadata?.extensions?.custom_attributes?.activity ||
+        [];
+      const resolveActivity = {
+        id: `status-${Date.now()}`,
+        type: 'status' as const,
+        user: currentUser,
+        timestamp: Date.now(),
+        content: `Resolved: ${reasonLabel}${resolutionData.notes ? ` - ${resolutionData.notes}` : ''}`,
+        details: {},
+        attachments: [],
+      };
+      const updated = {
+        ...(incident.rawOCSF || { id: incident.id, title: incident.title }),
+        status_id: 3,
+        status: 'Resolved',
+        status_detail: `${resolutionData.reason}${resolutionData.notes ? `: ${resolutionData.notes}` : ''}`,
+        activity: [...existingActivity, resolveActivity],
+        metadata: {
+          ...incident.rawOCSF?.metadata,
+          extensions: {
+            ...incident.rawOCSF?.metadata?.extensions,
+            custom_attributes: {
+              ...incident.rawOCSF?.metadata?.extensions?.custom_attributes,
+            },
+          },
+        },
+      };
+      try {
+        const res = await setDatastoreItem(
+          incident.id,
+          updated,
+          DATASTORE_CATEGORIES.INCIDENTS,
+        );
+        if (!res.success) {
+          toast.error('Failed to resolve');
+          return;
+        }
+        toast.success('Incident resolved');
+        setShowResolveDialog(false);
+        navigate('/incidents');
+      } catch {
+        toast.error('Failed to resolve');
+      } finally {
+        setIsSavingMeta(false);
+      }
+    },
+    [incident, currentUser, navigate],
+  );
 
   // ==========================================================================
   // Task mutations
@@ -418,49 +565,64 @@ const IncidentSimplePage = () => {
           ) : (
             // ---- Expanded: full details ----
             <>
-              <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
-                <Chip
-                  size="small"
-                  label={incident.severity.toUpperCase()}
-                  sx={{
-                    bgcolor: `${sevColor}22`,
-                    color: sevColor,
-                    fontWeight: 600,
-                    height: 24,
-                  }}
-                />
-                <Chip
-                  size="small"
-                  icon={<statusInfo.icon size={14} color={statusInfo.color} />}
-                  label={statusInfo.label}
-                  sx={{
-                    bgcolor: statusInfo.bg,
-                    color: statusInfo.color,
-                    fontWeight: 600,
-                    height: 24,
-                    '& .MuiChip-icon': { color: statusInfo.color },
-                  }}
+              {/* Editable status / severity / assignee chips — same component as /incidents */}
+              <Box sx={{ mb: 2 }}>
+                <IncidentMetaChips
+                  status={incident.status}
+                  severity={incident.severity}
+                  assignee={incident.assignee}
+                  onStatusChange={(v) => saveMetaPatch({ status: v })}
+                  onSeverityChange={(v) => saveMetaPatch({ severity: v })}
+                  onAssigneeChange={(v) => saveMetaPatch({ assignee: v })}
+                  onResolveRequest={() => setShowResolveDialog(true)}
+                  assigneeMaxWidth={160}
                 />
               </Box>
 
-              <Typography variant="h5" sx={{ fontWeight: 600, mb: 1, lineHeight: 1.3 }}>
-                {incident.title}
-              </Typography>
-
-              {incident.source && (
-                <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-                  Source · {incident.source}
-                </Typography>
-              )}
+              <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.25, mb: 1 }}>
+                {/* Source app image — replaces the text caption when we found one */}
+                {sourceAppImage ? (
+                  <Tooltip title={incident.source || ''} placement="top">
+                    <Box
+                      sx={{
+                        width: 36,
+                        height: 36,
+                        flexShrink: 0,
+                        borderRadius: 1,
+                        bgcolor: 'hsl(var(--muted) / 0.4)',
+                        border: '1px solid hsl(var(--border))',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <img
+                        src={sourceAppImage}
+                        alt={incident.source || ''}
+                        style={{ width: 28, height: 28, objectFit: 'contain' }}
+                      />
+                    </Box>
+                  </Tooltip>
+                ) : null}
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.3 }}>
+                    {incident.title}
+                  </Typography>
+                  {incident.source && !sourceAppImage && (
+                    <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                      Source · {incident.source}
+                    </Typography>
+                  )}
+                </Box>
+                {isSavingMeta && (
+                  <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                    Saving…
+                  </Typography>
+                )}
+              </Box>
 
               <Divider sx={{ my: 2 }} />
-
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                <PersonIcon sx={{ fontSize: 16, color: 'hsl(var(--muted-foreground))' }} />
-                <Typography variant="body2" sx={{ color: 'hsl(var(--foreground))' }}>
-                  {incident.assignee || 'Unassigned'}
-                </Typography>
-              </Box>
 
               <Typography
                 variant="caption"
@@ -709,6 +871,14 @@ const IncidentSimplePage = () => {
           </Box>
         </Box>
       </Box>
+
+      <ResolveIncidentDialog
+        open={showResolveDialog}
+        onClose={() => setShowResolveDialog(false)}
+        onResolve={handleResolve}
+        incidentTitle={incident.title}
+        isLoading={isSavingMeta}
+      />
     </Box>
   );
 };
