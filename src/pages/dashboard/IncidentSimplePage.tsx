@@ -1193,6 +1193,9 @@ const IncidentSimplePage = () => {
             onClose={() => setEditingTaskId(null)}
             task={editingTask}
             onTaskChange={handleTaskUpdate}
+            // Route deletes through the existing confirmation flow so a
+            // stray click in the popup can't drop a task.
+            onTaskDelete={(tid) => setPendingDeleteId(tid)}
             incidentId={incident.id}
             siblings={siblings}
             onNavigate={(nextId) => setEditingTaskId(nextId)}
