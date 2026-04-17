@@ -546,6 +546,49 @@ const IncidentSimplePage = () => {
             overflow: 'visible',
           }}
         >
+          {/* Source app icon — absolutely positioned to overlap the top edge of
+              the sidebar (visually overlapping the page top bar above it).
+              A strong visual anchor for "where this came from". Hidden in the
+              collapsed rail since the rail already shows source-related icons. */}
+          {sourceAppImage && !leftCollapsed && (
+            <Tooltip title={incident.source || ''} placement="top">
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: -28,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: 64,
+                  height: 64,
+                  borderRadius: '50%',
+                  bgcolor: 'hsl(var(--card))',
+                  // Thicker ring + outer glow makes the avatar float above the
+                  // panel rather than appear glued to it.
+                  border: '2px solid hsl(var(--border))',
+                  boxShadow: '0 6px 18px hsl(0 0% 0% / 0.35)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  zIndex: 2,
+                  transition: 'transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease',
+                  '&:hover': {
+                    transform: 'translateX(-50%) scale(1.06)',
+                    borderColor: 'hsl(var(--primary) / 0.6)',
+                    boxShadow: '0 8px 22px hsl(var(--primary) / 0.3)',
+                  },
+                }}
+              >
+                <img
+                  src={sourceAppImage}
+                  alt={incident.source || ''}
+                  style={{ width: 44, height: 44, objectFit: 'contain' }}
+                />
+              </Box>
+            </Tooltip>
+          )}
+
           {/* Collapse toggle */}
           <Box
             sx={{
