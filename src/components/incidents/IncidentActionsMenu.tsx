@@ -383,7 +383,13 @@ export const IncidentActionsMenu = ({
       )
     : {};
 
-  const publicLink = `${window.location.origin}/incidents/${incident.id}?authorization=${publicAuthorization}&org=${orgId}`;
+  // Match the share link to whichever view the user is sharing from — the
+  // simplified kanban view has its own route (/incidents-simple/<id>) and
+  // recipients should land on the same UX the sender saw.
+  const sharePathBase = window.location.pathname.startsWith('/incidents-simple/')
+    ? '/incidents-simple'
+    : '/incidents';
+  const publicLink = `${window.location.origin}${sharePathBase}/${incident.id}?authorization=${publicAuthorization}&org=${orgId}`;
 
   return (
     <>
