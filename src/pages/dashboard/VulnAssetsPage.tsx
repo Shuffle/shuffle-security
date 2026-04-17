@@ -603,7 +603,7 @@ const VulnAssetsPage = () => {
     parts.push(`screenlock_check=${hostChecks.screenlock}`);
     parts.push(`code_scanner_enabled=${hostChecks.code_scanner_enabled}`);
     parts.push(`response_actions=${hostChecks.response_actions ? responseActionMode : 'false'}`);
-    if (hostChecks.log_forwarding && logForwardingEndpoint.trim()) parts.push(`log_forwarding=${logForwardingEndpoint.trim()}`);
+    parts.push(`log_forwarding=${hostChecks.log_forwarding && logForwardingEndpoint.trim() ? logForwardingEndpoint.trim() : 'false'}`);
 
     const authHeader = selectedGroup?.auth ? `-H 'Auth: ${selectedGroup.auth}'` : '';
     const downloadUrl = 'https://shuffler.io/api/v1/orborus';
