@@ -1148,6 +1148,13 @@ const VulnAssetsPage = () => {
                               {/* Predefined action chips — pinned above input */}
                               {(
                                 <div className="px-3 py-2 flex flex-wrap gap-1 border-t border-border/50 shrink-0">
+                                  <button
+                                    key="disable_rce"
+                                    className="px-2 py-1 text-[0.65rem] rounded-md border border-destructive/40 text-destructive hover:bg-destructive/10 transition-colors"
+                                    onClick={() => executeHostAction('disable_rce', 'Disable RCE', host.hostname, host.groupName, host.uuid, true)}
+                                  >
+                                    Disable RCE
+                                  </button>
                                   {hostActionablePerms.map(perm => (
                                     <button
                                       key={perm.id}
