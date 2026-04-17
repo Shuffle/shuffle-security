@@ -107,6 +107,48 @@ function getSidebarTabsSnapshot(): Record<SidebarTabKey, boolean> {
   return _cachedSidebarTabs;
 }
 
+// Task statuses snapshot — also memoised by raw string so identity is stable
+// across renders (required by useSyncExternalStore to avoid render loops).
+let _cachedTaskStatuses: TaskStatusOption[] = DEFAULT_TASK_STATUSES;
+let _cachedTaskStatusesRaw: string | null = null;
+
+function normalizeTaskStatuses(arr: unknown): TaskStatusOption[] {
+  if (!Array.isArray(arr)) return DEFAULT_TASK_STATUSES;
+  const cleaned: TaskStatusOption[] = [];
+  for (const item of arr) {
+    if (
+      item &&
+      typeof item === 'object' &&
+      typeof (item as TaskStatusOption).key === 'string' &&
+      typeof (item as TaskStatusOption).label === 'string' &&
+      typeof (item as TaskStatusOption).color === 'string'
+    ) {
+      cleaned.push({
+        key: (item as TaskStatusOption).key,
+        label: (item as TaskStatusOption).label,
+        color: (item as TaskStatusOption).color,
+      });
+    }
+  }
+  // The `done` lane is required — if it was removed, restore it at the end.
+  if (!cleaned.some((s) => s.key === 'done')) {
+    cleaned.push(DEFAULT_TASK_STATUSES[DEFAULT_TASK_STATUSES.length - 1]);
+  }
+  return cleaned.length > 0 ? cleaned : DEFAULT_TASK_STATUSES;
+}
+
+function getTaskStatusesSnapshot(): TaskStatusOption[] {
+  const raw = localStorage.getItem(LOCAL_TASK_STATUSES_KEY);
+  if (raw === _cachedTaskStatusesRaw) return _cachedTaskStatuses;
+  _cachedTaskStatusesRaw = raw;
+  try {
+    _cachedTaskStatuses = raw ? normalizeTaskStatuses(JSON.parse(raw)) : DEFAULT_TASK_STATUSES;
+  } catch {
+    _cachedTaskStatuses = DEFAULT_TASK_STATUSES;
+  }
+  return _cachedTaskStatuses;
+}
+
 let _fetchedFromServer = false;
 
 /** Load org setting from datastore and sync to local cache */
