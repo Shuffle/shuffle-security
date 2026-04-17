@@ -917,49 +917,6 @@ const IncidentSimplePage = () => {
         isLoading={isSavingMeta}
       />
 
-      {/* Single-task editor — reuses the exact TaskEditor component as /incidents.
-          Prev/Next walks through the same lane the user opened the task from
-          so triaging "all open To Do items" is one keystroke per task. */}
-      {(() => {
-        const editingTask = tasks.find((t) => t.id === editingTaskId) || null;
-        const lane = editingTask ? getLane(editingTask, laneKeys) : null;
-        const siblings = lane ? tasksByLane[lane] || [] : [];
-        return (
-          <TaskEditDialog
-            open={!!editingTaskId}
-            onClose={() => setEditingTaskId(null)}
-            task={editingTask}
-            onTaskChange={handleTaskUpdate}
-            // Route deletes through the existing confirmation flow so a
-            // stray click in the popup can't drop a task.
-            onTaskDelete={(tid) => setPendingDeleteId(tid)}
-            incidentId={incident.id}
-            siblings={siblings}
-            onNavigate={(nextId) => setEditingTaskId(nextId)}
-          />
-        );
-      })()}
-      {/* Delete confirmation — required so a stray click doesn't drop tasks */}
-      <AlertDialog open={!!pendingDeleteId} onOpenChange={(o) => !o && setPendingDeleteId(null)}>
-        {/* z-[1500] so the confirm sits above the MUI TaskEditDialog (z-index 1400) */}
-        <AlertDialogContent className="z-[1500]">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete this task?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will remove the task from this incident. You can't undo this from the simple view.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDeleteTask}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </Box>
   );
 };
