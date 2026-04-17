@@ -100,7 +100,6 @@ export const IncidentActionsMenu = ({
   const { addItem } = useDatastore({
     category: DATASTORE_CATEGORIES.INCIDENTS,
     orgId: crossOrgId || undefined,
-    autoFetch: false,
   });
 
   const [anchor, setAnchor] = useState<null | HTMLElement>(null);
