@@ -143,6 +143,10 @@ const IncidentSimplePage = () => {
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
   const [hoverLane, setHoverLane] = useState<LaneKey | null>(null);
+  // Insertion index within the hovered lane — `null` means "append at end".
+  // Used to render a drop indicator between cards and to compute the final
+  // ordering when the drop fires.
+  const [dropIndex, setDropIndex] = useState<number | null>(null);
   // Single-task edit modal
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   // Delete confirmation
