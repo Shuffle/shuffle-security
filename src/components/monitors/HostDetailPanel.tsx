@@ -42,10 +42,10 @@ interface HostDetailPanelProps {
   collapsibleSections?: boolean;
 }
 
-const stateOf = (v: boolean | string | undefined): 'on' | 'off' | 'empty' => {
+const stateOf = (v: boolean | string | undefined): 'on' | 'off' => {
   if (v === true || v === 'true') return 'on';
-  if (v === false || v === 'false' || v === 'FALSE') return 'off';
-  return 'empty';
+  // Anything else (false, "false", undefined, null, empty string, missing field) → off
+  return 'off';
 };
 
 export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections = false }: HostDetailPanelProps) => {
@@ -86,7 +86,7 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
                   <TooltipTrigger asChild>
                     <p className="text-xs font-mono text-foreground cursor-help">{display}</p>
                   </TooltipTrigger>
-                  <TooltipContent side="bottom" align="start" className="max-w-sm">
+                  <TooltipContent side="bottom" align="start" className="z-[9999] max-w-sm">
                     <pre className="text-[0.65rem] font-mono whitespace-pre-wrap">{raw}</pre>
                   </TooltipContent>
                 </Tooltip>
@@ -112,7 +112,7 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
                 <TooltipTrigger asChild>
                   <p className="text-xs text-foreground cursor-help truncate">Enabled</p>
                 </TooltipTrigger>
-                <TooltipContent side="bottom" align="start" className="max-w-sm">
+                <TooltipContent side="bottom" align="start" className="z-[9999] max-w-sm">
                   <pre className="text-[0.65rem] font-mono whitespace-pre-wrap">{host.log_forwarding}</pre>
                 </TooltipContent>
               </Tooltip>
@@ -132,7 +132,7 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
                     {(responseActionsRaw || '').toLowerCase().includes('full') ? 'Full control (RCE)' : 'Controlled'}
                   </p>
                 </TooltipTrigger>
-                <TooltipContent side="bottom" align="start" className="max-w-sm">
+                <TooltipContent side="bottom" align="start" className="z-[9999] max-w-sm">
                   <p className="text-[0.65rem] font-mono">response_actions = {String(responseActionsRaw)}</p>
                 </TooltipContent>
               </Tooltip>
@@ -148,23 +148,23 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
         <div className="flex flex-wrap gap-3">
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium cursor-help ${hdState === 'on' ? 'border-green-500/30 bg-green-500/10 text-green-600 dark:text-green-400' : hdState === 'off' ? 'border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400' : 'border-border bg-muted/30 text-muted-foreground'}`}>
+              <div className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium cursor-help ${hdState === 'on' ? 'border-green-500/30 bg-green-500/10 text-green-600 dark:text-green-400' : 'border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400'}`}>
                 {hdState === 'on' ? <ShieldCheck size={13} /> : <ShieldX size={13} />}
-                Disk Encryption: {hdState === 'on' ? 'Enabled' : hdState === 'off' ? 'Disabled' : 'Not checked'}
+                Disk Encryption: {hdState === 'on' ? 'Enabled' : 'Disabled'}
               </div>
             </TooltipTrigger>
-            <TooltipContent side="bottom" align="start" className="max-w-sm">
+            <TooltipContent side="bottom" align="start" className="z-[9999] max-w-sm">
               <p className="text-[0.65rem] font-mono">hd_encrypted = {String(host.hd_encrypted)}</p>
             </TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium cursor-help ${screenlockState === 'on' ? 'border-green-500/30 bg-green-500/10 text-green-600 dark:text-green-400' : screenlockState === 'off' ? 'border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400' : 'border-border bg-muted/30 text-muted-foreground'}`}>
+              <div className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium cursor-help ${screenlockState === 'on' ? 'border-green-500/30 bg-green-500/10 text-green-600 dark:text-green-400' : 'border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400'}`}>
                 <Lock size={13} />
-                Screen Lock: {screenlockState === 'on' ? 'Enabled' : screenlockState === 'off' ? 'Disabled' : 'Not checked'}
+                Screen Lock: {screenlockState === 'on' ? 'Enabled' : 'Disabled'}
               </div>
             </TooltipTrigger>
-            <TooltipContent side="bottom" align="start" className="max-w-sm">
+            <TooltipContent side="bottom" align="start" className="z-[9999] max-w-sm">
               <p className="text-[0.65rem] font-mono">automatic_screen_lock_enabled = {String(host.automatic_screen_lock_enabled)}</p>
             </TooltipContent>
           </Tooltip>
@@ -175,7 +175,7 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
                 Elevated Access: {host.elevated_access ? 'Yes' : 'No'}
               </div>
             </TooltipTrigger>
-            <TooltipContent side="bottom" align="start" className="max-w-sm">
+            <TooltipContent side="bottom" align="start" className="z-[9999] max-w-sm">
               <p className="text-[0.65rem] font-mono">elevated_access = {String(host.elevated_access)}</p>
             </TooltipContent>
           </Tooltip>
@@ -187,7 +187,7 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
                   Active Monitoring: Enabled
                 </div>
               </TooltipTrigger>
-              <TooltipContent side="bottom" align="start" className="max-w-sm">
+              <TooltipContent side="bottom" align="start" className="z-[9999] max-w-sm">
                 <p className="text-[0.65rem] font-mono whitespace-pre-wrap">log_forwarding = {String(host.log_forwarding)}</p>
               </TooltipContent>
             </Tooltip>

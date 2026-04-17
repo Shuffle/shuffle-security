@@ -144,9 +144,9 @@ export const HostActionPopover = ({
                   <TooltipProvider delayDuration={200}>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <p className="text-[0.6rem] text-muted-foreground cursor-help">{modeLabel}</p>
+                        <p className="text-[0.6rem] text-muted-foreground cursor-help inline-block">{modeLabel}</p>
                       </TooltipTrigger>
-                      <TooltipContent side="bottom" align="start" className="max-w-sm">
+                      <TooltipContent side="bottom" align="start" className="z-[9999] max-w-sm">
                         <p className="text-[0.65rem] font-mono">response_actions = {String(responseActionsRaw)}</p>
                       </TooltipContent>
                     </Tooltip>
