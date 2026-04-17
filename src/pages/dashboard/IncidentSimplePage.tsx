@@ -559,7 +559,7 @@ const IncidentSimplePage = () => {
           }}
           showSimpleViewEntry={false}
           showFullViewEntry
-          publicAuthorization={incident.rawOCSF?.public_authorization || ''}
+          publicAuthorization={publicAuthorization}
           onAfterChange={() => loadIncident()}
         />
       </Box>
