@@ -66,9 +66,10 @@ export const HostActionPopover = ({
   const [historyIndex, setHistoryIndex] = useState(-1);
 
   const responseActionsRaw = host.responseActions;
-  const responseActionsOn = !!responseActionsRaw;
-  const rawLower = (responseActionsRaw || '').toLowerCase();
-  const responseActionsMode: 'full' | 'controlled' | null = responseActionsRaw
+  const rawLower = String(responseActionsRaw ?? '').toLowerCase().trim();
+  // Treat explicit false-y strings AND missing values as "off"
+  const responseActionsOn = !!responseActionsRaw && rawLower !== 'false' && rawLower !== '0' && rawLower !== 'no' && rawLower !== 'off';
+  const responseActionsMode: 'full' | 'controlled' | null = responseActionsOn
     ? (rawLower.includes('full') ? 'full' : 'controlled')
     : null;
   const modeLabel = responseActionsMode === 'full' ? 'Full control (RCE)' : 'Controlled';
