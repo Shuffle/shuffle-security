@@ -49,55 +49,6 @@ import {
 } from '@/components/incidents/ResolveIncidentDialog';
 import { TaskKanbanBoard } from '@/components/incidents/TaskKanbanBoard';
 
-// ============================================================================
-// Kanban column definition — lanes are configured per-org via Org Preferences.
-// `done` is a reserved key that maps to `task.completed === true`. All other
-// lanes are stored on the task as a `_lane` marker. The first non-`done` lane
-// in the configured list is treated as the default for unmarked tasks.
-// ============================================================================
-type LaneKey = string;
-
-/**
- * Determine which kanban lane a task belongs to.
- *
- * Tasks don't have an explicit `status` field in OCSF, so we derive lane
- * membership from existing fields:
- *  - `completed: true` → `done`
- *  - explicit `_lane` marker that matches a configured key → that lane
- *  - has `aiWorking` / `assignee` → second-from-top lane (the conventional
- *    "in progress" slot) if present, else default
- *  - otherwise → first lane (the conventional "to do" slot)
- */
-const getLane = (
-  task: IncidentTask & { _lane?: LaneKey },
-  laneKeys: LaneKey[],
-): LaneKey => {
-  if (task.completed) return 'done';
-  if (task._lane && laneKeys.includes(task._lane)) return task._lane;
-  const openLanes = laneKeys.filter((k) => k !== 'done');
-  // Heuristic for legacy tasks created before the lane marker existed.
-  if ((task.aiWorking || task.assignee) && openLanes.length > 1) {
-    return openLanes[1];
-  }
-  return openLanes[0] || laneKeys[0];
-};
-
-/**
- * Apply lane semantics to a task when it's moved between columns.
- *
- * The explicit `_lane` marker keeps drag deterministic — without it, an
- * assigned task dragged back to "To Do" would immediately bounce because
- * `getLane` would re-derive it from the assignee.
- */
-const applyLane = (
-  task: IncidentTask & { _lane?: LaneKey },
-  lane: LaneKey,
-): IncidentTask & { _lane?: LaneKey } => {
-  if (lane === 'done') {
-    return { ...task, _lane: 'done', completed: true, completedAt: task.completedAt || Date.now() };
-  }
-  return { ...task, _lane: lane, completed: false, completedAt: 0, aiWorking: false };
-};
 
 interface IncidentSnapshot {
   id: string;
