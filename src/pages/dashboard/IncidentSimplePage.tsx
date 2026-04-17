@@ -37,6 +37,7 @@ import {
   getOCSFStatus,
 } from '@/config/incidentConfig';
 import { htmlToPlainText, decodeIfBase64, isAIAssignee } from '@/lib/utils';
+import { IncidentActionsMenu } from '@/components/incidents/IncidentActionsMenu';
 
 // ============================================================================
 // Kanban column definition — tasks are grouped into 3 lanes
@@ -308,6 +309,19 @@ const IncidentSimplePage = () => {
             Full view
           </Button>
         </Tooltip>
+        <IncidentActionsMenu
+          incident={{
+            id: incident.id,
+            title: incident.title,
+            source: incident.source,
+            status: incident.status,
+            rawOCSF: incident.rawOCSF,
+          }}
+          showSimpleViewEntry={false}
+          showFullViewEntry
+          publicAuthorization={incident.rawOCSF?.public_authorization || ''}
+          onAfterChange={() => loadIncident()}
+        />
       </Box>
 
       <Box
