@@ -1352,8 +1352,8 @@ const VulnAssetsPage = () => {
                             <Zap size={12} />
                             <span className="text-[0.65rem] font-semibold uppercase tracking-wide">Response Actions</span>
                           </div>
-                          <p className={`text-xs ${(host as any).response_actions ? 'text-foreground' : 'text-muted-foreground'}`}>
-                            {(host as any).response_actions ? `Enabled (${(host as any).response_actions})` : 'Not enabled'}
+                          <p className={`text-xs ${responseActionsOn ? (responseActionsMode === 'full' ? 'text-red-600 dark:text-red-400 font-medium' : 'text-foreground') : 'text-muted-foreground'}`} title={`response_actions = ${responseActionsRaw === undefined ? '(field not set)' : String(responseActionsRaw)}`}>
+                            {responseActionsOn ? (responseActionsMode === 'full' ? 'Full control (RCE)' : 'Controlled') : 'Not enabled'}
                           </p>
                         </div>
                       </div>
