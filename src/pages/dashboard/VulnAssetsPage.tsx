@@ -75,6 +75,27 @@ const HOST_OVERVIEW_TILES = [
 /** Single source of truth for active monitoring (formerly log forwarding) status */
 const isActiveMonitoringEnabled = (host: { log_forwarding?: string }): boolean => !!host.log_forwarding;
 
+const fmtRaw = (value: unknown): string => {
+  if (value === undefined) return '(field not set)';
+  if (value === null) return 'null';
+  if (value === '') return '"" (empty string)';
+  if (typeof value === 'string') return value;
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+};
+
+const parseResponseActionsState = (value: unknown): { enabled: boolean; mode: 'full' | 'controlled' | null } => {
+  const raw = String(value ?? '').toLowerCase().trim();
+  const enabled = value !== undefined && value !== null && raw !== '' && raw !== 'false' && raw !== '0' && raw !== 'no' && raw !== 'off';
+  return {
+    enabled,
+    mode: enabled ? (raw.includes('full') ? 'full' : 'controlled') : null,
+  };
+};
+
 interface CodeScannerProject {
   path: string;
   type: string;
@@ -574,7 +595,7 @@ const VulnAssetsPage = () => {
       case 'screenlock': cmp = Number(a.automatic_screen_lock_enabled === true || a.automatic_screen_lock_enabled === 'true') - Number(b.automatic_screen_lock_enabled === true || b.automatic_screen_lock_enabled === 'true'); break;
       case 'software': cmp = (Array.isArray(a.installed_software) ? a.installed_software.length : 0) - (Array.isArray(b.installed_software) ? b.installed_software.length : 0); break;
       case 'codescan': cmp = (Array.isArray(a.code_scanner) ? a.code_scanner.length : 0) - (Array.isArray(b.code_scanner) ? b.code_scanner.length : 0); break;
-      case 'response': cmp = Number(!!(a as any).response_actions) - Number(!!(b as any).response_actions); break;
+      case 'response': cmp = Number(parseResponseActionsState((a as any).response_actions).enabled) - Number(parseResponseActionsState((b as any).response_actions).enabled); break;
       case 'logfwd': cmp = Number(!!a.log_forwarding) - Number(!!b.log_forwarding); break;
       case 'group': cmp = ((a as any).groupName || '').localeCompare((b as any).groupName || ''); break;
       case 'checkin': cmp = (a.checkin || 0) - (b.checkin || 0); break;
@@ -959,9 +980,9 @@ const VulnAssetsPage = () => {
               const screenlockOn = screenlockState === 'on';
               const softwareCount = Array.isArray(host.installed_software) ? host.installed_software.length : 0;
               const responseActionsRaw = (host as any).response_actions as string | boolean | undefined;
-              const raLower = String(responseActionsRaw ?? '').toLowerCase().trim();
-              const responseActionsOn = responseActionsRaw !== undefined && responseActionsRaw !== null && raLower !== '' && raLower !== 'false' && raLower !== '0' && raLower !== 'no' && raLower !== 'off';
-              const responseActionsMode = responseActionsOn ? (raLower.includes('full') ? 'full' : 'controlled') : null;
+              const responseActionsState = parseResponseActionsState(responseActionsRaw);
+              const responseActionsOn = responseActionsState.enabled;
+              const responseActionsMode = responseActionsState.mode;
               const logForwardingOn = isActiveMonitoringEnabled(host);
               const isExpanded = expandedHosts.has(host.uuid);
               const toggleExpanded = () => {
@@ -976,7 +997,11 @@ const VulnAssetsPage = () => {
                 setExpandedCodePaths(new Set());
               };
               const CheckDot = ({ on, tip, color, state }: { on: boolean; tip: string; color?: string; state?: 'on' | 'off' | 'empty' }) => {
-                const dotColor = state === 'off' ? 'bg-[hsl(var(--severity-critical))]' : on ? (color || 'bg-green-500') : 'bg-muted-foreground/30';
+                const dotColor = state === 'off'
+                  ? 'bg-[hsl(var(--severity-critical))]'
+                  : on
+                    ? (color || 'bg-[hsl(var(--severity-low))]')
+                    : 'bg-muted-foreground/30';
                 return (
                 <TooltipProvider delayDuration={200}>
                   <Tooltip>
@@ -1018,19 +1043,19 @@ const VulnAssetsPage = () => {
                         );
                       })()}
                     </div>
-                    <CheckDot on={hdEncrypted} state={hdState} tip={hdState === 'on' ? 'Disk encryption enabled' : hdState === 'off' ? 'Disk encryption disabled' : 'Disk encryption not checked'} />
-                    <CheckDot on={screenlockOn} state={screenlockState} tip={screenlockState === 'on' ? 'Screenlock enabled' : screenlockState === 'off' ? 'Screenlock disabled' : 'Screenlock not checked'} />
-                    <CheckDot on={softwareCount > 0} tip={softwareCount > 0 ? `${softwareCount} installed software` : 'Installed software not collected'} />
+                    <CheckDot on={hdEncrypted} state={hdState} tip={`hd_encrypted = ${fmtRaw(host.hd_encrypted)}`} />
+                    <CheckDot on={screenlockOn} state={screenlockState} tip={`automatic_screen_lock_enabled = ${fmtRaw(host.automatic_screen_lock_enabled)}`} />
+                    <CheckDot on={softwareCount > 0} tip={`installed_software = ${fmtRaw(host.installed_software)}`} />
                     {(() => {
                       const codeScanCount = Array.isArray(host.code_scanner) ? host.code_scanner.length : 0;
-                      return <CheckDot on={codeScanCount > 0} tip={codeScanCount > 0 ? `${codeScanCount} code projects scanned` : 'Code package scanner not collected'} />;
+                      return <CheckDot on={codeScanCount > 0} tip={`code_scanner = ${fmtRaw(host.code_scanner)}`} />;
                     })()}
                     <CheckDot
                       on={responseActionsOn}
-                      tip={responseActionsOn ? `Response actions: ${responseActionsMode === 'full' ? 'Full control (RCE)' : 'Controlled'}` : 'Response actions not enabled'}
-                      color={responseActionsMode === 'full' ? 'bg-[hsl(var(--severity-high))]' : 'bg-green-500'}
+                      tip={`response_actions = ${fmtRaw(responseActionsRaw)}`}
+                      color={responseActionsMode === 'full' ? 'bg-[hsl(var(--severity-high))]' : 'bg-[hsl(var(--severity-low))]'}
                     />
-                    <CheckDot on={logForwardingOn} tip={logForwardingOn ? `Active monitoring: ${host.log_forwarding}` : 'Active monitoring — not generally available yet'} />
+                    <CheckDot on={logForwardingOn} tip={`log_forwarding = ${fmtRaw(host.log_forwarding)}`} />
                     <span className="text-xs text-muted-foreground truncate">{host.groupName}</span>
                     <TooltipProvider delayDuration={200}>
                       <Tooltip>
