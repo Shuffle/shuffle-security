@@ -67,9 +67,11 @@ export const HostActionPopover = ({
 
   const responseActionsRaw = host.responseActions;
   const responseActionsOn = !!responseActionsRaw;
-  const responseActionsMode = responseActionsRaw
-    ? (responseActionsRaw.toLowerCase().includes('full') ? 'full' : 'controlled')
+  const rawLower = (responseActionsRaw || '').toLowerCase();
+  const responseActionsMode: 'full' | 'controlled' | null = responseActionsRaw
+    ? (rawLower.includes('full') ? 'full' : 'controlled')
     : null;
+  const modeLabel = responseActionsMode === 'full' ? 'Full control (RCE)' : 'Controlled';
 
   // Disabled trigger when response actions aren't enabled
   if (!responseActionsOn) {
@@ -139,7 +141,16 @@ export const HostActionPopover = ({
                 <Terminal size={12} className="text-muted-foreground" />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold text-foreground truncate">{host.hostname}</p>
-                  <p className="text-[0.6rem] text-muted-foreground">{isFull ? 'Full control (RCE)' : 'Controlled'}</p>
+                  <TooltipProvider delayDuration={200}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <p className="text-[0.6rem] text-muted-foreground cursor-help">{modeLabel}</p>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" align="start" className="max-w-sm">
+                        <p className="text-[0.65rem] font-mono">response_actions = {String(responseActionsRaw)}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
                 <Button
                   variant="ghost"

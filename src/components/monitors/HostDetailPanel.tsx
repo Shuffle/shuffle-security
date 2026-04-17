@@ -124,33 +124,76 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
             <Zap size={12} />
             <span className="text-[0.65rem] font-semibold uppercase tracking-wide">Response Actions</span>
           </div>
-          <p className={`text-xs ${responseActionsOn ? 'text-foreground' : 'text-muted-foreground'}`}>
-            {responseActionsOn ? `Enabled (${responseActionsRaw})` : 'Not enabled'}
-          </p>
+          {responseActionsOn ? (
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <p className="text-xs text-foreground cursor-help">
+                    {(responseActionsRaw || '').toLowerCase().includes('full') ? 'Full control (RCE)' : 'Controlled'}
+                  </p>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" align="start" className="max-w-sm">
+                  <p className="text-[0.65rem] font-mono">response_actions = {String(responseActionsRaw)}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            <p className="text-xs text-muted-foreground">Not enabled</p>
+          )}
         </div>
       </div>
 
       {/* Compliance summary */}
-      <div className="flex flex-wrap gap-3">
-        <div className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium ${hdState === 'on' ? 'border-green-500/30 bg-green-500/10 text-green-600 dark:text-green-400' : hdState === 'off' ? 'border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400' : 'border-border bg-muted/30 text-muted-foreground'}`}>
-          {hdState === 'on' ? <ShieldCheck size={13} /> : <ShieldX size={13} />}
-          Disk Encryption: {hdState === 'on' ? 'Enabled' : hdState === 'off' ? 'Disabled' : 'Not checked'}
+      <TooltipProvider delayDuration={200}>
+        <div className="flex flex-wrap gap-3">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium cursor-help ${hdState === 'on' ? 'border-green-500/30 bg-green-500/10 text-green-600 dark:text-green-400' : hdState === 'off' ? 'border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400' : 'border-border bg-muted/30 text-muted-foreground'}`}>
+                {hdState === 'on' ? <ShieldCheck size={13} /> : <ShieldX size={13} />}
+                Disk Encryption: {hdState === 'on' ? 'Enabled' : hdState === 'off' ? 'Disabled' : 'Not checked'}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" align="start" className="max-w-sm">
+              <p className="text-[0.65rem] font-mono">hd_encrypted = {String(host.hd_encrypted)}</p>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium cursor-help ${screenlockState === 'on' ? 'border-green-500/30 bg-green-500/10 text-green-600 dark:text-green-400' : screenlockState === 'off' ? 'border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400' : 'border-border bg-muted/30 text-muted-foreground'}`}>
+                <Lock size={13} />
+                Screen Lock: {screenlockState === 'on' ? 'Enabled' : screenlockState === 'off' ? 'Disabled' : 'Not checked'}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" align="start" className="max-w-sm">
+              <p className="text-[0.65rem] font-mono">automatic_screen_lock_enabled = {String(host.automatic_screen_lock_enabled)}</p>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/30 px-2.5 py-1.5 text-xs font-medium text-muted-foreground cursor-help">
+                <Zap size={13} />
+                Elevated Access: {host.elevated_access ? 'Yes' : 'No'}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" align="start" className="max-w-sm">
+              <p className="text-[0.65rem] font-mono">elevated_access = {String(host.elevated_access)}</p>
+            </TooltipContent>
+          </Tooltip>
+          {logForwardingOn && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/30 px-2.5 py-1.5 text-xs font-medium text-muted-foreground cursor-help">
+                  <Send size={13} />
+                  Active Monitoring: Enabled
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" align="start" className="max-w-sm">
+                <p className="text-[0.65rem] font-mono whitespace-pre-wrap">log_forwarding = {String(host.log_forwarding)}</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
         </div>
-        <div className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium ${screenlockState === 'on' ? 'border-green-500/30 bg-green-500/10 text-green-600 dark:text-green-400' : screenlockState === 'off' ? 'border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400' : 'border-border bg-muted/30 text-muted-foreground'}`}>
-          <Lock size={13} />
-          Screen Lock: {screenlockState === 'on' ? 'Enabled' : screenlockState === 'off' ? 'Disabled' : 'Not checked'}
-        </div>
-        <div className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/30 px-2.5 py-1.5 text-xs font-medium text-muted-foreground">
-          <Zap size={13} />
-          Elevated Access: {host.elevated_access ? 'Yes' : 'No'}
-        </div>
-        {logForwardingOn && (
-          <div className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/30 px-2.5 py-1.5 text-xs font-medium text-muted-foreground">
-            <Send size={13} />
-            Active Monitoring: {host.log_forwarding}
-          </div>
-        )}
-      </div>
+      </TooltipProvider>
 
       {/* Installed Software */}
       <div className="space-y-2">
