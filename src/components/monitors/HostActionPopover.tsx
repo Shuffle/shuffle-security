@@ -67,9 +67,11 @@ export const HostActionPopover = ({
 
   const responseActionsRaw = host.responseActions;
   const responseActionsOn = !!responseActionsRaw;
-  const responseActionsMode = responseActionsRaw
-    ? (responseActionsRaw.toLowerCase().includes('full') ? 'full' : 'controlled')
+  const rawLower = (responseActionsRaw || '').toLowerCase();
+  const responseActionsMode: 'full' | 'controlled' | null = responseActionsRaw
+    ? (rawLower.includes('full') ? 'full' : 'controlled')
     : null;
+  const modeLabel = responseActionsMode === 'full' ? 'Full control (RCE)' : 'Controlled';
 
   // Disabled trigger when response actions aren't enabled
   if (!responseActionsOn) {
