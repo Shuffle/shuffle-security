@@ -697,10 +697,10 @@ const IncidentSimplePage = () => {
               <Tooltip title={incident.assignee || 'Unassigned'} placement="right">
                 <PersonIcon sx={{ fontSize: 18, color: 'hsl(var(--muted-foreground))' }} />
               </Tooltip>
-              <Tooltip title={`${tasksByLane.done.length}/${tasks.length} tasks done`} placement="right">
+              <Tooltip title={`${(tasksByLane.done?.length || 0)}/${tasks.length} tasks done`} placement="right">
                 <Chip
                   size="small"
-                  label={`${tasksByLane.done.length}/${tasks.length}`}
+                  label={`${(tasksByLane.done?.length || 0)}/${tasks.length}`}
                   sx={{ height: 22, fontSize: 11, fontWeight: 600 }}
                 />
               </Tooltip>
@@ -775,7 +775,7 @@ const IncidentSimplePage = () => {
                     Tasks
                   </Typography>
                   <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                    {tasksByLane.done.length}/{tasks.length}
+                    {(tasksByLane.done?.length || 0)}/{tasks.length}
                   </Typography>
                 </Box>
                 <Box sx={{ textAlign: 'right' }}>
