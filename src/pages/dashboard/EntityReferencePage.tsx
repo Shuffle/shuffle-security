@@ -37,6 +37,74 @@ const normalizeSeverity = (raw?: string | null): string => {
   return 'informational';
 };
 
+/**
+ * Strip common version prefixes (^, ~, >=, ==, v, etc.) so we can compare a host's
+ * declared dependency version against an OSV affected range. Best-effort — OSV
+ * ranges use ECOSYSTEM/SEMVER ordering which we approximate with numeric tuple
+ * comparison sufficient for typical semver-like strings.
+ */
+const cleanVersion = (v?: string): string => {
+  if (!v) return '';
+  return String(v).trim().replace(/^[\^~=v><]+\s*/, '').replace(/^>=|^<=|^>|^</, '').trim();
+};
+
+const compareVersions = (a: string, b: string): number => {
+  const pa = cleanVersion(a).split(/[.\-+]/);
+  const pb = cleanVersion(b).split(/[.\-+]/);
+  const len = Math.max(pa.length, pb.length);
+  for (let i = 0; i < len; i++) {
+    const na = parseInt(pa[i] || '0', 10);
+    const nb = parseInt(pb[i] || '0', 10);
+    if (!Number.isNaN(na) && !Number.isNaN(nb) && na !== nb) return na - nb;
+    // Fallback to string compare for non-numeric segments
+    const sa = pa[i] || '';
+    const sb = pb[i] || '';
+    if (sa !== sb) return sa.localeCompare(sb);
+  }
+  return 0;
+};
+
+/**
+ * Check if a given installed version is affected by an OSV vuln.
+ * Matches against:
+ *  - exact `versions` list, AND
+ *  - `ranges[].events` (introduced/fixed) — version is affected when it is
+ *    >= any introduced and < the corresponding fixed (or no fixed yet).
+ * If we can't determine, return false (conservative — don't false-flag).
+ */
+const isVersionAffected = (installed: string | undefined, vuln: OsvVuln): boolean => {
+  if (!installed) return false;
+  const cleaned = cleanVersion(installed);
+  if (!cleaned) return false;
+  const affected = vuln.affected || [];
+  for (const a of affected) {
+    if (a.versions && a.versions.some(v => cleanVersion(v) === cleaned)) return true;
+    for (const r of a.ranges || []) {
+      const events = r.events || [];
+      let introduced: string | null = null;
+      let fixed: string | null = null;
+      let isAffected = false;
+      for (const e of events) {
+        if (e.introduced !== undefined) {
+          introduced = e.introduced;
+          // "0" means affected from the beginning
+          if (introduced === '0' || compareVersions(cleaned, introduced) >= 0) {
+            isAffected = true;
+          }
+        }
+        if (e.fixed !== undefined) {
+          fixed = e.fixed;
+          if (isAffected && compareVersions(cleaned, fixed) >= 0) {
+            isAffected = false;
+          }
+        }
+      }
+      if (isAffected) return true;
+    }
+  }
+  return false;
+};
+
 type EntityType = 'software' | 'package';
 
 interface EntityReferencePageProps {
