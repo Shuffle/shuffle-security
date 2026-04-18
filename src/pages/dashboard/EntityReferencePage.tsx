@@ -28,6 +28,8 @@ interface LanguageInfo {
   iconSlug: string;
   /** Hex color (no `#`) for the logo background tint */
   color: string;
+  /** OSV.dev ecosystem identifier — see https://ossf.github.io/osv-schema/#defined-ecosystems */
+  osvEcosystem?: string;
 }
 
 const LANGUAGE_REGISTRY: Record<string, LanguageInfo> = {
