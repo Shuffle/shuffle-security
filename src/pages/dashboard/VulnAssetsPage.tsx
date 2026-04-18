@@ -1333,7 +1333,18 @@ const VulnAssetsPage = () => {
                       <TooltipProvider delayDuration={200}>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={(e) => { if (e.ctrlKey || e.metaKey) { window.open(`/monitors/${host.uuid}`, '_blank'); } else { navigate(`/monitors/${host.uuid}`); } }}>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-primary"
+                              onClick={(e) => {
+                                const hostId = host.uuid || host.hostname;
+                                if (!hostId) return;
+                                const path = `/monitors/${encodeURIComponent(hostId)}`;
+                                if (e.ctrlKey || e.metaKey) window.open(path, '_blank');
+                                else navigate(path);
+                              }}
+                            >
                               <Maximize2 size={14} />
                             </Button>
                           </TooltipTrigger>
