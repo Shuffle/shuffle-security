@@ -4,7 +4,7 @@ import { usePageMeta } from '@/hooks/usePageMeta';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowLeft, Package, FileCode, ExternalLink, ShieldAlert, Info, Clock, Server, Search, Loader2, FolderOpen } from 'lucide-react';
-import { getDatastoreByCategory } from '@/services/datastore';
+import { getDatastoreItem } from '@/services/datastore';
 
 type EntityType = 'software' | 'package';
 
