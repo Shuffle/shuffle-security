@@ -64,57 +64,45 @@ const safeParse = (raw: unknown): Record<string, unknown> | null => {
 };
 
 /**
- * Walk a datastore item to find all hosts that contain the given name.
- * Handles two shapes:
- *  - sensors (software): { hostname, installed_software: [{ name, version? }] }
- *  - packages: { hostname, code_scanner?: [{ path, type, packages: [{ name, version }] }] }
- *    or flat shape { hostname, path, packages: [{ name, version }] }
+ * Extract host matches from the value stored under the entity key.
+ * The value is expected to be an array (or object with array fields) of host
+ * occurrences. We try a few common shapes to be resilient.
  */
-const extractMatches = (
-  item: Record<string, unknown>,
-  needleLower: string,
-  type: EntityType,
-): HostMatch[] => {
-  const hostname = String(item.hostname || item.host || '').trim();
-  if (!hostname) return [];
+const extractMatchesFromValue = (value: unknown, type: EntityType): HostMatch[] => {
+  if (value == null) return [];
+
+  // Find an array of host entries inside the value
+  let entries: Array<Record<string, unknown>> = [];
+  if (Array.isArray(value)) {
+    entries = value as Array<Record<string, unknown>>;
+  } else if (typeof value === 'object') {
+    const obj = value as Record<string, unknown>;
+    // Common wrapper keys
+    for (const k of ['hosts', 'matches', 'occurrences', 'items', 'data']) {
+      if (Array.isArray(obj[k])) {
+        entries = obj[k] as Array<Record<string, unknown>>;
+        break;
+      }
+    }
+    // Map of hostname -> info
+    if (entries.length === 0) {
+      const possibleEntries = Object.entries(obj)
+        .filter(([, v]) => v && typeof v === 'object')
+        .map(([hostname, v]) => ({ hostname, ...(v as Record<string, unknown>) }));
+      if (possibleEntries.length > 0) entries = possibleEntries;
+    }
+  }
+
   const matches: HostMatch[] = [];
-
-  if (type === 'software') {
-    const installed = Array.isArray(item.installed_software) ? item.installed_software : [];
-    for (const sw of installed as Array<Record<string, unknown>>) {
-      const name = String(sw?.name || '').toLowerCase();
-      if (name && name === needleLower) {
-        matches.push({
-          hostname,
-          version: sw?.version ? String(sw.version) : undefined,
-        });
-      }
-    }
-    return matches;
-  }
-
-  // Packages: prefer code_scanner shape, fall back to flat
-  const projects: Array<Record<string, unknown>> = [];
-  if (Array.isArray(item.code_scanner)) projects.push(...(item.code_scanner as Array<Record<string, unknown>>));
-  if (Array.isArray(item.projects)) projects.push(...(item.projects as Array<Record<string, unknown>>));
-  // Flat shape support
-  if (Array.isArray(item.packages)) {
-    projects.push({ path: item.path, type: item.type, packages: item.packages });
-  }
-
-  for (const proj of projects) {
-    const pkgs = Array.isArray(proj?.packages) ? (proj.packages as Array<Record<string, unknown>>) : [];
-    for (const pkg of pkgs) {
-      const name = String(pkg?.name || '').toLowerCase();
-      if (name && name === needleLower) {
-        matches.push({
-          hostname,
-          path: proj?.path ? String(proj.path) : undefined,
-          projectType: proj?.type ? String(proj.type) : undefined,
-          version: pkg?.version ? String(pkg.version) : undefined,
-        });
-      }
-    }
+  for (const entry of entries) {
+    const hostname = String(entry?.hostname || entry?.host || entry?.name || '').trim();
+    if (!hostname) continue;
+    matches.push({
+      hostname,
+      path: entry?.path ? String(entry.path) : undefined,
+      version: entry?.version ? String(entry.version) : undefined,
+      projectType: entry?.type ? String(entry.type) : (type === 'package' && entry?.project_type ? String(entry.project_type) : undefined),
+    });
   }
   return matches;
 };
@@ -141,22 +129,22 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
     const load = async () => {
       setLoading(true);
       setError(null);
-      const res = await getDatastoreByCategory(config.category);
+      const res = await getDatastoreItem(name, config.category);
       if (cancelled) return;
       if (!res.success) {
-        setError(res.error || `Failed to load ${config.category}`);
+        setError(res.error || `Failed to load ${name}`);
         setMatches([]);
         setLoading(false);
         return;
       }
-      const needleLower = name.toLowerCase();
-      const found: HostMatch[] = [];
-      for (const item of res.data || []) {
-        const parsed = safeParse(item.value);
-        if (!parsed) continue;
-        found.push(...extractMatches(parsed, needleLower, type));
+      if (!res.item) {
+        setMatches([]);
+        setLoading(false);
+        return;
       }
-      setMatches(found);
+      const parsed = safeParse(res.item.value);
+      const value = parsed ?? res.item.value;
+      setMatches(extractMatchesFromValue(value, type));
       setLoading(false);
     };
     load();
