@@ -156,9 +156,19 @@ const LANGUAGE_REGISTRY: Record<string, LanguageInfo> = {
   elixir: { label: 'Elixir', registryLabel: 'Hex', registryUrl: n => `https://hex.pm/packages/${encodeURIComponent(n)}`, iconSlug: 'elixir', color: '4B275F', osvEcosystem: 'Hex' },
 };
 
-const getLanguageInfo = (os?: string): LanguageInfo | null => {
-  if (!os) return null;
-  return LANGUAGE_REGISTRY[os.toLowerCase().trim()] || null;
+const getLanguageInfo = (os?: string, fallbackName?: string): (LanguageInfo & { inferred?: boolean; inferReason?: string }) | null => {
+  const direct = os ? LANGUAGE_REGISTRY[os.toLowerCase().trim()] : null;
+  if (direct) return direct;
+  // Fallback: infer ecosystem from the package name's format
+  // (e.g. "org.bouncycastle:bcprov-jdk14" → Maven, "@scope/pkg" → npm).
+  if (fallbackName) {
+    const guess = detectEcosystemFromName(fallbackName);
+    if (guess) {
+      const info = LANGUAGE_REGISTRY[guess.key];
+      if (info) return { ...info, inferred: true, inferReason: guess.reason };
+    }
+  }
+  return null;
 };
 
 const CONFIG: Record<EntityType, {
