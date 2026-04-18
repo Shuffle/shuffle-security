@@ -1338,7 +1338,7 @@ const VulnAssetsPage = () => {
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent side="left">
-                            <p className="text-xs">Open in new window</p>
+                            <p className="text-xs">Explore monitor</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
