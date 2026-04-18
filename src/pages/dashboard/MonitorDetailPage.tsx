@@ -8,6 +8,7 @@ import { useHostActions } from '@/hooks/useHostActions';
 import { HostActionPopover } from '@/components/monitors/HostActionPopover';
 import { HostDetailPanel } from '@/components/monitors/HostDetailPanel';
 import { DisableRceConfirmDialog } from '@/components/monitors/DisableRceConfirmDialog';
+import { fetchHostSupplements, mergeHost } from '@/lib/mergeMonitorHosts';
 
 // ── OS icon (kept local — also used inline in the header) ────────────────────
 const OsIcon = ({ os, size = 14, className = '' }: { os: string; size?: number; className?: string }) => {
@@ -52,6 +53,7 @@ const MonitorDetailPage = () => {
     setLoading(true);
     setError(null);
     try {
+      // 1) Pull env stub (lightweight host metadata + group association).
       const res = await fetch(getApiUrl('/api/v1/getenvironments'), {
         credentials: 'include',
         headers: { ...getAuthHeader() },
@@ -59,17 +61,35 @@ const MonitorDetailPage = () => {
       if (!res.ok) { setError(`Failed to load (HTTP ${res.status})`); setLoading(false); return; }
       const data = await res.json();
       const envs = Array.isArray(data) ? data.filter((e: any) => !e.archived && e.sensor_group === true) : [];
+
+      let envHost: SensorHost | null = null;
+      let envGroupName = '';
       for (const env of envs) {
         const hosts: SensorHost[] = Array.isArray(env.sensor_hosts) ? env.sensor_hosts : [];
         const found = hosts.find((h: SensorHost) => h.uuid === id);
         if (found) {
-          setHost(found);
-          setGroupName(env.Name || '');
-          setLoading(false);
-          return;
+          envHost = found;
+          envGroupName = env.Name || '';
+          break;
         }
       }
-      setError('Host not found');
+
+      if (!envHost) {
+        setError('Host not found');
+        setLoading(false);
+        return;
+      }
+
+      // 2) Cross-load shuffle-security_sensors + shuffle-security_assets and
+      //    merge by hostname (sensors > assets > env).
+      const supplements = await fetchHostSupplements();
+      if (supplements.errors.length) {
+        console.warn('[MonitorDetail] Host supplement load issues:', supplements.errors);
+      }
+      const merged = mergeHost(envHost as unknown as Record<string, unknown>, supplements.sensorsByHost, supplements.assetsByHost) as unknown as SensorHost;
+
+      setHost(merged);
+      setGroupName(envGroupName);
     } catch {
       setError('Failed to reach the API');
     }
