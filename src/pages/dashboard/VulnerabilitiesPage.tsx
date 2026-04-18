@@ -1,14 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useState, useCallback } from 'react';
 import { Box, Typography, Chip, IconButton, Avatar } from '@mui/material';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Shield, Plus, RefreshCw, Monitor, Users, Search, Zap, ArrowRight, Wrench, Sparkles, ChevronRight, AlertTriangle, ExternalLink } from 'lucide-react';
+import { Shield, Plus, RefreshCw, Search, Zap, ArrowRight, Wrench, Sparkles, AlertTriangle } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useVulnerabilities, Vulnerability, VulnSeverity, VulnCategory } from '@/hooks/useVulnerabilities';
 import { useAppAuth } from '@/hooks/useAppAuth';
@@ -49,9 +47,6 @@ const STATUS_LABELS: Record<string, string> = {
 
 const VulnerabilitiesPage = () => {
   usePageMeta({ title: 'Vulnerabilities', description: 'Track and manage vulnerabilities across assets and users' });
-  const [searchParams] = useSearchParams();
-  const initialTab = searchParams.get('tab') === 'users' ? 'users' : 'assets';
-  const [activeTab, setActiveTab] = useState<'assets' | 'users'>(initialTab);
   const [searchQuery, setSearchQuery] = useState('');
   const [severityFilter, setSeverityFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -60,12 +55,7 @@ const VulnerabilitiesPage = () => {
   const [aiScanLoading, setAiScanLoading] = useState(false);
   const [aiScanResult, setAiScanResult] = useState<string | null>(null);
 
-  useEffect(() => {
-    const tab = searchParams.get('tab');
-    if (tab === 'users' || tab === 'assets') setActiveTab(tab);
-  }, [searchParams]);
-
-  const { vulnerabilities, severityCounts, isLoading, isRefreshing, refresh } = useVulnerabilities({ tab: activeTab });
+  const { vulnerabilities, severityCounts, isLoading, isRefreshing, refresh } = useVulnerabilities();
   const { authenticatedApps } = useAppAuth();
 
   // Filter connected vuln scanner apps

@@ -162,11 +162,6 @@ export const useVulnerabilities = ({ tab = 'assets' }: UseVulnerabilitiesOptions
     return out;
   }, [items]);
 
-  const filteredVulnerabilities = useMemo(() => {
-    const assetType: VulnAssetType = tab === 'users' ? 'user' : 'asset';
-    return allVulnerabilities.filter(v => v.asset_type === assetType);
-  }, [allVulnerabilities, tab]);
-
   const severityCounts = useMemo(() => {
     const counts = { critical: 0, high: 0, medium: 0, low: 0, info: 0 };
     for (const v of allVulnerabilities) {
@@ -176,7 +171,7 @@ export const useVulnerabilities = ({ tab = 'assets' }: UseVulnerabilitiesOptions
   }, [allVulnerabilities]);
 
   return {
-    vulnerabilities: filteredVulnerabilities,
+    vulnerabilities: allVulnerabilities,
     allVulnerabilities,
     severityCounts,
     isLoading,
