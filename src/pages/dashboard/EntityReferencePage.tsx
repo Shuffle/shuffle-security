@@ -139,7 +139,7 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
       }
       const parsed = safeParse(res.item.value);
       const value = parsed ?? res.item.value;
-      setMatches(extractMatchesFromValue(value, type));
+      setMatches(extractMatchesFromValue(value));
       setLoading(false);
     };
     load();
