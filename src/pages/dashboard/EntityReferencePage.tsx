@@ -416,8 +416,21 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
 
   const language = type === 'package' ? getLanguageInfo(os || undefined, name) : null;
 
-  // OSV-style vulnerability query: POST /api/v1/vulnerabilities { package: { name, ecosystem } }
+  // Lowest version observed across all hosts (for narrowing the OSV query).
+  // If we don't know any version, we omit `version` and fall back to a plain
+  // package/CVE lookup.
+  const lowestVersion = useMemo(() => {
+    const versions = matches
+      .map(m => cleanVersion(m.version || ''))
+      .filter(v => v.length > 0);
+    if (versions.length === 0) return undefined;
+    return versions.slice().sort(compareVersions)[0];
+  }, [matches]);
+
+  // OSV-style vulnerability query: POST /api/v1/vulnerabilities
   // Mirrors https://google.github.io/osv.dev/post-v1-query/
+  // Always includes the lowest known version when available so the API can
+  // narrow results to ranges actually affecting our fleet.
   useEffect(() => {
     if (type !== 'package') return;
     const ecosystem = language?.osvEcosystem;
@@ -432,10 +445,14 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
       setVulnsError(null);
       setVulnsQueried(true);
       try {
+        const payload: Record<string, unknown> = {
+          package: { name, ecosystem },
+        };
+        if (lowestVersion) payload.version = lowestVersion;
         const res = await shuffleFetch(getApiUrl('/api/v1/vulnerabilities'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ package: { name, ecosystem } }),
+          body: JSON.stringify(payload),
         });
         if (cancelled) return;
         if (!res.ok) {
