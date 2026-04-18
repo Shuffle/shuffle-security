@@ -67,10 +67,15 @@ const indexByHostname = (
 export const fetchHostSupplements = async (): Promise<SupplementResult> => {
   const errors: SupplementResult['errors'] = [];
 
+  console.log('[MonitorHosts] Fetching supplements: sensors + assets datastores');
   const [sensorsRes, assetsRes] = await Promise.allSettled([
     getDatastoreByCategory(SENSORS_CATEGORY),
     getDatastoreByCategory(ASSETS_CATEGORY),
   ]);
+  console.log('[MonitorHosts] Supplements fetched', {
+    sensors: sensorsRes.status,
+    assets: assetsRes.status,
+  });
 
   let sensorsByHost = new Map<string, Record<string, unknown>>();
   let assetsByHost = new Map<string, Record<string, unknown>>();
