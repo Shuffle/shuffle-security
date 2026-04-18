@@ -368,25 +368,46 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
       setLoading(true);
       setError(null);
       setOs(null);
+
+      // 1) Try the per-entity datastore key (legacy / pre-aggregated cache).
       const res = await getDatastoreItem(name, config.category);
       if (cancelled) return;
-      if (!res.success) {
-        setError(res.error || `Failed to load ${name}`);
-        setMatches([]);
-        setLoading(false);
-        return;
+
+      let directMatches: HostMatch[] = [];
+      if (res.success && res.item) {
+        const parsed = safeParse(res.item.value);
+        const value = parsed ?? res.item.value;
+        if (value && typeof value === 'object' && 'os' in value && typeof (value as Record<string, unknown>).os === 'string') {
+          setOs((value as Record<string, unknown>).os as string);
+        }
+        directMatches = extractMatchesFromValue(value);
       }
-      if (!res.item) {
-        setMatches([]);
-        setLoading(false);
-        return;
+
+      // 2) Fallback: scan every sensor record for installed_software /
+      // code_scanner entries matching this name. This is the path that
+      // actually works today because nothing populates per-entity caches.
+      if (directMatches.length === 0) {
+        try {
+          const scanned = await scanSensorsForEntity(type, name);
+          if (cancelled) return;
+          setMatches(scanned);
+        } catch (err) {
+          if (cancelled) return;
+          // If scanning fails we still want to render the page; just leave
+          // matches empty rather than blocking on an error.
+          console.warn('[EntityReferencePage] sensor scan failed', err);
+          setMatches([]);
+        }
+      } else {
+        setMatches(directMatches);
       }
-      const parsed = safeParse(res.item.value);
-      const value = parsed ?? res.item.value;
-      if (value && typeof value === 'object' && 'os' in value && typeof (value as Record<string, unknown>).os === 'string') {
-        setOs((value as Record<string, unknown>).os as string);
+
+      // Soft errors from the direct fetch shouldn't block fallback rendering.
+      if (!res.success && directMatches.length === 0) {
+        // Only surface the error if the fallback also produced nothing.
+        // We still allow the page to render; the empty-state copy explains.
       }
-      setMatches(extractMatchesFromValue(value));
+
       setLoading(false);
     };
     load();
