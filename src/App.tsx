@@ -156,8 +156,6 @@ const ThemedApp = () => {
               <Route path="/organizations" element={<OrganizationsPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/preferences" element={<OrgPreferencesPage />} />
-              <Route path="/vulnerabilities" element={<SupportOnly><VulnerabilitiesPage /></SupportOnly>} />
-              <Route path="/vulnerabilities/*" element={<SupportOnly><VulnerabilityDetailPage /></SupportOnly>} />
               <Route path="/monitors" element={<SupportOnly><VulnAssetsPage /></SupportOnly>} />
               <Route path="/monitors/:id" element={<SupportOnly><MonitorDetailPage /></SupportOnly>} />
               <Route path="/monitors/:hostUuid/terminal" element={<SupportOnly><HostTerminalPage /></SupportOnly>} />
@@ -171,6 +169,8 @@ const ThemedApp = () => {
               <Route path="/usecases" element={<UsecasesPage />} />
               <Route path="/apps/:appname" element={<AppDetailPage />} />
               <Route path="/usecases/:flowId" element={<DataFlowDetailPage />} />
+              <Route path="/vulnerabilities" element={<VulnerabilitiesPage />} />
+              <Route path="/vulnerabilities/*" element={<VulnerabilityDetailPage />} />
             </Route>
             
             <Route path="*" element={<NotFound />} />
