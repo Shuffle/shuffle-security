@@ -414,7 +414,8 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
         }
       }
       return { match: m, counts };
-  });
+    });
+  }, [matches, vulnsWithMeta]);
 
   // Persist affected vulnerabilities into the shuffle-security_vulnerabilities
   // datastore. For each vuln that has at least one affected host, we store the
@@ -443,13 +444,14 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
           hosts: Array.from(hostMap.values()),
         };
         if (cancelled) return;
-        await setDatastoreItem(meta.vuln.id, payload, 'shuffle-security_vulnerabilities');
+        console.log('[EntityReferencePage] persisting vuln', meta.vuln.id, 'hosts:', payload.hosts.length);
+        const result = await setDatastoreItem(meta.vuln.id, payload, 'shuffle-security_vulnerabilities');
+        if (!result.success) console.warn('[EntityReferencePage] persist failed', meta.vuln.id, result.error);
       }
     };
     persist().catch(err => console.warn('[EntityReferencePage] failed to persist vulns', err));
     return () => { cancelled = true; };
   }, [vulnsWithMeta, vulns.length, matches.length]);
-  }, [matches, vulnsWithMeta]);
 
   const filteredMatches = useMemo(() => {
     const q = filter.trim().toLowerCase();
