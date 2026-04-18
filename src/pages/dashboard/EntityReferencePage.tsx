@@ -337,6 +337,8 @@ const scanSensorsForEntity = async (
     a.hostname.localeCompare(b.hostname) || (a.path || '').localeCompare(b.path || ''),
   );
 };
+
+const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
   const params = useParams();
   const navigate = useNavigate();
   // Use splat param ('*') to capture multi-segment names like '@eslint/js'
