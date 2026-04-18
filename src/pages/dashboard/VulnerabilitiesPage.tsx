@@ -295,6 +295,14 @@ interface VulnTableProps {
 }
 
 const VulnTable = ({ vulnerabilities, isLoading, onRemediate, emptyIcon, emptyTitle, emptyDescription }: VulnTableProps) => {
+  const navigate = useNavigate();
+  const openDetail = (id: string, e?: React.MouseEvent) => {
+    // Strip "::hostname" expansion suffix to get the canonical OSV id used as datastore key.
+    const baseId = String(id).split('::')[0];
+    const url = `/vulnerabilities/${encodeURIComponent(baseId)}`;
+    if (e && (e.ctrlKey || e.metaKey || e.shiftKey)) { window.open(url, '_blank'); return; }
+    navigate(url);
+  };
   if (isLoading) {
     return (
       <div className="rounded-lg border border-border bg-card p-12 text-center">
