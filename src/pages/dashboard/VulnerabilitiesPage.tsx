@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Box, Typography, Chip, IconButton, Avatar } from '@mui/material';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -294,6 +295,14 @@ interface VulnTableProps {
 }
 
 const VulnTable = ({ vulnerabilities, isLoading, onRemediate, emptyIcon, emptyTitle, emptyDescription }: VulnTableProps) => {
+  const navigate = useNavigate();
+  const openDetail = (id: string, e?: React.MouseEvent) => {
+    // Strip "::hostname" expansion suffix to get the canonical OSV id used as datastore key.
+    const baseId = String(id).split('::')[0];
+    const url = `/vulnerabilities/${encodeURIComponent(baseId)}`;
+    if (e && (e.ctrlKey || e.metaKey || e.shiftKey)) { window.open(url, '_blank'); return; }
+    navigate(url);
+  };
   if (isLoading) {
     return (
       <div className="rounded-lg border border-border bg-card p-12 text-center">
@@ -334,7 +343,12 @@ const VulnTable = ({ vulnerabilities, isLoading, onRemediate, emptyIcon, emptyTi
         </TableHeader>
         <TableBody>
           {vulnerabilities.map(vuln => (
-            <TableRow key={vuln.id}>
+            <TableRow
+              key={vuln.id}
+              className="cursor-pointer hover:bg-muted/30"
+              onClick={(e) => openDetail(vuln.id, e)}
+              onAuxClick={(e) => e.button === 1 && window.open(`/vulnerabilities/${encodeURIComponent(String(vuln.id).split('::')[0])}`, '_blank')}
+            >
               <TableCell>
                 <Badge variant="outline" className={`text-xs capitalize ${SEVERITY_COLORS[vuln.severity]}`}>
                   {vuln.severity}
@@ -363,7 +377,7 @@ const VulnTable = ({ vulnerabilities, isLoading, onRemediate, emptyIcon, emptyTi
                   {vuln.first_seen ? new Date(vuln.first_seen).toLocaleDateString() : '—'}
                 </span>
               </TableCell>
-              <TableCell className="text-right">
+              <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
