@@ -473,7 +473,7 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
     };
     run();
     return () => { cancelled = true; };
-  }, [name, type, language?.osvEcosystem]);
+  }, [name, type, language?.osvEcosystem, lowestVersion]);
 
   // Build reference links: prepend language registry link when known, dedupe by URL.
   const referenceLinks = useMemo(() => {
