@@ -373,23 +373,12 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
     return [registryLink, ...base.filter(l => !seen.has(l.url) && (seen.add(l.url), true))];
   }, [config, name, language]);
 
-  const filteredMatches = useMemo(() => {
-    const q = filter.trim().toLowerCase();
-    if (!q) return matches;
-    return matches.filter(m =>
-      m.hostname.toLowerCase().includes(q) ||
-      (m.path || '').toLowerCase().includes(q) ||
-      (m.version || '').toLowerCase().includes(q),
-    );
-  }, [matches, filter]);
-
   // Pre-compute normalized severity per vuln + which of our hosts are affected
   // by checking each host's installed version against the OSV affected ranges.
   const vulnsWithMeta = useMemo(() => vulns.map(v => {
     const rawSev = v.database_specific?.severity || v.severity?.[0]?.score;
     const sevToken = normalizeSeverity(rawSev);
     const affectedHosts = matches.filter(m => isVersionAffected(m.version, v));
-    // Deduplicate by hostname (a host may appear with multiple paths)
     const affectedHostNames = Array.from(new Set(affectedHosts.map(h => h.hostname)));
     return {
       vuln: v,
@@ -404,10 +393,54 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
     };
   }), [vulns, matches]);
 
+  // Per-host vulnerability severity tallies. Each host gets a count for
+  // critical/high/medium/low so we can render an L M H C strip.
+  type HostSevCounts = { critical: number; high: number; medium: number; low: number; informational: number; total: number; vulnIds: Record<string, string[]> };
+  const matchesWithVulns = useMemo(() => {
+    return matches.map(m => {
+      const counts: HostSevCounts = { critical: 0, high: 0, medium: 0, low: 0, informational: 0, total: 0, vulnIds: { critical: [], high: [], medium: [], low: [], informational: [] } };
+      // Use a per-host set to avoid double-counting the same vuln across multiple paths
+      const seen = new Set<string>();
+      for (const meta of vulnsWithMeta) {
+        if (seen.has(meta.vuln.id)) continue;
+        if (!isVersionAffected(m.version, meta.vuln)) continue;
+        seen.add(meta.vuln.id);
+        const bucket = (meta.sevToken as keyof HostSevCounts);
+        if (bucket === 'critical' || bucket === 'high' || bucket === 'medium' || bucket === 'low' || bucket === 'informational') {
+          counts[bucket] += 1;
+          counts.vulnIds[bucket].push(meta.vuln.id);
+          counts.total += 1;
+        }
+      }
+      return { match: m, counts };
+    });
+  }, [matches, vulnsWithMeta]);
+
+  const filteredMatches = useMemo(() => {
+    const q = filter.trim().toLowerCase();
+    const list = q
+      ? matchesWithVulns.filter(({ match: m }) =>
+          m.hostname.toLowerCase().includes(q) ||
+          (m.path || '').toLowerCase().includes(q) ||
+          (m.version || '').toLowerCase().includes(q),
+        )
+      : matchesWithVulns;
+    // Sort: total affected desc, then severity-weighted (crit*1000+high*100+med*10+low),
+    // then hostname asc, then path asc.
+    return [...list].sort((a, b) => {
+      const ta = a.counts.total;
+      const tb = b.counts.total;
+      if (ta !== tb) return tb - ta;
+      const wa = a.counts.critical * 1000 + a.counts.high * 100 + a.counts.medium * 10 + a.counts.low;
+      const wb = b.counts.critical * 1000 + b.counts.high * 100 + b.counts.medium * 10 + b.counts.low;
+      if (wa !== wb) return wb - wa;
+      return a.match.hostname.localeCompare(b.match.hostname) || (a.match.path || '').localeCompare(b.match.path || '');
+    });
+  }, [matchesWithVulns, filter]);
+
   const sortedVulns = useMemo(() => {
     const arr = [...vulnsWithMeta];
     if (vulnsSort === 'affected') {
-      // Affected first (count desc), then severity desc, then newest
       arr.sort((a, b) =>
         b.affectedCount - a.affectedCount
         || b.sevOrder - a.sevOrder
