@@ -159,8 +159,8 @@ const ThemedApp = () => {
               <Route path="/monitors" element={<SupportOnly><VulnAssetsPage /></SupportOnly>} />
               <Route path="/monitors/:id" element={<SupportOnly><MonitorDetailPage /></SupportOnly>} />
               <Route path="/monitors/:hostUuid/terminal" element={<SupportOnly><HostTerminalPage /></SupportOnly>} />
-              <Route path="/software/:id" element={<SupportOnly><EntityReferencePage type="software" /></SupportOnly>} />
-              <Route path="/packages/:id" element={<SupportOnly><EntityReferencePage type="package" /></SupportOnly>} />
+              <Route path="/software/*" element={<SupportOnly><EntityReferencePage type="software" /></SupportOnly>} />
+              <Route path="/packages/*" element={<SupportOnly><EntityReferencePage type="package" /></SupportOnly>} />
               <Route path="/assets" element={<AssetsPage />} />
             </Route>
 

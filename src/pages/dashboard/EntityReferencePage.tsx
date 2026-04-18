@@ -42,9 +42,11 @@ const CONFIG: Record<EntityType, {
 };
 
 const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
-  const { id } = useParams<{ id: string }>();
+  const params = useParams();
   const navigate = useNavigate();
-  const name = decodeURIComponent(id || '');
+  // Use splat param ('*') to capture multi-segment names like '@eslint/js'
+  const raw = (params['*'] || params.id || '') as string;
+  const name = decodeURIComponent(raw);
   const config = CONFIG[type];
   const Icon = config.icon;
   const referenceLinks = config.buildLinks(name);
