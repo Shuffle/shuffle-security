@@ -6,6 +6,36 @@ import { Input } from '@/components/ui/input';
 import { ArrowLeft, Package, FileCode, ExternalLink, ShieldAlert, Info, Clock, Server, Search, Loader2, FolderOpen, AlertTriangle } from 'lucide-react';
 import { getDatastoreItem } from '@/services/datastore';
 import { getApiUrl, shuffleFetch } from '@/config/api';
+import { severityColors, severityOrder } from '@/config/incidentConfig';
+
+/**
+ * Normalize OSV severity strings to the canonical incident severity tokens
+ * (critical/high/medium/low/informational) so we can reuse the incident colors
+ * and sort order.
+ *
+ * OSV reports severity in several shapes:
+ *  - database_specific.severity: "CRITICAL" | "HIGH" | "MODERATE" | "LOW"  (GHSA)
+ *  - severity[].score: CVSS vector or numeric score (e.g. "CVSS:3.1/AV:N/...")
+ */
+const normalizeSeverity = (raw?: string | null): string => {
+  if (!raw) return 'informational';
+  const s = String(raw).trim().toLowerCase();
+  if (!s) return 'informational';
+  if (s.startsWith('crit')) return 'critical';
+  if (s.startsWith('high') || s === 'severe') return 'high';
+  if (s.startsWith('mod') || s.startsWith('med')) return 'medium';
+  if (s.startsWith('low')) return 'low';
+  if (s.startsWith('info') || s.startsWith('none') || s === 'negligible') return 'informational';
+  // Try to parse numeric CVSS score (0.0–10.0)
+  const num = parseFloat(s);
+  if (!Number.isNaN(num)) {
+    if (num >= 9) return 'critical';
+    if (num >= 7) return 'high';
+    if (num >= 4) return 'medium';
+    if (num > 0) return 'low';
+  }
+  return 'informational';
+};
 
 type EntityType = 'software' | 'package';
 
