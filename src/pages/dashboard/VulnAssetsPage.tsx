@@ -1489,7 +1489,13 @@ const VulnAssetsPage = () => {
                                         <tr
                                           key={idx}
                                           className="hover:bg-muted/20 cursor-pointer"
-                                          onClick={() => sw.name && window.open(`/software/${encodeURIComponent(sw.name)}`, '_blank')}
+                                          onClick={(e) => {
+                                            if (!sw.name) return;
+                                            const url = `/software/${encodeURIComponent(sw.name)}`;
+                                            if (e.ctrlKey || e.metaKey || e.shiftKey) { window.open(url, '_blank'); return; }
+                                            navigate(url);
+                                          }}
+                                          onAuxClick={(e) => sw.name && e.button === 1 && window.open(`/software/${encodeURIComponent(sw.name)}`, '_blank')}
                                         >
                                           <td className="px-3 py-1.5 font-medium text-foreground">{sw.name || '—'}</td>
                                           <td className="px-3 py-1.5 font-mono text-muted-foreground">{(sw.version as string) || '—'}</td>
@@ -1581,7 +1587,13 @@ const VulnAssetsPage = () => {
                                                   <tr
                                                     key={ki}
                                                     className="hover:bg-muted/20 cursor-pointer"
-                                                    onClick={() => pkg.name && window.open(`/packages/${encodeURIComponent(pkg.name)}`, '_blank')}
+                                                    onClick={(e) => {
+                                                      if (!pkg.name) return;
+                                                      const url = `/packages/${encodeURIComponent(pkg.name)}`;
+                                                      if (e.ctrlKey || e.metaKey || e.shiftKey) { window.open(url, '_blank'); return; }
+                                                      navigate(url);
+                                                    }}
+                                                    onAuxClick={(e) => pkg.name && e.button === 1 && window.open(`/packages/${encodeURIComponent(pkg.name)}`, '_blank')}
                                                   >
                                                     <td className="px-3 py-1.5 font-medium text-foreground">{pkg.name || '—'}</td>
                                                     <td className="px-3 py-1.5 font-mono text-muted-foreground">{pkg.version || '—'}</td>
