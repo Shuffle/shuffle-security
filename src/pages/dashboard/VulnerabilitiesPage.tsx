@@ -49,6 +49,95 @@ const STATUS_LABELS: Record<string, string> = {
 
 const VulnerabilitiesPage = () => {
   usePageMeta({ title: 'Vulnerabilities', description: 'Track and manage vulnerabilities across assets and users' });
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  if (authLoading) return null;
+  if (!isAuthenticated) return <PublicVulnerabilitiesView />;
+  return <AuthenticatedVulnerabilitiesView />;
+};
+
+const PublicVulnerabilitiesView = () => {
+  const navigate = useNavigate();
+  const [query, setQuery] = useState('');
+  const trimmed = query.trim();
+  const looksLikeId = /^(CVE-|GHSA-|PYSEC-|GO-|RUSTSEC-|MAL-|OSV-)/i.test(trimmed);
+  const handleLookup = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!trimmed) return;
+    navigate(`/vulnerabilities/${encodeURIComponent(trimmed)}`);
+  };
+  return (
+    <div className="p-6 max-w-[1100px] mx-auto space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-primary/15 text-primary shrink-0">
+          <Shield size={20} />
+        </div>
+        <div>
+          <h1 className="text-xl font-semibold text-foreground">Vulnerabilities</h1>
+          <p className="text-sm text-muted-foreground">
+            Look up any CVE, GHSA, or OSV advisory — public, no sign-in required.
+          </p>
+        </div>
+      </div>
+
+      <form onSubmit={handleLookup} className="rounded-lg border border-border bg-card p-5 space-y-3">
+        <label htmlFor="vuln-id" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+          Vulnerability ID
+        </label>
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              id="vuln-id"
+              autoFocus
+              placeholder="e.g. CVE-2024-12345 or GHSA-xxxx-xxxx-xxxx"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="pl-8 h-9 text-sm font-mono"
+            />
+          </div>
+          <Button type="submit" size="sm" className="gap-1.5 h-9" disabled={!trimmed}>
+            <ArrowRight size={14} />
+            Open
+          </Button>
+        </div>
+        {trimmed && !looksLikeId && (
+          <p className="text-[0.7rem] text-muted-foreground">
+            Tip: this doesn't look like a standard advisory ID — we'll still try to open it.
+          </p>
+        )}
+        <p className="text-[0.7rem] text-muted-foreground flex items-center gap-1.5">
+          <Globe size={11} />
+          Powered by the public OSV.dev vulnerability database.
+        </p>
+      </form>
+
+      <div className="rounded-lg border border-border bg-card p-5">
+        <div className="flex items-start gap-3">
+          <div className="w-8 h-8 rounded-full flex items-center justify-center bg-primary/15 text-primary shrink-0">
+            <LogIn size={14} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-foreground mb-0.5">Track vulnerabilities in your environment</p>
+            <p className="text-xs text-muted-foreground mb-3">
+              Sign in to connect Shuffle to your hosts and see exactly which systems are affected by each advisory.
+            </p>
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="outline" className="gap-1.5" onClick={() => navigate('/login?returnUrl=%2Fvulnerabilities')}>
+                <LogIn size={14} />
+                Sign in
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => navigate('/register')}>
+                Create account
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const AuthenticatedVulnerabilitiesView = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [severityFilter, setSeverityFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
