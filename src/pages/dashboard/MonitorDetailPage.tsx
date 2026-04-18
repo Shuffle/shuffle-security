@@ -64,9 +64,13 @@ const MonitorDetailPage = () => {
 
       let envHost: SensorHost | null = null;
       let envGroupName = '';
+      const decodedId = id ? decodeURIComponent(id) : '';
+      const idLower = decodedId.toLowerCase();
       for (const env of envs) {
         const hosts: SensorHost[] = Array.isArray(env.sensor_hosts) ? env.sensor_hosts : [];
-        const found = hosts.find((h: SensorHost) => h.uuid === id);
+        const found = hosts.find((h: SensorHost) =>
+          h.uuid === decodedId || (h.hostname || '').toLowerCase() === idLower,
+        );
         if (found) {
           envHost = found;
           envGroupName = env.Name || '';
