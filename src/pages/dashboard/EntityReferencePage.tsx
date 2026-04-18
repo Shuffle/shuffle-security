@@ -1,23 +1,55 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, FileCode, ExternalLink, ShieldAlert, Info, Clock } from 'lucide-react';
+import { ArrowLeft, Package, FileCode, ExternalLink, ShieldAlert, Info, Clock } from 'lucide-react';
 
-const PackageDetailPage = () => {
+type EntityType = 'software' | 'package';
+
+interface EntityReferencePageProps {
+  type: EntityType;
+}
+
+const CONFIG: Record<EntityType, {
+  label: string;
+  icon: typeof Package;
+  crossRef: string;
+  buildLinks: (name: string) => { label: string; url: string }[];
+}> = {
+  software: {
+    label: 'Software',
+    icon: Package,
+    crossRef: "Cross-reference with the host's installed version in the Monitors view.",
+    buildLinks: (name) => [
+      { label: 'NVD (NIST)', url: `https://nvd.nist.gov/vuln/search/results?query=${encodeURIComponent(name)}` },
+      { label: 'CVE Details', url: `https://www.cvedetails.com/google-search-results.php?q=${encodeURIComponent(name)}` },
+      { label: 'OSV.dev', url: `https://osv.dev/list?q=${encodeURIComponent(name)}` },
+      { label: 'Google Search', url: `https://www.google.com/search?q=${encodeURIComponent(name + ' vulnerability')}` },
+    ],
+  },
+  package: {
+    label: 'Package',
+    icon: FileCode,
+    crossRef: "Cross-reference with the host's package list in the Monitors view.",
+    buildLinks: (name) => [
+      { label: 'NVD (NIST)', url: `https://nvd.nist.gov/vuln/search/results?query=${encodeURIComponent(name)}` },
+      { label: 'OSV.dev', url: `https://osv.dev/list?q=${encodeURIComponent(name)}` },
+      { label: 'Snyk Vulnerability DB', url: `https://security.snyk.io/search?q=${encodeURIComponent(name)}` },
+      { label: 'npm', url: `https://www.npmjs.com/package/${encodeURIComponent(name)}` },
+      { label: 'PyPI', url: `https://pypi.org/project/${encodeURIComponent(name)}/` },
+      { label: 'Google Search', url: `https://www.google.com/search?q=${encodeURIComponent(name + ' vulnerability')}` },
+    ],
+  },
+};
+
+const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const name = decodeURIComponent(id || '');
+  const config = CONFIG[type];
+  const Icon = config.icon;
+  const referenceLinks = config.buildLinks(name);
 
-  usePageMeta({ title: `${name} — Package`, description: `Package detail for ${name}` });
-
-  const referenceLinks = [
-    { label: 'NVD (NIST)', url: `https://nvd.nist.gov/vuln/search/results?query=${encodeURIComponent(name)}` },
-    { label: 'OSV.dev', url: `https://osv.dev/list?q=${encodeURIComponent(name)}` },
-    { label: 'Snyk Vulnerability DB', url: `https://security.snyk.io/search?q=${encodeURIComponent(name)}` },
-    { label: 'npm', url: `https://www.npmjs.com/package/${encodeURIComponent(name)}` },
-    { label: 'PyPI', url: `https://pypi.org/project/${encodeURIComponent(name)}/` },
-    { label: 'Google Search', url: `https://www.google.com/search?q=${encodeURIComponent(name + ' vulnerability')}` },
-  ];
+  usePageMeta({ title: `${name} — ${config.label}`, description: `${config.label} detail for ${name}` });
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
@@ -27,7 +59,7 @@ const PackageDetailPage = () => {
           <ArrowLeft size={14} /> Back
         </Button>
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          <FileCode size={18} className="text-primary shrink-0" />
+          <Icon size={18} className="text-primary shrink-0" />
           <h1 className="text-lg font-semibold text-foreground truncate">{name}</h1>
         </div>
       </div>
@@ -40,7 +72,7 @@ const PackageDetailPage = () => {
             <span className="text-sm font-medium">Version Status</span>
           </div>
           <p className="text-xs text-muted-foreground pl-6">
-            Check the reference links below to determine if the installed version is current or outdated. Cross-reference with the host's package list in the Monitors view.
+            Check the reference links below to determine if the installed version is current or outdated. {config.crossRef}
           </p>
         </div>
 
@@ -79,4 +111,4 @@ const PackageDetailPage = () => {
   );
 };
 
-export default PackageDetailPage;
+export default EntityReferencePage;
