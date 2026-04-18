@@ -720,7 +720,7 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
             <table className="w-full text-xs">
               <thead className="bg-muted/30">
                 <tr className="text-left text-muted-foreground">
-                  {type === 'package' && vulnsQueried && (
+                  {vulnsQueried && (
                     <th className="pl-3 pr-1 py-1.5 font-medium w-[1%] whitespace-nowrap">Risk</th>
                   )}
                   <th className="px-3 py-1.5 font-medium">Hostname</th>
@@ -731,7 +731,7 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
               <tbody className="divide-y divide-border">
                 <TooltipProvider delayDuration={150}>
                   {filteredMatches.map(({ match: m, counts }, i) => {
-                    const showRisk = type === 'package' && vulnsQueried;
+                    const showRisk = vulnsQueried;
                     const buckets: Array<{ key: 'critical' | 'high' | 'medium' | 'low'; letter: string; label: string }> = [
                       { key: 'critical', letter: 'C', label: 'Critical' },
                       { key: 'high', letter: 'H', label: 'High' },
@@ -807,7 +807,7 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
       </div>
 
       {/* Known vulnerabilities (OSV-style query) */}
-      {type === 'package' && vulnsQueried && (
+      {vulnsQueried && (
         <div className="rounded-lg border border-border bg-card p-5 space-y-3">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 text-foreground flex-wrap">
