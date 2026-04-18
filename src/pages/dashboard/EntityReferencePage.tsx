@@ -391,6 +391,85 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
         )}
       </div>
 
+      {/* Known vulnerabilities (OSV-style query) */}
+      {type === 'package' && vulnsQueried && (
+        <div className="rounded-lg border border-border bg-card p-5 space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-foreground">
+              <ShieldAlert size={14} className="text-orange-500" />
+              <span className="text-sm font-medium">Known vulnerabilities</span>
+              {!vulnsLoading && !vulnsError && (
+                <span className="text-[0.65rem] text-muted-foreground">({vulns.length})</span>
+              )}
+            </div>
+            {language?.osvEcosystem && (
+              <span className="text-[0.65rem] text-muted-foreground font-mono">
+                {language.osvEcosystem}
+              </span>
+            )}
+          </div>
+
+          {vulnsLoading ? (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground py-3">
+              <Loader2 size={12} className="animate-spin" />
+              Querying vulnerability database…
+            </div>
+          ) : vulnsError ? (
+            <p className="text-xs text-destructive py-2">{vulnsError}</p>
+          ) : vulns.length === 0 ? (
+            <p className="text-xs text-muted-foreground py-2">
+              No known vulnerabilities reported for <span className="font-mono font-medium text-foreground">{name}</span>.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {vulns.map((v) => {
+                const sev = (v.database_specific?.severity || v.severity?.[0]?.score || '').toString();
+                const fixedVersions = (v.affected || [])
+                  .flatMap(a => (a.ranges || []).flatMap(r => (r.events || []).map(e => e.fixed).filter(Boolean) as string[]));
+                const advisoryUrl = v.references?.find(r => r.type === 'ADVISORY')?.url
+                  || v.references?.[0]?.url
+                  || `https://osv.dev/vulnerability/${encodeURIComponent(v.id)}`;
+                return (
+                  <a
+                    key={v.id}
+                    href={advisoryUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block rounded-md border border-border bg-muted/20 px-3 py-2.5 hover:bg-muted/40 transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs font-mono font-medium text-foreground">{v.id}</span>
+                          {sev && (
+                            <span className="inline-flex items-center gap-1 rounded-md border border-border bg-orange-500/10 px-1.5 py-0.5 text-[0.6rem] font-medium text-orange-500">
+                              <AlertTriangle size={9} />
+                              {sev}
+                            </span>
+                          )}
+                          {v.aliases?.slice(0, 2).map(a => (
+                            <span key={a} className="text-[0.6rem] font-mono text-muted-foreground">{a}</span>
+                          ))}
+                        </div>
+                        {v.summary && (
+                          <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{v.summary}</p>
+                        )}
+                        {fixedVersions.length > 0 && (
+                          <p className="mt-1 text-[0.65rem] text-muted-foreground">
+                            Fixed in: <span className="font-mono text-foreground">{Array.from(new Set(fixedVersions)).slice(0, 3).join(', ')}</span>
+                          </p>
+                        )}
+                      </div>
+                      <ExternalLink size={12} className="text-muted-foreground shrink-0 mt-0.5" />
+                    </div>
+                  </a>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Version & vulnerability status */}
       <div className="rounded-lg border border-border bg-card p-5 space-y-5">
         <div className="space-y-3">
