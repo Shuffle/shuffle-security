@@ -141,7 +141,7 @@ const AuthenticatedVulnerabilitiesView = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [severityFilter, setSeverityFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('open');
   const [aiScanOpen, setAiScanOpen] = useState(false);
   const [aiScanLoading, setAiScanLoading] = useState(false);
   const [aiScanResult, setAiScanResult] = useState<string | null>(null);
