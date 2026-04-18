@@ -31,11 +31,88 @@ export interface Vulnerability {
 
 const DATASTORE_CATEGORY = 'shuffle-vulnerabilities';
 
-function parseVulnerability(raw: any): Vulnerability | null {
+function normalizeOsvSeverity(raw?: string | null): VulnSeverity {
+  if (!raw) return 'info';
+  const s = String(raw).trim().toLowerCase();
+  if (s.startsWith('crit')) return 'critical';
+  if (s.startsWith('high') || s === 'severe') return 'high';
+  if (s.startsWith('mod') || s.startsWith('med')) return 'medium';
+  if (s.startsWith('low')) return 'low';
+  const num = parseFloat(s);
+  if (!Number.isNaN(num)) {
+    if (num >= 9) return 'critical';
+    if (num >= 7) return 'high';
+    if (num >= 4) return 'medium';
+    if (num > 0) return 'low';
+  }
+  return 'info';
+}
+
+/**
+ * Parse a single datastore record. Supports two shapes:
+ *  1. Native vuln record (legacy): matches the Vulnerability interface directly.
+ *  2. OSV record (from /packages and /software lookups): has `id`, `summary`,
+ *     `affected[].package.ecosystem`, optional `hosts: [{ hostname, paths }]`.
+ *     We expand to one Vulnerability row per affected hostname.
+ */
+function parseRecord(raw: any): Vulnerability[] {
   try {
     const data = typeof raw === 'string' ? JSON.parse(raw) : raw;
-    if (!data || !data.id || !data.title) return null;
-    return {
+    if (!data || !data.id) return [];
+
+    const isOsv = Array.isArray(data.affected) || Array.isArray(data.severity) || data.database_specific;
+
+    if (isOsv) {
+      const sevRaw = data.database_specific?.severity || data.severity?.[0]?.score;
+      const severity = normalizeOsvSeverity(sevRaw);
+      const ecosystem: string = data.affected?.[0]?.package?.ecosystem || '';
+      const pkgName: string = data.affected?.[0]?.package?.name || '';
+      const isCve = String(data.id).toUpperCase().startsWith('CVE-');
+      const cveId = isCve ? data.id : (data.aliases || []).find((a: string) => /^CVE-/i.test(a));
+      const title = data.summary || data.id;
+      const description = data.details || '';
+      const firstSeen = data.published || data.modified || '';
+      const lastSeen = data.modified || data.published || '';
+      const source = ecosystem ? `osv:${ecosystem.toLowerCase()}` : 'osv';
+      const hosts: Array<{ hostname: string; paths?: any[] }> = Array.isArray(data.hosts) ? data.hosts : [];
+
+      if (hosts.length === 0) {
+        return [{
+          id: data.id,
+          title,
+          description,
+          severity,
+          category: 'code_dependency',
+          status: 'open',
+          source,
+          asset_type: 'asset',
+          asset_id: pkgName,
+          asset_name: pkgName,
+          cve_id: cveId,
+          first_seen: firstSeen,
+          last_seen: lastSeen,
+        }];
+      }
+
+      return hosts.map(h => ({
+        id: `${data.id}::${h.hostname}`,
+        title,
+        description,
+        severity,
+        category: 'code_dependency',
+        status: 'open',
+        source,
+        asset_type: 'asset',
+        asset_id: h.hostname,
+        asset_name: h.hostname,
+        cve_id: cveId,
+        first_seen: firstSeen,
+        last_seen: lastSeen,
+      }));
+    }
+
+    if (!data.title) return [];
+    return [{
       id: data.id,
       title: data.title,
       description: data.description || '',
@@ -51,9 +128,9 @@ function parseVulnerability(raw: any): Vulnerability | null {
       first_seen: data.first_seen || '',
       last_seen: data.last_seen || '',
       resolved_at: data.resolved_at || '',
-    };
+    }];
   } catch {
-    return null;
+    return [];
   }
 }
 
@@ -73,14 +150,16 @@ export const useVulnerabilities = ({ tab = 'assets' }: UseVulnerabilitiesOptions
   }, [hasInitialFetch, fetchItems]);
 
   const allVulnerabilities = useMemo(() => {
-    return items.map(item => {
+    const out: Vulnerability[] = [];
+    for (const item of items) {
       try {
         const parsed = typeof item.value === 'string' ? JSON.parse(item.value) : item.value;
-        return parseVulnerability(parsed);
+        out.push(...parseRecord(parsed));
       } catch {
-        return null;
+        // skip
       }
-    }).filter(Boolean) as Vulnerability[];
+    }
+    return out;
   }, [items]);
 
   const filteredVulnerabilities = useMemo(() => {
