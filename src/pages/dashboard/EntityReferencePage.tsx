@@ -225,6 +225,27 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
           <Icon size={18} className="text-primary shrink-0" />
           <h1 className="text-lg font-semibold text-foreground truncate">{name}</h1>
+          {language && (
+            <span
+              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/30 px-2 py-0.5 text-[0.65rem] font-medium text-foreground shrink-0"
+              title={`${language.label} — ${language.registryLabel}`}
+            >
+              <img
+                src={`https://cdn.simpleicons.org/${language.iconSlug}/${language.color}`}
+                alt=""
+                width={12}
+                height={12}
+                loading="lazy"
+                className="shrink-0"
+              />
+              {language.label}
+            </span>
+          )}
+          {!language && os && (
+            <span className="inline-flex items-center rounded-md border border-border bg-muted/30 px-2 py-0.5 text-[0.65rem] font-medium text-muted-foreground shrink-0">
+              {os}
+            </span>
+          )}
         </div>
       </div>
 
