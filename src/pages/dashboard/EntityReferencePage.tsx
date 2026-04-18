@@ -791,8 +791,49 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
-...
-                        {fixedVersions.length > 0 && (
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs font-mono font-medium text-foreground">{v.id}</span>
+                          <span
+                            className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[0.6rem] font-medium uppercase tracking-wide"
+                            style={{
+                              backgroundColor: `${sevColor}1f`,
+                              color: sevColor,
+                              border: `1px solid ${sevColor}55`,
+                            }}
+                          >
+                            <AlertTriangle size={9} />
+                            {sevToken}
+                          </span>
+                          {isAffected && (
+                            <span
+                              className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide"
+                              style={{
+                                backgroundColor: `${sevColor}2a`,
+                                color: sevColor,
+                                border: `1px solid ${sevColor}66`,
+                              }}
+                              title={`Affects ${affectedCount} host${affectedCount === 1 ? '' : 's'}: ${affectedHostNames.join(', ')}`}
+                            >
+                              <Server size={9} />
+                              {affectedCount} affected
+                            </span>
+                          )}
+                          {v.aliases?.slice(0, 2).map(a => (
+                            <span key={a} className="text-[0.6rem] font-mono text-muted-foreground">{a}</span>
+                          ))}
+                        </div>
+                        {v.summary && (
+                          <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{v.summary}</p>
+                        )}
+                        {isAffected && (
+                          <p className="mt-1 text-[0.65rem]">
+                            <span className="text-muted-foreground">Hosts: </span>
+                            <span className="font-mono text-foreground">
+                              {affectedHostNames.slice(0, 3).join(', ')}
+                              {affectedHostNames.length > 3 && ` +${affectedHostNames.length - 3} more`}
+                            </span>
+                          </p>
+                        )}
                           <p className="mt-1 text-[0.65rem] text-muted-foreground">
                             Fixed in: <span className="font-mono text-foreground">{Array.from(new Set(fixedVersions)).slice(0, 3).join(', ')}</span>
                           </p>
