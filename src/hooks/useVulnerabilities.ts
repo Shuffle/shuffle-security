@@ -74,10 +74,10 @@ function parseRecord(raw: any): Vulnerability[] {
       const firstSeen = data.published || data.modified || '';
       const lastSeen = data.modified || data.published || '';
       const source = ecosystem ? `osv:${ecosystem.toLowerCase()}` : 'osv';
-      const hosts: Array<{ hostname: string; paths?: any[] }> = Array.isArray(data.hosts) ? data.hosts : [];
-      // Preserve manual resolution state stored on the OSV record (set via "Mark as resolved" on detail page).
-      const status: VulnStatus = (['open', 'in_progress', 'resolved', 'accepted'].includes(data.status) ? data.status : 'open') as VulnStatus;
-      const resolvedAt: string = data.resolved_at || '';
+      const hosts: Array<{ hostname: string; paths?: any[]; resolution?: any }> = Array.isArray(data.hosts) ? data.hosts : [];
+      // Root-level resolution (legacy whole-vuln close) is treated as a fallback only.
+      const rootStatus: VulnStatus = (['open', 'in_progress', 'resolved', 'accepted'].includes(data.status) ? data.status : 'open') as VulnStatus;
+      const rootResolvedAt: string = data.resolved_at || '';
 
       if (hosts.length === 0) {
         return [{
@@ -86,7 +86,7 @@ function parseRecord(raw: any): Vulnerability[] {
           description,
           severity,
           category: 'code_dependency',
-          status,
+          status: rootStatus,
           source,
           asset_type: 'asset',
           asset_id: pkgName,
@@ -94,26 +94,36 @@ function parseRecord(raw: any): Vulnerability[] {
           cve_id: cveId,
           first_seen: firstSeen,
           last_seen: lastSeen,
-          resolved_at: resolvedAt,
+          resolved_at: rootResolvedAt,
         }];
       }
 
-      return hosts.map(h => ({
-        id: `${data.id}::${h.hostname}`,
-        title,
-        description,
-        severity,
-        category: 'code_dependency',
-        status,
-        source,
-        asset_type: 'asset',
-        asset_id: h.hostname,
-        asset_name: h.hostname,
-        cve_id: cveId,
-        first_seen: firstSeen,
-        last_seen: lastSeen,
-        resolved_at: resolvedAt,
-      }));
+      return hosts.map(h => {
+        // Per-host resolution wins. Fall back to legacy root-level resolution
+        // when present (covers vulns closed before per-host resolution shipped).
+        const hostResolution = h.resolution;
+        const hasHostResolution = hostResolution && hostResolution.reason;
+        const status: VulnStatus = hasHostResolution
+          ? (hostResolution.reason === 'accepted' ? 'accepted' : 'resolved')
+          : rootStatus;
+        const resolvedAt = hasHostResolution ? (hostResolution.at || '') : rootResolvedAt;
+        return {
+          id: `${data.id}::${h.hostname}`,
+          title,
+          description,
+          severity,
+          category: 'code_dependency',
+          status,
+          source,
+          asset_type: 'asset',
+          asset_id: h.hostname,
+          asset_name: h.hostname,
+          cve_id: cveId,
+          first_seen: firstSeen,
+          last_seen: lastSeen,
+          resolved_at: resolvedAt,
+        };
+      });
     }
 
     if (!data.title) return [];
