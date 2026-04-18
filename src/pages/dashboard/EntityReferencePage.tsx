@@ -183,10 +183,8 @@ const CONFIG: Record<EntityType, {
     icon: Package,
     category: 'shuffle-security_sensors',
     buildLinks: (name) => [
-      { label: 'NVD (NIST)', url: `https://nvd.nist.gov/vuln/search/results?query=${encodeURIComponent(name)}` },
-      { label: 'CVE Details', url: `https://www.cvedetails.com/google-search-results.php?q=${encodeURIComponent(name)}` },
-      { label: 'OSV.dev', url: `https://osv.dev/list?q=${encodeURIComponent(name)}` },
-      { label: 'Google Search', url: `https://www.google.com/search?q=${encodeURIComponent(name + ' vulnerability')}` },
+      { label: 'NVD (NIST)', url: `https://nvd.nist.gov/vuln/search#/nvd/home?keyword=${encodeURIComponent(name)}&resultType=records` },
+      { label: 'Google Search', url: `https://www.google.com/search?q=vulnerabilities "${encodeURIComponent(name)}"` },
     ],
   },
   package: {
