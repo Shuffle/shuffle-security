@@ -223,6 +223,48 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
 
   const language = type === 'package' ? getLanguageInfo(os || undefined) : null;
 
+  // OSV-style vulnerability query: POST /api/v1/vulnerabilities { package: { name, ecosystem } }
+  // Mirrors https://google.github.io/osv.dev/post-v1-query/
+  useEffect(() => {
+    if (type !== 'package') return;
+    const ecosystem = language?.osvEcosystem;
+    if (!ecosystem || !name) {
+      setVulns([]);
+      setVulnsQueried(false);
+      return;
+    }
+    let cancelled = false;
+    const run = async () => {
+      setVulnsLoading(true);
+      setVulnsError(null);
+      setVulnsQueried(true);
+      try {
+        const res = await shuffleFetch(getApiUrl('/api/v1/vulnerabilities'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ package: { name, ecosystem } }),
+        });
+        if (cancelled) return;
+        if (!res.ok) {
+          setVulnsError(`Vulnerability lookup failed (${res.status})`);
+          setVulns([]);
+          return;
+        }
+        const data = await res.json().catch(() => ({}));
+        const list = Array.isArray(data?.vulns) ? (data.vulns as OsvVuln[]) : [];
+        setVulns(list);
+      } catch (e) {
+        if (cancelled) return;
+        setVulnsError(e instanceof Error ? e.message : 'Vulnerability lookup failed');
+        setVulns([]);
+      } finally {
+        if (!cancelled) setVulnsLoading(false);
+      }
+    };
+    run();
+    return () => { cancelled = true; };
+  }, [name, type, language?.osvEcosystem]);
+
   // Build reference links: prepend language registry link when known, dedupe by URL.
   const referenceLinks = useMemo(() => {
     const base = config.buildLinks(name);
