@@ -4,7 +4,7 @@ import { usePageMeta } from '@/hooks/usePageMeta';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { ArrowLeft, Package, FileCode, ExternalLink, ShieldAlert, Info, Clock, Server, Search, Loader2, FolderOpen, AlertTriangle, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Package, FileCode, ExternalLink, ShieldAlert, Info, Clock, Server, Search, Loader2, FolderOpen, AlertTriangle, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { getDatastoreItem, setDatastoreItems } from '@/services/datastore';
 import { getApiUrl, shuffleFetch } from '@/config/api';
@@ -423,6 +423,7 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
   // and inject a `hosts: [{ hostname, paths: [{ last_seen, path, version }] }]` array.
   // Keyed by the OSV vuln id (e.g. "GHSA-xxxx" or "CVE-xxxx"). Direct overwrite.
   const [syncing, setSyncing] = useState(false);
+  const [syncedCount, setSyncedCount] = useState<number | null>(null);
   const syncVulns = useCallback(async () => {
     const affectedMetas = vulnsWithMeta.filter(m => m.affectedHosts.length > 0);
     if (affectedMetas.length === 0) {
@@ -430,6 +431,7 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
       return;
     }
     setSyncing(true);
+    setSyncedCount(null);
     const items = affectedMetas.map(meta => {
       const hostMap = new Map<string, { hostname: string; paths: Array<{ last_seen?: string; path?: string; version?: string }> }>();
       for (const h of meta.affectedHosts) {
@@ -449,12 +451,19 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
     const result = await setDatastoreItems(items, 'shuffle-security_vulnerabilities');
     setSyncing(false);
     if (result.success) {
-      toast.success(`Synced ${items.length} vulnerabilit${items.length === 1 ? 'y' : 'ies'}`);
+      setSyncedCount(items.length);
+      toast.success(`Synced ${items.length} vulnerabilit${items.length === 1 ? 'y' : 'ies'} — ready on /vulnerabilities`, {
+        action: { label: 'View', onClick: () => navigate('/vulnerabilities') },
+      });
     } else {
       console.warn('[EntityReferencePage] bulk persist failed', result.error);
       toast.error(`Sync failed: ${result.error || 'Unknown error'}`);
     }
-  }, [vulnsWithMeta]);
+  }, [vulnsWithMeta, navigate]);
+
+  // Reset the synced indicator if the underlying data changes (e.g. user navigates
+  // to a different package), so the badge doesn't get stale.
+  useEffect(() => { setSyncedCount(null); }, [name]);
 
   const filteredMatches = useMemo(() => {
     const q = filter.trim().toLowerCase();
@@ -528,17 +537,30 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
             </span>
           )}
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={syncVulns}
-          disabled={syncing || vulnsWithMeta.filter(m => m.affectedHosts.length > 0).length === 0}
-          className="gap-1.5 shrink-0"
-          title="Persist affected vulnerabilities to shuffle-security_vulnerabilities"
-        >
-          <RefreshCw size={14} className={syncing ? 'animate-spin' : ''} />
-          {syncing ? 'Syncing…' : 'Sync to Vulnerabilities'}
-        </Button>
+        <div className="flex items-center gap-2 shrink-0">
+          {syncedCount !== null && !syncing && (
+            <button
+              type="button"
+              onClick={() => navigate('/vulnerabilities')}
+              className="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2 py-1 text-[0.7rem] font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/15 transition-colors"
+              title="Open Vulnerabilities page"
+            >
+              <CheckCircle2 size={12} />
+              Synced {syncedCount} — view
+            </button>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={syncVulns}
+            disabled={syncing || vulnsWithMeta.filter(m => m.affectedHosts.length > 0).length === 0}
+            className="gap-1.5"
+            title="Persist affected vulnerabilities to shuffle-security_vulnerabilities"
+          >
+            <RefreshCw size={14} className={syncing ? 'animate-spin' : ''} />
+            {syncing ? 'Syncing…' : 'Sync to Vulnerabilities'}
+          </Button>
+        </div>
       </div>
 
       {/* Hosts containing this entity */}
