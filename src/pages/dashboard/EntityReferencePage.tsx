@@ -37,6 +37,74 @@ const normalizeSeverity = (raw?: string | null): string => {
   return 'informational';
 };
 
+/**
+ * Strip common version prefixes (^, ~, >=, ==, v, etc.) so we can compare a host's
+ * declared dependency version against an OSV affected range. Best-effort — OSV
+ * ranges use ECOSYSTEM/SEMVER ordering which we approximate with numeric tuple
+ * comparison sufficient for typical semver-like strings.
+ */
+const cleanVersion = (v?: string): string => {
+  if (!v) return '';
+  return String(v).trim().replace(/^[\^~=v><]+\s*/, '').replace(/^>=|^<=|^>|^</, '').trim();
+};
+
+const compareVersions = (a: string, b: string): number => {
+  const pa = cleanVersion(a).split(/[.\-+]/);
+  const pb = cleanVersion(b).split(/[.\-+]/);
+  const len = Math.max(pa.length, pb.length);
+  for (let i = 0; i < len; i++) {
+    const na = parseInt(pa[i] || '0', 10);
+    const nb = parseInt(pb[i] || '0', 10);
+    if (!Number.isNaN(na) && !Number.isNaN(nb) && na !== nb) return na - nb;
+    // Fallback to string compare for non-numeric segments
+    const sa = pa[i] || '';
+    const sb = pb[i] || '';
+    if (sa !== sb) return sa.localeCompare(sb);
+  }
+  return 0;
+};
+
+/**
+ * Check if a given installed version is affected by an OSV vuln.
+ * Matches against:
+ *  - exact `versions` list, AND
+ *  - `ranges[].events` (introduced/fixed) — version is affected when it is
+ *    >= any introduced and < the corresponding fixed (or no fixed yet).
+ * If we can't determine, return false (conservative — don't false-flag).
+ */
+const isVersionAffected = (installed: string | undefined, vuln: OsvVuln): boolean => {
+  if (!installed) return false;
+  const cleaned = cleanVersion(installed);
+  if (!cleaned) return false;
+  const affected = vuln.affected || [];
+  for (const a of affected) {
+    if (a.versions && a.versions.some(v => cleanVersion(v) === cleaned)) return true;
+    for (const r of a.ranges || []) {
+      const events = r.events || [];
+      let introduced: string | null = null;
+      let fixed: string | null = null;
+      let isAffected = false;
+      for (const e of events) {
+        if (e.introduced !== undefined) {
+          introduced = e.introduced;
+          // "0" means affected from the beginning
+          if (introduced === '0' || compareVersions(cleaned, introduced) >= 0) {
+            isAffected = true;
+          }
+        }
+        if (e.fixed !== undefined) {
+          fixed = e.fixed;
+          if (isAffected && compareVersions(cleaned, fixed) >= 0) {
+            isAffected = false;
+          }
+        }
+      }
+      if (isAffected) return true;
+    }
+  }
+  return false;
+};
+
 type EntityType = 'software' | 'package';
 
 interface EntityReferencePageProps {
@@ -219,7 +287,7 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
   const [vulnsLoading, setVulnsLoading] = useState(false);
   const [vulnsError, setVulnsError] = useState<string | null>(null);
   const [vulnsQueried, setVulnsQueried] = useState(false);
-  const [vulnsSort, setVulnsSort] = useState<'severity' | 'date' | 'id'>('severity');
+  const [vulnsSort, setVulnsSort] = useState<'affected' | 'severity' | 'date' | 'id'>('affected');
 
   useEffect(() => {
     let cancelled = false;
@@ -315,10 +383,14 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
     );
   }, [matches, filter]);
 
-  // Pre-compute normalized severity per vuln for both display and sorting.
+  // Pre-compute normalized severity per vuln + which of our hosts are affected
+  // by checking each host's installed version against the OSV affected ranges.
   const vulnsWithMeta = useMemo(() => vulns.map(v => {
     const rawSev = v.database_specific?.severity || v.severity?.[0]?.score;
     const sevToken = normalizeSeverity(rawSev);
+    const affectedHosts = matches.filter(m => isVersionAffected(m.version, v));
+    // Deduplicate by hostname (a host may appear with multiple paths)
+    const affectedHostNames = Array.from(new Set(affectedHosts.map(h => h.hostname)));
     return {
       vuln: v,
       sevToken,
@@ -326,12 +398,23 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
       sevOrder: severityOrder[sevToken] ?? 0,
       modifiedTs: v.modified ? new Date(v.modified).getTime() : 0,
       publishedTs: v.published ? new Date(v.published).getTime() : 0,
+      affectedHosts,
+      affectedHostNames,
+      affectedCount: affectedHostNames.length,
     };
-  }), [vulns]);
+  }), [vulns, matches]);
 
   const sortedVulns = useMemo(() => {
     const arr = [...vulnsWithMeta];
-    if (vulnsSort === 'severity') {
+    if (vulnsSort === 'affected') {
+      // Affected first (count desc), then severity desc, then newest
+      arr.sort((a, b) =>
+        b.affectedCount - a.affectedCount
+        || b.sevOrder - a.sevOrder
+        || (b.modifiedTs - a.modifiedTs)
+        || a.vuln.id.localeCompare(b.vuln.id),
+      );
+    } else if (vulnsSort === 'severity') {
       arr.sort((a, b) => b.sevOrder - a.sevOrder || (b.modifiedTs - a.modifiedTs) || a.vuln.id.localeCompare(b.vuln.id));
     } else if (vulnsSort === 'date') {
       arr.sort((a, b) => (b.modifiedTs || b.publishedTs) - (a.modifiedTs || a.publishedTs) || b.sevOrder - a.sevOrder);
@@ -451,21 +534,42 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
       {type === 'package' && vulnsQueried && (
         <div className="rounded-lg border border-border bg-card p-5 space-y-3">
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 text-foreground">
+            <div className="flex items-center gap-2 text-foreground flex-wrap">
               <ShieldAlert size={14} className="text-orange-500" />
               <span className="text-sm font-medium">Known vulnerabilities</span>
               {!vulnsLoading && !vulnsError && (
-                <span className="text-[0.65rem] text-muted-foreground">({vulns.length})</span>
+                <>
+                  <span className="text-[0.65rem] text-muted-foreground">({vulns.length})</span>
+                  {(() => {
+                    const affectedCount = vulnsWithMeta.filter(m => m.affectedCount > 0).length;
+                    if (affectedCount === 0) return null;
+                    return (
+                      <span
+                        className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[0.6rem] font-medium uppercase tracking-wide"
+                        style={{
+                          backgroundColor: `${severityColors.high}1f`,
+                          color: severityColors.high,
+                          border: `1px solid ${severityColors.high}55`,
+                        }}
+                        title="Vulnerabilities matching an installed version on at least one host"
+                      >
+                        <AlertTriangle size={9} />
+                        {affectedCount} affecting your hosts
+                      </span>
+                    );
+                  })()}
+                </>
               )}
             </div>
             <div className="flex items-center gap-2">
               {vulns.length > 1 && !vulnsLoading && !vulnsError && (
                 <select
                   value={vulnsSort}
-                  onChange={(e) => setVulnsSort(e.target.value as 'severity' | 'date' | 'id')}
+                  onChange={(e) => setVulnsSort(e.target.value as 'affected' | 'severity' | 'date' | 'id')}
                   className="h-7 rounded-md border border-border bg-background px-2 text-[0.65rem] text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                   aria-label="Sort vulnerabilities"
                 >
+                  <option value="affected">Sort: Affected</option>
                   <option value="severity">Sort: Severity</option>
                   <option value="date">Sort: Newest</option>
                   <option value="id">Sort: ID</option>
@@ -492,19 +596,21 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
             </p>
           ) : (
             <div className="space-y-2">
-              {sortedVulns.map(({ vuln: v, sevToken, sevColor }) => {
+              {sortedVulns.map(({ vuln: v, sevToken, sevColor, affectedHostNames, affectedCount }) => {
                 const fixedVersions = (v.affected || [])
                   .flatMap(a => (a.ranges || []).flatMap(r => (r.events || []).map(e => e.fixed).filter(Boolean) as string[]));
                 const advisoryUrl = v.references?.find(r => r.type === 'ADVISORY')?.url
                   || v.references?.[0]?.url
                   || `https://osv.dev/vulnerability/${encodeURIComponent(v.id)}`;
+                const isAffected = affectedCount > 0;
                 return (
                   <a
                     key={v.id}
                     href={advisoryUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block rounded-md border border-border bg-muted/20 px-3 py-2.5 hover:bg-muted/40 transition-colors"
+                    className="block rounded-md border bg-muted/20 px-3 py-2.5 hover:bg-muted/40 transition-colors"
+                    style={isAffected ? { borderColor: `${sevColor}66` } : { borderColor: 'hsl(var(--border))' }}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
@@ -513,7 +619,7 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
                           <span
                             className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[0.6rem] font-medium uppercase tracking-wide"
                             style={{
-                              backgroundColor: `${sevColor}1f`, // ~12% alpha
+                              backgroundColor: `${sevColor}1f`,
                               color: sevColor,
                               border: `1px solid ${sevColor}55`,
                             }}
@@ -521,12 +627,35 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
                             <AlertTriangle size={9} />
                             {sevToken}
                           </span>
+                          {isAffected && (
+                            <span
+                              className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide"
+                              style={{
+                                backgroundColor: `${sevColor}2a`,
+                                color: sevColor,
+                                border: `1px solid ${sevColor}66`,
+                              }}
+                              title={`Affects ${affectedCount} host${affectedCount === 1 ? '' : 's'}: ${affectedHostNames.join(', ')}`}
+                            >
+                              <Server size={9} />
+                              {affectedCount} affected
+                            </span>
+                          )}
                           {v.aliases?.slice(0, 2).map(a => (
                             <span key={a} className="text-[0.6rem] font-mono text-muted-foreground">{a}</span>
                           ))}
                         </div>
                         {v.summary && (
                           <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{v.summary}</p>
+                        )}
+                        {isAffected && (
+                          <p className="mt-1 text-[0.65rem]">
+                            <span className="text-muted-foreground">Hosts: </span>
+                            <span className="font-mono text-foreground">
+                              {affectedHostNames.slice(0, 3).join(', ')}
+                              {affectedHostNames.length > 3 && ` +${affectedHostNames.length - 3} more`}
+                            </span>
+                          </p>
                         )}
                         {fixedVersions.length > 0 && (
                           <p className="mt-1 text-[0.65rem] text-muted-foreground">
