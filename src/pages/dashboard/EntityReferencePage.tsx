@@ -4,7 +4,8 @@ import { usePageMeta } from '@/hooks/usePageMeta';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { ArrowLeft, Package, FileCode, ExternalLink, ShieldAlert, Info, Clock, Server, Search, Loader2, FolderOpen, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Package, FileCode, ExternalLink, ShieldAlert, Info, Clock, Server, Search, Loader2, FolderOpen, AlertTriangle, RefreshCw } from 'lucide-react';
+import { toast } from 'sonner';
 import { getDatastoreItem, setDatastoreItem } from '@/services/datastore';
 import { getApiUrl, shuffleFetch } from '@/config/api';
 import { severityColors, severityOrder } from '@/config/incidentConfig';
@@ -417,41 +418,39 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
     });
   }, [matches, vulnsWithMeta]);
 
-  // Persist affected vulnerabilities into the shuffle-security_vulnerabilities
-  // datastore. For each vuln that has at least one affected host, we store the
-  // OSV record verbatim and inject a `hosts` array of the form:
-  //   { hostname, paths: [{ last_seen, path, version }] }
+  // Manual sync of affected vulnerabilities to shuffle-security_vulnerabilities.
+  // For each OSV vuln with at least one affected host, store the OSV record verbatim
+  // and inject a `hosts: [{ hostname, paths: [{ last_seen, path, version }] }]` array.
   // Keyed by the OSV vuln id (e.g. "GHSA-xxxx" or "CVE-xxxx"). Direct overwrite.
-  useEffect(() => {
-    if (vulns.length === 0 || matches.length === 0) return;
-    let cancelled = false;
-    const persist = async () => {
-      for (const meta of vulnsWithMeta) {
-        if (meta.affectedHosts.length === 0) continue;
-        // Group affected hosts -> paths
-        const hostMap = new Map<string, { hostname: string; paths: Array<{ last_seen?: string; path?: string; version?: string }> }>();
-        for (const h of meta.affectedHosts) {
-          const existing = hostMap.get(h.hostname) || { hostname: h.hostname, paths: [] };
-          existing.paths.push({
-            last_seen: h.updatedAt ? new Date(h.updatedAt * (h.updatedAt < 1e12 ? 1000 : 1)).toISOString() : undefined,
-            path: h.path,
-            version: h.version,
-          });
-          hostMap.set(h.hostname, existing);
-        }
-        const payload = {
-          ...meta.vuln,
-          hosts: Array.from(hostMap.values()),
-        };
-        if (cancelled) return;
-        console.log('[EntityReferencePage] persisting vuln', meta.vuln.id, 'hosts:', payload.hosts.length);
-        const result = await setDatastoreItem(meta.vuln.id, payload, 'shuffle-security_vulnerabilities');
-        if (!result.success) console.warn('[EntityReferencePage] persist failed', meta.vuln.id, result.error);
+  const [syncing, setSyncing] = useState(false);
+  const syncVulns = useCallback(async () => {
+    const affectedMetas = vulnsWithMeta.filter(m => m.affectedHosts.length > 0);
+    if (affectedMetas.length === 0) {
+      toast.info('No affected vulnerabilities to sync');
+      return;
+    }
+    setSyncing(true);
+    let ok = 0;
+    let failed = 0;
+    for (const meta of affectedMetas) {
+      const hostMap = new Map<string, { hostname: string; paths: Array<{ last_seen?: string; path?: string; version?: string }> }>();
+      for (const h of meta.affectedHosts) {
+        const existing = hostMap.get(h.hostname) || { hostname: h.hostname, paths: [] };
+        existing.paths.push({
+          last_seen: h.updatedAt ? new Date(h.updatedAt * (h.updatedAt < 1e12 ? 1000 : 1)).toISOString() : undefined,
+          path: h.path,
+          version: h.version,
+        });
+        hostMap.set(h.hostname, existing);
       }
-    };
-    persist().catch(err => console.warn('[EntityReferencePage] failed to persist vulns', err));
-    return () => { cancelled = true; };
-  }, [vulnsWithMeta, vulns.length, matches.length]);
+      const payload = { ...meta.vuln, hosts: Array.from(hostMap.values()) };
+      const result = await setDatastoreItem(meta.vuln.id, payload, 'shuffle-security_vulnerabilities');
+      if (result.success) ok++; else { failed++; console.warn('[EntityReferencePage] persist failed', meta.vuln.id, result.error); }
+    }
+    setSyncing(false);
+    if (failed === 0) toast.success(`Synced ${ok} vulnerabilit${ok === 1 ? 'y' : 'ies'}`);
+    else toast.warning(`Synced ${ok}, ${failed} failed`);
+  }, [vulnsWithMeta]);
 
   const filteredMatches = useMemo(() => {
     const q = filter.trim().toLowerCase();
