@@ -166,6 +166,12 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState('');
 
+  // OSV-style vulnerability lookup via /api/v1/vulnerabilities
+  const [vulns, setVulns] = useState<OsvVuln[]>([]);
+  const [vulnsLoading, setVulnsLoading] = useState(false);
+  const [vulnsError, setVulnsError] = useState<string | null>(null);
+  const [vulnsQueried, setVulnsQueried] = useState(false);
+
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
