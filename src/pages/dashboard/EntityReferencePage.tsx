@@ -333,7 +333,7 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
     return () => { cancelled = true; };
   }, [name, config.category, type]);
 
-  const language = type === 'package' ? getLanguageInfo(os || undefined) : null;
+  const language = type === 'package' ? getLanguageInfo(os || undefined, name) : null;
 
   // OSV-style vulnerability query: POST /api/v1/vulnerabilities { package: { name, ecosystem } }
   // Mirrors https://google.github.io/osv.dev/post-v1-query/
