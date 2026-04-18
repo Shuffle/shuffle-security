@@ -279,7 +279,64 @@ const extractMatchesFromValue = (value: unknown): HostMatch[] => {
   );
 };
 
-const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
+/**
+ * Fallback path: when the per-entity datastore key has no record (or no
+ * `hostnames` field), scan every sensor record and aggregate hostnames whose
+ * `installed_software` (for software) or `code_scanner[].packages` (for
+ * packages) contains an entry matching `name` (case-insensitive).
+ *
+ * This is what /software/{name} and /packages/{name} need when no upstream
+ * job has populated a per-entity cache yet.
+ */
+const scanSensorsForEntity = async (
+  entityType: EntityType,
+  name: string,
+): Promise<HostMatch[]> => {
+  const supplements = await fetchHostSupplements();
+  const target = name.toLowerCase().trim();
+  if (!target) return [];
+  const map = new Map<string, HostMatch>();
+  const upsert = (hostname: string, version?: string, path?: string) => {
+    const key = `${hostname}::${path ?? ''}`;
+    const existing = map.get(key);
+    if (!existing) map.set(key, { hostname, version, path });
+  };
+
+  for (const [hostnameLower, sensor] of supplements.sensorsByHost.entries()) {
+    const hostname = String(
+      (sensor.hostname as string | undefined) || hostnameLower,
+    );
+    if (entityType === 'software') {
+      const sw = Array.isArray(sensor.installed_software)
+        ? (sensor.installed_software as Array<Record<string, unknown>>)
+        : [];
+      for (const item of sw) {
+        const itemName = String(item?.name || '').toLowerCase().trim();
+        if (!itemName || itemName !== target) continue;
+        upsert(hostname, item?.version ? String(item.version) : undefined);
+      }
+    } else if (entityType === 'package') {
+      const projects = Array.isArray(sensor.code_scanner)
+        ? (sensor.code_scanner as Array<Record<string, unknown>>)
+        : [];
+      for (const proj of projects) {
+        const path = proj?.path ? String(proj.path) : undefined;
+        const pkgs = Array.isArray(proj?.packages)
+          ? (proj.packages as Array<Record<string, unknown>>)
+          : [];
+        for (const pkg of pkgs) {
+          const pkgName = String(pkg?.name || '').toLowerCase().trim();
+          if (!pkgName || pkgName !== target) continue;
+          upsert(hostname, pkg?.version ? String(pkg.version) : undefined, path);
+        }
+      }
+    }
+  }
+
+  return Array.from(map.values()).sort((a, b) =>
+    a.hostname.localeCompare(b.hostname) || (a.path || '').localeCompare(b.path || ''),
+  );
+};
   const params = useParams();
   const navigate = useNavigate();
   // Use splat param ('*') to capture multi-segment names like '@eslint/js'
