@@ -834,6 +834,7 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
                             </span>
                           </p>
                         )}
+                        {fixedVersions.length > 0 && (
                           <p className="mt-1 text-[0.65rem] text-muted-foreground">
                             Fixed in: <span className="font-mono text-foreground">{Array.from(new Set(fixedVersions)).slice(0, 3).join(', ')}</span>
                           </p>
