@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ArrowLeft, Package, FileCode, ExternalLink, ShieldAlert, Info, Clock, Server, Search, Loader2, FolderOpen, AlertTriangle } from 'lucide-react';
 import { getDatastoreItem } from '@/services/datastore';
 import { getApiUrl, shuffleFetch } from '@/config/api';
