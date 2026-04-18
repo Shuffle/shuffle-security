@@ -12,6 +12,51 @@ interface EntityReferencePageProps {
   type: EntityType;
 }
 
+/**
+ * Map a programming language / ecosystem identifier (as reported in the
+ * datastore `os` field for packages) to its canonical registry. Used for
+ * both the registry deep-link and the language logo.
+ *
+ * Logos come from Simple Icons CDN — no extra deps, themable via currentColor.
+ */
+interface LanguageInfo {
+  label: string;           // Display name (e.g. "Python")
+  registryLabel: string;   // Registry name (e.g. "PyPI")
+  registryUrl: (name: string) => string;
+  /** Simple Icons slug — see https://simpleicons.org/ */
+  iconSlug: string;
+  /** Hex color (no `#`) for the logo background tint */
+  color: string;
+}
+
+const LANGUAGE_REGISTRY: Record<string, LanguageInfo> = {
+  javascript: { label: 'JavaScript', registryLabel: 'npm', registryUrl: n => `https://www.npmjs.com/package/${encodeURIComponent(n)}`, iconSlug: 'npm', color: 'CB3837' },
+  typescript: { label: 'TypeScript', registryLabel: 'npm', registryUrl: n => `https://www.npmjs.com/package/${encodeURIComponent(n)}`, iconSlug: 'npm', color: 'CB3837' },
+  node: { label: 'Node.js', registryLabel: 'npm', registryUrl: n => `https://www.npmjs.com/package/${encodeURIComponent(n)}`, iconSlug: 'npm', color: 'CB3837' },
+  npm: { label: 'npm', registryLabel: 'npm', registryUrl: n => `https://www.npmjs.com/package/${encodeURIComponent(n)}`, iconSlug: 'npm', color: 'CB3837' },
+  python: { label: 'Python', registryLabel: 'PyPI', registryUrl: n => `https://pypi.org/project/${encodeURIComponent(n)}/`, iconSlug: 'pypi', color: '3775A9' },
+  pypi: { label: 'Python', registryLabel: 'PyPI', registryUrl: n => `https://pypi.org/project/${encodeURIComponent(n)}/`, iconSlug: 'pypi', color: '3775A9' },
+  ruby: { label: 'Ruby', registryLabel: 'RubyGems', registryUrl: n => `https://rubygems.org/gems/${encodeURIComponent(n)}`, iconSlug: 'rubygems', color: 'E9573F' },
+  go: { label: 'Go', registryLabel: 'pkg.go.dev', registryUrl: n => `https://pkg.go.dev/${encodeURIComponent(n)}`, iconSlug: 'go', color: '00ADD8' },
+  golang: { label: 'Go', registryLabel: 'pkg.go.dev', registryUrl: n => `https://pkg.go.dev/${encodeURIComponent(n)}`, iconSlug: 'go', color: '00ADD8' },
+  rust: { label: 'Rust', registryLabel: 'crates.io', registryUrl: n => `https://crates.io/crates/${encodeURIComponent(n)}`, iconSlug: 'rust', color: 'DEA584' },
+  java: { label: 'Java', registryLabel: 'Maven Central', registryUrl: n => `https://central.sonatype.com/search?q=${encodeURIComponent(n)}`, iconSlug: 'openjdk', color: 'ED8B00' },
+  maven: { label: 'Java', registryLabel: 'Maven Central', registryUrl: n => `https://central.sonatype.com/search?q=${encodeURIComponent(n)}`, iconSlug: 'apachemaven', color: 'C71A36' },
+  kotlin: { label: 'Kotlin', registryLabel: 'Maven Central', registryUrl: n => `https://central.sonatype.com/search?q=${encodeURIComponent(n)}`, iconSlug: 'kotlin', color: '7F52FF' },
+  php: { label: 'PHP', registryLabel: 'Packagist', registryUrl: n => `https://packagist.org/packages/${encodeURIComponent(n)}`, iconSlug: 'php', color: '777BB4' },
+  composer: { label: 'PHP', registryLabel: 'Packagist', registryUrl: n => `https://packagist.org/packages/${encodeURIComponent(n)}`, iconSlug: 'composer', color: '885630' },
+  dotnet: { label: '.NET', registryLabel: 'NuGet', registryUrl: n => `https://www.nuget.org/packages/${encodeURIComponent(n)}`, iconSlug: 'nuget', color: '004880' },
+  csharp: { label: 'C#', registryLabel: 'NuGet', registryUrl: n => `https://www.nuget.org/packages/${encodeURIComponent(n)}`, iconSlug: 'nuget', color: '004880' },
+  swift: { label: 'Swift', registryLabel: 'Swift Package Index', registryUrl: n => `https://swiftpackageindex.com/search?query=${encodeURIComponent(n)}`, iconSlug: 'swift', color: 'F05138' },
+  dart: { label: 'Dart', registryLabel: 'pub.dev', registryUrl: n => `https://pub.dev/packages/${encodeURIComponent(n)}`, iconSlug: 'dart', color: '0175C2' },
+  elixir: { label: 'Elixir', registryLabel: 'Hex', registryUrl: n => `https://hex.pm/packages/${encodeURIComponent(n)}`, iconSlug: 'elixir', color: '4B275F' },
+};
+
+const getLanguageInfo = (os?: string): LanguageInfo | null => {
+  if (!os) return null;
+  return LANGUAGE_REGISTRY[os.toLowerCase().trim()] || null;
+};
+
 const CONFIG: Record<EntityType, {
   label: string;
   icon: typeof Package;
@@ -33,12 +78,11 @@ const CONFIG: Record<EntityType, {
     label: 'Package',
     icon: FileCode,
     category: 'shuffle-security_packages',
+    // Note: language-specific registry link is injected dynamically via os field.
     buildLinks: (name) => [
       { label: 'NVD (NIST)', url: `https://nvd.nist.gov/vuln/search/results?query=${encodeURIComponent(name)}` },
       { label: 'OSV.dev', url: `https://osv.dev/list?q=${encodeURIComponent(name)}` },
       { label: 'Snyk Vulnerability DB', url: `https://security.snyk.io/search?q=${encodeURIComponent(name)}` },
-      { label: 'npm', url: `https://www.npmjs.com/package/${encodeURIComponent(name)}` },
-      { label: 'PyPI', url: `https://pypi.org/project/${encodeURIComponent(name)}/` },
       { label: 'Google Search', url: `https://www.google.com/search?q=${encodeURIComponent(name + ' vulnerability')}` },
     ],
   },
