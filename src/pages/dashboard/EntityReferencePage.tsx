@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ArrowLeft, Package, FileCode, ExternalLink, ShieldAlert, Info, Clock, Server, Search, Loader2, FolderOpen, AlertTriangle, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
-import { getDatastoreItem, setDatastoreItem } from '@/services/datastore';
+import { getDatastoreItem, setDatastoreItems } from '@/services/datastore';
 import { getApiUrl, shuffleFetch } from '@/config/api';
 import { severityColors, severityOrder } from '@/config/incidentConfig';
 
@@ -430,9 +430,7 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
       return;
     }
     setSyncing(true);
-    let ok = 0;
-    let failed = 0;
-    for (const meta of affectedMetas) {
+    const items = affectedMetas.map(meta => {
       const hostMap = new Map<string, { hostname: string; paths: Array<{ last_seen?: string; path?: string; version?: string }> }>();
       for (const h of meta.affectedHosts) {
         const existing = hostMap.get(h.hostname) || { hostname: h.hostname, paths: [] };
@@ -443,13 +441,19 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
         });
         hostMap.set(h.hostname, existing);
       }
-      const payload = { ...meta.vuln, hosts: Array.from(hostMap.values()) };
-      const result = await setDatastoreItem(meta.vuln.id, payload, 'shuffle-security_vulnerabilities');
-      if (result.success) ok++; else { failed++; console.warn('[EntityReferencePage] persist failed', meta.vuln.id, result.error); }
-    }
+      return {
+        key: meta.vuln.id,
+        value: { ...meta.vuln, hosts: Array.from(hostMap.values()) },
+      };
+    });
+    const result = await setDatastoreItems(items, 'shuffle-security_vulnerabilities');
     setSyncing(false);
-    if (failed === 0) toast.success(`Synced ${ok} vulnerabilit${ok === 1 ? 'y' : 'ies'}`);
-    else toast.warning(`Synced ${ok}, ${failed} failed`);
+    if (result.success) {
+      toast.success(`Synced ${items.length} vulnerabilit${items.length === 1 ? 'y' : 'ies'}`);
+    } else {
+      console.warn('[EntityReferencePage] bulk persist failed', result.error);
+      toast.error(`Sync failed: ${result.error || 'Unknown error'}`);
+    }
   }, [vulnsWithMeta]);
 
   const filteredMatches = useMemo(() => {
