@@ -416,12 +416,31 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
 
   const language = type === 'package' ? getLanguageInfo(os || undefined, name) : null;
 
-  // OSV-style vulnerability query: POST /api/v1/vulnerabilities { package: { name, ecosystem } }
+  // Lowest version observed across all hosts (for narrowing the OSV query).
+  // If we don't know any version, we omit `version` and fall back to a plain
+  // package/CVE lookup.
+  const lowestVersion = useMemo(() => {
+    const versions = matches
+      .map(m => cleanVersion(m.version || ''))
+      .filter(v => v.length > 0);
+    if (versions.length === 0) return undefined;
+    return versions.slice().sort(compareVersions)[0];
+  }, [matches]);
+
+  // OSV-style vulnerability query: POST /api/v1/vulnerabilities
   // Mirrors https://google.github.io/osv.dev/post-v1-query/
+  // Always includes the lowest known version when available so the API can
+  // narrow results to ranges actually affecting our fleet.
   useEffect(() => {
-    if (type !== 'package') return;
     const ecosystem = language?.osvEcosystem;
-    if (!ecosystem || !name) {
+    // Packages require a known ecosystem (OSV-style). Software is queried by
+    // name only (CVE-style), with version narrowing when we have one.
+    if (type === 'package' && !ecosystem) {
+      setVulns([]);
+      setVulnsQueried(false);
+      return;
+    }
+    if (!name) {
       setVulns([]);
       setVulnsQueried(false);
       return;
@@ -432,10 +451,15 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
       setVulnsError(null);
       setVulnsQueried(true);
       try {
+        const payload: Record<string, unknown> =
+          type === 'package'
+            ? { package: { name, ecosystem } }
+            : { package: { name } };
+        if (lowestVersion) payload.version = lowestVersion;
         const res = await shuffleFetch(getApiUrl('/api/v1/vulnerabilities'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ package: { name, ecosystem } }),
+          body: JSON.stringify(payload),
         });
         if (cancelled) return;
         if (!res.ok) {
@@ -456,7 +480,7 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
     };
     run();
     return () => { cancelled = true; };
-  }, [name, type, language?.osvEcosystem]);
+  }, [name, type, language?.osvEcosystem, lowestVersion]);
 
   // Build reference links: prepend language registry link when known, dedupe by URL.
   const referenceLinks = useMemo(() => {
@@ -696,7 +720,7 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
             <table className="w-full text-xs">
               <thead className="bg-muted/30">
                 <tr className="text-left text-muted-foreground">
-                  {type === 'package' && vulnsQueried && (
+                  {vulnsQueried && (
                     <th className="pl-3 pr-1 py-1.5 font-medium w-[1%] whitespace-nowrap">Risk</th>
                   )}
                   <th className="px-3 py-1.5 font-medium">Hostname</th>
@@ -707,7 +731,7 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
               <tbody className="divide-y divide-border">
                 <TooltipProvider delayDuration={150}>
                   {filteredMatches.map(({ match: m, counts }, i) => {
-                    const showRisk = type === 'package' && vulnsQueried;
+                    const showRisk = vulnsQueried;
                     const buckets: Array<{ key: 'critical' | 'high' | 'medium' | 'low'; letter: string; label: string }> = [
                       { key: 'critical', letter: 'C', label: 'Critical' },
                       { key: 'high', letter: 'H', label: 'High' },
@@ -783,7 +807,7 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
       </div>
 
       {/* Known vulnerabilities (OSV-style query) */}
-      {type === 'package' && vulnsQueried && (
+      {vulnsQueried && (
         <div className="rounded-lg border border-border bg-card p-5 space-y-3">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 text-foreground flex-wrap">
