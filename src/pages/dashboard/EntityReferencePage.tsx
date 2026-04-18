@@ -154,11 +154,11 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
   const name = decodeURIComponent(raw);
   const config = CONFIG[type];
   const Icon = config.icon;
-  const referenceLinks = config.buildLinks(name);
 
   usePageMeta({ title: `${name} — ${config.label}`, description: `${config.label} detail for ${name}` });
 
   const [matches, setMatches] = useState<HostMatch[]>([]);
+  const [os, setOs] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState('');
@@ -168,6 +168,7 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
     const load = async () => {
       setLoading(true);
       setError(null);
+      setOs(null);
       const res = await getDatastoreItem(name, config.category);
       if (cancelled) return;
       if (!res.success) {
@@ -183,12 +184,26 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
       }
       const parsed = safeParse(res.item.value);
       const value = parsed ?? res.item.value;
+      if (value && typeof value === 'object' && 'os' in value && typeof (value as Record<string, unknown>).os === 'string') {
+        setOs((value as Record<string, unknown>).os as string);
+      }
       setMatches(extractMatchesFromValue(value));
       setLoading(false);
     };
     load();
     return () => { cancelled = true; };
   }, [name, config.category, type]);
+
+  const language = type === 'package' ? getLanguageInfo(os || undefined) : null;
+
+  // Build reference links: prepend language registry link when known, dedupe by URL.
+  const referenceLinks = useMemo(() => {
+    const base = config.buildLinks(name);
+    if (!language) return base;
+    const registryLink = { label: language.registryLabel, url: language.registryUrl(name) };
+    const seen = new Set<string>([registryLink.url]);
+    return [registryLink, ...base.filter(l => !seen.has(l.url) && (seen.add(l.url), true))];
+  }, [config, name, language]);
 
   const filteredMatches = useMemo(() => {
     const q = filter.trim().toLowerCase();
