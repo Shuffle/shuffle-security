@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { Button } from '@/components/ui/button';
@@ -524,6 +524,17 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
             </span>
           )}
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={syncVulns}
+          disabled={syncing || vulnsWithMeta.filter(m => m.affectedHosts.length > 0).length === 0}
+          className="gap-1.5 shrink-0"
+          title="Persist affected vulnerabilities to shuffle-security_vulnerabilities"
+        >
+          <RefreshCw size={14} className={syncing ? 'animate-spin' : ''} />
+          {syncing ? 'Syncing…' : 'Sync to Vulnerabilities'}
+        </Button>
       </div>
 
       {/* Hosts containing this entity */}
