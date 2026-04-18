@@ -98,6 +98,24 @@ interface HostMatch {
   updatedAt?: number;
 }
 
+/** OSV.dev vulnerability schema (subset) — see https://ossf.github.io/osv-schema/ */
+interface OsvVuln {
+  id: string;
+  summary?: string;
+  details?: string;
+  aliases?: string[];
+  modified?: string;
+  published?: string;
+  severity?: Array<{ type?: string; score?: string }>;
+  database_specific?: { severity?: string; cwe_ids?: string[] };
+  affected?: Array<{
+    package?: { name?: string; ecosystem?: string };
+    ranges?: Array<{ type?: string; events?: Array<{ introduced?: string; fixed?: string }> }>;
+    versions?: string[];
+  }>;
+  references?: Array<{ type?: string; url?: string }>;
+}
+
 const safeParse = (raw: unknown): Record<string, unknown> | null => {
   if (raw == null) return null;
   if (typeof raw === 'object') return raw as Record<string, unknown>;
