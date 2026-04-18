@@ -48,7 +48,7 @@ interface HostMatch {
   hostname: string;
   path?: string;
   version?: string;
-  projectType?: string;
+  updatedAt?: number;
 }
 
 const safeParse = (raw: unknown): Record<string, unknown> | null => {
@@ -64,47 +64,42 @@ const safeParse = (raw: unknown): Record<string, unknown> | null => {
 };
 
 /**
- * Extract host matches from the value stored under the entity key.
- * The value is expected to be an array (or object with array fields) of host
- * occurrences. We try a few common shapes to be resilient.
+ * Expected shape from get_cache:
+ * {
+ *   name, os, versions: string[],
+ *   hostnames: [{ hostname, paths: string[], version, updated_at }, ...]
+ * }
+ *
+ * We expand to one row per (hostname, path) and keep the latest updated_at
+ * + version per pair.
  */
-const extractMatchesFromValue = (value: unknown, type: EntityType): HostMatch[] => {
-  if (value == null) return [];
+const extractMatchesFromValue = (value: unknown): HostMatch[] => {
+  if (!value || typeof value !== 'object') return [];
+  const obj = value as Record<string, unknown>;
+  const hostnames = Array.isArray(obj.hostnames) ? (obj.hostnames as Array<Record<string, unknown>>) : [];
+  if (hostnames.length === 0) return [];
 
-  // Find an array of host entries inside the value
-  let entries: Array<Record<string, unknown>> = [];
-  if (Array.isArray(value)) {
-    entries = value as Array<Record<string, unknown>>;
-  } else if (typeof value === 'object') {
-    const obj = value as Record<string, unknown>;
-    // Common wrapper keys
-    for (const k of ['hosts', 'matches', 'occurrences', 'items', 'data']) {
-      if (Array.isArray(obj[k])) {
-        entries = obj[k] as Array<Record<string, unknown>>;
-        break;
+  // Deduplicate by hostname + path, keeping the latest updated_at and version.
+  const map = new Map<string, HostMatch>();
+  for (const entry of hostnames) {
+    const hostname = String(entry?.hostname || '').trim();
+    if (!hostname) continue;
+    const version = entry?.version ? String(entry.version) : undefined;
+    const updatedAt = typeof entry?.updated_at === 'number' ? entry.updated_at as number : undefined;
+    const paths = Array.isArray(entry?.paths) ? (entry.paths as unknown[]).map(p => String(p)) : [];
+    const uniquePaths = paths.length > 0 ? Array.from(new Set(paths)) : [undefined as unknown as string];
+    for (const path of uniquePaths) {
+      const key = `${hostname}::${path ?? ''}`;
+      const existing = map.get(key);
+      if (!existing || (updatedAt && (!existing.updatedAt || updatedAt > existing.updatedAt))) {
+        map.set(key, { hostname, path: path || undefined, version, updatedAt });
       }
     }
-    // Map of hostname -> info
-    if (entries.length === 0) {
-      const possibleEntries = Object.entries(obj)
-        .filter(([, v]) => v && typeof v === 'object')
-        .map(([hostname, v]) => ({ hostname, ...(v as Record<string, unknown>) }));
-      if (possibleEntries.length > 0) entries = possibleEntries;
-    }
   }
-
-  const matches: HostMatch[] = [];
-  for (const entry of entries) {
-    const hostname = String(entry?.hostname || entry?.host || entry?.name || '').trim();
-    if (!hostname) continue;
-    matches.push({
-      hostname,
-      path: entry?.path ? String(entry.path) : undefined,
-      version: entry?.version ? String(entry.version) : undefined,
-      projectType: entry?.type ? String(entry.type) : (type === 'package' && entry?.project_type ? String(entry.project_type) : undefined),
-    });
-  }
-  return matches;
+  // Sort: hostname asc, then path asc
+  return Array.from(map.values()).sort((a, b) =>
+    a.hostname.localeCompare(b.hostname) || (a.path || '').localeCompare(b.path || '')
+  );
 };
 
 const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
