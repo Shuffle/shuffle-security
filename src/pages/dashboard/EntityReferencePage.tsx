@@ -6,6 +6,36 @@ import { Input } from '@/components/ui/input';
 import { ArrowLeft, Package, FileCode, ExternalLink, ShieldAlert, Info, Clock, Server, Search, Loader2, FolderOpen, AlertTriangle } from 'lucide-react';
 import { getDatastoreItem } from '@/services/datastore';
 import { getApiUrl, shuffleFetch } from '@/config/api';
+import { severityColors, severityOrder } from '@/config/incidentConfig';
+
+/**
+ * Normalize OSV severity strings to the canonical incident severity tokens
+ * (critical/high/medium/low/informational) so we can reuse the incident colors
+ * and sort order.
+ *
+ * OSV reports severity in several shapes:
+ *  - database_specific.severity: "CRITICAL" | "HIGH" | "MODERATE" | "LOW"  (GHSA)
+ *  - severity[].score: CVSS vector or numeric score (e.g. "CVSS:3.1/AV:N/...")
+ */
+const normalizeSeverity = (raw?: string | null): string => {
+  if (!raw) return 'informational';
+  const s = String(raw).trim().toLowerCase();
+  if (!s) return 'informational';
+  if (s.startsWith('crit')) return 'critical';
+  if (s.startsWith('high') || s === 'severe') return 'high';
+  if (s.startsWith('mod') || s.startsWith('med')) return 'medium';
+  if (s.startsWith('low')) return 'low';
+  if (s.startsWith('info') || s.startsWith('none') || s === 'negligible') return 'informational';
+  // Try to parse numeric CVSS score (0.0–10.0)
+  const num = parseFloat(s);
+  if (!Number.isNaN(num)) {
+    if (num >= 9) return 'critical';
+    if (num >= 7) return 'high';
+    if (num >= 4) return 'medium';
+    if (num > 0) return 'low';
+  }
+  return 'informational';
+};
 
 type EntityType = 'software' | 'package';
 
@@ -189,6 +219,7 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
   const [vulnsLoading, setVulnsLoading] = useState(false);
   const [vulnsError, setVulnsError] = useState<string | null>(null);
   const [vulnsQueried, setVulnsQueried] = useState(false);
+  const [vulnsSort, setVulnsSort] = useState<'severity' | 'date' | 'id'>('severity');
 
   useEffect(() => {
     let cancelled = false;
@@ -284,6 +315,31 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
     );
   }, [matches, filter]);
 
+  // Pre-compute normalized severity per vuln for both display and sorting.
+  const vulnsWithMeta = useMemo(() => vulns.map(v => {
+    const rawSev = v.database_specific?.severity || v.severity?.[0]?.score;
+    const sevToken = normalizeSeverity(rawSev);
+    return {
+      vuln: v,
+      sevToken,
+      sevColor: severityColors[sevToken] || severityColors.informational,
+      sevOrder: severityOrder[sevToken] ?? 0,
+      modifiedTs: v.modified ? new Date(v.modified).getTime() : 0,
+      publishedTs: v.published ? new Date(v.published).getTime() : 0,
+    };
+  }), [vulns]);
+
+  const sortedVulns = useMemo(() => {
+    const arr = [...vulnsWithMeta];
+    if (vulnsSort === 'severity') {
+      arr.sort((a, b) => b.sevOrder - a.sevOrder || (b.modifiedTs - a.modifiedTs) || a.vuln.id.localeCompare(b.vuln.id));
+    } else if (vulnsSort === 'date') {
+      arr.sort((a, b) => (b.modifiedTs || b.publishedTs) - (a.modifiedTs || a.publishedTs) || b.sevOrder - a.sevOrder);
+    } else {
+      arr.sort((a, b) => a.vuln.id.localeCompare(b.vuln.id));
+    }
+    return arr;
+  }, [vulnsWithMeta, vulnsSort]);
   return (
     <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
       {/* Header */}
@@ -402,11 +458,25 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
                 <span className="text-[0.65rem] text-muted-foreground">({vulns.length})</span>
               )}
             </div>
-            {language?.osvEcosystem && (
-              <span className="text-[0.65rem] text-muted-foreground font-mono">
-                {language.osvEcosystem}
-              </span>
-            )}
+            <div className="flex items-center gap-2">
+              {vulns.length > 1 && !vulnsLoading && !vulnsError && (
+                <select
+                  value={vulnsSort}
+                  onChange={(e) => setVulnsSort(e.target.value as 'severity' | 'date' | 'id')}
+                  className="h-7 rounded-md border border-border bg-background px-2 text-[0.65rem] text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                  aria-label="Sort vulnerabilities"
+                >
+                  <option value="severity">Sort: Severity</option>
+                  <option value="date">Sort: Newest</option>
+                  <option value="id">Sort: ID</option>
+                </select>
+              )}
+              {language?.osvEcosystem && (
+                <span className="text-[0.65rem] text-muted-foreground font-mono">
+                  {language.osvEcosystem}
+                </span>
+              )}
+            </div>
           </div>
 
           {vulnsLoading ? (
@@ -422,8 +492,7 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
             </p>
           ) : (
             <div className="space-y-2">
-              {vulns.map((v) => {
-                const sev = (v.database_specific?.severity || v.severity?.[0]?.score || '').toString();
+              {sortedVulns.map(({ vuln: v, sevToken, sevColor }) => {
                 const fixedVersions = (v.affected || [])
                   .flatMap(a => (a.ranges || []).flatMap(r => (r.events || []).map(e => e.fixed).filter(Boolean) as string[]));
                 const advisoryUrl = v.references?.find(r => r.type === 'ADVISORY')?.url
@@ -441,12 +510,17 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-xs font-mono font-medium text-foreground">{v.id}</span>
-                          {sev && (
-                            <span className="inline-flex items-center gap-1 rounded-md border border-border bg-orange-500/10 px-1.5 py-0.5 text-[0.6rem] font-medium text-orange-500">
-                              <AlertTriangle size={9} />
-                              {sev}
-                            </span>
-                          )}
+                          <span
+                            className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[0.6rem] font-medium uppercase tracking-wide"
+                            style={{
+                              backgroundColor: `${sevColor}1f`, // ~12% alpha
+                              color: sevColor,
+                              border: `1px solid ${sevColor}55`,
+                            }}
+                          >
+                            <AlertTriangle size={9} />
+                            {sevToken}
+                          </span>
                           {v.aliases?.slice(0, 2).map(a => (
                             <span key={a} className="text-[0.6rem] font-mono text-muted-foreground">{a}</span>
                           ))}
