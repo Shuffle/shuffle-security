@@ -138,7 +138,7 @@ interface MonitoringGroup {
   hosts: SensorHost[];
 }
 
-/** Fetch environments from the API and filter for sensor_group: true */
+/** Fetch environments from the API and supplement hosts from datastore (sensors > assets > env). */
 const fetchSensorGroups = async (): Promise<{ groups: MonitoringGroup[]; allEnvs: OrbEnvironment[]; error?: string }> => {
   try {
     const res = await fetch(getApiUrl('/api/v1/getenvironments'), {
@@ -148,9 +148,23 @@ const fetchSensorGroups = async (): Promise<{ groups: MonitoringGroup[]; allEnvs
     if (!res.ok) return { groups: [], allEnvs: [], error: `Failed to load monitors (HTTP ${res.status})` };
     const data = await res.json();
     const envs: OrbEnvironment[] = Array.isArray(data) ? data.filter((e: OrbEnvironment) => !e.archived) : [];
+
+    // Cross-load sensor + asset datastores once for the whole set of groups.
+    const supplements = await fetchHostSupplements();
+    if (supplements.errors.length) {
+      console.warn('[VulnAssets] Host supplement load issues:', supplements.errors);
+    }
+
     const groups = envs
       .filter(e => e.sensor_group === true)
-      .map(e => ({ id: e.id || e.Name, name: e.Name, queue: e.Name.replace(/ +/g, '-'), auth: String(e.auth || ''), org_id: String(e.org_id || ''), hosts: Array.isArray(e.sensor_hosts) ? e.sensor_hosts : [] }));
+      .map(e => ({
+        id: e.id || e.Name,
+        name: e.Name,
+        queue: e.Name.replace(/ +/g, '-'),
+        auth: String(e.auth || ''),
+        org_id: String(e.org_id || ''),
+        hosts: mergeHosts(Array.isArray(e.sensor_hosts) ? e.sensor_hosts : [], supplements) as SensorHost[],
+      }));
     return { groups, allEnvs: envs };
   } catch (err) {
     return { groups: [], allEnvs: [], error: `Failed to load monitors — could not reach the API` };
