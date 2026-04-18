@@ -343,7 +343,12 @@ const VulnTable = ({ vulnerabilities, isLoading, onRemediate, emptyIcon, emptyTi
         </TableHeader>
         <TableBody>
           {vulnerabilities.map(vuln => (
-            <TableRow key={vuln.id}>
+            <TableRow
+              key={vuln.id}
+              className="cursor-pointer hover:bg-muted/30"
+              onClick={(e) => openDetail(vuln.id, e)}
+              onAuxClick={(e) => e.button === 1 && window.open(`/vulnerabilities/${encodeURIComponent(String(vuln.id).split('::')[0])}`, '_blank')}
+            >
               <TableCell>
                 <Badge variant="outline" className={`text-xs capitalize ${SEVERITY_COLORS[vuln.severity]}`}>
                   {vuln.severity}
@@ -372,7 +377,7 @@ const VulnTable = ({ vulnerabilities, isLoading, onRemediate, emptyIcon, emptyTi
                   {vuln.first_seen ? new Date(vuln.first_seen).toLocaleDateString() : '—'}
                 </span>
               </TableCell>
-              <TableCell className="text-right">
+              <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
