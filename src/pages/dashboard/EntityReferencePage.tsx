@@ -383,10 +383,14 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
     );
   }, [matches, filter]);
 
-  // Pre-compute normalized severity per vuln for both display and sorting.
+  // Pre-compute normalized severity per vuln + which of our hosts are affected
+  // by checking each host's installed version against the OSV affected ranges.
   const vulnsWithMeta = useMemo(() => vulns.map(v => {
     const rawSev = v.database_specific?.severity || v.severity?.[0]?.score;
     const sevToken = normalizeSeverity(rawSev);
+    const affectedHosts = matches.filter(m => isVersionAffected(m.version, v));
+    // Deduplicate by hostname (a host may appear with multiple paths)
+    const affectedHostNames = Array.from(new Set(affectedHosts.map(h => h.hostname)));
     return {
       vuln: v,
       sevToken,
@@ -394,12 +398,23 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
       sevOrder: severityOrder[sevToken] ?? 0,
       modifiedTs: v.modified ? new Date(v.modified).getTime() : 0,
       publishedTs: v.published ? new Date(v.published).getTime() : 0,
+      affectedHosts,
+      affectedHostNames,
+      affectedCount: affectedHostNames.length,
     };
-  }), [vulns]);
+  }), [vulns, matches]);
 
   const sortedVulns = useMemo(() => {
     const arr = [...vulnsWithMeta];
-    if (vulnsSort === 'severity') {
+    if (vulnsSort === 'affected') {
+      // Affected first (count desc), then severity desc, then newest
+      arr.sort((a, b) =>
+        b.affectedCount - a.affectedCount
+        || b.sevOrder - a.sevOrder
+        || (b.modifiedTs - a.modifiedTs)
+        || a.vuln.id.localeCompare(b.vuln.id),
+      );
+    } else if (vulnsSort === 'severity') {
       arr.sort((a, b) => b.sevOrder - a.sevOrder || (b.modifiedTs - a.modifiedTs) || a.vuln.id.localeCompare(b.vuln.id));
     } else if (vulnsSort === 'date') {
       arr.sort((a, b) => (b.modifiedTs || b.publishedTs) - (a.modifiedTs || a.publishedTs) || b.sevOrder - a.sevOrder);
