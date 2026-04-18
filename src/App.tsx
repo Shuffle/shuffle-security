@@ -44,8 +44,7 @@ import VulnAssetsPage from '@/pages/dashboard/VulnAssetsPage';
 import AssetsPage from '@/pages/dashboard/AssetsPage';
 import HostTerminalPage from '@/pages/dashboard/HostTerminalPage';
 import MonitorDetailPage from '@/pages/dashboard/MonitorDetailPage';
-import SoftwareDetailPage from '@/pages/dashboard/SoftwareDetailPage';
-import PackageDetailPage from '@/pages/dashboard/PackageDetailPage';
+import EntityReferencePage from '@/pages/dashboard/EntityReferencePage';
 
 import AppsPage from '@/pages/AppsPage';
 import NotFound from './pages/NotFound';
@@ -160,8 +159,8 @@ const ThemedApp = () => {
               <Route path="/monitors" element={<SupportOnly><VulnAssetsPage /></SupportOnly>} />
               <Route path="/monitors/:id" element={<SupportOnly><MonitorDetailPage /></SupportOnly>} />
               <Route path="/monitors/:hostUuid/terminal" element={<SupportOnly><HostTerminalPage /></SupportOnly>} />
-              <Route path="/software/:id" element={<SupportOnly><SoftwareDetailPage /></SupportOnly>} />
-              <Route path="/packages/:id" element={<SupportOnly><PackageDetailPage /></SupportOnly>} />
+              <Route path="/software/:id" element={<SupportOnly><EntityReferencePage type="software" /></SupportOnly>} />
+              <Route path="/packages/:id" element={<SupportOnly><EntityReferencePage type="package" /></SupportOnly>} />
               <Route path="/assets" element={<AssetsPage />} />
             </Route>
 
