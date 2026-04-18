@@ -29,7 +29,7 @@ export interface Vulnerability {
   resolved_at?: string;
 }
 
-const DATASTORE_CATEGORY = 'shuffle-vulnerabilities';
+const DATASTORE_CATEGORY = 'shuffle-security_vulnerabilities';
 
 function normalizeOsvSeverity(raw?: string | null): VulnSeverity {
   if (!raw) return 'info';
