@@ -172,42 +172,7 @@ const VulnerabilitiesPage = () => {
         ))}
       </div>
 
-      {/* Automation strip */}
-      <div className="rounded-lg border border-border bg-card p-4">
-        <div className="flex items-center gap-3 min-h-[40px]">
-          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider shrink-0">Sources</span>
-          <ArrowRight size={14} className="text-muted-foreground shrink-0" />
-          {connectedScanners.length > 0 ? (
-            <div className="flex items-center gap-2 flex-wrap">
-              {connectedScanners.slice(0, 4).map((scanner, i) => (
-                <div key={i} className="flex items-center gap-1.5 bg-muted rounded-md px-2 py-1">
-                  {scanner.app?.large_image && (
-                    <Avatar sx={{ width: 18, height: 18 }}>
-                      <img src={scanner.app.large_image} alt="" style={{ width: 18, height: 18 }} />
-                    </Avatar>
-                  )}
-                  <span className="text-xs text-foreground">{scanner.app?.name || 'Scanner'}</span>
-                </div>
-              ))}
-              {connectedScanners.length > 4 && (
-                <span className="text-xs text-muted-foreground">+{connectedScanners.length - 4} more</span>
-              )}
-            </div>
-          ) : (
-            <span className="text-xs text-muted-foreground italic">No scanners connected</span>
-          )}
-          <ArrowRight size={14} className="text-muted-foreground shrink-0" />
-          <div className="flex items-center gap-1.5 bg-primary/10 rounded-md px-2 py-1">
-            <Zap size={14} className="text-primary" />
-            <span className="text-xs font-medium text-primary">Shuffle</span>
-          </div>
-          <ArrowRight size={14} className="text-muted-foreground shrink-0" />
-          <div className="flex items-center gap-1.5 bg-muted rounded-md px-2 py-1">
-            <Shield size={14} className="text-muted-foreground" />
-            <span className="text-xs text-foreground">Vuln DB</span>
-          </div>
-        </div>
-      </div>
+
 
       {/* Filters + table — only show when there's data */}
       {vulnerabilities.length > 0 || isLoading ? (
