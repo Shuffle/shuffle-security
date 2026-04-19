@@ -34,7 +34,7 @@ import FingerprintIcon from '@mui/icons-material/Fingerprint';
 import TuneIcon from '@mui/icons-material/Tune';
 import RssFeedIcon from '@mui/icons-material/RssFeed';
 import RadarIcon from '@mui/icons-material/Radar';
-import { Braces, Waypoints, Network, Activity, BookOpen, Sun, Moon, Monitor, LayoutDashboard, Shield, HardDrive, Radar, Users } from 'lucide-react';
+import { Braces, Waypoints, Network, Activity, BookOpen, Sun, Moon, Monitor, LayoutDashboard, Shield, HardDrive, Radar, Users, MonitorCheck } from 'lucide-react';
 import AgentIcon from '@/components/agent/AgentIcon';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -78,7 +78,7 @@ const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: bool
       { label: 'Custom Fields', path: '/incidents/custom-fields', icon: <TuneIcon fontSize="small" /> },
     ],
   },
-  { label: 'Monitors', icon: <Radar size={20} />, path: '/monitors' },
+  { label: 'Host Monitors', icon: <MonitorCheck size={20} />, path: '/monitors' },
   {
     label: 'Vulnerabilities',
     icon: <Shield size={20} />,
