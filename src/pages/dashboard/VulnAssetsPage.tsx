@@ -962,7 +962,7 @@ const VulnAssetsPage = () => {
           </div>
         )}
 
-        {allHosts.length === 0 ? (
+        {allHosts.length === 0 && !groupsLoading ? (
           <div className="border-t border-border px-5 py-16 flex flex-col items-center text-center gap-4">
             <Activity size={36} className="text-muted-foreground/25" />
             <div className="space-y-1">
@@ -974,7 +974,7 @@ const VulnAssetsPage = () => {
               Add Host
             </Button>
           </div>
-        ) : (
+        ) : allHosts.length > 0 ? (
           <div className="border-t border-border">
             {/* Table header */}
             <div className="grid grid-cols-[2rem_1.5fr_2rem_2rem_2rem_2rem_2rem_2rem_0.7fr_0.8fr_2.5rem] gap-2 px-5 py-2 border-b border-border bg-muted/30 items-center">
