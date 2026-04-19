@@ -277,7 +277,7 @@ const DetectionOnboardingPage = () => {
           loading: false,
           checked: true,
           success: false,
-          message: 'Pipeline sensor is running but detection pipeline is not yet configured',
+          message: 'Log ingestion is running but detection pipeline is not yet configured',
         });
       }
 
@@ -449,7 +449,7 @@ const DetectionOnboardingPage = () => {
           loading: false,
           checked: true,
           success: false,
-          message: 'Failed to check pipeline sensor status',
+          message: 'Failed to check log ingestion status',
         });
         return;
       }
@@ -466,7 +466,7 @@ const DetectionOnboardingPage = () => {
           loading: false,
           checked: true,
           success: false,
-          message: 'No pipeline sensor selected',
+          message: 'No log ingestion source selected',
         });
         return;
       }
@@ -477,13 +477,13 @@ const DetectionOnboardingPage = () => {
       
       let message = '';
       if (!isRunning) {
-        message = 'Pipeline sensor not running. Deploy it using the options above.';
+        message = 'Log ingestion not running. Deploy it using the options above.';
       } else if (pipelineReady) {
         message = pipelineCount > 0 
           ? `Detection ready with ${pipelineCount} pipeline${pipelineCount !== 1 ? 's' : ''} active`
           : 'Detection pipeline is enabled and ready';
       } else {
-        message = 'Pipeline sensor is running but detection pipeline is not yet configured';
+        message = 'Log ingestion is running but detection pipeline is not yet configured';
       }
       
       setSensorStatus({
@@ -502,7 +502,7 @@ const DetectionOnboardingPage = () => {
         loading: false,
         checked: true,
         success: false,
-        message: 'Error checking pipeline sensor status',
+        message: 'Error checking log ingestion status',
       });
     }
   };
@@ -1418,7 +1418,7 @@ const DetectionOnboardingPage = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
               <SensorsIcon sx={{ color: 'hsl(var(--primary))', fontSize: 20 }} />
               <Typography sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-                Install a Pipeline Sensor
+                Set up Log Ingestion
               </Typography>
               {/* Status chips for selected environment */}
               {selectedEnvironment && (() => {
@@ -1498,14 +1498,14 @@ const DetectionOnboardingPage = () => {
           <Box sx={{ px: 3, pb: 3, pt: 1 }}>
             {/* Sensor Selection */}
             <Typography sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, fontSize: '0.9rem', mb: 2 }}>
-              1. Select or Create a Pipeline Sensor
+              1. Select or Create a Log Ingestion source
             </Typography>
             
             {loadingEnvs ? (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
                 <CircularProgress size={20} sx={{ color: 'hsl(var(--primary))' }} />
                 <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.875rem' }}>
-                  Loading pipeline sensors...
+                  Loading log ingestion sources...
                 </Typography>
               </Box>
             ) : (
@@ -1519,12 +1519,12 @@ const DetectionOnboardingPage = () => {
                           '&.Mui-focused': { color: 'hsl(var(--primary))' },
                         }}
                       >
-                         Select Pipeline Sensor
+                         Select Log Ingestion
                       </InputLabel>
                       <Select
                         value={selectedEnvId}
                         onChange={(e) => setSelectedEnvId(e.target.value)}
-                        label="Select Pipeline Sensor"
+                        label="Select Log Ingestion"
                         sx={{
                           backgroundColor: 'hsl(var(--muted))',
                           '& .MuiOutlinedInput-notchedOutline': { borderColor: 'hsl(var(--border))' },
@@ -1591,7 +1591,7 @@ const DetectionOnboardingPage = () => {
                     <TextField
                       value={newEnvName}
                       onChange={(e) => setNewEnvName(e.target.value)}
-                      placeholder="Enter pipeline sensor name..."
+                      placeholder="Enter log ingestion name..."
                       size="small"
                       autoFocus
                       sx={{
@@ -2738,7 +2738,7 @@ const DetectionOnboardingPage = () => {
             fullWidth
             value={createDialogName}
             onChange={(e) => setCreateDialogName(e.target.value)}
-            placeholder="e.g. Production Pipeline Sensor"
+            placeholder="e.g. Production Log Ingestion"
             onKeyDown={(e) => e.key === 'Enter' && createDialogName.trim() && handleCreateEnvironment()}
             size="small"
             sx={{

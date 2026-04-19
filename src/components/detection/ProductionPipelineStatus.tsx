@@ -153,8 +153,8 @@ const ProductionPipelineStatus = ({ environment, sensorRunning, pipelineReady }:
       icon: <StorageIcon sx={{ fontSize: 20 }} />,
       status: !environment ? 'inactive' : sensorRunning ? 'active' : 'inactive',
       tooltip: sensorRunning
-        ? `Sensor "${environment?.Name}" is running and receiving logs`
-        : 'No running sensor — logs are not being received',
+        ? `Log ingestion "${environment?.Name}" is running and receiving logs`
+        : 'No active log ingestion — logs are not being received',
     };
 
     // Stage 2: Detection Pipeline
@@ -165,7 +165,7 @@ const ProductionPipelineStatus = ({ environment, sensorRunning, pipelineReady }:
       status: !sensorRunning ? 'inactive' : pipelineReady ? 'active' : 'warning',
       tooltip: pipelineReady
         ? 'Detection pipeline is processing events with Sigma rules'
-        : 'Detection pipeline is not yet configured on this sensor',
+        : 'Detection pipeline is not yet configured on this log ingestion',
     };
 
     // Stage 3: Webhook

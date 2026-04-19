@@ -609,10 +609,10 @@ const DashboardPage = () => {
       },
       {
         id: 'setup-detection',
-        title: 'Set up detection sensors',
+        title: 'Set up log ingestion',
         description: hasDetection
-          ? 'A detection sensor is running and monitoring your environment.'
-          : 'Deploy detection sensors to monitor logs, network traffic, and endpoints.',
+          ? 'Log ingestion is running and forwarding events to detection.'
+          : 'Set up log ingestion to collect logs, network traffic, and endpoint events.',
         icon: <Radar size={20} />,
         status: hasDetection ? 'complete' : 'not-started',
         ctaLabel: 'Set Up',
