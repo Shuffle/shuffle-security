@@ -1365,18 +1365,6 @@ const DetectionOnboardingPage = () => {
           >
             Detection Setup
           </Typography>
-          <Chip
-            label="PUBLIC PREVIEW"
-            size="small"
-            sx={{
-              height: 22,
-              fontSize: '0.65rem',
-              fontWeight: 600,
-              backgroundColor: 'hsla(var(--primary) / 0.12)',
-              color: 'hsl(var(--primary))',
-              border: '1px solid hsla(var(--primary) / 0.25)',
-            }}
-          />
           <WebhookActiveChip />
         </Box>
         <Typography sx={{ color: 'hsl(var(--muted-foreground))' }}>
@@ -1403,40 +1391,6 @@ const DetectionOnboardingPage = () => {
         <WebhookStatusBanner />
       </Box>
 
-      {/* Coming Soon banner */}
-      <Box sx={{
-        mb: 3,
-        px: 2.5,
-        py: 2,
-        borderRadius: 2,
-        border: '1px solid hsla(var(--primary) / 0.3)',
-        bgcolor: 'hsla(var(--primary) / 0.06)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 1.5,
-      }}>
-        <Box sx={{
-          width: 32,
-          height: 32,
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          bgcolor: 'hsla(var(--primary) / 0.15)',
-          color: 'hsl(var(--primary))',
-          flexShrink: 0,
-        }}>
-          <SensorsIcon sx={{ fontSize: 16 }} />
-        </Box>
-        <Box>
-          <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-            Coming Soon — Public Preview
-          </Typography>
-          <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.4 }}>
-            Detection pipelines are in public preview. Features may change and some functionality is limited.
-          </Typography>
-        </Box>
-      </Box>
 
       {/* Step 1: Check Sensors */}
       <Paper

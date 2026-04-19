@@ -777,18 +777,6 @@ Use case: ${aiPrompt}`,
             <Typography variant="h4" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}>
               Tenzir Pipelines
             </Typography>
-            <Chip
-              label="PUBLIC PREVIEW"
-              size="small"
-              sx={{
-                height: 22,
-                fontSize: '0.65rem',
-                fontWeight: 600,
-                backgroundColor: 'hsla(var(--primary) / 0.12)',
-                color: 'hsl(var(--primary))',
-                border: '1px solid hsla(var(--primary) / 0.25)',
-              }}
-            />
             <WebhookActiveChip />
           </Box>
           <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>

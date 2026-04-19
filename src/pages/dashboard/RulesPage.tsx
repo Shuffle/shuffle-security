@@ -606,18 +606,6 @@ const RulesPage = () => {
             <Typography variant="h4" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
               Detection Rules
             </Typography>
-            <Chip
-              label="PUBLIC PREVIEW"
-              size="small"
-              sx={{
-                height: 22,
-                fontSize: '0.65rem',
-                fontWeight: 600,
-                backgroundColor: 'hsla(var(--primary) / 0.12)',
-                color: 'hsl(var(--primary))',
-                border: '1px solid hsla(var(--primary) / 0.25)',
-              }}
-            />
             <WebhookActiveChip />
           </Box>
           <Typography sx={{ color: 'hsl(var(--muted-foreground))' }}>
