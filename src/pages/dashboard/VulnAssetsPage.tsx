@@ -1628,7 +1628,7 @@ const VulnAssetsPage = () => {
               );
             })}
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Add Host Monitor Dialog */}
