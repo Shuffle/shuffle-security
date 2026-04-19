@@ -79,6 +79,14 @@ const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: bool
     ],
   },
   { label: 'Monitors', icon: <Radar size={20} />, path: '/monitors', supportOnly: true },
+  {
+    label: 'Vulnerabilities',
+    icon: <Shield size={20} />,
+    path: '/vulnerabilities',
+    children: [
+      { label: 'Assets', path: '/assets', icon: <HardDrive size={16} /> },
+    ],
+  },
   { 
     label: 'Detection', 
     icon: <RadarIcon />,
@@ -89,15 +97,11 @@ const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: bool
       { label: 'ATT&CK', path: '/detection/mitre', icon: <Waypoints size={16} />, supportOnly: true },
       { label: 'Threat Feeds', path: '/incidents/threat-feeds', icon: <RssFeedIcon fontSize="small" /> },
       { label: 'IOC Types', path: '/incidents/ioc-types', icon: <FingerprintIcon fontSize="small" /> },
-      { label: 'Vulnerabilities', path: '/vulnerabilities', icon: <Shield size={16} /> },
-      { label: 'Assets', path: '/assets', icon: <HardDrive size={16} /> },
       { label: 'Response Actions', path: '/incidents/response-actions', icon: <Shield size={16} /> },
-      { label: 'Users', path: '/users', icon: <Users size={16} /> },
     ],
   },
   { label: '__divider__', icon: <></> },
   { label: 'Agent', icon: <AgentIcon size={20} />, path: '/agent' },
-  { label: 'Automation', icon: <Activity size={20} />, path: '/usecases' },
   { label: 'Documentation', icon: <BookOpen size={20} />, path: '/docs' },
 ];
 
@@ -748,6 +752,50 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
       {/* Integrations Section */}
       <Box sx={{ mt: 2, overflow: 'hidden' }}>
         <Divider sx={{ borderColor: 'hsl(var(--border))', mx: visuallyCollapsed ? 1 : 2, mb: 1 }} />
+        {/* Automation entry — lives with Integrations because flows are powered by integrations */}
+        <Tooltip title={visuallyCollapsed ? 'Automation' : ''} placement="right">
+          <ListItemButton
+            component={Link}
+            to="/usecases"
+            selected={isActive('/usecases')}
+            sx={{
+              mx: visuallyCollapsed ? 1 : 1.5,
+              mb: 1,
+              borderRadius: 1,
+              minHeight: 36,
+              px: visuallyCollapsed ? 1 : 1.5,
+              justifyContent: visuallyCollapsed ? 'center' : 'flex-start',
+              color: isActive('/usecases') ? 'hsl(var(--primary))' : 'hsl(var(--foreground))',
+              backgroundColor: isActive('/usecases') ? 'hsla(var(--primary) / 0.1)' : 'transparent',
+              '&:hover': { backgroundColor: 'hsl(var(--muted))' },
+              '&.Mui-selected': {
+                backgroundColor: 'hsla(var(--primary) / 0.1)',
+                '&:hover': { backgroundColor: 'hsla(var(--primary) / 0.15)' },
+              },
+            }}
+          >
+            <ListItemIcon
+              sx={{
+                minWidth: 0,
+                mr: visuallyCollapsed ? 0 : 1.5,
+                color: 'inherit',
+                justifyContent: 'center',
+              }}
+            >
+              <Activity size={18} />
+            </ListItemIcon>
+            {!visuallyCollapsed && (
+              <ListItemText
+                primary="Automation"
+                slotProps={{
+                  primary: {
+                    sx: { fontSize: '0.85rem', fontWeight: isActive('/usecases') ? 600 : 500 },
+                  },
+                }}
+              />
+            )}
+          </ListItemButton>
+        </Tooltip>
         <IntegrationStatus collapsed={visuallyCollapsed} />
         
       </Box>
