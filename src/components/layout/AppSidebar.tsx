@@ -84,7 +84,7 @@ const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: bool
     icon: <Shield size={20} />,
     path: '/vulnerabilities',
     children: [
-      { label: 'Assets', path: '/assets', icon: <HardDrive size={16} /> },
+      { label: 'Assets', path: '/assets', icon: <HardDrive size={16} />, supportOnly: true },
     ],
   },
   { 
@@ -97,7 +97,7 @@ const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: bool
       { label: 'ATT&CK', path: '/detection/mitre', icon: <Waypoints size={16} />, supportOnly: true },
       { label: 'Threat Feeds', path: '/incidents/threat-feeds', icon: <RssFeedIcon fontSize="small" /> },
       { label: 'IOC Types', path: '/incidents/ioc-types', icon: <FingerprintIcon fontSize="small" /> },
-      { label: 'Response Actions', path: '/incidents/response-actions', icon: <Shield size={16} /> },
+      { label: 'Response Actions', path: '/incidents/response-actions', icon: <Shield size={16} />, supportOnly: true },
     ],
   },
   { label: '__divider__', icon: <></> },
