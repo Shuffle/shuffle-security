@@ -76,7 +76,7 @@ const parseItem = (item: DatastoreItem, category: AssetCategory): ParsedAsset | 
   if (!value || typeof value !== 'object') return null;
 
   // OCSF device shape
-  const device = (value as OCSFDeviceInventory);
+  const device = value as unknown as OCSFDeviceInventory;
   const isDevice = typeof device.hostname === 'string';
 
   const name =
