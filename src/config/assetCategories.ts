@@ -36,8 +36,6 @@ export const ASSET_CATEGORIES: AssetCategory[] = [
   { id: 'compute',       label: 'Compute Instances',   short: 'Compute',    description: 'EC2, GCE, Azure VMs',                               datastoreKey: 'shuffle-security_assets_compute',       icon: Server,      group: 'Compute' },
   { id: 'containers',    label: 'Container Platforms', short: 'Containers', description: 'Kubernetes, ECS, GKE clusters and workloads',      datastoreKey: 'shuffle-security_assets_containers',    icon: Boxes,       group: 'Compute' },
   { id: 'serverless',    label: 'Serverless Functions',short: 'Serverless', description: 'Lambda, Cloud Functions, Azure Functions',          datastoreKey: 'shuffle-security_assets_serverless',    icon: Zap,         group: 'Compute' },
-  { id: 'containers',    label: 'Container Platforms', short: 'Containers', description: 'Kubernetes, ECS, GKE clusters and workloads',      datastoreKey: 'shuffle-security_assets_containers',    icon: Boxes,       group: 'Compute' },
-  { id: 'serverless',    label: 'Serverless Functions',short: 'Serverless', description: 'Lambda, Cloud Functions, Azure Functions',          datastoreKey: 'shuffle-security_assets_serverless',    icon: Zap,         group: 'Compute' },
 
   // Infra & data
   { id: 'storage',       label: 'Storage & Databases', short: 'Storage',    description: 'S3, RDS, Postgres, Mongo, buckets',                 datastoreKey: 'shuffle-security_assets_storage',       icon: Database,    group: 'Infra' },
