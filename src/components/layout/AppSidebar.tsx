@@ -216,6 +216,22 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
     return () => document.removeEventListener('keydown', handleGlobalKey);
   }, []);
 
+  // Auto-expand the nav group whose own path or any child path matches the current route.
+  // This prevents the previously-expanded group (e.g. Incidents) from staying open when
+  // navigating to a sibling group like Vulnerabilities.
+  useEffect(() => {
+    const path = location.pathname;
+    const matches = (p?: string) => !!p && (path === p || path.startsWith(p + '/'));
+    const owning = navItems.find(item => {
+      if (matches(item.path)) return true;
+      if (item.children?.some(c => matches(c.path))) return true;
+      return false;
+    });
+    if (owning) {
+      setExpandedItems(prev => (prev.length === 1 && prev[0] === owning.label ? prev : [owning.label]));
+    }
+  }, [location.pathname, navItems]);
+
   // The sidebar appears expanded if it's actually expanded OR hover-expanded
   const visuallyCollapsed = collapsed && !hoverExpanded;
 
