@@ -190,21 +190,43 @@ const AuthenticatedVulnerabilitiesView = () => {
 
   return (
     <div className="p-6 max-w-[1400px] mx-auto space-y-6">
+      {/* Automation Coming Soon banner */}
+      <div className="flex items-center gap-3 px-4 py-3 rounded-lg border border-primary/30 bg-primary/[0.06]">
+        <div className="w-8 h-8 rounded-full flex items-center justify-center bg-primary/15 text-primary shrink-0">
+          <Zap size={16} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 mb-0.5">
+            <span className="text-sm font-semibold text-foreground">Automated remediation</span>
+            <span className="px-1.5 py-0.5 text-[0.55rem] font-bold tracking-wide uppercase rounded bg-primary/15 text-primary leading-none">Coming Soon</span>
+          </div>
+          <p className="text-xs text-muted-foreground leading-snug">
+            Auto-remediate vulnerabilities by running fixes directly on affected hosts. Tracking and manual workflows are already available below.
+          </p>
+        </div>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span tabIndex={0}>
+                <Button size="sm" variant="outline" className="gap-1.5 shrink-0" disabled>
+                  <Zap size={14} />
+                  Enable
+                </Button>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="left" className="max-w-[220px] text-center">
+              <p className="text-xs">Automated remediation isn't available yet — coming soon.</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Shield size={28} className="text-primary" />
           <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-xl font-semibold text-foreground">Vulnerabilities</h1>
-              <span
-                className="inline-flex items-center gap-1 px-2 py-0.5 text-[0.65rem] font-medium rounded-full border border-primary/30 bg-primary/[0.08] text-primary"
-                title="Automated vulnerability remediation workflows are under active development."
-              >
-                <Zap size={10} />
-                Automation: Coming Soon
-              </span>
-            </div>
+            <h1 className="text-xl font-semibold text-foreground">Vulnerabilities</h1>
             <p className="text-sm text-muted-foreground">Track and manage vulnerabilities across your assets and users</p>
           </div>
         </div>
