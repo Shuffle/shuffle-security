@@ -78,7 +78,7 @@ const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: bool
       { label: 'Custom Fields', path: '/incidents/custom-fields', icon: <TuneIcon fontSize="small" /> },
     ],
   },
-  { label: 'Monitors', icon: <Radar size={20} />, path: '/monitors', supportOnly: true },
+  { label: 'Monitors', icon: <Radar size={20} />, path: '/monitors' },
   {
     label: 'Vulnerabilities',
     icon: <Shield size={20} />,
