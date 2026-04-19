@@ -337,7 +337,7 @@ const OnboardingPage = () => {
         }),
       ]);
 
-      navigate('/incidents?autoSync=1');
+      navigate('/dashboard?autoSync=1');
     } else {
       const nextStep = activeStep + 1;
       trackOnboardingStep(nextStep, steps[nextStep].label);
@@ -1058,7 +1058,7 @@ const OnboardingPage = () => {
             {activeStep < steps.length - 1 ? (
               <Button
                 component={Link}
-                to="/incidents"
+                to="/dashboard"
                 sx={{
                   color: 'text.secondary',
                   textDecoration: 'none',
