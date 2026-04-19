@@ -752,50 +752,6 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
       {/* Integrations Section */}
       <Box sx={{ mt: 2, overflow: 'hidden' }}>
         <Divider sx={{ borderColor: 'hsl(var(--border))', mx: visuallyCollapsed ? 1 : 2, mb: 1 }} />
-        {/* Automation entry — lives with Integrations because flows are powered by integrations */}
-        <Tooltip title={visuallyCollapsed ? 'Automation' : ''} placement="right">
-          <ListItemButton
-            component={Link}
-            to="/usecases"
-            selected={isActive('/usecases')}
-            sx={{
-              mx: visuallyCollapsed ? 1 : 1.5,
-              mb: 1,
-              borderRadius: 1,
-              minHeight: 36,
-              px: visuallyCollapsed ? 1 : 1.5,
-              justifyContent: visuallyCollapsed ? 'center' : 'flex-start',
-              color: isActive('/usecases') ? 'hsl(var(--primary))' : 'hsl(var(--foreground))',
-              backgroundColor: isActive('/usecases') ? 'hsla(var(--primary) / 0.1)' : 'transparent',
-              '&:hover': { backgroundColor: 'hsl(var(--muted))' },
-              '&.Mui-selected': {
-                backgroundColor: 'hsla(var(--primary) / 0.1)',
-                '&:hover': { backgroundColor: 'hsla(var(--primary) / 0.15)' },
-              },
-            }}
-          >
-            <ListItemIcon
-              sx={{
-                minWidth: 0,
-                mr: visuallyCollapsed ? 0 : 1.5,
-                color: 'inherit',
-                justifyContent: 'center',
-              }}
-            >
-              <Activity size={18} />
-            </ListItemIcon>
-            {!visuallyCollapsed && (
-              <ListItemText
-                primary="Automation"
-                slotProps={{
-                  primary: {
-                    sx: { fontSize: '0.85rem', fontWeight: isActive('/usecases') ? 600 : 500 },
-                  },
-                }}
-              />
-            )}
-          </ListItemButton>
-        </Tooltip>
         <IntegrationStatus collapsed={visuallyCollapsed} />
         
       </Box>
@@ -1128,6 +1084,23 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
             },
           }}
         >
+          <MenuItem
+            component={Link}
+            to="/usecases"
+            onClick={() => setUserMenuAnchor(null)}
+            sx={{
+              py: 1.25,
+              px: 2,
+              gap: 1.5,
+              fontSize: '0.875rem',
+              color: 'hsl(var(--foreground))',
+              '&:hover': { backgroundColor: 'hsl(var(--muted))' },
+            }}
+          >
+            <Activity size={18} style={{ color: 'hsl(var(--muted-foreground))' }} />
+            Usecases
+          </MenuItem>
+          <Divider sx={{ borderColor: 'hsl(var(--border))', my: 0.5 }} />
           <MenuItem
             component={Link}
             to="/admin"
