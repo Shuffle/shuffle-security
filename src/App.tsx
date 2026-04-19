@@ -69,7 +69,7 @@ const ConditionalDashboardLayout = () => {
 /** Guard that only allows support users; redirects others to incidents */
 const SupportOnly = ({ children }: { children: React.ReactNode }) => {
   const { userInfo } = useAuth();
-  if (userInfo?.support !== true) return <Navigate to="/incidents" replace />;
+  if (userInfo?.support !== true) return <Navigate to="/dashboard" replace />;
   return <>{children}</>;
 };
 

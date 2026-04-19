@@ -47,7 +47,7 @@ const AuthPage = ({ mode }: AuthPageProps) => {
   const returnUrl = searchParams.get('returnUrl');
   // First login detection: if no explicit returnUrl and user has never logged in, go to onboarding
   const hasLoggedInBefore = localStorage.getItem('shuffle_has_logged_in') === 'true';
-  const defaultDestination = hasLoggedInBefore ? '/incidents' : '/onboarding';
+  const defaultDestination = hasLoggedInBefore ? '/dashboard' : '/onboarding';
   const from = location.state?.from?.pathname || returnUrl || defaultDestination;
 
   // Redirect if already authenticated (e.g., via API key)
