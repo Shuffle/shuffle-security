@@ -31,10 +31,11 @@ export interface AssetCategory {
 }
 
 export const ASSET_CATEGORIES: AssetCategory[] = [
-  // Compute & endpoints
-  { id: 'endpoints',     label: 'Computer Endpoints',  short: 'Endpoints',  description: 'Laptops, desktops, workstations',                  datastoreKey: 'shuffle-security_assets_endpoints',     icon: Monitor,     group: 'Compute' },
-  { id: 'mobile',        label: 'Mobile Devices',      short: 'Mobile',     description: 'Phones and tablets',                                datastoreKey: 'shuffle-security_assets_mobile',        icon: Smartphone,  group: 'Compute' },
+  // Compute & endpoints (Endpoints + Mobile combined into one tab)
+  { id: 'mobile',        label: 'Mobile & Endpoints',  short: 'Mobile',     description: 'Phones, tablets, laptops, desktops, workstations',  datastoreKey: 'shuffle-security_assets_mobile',        icon: Smartphone,  group: 'Compute' },
   { id: 'compute',       label: 'Compute Instances',   short: 'Compute',    description: 'EC2, GCE, Azure VMs',                               datastoreKey: 'shuffle-security_assets_compute',       icon: Server,      group: 'Compute' },
+  { id: 'containers',    label: 'Container Platforms', short: 'Containers', description: 'Kubernetes, ECS, GKE clusters and workloads',      datastoreKey: 'shuffle-security_assets_containers',    icon: Boxes,       group: 'Compute' },
+  { id: 'serverless',    label: 'Serverless Functions',short: 'Serverless', description: 'Lambda, Cloud Functions, Azure Functions',          datastoreKey: 'shuffle-security_assets_serverless',    icon: Zap,         group: 'Compute' },
   { id: 'containers',    label: 'Container Platforms', short: 'Containers', description: 'Kubernetes, ECS, GKE clusters and workloads',      datastoreKey: 'shuffle-security_assets_containers',    icon: Boxes,       group: 'Compute' },
   { id: 'serverless',    label: 'Serverless Functions',short: 'Serverless', description: 'Lambda, Cloud Functions, Azure Functions',          datastoreKey: 'shuffle-security_assets_serverless',    icon: Zap,         group: 'Compute' },
 
