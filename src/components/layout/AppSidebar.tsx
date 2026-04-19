@@ -78,7 +78,14 @@ const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: bool
       { label: 'Custom Fields', path: '/incidents/custom-fields', icon: <TuneIcon fontSize="small" /> },
     ],
   },
-  { label: 'Host Monitors', icon: <MonitorCheck size={20} />, path: '/monitors' },
+  {
+    label: 'Host Monitors',
+    icon: <MonitorCheck size={20} />,
+    path: '/monitors',
+    children: [
+      { label: 'Response', path: '/incidents/response-actions', icon: <Zap size={16} />, supportOnly: true },
+    ],
+  },
   {
     label: 'Vulnerabilities',
     icon: <Bug size={20} />,
@@ -97,7 +104,6 @@ const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: bool
       { label: 'ATT&CK', path: '/detection/mitre', icon: <Waypoints size={16} />, supportOnly: true },
       { label: 'Threat Feeds', path: '/incidents/threat-feeds', icon: <RssFeedIcon fontSize="small" /> },
       { label: 'IOC Types', path: '/incidents/ioc-types', icon: <FingerprintIcon fontSize="small" /> },
-      { label: 'Response', path: '/incidents/response-actions', icon: <Zap size={16} />, supportOnly: true },
     ],
   },
   { label: '__divider__', icon: <></> },
