@@ -938,7 +938,17 @@ const VulnAssetsPage = () => {
           </div>
         )}
 
-        {allHosts.length === 0 && (
+        {groupsLoading && allHosts.length === 0 && (
+          <div className="border-t border-border px-5 py-16 flex flex-col items-center text-center gap-3">
+            <Loader2 size={28} className="text-muted-foreground animate-spin" />
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground">Loading monitors…</p>
+              <p className="text-xs text-muted-foreground">Fetching monitoring groups, hosts, and supplements.</p>
+            </div>
+          </div>
+        )}
+
+        {!groupsLoading && allHosts.length === 0 && (
           <div className="grid grid-cols-5 gap-0 divide-x divide-border">
             {HOST_OVERVIEW_TILES.map(check => (
               <div key={check.id} className="px-4 py-4 flex flex-col items-center text-center gap-2">
