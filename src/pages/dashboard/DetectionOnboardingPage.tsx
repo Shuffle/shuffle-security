@@ -1365,7 +1365,7 @@ const DetectionOnboardingPage = () => {
           >
             Detection Setup
           </Typography>
-          <WebhookActiveChip />
+          
         </Box>
         <Typography sx={{ color: 'hsl(var(--muted-foreground))' }}>
           Get your detection pipelines running in three simple steps.{' '}
