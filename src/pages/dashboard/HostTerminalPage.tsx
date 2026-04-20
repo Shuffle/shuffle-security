@@ -476,18 +476,9 @@ const HostTerminalPage = () => {
     );
   }
 
-  if (hostsLoaded && !hostState?.hostname && !resolvedHost) {
-    return (
-      <div className="flex flex-col h-[calc(100vh-4rem)] items-center justify-center gap-4 text-muted-foreground">
-        <ShieldX size={32} className="text-destructive" />
-        <span className="text-base font-medium text-foreground">Host not found</span>
-        <span className="text-sm max-w-md text-center">This host may have been removed or is no longer part of any monitoring group.</span>
-        <Button variant="outline" size="sm" onClick={() => navigate('/monitors')}>
-          <ArrowLeft size={14} className="mr-2" /> Back to Monitors
-        </Button>
-      </div>
-    );
-  }
+  // Note: even if the host UUID/hostname doesn't resolve, we still render the
+  // full terminal UI so the user can pivot to another host via the switcher in
+  // the header. Commands sent to an unknown host will simply fail.
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)]">
