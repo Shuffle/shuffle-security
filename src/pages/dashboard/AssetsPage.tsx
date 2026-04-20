@@ -21,10 +21,13 @@ import { setDatastoreItem, DatastoreItem } from '@/services/datastore';
 import { ASSET_CATEGORIES, ASSET_CATEGORY_BY_ID, LEGACY_ASSETS_KEY, AssetCategory } from '@/config/assetCategories';
 import { CreateAssetDialog } from '@/components/assets/CreateAssetDialog';
 import { OCSFDeviceInventory, DEVICE_TYPES, RISK_LEVELS } from '@/config/ocsfAssetSchema';
+import { HostDetailPanel } from '@/components/monitors/HostDetailPanel';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 const DEFAULT_TAB = 'mobile';
+const SENSORS_KEY = 'shuffle-security_sensors';
 
 const deviceIcon = (typeId: number, size = 18) => {
   switch (typeId) {
@@ -129,8 +132,35 @@ const AssetsPage = () => {
   useEffect(() => {
     const cat = ASSET_CATEGORY_BY_ID[activeTab];
     if (cat) fetchKey(cat.datastoreKey);
-    if (activeTab === 'mobile') fetchKey(LEGACY_ASSETS_KEY);
+    if (activeTab === 'mobile') {
+      fetchKey(LEGACY_ASSETS_KEY);
+      fetchKey(SENSORS_KEY);
+    }
   }, [activeTab, fetchKey]);
+
+  // Parse sensors (host monitors) for the mobile tab — fed straight into HostDetailPanel.
+  const sensorHosts = useMemo(() => {
+    if (activeTab !== 'mobile') return [];
+    const items = states[SENSORS_KEY]?.items || [];
+    return items
+      .map(it => {
+        try {
+          const v = typeof it.value === 'string' ? JSON.parse(it.value) : it.value;
+          if (!v || typeof v !== 'object') return null;
+          return { key: it.key, host: v as Record<string, unknown> };
+        } catch { return null; }
+      })
+      .filter(Boolean) as { key: string; host: Record<string, unknown> }[];
+  }, [activeTab, states]);
+
+  const [expandedSensors, setExpandedSensors] = useState<Set<string>>(new Set());
+  const toggleSensor = useCallback((k: string) => {
+    setExpandedSensors(prev => {
+      const next = new Set(prev);
+      if (next.has(k)) next.delete(k); else next.add(k);
+      return next;
+    });
+  }, []);
 
   // Parse only what's loaded for the active tab
   const visibleAssets = useMemo(() => {
@@ -187,7 +217,10 @@ const AssetsPage = () => {
   const handleRefreshActive = useCallback(() => {
     if (!activeCategory) return;
     refetch(activeCategory.datastoreKey);
-    if (activeTab === 'mobile') refetch(LEGACY_ASSETS_KEY);
+    if (activeTab === 'mobile') {
+      refetch(LEGACY_ASSETS_KEY);
+      refetch(SENSORS_KEY);
+    }
   }, [activeCategory, activeTab, refetch]);
 
   return (
@@ -277,7 +310,63 @@ const AssetsPage = () => {
         />
       </Box>
 
-      {/* Loading initial */}
+      {/* Sensors (host monitors) — only on the Mobile/Endpoints tab. */}
+      {activeTab === 'mobile' && sensorHosts.length > 0 && (() => {
+        const q = search.trim().toLowerCase();
+        const filtered = q
+          ? sensorHosts.filter(({ host }) =>
+              String(host.hostname || '').toLowerCase().includes(q) ||
+              String(host.os || '').toLowerCase().includes(q) ||
+              String(host.serial || '').toLowerCase().includes(q),
+            )
+          : sensorHosts;
+        return (
+          <Box sx={{ mb: 4 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Host Monitors</Typography>
+              <Chip label={filtered.length} size="small" sx={{ height: 18, fontSize: '0.65rem' }} />
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                from <code>{SENSORS_KEY}</code>
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {filtered.map(({ key, host }) => {
+                const isOpen = expandedSensors.has(key);
+                const hostname = String(host.hostname || key);
+                const os = String(host.os || '—');
+                const arch = String(host.arch || '');
+                return (
+                  <Card key={key} variant="outlined">
+                    <Box
+                      onClick={() => toggleSensor(key)}
+                      sx={{
+                        display: 'flex', alignItems: 'center', gap: 1,
+                        px: 2, py: 1.25, cursor: 'pointer',
+                        '&:hover': { bgcolor: 'action.hover' },
+                      }}
+                    >
+                      {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                      <Laptop size={16} className="text-muted-foreground" />
+                      <Typography variant="body2" sx={{ fontWeight: 600, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {hostname}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: 'text.secondary', fontFamily: 'monospace' }}>
+                        {os}{arch ? ` / ${arch}` : ''}
+                      </Typography>
+                    </Box>
+                    {isOpen && (
+                      <Box sx={{ px: 0, pb: 0 }}>
+                        <HostDetailPanel host={host as any} variant="inline" />
+                      </Box>
+                    )}
+                  </Card>
+                );
+              })}
+            </Box>
+          </Box>
+        );
+      })()}
+
       {activeLoading && visibleAssets.length === 0 && (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 10 }}>
           <CircularProgress size={32} />
