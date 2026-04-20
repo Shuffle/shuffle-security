@@ -137,9 +137,17 @@ const HostTerminalPage = () => {
   const [hostSearchQuery, setHostSearchQuery] = useState('');
   const [hostSwitcherOpen, setHostSwitcherOpen] = useState(false);
 
-  // Resolve host info from location.state first, then fall back to allHosts lookup
-  const resolvedHost = allHosts.find(h => h.uuid === hostUuid);
-  const hostname = hostState?.hostname || resolvedHost?.hostname || (hostsLoaded ? 'Unknown Host' : '');
+  // Resolve host info from location.state first, then fall back to allHosts lookup.
+  // Match by UUID first, then by hostname (with tolerant domain-suffix stripping)
+  // so deep links like /monitors/FRIKKYS-MACBOOK-PRO/terminal still resolve.
+  const stripDomain = (h: string) => h.toLowerCase().trim().replace(/\.(local|lan|home|internal|corp)$/i, '');
+  const idLower = (hostUuid || '').toLowerCase().trim();
+  const idStripped = stripDomain(hostUuid || '');
+  const resolvedHost =
+    allHosts.find(h => h.uuid === hostUuid) ||
+    allHosts.find(h => (h.hostname || '').toLowerCase().trim() === idLower) ||
+    allHosts.find(h => stripDomain(h.hostname || '') === idStripped);
+  const hostname = hostState?.hostname || resolvedHost?.hostname || hostUuid || (hostsLoaded ? 'Unknown Host' : '');
   const groupName = hostState?.groupName || resolvedHost?.groupName || '';
   const mode = hostState?.mode || resolvedHost?.mode || 'full';
   const isFull = mode === 'full';
