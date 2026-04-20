@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -214,6 +214,7 @@ const createSensorGroupEnv = async (name: string, allEnvs: OrbEnvironment[]): Pr
 const VulnAssetsPage = () => {
   usePageMeta({ title: 'Assets — Vulnerabilities', description: 'Monitor host compliance and security posture' });
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [addHostOpen, setAddHostOpen] = useState(false);
   const [addHostStep, setAddHostStep] = useState<'checks' | 'deploy'>('checks');
@@ -792,6 +793,17 @@ const VulnAssetsPage = () => {
     setAddHostOpen(true);
     loadGroups();
   };
+
+  // Auto-open Add Host dialog when ?add_host=true is present in the URL
+  useEffect(() => {
+    if (searchParams.get('add_host') === 'true' && !addHostOpen) {
+      handleOpenAddHost();
+      const next = new URLSearchParams(searchParams);
+      next.delete('add_host');
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const handleCreateGroup = async () => {
     if (!newGroupName.trim()) return;

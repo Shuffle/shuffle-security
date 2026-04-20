@@ -276,7 +276,7 @@ const AuthenticatedVulnerabilitiesView = () => {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button size="sm" className="gap-1.5" onClick={() => navigate('/monitors')}>
+                <Button size="sm" className="gap-1.5" onClick={() => navigate('/monitors?add_host=true')}>
                   <Plus size={14} />
                   Add Source
                 </Button>
@@ -379,7 +379,7 @@ const AuthenticatedVulnerabilitiesView = () => {
           <p className="text-xs text-muted-foreground/70 mb-4 max-w-sm mx-auto">
             Supported: VMS tools (Qualys, Tenable, Rapid7), GitHub, Docker, Asset & IAM platforms
           </p>
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => navigate('/monitors')}>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => navigate('/monitors?add_host=true')}>
             <Plus size={14} />
             Add Source
           </Button>
