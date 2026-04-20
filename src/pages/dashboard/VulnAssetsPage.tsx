@@ -26,6 +26,7 @@ import { toast } from 'sonner';
 import { getApiUrl, getAuthHeader, API_CONFIG } from '@/config/api';
 import { DEFAULT_AGENT_PERMISSIONS } from '@/hooks/useAgentPermissions';
 import { fetchHostSupplements, mergeHosts } from '@/lib/mergeMonitorHosts';
+import { HostDetailPanel } from '@/components/monitors/HostDetailPanel';
 
 const OsIcon = ({ os, size = 14, className = '' }: { os: string; size?: number; className?: string }) => {
   const lower = (os || '').toLowerCase();
