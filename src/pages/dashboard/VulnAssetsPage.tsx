@@ -590,15 +590,16 @@ const VulnAssetsPage = () => {
     // Don't remove from actionExecuting immediately — keep popover open to show debug info.
   };
 
-  // Aggregate all hosts across all sensor groups. Dedup by uuid when present,
-  // otherwise fall back to `groupId::hostname` so hosts without uuid (or hosts
-  // that ended up sharing a uuid via the sensors-datastore merge) still render.
+  // Aggregate all hosts across all sensor groups. Dedup by composite key:
+  // hostname + arch + sensor group. UUID alone is unreliable since the same
+  // physical host can appear with different uuids across env/sensor records.
   const allHostsRaw = Array.from(
     groups.flatMap(g => g.hosts.map(h => ({ ...h, groupName: g.name, groupId: g.id })))
       .reduce((map, h) => {
-        const key = (h.uuid && String(h.uuid).trim())
-          ? `uuid:${h.uuid}`
-          : `gh:${h.groupId}::${(h.hostname || '').toLowerCase()}`;
+        const hostname = (h.hostname || '').toLowerCase().trim();
+        const arch = String((h as any).arch || '').toLowerCase().trim();
+        const group = String(h.groupId || '').toLowerCase().trim();
+        const key = `${hostname}::${arch}::${group}`;
         if (!map.has(key)) map.set(key, h);
         return map;
       }, new Map<string, any>())
