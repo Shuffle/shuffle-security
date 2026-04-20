@@ -1539,7 +1539,7 @@ const VulnAssetsPage = () => {
                           <FileCode size={14} className="text-muted-foreground" />
                           <span className="text-xs font-semibold text-foreground">Code Package Scanner</span>
                           {Array.isArray(host.code_scanner) && host.code_scanner.length > 0 && (
-                            <span className="text-[0.65rem] text-muted-foreground">({host.code_scanner.length} projects)</span>
+                            <span className="text-[0.65rem] text-muted-foreground">({host.code_scanner.length} projects, {host.code_scanner.reduce((sum, p) => sum + (p.packages?.length || 0), 0)} packages)</span>
                           )}
                         </div>
                         {!Array.isArray(host.code_scanner) || host.code_scanner.length === 0 ? (
