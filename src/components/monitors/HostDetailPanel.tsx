@@ -318,7 +318,7 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
             <FileCode size={14} className="text-muted-foreground" />
             <span className="text-xs font-semibold text-foreground">Code Package Scanner</span>
             {codeScanCount > 0 && (
-              <span className="text-[0.65rem] text-muted-foreground">({codeScanCount} projects)</span>
+              <span className="text-[0.65rem] text-muted-foreground">({codeScanCount} projects, {codeScanPackageCount} packages)</span>
             )}
           </button>
         ) : (
@@ -326,7 +326,7 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
             <FileCode size={14} className="text-muted-foreground" />
             <span className="text-xs font-semibold text-foreground">Code Package Scanner</span>
             {codeScanCount > 0 && (
-              <span className="text-[0.65rem] text-muted-foreground">({codeScanCount} projects)</span>
+              <span className="text-[0.65rem] text-muted-foreground">({codeScanCount} projects, {codeScanPackageCount} packages)</span>
             )}
           </div>
         )}
