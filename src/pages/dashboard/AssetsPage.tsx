@@ -22,7 +22,7 @@ import { ASSET_CATEGORIES, ASSET_CATEGORY_BY_ID, LEGACY_ASSETS_KEY, AssetCategor
 import { CreateAssetDialog } from '@/components/assets/CreateAssetDialog';
 import { OCSFDeviceInventory, DEVICE_TYPES, RISK_LEVELS } from '@/config/ocsfAssetSchema';
 import { HostDetailPanel } from '@/components/monitors/HostDetailPanel';
-import { MonitorHostList } from '@/components/monitors/MonitorHostList';
+import { MonitorHostTable } from '@/components/monitors/MonitorHostTable';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -355,7 +355,7 @@ const AssetsPage = () => {
                 from <code>{SENSORS_KEY}</code>
               </Typography>
             </Box>
-            <MonitorHostList hosts={filtered.map(s => s.host as any)} />
+            <MonitorHostTable hosts={filtered.map(s => s.host as any)} />
           </Box>
         );
       })()}
