@@ -65,12 +65,17 @@ const MonitorDetailPage = () => {
       let envHost: SensorHost | null = null;
       let envGroupName = '';
       const decodedId = id ? decodeURIComponent(id) : '';
-      const idLower = decodedId.toLowerCase();
+      const idLower = decodedId.toLowerCase().trim();
+      // Strip common domain suffixes for tolerant matching (matches list-page display behavior)
+      const stripDomain = (h: string) => h.toLowerCase().trim().replace(/\.(local|lan|home|internal|corp)$/i, '');
+      const idStripped = stripDomain(decodedId);
+
       for (const env of envs) {
         const hosts: SensorHost[] = Array.isArray(env.sensor_hosts) ? env.sensor_hosts : [];
-        const found = hosts.find((h: SensorHost) =>
-          h.uuid === decodedId || (h.hostname || '').toLowerCase() === idLower,
-        );
+        const found = hosts.find((h: SensorHost) => {
+          const hn = (h.hostname || '').toLowerCase().trim();
+          return h.uuid === decodedId || hn === idLower || stripDomain(hn) === idStripped;
+        });
         if (found) {
           envHost = found;
           envGroupName = env.Name || '';
@@ -78,18 +83,35 @@ const MonitorDetailPage = () => {
         }
       }
 
-      if (!envHost) {
-        setError('Host not found');
-        setLoading(false);
-        return;
-      }
-
-      // 2) Cross-load shuffle-security_sensors + shuffle-security_assets and
-      //    merge by hostname (sensors > assets > env).
+      // 2) Cross-load shuffle-security_sensors + shuffle-security_assets.
+      //    Hosts may exist in sensors/assets without an env stub — fall back to
+      //    those records when the env lookup fails.
       const supplements = await fetchHostSupplements();
       if (supplements.errors.length) {
         console.warn('[MonitorDetail] Host supplement load issues:', supplements.errors);
       }
+
+      if (!envHost) {
+        // Try to locate by hostname in the sensors/assets datastores directly.
+        const findInMap = (map: Map<string, Record<string, unknown>>) => {
+          if (map.has(idLower)) return map.get(idLower)!;
+          if (map.has(idStripped)) return map.get(idStripped)!;
+          for (const [key, val] of map.entries()) {
+            if (stripDomain(key) === idStripped) return val;
+          }
+          return null;
+        };
+        const fromSensors = findInMap(supplements.sensorsByHost);
+        const fromAssets = findInMap(supplements.assetsByHost);
+        const fallback = fromSensors || fromAssets;
+        if (!fallback) {
+          setError('Host not found');
+          setLoading(false);
+          return;
+        }
+        envHost = { hostname: decodedId, ...(fallback as Record<string, unknown>) } as unknown as SensorHost;
+      }
+
       const merged = mergeHost(envHost as unknown as Record<string, unknown>, supplements.sensorsByHost, supplements.assetsByHost) as unknown as SensorHost;
 
       setHost(merged);
