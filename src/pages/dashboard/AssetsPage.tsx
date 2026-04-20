@@ -72,11 +72,12 @@ interface ParsedAsset {
 const parseItem = (item: DatastoreItem, category: AssetCategory): ParsedAsset | null => {
   let value: Record<string, unknown> = {};
   try {
-    value = typeof item.value === 'string' ? JSON.parse(item.value) : (item.value as Record<string, unknown>);
+    const v = typeof item.value === 'string' ? JSON.parse(item.value) : item.value;
+    value = (v && typeof v === 'object') ? (v as Record<string, unknown>) : { raw: v };
   } catch {
-    return null;
+    // Non-JSON string — keep as raw so we still surface the entry instead of dropping it.
+    value = { raw: item.value };
   }
-  if (!value || typeof value !== 'object') return null;
 
   // OCSF device shape
   const device = value as unknown as OCSFDeviceInventory;
