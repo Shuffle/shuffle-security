@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/context/AuthContext';
 import { getApiUrl, getAuthHeader } from '@/config/api';
+import { useWorkflows } from '@/hooks/useWorkflows';
 
 const SEVERITY_COLORS: Record<VulnSeverity, string> = {
   critical: 'bg-red-500/10 text-red-500 border-red-500/20',
@@ -147,7 +148,13 @@ const AuthenticatedVulnerabilitiesView = () => {
   const [aiScanLoading, setAiScanLoading] = useState(false);
   const [aiScanResult, setAiScanResult] = useState<string | null>(null);
   const [enablingAutomation, setEnablingAutomation] = useState(false);
-  const [automationEnabled, setAutomationEnabled] = useState(false);
+
+  const { data: workflows, refetch: refetchWorkflows } = useWorkflows();
+  const vulnComparisonWorkflow = (workflows || []).find(
+    w => (w.name || '').toLowerCase() === 'vulnerability comparison'
+  );
+  const automationEnabled = !!vulnComparisonWorkflow;
+  const navigate = useNavigate();
 
   const handleEnableAutomation = useCallback(async () => {
     setEnablingAutomation(true);
@@ -159,14 +166,14 @@ const AuthenticatedVulnerabilitiesView = () => {
         body: JSON.stringify({ label: 'vulnerability_comparison' }),
       });
       if (!res.ok) throw new Error('Failed');
-      setAutomationEnabled(true);
-      toast.success('Automated vulnerability remediation enabled');
+      await refetchWorkflows();
+      toast.success('Vulnerability Comparison workflow enabled');
     } catch {
-      toast.error('Failed to enable automated remediation');
+      toast.error('Failed to enable Vulnerability Comparison workflow');
     } finally {
       setEnablingAutomation(false);
     }
-  }, []);
+  }, [refetchWorkflows]);
 
   const { vulnerabilities, severityCounts, isLoading, isRefreshing, refresh } = useVulnerabilities();
   const { authenticatedApps } = useAppAuth();
@@ -269,7 +276,7 @@ const AuthenticatedVulnerabilitiesView = () => {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button size="sm" className="gap-1.5">
+                <Button size="sm" className="gap-1.5" onClick={() => navigate('/monitors')}>
                   <Plus size={14} />
                   Add Source
                 </Button>
@@ -372,7 +379,7 @@ const AuthenticatedVulnerabilitiesView = () => {
           <p className="text-xs text-muted-foreground/70 mb-4 max-w-sm mx-auto">
             Supported: VMS tools (Qualys, Tenable, Rapid7), GitHub, Docker, Asset & IAM platforms
           </p>
-          <Button variant="outline" size="sm" className="gap-1.5">
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => navigate('/monitors')}>
             <Plus size={14} />
             Add Source
           </Button>
