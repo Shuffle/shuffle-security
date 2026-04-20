@@ -402,7 +402,7 @@ const AssetsPage = () => {
               </>
             )}
             <Button variant="contained" startIcon={<Plus size={16} />} onClick={() => setCreateOpen(true)}>
-              Add Asset
+              {activeTab === 'identity_users' ? 'Add User' : 'Add Device'}
             </Button>
           </CardContent>
         </Card>
