@@ -487,7 +487,7 @@ export const MonitorHostTable = ({ hosts, onRefresh }: MonitorHostTableProps) =>
                         className="text-[0.65rem] text-muted-foreground/70 font-mono truncate ml-[30px] cursor-help"
                         title={raw}
                       >
-                        SN: {display}
+                        {display}
                       </span>
                     );
                   })()}
