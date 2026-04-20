@@ -551,9 +551,10 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                       component={Link}
                       to={item.path!}
                       onClick={() => {
-                        if (!expandedItems.includes(item.label)) {
-                          handleExpand(item.label);
-                        }
+                        // Always switch the expanded group to this item synchronously
+                        // (avoids a brief flicker where the previously-open group stays
+                        // open while the route changes).
+                        setExpandedItems([item.label]);
                       }}
                       sx={{
                         borderRadius: 1,
