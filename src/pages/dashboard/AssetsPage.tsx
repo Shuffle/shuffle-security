@@ -21,6 +21,8 @@ import { setDatastoreItem, DatastoreItem } from '@/services/datastore';
 import { ASSET_CATEGORIES, ASSET_CATEGORY_BY_ID, LEGACY_ASSETS_KEY, AssetCategory } from '@/config/assetCategories';
 import { CreateAssetDialog } from '@/components/assets/CreateAssetDialog';
 import { OCSFDeviceInventory, DEVICE_TYPES, RISK_LEVELS } from '@/config/ocsfAssetSchema';
+import { HostDetailPanel } from '@/components/monitors/HostDetailPanel';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
