@@ -163,7 +163,7 @@ const AuthenticatedVulnerabilitiesView = () => {
         method: 'POST',
         credentials: 'include',
         headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ label: 'vulnerability_comparison' }),
+        body: JSON.stringify({ label: 'vulnerability_comparison', name: 'Vulnerability Comparison' }),
       });
       if (!res.ok) throw new Error('Failed');
       await refetchWorkflows();
