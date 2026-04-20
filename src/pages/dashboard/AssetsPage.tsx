@@ -22,6 +22,7 @@ import { ASSET_CATEGORIES, ASSET_CATEGORY_BY_ID, LEGACY_ASSETS_KEY, AssetCategor
 import { CreateAssetDialog } from '@/components/assets/CreateAssetDialog';
 import { OCSFDeviceInventory, DEVICE_TYPES, RISK_LEVELS } from '@/config/ocsfAssetSchema';
 import { HostDetailPanel } from '@/components/monitors/HostDetailPanel';
+import { MonitorHostList } from '@/components/monitors/MonitorHostList';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 
