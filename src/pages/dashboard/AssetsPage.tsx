@@ -245,7 +245,7 @@ const AssetsPage = () => {
             </IconButton>
           </Tooltip>
           <Button variant="contained" size="small" startIcon={<Plus size={16} />} onClick={() => setCreateOpen(true)} sx={{ height: 36 }}>
-            Add Asset
+            {activeTab === 'identity_users' ? 'Add User' : 'Add Device'}
           </Button>
         </Box>
       </Box>
