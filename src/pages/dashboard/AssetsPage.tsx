@@ -217,7 +217,10 @@ const AssetsPage = () => {
   const handleRefreshActive = useCallback(() => {
     if (!activeCategory) return;
     refetch(activeCategory.datastoreKey);
-    if (activeTab === 'mobile') refetch(LEGACY_ASSETS_KEY);
+    if (activeTab === 'mobile') {
+      refetch(LEGACY_ASSETS_KEY);
+      refetch(SENSORS_KEY);
+    }
   }, [activeCategory, activeTab, refetch]);
 
   return (
