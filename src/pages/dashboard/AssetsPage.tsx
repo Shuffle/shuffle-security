@@ -268,10 +268,12 @@ const AssetsPage = () => {
             const state = states[cat.datastoreKey];
             const loading = state?.isLoading;
             const count = state?.hasFetched ? state.items.length : null;
+            const isEnabled = cat.id === 'mobile' || cat.id === 'identity_users';
             return (
               <Tab
                 key={cat.id}
                 value={cat.id}
+                disabled={!isEnabled}
                 label={
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                     {loading ? <CircularProgress size={12} /> : <Icon size={14} />}
