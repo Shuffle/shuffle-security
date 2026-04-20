@@ -1352,7 +1352,7 @@ const DetectionOnboardingPage = () => {
   };
 
   return (
-    <Box sx={{ p: 4, maxWidth: 1400, mx: 'auto' }}>
+    <Box sx={{ p: 4, maxWidth: 1400, width: '100%', mx: 'auto' }}>
       {/* Header */}
       <Box sx={{ mb: 4 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>

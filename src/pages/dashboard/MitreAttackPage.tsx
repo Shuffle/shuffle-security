@@ -172,7 +172,7 @@ const MitreAttackPage = () => {
   const totalSubTechniques = techniques.filter((t) => t.isSubtechnique).length;
 
   return (
-    <Box sx={{ p: 4, maxWidth: 1400, mx: 'auto' }}>
+    <Box sx={{ p: 4, maxWidth: 1400, width: '100%', mx: 'auto' }}>
       {/* Header */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
         <Box>

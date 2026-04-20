@@ -184,7 +184,7 @@ const OrgPreferencesPage = () => {
   const showAutomation = useShowAutomation();
 
   return (
-    <Box sx={{ p: 4, maxWidth: 900, mx: 'auto' }}>
+    <Box sx={{ p: 4, maxWidth: 900, width: '100%', mx: 'auto' }}>
       <Typography variant="h4" sx={{ fontWeight: 600, mb: 1, color: 'hsl(var(--foreground))' }}>
         Tenant Preferences
       </Typography>

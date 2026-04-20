@@ -593,7 +593,7 @@ const RulesPage = () => {
   };
 
   return (
-    <Box sx={{ p: 4, maxWidth: 1400, mx: 'auto' }}>
+    <Box sx={{ p: 4, maxWidth: 1400, width: '100%', mx: 'auto' }}>
       {/* Webhook status */}
       <Box sx={{ mb: 3 }}>
         <WebhookStatusBanner />

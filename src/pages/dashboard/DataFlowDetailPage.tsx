@@ -289,7 +289,7 @@ const DataFlowDetailPage = () => {
   const nextFlow = currentIdx < DEFAULT_USECASES.length - 1 ? DEFAULT_USECASES[currentIdx + 1] : null;
 
   return (
-    <Box sx={{ maxWidth: 860, mx: 'auto', pb: 6 }}>
+    <Box sx={{ maxWidth: 860, width: '100%', mx: 'auto', pb: 6 }}>
       {/* Back nav */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
         <Button

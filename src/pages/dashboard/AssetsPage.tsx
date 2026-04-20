@@ -226,7 +226,7 @@ const AssetsPage = () => {
   }, [activeCategory, activeTab, refetch]);
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1400, mx: 'auto' }}>
+    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1400, width: '100%', mx: 'auto' }}>
       {/* Header */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
         <Box>

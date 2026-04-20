@@ -691,7 +691,7 @@ const DashboardPage = () => {
 
   return (
     <>
-    <Box sx={{ maxWidth: 1100, mx: 'auto', p: { xs: 2, sm: 3, md: 4 } }}>
+    <Box sx={{ maxWidth: 1100, width: '100%', mx: 'auto', p: { xs: 2, sm: 3, md: 4 } }}>
       {/* Header */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>

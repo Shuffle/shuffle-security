@@ -469,7 +469,7 @@ const UsersPage = ({ embedded }: { embedded?: boolean }) => {
   const adminCount = users.filter(u => u.role === 'admin').length;
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1400, mx: 'auto' }}>
+    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1400, width: '100%', mx: 'auto' }}>
       {/* Tenant Admin Header */}
     {!embedded && (
       <>
