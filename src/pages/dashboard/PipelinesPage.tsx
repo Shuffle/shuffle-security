@@ -37,7 +37,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 import { getApiUrl, getAuthHeader, API_CONFIG } from '@/config/api';
 import { Link } from 'react-router-dom';
 import { askAI } from '@/services/ai';
-import WebhookStatusBanner, { WebhookActiveChip } from '@/components/detection/WebhookStatusBanner';
+import WebhookStatusBanner from '@/components/detection/WebhookStatusBanner';
 
 interface Environment {
   id: string;
