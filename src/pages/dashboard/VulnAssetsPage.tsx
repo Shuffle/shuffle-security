@@ -590,10 +590,18 @@ const VulnAssetsPage = () => {
     // Don't remove from actionExecuting immediately — keep popover open to show debug info.
   };
 
-  // Aggregate all hosts across all sensor groups, deduplicated by uuid
+  // Aggregate all hosts across all sensor groups. Dedup by uuid when present,
+  // otherwise fall back to `groupId::hostname` so hosts without uuid (or hosts
+  // that ended up sharing a uuid via the sensors-datastore merge) still render.
   const allHostsRaw = Array.from(
     groups.flatMap(g => g.hosts.map(h => ({ ...h, groupName: g.name, groupId: g.id })))
-      .reduce((map, h) => { if (!map.has(h.uuid)) map.set(h.uuid, h); return map; }, new Map<string, any>())
+      .reduce((map, h) => {
+        const key = (h.uuid && String(h.uuid).trim())
+          ? `uuid:${h.uuid}`
+          : `gh:${h.groupId}::${(h.hostname || '').toLowerCase()}`;
+        if (!map.has(key)) map.set(key, h);
+        return map;
+      }, new Map<string, any>())
       .values()
   );
   const defaultSort = (a: any, b: any) => {
