@@ -100,8 +100,32 @@ export const fetchHostSupplements = async (): Promise<SupplementResult> => {
 };
 
 /**
+ * Fields where /api/v1/environments is authoritative when its checkin is more
+ * recent than the sensors datastore record. The environments API receives
+ * real-time updates from orborus, so its values for these specific fields are
+ * fresher than the periodically-snapshotted sensors datastore.
+ */
+const ENV_FRESH_FIELDS = ['arch', 'hostname', 'checkin', 'uuid'] as const;
+
+const toCheckinNumber = (v: unknown): number => {
+  if (typeof v === 'number' && Number.isFinite(v)) return v;
+  if (typeof v === 'string') {
+    const n = Number(v);
+    if (Number.isFinite(n)) return n;
+    const t = Date.parse(v);
+    if (Number.isFinite(t)) return Math.floor(t / 1000);
+  }
+  return 0;
+};
+
+/**
  * Merge a single environment host stub with its sensor + asset records.
  * Precedence (highest → lowest): sensors > assets > environments.
+ *
+ * Exception: when the env stub's `checkin` is newer than the sensor record's
+ * `checkin`, the env values for arch/hostname/checkin/uuid take precedence
+ * (the environments API gets these updated more frequently than the sensors
+ * datastore snapshot).
  *
  * Undefined values from higher-precedence sources do NOT override lower ones,
  * so partial records still benefit from data filled in further down the chain.
@@ -129,6 +153,19 @@ export const mergeHost = <T extends Record<string, unknown>>(
   if (sensor) {
     for (const [k, v] of Object.entries(sensor)) {
       if (v !== undefined) merged[k] = v;
+    }
+  }
+
+  // Env-fresh override: if env checkin is newer than sensor checkin, prefer
+  // env values for the small set of fields the environments API keeps current.
+  const envCheckin = toCheckinNumber(envHost.checkin);
+  const sensorCheckin = sensor ? toCheckinNumber(sensor.checkin) : 0;
+  if (envCheckin > sensorCheckin) {
+    for (const k of ENV_FRESH_FIELDS) {
+      const v = envHost[k];
+      if (v !== undefined && v !== null && v !== '') {
+        merged[k] = v;
+      }
     }
   }
 
