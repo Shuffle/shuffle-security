@@ -568,6 +568,16 @@ const DashboardPage = () => {
 
     const steps: SetupStep[] = [
       {
+        id: 'setup-endpoints',
+        title: 'Set up host monitors',
+        description: 'Deploy lightweight host monitors to check compliance, encryption, and posture.',
+        icon: <Monitor size={20} />,
+        status: 'not-started',
+        ctaLabel: 'Set Up',
+        ctaPath: '/monitors',
+        priority: 1,
+      },
+      {
         id: 'activate-apps',
         title: 'Activate apps',
         description: 'Browse the app catalog and activate the tools your team uses.',
@@ -575,8 +585,8 @@ const DashboardPage = () => {
         status: hasActivatedApps ? 'complete' : 'not-started',
         ctaLabel: 'Browse Apps',
         ctaPath: '/apps',
-        priority: 1,
-        detail: hasActivatedApps ? undefined : 'Start here — activate at least one app to unlock other steps.',
+        priority: 2,
+        detail: hasActivatedApps ? undefined : 'Activate at least one app to unlock other steps.',
       },
       {
         id: 'authenticate-apps',
@@ -590,7 +600,7 @@ const DashboardPage = () => {
         status: hasAuthenticatedApps ? 'complete' : hasActivatedApps ? 'action-needed' : 'not-started',
         ctaLabel: 'Set Up Auth',
         ctaPath: '/apps',
-        priority: 2,
+        priority: 3,
         detail: hasActivatedApps && !hasAuthenticatedApps
           ? `${activatedApps.length} activated — add credentials to connect.`
           : undefined,
@@ -599,24 +609,12 @@ const DashboardPage = () => {
         id: 'enable-ingest',
         title: 'Enable incident ingestion',
         description: hasIngest
-          ? 'Incident ingestion workflow is configured and pulling data.'
+          ? 'Incident ingestion is configured and pulling data.'
           : 'Set up automatic ingestion to pull incidents from your connected tools.',
         icon: <ArrowDownToLine size={20} />,
         status: hasIngest ? 'complete' : hasAuthenticatedApps ? 'action-needed' : 'not-started',
         ctaLabel: 'Configure',
         ctaPath: '/incidents',
-        priority: 3,
-      },
-      {
-        id: 'setup-detection',
-        title: 'Set up log ingestion',
-        description: hasDetection
-          ? 'Log ingestion is running and forwarding events to detection.'
-          : 'Set up log ingestion to collect logs, network traffic, and endpoint events.',
-        icon: <Radar size={20} />,
-        status: hasDetection ? 'complete' : 'not-started',
-        ctaLabel: 'Set Up',
-        ctaPath: '/detection',
         priority: 4,
       },
       {
@@ -632,23 +630,20 @@ const DashboardPage = () => {
         priority: 5,
       },
       {
-        id: 'setup-endpoints',
-        title: 'Set up endpoint monitoring',
-        description: 'Deploy lightweight host monitors to check compliance, encryption, and posture.',
-        icon: <Monitor size={20} />,
-        status: 'not-started',
+        id: 'setup-detection',
+        title: 'Set up log ingestion',
+        description: hasDetection
+          ? 'Log ingestion is running and forwarding events to detection.'
+          : 'Set up log ingestion to collect logs, network traffic, and endpoint events.',
+        icon: <Radar size={20} />,
+        status: hasDetection ? 'complete' : 'not-started',
         ctaLabel: 'Set Up',
-        ctaPath: '/monitors',
+        ctaPath: '/detection',
         priority: 6,
       },
     ];
-    // Sort: action-needed first, then not-started, then complete
-    const statusOrder = { 'action-needed': 0, 'not-started': 1, 'complete': 2 };
-    steps.sort((a, b) => {
-      const sDiff = statusOrder[a.status] - statusOrder[b.status];
-      if (sDiff !== 0) return sDiff;
-      return a.priority - b.priority;
-    });
+    // Preserve the explicit priority order requested by the user
+    steps.sort((a, b) => a.priority - b.priority);
 
     return steps;
   }, [authenticatedApps, workflows, hasRunningSensor]);
