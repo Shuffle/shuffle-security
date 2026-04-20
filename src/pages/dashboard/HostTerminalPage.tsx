@@ -137,9 +137,17 @@ const HostTerminalPage = () => {
   const [hostSearchQuery, setHostSearchQuery] = useState('');
   const [hostSwitcherOpen, setHostSwitcherOpen] = useState(false);
 
-  // Resolve host info from location.state first, then fall back to allHosts lookup
-  const resolvedHost = allHosts.find(h => h.uuid === hostUuid);
-  const hostname = hostState?.hostname || resolvedHost?.hostname || (hostsLoaded ? 'Unknown Host' : '');
+  // Resolve host info from location.state first, then fall back to allHosts lookup.
+  // Match by UUID first, then by hostname (with tolerant domain-suffix stripping)
+  // so deep links like /monitors/FRIKKYS-MACBOOK-PRO/terminal still resolve.
+  const stripDomain = (h: string) => h.toLowerCase().trim().replace(/\.(local|lan|home|internal|corp)$/i, '');
+  const idLower = (hostUuid || '').toLowerCase().trim();
+  const idStripped = stripDomain(hostUuid || '');
+  const resolvedHost =
+    allHosts.find(h => h.uuid === hostUuid) ||
+    allHosts.find(h => (h.hostname || '').toLowerCase().trim() === idLower) ||
+    allHosts.find(h => stripDomain(h.hostname || '') === idStripped);
+  const hostname = hostState?.hostname || resolvedHost?.hostname || hostUuid || (hostsLoaded ? 'Unknown Host' : '');
   const groupName = hostState?.groupName || resolvedHost?.groupName || '';
   const mode = hostState?.mode || resolvedHost?.mode || 'full';
   const isFull = mode === 'full';
@@ -468,18 +476,9 @@ const HostTerminalPage = () => {
     );
   }
 
-  if (hostsLoaded && !hostState?.hostname && !resolvedHost) {
-    return (
-      <div className="flex flex-col h-[calc(100vh-4rem)] items-center justify-center gap-4 text-muted-foreground">
-        <ShieldX size={32} className="text-destructive" />
-        <span className="text-base font-medium text-foreground">Host not found</span>
-        <span className="text-sm max-w-md text-center">This host may have been removed or is no longer part of any monitoring group.</span>
-        <Button variant="outline" size="sm" onClick={() => navigate('/monitors')}>
-          <ArrowLeft size={14} className="mr-2" /> Back to Monitors
-        </Button>
-      </div>
-    );
-  }
+  // Note: even if the host UUID/hostname doesn't resolve, we still render the
+  // full terminal UI so the user can pivot to another host via the switcher in
+  // the header. Commands sent to an unknown host will simply fail.
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)]">
