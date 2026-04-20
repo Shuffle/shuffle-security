@@ -254,9 +254,11 @@ const AssetsPage = () => {
           onChange={(_, v) => setActiveTab(v)}
           variant="scrollable"
           scrollButtons="auto"
+          slotProps={{ scrollButtons: { sx: { '&.Mui-disabled': { width: 0, display: 'none' } } } }}
           sx={{
             minHeight: 40,
             '& .MuiTabs-flexContainer': { gap: 0 },
+            '& .MuiTabs-scrollButtons.Mui-disabled': { width: 0, display: 'none' },
             '& .MuiTab-root': { minHeight: 40, textTransform: 'none', fontSize: '0.8rem', py: 1, px: 1.5 },
             '& .MuiTab-root:first-of-type': { pl: 0 },
           }}
