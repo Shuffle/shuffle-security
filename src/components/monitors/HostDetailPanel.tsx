@@ -18,6 +18,9 @@ const handleEntityClick = (
   navigate: ReturnType<typeof useNavigate>,
 ) => {
   if (e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1) return; // browser opens new tab
+  // Don't navigate if the user is selecting text
+  const sel = typeof window !== 'undefined' ? window.getSelection() : null;
+  if (sel && sel.toString().length > 0) return;
   e.preventDefault();
   navigate(url);
 };
