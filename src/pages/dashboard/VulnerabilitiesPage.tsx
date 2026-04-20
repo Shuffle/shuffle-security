@@ -146,6 +146,27 @@ const AuthenticatedVulnerabilitiesView = () => {
   const [aiScanOpen, setAiScanOpen] = useState(false);
   const [aiScanLoading, setAiScanLoading] = useState(false);
   const [aiScanResult, setAiScanResult] = useState<string | null>(null);
+  const [enablingAutomation, setEnablingAutomation] = useState(false);
+  const [automationEnabled, setAutomationEnabled] = useState(false);
+
+  const handleEnableAutomation = useCallback(async () => {
+    setEnablingAutomation(true);
+    try {
+      const res = await fetch(getApiUrl('/api/v2/workflows/generate'), {
+        method: 'POST',
+        credentials: 'include',
+        headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ label: 'vulnerability_comparison' }),
+      });
+      if (!res.ok) throw new Error('Failed');
+      setAutomationEnabled(true);
+      toast.success('Automated vulnerability remediation enabled');
+    } catch {
+      toast.error('Failed to enable automated remediation');
+    } finally {
+      setEnablingAutomation(false);
+    }
+  }, []);
 
   const { vulnerabilities, severityCounts, isLoading, isRefreshing, refresh } = useVulnerabilities();
   const { authenticatedApps } = useAppAuth();
