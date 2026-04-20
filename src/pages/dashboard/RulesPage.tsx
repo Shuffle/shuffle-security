@@ -606,7 +606,7 @@ const RulesPage = () => {
             <Typography variant="h4" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
               Detection Rules
             </Typography>
-            <WebhookActiveChip />
+            
           </Box>
           <Typography sx={{ color: 'hsl(var(--muted-foreground))' }}>
             Manage Sigma detection rules for threat hunting and alerting
