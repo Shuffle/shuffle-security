@@ -478,19 +478,6 @@ export const MonitorHostTable = ({ hosts, onRefresh }: MonitorHostTableProps) =>
                     <ChevronRight size={14} className={`text-muted-foreground shrink-0 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
                     <span className="text-sm font-medium text-foreground truncate">{host.hostname}</span>
                   </div>
-                  {host.serial && (() => {
-                    const raw = host.serial.trim();
-                    const snMatch = raw.match(/Serial\s*Number\s*\(?\w*\)?\s*:\s*(\S+)/i);
-                    const display = snMatch ? snMatch[1] : raw.split('\n')[0].trim().substring(0, 24);
-                    return (
-                      <span
-                        className="text-[0.65rem] text-muted-foreground/70 font-mono truncate ml-[30px] cursor-help"
-                        title={raw}
-                      >
-                        {display}
-                      </span>
-                    );
-                  })()}
                 </div>
                 <CheckDot on={hdEncrypted} state={hdState} tip={`hd_encrypted = ${fmtRaw(host.hd_encrypted)}`} />
                 <CheckDot on={screenlockOn} state={screenlockState} tip={`automatic_screen_lock_enabled = ${fmtRaw(host.automatic_screen_lock_enabled)}`} />
