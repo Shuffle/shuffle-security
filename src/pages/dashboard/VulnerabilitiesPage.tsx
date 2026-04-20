@@ -226,21 +226,20 @@ const AuthenticatedVulnerabilitiesView = () => {
             Auto-remediate vulnerabilities by running fixes directly on affected hosts. Tracking and manual workflows are already available below.
           </p>
         </div>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span tabIndex={0}>
-                <Button size="sm" variant="outline" className="gap-1.5 shrink-0" disabled>
-                  <Zap size={14} />
-                  Enable
-                </Button>
-              </span>
-            </TooltipTrigger>
-            <TooltipContent side="left" className="max-w-[220px] text-center">
-              <p className="text-xs">Automated remediation isn't available yet — coming soon.</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <Button
+          size="sm"
+          variant={automationEnabled ? 'secondary' : 'outline'}
+          className="gap-1.5 shrink-0"
+          disabled={enablingAutomation || automationEnabled}
+          onClick={handleEnableAutomation}
+        >
+          {enablingAutomation ? (
+            <Loader2 size={14} className="animate-spin" />
+          ) : (
+            <Zap size={14} />
+          )}
+          {automationEnabled ? 'Enabled' : enablingAutomation ? 'Enabling…' : 'Enable'}
+        </Button>
       </div>
 
       {/* Header */}
