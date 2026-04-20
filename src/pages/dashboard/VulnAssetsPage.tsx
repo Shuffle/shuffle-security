@@ -263,9 +263,6 @@ const VulnAssetsPage = () => {
   const [pendingDisableRce, setPendingDisableRce] = useState<null | { actionId: string; actionName: string; hostname: string; groupName: string; hostUuid: string; isPredefined: boolean }>(null);
   const [customAction, setCustomAction] = useState('');
   const [historyIndex, setHistoryIndex] = useState(-1);
-  const [softwareFilter, setSoftwareFilter] = useState('');
-  const [codeScanFilter, setCodeScanFilter] = useState('');
-  const [expandedCodePaths, setExpandedCodePaths] = useState<Set<string>>(new Set());
 
   // Hydrate actionHistoryMap from localStorage for a single host (called lazily on popover open)
   const hydrateHost = useCallback((hostUuid: string) => {
