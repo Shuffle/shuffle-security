@@ -37,7 +37,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 import { getApiUrl, getAuthHeader, API_CONFIG } from '@/config/api';
 import { Link } from 'react-router-dom';
 import { askAI } from '@/services/ai';
-import WebhookStatusBanner, { WebhookActiveChip } from '@/components/detection/WebhookStatusBanner';
+import WebhookStatusBanner from '@/components/detection/WebhookStatusBanner';
 
 interface Environment {
   id: string;
@@ -777,7 +777,7 @@ Use case: ${aiPrompt}`,
             <Typography variant="h4" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}>
               Tenzir Pipelines
             </Typography>
-            <WebhookActiveChip />
+            
           </Box>
           <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
             Lightweight detection infrastructure — ingest, match, and forward security events without heavy tooling
