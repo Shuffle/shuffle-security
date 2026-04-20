@@ -132,8 +132,35 @@ const AssetsPage = () => {
   useEffect(() => {
     const cat = ASSET_CATEGORY_BY_ID[activeTab];
     if (cat) fetchKey(cat.datastoreKey);
-    if (activeTab === 'mobile') fetchKey(LEGACY_ASSETS_KEY);
+    if (activeTab === 'mobile') {
+      fetchKey(LEGACY_ASSETS_KEY);
+      fetchKey(SENSORS_KEY);
+    }
   }, [activeTab, fetchKey]);
+
+  // Parse sensors (host monitors) for the mobile tab — fed straight into HostDetailPanel.
+  const sensorHosts = useMemo(() => {
+    if (activeTab !== 'mobile') return [];
+    const items = states[SENSORS_KEY]?.items || [];
+    return items
+      .map(it => {
+        try {
+          const v = typeof it.value === 'string' ? JSON.parse(it.value) : it.value;
+          if (!v || typeof v !== 'object') return null;
+          return { key: it.key, host: v as Record<string, unknown> };
+        } catch { return null; }
+      })
+      .filter(Boolean) as { key: string; host: Record<string, unknown> }[];
+  }, [activeTab, states]);
+
+  const [expandedSensors, setExpandedSensors] = useState<Set<string>>(new Set());
+  const toggleSensor = useCallback((k: string) => {
+    setExpandedSensors(prev => {
+      const next = new Set(prev);
+      if (next.has(k)) next.delete(k); else next.add(k);
+      return next;
+    });
+  }, []);
 
   // Parse only what's loaded for the active tab
   const visibleAssets = useMemo(() => {
