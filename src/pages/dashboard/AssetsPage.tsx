@@ -253,7 +253,12 @@ const AssetsPage = () => {
           onChange={(_, v) => setActiveTab(v)}
           variant="scrollable"
           scrollButtons="auto"
-          sx={{ minHeight: 40, '& .MuiTab-root': { minHeight: 40, textTransform: 'none', fontSize: '0.8rem', py: 1, px: 1.5 } }}
+          sx={{
+            minHeight: 40,
+            '& .MuiTabs-flexContainer': { gap: 0 },
+            '& .MuiTab-root': { minHeight: 40, textTransform: 'none', fontSize: '0.8rem', py: 1, px: 1.5 },
+            '& .MuiTab-root:first-of-type': { pl: 0 },
+          }}
         >
           {ASSET_CATEGORIES.map(cat => {
             const Icon = cat.icon;
