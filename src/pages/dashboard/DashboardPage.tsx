@@ -642,13 +642,8 @@ const DashboardPage = () => {
         priority: 6,
       },
     ];
-    // Sort: action-needed first, then not-started, then complete
-    const statusOrder = { 'action-needed': 0, 'not-started': 1, 'complete': 2 };
-    steps.sort((a, b) => {
-      const sDiff = statusOrder[a.status] - statusOrder[b.status];
-      if (sDiff !== 0) return sDiff;
-      return a.priority - b.priority;
-    });
+    // Preserve the explicit priority order requested by the user
+    steps.sort((a, b) => a.priority - b.priority);
 
     return steps;
   }, [authenticatedApps, workflows, hasRunningSensor]);
