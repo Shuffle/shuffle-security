@@ -87,7 +87,7 @@ const navItems: NavResult[] = [
   { type: 'nav', label: 'Automation', path: '/usecases', icon: <Activity size={16} /> },
   { type: 'nav', label: 'Documentation', path: '/docs', icon: <BookOpen size={16} /> },
   { type: 'nav', label: 'Settings', path: '/settings', icon: <SettingsIcon sx={{ fontSize: 16 }} /> },
-  { type: 'nav', label: 'Organizations', path: '/organizations', icon: <LayoutDashboard size={16} /> },
+  { type: 'nav', label: 'Tenants', path: '/organizations', icon: <LayoutDashboard size={16} /> },
 ];
 
 const NOISE_KEYS = new Set([

@@ -101,7 +101,7 @@ export const DashboardLayout = ({ children, defaultCollapsed }: DashboardLayoutP
                   </Box>
                 }
               >
-                Your active organization has changed in another tab. Refresh to sync.
+                Your active tenant has changed in another tab. Refresh to sync.
               </Alert>
             )}
             {children || <Outlet />}

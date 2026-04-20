@@ -177,15 +177,15 @@ const TenantManagement = () => {
             '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)' },
           }}
         >
-          Add suborganization
+          Add sub-tenant
         </Button>
       </Box>
 
-      {/* Current Organization */}
+      {/* Current Tenant */}
       <Paper sx={{ bgcolor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', mb: 3 }}>
         <Box sx={{ p: 2.5, borderBottom: '1px solid hsl(var(--border))' }}>
           <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-            Current Organization
+            Current Tenant
           </Typography>
         </Box>
         <TableContainer>
@@ -205,7 +205,7 @@ const TenantManagement = () => {
               ) : (
                 <TableRow>
                   <TableCell colSpan={4} align="center" sx={{ py: 3 }}>
-                    <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>No active organization</Typography>
+                    <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>No active tenant</Typography>
                   </TableCell>
                 </TableRow>
               )}
@@ -214,12 +214,12 @@ const TenantManagement = () => {
         </TableContainer>
       </Paper>
 
-      {/* Parent Organization (if exists) */}
+      {/* Parent Tenant (if exists) */}
       {parentOrg && (
         <Paper sx={{ bgcolor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', mb: 3 }}>
           <Box sx={{ p: 2.5, borderBottom: '1px solid hsl(var(--border))' }}>
             <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-              Parent Organization
+              Parent Tenant
             </Typography>
           </Box>
           <TableContainer>
@@ -241,7 +241,7 @@ const TenantManagement = () => {
         </Paper>
       )}
 
-      {/* Sub Organizations */}
+      {/* Sub Tenants */}
       <Paper sx={{ bgcolor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', mb: 3 }}>
         <Box
           onClick={() => setShowSubOrgs(!showSubOrgs)}
@@ -255,7 +255,7 @@ const TenantManagement = () => {
           }}
         >
           <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-            Sub Organizations{subOrgs.length > 0 ? ` (${subOrgs.length})` : ''}
+            Sub Tenants{subOrgs.length > 0 ? ` (${subOrgs.length})` : ''}
           </Typography>
           <ExpandMoreIcon sx={{
             color: 'hsl(var(--muted-foreground))',
@@ -271,7 +271,7 @@ const TenantManagement = () => {
           ) : subOrgs.length === 0 ? (
             <Box sx={{ p: 3, textAlign: 'center' }}>
               <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-                No sub-organizations found
+                No sub-tenants found
               </Typography>
             </Box>
           ) : (
@@ -297,7 +297,7 @@ const TenantManagement = () => {
         </Collapse>
       </Paper>
 
-      {/* All Orgs */}
+      {/* All Tenants */}
       <Paper sx={{ bgcolor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
         <Box
           onClick={() => setShowAllOrgs(!showAllOrgs)}
@@ -323,7 +323,7 @@ const TenantManagement = () => {
           {allOrgs.length === 0 ? (
             <Box sx={{ p: 3, textAlign: 'center' }}>
               <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-                No organizations available
+                No tenants available
               </Typography>
             </Box>
           ) : (
@@ -349,7 +349,7 @@ const TenantManagement = () => {
         </Collapse>
       </Paper>
 
-      {/* Create Sub-Org Dialog */}
+      {/* Create Sub-Tenant Dialog */}
       <Dialog
         open={createDialogOpen}
         onClose={() => !creating && setCreateDialogOpen(false)}
@@ -366,16 +366,16 @@ const TenantManagement = () => {
         }}
       >
         <DialogTitle sx={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}>
-          Create Sub-Organization
+          Create Sub-Tenant
         </DialogTitle>
         <DialogContent>
           <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))', mb: 2 }}>
-            Create a new sub-organization under your current organization.
+            Create a new sub-tenant under your current tenant.
           </Typography>
           <TextField
             autoFocus
             fullWidth
-            label="Organization Name"
+            label="Tenant Name"
             value={newOrgName}
             onChange={(e) => setNewOrgName(e.target.value)}
             disabled={creating}

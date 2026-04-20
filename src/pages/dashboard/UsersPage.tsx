@@ -470,7 +470,7 @@ const UsersPage = ({ embedded }: { embedded?: boolean }) => {
 
   return (
     <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1400, mx: 'auto' }}>
-      {/* Org Admin Header */}
+      {/* Tenant Admin Header */}
     {!embedded && (
       <>
       <Typography 
@@ -482,10 +482,10 @@ const UsersPage = ({ embedded }: { embedded?: boolean }) => {
           mb: 1,
         }}
       >
-        Org Admin
+        Tenant Admin
       </Typography>
       <Typography variant="body1" sx={{ color: 'hsl(var(--muted-foreground))', mb: 3 }}>
-        Manage your team members and tenant organizations
+        Manage your team members and sub-tenants
       </Typography>
 
       {/* Tabs */}

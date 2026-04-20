@@ -66,7 +66,7 @@ const OrganizationsPage = () => {
   return (
     <Box sx={{ p: 4 }}>
       <Typography variant="h4" sx={{ fontWeight: 600, mb: 4 }}>
-        Organizations
+        Tenants
       </Typography>
 
       {error && (
@@ -84,10 +84,10 @@ const OrganizationsPage = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Organization</TableCell>
+                <TableCell>Tenant</TableCell>
                 <TableCell>Description</TableCell>
                 <TableCell>Users</TableCell>
-                <TableCell>Sub-orgs</TableCell>
+                <TableCell>Sub-tenants</TableCell>
                 <TableCell>Sync</TableCell>
               </TableRow>
             </TableHead>
@@ -96,7 +96,7 @@ const OrganizationsPage = () => {
                 <TableRow>
                   <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
                     <Typography color="text.secondary">
-                      No organizations found
+                      No tenants found
                     </Typography>
                   </TableCell>
                 </TableRow>
@@ -117,7 +117,7 @@ const OrganizationsPage = () => {
                           </Typography>
                           {org.creator_org && (
                             <Typography variant="caption" color="text.secondary">
-                              Child org
+                              Child tenant
                             </Typography>
                           )}
                         </Box>

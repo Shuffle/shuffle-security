@@ -2399,8 +2399,8 @@ const IncidentsPage = () => {
                   ];
                   // Don't add parent org — we only fetch downward (children)
                   return [
-                    { id: '__all__', name: 'All orgs' },
-                    { id: '__none__', name: 'Current Org' },
+                    { id: '__all__', name: 'All tenants' },
+                    { id: '__none__', name: 'Current Tenant' },
                     ...realOrgs,
                   ];
                 })()}
@@ -2472,7 +2472,7 @@ const IncidentsPage = () => {
                           )}
                           <Typography sx={{ fontSize: '0.82rem' }}>{option.name}</Typography>
                           {isOrgFailed && (
-                            <Tooltip title="Failed to load incidents from this org" placement="right">
+                            <Tooltip title="Failed to load incidents from this tenant" placement="right">
                               <WarningAmberIcon sx={{ fontSize: 14, color: 'hsl(var(--severity-medium))' }} />
                             </Tooltip>
                           )}
@@ -2493,7 +2493,7 @@ const IncidentsPage = () => {
                     {...params}
                     placeholder={(() => {
                       const orgFilter = Array.isArray(filters.org) ? filters.org : filters.org ? [filters.org] : [];
-                      return orgFilter.length > 0 ? `${orgFilter.length} Org${orgFilter.length > 1 ? 's' : ''}` : 'Orgs';
+                      return orgFilter.length > 0 ? `${orgFilter.length} Tenant${orgFilter.length > 1 ? 's' : ''}` : 'Tenants';
                     })()}
                     sx={{ minWidth: 150, width: 150 }}
                     InputProps={{

@@ -158,7 +158,7 @@ export const OrgTrendChart = ({ incidents, dateFrom, dateTo }: OrgTrendChartProp
       >
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
           <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontWeight: 600, fontSize: '0.7rem', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-            By Org
+            By Tenant
           </Typography>
           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             {orgNames.slice(0, 4).map((name, i) => (
@@ -205,7 +205,7 @@ export const OrgTrendChart = ({ incidents, dateFrom, dateTo }: OrgTrendChartProp
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
             <Box>
               <Typography variant="h6" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}>
-                Incidents by Organization
+                Incidents by Tenant
               </Typography>
               <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
                 {dateFrom ? format(dateFrom, 'MMM d, yyyy') : format(subDays(new Date(), 30), 'MMM d, yyyy')}

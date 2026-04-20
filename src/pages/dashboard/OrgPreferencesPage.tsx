@@ -186,10 +186,10 @@ const OrgPreferencesPage = () => {
   return (
     <Box sx={{ p: 4, maxWidth: 900, mx: 'auto' }}>
       <Typography variant="h4" sx={{ fontWeight: 600, mb: 1, color: 'hsl(var(--foreground))' }}>
-        Org Preferences
+        Tenant Preferences
       </Typography>
       <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))', mb: 3 }}>
-        Configure organization-wide settings that apply to all users
+        Configure tenant-wide settings that apply to all users
       </Typography>
 
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>

@@ -304,7 +304,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
         >
           <CircularProgress size={32} sx={{ color: 'hsl(var(--primary))' }} />
           <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-            Changing organization…
+            Changing tenant…
           </Typography>
         </Box>
       )}
@@ -800,7 +800,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                 return (
                   <TextField
                     {...params}
-                    placeholder="Select organization"
+                    placeholder="Select tenant"
                     slotProps={{
                       input: {
                         ...params.InputProps,
@@ -910,7 +910,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
           </Box>
         ) : (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
-            <Tooltip title={selectedOrg?.name || 'No org'} placement="right">
+            <Tooltip title={selectedOrg?.name || 'No tenant'} placement="right">
               <IconButton size="small" sx={{ color: 'hsl(var(--muted-foreground))' }}>
                 <BusinessIcon fontSize="small" />
               </IconButton>
@@ -1137,7 +1137,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
             }}
           >
             <AdminPanelSettingsIcon sx={{ fontSize: 18, color: 'hsl(var(--muted-foreground))' }} />
-            Org Admin
+            Tenant Admin
           </MenuItem>
           <MenuItem
             component={Link}
@@ -1153,7 +1153,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
             }}
           >
             <TuneIcon sx={{ fontSize: 18, color: 'hsl(var(--muted-foreground))' }} />
-            Org Preferences
+            Tenant Preferences
           </MenuItem>
           <MenuItem
             component={Link}

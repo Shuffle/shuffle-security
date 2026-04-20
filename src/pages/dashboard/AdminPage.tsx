@@ -170,7 +170,7 @@ const AdminPage = () => {
       setOriginalImage(orgImage);
       setOriginalRegionUrl(orgRegionUrl);
 
-      toast.success('Organization updated successfully');
+      toast.success('Tenant updated successfully');
       await refreshUserInfo();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to update');
@@ -200,10 +200,10 @@ const AdminPage = () => {
   return (
     <Box sx={{ p: { xs: 0, sm: 0 }, maxWidth: 1200 }}>
       <Typography variant="h4" sx={{ fontWeight: 600, mb: 1, color: 'hsl(var(--foreground))' }}>
-        Organization Admin
+        Tenant Admin
       </Typography>
       <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))', mb: 3 }}>
-        Manage your organization settings, users, and tenants.
+        Manage your tenant settings, users, and sub-tenants.
       </Typography>
 
       <Tabs
@@ -351,7 +351,7 @@ const AdminPage = () => {
                 multiline
                 rows={4}
                 fullWidth
-                placeholder="Org description"
+                placeholder="Tenant description"
                 sx={{
                   mb: 3,
                   '& .MuiOutlinedInput-root': {
