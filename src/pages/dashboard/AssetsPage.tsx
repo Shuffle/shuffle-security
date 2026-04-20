@@ -295,7 +295,26 @@ const AssetsPage = () => {
           {ActiveIcon && <ActiveIcon size={14} />}
           <Typography variant="caption">{activeCategory.description}</Typography>
           {activeState?.error && (
-            <Chip label="Source error" size="small" color="error" sx={{ height: 18, fontSize: '0.65rem' }} />
+            <Tooltip
+              title={
+                <Box sx={{ maxWidth: 360 }}>
+                  <Typography variant="caption" sx={{ display: 'block', fontWeight: 600, mb: 0.5 }}>
+                    Failed to load <code>{activeCategory.datastoreKey}</code>
+                  </Typography>
+                  <Typography variant="caption" sx={{ display: 'block', fontFamily: 'monospace', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                    {activeState.error}
+                  </Typography>
+                </Box>
+              }
+              arrow
+            >
+              <Chip
+                label="Source error"
+                size="small"
+                color="error"
+                sx={{ height: 18, fontSize: '0.65rem', cursor: 'help' }}
+              />
+            </Tooltip>
           )}
         </Box>
       )}
