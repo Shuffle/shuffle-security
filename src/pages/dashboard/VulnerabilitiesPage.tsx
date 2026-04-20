@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Shield, Plus, RefreshCw, Search, Zap, ArrowRight, Wrench, Sparkles, AlertTriangle, Globe, LogIn } from 'lucide-react';
+import { Shield, Plus, RefreshCw, Search, Zap, ArrowRight, Wrench, Sparkles, AlertTriangle, Globe, LogIn, Loader2 } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useVulnerabilities, Vulnerability, VulnSeverity, VulnCategory } from '@/hooks/useVulnerabilities';
 import { useAppAuth } from '@/hooks/useAppAuth';
@@ -16,6 +16,7 @@ import { askAI } from '@/services/ai';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/context/AuthContext';
+import { getApiUrl, getAuthHeader } from '@/config/api';
 
 const SEVERITY_COLORS: Record<VulnSeverity, string> = {
   critical: 'bg-red-500/10 text-red-500 border-red-500/20',
@@ -145,6 +146,27 @@ const AuthenticatedVulnerabilitiesView = () => {
   const [aiScanOpen, setAiScanOpen] = useState(false);
   const [aiScanLoading, setAiScanLoading] = useState(false);
   const [aiScanResult, setAiScanResult] = useState<string | null>(null);
+  const [enablingAutomation, setEnablingAutomation] = useState(false);
+  const [automationEnabled, setAutomationEnabled] = useState(false);
+
+  const handleEnableAutomation = useCallback(async () => {
+    setEnablingAutomation(true);
+    try {
+      const res = await fetch(getApiUrl('/api/v2/workflows/generate'), {
+        method: 'POST',
+        credentials: 'include',
+        headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ label: 'vulnerability_comparison' }),
+      });
+      if (!res.ok) throw new Error('Failed');
+      setAutomationEnabled(true);
+      toast.success('Automated vulnerability remediation enabled');
+    } catch {
+      toast.error('Failed to enable automated remediation');
+    } finally {
+      setEnablingAutomation(false);
+    }
+  }, []);
 
   const { vulnerabilities, severityCounts, isLoading, isRefreshing, refresh } = useVulnerabilities();
   const { authenticatedApps } = useAppAuth();
@@ -204,21 +226,20 @@ const AuthenticatedVulnerabilitiesView = () => {
             Auto-remediate vulnerabilities by running fixes directly on affected hosts. Tracking and manual workflows are already available below.
           </p>
         </div>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span tabIndex={0}>
-                <Button size="sm" variant="outline" className="gap-1.5 shrink-0" disabled>
-                  <Zap size={14} />
-                  Enable
-                </Button>
-              </span>
-            </TooltipTrigger>
-            <TooltipContent side="left" className="max-w-[220px] text-center">
-              <p className="text-xs">Automated remediation isn't available yet — coming soon.</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <Button
+          size="sm"
+          variant={automationEnabled ? 'secondary' : 'outline'}
+          className="gap-1.5 shrink-0"
+          disabled={enablingAutomation || automationEnabled}
+          onClick={handleEnableAutomation}
+        >
+          {enablingAutomation ? (
+            <Loader2 size={14} className="animate-spin" />
+          ) : (
+            <Zap size={14} />
+          )}
+          {automationEnabled ? 'Enabled' : enablingAutomation ? 'Enabling…' : 'Enable'}
+        </Button>
       </div>
 
       {/* Header */}
