@@ -406,7 +406,7 @@ export const MonitorHostTable = ({ hosts, onRefresh }: MonitorHostTableProps) =>
           <span className="text-xs font-semibold text-muted-foreground">Actions</span>
         </div>
         {/* Host rows */}
-        {allHosts.map(host => {
+        {allHosts.map((host, idx) => {
           const checkinDate = host.checkin ? new Date(host.checkin * 1000) : null;
           const isRecent = checkinDate ? (Date.now() - checkinDate.getTime()) < 5 * 60 * 1000 : false;
           const hdState = triState(host.hd_encrypted);
