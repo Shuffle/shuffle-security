@@ -70,7 +70,12 @@ const isActiveMonitoringEnabled = (host: { log_forwarding?: unknown }): boolean 
   const v = host.log_forwarding;
   if (v === undefined || v === null) return false;
   const raw = String(v).toLowerCase().trim();
-  if (raw === '' || raw === 'false' || raw === '0' || raw === 'no' || raw === 'off') return false;
+  if (!raw) return false;
+  // Explicit off / unconfigured states
+  if (raw === 'false' || raw === '0' || raw === 'no' || raw === 'off') return false;
+  if (raw.includes('not implemented') || raw.includes('not configured') || raw.includes('disabled')) return false;
+  // String like "not implemented: false" or "...: false" → treat as off
+  if (/[:=]\s*false\s*$/.test(raw)) return false;
   return true;
 };
 
