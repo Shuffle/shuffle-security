@@ -33,6 +33,10 @@ export interface AssetCategory {
 export const ASSET_CATEGORIES: AssetCategory[] = [
   // Compute & endpoints (Endpoints + Mobile combined into one tab)
   { id: 'mobile',        label: 'Mobile & Endpoints',  short: 'Mobile',     description: 'Phones, tablets, laptops, desktops, workstations',  datastoreKey: 'shuffle-security_assets_mobile',        icon: Smartphone,  group: 'Compute' },
+
+  // Identity (Users surfaced second so it's obvious in the tab list)
+  { id: 'identity_users',  label: 'Identity Users',  short: 'Users',  description: 'IAM, Okta, Entra, Workspace users',               datastoreKey: 'shuffle-security_assets_identity-users',  icon: Users,       group: 'Identity' },
+
   { id: 'compute',       label: 'Compute Instances',   short: 'Compute',    description: 'EC2, GCE, Azure VMs',                               datastoreKey: 'shuffle-security_assets_compute',       icon: Server,      group: 'Compute' },
   { id: 'containers',    label: 'Container Platforms', short: 'Containers', description: 'Kubernetes, ECS, GKE clusters and workloads',      datastoreKey: 'shuffle-security_assets_containers',    icon: Boxes,       group: 'Compute' },
   { id: 'serverless',    label: 'Serverless Functions',short: 'Serverless', description: 'Lambda, Cloud Functions, Azure Functions',          datastoreKey: 'shuffle-security_assets_serverless',    icon: Zap,         group: 'Compute' },
@@ -43,8 +47,7 @@ export const ASSET_CATEGORIES: AssetCategory[] = [
   { id: 'monitoring',    label: 'Monitoring & Logging',short: 'Monitoring', description: 'CloudWatch, Datadog, log groups, dashboards',       datastoreKey: 'shuffle-security_assets_monitoring',    icon: Activity,    group: 'Infra' },
   { id: 'kms',           label: 'Key Management',      short: 'KMS',        description: 'KMS keys, Vault secrets, certificates',             datastoreKey: 'shuffle-security_assets_kms',           icon: KeyRound,    group: 'Infra' },
 
-  // Identity
-  { id: 'identity_users',  label: 'Identity Users',  short: 'Users',  description: 'IAM, Okta, Entra, Workspace users',               datastoreKey: 'shuffle-security_assets_identity-users',  icon: Users,       group: 'Identity' },
+  // Identity (continued)
   { id: 'identity_roles',  label: 'Identity Roles',  short: 'Roles',  description: 'IAM roles, service roles, assumable roles',       datastoreKey: 'shuffle-security_assets_identity-roles',  icon: ShieldCheck, group: 'Identity' },
   { id: 'identity_groups', label: 'Identity Groups', short: 'Groups', description: 'Directory groups, IAM groups, Okta groups',        datastoreKey: 'shuffle-security_assets_identity-groups', icon: UsersRound,  group: 'Identity' },
 
