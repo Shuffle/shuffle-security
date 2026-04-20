@@ -85,6 +85,9 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
   const screenlockState = stateOf(host.automatic_screen_lock_enabled);
   const softwareCount = Array.isArray(host.installed_software) ? host.installed_software.length : 0;
   const codeScanCount = Array.isArray(host.code_scanner) ? host.code_scanner.length : 0;
+  const codeScanPackageCount = Array.isArray(host.code_scanner)
+    ? host.code_scanner.reduce((sum, proj) => sum + (proj.packages?.length || 0), 0)
+    : 0;
   const responseActionsRaw = host.response_actions;
   const raLower = String(responseActionsRaw ?? '').toLowerCase().trim();
   const responseActionsOn = !!responseActionsRaw && raLower !== 'false' && raLower !== '0' && raLower !== 'no' && raLower !== 'off';
@@ -315,7 +318,7 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
             <FileCode size={14} className="text-muted-foreground" />
             <span className="text-xs font-semibold text-foreground">Code Package Scanner</span>
             {codeScanCount > 0 && (
-              <span className="text-[0.65rem] text-muted-foreground">({codeScanCount} projects)</span>
+              <span className="text-[0.65rem] text-muted-foreground">({codeScanCount} projects, {codeScanPackageCount} packages)</span>
             )}
           </button>
         ) : (
@@ -323,7 +326,7 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
             <FileCode size={14} className="text-muted-foreground" />
             <span className="text-xs font-semibold text-foreground">Code Package Scanner</span>
             {codeScanCount > 0 && (
-              <span className="text-[0.65rem] text-muted-foreground">({codeScanCount} projects)</span>
+              <span className="text-[0.65rem] text-muted-foreground">({codeScanCount} projects, {codeScanPackageCount} packages)</span>
             )}
           </div>
         )}
