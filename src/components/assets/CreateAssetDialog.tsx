@@ -25,9 +25,11 @@ interface CreateAssetDialogProps {
   open: boolean;
   onClose: () => void;
   onSubmit: (asset: OCSFDeviceInventory) => Promise<void>;
+  kind?: 'device' | 'user';
 }
 
-export const CreateAssetDialog = ({ open, onClose, onSubmit }: CreateAssetDialogProps) => {
+export const CreateAssetDialog = ({ open, onClose, onSubmit, kind = 'device' }: CreateAssetDialogProps) => {
+  const isUser = kind === 'user';
   const [hostname, setHostname] = useState('');
   const [ip, setIp] = useState('');
   const [mac, setMac] = useState('');
@@ -117,44 +119,48 @@ export const CreateAssetDialog = ({ open, onClose, onSubmit }: CreateAssetDialog
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle>
         <Typography variant="h6" sx={{ fontWeight: 600 }}>
-          Add Asset
+          {isUser ? 'Add User' : 'Add Device'}
         </Typography>
         <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-          OCSF Device Inventory Info (class_uid: 6002)
+          {isUser
+            ? 'Identity user — IAM, Okta, Entra, Workspace'
+            : 'OCSF Device Inventory Info (class_uid: 6002)'}
         </Typography>
       </DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 1 }}>
-          {/* Hostname — required */}
+          {/* Hostname / Username — required */}
           <TextField
-            label="Hostname"
+            label={isUser ? 'Username' : 'Hostname'}
             value={hostname}
             onChange={e => setHostname(e.target.value)}
             fullWidth
             required
-            placeholder="e.g., prod-web-01.corp.example.com"
+            placeholder={isUser ? 'e.g., jane.doe' : 'e.g., prod-web-01.corp.example.com'}
           />
 
-          {/* IP + Device Type */}
+          {/* IP + Device Type  /  Email + Role for users */}
           <Box sx={{ display: 'flex', gap: 2 }}>
             <TextField
-              label="IP Address"
-              value={ip}
-              onChange={e => setIp(e.target.value)}
+              label={isUser ? 'Email' : 'IP Address'}
+              value={isUser ? ownerEmail : ip}
+              onChange={e => (isUser ? setOwnerEmail(e.target.value) : setIp(e.target.value))}
               fullWidth
-              placeholder="e.g., 10.0.1.42"
+              placeholder={isUser ? 'e.g., jane@example.com' : 'e.g., 10.0.1.42'}
             />
-            <TextField
-              select
-              label="Device Type"
-              value={typeId}
-              onChange={e => setTypeId(Number(e.target.value))}
-              fullWidth
-            >
-              {DEVICE_TYPES.map(t => (
-                <MenuItem key={t.id} value={t.id}>{t.label}</MenuItem>
-              ))}
-            </TextField>
+            {!isUser && (
+              <TextField
+                select
+                label="Device Type"
+                value={typeId}
+                onChange={e => setTypeId(Number(e.target.value))}
+                fullWidth
+              >
+                {DEVICE_TYPES.map(t => (
+                  <MenuItem key={t.id} value={t.id}>{t.label}</MenuItem>
+                ))}
+              </TextField>
+            )}
           </Box>
 
           {/* Risk Level */}
@@ -321,7 +327,7 @@ export const CreateAssetDialog = ({ open, onClose, onSubmit }: CreateAssetDialog
           disabled={!hostname.trim() || isSubmitting}
           startIcon={isSubmitting ? <CircularProgress size={16} /> : undefined}
         >
-          {isSubmitting ? 'Adding…' : 'Add Asset'}
+          {isSubmitting ? 'Adding…' : (isUser ? 'Add User' : 'Add Device')}
         </Button>
       </DialogActions>
     </Dialog>

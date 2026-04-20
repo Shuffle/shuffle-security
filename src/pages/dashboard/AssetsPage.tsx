@@ -190,19 +190,22 @@ const AssetsPage = () => {
 
   const handleCreateAsset = useCallback(async (asset: OCSFDeviceInventory) => {
     const key = asset.metadata?.uid || asset.uid || `asset-${Date.now()}`;
-    // Route by device type. Endpoints + mobile share the mobile key now.
+    // Route by active tab. Users go to the identity_users key; everything else
+    // follows device-type routing (compute vs mobile/endpoints).
     const targetKey =
-      asset.type_id === 1 ? ASSET_CATEGORY_BY_ID.compute.datastoreKey
+      activeTab === 'identity_users' ? ASSET_CATEGORY_BY_ID.identity_users.datastoreKey
+      : asset.type_id === 1 ? ASSET_CATEGORY_BY_ID.compute.datastoreKey
       : ASSET_CATEGORY_BY_ID.mobile.datastoreKey;
 
     const ok = await setDatastoreItem(targetKey, key, JSON.stringify(asset));
     if (ok) {
-      toast.success('Asset added', { description: asset.hostname });
+      const label = activeTab === 'identity_users' ? 'User added' : 'Asset added';
+      toast.success(label, { description: asset.hostname });
       await refetch(targetKey);
     } else {
-      toast.error('Failed to add asset');
+      toast.error(activeTab === 'identity_users' ? 'Failed to add user' : 'Failed to add asset');
     }
-  }, [refetch]);
+  }, [refetch, activeTab]);
 
   const formatTime = (ts?: string) => {
     if (!ts) return '—';
@@ -242,7 +245,7 @@ const AssetsPage = () => {
             </IconButton>
           </Tooltip>
           <Button variant="contained" size="small" startIcon={<Plus size={16} />} onClick={() => setCreateOpen(true)} sx={{ height: 36 }}>
-            Add Asset
+            {activeTab === 'identity_users' ? 'Add User' : 'Add Device'}
           </Button>
         </Box>
       </Box>
@@ -399,7 +402,7 @@ const AssetsPage = () => {
               </>
             )}
             <Button variant="contained" startIcon={<Plus size={16} />} onClick={() => setCreateOpen(true)}>
-              Add Asset
+              {activeTab === 'identity_users' ? 'Add User' : 'Add Device'}
             </Button>
           </CardContent>
         </Card>
@@ -508,6 +511,7 @@ const AssetsPage = () => {
         open={createOpen}
         onClose={() => setCreateOpen(false)}
         onSubmit={handleCreateAsset}
+        kind={activeTab === 'identity_users' ? 'user' : 'device'}
       />
     </Box>
   );
