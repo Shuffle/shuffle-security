@@ -66,7 +66,13 @@ const parseResponseActionsState = (value: unknown): { enabled: boolean; mode: 'f
   return { enabled, mode: enabled ? (raw.includes('full') ? 'full' : 'controlled') : null };
 };
 
-const isActiveMonitoringEnabled = (host: { log_forwarding?: string }): boolean => !!host.log_forwarding;
+const isActiveMonitoringEnabled = (host: { log_forwarding?: unknown }): boolean => {
+  const v = host.log_forwarding;
+  if (v === undefined || v === null) return false;
+  const raw = String(v).toLowerCase().trim();
+  if (raw === '' || raw === 'false' || raw === '0' || raw === 'no' || raw === 'off') return false;
+  return true;
+};
 
 const triState = (v: unknown): 'on' | 'off' | 'empty' => {
   if (v === true || v === 'true' || v === 'TRUE') return 'on';
