@@ -107,7 +107,7 @@ const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: bool
     ],
   },
   { label: '__divider__', icon: <></> },
-  { label: 'Agent', icon: <AgentIcon size={20} />, path: '/agent' },
+  { label: 'Agents', icon: <AgentIcon size={20} />, path: '/agent' },
   { label: 'Documentation', icon: <BookOpen size={20} />, path: '/docs' },
 ];
 
