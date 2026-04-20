@@ -777,7 +777,7 @@ Use case: ${aiPrompt}`,
             <Typography variant="h4" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}>
               Tenzir Pipelines
             </Typography>
-            <WebhookActiveChip />
+            
           </Box>
           <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
             Lightweight detection infrastructure — ingest, match, and forward security events without heavy tooling
