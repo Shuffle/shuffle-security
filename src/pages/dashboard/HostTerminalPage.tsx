@@ -166,6 +166,12 @@ const HostTerminalPage = () => {
   const hasResolvedHostname = Boolean(hostname && hostname !== 'Unknown Host' && hostname !== hostUuid);
   const hostLookupFailed = hostsLoaded && datastoreLookupDone && !hasResolvedHostname;
   const missingSensorGroup = hostsLoaded && datastoreLookupDone && hasResolvedHostname && !groupName;
+  const canRunActions = hasResolvedHostname && Boolean(groupName) && !hostLookupFailed && !missingSensorGroup;
+  const resolutionErrorMessage = hostLookupFailed
+    ? `This terminal URL did not resolve to a monitor. We finished loading /getenvironments and the monitor datastores, but could not map ID ${hostUuid} to a hostname.`
+    : missingSensorGroup
+      ? `This monitor resolved as ${hostname}, but its environment Name was empty so no sensor_group could be sent.`
+      : '';
   const displayHostname = hasResolvedHostname ? hostname : 'Unresolved monitor';
 
   usePageMeta({ title: `Terminal · ${displayHostname}`, description: `Terminal session for ${displayHostname}` });
@@ -260,6 +266,17 @@ const HostTerminalPage = () => {
     })();
     return () => { cancelled = true; };
   }, [hostsLoaded, hostUuid, hostState?.hostname, resolvedHost, datastoreResolvedHostname]);
+
+  const resolutionToastRef = useRef('');
+  useEffect(() => {
+    if (!datastoreLookupDone) return;
+    const nextKey = hostLookupFailed ? `host:${hostUuid}` : missingSensorGroup ? `group:${hostUuid}` : '';
+    if (!nextKey || resolutionToastRef.current === nextKey) return;
+    resolutionToastRef.current = nextKey;
+    toast.error(hostLookupFailed ? 'Monitor not found' : 'Sensor group missing', {
+      description: resolutionErrorMessage,
+    });
+  }, [datastoreLookupDone, hostLookupFailed, hostUuid, missingSensorGroup, resolutionErrorMessage]);
 
   // Load stored session on mount / host change
   useEffect(() => {
@@ -659,7 +676,16 @@ const HostTerminalPage = () => {
 
       {/* Scrollable session log */}
       <div className="flex-1 overflow-y-auto min-h-0" ref={scrollRef}>
-        {actionHistory.length === 0 && (
+        {resolutionErrorMessage && (
+          <div className="mx-6 mt-6 rounded-md border border-destructive/40 bg-destructive/5 px-4 py-3">
+            <p className="text-sm font-medium text-destructive">
+              {hostLookupFailed ? 'Monitor resolution failed' : 'Sensor group missing'}
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">{resolutionErrorMessage}</p>
+          </div>
+        )}
+
+        {actionHistory.length === 0 && !resolutionErrorMessage && (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-3">
             <Terminal size={40} className="opacity-30" />
             <p className="text-sm">No commands run yet. Type a command or use the predefined actions below.</p>
@@ -779,6 +805,7 @@ const HostTerminalPage = () => {
       <div className="px-6 py-3 flex flex-wrap gap-1.5 border-t border-border/50 shrink-0">
         <button
           key="disable_rce"
+          disabled={!canRunActions}
           className="px-3 py-1.5 text-xs rounded-md border border-destructive/40 text-destructive hover:bg-destructive/10 transition-colors"
           onClick={() => executeHostAction('disable_rce', 'Disable RCE', true)}
         >
@@ -805,11 +832,12 @@ const HostTerminalPage = () => {
         <div className="flex gap-2 items-center max-w-4xl">
           <span className="text-sm font-mono text-primary shrink-0">$</span>
           <Input
-            placeholder={isFull ? 'Type command…' : 'Custom action…'}
+            placeholder={canRunActions ? (isFull ? 'Type command…' : 'Custom action…') : 'Monitor resolution required before running commands'}
             value={customAction}
             onChange={e => setCustomAction(e.target.value)}
             className="h-9 text-sm flex-1 font-mono"
             ref={inputRef}
+            disabled={!canRunActions}
             onKeyDown={e => {
               // Full ordered history, every entry (no dedup), most recent first
               const history = [...actionHistory].reverse().map(e => e.actionName).filter(Boolean);
@@ -839,7 +867,7 @@ const HostTerminalPage = () => {
             size="icon"
             variant="ghost"
             className="h-9 w-9 shrink-0"
-            disabled={!customAction.trim()}
+            disabled={!canRunActions || !customAction.trim()}
             onClick={() => {
               if (customAction.trim()) {
                 
