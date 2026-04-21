@@ -1681,7 +1681,11 @@ function UsecaseDetailContent({
   const nextFlow = currentIndex < usecases.length - 1 ? usecases[currentIndex + 1] : null;
   const goToUsecase = (id: string) => {
     if (onNavigateUsecase) onNavigateUsecase(id);
-    else navigate(`/usecases/${id}`);
+    else {
+      const target = usecases.find((u) => u.id === id);
+      const seg = target?.label || id;
+      navigate(`/usecases/${encodeURIComponent(seg)}`);
+    }
   };
 
   // Self-contained color tokens with fallbacks so the standalone build
