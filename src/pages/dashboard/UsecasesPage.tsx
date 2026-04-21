@@ -1203,6 +1203,59 @@ function IntegrationStatusLite({ filterApps, singleLine = false }: { filterApps?
     );
   }
 
+  if (singleLine) {
+    const hiddenCount = Math.max(0, visible.length - 0); // overflow handled visually below
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          flexWrap: 'nowrap',
+          gap: 0.75,
+          px: 0.5,
+          py: 0.5,
+          overflow: 'hidden',
+          minWidth: 0,
+          maskImage: 'linear-gradient(to right, black calc(100% - 32px), transparent)',
+          WebkitMaskImage: 'linear-gradient(to right, black calc(100% - 32px), transparent)',
+        }}
+      >
+        {visible.map((integration) => (
+          <Tooltip
+            key={integration.id}
+            title={`${integration.name}${integration.validated ? ' (validated)' : integration.active ? ' (configured)' : ''}`}
+            placement="top"
+            arrow
+          >
+            <Box
+              sx={{
+                width: 32,
+                height: 32,
+                flexShrink: 0,
+                borderRadius: 1,
+                border: integration.validated
+                  ? '1px solid hsl(var(--severity-low) / 0.6)'
+                  : '1px solid hsl(var(--border))',
+                overflow: 'hidden',
+                bgcolor: 'hsl(var(--card))',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {integration.icon ? (
+                <Box component="img" src={integration.icon} alt={integration.name} loading="lazy" sx={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+              ) : (
+                <Avatar sx={{ width: 24, height: 24, fontSize: '0.72rem', bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--foreground))' }}>
+                  {integration.name.slice(0, 1).toUpperCase()}
+                </Avatar>
+              )}
+            </Box>
+          </Tooltip>
+        ))}
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, px: 0.5, py: 0.5 }}>
       {visible.map((integration) => (
