@@ -8,10 +8,11 @@
  * at the element identified by `targetSelector`.
  */
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { seedForStep, cleanupDemoData, isDemoActive, getDemoStats } from '@/services/demoMode';
+import { trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
 
 export interface TourStepRequirement {
   /** Short human label shown in the drawer (e.g. "Enable the ingestion webhook"). */
@@ -156,15 +157,32 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
   const [stats, setStats] = useState(() => getDemoStats());
   const [completedSteps, setCompletedSteps] = useState<Record<string, boolean>>({});
 
+  // GA dedupe: each step view fires at most once per session, each completion
+  // fires at most once per step. Refs survive re-renders without retriggering.
+  const viewedStepsRef = useRef<Set<string>>(new Set());
+  const completedStepsGARef = useRef<Set<string>>(new Set());
+
+  /** Fire a GA funnel event for a tour step. Safe no-op outside cloud. */
+  const trackDemoStep = useCallback((
+    event: typeof GA_EVENTS.DEMO_STEP_VIEW | typeof GA_EVENTS.DEMO_STEP_COMPLETE | typeof GA_EVENTS.DEMO_FINISH,
+    index: number,
+  ) => {
+    const def = TOUR_STEPS[index];
+    if (!def) return;
+    trackPredefinedEvent(event, def.id, index, { step_index: index, step_id: def.id });
+  }, []);
+
   const minimizeTour = useCallback(() => {
     setMinimized(true);
     try { localStorage.setItem('shuffle_demo_minimized', 'true'); } catch { /* ignore */ }
-  }, []);
+    trackPredefinedEvent(GA_EVENTS.DEMO_MINIMIZE, TOUR_STEPS[step]?.id, step);
+  }, [step]);
   const restoreTour = useCallback(() => {
     setMinimized(false);
     setDrawerOpen(true);
     try { localStorage.setItem('shuffle_demo_minimized', 'false'); } catch { /* ignore */ }
-  }, []);
+    trackPredefinedEvent(GA_EVENTS.DEMO_RESTORE, TOUR_STEPS[step]?.id, step);
+  }, [step]);
   const setDock = useCallback((d: DemoDock) => {
     setDockState(d);
     try { localStorage.setItem('shuffle_demo_dock', d); } catch { /* ignore */ }
@@ -181,7 +199,14 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
 
   const markStepCompleted = useCallback((stepId: string) => {
     setCompletedSteps(prev => (prev[stepId] ? prev : { ...prev, [stepId]: true }));
-  }, []);
+    // Fire DEMO_STEP_COMPLETE once per step (gated steps only — this is invoked
+    // by the completion watchers when the real action is detected).
+    if (!completedStepsGARef.current.has(stepId)) {
+      completedStepsGARef.current.add(stepId);
+      const idx = TOUR_STEPS.findIndex(s => s.id === stepId);
+      if (idx >= 0) trackDemoStep(GA_EVENTS.DEMO_STEP_COMPLETE, idx);
+    }
+  }, [trackDemoStep]);
 
   const navigateForStep = useCallback((i: number) => {
     const route = TOUR_STEPS[i]?.route;
@@ -213,6 +238,10 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
       setActive(true);
       setStep(0);
       setDrawerOpen(true);
+      // Reset GA dedupes for a fresh funnel run
+      viewedStepsRef.current = new Set();
+      completedStepsGARef.current = new Set();
+      trackPredefinedEvent(GA_EVENTS.DEMO_START);
       navigateForStep(0);
       await runStepSeed(0);
     } finally {
@@ -268,12 +297,15 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
 
   const cleanup = useCallback(async () => {
     setIsCleaning(true);
+    trackPredefinedEvent(GA_EVENTS.DEMO_CLEANUP, TOUR_STEPS[step]?.id, step);
     try {
       const res = await cleanupDemoData();
       setActive(false);
       setDrawerOpen(false);
       setStep(0);
       setCompletedSteps({});
+      viewedStepsRef.current = new Set();
+      completedStepsGARef.current = new Set();
       refreshStats();
       if (res.success) {
         toast.success(`Removed ${res.deleted} demo item${res.deleted === 1 ? '' : 's'}.`);
@@ -285,7 +317,22 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setIsCleaning(false);
     }
-  }, [refreshStats]);
+  }, [refreshStats, step]);
+
+  // Funnel signal: whenever the user lands on a new step (via start/next/prev/
+  // goToStep/openTour), fire DEMO_STEP_VIEW exactly once per step per session.
+  // Also fire DEMO_FINISH the first time the final "wrap" step is viewed.
+  useEffect(() => {
+    if (!active || !drawerOpen) return;
+    const def = TOUR_STEPS[step];
+    if (!def) return;
+    if (viewedStepsRef.current.has(def.id)) return;
+    viewedStepsRef.current.add(def.id);
+    trackDemoStep(GA_EVENTS.DEMO_STEP_VIEW, step);
+    if (step === TOUR_STEPS.length - 1) {
+      trackDemoStep(GA_EVENTS.DEMO_FINISH, step);
+    }
+  }, [active, drawerOpen, step, trackDemoStep]);
 
   // Re-sync active flag if changed in another tab
   useEffect(() => {
