@@ -850,9 +850,15 @@ export function getUsecasesJson(
 // Resolve the Shuffle backend base URL.
 // Order:
 //  1. VITE_SHUFFLE_API_URL env override
-//  2. Lovable preview hosts -> shuffler.io (preview origin doesn't serve the API)
+//  2. Lovable preview hosts -> tunnel.schemaless.org (dev backend with CORS+cookies)
 //  3. window.location.origin (self-hosted: nginx proxies /api/* to the backend)
 //  4. https://shuffler.io (SSR / fallback)
+//
+// NOTE: The host app can override this entirely by passing the `globalUrl`
+// prop on <UsecasesPage />. This resolver only kicks in for standalone use.
+const DEV_BACKEND = 'https://tunnel.schemaless.org';
+const PROD_BACKEND = 'https://shuffler.io';
+
 const resolveApiBaseUrl = () => {
   const envUrl =
     typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_SHUFFLE_API_URL;
@@ -863,10 +869,10 @@ const resolveApiBaseUrl = () => {
       host.includes('lovableproject.com') ||
       host.includes('lovable.app') ||
       host.includes('id-preview--');
-    if (isLovablePreview) return 'https://shuffler.io';
+    if (isLovablePreview) return DEV_BACKEND;
     return window.location.origin;
   }
-  return 'https://shuffler.io';
+  return PROD_BACKEND;
 };
 
 const DEFAULT_API_BASE_URL: string = resolveApiBaseUrl();
