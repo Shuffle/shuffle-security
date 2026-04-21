@@ -78,6 +78,26 @@ export default function UsecasesPage() {
     return set;
   }, [workflows, usecases]);
 
+  // Export the current usecase registry (with live `running` state) as JSON.
+  const handleExportJson = () => {
+    try {
+      const json = getUsecasesJson(usecases, enabledLabels);
+      const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `automations-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success('Automations exported');
+    } catch (err) {
+      console.error('[UsecasesPage] export failed', err);
+      toast.error('Failed to export automations');
+    }
+  };
+
   // Collect unique tags across all usecases
   const allTags = useMemo(() => {
     const tagSet = new Set<string>();
