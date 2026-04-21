@@ -64,7 +64,9 @@ const toIncident = (item: RawInc): { key: string; value: OCSFIncidentFinding } =
   } as OCSFIncidentFinding,
 });
 
-// ─── Incidents (split into 3 batches that drip in) ────────────────────────────
+// ─── Incidents ────────────────────────────────────────────────────────────────
+// Kept intentionally small (2 items in the first batch) and tied to the apps
+// the user just "connected" in the previous tour step.
 export const buildDemoIncidentsBatch1 = (): { key: string; value: OCSFIncidentFinding }[] => {
   const t = now();
   return ([
@@ -86,71 +88,21 @@ export const buildDemoIncidentsBatch1 = (): { key: string; value: OCSFIncidentFi
       first_seen_time: minsAgo(12),
       types: ['malware', 'c2'],
     },
-    {
-      _key: `demo-inc-bf-${t}-3`,
-      title: 'Brute force on VPN gateway from 185.220.101.42',
-      desc: '480 failed authentication attempts against the corporate VPN over 6 minutes from a Tor exit node. Account "j.smith" was targeted. No success.',
-      severity_id: 3, severity: 'Medium', status_id: 1, status: 'New',
-      product: { name: 'Splunk Enterprise Security' },
-      first_seen_time: hoursAgo(2),
-      types: ['brute-force', 'network'],
-    },
   ] as RawInc[]).map(toIncident);
 };
 
+// Optional follow-up batch — adds one more incident if the user lingers.
 export const buildDemoIncidentsBatch2 = (): { key: string; value: OCSFIncidentFinding }[] => {
   const t = now();
   return ([
     {
-      _key: `demo-inc-exfil-${t}-4`,
-      title: 'Possible data exfiltration to Mega.nz',
-      desc: '2.4 GB uploaded to mega.nz from finance workstation FIN-DT-11 over the weekend. User claims unaware.',
-      severity_id: 4, severity: 'High', status_id: 2, status: 'In Progress',
-      product: { name: 'Zscaler' },
-      first_seen_time: hoursAgo(34),
-      types: ['exfiltration', 'insider'],
-    },
-    {
-      _key: `demo-inc-login-${t}-5`,
+      _key: `demo-inc-login-${t}-3`,
       title: 'Impossible travel: Anna Park (Oslo → Lagos in 14 min)',
       desc: 'Successful Azure AD sign-in from Lagos, Nigeria 14 minutes after a successful sign-in from Oslo, Norway. MFA satisfied via push approval.',
       severity_id: 4, severity: 'High', status_id: 1, status: 'New',
-      product: { name: 'Azure AD Sign-in Logs' },
+      product: { name: 'Microsoft Defender for Office 365' },
       first_seen_time: minsAgo(54),
       types: ['identity', 'impossible-travel'],
-    },
-    {
-      _key: `demo-inc-ransom-${t}-6`,
-      title: 'Ransomware note found on file server FS-CORP-02',
-      desc: 'README_RESTORE_FILES.txt dropped in 14 directories. Files .docx → .lockbit3 extensions. Server isolated, snapshot taken.',
-      severity_id: 5, severity: 'Critical', status_id: 3, status: 'Resolved',
-      product: { name: 'SentinelOne' },
-      first_seen_time: hoursAgo(72),
-      types: ['ransomware'],
-    },
-  ] as RawInc[]).map(toIncident);
-};
-
-export const buildDemoIncidentsBatch3 = (): { key: string; value: OCSFIncidentFinding }[] => {
-  const t = now();
-  return ([
-    {
-      _key: `demo-inc-mfa-${t}-7`,
-      title: 'MFA fatigue against Mark Olsen (12 push prompts)',
-      desc: '12 Duo push notifications in 3 minutes targeting CFO Mark Olsen. User denied all. Source IP from a residential proxy in Romania.',
-      severity_id: 3, severity: 'Medium', status_id: 2, status: 'In Progress',
-      product: { name: 'Duo Security' },
-      first_seen_time: minsAgo(120),
-      types: ['identity', 'mfa-bypass'],
-    },
-    {
-      _key: `demo-inc-insider-${t}-8`,
-      title: 'Departing employee accessed 1,247 customer records',
-      desc: 'Salesforce reports user "j.lopez" (notice given last week) downloaded a customer export of 1,247 records 2 hours before end-of-day. Within job role but anomalous volume.',
-      severity_id: 2, severity: 'Low', status_id: 1, status: 'New',
-      product: { name: 'Salesforce Event Monitoring' },
-      first_seen_time: hoursAgo(8),
-      types: ['insider', 'dlp'],
     },
   ] as RawInc[]).map(toIncident);
 };

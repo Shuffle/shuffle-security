@@ -13,7 +13,6 @@ import { setDatastoreItems, deleteDatastoreItem, DATASTORE_CATEGORIES, getDatast
 import {
   buildDemoIncidentsBatch1,
   buildDemoIncidentsBatch2,
-  buildDemoIncidentsBatch3,
   buildDemoAssets,
   buildDemoUsers,
   DEMO_FLAG_KEY,
@@ -69,14 +68,18 @@ const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 // Each returns the number of items written (or 0 if already seeded).
 
 export const STEP_SEEDERS: Record<string, () => Promise<number>> = {
-  // Step 0: welcome — nothing
+  // welcome — nothing
   welcome: async () => 0,
 
-  // Step 1: incidents list — drip 3 batches with a small delay so the list
-  // visibly populates while the user reads.
+  // apps — no datastore writes; the user is just learning where to connect
+  // tools. Real auth setup is intentionally not faked so cleanup stays simple.
+  apps: async () => 0,
+
+  // incidents list — 2 incidents from the apps the user just "connected",
+  // followed by 1 more after a short delay so the list visibly populates.
   'incidents-list': async () => {
     let total = 0;
-    const batches = [buildDemoIncidentsBatch1(), buildDemoIncidentsBatch2(), buildDemoIncidentsBatch3()];
+    const batches = [buildDemoIncidentsBatch1(), buildDemoIncidentsBatch2()];
     for (let i = 0; i < batches.length; i++) {
       const batch = batches[i];
       const res = await setDatastoreItems(batch, DATASTORE_CATEGORIES.INCIDENTS);
@@ -90,7 +93,7 @@ export const STEP_SEEDERS: Record<string, () => Promise<number>> = {
     return total;
   },
 
-  // Step 2: incident-detail — no new data, user is exploring an existing one
+  // incident-detail — no new data, user is exploring an existing one
   'incident-detail': async () => 0,
 
   // Step 3: assets

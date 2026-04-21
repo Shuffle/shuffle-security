@@ -23,9 +23,15 @@ export const TOUR_STEPS: TourStep[] = [
     route: '/dashboard',
   },
   {
+    id: 'apps',
+    title: 'Connect your tools',
+    body: "Everything starts with your tools. In a real setup you'd connect 1–2 detection sources here — say Microsoft Defender for email and CrowdStrike for endpoints. For the demo we'll pretend those are connected and incidents will start arriving from them on the next step.",
+    route: '/onboarding/sources',
+  },
+  {
     id: 'incidents-list',
-    title: 'Incidents',
-    body: 'This is your incident queue. Each row shows severity, the source tool that detected it, who it\'s assigned to, and current status. Try opening a critical one.',
+    title: 'Incidents arriving',
+    body: 'Now that your tools are "connected", incidents from Defender and CrowdStrike start showing up in your queue. Each row shows severity, the source tool, who it\'s assigned to, and current status. Try opening one.',
     route: '/incidents',
   },
   {
