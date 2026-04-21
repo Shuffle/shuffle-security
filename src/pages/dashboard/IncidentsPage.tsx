@@ -1909,15 +1909,17 @@ const IncidentsPage = () => {
             </Box>
           )}
 
-          {/* Arrow between Ingest and Forward - hidden until workflows loaded */}
-          {!ingestionLoading && (
+          {/* Arrow between Ingest and Forward - hidden until workflows loaded.
+              Also hidden during the demo "add-outlook" step to remove distractions. */}
+          {!ingestionLoading && !isAddOutlookStep && (
           <Box className="automation-arrow" sx={{ display: 'flex', alignItems: 'center', color: 'hsl(var(--muted-foreground))', mx: -0.25, maxWidth: 30, opacity: 1 }}>
             <ChevronRightIcon sx={{ fontSize: 18 }} />
           </Box>
           )}
 
-          {/* Forward Destinations - visible after workflows loaded */}
-          {!ingestionLoading && (
+          {/* Forward Destinations - visible after workflows loaded.
+              Hidden entirely during the demo "add-outlook" step. */}
+          {!ingestionLoading && !isAddOutlookStep && (
             <Box className={`automation-section-forward${forwardHovered ? ' is-hovered' : ''}`}
               onMouseEnter={handleForwardEnter}
               onMouseLeave={handleForwardLeave}
