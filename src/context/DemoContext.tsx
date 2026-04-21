@@ -105,6 +105,10 @@ export const TOUR_STEPS: TourStep[] = [
       'Filter, sort, bulk-resolve',
     ],
     route: '/incidents',
+    requirement: {
+      label: 'At least one demo incident must be present',
+      targetSelector: '[data-tour="demo-force-create-incidents"]',
+    },
   },
   {
     id: 'incident-detail',
