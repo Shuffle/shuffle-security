@@ -397,6 +397,7 @@ export function normalizeCategory(apiCategory: string): string {
   const map: Record<string, string> = {
     cases: 'case_management',
     case: 'case_management',
+    'case management': 'case_management',
     case_management: 'case_management',
     communication: 'communication',
     chat: 'communication',
@@ -407,11 +408,13 @@ export function normalizeCategory(apiCategory: string): string {
     network: 'network',
     firewall: 'network',
     threat_intel: 'threat_intel',
+    'threat intel': 'threat_intel',
     intel: 'threat_intel',
     iam: 'iam',
     identity: 'iam',
     cloud: 'cloud',
     asset_management: 'asset_management',
+    'asset management': 'asset_management',
     assets: 'asset_management',
     cmdb: 'asset_management',
   };
