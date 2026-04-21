@@ -3153,12 +3153,12 @@ const IncidentDetailPage = () => {
                     gap: 1,
                     transition: 'all 0.2s ease',
                     opacity: unmappedOriginal ? 1 : 0.4,
-                    bgcolor: activeTab === 6 ? 'rgba(255, 102, 0, 0.15)' : 'transparent',
-                    color: activeTab === 6 ? '#ff6600' : 'text.secondary',
+                    bgcolor: activeTab === 6 ? '#ff6600' : 'transparent',
+                    color: activeTab === 6 ? '#ffffff' : 'text.secondary',
                     fontWeight: activeTab === 6 ? 600 : 400,
                     fontSize: '0.875rem',
                     '&:hover': unmappedOriginal ? {
-                      bgcolor: activeTab === 6 ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255,255,255,0.05)',
+                      bgcolor: activeTab === 6 ? '#ff6600' : 'rgba(255,255,255,0.05)',
                     } : {},
                   }}
                 >
