@@ -93,6 +93,34 @@ const PHISH_ATTACKER_IP = '185.220.101.47';
 const PHISH_LURE_URL = 'https://it-support-portal[.]live/mfa-reset?u=schen';
 const PHISH_PAYLOAD_SHA256 = '7b1c4f9a2e3d8b6f1a0c5d7e9b2a4c6e8d1f3a5b7c9e1d2f4a6b8c0e2d4f6a8b';
 
+/**
+ * Single "focus" incident — the Wazuh/Sliver C2 detection on Sarah Chen's
+ * laptop. This is the centerpiece of the demo narrative (host isolation
+ * approval flow), used by the "Force generate" button on the tour so the
+ * user can focus on one incident before the others arrive for correlation.
+ */
+export const buildDemoFocusIncident = (): { key: string; value: OCSFIncidentFinding } => {
+  const t = now();
+  return toIncident({
+    _key: `demo-inc-malware-${t}-focus`,
+    title: `Wazuh: Sliver C2 implant beaconing on ${PHISH_HOST}`,
+    desc: `Wazuh agent flagged an unsigned Go binary at %APPDATA%\\Roaming\\Microsoft\\Edge\\msedge_proxy.exe on ${PHISH_HOST} (owner: Sarah Chen) making low-and-slow HTTPS callbacks to ${PHISH_ATTACKER_IP} every ~57s with jitter — Sliver implant signature (rule 100221, level 12). Process tree: chrome.exe (v124.0.6367.91 — outdated, vulnerable to CVE-2024-5274) → cmd.exe → msedge_proxy.exe, triggered after the user visited ${PHISH_LURE_URL}. Sysmon EID 1 + 3 correlated; persistence created via Run key "EdgeUpdate".`,
+    severity_id: 5, severity: 'Critical', status_id: 1, status: 'New',
+    product: { name: 'Wazuh' },
+    first_seen_time: minsAgo(12),
+    types: ['malware', 'c2', 'exploit'],
+    observables: [
+      { type: 'hostname', value: PHISH_HOST },
+      { type: 'email', value: PHISH_USER_EMAIL },
+      { type: 'ip', value: PHISH_ATTACKER_IP },
+      { type: 'url', value: PHISH_LURE_URL },
+      { type: 'sha256', value: PHISH_PAYLOAD_SHA256 },
+      { type: 'cve', value: 'CVE-2024-5274' },
+      { type: 'tool_name', value: 'Sliver' },
+    ],
+  });
+};
+
 export const buildDemoIncidentsBatch1 = (): { key: string; value: OCSFIncidentFinding }[] => {
   const t = now();
   return ([
