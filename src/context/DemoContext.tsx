@@ -117,13 +117,17 @@ export const TOUR_STEPS: TourStep[] = [
   },
   {
     id: 'incident-detail',
-    title: 'Inside an incident',
-    body: 'Full picture of one incident.',
+    title: 'Watch the agent work',
+    body: 'The Activity feed is where the AI agent narrates what it is doing — enrichments, lookups, proposed actions and approvals.',
     bullets: [
-      'Description & observables (IPs, hashes, users)',
-      'Tasks for the responder',
-      'Activity feed including AI agent actions',
+      'Every agent step is logged in real time on the right',
+      'Filter by Agent to focus on its decisions',
+      'Manual comments and revisions show up here too',
     ],
+    requirement: {
+      label: 'Open the Activity feed on the right',
+      targetSelector: '[data-tour="incident-activity-feed"]',
+    },
   },
   {
     id: 'assets',

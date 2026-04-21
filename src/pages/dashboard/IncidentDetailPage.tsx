@@ -5007,7 +5007,9 @@ const IncidentDetailPage = () => {
 
         {/* Right Activity Sidebar - Hidden on Original/Translation/OCSF tabs */}
         {activeTab !== 4 && activeTab !== 5 && activeTab !== 6 && (
-        <Box sx={{ 
+        <Box
+          data-tour="incident-activity-feed"
+          sx={{ 
           width: { xs: '100%', lg: 380 },
           flexShrink: 0,
           display: 'flex',

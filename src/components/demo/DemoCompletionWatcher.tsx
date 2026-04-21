@@ -93,6 +93,24 @@ export const DemoCompletionWatcher = () => {
     return () => window.clearTimeout(timer);
   }, [drawerOpen, step]);
 
+  // ─── incident-detail — auto-complete once the Activity feed is visible ────
+  // The step has a `requirement.targetSelector` so the spotlight points at
+  // the Activity feed, but we don't want to *block* Next on it. Mark complete
+  // as soon as the feed exists in the DOM (i.e. user is on the detail page).
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const stepId = TOUR_STEPS[step]?.id;
+    if (stepId !== 'incident-detail') return;
+    const id = window.setInterval(() => {
+      const el = document.querySelector('[data-tour="incident-activity-feed"]');
+      if (el) {
+        markStepCompleted('incident-detail');
+        window.clearInterval(id);
+      }
+    }, 500);
+    return () => window.clearInterval(id);
+  }, [drawerOpen, step, markStepCompleted]);
+
   // ─── agent: at least one approval notification has been cleared ───────────
   // Snapshot the open approvals when the user lands on the step, then mark
   // complete the moment the count drops.
