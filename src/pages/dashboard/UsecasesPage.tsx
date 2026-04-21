@@ -1390,24 +1390,25 @@ function IntegrationStatusLite({ filterApps, singleLine = false }: { filterApps?
   }
 
   const renderIcon = (integration: IntegrationItem) => {
-    // Match the IngestionSourceButton design language:
-    // - validated  → green tint border/bg + green status dot
-    // - active     → amber tint border/bg + amber status dot
+    // Self-contained styles — explicit hex colors so they render identically
+    // in the standalone build (host CSS may not define --severity-* tokens),
+    // and explicit borderRadius/objectFit on the image so host CSS resets
+    // can't override them.
+    // - validated  → green (#22c55e)
+    // - active     → amber (#f59e0b)
     // - otherwise  → muted, slightly faded
-    const dotColor = integration.validated
-      ? 'hsl(var(--severity-low))'
-      : integration.active
-        ? 'hsl(var(--severity-medium))'
-        : null;
+    const GREEN = '#22c55e';
+    const AMBER = '#f59e0b';
+    const dotColor = integration.validated ? GREEN : integration.active ? AMBER : null;
     const borderColor = integration.validated
-      ? 'hsl(var(--severity-low) / 0.35)'
+      ? 'rgba(34, 197, 94, 0.45)'
       : integration.active
-        ? 'hsl(var(--severity-medium) / 0.35)'
+        ? 'rgba(245, 158, 11, 0.45)'
         : 'hsl(var(--border))';
     const bgColor = integration.validated
-      ? 'hsl(var(--severity-low) / 0.10)'
+      ? 'rgba(34, 197, 94, 0.10)'
       : integration.active
-        ? 'hsl(var(--severity-medium) / 0.10)'
+        ? 'rgba(245, 158, 11, 0.10)'
         : 'hsl(var(--card))';
     const isReady = integration.validated || integration.active;
 
@@ -1424,11 +1425,12 @@ function IntegrationStatusLite({ filterApps, singleLine = false }: { filterApps?
             width: 32,
             height: 32,
             flexShrink: 0,
-            borderRadius: '50%',
+            borderRadius: '50% !important',
             border: `1px solid ${borderColor}`,
+            // overflow visible so the status dot can sit outside the circle
             overflow: 'visible',
             bgcolor: bgColor,
-            display: 'flex',
+            display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
             opacity: isReady ? 1 : 0.45,
@@ -1438,30 +1440,72 @@ function IntegrationStatusLite({ filterApps, singleLine = false }: { filterApps?
               transform: 'scale(1.1)',
               opacity: 1,
               filter: 'none',
+              zIndex: 2,
             },
           }}
         >
-          <Box sx={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {/* Image clip layer: fills the circle entirely, host CSS can't override */}
+          <Box
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              borderRadius: '50% !important',
+              overflow: 'hidden',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: '#ffffff',
+            }}
+          >
             {integration.icon ? (
-              <Box component="img" src={integration.icon} alt={integration.name} loading="lazy" sx={{ width: '82%', height: '82%', objectFit: 'contain' }} />
+              <Box
+                component="img"
+                src={integration.icon}
+                alt={integration.name}
+                loading="lazy"
+                sx={{
+                  display: 'block',
+                  width: '100% !important',
+                  height: '100% !important',
+                  maxWidth: 'none !important',
+                  maxHeight: 'none !important',
+                  objectFit: 'cover',
+                  borderRadius: '50% !important',
+                }}
+              />
             ) : (
-              <Avatar sx={{ width: 22, height: 22, fontSize: '0.72rem', bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--foreground))' }}>
+              <Box
+                sx={{
+                  width: '100%',
+                  height: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  color: 'hsl(var(--foreground))',
+                  bgcolor: 'hsl(var(--muted))',
+                }}
+              >
                 {integration.name.slice(0, 1).toUpperCase()}
-              </Avatar>
+              </Box>
             )}
           </Box>
+          {/* Status dot — sits OUTSIDE the circle, high z-index so nothing hides it */}
           {dotColor && (
             <Box
+              aria-hidden
               sx={{
                 position: 'absolute',
-                bottom: -1,
-                right: -1,
-                width: 9,
-                height: 9,
-                borderRadius: '50%',
-                bgcolor: dotColor,
-                border: '2px solid hsl(var(--background))',
-                boxSizing: 'content-box',
+                bottom: -2,
+                right: -2,
+                width: 10,
+                height: 10,
+                borderRadius: '50% !important',
+                backgroundColor: `${dotColor} !important`,
+                boxShadow: `0 0 0 2px hsl(var(--background)), 0 0 4px ${dotColor}66`,
+                zIndex: 3,
+                pointerEvents: 'none',
               }}
             />
           )}
