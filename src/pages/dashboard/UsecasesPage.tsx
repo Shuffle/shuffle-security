@@ -1688,6 +1688,12 @@ export interface UsecasesPageProps {
    * this fully overrides authentication state. Defaults to `!!userdata`.
    */
   isLoggedIn?: boolean;
+  /**
+   * Force the color theme of the page. Defaults to `'system'` (follows
+   * `prefers-color-scheme` and any ancestor `.dark` class). Pass `'dark'`
+   * or `'light'` to lock it.
+   */
+  theme?: 'light' | 'dark' | 'system';
 }
 
 function UsecasesPageInner() {
@@ -2384,7 +2390,12 @@ function UsecaseCard({
  */
 export default function UsecasesPage(props: UsecasesPageProps = {}) {
   useInjectScopedStyles();
-  const { globalUrl, userdata, isLoaded, isLoggedIn } = props;
+  const { globalUrl, userdata, isLoaded, isLoggedIn, theme = 'system' } = props;
+
+  // Resolve the theme class applied directly on the scope wrapper. 'system'
+  // means "do nothing" — let the host app's `.dark` ancestor (or none) decide.
+  const themeClass =
+    theme === 'dark' ? 'dark' : theme === 'light' ? 'light' : '';
 
   // Detect whether the host app is driving auth/config. As soon as ANY of the
   // four props is supplied, we treat the host as the source of truth and
