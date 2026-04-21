@@ -129,7 +129,7 @@ const HostTerminalPage = () => {
   const { hostUuid } = useParams<{ hostUuid: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const hostState = location.state as { hostname?: string; groupName?: string; mode?: string } | null;
+  const hostState = location.state as { hostname?: string; groupName?: string; mode?: string; autoRunAction?: string } | null;
 
   // Host switcher state
   const [allHosts, setAllHosts] = useState<HostOption[]>([]);
@@ -402,6 +402,21 @@ const HostTerminalPage = () => {
       abortControllersRef.current.delete(abortKey);
     }
   }, [hostUuid, hostname, groupName]);
+
+  // Auto-run an action passed via navigation state (e.g. "CBOM Scan" from /monitors/:id).
+  // Fires once per navigation entry, after hostname + groupName have resolved.
+  const autoRunFiredRef = useRef(false);
+  useEffect(() => {
+    if (autoRunFiredRef.current) return;
+    const action = hostState?.autoRunAction;
+    if (!action || !hostUuid) return;
+    if (!hostname || hostname === 'Unknown Host' || hostname === hostUuid) return;
+    if (!groupName) return;
+    autoRunFiredRef.current = true;
+    executeHostAction(action, action, false);
+    // Clear the state so a refresh doesn't re-trigger
+    navigate(location.pathname, { replace: true, state: { hostname, groupName, mode: hostState?.mode } });
+  }, [hostState, hostUuid, hostname, groupName, executeHostAction, navigate, location.pathname]);
 
   const abortAll = () => {
     pollingActiveRef.current.forEach((_, key) => {

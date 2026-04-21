@@ -734,7 +734,16 @@ export const MonitorHostTable = ({ hosts, onRefresh }: MonitorHostTableProps) =>
                 </div>
               </div>
               {/* Expanded detail panel — shared with /monitors/:id via HostDetailPanel */}
-              {isExpanded && <HostDetailPanel host={host as any} variant="inline" />}
+              {isExpanded && (
+                <HostDetailPanel
+                  host={host as any}
+                  variant="inline"
+                  hostUuid={host.uuid}
+                  hostname={host.hostname}
+                  groupName={host.groupName}
+                  mode={responseActionsMode || 'controlled'}
+                />
+              )}
             </div>
           );
         })}

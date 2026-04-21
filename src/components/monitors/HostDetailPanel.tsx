@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Button } from '@/components/ui/button';
 import {
   HardDrive, Lock, Package, Zap, ChevronRight, ChevronDown,
-  Hash, Cpu, Send, ShieldCheck, ShieldX, FileCode,
+  Hash, Cpu, Send, ShieldCheck, ShieldX, FileCode, ScanLine,
 } from 'lucide-react';
 
 /**
@@ -60,6 +61,11 @@ interface HostDetailPanelProps {
   variant?: 'inline' | 'page';
   /** When true, software + code scanner sections start collapsed (used on the standalone page) */
   collapsibleSections?: boolean;
+  /** Optional terminal context — enables the per-project "CBOM Scan" button when provided */
+  hostUuid?: string;
+  hostname?: string;
+  groupName?: string;
+  mode?: string;
 }
 
 const stateOf = (v: boolean | string | undefined): 'on' | 'off' => {
@@ -76,8 +82,22 @@ const fmtRaw = (v: unknown): string => {
   return String(v);
 };
 
-export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections = false }: HostDetailPanelProps) => {
+export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections = false, hostUuid, hostname, groupName, mode }: HostDetailPanelProps) => {
   const navigate = useNavigate();
+  const resolvedUuid = hostUuid || (host.uuid as string | undefined);
+  const resolvedHostname = hostname || (host.hostname as string | undefined);
+  const canRunCbom = !!resolvedUuid && !!resolvedHostname;
+  const runCbomScan = (path: string) => {
+    if (!resolvedUuid) return;
+    navigate(`/monitors/${resolvedUuid}/terminal`, {
+      state: {
+        hostname: resolvedHostname,
+        groupName: groupName || (host.groupName as string | undefined) || '',
+        mode: mode || 'controlled',
+        autoRunAction: `script:cbom ${path}`,
+      },
+    });
+  };
   const [softwareFilter, setSoftwareFilter] = useState('');
   const [codeScanFilter, setCodeScanFilter] = useState('');
   const [expandedCodePaths, setExpandedCodePaths] = useState<Set<string>>(new Set());
@@ -361,32 +381,55 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
                       const pkgCount = proj.packages?.length || 0;
                       return (
                         <div key={pi} className="border-b border-border last:border-b-0">
-                          <button
-                            onClick={() => setExpandedCodePaths(prev => {
-                              const next = new Set(prev);
-                              if (next.has(proj.path)) next.delete(proj.path); else next.add(proj.path);
-                              return next;
-                            })}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-muted/20 transition-colors"
-                          >
-                            {isExpanded ? <ChevronDown size={12} className="text-muted-foreground shrink-0" /> : <ChevronRight size={12} className="text-muted-foreground shrink-0" />}
-                            <span className={`inline-flex items-center gap-1 text-[0.65rem] font-semibold px-1.5 py-0.5 rounded shrink-0 w-[72px] justify-center ${
-                              proj.type === 'python' ? 'bg-blue-500/15 text-blue-500' :
-                              proj.type === 'java' ? 'bg-red-500/15 text-red-500' :
-                              proj.type === 'javascript' || proj.type === 'node' ? 'bg-yellow-500/15 text-yellow-600 dark:text-yellow-400' :
-                              proj.type === 'go' ? 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400' :
-                              proj.type === 'rust' ? 'bg-orange-500/15 text-orange-600 dark:text-orange-400' :
-                              proj.type === 'ruby' ? 'bg-red-400/15 text-red-400' :
-                              proj.type === 'php' ? 'bg-indigo-500/15 text-indigo-500' :
-                              proj.type === 'dotnet' || proj.type === 'csharp' ? 'bg-purple-500/15 text-purple-500' :
-                              'bg-muted text-muted-foreground'
-                            }`}>
-                              <FileCode size={10} />
-                              {proj.type}
-                            </span>
-                            <span className="text-xs font-mono font-medium text-foreground truncate flex-1">{proj.path}</span>
-                            <span className="text-[0.65rem] text-muted-foreground shrink-0">{pkgCount} pkg{pkgCount !== 1 ? 's' : ''}</span>
-                          </button>
+                          <div className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted/20 transition-colors">
+                            <button
+                              type="button"
+                              onClick={() => setExpandedCodePaths(prev => {
+                                const next = new Set(prev);
+                                if (next.has(proj.path)) next.delete(proj.path); else next.add(proj.path);
+                                return next;
+                              })}
+                              className="flex items-center gap-2 flex-1 min-w-0 text-left"
+                            >
+                              {isExpanded ? <ChevronDown size={12} className="text-muted-foreground shrink-0" /> : <ChevronRight size={12} className="text-muted-foreground shrink-0" />}
+                              <span className={`inline-flex items-center gap-1 text-[0.65rem] font-semibold px-1.5 py-0.5 rounded shrink-0 w-[72px] justify-center ${
+                                proj.type === 'python' ? 'bg-blue-500/15 text-blue-500' :
+                                proj.type === 'java' ? 'bg-red-500/15 text-red-500' :
+                                proj.type === 'javascript' || proj.type === 'node' ? 'bg-yellow-500/15 text-yellow-600 dark:text-yellow-400' :
+                                proj.type === 'go' ? 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400' :
+                                proj.type === 'rust' ? 'bg-orange-500/15 text-orange-600 dark:text-orange-400' :
+                                proj.type === 'ruby' ? 'bg-red-400/15 text-red-400' :
+                                proj.type === 'php' ? 'bg-indigo-500/15 text-indigo-500' :
+                                proj.type === 'dotnet' || proj.type === 'csharp' ? 'bg-purple-500/15 text-purple-500' :
+                                'bg-muted text-muted-foreground'
+                              }`}>
+                                <FileCode size={10} />
+                                {proj.type}
+                              </span>
+                              <span className="text-xs font-mono font-medium text-foreground truncate flex-1">{proj.path}</span>
+                              <span className="text-[0.65rem] text-muted-foreground shrink-0">{pkgCount} pkg{pkgCount !== 1 ? 's' : ''}</span>
+                            </button>
+                            {canRunCbom && (
+                              <TooltipProvider delayDuration={200}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-6 px-2 gap-1 text-[0.65rem] shrink-0"
+                                      onClick={(e) => { e.stopPropagation(); runCbomScan(proj.path); }}
+                                    >
+                                      <ScanLine size={11} />
+                                      CBOM Scan
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="left" className="max-w-xs">
+                                    <p className="text-[0.65rem]">Runs <code className="font-mono">script:cbom {proj.path}</code> on this host and opens the terminal with live output.</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
+                          </div>
                           {isExpanded && pkgCount > 0 && (
                             <div className="bg-muted/10">
                               <table className="w-full text-xs">
