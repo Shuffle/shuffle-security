@@ -1896,35 +1896,50 @@ function UsecasesPageInner() {
               Export JSON
             </Box>
           )}
-          <Box
-            component={Link}
-            to="/infrastructure"
-            sx={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 1,
-              px: 2,
-              py: 1,
-              borderRadius: 1.5,
-              border: '1px solid hsl(var(--border))',
-              bgcolor: 'hsl(var(--card))',
-              color: 'hsl(var(--foreground))',
-              textDecoration: 'none',
-              fontSize: '0.85rem',
-              fontWeight: 500,
-              transition: 'all 0.15s ease',
-              whiteSpace: 'nowrap',
-              '&:hover': {
-                bgcolor: 'hsl(var(--muted))',
-                borderColor: 'hsl(var(--primary) / 0.4)',
-                boxShadow: '0 2px 8px hsl(var(--primary) / 0.1)',
-              },
-            }}
-          >
-            <Network size={16} />
-            Infrastructure
-            <ArrowRight size={14} style={{ opacity: 0.5 }} />
-          </Box>
+          {(() => {
+            // Always link to security.shuffler.io/infrastructure in a new window.
+            // Outside of security.shuffler.io itself, restrict visibility to support users.
+            const onSecurityHost = typeof window !== 'undefined' && window.location.hostname === 'security.shuffler.io';
+            if (!onSecurityHost && !isSupport) return null;
+            const tooltip = onSecurityHost
+              ? 'Open Infrastructure'
+              : 'Support-only: opens security.shuffler.io/infrastructure in a new tab';
+            return (
+              <Tooltip title={tooltip} placement="bottom" arrow>
+                <Box
+                  component="a"
+                  href="https://security.shuffler.io/infrastructure"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  sx={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    px: 2,
+                    py: 1,
+                    borderRadius: 1.5,
+                    border: '1px solid hsl(var(--border))',
+                    bgcolor: 'hsl(var(--card))',
+                    color: 'hsl(var(--foreground))',
+                    textDecoration: 'none',
+                    fontSize: '0.85rem',
+                    fontWeight: 500,
+                    transition: 'all 0.15s ease',
+                    whiteSpace: 'nowrap',
+                    '&:hover': {
+                      bgcolor: 'hsl(var(--muted))',
+                      borderColor: 'hsl(var(--primary) / 0.4)',
+                      boxShadow: '0 2px 8px hsl(var(--primary) / 0.1)',
+                    },
+                  }}
+                >
+                  <Network size={16} />
+                  Infrastructure
+                  <ExternalLink size={14} style={{ opacity: 0.5 }} />
+                </Box>
+              </Tooltip>
+            );
+          })()}
         </Box>
       </Box>
 
