@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams, useParams } from 'react-router-dom';
 
 import {
   Box,
@@ -1681,7 +1681,11 @@ function UsecaseDetailContent({
   const nextFlow = currentIndex < usecases.length - 1 ? usecases[currentIndex + 1] : null;
   const goToUsecase = (id: string) => {
     if (onNavigateUsecase) onNavigateUsecase(id);
-    else navigate(`/usecases/${id}`);
+    else {
+      const target = usecases.find((u) => u.id === id);
+      const seg = target?.label || id;
+      navigate(`/usecases/${encodeURIComponent(seg)}`);
+    }
   };
 
   // Self-contained color tokens with fallbacks so the standalone build
@@ -1749,7 +1753,7 @@ function UsecaseDetailContent({
           <Box sx={{ display: 'flex', gap: 1, flexShrink: 0, width: { xs: '100%', sm: 'auto' } }}>
             <Button
               component={Link}
-              to={`/register?returnUrl=${encodeURIComponent(`/usecases?usecase=${flow.id}`)}`}
+              to={`/register?returnUrl=${encodeURIComponent(`/usecases/${encodeURIComponent(flow.label)}`)}`}
               variant="contained"
               disableElevation
               endIcon={<ArrowRight size={16} />}
@@ -1769,7 +1773,7 @@ function UsecaseDetailContent({
             </Button>
             <Button
               component={Link}
-              to={`/login?returnUrl=${encodeURIComponent(`/usecases?usecase=${flow.id}`)}`}
+              to={`/login?returnUrl=${encodeURIComponent(`/usecases/${encodeURIComponent(flow.label)}`)}`}
               variant="text"
               sx={{
                 textTransform: 'none',
@@ -1990,23 +1994,43 @@ function UsecasesPageInner() {
   const [tagFilter, setTagFilter] = useState<string>('all');
 
   const navigate = useNavigate();
+  const { apiUrl, authHeader } = useApi();
   const { usecases, apiLoaded, getDrift } = useUsecasesLite();
   const { userInfo, isAuthenticated } = useAuthLite();
   const { data: workflows = [], refetch: refetchWorkflows } = useWorkflowsLite();
   const isSupport = userInfo?.support === true;
   const [showAllAsSupport, setShowAllAsSupport] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
-  const drawerFlowId = searchParams.get('usecase');
+  const routeParams = useParams<{ flowId?: string }>();
+
+  // Drawer is driven by the route segment /usecases/:flowId where the segment
+  // is the URL-encoded usecase label (human-readable name). We resolve it back
+  // to a flow id by matching against `flow.label`.
+  const drawerLabel = routeParams.flowId ? decodeURIComponent(routeParams.flowId) : null;
+  const drawerFlowId = useMemo(() => {
+    if (!drawerLabel) return null;
+    const match = usecases.find(u => u.label === drawerLabel);
+    return match ? match.id : null;
+  }, [drawerLabel, usecases]);
+
   const setDrawerFlowId = (id: string | null) => {
-    setSearchParams(
-      (prev) => {
-        const next = new URLSearchParams(prev);
-        if (id) next.set('usecase', id);
-        else next.delete('usecase');
-        return next;
-      },
-      { replace: false }
-    );
+    if (!id) {
+      navigate({ pathname: '/usecases', search: searchParams.toString() ? `?${searchParams.toString()}` : '' });
+      return;
+    }
+    const flow = usecases.find(u => u.id === id);
+    const name = flow?.label || id;
+    // Fire-and-forget API call — response intentionally ignored per product spec.
+    try {
+      fetch(apiUrl(`/api/v1/workflows/usecases/${encodeURIComponent(name)}`), {
+        credentials: 'include',
+        headers: { ...authHeader() },
+      }).catch(() => { /* ignore */ });
+    } catch { /* ignore */ }
+    navigate({
+      pathname: `/usecases/${encodeURIComponent(name)}`,
+      search: searchParams.toString() ? `?${searchParams.toString()}` : '',
+    });
   };
 
   // Map: automationLabel -> whether at least one workflow exists for it.
@@ -2416,7 +2440,7 @@ function UsecasesPageInner() {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             {drawerFlowId && (
               <Button
-                onClick={() => { const id = drawerFlowId; setDrawerFlowId(null); navigate(`/usecases/${id}`); }}
+                onClick={() => { const id = drawerFlowId; navigate(`/usecases/${encodeURIComponent(usecases.find(u => u.id === id)?.label || id || '')}/details`); }}
                 endIcon={<ExternalLink size={14} />}
                 sx={{
                   textTransform: 'none',
@@ -2662,7 +2686,7 @@ function UsecaseCard({
           ) : (
             <Button
               component={Link}
-              to={`/register?returnUrl=${encodeURIComponent(`/usecases?usecase=${flow.id}`)}`}
+              to={`/register?returnUrl=${encodeURIComponent(`/usecases/${encodeURIComponent(flow.label)}`)}`}
               size="small"
               variant="contained"
               disableElevation
