@@ -17,8 +17,11 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  Button,
+  CircularProgress,
 } from '@mui/material';
-import { Search, ArrowRight, Download, Zap, Activity, CheckCircle2, Circle, AlertTriangle, Network, Clock } from 'lucide-react';
+import { Search, ArrowRight, Download, Zap, Activity, CheckCircle2, Circle, AlertTriangle, Network, Clock, Power, PowerOff } from 'lucide-react';
+import { toast } from 'sonner';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import {
   FLOW_PHASES,
@@ -29,6 +32,8 @@ import {
 import { useUsecases, type UsecaseDrift } from '@/hooks/useUsecases';
 import UsecaseAlluvialDiagram from '@/components/usecases/UsecaseAlluvialDiagram';
 import { useAuth } from '@/context/AuthContext';
+import { useWorkflows } from '@/hooks/useWorkflows';
+import { getApiUrl, getAuthHeader } from '@/config/api';
 
 const categoryLabel = (id: string) =>
   TOOL_CATEGORIES.find((c) => c.id === id)?.label || id;
@@ -50,8 +55,27 @@ export default function UsecasesPage() {
   const navigate = useNavigate();
   const { usecases, apiLoaded, getDrift } = useUsecases();
   const { userInfo, isAuthenticated } = useAuth();
+  const { data: workflows = [], refetch: refetchWorkflows } = useWorkflows();
   const isSupport = userInfo?.support === true;
   const [showAllAsSupport, setShowAllAsSupport] = useState(true);
+
+  // Map: automationLabel -> whether at least one workflow exists for it.
+  // Match by workflow name OR tag containing the label (case-insensitive).
+  const enabledLabels = useMemo(() => {
+    const set = new Set<string>();
+    for (const wf of workflows) {
+      const name = (wf.name || '').toLowerCase();
+      const tags = (wf.tags || []).map(t => String(t).toLowerCase());
+      for (const uc of usecases) {
+        if (!uc.automationLabel) continue;
+        const lbl = uc.automationLabel.toLowerCase();
+        if (name === lbl || name.includes(lbl) || tags.includes(lbl) || tags.some(t => t.includes(lbl))) {
+          set.add(uc.automationLabel);
+        }
+      }
+    }
+    return set;
+  }, [workflows, usecases]);
 
   // Collect unique tags across all usecases
   const allTags = useMemo(() => {
@@ -307,7 +331,16 @@ export default function UsecasesPage() {
             }}
           >
             {group.flows.map((flow) => (
-              <UsecaseCard key={flow.id} flow={flow} drift={getDrift(flow.id)} apiLoaded={apiLoaded} onClick={() => navigate(`/usecases/${flow.id}`)} />
+              <UsecaseCard
+                key={flow.id}
+                flow={flow}
+                drift={getDrift(flow.id)}
+                apiLoaded={apiLoaded}
+                isEnabled={!!flow.automationLabel && enabledLabels.has(flow.automationLabel)}
+                canToggle={isAuthenticated && !!flow.automationLabel}
+                onToggled={refetchWorkflows}
+                onClick={() => navigate(`/usecases/${flow.id}`)}
+              />
             ))}
           </Box>
         </Box>
@@ -324,10 +357,60 @@ export default function UsecasesPage() {
 
 const ACTIVE_USECASE_IDS = ['siem_case_management_1', 'edr_case_management_1', 'email_case_management_1'];
 
-function UsecaseCard({ flow, drift, apiLoaded, onClick }: { flow: Usecase; drift?: UsecaseDrift; apiLoaded: boolean; onClick: () => void }) {
+function UsecaseCard({
+  flow,
+  drift,
+  apiLoaded,
+  isEnabled,
+  canToggle,
+  onToggled,
+  onClick,
+}: {
+  flow: Usecase;
+  drift?: UsecaseDrift;
+  apiLoaded: boolean;
+  isEnabled: boolean;
+  canToggle: boolean;
+  onToggled?: () => void;
+  onClick: () => void;
+}) {
   const sourceCat = categoryLabel(flow.source);
   const isComingSoon = !ACTIVE_USECASE_IDS.includes(flow.id);
   const targetCat = categoryLabel(flow.target);
+  const [toggling, setToggling] = useState(false);
+  const [optimisticEnabled, setOptimisticEnabled] = useState<boolean | null>(null);
+  const effectiveEnabled = optimisticEnabled !== null ? optimisticEnabled : isEnabled;
+
+  const handleToggle = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (!flow.automationLabel || toggling) return;
+    const willBeEnabled = !effectiveEnabled;
+    setToggling(true);
+    setOptimisticEnabled(willBeEnabled);
+    try {
+      const res = await fetch(getApiUrl('/api/v2/workflows/generate'), {
+        method: 'POST',
+        credentials: 'include',
+        headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          label: flow.automationLabel,
+          ...(flow.automationCategory ? { category: flow.automationCategory } : {}),
+          ...(willBeEnabled ? {} : { action_name: 'remove' }),
+        }),
+      });
+      if (!res.ok) throw new Error('Failed');
+      toast.success(willBeEnabled ? `${flow.label} enabled` : `${flow.label} disabled`);
+      onToggled?.();
+      // Clear optimistic after a short delay so refetch can land
+      setTimeout(() => setOptimisticEnabled(null), 1500);
+    } catch {
+      setOptimisticEnabled(null);
+      toast.error('Failed to update automation');
+    } finally {
+      setToggling(false);
+    }
+  };
 
   // Determine sync status
   const isSynced = drift && drift.drifts.length === 0; // matched with no drift
@@ -358,12 +441,17 @@ function UsecaseCard({ flow, drift, apiLoaded, onClick }: { flow: Usecase; drift
     <Card
       variant="outlined"
       sx={{
+        position: 'relative',
         bgcolor: 'hsl(var(--card))',
-        borderColor: 'hsl(var(--border))',
+        borderColor: effectiveEnabled ? 'hsl(var(--severity-low) / 0.4)' : 'hsl(var(--border))',
         transition: 'border-color 0.15s, box-shadow 0.15s',
         '&:hover': {
           borderColor: 'hsl(var(--primary) / 0.4)',
           boxShadow: '0 2px 12px hsl(var(--primary) / 0.08)',
+        },
+        '&:hover .uc-toggle-btn': {
+          opacity: 1,
+          pointerEvents: 'auto',
         },
       }}
     >
@@ -373,6 +461,13 @@ function UsecaseCard({ flow, drift, apiLoaded, onClick }: { flow: Usecase; drift
           <Typography variant="body2" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))', flexGrow: 1, fontSize: '0.82rem' }}>
             {flow.label}
           </Typography>
+          {effectiveEnabled && (
+            <Tooltip title="Automation enabled" placement="top" arrow>
+              <Box sx={{ display: 'inline-flex' }}>
+                <Power size={13} style={{ color: 'hsl(var(--severity-low))' }} />
+              </Box>
+            </Tooltip>
+          )}
           {isComingSoon && (
             <Tooltip title="Coming soon" placement="top" arrow>
               <Box sx={{ display: 'inline-flex' }}>
@@ -394,6 +489,53 @@ function UsecaseCard({ flow, drift, apiLoaded, onClick }: { flow: Usecase; drift
           </Typography>
         </Box>
       </CardActionArea>
+
+      {/* Hover-revealed Enable/Disable button */}
+      {canToggle && (
+        <Box
+          className="uc-toggle-btn"
+          sx={{
+            position: 'absolute',
+            top: 6,
+            right: 6,
+            opacity: 0,
+            pointerEvents: 'none',
+            transition: 'opacity 0.15s ease',
+          }}
+        >
+          <Button
+            size="small"
+            variant="contained"
+            disableElevation
+            onClick={handleToggle}
+            disabled={toggling}
+            startIcon={
+              toggling ? (
+                <CircularProgress size={12} sx={{ color: 'inherit' }} />
+              ) : effectiveEnabled ? (
+                <PowerOff size={12} />
+              ) : (
+                <Power size={12} />
+              )
+            }
+            sx={{
+              textTransform: 'none',
+              fontSize: '0.7rem',
+              fontWeight: 600,
+              minHeight: 0,
+              py: 0.4,
+              px: 1,
+              bgcolor: effectiveEnabled ? 'hsl(var(--destructive))' : 'hsl(var(--primary))',
+              color: effectiveEnabled ? 'hsl(var(--destructive-foreground))' : 'hsl(var(--primary-foreground))',
+              '&:hover': {
+                bgcolor: effectiveEnabled ? 'hsl(var(--destructive) / 0.9)' : 'hsl(var(--primary) / 0.9)',
+              },
+            }}
+          >
+            {effectiveEnabled ? 'Disable' : 'Enable'}
+          </Button>
+        </Box>
+      )}
     </Card>
   );
 }
