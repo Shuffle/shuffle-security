@@ -31,16 +31,10 @@ export const DemoCompletionWatcher = () => {
     if (!stopped) markStepCompleted('ingest-webhook');
   }, [drawerOpen, workflows, markStepCompleted]);
 
-  // ─── enable-crowdstrike: app appears in Ingest Tickets workflow ────────────
-  useEffect(() => {
-    if (!drawerOpen || !workflows) return;
-    const ingest = findIngestTicketsWorkflow(workflows);
-    if (!ingest) return;
-    const names = extractWorkflowAppNames(ingest);
-    if (names.has(normalizeAppName('crowdstrike')) || names.has(normalizeAppName('crowdstrike_falcon'))) {
-      markStepCompleted('enable-crowdstrike');
-    }
-  }, [drawerOpen, workflows, markStepCompleted]);
+  // Note: the `add-outlook` step is marked complete directly from the
+  // IncidentsPage AppSearchDrawer override when the user picks Outlook
+  // Office365 from the popup (pretend-authenticated for the demo).
+
 
   // ─── agent: at least one approval notification has been cleared ───────────
   // We snapshot the open approvals when the user lands on the step, then mark
