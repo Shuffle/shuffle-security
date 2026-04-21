@@ -1707,6 +1707,84 @@ function UsecaseDetailContent({
         </Button>
       )}
 
+      {!isAuthenticated && (
+        <Box
+          sx={{
+            position: 'relative',
+            overflow: 'hidden',
+            borderRadius: 2,
+            border: '1px solid hsla(24, 100%, 50%, 0.4)',
+            background: 'linear-gradient(135deg, hsla(24, 100%, 50%, 0.18) 0%, hsla(24, 100%, 50%, 0.06) 60%, hsla(24, 100%, 50%, 0.02) 100%)',
+            p: { xs: 2, md: 2.5 },
+            mb: 3,
+            display: 'flex',
+            alignItems: { xs: 'flex-start', sm: 'center' },
+            gap: 2,
+            flexDirection: { xs: 'column', sm: 'row' },
+          }}
+        >
+          <Box
+            sx={{
+              flexShrink: 0,
+              width: 44,
+              height: 44,
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              bgcolor: 'hsla(24, 100%, 50%, 0.18)',
+              color: PRIMARY,
+            }}
+          >
+            <Sparkles size={22} />
+          </Box>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography sx={{ fontSize: '1rem', fontWeight: 700, color: FG, mb: 0.25 }}>
+              Try “{flow.label}” in your own environment
+            </Typography>
+            <Typography sx={{ fontSize: '0.82rem', color: MUTED, lineHeight: 1.5 }}>
+              Create a free account to enable this automation in one click — no credit card, setup in under 2 minutes.
+            </Typography>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 1, flexShrink: 0, width: { xs: '100%', sm: 'auto' } }}>
+            <Button
+              component={Link}
+              to={`/register?returnUrl=${encodeURIComponent(`/usecases?usecase=${flow.id}`)}`}
+              variant="contained"
+              disableElevation
+              endIcon={<ArrowRight size={16} />}
+              sx={{
+                textTransform: 'none',
+                fontWeight: 700,
+                fontSize: '0.85rem',
+                px: 2,
+                py: 1,
+                bgcolor: PRIMARY,
+                color: 'hsl(var(--primary-foreground, 0 0% 100%))',
+                '&:hover': { bgcolor: 'hsla(24, 100%, 50%, 0.9)' },
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Get started free
+            </Button>
+            <Button
+              component={Link}
+              to={`/login?returnUrl=${encodeURIComponent(`/usecases?usecase=${flow.id}`)}`}
+              variant="text"
+              sx={{
+                textTransform: 'none',
+                fontWeight: 600,
+                fontSize: '0.85rem',
+                color: MUTED,
+                '&:hover': { color: FG, bgcolor: 'transparent' },
+              }}
+            >
+              Sign in
+            </Button>
+          </Box>
+        </Box>
+      )}
+
       <Box sx={{ p: 3, borderRadius: 2, border: CARD_BORDER, bgcolor: CARD_BG, mb: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2.5 }}>
           <Box sx={{ width: 52, height: 52, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: accentBg(sourceCat?.color, 0.12), color: accent(sourceCat?.color), flexShrink: 0 }}>
