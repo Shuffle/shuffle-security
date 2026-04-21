@@ -389,15 +389,17 @@ export const DemoTourDrawer = () => {
                         ? current.subGoals.map(g => ({
                             id: g.id,
                             label: g.label,
-                            done: !!completedSteps[g.id],
+                            // Special-case: the "incident must be present"
+                            // sub-goal is satisfied by the live datastore
+                            // presence check, not by completedSteps.
+                            done: g.id === 'incidents-list:present'
+                              ? hasDemoIncidents
+                              : !!completedSteps[g.id],
                           }))
                         : requirement
                           ? [{
                               id: current.id,
                               label: requirement.label,
-                              // Special-case the incidents-list gate: it is
-                              // satisfied by the presence of a demo incident
-                              // in the datastore, not by completedSteps.
                               done: isIncidentsListStep
                                 ? hasDemoIncidents
                                 : !!completedSteps[current.id],
@@ -423,10 +425,11 @@ export const DemoTourDrawer = () => {
                           </Typography>
                           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.85 }}>
                             {goals.map(g => {
-                              // For the incidents-list step, render a tiny
-                              // "Force generate" button inline next to the
-                              // goal label when not yet satisfied.
-                              const showForceGenerate = isIncidentsListStep && !g.done;
+                              // For the incidents-list "present" sub-goal,
+                              // render a tiny "Force generate" button inline
+                              // next to the label when not yet satisfied.
+                              const showForceGenerate =
+                                isIncidentsListStep && g.id === 'incidents-list:present' && !g.done;
                               return (
                                 <Box key={g.id} sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
                                   <Box

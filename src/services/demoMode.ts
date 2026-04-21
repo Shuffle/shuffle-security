@@ -15,6 +15,7 @@ import {
   buildDemoIncidentsBatch1,
   buildDemoIncidentsBatch2,
   buildDemoFocusIncident,
+  buildDemoWazuhImplantIncident,
   buildDemoAssets,
   buildDemoUsers,
   buildDemoVulnerabilities,
@@ -316,6 +317,27 @@ export const forceCreateSingleDemoIncident = async (): Promise<number> => {
   const item = buildDemoFocusIncident();
   const res = await setDatastoreItems([item], DATASTORE_CATEGORIES.INCIDENTS);
   if (!res.success) throw new Error(res.error || 'Failed to create demo focus incident');
+  recordSeed(DATASTORE_CATEGORIES.INCIDENTS, [item.key]);
+  broadcastRefresh(DATASTORE_CATEGORIES.INCIDENTS);
+  return 1;
+};
+
+/**
+ * Seed the follow-up Wazuh / Sliver C2 implant detection. Called after the
+ * user has been exploring the phishing focus incident for a bit, so the
+ * critical malware finding visibly "arrives" mid-investigation. Idempotent
+ * on the wazuh key suffix — already-seeded calls are a no-op.
+ *
+ * Returns the number of incidents written (0 or 1).
+ */
+export const seedDemoWazuhImplantIncident = async (): Promise<number> => {
+  const idx = readIndex();
+  const existing = idx[DATASTORE_CATEGORIES.INCIDENTS] || [];
+  if (existing.some(k => k.includes('-wazuh'))) return 0;
+
+  const item = buildDemoWazuhImplantIncident();
+  const res = await setDatastoreItems([item], DATASTORE_CATEGORIES.INCIDENTS);
+  if (!res.success) throw new Error(res.error || 'Failed to seed Wazuh implant incident');
   recordSeed(DATASTORE_CATEGORIES.INCIDENTS, [item.key]);
   broadcastRefresh(DATASTORE_CATEGORIES.INCIDENTS);
   return 1;
