@@ -971,9 +971,12 @@ const SCOPED_CSS = `
   background: hsl(var(--background));
 }
 
-/* Dark theme — applies when any ancestor (or the scope itself) has .dark */
-.dark .${SCOPE_CLASS},
-.${SCOPE_CLASS}.dark {
+/* Dark theme rules.
+ * Applies when the scope itself has .dark (forced via theme=dark), OR when an
+ * ancestor has .dark AND the scope was not forced to .light. The :not(.light)
+ * guard lets theme=light override an ambient .dark host. */
+.${SCOPE_CLASS}.dark,
+.dark .${SCOPE_CLASS}:not(.light) {
   --background: 0 0% 10%;
   --foreground: 0 0% 100%;
   --card: 0 0% 13%;
@@ -1688,6 +1691,12 @@ export interface UsecasesPageProps {
    * this fully overrides authentication state. Defaults to `!!userdata`.
    */
   isLoggedIn?: boolean;
+  /**
+   * Force the color theme of the page. Defaults to `'system'` (follows
+   * `prefers-color-scheme` and any ancestor `.dark` class). Pass `'dark'`
+   * or `'light'` to lock it.
+   */
+  theme?: 'light' | 'dark' | 'system';
 }
 
 function UsecasesPageInner() {
@@ -2384,7 +2393,12 @@ function UsecaseCard({
  */
 export default function UsecasesPage(props: UsecasesPageProps = {}) {
   useInjectScopedStyles();
-  const { globalUrl, userdata, isLoaded, isLoggedIn } = props;
+  const { globalUrl, userdata, isLoaded, isLoggedIn, theme = 'system' } = props;
+
+  // Resolve the theme class applied directly on the scope wrapper. 'system'
+  // means "do nothing" — let the host app's `.dark` ancestor (or none) decide.
+  const themeClass =
+    theme === 'dark' ? 'dark' : theme === 'light' ? 'light' : '';
 
   // Detect whether the host app is driving auth/config. As soon as ANY of the
   // four props is supplied, we treat the host as the source of truth and
@@ -2427,7 +2441,7 @@ export default function UsecasesPage(props: UsecasesPageProps = {}) {
 
   return (
     <UsecasesPageConfigContext.Provider value={config}>
-      <div className={SCOPE_CLASS}>
+      <div className={themeClass ? `${SCOPE_CLASS} ${themeClass}` : SCOPE_CLASS}>
         <UsecasesPageInner />
       </div>
     </UsecasesPageConfigContext.Provider>
