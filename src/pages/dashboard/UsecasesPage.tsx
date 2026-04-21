@@ -1835,9 +1835,6 @@ function UsecaseDetailContent({
                   {effectiveEnabled ? 'Disable' : 'Enable'}
                 </Button>
               )}
-              {!canToggle && isAuthenticated && flow.automationLabel && (
-                null
-              )}
             </Box>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 1.25 }}>
               <Typography sx={{ fontSize: '0.68rem', fontWeight: 700, px: 1, py: 0.35, borderRadius: 1, bgcolor: accentBg(phaseInfo.color, 0.12), color: accent(phaseInfo.color), border: `1px solid ${accentBg(phaseInfo.color, 0.25)}` }}>
