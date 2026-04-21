@@ -883,10 +883,21 @@ const getStoredApiKey = (): string | null => {
 // API base resolved from env/host, auth via `shuffle_api_key` localStorage,
 // and authentication probed via `/api/v1/getinfo`.
 // ============================================================================
+/**
+ * Raw response body from `GET /api/v1/getinfo`. Host apps typically already
+ * have this loaded and pass it down as `userdata`.
+ */
 export interface UsecasesUserData {
+  success?: boolean;
   id?: string;
   username?: string;
   support?: boolean;
+  active_org?: { id?: string; name?: string; [key: string]: any };
+  orgs?: any[];
+  region_url?: string;
+  app_execution_limit?: number;
+  app_execution_usage?: number;
+  /** Optional API key — if present it's used as bearer token for requests. */
   api_key?: string;
   apikey?: string;
   [key: string]: any;
@@ -1596,13 +1607,22 @@ function UsecaseDetailContent({
 export interface UsecasesPageProps {
   /** Override the API base URL (e.g. "https://shuffler.io"). */
   globalUrl?: string;
-  /** Logged-in user info from the host app. If provided, the internal
-   *  `/api/v1/getinfo` probe is skipped. `userdata.api_key` is used as bearer
-   *  token when present (falls back to `localStorage.shuffle_api_key`). */
+  /**
+   * Raw `/api/v1/getinfo` response body from the host app. When provided
+   * the inlined getinfo probe is skipped and this object is used directly
+   * (id, username, support, api_key, …).
+   */
   userdata?: UsecasesUserData | null;
-  /** Mirrors host app's loading state. Currently informational. */
+  /**
+   * Whether the host app's getinfo call has finished. While `false`, the
+   * page treats auth state as "still resolving" and does NOT fall back to
+   * its own getinfo probe — preventing duplicate requests.
+   */
   isLoaded?: boolean;
-  /** Override authentication state. Defaults to `!!userdata`. */
+  /**
+   * Whether getinfo says the user is logged in. When `isLoaded` is `true`,
+   * this fully overrides authentication state. Defaults to `!!userdata`.
+   */
   isLoggedIn?: boolean;
 }
 
@@ -2299,30 +2319,46 @@ function UsecaseCard({
  * an internal `/api/v1/getinfo` probe).
  */
 export default function UsecasesPage(props: UsecasesPageProps = {}) {
-  const { globalUrl, userdata, isLoaded = true, isLoggedIn } = props;
+  const { globalUrl, userdata, isLoaded, isLoggedIn } = props;
+
+  // Detect whether the host app is driving auth/config. As soon as ANY of the
+  // four props is supplied, we treat the host as the source of truth and
+  // suppress the inlined getinfo probe — even while `isLoaded` is still false
+  // (host's getinfo is in flight).
+  const hostManaged =
+    globalUrl !== undefined ||
+    userdata !== undefined ||
+    isLoaded !== undefined ||
+    isLoggedIn !== undefined;
 
   const config = React.useMemo<UsecasesPageConfig>(() => {
     const baseUrl = (globalUrl && globalUrl.replace(/\/+$/, '')) || DEFAULT_API_BASE_URL;
     const externalUserInfo = userdata ?? null;
     const externalApiKey = userdata?.api_key || userdata?.apikey || null;
-    const hasExternalAuth = !!userdata || typeof isLoggedIn === 'boolean';
-    const externalIsAuthenticated =
+
+    // Auth state mirrors the host: only authenticated once getinfo finished
+    // (`isLoaded === true`) AND `isLoggedIn` is true (or, if `isLoggedIn` was
+    // omitted, `userdata` is present).
+    const loaded = isLoaded !== false; // default true when undefined
+    const loggedIn =
       typeof isLoggedIn === 'boolean' ? isLoggedIn : !!userdata;
+    const externalIsAuthenticated = hostManaged ? loaded && loggedIn : false;
 
     return {
       baseUrl,
       authHeader: () => {
-        // Prefer the external user's API key if provided, else fall back to
-        // the standalone localStorage key (legacy behavior).
+        // Prefer the host's API key (if surfaced via userdata.api_key); else
+        // fall back to the standalone localStorage key. Cookie auth still
+        // works either way via `credentials: 'include'`.
         const key = externalApiKey || getStoredApiKey();
         return key ? { Authorization: `Bearer ${key}` } : {};
       },
-      hasExternalAuth,
+      hasExternalAuth: hostManaged,
       externalUserInfo,
       externalIsAuthenticated,
-      isLoaded,
+      isLoaded: loaded,
     };
-  }, [globalUrl, userdata, isLoaded, isLoggedIn]);
+  }, [globalUrl, userdata, isLoaded, isLoggedIn, hostManaged]);
 
   return (
     <UsecasesPageConfigContext.Provider value={config}>
