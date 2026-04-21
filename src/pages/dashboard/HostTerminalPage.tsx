@@ -148,7 +148,7 @@ const HostTerminalPage = () => {
     allHosts.find(h => (h.hostname || '').toLowerCase().trim() === idLower) ||
     allHosts.find(h => stripDomain(h.hostname || '') === idStripped);
   const hostname = hostState?.hostname || resolvedHost?.hostname || hostUuid || (hostsLoaded ? 'Unknown Host' : '');
-  const groupName = hostState?.groupName || resolvedHost?.groupName || '';
+  const groupName = hostState?.groupName || resolvedHost?.groupName || singleEnvFallback || '';
   const mode = hostState?.mode || resolvedHost?.mode || 'full';
   const isFull = mode === 'full';
   const needsLoading = !hostState?.hostname && !hostsLoaded;
