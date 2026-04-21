@@ -1123,51 +1123,63 @@ const getToolCategoryMeta = (categoryId: string): { color: string; icon: React.R
   return { color: cat.color, icon: cat.icon, label: cat.label };
 };
 
-function IntegrationStatusLite({ filterApps }: { filterApps?: string[] }) {
-  const { data: integrations = [], isLoading } = useQuery<{ id: string; name: string; icon: string }[]>({
+interface IntegrationItem {
+  id: string;
+  name: string;
+  icon: string;
+  /** Validated (tested) — highest priority */
+  validated: boolean;
+  /** Active auth entry */
+  active: boolean;
+}
+
+function IntegrationStatusLite({ filterApps, singleLine = false }: { filterApps?: string[]; singleLine?: boolean }) {
+  const { data: integrations = [], isLoading } = useQuery<IntegrationItem[]>({
     queryKey: ['usecases-page-integrations'],
     queryFn: async () => {
       try {
-        const [authRes, appsRes] = await Promise.all([
-          fetch(apiUrl('/api/v1/apps/authentication'), { credentials: 'include', headers: { ...authHeader() } }),
-          fetch(apiUrl('/api/v1/apps'), { credentials: 'include', headers: { ...authHeader() } }),
-        ]);
+        const res = await fetch(apiUrl('/api/v1/apps/authentication'), {
+          credentials: 'include',
+          headers: { ...authHeader() },
+        });
 
-        const items = new Map<string, { id: string; name: string; icon: string }>();
+        const items = new Map<string, IntegrationItem>();
 
-        if (authRes.ok) {
-          const authData = await authRes.json();
+        if (res.ok) {
+          const authData = await res.json();
           const authList = Array.isArray(authData) ? authData : (authData?.data || []);
           for (const entry of Array.isArray(authList) ? authList : []) {
             const app = entry?.app;
             if (!app?.name) continue;
             const key = String(app.name).toLowerCase();
-            if (!items.has(key)) {
+            const validated = entry?.validation?.valid === true;
+            const active = entry?.active === true;
+            const existing = items.get(key);
+            if (!existing) {
               items.set(key, {
                 id: app.id || key,
                 name: app.name,
                 icon: app.large_image || app.image || '',
+                validated,
+                active,
               });
+            } else {
+              // Merge: prefer validated/active across multiple auth entries
+              existing.validated = existing.validated || validated;
+              existing.active = existing.active || active;
+              if (!existing.icon && (app.large_image || app.image)) {
+                existing.icon = app.large_image || app.image;
+              }
             }
           }
         }
 
-        if (appsRes.ok) {
-          const appsData = await appsRes.json();
-          for (const app of Array.isArray(appsData) ? appsData : []) {
-            if (!app?.name || !app?.activated) continue;
-            const key = String(app.name).toLowerCase();
-            if (!items.has(key)) {
-              items.set(key, {
-                id: app.id || key,
-                name: app.name,
-                icon: app.large_image || app.image || '',
-              });
-            }
-          }
-        }
-
-        return Array.from(items.values()).sort((a, b) => a.name.localeCompare(b.name));
+        // Sort: validated first, then active, then alphabetical
+        return Array.from(items.values()).sort((a, b) => {
+          if (a.validated !== b.validated) return a.validated ? -1 : 1;
+          if (a.active !== b.active) return a.active ? -1 : 1;
+          return a.name.localeCompare(b.name);
+        });
       } catch {
         return [];
       }
@@ -1188,6 +1200,59 @@ function IntegrationStatusLite({ filterApps }: { filterApps?: string[] }) {
       <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))', px: 1, py: 0.75 }}>
         No apps selected
       </Typography>
+    );
+  }
+
+  if (singleLine) {
+    const hiddenCount = Math.max(0, visible.length - 0); // overflow handled visually below
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          flexWrap: 'nowrap',
+          gap: 0.75,
+          px: 0.5,
+          py: 0.5,
+          overflow: 'hidden',
+          minWidth: 0,
+          maskImage: 'linear-gradient(to right, black calc(100% - 32px), transparent)',
+          WebkitMaskImage: 'linear-gradient(to right, black calc(100% - 32px), transparent)',
+        }}
+      >
+        {visible.map((integration) => (
+          <Tooltip
+            key={integration.id}
+            title={`${integration.name}${integration.validated ? ' (validated)' : integration.active ? ' (configured)' : ''}`}
+            placement="top"
+            arrow
+          >
+            <Box
+              sx={{
+                width: 32,
+                height: 32,
+                flexShrink: 0,
+                borderRadius: 1,
+                border: integration.validated
+                  ? '1px solid hsl(var(--severity-low) / 0.6)'
+                  : '1px solid hsl(var(--border))',
+                overflow: 'hidden',
+                bgcolor: 'hsl(var(--card))',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {integration.icon ? (
+                <Box component="img" src={integration.icon} alt={integration.name} loading="lazy" sx={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+              ) : (
+                <Avatar sx={{ width: 24, height: 24, fontSize: '0.72rem', bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--foreground))' }}>
+                  {integration.name.slice(0, 1).toUpperCase()}
+                </Avatar>
+              )}
+            </Box>
+          </Tooltip>
+        ))}
+      </Box>
     );
   }
 
@@ -1646,7 +1711,7 @@ export default function UsecasesPage() {
             }}
           >
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              <IntegrationStatusLite />
+              <IntegrationStatusLite singleLine />
             </Box>
             <Button
               component={Link}
