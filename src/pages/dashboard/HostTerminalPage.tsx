@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 import { DEFAULT_AGENT_PERMISSIONS } from '@/hooks/useAgentPermissions';
 import { usePageMeta } from '@/hooks/usePageMeta';
+import { fetchHostSupplements } from '@/lib/mergeMonitorHosts';
 
 interface HostOption {
   uuid: string;
