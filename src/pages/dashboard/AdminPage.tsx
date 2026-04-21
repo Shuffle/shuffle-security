@@ -198,7 +198,7 @@ const AdminPage = () => {
   const regionFlag = getRegionFlag(orgRegionUrl);
 
   return (
-    <Box sx={{ p: { xs: 0, sm: 0 }, maxWidth: 1200 }}>
+    <Box sx={{ p: { xs: 0, sm: 0 }, maxWidth: 1200, width: '100%', mx: 'auto' }}>
       <Typography variant="h4" sx={{ fontWeight: 600, mb: 1, color: 'hsl(var(--foreground))' }}>
         Tenant Admin
       </Typography>
