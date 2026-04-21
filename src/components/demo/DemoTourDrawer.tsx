@@ -208,21 +208,30 @@ export const DemoTourDrawer = () => {
 
             {/* Step dots */}
             <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.75, px: 2, pb: 1.5 }}>
-              {TOUR_STEPS.map((s, i) => (
-                <Box
-                  key={s.id}
-                  onClick={() => goToStep(i)}
-                  sx={{
-                    cursor: 'pointer',
-                    width: i === step ? 18 : 6,
-                    height: 6,
-                    borderRadius: 3,
-                    backgroundColor: i === step ? 'hsl(var(--primary))' : 'hsl(var(--muted))',
-                    transition: 'all 0.2s ease',
-                    '&:hover': { backgroundColor: i === step ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground) / 0.5)' },
-                  }}
-                />
-              ))}
+              {TOUR_STEPS.map((s, i) => {
+                const isCurrent = i === step;
+                const isComplete = !!completedSteps[s.id];
+                const hasReq = !!s.requirement;
+                return (
+                  <Box
+                    key={s.id}
+                    onClick={() => goToStep(i)}
+                    sx={{
+                      cursor: 'pointer',
+                      width: isCurrent ? 18 : 6,
+                      height: 6,
+                      borderRadius: 3,
+                      backgroundColor: isCurrent
+                        ? 'hsl(var(--primary))'
+                        : hasReq && !isComplete
+                          ? 'hsl(var(--primary) / 0.35)'
+                          : 'hsl(var(--muted))',
+                      transition: 'all 0.2s ease',
+                      '&:hover': { backgroundColor: isCurrent ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground) / 0.5)' },
+                    }}
+                  />
+                );
+              })}
             </Box>
 
             {/* Footer */}
@@ -254,24 +263,38 @@ export const DemoTourDrawer = () => {
               >
                 Previous
               </Button>
-              <Button
-                onClick={isLast ? closeTour : nextStep}
-                variant="contained"
-                size="small"
-                endIcon={!isLast && <ChevronRight size={14} />}
-                sx={{
-                  flex: 1.4,
-                  textTransform: 'none',
-                  fontSize: '0.78rem',
-                  fontWeight: 600,
-                  backgroundColor: 'hsl(var(--primary))',
-                  color: 'hsl(var(--primary-foreground))',
-                  boxShadow: 'none',
-                  '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.9)', boxShadow: 'none' },
-                }}
+              <Tooltip
+                title={locked && requirement ? `Complete: ${requirement.label}` : ''}
+                arrow
+                disableHoverListener={!locked}
               >
-                {isLast ? 'Finish' : 'Next'}
-              </Button>
+                <span style={{ flex: 1.4, display: 'flex' }}>
+                  <Button
+                    onClick={isLast ? closeTour : nextStep}
+                    disabled={locked}
+                    variant="contained"
+                    size="small"
+                    startIcon={locked ? <Lock size={13} /> : undefined}
+                    endIcon={!isLast && !locked ? <ChevronRight size={14} /> : undefined}
+                    sx={{
+                      flex: 1,
+                      textTransform: 'none',
+                      fontSize: '0.78rem',
+                      fontWeight: 600,
+                      backgroundColor: 'hsl(var(--primary))',
+                      color: 'hsl(var(--primary-foreground))',
+                      boxShadow: 'none',
+                      '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.9)', boxShadow: 'none' },
+                      '&.Mui-disabled': {
+                        backgroundColor: 'hsl(var(--muted))',
+                        color: 'hsl(var(--muted-foreground))',
+                      },
+                    }}
+                  >
+                    {locked ? 'Locked' : isLast ? 'Finish' : 'Next'}
+                  </Button>
+                </span>
+              </Tooltip>
             </Box>
           </Box>
         </motion.div>
