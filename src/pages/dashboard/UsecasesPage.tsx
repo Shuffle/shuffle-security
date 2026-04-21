@@ -2383,6 +2383,7 @@ function UsecaseCard({
  * an internal `/api/v1/getinfo` probe).
  */
 export default function UsecasesPage(props: UsecasesPageProps = {}) {
+  useInjectScopedStyles();
   const { globalUrl, userdata, isLoaded, isLoggedIn } = props;
 
   // Detect whether the host app is driving auth/config. As soon as ANY of the
@@ -2426,7 +2427,9 @@ export default function UsecasesPage(props: UsecasesPageProps = {}) {
 
   return (
     <UsecasesPageConfigContext.Provider value={config}>
-      <UsecasesPageInner />
+      <div className={SCOPE_CLASS}>
+        <UsecasesPageInner />
+      </div>
     </UsecasesPageConfigContext.Provider>
   );
 }
