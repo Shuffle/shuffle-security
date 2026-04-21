@@ -138,6 +138,10 @@ const HostTerminalPage = () => {
   const [hostSearchQuery, setHostSearchQuery] = useState('');
   const [hostSwitcherOpen, setHostSwitcherOpen] = useState(false);
   const [singleEnvFallback, setSingleEnvFallback] = useState<string>('');
+  // Hostname resolved from sensors/assets datastores when the URL :hostUuid
+  // doesn't match any env-stub host (covers cases where the env API and the
+  // datastores use different UUIDs for the same machine).
+  const [datastoreResolvedHostname, setDatastoreResolvedHostname] = useState<string>('');
 
   // Resolve host info from location.state first, then fall back to allHosts lookup.
   // Match by UUID first, then by hostname (with tolerant domain-suffix stripping)
@@ -149,7 +153,11 @@ const HostTerminalPage = () => {
     allHosts.find(h => h.uuid === hostUuid) ||
     allHosts.find(h => (h.hostname || '').toLowerCase().trim() === idLower) ||
     allHosts.find(h => stripDomain(h.hostname || '') === idStripped);
-  const hostname = hostState?.hostname || resolvedHost?.hostname || hostUuid || (hostsLoaded ? 'Unknown Host' : '');
+  const hostname =
+    hostState?.hostname ||
+    resolvedHost?.hostname ||
+    datastoreResolvedHostname ||
+    (hostsLoaded ? (hostUuid || 'Unknown Host') : '');
   const groupName = hostState?.groupName || resolvedHost?.groupName || singleEnvFallback || '';
   const mode = hostState?.mode || resolvedHost?.mode || 'full';
   const isFull = mode === 'full';
