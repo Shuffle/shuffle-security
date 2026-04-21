@@ -6,7 +6,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Typography, Chip, Button, Avatar, IconButton, Tooltip } from '@mui/material';
-import { ArrowRight, ArrowLeft, Bot, Link as LinkIcon, Plus, PlayCircle, BookOpen, Image as ImageIcon, Flame } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Bot, Link as LinkIcon, Plus, PlayCircle, BookOpen, Image as ImageIcon, Flame, Zap, ExternalLink } from 'lucide-react';
 import UsecaseAlluvialDiagram from '@/components/usecases/UsecaseAlluvialDiagram';
 import { IntegrationStatus } from '@/components/layout/IntegrationStatus';
 import { Clock } from 'lucide-react';
