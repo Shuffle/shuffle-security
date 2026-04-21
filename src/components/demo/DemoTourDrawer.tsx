@@ -467,37 +467,58 @@ export const DemoTourDrawer = () => {
                           borderRadius: 2,
                           border: '1px dashed hsl(var(--border))',
                           backgroundColor: 'hsl(var(--muted) / 0.3)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 1,
                         }}
                       >
-                        <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', mb: 1, lineHeight: 1.5 }}>
+                        <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.5 }}>
                           {hasDemoIncidents
-                            ? 'Demo incidents are present. If something looks wrong, you can wipe and recreate them.'
-                            : 'No demo incidents detected yet. Use the button below to force-create them.'}
+                            ? 'Demo incidents are present. You can generate the focus incident again, or recreate the full set.'
+                            : 'No demo incidents detected yet. Generate a single focus incident to start with — the others arrive later for cross-correlation.'}
                         </Typography>
                         <Button
-                          data-tour="demo-force-create-incidents"
-                          onClick={forceCreateIncidents}
-                          disabled={isForceCreatingIncidents}
-                          variant="outlined"
+                          data-tour="demo-force-generate-single"
+                          onClick={forceGenerateSingleIncident}
+                          disabled={isForceGeneratingSingle}
+                          variant="contained"
                           size="small"
                           fullWidth
                           sx={{
                             textTransform: 'none',
                             fontSize: '0.78rem',
                             fontWeight: 600,
-                            borderColor: 'hsl(var(--primary) / 0.5)',
-                            color: 'hsl(var(--primary))',
+                            backgroundColor: 'hsl(var(--primary))',
+                            color: 'hsl(var(--primary-foreground))',
+                            boxShadow: 'none',
+                            '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.9)', boxShadow: 'none' },
+                          }}
+                        >
+                          {isForceGeneratingSingle ? 'Generating…' : 'Force generate'}
+                        </Button>
+                        <Button
+                          data-tour="demo-force-create-incidents"
+                          onClick={forceCreateIncidents}
+                          disabled={isForceCreatingIncidents}
+                          variant="text"
+                          size="small"
+                          fullWidth
+                          sx={{
+                            textTransform: 'none',
+                            fontSize: '0.72rem',
+                            fontWeight: 500,
+                            color: 'hsl(var(--muted-foreground))',
                             '&:hover': {
-                              borderColor: 'hsl(var(--primary))',
-                              backgroundColor: 'hsl(var(--primary) / 0.08)',
+                              backgroundColor: 'hsl(var(--primary) / 0.06)',
+                              color: 'hsl(var(--primary))',
                             },
                           }}
                         >
                           {isForceCreatingIncidents
-                            ? 'Recreating incidents…'
+                            ? 'Recreating full set…'
                             : hasDemoIncidents
-                              ? 'Recreate demo incidents'
-                              : 'Force-create demo incidents'}
+                              ? 'Recreate full demo incident set'
+                              : 'Or generate the full demo incident set'}
                         </Button>
                       </Box>
                     )}
