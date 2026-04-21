@@ -33,7 +33,7 @@ export const TOUR_STEPS: TourStep[] = [
   {
     id: 'welcome',
     title: 'Welcome to your demo',
-    body: "We'll walk you through the platform step by step. Sample data will appear as you go — use Next/Previous to advance, or click around freely.",
+    body: "Heads up — this is a hands-on demo, not a sandbox. As you walk through, we'll actually enable apps in your account, seed real incidents, assets and users, and let an AI agent perform live actions on your approval. Use Next/Previous to advance, or click around freely. When you're done, hit \"Clean up demo data\" and every sample item we created is removed.",
     route: '/dashboard',
   },
   {
