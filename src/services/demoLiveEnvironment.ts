@@ -257,5 +257,6 @@ export const enableLiveDemoEnvironment = async (): Promise<void> => {
     generateOnboardingWorkflows(),
     initThreatFeedsDefaults(),
     initIOCTypesDefaults(),
+    initDemoMonitorHost(),
   ]);
 };
