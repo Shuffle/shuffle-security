@@ -32,6 +32,20 @@ export const isCloudDomain = (): boolean => {
   return CLOUD_DOMAINS.includes(hostname);
 };
 
+/**
+ * True when running on Shuffle Cloud (a known *.shuffler.io / shutdown.no domain).
+ * Use this to gate cloud-only features like Google Analytics (ReactGA).
+ *
+ * isCloud()  → cloud deployment, GA allowed, telemetry OK
+ * !isCloud() → either Lovable preview (dev) OR self-hosted onprem; do NOT call GA
+ */
+export const isCloud = (): boolean => isCloudDomain();
+
+/**
+ * True when running self-hosted (onprem) — i.e. NOT in Lovable preview AND NOT on a known cloud domain.
+ */
+export const isOnprem = (): boolean => !isDevEnvironment() && !isCloudDomain();
+
 const getDefaultBaseUrl = (): string => {
   if (import.meta.env.VITE_SHUFFLE_API_URL) {
     return import.meta.env.VITE_SHUFFLE_API_URL;
