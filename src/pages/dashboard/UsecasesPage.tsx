@@ -972,6 +972,16 @@ const SCOPED_CSS = `
   --infra-iam: 330 75% 55%;
   --infra-cloud: 200 75% 50%;
 
+  /* Severity / status tokens (used for enabled/active indicators) */
+  --severity-low: 142 71% 45%;
+  --severity-medium: 45 93% 47%;
+  --severity-high: 25 95% 53%;
+  --severity-critical: 0 84% 60%;
+  --severity-info: 210 100% 56%;
+
+  /* Radius — used by MUI Card via the design tokens */
+  --radius: 8px;
+
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   color: hsl(var(--foreground));
   background: hsl(var(--background));
