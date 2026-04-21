@@ -13,6 +13,8 @@ export type VulnAssetType = 'asset' | 'user';
 
 export interface Vulnerability {
   id: string;
+  /** Stable record id without the per-host suffix (e.g. CVE-2024-xxxx) */
+  record_id?: string;
   title: string;
   description?: string;
   severity: VulnSeverity;
@@ -23,6 +25,12 @@ export interface Vulnerability {
   asset_id?: string;
   asset_name?: string;
   cve_id?: string;
+  /** OSV affected package name (preserved separately from asset_id when host-scoped) */
+  package_name?: string;
+  /** OSV affected package ecosystem (e.g. PyPI, npm) */
+  ecosystem?: string;
+  /** Per-host install paths from the OSV record */
+  paths?: Array<{ path?: string; version?: string; last_seen?: string }>;
   remediation?: string;
   first_seen?: string;
   last_seen?: string;
