@@ -204,6 +204,11 @@ interface DemoContextValue {
   forceCreateIncidents: () => Promise<void>;
   /** True while a force-create is running. */
   isForceCreatingIncidents: boolean;
+  /** Force-generate a single "focus" demo incident (Wazuh / Sliver C2).
+   *  Other incidents arrive later for cross-correlation. */
+  forceGenerateSingleIncident: () => Promise<void>;
+  /** True while the single-incident force-generate is running. */
+  isForceGeneratingSingle: boolean;
   /** True when at least one demo incident is present in the datastore. */
   hasDemoIncidents: boolean;
 }
