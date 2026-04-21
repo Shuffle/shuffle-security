@@ -215,7 +215,7 @@ const TenantManagement = () => {
       </Paper>
 
       {/* Parent Tenant (if exists) */}
-      {parentOrg && (
+      {parentOrg && parentOrg.id !== currentOrgId && (
         <Paper sx={{ bgcolor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', mb: 3 }}>
           <Box sx={{ p: 2.5, borderBottom: '1px solid hsl(var(--border))' }}>
             <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
