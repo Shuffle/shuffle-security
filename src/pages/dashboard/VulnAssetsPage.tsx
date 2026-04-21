@@ -851,12 +851,16 @@ const VulnAssetsPage = () => {
   }, []);
 
   // Auto-open Add Host dialog when ?add_host=true is present in the URL
+  // (small delay so users can see the page they navigated to first)
   useEffect(() => {
     if (searchParams.get('add_host') === 'true' && !addHostOpen) {
-      handleOpenAddHost();
-      const next = new URLSearchParams(searchParams);
-      next.delete('add_host');
-      setSearchParams(next, { replace: true });
+      const timer = setTimeout(() => {
+        handleOpenAddHost();
+        const next = new URLSearchParams(searchParams);
+        next.delete('add_host');
+        setSearchParams(next, { replace: true });
+      }, 600);
+      return () => clearTimeout(timer);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
