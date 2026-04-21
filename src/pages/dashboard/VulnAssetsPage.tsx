@@ -244,6 +244,11 @@ const VulnAssetsPage = () => {
   // DISMISS only fires when the user closed the dialog without success.
   const detectedFiredRef = useRef(false);
   const dialogOpenRef = useRef(false);
+  // Auto-create-default guard: when Add Host opens for the first time and the
+  // org has zero monitoring groups, we silently spin up "shuffle_sensors" so
+  // the user never has to click "+ New group" before deploying. One-shot per
+  // page mount — if creation fails the user can still create one manually.
+  const autoCreatedDefaultRef = useRef(false);
 
   // Monitoring groups (from API)
   const [groups, setGroups] = useState<MonitoringGroup[]>([]);
