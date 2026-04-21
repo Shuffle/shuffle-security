@@ -313,21 +313,23 @@ export const UsecaseDetailContent = ({
   return (
     <Box sx={{ maxWidth: 860, width: '100%', mx: 'auto', pb: 6 }}>
       {/* Back nav */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-        <Button
-          onClick={() => navigate('/usecases')}
-          startIcon={<ArrowLeft size={14} />}
-          sx={{
-            color: 'hsl(var(--muted-foreground))',
-            textTransform: 'none',
-            fontSize: '0.8rem',
-            fontWeight: 600,
-            '&:hover': { color: 'hsl(var(--foreground))', bgcolor: 'hsla(var(--muted-foreground) / 0.08)' },
-          }}
-        >
-          Automations
-        </Button>
-      </Box>
+      {!hideBackNav && (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+          <Button
+            onClick={() => navigate('/usecases')}
+            startIcon={<ArrowLeft size={14} />}
+            sx={{
+              color: 'hsl(var(--muted-foreground))',
+              textTransform: 'none',
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              '&:hover': { color: 'hsl(var(--foreground))', bgcolor: 'hsla(var(--muted-foreground) / 0.08)' },
+            }}
+          >
+            Automations
+          </Button>
+        </Box>
+      )}
 
       {/* Hero header */}
       <Box sx={{
