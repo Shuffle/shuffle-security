@@ -27,6 +27,7 @@ import {
   Zap,
   Shield,
   Send,
+  Mail,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { AgentNotification } from '@/services/notifications';
@@ -581,18 +582,31 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
           </Button>
         )}
         {data.isApproval && data.notification && (
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button onClick={handleApprove} fullWidth variant="contained" startIcon={<CheckCircle size={15} />}
-              sx={approveButtonSx}>
-              Approve
-            </Button>
-            {!isConfiguring && (
-              <Button onClick={() => setIsConfiguring(true)} fullWidth variant="outlined" startIcon={<Settings size={15} />}
-                sx={outlineButtonSx}>
-                Configure
+          <>
+            <Box sx={{
+              display: 'flex', alignItems: 'flex-start', gap: 1,
+              px: 1.5, py: 1, borderRadius: 1.5,
+              backgroundColor: 'hsl(var(--severity-info) / 0.08)',
+              border: '1px solid hsl(var(--severity-info) / 0.2)',
+            }}>
+              <Mail size={14} style={{ color: 'hsl(var(--severity-info))', marginTop: 2, flexShrink: 0 }} />
+              <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--foreground))', lineHeight: 1.5 }}>
+                We have also emailed you this approval request — you can allow or deny it directly from your inbox.
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button onClick={handleApprove} fullWidth variant="contained" startIcon={<CheckCircle size={15} />}
+                sx={approveButtonSx}>
+                Approve
               </Button>
-            )}
-          </Box>
+              {!isConfiguring && (
+                <Button onClick={() => setIsConfiguring(true)} fullWidth variant="outlined" startIcon={<Settings size={15} />}
+                  sx={outlineButtonSx}>
+                  Configure
+                </Button>
+              )}
+            </Box>
+          </>
         )}
         {data.incidentLink && (
           <Button component={Link} to={data.incidentLink} fullWidth variant="outlined"
