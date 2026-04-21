@@ -12,6 +12,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { seedForStep, cleanupDemoData, isDemoActive, getDemoStats, forceRecreateDemoIncidents, countDemoIncidents } from '@/services/demoMode';
+import { enableLiveDemoEnvironment } from '@/services/demoLiveEnvironment';
 import { trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
 
 export interface TourStepRequirement {
@@ -325,7 +326,13 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
       completedStepsGARef.current = new Set();
       trackPredefinedEvent(GA_EVENTS.DEMO_START);
       navigateForStep(0);
-      await runStepSeed(0);
+      // Make the environment "live": generate ingest + threat-intel
+      // workflows and seed Threat Feeds + IOC Types defaults. Runs in
+      // parallel with the first-step seeder so it does not block the UI.
+      const liveEnvPromise = enableLiveDemoEnvironment().catch(err => {
+        console.warn('[demo] live environment bootstrap failed', err);
+      });
+      await Promise.all([runStepSeed(0), liveEnvPromise]);
     } finally {
       setIsSeeding(false);
     }
