@@ -365,6 +365,26 @@ const DataFlowDetailPage = () => {
                 Manual Verification
               </Typography>
             )}
+            {typeof flow.priority === 'number' && (
+              <Tooltip title={`Priority ${flow.priority} / 100 — higher means more important / commonly used`} placement="top" arrow>
+                <Box sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 0.4,
+                  fontSize: '0.65rem',
+                  fontWeight: 700,
+                  px: 1,
+                  py: 0.3,
+                  borderRadius: 1,
+                  bgcolor: 'hsla(var(--primary) / 0.1)',
+                  color: 'hsl(var(--primary))',
+                  border: '1px solid hsla(var(--primary) / 0.25)',
+                }}>
+                  <Flame size={11} />
+                  Priority {flow.priority}
+                </Box>
+              </Tooltip>
+            )}
           </Box>
           {/* Tags */}
           {flow.tags.length > 0 && (
