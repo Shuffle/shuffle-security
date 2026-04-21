@@ -2599,7 +2599,6 @@ function UsecaseCard({
               </Box>
             </Tooltip>
           )}
-          {!isComingSoon && syncIcon}
         </Box>
 
         {/* Source → Target */}
