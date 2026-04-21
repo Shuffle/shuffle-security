@@ -17,6 +17,8 @@ import {
   Checkbox,
   Autocomplete,
   Alert,
+  Dialog,
+  DialogContent,
 } from '@mui/material';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
@@ -401,6 +403,13 @@ const IncidentsPage = () => {
    const forwardDebounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
    const [appSearchOpen, setAppSearchOpen] = useState(false);
    const [forwardAppSearchOpen, setForwardAppSearchOpen] = useState(false);
+   // Fake auth experience for the demo "add-outlook" step. Holds the app
+   // metadata while we show a brief "Connecting…" dialog before injecting
+   // the app into the Ingest row.
+   const [fakeAuth, setFakeAuth] = useState<{ name: string; image: string } | null>(null);
+   // Optimistically-injected ingestion apps from the demo flow (e.g. Outlook
+   // Office365 after fake auth). Merged with the real list for rendering.
+   const [demoInjectedApps, setDemoInjectedApps] = useState<ValidatedIngestionApp[]>([]);
 
    // ─── Demo tour gating ─────────────────────────────────────────────────────
    // While the demo tour is open and on the "add-outlook" step, we strip the
@@ -1849,6 +1858,11 @@ const IncidentsPage = () => {
               </Typography>
               {/* Webhook counts as 1 of the 5 visible slots */}
               <WebhookIngestionButton webhook={webhookIngestion} onToggled={fetchIngestionApps} />
+              {/* Demo-injected apps (e.g. Outlook after fake auth) always render
+                  so the user sees the result of step 2 even while the tour is open. */}
+              {demoInjectedApps.map(app => (
+                <IngestionSourceButton key={`demo-${app.name}`} app={app} onToggle={() => { /* no-op for demo apps */ }} incidentCount={0} />
+              ))}
               {!isDemoTourActive && ingestionApps.slice(0, 3).map(app => (
                 <IngestionSourceButton key={app.name} app={app} onToggle={handleToggleApp} incidentCount={incidentCountsBySource.get(normalizeAppName(app.name)) || 0} />
               ))}
@@ -2841,18 +2855,72 @@ const IncidentsPage = () => {
           // the user isn't trapped if they explore.
           const norm = app.name.toLowerCase().replace(/[^a-z0-9]/g, '');
           if (norm.includes('outlook') || norm.includes('office365')) {
-            markStepCompleted('add-outlook');
-            toast.success('Outlook Office365 authenticated (demo)', {
-              description: 'In a real setup you\'d sign in with Microsoft. Moving on…',
-              duration: 2400,
-            });
+            // Close the search drawer and run the fake auth experience.
             setAppSearchOpen(false);
+            setFakeAuth({ name: app.name, image: app.icon || '' });
+            // After ~1.6s, finish "auth": inject the app into Ingest, mark
+            // the step done, and dismiss the dialog.
+            setTimeout(() => {
+              setDemoInjectedApps(prev => {
+                if (prev.some(a => a.name.toLowerCase() === app.name.toLowerCase())) return prev;
+                return [
+                  ...prev,
+                  {
+                    id: `demo-${app.name}`,
+                    name: app.name,
+                    image: app.icon || '',
+                    validated: true,
+                    enabled: true,
+                    category: 'email',
+                  },
+                ];
+              });
+              markStepCompleted('add-outlook');
+              setFakeAuth(null);
+              toast.success('Outlook Office365 authenticated (demo)', {
+                description: 'In a real setup you\'d sign in with Microsoft. Moving on…',
+                duration: 2400,
+              });
+            }, 1600);
             return true; // prevent the detail drawer from opening
           }
           return false;
         } : undefined}
       />
 
+      {/* Fake "Connecting to Microsoft" dialog used during the demo's
+          add-outlook step so users get a tangible auth moment. */}
+      <Dialog
+        open={!!fakeAuth}
+        PaperProps={{
+          sx: {
+            bgcolor: 'hsl(var(--card))',
+            border: '1px solid hsl(var(--border))',
+            borderRadius: 2,
+            minWidth: 360,
+          },
+        }}
+      >
+        <DialogContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, py: 4 }}>
+          {fakeAuth?.image && (
+            <Box
+              component="img"
+              src={fakeAuth.image}
+              alt={fakeAuth.name}
+              sx={{ width: 56, height: 56, borderRadius: 1.5, p: 0.75, bgcolor: 'hsl(var(--muted))', objectFit: 'contain' }}
+            />
+          )}
+          <CircularProgress size={28} sx={{ color: 'hsl(var(--primary))' }} />
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography sx={{ fontSize: '0.95rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+              Connecting to {fakeAuth?.name?.replace(/_/g, ' ') || 'Microsoft'}…
+            </Typography>
+            <Typography sx={{ mt: 0.5, fontSize: '0.78rem', color: 'hsl(var(--muted-foreground))' }}>
+              Demo mode — no real OAuth roundtrip.
+            </Typography>
+          </Box>
+        </DialogContent>
+      </Dialog>
       {/* Fixed bottom pagination */}
       {sortedIncidents.length > ITEMS_PER_PAGE && (
         <Box sx={{
