@@ -37,19 +37,34 @@ export const TOUR_STEPS: TourStep[] = [
   {
     id: 'welcome',
     title: 'Welcome to your demo',
-    body: "Heads up — this is a hands-on demo, not a sandbox. As you walk through, we'll actually enable apps in your account, seed real incidents, assets and users, and let an AI agent perform live actions on your approval. Use Next/Previous to advance, or click around freely. When you're done, hit \"Clean up demo data\" and every sample item we created is removed.",
+    body: 'Hands-on demo — not a sandbox. Real changes, easy cleanup.',
+    bullets: [
+      'Enables apps in your account',
+      'Seeds sample incidents, assets & users',
+      'AI agent runs live actions on your approval',
+      '"Clean up demo data" removes everything we added',
+    ],
     route: '/dashboard',
   },
   {
     id: 'apps',
     title: 'Connect your tools',
-    body: "Everything starts with your tools. In a real setup you'd connect detection sources here — say Microsoft Defender for email and CrowdStrike for endpoints. For the demo we'll pretend those are connected and incidents will start arriving from them on the next step.",
+    body: 'Detection sources feed into Shuffle.',
+    bullets: [
+      'Microsoft Defender — email alerts',
+      'CrowdStrike — endpoint alerts',
+      "We'll simulate these for the demo",
+    ],
     route: '/onboarding/sources',
   },
   {
     id: 'ingest-webhook',
     title: 'Turn on the ingestion webhook',
-    body: 'Most tools forward incidents to Shuffle over a webhook. Click the highlighted Webhook button on the Incidents page and enable it — this gives you a URL detection tools can post to. We need this on before incidents can land.',
+    body: 'A webhook URL where tools can post incidents.',
+    bullets: [
+      'Click the highlighted Webhook button',
+      'Enable it to receive incoming alerts',
+    ],
     route: '/incidents',
     requirement: {
       label: 'Enable the ingestion webhook',
@@ -59,7 +74,11 @@ export const TOUR_STEPS: TourStep[] = [
   {
     id: 'enable-crowdstrike',
     title: 'Turn on CrowdStrike',
-    body: 'Now toggle on the CrowdStrike source so EDR alerts route into Shuffle. Click the highlighted CrowdStrike icon and switch it on.',
+    body: 'Route EDR alerts into Shuffle.',
+    bullets: [
+      'Click the highlighted CrowdStrike icon',
+      'Switch the source on',
+    ],
     route: '/incidents',
     requirement: {
       label: 'Enable CrowdStrike as an ingestion source',
@@ -69,30 +88,51 @@ export const TOUR_STEPS: TourStep[] = [
   {
     id: 'incidents-list',
     title: 'Incidents arriving',
-    body: 'With your tools connected, incidents from Defender and CrowdStrike start showing up. Each row shows severity, the source tool, who it\'s assigned to, and current status. Try opening one.',
+    body: 'Alerts from your tools land here. Open one to dig in.',
+    bullets: [
+      'Severity, source tool, assignee, status',
+      'Filter, sort, bulk-resolve',
+    ],
     route: '/incidents',
   },
   {
     id: 'incident-detail',
     title: 'Inside an incident',
-    body: 'Open any incident to see the full picture: description, observables (IPs, hashes, users), tasks for the responder, and a chronological activity feed including AI agent actions.',
+    body: 'Full picture of one incident.',
+    bullets: [
+      'Description & observables (IPs, hashes, users)',
+      'Tasks for the responder',
+      'Activity feed including AI agent actions',
+    ],
   },
   {
     id: 'assets',
     title: 'Assets',
-    body: 'Assets are the devices and accounts you protect — laptops, servers, mobile devices, and cloud workloads. Each has a risk score so you know which to triage first.',
+    body: 'The devices and accounts you protect.',
+    bullets: [
+      'Laptops, servers, mobile, cloud workloads',
+      'Risk score per asset for triage',
+    ],
     route: '/assets',
   },
   {
     id: 'vulnerabilities',
     title: 'Vulnerabilities',
-    body: 'Vulnerabilities aggregates findings from scanners (Qualys, Tenable, Snyk, AWS Config…) into one view. You filter by severity, source, or asset.',
+    body: 'Scanner findings unified into one view.',
+    bullets: [
+      'Sources: Qualys, Tenable, Snyk, AWS Config…',
+      'Filter by severity, source, or asset',
+    ],
     route: '/vulnerabilities',
   },
   {
     id: 'agent',
     title: 'Approve an AI agent action',
-    body: "When the AI agent proposes a high-stakes action (like isolating a host), it waits for your approval. Find a pending notification on the dashboard and click Approve — the spotlight will point you at it.",
+    body: 'High-stakes actions wait for you.',
+    bullets: [
+      'Find a pending notification on the dashboard',
+      'Click Approve — the spotlight will point at it',
+    ],
     route: '/dashboard',
     requirement: {
       label: 'Approve a pending agent action',
