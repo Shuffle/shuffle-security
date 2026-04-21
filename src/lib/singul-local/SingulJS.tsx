@@ -266,7 +266,7 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
     switch (event.key) {
       case 'ArrowDown':
         event.preventDefault();
-        setSelectedIndex((prev) => Math.min(prev + 1, results.length - 1));
+        setSelectedIndex((prev) => Math.min(prev + 1, displayResults.length - 1));
         break;
       case 'ArrowUp':
         event.preventDefault();
@@ -274,8 +274,8 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
         break;
       case 'Enter':
         event.preventDefault();
-        if (selectedIndex >= 0 && results[selectedIndex]) {
-          selectApp(results[selectedIndex]);
+        if (selectedIndex >= 0 && displayResults[selectedIndex]) {
+          selectApp(displayResults[selectedIndex]);
         }
         break;
       case 'Escape':
