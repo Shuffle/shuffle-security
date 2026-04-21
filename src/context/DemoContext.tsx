@@ -356,10 +356,19 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
   // returns to its inactive state. Any already-seeded sample data stays put
   // until the user explicitly runs "Clean up demo data".
   const closeTour = useCallback(() => {
+    // Fire the abandon event ONLY if the user did not actually finish the
+    // tour. Reaching the wrap step means they completed it.
+    const isOnFinalStep = step === TOUR_STEPS.length - 1;
+    if (!isOnFinalStep) {
+      trackPredefinedEvent(GA_EVENTS.DEMO_ABANDON, TOUR_STEPS[step]?.id, step, {
+        step_index: step,
+        step_id: TOUR_STEPS[step]?.id,
+      });
+    }
     setDrawerOpen(false);
     setActive(false);
     try { localStorage.removeItem('shuffle_demo_active'); } catch { /* ignore */ }
-  }, []);
+  }, [step]);
 
   const isStepUnlocked = useCallback((s: TourStep | undefined): boolean => {
     if (!s) return true;
