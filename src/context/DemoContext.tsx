@@ -418,13 +418,13 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
     completedSteps, currentStepUnlocked,
     startDemo, openTour, closeTour, minimizeTour, restoreTour, toggleDock, setDock,
     nextStep, prevStep, goToStep, cleanup,
-    markStepCompleted,
+    markStepCompleted, setStepCompleted,
   }), [
     active, isSeeding, isCleaning, drawerOpen, minimized, dock, step, stats,
     completedSteps, currentStepUnlocked,
     startDemo, openTour, closeTour, minimizeTour, restoreTour, toggleDock, setDock,
     nextStep, prevStep, goToStep, cleanup,
-    markStepCompleted,
+    markStepCompleted, setStepCompleted,
   ]);
 
   return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;
