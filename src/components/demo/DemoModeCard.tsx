@@ -120,7 +120,7 @@ export const DemoModeCard = () => {
               ? `Sample data is loaded into your account: ${stats.incidents} incidents, ${stats.assets} assets, ${stats.users} users. Take the tour to see how everything works, then clean up when you're done.`
               : disableStart
                 ? `${disableReason} You're already past the demo — explore your real data instead.`
-                : "See how Shuffle handles incidents, assets, vulnerabilities, and AI agent activity — no setup required. We'll seed sample data into your account and walk you through it."}
+                : "A guided, hands-on tour: we'll enable apps in your account for real, seed sample incidents, assets and users, and let an AI agent perform live actions on your approval. Everything we create can be removed in one click when you're done."}
           </Typography>
         </Box>
 
