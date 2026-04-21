@@ -431,6 +431,17 @@ const IncidentsPage = () => {
    const { active: demoActive, drawerOpen: demoDrawerOpen, step: demoStep, markStepCompleted } = useDemo();
    const demoStepId = TOUR_STEPS[demoStep]?.id;
    const isAddOutlookStep = demoActive && demoDrawerOpen && demoStepId === 'add-outlook';
+
+   // Reconcile sub-goal completion with whatever apps are already injected.
+   // Otherwise, returning to the tour after a reload would leave the goals
+   // locked even though both apps are visibly present in the Ingest bar.
+   useEffect(() => {
+     if (!demoActive) return;
+     const hasOutlook = demoInjectedApps.some(a => /outlook|office365/i.test(a.name));
+     const hasDefender = demoInjectedApps.some(a => /defender/i.test(a.name));
+     if (hasOutlook) markStepCompleted('add-outlook:outlook');
+     if (hasDefender) markStepCompleted('add-outlook:defender');
+   }, [demoActive, demoInjectedApps, markStepCompleted]);
    // Whenever the demo tour drawer is open, hide the arrow and the entire
    // Forward section so users stay focused on the ingestion flow.
    const isDemoTourActive = demoActive && demoDrawerOpen;
