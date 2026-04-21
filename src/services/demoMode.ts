@@ -24,6 +24,7 @@ import {
 
 const VULNS_CATEGORY = 'shuffle-security_vulnerabilities';
 const SENSORS_CATEGORY = 'shuffle-security_sensors';
+const AGENTS_CATEGORY = 'shuffle-security_agents';
 
 
 /**
@@ -308,7 +309,7 @@ export const cleanupDemoData = async (): Promise<CleanupResult> => {
     }
   }
 
-  const safetyCategories = [DATASTORE_CATEGORIES.INCIDENTS, DATASTORE_CATEGORIES.ASSETS, DATASTORE_CATEGORIES.USERS, VULNS_CATEGORY, SENSORS_CATEGORY];
+  const safetyCategories = [DATASTORE_CATEGORIES.INCIDENTS, DATASTORE_CATEGORIES.ASSETS, DATASTORE_CATEGORIES.USERS, VULNS_CATEGORY, SENSORS_CATEGORY, AGENTS_CATEGORY];
   for (const category of safetyCategories) {
     try {
       const res = await getDatastoreByCategory(category);
