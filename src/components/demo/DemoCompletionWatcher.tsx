@@ -11,10 +11,7 @@ import { useDemo } from '@/context/DemoContext';
 import { useWorkflows } from '@/hooks/useWorkflows';
 import { useAgentNotifications } from '@/hooks/useNotifications';
 import {
-  findIngestTicketsWorkflow,
   isWorkflowScheduleStopped,
-  extractWorkflowAppNames,
-  normalizeAppName,
 } from '@/lib/ingestionDetection';
 
 export const DemoCompletionWatcher = () => {
