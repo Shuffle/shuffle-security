@@ -35,7 +35,8 @@ export type EventCategory =
   | 'conversion'
   | 'incidents'
   | 'detection'
-  | 'demo';
+  | 'demo'
+  | 'monitors';
 
 // Predefined events for type safety
 export const GA_EVENTS = {
@@ -103,6 +104,17 @@ export const GA_EVENTS = {
   DEMO_CLEANUP: { category: 'demo', action: 'demo_cleanup' },
   DEMO_MINIMIZE: { category: 'demo', action: 'demo_minimize' },
   DEMO_RESTORE: { category: 'demo', action: 'demo_restore' },
+
+  // Host monitor (Add Host) funnel events.
+  //   OPEN     — user opened the Add Host dialog
+  //   DEPLOY   — advanced from "checks" to "deploy" step (saw the install command)
+  //   DETECTED — sensor actually checked in while the dialog was open (success)
+  //   DISMISS  — dialog closed (or page unmounted) without a successful detection (abandonment)
+  // Together these form a 4-step funnel: OPEN → DEPLOY → DETECTED, with DISMISS as the abandonment counter.
+  MONITOR_ADD_HOST_OPEN: { category: 'monitors', action: 'add_host_open' },
+  MONITOR_ADD_HOST_DEPLOY: { category: 'monitors', action: 'add_host_deploy' },
+  MONITOR_ADD_HOST_DETECTED: { category: 'monitors', action: 'add_host_detected' },
+  MONITOR_ADD_HOST_DISMISS: { category: 'monitors', action: 'add_host_dismiss' },
 } as const;
 
 interface TrackEventParams {

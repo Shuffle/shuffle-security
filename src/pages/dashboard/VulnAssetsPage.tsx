@@ -28,6 +28,7 @@ import { DEFAULT_AGENT_PERMISSIONS } from '@/hooks/useAgentPermissions';
 import { fetchHostSupplements, mergeHosts } from '@/lib/mergeMonitorHosts';
 import { HostDetailPanel } from '@/components/monitors/HostDetailPanel';
 import { MonitorHostTable } from '@/components/monitors/MonitorHostTable';
+import { trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
 
 const OsIcon = ({ os, size = 14, className = '' }: { os: string; size?: number; className?: string }) => {
   const lower = (os || '').toLowerCase();
@@ -239,6 +240,10 @@ const VulnAssetsPage = () => {
   const [pollingActivated, setPollingActivated] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const activationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // GA funnel guards: ensure DETECTED fires once per dialog session, and that
+  // DISMISS only fires when the user closed the dialog without success.
+  const detectedFiredRef = useRef(false);
+  const dialogOpenRef = useRef(false);
 
   // Monitoring groups (from API)
   const [groups, setGroups] = useState<MonitoringGroup[]>([]);
@@ -738,6 +743,15 @@ const VulnAssetsPage = () => {
             setSensorDetected(true);
             setSensorPolling(false);
             if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+            // GA: success — fire DETECTED exactly once per dialog session.
+            if (!detectedFiredRef.current) {
+              detectedFiredRef.current = true;
+              trackPredefinedEvent(
+                GA_EVENTS.MONITOR_ADD_HOST_DETECTED,
+                selectedGroup?.name,
+                hasNewHost ? currentHostCount - baseline : 0,
+              );
+            }
           }
         }
       } catch { /* continue polling */ }
@@ -799,8 +813,42 @@ const VulnAssetsPage = () => {
     setIsCreatingGroup(false);
     setNewGroupName('');
     setAddHostOpen(true);
+    // Reset GA funnel guards for a fresh Add-Host session
+    detectedFiredRef.current = false;
+    dialogOpenRef.current = true;
+    trackPredefinedEvent(GA_EVENTS.MONITOR_ADD_HOST_OPEN);
     loadGroups();
   };
+
+  // GA: when the Add Host dialog closes (manually, ESC, click-outside, or page
+  // navigation that unmounts this component), fire DISMISS unless the user
+  // actually got a sensor detection. Covers both "closed dialog" and
+  // "left page before sensor connected" failure paths.
+  useEffect(() => {
+    if (addHostOpen) {
+      dialogOpenRef.current = true;
+      return;
+    }
+    if (dialogOpenRef.current) {
+      dialogOpenRef.current = false;
+      if (!detectedFiredRef.current) {
+        trackPredefinedEvent(
+          GA_EVENTS.MONITOR_ADD_HOST_DISMISS,
+          addHostStep, // 'checks' | 'deploy' — tells you how far they got
+        );
+      }
+    }
+  }, [addHostOpen, addHostStep]);
+
+  // Unmount-time safety net: if the user navigates away with the dialog still
+  // open and no detection, count it as a dismissal.
+  useEffect(() => {
+    return () => {
+      if (dialogOpenRef.current && !detectedFiredRef.current) {
+        trackPredefinedEvent(GA_EVENTS.MONITOR_ADD_HOST_DISMISS, 'unmount');
+      }
+    };
+  }, []);
 
   // Auto-open Add Host dialog when ?add_host=true is present in the URL
   useEffect(() => {
@@ -1352,7 +1400,10 @@ const VulnAssetsPage = () => {
             {addHostStep === 'checks' ? (
               <Button
                 size="sm"
-                onClick={() => setAddHostStep('deploy')}
+                onClick={() => {
+                  trackPredefinedEvent(GA_EVENTS.MONITOR_ADD_HOST_DEPLOY, hostPlatform);
+                  setAddHostStep('deploy');
+                }}
                 disabled={Object.values(hostChecks).every(v => !v) || !selectedGroupId}
               >
                 Next: Deploy
