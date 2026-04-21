@@ -1849,10 +1849,10 @@ const IncidentsPage = () => {
               </Typography>
               {/* Webhook counts as 1 of the 5 visible slots */}
               <WebhookIngestionButton webhook={webhookIngestion} onToggled={fetchIngestionApps} />
-              {!isAddOutlookStep && ingestionApps.slice(0, 3).map(app => (
+              {!isDemoTourActive && ingestionApps.slice(0, 3).map(app => (
                 <IngestionSourceButton key={app.name} app={app} onToggle={handleToggleApp} incidentCount={incidentCountsBySource.get(normalizeAppName(app.name)) || 0} />
               ))}
-              {!isAddOutlookStep && ingestionApps.length > 3 && (
+              {!isDemoTourActive && ingestionApps.length > 3 && (
                 <>
                   <Typography className="automation-overflow-count" sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', fontWeight: 600, px: 0.25 }}>
                     +{ingestionApps.length - 3}
