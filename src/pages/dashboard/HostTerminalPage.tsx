@@ -172,6 +172,7 @@ const HostTerminalPage = () => {
     .filter(p => p.hostActionable && !p.disabled);
 
   // Fetch all hosts for the switcher
+  const [singleEnvFallback, setSingleEnvFallback] = useState<string>('');
   useEffect(() => {
     (async () => {
       try {
@@ -187,16 +188,26 @@ const HostTerminalPage = () => {
           const checks = Array.isArray(env.sensor_checks) ? env.sensor_checks : [];
           const hasResponseActions = checks.some((c: any) => c === 'response_actions');
           const modeStr = hasResponseActions ? 'full' : 'controlled';
+          // Validate group name — env.Name is the authoritative sensor_group identifier
+          const groupName = typeof env.Name === 'string' && env.Name.trim() ? env.Name.trim() : '';
+          if (!groupName) {
+            console.warn('[HostTerminal] Environment missing Name field, skipping:', env);
+          }
           return groupHosts.map((h: any) => ({
             uuid: h.uuid,
             hostname: h.hostname,
-            groupName: env.Name,
+            groupName,
             mode: modeStr,
             os: h.os || '',
             checkin: h.checkin,
           }));
         });
         setAllHosts(hosts);
+        // Fallback: if there's exactly one sensor group, use its Name when no
+        // host match is found (mirrors MonitorDetailPage behavior).
+        if (envs.length === 1 && typeof envs[0].Name === 'string' && envs[0].Name.trim()) {
+          setSingleEnvFallback(envs[0].Name.trim());
+        }
       } catch { /* ignore */ } finally {
         setHostsLoaded(true);
       }
