@@ -2152,7 +2152,11 @@ function UsecasesPageInner() {
           sx: {
             width: { xs: '100%', sm: 720, md: 900 },
             maxWidth: '100vw',
-            bgcolor: 'hsl(var(--background))',
+            // Explicit fallback so the drawer is never transparent in the
+            // standalone build (host CSS may not define --background).
+            backgroundColor: '#1a1a1a',
+            bgcolor: 'hsl(var(--background, 0 0% 10%))',
+            color: 'hsl(var(--foreground, 0 0% 100%))',
             backgroundImage: 'none',
           },
         }}
@@ -2162,9 +2166,10 @@ function UsecasesPageInner() {
           alignItems: 'center',
           justifyContent: 'space-between',
           px: 3, py: 2,
-          borderBottom: '1px solid hsl(var(--border))',
+          borderBottom: '1px solid hsl(var(--border, 0 0% 20%))',
           position: 'sticky', top: 0, zIndex: 2,
-          bgcolor: 'hsl(var(--background))',
+          backgroundColor: '#1a1a1a',
+          bgcolor: 'hsl(var(--background, 0 0% 10%))',
         }}>
           <Typography sx={{ fontSize: '0.78rem', fontWeight: 700, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
             Automation
