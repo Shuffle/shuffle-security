@@ -312,6 +312,14 @@ export interface Usecase {
   status?: 'enabled' | 'disabled' | 'misconfigured';
   /** True if this flow requires manual verification (e.g. log forwarding can't be auto-detected) */
   manualVerification?: boolean;
+  /** Importance ranking 0–100; 100 = highest priority (most-used). */
+  priority?: number;
+  /** Optional video URL (YouTube, Vimeo, mp4) showcasing the usecase. */
+  video?: string;
+  /** Optional blogpost / article URL with deeper context. */
+  blogpost?: string;
+  /** Optional reference image URL (architecture diagram, screenshot). */
+  referenceImage?: string;
 }
 
 // ── API usecase types (from /api/v1/workflows/usecases) ────────────────────────
