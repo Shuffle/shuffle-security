@@ -2560,30 +2560,6 @@ function UsecaseCard({
     }
   };
 
-  // Determine sync status
-  const isSynced = drift && drift.drifts.length === 0; // matched with no drift
-  const isLocalOnly = !drift || drift.drifts.includes('local_only');
-  const hasDrift = drift && drift.drifts.length > 0 && !isLocalOnly;
-
-  const syncIcon = !apiLoaded ? null : isSynced ? (
-    <Tooltip title="Synced with API" placement="top" arrow>
-      <Box sx={{ display: 'inline-flex' }}>
-        <CheckCircle2 size={14} style={{ color: 'hsl(var(--severity-low))' }} />
-      </Box>
-    </Tooltip>
-  ) : hasDrift ? (
-    <Tooltip title={`Drift detected: ${drift!.drifts.join(', ')}`} placement="top" arrow>
-      <Box sx={{ display: 'inline-flex' }}>
-        <AlertTriangle size={14} style={{ color: 'hsl(var(--severity-medium))' }} />
-      </Box>
-    </Tooltip>
-  ) : (
-    <Tooltip title="Not found in API" placement="top" arrow>
-      <Box sx={{ display: 'inline-flex' }}>
-        <Circle size={14} style={{ color: 'hsl(var(--muted-foreground))' }} />
-      </Box>
-    </Tooltip>
-  );
 
   return (
     <Card
