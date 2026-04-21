@@ -1018,6 +1018,7 @@ interface WorkflowSummary {
   [key: string]: any;
 }
 function useWorkflowsLite() {
+  const { apiUrl, authHeader } = useApi();
   const [data, setData] = useState<WorkflowSummary[]>([]);
   const fetchOnce = React.useCallback(async () => {
     try {
