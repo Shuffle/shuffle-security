@@ -245,6 +245,7 @@ const MonitorDetailPage = () => {
         hostUuid={host.uuid}
         hostname={host.hostname}
         groupName={groupName}
+        vulnerabilities={hostVulnerabilities}
       />
 
       <DisableRceConfirmDialog
