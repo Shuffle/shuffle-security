@@ -331,7 +331,16 @@ export default function UsecasesPage() {
             }}
           >
             {group.flows.map((flow) => (
-              <UsecaseCard key={flow.id} flow={flow} drift={getDrift(flow.id)} apiLoaded={apiLoaded} onClick={() => navigate(`/usecases/${flow.id}`)} />
+              <UsecaseCard
+                key={flow.id}
+                flow={flow}
+                drift={getDrift(flow.id)}
+                apiLoaded={apiLoaded}
+                isEnabled={!!flow.automationLabel && enabledLabels.has(flow.automationLabel)}
+                canToggle={isAuthenticated && !!flow.automationLabel}
+                onToggled={refetchWorkflows}
+                onClick={() => navigate(`/usecases/${flow.id}`)}
+              />
             ))}
           </Box>
         </Box>
