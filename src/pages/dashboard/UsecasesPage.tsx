@@ -964,11 +964,27 @@ interface UserInfoLite {
   support?: boolean;
 }
 function useAuthLite() {
+  const cfg = useUsecasesConfig();
+  const { apiUrl, authHeader } = useApi();
   const [state, setState] = useState<{ userInfo: UserInfoLite | null; isAuthenticated: boolean }>({
     userInfo: null,
     isAuthenticated: false,
   });
   useEffect(() => {
+    // External host app provided auth — trust it, skip the getinfo probe.
+    if (cfg.hasExternalAuth) {
+      setState({
+        userInfo: cfg.externalUserInfo
+          ? {
+              id: cfg.externalUserInfo.id,
+              username: cfg.externalUserInfo.username,
+              support: cfg.externalUserInfo.support === true,
+            }
+          : null,
+        isAuthenticated: cfg.externalIsAuthenticated,
+      });
+      return;
+    }
     let cancelled = false;
     (async () => {
       try {
@@ -988,7 +1004,7 @@ function useAuthLite() {
       }
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [cfg.hasExternalAuth, cfg.externalIsAuthenticated, cfg.externalUserInfo, apiUrl, authHeader]);
   return state;
 }
 
