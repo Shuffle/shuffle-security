@@ -52,9 +52,15 @@ const slugify = (value: string) =>
     .replace(/[^a-z0-9]+/g, '_')
     .replace(/^_+|_+$/g, '') || 'usecase';
 
+const getApiSource = (apiUsecase: ApiUsecase) =>
+  normalizeCategory(apiUsecase.source_id || apiUsecase.type);
+
+const getApiTarget = (apiUsecase: ApiUsecase) =>
+  normalizeCategory(apiUsecase.target_id || apiUsecase.last || apiUsecase.destination || '');
+
 const buildApiOnlyId = (apiUsecase: ApiUsecase) => {
-  const source = normalizeCategory(apiUsecase.type);
-  const target = normalizeCategory(apiUsecase.last);
+  const source = getApiSource(apiUsecase);
+  const target = getApiTarget(apiUsecase);
   return `api_${source}_${target}_${slugify(apiUsecase.name)}`;
 };
 
@@ -74,8 +80,8 @@ const buildLocalRouteMap = () => {
 const LOCAL_ROUTE_MAP = buildLocalRouteMap();
 
 function getMatchingLocalUsecase(apiUsecase: ApiUsecase, matchedLocalIds: Set<string>): Usecase | undefined {
-  const source = normalizeCategory(apiUsecase.type);
-  const target = normalizeCategory(apiUsecase.last);
+  const source = getApiSource(apiUsecase);
+  const target = getApiTarget(apiUsecase);
   const candidateSources = [source, ...(ROUTE_ALIASES[source] || [])];
 
   for (const candidateSource of candidateSources) {
@@ -90,26 +96,26 @@ function getMatchingLocalUsecase(apiUsecase: ApiUsecase, matchedLocalIds: Set<st
 function mapApiUsecaseToFrontend(apiCategory: ApiUsecaseCategory, apiUsecase: ApiUsecase, localUsecase?: Usecase): Usecase {
   return {
     id: localUsecase?.id || buildApiOnlyId(apiUsecase),
-    source: normalizeCategory(apiUsecase.type),
-    target: normalizeCategory(apiUsecase.last),
+    source: getApiSource(apiUsecase),
+    target: getApiTarget(apiUsecase),
     label: apiUsecase.name || localUsecase?.label || 'Untitled usecase',
     description: apiUsecase.description || localUsecase?.description || '',
-    agenticDescription: localUsecase?.agenticDescription || apiUsecase.description || '',
+    agenticDescription: localUsecase?.agenticDescription || apiUsecase.agentic_description || apiUsecase.description || '',
     phase: apiCategoryToPhase(apiCategory.name),
-    tags: localUsecase?.tags || [],
+    tags: apiUsecase.tags || localUsecase?.tags || [],
     // Backend is the source of truth — anything returned by the API counts as
     // active/animated unless the local override explicitly says otherwise.
-    animated: localUsecase ? localUsecase.animated : true,
-    automationLabel: localUsecase?.automationLabel,
-    automationCategory: localUsecase?.automationCategory,
-    automationArea: localUsecase?.automationArea,
+    animated: typeof apiUsecase.disabled === 'boolean' ? !apiUsecase.disabled : (localUsecase ? localUsecase.animated : true),
+    automationLabel: apiUsecase.automation_label || localUsecase?.automationLabel,
+    automationCategory: apiUsecase.automation_category || localUsecase?.automationCategory,
+    automationArea: (apiUsecase.automation_area as Usecase['automationArea'] | undefined) || localUsecase?.automationArea,
     status: localUsecase?.status,
-    manualVerification: localUsecase?.manualVerification,
+    manualVerification: typeof apiUsecase.manual_verification === 'boolean' ? apiUsecase.manual_verification : localUsecase?.manualVerification,
     priority: typeof apiUsecase.priority === 'number' ? apiUsecase.priority : localUsecase?.priority,
     video: apiUsecase.video || localUsecase?.video,
     blogpost: apiUsecase.blogpost || localUsecase?.blogpost,
     referenceImage: apiUsecase.reference_image || localUsecase?.referenceImage,
-    customAction: localUsecase?.customAction,
+    customAction: apiUsecase.custom_action || localUsecase?.customAction,
   };
 }
 
@@ -120,7 +126,7 @@ function buildBackendUsecases(apiCategories: ApiUsecaseCategory[]): Pick<FetchRe
 
   for (const apiCategory of apiCategories) {
     for (const apiUsecase of apiCategory.list || []) {
-      if (!apiUsecase.type || !apiUsecase.last) continue;
+      if (!getApiSource(apiUsecase) || !getApiTarget(apiUsecase)) continue;
 
       const localUsecase = getMatchingLocalUsecase(apiUsecase, matchedLocalIds);
       if (localUsecase) matchedLocalIds.add(localUsecase.id);

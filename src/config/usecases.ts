@@ -345,8 +345,24 @@ export interface ApiUsecaseItem {
 export interface ApiUsecase {
   name: string;
   priority?: number;
-  type: string;       // source category (e.g. "siem", "edr", "communication")
-  last: string;       // target category (e.g. "cases")
+  type: string;       // source category label/id (e.g. "SIEM", "siem")
+  last?: string;      // legacy target category (e.g. "cases")
+  destination?: string; // exported JSON target label (e.g. "Case Management")
+  source_id?: string;
+  target_id?: string;
+  disabled?: boolean;
+  tags?: string[];
+  agentic_description?: string;
+  automation_label?: string;
+  automation_category?: string;
+  automation_area?: string;
+  manual_verification?: boolean;
+  custom_action?: {
+    label: string;
+    href?: string;
+    url?: string;
+    description?: string;
+  };
   description?: string;
   video?: string;
   blogpost?: string;
@@ -381,6 +397,7 @@ export function normalizeCategory(apiCategory: string): string {
   const map: Record<string, string> = {
     cases: 'case_management',
     case: 'case_management',
+    'case management': 'case_management',
     case_management: 'case_management',
     communication: 'communication',
     chat: 'communication',
@@ -391,11 +408,13 @@ export function normalizeCategory(apiCategory: string): string {
     network: 'network',
     firewall: 'network',
     threat_intel: 'threat_intel',
+    'threat intel': 'threat_intel',
     intel: 'threat_intel',
     iam: 'iam',
     identity: 'iam',
     cloud: 'cloud',
     asset_management: 'asset_management',
+    'asset management': 'asset_management',
     assets: 'asset_management',
     cmdb: 'asset_management',
   };
