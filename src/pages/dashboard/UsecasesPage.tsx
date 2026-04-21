@@ -1996,17 +1996,36 @@ function UsecasesPageInner() {
   const isSupport = userInfo?.support === true;
   const [showAllAsSupport, setShowAllAsSupport] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
-  const drawerFlowId = searchParams.get('usecase');
+  const routeParams = useParams<{ flowId?: string }>();
+
+  // Drawer is driven by the route segment /usecases/:flowId where the segment
+  // is the URL-encoded usecase label (human-readable name). We resolve it back
+  // to a flow id by matching against `flow.label`.
+  const drawerLabel = routeParams.flowId ? decodeURIComponent(routeParams.flowId) : null;
+  const drawerFlowId = useMemo(() => {
+    if (!drawerLabel) return null;
+    const match = usecases.find(u => u.label === drawerLabel);
+    return match ? match.id : null;
+  }, [drawerLabel, usecases]);
+
   const setDrawerFlowId = (id: string | null) => {
-    setSearchParams(
-      (prev) => {
-        const next = new URLSearchParams(prev);
-        if (id) next.set('usecase', id);
-        else next.delete('usecase');
-        return next;
-      },
-      { replace: false }
-    );
+    if (!id) {
+      navigate({ pathname: '/usecases', search: searchParams.toString() ? `?${searchParams.toString()}` : '' });
+      return;
+    }
+    const flow = usecases.find(u => u.id === id);
+    const name = flow?.label || id;
+    // Fire-and-forget API call — response intentionally ignored per product spec.
+    try {
+      fetch(apiUrl(`/api/v1/workflows/usecases/${encodeURIComponent(name)}`), {
+        credentials: 'include',
+        headers: { ...authHeader() },
+      }).catch(() => { /* ignore */ });
+    } catch { /* ignore */ }
+    navigate({
+      pathname: `/usecases/${encodeURIComponent(name)}`,
+      search: searchParams.toString() ? `?${searchParams.toString()}` : '',
+    });
   };
 
   // Map: automationLabel -> whether at least one workflow exists for it.
