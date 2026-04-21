@@ -1123,51 +1123,63 @@ const getToolCategoryMeta = (categoryId: string): { color: string; icon: React.R
   return { color: cat.color, icon: cat.icon, label: cat.label };
 };
 
-function IntegrationStatusLite({ filterApps }: { filterApps?: string[] }) {
-  const { data: integrations = [], isLoading } = useQuery<{ id: string; name: string; icon: string }[]>({
+interface IntegrationItem {
+  id: string;
+  name: string;
+  icon: string;
+  /** Validated (tested) — highest priority */
+  validated: boolean;
+  /** Active auth entry */
+  active: boolean;
+}
+
+function IntegrationStatusLite({ filterApps, singleLine = false }: { filterApps?: string[]; singleLine?: boolean }) {
+  const { data: integrations = [], isLoading } = useQuery<IntegrationItem[]>({
     queryKey: ['usecases-page-integrations'],
     queryFn: async () => {
       try {
-        const [authRes, appsRes] = await Promise.all([
-          fetch(apiUrl('/api/v1/apps/authentication'), { credentials: 'include', headers: { ...authHeader() } }),
-          fetch(apiUrl('/api/v1/apps'), { credentials: 'include', headers: { ...authHeader() } }),
-        ]);
+        const res = await fetch(apiUrl('/api/v1/apps/authentication'), {
+          credentials: 'include',
+          headers: { ...authHeader() },
+        });
 
-        const items = new Map<string, { id: string; name: string; icon: string }>();
+        const items = new Map<string, IntegrationItem>();
 
-        if (authRes.ok) {
-          const authData = await authRes.json();
+        if (res.ok) {
+          const authData = await res.json();
           const authList = Array.isArray(authData) ? authData : (authData?.data || []);
           for (const entry of Array.isArray(authList) ? authList : []) {
             const app = entry?.app;
             if (!app?.name) continue;
             const key = String(app.name).toLowerCase();
-            if (!items.has(key)) {
+            const validated = entry?.validation?.valid === true;
+            const active = entry?.active === true;
+            const existing = items.get(key);
+            if (!existing) {
               items.set(key, {
                 id: app.id || key,
                 name: app.name,
                 icon: app.large_image || app.image || '',
+                validated,
+                active,
               });
+            } else {
+              // Merge: prefer validated/active across multiple auth entries
+              existing.validated = existing.validated || validated;
+              existing.active = existing.active || active;
+              if (!existing.icon && (app.large_image || app.image)) {
+                existing.icon = app.large_image || app.image;
+              }
             }
           }
         }
 
-        if (appsRes.ok) {
-          const appsData = await appsRes.json();
-          for (const app of Array.isArray(appsData) ? appsData : []) {
-            if (!app?.name || !app?.activated) continue;
-            const key = String(app.name).toLowerCase();
-            if (!items.has(key)) {
-              items.set(key, {
-                id: app.id || key,
-                name: app.name,
-                icon: app.large_image || app.image || '',
-              });
-            }
-          }
-        }
-
-        return Array.from(items.values()).sort((a, b) => a.name.localeCompare(b.name));
+        // Sort: validated first, then active, then alphabetical
+        return Array.from(items.values()).sort((a, b) => {
+          if (a.validated !== b.validated) return a.validated ? -1 : 1;
+          if (a.active !== b.active) return a.active ? -1 : 1;
+          return a.name.localeCompare(b.name);
+        });
       } catch {
         return [];
       }
