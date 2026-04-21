@@ -1914,7 +1914,19 @@ function UsecasesPageInner() {
   const { data: workflows = [], refetch: refetchWorkflows } = useWorkflowsLite();
   const isSupport = userInfo?.support === true;
   const [showAllAsSupport, setShowAllAsSupport] = useState(true);
-  const [drawerFlowId, setDrawerFlowId] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const drawerFlowId = searchParams.get('usecase');
+  const setDrawerFlowId = (id: string | null) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (id) next.set('usecase', id);
+        else next.delete('usecase');
+        return next;
+      },
+      { replace: false }
+    );
+  };
 
   // Map: automationLabel -> whether at least one workflow exists for it.
   // Match by workflow name OR tag containing the label (case-insensitive).
