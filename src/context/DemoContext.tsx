@@ -24,7 +24,10 @@ export interface TourStepRequirement {
 export interface TourStep {
   id: string;
   title: string;
+  /** Short lead sentence — keep it to one line if possible. */
   body: string;
+  /** Optional scannable bullet points shown under the body. */
+  bullets?: string[];
   route?: string;
   /** If set, Next is disabled until completedSteps[id] is true. */
   requirement?: TourStepRequirement;
