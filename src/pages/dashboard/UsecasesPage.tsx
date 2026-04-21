@@ -2383,45 +2383,17 @@ function UsecasesPageInner() {
         </Box>
       ) : (
         <Box sx={{
-          mb: 3, p: { xs: 2, md: 2.5 }, borderRadius: 2,
+          mb: 3,
+          display: 'inline-flex', alignItems: 'center', gap: 1,
+          px: 1.5, py: 0.75, borderRadius: 1.5,
           bgcolor: 'hsl(var(--primary) / 0.06)',
           border: '1px solid hsl(var(--primary) / 0.18)',
         }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.25 }}>
-            <Zap size={16} style={{ color: 'hsl(var(--primary))' }} />
-            <Typography variant="body2" sx={{ color: 'hsl(var(--primary))', fontWeight: 700, fontSize: '0.85rem' }}>
-              One-click automations for Incidents, AI Agents & Enrichment
-            </Typography>
-          </Box>
-          <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.82rem', lineHeight: 1.6, mb: 1.5 }}>
-            Every usecase below is a pre-built workflow you can enable in one click — no YAML, no glue code.
-            Pick the tools you already use and Shuffle wires up the integration for you.
+          <Zap size={14} style={{ color: 'hsl(var(--primary))' }} />
+          <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.78rem' }}>
+            <Box component="span" sx={{ color: 'hsl(var(--primary))', fontWeight: 700 }}>One-click automations</Box>
+            {' '}for Incidents, AI Agents & Enrichment.
           </Typography>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
-            {[
-              { label: 'Detect', desc: 'Catch what matters' },
-              { label: 'Collect', desc: 'Pull data into incidents' },
-              { label: 'Enrich', desc: 'Add context with AI & threat intel' },
-              { label: 'Respond', desc: 'Act in seconds, with approval' },
-            ].map((pillar) => (
-              <Box
-                key={pillar.label}
-                sx={{
-                  display: 'inline-flex', alignItems: 'center', gap: 0.6,
-                  px: 1, py: 0.4, borderRadius: 1,
-                  bgcolor: 'hsl(var(--primary) / 0.1)',
-                  border: '1px solid hsl(var(--primary) / 0.2)',
-                }}
-              >
-                <Typography sx={{ color: 'hsl(var(--primary))', fontWeight: 700, fontSize: '0.72rem' }}>
-                  {pillar.label}
-                </Typography>
-                <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.72rem' }}>
-                  · {pillar.desc}
-                </Typography>
-              </Box>
-            ))}
-          </Box>
         </Box>
       )}
 
