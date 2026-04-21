@@ -402,6 +402,15 @@ const IncidentsPage = () => {
    const [appSearchOpen, setAppSearchOpen] = useState(false);
    const [forwardAppSearchOpen, setForwardAppSearchOpen] = useState(false);
 
+   // ─── Demo tour gating ─────────────────────────────────────────────────────
+   // While the demo tour is open and on the "add-outlook" step, we strip the
+   // automation row down to the bare minimum: webhook + the highlighted "+"
+   // button. Existing ingest icons, the arrow, and the entire Forward section
+   // are hidden so the user can't be distracted from the one click we want.
+   const { active: demoActive, drawerOpen: demoDrawerOpen, step: demoStep, markStepCompleted } = useDemo();
+   const demoStepId = TOUR_STEPS[demoStep]?.id;
+   const isAddOutlookStep = demoActive && demoDrawerOpen && demoStepId === 'add-outlook';
+
    // Hover state for automation sections (state-based to survive popover portals)
    const [ingestHovered, setIngestHovered] = useState(false);
    const [forwardHovered, setForwardHovered] = useState(false);
