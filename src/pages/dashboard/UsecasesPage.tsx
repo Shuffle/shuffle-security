@@ -1550,17 +1550,62 @@ function UsecaseDetailContent({
   hidePrevNext = false,
   onNavigateUsecase,
   usecases,
+  isEnabled = false,
+  canToggle = false,
+  onToggled,
 }: {
   flowId: string | undefined;
   hideBackNav?: boolean;
   hidePrevNext?: boolean;
   onNavigateUsecase?: (flowId: string) => void;
   usecases: Usecase[];
+  /** Whether this automation currently has a running workflow */
+  isEnabled?: boolean;
+  /** Whether the Enable/Disable button should be shown (auth + automationLabel) */
+  canToggle?: boolean;
+  /** Called after a successful toggle so the parent can refetch workflows */
+  onToggled?: () => void;
 }) {
   const navigate = useNavigate();
   const { apiUrl, authHeader } = useApi();
   const flow = usecases.find((item) => item.id === flowId);
   const [categoryAppNames, setCategoryAppNames] = useState<Record<string, string[]>>({});
+  const [toggling, setToggling] = useState(false);
+  const [optimisticEnabled, setOptimisticEnabled] = useState<boolean | null>(null);
+  const effectiveEnabled = optimisticEnabled !== null ? optimisticEnabled : isEnabled;
+
+  const handleToggle = async () => {
+    if (!flow?.automationLabel || toggling) return;
+    const willBeEnabled = !effectiveEnabled;
+    setToggling(true);
+    setOptimisticEnabled(willBeEnabled);
+    try {
+      const res = await fetch(apiUrl('/api/v2/workflows/generate'), {
+        method: 'POST',
+        credentials: 'include',
+        headers: { ...authHeader(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          label: flow.automationLabel,
+          ...(flow.automationCategory ? { category: flow.automationCategory } : {}),
+          ...(willBeEnabled ? {} : { action_name: 'remove' }),
+        }),
+      });
+      let body: any = null;
+      try { body = await res.json(); } catch { /* ignore */ }
+      const reason = typeof body?.reason === 'string' ? body.reason : '';
+      const ok = res.ok && body?.success !== false;
+      if (!ok) throw new Error(reason || `Request failed (${res.status})`);
+      toast.success(willBeEnabled ? `${flow.label} enabled` : `${flow.label} disabled`);
+      onToggled?.();
+      setTimeout(() => setOptimisticEnabled(null), 1500);
+    } catch (err: any) {
+      setOptimisticEnabled(null);
+      toast.error(err?.message || 'Failed to update automation', { duration: 6000 });
+    } finally {
+      setToggling(false);
+    }
+  };
+
 
   useEffect(() => {
     let cancelled = false;
@@ -1665,9 +1710,51 @@ function UsecaseDetailContent({
             {sourceCat?.icon || <ArrowRight size={22} />}
           </Box>
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography sx={{ fontSize: '1.35rem', fontWeight: 800, color: FG, mb: 1, lineHeight: 1.2 }}>
-              {flow.label}
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, mb: 1 }}>
+              <Typography sx={{ fontSize: '1.35rem', fontWeight: 800, color: FG, lineHeight: 1.2, flex: 1, minWidth: 0 }}>
+                {flow.label}
+              </Typography>
+              {canToggle && flow.automationLabel && (
+                <Button
+                  size="small"
+                  variant="contained"
+                  disableElevation
+                  onClick={handleToggle}
+                  disabled={toggling}
+                  startIcon={
+                    toggling ? (
+                      <CircularProgress size={12} sx={{ color: 'inherit' }} />
+                    ) : effectiveEnabled ? (
+                      <PowerOff size={14} />
+                    ) : (
+                      <Power size={14} />
+                    )
+                  }
+                  sx={{
+                    flexShrink: 0,
+                    textTransform: 'none',
+                    fontSize: '0.78rem',
+                    fontWeight: 600,
+                    minHeight: 0,
+                    py: 0.6,
+                    px: 1.25,
+                    bgcolor: effectiveEnabled
+                      ? 'hsl(var(--destructive, 0 84% 60%))'
+                      : 'hsl(var(--primary, 24 100% 50%))',
+                    color: effectiveEnabled
+                      ? 'hsl(var(--destructive-foreground, 0 0% 100%))'
+                      : 'hsl(var(--primary-foreground, 0 0% 100%))',
+                    '&:hover': {
+                      bgcolor: effectiveEnabled
+                        ? 'hsla(0, 84%, 60%, 0.9)'
+                        : 'hsla(24, 100%, 50%, 0.9)',
+                    },
+                  }}
+                >
+                  {effectiveEnabled ? 'Disable' : 'Enable'}
+                </Button>
+              )}
+            </Box>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 1.25 }}>
               <Typography sx={{ fontSize: '0.68rem', fontWeight: 700, px: 1, py: 0.35, borderRadius: 1, bgcolor: accentBg(phaseInfo.color, 0.12), color: accent(phaseInfo.color), border: `1px solid ${accentBg(phaseInfo.color, 0.25)}` }}>
                 Step {phaseInfo.step}: {phaseInfo.label}
@@ -2221,12 +2308,22 @@ function UsecasesPageInner() {
           </Box>
         </Box>
         <Box sx={{ p: { xs: 2, md: 3 } }}>
-          <UsecaseDetailContent
-            flowId={drawerFlowId ?? undefined}
-            hideBackNav
-            onNavigateUsecase={(id) => setDrawerFlowId(id || null)}
-            usecases={usecases}
-          />
+          {(() => {
+            const drawerFlow = drawerFlowId ? usecases.find(u => u.id === drawerFlowId) : null;
+            const drawerEnabled = !!drawerFlow?.automationLabel && enabledLabels.has(drawerFlow.automationLabel);
+            const drawerCanToggle = isAuthenticated && !!drawerFlow?.automationLabel;
+            return (
+              <UsecaseDetailContent
+                flowId={drawerFlowId ?? undefined}
+                hideBackNav
+                onNavigateUsecase={(id) => setDrawerFlowId(id || null)}
+                usecases={usecases}
+                isEnabled={drawerEnabled}
+                canToggle={drawerCanToggle}
+                onToggled={refetchWorkflows}
+              />
+            );
+          })()}
         </Box>
       </Drawer>
     </Box>
