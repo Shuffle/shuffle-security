@@ -2002,8 +2002,9 @@ function UsecasesPageInner() {
   const filtered = useMemo(() => {
     let list = usecases;
 
-    // Hide inactive (non-animated) usecases for non-support users
-    if (!(isSupport && showAllAsSupport)) {
+    // Hide inactive (non-animated) usecases for authenticated non-support users.
+    // Guests see everything so the page doesn't look empty before sign-up.
+    if (isAuthenticated && !(isSupport && showAllAsSupport)) {
       list = list.filter((u) => u.animated === true);
     }
 
@@ -2028,7 +2029,7 @@ function UsecasesPageInner() {
       );
     }
     return list;
-  }, [search, phaseFilter, categoryFilter, tagFilter, usecases, isSupport, showAllAsSupport]);
+  }, [search, phaseFilter, categoryFilter, tagFilter, usecases, isAuthenticated, isSupport, showAllAsSupport]);
 
   // Group by phase in order
   const grouped = useMemo(() => {
@@ -2276,6 +2277,7 @@ function UsecasesPageInner() {
                 apiLoaded={apiLoaded}
                 isEnabled={!!flow.automationLabel && enabledLabels.has(flow.automationLabel)}
                 canToggle={isAuthenticated && !!flow.automationLabel}
+                isAuthenticated={isAuthenticated}
                 onToggled={refetchWorkflows}
                 onClick={() => setDrawerFlowId(flow.id)}
               />
@@ -2384,6 +2386,7 @@ function UsecaseCard({
   apiLoaded,
   isEnabled,
   canToggle,
+  isAuthenticated = true,
   onToggled,
   onClick,
 }: {
@@ -2392,6 +2395,7 @@ function UsecaseCard({
   apiLoaded: boolean;
   isEnabled: boolean;
   canToggle: boolean;
+  isAuthenticated?: boolean;
   onToggled?: () => void;
   onClick: () => void;
 }) {
@@ -2519,8 +2523,8 @@ function UsecaseCard({
         </Box>
       </CardActionArea>
 
-      {/* Hover-revealed Enable/Disable button */}
-      {canToggle && (
+      {/* Hover-revealed Enable/Disable button (or Sign-up CTA for guests) */}
+      {(canToggle || (!isAuthenticated && flow.automationLabel)) && (
         <Box
           className="uc-toggle-btn"
           sx={{
@@ -2532,37 +2536,62 @@ function UsecaseCard({
             transition: 'opacity 0.15s ease',
           }}
         >
-          <Button
-            size="small"
-            variant="contained"
-            disableElevation
-            onClick={handleToggle}
-            disabled={toggling}
-            startIcon={
-              toggling ? (
-                <CircularProgress size={12} sx={{ color: 'inherit' }} />
-              ) : effectiveEnabled ? (
-                <PowerOff size={12} />
-              ) : (
-                <Power size={12} />
-              )
-            }
-            sx={{
-              textTransform: 'none',
-              fontSize: '0.7rem',
-              fontWeight: 600,
-              minHeight: 0,
-              py: 0.4,
-              px: 1,
-              bgcolor: effectiveEnabled ? 'hsl(var(--destructive))' : 'hsl(var(--primary))',
-              color: effectiveEnabled ? 'hsl(var(--destructive-foreground))' : 'hsl(var(--primary-foreground))',
-              '&:hover': {
-                bgcolor: effectiveEnabled ? 'hsl(var(--destructive) / 0.9)' : 'hsl(var(--primary) / 0.9)',
-              },
-            }}
-          >
-            {effectiveEnabled ? 'Disable' : 'Enable'}
-          </Button>
+          {canToggle ? (
+            <Button
+              size="small"
+              variant="contained"
+              disableElevation
+              onClick={handleToggle}
+              disabled={toggling}
+              startIcon={
+                toggling ? (
+                  <CircularProgress size={12} sx={{ color: 'inherit' }} />
+                ) : effectiveEnabled ? (
+                  <PowerOff size={12} />
+                ) : (
+                  <Power size={12} />
+                )
+              }
+              sx={{
+                textTransform: 'none',
+                fontSize: '0.7rem',
+                fontWeight: 600,
+                minHeight: 0,
+                py: 0.4,
+                px: 1,
+                bgcolor: effectiveEnabled ? 'hsl(var(--destructive))' : 'hsl(var(--primary))',
+                color: effectiveEnabled ? 'hsl(var(--destructive-foreground))' : 'hsl(var(--primary-foreground))',
+                '&:hover': {
+                  bgcolor: effectiveEnabled ? 'hsl(var(--destructive) / 0.9)' : 'hsl(var(--primary) / 0.9)',
+                },
+              }}
+            >
+              {effectiveEnabled ? 'Disable' : 'Enable'}
+            </Button>
+          ) : (
+            <Button
+              component={Link}
+              to={`/register?returnUrl=${encodeURIComponent(`/usecases?usecase=${flow.id}`)}`}
+              size="small"
+              variant="contained"
+              disableElevation
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
+              startIcon={<Power size={12} />}
+              sx={{
+                textTransform: 'none',
+                fontSize: '0.7rem',
+                fontWeight: 600,
+                minHeight: 0,
+                py: 0.4,
+                px: 1,
+                bgcolor: 'hsl(var(--primary))',
+                color: 'hsl(var(--primary-foreground))',
+                '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)' },
+              }}
+            >
+              Enable
+            </Button>
+          )}
         </Box>
       )}
     </Card>
