@@ -2830,7 +2830,24 @@ const IncidentsPage = () => {
           fetchIngestionApps();
         }}
         title="Add Ingestion Source"
-        subtitle="Search and authenticate a tool to ingest incidents from"
+        subtitle={isAddOutlookStep ? 'Pick "Outlook Office365" — we\'ll pretend-authenticate it for the demo' : 'Search and authenticate a tool to ingest incidents from'}
+        initialQuery={isAddOutlookStep ? 'Outlook Office365' : undefined}
+        onSelectOverride={isAddOutlookStep ? (app) => {
+          // Pretend-authenticate flow: only Outlook Office365 advances the
+          // tour. Anything else falls through to the normal detail drawer so
+          // the user isn't trapped if they explore.
+          const norm = app.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+          if (norm.includes('outlook') || norm.includes('office365')) {
+            markStepCompleted('add-outlook');
+            toast.success('Outlook Office365 authenticated (demo)', {
+              description: 'In a real setup you\'d sign in with Microsoft. Moving on…',
+              duration: 2400,
+            });
+            setAppSearchOpen(false);
+            return true; // prevent the detail drawer from opening
+          }
+          return false;
+        } : undefined}
       />
 
       {/* Fixed bottom pagination */}
