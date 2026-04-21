@@ -44,6 +44,9 @@ export const DemoTourDrawer = () => {
     minimizeTour,
     restoreTour,
     toggleDock,
+    forceCreateIncidents,
+    isForceCreatingIncidents,
+    hasDemoIncidents,
   } = useDemo();
 
   const total = TOUR_STEPS.length;
@@ -52,6 +55,7 @@ export const DemoTourDrawer = () => {
   const isLast = step === total - 1;
   const requirement = current?.requirement;
   const locked = !!requirement && !currentStepUnlocked;
+  const isIncidentsListStep = current?.id === 'incidents-list';
 
   // ── Minimized pill ────────────────────────────────────────────────────────
   if (drawerOpen && minimized) {
