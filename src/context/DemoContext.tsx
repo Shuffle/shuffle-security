@@ -21,6 +21,19 @@ export interface TourStepRequirement {
   targetSelector: string;
 }
 
+/**
+ * A sub-goal is one of several discrete things the user must complete inside
+ * a single tour step. Each sub-goal tracks completion under its own id (which
+ * is stored in the same `completedSteps` map). The step is unlocked only when
+ * every sub-goal id is marked complete.
+ */
+export interface TourStepSubGoal {
+  /** Stable id used as the key in `completedSteps`. */
+  id: string;
+  /** Short human label shown in the drawer. */
+  label: string;
+}
+
 export interface TourStep {
   id: string;
   title: string;
@@ -31,6 +44,8 @@ export interface TourStep {
   route?: string;
   /** If set, Next is disabled until completedSteps[id] is true. */
   requirement?: TourStepRequirement;
+  /** If set, Next is disabled until every sub-goal id is in completedSteps. */
+  subGoals?: TourStepSubGoal[];
 }
 
 export const TOUR_STEPS: TourStep[] = [
@@ -62,6 +77,10 @@ export const TOUR_STEPS: TourStep[] = [
       label: 'Add both Outlook Office365 and Microsoft 365 Defender',
       targetSelector: '[data-tour="add-ingestion-source-button"]',
     },
+    subGoals: [
+      { id: 'add-outlook:outlook', label: 'Add Outlook Office365' },
+      { id: 'add-outlook:defender', label: 'Add Microsoft 365 Defender' },
+    ],
   },
   {
     id: 'ingest-webhook',
@@ -317,20 +336,30 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
     try { localStorage.removeItem('shuffle_demo_active'); } catch { /* ignore */ }
   }, []);
 
+  const isStepUnlocked = useCallback((s: TourStep | undefined): boolean => {
+    if (!s) return true;
+    // Step-level requirement gate (legacy single-goal).
+    if (s.requirement && !completedSteps[s.id]) return false;
+    // Sub-goal gate: every sub-goal id must be marked complete.
+    if (s.subGoals && s.subGoals.length > 0) {
+      if (!s.subGoals.every(g => !!completedSteps[g.id])) return false;
+    }
+    return true;
+  }, [completedSteps]);
+
   const currentStep = TOUR_STEPS[step];
-  const currentStepUnlocked = !currentStep?.requirement || !!completedSteps[currentStep.id];
+  const currentStepUnlocked = isStepUnlocked(currentStep);
 
   const nextStep = useCallback(() => {
     setStep(prev => {
       const cur = TOUR_STEPS[prev];
-      // Block forward navigation if requirement not met
-      if (cur?.requirement && !completedSteps[cur.id]) return prev;
+      if (!isStepUnlocked(cur)) return prev;
       const next = Math.min(prev + 1, TOUR_STEPS.length - 1);
       navigateForStep(next);
       runStepSeed(next);
       return next;
     });
-  }, [navigateForStep, runStepSeed, completedSteps]);
+  }, [navigateForStep, runStepSeed, isStepUnlocked]);
 
   const prevStep = useCallback(() => {
     setStep(prev => {
@@ -346,12 +375,12 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
     // Allow free backward jumps; forward jumps respect the gate at current step.
     if (clamped > step) {
       const cur = TOUR_STEPS[step];
-      if (cur?.requirement && !completedSteps[cur.id]) return;
+      if (!isStepUnlocked(cur)) return;
     }
     setStep(clamped);
     navigateForStep(clamped);
     runStepSeed(clamped);
-  }, [navigateForStep, runStepSeed, completedSteps, step]);
+  }, [navigateForStep, runStepSeed, isStepUnlocked, step]);
 
   const cleanup = useCallback(async () => {
     setIsCleaning(true);

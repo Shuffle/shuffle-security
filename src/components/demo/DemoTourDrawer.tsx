@@ -376,44 +376,77 @@ export const DemoTourDrawer = () => {
                       </Box>
                     )}
 
-                    {requirement && (
-                      <Box
-                        sx={{
-                          mt: 2.5,
-                          p: 1.75,
-                          borderRadius: 2,
-                          border: '1px solid',
-                          borderColor: locked ? 'hsl(var(--primary) / 0.35)' : 'hsl(var(--severity-low) / 0.35)',
-                          backgroundColor: locked ? 'hsl(var(--primary) / 0.06)' : 'hsl(var(--severity-low) / 0.08)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 1.25,
-                        }}
-                      >
+                    {(requirement || (current?.subGoals && current.subGoals.length > 0)) && (() => {
+                      // Build a unified list of goals. If the step uses
+                      // sub-goals, show them as separate rows so the user can
+                      // see exactly what is left. Otherwise fall back to the
+                      // single requirement label.
+                      const goals = current?.subGoals && current.subGoals.length > 0
+                        ? current.subGoals.map(g => ({
+                            id: g.id,
+                            label: g.label,
+                            done: !!completedSteps[g.id],
+                          }))
+                        : requirement
+                          ? [{
+                              id: current.id,
+                              label: requirement.label,
+                              done: !!completedSteps[current.id],
+                            }]
+                          : [];
+                      const allDone = goals.every(g => g.done);
+                      return (
                         <Box
                           sx={{
-                            width: 24,
-                            height: 24,
-                            borderRadius: 1,
-                            display: 'grid',
-                            placeItems: 'center',
-                            backgroundColor: locked ? 'hsl(var(--primary) / 0.18)' : 'hsl(var(--severity-low) / 0.2)',
-                            color: locked ? 'hsl(var(--primary))' : 'hsl(var(--severity-low))',
-                            flexShrink: 0,
+                            mt: 2.5,
+                            p: 1.75,
+                            borderRadius: 2,
+                            border: '1px solid',
+                            borderColor: allDone ? 'hsl(var(--severity-low) / 0.35)' : 'hsl(var(--primary) / 0.35)',
+                            backgroundColor: allDone ? 'hsl(var(--severity-low) / 0.08)' : 'hsl(var(--primary) / 0.06)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 1.25,
                           }}
                         >
-                          {locked ? <Lock size={13} /> : <Check size={14} />}
-                        </Box>
-                        <Box sx={{ flex: 1, minWidth: 0 }}>
-                          <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: locked ? 'hsl(var(--primary))' : 'hsl(var(--severity-low))', mb: 0.25 }}>
-                            {locked ? 'Required to continue' : 'Done'}
+                          <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: allDone ? 'hsl(var(--severity-low))' : 'hsl(var(--primary))' }}>
+                            {allDone ? 'Done' : 'Required to continue'}
                           </Typography>
-                          <Typography sx={{ fontSize: '0.78rem', fontWeight: 500, color: 'hsl(var(--foreground))', lineHeight: 1.4 }}>
-                            {requirement.label}
-                          </Typography>
+                          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.85 }}>
+                            {goals.map(g => (
+                              <Box key={g.id} sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+                                <Box
+                                  sx={{
+                                    width: 22,
+                                    height: 22,
+                                    borderRadius: 1,
+                                    display: 'grid',
+                                    placeItems: 'center',
+                                    backgroundColor: g.done ? 'hsl(var(--severity-low) / 0.2)' : 'hsl(var(--primary) / 0.18)',
+                                    color: g.done ? 'hsl(var(--severity-low))' : 'hsl(var(--primary))',
+                                    flexShrink: 0,
+                                  }}
+                                >
+                                  {g.done ? <Check size={13} /> : <Lock size={12} />}
+                                </Box>
+                                <Typography
+                                  sx={{
+                                    fontSize: '0.78rem',
+                                    fontWeight: 500,
+                                    color: 'hsl(var(--foreground))',
+                                    lineHeight: 1.4,
+                                    textDecoration: g.done ? 'line-through' : 'none',
+                                    opacity: g.done ? 0.7 : 1,
+                                  }}
+                                >
+                                  {g.label}
+                                </Typography>
+                              </Box>
+                            ))}
+                          </Box>
                         </Box>
-                      </Box>
-                    )}
+                      );
+                    })()}
 
                     {isLast && (
                       <Box
@@ -460,8 +493,11 @@ export const DemoTourDrawer = () => {
                 <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.75, px: 2, pb: 1.5 }}>
                   {TOUR_STEPS.map((s, i) => {
                     const isCurrent = i === step;
-                    const isComplete = !!completedSteps[s.id];
-                    const hasReq = !!s.requirement;
+                    const hasSubGoals = !!s.subGoals && s.subGoals.length > 0;
+                    const isComplete = hasSubGoals
+                      ? s.subGoals!.every(g => !!completedSteps[g.id])
+                      : !!completedSteps[s.id];
+                    const hasReq = !!s.requirement || hasSubGoals;
                     return (
                       <Box
                         key={s.id}
@@ -515,7 +551,16 @@ export const DemoTourDrawer = () => {
                   Previous
                 </Button>
                 <Tooltip
-                  title={locked && requirement ? `Complete: ${requirement.label}` : ''}
+                  title={
+                    locked
+                      ? (() => {
+                          const pending = current?.subGoals?.find(g => !completedSteps[g.id]);
+                          if (pending) return `Complete: ${pending.label}`;
+                          if (requirement) return `Complete: ${requirement.label}`;
+                          return '';
+                        })()
+                      : ''
+                  }
                   arrow
                   disableHoverListener={!locked}
                 >

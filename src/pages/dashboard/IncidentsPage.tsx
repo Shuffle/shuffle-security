@@ -2901,11 +2901,9 @@ const IncidentsPage = () => {
                     category: 'email',
                   },
                 ];
-                const hasOutlook = next.some(a => /outlook|office365/i.test(a.name));
-                const hasDefender = next.some(a => /defender/i.test(a.name));
-                if (hasOutlook && hasDefender) {
-                  markStepCompleted('add-outlook');
-                }
+                // Mark whichever sub-goal this app satisfies as complete.
+                if (isOutlook) markStepCompleted('add-outlook:outlook');
+                if (isDefender) markStepCompleted('add-outlook:defender');
                 return next;
               });
               setFakeAuth(null);
