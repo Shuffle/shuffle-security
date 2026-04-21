@@ -34,7 +34,8 @@ export type EventCategory =
   | 'engagement'
   | 'conversion'
   | 'incidents'
-  | 'detection';
+  | 'detection'
+  | 'demo';
 
 // Predefined events for type safety
 export const GA_EVENTS = {
