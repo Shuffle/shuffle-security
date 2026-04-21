@@ -182,6 +182,9 @@ interface DemoContextValue {
   cleanup: () => Promise<void>;
   /** Imperatively mark a step as done (used by completion watchers). */
   markStepCompleted: (stepId: string) => void;
+  /** Set a step's completion explicitly — supports reverting (e.g. webhook
+   *  re-stopped after being started). */
+  setStepCompleted: (stepId: string, done: boolean) => void;
 }
 
 const DemoContext = createContext<DemoContextValue | null>(null);
