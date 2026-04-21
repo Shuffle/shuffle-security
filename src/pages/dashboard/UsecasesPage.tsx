@@ -1607,13 +1607,22 @@ function UsecaseDetailContent({
 export interface UsecasesPageProps {
   /** Override the API base URL (e.g. "https://shuffler.io"). */
   globalUrl?: string;
-  /** Logged-in user info from the host app. If provided, the internal
-   *  `/api/v1/getinfo` probe is skipped. `userdata.api_key` is used as bearer
-   *  token when present (falls back to `localStorage.shuffle_api_key`). */
+  /**
+   * Raw `/api/v1/getinfo` response body from the host app. When provided
+   * the inlined getinfo probe is skipped and this object is used directly
+   * (id, username, support, api_key, …).
+   */
   userdata?: UsecasesUserData | null;
-  /** Mirrors host app's loading state. Currently informational. */
+  /**
+   * Whether the host app's getinfo call has finished. While `false`, the
+   * page treats auth state as "still resolving" and does NOT fall back to
+   * its own getinfo probe — preventing duplicate requests.
+   */
   isLoaded?: boolean;
-  /** Override authentication state. Defaults to `!!userdata`. */
+  /**
+   * Whether getinfo says the user is logged in. When `isLoaded` is `true`,
+   * this fully overrides authentication state. Defaults to `!!userdata`.
+   */
   isLoggedIn?: boolean;
 }
 
