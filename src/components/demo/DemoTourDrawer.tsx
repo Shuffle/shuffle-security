@@ -4,18 +4,20 @@
  * underlying page — users can still freely explore.
  */
 
-import { Box, IconButton, Typography, Button, LinearProgress } from '@mui/material';
-import { ChevronLeft, ChevronRight, X, Sparkles } from 'lucide-react';
+import { Box, IconButton, Typography, Button, LinearProgress, Tooltip } from '@mui/material';
+import { ChevronLeft, ChevronRight, X, Sparkles, Lock, Check } from 'lucide-react';
 import { useDemo, TOUR_STEPS } from '@/context/DemoContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const DemoTourDrawer = () => {
-  const { drawerOpen, step, nextStep, prevStep, closeTour, goToStep, cleanup, isCleaning } = useDemo();
+  const { drawerOpen, step, nextStep, prevStep, closeTour, goToStep, cleanup, isCleaning, currentStepUnlocked, completedSteps } = useDemo();
 
   const total = TOUR_STEPS.length;
   const current = TOUR_STEPS[step];
   const progress = ((step + 1) / total) * 100;
   const isLast = step === total - 1;
+  const requirement = current?.requirement;
+  const locked = !!requirement && !currentStepUnlocked;
 
   return (
     <AnimatePresence>
