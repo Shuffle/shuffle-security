@@ -410,6 +410,9 @@ const IncidentsPage = () => {
    const { active: demoActive, drawerOpen: demoDrawerOpen, step: demoStep, markStepCompleted } = useDemo();
    const demoStepId = TOUR_STEPS[demoStep]?.id;
    const isAddOutlookStep = demoActive && demoDrawerOpen && demoStepId === 'add-outlook';
+   // Whenever the demo tour drawer is open, hide the arrow and the entire
+   // Forward section so users stay focused on the ingestion flow.
+   const isDemoTourActive = demoActive && demoDrawerOpen;
 
    // Hover state for automation sections (state-based to survive popover portals)
    const [ingestHovered, setIngestHovered] = useState(false);
@@ -1910,16 +1913,16 @@ const IncidentsPage = () => {
           )}
 
           {/* Arrow between Ingest and Forward - hidden until workflows loaded.
-              Also hidden during the demo "add-outlook" step to remove distractions. */}
-          {!ingestionLoading && !isAddOutlookStep && (
+              Also hidden whenever the demo tour drawer is open. */}
+          {!ingestionLoading && !isDemoTourActive && (
           <Box className="automation-arrow" sx={{ display: 'flex', alignItems: 'center', color: 'hsl(var(--muted-foreground))', mx: -0.25, maxWidth: 30, opacity: 1 }}>
             <ChevronRightIcon sx={{ fontSize: 18 }} />
           </Box>
           )}
 
           {/* Forward Destinations - visible after workflows loaded.
-              Hidden entirely during the demo "add-outlook" step. */}
-          {!ingestionLoading && !isAddOutlookStep && (
+              Hidden entirely whenever the demo tour drawer is open. */}
+          {!ingestionLoading && !isDemoTourActive && (
             <Box className={`automation-section-forward${forwardHovered ? ' is-hovered' : ''}`}
               onMouseEnter={handleForwardEnter}
               onMouseLeave={handleForwardLeave}
