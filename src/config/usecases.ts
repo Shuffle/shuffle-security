@@ -320,6 +320,19 @@ export interface Usecase {
   blogpost?: string;
   /** Optional reference image URL (architecture diagram, screenshot). */
   referenceImage?: string;
+  /** Optional custom action — a one-click CTA that overrides the default "create workflow" flow.
+   *  Use for usecases best fulfilled by an in-app navigation (e.g. opening /monitors?add_host=true)
+   *  rather than generating a Shuffle workflow. */
+  customAction?: {
+    /** Button label shown on the usecase detail page (e.g. "Add Monitor"). */
+    label: string;
+    /** In-app route. Use this OR `url`. Internal routes use react-router navigation. */
+    href?: string;
+    /** External URL. Opens in a new tab. */
+    url?: string;
+    /** Optional helper text rendered next to the CTA. */
+    description?: string;
+  };
 }
 
 // ── API usecase types (from /api/v1/workflows/usecases) ────────────────────────
