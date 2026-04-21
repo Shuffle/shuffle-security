@@ -11,11 +11,11 @@ import UsecaseAlluvialDiagram from '@/components/usecases/UsecaseAlluvialDiagram
 import { IntegrationStatus } from '@/components/layout/IntegrationStatus';
 import { Clock } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
+import { useUsecases } from '@/hooks/useUsecases';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import AppSearchDrawer from '@/components/shared/AppSearchDrawer';
 import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
 import {
-  DEFAULT_USECASES,
   TOOL_CATEGORIES,
   FLOW_PHASES,
   CATEGORY_KEYWORDS,
@@ -48,8 +48,8 @@ function getPhaseInfo(phase: FlowPhase) {
   return FLOW_PHASES.find(p => p.id === phase) || FLOW_PHASES[0];
 }
 
-function getRelatedFlows(flow: Usecase): Usecase[] {
-  return DEFAULT_USECASES.filter(
+function getRelatedFlows(flow: Usecase, usecases: Usecase[]): Usecase[] {
+  return usecases.filter(
     f => f.id !== flow.id && (f.source === flow.source || f.target === flow.target || f.source === flow.target || f.target === flow.source)
   );
 }
@@ -197,7 +197,8 @@ const ConnectionEndpoint = ({
 const DataFlowDetailPage = () => {
   const { flowId } = useParams<{ flowId: string }>();
   const navigate = useNavigate();
-  const flow = DEFAULT_USECASES.find(f => f.id === flowId);
+  const { usecases } = useUsecases();
+  const flow = usecases.find(f => f.id === flowId);
 
   // Fetch apps from API and match to categories
   const [categoryAppNames, setCategoryAppNames] = useState<Record<string, string[]>>({});
@@ -278,15 +279,15 @@ const DataFlowDetailPage = () => {
   const sourceDetails = getCategoryDetails(flow.source);
   const targetDetails = getCategoryDetails(flow.target);
   const phaseInfo = getPhaseInfo(flow.phase);
-  const related = getRelatedFlows(flow);
+  const related = getRelatedFlows(flow, usecases);
   const headerColor = sourceCat?.color || '--primary';
   const sourceAppNames = categoryAppNames[flow.source] || [];
   const targetAppNames = categoryAppNames[flow.target] || [];
 
   // Find current index for prev/next navigation
-  const currentIdx = DEFAULT_USECASES.findIndex(f => f.id === flow.id);
-  const prevFlow = currentIdx > 0 ? DEFAULT_USECASES[currentIdx - 1] : null;
-  const nextFlow = currentIdx < DEFAULT_USECASES.length - 1 ? DEFAULT_USECASES[currentIdx + 1] : null;
+  const currentIdx = usecases.findIndex(f => f.id === flow.id);
+  const prevFlow = currentIdx > 0 ? usecases[currentIdx - 1] : null;
+  const nextFlow = currentIdx < usecases.length - 1 ? usecases[currentIdx + 1] : null;
 
   return (
     <Box sx={{ maxWidth: 860, width: '100%', mx: 'auto', pb: 6 }}>

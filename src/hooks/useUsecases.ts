@@ -1,7 +1,7 @@
 /**
  * useUsecases — React Query hook that fetches usecases from the API,
- * merges with local defaults, and exposes the unified list + helpers.
- * Includes drift detection to flag usecases that diverge between API and defaults.
+ * renders backend usecases as the primary source of truth,
+ * and falls back to local defaults when the API is unavailable.
  */
 
 import { useMemo } from 'react';
@@ -21,215 +21,178 @@ import {
   normalizeCategory,
 } from '@/config/usecases';
 
-// ── Drift detection ────────────────────────────────────────────────────────────
-
 export type DriftType =
-  | 'api_only'       // Usecase exists in API but has no matching data flow
-  | 'local_only'     // Data flow exists locally but has no matching API usecase
-  | 'phase_mismatch' // Matched, but API category implies a different phase
-  | 'description_added'; // API provides a description our default doesn't have
+  | 'api_only'
+  | 'local_only'
+  | 'phase_mismatch'
+  | 'description_added';
 
 export interface UsecaseDrift {
   usecaseId: string;
   drifts: DriftType[];
-  /** The API usecase that matched (or didn't) */
   apiUsecase?: ApiUsecase;
-  /** The API category name */
   apiCategory?: string;
-  /** The local usecase if it exists */
   localValue?: Usecase;
 }
-
-// ── Matching logic ─────────────────────────────────────────────────────────────
-
-interface MatchedPair {
-  local: Usecase;
-  api: ApiUsecase;
-  apiCategoryName: string;
-}
-
-/**
- * Match API usecases to local data flows based on source (type) → target (last).
- * Returns matched pairs, unmatched API usecases, and unmatched local flows.
- */
-function matchUsecases(apiCategories: ApiUsecaseCategory[]): {
-  matched: MatchedPair[];
-  apiOnly: { uc: ApiUsecase; categoryName: string }[];
-  localOnly: Usecase[];
-} {
-  // Build a lookup: "source→target" → local usecase(s)
-  const localByRoute = new Map<string, Usecase[]>();
-  for (const uc of DEFAULT_USECASES) {
-    const key = `${uc.source}→${uc.target}`;
-    const arr = localByRoute.get(key) || [];
-    arr.push(uc);
-    localByRoute.set(key, arr);
-  }
-
-  // Route aliases: API may use a different source category than the local flow.
-  // e.g. API "communication→case_management" should match local "email→case_management"
-  const routeAliases: Record<string, string[]> = {
-    communication: ['email'],   // API uses "communication" for email-related flows
-    email: ['communication'],
-  };
-
-  const findLocals = (key: string, source: string): Usecase[] | undefined => {
-    const direct = localByRoute.get(key);
-    if (direct && direct.length > 0) return direct;
-    // Try aliases for the source category
-    const aliases = routeAliases[source];
-    if (aliases) {
-      const target = key.split('→')[1];
-      for (const alias of aliases) {
-        const altKey = `${alias}→${target}`;
-        const altLocals = localByRoute.get(altKey);
-        if (altLocals && altLocals.length > 0) return altLocals;
-      }
-    }
-    return undefined;
-  };
-
-  const matched: MatchedPair[] = [];
-  const apiOnly: { uc: ApiUsecase; categoryName: string }[] = [];
-  const matchedLocalIds = new Set<string>();
-
-  for (const cat of apiCategories) {
-    for (const apiUc of cat.list) {
-      if (!apiUc.type || !apiUc.last) continue; // Skip entries without both type and last
-      const source = normalizeCategory(apiUc.type);
-      const target = normalizeCategory(apiUc.last);
-      const key = `${source}→${target}`;
-
-      const locals = findLocals(key, source);
-      if (locals && locals.length > 0) {
-        const unmatched = locals.find(l => !matchedLocalIds.has(l.id));
-        if (unmatched) {
-          matched.push({ local: unmatched, api: apiUc, apiCategoryName: cat.name });
-          matchedLocalIds.add(unmatched.id);
-        } else {
-          apiOnly.push({ uc: apiUc, categoryName: cat.name });
-        }
-      } else {
-        apiOnly.push({ uc: apiUc, categoryName: cat.name });
-      }
-    }
-  }
-
-  const localOnly = DEFAULT_USECASES.filter(uc => !matchedLocalIds.has(uc.id));
-
-  return { matched, apiOnly, localOnly };
-}
-
-// ── Drift computation ──────────────────────────────────────────────────────────
-
-function computeDrifts(apiCategories: ApiUsecaseCategory[]): UsecaseDrift[] {
-  if (apiCategories.length === 0) return [];
-
-  const { matched, apiOnly, localOnly } = matchUsecases(apiCategories);
-  const drifts: UsecaseDrift[] = [];
-
-  // Matched pairs: always emit an entry (clean or with drifts)
-  for (const { local, api, apiCategoryName } of matched) {
-    const d: DriftType[] = [];
-    const apiPhase = apiCategoryToPhase(apiCategoryName);
-    if (apiPhase !== local.phase) d.push('phase_mismatch');
-    if (api.description && !local.description) d.push('description_added');
-    drifts.push({
-      usecaseId: local.id,
-      drifts: d,
-      apiUsecase: api,
-      apiCategory: apiCategoryName,
-      localValue: local,
-    });
-  }
-
-  // API-only usecases (no matching data flow)
-  for (const { uc, categoryName } of apiOnly) {
-    const source = normalizeCategory(uc.type);
-    const target = normalizeCategory(uc.last);
-    drifts.push({
-      usecaseId: `api_${source}_${target}_${uc.name.toLowerCase().replace(/\s+/g, '_')}`,
-      drifts: ['api_only'],
-      apiUsecase: uc,
-      apiCategory: categoryName,
-    });
-  }
-
-  // Local-only data flows (no matching API usecase)
-  for (const local of localOnly) {
-    drifts.push({
-      usecaseId: local.id,
-      drifts: ['local_only'],
-      localValue: local,
-    });
-  }
-
-  return drifts;
-}
-
-// ── Fetcher ────────────────────────────────────────────────────────────────────
 
 interface FetchResult {
   usecases: Usecase[];
   apiCategories: ApiUsecaseCategory[];
+  drifts: UsecaseDrift[];
+}
+
+const ROUTE_ALIASES: Record<string, string[]> = {
+  communication: ['email'],
+  email: ['communication'],
+};
+
+const slugify = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '') || 'usecase';
+
+const buildApiOnlyId = (apiUsecase: ApiUsecase) => {
+  const source = normalizeCategory(apiUsecase.type);
+  const target = normalizeCategory(apiUsecase.last);
+  return `api_${source}_${target}_${slugify(apiUsecase.name)}`;
+};
+
+const buildLocalRouteMap = () => {
+  const map = new Map<string, Usecase[]>();
+
+  for (const usecase of DEFAULT_USECASES) {
+    const key = `${usecase.source}→${usecase.target}`;
+    const existing = map.get(key) || [];
+    existing.push(usecase);
+    map.set(key, existing);
+  }
+
+  return map;
+};
+
+const LOCAL_ROUTE_MAP = buildLocalRouteMap();
+
+function getMatchingLocalUsecase(apiUsecase: ApiUsecase, matchedLocalIds: Set<string>): Usecase | undefined {
+  const source = normalizeCategory(apiUsecase.type);
+  const target = normalizeCategory(apiUsecase.last);
+  const candidateSources = [source, ...(ROUTE_ALIASES[source] || [])];
+
+  for (const candidateSource of candidateSources) {
+    const locals = LOCAL_ROUTE_MAP.get(`${candidateSource}→${target}`) || [];
+    const unmatched = locals.find((local) => !matchedLocalIds.has(local.id));
+    if (unmatched) return unmatched;
+  }
+
+  return undefined;
+}
+
+function mapApiUsecaseToFrontend(apiCategory: ApiUsecaseCategory, apiUsecase: ApiUsecase, localUsecase?: Usecase): Usecase {
+  return {
+    id: localUsecase?.id || buildApiOnlyId(apiUsecase),
+    source: normalizeCategory(apiUsecase.type),
+    target: normalizeCategory(apiUsecase.last),
+    label: apiUsecase.name || localUsecase?.label || 'Untitled usecase',
+    description: apiUsecase.description || localUsecase?.description || '',
+    agenticDescription: localUsecase?.agenticDescription || apiUsecase.description || '',
+    phase: apiCategoryToPhase(apiCategory.name),
+    tags: localUsecase?.tags || [],
+    animated: localUsecase?.animated,
+    automationLabel: localUsecase?.automationLabel,
+    automationCategory: localUsecase?.automationCategory,
+    automationArea: localUsecase?.automationArea,
+    status: localUsecase?.status,
+    manualVerification: localUsecase?.manualVerification,
+    priority: typeof apiUsecase.priority === 'number' ? apiUsecase.priority : localUsecase?.priority,
+    video: apiUsecase.video || localUsecase?.video,
+    blogpost: apiUsecase.blogpost || localUsecase?.blogpost,
+    referenceImage: apiUsecase.reference_image || localUsecase?.referenceImage,
+    customAction: localUsecase?.customAction,
+  };
+}
+
+function buildBackendUsecases(apiCategories: ApiUsecaseCategory[]): Pick<FetchResult, 'usecases' | 'drifts'> {
+  const matchedLocalIds = new Set<string>();
+  const usecases: Usecase[] = [];
+  const drifts: UsecaseDrift[] = [];
+
+  for (const apiCategory of apiCategories) {
+    for (const apiUsecase of apiCategory.list || []) {
+      if (!apiUsecase.type || !apiUsecase.last) continue;
+
+      const localUsecase = getMatchingLocalUsecase(apiUsecase, matchedLocalIds);
+      if (localUsecase) matchedLocalIds.add(localUsecase.id);
+
+      const mapped = mapApiUsecaseToFrontend(apiCategory, apiUsecase, localUsecase);
+      const driftTypes: DriftType[] = [];
+
+      if (!localUsecase) {
+        driftTypes.push('api_only');
+      } else {
+        if (mapped.phase !== localUsecase.phase) driftTypes.push('phase_mismatch');
+        if (apiUsecase.description && !localUsecase.description) driftTypes.push('description_added');
+      }
+
+      usecases.push(mapped);
+      drifts.push({
+        usecaseId: mapped.id,
+        drifts: driftTypes,
+        apiUsecase,
+        apiCategory: apiCategory.name,
+        ...(localUsecase ? { localValue: localUsecase } : {}),
+      });
+    }
+  }
+
+  for (const localUsecase of DEFAULT_USECASES) {
+    if (matchedLocalIds.has(localUsecase.id)) continue;
+    drifts.push({
+      usecaseId: localUsecase.id,
+      drifts: ['local_only'],
+      localValue: localUsecase,
+    });
+  }
+
+  return { usecases, drifts };
 }
 
 async function fetchUsecases(): Promise<FetchResult> {
   try {
-    const res = await shuffleFetch(getApiUrl('/api/v1/workflows/usecases'));
-    if (!res.ok) {
-      console.warn(`[useUsecases] API returned ${res.status}, using defaults`);
-      return { usecases: DEFAULT_USECASES, apiCategories: [] };
+    const response = await shuffleFetch(getApiUrl('/api/v1/workflows/usecases'));
+
+    if (!response.ok) {
+      console.warn(`[useUsecases] API returned ${response.status}, using defaults`);
+      return { usecases: DEFAULT_USECASES, apiCategories: [], drifts: [] };
     }
 
-    const data = await res.json();
-
-    // The API returns an array of category objects
+    const data = await response.json();
     const apiCategories: ApiUsecaseCategory[] = Array.isArray(data) ? data : [];
 
     if (apiCategories.length === 0) {
       console.log('[useUsecases] No categories in API response, using defaults');
-      return { usecases: DEFAULT_USECASES, apiCategories: [] };
+      return { usecases: DEFAULT_USECASES, apiCategories: [], drifts: [] };
     }
+
+    const rendered = buildBackendUsecases(apiCategories);
 
     console.log(
-      `[useUsecases] API returned ${apiCategories.length} categories with ${apiCategories.reduce((n, c) => n + c.list.length, 0)} usecases`
+      `[useUsecases] Rendering ${rendered.usecases.length} backend usecases from ${apiCategories.length} API categories`
     );
 
-    // Merge: enrich local defaults with API data where matched
-    const { matched } = matchUsecases(apiCategories);
-    const enriched = new Map<string, Usecase>();
-    for (const uc of DEFAULT_USECASES) {
-      enriched.set(uc.id, { ...uc });
-    }
-
-    for (const { local, api, apiCategoryName } of matched) {
-      const existing = enriched.get(local.id)!;
-      enriched.set(local.id, {
-        ...existing,
-        // Enrich with API data where available — API is the source of truth
-        // for user-visible content (label, description, media, priority).
-        label: api.name || existing.label,
-        description: api.description || existing.description,
-        priority: typeof api.priority === 'number' ? api.priority : existing.priority,
-        video: api.video || existing.video,
-        blogpost: api.blogpost || existing.blogpost,
-        referenceImage: api.reference_image || existing.referenceImage,
-      });
-    }
-
-    return { usecases: Array.from(enriched.values()), apiCategories };
-  } catch (err) {
-    console.warn('[useUsecases] Fetch failed, using defaults:', err);
-    return { usecases: DEFAULT_USECASES, apiCategories: [] };
+    return {
+      usecases: rendered.usecases,
+      apiCategories,
+      drifts: rendered.drifts,
+    };
+  } catch (error) {
+    console.warn('[useUsecases] Fetch failed, using defaults:', error);
+    return { usecases: DEFAULT_USECASES, apiCategories: [], drifts: [] };
   }
 }
 
-// ── Hook ───────────────────────────────────────────────────────────────────────
-
 export function useUsecases() {
   const { isAuthenticated } = useAuth();
-  const query = useQuery({
+  const query = useQuery<FetchResult>({
     queryKey: ['usecases', isAuthenticated],
     queryFn: fetchUsecases,
     staleTime: 5 * 60 * 1000,
@@ -238,11 +201,11 @@ export function useUsecases() {
 
   const usecases = query.data?.usecases ?? DEFAULT_USECASES;
   const apiCategories = query.data?.apiCategories ?? [];
+  const drifts = query.data?.drifts ?? [];
 
-  const drifts = useMemo(() => computeDrifts(apiCategories), [apiCategories]);
   const driftMap = useMemo(() => {
     const map = new Map<string, UsecaseDrift>();
-    for (const d of drifts) map.set(d.usecaseId, d);
+    for (const drift of drifts) map.set(drift.usecaseId, drift);
     return map;
   }, [drifts]);
 
@@ -253,13 +216,13 @@ export function useUsecases() {
     apiLoaded: apiCategories.length > 0,
     drifts,
     driftMap,
-    hasDrift: drifts.some(d => d.drifts.length > 0),
+    hasDrift: drifts.some((drift) => drift.drifts.length > 0),
     getDrift: (id: string) => driftMap.get(id),
-    getById: (id: string) => usecases.find(uc => uc.id === id),
+    getById: (id: string) => usecases.find((usecase) => usecase.id === id),
     getByPhase: (phase: FlowPhase) => getUsecasesByPhase(phase, usecases),
     getByArea: (area: string) => getUsecasesByArea(area, usecases),
     getAutomationLabels: (area: string) => getAutomationLabels(area, usecases),
     getBySourceOrTarget: (categoryId: string) =>
-      usecases.filter(uc => uc.source === categoryId || uc.target === categoryId),
+      usecases.filter((usecase) => usecase.source === categoryId || usecase.target === categoryId),
   };
 }
