@@ -971,9 +971,12 @@ const SCOPED_CSS = `
   background: hsl(var(--background));
 }
 
-/* Dark theme — applies when any ancestor (or the scope itself) has .dark */
-.dark .${SCOPE_CLASS},
-.${SCOPE_CLASS}.dark {
+/* Dark theme — applies when:
+ *   - the scope itself has .dark (forced via theme="dark"), OR
+ *   - an ancestor has .dark AND the scope was NOT forced to .light.
+ * The :not(.light) guard lets `theme="light"` override an ambient .dark host. */
+.${SCOPE_CLASS}.dark,
+.dark .${SCOPE_CLASS}:not(.light) {
   --background: 0 0% 10%;
   --foreground: 0 0% 100%;
   --card: 0 0% 13%;
