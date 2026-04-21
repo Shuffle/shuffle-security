@@ -182,6 +182,9 @@ interface DemoContextValue {
   cleanup: () => Promise<void>;
   /** Imperatively mark a step as done (used by completion watchers). */
   markStepCompleted: (stepId: string) => void;
+  /** Set a step's completion explicitly — supports reverting (e.g. webhook
+   *  re-stopped after being started). */
+  setStepCompleted: (stepId: string, done: boolean) => void;
 }
 
 const DemoContext = createContext<DemoContextValue | null>(null);
@@ -245,16 +248,25 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
 
   const refreshStats = useCallback(() => setStats(getDemoStats()), []);
 
-  const markStepCompleted = useCallback((stepId: string) => {
-    setCompletedSteps(prev => (prev[stepId] ? prev : { ...prev, [stepId]: true }));
-    // Fire DEMO_STEP_COMPLETE once per step (gated steps only — this is invoked
-    // by the completion watchers when the real action is detected).
-    if (!completedStepsGARef.current.has(stepId)) {
+  const setStepCompleted = useCallback((stepId: string, done: boolean) => {
+    setCompletedSteps(prev => {
+      const cur = !!prev[stepId];
+      if (cur === done) return prev;
+      const next = { ...prev };
+      if (done) next[stepId] = true; else delete next[stepId];
+      return next;
+    });
+    // Fire DEMO_STEP_COMPLETE once per step on the first true-flip only.
+    if (done && !completedStepsGARef.current.has(stepId)) {
       completedStepsGARef.current.add(stepId);
       const idx = TOUR_STEPS.findIndex(s => s.id === stepId);
       if (idx >= 0) trackDemoStep(GA_EVENTS.DEMO_STEP_COMPLETE, idx);
     }
   }, [trackDemoStep]);
+
+  const markStepCompleted = useCallback((stepId: string) => {
+    setStepCompleted(stepId, true);
+  }, [setStepCompleted]);
 
   const navigateForStep = useCallback((i: number) => {
     const route = TOUR_STEPS[i]?.route;
@@ -406,13 +418,13 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
     completedSteps, currentStepUnlocked,
     startDemo, openTour, closeTour, minimizeTour, restoreTour, toggleDock, setDock,
     nextStep, prevStep, goToStep, cleanup,
-    markStepCompleted,
+    markStepCompleted, setStepCompleted,
   }), [
     active, isSeeding, isCleaning, drawerOpen, minimized, dock, step, stats,
     completedSteps, currentStepUnlocked,
     startDemo, openTour, closeTour, minimizeTour, restoreTour, toggleDock, setDock,
     nextStep, prevStep, goToStep, cleanup,
-    markStepCompleted,
+    markStepCompleted, setStepCompleted,
   ]);
 
   return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;
