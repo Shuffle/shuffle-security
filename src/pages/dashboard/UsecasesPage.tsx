@@ -931,6 +931,70 @@ const UsecasesPageConfigContext = React.createContext<UsecasesPageConfig>(DEFAUL
 
 const useUsecasesConfig = () => React.useContext(UsecasesPageConfigContext);
 
+// ============================================================================
+// Scoped design tokens — injected once into <head> the first time the page
+// mounts. Everything inside `.shuffle-usecases-scope` resolves the HSL
+// variables this file relies on (background, card, border, primary, infra-*),
+// so the page renders identically regardless of the host app's CSS.
+// Toggle dark mode by adding `class="dark"` anywhere up the tree.
+// ============================================================================
+const SCOPE_CLASS = 'shuffle-usecases-scope';
+const STYLE_TAG_ID = 'shuffle-usecases-scope-style';
+
+const SCOPED_CSS = `
+.${SCOPE_CLASS} {
+  /* Light theme defaults */
+  --background: 0 0% 98%;
+  --foreground: 0 0% 9%;
+  --card: 0 0% 100%;
+  --muted-foreground: 0 0% 45%;
+  --border: 0 0% 89%;
+
+  --primary: 24 100% 50%;
+  --primary-foreground: 0 0% 100%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+
+  --infra-case-mgmt: 24 90% 55%;
+  --infra-siem: 45 93% 47%;
+  --infra-network: 210 100% 56%;
+  --infra-edr: 0 84% 60%;
+  --infra-communication: 142 71% 45%;
+  --infra-email: 280 70% 60%;
+  --infra-threat-intel: 190 80% 50%;
+  --infra-asset-mgmt: 25 95% 53%;
+  --infra-iam: 330 75% 55%;
+  --infra-cloud: 200 75% 50%;
+
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: hsl(var(--foreground));
+  background: hsl(var(--background));
+}
+
+/* Dark theme — applies when any ancestor (or the scope itself) has .dark */
+.dark .${SCOPE_CLASS},
+.${SCOPE_CLASS}.dark {
+  --background: 0 0% 10%;
+  --foreground: 0 0% 100%;
+  --card: 0 0% 13%;
+  --muted-foreground: 0 0% 50%;
+  --border: 0 0% 20%;
+}
+`;
+
+function useInjectScopedStyles() {
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    if (document.getElementById(STYLE_TAG_ID)) return;
+    const tag = document.createElement('style');
+    tag.id = STYLE_TAG_ID;
+    tag.textContent = SCOPED_CSS;
+    document.head.appendChild(tag);
+    // Intentionally never removed — page may unmount/remount; styles stay cheap.
+  }, []);
+}
+
+
 /** Hook returning `apiUrl` and `authHeader` bound to the active config. */
 function useApi() {
   const cfg = useUsecasesConfig();
@@ -2319,6 +2383,7 @@ function UsecaseCard({
  * an internal `/api/v1/getinfo` probe).
  */
 export default function UsecasesPage(props: UsecasesPageProps = {}) {
+  useInjectScopedStyles();
   const { globalUrl, userdata, isLoaded, isLoggedIn } = props;
 
   // Detect whether the host app is driving auth/config. As soon as ANY of the
@@ -2362,7 +2427,9 @@ export default function UsecasesPage(props: UsecasesPageProps = {}) {
 
   return (
     <UsecasesPageConfigContext.Provider value={config}>
-      <UsecasesPageInner />
+      <div className={SCOPE_CLASS}>
+        <UsecasesPageInner />
+      </div>
     </UsecasesPageConfigContext.Provider>
   );
 }
