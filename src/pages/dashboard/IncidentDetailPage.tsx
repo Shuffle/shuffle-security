@@ -446,8 +446,8 @@ const Section = forwardRef<HTMLDivElement, {
             sx={{ 
               height: 20, 
               fontSize: '0.7rem',
-              bgcolor: 'rgba(255, 102, 0, 0.15)',
-              color: '#ff6600',
+              bgcolor: '#ff6600',
+              color: '#ffffff',
             }} 
           />
         )}
@@ -3095,12 +3095,12 @@ const IncidentDetailPage = () => {
                     alignItems: 'center',
                     gap: 1,
                     transition: 'all 0.2s ease',
-                    bgcolor: activeTab === index ? 'rgba(255, 102, 0, 0.15)' : 'transparent',
-                    color: activeTab === index ? '#ff6600' : 'text.secondary',
+                    bgcolor: activeTab === index ? '#ff6600' : 'transparent',
+                    color: activeTab === index ? '#ffffff' : 'text.secondary',
                     fontWeight: activeTab === index ? 600 : 400,
                     fontSize: '0.875rem',
                     '&:hover': {
-                      bgcolor: activeTab === index ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255,255,255,0.05)',
+                      bgcolor: activeTab === index ? '#ff6600' : 'rgba(255,255,255,0.05)',
                     },
                   }}
                 >
@@ -3116,8 +3116,8 @@ const IncidentDetailPage = () => {
                         px: 0.75,
                         py: 0.25,
                         borderRadius: 1,
-                        bgcolor: activeTab === index ? 'rgba(255, 102, 0, 0.3)' : 'rgba(255,255,255,0.08)',
-                        color: activeTab === index ? '#ff6600' : 'text.secondary',
+                        bgcolor: activeTab === index ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.08)',
+                        color: activeTab === index ? '#ffffff' : 'text.secondary',
                       }}
                     >
                       {tab.count}
@@ -3153,12 +3153,12 @@ const IncidentDetailPage = () => {
                     gap: 1,
                     transition: 'all 0.2s ease',
                     opacity: unmappedOriginal ? 1 : 0.4,
-                    bgcolor: activeTab === 6 ? 'rgba(255, 102, 0, 0.15)' : 'transparent',
-                    color: activeTab === 6 ? '#ff6600' : 'text.secondary',
+                    bgcolor: activeTab === 6 ? '#ff6600' : 'transparent',
+                    color: activeTab === 6 ? '#ffffff' : 'text.secondary',
                     fontWeight: activeTab === 6 ? 600 : 400,
                     fontSize: '0.875rem',
                     '&:hover': unmappedOriginal ? {
-                      bgcolor: activeTab === 6 ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255,255,255,0.05)',
+                      bgcolor: activeTab === 6 ? '#ff6600' : 'rgba(255,255,255,0.05)',
                     } : {},
                   }}
                 >
@@ -3186,12 +3186,12 @@ const IncidentDetailPage = () => {
                         gap: 1,
                         transition: 'all 0.2s ease',
                         opacity: hasFile ? 1 : 0.4,
-                        bgcolor: activeTab === 5 ? 'rgba(255, 102, 0, 0.15)' : 'transparent',
-                        color: activeTab === 5 ? '#ff6600' : 'text.secondary',
+                        bgcolor: activeTab === 5 ? '#ff6600' : 'transparent',
+                        color: activeTab === 5 ? '#ffffff' : 'text.secondary',
                         fontWeight: activeTab === 5 ? 600 : 400,
                         fontSize: '0.875rem',
                         '&:hover': hasFile ? {
-                          bgcolor: activeTab === 5 ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255,255,255,0.05)',
+                          bgcolor: activeTab === 5 ? '#ff6600' : 'rgba(255,255,255,0.05)',
                         } : {},
                       }}
                     >
@@ -3255,13 +3255,13 @@ const IncidentDetailPage = () => {
                     alignItems: 'center',
                     gap: 0.5,
                     transition: 'all 0.2s ease',
-                    bgcolor: activeTab === 4 ? 'rgba(255, 102, 0, 0.15)' : 'transparent',
-                    color: activeTab === 4 ? '#ff6600' : 'text.secondary',
+                    bgcolor: activeTab === 4 ? '#ff6600' : 'transparent',
+                    color: activeTab === 4 ? '#ffffff' : 'text.secondary',
                     fontWeight: activeTab === 4 ? 600 : 400,
                     fontSize: '0.875rem',
                     '&:hover': {
-                      bgcolor: activeTab === 4 ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255,255,255,0.05)',
-                      color: activeTab === 4 ? '#ff6600' : 'text.secondary',
+                      bgcolor: activeTab === 4 ? '#ff6600' : 'rgba(255,255,255,0.05)',
+                      color: activeTab === 4 ? '#ffffff' : 'text.secondary',
                     },
                   }}
                 >
@@ -3302,9 +3302,9 @@ const IncidentDetailPage = () => {
                           height: 20,
                           fontSize: '0.65rem',
                           cursor: 'pointer',
-                          bgcolor: descriptionView === view ? 'rgba(255, 102, 0, 0.15)' : 'rgba(255,255,255,0.05)',
-                          color: descriptionView === view ? '#ff6600' : 'text.secondary',
-                          '&:hover': { bgcolor: descriptionView === view ? 'rgba(255, 102, 0, 0.2)' : 'rgba(255,255,255,0.1)' },
+                          bgcolor: descriptionView === view ? '#ff6600' : 'rgba(255,255,255,0.05)',
+                          color: descriptionView === view ? '#ffffff' : 'text.secondary',
+                          '&:hover': { bgcolor: descriptionView === view ? '#ff6600' : 'rgba(255,255,255,0.1)' },
                         }}
                       />
                     ))}
@@ -3466,7 +3466,7 @@ const IncidentDetailPage = () => {
                 Stakeholders
               </Typography>
               {editedStakeholders.length > 0 && (
-                <Chip label={editedStakeholders.length} size="small" sx={{ height: 20, fontSize: '0.7rem', bgcolor: 'rgba(255, 102, 0, 0.15)', color: '#ff6600' }} />
+                <Chip label={editedStakeholders.length} size="small" sx={{ height: 20, fontSize: '0.7rem', bgcolor: '#ff6600', color: '#ffffff' }} />
               )}
             </Box>
 
@@ -4666,8 +4666,8 @@ const IncidentDetailPage = () => {
                           sx={{
                             fontFamily: 'monospace',
                             fontSize: '0.75rem',
-                            bgcolor: isHighMatch ? 'rgba(255, 102, 0, 0.15)' : isMediumMatch ? 'rgba(234, 179, 8, 0.15)' : 'rgba(148, 163, 184, 0.1)',
-                            color: isHighMatch ? '#ff6600' : isMediumMatch ? '#eab308' : 'text.secondary',
+                            bgcolor: isHighMatch ? '#ff6600' : isMediumMatch ? 'rgba(234, 179, 8, 0.15)' : 'rgba(148, 163, 184, 0.1)',
+                            color: isHighMatch ? '#ffffff' : isMediumMatch ? '#eab308' : 'text.secondary',
                             fontWeight: 600,
                           }}
                         />
@@ -4710,10 +4710,10 @@ const IncidentDetailPage = () => {
                                       height: 22,
                                       fontSize: '0.7rem',
                                       fontFamily: 'monospace',
-                                      bgcolor: isIncidentCategory ? 'rgba(255, 102, 0, 0.1)' : 'rgba(255,255,255,0.05)',
-                                      color: isIncidentCategory ? '#ff6600' : 'text.secondary',
+                                      bgcolor: isIncidentCategory ? '#ff6600' : 'rgba(255,255,255,0.05)',
+                                      color: isIncidentCategory ? '#ffffff' : 'text.secondary',
                                       cursor: isIncidentCategory ? 'pointer' : 'default',
-                                      '&:hover': isIncidentCategory ? { bgcolor: 'rgba(255, 102, 0, 0.2)' } : {},
+                                      '&:hover': isIncidentCategory ? { bgcolor: '#e55c00' } : {},
                                     }}
                                   />
                                 ))}
@@ -5053,9 +5053,9 @@ const IncidentDetailPage = () => {
                     height: 24,
                     fontSize: '0.7rem',
                     borderColor: activityFilter === key ? '#ff6600' : 'rgba(255,255,255,0.12)',
-                    bgcolor: activityFilter === key ? 'rgba(255, 102, 0, 0.15)' : 'transparent',
-                    color: activityFilter === key ? '#ff6600' : 'text.secondary',
-                    '&:hover': { bgcolor: activityFilter === key ? 'rgba(255, 102, 0, 0.2)' : 'rgba(255,255,255,0.05)' },
+                    bgcolor: activityFilter === key ? '#ff6600' : 'transparent',
+                    color: activityFilter === key ? '#ffffff' : 'text.secondary',
+                    '&:hover': { bgcolor: activityFilter === key ? '#ff6600' : 'rgba(255,255,255,0.05)' },
                   }}
                 />
               ))}
@@ -5254,13 +5254,13 @@ const IncidentDetailPage = () => {
                               Revision #{revisions.length - item.idx}
                             </Typography>
                             {isLatest && (
-                              <Chip label="Latest" size="small" sx={{ height: 16, fontSize: '0.58rem', bgcolor: 'rgba(255, 102, 0, 0.15)', color: '#ff6600', fontWeight: 600 }} />
+                              <Chip label="Latest" size="small" sx={{ height: 16, fontSize: '0.58rem', bgcolor: '#ff6600', color: '#ffffff', fontWeight: 600 }} />
                             )}
                             {isFirst && !isLatest && (
                               <Chip label="Initial" size="small" sx={{ height: 16, fontSize: '0.58rem', bgcolor: 'rgba(255,255,255,0.06)', color: 'text.secondary', fontWeight: 600 }} />
                             )}
                             {totalChanges > 0 && (
-                              <Chip label={`${totalChanges} change${totalChanges !== 1 ? 's' : ''}`} size="small" sx={{ height: 16, fontSize: '0.58rem', bgcolor: 'rgba(255, 102, 0, 0.1)', color: '#ff6600' }} />
+                              <Chip label={`${totalChanges} change${totalChanges !== 1 ? 's' : ''}`} size="small" sx={{ height: 16, fontSize: '0.58rem', bgcolor: '#ff6600', color: '#ffffff' }} />
                             )}
                           </Box>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>

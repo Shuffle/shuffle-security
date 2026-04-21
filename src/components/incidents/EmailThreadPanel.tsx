@@ -248,8 +248,8 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
             sx={{
               height: 18,
               fontSize: '0.65rem',
-              bgcolor: 'rgba(255,102,0,0.1)',
-              color: '#ff6600',
+              bgcolor: '#ff6600',
+              color: '#ffffff',
             }}
           />
         </Box>

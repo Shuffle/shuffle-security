@@ -179,11 +179,11 @@ export const TaskDateTimePicker = ({ value, onChange }: TaskDateTimePickerProps)
                   py: 0.5,
                   fontSize: '0.7rem',
                   borderRadius: 1,
-                  bgcolor: 'rgba(255, 102, 0, 0.1)',
-                  color: '#ff6600',
+                  bgcolor: '#ff6600',
+                  color: '#ffffff',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
-                  '&:hover': { bgcolor: 'rgba(255, 102, 0, 0.2)' },
+                  '&:hover': { bgcolor: '#e55c00' },
                 }}
               >
                 {opt.label}
