@@ -617,6 +617,11 @@ export const DEFAULT_USECASES: Usecase[] = [
     automationLabel: 'Add Monitors',
     automationCategory: 'cases',
     automationArea: 'response',
+    customAction: {
+      label: 'Add Monitor',
+      href: '/monitors?add_host=true',
+      description: 'Open the monitor deployment dialog to register a new host.',
+    },
   },
   {
     id: 'cloud_asset_management_1', phase: 'correlation', source: 'cloud', target: 'asset_management',
