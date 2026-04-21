@@ -243,9 +243,12 @@ const AuthPage = ({ mode }: AuthPageProps) => {
         }, 1500);
         return;
       } else if (!isLogin) {
-        // Registration successful, redirect to login
+        // Registration successful, redirect to login (preserve returnUrl so post-login lands the user back)
         trackPredefinedEvent(GA_EVENTS.REGISTER_SUCCESS);
-        navigate('/login', { state: { message: 'Registration successful. Please log in.' } });
+        const loginPath = returnUrl
+          ? `/login?returnUrl=${encodeURIComponent(returnUrl)}`
+          : '/login';
+        navigate(loginPath, { state: { message: 'Registration successful. Please log in.' } });
       } else {
         throw new Error('Login failed: No session token received');
       }

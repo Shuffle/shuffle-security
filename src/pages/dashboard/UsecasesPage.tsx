@@ -1754,6 +1754,32 @@ function UsecaseDetailContent({
                   {effectiveEnabled ? 'Disable' : 'Enable'}
                 </Button>
               )}
+              {!canToggle && flow.automationLabel && (
+                <Button
+                  component={Link}
+                  to={`/register?returnUrl=${encodeURIComponent(`/usecases?usecase=${flow.id}`)}`}
+                  size="small"
+                  variant="contained"
+                  disableElevation
+                  startIcon={<Power size={14} />}
+                  sx={{
+                    flexShrink: 0,
+                    textTransform: 'none',
+                    fontSize: '0.78rem',
+                    fontWeight: 600,
+                    minHeight: 0,
+                    py: 0.6,
+                    px: 1.25,
+                    bgcolor: 'hsl(var(--primary, 24 100% 50%))',
+                    color: 'hsl(var(--primary-foreground, 0 0% 100%))',
+                    '&:hover': {
+                      bgcolor: 'hsla(24, 100%, 50%, 0.9)',
+                    },
+                  }}
+                >
+                  Sign up to enable
+                </Button>
+              )}
             </Box>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 1.25 }}>
               <Typography sx={{ fontSize: '0.68rem', fontWeight: 700, px: 1, py: 0.35, borderRadius: 1, bgcolor: accentBg(phaseInfo.color, 0.12), color: accent(phaseInfo.color), border: `1px solid ${accentBg(phaseInfo.color, 0.25)}` }}>
