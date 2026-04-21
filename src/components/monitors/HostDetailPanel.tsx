@@ -495,6 +495,20 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
                     ) : filtered.map((proj, pi) => {
                       const isExpanded = expandedCodePaths.has(proj.path);
                       const pkgCount = proj.packages?.length || 0;
+                      // Aggregate vulns at the project level: any package matching by name OR a path matching this project root.
+                      const projVulnSet = new Map<string, Vulnerability>();
+                      const projPathKey = normalize(proj.path || '');
+                      for (const v of openVulns) {
+                        if (v.package_name && (proj.packages || []).some(p => normalize(p.name || '') === normalize(v.package_name!))) {
+                          projVulnSet.set(v.id, v);
+                        }
+                        for (const pp of v.paths || []) {
+                          if (pp.path && normalize(pp.path).startsWith(projPathKey) && projPathKey) {
+                            projVulnSet.set(v.id, v);
+                          }
+                        }
+                      }
+                      const projVulns = Array.from(projVulnSet.values());
                       return (
                         <div key={pi} className="border-b border-border last:border-b-0">
                           <div className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted/20 transition-colors">
@@ -524,6 +538,7 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
                               </span>
                               <span className="text-xs font-mono font-medium text-foreground truncate flex-1">{proj.path}</span>
                               <span className="text-[0.65rem] text-muted-foreground shrink-0">{pkgCount} pkg{pkgCount !== 1 ? 's' : ''}</span>
+                              <RowVulnBadge vulns={projVulns} />
                             </button>
                             {canRunCbom && (
                               <TooltipProvider delayDuration={200}>
@@ -558,17 +573,25 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
                                   </tr>
                                 </thead>
                                 <tbody className="divide-y divide-border">
-                                  {proj.packages.map((pkg, ki) => (
-                                    <tr
-                                      key={ki}
-                                      className="hover:bg-muted/20 cursor-pointer"
-                                      onClick={(e) => pkg.name && handleEntityClick(e, `/packages/${encodeURIComponent(pkg.name)}`, navigate)}
-                                      onAuxClick={(e) => pkg.name && e.button === 1 && window.open(`/packages/${encodeURIComponent(pkg.name)}`, '_blank')}
-                                    >
-                                      <td className="px-3 py-1.5 font-medium text-foreground">{pkg.name || '—'}</td>
-                                      <td className="px-3 py-1.5 font-mono text-muted-foreground">{pkg.version || '—'}</td>
-                                    </tr>
-                                  ))}
+                                  {proj.packages.map((pkg, ki) => {
+                                    const pkgVulns = pkg.name ? vulnsByCodePackage.get(normalize(pkg.name)) || [] : [];
+                                    return (
+                                      <tr
+                                        key={ki}
+                                        className="hover:bg-muted/20 cursor-pointer"
+                                        onClick={(e) => pkg.name && handleEntityClick(e, `/packages/${encodeURIComponent(pkg.name)}`, navigate)}
+                                        onAuxClick={(e) => pkg.name && e.button === 1 && window.open(`/packages/${encodeURIComponent(pkg.name)}`, '_blank')}
+                                      >
+                                        <td className="px-3 py-1.5 font-medium text-foreground">
+                                          <span className="inline-flex items-center gap-2">
+                                            {pkg.name || '—'}
+                                            <RowVulnBadge vulns={pkgVulns} />
+                                          </span>
+                                        </td>
+                                        <td className="px-3 py-1.5 font-mono text-muted-foreground">{pkg.version || '—'}</td>
+                                      </tr>
+                                    );
+                                  })}
                                 </tbody>
                               </table>
                             </div>
