@@ -2040,6 +2040,18 @@ function UsecasesPageInner() {
   const [searchParams, setSearchParams] = useSearchParams();
   const routeParams = useParams<{ flowId?: string }>();
 
+  // Locally-remembered usecase interests — survive the not-logged-in →
+  // logged-in transition (and pre-fill before the first /getinfo lands).
+  const [localInterests, setLocalInterests] = useState<Set<string>>(() => {
+    try {
+      const raw = localStorage.getItem('shuffle_usecase_interests');
+      const list = raw ? JSON.parse(raw) : [];
+      return new Set(Array.isArray(list) ? list : []);
+    } catch {
+      return new Set();
+    }
+  });
+
   // Drawer is driven by the route segment /usecases/:flowId where the segment
   // is the URL-encoded usecase label (human-readable name). We resolve it back
   // to a flow id by matching against `flow.label`.
@@ -2057,6 +2069,18 @@ function UsecasesPageInner() {
     }
     const flow = usecases.find(u => u.id === id);
     const name = flow?.label || id;
+    // Persist locally so the "Interest shown" indicator survives the
+    // not-logged-in → logged-in transition (the API call below is a no-op
+    // for guests, so without this we'd lose the signal entirely).
+    try {
+      const raw = localStorage.getItem('shuffle_usecase_interests');
+      const list: string[] = raw ? JSON.parse(raw) : [];
+      if (!list.includes(name)) {
+        list.push(name);
+        localStorage.setItem('shuffle_usecase_interests', JSON.stringify(list));
+        setLocalInterests(new Set(list));
+      }
+    } catch { /* ignore */ }
     // Fire-and-forget API call — response intentionally ignored per product spec.
     try {
       fetch(apiUrl(`/api/v1/workflows/usecases/${encodeURIComponent(name)}`), {
@@ -2090,16 +2114,17 @@ function UsecasesPageInner() {
     return set;
   }, [workflows, usecases]);
 
-  // Set of usecase names the user has shown interest in (from /getinfo `.interests`).
-  // Names are URL-encoded in the API; we decode them so we can compare against `flow.label`.
+  // Set of usecase names the user has shown interest in. Sourced from both
+  // /getinfo `.interests` (server-side, multi-device) and localStorage
+  // (so guest clicks survive the login transition).
   const interestNames = useMemo(() => {
-    const set = new Set<string>();
+    const set = new Set<string>(localInterests);
     for (const i of userInfo?.interests || []) {
       if (i?.type !== 'usecase' || !i?.active || !i?.name) continue;
       try { set.add(decodeURIComponent(i.name)); } catch { set.add(i.name); }
     }
     return set;
-  }, [userInfo?.interests]);
+  }, [userInfo?.interests, localInterests]);
 
   // Export the current usecase registry (with live `running` state) as JSON.
   const handleExportJson = () => {
