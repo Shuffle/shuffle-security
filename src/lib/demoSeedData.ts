@@ -205,3 +205,52 @@ export const buildDemoUsers = (): { key: string; value: object }[] => {
     };
   });
 };
+
+// ─── Vulnerabilities ──────────────────────────────────────────────────────────
+// One real, scary CVE wired to the same host (FIN-LAPTOP-04) the phishing →
+// CrowdStrike narrative pivots on. CVE-2024-5274 was an in-the-wild zero-day
+// V8 type-confusion bug enabling RCE via a crafted HTML page — exactly the
+// kind of thing a phishing link would weaponise.
+//
+// We use the OSV-style record shape that useVulnerabilities.ts parses:
+//   { id, summary, details, severity[], database_specific, affected[], hosts[] }
+export const buildDemoVulnerabilities = (): { key: string; value: object }[] => {
+  const t = now();
+  const key = `demo-vuln-${t}-cve-2024-5274`;
+  return [
+    {
+      key,
+      value: {
+        id: 'CVE-2024-5274',
+        summary: 'Google Chrome V8 Type Confusion (RCE) — CVE-2024-5274',
+        details:
+          'Type confusion in V8 in Google Chrome prior to 125.0.6422.112 allowed a remote attacker to execute arbitrary code inside a sandbox via a crafted HTML page. Exploited in the wild as a zero-day (Google TAG, May 2024). FIN-LAPTOP-04 is running Chrome 124.0.6367.91 — vulnerable.',
+        aliases: ['CVE-2024-5274'],
+        published: hoursAgo(24 * 60),
+        modified: hoursAgo(24 * 14),
+        severity: [{ type: 'CVSS_V3', score: '8.8' }],
+        database_specific: { severity: 'High' },
+        affected: [
+          {
+            package: { ecosystem: 'Chromium', name: 'google-chrome' },
+            ranges: [{ type: 'SEMVER', events: [{ introduced: '0' }, { fixed: '125.0.6422.112' }] }],
+          },
+        ],
+        references: [
+          { type: 'ADVISORY', url: 'https://nvd.nist.gov/vuln/detail/CVE-2024-5274' },
+          { type: 'WEB', url: 'https://chromereleases.googleblog.com/2024/05/stable-channel-update-for-desktop_23.html' },
+        ],
+        hosts: [
+          {
+            hostname: 'FIN-LAPTOP-04',
+            paths: [
+              { path: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe', version: '124.0.6367.91', last_seen: minsAgo(8) },
+            ],
+          },
+        ],
+        metadata: demoMeta(key),
+      },
+    },
+  ];
+};
+
