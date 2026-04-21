@@ -1877,7 +1877,7 @@ function UsecasesPageInner() {
       </Box>
 
       {/* Selected apps — same format as the AppSearchDrawer's "Your Apps" row */}
-      {getStoredApiKey() && (
+      {isAuthenticated && (
         <Box sx={{ mb: 3 }}>
           <Typography
             sx={{
