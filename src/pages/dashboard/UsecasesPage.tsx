@@ -248,9 +248,33 @@ export default function UsecasesPage() {
               borderRadius: 1.5,
               border: '1px solid hsl(var(--border))',
               bgcolor: 'hsl(var(--card))',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
             }}
           >
-            <IntegrationStatus collapsed={false} showAll hideAddButton />
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <IntegrationStatus collapsed={false} showAll hideAddButton hideHeader />
+            </Box>
+            <Button
+              component={Link}
+              to="/apps"
+              size="small"
+              variant="outlined"
+              startIcon={<Search size={14} />}
+              sx={{
+                flexShrink: 0,
+                textTransform: 'none',
+                borderColor: 'hsl(var(--border))',
+                color: 'hsl(var(--foreground))',
+                '&:hover': {
+                  borderColor: 'hsl(var(--primary))',
+                  bgcolor: 'hsl(var(--accent))',
+                },
+              }}
+            >
+              Find apps
+            </Button>
           </Box>
         </Box>
       )}
