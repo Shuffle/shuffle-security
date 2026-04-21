@@ -2029,11 +2029,18 @@ function UsecasesPageInner() {
               sx={{
                 flexShrink: 0,
                 textTransform: 'none',
-                borderColor: 'hsl(var(--border))',
-                color: 'hsl(var(--foreground))',
+                borderColor: 'hsl(var(--border, 0 0% 20%))',
+                color: 'hsl(var(--foreground, 0 0% 100%)) !important',
+                bgcolor: 'transparent',
                 '&:hover': {
-                  borderColor: 'hsl(var(--primary))',
-                  bgcolor: 'hsl(var(--accent))',
+                  borderColor: 'hsl(var(--primary, 24 100% 50%))',
+                  // Use a translucent primary tint instead of --accent (which is
+                  // solid orange in this theme and would clash with the text).
+                  bgcolor: 'hsla(24, 100%, 50%, 0.12)',
+                  color: 'hsl(var(--foreground, 0 0% 100%)) !important',
+                },
+                '&:hover .MuiButton-startIcon': {
+                  color: 'hsl(var(--foreground, 0 0% 100%))',
                 },
               }}
             >
