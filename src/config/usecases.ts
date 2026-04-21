@@ -735,6 +735,14 @@ const labelFor = (categoryId: string): string =>
  * @param enabledLabels  Optional set of `automationLabel`s known to have a
  *                       running workflow — used to populate `running: true`.
  */
+/** Hardcoded hex equivalents of the FLOW_PHASES CSS variable colors,
+ *  used in the exported JSON so consumers don't need our theme tokens. */
+const PHASE_HEX_BY_ID: Record<FlowPhase, string> = {
+  ingest: '#E7B008',      // --infra-siem        (45 93% 47%)
+  response: '#EF4444',    // --infra-edr         (0 84% 60%)
+  correlation: '#1AC4E6', // --infra-threat-intel (190 80% 50%)
+};
+
 export function getUsecasesJson(
   usecases: Usecase[] = DEFAULT_USECASES,
   enabledLabels?: Set<string>,
@@ -742,7 +750,7 @@ export function getUsecasesJson(
   return FLOW_PHASES.map(phase => ({
     name: phase.label,
     description: phase.subtitle,
-    color: `hsl(var(${phase.color}))`,
+    color: PHASE_HEX_BY_ID[phase.id],
     phase: phase.id,
     step: phase.step,
     list: usecases
