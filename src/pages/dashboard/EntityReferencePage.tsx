@@ -730,11 +730,12 @@ const EntityReferencePage = ({ type }: EntityReferencePageProps) => {
                 <TooltipProvider delayDuration={150}>
                   {filteredMatches.map(({ match: m, counts }, i) => {
                     const showRisk = vulnsQueried;
-                    const buckets: Array<{ key: 'critical' | 'high' | 'medium' | 'low'; letter: string; label: string }> = [
+                    const buckets: Array<{ key: 'critical' | 'high' | 'medium' | 'low' | 'informational'; letter: string; label: string }> = [
                       { key: 'critical', letter: 'C', label: 'Critical' },
                       { key: 'high', letter: 'H', label: 'High' },
                       { key: 'medium', letter: 'M', label: 'Medium' },
                       { key: 'low', letter: 'L', label: 'Low' },
+                      { key: 'informational', letter: 'I', label: 'Informational' },
                     ];
                     return (
                       <tr
