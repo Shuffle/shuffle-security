@@ -2033,7 +2033,7 @@ function UsecasesPageInner() {
   const navigate = useNavigate();
   const { apiUrl, authHeader } = useApi();
   const { usecases, apiLoaded, getDrift } = useUsecasesLite();
-  const { userInfo, isAuthenticated } = useAuthLite();
+  const { userInfo, isAuthenticated, refetch: refetchAuth } = useAuthLite();
   const { data: workflows = [], refetch: refetchWorkflows } = useWorkflowsLite();
   const isSupport = userInfo?.support === true;
   const [showAllAsSupport, setShowAllAsSupport] = useState(true);
