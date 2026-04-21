@@ -3295,7 +3295,7 @@ const IncidentDetailPage = () => {
         /* Details Tab */
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {/* Description Section */}
-          <Section title="Description" icon={DescriptionIcon} defaultOpen={true}>
+          <Section title="Description" icon={DescriptionIcon} defaultOpen={false}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 {(hasHtmlDescription || editedMessage) && !isEditingDescription && (
@@ -3463,22 +3463,13 @@ const IncidentDetailPage = () => {
             />
           )}
 
-          {/* Stakeholders - Always visible, prominent */}
-          <Box sx={{ 
-            bgcolor: 'hsl(var(--card))', 
-            borderRadius: 2, 
-            border: '1px solid hsl(var(--border))',
-            p: 2.5,
-          }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-              <PeopleIcon sx={{ fontSize: 20, color: 'primary.main' }} />
-              <Typography variant="subtitle2" sx={{ fontWeight: 600, flex: 1 }}>
-                Stakeholders
-              </Typography>
-              {editedStakeholders.length > 0 && (
-                <Chip label={editedStakeholders.length} size="small" variant="outlined" sx={{ height: 20, fontSize: '0.7rem', bgcolor: 'transparent', borderColor: 'rgba(255, 102, 0, 0.4)', color: '#ff6600' }} />
-              )}
-            </Box>
+          {/* Stakeholders - collapsed by default */}
+          <Section
+            title="Stakeholders"
+            icon={PeopleIcon}
+            defaultOpen={false}
+            badge={editedStakeholders.length > 0 ? editedStakeholders.length : undefined}
+          >
 
             {/* Inline autocomplete input */}
             {!isPublicView && (
