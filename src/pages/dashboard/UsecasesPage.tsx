@@ -7,7 +7,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+
 import {
   Box,
   Typography,
@@ -915,32 +915,32 @@ interface UserInfoLite {
   support?: boolean;
 }
 function useAuthLite() {
-  const { data } = useQuery<{ userInfo: UserInfoLite | null; isAuthenticated: boolean }>({
-    queryKey: ['usecases-page-auth'],
-    queryFn: async () => {
+  const [state, setState] = useState<{ userInfo: UserInfoLite | null; isAuthenticated: boolean }>({
+    userInfo: null,
+    isAuthenticated: false,
+  });
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
       try {
         const res = await fetch(apiUrl('/api/v1/getinfo'), {
           credentials: 'include',
           headers: { ...authHeader(), 'Content-Type': 'application/json' },
         });
-        if (!res.ok) return { userInfo: null, isAuthenticated: false };
+        if (!res.ok) return;
         const body = await res.json();
-        if (body?.success !== true) return { userInfo: null, isAuthenticated: false };
-        return {
+        if (body?.success !== true || cancelled) return;
+        setState({
           userInfo: { id: body.id, username: body.username, support: body.support === true },
           isAuthenticated: true,
-        };
+        });
       } catch {
-        return { userInfo: null, isAuthenticated: false };
+        /* keep defaults */
       }
-    },
-    staleTime: 5 * 60 * 1000,
-    retry: 0,
-  });
-  return {
-    userInfo: data?.userInfo ?? null,
-    isAuthenticated: data?.isAuthenticated ?? false,
-  };
+    })();
+    return () => { cancelled = true; };
+  }, []);
+  return state;
 }
 
 // ============================================================================
@@ -953,20 +953,23 @@ interface WorkflowSummary {
   [key: string]: any;
 }
 function useWorkflowsLite() {
-  return useQuery<WorkflowSummary[]>({
-    queryKey: ['usecases-page-workflows'],
-    queryFn: async () => {
+  const [data, setData] = useState<WorkflowSummary[]>([]);
+  const fetchOnce = React.useCallback(async () => {
+    try {
       const res = await fetch(apiUrl('/api/v1/workflows'), {
         credentials: 'include',
         headers: { ...authHeader() },
       });
-      if (!res.ok) return [];
-      const data = await res.json();
-      return Array.isArray(data) ? data : (data.workflows || []);
-    },
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
-  });
+      if (!res.ok) return;
+      const body = await res.json();
+      const list = Array.isArray(body) ? body : (body.workflows || []);
+      setData(list);
+    } catch {
+      /* keep current */
+    }
+  }, []);
+  useEffect(() => { fetchOnce(); }, [fetchOnce]);
+  return { data, refetch: fetchOnce };
 }
 
 // ============================================================================
@@ -1069,38 +1072,42 @@ function buildBackendUsecases(cats: ApiUsecaseCategory[]) {
 }
 
 function useUsecasesLite() {
-  const query = useQuery({
-    queryKey: ['usecases-page-usecases'],
-    queryFn: async () => {
+  const [data, setData] = useState<{
+    usecases: Usecase[];
+    apiCategories: ApiUsecaseCategory[];
+    drifts: UsecaseDrift[];
+  }>({ usecases: DEFAULT_USECASES, apiCategories: [], drifts: [] });
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
       try {
         const res = await fetch(apiUrl('/api/v1/workflows/usecases'), {
           credentials: 'include',
           headers: { ...authHeader() },
         });
-        if (!res.ok) return { usecases: DEFAULT_USECASES, apiCategories: [] as ApiUsecaseCategory[], drifts: [] as UsecaseDrift[] };
-        const data = await res.json();
-        const cats: ApiUsecaseCategory[] = Array.isArray(data) ? data : [];
-        if (cats.length === 0) return { usecases: DEFAULT_USECASES, apiCategories: [], drifts: [] };
+        if (!res.ok) return;
+        const body = await res.json();
+        const cats: ApiUsecaseCategory[] = Array.isArray(body) ? body : [];
+        if (cancelled || cats.length === 0) return;
         const built = buildBackendUsecases(cats);
-        return { usecases: built.usecases, apiCategories: cats, drifts: built.drifts };
+        setData({ usecases: built.usecases, apiCategories: cats, drifts: built.drifts });
       } catch {
-        return { usecases: DEFAULT_USECASES, apiCategories: [] as ApiUsecaseCategory[], drifts: [] as UsecaseDrift[] };
+        /* keep defaults */
       }
-    },
-    staleTime: 5 * 60 * 1000,
-    retry: 1,
-  });
-  const usecases = query.data?.usecases ?? DEFAULT_USECASES;
-  const apiCategories = query.data?.apiCategories ?? [];
-  const drifts = query.data?.drifts ?? [];
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   const driftMap = useMemo(() => {
     const m = new Map<string, UsecaseDrift>();
-    for (const d of drifts) m.set(d.usecaseId, d);
+    for (const d of data.drifts) m.set(d.usecaseId, d);
     return m;
-  }, [drifts]);
+  }, [data.drifts]);
+
   return {
-    usecases,
-    apiLoaded: apiCategories.length > 0,
+    usecases: data.usecases,
+    apiLoaded: data.apiCategories.length > 0,
     getDrift: (id: string) => driftMap.get(id),
   };
 }
@@ -1134,9 +1141,12 @@ interface IntegrationItem {
 }
 
 function IntegrationStatusLite({ filterApps, singleLine = false }: { filterApps?: string[]; singleLine?: boolean }) {
-  const { data: integrations = [], isLoading } = useQuery<IntegrationItem[]>({
-    queryKey: ['usecases-page-integrations'],
-    queryFn: async () => {
+  const [integrations, setIntegrations] = useState<IntegrationItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
       try {
         const res = await fetch(apiUrl('/api/v1/apps/authentication'), {
           credentials: 'include',
@@ -1164,7 +1174,6 @@ function IntegrationStatusLite({ filterApps, singleLine = false }: { filterApps?
                 active,
               });
             } else {
-              // Merge: prefer validated/active across multiple auth entries
               existing.validated = existing.validated || validated;
               existing.active = existing.active || active;
               if (!existing.icon && (app.large_image || app.image)) {
@@ -1174,18 +1183,21 @@ function IntegrationStatusLite({ filterApps, singleLine = false }: { filterApps?
           }
         }
 
-        // Sort: validated first, then active, then alphabetical
-        return Array.from(items.values()).sort((a, b) => {
+        const sorted = Array.from(items.values()).sort((a, b) => {
           if (a.validated !== b.validated) return a.validated ? -1 : 1;
           if (a.active !== b.active) return a.active ? -1 : 1;
           return a.name.localeCompare(b.name);
         });
+
+        if (!cancelled) setIntegrations(sorted);
       } catch {
-        return [];
+        /* keep [] */
+      } finally {
+        if (!cancelled) setIsLoading(false);
       }
-    },
-    staleTime: 5 * 60 * 1000,
-  });
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const visible = filterApps?.length
     ? integrations.filter((item) => filterApps.some((name) => name.toLowerCase() === item.name.toLowerCase()))
