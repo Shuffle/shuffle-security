@@ -227,6 +227,8 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
   const [step, setStep] = useState(0);
   const [stats, setStats] = useState(() => getDemoStats());
   const [completedSteps, setCompletedSteps] = useState<Record<string, boolean>>({});
+  const [isForceCreatingIncidents, setIsForceCreatingIncidents] = useState(false);
+  const [hasDemoIncidents, setHasDemoIncidents] = useState(false);
 
   // GA dedupe: each step view fires at most once per session, each completion
   // fires at most once per step. Refs survive re-renders without retriggering.
