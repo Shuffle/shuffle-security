@@ -847,9 +847,29 @@ export function getUsecasesJson(
 // ============================================================================
 // Inlined: API config
 // ============================================================================
-const API_BASE_URL: string =
-  (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_SHUFFLE_API_URL) ||
-  (typeof window !== 'undefined' ? window.location.origin : 'https://shuffler.io');
+// Resolve the Shuffle backend base URL.
+// Order:
+//  1. VITE_SHUFFLE_API_URL env override
+//  2. Lovable preview hosts -> shuffler.io (preview origin doesn't serve the API)
+//  3. window.location.origin (self-hosted: nginx proxies /api/* to the backend)
+//  4. https://shuffler.io (SSR / fallback)
+const resolveApiBaseUrl = () => {
+  const envUrl =
+    typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_SHUFFLE_API_URL;
+  if (envUrl) return envUrl;
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    const isLovablePreview =
+      host.includes('lovableproject.com') ||
+      host.includes('lovable.app') ||
+      host.includes('id-preview--');
+    if (isLovablePreview) return 'https://shuffler.io';
+    return window.location.origin;
+  }
+  return 'https://shuffler.io';
+};
+
+const API_BASE_URL: string = resolveApiBaseUrl();
 
 const getStoredApiKey = (): string | null => {
   try { return typeof window !== 'undefined' ? window.localStorage.getItem('shuffle_api_key') : null; }
