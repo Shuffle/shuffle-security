@@ -14,6 +14,7 @@ import { getApiUrl, getAuthHeader } from '@/config/api';
 import {
   buildDemoIncidentsBatch1,
   buildDemoIncidentsBatch2,
+  buildDemoFocusIncident,
   buildDemoAssets,
   buildDemoUsers,
   buildDemoVulnerabilities,
