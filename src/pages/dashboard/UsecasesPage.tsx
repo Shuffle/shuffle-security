@@ -1389,14 +1389,94 @@ function IntegrationStatusLite({ filterApps, singleLine = false }: { filterApps?
     );
   }
 
+  const renderIcon = (integration: IntegrationItem) => {
+    // Match the IngestionSourceButton design language:
+    // - validated  → green tint border/bg + green status dot
+    // - active     → amber tint border/bg + amber status dot
+    // - otherwise  → muted, slightly faded
+    const dotColor = integration.validated
+      ? 'hsl(var(--severity-low))'
+      : integration.active
+        ? 'hsl(var(--severity-medium))'
+        : null;
+    const borderColor = integration.validated
+      ? 'hsl(var(--severity-low) / 0.35)'
+      : integration.active
+        ? 'hsl(var(--severity-medium) / 0.35)'
+        : 'hsl(var(--border))';
+    const bgColor = integration.validated
+      ? 'hsl(var(--severity-low) / 0.10)'
+      : integration.active
+        ? 'hsl(var(--severity-medium) / 0.10)'
+        : 'hsl(var(--card))';
+    const isReady = integration.validated || integration.active;
+
+    return (
+      <Tooltip
+        key={integration.id}
+        title={`${integration.name}${integration.validated ? ' (validated)' : integration.active ? ' (configured)' : ' (not configured)'}`}
+        placement="top"
+        arrow
+      >
+        <Box
+          sx={{
+            position: 'relative',
+            width: 32,
+            height: 32,
+            flexShrink: 0,
+            borderRadius: '50%',
+            border: `1px solid ${borderColor}`,
+            overflow: 'visible',
+            bgcolor: bgColor,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            opacity: isReady ? 1 : 0.45,
+            filter: isReady ? 'none' : 'grayscale(1)',
+            transition: 'transform 0.15s ease, opacity 0.15s ease, filter 0.15s ease',
+            '&:hover': {
+              transform: 'scale(1.1)',
+              opacity: 1,
+              filter: 'none',
+            },
+          }}
+        >
+          <Box sx={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {integration.icon ? (
+              <Box component="img" src={integration.icon} alt={integration.name} loading="lazy" sx={{ width: '82%', height: '82%', objectFit: 'contain' }} />
+            ) : (
+              <Avatar sx={{ width: 22, height: 22, fontSize: '0.72rem', bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--foreground))' }}>
+                {integration.name.slice(0, 1).toUpperCase()}
+              </Avatar>
+            )}
+          </Box>
+          {dotColor && (
+            <Box
+              sx={{
+                position: 'absolute',
+                bottom: -1,
+                right: -1,
+                width: 9,
+                height: 9,
+                borderRadius: '50%',
+                bgcolor: dotColor,
+                border: '2px solid hsl(var(--background))',
+                boxSizing: 'content-box',
+              }}
+            />
+          )}
+        </Box>
+      </Tooltip>
+    );
+  };
+
   if (singleLine) {
-    const hiddenCount = Math.max(0, visible.length - 0); // overflow handled visually below
     return (
       <Box
         sx={{
           display: 'flex',
           flexWrap: 'nowrap',
-          gap: 0.75,
+          gap: 1,
           px: 0.5,
           py: 0.5,
           overflow: 'hidden',
@@ -1405,70 +1485,14 @@ function IntegrationStatusLite({ filterApps, singleLine = false }: { filterApps?
           WebkitMaskImage: 'linear-gradient(to right, black calc(100% - 32px), transparent)',
         }}
       >
-        {visible.map((integration) => (
-          <Tooltip
-            key={integration.id}
-            title={`${integration.name}${integration.validated ? ' (validated)' : integration.active ? ' (configured)' : ''}`}
-            placement="top"
-            arrow
-          >
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                flexShrink: 0,
-                borderRadius: 1,
-                border: integration.validated
-                  ? '1px solid hsl(var(--severity-low) / 0.6)'
-                  : '1px solid hsl(var(--border))',
-                overflow: 'hidden',
-                bgcolor: 'hsl(var(--card))',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              {integration.icon ? (
-                <Box component="img" src={integration.icon} alt={integration.name} loading="lazy" sx={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-              ) : (
-                <Avatar sx={{ width: 24, height: 24, fontSize: '0.72rem', bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--foreground))' }}>
-                  {integration.name.slice(0, 1).toUpperCase()}
-                </Avatar>
-              )}
-            </Box>
-          </Tooltip>
-        ))}
+        {visible.map(renderIcon)}
       </Box>
     );
   }
 
   return (
-    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, px: 0.5, py: 0.5 }}>
-      {visible.map((integration) => (
-        <Tooltip key={integration.id} title={integration.name} placement="top" arrow>
-          <Box
-            sx={{
-              width: 32,
-              height: 32,
-              borderRadius: 1,
-              border: '1px solid hsl(var(--border))',
-              overflow: 'hidden',
-              bgcolor: 'hsl(var(--card))',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            {integration.icon ? (
-              <Box component="img" src={integration.icon} alt={integration.name} loading="lazy" sx={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-            ) : (
-              <Avatar sx={{ width: 24, height: 24, fontSize: '0.72rem', bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--foreground))' }}>
-                {integration.name.slice(0, 1).toUpperCase()}
-              </Avatar>
-            )}
-          </Box>
-        </Tooltip>
-      ))}
+    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, px: 0.5, py: 0.5 }}>
+      {visible.map(renderIcon)}
     </Box>
   );
 }
