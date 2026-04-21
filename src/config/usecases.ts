@@ -816,6 +816,7 @@ export function getUsecasesJson(
         ...(uc.video ? { video: uc.video } : {}),
         ...(uc.blogpost ? { blogpost: uc.blogpost } : {}),
         ...(uc.referenceImage ? { reference_image: uc.referenceImage } : {}),
+        ...(uc.customAction ? { custom_action: uc.customAction } : {}),
       })),
   }));
 }
