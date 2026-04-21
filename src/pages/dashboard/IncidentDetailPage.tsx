@@ -828,6 +828,54 @@ const IncidentDetailPage = () => {
   const [forwardingApps, setForwardingApps] = useState<Array<{ id: string; name: string; large_image: string; categories: string[] }>>([]);
   const [forwardingAppsLoading, setForwardingAppsLoading] = useState(false);
   const [sourceAppImage, setSourceAppImage] = useState<string | null>(null);
+
+  // Reload authenticated tools every time the Forward dialog opens so newly
+  // connected tools (e.g. just-authenticated email apps) appear immediately.
+  useEffect(() => {
+    if (!showForwardDialog) return;
+    let cancelled = false;
+    setForwardingAppsLoading(true);
+    fetch(getApiUrl('/api/v1/apps/authentication'), {
+      credentials: 'include',
+      headers: { ...getAuthHeader(), ...crossOrgHeaders },
+    })
+      .then(r => r.json())
+      .then(result => {
+        if (cancelled) return;
+        const authData = result.data || result;
+        if (Array.isArray(authData)) {
+          const seen = new Set<string>();
+          const apps = authData
+            .filter((a: any) => a.app?.name && a.validation?.valid)
+            .filter((a: any) => {
+              if (seen.has(a.app.name)) return false;
+              seen.add(a.app.name);
+              return true;
+            })
+            .map((a: any) => {
+              const rawCategories = a.app?.categories ?? a.categories ?? a.app?.category ?? a.category ?? [];
+              const categories = Array.isArray(rawCategories)
+                ? rawCategories
+                : typeof rawCategories === 'string'
+                  ? [rawCategories]
+                  : typeof rawCategories === 'object' && rawCategories !== null
+                    ? Object.keys(rawCategories)
+                    : [];
+              return {
+                id: a.app.name,
+                name: (a.app.name || '').replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                large_image: a.app.large_image || '',
+                categories,
+              };
+            });
+          setForwardingApps(apps);
+        }
+      })
+      .catch(() => { if (!cancelled) setForwardingApps([]); })
+      .finally(() => { if (!cancelled) setForwardingAppsLoading(false); });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showForwardDialog]);
   const [correlations, setCorrelations] = useState<Array<{ key: string; amount: number; ref: string[] }>>([]);
   const [correlationsLoading, setCorrelationsLoading] = useState(false);
   const [obsCorrelations, setObsCorrelations] = useState<Record<string, { loading: boolean; data: Array<{ key: string; amount: number; ref: string[] }> }>>({});
