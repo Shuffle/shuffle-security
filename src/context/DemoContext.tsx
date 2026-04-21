@@ -305,7 +305,14 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
     runStepSeed(step);
   }, [navigateForStep, runStepSeed, step]);
 
-  const closeTour = useCallback(() => setDrawerOpen(false), []);
+  // Closing the tour drawer also deactivates demo mode so the dashboard CTA
+  // returns to its inactive state. Any already-seeded sample data stays put
+  // until the user explicitly runs "Clean up demo data".
+  const closeTour = useCallback(() => {
+    setDrawerOpen(false);
+    setActive(false);
+    try { localStorage.removeItem('shuffle_demo_active'); } catch { /* ignore */ }
+  }, []);
 
   const currentStep = TOUR_STEPS[step];
   const currentStepUnlocked = !currentStep?.requirement || !!completedSteps[currentStep.id];
