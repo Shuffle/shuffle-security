@@ -424,104 +424,74 @@ export const DemoTourDrawer = () => {
                             {allDone ? 'Done' : 'Required to continue'}
                           </Typography>
                           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.85 }}>
-                            {goals.map(g => (
-                              <Box key={g.id} sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                                <Box
-                                  sx={{
-                                    width: 22,
-                                    height: 22,
-                                    borderRadius: 1,
-                                    display: 'grid',
-                                    placeItems: 'center',
-                                    backgroundColor: g.done ? 'hsl(var(--severity-low) / 0.2)' : 'hsl(var(--primary) / 0.18)',
-                                    color: g.done ? 'hsl(var(--severity-low))' : 'hsl(var(--primary))',
-                                    flexShrink: 0,
-                                  }}
-                                >
-                                  {g.done ? <Check size={13} /> : <Lock size={12} />}
+                            {goals.map(g => {
+                              // For the incidents-list step, render a tiny
+                              // "Force generate" button inline next to the
+                              // goal label when not yet satisfied.
+                              const showForceGenerate = isIncidentsListStep && !g.done;
+                              return (
+                                <Box key={g.id} sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+                                  <Box
+                                    sx={{
+                                      width: 22,
+                                      height: 22,
+                                      borderRadius: 1,
+                                      display: 'grid',
+                                      placeItems: 'center',
+                                      backgroundColor: g.done ? 'hsl(var(--severity-low) / 0.2)' : 'hsl(var(--primary) / 0.18)',
+                                      color: g.done ? 'hsl(var(--severity-low))' : 'hsl(var(--primary))',
+                                      flexShrink: 0,
+                                    }}
+                                  >
+                                    {g.done ? <Check size={13} /> : <Lock size={12} />}
+                                  </Box>
+                                  <Typography
+                                    sx={{
+                                      flex: 1,
+                                      fontSize: '0.78rem',
+                                      fontWeight: 500,
+                                      color: 'hsl(var(--foreground))',
+                                      lineHeight: 1.4,
+                                      textDecoration: g.done ? 'line-through' : 'none',
+                                      opacity: g.done ? 0.7 : 1,
+                                    }}
+                                  >
+                                    {g.label}
+                                  </Typography>
+                                  {showForceGenerate && (
+                                    <Button
+                                      data-tour="demo-force-generate-single"
+                                      onClick={forceGenerateSingleIncident}
+                                      disabled={isForceGeneratingSingle}
+                                      variant="contained"
+                                      size="small"
+                                      sx={{
+                                        flexShrink: 0,
+                                        textTransform: 'none',
+                                        fontSize: '0.68rem',
+                                        fontWeight: 600,
+                                        minHeight: 22,
+                                        height: 22,
+                                        py: 0,
+                                        px: 1,
+                                        lineHeight: 1,
+                                        backgroundColor: 'hsl(var(--primary))',
+                                        color: 'hsl(var(--primary-foreground))',
+                                        boxShadow: 'none',
+                                        '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.9)', boxShadow: 'none' },
+                                      }}
+                                    >
+                                      {isForceGeneratingSingle ? 'Generating…' : 'Force generate'}
+                                    </Button>
+                                  )}
                                 </Box>
-                                <Typography
-                                  sx={{
-                                    fontSize: '0.78rem',
-                                    fontWeight: 500,
-                                    color: 'hsl(var(--foreground))',
-                                    lineHeight: 1.4,
-                                    textDecoration: g.done ? 'line-through' : 'none',
-                                    opacity: g.done ? 0.7 : 1,
-                                  }}
-                                >
-                                  {g.label}
-                                </Typography>
-                              </Box>
-                            ))}
+                              );
+                            })}
                           </Box>
                         </Box>
                       );
                     })()}
 
-                    {isIncidentsListStep && (
-                      <Box
-                        sx={{
-                          mt: 2,
-                          p: 1.75,
-                          borderRadius: 2,
-                          border: '1px dashed hsl(var(--border))',
-                          backgroundColor: 'hsl(var(--muted) / 0.3)',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: 1,
-                        }}
-                      >
-                        <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.5 }}>
-                          {hasDemoIncidents
-                            ? 'Demo incidents are present. You can generate the focus incident again, or recreate the full set.'
-                            : 'No demo incidents detected yet. Generate a single focus incident to start with — the others arrive later for cross-correlation.'}
-                        </Typography>
-                        <Button
-                          data-tour="demo-force-generate-single"
-                          onClick={forceGenerateSingleIncident}
-                          disabled={isForceGeneratingSingle}
-                          variant="contained"
-                          size="small"
-                          fullWidth
-                          sx={{
-                            textTransform: 'none',
-                            fontSize: '0.78rem',
-                            fontWeight: 600,
-                            backgroundColor: 'hsl(var(--primary))',
-                            color: 'hsl(var(--primary-foreground))',
-                            boxShadow: 'none',
-                            '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.9)', boxShadow: 'none' },
-                          }}
-                        >
-                          {isForceGeneratingSingle ? 'Generating…' : 'Force generate'}
-                        </Button>
-                        <Button
-                          data-tour="demo-force-create-incidents"
-                          onClick={forceCreateIncidents}
-                          disabled={isForceCreatingIncidents}
-                          variant="text"
-                          size="small"
-                          fullWidth
-                          sx={{
-                            textTransform: 'none',
-                            fontSize: '0.72rem',
-                            fontWeight: 500,
-                            color: 'hsl(var(--muted-foreground))',
-                            '&:hover': {
-                              backgroundColor: 'hsl(var(--primary) / 0.06)',
-                              color: 'hsl(var(--primary))',
-                            },
-                          }}
-                        >
-                          {isForceCreatingIncidents
-                            ? 'Recreating full set…'
-                            : hasDemoIncidents
-                              ? 'Recreate full demo incident set'
-                              : 'Or generate the full demo incident set'}
-                        </Button>
-                      </Box>
-                    )}
 
                     {isLast && (
                       <Box
