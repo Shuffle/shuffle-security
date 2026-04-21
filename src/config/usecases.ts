@@ -345,8 +345,24 @@ export interface ApiUsecaseItem {
 export interface ApiUsecase {
   name: string;
   priority?: number;
-  type: string;       // source category (e.g. "siem", "edr", "communication")
-  last: string;       // target category (e.g. "cases")
+  type: string;       // source category label/id (e.g. "SIEM", "siem")
+  last?: string;      // legacy target category (e.g. "cases")
+  destination?: string; // exported JSON target label (e.g. "Case Management")
+  source_id?: string;
+  target_id?: string;
+  disabled?: boolean;
+  tags?: string[];
+  agentic_description?: string;
+  automation_label?: string;
+  automation_category?: string;
+  automation_area?: string;
+  manual_verification?: boolean;
+  custom_action?: {
+    label: string;
+    href?: string;
+    url?: string;
+    description?: string;
+  };
   description?: string;
   video?: string;
   blogpost?: string;
