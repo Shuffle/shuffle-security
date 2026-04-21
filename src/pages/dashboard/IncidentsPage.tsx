@@ -442,6 +442,41 @@ const IncidentsPage = () => {
      if (hasOutlook) markStepCompleted('add-outlook:outlook');
      if (hasDefender) markStepCompleted('add-outlook:defender');
    }, [demoActive, demoInjectedApps, markStepCompleted]);
+
+   // When the demo lands on a step that depends on the seeded incidents being
+   // visible, make sure the user's current filters are not silently hiding
+   // the demo data we just wrote into their org. We clear narrowing filters
+   // and ensure the current org is in the org filter so the seeded items
+   // show up immediately.
+   const incidentsVisibilityResetRef = useRef(false);
+   useEffect(() => {
+     if (!demoActive) {
+       incidentsVisibilityResetRef.current = false;
+       return;
+     }
+     if (incidentsVisibilityResetRef.current) return;
+     const stepsThatNeedVisibleIncidents = new Set([
+       'incidents-list', 'incident-detail', 'assets', 'vulnerabilities', 'agent', 'wrap',
+     ]);
+     if (!stepsThatNeedVisibleIncidents.has(demoStepId || '')) return;
+     incidentsVisibilityResetRef.current = true;
+     setFilters(prev => {
+       const orgFilter = Array.isArray(prev.org) ? prev.org : prev.org ? [prev.org] : [];
+       const includesCurrent = currentOrgId ? orgFilter.includes(currentOrgId) : true;
+       return {
+         ...prev,
+         severity: null,
+         status: null,
+         source: null,
+         tag: null,
+         assignee: null,
+         tlp: null,
+         org: includesCurrent ? prev.org : (currentOrgId ? [...orgFilter, currentOrgId] : prev.org),
+       };
+     });
+     setNegatedFilters(new Set());
+   }, [demoActive, demoStepId, currentOrgId]);
+
    // Whenever the demo tour drawer is open, hide the arrow and the entire
    // Forward section so users stay focused on the ingestion flow.
    const isDemoTourActive = demoActive && demoDrawerOpen;
