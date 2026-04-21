@@ -3633,7 +3633,7 @@ const IncidentDetailPage = () => {
                 No stakeholders yet — type above to add
               </Typography>
             )}
-          </Box>
+          </Section>
 
           {/* Custom Fields */}
           {(() => {
