@@ -2663,17 +2663,17 @@ function UsecaseCard({
           <Typography variant="body2" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))', flexGrow: 1, fontSize: '0.82rem' }}>
             {flow.label}
           </Typography>
-          {effectiveEnabled && (
-            <Tooltip title="Automation enabled" placement="top" arrow>
-              <Box sx={{ display: 'inline-flex' }}>
-                <Power size={13} style={{ color: 'hsl(var(--severity-low))' }} />
-              </Box>
-            </Tooltip>
-          )}
           {hasInterest && (
             <Tooltip title="Interest shown" placement="top" arrow>
               <Box sx={{ display: 'inline-flex' }}>
                 <Sparkles size={13} style={{ color: 'hsl(var(--primary))' }} />
+              </Box>
+            </Tooltip>
+          )}
+          {effectiveEnabled && (
+            <Tooltip title="Automation enabled" placement="top" arrow>
+              <Box sx={{ display: 'inline-flex' }}>
+                <Power size={13} style={{ color: 'hsl(var(--severity-low))' }} />
               </Box>
             </Tooltip>
           )}
