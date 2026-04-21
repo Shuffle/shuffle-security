@@ -1764,12 +1764,12 @@ function UsecaseDetailContent({
       {!hidePrevNext && (
         <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mt: 2 }}>
           {prevFlow ? (
-            <Button onClick={() => goToUsecase(prevFlow.id)} startIcon={<ArrowLeft size={14} />} sx={{ textTransform: 'none', color: 'hsl(var(--muted-foreground))' }}>
+            <Button onClick={() => goToUsecase(prevFlow.id)} startIcon={<ArrowLeft size={14} />} sx={{ textTransform: 'none', color: MUTED }}>
               {prevFlow.label}
             </Button>
           ) : <Box />}
           {nextFlow ? (
-            <Button onClick={() => goToUsecase(nextFlow.id)} endIcon={<ArrowRight size={14} />} sx={{ textTransform: 'none', color: 'hsl(var(--muted-foreground))' }}>
+            <Button onClick={() => goToUsecase(nextFlow.id)} endIcon={<ArrowRight size={14} />} sx={{ textTransform: 'none', color: MUTED }}>
               {nextFlow.label}
             </Button>
           ) : <Box />}
