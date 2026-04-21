@@ -2865,7 +2865,7 @@ const IncidentsPage = () => {
             setTimeout(() => {
               setDemoInjectedApps(prev => {
                 if (prev.some(a => a.name.toLowerCase() === app.name.toLowerCase())) return prev;
-                const next = [
+                const next: ValidatedIngestionApp[] = [
                   ...prev,
                   {
                     id: `demo-${app.name}`,
