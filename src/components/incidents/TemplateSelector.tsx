@@ -67,12 +67,12 @@ export const TemplateSelector = ({ onApplyTemplate, currentUsername = '' }: Temp
         <IconButton 
           onClick={handleOpen}
           sx={{ 
-            bgcolor: 'rgba(255, 102, 0, 0.15)', 
-            color: '#ff6600', 
-            '&:hover': { bgcolor: 'rgba(255, 102, 0, 0.25)' } 
+            bgcolor: '#ff6600', 
+            color: '#ffffff', 
+            '&:hover': { bgcolor: '#e55c00' } 
           }}
         >
-          {isLoading ? <CircularProgress size={20} sx={{ color: '#ff6600' }} /> : <PlaylistAddIcon />}
+          {isLoading ? <CircularProgress size={20} sx={{ color: '#ffffff' }} /> : <PlaylistAddIcon />}
         </IconButton>
       </Tooltip>
       

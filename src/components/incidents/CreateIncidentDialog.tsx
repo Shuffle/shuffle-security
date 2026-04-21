@@ -635,7 +635,9 @@ export const CreateIncidentDialog = ({ open, onClose, onSubmit }: CreateIncident
                         size="small"
                         onDelete={() => handleRemoveObservable(idx)}
                         sx={{ 
-                          bgcolor: 'rgba(255, 102, 0, 0.15)',
+                          bgcolor: '#ff6600',
+                          color: '#ffffff',
+                          '& .MuiChip-deleteIcon': { color: 'rgba(255,255,255,0.8)', '&:hover': { color: '#ffffff' } },
                           '& .MuiChip-label': { fontFamily: 'monospace', fontSize: '0.75rem' }
                         }}
                       />
