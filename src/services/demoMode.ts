@@ -271,6 +271,7 @@ export const forceRecreateDemoIncidents = async (): Promise<number> => {
     const res = await getDatastoreByCategory(DATASTORE_CATEGORIES.INCIDENTS);
     if (res.success && res.data) {
       const orphans = res.data.filter(item => {
+        if (typeof item.key === 'string' && item.key.startsWith('demo-')) return true;
         try {
           const parsed = typeof item.value === 'string' ? JSON.parse(item.value) : item.value;
           return parsed?.metadata?.extensions?.custom_attributes?.demo === true;
