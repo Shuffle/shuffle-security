@@ -78,17 +78,6 @@ export const TOUR_STEPS: TourStep[] = [
     },
   },
   {
-    id: 'apps',
-    title: 'Connect your tools',
-    body: 'Detection sources feed into Shuffle.',
-    bullets: [
-      'Microsoft Defender — email alerts',
-      'CrowdStrike — endpoint alerts',
-      "We'll simulate these for the demo",
-    ],
-    route: '/onboarding/sources',
-  },
-  {
     id: 'incidents-list',
     title: 'Incidents arriving',
     body: 'Alerts from your tools land here. Open one to dig in.',
