@@ -103,6 +103,8 @@ const ThemedApp = () => {
           <ScrollToTop />
           <DemoProvider>
           <DemoTourDrawer />
+          <DemoSpotlight />
+          <DemoCompletionWatcher />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/apps" element={<AppsPage />} />
