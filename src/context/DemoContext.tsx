@@ -222,6 +222,8 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
 
   const openTour = useCallback(() => {
     setDrawerOpen(true);
+    setMinimized(false);
+    try { localStorage.setItem('shuffle_demo_minimized', 'false'); } catch { /* ignore */ }
     navigateForStep(step);
     runStepSeed(step);
   }, [navigateForStep, runStepSeed, step]);
