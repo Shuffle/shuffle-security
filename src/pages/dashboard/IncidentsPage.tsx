@@ -2211,18 +2211,9 @@ const IncidentsPage = () => {
         subtitle="Search and authenticate a tool to forward incidents to"
       />
 
-            {/* Selection count and bulk actions */}
+            {/* Bulk actions */}
             {selectedIds.size > 0 && (
               <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                <Typography 
-                  variant="body2" 
-                  sx={{ 
-                    fontWeight: 600, 
-                    color: 'hsl(var(--primary))',
-                  }}
-                >
-                  {selectedIds.size} selected
-                </Typography>
                 {allSelectedResolved ? (
                   <Button
                     size="small"
@@ -2259,18 +2250,6 @@ const IncidentsPage = () => {
                     Resolve
                   </Button>
                 )}
-                <IconButton
-                  size="small"
-                  onClick={() => setSelectedIds(new Set())}
-                  sx={{
-                    color: 'hsl(var(--muted-foreground))',
-                    '&:hover': {
-                      color: 'hsl(var(--foreground))',
-                    },
-                  }}
-                >
-                  <CloseIcon fontSize="small" />
-                </IconButton>
               </Box>
             )}
 
