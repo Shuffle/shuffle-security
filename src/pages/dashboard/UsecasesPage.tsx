@@ -397,7 +397,7 @@ export default function UsecasesPage() {
                 isEnabled={!!flow.automationLabel && enabledLabels.has(flow.automationLabel)}
                 canToggle={isAuthenticated && !!flow.automationLabel}
                 onToggled={refetchWorkflows}
-                onClick={() => navigate(`/usecases/${flow.id}`)}
+                onClick={() => setDrawerFlowId(flow.id)}
               />
             ))}
           </Box>
