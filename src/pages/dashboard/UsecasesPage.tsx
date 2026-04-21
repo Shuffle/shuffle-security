@@ -869,19 +869,68 @@ const resolveApiBaseUrl = () => {
   return 'https://shuffler.io';
 };
 
-const API_BASE_URL: string = resolveApiBaseUrl();
+const DEFAULT_API_BASE_URL: string = resolveApiBaseUrl();
 
 const getStoredApiKey = (): string | null => {
   try { return typeof window !== 'undefined' ? window.localStorage.getItem('shuffle_api_key') : null; }
   catch { return null; }
 };
 
-const apiUrl = (endpoint: string): string => `${API_BASE_URL}${endpoint}`;
+// ============================================================================
+// Runtime config context — lets host apps inject `globalUrl` / `userdata` /
+// `isLoggedIn` overrides via props on <UsecasesPage />. When no provider is
+// present (standalone usage), defaults reproduce the previous behavior:
+// API base resolved from env/host, auth via `shuffle_api_key` localStorage,
+// and authentication probed via `/api/v1/getinfo`.
+// ============================================================================
+export interface UsecasesUserData {
+  id?: string;
+  username?: string;
+  support?: boolean;
+  api_key?: string;
+  apikey?: string;
+  [key: string]: any;
+}
 
-const authHeader = (): Record<string, string> => {
-  const key = getStoredApiKey();
-  return key ? { Authorization: `Bearer ${key}` } : {};
+interface UsecasesPageConfig {
+  baseUrl: string;
+  /** Built from external `userdata.api_key` if provided, else from localStorage. */
+  authHeader: () => Record<string, string>;
+  /** When true, skip the internal getinfo probe and trust `externalUserInfo`. */
+  hasExternalAuth: boolean;
+  externalUserInfo: UsecasesUserData | null;
+  externalIsAuthenticated: boolean;
+  /** Mirrors the host app's `isLoaded` flag — currently informational. */
+  isLoaded: boolean;
+}
+
+const DEFAULT_CONFIG: UsecasesPageConfig = {
+  baseUrl: DEFAULT_API_BASE_URL,
+  authHeader: () => {
+    const key = getStoredApiKey();
+    return key ? { Authorization: `Bearer ${key}` } : {};
+  },
+  hasExternalAuth: false,
+  externalUserInfo: null,
+  externalIsAuthenticated: false,
+  isLoaded: true,
 };
+
+const UsecasesPageConfigContext = React.createContext<UsecasesPageConfig>(DEFAULT_CONFIG);
+
+const useUsecasesConfig = () => React.useContext(UsecasesPageConfigContext);
+
+/** Hook returning `apiUrl` and `authHeader` bound to the active config. */
+function useApi() {
+  const cfg = useUsecasesConfig();
+  return React.useMemo(
+    () => ({
+      apiUrl: (endpoint: string) => `${cfg.baseUrl}${endpoint}`,
+      authHeader: cfg.authHeader,
+    }),
+    [cfg.baseUrl, cfg.authHeader],
+  );
+}
 
 // ============================================================================
 // Inlined: minimal toast (was `sonner`)
@@ -915,11 +964,27 @@ interface UserInfoLite {
   support?: boolean;
 }
 function useAuthLite() {
+  const cfg = useUsecasesConfig();
+  const { apiUrl, authHeader } = useApi();
   const [state, setState] = useState<{ userInfo: UserInfoLite | null; isAuthenticated: boolean }>({
     userInfo: null,
     isAuthenticated: false,
   });
   useEffect(() => {
+    // External host app provided auth — trust it, skip the getinfo probe.
+    if (cfg.hasExternalAuth) {
+      setState({
+        userInfo: cfg.externalUserInfo
+          ? {
+              id: cfg.externalUserInfo.id,
+              username: cfg.externalUserInfo.username,
+              support: cfg.externalUserInfo.support === true,
+            }
+          : null,
+        isAuthenticated: cfg.externalIsAuthenticated,
+      });
+      return;
+    }
     let cancelled = false;
     (async () => {
       try {
@@ -939,7 +1004,7 @@ function useAuthLite() {
       }
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [cfg.hasExternalAuth, cfg.externalIsAuthenticated, cfg.externalUserInfo, apiUrl, authHeader]);
   return state;
 }
 
@@ -953,6 +1018,7 @@ interface WorkflowSummary {
   [key: string]: any;
 }
 function useWorkflowsLite() {
+  const { apiUrl, authHeader } = useApi();
   const [data, setData] = useState<WorkflowSummary[]>([]);
   const fetchOnce = React.useCallback(async () => {
     try {
@@ -967,7 +1033,7 @@ function useWorkflowsLite() {
     } catch {
       /* keep current */
     }
-  }, []);
+  }, [apiUrl, authHeader]);
   useEffect(() => { fetchOnce(); }, [fetchOnce]);
   return { data, refetch: fetchOnce };
 }
@@ -1078,6 +1144,7 @@ function useUsecasesLite() {
     drifts: UsecaseDrift[];
   }>({ usecases: DEFAULT_USECASES, apiCategories: [], drifts: [] });
 
+  const { apiUrl, authHeader } = useApi();
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -1141,6 +1208,7 @@ interface IntegrationItem {
 }
 
 function IntegrationStatusLite({ filterApps, singleLine = false }: { filterApps?: string[]; singleLine?: boolean }) {
+  const { apiUrl, authHeader } = useApi();
   const [integrations, setIntegrations] = useState<IntegrationItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -1313,6 +1381,7 @@ function UsecaseDetailContent({
   usecases: Usecase[];
 }) {
   const navigate = useNavigate();
+  const { apiUrl, authHeader } = useApi();
   const flow = usecases.find((item) => item.id === flowId);
   const [categoryAppNames, setCategoryAppNames] = useState<Record<string, string[]>>({});
 
@@ -1518,7 +1587,26 @@ function UsecaseDetailContent({
   );
 }
 
-export default function UsecasesPage() {
+/**
+ * Public props. All optional — when omitted, the page works standalone.
+ *
+ * Pass these to integrate with a host SPA that already manages auth/config:
+ *   <UsecasesPage userdata={userdata} globalUrl={globalUrl} isLoaded isLoggedIn />
+ */
+export interface UsecasesPageProps {
+  /** Override the API base URL (e.g. "https://shuffler.io"). */
+  globalUrl?: string;
+  /** Logged-in user info from the host app. If provided, the internal
+   *  `/api/v1/getinfo` probe is skipped. `userdata.api_key` is used as bearer
+   *  token when present (falls back to `localStorage.shuffle_api_key`). */
+  userdata?: UsecasesUserData | null;
+  /** Mirrors host app's loading state. Currently informational. */
+  isLoaded?: boolean;
+  /** Override authentication state. Defaults to `!!userdata`. */
+  isLoggedIn?: boolean;
+}
+
+function UsecasesPageInner() {
   usePageTitle('Usecases');
 
   const [search, setSearch] = useState('');
@@ -2029,6 +2117,7 @@ function UsecaseCard({
   const [toggling, setToggling] = useState(false);
   const [optimisticEnabled, setOptimisticEnabled] = useState<boolean | null>(null);
   const effectiveEnabled = optimisticEnabled !== null ? optimisticEnabled : isEnabled;
+  const { apiUrl, authHeader } = useApi();
 
   const handleToggle = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -2193,5 +2282,51 @@ function UsecaseCard({
         </Box>
       )}
     </Card>
+  );
+}
+
+/**
+ * Default export — wraps `UsecasesPageInner` with a config provider so host
+ * apps can pass `userdata` / `globalUrl` / `isLoaded` / `isLoggedIn` props
+ * exactly like the legacy Shuffle Frontend route:
+ *
+ *   <Route exact path="/usecases" element={
+ *     <UsecasesPage userdata={userdata} globalUrl={globalUrl} isLoaded isLoggedIn />
+ *   } />
+ *
+ * When called with no props the page falls back to standalone behavior
+ * (env / hostname-derived API URL, `localStorage.shuffle_api_key` auth, and
+ * an internal `/api/v1/getinfo` probe).
+ */
+export default function UsecasesPage(props: UsecasesPageProps = {}) {
+  const { globalUrl, userdata, isLoaded = true, isLoggedIn } = props;
+
+  const config = React.useMemo<UsecasesPageConfig>(() => {
+    const baseUrl = (globalUrl && globalUrl.replace(/\/+$/, '')) || DEFAULT_API_BASE_URL;
+    const externalUserInfo = userdata ?? null;
+    const externalApiKey = userdata?.api_key || userdata?.apikey || null;
+    const hasExternalAuth = !!userdata || typeof isLoggedIn === 'boolean';
+    const externalIsAuthenticated =
+      typeof isLoggedIn === 'boolean' ? isLoggedIn : !!userdata;
+
+    return {
+      baseUrl,
+      authHeader: () => {
+        // Prefer the external user's API key if provided, else fall back to
+        // the standalone localStorage key (legacy behavior).
+        const key = externalApiKey || getStoredApiKey();
+        return key ? { Authorization: `Bearer ${key}` } : {};
+      },
+      hasExternalAuth,
+      externalUserInfo,
+      externalIsAuthenticated,
+      isLoaded,
+    };
+  }, [globalUrl, userdata, isLoaded, isLoggedIn]);
+
+  return (
+    <UsecasesPageConfigContext.Provider value={config}>
+      <UsecasesPageInner />
+    </UsecasesPageConfigContext.Provider>
   );
 }
