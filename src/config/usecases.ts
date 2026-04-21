@@ -588,6 +588,16 @@ export const DEFAULT_USECASES: Usecase[] = [
     automationArea: 'assign_escalate',
   },
   {
+    id: 'case_management_asset_management_monitors_1', phase: 'response', source: 'case_management', target: 'asset_management',
+    label: 'Add Monitors', animated: true,
+    tags: ['Response', 'Monitoring', 'Endpoint'],
+    description: 'Deploy host monitors to endpoints for real-time telemetry collection, compliance checks, and on-demand response action execution. Monitors enable direct interaction with hosts during investigations and continuous visibility into endpoint state.',
+    agenticDescription: 'An agent identifies hosts missing monitor coverage, generates the appropriate deployment command for each platform, tracks rollout status, and verifies telemetry is flowing back into the platform after install.',
+    automationLabel: 'Add Monitors',
+    automationCategory: 'cases',
+    automationArea: 'response',
+  },
+  {
     id: 'cloud_asset_management_1', phase: 'correlation', source: 'cloud', target: 'asset_management',
     label: 'Resource inventory',
     tags: ['Logs', 'Context'],
