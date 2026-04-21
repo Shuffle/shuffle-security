@@ -2148,26 +2148,42 @@ const IncidentsPage = () => {
         <CardContent sx={{ py: 1.5, px: 2, '&:last-child': { pb: 1.5 } }}>
           <Box sx={{ display: 'flex', gap: { xs: 1, sm: 1.5 }, alignItems: 'center', flexWrap: 'nowrap', overflow: 'hidden' }}>
             {/* Select all checkbox - always visible */}
-            <Tooltip title={selectedIds.size === sortedIncidents.length ? 'Deselect all' : 'Select all'}>
-              <Checkbox
-                checked={selectedIds.size === sortedIncidents.length && sortedIncidents.length > 0}
-                indeterminate={selectedIds.size > 0 && selectedIds.size < sortedIncidents.length}
-                onChange={() => {
-                  if (selectedIds.size === sortedIncidents.length) {
-                    setSelectedIds(new Set());
-                  } else {
-                    setSelectedIds(new Set(sortedIncidents.map(i => i.id)));
-                  }
-                }}
-                size="small"
-                sx={{
-                  color: 'hsl(var(--muted-foreground))',
-                  '&.Mui-checked, &.MuiCheckbox-indeterminate': {
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Tooltip title={selectedIds.size > 0 ? 'Deselect all' : 'Select all'}>
+                <Checkbox
+                  checked={selectedIds.size === sortedIncidents.length && sortedIncidents.length > 0}
+                  indeterminate={selectedIds.size > 0 && selectedIds.size < sortedIncidents.length}
+                  onChange={() => {
+                    if (selectedIds.size > 0) {
+                      setSelectedIds(new Set());
+                    } else {
+                      setSelectedIds(new Set(sortedIncidents.map(i => i.id)));
+                    }
+                  }}
+                  size="small"
+                  sx={{
+                    color: 'hsl(var(--muted-foreground))',
+                    '&.Mui-checked, &.MuiCheckbox-indeterminate': {
+                      color: 'hsl(var(--primary))',
+                    },
+                  }}
+                />
+              </Tooltip>
+              {selectedIds.size > 0 && (
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontWeight: 600,
                     color: 'hsl(var(--primary))',
-                  },
-                }}
-              />
-            </Tooltip>
+                    fontSize: '0.7rem',
+                    ml: -0.5,
+                    minWidth: 12,
+                  }}
+                >
+                  {selectedIds.size}
+                </Typography>
+              )}
+            </Box>
 
             <TextField
               size="small"
