@@ -347,6 +347,9 @@ const IntegrationsVisual = () => (
           <Box
             component={Link}
             to={`/apps?search=${encodeURIComponent(int.name)}`}
+            onClick={() => {
+              import('@/lib/analytics').then(({ trackCTA }) => trackCTA(`integration_${int.name}`, 'features_grid'));
+            }}
             sx={{
               aspectRatio: '1',
               borderRadius: 3,
@@ -376,6 +379,9 @@ const IntegrationsVisual = () => (
     <Box 
       component={Link}
       to="/apps"
+      onClick={() => {
+        import('@/lib/analytics').then(({ trackCTA }) => trackCTA('view_all_integrations', 'features_grid'));
+      }}
       sx={{ 
         mt: 3, 
         p: 2, 

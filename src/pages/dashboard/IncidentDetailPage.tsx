@@ -1990,6 +1990,10 @@ const IncidentDetailPage = () => {
     setIsSaving(true);
     
     const reasonLabel = RESOLUTION_REASONS.find(r => r.value === resolutionData.reason)?.label || resolutionData.reason;
+    // GA: track single-incident resolve
+    import('@/lib/analytics').then(({ trackPredefinedEvent, GA_EVENTS }) => {
+      trackPredefinedEvent(GA_EVENTS.INCIDENT_RESOLVE, resolutionData.reason);
+    });
     
     const resolveActivity: ActivityItem = {
       id: `status-${Date.now()}`,

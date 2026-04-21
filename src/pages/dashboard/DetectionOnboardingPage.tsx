@@ -351,6 +351,7 @@ const DetectionOnboardingPage = () => {
     const name = createDialogName.trim();
     if (!name) return;
     setCreatingEnv(true);
+    trackPredefinedEvent(GA_EVENTS.DETECTION_ENV_CREATE, name);
     try {
       const allEnvs = [
         ...environments,
@@ -510,6 +511,7 @@ const DetectionOnboardingPage = () => {
   // Load default Sigma rules from GitHub repo
   const loadDefaultRules = async () => {
     setLoadingDefaultRules(true);
+    trackPredefinedEvent(GA_EVENTS.DETECTION_RULES_LOAD);
     
     try {
       const response = await fetch(getApiUrl('/api/v1/files/download_remote'), {
@@ -748,6 +750,7 @@ const DetectionOnboardingPage = () => {
 
   // Deploy a pipeline via POST /api/v1/triggers/pipeline
   const deployPipeline = async (type: 'syslogTcp' | 'syslogUdp' | 'sigmaForwarder', webhookId?: string) => {
+    trackPredefinedEvent(GA_EVENTS.DETECTION_DEPLOY_CLICK, type);
     setDeployingPipeline(prev => ({ 
       ...prev, 
       [type]: true, 
@@ -895,6 +898,7 @@ const DetectionOnboardingPage = () => {
 
   // Deploy webhook workflow via POST /api/v2/workflows/generate
   const deployWebhookWorkflow = async () => {
+    trackPredefinedEvent(GA_EVENTS.DETECTION_DEPLOY_CLICK, 'webhook');
     setDeployingPipeline(prev => ({ ...prev, webhook: true }));
     
     try {
@@ -999,6 +1003,7 @@ const DetectionOnboardingPage = () => {
 
   // Test detection rules
   const testRules = async (type: 'manual' | 'realworld') => {
+    trackPredefinedEvent(GA_EVENTS.DETECTION_TEST_RUN, type);
     if (type === 'realworld') {
       setTestStatus({
         loading: false,

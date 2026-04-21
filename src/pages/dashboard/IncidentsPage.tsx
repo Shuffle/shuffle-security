@@ -1329,6 +1329,7 @@ const IncidentsPage = () => {
     const key = ocsf.finding_uid;
     await addItem(key, ocsf);
     await fetchItems();
+    trackPredefinedEvent(GA_EVENTS.INCIDENT_CREATE);
   };
 
   const resetToDefaults = () => {
@@ -1391,6 +1392,7 @@ const IncidentsPage = () => {
     if (selectedIds.size === 0) return;
     
     setIsBulkResolving(true);
+    trackPredefinedEvent(GA_EVENTS.INCIDENT_BULK_RESOLVE, resolutionData.reason, selectedIds.size);
     
     const reasonLabel = RESOLUTION_REASONS.find(r => r.value === resolutionData.reason)?.label || resolutionData.reason;
     
