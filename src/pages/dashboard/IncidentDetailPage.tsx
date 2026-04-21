@@ -443,11 +443,13 @@ const Section = forwardRef<HTMLDivElement, {
           <Chip 
             label={badge} 
             size="small" 
+            variant="outlined"
             sx={{ 
               height: 20, 
               fontSize: '0.7rem',
-              bgcolor: '#ff6600',
-              color: '#ffffff',
+              bgcolor: 'transparent',
+              color: '#ff6600',
+              borderColor: 'rgba(255, 102, 0, 0.4)',
             }} 
           />
         )}
@@ -2497,9 +2499,10 @@ const IncidentDetailPage = () => {
                     return (
                       <Chip
                         size="small"
+                        variant="outlined"
                         avatar={viewingOrg.image ? <img src={viewingOrg.image} alt="" style={{ width: 16, height: 16, borderRadius: 3 }} /> : undefined}
                         label={viewingOrg.name}
-                        sx={{ height: 22, fontSize: '0.72rem', bgcolor: 'rgba(139, 92, 246, 0.2)', color: '#a78bfa', fontWeight: 600 }}
+                        sx={{ height: 22, fontSize: '0.72rem', bgcolor: 'transparent', borderColor: 'rgba(167, 139, 250, 0.4)', color: '#a78bfa', fontWeight: 600 }}
                       />
                     );
                   })()}
@@ -2507,9 +2510,10 @@ const IncidentDetailPage = () => {
                     <Chip
                       key={org.id}
                       size="small"
+                      variant="outlined"
                       avatar={org.image ? <img src={org.image} alt="" style={{ width: 16, height: 16, borderRadius: 3 }} /> : undefined}
                       label={org.name}
-                      sx={{ height: 22, fontSize: '0.72rem', bgcolor: 'rgba(255,255,255,0.06)', color: 'text.secondary' }}
+                      sx={{ height: 22, fontSize: '0.72rem', bgcolor: 'transparent', borderColor: 'rgba(255,255,255,0.12)', color: 'text.secondary' }}
                     />
                   ))}
                 </Box>
@@ -3301,14 +3305,16 @@ const IncidentDetailPage = () => {
                         key={view}
                         label={view === 'readable' ? 'Clean' : view.charAt(0).toUpperCase() + view.slice(1)}
                         size="small"
+                        variant="outlined"
                         onClick={() => setDescriptionView(view)}
                         sx={{
                           height: 20,
                           fontSize: '0.65rem',
                           cursor: 'pointer',
-                          bgcolor: descriptionView === view ? '#ff6600' : 'rgba(255,255,255,0.05)',
-                          color: descriptionView === view ? '#ffffff' : 'text.secondary',
-                          '&:hover': { bgcolor: descriptionView === view ? '#ff6600' : 'rgba(255,255,255,0.1)' },
+                          bgcolor: 'transparent',
+                          borderColor: descriptionView === view ? 'rgba(255, 102, 0, 0.5)' : 'rgba(255,255,255,0.12)',
+                          color: descriptionView === view ? '#ff6600' : 'text.secondary',
+                          '&:hover': { bgcolor: 'rgba(255,255,255,0.05)' },
                         }}
                       />
                     ))}
@@ -3470,7 +3476,7 @@ const IncidentDetailPage = () => {
                 Stakeholders
               </Typography>
               {editedStakeholders.length > 0 && (
-                <Chip label={editedStakeholders.length} size="small" sx={{ height: 20, fontSize: '0.7rem', bgcolor: '#ff6600', color: '#ffffff' }} />
+                <Chip label={editedStakeholders.length} size="small" variant="outlined" sx={{ height: 20, fontSize: '0.7rem', bgcolor: 'transparent', borderColor: 'rgba(255, 102, 0, 0.4)', color: '#ff6600' }} />
               )}
             </Box>
 
@@ -3612,9 +3618,10 @@ const IncidentDetailPage = () => {
                     <Box sx={{ flex: 1, minWidth: 0 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.2 }}>{s.name}</Typography>
-                        <Chip label={s.type === 'technical' ? 'Tech' : 'Business'} size="small" sx={{ 
+                        <Chip label={s.type === 'technical' ? 'Tech' : 'Business'} size="small" variant="outlined" sx={{ 
                           height: 18, fontSize: '0.6rem', 
-                          bgcolor: s.type === 'technical' ? 'hsl(var(--severity-info) / 0.15)' : 'hsl(var(--severity-medium) / 0.15)',
+                          bgcolor: 'transparent',
+                          borderColor: s.type === 'technical' ? 'hsl(var(--severity-info) / 0.4)' : 'hsl(var(--severity-medium) / 0.4)',
                           color: s.type === 'technical' ? 'hsl(var(--severity-info))' : 'hsl(var(--severity-medium))',
                         }} />
                       </Box>
@@ -3755,6 +3762,7 @@ const IncidentDetailPage = () => {
                     key={idx}
                     label={label}
                     size="small"
+                    variant="outlined"
                     onDelete={() => {
                       autoProgressStatus();
                       setEditedLabels(editedLabels.filter((_, i) => i !== idx));
@@ -3763,7 +3771,8 @@ const IncidentDetailPage = () => {
                       height: 22,
                       fontSize: '0.7rem',
                       fontWeight: 500,
-                      bgcolor: 'rgba(6, 182, 212, 0.12)',
+                      bgcolor: 'transparent',
+                      borderColor: 'rgba(6, 182, 212, 0.4)',
                       color: '#06b6d4',
                       '& .MuiChip-deleteIcon': { fontSize: 14, color: '#06b6d4', '&:hover': { color: '#67e8f9' } },
                     }}
@@ -4224,11 +4233,13 @@ const IncidentDetailPage = () => {
                         <Chip
                           label={obs.type}
                           size="small"
+                          variant="outlined"
                           sx={{
                             fontWeight: 600,
                             fontSize: '0.7rem',
                             textTransform: 'uppercase',
-                            bgcolor: mismatch ? 'rgba(251, 146, 60, 0.15)' : 'hsl(var(--primary) / 0.15)',
+                            bgcolor: 'transparent',
+                            borderColor: mismatch ? 'rgba(251, 146, 60, 0.4)' : 'hsl(var(--primary) / 0.4)',
                             color: mismatch ? '#fb923c' : 'hsl(var(--primary))',
                           }}
                         />
@@ -4250,15 +4261,17 @@ const IncidentDetailPage = () => {
                             <Chip
                               label={`${corr.data.length} corr`}
                               size="small"
+                              variant="outlined"
                               onClick={(e) => { e.stopPropagation(); setObsCorrelationAnchor({ el: e.currentTarget, obsKey }); }}
                               sx={{
                                 height: 20,
                                 fontSize: '0.6rem',
                                 fontWeight: 600,
                                 cursor: 'pointer',
-                                bgcolor: 'rgba(59, 130, 246, 0.12)',
+                                bgcolor: 'transparent',
+                                borderColor: 'rgba(59, 130, 246, 0.4)',
                                 color: '#3b82f6',
-                                '&:hover': { bgcolor: 'rgba(59, 130, 246, 0.25)' },
+                                '&:hover': { bgcolor: 'rgba(59, 130, 246, 0.08)' },
                               }}
                             />
                           );
@@ -4434,18 +4447,20 @@ const IncidentDetailPage = () => {
                                                 key={ri}
                                                 label={refId.slice(0, 12) + (refId.length > 12 ? '…' : '')}
                                                 size="small"
+                                                variant="outlined"
                                                 component={Link}
                                                 to={`/incidents/${refId}`}
                                                 clickable
                                                 onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                                                sx={{ height: 20, fontSize: '0.6rem', bgcolor: 'rgba(59,130,246,0.12)', color: '#3b82f6' }}
+                                                sx={{ height: 20, fontSize: '0.6rem', bgcolor: 'transparent', borderColor: 'rgba(59,130,246,0.4)', color: '#3b82f6' }}
                                               />
                                             ) : (
                                               <Chip
                                                 key={ri}
                                                 label={ref.length > 30 ? ref.slice(0, 30) + '…' : ref}
                                                 size="small"
-                                                sx={{ height: 20, fontSize: '0.6rem', bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }}
+                                                variant="outlined"
+                                                sx={{ height: 20, fontSize: '0.6rem', bgcolor: 'transparent', borderColor: 'hsl(var(--border))', color: 'hsl(var(--muted-foreground))' }}
                                               />
                                             );
                                           })}
@@ -4484,6 +4499,7 @@ const IncidentDetailPage = () => {
                                   key={st.name}
                                   label={`Change to ${st.name}`}
                                   size="small"
+                                  variant="outlined"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     const updated = [...editedObservables];
@@ -4495,9 +4511,10 @@ const IncidentDetailPage = () => {
                                     fontSize: '0.6rem',
                                     fontWeight: 600,
                                     cursor: 'pointer',
-                                    bgcolor: 'rgba(34, 197, 94, 0.12)',
+                                    bgcolor: 'transparent',
+                                    borderColor: 'rgba(34, 197, 94, 0.4)',
                                     color: '#22c55e',
-                                    '&:hover': { bgcolor: 'rgba(34, 197, 94, 0.25)' },
+                                    '&:hover': { bgcolor: 'rgba(34, 197, 94, 0.08)' },
                                   }}
                                 />
                               ))}
@@ -4550,17 +4567,19 @@ const IncidentDetailPage = () => {
                                   key={ri}
                                   label={refId.slice(0, 12) + (refId.length > 12 ? '…' : '')}
                                   size="small"
+                                  variant="outlined"
                                   component={Link}
                                   to={`/incidents/${refId}`}
                                   clickable
-                                  sx={{ height: 20, fontSize: '0.6rem', bgcolor: 'rgba(59,130,246,0.12)', color: '#3b82f6' }}
+                                  sx={{ height: 20, fontSize: '0.6rem', bgcolor: 'transparent', borderColor: 'rgba(59,130,246,0.4)', color: '#3b82f6' }}
                                 />
                               ) : (
                                 <Chip
                                   key={ri}
                                   label={ref.length > 30 ? ref.slice(0, 30) + '…' : ref}
                                   size="small"
-                                  sx={{ height: 20, fontSize: '0.6rem', bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }}
+                                  variant="outlined"
+                                  sx={{ height: 20, fontSize: '0.6rem', bgcolor: 'transparent', borderColor: 'hsl(var(--border))', color: 'hsl(var(--muted-foreground))' }}
                                 />
                               );
                             })}
@@ -4667,11 +4686,13 @@ const IncidentDetailPage = () => {
                         <Chip 
                           label={corr.key}
                           size="small"
+                          variant="outlined"
                           sx={{
                             fontFamily: 'monospace',
                             fontSize: '0.75rem',
-                            bgcolor: isHighMatch ? '#ff6600' : isMediumMatch ? 'rgba(234, 179, 8, 0.15)' : 'rgba(148, 163, 184, 0.1)',
-                            color: isHighMatch ? '#ffffff' : isMediumMatch ? '#eab308' : 'text.secondary',
+                            bgcolor: 'transparent',
+                            borderColor: isHighMatch ? 'rgba(255, 102, 0, 0.5)' : isMediumMatch ? 'rgba(234, 179, 8, 0.4)' : 'rgba(148, 163, 184, 0.3)',
+                            color: isHighMatch ? '#ff6600' : isMediumMatch ? '#eab308' : 'text.secondary',
                             fontWeight: 600,
                           }}
                         />
@@ -4707,6 +4728,7 @@ const IncidentDetailPage = () => {
                                     key={key}
                                     label={key}
                                     size="small"
+                                    variant="outlined"
                                     component={isIncidentCategory ? Link : 'div'}
                                     to={isIncidentCategory ? `/incidents/${key}` : undefined}
                                     clickable={isIncidentCategory}
@@ -4714,10 +4736,11 @@ const IncidentDetailPage = () => {
                                       height: 22,
                                       fontSize: '0.7rem',
                                       fontFamily: 'monospace',
-                                      bgcolor: isIncidentCategory ? '#ff6600' : 'rgba(255,255,255,0.05)',
-                                      color: isIncidentCategory ? '#ffffff' : 'text.secondary',
+                                      bgcolor: 'transparent',
+                                      borderColor: isIncidentCategory ? 'rgba(255, 102, 0, 0.5)' : 'rgba(255,255,255,0.12)',
+                                      color: isIncidentCategory ? '#ff6600' : 'text.secondary',
                                       cursor: isIncidentCategory ? 'pointer' : 'default',
-                                      '&:hover': isIncidentCategory ? { bgcolor: '#e55c00' } : {},
+                                      '&:hover': isIncidentCategory ? { bgcolor: 'rgba(255, 102, 0, 0.08)' } : {},
                                     }}
                                   />
                                 ))}
@@ -4726,10 +4749,12 @@ const IncidentDetailPage = () => {
                                     <Chip
                                       label={`+${keys.length - 5}`}
                                       size="small"
+                                      variant="outlined"
                                       sx={{
                                         height: 22,
                                         fontSize: '0.7rem',
-                                        bgcolor: 'rgba(148, 163, 184, 0.1)',
+                                        bgcolor: 'transparent',
+                                        borderColor: 'rgba(148, 163, 184, 0.3)',
                                         color: 'text.disabled',
                                       }}
                                     />
@@ -5053,15 +5078,15 @@ const IncidentDetailPage = () => {
                   key={key}
                   label={count !== undefined ? `${label} (${count})` : label}
                   size="small"
-                  variant={activityFilter === key ? 'filled' : 'outlined'}
+                  variant="outlined"
                   onClick={() => setActivityFilter(key)}
                   sx={{
                     height: 24,
                     fontSize: '0.7rem',
-                    borderColor: activityFilter === key ? '#ff6600' : 'rgba(255,255,255,0.12)',
-                    bgcolor: activityFilter === key ? '#ff6600' : 'transparent',
-                    color: activityFilter === key ? '#ffffff' : 'text.secondary',
-                    '&:hover': { bgcolor: activityFilter === key ? '#ff6600' : 'rgba(255,255,255,0.05)' },
+                    bgcolor: 'transparent',
+                    borderColor: activityFilter === key ? 'rgba(255, 102, 0, 0.5)' : 'rgba(255,255,255,0.12)',
+                    color: activityFilter === key ? '#ff6600' : 'text.secondary',
+                    '&:hover': { bgcolor: 'rgba(255, 102, 0, 0.06)' },
                   }}
                 />
               ))}
@@ -5260,13 +5285,13 @@ const IncidentDetailPage = () => {
                               Revision #{revisions.length - item.idx}
                             </Typography>
                             {isLatest && (
-                              <Chip label="Latest" size="small" sx={{ height: 16, fontSize: '0.58rem', bgcolor: '#ff6600', color: '#ffffff', fontWeight: 600 }} />
+                              <Chip label="Latest" size="small" variant="outlined" sx={{ height: 16, fontSize: '0.58rem', bgcolor: 'transparent', borderColor: 'rgba(255, 102, 0, 0.4)', color: '#ff6600', fontWeight: 600 }} />
                             )}
                             {isFirst && !isLatest && (
-                              <Chip label="Initial" size="small" sx={{ height: 16, fontSize: '0.58rem', bgcolor: 'rgba(255,255,255,0.06)', color: 'text.secondary', fontWeight: 600 }} />
+                              <Chip label="Initial" size="small" variant="outlined" sx={{ height: 16, fontSize: '0.58rem', bgcolor: 'transparent', borderColor: 'rgba(255,255,255,0.12)', color: 'text.secondary', fontWeight: 600 }} />
                             )}
                             {totalChanges > 0 && (
-                              <Chip label={`${totalChanges} change${totalChanges !== 1 ? 's' : ''}`} size="small" sx={{ height: 16, fontSize: '0.58rem', bgcolor: '#ff6600', color: '#ffffff' }} />
+                              <Chip label={`${totalChanges} change${totalChanges !== 1 ? 's' : ''}`} size="small" variant="outlined" sx={{ height: 16, fontSize: '0.58rem', bgcolor: 'transparent', borderColor: 'rgba(255, 102, 0, 0.4)', color: '#ff6600' }} />
                             )}
                           </Box>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
@@ -5411,7 +5436,8 @@ const IncidentDetailPage = () => {
                               key={ai}
                               label={att.filename}
                               size="small"
-                              sx={{ height: 20, fontSize: '0.65rem', bgcolor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}
+                              variant="outlined"
+                              sx={{ height: 20, fontSize: '0.65rem', bgcolor: 'transparent', borderColor: 'rgba(59, 130, 246, 0.4)', color: '#3b82f6' }}
                             />
                           ))}
                         </Box>

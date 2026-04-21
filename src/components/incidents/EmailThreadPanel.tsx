@@ -245,11 +245,13 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
           <Chip
             label={`${messages.length} message${messages.length !== 1 ? 's' : ''}`}
             size="small"
+            variant="outlined"
             sx={{
               height: 18,
               fontSize: '0.65rem',
-              bgcolor: '#ff6600',
-              color: '#ffffff',
+              bgcolor: 'transparent',
+              borderColor: 'rgba(255, 102, 0, 0.4)',
+              color: '#ff6600',
             }}
           />
         </Box>
