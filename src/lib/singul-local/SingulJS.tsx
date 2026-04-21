@@ -292,6 +292,15 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
     return internalSelectedApps.some((a) => a.objectID === app.objectID);
   }, [internalSelectedApps]);
 
+  // Merge pinned apps at the top of the results, deduped by normalized name
+  const displayResults = useMemo(() => {
+    if (!pinnedApps || pinnedApps.length === 0) return results;
+    const norm = (n: string) => (n || '').toLowerCase().replace(/[\s_\-]+/g, '');
+    const pinnedNames = new Set(pinnedApps.map(a => norm(a.name)));
+    const filtered = results.filter(a => !pinnedNames.has(norm(a.name)));
+    return [...pinnedApps, ...filtered];
+  }, [pinnedApps, results]);
+
   // Get grid columns style
   const getGridColumnsStyle = useMemo(() => {
     if (layout !== 'grid') return {};
