@@ -548,7 +548,16 @@ export const DemoTourDrawer = () => {
                   Previous
                 </Button>
                 <Tooltip
-                  title={locked && requirement ? `Complete: ${requirement.label}` : ''}
+                  title={
+                    locked
+                      ? (() => {
+                          const pending = current?.subGoals?.find(g => !completedSteps[g.id]);
+                          if (pending) return `Complete: ${pending.label}`;
+                          if (requirement) return `Complete: ${requirement.label}`;
+                          return '';
+                        })()
+                      : ''
+                  }
                   arrow
                   disableHoverListener={!locked}
                 >
