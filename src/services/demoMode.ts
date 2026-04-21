@@ -86,11 +86,10 @@ export const STEP_SEEDERS: Record<string, () => Promise<number>> = {
     for (let i = 0; i < batches.length; i++) {
       const batch = batches[i];
       const res = await setDatastoreItems(batch, DATASTORE_CATEGORIES.INCIDENTS);
-      if (res.success) {
-        recordSeed(DATASTORE_CATEGORIES.INCIDENTS, batch.map(b => b.key));
-        broadcastRefresh(DATASTORE_CATEGORIES.INCIDENTS);
-        total += batch.length;
-      }
+      if (!res.success) throw new Error(res.error || 'Failed to seed demo incidents');
+      recordSeed(DATASTORE_CATEGORIES.INCIDENTS, batch.map(b => b.key));
+      broadcastRefresh(DATASTORE_CATEGORIES.INCIDENTS);
+      total += batch.length;
       if (i < batches.length - 1) await sleep(1400);
     }
     return total;
@@ -103,7 +102,7 @@ export const STEP_SEEDERS: Record<string, () => Promise<number>> = {
   assets: async () => {
     const items = buildDemoAssets();
     const res = await setDatastoreItems(items, DATASTORE_CATEGORIES.ASSETS);
-    if (!res.success) return 0;
+    if (!res.success) throw new Error(res.error || 'Failed to seed demo assets');
     recordSeed(DATASTORE_CATEGORIES.ASSETS, items.map(i => i.key));
     broadcastRefresh(DATASTORE_CATEGORIES.ASSETS);
     return items.length;
@@ -114,7 +113,7 @@ export const STEP_SEEDERS: Record<string, () => Promise<number>> = {
   vulnerabilities: async () => {
     const items = buildDemoVulnerabilities();
     const res = await setDatastoreItems(items, VULNS_CATEGORY);
-    if (!res.success) return 0;
+    if (!res.success) throw new Error(res.error || 'Failed to seed demo vulnerabilities');
     recordSeed(VULNS_CATEGORY, items.map(i => i.key));
     broadcastRefresh(VULNS_CATEGORY);
     return items.length;
@@ -124,7 +123,7 @@ export const STEP_SEEDERS: Record<string, () => Promise<number>> = {
   agent: async () => {
     const items = buildDemoUsers();
     const res = await setDatastoreItems(items, DATASTORE_CATEGORIES.USERS);
-    if (!res.success) return 0;
+    if (!res.success) throw new Error(res.error || 'Failed to seed demo users');
     recordSeed(DATASTORE_CATEGORIES.USERS, items.map(i => i.key));
     broadcastRefresh(DATASTORE_CATEGORIES.USERS);
     return items.length;

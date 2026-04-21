@@ -164,13 +164,24 @@ export const setDatastoreItems = async (
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
+      'Org-Id': orgId,
       ...getAuthHeader(),
     },
     body: JSON.stringify(payload),
   });
 
-  if (!response.ok) {
-    return { success: false, error: `Failed to set datastore items: ${response.statusText}` };
+   if (!response.ok) {
+    const fallbackResults = await Promise.all(items.map(item =>
+      setDatastoreItem(item.key, item.value, category)
+    ));
+    const failedWrites = fallbackResults.filter(result => !result.success);
+    if (failedWrites.length > 0) {
+      return {
+        success: false,
+        error: failedWrites[0]?.error || `Failed to set datastore items: ${response.statusText}`,
+      };
+    }
+    return { success: true };
   }
 
   return { success: true };
