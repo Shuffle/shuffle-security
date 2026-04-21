@@ -641,7 +641,7 @@ function UsecaseCard({
         },
       }}
     >
-      <CardActionArea onClick={onClick} sx={{ px: 2, py: 1.5, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+      <CardActionArea onClick={onClick} sx={{ px: 2, py: '14.5px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
         {/* Label + sync icon */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, width: '100%' }}>
           <Typography variant="body2" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))', flexGrow: 1, fontSize: '0.82rem' }}>
