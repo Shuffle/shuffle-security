@@ -2114,16 +2114,17 @@ function UsecasesPageInner() {
     return set;
   }, [workflows, usecases]);
 
-  // Set of usecase names the user has shown interest in (from /getinfo `.interests`).
-  // Names are URL-encoded in the API; we decode them so we can compare against `flow.label`.
+  // Set of usecase names the user has shown interest in. Sourced from both
+  // /getinfo `.interests` (server-side, multi-device) and localStorage
+  // (so guest clicks survive the login transition).
   const interestNames = useMemo(() => {
-    const set = new Set<string>();
+    const set = new Set<string>(localInterests);
     for (const i of userInfo?.interests || []) {
       if (i?.type !== 'usecase' || !i?.active || !i?.name) continue;
       try { set.add(decodeURIComponent(i.name)); } catch { set.add(i.name); }
     }
     return set;
-  }, [userInfo?.interests]);
+  }, [userInfo?.interests, localInterests]);
 
   // Export the current usecase registry (with live `running` state) as JSON.
   const handleExportJson = () => {
