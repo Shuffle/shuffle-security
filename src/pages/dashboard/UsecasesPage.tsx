@@ -845,7 +845,7 @@ export function getUsecasesJson(
 }
 
 // ============================================================================
-// Inlined: API config (was @/config/api)
+// Inlined: API config
 // ============================================================================
 const API_BASE_URL: string =
   (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_SHUFFLE_API_URL) ||
@@ -876,7 +876,7 @@ const toast = {
 };
 
 // ============================================================================
-// Inlined: usePageMeta (was @/hooks/usePageMeta) — title-only
+// Inlined: page title helper
 // ============================================================================
 function usePageTitle(title: string) {
   useEffect(() => {
@@ -887,7 +887,7 @@ function usePageTitle(title: string) {
 }
 
 // ============================================================================
-// Inlined: useAuth (was @/context/AuthContext)
+// Inlined: auth state query
 // ============================================================================
 interface UserInfoLite {
   id?: string;
@@ -924,7 +924,7 @@ function useAuthLite() {
 }
 
 // ============================================================================
-// Inlined: useWorkflows (was @/hooks/useWorkflows)
+// Inlined: workflows query
 // ============================================================================
 interface WorkflowSummary {
   id: string;
@@ -950,7 +950,7 @@ function useWorkflowsLite() {
 }
 
 // ============================================================================
-// Inlined: useUsecases (was @/hooks/useUsecases)
+// Inlined: usecases query
 // ============================================================================
 type DriftType = 'api_only' | 'local_only' | 'phase_mismatch' | 'description_added';
 export interface UsecaseDrift {
