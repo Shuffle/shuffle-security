@@ -1520,10 +1520,13 @@ function IntegrationStatusLite({ filterApps, singleLine = false }: { filterApps?
         sx={{
           display: 'flex',
           flexWrap: 'nowrap',
+          alignItems: 'center',
           gap: 1,
           px: 0.5,
-          py: 0.5,
-          overflow: 'hidden',
+          // extra vertical padding so the status dot (bottom: -2) isn't clipped
+          py: '6px',
+          overflowX: 'hidden',
+          overflowY: 'visible',
           minWidth: 0,
           maskImage: 'linear-gradient(to right, black calc(100% - 32px), transparent)',
           WebkitMaskImage: 'linear-gradient(to right, black calc(100% - 32px), transparent)',
