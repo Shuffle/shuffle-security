@@ -258,6 +258,16 @@ const HostTerminalPage = () => {
 
   const executeHostAction = useCallback(async (actionId: string, actionName: string, isPredefined = false, skipConfirm = false) => {
     if (!hostUuid) return;
+    // Hard guard: backend rejects empty sensor_group / hosts with a confusing
+    // "'sensor_group' can't be empty" error. Surface a clear message instead.
+    if (!groupName || !hostname || hostname === 'Unknown Host' || hostname === hostUuid) {
+      toast.error('Host context not ready', {
+        description: !groupName
+          ? 'Sensor group not loaded yet — wait for the host list to finish loading, or open this terminal from the Monitors page.'
+          : 'Hostname could not be resolved. Open this terminal from the Monitors page.',
+      });
+      return;
+    }
     // Confirm gate for the irreversible disable_rce script
     const normalized = (isPredefined ? `script:${actionId}` : actionId).trim().toLowerCase();
     if (!skipConfirm && normalized === 'script:disable_rce') {

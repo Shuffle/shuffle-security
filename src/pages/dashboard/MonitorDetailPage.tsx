@@ -110,6 +110,27 @@ const MonitorDetailPage = () => {
           return;
         }
         envHost = { hostname: decodedId, ...(fallback as Record<string, unknown>) } as unknown as SensorHost;
+
+        // Even though there's no env stub for this host, scan envs for any
+        // group that *mentions* this hostname/uuid so terminal actions get a
+        // valid sensor_group. Without this, /api/v1/apps/sensors/run rejects
+        // requests with "'sensor_group' can't be empty".
+        const fallbackHostname = String((fallback as Record<string, unknown>).hostname || decodedId).toLowerCase().trim();
+        const fallbackUuid = String((fallback as Record<string, unknown>).uuid || '');
+        outer: for (const env of envs) {
+          const hosts: SensorHost[] = Array.isArray(env.sensor_hosts) ? env.sensor_hosts : [];
+          for (const h of hosts) {
+            const hn = (h.hostname || '').toLowerCase().trim();
+            if ((fallbackUuid && h.uuid === fallbackUuid) || hn === fallbackHostname || stripDomain(hn) === stripDomain(fallbackHostname)) {
+              envGroupName = env.Name || '';
+              break outer;
+            }
+          }
+        }
+        // Last resort: if there's exactly one sensor group, assume this host belongs to it.
+        if (!envGroupName && envs.length === 1) {
+          envGroupName = envs[0].Name || '';
+        }
       }
 
       const merged = mergeHost(envHost as unknown as Record<string, unknown>, supplements.sensorsByHost, supplements.assetsByHost) as unknown as SensorHost;
