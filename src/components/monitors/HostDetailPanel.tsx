@@ -413,18 +413,20 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
                               <TooltipProvider delayDuration={200}>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="h-6 px-2 gap-1 text-[0.65rem] shrink-0"
-                                      onClick={(e) => { e.stopPropagation(); runCbomScan(proj.path); }}
-                                    >
-                                      <ScanLine size={11} />
-                                      CBOM Scan
-                                    </Button>
+                                    <span tabIndex={0} className="shrink-0">
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        disabled
+                                        className="h-6 px-2 gap-1 text-[0.65rem] shrink-0 pointer-events-none"
+                                      >
+                                        <ScanLine size={11} />
+                                        BOM Scan
+                                      </Button>
+                                    </span>
                                   </TooltipTrigger>
                                   <TooltipContent side="left" className="max-w-xs">
-                                    <p className="text-[0.65rem]">Runs <code className="font-mono">script:cbom {proj.path}</code> on this host and opens the terminal with live output.</p>
+                                    <p className="text-[0.65rem]">Generates a CycloneDX Bill of Materials (BOM) for this project — a standardized inventory of all packages, versions, and dependencies used to track supply-chain risk. Coming soon.</p>
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
