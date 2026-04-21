@@ -5,8 +5,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Button } from '@/components/ui/button';
 import {
   HardDrive, Lock, Package, Zap, ChevronRight, ChevronDown,
-  Hash, Cpu, Send, ShieldCheck, ShieldX, FileCode, ScanLine,
+  Hash, Cpu, Send, ShieldCheck, ShieldX, FileCode, ScanLine, AlertTriangle,
 } from 'lucide-react';
+import type { Vulnerability, VulnSeverity } from '@/hooks/useVulnerabilities';
 
 /**
  * Click handler that mimics <a> behavior:
