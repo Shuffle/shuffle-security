@@ -395,7 +395,12 @@ export const DemoTourDrawer = () => {
                           ? [{
                               id: current.id,
                               label: requirement.label,
-                              done: !!completedSteps[current.id],
+                              // Special-case the incidents-list gate: it is
+                              // satisfied by the presence of a demo incident
+                              // in the datastore, not by completedSteps.
+                              done: isIncidentsListStep
+                                ? hasDemoIncidents
+                                : !!completedSteps[current.id],
                             }]
                           : [];
                       const allDone = goals.every(g => g.done);
