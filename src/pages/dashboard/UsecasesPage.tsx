@@ -2052,17 +2052,25 @@ function UsecasesPageInner() {
     }
   });
 
-  // Drawer is driven by the route segment /usecases/:flowId where the segment
-  // is the URL-encoded usecase label (human-readable name). We resolve it back
-  // to a flow id by matching against `flow.label`.
+  // Drawer state — local source of truth so it works regardless of how the
+  // host app wires routes. We still sync to/from /usecases/:flowId so refreshes
+  // and deep-links open the drawer.
   const drawerLabel = routeParams.flowId ? decodeURIComponent(routeParams.flowId) : null;
-  const drawerFlowId = useMemo(() => {
-    if (!drawerLabel) return null;
+  const [drawerFlowId, setDrawerFlowIdState] = useState<string | null>(null);
+
+  // Resolve a label from the URL to a flow id once usecases load (and whenever
+  // the URL segment changes).
+  useEffect(() => {
+    if (!drawerLabel) {
+      setDrawerFlowIdState(null);
+      return;
+    }
     const match = usecases.find(u => u.label === drawerLabel);
-    return match ? match.id : null;
+    if (match) setDrawerFlowIdState(match.id);
   }, [drawerLabel, usecases]);
 
   const setDrawerFlowId = (id: string | null) => {
+    setDrawerFlowIdState(id);
     if (!id) {
       navigate({ pathname: '/usecases', search: searchParams.toString() ? `?${searchParams.toString()}` : '' });
       return;
