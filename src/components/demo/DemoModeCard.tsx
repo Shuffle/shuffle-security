@@ -15,27 +15,25 @@ import { useWorkflows } from '@/hooks/useWorkflows';
 import { findIngestTicketsWorkflow, isWorkflowScheduleStopped } from '@/lib/ingestionDetection';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 
-/** Returns true if any sensor_group environment has at least one host configured. */
-const useHasMonitors = () => {
-  return useQuery<boolean>({
-    queryKey: ['demo-card', 'has-monitors'],
+/** Returns the total number of host monitors across all sensor_group environments. */
+const useMonitorCount = () => {
+  return useQuery<number>({
+    queryKey: ['demo-card', 'monitor-count'],
     queryFn: async () => {
       try {
         const res = await fetch(getApiUrl('/api/v1/getenvironments'), {
           credentials: 'include',
           headers: { ...getAuthHeader() },
         });
-        if (!res.ok) return false;
+        if (!res.ok) return 0;
         const data = await res.json();
         const envs = Array.isArray(data) ? data : [];
-        return envs.some((e: any) =>
-          !e?.archived &&
-          e?.sensor_group === true &&
-          Array.isArray(e?.sensor_hosts) &&
-          e.sensor_hosts.length > 0
-        );
+        return envs.reduce((sum: number, e: any) => {
+          if (e?.archived || e?.sensor_group !== true) return sum;
+          return sum + (Array.isArray(e?.sensor_hosts) ? e.sensor_hosts.length : 0);
+        }, 0);
       } catch {
-        return false;
+        return 0;
       }
     },
     staleTime: 5 * 60 * 1000,
@@ -43,21 +41,53 @@ const useHasMonitors = () => {
   });
 };
 
+/** Returns the total number of incidents in the org's datastore. */
+const useIncidentCount = () => {
+  return useQuery<number>({
+    queryKey: ['demo-card', 'incident-count'],
+    queryFn: async () => {
+      try {
+        const res = await fetch(
+          getApiUrl('/api/v1/datastore/list_cache?category=shuffle-security_incidents&top=50'),
+          { credentials: 'include', headers: { ...getAuthHeader() } },
+        );
+        if (!res.ok) return 0;
+        const data = await res.json();
+        if (typeof data?.total === 'number') return data.total;
+        if (Array.isArray(data?.keys)) return data.keys.length;
+        if (Array.isArray(data)) return data.length;
+        return 0;
+      } catch {
+        return 0;
+      }
+    },
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+};
+
+const INCIDENT_THRESHOLD = 10;
+const MONITOR_THRESHOLD = 1;
+
 export const DemoModeCard = () => {
   const { active, isSeeding, isCleaning, stats, startDemo, openTour, cleanup } = useDemo();
   const { data: workflows } = useWorkflows();
-  const { data: hasMonitors } = useHasMonitors();
+  const { data: monitorCount = 0 } = useMonitorCount();
+  const { data: incidentCount = 0 } = useIncidentCount();
 
-  // Detect existing setup so we don't pollute real environments with sample data.
+  // Allow demo mode when the account is still light on real data:
+  // ≤ 10 incidents AND ≤ 1 host monitor. Ingest workflow is informational only.
   const ingestWorkflow = workflows ? findIngestTicketsWorkflow(workflows) : null;
   const hasIngest = !!ingestWorkflow && !isWorkflowScheduleStopped(ingestWorkflow);
-  const setupExists = hasIngest || !!hasMonitors;
+  const tooManyIncidents = incidentCount >= INCIDENT_THRESHOLD;
+  const tooManyMonitors = monitorCount > MONITOR_THRESHOLD;
+  const setupExists = tooManyIncidents || tooManyMonitors;
   const disableStart = !active && setupExists;
-  const disableReason = hasIngest && hasMonitors
-    ? 'Ingest and Monitors are already set up — demo mode is for empty accounts.'
-    : hasIngest
-      ? 'Ingest is already set up — demo mode is for empty accounts.'
-      : 'Monitors are already set up — demo mode is for empty accounts.';
+  const disableReason = tooManyIncidents && tooManyMonitors
+    ? `You already have ${incidentCount} incidents and ${monitorCount} host monitors — demo mode is for lightly-used accounts.`
+    : tooManyIncidents
+      ? `You already have ${incidentCount} incidents — demo mode is for accounts with fewer than ${INCIDENT_THRESHOLD}.`
+      : `You already have ${monitorCount} host monitors — demo mode is for accounts with ${MONITOR_THRESHOLD} or fewer.`;
 
   return (
     <motion.div
