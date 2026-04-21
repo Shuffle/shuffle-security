@@ -223,6 +223,35 @@ const HostTerminalPage = () => {
     })();
   }, []);
 
+  // After env hosts load, if the URL :hostUuid still didn't resolve to a hostname,
+  // try matching against shuffle-security_sensors / shuffle-security_assets by
+  // their `uuid` field. Avoids showing the raw UUID in the header.
+  useEffect(() => {
+    if (!hostsLoaded || !hostUuid) return;
+    if (hostState?.hostname) return;
+    if (resolvedHost) return;
+    if (datastoreResolvedHostname) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const supplements = await fetchHostSupplements();
+        const search = (map: Map<string, Record<string, unknown>>) => {
+          for (const [, val] of map.entries()) {
+            const recUuid = String((val as any).uuid || '').trim();
+            if (recUuid && recUuid === hostUuid) {
+              const hn = String((val as any).hostname || '').trim();
+              if (hn) return hn;
+            }
+          }
+          return '';
+        };
+        const found = search(supplements.sensorsByHost) || search(supplements.assetsByHost);
+        if (!cancelled && found) setDatastoreResolvedHostname(found);
+      } catch { /* ignore */ }
+    })();
+    return () => { cancelled = true; };
+  }, [hostsLoaded, hostUuid, hostState?.hostname, resolvedHost, datastoreResolvedHostname]);
+
   // Load stored session on mount / host change
   useEffect(() => {
     if (!hostUuid) return;
