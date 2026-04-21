@@ -392,6 +392,13 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
       const cur = TOUR_STEPS[prev];
       if (!isStepUnlocked(cur)) return prev;
       const next = Math.min(prev + 1, TOUR_STEPS.length - 1);
+      // Successful step advance — counts as "user completed step N successfully".
+      trackPredefinedEvent(GA_EVENTS.DEMO_STEP_ADVANCE, cur?.id, prev, {
+        step_index: prev,
+        step_id: cur?.id,
+        from_index: prev,
+        to_index: next,
+      });
       navigateForStep(next);
       runStepSeed(next);
       return next;
