@@ -407,7 +407,14 @@ export default function UsecasesPage() {
   );
 }
 
-const ACTIVE_USECASE_IDS = ['siem_case_management_1', 'edr_case_management_1', 'email_case_management_1'];
+const ACTIVE_USECASE_IDS = [
+  'siem_case_management_1',
+  'edr_case_management_1',
+  'email_case_management_1',
+  'threat_intel_case_management_1',
+  'asset_management_case_management_vuln_1',
+  'case_management_cases_forward_1',
+];
 
 function UsecaseCard({
   flow,
