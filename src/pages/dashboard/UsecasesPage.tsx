@@ -28,7 +28,7 @@ import {
   IconButton,
 } from '@mui/material';
 import { Search, ArrowRight, ArrowLeft, Download, Zap, Activity, CheckCircle2, Circle, AlertTriangle, Network, Clock, Power, PowerOff, FileJson, X, ExternalLink, Flame, PlayCircle, BookOpen, LayoutGrid, Server, Shield, MessageSquare, Mail, Crosshair, HardDrive, KeyRound, Cloud, Sparkles } from 'lucide-react';
-import { trackEvent } from '@/lib/analytics';
+import ReactGA from 'react-ga4';
 // ── Flow phases ────────────────────────────────────────────────────────────────
 
 export type FlowPhase = 'ingest' | 'response' | 'correlation';
@@ -2093,8 +2093,11 @@ function UsecasesPageInner() {
     const flow = usecases.find(u => u.id === id);
     const name = flow?.label || id;
     const slug = slugify(name);
-    // GA: track usecase selection (no-op outside Shuffle Cloud)
-    trackEvent({ category: 'engagement', action: 'Select_Usecase', label: name });
+    // GA: track usecase selection — direct ReactGA call so this page stays
+    // standalone (no dependency on src/lib/analytics).
+    try {
+      ReactGA.event({ category: 'Engagement', action: 'Select_Usecase', label: name });
+    } catch { /* ignore — GA may not be initialized */ }
     // Persist locally so the "Interest shown" indicator survives the
     // not-logged-in → logged-in transition (the API call below is a no-op
     // for guests, so without this we'd lose the signal entirely).
