@@ -6,7 +6,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { seedDemoData, cleanupDemoData, isDemoActive, getDemoStats } from '@/services/demoMode';
+import { seedForStep, cleanupDemoData, isDemoActive, getDemoStats } from '@/services/demoMode';
 
 export interface TourStep {
   id: string;
@@ -95,29 +95,42 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [navigate]);
 
+  // Run the seeder for the given step (idempotent — no-op if already seeded).
+  const runStepSeed = useCallback(async (i: number) => {
+    const stepDef = TOUR_STEPS[i];
+    if (!stepDef) return;
+    try {
+      const added = await seedForStep(stepDef.id);
+      if (added > 0) {
+        refreshStats();
+        toast.success(`+${added} sample item${added === 1 ? '' : 's'} added`, { duration: 1800 });
+      }
+    } catch {
+      toast.error('Failed to add sample data for this step.');
+    }
+  }, [refreshStats]);
+
   const startDemo = useCallback(async () => {
     setIsSeeding(true);
     try {
-      const res = await seedDemoData();
-      if (res.success) {
-        setActive(true);
-        refreshStats();
-        setStep(0);
-        setDrawerOpen(true);
-        toast.success(`Demo ready — ${res.counts.incidents} incidents, ${res.counts.assets} assets, ${res.counts.users} users seeded.`);
-        navigateForStep(0);
-      } else {
-        toast.error(res.error || 'Failed to seed demo data.');
-      }
+      // Mark active immediately so the dashboard CTA flips state, even before any data lands.
+      localStorage.setItem('shuffle_demo_active', 'true');
+      setActive(true);
+      setStep(0);
+      setDrawerOpen(true);
+      toast.success('Demo started — data will appear as you tour the platform.');
+      navigateForStep(0);
+      await runStepSeed(0);
     } finally {
       setIsSeeding(false);
     }
-  }, [navigateForStep, refreshStats]);
+  }, [navigateForStep, runStepSeed]);
 
   const openTour = useCallback(() => {
     setDrawerOpen(true);
     navigateForStep(step);
-  }, [navigateForStep, step]);
+    runStepSeed(step);
+  }, [navigateForStep, runStepSeed, step]);
 
   const closeTour = useCallback(() => setDrawerOpen(false), []);
 
@@ -125,23 +138,26 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
     setStep(prev => {
       const next = Math.min(prev + 1, TOUR_STEPS.length - 1);
       navigateForStep(next);
+      runStepSeed(next);
       return next;
     });
-  }, [navigateForStep]);
+  }, [navigateForStep, runStepSeed]);
 
   const prevStep = useCallback(() => {
     setStep(prev => {
       const next = Math.max(prev - 1, 0);
       navigateForStep(next);
+      runStepSeed(next);
       return next;
     });
-  }, [navigateForStep]);
+  }, [navigateForStep, runStepSeed]);
 
   const goToStep = useCallback((i: number) => {
     const clamped = Math.max(0, Math.min(i, TOUR_STEPS.length - 1));
     setStep(clamped);
     navigateForStep(clamped);
-  }, [navigateForStep]);
+    runStepSeed(clamped);
+  }, [navigateForStep, runStepSeed]);
 
   const cleanup = useCallback(async () => {
     setIsCleaning(true);

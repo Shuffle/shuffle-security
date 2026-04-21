@@ -3,7 +3,7 @@
  * Provides a convenient interface for components to interact with the datastore
  */
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import {
   setDatastoreItem,
   setDatastoreItems,
@@ -155,6 +155,19 @@ export const useDatastore = ({ category, orgId: overrideOrgId }: UseDatastoreOpt
     setCursor(null);
     setHasMore(false);
   }, []);
+
+  // Demo Mode: if data was just seeded for our category, refetch so the open
+  // page updates live as the user advances through the tour.
+  useEffect(() => {
+    const onRefresh = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.category === category) {
+        fetchItems();
+      }
+    };
+    window.addEventListener('demo:refresh', onRefresh);
+    return () => window.removeEventListener('demo:refresh', onRefresh);
+  }, [category, fetchItems]);
 
   const addItem = useCallback(async (key: string, value: string | object, skipRefresh = true): Promise<boolean> => {
     setError(null);
