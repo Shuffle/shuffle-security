@@ -209,6 +209,7 @@ export const cleanupDemoData = async (): Promise<CleanupResult> => {
   localStorage.removeItem(DEMO_FLAG_KEY);
   localStorage.removeItem(DEMO_ACTIVE_KEY);
   localStorage.removeItem(DEMO_SEEDED_STEPS_KEY);
+  localStorage.removeItem('shuffle_demo_injected_apps');
 
   return { success: failed === 0, deleted, failed };
 };
