@@ -2366,10 +2366,3 @@ export default function UsecasesPage(props: UsecasesPageProps = {}) {
     </UsecasesPageConfigContext.Provider>
   );
 }
-
-  return (
-    <UsecasesPageConfigContext.Provider value={config}>
-      <UsecasesPageInner />
-    </UsecasesPageConfigContext.Provider>
-  );
-}
