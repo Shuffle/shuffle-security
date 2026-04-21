@@ -288,7 +288,7 @@ export const UsecaseDetailContent = ({
         <Typography sx={{ fontSize: '1.2rem', color: 'hsl(var(--muted-foreground))', mb: 2 }}>
           Data flow not found
         </Typography>
-        <Button onClick={() => navigate('/usecases')} sx={{ color: 'hsl(var(--primary))', textTransform: 'none' }}>
+        <Button onClick={() => (onNavigateUsecase ? onNavigateUsecase('') : navigate('/usecases'))} sx={{ color: 'hsl(var(--primary))', textTransform: 'none' }}>
           ← Back to Automations
         </Button>
       </Box>
