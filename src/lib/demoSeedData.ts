@@ -40,6 +40,8 @@ type RawInc = {
   product: { name: string };
   first_seen_time: string;
   types: string[];
+  /** Shared values surface in the Correlations panel — keep these consistent across linked incidents. */
+  observables?: { type: string; value: string }[];
 };
 
 const toIncident = (item: RawInc): { key: string; value: OCSFIncidentFinding } => ({
@@ -60,33 +62,67 @@ const toIncident = (item: RawInc): { key: string; value: OCSFIncidentFinding } =
     last_seen_time: item.first_seen_time,
     types: item.types,
     product: item.product,
-    metadata: demoMeta(item._key),
+    metadata: {
+      ...demoMeta(item._key),
+      extensions: {
+        custom_attributes: {
+          ...(demoMeta(item._key).extensions.custom_attributes),
+          ...(item.observables ? { observables: item.observables } : {}),
+        },
+      },
+    },
   } as OCSFIncidentFinding,
 });
 
 // ─── Incidents ────────────────────────────────────────────────────────────────
-// Kept intentionally small (2 items in the first batch) and tied to the apps
-// the user just "connected" in the previous tour step.
+// Demo narrative (the "phishing → host compromise" funnel):
+//   1. Sarah Chen reports a phishing email and admits she clicked the link.
+//   2. CrowdStrike fires on her laptop FIN-LAPTOP-04 minutes later — Cobalt
+//      Strike beacon spawned by chrome.exe (her outdated Chrome was
+//      vulnerable to CVE-2024-5274, a V8 type-confusion RCE).
+// Both incidents share the same user, hostname, attacker IP and URL so the
+// Correlations panel links them automatically and the agent knows to focus
+// on isolating FIN-LAPTOP-04.
+const PHISH_USER_EMAIL = 'sarah.chen@example.com';
+const PHISH_HOST = 'FIN-LAPTOP-04';
+const PHISH_ATTACKER_IP = '185.220.101.47';
+const PHISH_LURE_URL = 'https://it-support-portal[.]live/mfa-reset?u=schen';
+const PHISH_PAYLOAD_SHA256 = '7b1c4f9a2e3d8b6f1a0c5d7e9b2a4c6e8d1f3a5b7c9e1d2f4a6b8c0e2d4f6a8b';
+
 export const buildDemoIncidentsBatch1 = (): { key: string; value: OCSFIncidentFinding }[] => {
   const t = now();
   return ([
     {
       _key: `demo-inc-phish-${t}-1`,
       title: 'Phishing email reported by Sarah Chen',
-      desc: 'User reported a suspicious email impersonating IT support, asking to reset MFA. Attachment: invoice_april.html. URLs sandboxed — known credential harvesting kit.',
+      desc: `User reported a suspicious email impersonating IT support, asking to reset MFA. She admits she clicked the link from her ${PHISH_HOST} laptop before flagging the message. URL resolves to a known credential-harvesting kit hosted at ${PHISH_ATTACKER_IP}.`,
       severity_id: 4, severity: 'High', status_id: 2, status: 'In Progress',
       product: { name: 'Microsoft Defender for Office 365' },
       first_seen_time: minsAgo(38),
       types: ['phishing', 'credential-theft'],
+      observables: [
+        { type: 'email', value: PHISH_USER_EMAIL },
+        { type: 'hostname', value: PHISH_HOST },
+        { type: 'url', value: PHISH_LURE_URL },
+        { type: 'ip', value: PHISH_ATTACKER_IP },
+      ],
     },
     {
       _key: `demo-inc-malware-${t}-2`,
-      title: 'CrowdStrike: Cobalt Strike beacon on FIN-LAPTOP-04',
-      desc: 'EDR detected a Cobalt Strike beacon executing from %APPDATA%\\Roaming\\svchost.exe. Process tree shows initial execution from a macro in a recently opened .docx.',
+      title: `CrowdStrike: Cobalt Strike beacon on ${PHISH_HOST}`,
+      desc: `EDR detected a Cobalt Strike beacon executing from %APPDATA%\\Roaming\\svchost.exe on ${PHISH_HOST} (owner: Sarah Chen). Process tree shows chrome.exe (v124.0.6367.91 — outdated, vulnerable to CVE-2024-5274) spawning the payload after the user visited ${PHISH_LURE_URL}. Beacon callbacks observed to ${PHISH_ATTACKER_IP}.`,
       severity_id: 5, severity: 'Critical', status_id: 1, status: 'New',
       product: { name: 'CrowdStrike Falcon' },
       first_seen_time: minsAgo(12),
-      types: ['malware', 'c2'],
+      types: ['malware', 'c2', 'exploit'],
+      observables: [
+        { type: 'hostname', value: PHISH_HOST },
+        { type: 'email', value: PHISH_USER_EMAIL },
+        { type: 'ip', value: PHISH_ATTACKER_IP },
+        { type: 'url', value: PHISH_LURE_URL },
+        { type: 'sha256', value: PHISH_PAYLOAD_SHA256 },
+        { type: 'cve', value: 'CVE-2024-5274' },
+      ],
     },
   ] as RawInc[]).map(toIncident);
 };
@@ -103,6 +139,9 @@ export const buildDemoIncidentsBatch2 = (): { key: string; value: OCSFIncidentFi
       product: { name: 'Microsoft Defender for Office 365' },
       first_seen_time: minsAgo(54),
       types: ['identity', 'impossible-travel'],
+      observables: [
+        { type: 'email', value: 'anna.park@example.com' },
+      ],
     },
   ] as RawInc[]).map(toIncident);
 };
