@@ -520,6 +520,7 @@ const IncidentDetailPage = () => {
   const [refreshingObservables, setRefreshingObservables] = useState(false);
   const obsRefreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showThreatIntelDrawer, setShowThreatIntelDrawer] = useState(false);
+  const [showForwardAppsDrawer, setShowForwardAppsDrawer] = useState(false);
   const [newObservableType, setNewObservableType] = useState('ip');
   const [newObservableValue, setNewObservableValue] = useState('');
   const [obsFilterTypes, setObsFilterTypes] = useState<string[]>([]);
@@ -827,6 +828,54 @@ const IncidentDetailPage = () => {
   const [forwardingApps, setForwardingApps] = useState<Array<{ id: string; name: string; large_image: string; categories: string[] }>>([]);
   const [forwardingAppsLoading, setForwardingAppsLoading] = useState(false);
   const [sourceAppImage, setSourceAppImage] = useState<string | null>(null);
+
+  // Reload authenticated tools every time the Forward dialog opens so newly
+  // connected tools (e.g. just-authenticated email apps) appear immediately.
+  useEffect(() => {
+    if (!showForwardDialog) return;
+    let cancelled = false;
+    setForwardingAppsLoading(true);
+    fetch(getApiUrl('/api/v1/apps/authentication'), {
+      credentials: 'include',
+      headers: { ...getAuthHeader(), ...crossOrgHeaders },
+    })
+      .then(r => r.json())
+      .then(result => {
+        if (cancelled) return;
+        const authData = result.data || result;
+        if (Array.isArray(authData)) {
+          const seen = new Set<string>();
+          const apps = authData
+            .filter((a: any) => a.app?.name && a.validation?.valid)
+            .filter((a: any) => {
+              if (seen.has(a.app.name)) return false;
+              seen.add(a.app.name);
+              return true;
+            })
+            .map((a: any) => {
+              const rawCategories = a.app?.categories ?? a.categories ?? a.app?.category ?? a.category ?? [];
+              const categories = Array.isArray(rawCategories)
+                ? rawCategories
+                : typeof rawCategories === 'string'
+                  ? [rawCategories]
+                  : typeof rawCategories === 'object' && rawCategories !== null
+                    ? Object.keys(rawCategories)
+                    : [];
+              return {
+                id: a.app.name,
+                name: (a.app.name || '').replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                large_image: a.app.large_image || '',
+                categories,
+              };
+            });
+          setForwardingApps(apps);
+        }
+      })
+      .catch(() => { if (!cancelled) setForwardingApps([]); })
+      .finally(() => { if (!cancelled) setForwardingAppsLoading(false); });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showForwardDialog]);
   const [correlations, setCorrelations] = useState<Array<{ key: string; amount: number; ref: string[] }>>([]);
   const [correlationsLoading, setCorrelationsLoading] = useState(false);
   const [obsCorrelations, setObsCorrelations] = useState<Record<string, { loading: boolean; data: Array<{ key: string; amount: number; ref: string[] }> }>>({});
@@ -5556,9 +5605,31 @@ const IncidentDetailPage = () => {
               <CircularProgress size={24} />
             </Box>
           ) : forwardingApps.length === 0 ? (
-            <Typography variant="body2" sx={{ color: 'text.disabled', textAlign: 'center', py: 4 }}>
-              No authenticated tools available. Configure integrations in Settings.
-            </Typography>
+            <Box sx={{ textAlign: 'center', py: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.5 }}>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                You do not have an email tool authenticated yet.
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.disabled', maxWidth: 340 }}>
+                Connect a tool like Gmail, Outlook or Microsoft Defender 365 to forward this incident as an email.
+              </Typography>
+              <Button
+                variant="contained"
+                size="small"
+                onClick={() => {
+                  setShowForwardDialog(false);
+                  setShowForwardAppsDrawer(true);
+                }}
+                sx={{
+                  mt: 1,
+                  textTransform: 'none',
+                  bgcolor: 'hsl(var(--primary))',
+                  color: 'hsl(var(--primary-foreground))',
+                  '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)' },
+                }}
+              >
+                Connect an email tool
+              </Button>
+            </Box>
           ) : (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
               {forwardingApps.map((app) => (
@@ -5643,6 +5714,21 @@ const IncidentDetailPage = () => {
         title="Threat Intel Apps"
         subtitle="Enable and authenticate an app to run IOC lookups"
         priorityCategory="Threat Intel"
+      />
+
+      {/* Forwarding / Email Tools App Search Drawer */}
+      <AppSearchDrawer
+        open={showForwardAppsDrawer}
+        onClose={() => {
+          setShowForwardAppsDrawer(false);
+          // Re-open the forward dialog so the user lands back where they started
+          // and any newly-authenticated app is picked up on the next fetch.
+          setShowForwardDialog(true);
+        }}
+        initialQuery="email"
+        title="Connect an Email Tool"
+        subtitle="Authenticate Gmail, Outlook, or another tool to forward incidents"
+        priorityCategory="Email"
       />
     </motion.div>
   );
