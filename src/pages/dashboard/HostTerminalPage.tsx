@@ -418,6 +418,7 @@ const HostTerminalPage = () => {
     navigate(location.pathname, { replace: true, state: { hostname, groupName, mode: hostState?.mode } });
   }, [hostState, hostUuid, hostname, groupName, executeHostAction, navigate, location.pathname]);
 
+  const abortAll = () => {
     pollingActiveRef.current.forEach((_, key) => {
       pollingActiveRef.current.set(key, false);
     });
