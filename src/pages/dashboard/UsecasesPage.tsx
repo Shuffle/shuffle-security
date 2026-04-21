@@ -55,8 +55,27 @@ export default function UsecasesPage() {
   const navigate = useNavigate();
   const { usecases, apiLoaded, getDrift } = useUsecases();
   const { userInfo, isAuthenticated } = useAuth();
+  const { data: workflows = [], refetch: refetchWorkflows } = useWorkflows();
   const isSupport = userInfo?.support === true;
   const [showAllAsSupport, setShowAllAsSupport] = useState(true);
+
+  // Map: automationLabel -> whether at least one workflow exists for it.
+  // Match by workflow name OR tag containing the label (case-insensitive).
+  const enabledLabels = useMemo(() => {
+    const set = new Set<string>();
+    for (const wf of workflows) {
+      const name = (wf.name || '').toLowerCase();
+      const tags = (wf.tags || []).map(t => String(t).toLowerCase());
+      for (const uc of usecases) {
+        if (!uc.automationLabel) continue;
+        const lbl = uc.automationLabel.toLowerCase();
+        if (name === lbl || name.includes(lbl) || tags.includes(lbl) || tags.some(t => t.includes(lbl))) {
+          set.add(uc.automationLabel);
+        }
+      }
+    }
+    return set;
+  }, [workflows, usecases]);
 
   // Collect unique tags across all usecases
   const allTags = useMemo(() => {
