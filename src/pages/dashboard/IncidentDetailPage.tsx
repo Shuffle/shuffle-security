@@ -3312,7 +3312,7 @@ const IncidentDetailPage = () => {
                           bgcolor: 'transparent',
                           borderColor: descriptionView === view ? 'rgba(255, 102, 0, 0.5)' : 'rgba(255,255,255,0.12)',
                           color: descriptionView === view ? '#ff6600' : 'text.secondary',
-                          '&:hover': { bgcolor: descriptionView === view ? '#ff6600' : 'rgba(255,255,255,0.1)' },
+                          '&:hover': { bgcolor: 'rgba(255,255,255,0.05)' },
                         }}
                       />
                     ))}
