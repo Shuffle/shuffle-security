@@ -1721,7 +1721,7 @@ function UsecaseDetailContent({
     else {
       const target = usecases.find((u) => u.id === id);
       const seg = target?.label || id;
-      navigate(`/usecases/${encodeURIComponent(seg)}`);
+      navigate(`/usecases/${slugify(seg)}`);
     }
   };
 
@@ -1790,7 +1790,7 @@ function UsecaseDetailContent({
           <Box sx={{ display: 'flex', gap: 1, flexShrink: 0, width: { xs: '100%', sm: 'auto' } }}>
             <Button
               component={Link}
-              to={`/register?returnUrl=${encodeURIComponent(`/usecases/${encodeURIComponent(flow.label)}`)}`}
+              to={`/register?returnUrl=${encodeURIComponent(`/usecases/${slugify(flow.label)}`)}`}
               variant="contained"
               disableElevation
               endIcon={<ArrowRight size={16} />}
@@ -1810,7 +1810,7 @@ function UsecaseDetailContent({
             </Button>
             <Button
               component={Link}
-              to={`/login?returnUrl=${encodeURIComponent(`/usecases/${encodeURIComponent(flow.label)}`)}`}
+              to={`/login?returnUrl=${encodeURIComponent(`/usecases/${slugify(flow.label)}`)}`}
               variant="text"
               sx={{
                 textTransform: 'none',
@@ -2514,7 +2514,7 @@ function UsecasesPageInner() {
                 onClick={() => {
                   const id = drawerFlowId;
                   const name = usecases.find(u => u.id === id)?.label || id || '';
-                  window.open(`https://security.shuffler.io/usecases/${encodeURIComponent(name)}/details`, '_blank', 'noopener,noreferrer');
+                  window.open(`https://security.shuffler.io/usecases/${slugify(name)}/details`, '_blank', 'noopener,noreferrer');
                 }}
                 endIcon={<ExternalLink size={14} />}
                 sx={{
@@ -2745,7 +2745,7 @@ function UsecaseCard({
           ) : (
             <Button
               component={Link}
-              to={`/register?returnUrl=${encodeURIComponent(`/usecases/${encodeURIComponent(flow.label)}`)}`}
+              to={`/register?returnUrl=${encodeURIComponent(`/usecases/${slugify(flow.label)}`)}`}
               size="small"
               variant="contained"
               disableElevation
