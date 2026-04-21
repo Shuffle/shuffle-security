@@ -44,8 +44,6 @@ export const DemoTourDrawer = () => {
     minimizeTour,
     restoreTour,
     toggleDock,
-    forceCreateIncidents,
-    isForceCreatingIncidents,
     forceGenerateSingleIncident,
     isForceGeneratingSingle,
     hasDemoIncidents,
