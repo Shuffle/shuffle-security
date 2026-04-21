@@ -419,18 +419,26 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
                       <tbody className="divide-y divide-border">
                         {filtered.length === 0 ? (
                           <tr><td colSpan={3} className="px-3 py-3 text-center text-muted-foreground italic">No matches</td></tr>
-                        ) : filtered.map((sw, idx) => (
-                          <tr
-                            key={idx}
-                            className="hover:bg-muted/20 cursor-pointer"
-                            onClick={(e) => sw.name && handleEntityClick(e, `/software/${encodeURIComponent(sw.name)}`, navigate)}
-                            onAuxClick={(e) => sw.name && e.button === 1 && window.open(`/software/${encodeURIComponent(sw.name)}`, '_blank')}
-                          >
-                            <td className="px-3 py-1.5 font-medium text-foreground">{sw.name || '—'}</td>
-                            <td className="px-3 py-1.5 font-mono text-muted-foreground">{(sw.version as string) || '—'}</td>
-                            <td className="px-3 py-1.5 text-muted-foreground">{(sw.source as string) || '—'}</td>
-                          </tr>
-                        ))}
+                        ) : filtered.map((sw, idx) => {
+                          const swVulns = sw.name ? vulnsBySoftwareName.get(normalize(String(sw.name))) || [] : [];
+                          return (
+                            <tr
+                              key={idx}
+                              className="hover:bg-muted/20 cursor-pointer"
+                              onClick={(e) => sw.name && handleEntityClick(e, `/software/${encodeURIComponent(sw.name)}`, navigate)}
+                              onAuxClick={(e) => sw.name && e.button === 1 && window.open(`/software/${encodeURIComponent(sw.name)}`, '_blank')}
+                            >
+                              <td className="px-3 py-1.5 font-medium text-foreground">
+                                <span className="inline-flex items-center gap-2">
+                                  {sw.name || '—'}
+                                  <RowVulnBadge vulns={swVulns} />
+                                </span>
+                              </td>
+                              <td className="px-3 py-1.5 font-mono text-muted-foreground">{(sw.version as string) || '—'}</td>
+                              <td className="px-3 py-1.5 text-muted-foreground">{(sw.source as string) || '—'}</td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
