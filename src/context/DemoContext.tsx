@@ -1,6 +1,11 @@
 /**
  * Demo Mode global state — drives both the dashboard CTA and the floating
  * tour drawer. Mounted once in App.tsx so it survives route changes.
+ *
+ * Some steps have a `requirement`: a real action the user must perform on the
+ * page before the tour will let them advance. The drawer's Next button is
+ * disabled until `completedSteps[stepId]` flips true, and a spotlight points
+ * at the element identified by `targetSelector`.
  */
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
@@ -8,11 +13,20 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { seedForStep, cleanupDemoData, isDemoActive, getDemoStats } from '@/services/demoMode';
 
+export interface TourStepRequirement {
+  /** Short human label shown in the drawer (e.g. "Enable the ingestion webhook"). */
+  label: string;
+  /** CSS selector for the element the spotlight should point at. Use a stable `[data-tour="..."]` attr. */
+  targetSelector: string;
+}
+
 export interface TourStep {
   id: string;
   title: string;
   body: string;
   route?: string;
+  /** If set, Next is disabled until completedSteps[id] is true. */
+  requirement?: TourStepRequirement;
 }
 
 export const TOUR_STEPS: TourStep[] = [
@@ -25,13 +39,33 @@ export const TOUR_STEPS: TourStep[] = [
   {
     id: 'apps',
     title: 'Connect your tools',
-    body: "Everything starts with your tools. In a real setup you'd connect 1–2 detection sources here — say Microsoft Defender for email and CrowdStrike for endpoints. For the demo we'll pretend those are connected and incidents will start arriving from them on the next step.",
+    body: "Everything starts with your tools. In a real setup you'd connect detection sources here — say Microsoft Defender for email and CrowdStrike for endpoints. For the demo we'll pretend those are connected and incidents will start arriving from them on the next step.",
     route: '/onboarding/sources',
+  },
+  {
+    id: 'ingest-webhook',
+    title: 'Turn on the ingestion webhook',
+    body: 'Most tools forward incidents to Shuffle over a webhook. Click the highlighted Webhook button on the Incidents page and enable it — this gives you a URL detection tools can post to. We need this on before incidents can land.',
+    route: '/incidents',
+    requirement: {
+      label: 'Enable the ingestion webhook',
+      targetSelector: '[data-tour="webhook-ingestion-button"]',
+    },
+  },
+  {
+    id: 'enable-crowdstrike',
+    title: 'Turn on CrowdStrike',
+    body: 'Now toggle on the CrowdStrike source so EDR alerts route into Shuffle. Click the highlighted CrowdStrike icon and switch it on.',
+    route: '/incidents',
+    requirement: {
+      label: 'Enable CrowdStrike as an ingestion source',
+      targetSelector: '[data-tour="ingestion-source-crowdstrike"]',
+    },
   },
   {
     id: 'incidents-list',
     title: 'Incidents arriving',
-    body: 'Now that your tools are "connected", incidents from Defender and CrowdStrike start showing up in your queue. Each row shows severity, the source tool, who it\'s assigned to, and current status. Try opening one.',
+    body: 'With your tools connected, incidents from Defender and CrowdStrike start showing up. Each row shows severity, the source tool, who it\'s assigned to, and current status. Try opening one.',
     route: '/incidents',
   },
   {
@@ -53,9 +87,13 @@ export const TOUR_STEPS: TourStep[] = [
   },
   {
     id: 'agent',
-    title: 'AI Agent activity',
-    body: 'When the AI agent investigates incidents or proposes high-stakes actions (like isolating a host), everything appears here for review and approval.',
-    route: '/agent',
+    title: 'Approve an AI agent action',
+    body: "When the AI agent proposes a high-stakes action (like isolating a host), it waits for your approval. Find a pending notification on the dashboard and click Approve — the spotlight will point you at it.",
+    route: '/dashboard',
+    requirement: {
+      label: 'Approve a pending agent action',
+      targetSelector: '[data-tour="agent-approve-button"]',
+    },
   },
   {
     id: 'wrap',
@@ -72,6 +110,10 @@ interface DemoContextValue {
   drawerOpen: boolean;
   step: number;
   stats: { incidents: number; assets: number; users: number };
+  /** Map of step id → completed (only relevant for steps with a requirement). */
+  completedSteps: Record<string, boolean>;
+  /** Whether the current step's gate (if any) is satisfied. */
+  currentStepUnlocked: boolean;
   startDemo: () => Promise<void>;
   openTour: () => void;
   closeTour: () => void;
@@ -79,6 +121,8 @@ interface DemoContextValue {
   prevStep: () => void;
   goToStep: (i: number) => void;
   cleanup: () => Promise<void>;
+  /** Imperatively mark a step as done (used by completion watchers). */
+  markStepCompleted: (stepId: string) => void;
 }
 
 const DemoContext = createContext<DemoContextValue | null>(null);
@@ -91,8 +135,13 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [step, setStep] = useState(0);
   const [stats, setStats] = useState(() => getDemoStats());
+  const [completedSteps, setCompletedSteps] = useState<Record<string, boolean>>({});
 
   const refreshStats = useCallback(() => setStats(getDemoStats()), []);
+
+  const markStepCompleted = useCallback((stepId: string) => {
+    setCompletedSteps(prev => (prev[stepId] ? prev : { ...prev, [stepId]: true }));
+  }, []);
 
   const navigateForStep = useCallback((i: number) => {
     const route = TOUR_STEPS[i]?.route;
@@ -124,7 +173,6 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
       setActive(true);
       setStep(0);
       setDrawerOpen(true);
-      // No toast — the drawer itself narrates what's happening.
       navigateForStep(0);
       await runStepSeed(0);
     } finally {
@@ -140,14 +188,20 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
 
   const closeTour = useCallback(() => setDrawerOpen(false), []);
 
+  const currentStep = TOUR_STEPS[step];
+  const currentStepUnlocked = !currentStep?.requirement || !!completedSteps[currentStep.id];
+
   const nextStep = useCallback(() => {
     setStep(prev => {
+      const cur = TOUR_STEPS[prev];
+      // Block forward navigation if requirement not met
+      if (cur?.requirement && !completedSteps[cur.id]) return prev;
       const next = Math.min(prev + 1, TOUR_STEPS.length - 1);
       navigateForStep(next);
       runStepSeed(next);
       return next;
     });
-  }, [navigateForStep, runStepSeed]);
+  }, [navigateForStep, runStepSeed, completedSteps]);
 
   const prevStep = useCallback(() => {
     setStep(prev => {
@@ -160,10 +214,15 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
 
   const goToStep = useCallback((i: number) => {
     const clamped = Math.max(0, Math.min(i, TOUR_STEPS.length - 1));
+    // Allow free backward jumps; forward jumps respect the gate at current step.
+    if (clamped > step) {
+      const cur = TOUR_STEPS[step];
+      if (cur?.requirement && !completedSteps[cur.id]) return;
+    }
     setStep(clamped);
     navigateForStep(clamped);
     runStepSeed(clamped);
-  }, [navigateForStep, runStepSeed]);
+  }, [navigateForStep, runStepSeed, completedSteps, step]);
 
   const cleanup = useCallback(async () => {
     setIsCleaning(true);
@@ -172,6 +231,7 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
       setActive(false);
       setDrawerOpen(false);
       setStep(0);
+      setCompletedSteps({});
       refreshStats();
       if (res.success) {
         toast.success(`Removed ${res.deleted} demo item${res.deleted === 1 ? '' : 's'}.`);
@@ -199,8 +259,15 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
 
   const value = useMemo<DemoContextValue>(() => ({
     active, isSeeding, isCleaning, drawerOpen, step, stats,
+    completedSteps, currentStepUnlocked,
     startDemo, openTour, closeTour, nextStep, prevStep, goToStep, cleanup,
-  }), [active, isSeeding, isCleaning, drawerOpen, step, stats, startDemo, openTour, closeTour, nextStep, prevStep, goToStep, cleanup]);
+    markStepCompleted,
+  }), [
+    active, isSeeding, isCleaning, drawerOpen, step, stats,
+    completedSteps, currentStepUnlocked,
+    startDemo, openTour, closeTour, nextStep, prevStep, goToStep, cleanup,
+    markStepCompleted,
+  ]);
 
   return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;
 };
