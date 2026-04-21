@@ -1064,10 +1064,17 @@ function usePageTitle(title: string) {
 // ============================================================================
 // Inlined: auth state query
 // ============================================================================
+interface OrgInterest {
+  active?: boolean;
+  name?: string;
+  type?: string;
+  [key: string]: any;
+}
 interface UserInfoLite {
   id?: string;
   username?: string;
   support?: boolean;
+  interests?: OrgInterest[];
 }
 function useAuthLite() {
   const cfg = useUsecasesConfig();
@@ -1076,15 +1083,40 @@ function useAuthLite() {
     userInfo: null,
     isAuthenticated: false,
   });
+  const refetch = React.useCallback(async () => {
+    if (cfg.hasExternalAuth) return;
+    try {
+      const res = await fetch(apiUrl('/api/v1/getinfo'), {
+        credentials: 'include',
+        headers: { ...authHeader(), 'Content-Type': 'application/json' },
+      });
+      if (!res.ok) return;
+      const body = await res.json();
+      if (body?.success !== true) return;
+      setState({
+        userInfo: {
+          id: body.id,
+          username: body.username,
+          support: body.support === true,
+          interests: Array.isArray(body.interests) ? body.interests : [],
+        },
+        isAuthenticated: true,
+      });
+    } catch {
+      /* keep current */
+    }
+  }, [cfg.hasExternalAuth, apiUrl, authHeader]);
   useEffect(() => {
     // External host app provided auth — trust it, skip the getinfo probe.
     if (cfg.hasExternalAuth) {
+      const ext = cfg.externalUserInfo as (UsecasesUserData & { interests?: OrgInterest[] }) | null;
       setState({
-        userInfo: cfg.externalUserInfo
+        userInfo: ext
           ? {
-              id: cfg.externalUserInfo.id,
-              username: cfg.externalUserInfo.username,
-              support: cfg.externalUserInfo.support === true,
+              id: ext.id,
+              username: ext.username,
+              support: ext.support === true,
+              interests: Array.isArray(ext.interests) ? ext.interests : [],
             }
           : null,
         isAuthenticated: cfg.externalIsAuthenticated,
@@ -1102,7 +1134,12 @@ function useAuthLite() {
         const body = await res.json();
         if (body?.success !== true || cancelled) return;
         setState({
-          userInfo: { id: body.id, username: body.username, support: body.support === true },
+          userInfo: {
+            id: body.id,
+            username: body.username,
+            support: body.support === true,
+            interests: Array.isArray(body.interests) ? body.interests : [],
+          },
           isAuthenticated: true,
         });
       } catch {
@@ -1111,7 +1148,7 @@ function useAuthLite() {
     })();
     return () => { cancelled = true; };
   }, [cfg.hasExternalAuth, cfg.externalIsAuthenticated, cfg.externalUserInfo, apiUrl, authHeader]);
-  return state;
+  return { ...state, refetch };
 }
 
 // ============================================================================
@@ -1996,7 +2033,7 @@ function UsecasesPageInner() {
   const navigate = useNavigate();
   const { apiUrl, authHeader } = useApi();
   const { usecases, apiLoaded, getDrift } = useUsecasesLite();
-  const { userInfo, isAuthenticated } = useAuthLite();
+  const { userInfo, isAuthenticated, refetch: refetchAuth } = useAuthLite();
   const { data: workflows = [], refetch: refetchWorkflows } = useWorkflowsLite();
   const isSupport = userInfo?.support === true;
   const [showAllAsSupport, setShowAllAsSupport] = useState(true);
@@ -2025,7 +2062,9 @@ function UsecasesPageInner() {
       fetch(apiUrl(`/api/v1/workflows/usecases/${encodeURIComponent(name)}`), {
         credentials: 'include',
         headers: { ...authHeader() },
-      }).catch(() => { /* ignore */ });
+      })
+        .then(() => { refetchAuth(); })
+        .catch(() => { /* ignore */ });
     } catch { /* ignore */ }
     navigate({
       pathname: `/usecases/${encodeURIComponent(name)}`,
@@ -2050,6 +2089,17 @@ function UsecasesPageInner() {
     }
     return set;
   }, [workflows, usecases]);
+
+  // Set of usecase names the user has shown interest in (from /getinfo `.interests`).
+  // Names are URL-encoded in the API; we decode them so we can compare against `flow.label`.
+  const interestNames = useMemo(() => {
+    const set = new Set<string>();
+    for (const i of userInfo?.interests || []) {
+      if (i?.type !== 'usecase' || !i?.active || !i?.name) continue;
+      try { set.add(decodeURIComponent(i.name)); } catch { set.add(i.name); }
+    }
+    return set;
+  }, [userInfo?.interests]);
 
   // Export the current usecase registry (with live `running` state) as JSON.
   const handleExportJson = () => {
@@ -2390,6 +2440,7 @@ function UsecasesPageInner() {
                 drift={getDrift(flow.id)}
                 apiLoaded={apiLoaded}
                 isEnabled={!!flow.automationLabel && enabledLabels.has(flow.automationLabel)}
+                hasInterest={interestNames.has(flow.label)}
                 canToggle={isAuthenticated && !!flow.automationLabel}
                 isAuthenticated={isAuthenticated}
                 onToggled={refetchWorkflows}
@@ -2500,6 +2551,7 @@ function UsecaseCard({
   drift,
   apiLoaded,
   isEnabled,
+  hasInterest = false,
   canToggle,
   isAuthenticated = true,
   onToggled,
@@ -2509,6 +2561,7 @@ function UsecaseCard({
   drift?: UsecaseDrift;
   apiLoaded: boolean;
   isEnabled: boolean;
+  hasInterest?: boolean;
   canToggle: boolean;
   isAuthenticated?: boolean;
   onToggled?: () => void;
@@ -2589,6 +2642,13 @@ function UsecaseCard({
             <Tooltip title="Automation enabled" placement="top" arrow>
               <Box sx={{ display: 'inline-flex' }}>
                 <Power size={13} style={{ color: 'hsl(var(--severity-low))' }} />
+              </Box>
+            </Tooltip>
+          )}
+          {hasInterest && (
+            <Tooltip title="Interest shown" placement="top" arrow>
+              <Box sx={{ display: 'inline-flex' }}>
+                <Sparkles size={13} style={{ color: 'hsl(var(--primary))' }} />
               </Box>
             </Tooltip>
           )}
