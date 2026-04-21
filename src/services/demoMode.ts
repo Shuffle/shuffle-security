@@ -292,6 +292,36 @@ export const forceRecreateDemoIncidents = async (): Promise<number> => {
 };
 
 /**
+ * Force-create the single "focus" demo incident (Wazuh / Sliver C2 on
+ * FIN-LAPTOP-04). Intended for the tour's "Force generate" button so the
+ * user can focus on one incident first; the rest of the batch arrives later
+ * for cross-correlation. Idempotent on the focus key suffix — wipes any
+ * existing focus incident before writing the new one.
+ *
+ * Returns the number of incidents written (0 or 1).
+ */
+export const forceCreateSingleDemoIncident = async (): Promise<number> => {
+  // Wipe any prior focus incident so this stays a single, fresh item.
+  try {
+    const idx = readIndex();
+    const existing = idx[DATASTORE_CATEGORIES.INCIDENTS] || [];
+    const focusKeys = existing.filter(k => k.includes('-focus'));
+    if (focusKeys.length > 0) {
+      await Promise.allSettled(focusKeys.map(k => deleteDatastoreItem(k, DATASTORE_CATEGORIES.INCIDENTS)));
+      idx[DATASTORE_CATEGORIES.INCIDENTS] = existing.filter(k => !k.includes('-focus'));
+      writeIndex(idx);
+    }
+  } catch { /* best-effort */ }
+
+  const item = buildDemoFocusIncident();
+  const res = await setDatastoreItems([item], DATASTORE_CATEGORIES.INCIDENTS);
+  if (!res.success) throw new Error(res.error || 'Failed to create demo focus incident');
+  recordSeed(DATASTORE_CATEGORIES.INCIDENTS, [item.key]);
+  broadcastRefresh(DATASTORE_CATEGORIES.INCIDENTS);
+  return 1;
+};
+
+/**
  * Delete every seeded item.
  *  1. Indexed deletions (keys we wrote, per category).
  *  2. Safety net: scan each category for items with demo: true and remove orphans.
