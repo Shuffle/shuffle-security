@@ -118,7 +118,7 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
       setActive(true);
       setStep(0);
       setDrawerOpen(true);
-      toast.success('Demo started — data will appear as you tour the platform.');
+      // No toast — the drawer itself narrates what's happening.
       navigateForStep(0);
       await runStepSeed(0);
     } finally {
