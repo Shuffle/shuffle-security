@@ -2057,6 +2057,18 @@ function UsecasesPageInner() {
     }
     const flow = usecases.find(u => u.id === id);
     const name = flow?.label || id;
+    // Persist locally so the "Interest shown" indicator survives the
+    // not-logged-in → logged-in transition (the API call below is a no-op
+    // for guests, so without this we'd lose the signal entirely).
+    try {
+      const raw = localStorage.getItem('shuffle_usecase_interests');
+      const list: string[] = raw ? JSON.parse(raw) : [];
+      if (!list.includes(name)) {
+        list.push(name);
+        localStorage.setItem('shuffle_usecase_interests', JSON.stringify(list));
+        setLocalInterests(new Set(list));
+      }
+    } catch { /* ignore */ }
     // Fire-and-forget API call — response intentionally ignored per product spec.
     try {
       fetch(apiUrl(`/api/v1/workflows/usecases/${encodeURIComponent(name)}`), {
