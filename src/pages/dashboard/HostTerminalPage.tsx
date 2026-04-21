@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 import { DEFAULT_AGENT_PERMISSIONS } from '@/hooks/useAgentPermissions';
 import { usePageMeta } from '@/hooks/usePageMeta';
+import { fetchHostSupplements } from '@/lib/mergeMonitorHosts';
 
 interface HostOption {
   uuid: string;
@@ -137,6 +138,10 @@ const HostTerminalPage = () => {
   const [hostSearchQuery, setHostSearchQuery] = useState('');
   const [hostSwitcherOpen, setHostSwitcherOpen] = useState(false);
   const [singleEnvFallback, setSingleEnvFallback] = useState<string>('');
+  // Hostname resolved from sensors/assets datastores when the URL :hostUuid
+  // doesn't match any env-stub host (covers cases where the env API and the
+  // datastores use different UUIDs for the same machine).
+  const [datastoreResolvedHostname, setDatastoreResolvedHostname] = useState<string>('');
 
   // Resolve host info from location.state first, then fall back to allHosts lookup.
   // Match by UUID first, then by hostname (with tolerant domain-suffix stripping)
@@ -148,7 +153,11 @@ const HostTerminalPage = () => {
     allHosts.find(h => h.uuid === hostUuid) ||
     allHosts.find(h => (h.hostname || '').toLowerCase().trim() === idLower) ||
     allHosts.find(h => stripDomain(h.hostname || '') === idStripped);
-  const hostname = hostState?.hostname || resolvedHost?.hostname || hostUuid || (hostsLoaded ? 'Unknown Host' : '');
+  const hostname =
+    hostState?.hostname ||
+    resolvedHost?.hostname ||
+    datastoreResolvedHostname ||
+    (hostsLoaded ? (hostUuid || 'Unknown Host') : '');
   const groupName = hostState?.groupName || resolvedHost?.groupName || singleEnvFallback || '';
   const mode = hostState?.mode || resolvedHost?.mode || 'full';
   const isFull = mode === 'full';
@@ -213,6 +222,35 @@ const HostTerminalPage = () => {
       }
     })();
   }, []);
+
+  // After env hosts load, if the URL :hostUuid still didn't resolve to a hostname,
+  // try matching against shuffle-security_sensors / shuffle-security_assets by
+  // their `uuid` field. Avoids showing the raw UUID in the header.
+  useEffect(() => {
+    if (!hostsLoaded || !hostUuid) return;
+    if (hostState?.hostname) return;
+    if (resolvedHost) return;
+    if (datastoreResolvedHostname) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const supplements = await fetchHostSupplements();
+        const search = (map: Map<string, Record<string, unknown>>) => {
+          for (const [, val] of map.entries()) {
+            const recUuid = String((val as any).uuid || '').trim();
+            if (recUuid && recUuid === hostUuid) {
+              const hn = String((val as any).hostname || '').trim();
+              if (hn) return hn;
+            }
+          }
+          return '';
+        };
+        const found = search(supplements.sensorsByHost) || search(supplements.assetsByHost);
+        if (!cancelled && found) setDatastoreResolvedHostname(found);
+      } catch { /* ignore */ }
+    })();
+    return () => { cancelled = true; };
+  }, [hostsLoaded, hostUuid, hostState?.hostname, resolvedHost, datastoreResolvedHostname]);
 
   // Load stored session on mount / host change
   useEffect(() => {
