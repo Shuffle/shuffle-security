@@ -15,6 +15,7 @@ import {
   Typography,
   Card,
   CardActionArea,
+  Avatar,
   Chip,
   TextField,
   InputAdornment,
@@ -28,21 +29,20 @@ import {
   Drawer,
   IconButton,
 } from '@mui/material';
-import { Search, ArrowRight, Download, Zap, Activity, CheckCircle2, Circle, AlertTriangle, Network, Clock, Power, PowerOff, FileJson, X, ExternalLink } from 'lucide-react';
+import { Search, ArrowRight, ArrowLeft, Download, Zap, Activity, CheckCircle2, Circle, AlertTriangle, Network, Clock, Power, PowerOff, FileJson, X, ExternalLink, Flame, PlayCircle, BookOpen } from 'lucide-react';
 import {
   FLOW_PHASES,
   TOOL_CATEGORIES,
   DEFAULT_USECASES,
   getUsecasesJson,
   apiCategoryToPhase,
+  matchAppToCategory,
   normalizeCategory,
   type FlowPhase,
   type Usecase,
   type ApiUsecase,
   type ApiUsecaseCategory,
 } from '@/config/usecases';
-import { UsecaseDetailContent } from '@/pages/dashboard/DataFlowDetailPage';
-import { IntegrationStatus } from '@/components/layout/IntegrationStatus';
 
 // ============================================================================
 // Inlined: API config (was @/config/api)
@@ -297,6 +297,330 @@ const phaseIcon = (phase: FlowPhase) => {
   return <Activity size={14} />;
 };
 
+const getToolCategoryMeta = (categoryId: string): { color: string; icon: React.ReactNode; label: string } | null => {
+  const cat = TOOL_CATEGORIES.find((c) => c.id === categoryId);
+  if (!cat) return null;
+  return { color: cat.color, icon: cat.icon, label: cat.label };
+};
+
+function IntegrationStatusLite({ filterApps }: { filterApps?: string[] }) {
+  const { data: integrations = [], isLoading } = useQuery<{ id: string; name: string; icon: string }[]>({
+    queryKey: ['usecases-page-integrations'],
+    queryFn: async () => {
+      try {
+        const [authRes, appsRes] = await Promise.all([
+          fetch(apiUrl('/api/v1/apps/authentication'), { credentials: 'include', headers: { ...authHeader() } }),
+          fetch(apiUrl('/api/v1/apps'), { credentials: 'include', headers: { ...authHeader() } }),
+        ]);
+
+        const items = new Map<string, { id: string; name: string; icon: string }>();
+
+        if (authRes.ok) {
+          const authData = await authRes.json();
+          const authList = Array.isArray(authData) ? authData : (authData?.data || []);
+          for (const entry of Array.isArray(authList) ? authList : []) {
+            const app = entry?.app;
+            if (!app?.name) continue;
+            const key = String(app.name).toLowerCase();
+            if (!items.has(key)) {
+              items.set(key, {
+                id: app.id || key,
+                name: app.name,
+                icon: app.large_image || app.image || '',
+              });
+            }
+          }
+        }
+
+        if (appsRes.ok) {
+          const appsData = await appsRes.json();
+          for (const app of Array.isArray(appsData) ? appsData : []) {
+            if (!app?.name || !app?.activated) continue;
+            const key = String(app.name).toLowerCase();
+            if (!items.has(key)) {
+              items.set(key, {
+                id: app.id || key,
+                name: app.name,
+                icon: app.large_image || app.image || '',
+              });
+            }
+          }
+        }
+
+        return Array.from(items.values()).sort((a, b) => a.name.localeCompare(b.name));
+      } catch {
+        return [];
+      }
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const visible = filterApps?.length
+    ? integrations.filter((item) => filterApps.some((name) => name.toLowerCase() === item.name.toLowerCase()))
+    : integrations;
+
+  if (isLoading) {
+    return <CircularProgress size={20} sx={{ color: 'hsl(var(--muted-foreground))' }} />;
+  }
+
+  if (visible.length === 0) {
+    return (
+      <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))', px: 1, py: 0.75 }}>
+        No apps selected
+      </Typography>
+    );
+  }
+
+  return (
+    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, px: 0.5, py: 0.5 }}>
+      {visible.map((integration) => (
+        <Tooltip key={integration.id} title={integration.name} placement="top" arrow>
+          <Box
+            sx={{
+              width: 32,
+              height: 32,
+              borderRadius: 1,
+              border: '1px solid hsl(var(--border))',
+              overflow: 'hidden',
+              bgcolor: 'hsl(var(--card))',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {integration.icon ? (
+              <Box component="img" src={integration.icon} alt={integration.name} loading="lazy" sx={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            ) : (
+              <Avatar sx={{ width: 24, height: 24, fontSize: '0.72rem', bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--foreground))' }}>
+                {integration.name.slice(0, 1).toUpperCase()}
+              </Avatar>
+            )}
+          </Box>
+        </Tooltip>
+      ))}
+    </Box>
+  );
+}
+
+function UsecaseDetailContent({
+  flowId,
+  hideBackNav = false,
+  hidePrevNext = false,
+  onNavigateUsecase,
+  usecases,
+}: {
+  flowId: string | undefined;
+  hideBackNav?: boolean;
+  hidePrevNext?: boolean;
+  onNavigateUsecase?: (flowId: string) => void;
+  usecases: Usecase[];
+}) {
+  const navigate = useNavigate();
+  const flow = usecases.find((item) => item.id === flowId);
+  const [categoryAppNames, setCategoryAppNames] = useState<Record<string, string[]>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchApps = async () => {
+      try {
+        const [authRes, appsRes] = await Promise.all([
+          fetch(apiUrl('/api/v1/apps/authentication'), { credentials: 'include', headers: { ...authHeader() } }),
+          fetch(apiUrl('/api/v1/apps'), { credentials: 'include', headers: { ...authHeader() } }),
+        ]);
+
+        const mapped: Record<string, Set<string>> = {};
+        const addApp = (name: string, categories: string[]) => {
+          const categoryId = matchAppToCategory(name, categories);
+          if (!categoryId) return;
+          if (!mapped[categoryId]) mapped[categoryId] = new Set();
+          mapped[categoryId].add(name);
+        };
+
+        if (authRes.ok) {
+          const authData = await authRes.json();
+          const authList = Array.isArray(authData) ? authData : (authData?.data || []);
+          for (const entry of Array.isArray(authList) ? authList : []) {
+            const app = entry?.app;
+            if (app?.name) addApp(app.name, app.categories || []);
+          }
+        }
+
+        if (appsRes.ok) {
+          const appsData = await appsRes.json();
+          for (const app of Array.isArray(appsData) ? appsData : []) {
+            if (app?.activated && app?.name) addApp(app.name, app.categories || []);
+          }
+        }
+
+        if (!cancelled) {
+          setCategoryAppNames(
+            Object.fromEntries(Object.entries(mapped).map(([key, value]) => [key, Array.from(value).sort()]))
+          );
+        }
+      } catch {
+        if (!cancelled) setCategoryAppNames({});
+      }
+    };
+
+    fetchApps();
+    return () => { cancelled = true; };
+  }, []);
+
+  if (!flow) {
+    return (
+      <Box sx={{ p: 4, textAlign: 'center' }}>
+        <Typography sx={{ fontSize: '1.1rem', color: 'hsl(var(--muted-foreground))', mb: 2 }}>
+          Automation not found
+        </Typography>
+        <Button onClick={() => (onNavigateUsecase ? onNavigateUsecase('') : navigate('/usecases'))} sx={{ textTransform: 'none', color: 'hsl(var(--primary))' }}>
+          ← Back to automations
+        </Button>
+      </Box>
+    );
+  }
+
+  const sourceCat = getToolCategoryMeta(flow.source);
+  const targetCat = getToolCategoryMeta(flow.target);
+  const phaseInfo = FLOW_PHASES.find((phase) => phase.id === flow.phase) || FLOW_PHASES[0];
+  const sourceDetails = TOOL_CATEGORIES.find((item) => item.id === flow.source);
+  const targetDetails = TOOL_CATEGORIES.find((item) => item.id === flow.target);
+  const currentIndex = usecases.findIndex((item) => item.id === flow.id);
+  const prevFlow = currentIndex > 0 ? usecases[currentIndex - 1] : null;
+  const nextFlow = currentIndex < usecases.length - 1 ? usecases[currentIndex + 1] : null;
+  const goToUsecase = (id: string) => {
+    if (onNavigateUsecase) onNavigateUsecase(id);
+    else navigate(`/usecases/${id}`);
+  };
+
+  return (
+    <Box sx={{ maxWidth: 860, width: '100%', mx: 'auto', pb: 4 }}>
+      {!hideBackNav && (
+        <Button onClick={() => navigate('/usecases')} startIcon={<ArrowLeft size={14} />} sx={{ mb: 2, textTransform: 'none', color: 'hsl(var(--muted-foreground))' }}>
+          Automations
+        </Button>
+      )}
+
+      <Box sx={{ p: 3, borderRadius: 2, border: '1px solid hsl(var(--border))', bgcolor: 'hsl(var(--card))', mb: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2.5 }}>
+          <Box sx={{ width: 52, height: 52, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: `hsla(var(${sourceCat?.color || '--primary'}) / 0.12)`, color: `hsl(var(${sourceCat?.color || '--primary'}))`, flexShrink: 0 }}>
+            {sourceCat?.icon || <ArrowRight size={22} />}
+          </Box>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography sx={{ fontSize: '1.35rem', fontWeight: 800, color: 'hsl(var(--foreground))', mb: 1, lineHeight: 1.2 }}>
+              {flow.label}
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 1.25 }}>
+              <Typography sx={{ fontSize: '0.68rem', fontWeight: 700, px: 1, py: 0.35, borderRadius: 1, bgcolor: `hsla(var(${phaseInfo.color}) / 0.12)`, color: `hsl(var(${phaseInfo.color}))`, border: `1px solid hsla(var(${phaseInfo.color}) / 0.25)` }}>
+                Step {phaseInfo.step}: {phaseInfo.label}
+              </Typography>
+              {flow.manualVerification && (
+                <Typography sx={{ fontSize: '0.68rem', fontWeight: 700, px: 1, py: 0.35, borderRadius: 1, bgcolor: 'hsla(45 93% 47% / 0.1)', color: 'hsl(45 93% 47%)', border: '1px solid hsla(45 93% 47% / 0.25)' }}>
+                  Manual Verification
+                </Typography>
+              )}
+              {typeof flow.priority === 'number' && (
+                <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, fontSize: '0.68rem', fontWeight: 700, px: 1, py: 0.35, borderRadius: 1, bgcolor: 'hsla(var(--primary) / 0.1)', color: 'hsl(var(--primary))', border: '1px solid hsla(var(--primary) / 0.25)' }}>
+                  <Flame size={11} />
+                  Priority {flow.priority}
+                </Box>
+              )}
+            </Box>
+            <Typography sx={{ fontSize: '0.88rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.7 }}>
+              {flow.description || 'No description available.'}
+            </Typography>
+            {flow.tags.length > 0 && (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mt: 1.5 }}>
+                {flow.tags.map((tag) => (
+                  <Typography key={tag} sx={{ fontSize: '0.7rem', px: 0.9, py: 0.35, borderRadius: 1, bgcolor: 'hsla(var(--muted-foreground) / 0.08)', color: 'hsl(var(--muted-foreground))', border: '1px solid hsla(var(--muted-foreground) / 0.18)', fontWeight: 600 }}>
+                    {tag}
+                  </Typography>
+                ))}
+              </Box>
+            )}
+          </Box>
+        </Box>
+      </Box>
+
+      <Box sx={{ p: 3, borderRadius: 2, border: '1px solid hsl(var(--border))', bgcolor: 'hsl(var(--card))', mb: 3 }}>
+        <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.06em', mb: 1.5 }}>
+          Connection Path
+        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'stretch', gap: 2, flexDirection: { xs: 'column', md: 'row' } }}>
+          {[{ title: 'Source', meta: sourceCat, details: sourceDetails, appNames: categoryAppNames[flow.source] || [] }, { title: 'Destination', meta: targetCat, details: targetDetails, appNames: categoryAppNames[flow.target] || [] }].map((endpoint, index) => (
+            <Box key={endpoint.title} sx={{ flex: 1, minWidth: 0 }}>
+              <Typography sx={{ fontSize: '0.66rem', fontWeight: 700, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.06em', mb: 1 }}>
+                {endpoint.title}
+              </Typography>
+              <Box sx={{ p: 1.5, borderRadius: 1.5, bgcolor: `hsla(var(${endpoint.meta?.color || '--primary'}) / 0.06)`, border: `1px solid hsla(var(${endpoint.meta?.color || '--primary'}) / 0.15)`, mb: 1.25 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+                  <Box sx={{ width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: `hsla(var(${endpoint.meta?.color || '--primary'}) / 0.12)`, color: `hsl(var(${endpoint.meta?.color || '--primary'}))`, flexShrink: 0 }}>
+                    {endpoint.meta?.icon}
+                  </Box>
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography sx={{ fontSize: '0.9rem', fontWeight: 700, color: `hsl(var(${endpoint.meta?.color || '--primary'}))` }}>
+                      {endpoint.meta?.label || 'Unknown'}
+                    </Typography>
+                    {endpoint.details && (
+                      <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.5 }}>
+                        {endpoint.details.description.split('—')[0].trim()}
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
+              </Box>
+              <Typography sx={{ fontSize: '0.64rem', fontWeight: 700, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.06em', mb: 0.75 }}>
+                Your Tools
+              </Typography>
+              <IntegrationStatusLite filterApps={endpoint.appNames} />
+            </Box>
+          ))}
+        </Box>
+      </Box>
+
+      {(flow.referenceImage || flow.video || flow.blogpost) && (
+        <Box sx={{ p: 3, borderRadius: 2, border: '1px solid hsl(var(--border))', bgcolor: 'hsl(var(--card))', mb: 3 }}>
+          <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.06em', mb: 1.5 }}>
+            Resources
+          </Typography>
+          {flow.referenceImage && (
+            <Box component="a" href={flow.referenceImage} target="_blank" rel="noopener noreferrer" sx={{ display: 'block', mb: (flow.video || flow.blogpost) ? 2 : 0, borderRadius: 1.5, overflow: 'hidden', border: '1px solid hsl(var(--border))' }}>
+              <Box component="img" src={flow.referenceImage} alt={`${flow.label} reference`} loading="lazy" sx={{ display: 'block', width: '100%', height: 'auto', maxHeight: 420, objectFit: 'contain' }} />
+            </Box>
+          )}
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            {flow.video && (
+              <Button href={flow.video} target="_blank" rel="noopener noreferrer" startIcon={<PlayCircle size={16} />} sx={{ textTransform: 'none', fontSize: '0.8rem', fontWeight: 600, color: 'hsl(var(--primary))', border: '1px solid hsla(var(--primary) / 0.3)', bgcolor: 'hsla(var(--primary) / 0.06)' }}>
+                Watch video
+              </Button>
+            )}
+            {flow.blogpost && (
+              <Button href={flow.blogpost} target="_blank" rel="noopener noreferrer" startIcon={<BookOpen size={16} />} sx={{ textTransform: 'none', fontSize: '0.8rem', fontWeight: 600, color: 'hsl(var(--foreground))', border: '1px solid hsl(var(--border))', bgcolor: 'hsla(var(--muted-foreground) / 0.04)' }}>
+                Read blogpost
+              </Button>
+            )}
+          </Box>
+        </Box>
+      )}
+
+      {!hidePrevNext && (
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mt: 2 }}>
+          {prevFlow ? (
+            <Button onClick={() => goToUsecase(prevFlow.id)} startIcon={<ArrowLeft size={14} />} sx={{ textTransform: 'none', color: 'hsl(var(--muted-foreground))' }}>
+              {prevFlow.label}
+            </Button>
+          ) : <Box />}
+          {nextFlow ? (
+            <Button onClick={() => goToUsecase(nextFlow.id)} endIcon={<ArrowRight size={14} />} sx={{ textTransform: 'none', color: 'hsl(var(--muted-foreground))' }}>
+              {nextFlow.label}
+            </Button>
+          ) : <Box />}
+        </Box>
+      )}
+    </Box>
+  );
+}
+
 export default function UsecasesPage() {
   usePageTitle('Usecases');
 
@@ -502,7 +826,7 @@ export default function UsecasesPage() {
             }}
           >
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              <IntegrationStatus collapsed={false} showAll hideAddButton hideHeader />
+              <IntegrationStatusLite />
             </Box>
             <Button
               component={Link}
@@ -767,6 +1091,7 @@ export default function UsecasesPage() {
             flowId={drawerFlowId ?? undefined}
             hideBackNav
             onNavigateUsecase={(id) => setDrawerFlowId(id || null)}
+            usecases={usecases}
           />
         </Box>
       </Drawer>
