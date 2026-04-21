@@ -94,13 +94,28 @@ export const GA_EVENTS = {
   // Demo tour funnel events.
   // Each fires with `label = stepId` and `value = stepIndex` so GA can build
   // a step-ordinal funnel (e.g. how many users reach step 5 of the demo).
-  // DEMO_STEP_VIEW is the primary funnel signal — fired exactly once per
-  // (session, step) when the user lands on / advances to that step.
-  // DEMO_STEP_COMPLETE only fires for steps with a real action requirement.
+  //
+  // Funnel layers:
+  //   DEMO_START          — user clicked "Start demo tour"
+  //   DEMO_LIVE_ENV_*     — environment bootstrap (workflows + feeds + IOCs) result
+  //   DEMO_STEP_VIEW      — user landed on a step (once per session per step)
+  //   DEMO_STEP_ADVANCE   — user clicked Next from a step (counts as "successful
+  //                         at this step" for steps without an explicit gate)
+  //   DEMO_STEP_COMPLETE  — gated step's requirement was satisfied (e.g. webhook on)
+  //   DEMO_FORCE_CREATE_INCIDENTS — manual rescue button on the incidents step
+  //   DEMO_FINISH         — user reached the final wrap step
+  //   DEMO_ABANDON        — user closed/exited the tour before finishing
+  //   DEMO_CLEANUP        — user clicked "Clean up demo data"
+  //   DEMO_MINIMIZE/RESTORE — drawer pill state
   DEMO_START: { category: 'demo', action: 'demo_start' },
+  DEMO_LIVE_ENV_SUCCESS: { category: 'demo', action: 'demo_live_env_success' },
+  DEMO_LIVE_ENV_FAILURE: { category: 'demo', action: 'demo_live_env_failure' },
   DEMO_STEP_VIEW: { category: 'demo', action: 'demo_step_view' },
+  DEMO_STEP_ADVANCE: { category: 'demo', action: 'demo_step_advance' },
   DEMO_STEP_COMPLETE: { category: 'demo', action: 'demo_step_complete' },
+  DEMO_FORCE_CREATE_INCIDENTS: { category: 'demo', action: 'demo_force_create_incidents' },
   DEMO_FINISH: { category: 'demo', action: 'demo_finish' },
+  DEMO_ABANDON: { category: 'demo', action: 'demo_abandon' },
   DEMO_CLEANUP: { category: 'demo', action: 'demo_cleanup' },
   DEMO_MINIMIZE: { category: 'demo', action: 'demo_minimize' },
   DEMO_RESTORE: { category: 'demo', action: 'demo_restore' },
