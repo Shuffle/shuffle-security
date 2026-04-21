@@ -160,19 +160,20 @@ export const DemoModeCard = () => {
             <>
               <Button
                 onClick={openTour}
-                variant="contained"
+                variant="text"
                 size="small"
                 startIcon={<Play size={14} />}
                 sx={{
                   textTransform: 'none',
                   fontSize: '0.8rem',
-                  fontWeight: 600,
-                  backgroundColor: 'hsl(var(--primary))',
-                  color: 'hsl(var(--primary-foreground))',
-                  px: 2,
-                  boxShadow: 'none',
+                  fontWeight: 500,
+                  color: 'hsl(var(--muted-foreground))',
+                  px: 1.5,
                   whiteSpace: 'nowrap',
-                  '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.9)', boxShadow: 'none' },
+                  '&:hover': {
+                    backgroundColor: 'hsl(var(--muted) / 0.6)',
+                    color: 'hsl(var(--foreground))',
+                  },
                 }}
               >
                 Continue tour
