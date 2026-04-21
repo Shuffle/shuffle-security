@@ -954,25 +954,22 @@ interface WorkflowSummary {
 }
 function useWorkflowsLite() {
   const [data, setData] = useState<WorkflowSummary[]>([]);
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch(apiUrl('/api/v1/workflows'), {
-          credentials: 'include',
-          headers: { ...authHeader() },
-        });
-        if (!res.ok) return;
-        const body = await res.json();
-        const list = Array.isArray(body) ? body : (body.workflows || []);
-        if (!cancelled) setData(list);
-      } catch {
-        /* keep [] */
-      }
-    })();
-    return () => { cancelled = true; };
+  const fetchOnce = React.useCallback(async () => {
+    try {
+      const res = await fetch(apiUrl('/api/v1/workflows'), {
+        credentials: 'include',
+        headers: { ...authHeader() },
+      });
+      if (!res.ok) return;
+      const body = await res.json();
+      const list = Array.isArray(body) ? body : (body.workflows || []);
+      setData(list);
+    } catch {
+      /* keep current */
+    }
   }, []);
-  return { data };
+  useEffect(() => { fetchOnce(); }, [fetchOnce]);
+  return { data, refetch: fetchOnce };
 }
 
 // ============================================================================
