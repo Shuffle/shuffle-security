@@ -25,7 +25,6 @@ import {
 const VULNS_CATEGORY = 'shuffle-security_vulnerabilities';
 const SENSORS_CATEGORY = 'shuffle-security_sensors';
 
-import { getApiUrl, getAuthHeader } from '@/config/api';
 
 /**
  * Strip the demo-injected sensor host stub(s) from /api/v1/getenvironments.
