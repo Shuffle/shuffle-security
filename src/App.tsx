@@ -167,8 +167,9 @@ const ThemedApp = () => {
             {/* App detail & usecase detail: uses sidebar when authenticated, standalone when guest */}
             <Route element={<ConditionalDashboardLayout />}>
               <Route path="/usecases" element={<UsecasesPage />} />
+              <Route path="/usecases/:flowId" element={<UsecasesPage />} />
+              <Route path="/usecases/:flowId/details" element={<DataFlowDetailPage />} />
               <Route path="/apps/:appname" element={<AppDetailPage />} />
-              <Route path="/usecases/:flowId" element={<DataFlowDetailPage />} />
               <Route path="/vulnerabilities" element={<VulnerabilitiesPage />} />
               <Route path="/vulnerabilities/*" element={<VulnerabilityDetailPage />} />
             </Route>
