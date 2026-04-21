@@ -72,17 +72,18 @@ export const TOUR_STEPS: TourStep[] = [
     },
   },
   {
-    id: 'enable-crowdstrike',
-    title: 'Turn on CrowdStrike',
-    body: 'Route EDR alerts into Shuffle.',
+    id: 'add-outlook',
+    title: 'Add an ingestion source',
+    body: 'Pull alerts from a real tool.',
     bullets: [
-      'Click the highlighted CrowdStrike icon',
-      'Switch the source on',
+      'Click the highlighted "+" button',
+      'Pick "Outlook Office365" in the popup',
+      "We'll pretend-authenticate it for the demo",
     ],
     route: '/incidents',
     requirement: {
-      label: 'Enable CrowdStrike as an ingestion source',
-      targetSelector: '[data-tour="ingestion-source-crowdstrike"]',
+      label: 'Add Outlook Office365 as an ingestion source',
+      targetSelector: '[data-tour="add-ingestion-source-button"]',
     },
   },
   {
