@@ -4618,39 +4618,25 @@ const IncidentDetailPage = () => {
             </Typography>
           ) : (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {/* Correlation summary */}
-              <Box sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: 2, 
-                p: 2, 
-                bgcolor: 'rgba(255, 102, 0, 0.08)', 
-                borderRadius: 1.5,
-                border: '1px solid rgba(255, 102, 0, 0.2)',
+              {/* Correlation summary — quiet header */}
+              <Box sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1.5,
+                pb: 1.5,
+                borderBottom: '1px solid hsl(var(--border))',
               }}>
-                <Box sx={{ 
-                  width: 40, 
-                  height: 40, 
-                  borderRadius: 1, 
-                  bgcolor: 'rgba(255, 102, 0, 0.15)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}>
-                  <LinkIcon sx={{ color: '#ff6600' }} />
-                </Box>
-                <Box>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    {correlations.length} Shared Attribute{correlations.length !== 1 ? 's' : ''}
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                    Values found across multiple datastore categories
-                  </Typography>
-                </Box>
+                <LinkIcon sx={{ fontSize: 18, color: 'hsl(var(--muted-foreground))' }} />
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  {correlations.length} shared attribute{correlations.length !== 1 ? 's' : ''}
+                </Typography>
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                  · linked across other datastore items
+                </Typography>
               </Box>
 
               {/* Correlation list */}
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 {correlations.map((corr, idx) => {
                   // Group refs by category
                   const refsByCategory: Record<string, string[]> = {};
@@ -4662,65 +4648,65 @@ const IncidentDetailPage = () => {
                       refsByCategory[category].push(key);
                     }
                   });
-                  
+
                   const categories = Object.keys(refsByCategory);
                   const isHighMatch = corr.amount >= 5;
                   const isMediumMatch = corr.amount >= 3 && corr.amount < 5;
-                  
+                  const dotColor = isHighMatch ? '#ff6600' : isMediumMatch ? '#eab308' : 'hsl(var(--muted-foreground))';
+
                   // Helper to format category name
                   const formatCategory = (cat: string) => cat.replace('shuffle-', '').replace(/_/g, ' ');
-                  
+
                   return (
-                    <Box 
-                      key={corr.key || idx} 
-                      sx={{ 
-                        p: 2, 
-                        borderRadius: 1.5, 
-                        bgcolor: isHighMatch ? 'rgba(255, 102, 0, 0.05)' : 'rgba(0,0,0,0.2)',
-                        border: '1px solid',
-                        borderColor: isHighMatch ? 'rgba(255, 102, 0, 0.2)' : 'rgba(255,255,255,0.06)',
+                    <Box
+                      key={corr.key || idx}
+                      sx={{
+                        p: 1.75,
+                        borderRadius: 1.5,
+                        bgcolor: 'transparent',
+                        border: '1px solid hsl(var(--border))',
+                        transition: 'border-color 120ms ease',
+                        '&:hover': { borderColor: 'hsl(var(--border) / 0.8)' },
                       }}
                     >
                       {/* Correlation header */}
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: categories.length > 0 ? 1.5 : 0 }}>
-                        <Chip 
-                          label={corr.key}
-                          size="small"
-                          variant="outlined"
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, mb: categories.length > 0 ? 1.25 : 0 }}>
+                        <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: dotColor, flexShrink: 0 }} />
+                        <Typography
                           sx={{
                             fontFamily: 'monospace',
-                            fontSize: '0.75rem',
-                            bgcolor: 'transparent',
-                            borderColor: isHighMatch ? 'rgba(255, 102, 0, 0.5)' : isMediumMatch ? 'rgba(234, 179, 8, 0.4)' : 'rgba(148, 163, 184, 0.3)',
-                            color: isHighMatch ? '#ff6600' : isMediumMatch ? '#eab308' : 'text.secondary',
+                            fontSize: '0.78rem',
                             fontWeight: 600,
+                            color: 'text.primary',
+                            wordBreak: 'break-all',
                           }}
-                        />
-                        <Box sx={{ flex: 1 }}>
-                          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                            Found in <strong>{corr.amount}</strong> items across {categories.length} categor{categories.length === 1 ? 'y' : 'ies'}
-                          </Typography>
-                        </Box>
+                        >
+                          {corr.key}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: 'text.secondary', ml: 'auto', flexShrink: 0 }}>
+                          {corr.amount} match{corr.amount !== 1 ? 'es' : ''}
+                        </Typography>
                       </Box>
-                      
+
                       {/* Refs by category */}
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
                         {categories.map(category => {
                           const keys = refsByCategory[category];
                           const isIncidentCategory = category === 'shuffle-security_incidents';
-                          
+
                           return (
                             <Box key={category} sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-                              <Typography 
-                                variant="caption" 
-                                sx={{ 
-                                  color: 'text.disabled', 
-                                  minWidth: 100, 
+                              <Typography
+                                variant="caption"
+                                sx={{
+                                  color: 'text.disabled',
+                                  minWidth: 100,
                                   textTransform: 'capitalize',
                                   pt: 0.25,
+                                  fontSize: '0.7rem',
                                 }}
                               >
-                                {formatCategory(category)}:
+                                {formatCategory(category)}
                               </Typography>
                               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                                 {keys.slice(0, 5).map((key) => (
@@ -4737,10 +4723,13 @@ const IncidentDetailPage = () => {
                                       fontSize: '0.7rem',
                                       fontFamily: 'monospace',
                                       bgcolor: 'transparent',
-                                      borderColor: isIncidentCategory ? 'rgba(255, 102, 0, 0.5)' : 'rgba(255,255,255,0.12)',
-                                      color: isIncidentCategory ? '#ff6600' : 'text.secondary',
+                                      borderColor: 'hsl(var(--border))',
+                                      color: isIncidentCategory ? 'hsl(var(--primary))' : 'text.secondary',
                                       cursor: isIncidentCategory ? 'pointer' : 'default',
-                                      '&:hover': isIncidentCategory ? { bgcolor: 'rgba(255, 102, 0, 0.08)' } : {},
+                                      '&:hover': isIncidentCategory ? {
+                                        bgcolor: 'hsl(var(--primary) / 0.06)',
+                                        borderColor: 'hsl(var(--primary) / 0.5)',
+                                      } : {},
                                     }}
                                   />
                                 ))}
@@ -4754,7 +4743,7 @@ const IncidentDetailPage = () => {
                                         height: 22,
                                         fontSize: '0.7rem',
                                         bgcolor: 'transparent',
-                                        borderColor: 'rgba(148, 163, 184, 0.3)',
+                                        borderColor: 'hsl(var(--border))',
                                         color: 'text.disabled',
                                       }}
                                     />
