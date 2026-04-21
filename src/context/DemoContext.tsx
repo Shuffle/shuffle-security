@@ -39,7 +39,7 @@ export const TOUR_STEPS: TourStep[] = [
     title: 'Welcome to your demo',
     body: 'Here is what we will do, in order:',
     bullets: [
-      '1. Add ingestion sources (Outlook Office365 + Microsoft Defender 365)',
+      '1. Add ingestion sources (Outlook Office365 + Microsoft 365 Defender)',
       '2. Turn on the ingestion webhook',
       '3. Watch incidents arrive and open one',
       '4. Explore assets and vulnerabilities',
@@ -55,11 +55,11 @@ export const TOUR_STEPS: TourStep[] = [
     bullets: [
       'Click the highlighted "+" button',
       'Add "Outlook Office365" — we will pretend-authenticate it',
-      'Click "+" again and add "Microsoft Defender 365"',
+      'Click "+" again and add "Microsoft 365 Defender"',
     ],
     route: '/incidents',
     requirement: {
-      label: 'Add both Outlook Office365 and Microsoft Defender 365',
+      label: 'Add both Outlook Office365 and Microsoft 365 Defender',
       targetSelector: '[data-tour="add-ingestion-source-button"]',
     },
   },
