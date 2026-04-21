@@ -89,6 +89,20 @@ export const GA_EVENTS = {
   DETECTION_TEST_RUN: { category: 'detection', action: 'test_run' },
   DETECTION_STEP_EXPAND: { category: 'detection', action: 'step_expand' },
   DETECTION_ENV_CREATE: { category: 'detection', action: 'env_create' },
+
+  // Demo tour funnel events.
+  // Each fires with `label = stepId` and `value = stepIndex` so GA can build
+  // a step-ordinal funnel (e.g. how many users reach step 5 of the demo).
+  // DEMO_STEP_VIEW is the primary funnel signal — fired exactly once per
+  // (session, step) when the user lands on / advances to that step.
+  // DEMO_STEP_COMPLETE only fires for steps with a real action requirement.
+  DEMO_START: { category: 'demo', action: 'demo_start' },
+  DEMO_STEP_VIEW: { category: 'demo', action: 'demo_step_view' },
+  DEMO_STEP_COMPLETE: { category: 'demo', action: 'demo_step_complete' },
+  DEMO_FINISH: { category: 'demo', action: 'demo_finish' },
+  DEMO_CLEANUP: { category: 'demo', action: 'demo_cleanup' },
+  DEMO_MINIMIZE: { category: 'demo', action: 'demo_minimize' },
+  DEMO_RESTORE: { category: 'demo', action: 'demo_restore' },
 } as const;
 
 interface TrackEventParams {
