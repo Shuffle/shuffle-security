@@ -350,6 +350,8 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
 
   const isStepUnlocked = useCallback((s: TourStep | undefined): boolean => {
     if (!s) return true;
+    // Special gate: incidents-list requires a real incident in the datastore.
+    if (s.id === 'incidents-list') return hasDemoIncidents;
     // Sub-goal gate takes precedence: if defined, the step's own
     // `requirement` is purely cosmetic and only the sub-goals decide.
     if (s.subGoals && s.subGoals.length > 0) {
@@ -358,7 +360,7 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
     // Step-level requirement gate (legacy single-goal).
     if (s.requirement && !completedSteps[s.id]) return false;
     return true;
-  }, [completedSteps]);
+  }, [completedSteps, hasDemoIncidents]);
 
   const currentStep = TOUR_STEPS[step];
   const currentStepUnlocked = isStepUnlocked(currentStep);
