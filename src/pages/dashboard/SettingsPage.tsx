@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import { getApiUrl, getAuthHeader, API_CONFIG } from '@/config/api';
 import { useAuth } from '@/context/AuthContext';
+import { trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
 
 // Settings types
 
@@ -67,6 +68,7 @@ const SettingsPage = () => {
   }, [sessionToken, userInfo]);
 
   const handleLogout = async () => {
+    trackPredefinedEvent(GA_EVENTS.LOGOUT);
     await logout();
     navigate('/login', { replace: true });
   };

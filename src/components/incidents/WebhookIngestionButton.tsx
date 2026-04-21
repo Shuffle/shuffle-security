@@ -6,6 +6,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import BlockIcon from '@mui/icons-material/Block';
 import { getApiUrl, getAuthHeader } from '@/config/api';
+import { trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
 import { toast } from 'sonner';
 
 export interface WebhookIngestionInfo {
@@ -49,6 +50,7 @@ export const WebhookIngestionButton = ({ webhook, onToggled }: WebhookIngestionB
     const willBeEnabled = !isEnabled;
     setOptimisticEnabled(willBeEnabled);
     setAnchorEl(null);
+    trackPredefinedEvent(GA_EVENTS.INCIDENT_INGESTION_TOGGLE, 'webhook', willBeEnabled ? 1 : 0);
 
     try {
       if (willBeEnabled) {
