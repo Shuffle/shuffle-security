@@ -197,8 +197,8 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
   const [dock, setDockState] = useState<DemoDock>(() => {
     try {
       const v = localStorage.getItem('shuffle_demo_dock');
-      return v === 'bottom' ? 'bottom' : 'right';
-    } catch { return 'right'; }
+      return v === 'right' ? 'right' : 'bottom';
+    } catch { return 'bottom'; }
   });
   const [step, setStep] = useState(0);
   const [stats, setStats] = useState(() => getDemoStats());
