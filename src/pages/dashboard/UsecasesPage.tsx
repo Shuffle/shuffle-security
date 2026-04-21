@@ -1550,17 +1550,62 @@ function UsecaseDetailContent({
   hidePrevNext = false,
   onNavigateUsecase,
   usecases,
+  isEnabled = false,
+  canToggle = false,
+  onToggled,
 }: {
   flowId: string | undefined;
   hideBackNav?: boolean;
   hidePrevNext?: boolean;
   onNavigateUsecase?: (flowId: string) => void;
   usecases: Usecase[];
+  /** Whether this automation currently has a running workflow */
+  isEnabled?: boolean;
+  /** Whether the Enable/Disable button should be shown (auth + automationLabel) */
+  canToggle?: boolean;
+  /** Called after a successful toggle so the parent can refetch workflows */
+  onToggled?: () => void;
 }) {
   const navigate = useNavigate();
   const { apiUrl, authHeader } = useApi();
   const flow = usecases.find((item) => item.id === flowId);
   const [categoryAppNames, setCategoryAppNames] = useState<Record<string, string[]>>({});
+  const [toggling, setToggling] = useState(false);
+  const [optimisticEnabled, setOptimisticEnabled] = useState<boolean | null>(null);
+  const effectiveEnabled = optimisticEnabled !== null ? optimisticEnabled : isEnabled;
+
+  const handleToggle = async () => {
+    if (!flow?.automationLabel || toggling) return;
+    const willBeEnabled = !effectiveEnabled;
+    setToggling(true);
+    setOptimisticEnabled(willBeEnabled);
+    try {
+      const res = await fetch(apiUrl('/api/v2/workflows/generate'), {
+        method: 'POST',
+        credentials: 'include',
+        headers: { ...authHeader(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          label: flow.automationLabel,
+          ...(flow.automationCategory ? { category: flow.automationCategory } : {}),
+          ...(willBeEnabled ? {} : { action_name: 'remove' }),
+        }),
+      });
+      let body: any = null;
+      try { body = await res.json(); } catch { /* ignore */ }
+      const reason = typeof body?.reason === 'string' ? body.reason : '';
+      const ok = res.ok && body?.success !== false;
+      if (!ok) throw new Error(reason || `Request failed (${res.status})`);
+      toast.success(willBeEnabled ? `${flow.label} enabled` : `${flow.label} disabled`);
+      onToggled?.();
+      setTimeout(() => setOptimisticEnabled(null), 1500);
+    } catch (err: any) {
+      setOptimisticEnabled(null);
+      toast.error(err?.message || 'Failed to update automation', { duration: 6000 });
+    } finally {
+      setToggling(false);
+    }
+  };
+
 
   useEffect(() => {
     let cancelled = false;
