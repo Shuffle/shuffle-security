@@ -813,8 +813,42 @@ const VulnAssetsPage = () => {
     setIsCreatingGroup(false);
     setNewGroupName('');
     setAddHostOpen(true);
+    // Reset GA funnel guards for a fresh Add-Host session
+    detectedFiredRef.current = false;
+    dialogOpenRef.current = true;
+    trackPredefinedEvent(GA_EVENTS.MONITOR_ADD_HOST_OPEN);
     loadGroups();
   };
+
+  // GA: when the Add Host dialog closes (manually, ESC, click-outside, or page
+  // navigation that unmounts this component), fire DISMISS unless the user
+  // actually got a sensor detection. Covers both "closed dialog" and
+  // "left page before sensor connected" failure paths.
+  useEffect(() => {
+    if (addHostOpen) {
+      dialogOpenRef.current = true;
+      return;
+    }
+    if (dialogOpenRef.current) {
+      dialogOpenRef.current = false;
+      if (!detectedFiredRef.current) {
+        trackPredefinedEvent(
+          GA_EVENTS.MONITOR_ADD_HOST_DISMISS,
+          addHostStep, // 'checks' | 'deploy' — tells you how far they got
+        );
+      }
+    }
+  }, [addHostOpen, addHostStep]);
+
+  // Unmount-time safety net: if the user navigates away with the dialog still
+  // open and no detection, count it as a dismissal.
+  useEffect(() => {
+    return () => {
+      if (dialogOpenRef.current && !detectedFiredRef.current) {
+        trackPredefinedEvent(GA_EVENTS.MONITOR_ADD_HOST_DISMISS, 'unmount');
+      }
+    };
+  }, []);
 
   // Auto-open Add Host dialog when ?add_host=true is present in the URL
   useEffect(() => {
