@@ -329,9 +329,15 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
       // Make the environment "live": generate ingest + threat-intel
       // workflows and seed Threat Feeds + IOC Types defaults. Runs in
       // parallel with the first-step seeder so it does not block the UI.
-      const liveEnvPromise = enableLiveDemoEnvironment().catch(err => {
-        console.warn('[demo] live environment bootstrap failed', err);
-      });
+      const liveEnvStartedAt = Date.now();
+      const liveEnvPromise = enableLiveDemoEnvironment()
+        .then(() => {
+          trackPredefinedEvent(GA_EVENTS.DEMO_LIVE_ENV_SUCCESS, undefined, Date.now() - liveEnvStartedAt);
+        })
+        .catch(err => {
+          console.warn('[demo] live environment bootstrap failed', err);
+          trackPredefinedEvent(GA_EVENTS.DEMO_LIVE_ENV_FAILURE, String(err?.message || 'unknown'), Date.now() - liveEnvStartedAt);
+        });
       await Promise.all([runStepSeed(0), liveEnvPromise]);
     } finally {
       setIsSeeding(false);
