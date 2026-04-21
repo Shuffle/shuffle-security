@@ -2386,6 +2386,7 @@ function UsecaseCard({
   apiLoaded,
   isEnabled,
   canToggle,
+  isAuthenticated = true,
   onToggled,
   onClick,
 }: {
@@ -2394,6 +2395,7 @@ function UsecaseCard({
   apiLoaded: boolean;
   isEnabled: boolean;
   canToggle: boolean;
+  isAuthenticated?: boolean;
   onToggled?: () => void;
   onClick: () => void;
 }) {
