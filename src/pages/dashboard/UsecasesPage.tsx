@@ -2059,19 +2059,29 @@ function UsecasesPageInner() {
   const [drawerFlowId, setDrawerFlowIdState] = useState<string | null>(null);
 
   // Resolve a label from the URL to a flow id once usecases load (and whenever
-  // the URL segment changes). Match is permissive: exact label, case-insensitive
-  // label, or by id — so deep-links work even if the backend renames the usecase.
+  // the URL segment changes). Match is permissive — slugified comparison, plus
+  // exact / case-insensitive / id fallbacks — so deep-links keep working even
+  // when the host platform's backend renames the usecase or formats it
+  // slightly differently (e.g. "siem_alerts" vs "SIEM alerts").
   useEffect(() => {
     if (!drawerLabel) {
       setDrawerFlowIdState(null);
       return;
     }
-    const target = drawerLabel.trim().toLowerCase();
+    const norm = (s: string) => s.trim().toLowerCase().replace(/[^a-z0-9]+/g, '');
+    const target = norm(drawerLabel);
     const match =
       usecases.find(u => u.label === drawerLabel) ||
-      usecases.find(u => u.label?.toLowerCase() === target) ||
-      usecases.find(u => u.id?.toLowerCase() === target);
-    if (match) setDrawerFlowIdState(match.id);
+      usecases.find(u => u.label && norm(u.label) === target) ||
+      usecases.find(u => u.id && norm(u.id) === target) ||
+      usecases.find(u => u.label && norm(u.label).includes(target)) ||
+      usecases.find(u => u.label && target.includes(norm(u.label)));
+    if (match) {
+      setDrawerFlowIdState(match.id);
+    } else if (usecases.length > 0) {
+      console.warn('[UsecasesPage] No matching usecase for URL label:', drawerLabel,
+        '— available labels:', usecases.map(u => u.label));
+    }
   }, [drawerLabel, usecases]);
 
   const setDrawerFlowId = (id: string | null) => {
