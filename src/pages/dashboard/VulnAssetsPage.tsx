@@ -244,6 +244,11 @@ const VulnAssetsPage = () => {
   // DISMISS only fires when the user closed the dialog without success.
   const detectedFiredRef = useRef(false);
   const dialogOpenRef = useRef(false);
+  // Auto-create-default guard: when Add Host opens for the first time and the
+  // org has zero monitoring groups, we silently spin up "shuffle_sensors" so
+  // the user never has to click "+ New group" before deploying. One-shot per
+  // page mount — if creation fails the user can still create one manually.
+  const autoCreatedDefaultRef = useRef(false);
 
   // Monitoring groups (from API)
   const [groups, setGroups] = useState<MonitoringGroup[]>([]);
@@ -880,6 +885,30 @@ const VulnAssetsPage = () => {
     }
     setCreatingGroupLoading(false);
   };
+
+  // Auto-create a default "shuffle_sensors" group the first time the Add Host
+  // dialog opens on an org with no existing groups. We wait for /getenvironments
+  // to finish (`!groupsLoading`) and snapshot via `autoCreatedDefaultRef` so we
+  // never POST the same env twice. Errors fall through silently — the user can
+  // still hit "+ New group" by hand.
+  useEffect(() => {
+    if (!addHostOpen) return;
+    if (groupsLoading) return;
+    if (loadError) return;
+    if (groups.length > 0) return;
+    if (creatingGroupLoading) return;
+    if (autoCreatedDefaultRef.current) return;
+    autoCreatedDefaultRef.current = true;
+    (async () => {
+      setCreatingGroupLoading(true);
+      const created = await createSensorGroupEnv('shuffle_sensors', allEnvs);
+      if (created) {
+        await loadGroups();
+        setSelectedGroupId(created.id);
+      }
+      setCreatingGroupLoading(false);
+    })();
+  }, [addHostOpen, groupsLoading, loadError, groups.length, creatingGroupLoading, allEnvs, loadGroups]);
 
   return (
     <div className="p-6 max-w-[1400px] mx-auto space-y-6">
