@@ -62,6 +62,7 @@ export default function UsecasesPage() {
   const { data: workflows = [], refetch: refetchWorkflows } = useWorkflows();
   const isSupport = userInfo?.support === true;
   const [showAllAsSupport, setShowAllAsSupport] = useState(true);
+  const [drawerFlowId, setDrawerFlowId] = useState<string | null>(null);
 
   // Map: automationLabel -> whether at least one workflow exists for it.
   // Match by workflow name OR tag containing the label (case-insensitive).
