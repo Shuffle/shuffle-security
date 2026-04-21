@@ -842,6 +842,10 @@ const VulnAssetsPage = () => {
           addHostStep, // 'checks' | 'deploy' — tells you how far they got
         );
       }
+      // Always re-pull /getenvironments on close so any host that connected
+      // (or any group created) while the dialog was open is reflected in the
+      // list immediately — no manual Refresh needed.
+      loadGroups();
     }
   }, [addHostOpen, addHostStep]);
 
