@@ -205,7 +205,14 @@ const MonitorDetailPage = () => {
       </div>
 
       {/* Detail panel — same component used by /monitors list expansion */}
-      <HostDetailPanel host={host} variant="page" collapsibleSections />
+      <HostDetailPanel
+        host={host}
+        variant="page"
+        collapsibleSections
+        hostUuid={host.uuid}
+        hostname={host.hostname}
+        groupName={groupName}
+      />
 
       <DisableRceConfirmDialog
         pending={hostActions.pendingDisableRce}
