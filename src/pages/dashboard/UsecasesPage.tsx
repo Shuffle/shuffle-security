@@ -2284,3 +2284,49 @@ function UsecaseCard({
     </Card>
   );
 }
+
+/**
+ * Default export — wraps `UsecasesPageInner` with a config provider so host
+ * apps can pass `userdata` / `globalUrl` / `isLoaded` / `isLoggedIn` props
+ * exactly like the legacy Shuffle Frontend route:
+ *
+ *   <Route exact path="/usecases" element={
+ *     <UsecasesPage userdata={userdata} globalUrl={globalUrl} isLoaded isLoggedIn />
+ *   } />
+ *
+ * When called with no props the page falls back to standalone behavior
+ * (env / hostname-derived API URL, `localStorage.shuffle_api_key` auth, and
+ * an internal `/api/v1/getinfo` probe).
+ */
+export default function UsecasesPage(props: UsecasesPageProps = {}) {
+  const { globalUrl, userdata, isLoaded = true, isLoggedIn } = props;
+
+  const config = React.useMemo<UsecasesPageConfig>(() => {
+    const baseUrl = (globalUrl && globalUrl.replace(/\/+$/, '')) || DEFAULT_API_BASE_URL;
+    const externalUserInfo = userdata ?? null;
+    const externalApiKey = userdata?.api_key || userdata?.apikey || null;
+    const hasExternalAuth = !!userdata || typeof isLoggedIn === 'boolean';
+    const externalIsAuthenticated =
+      typeof isLoggedIn === 'boolean' ? isLoggedIn : !!userdata;
+
+    return {
+      baseUrl,
+      authHeader: () => {
+        // Prefer the external user's API key if provided, else fall back to
+        // the standalone localStorage key (legacy behavior).
+        const key = externalApiKey || getStoredApiKey();
+        return key ? { Authorization: `Bearer ${key}` } : {};
+      },
+      hasExternalAuth,
+      externalUserInfo,
+      externalIsAuthenticated,
+      isLoaded,
+    };
+  }, [globalUrl, userdata, isLoaded, isLoggedIn]);
+
+  return (
+    <UsecasesPageConfigContext.Provider value={config}>
+      <UsecasesPageInner />
+    </UsecasesPageConfigContext.Provider>
+  );
+}
