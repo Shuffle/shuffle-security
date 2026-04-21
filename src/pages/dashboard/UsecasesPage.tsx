@@ -1636,46 +1636,61 @@ function UsecaseDetailContent({
     else navigate(`/usecases/${id}`);
   };
 
+  // Self-contained color tokens with fallbacks so the standalone build
+  // (where host CSS may not define --card/--border/etc.) still renders
+  // proper surfaces and accent colors instead of going transparent/flat.
+  const CARD_BG = 'hsl(var(--card, 0 0% 13%))';
+  const CARD_BORDER = '1px solid hsl(var(--border, 0 0% 20%))';
+  const FG = 'hsl(var(--foreground, 0 0% 100%))';
+  const MUTED = 'hsl(var(--muted-foreground, 0 0% 60%))';
+  const PRIMARY = 'hsl(var(--primary, 24 100% 50%))';
+  // Resolve a category color token (e.g. "--infra-siem") to an actual hsl()
+  // string with a sensible fallback (Shuffle orange) so badges/icons retain
+  // their accent color even when the host page lacks design tokens.
+  const accent = (token?: string) => `hsl(var(${token || '--primary'}, 24 100% 50%))`;
+  const accentBg = (token: string | undefined, alpha: number) =>
+    `hsla(var(${token || '--primary'}, 24 100% 50%) / ${alpha})`;
+
   return (
-    <Box sx={{ maxWidth: 860, width: '100%', mx: 'auto', pb: 4 }}>
+    <Box sx={{ maxWidth: 860, width: '100%', mx: 'auto', pb: 4, color: FG }}>
       {!hideBackNav && (
-        <Button onClick={() => navigate('/usecases')} startIcon={<ArrowLeft size={14} />} sx={{ mb: 2, textTransform: 'none', color: 'hsl(var(--muted-foreground))' }}>
+        <Button onClick={() => navigate('/usecases')} startIcon={<ArrowLeft size={14} />} sx={{ mb: 2, textTransform: 'none', color: MUTED }}>
           Automations
         </Button>
       )}
 
-      <Box sx={{ p: 3, borderRadius: 2, border: '1px solid hsl(var(--border))', bgcolor: 'hsl(var(--card))', mb: 3 }}>
+      <Box sx={{ p: 3, borderRadius: 2, border: CARD_BORDER, bgcolor: CARD_BG, mb: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2.5 }}>
-          <Box sx={{ width: 52, height: 52, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: `hsla(var(${sourceCat?.color || '--primary'}) / 0.12)`, color: `hsl(var(${sourceCat?.color || '--primary'}))`, flexShrink: 0 }}>
+          <Box sx={{ width: 52, height: 52, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: accentBg(sourceCat?.color, 0.12), color: accent(sourceCat?.color), flexShrink: 0 }}>
             {sourceCat?.icon || <ArrowRight size={22} />}
           </Box>
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography sx={{ fontSize: '1.35rem', fontWeight: 800, color: 'hsl(var(--foreground))', mb: 1, lineHeight: 1.2 }}>
+            <Typography sx={{ fontSize: '1.35rem', fontWeight: 800, color: FG, mb: 1, lineHeight: 1.2 }}>
               {flow.label}
             </Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 1.25 }}>
-              <Typography sx={{ fontSize: '0.68rem', fontWeight: 700, px: 1, py: 0.35, borderRadius: 1, bgcolor: `hsla(var(${phaseInfo.color}) / 0.12)`, color: `hsl(var(${phaseInfo.color}))`, border: `1px solid hsla(var(${phaseInfo.color}) / 0.25)` }}>
+              <Typography sx={{ fontSize: '0.68rem', fontWeight: 700, px: 1, py: 0.35, borderRadius: 1, bgcolor: accentBg(phaseInfo.color, 0.12), color: accent(phaseInfo.color), border: `1px solid ${accentBg(phaseInfo.color, 0.25)}` }}>
                 Step {phaseInfo.step}: {phaseInfo.label}
               </Typography>
               {flow.manualVerification && (
-                <Typography sx={{ fontSize: '0.68rem', fontWeight: 700, px: 1, py: 0.35, borderRadius: 1, bgcolor: 'hsla(45 93% 47% / 0.1)', color: 'hsl(45 93% 47%)', border: '1px solid hsla(45 93% 47% / 0.25)' }}>
+                <Typography sx={{ fontSize: '0.68rem', fontWeight: 700, px: 1, py: 0.35, borderRadius: 1, bgcolor: 'hsla(45, 93%, 47%, 0.1)', color: 'hsl(45, 93%, 47%)', border: '1px solid hsla(45, 93%, 47%, 0.25)' }}>
                   Manual Verification
                 </Typography>
               )}
               {typeof flow.priority === 'number' && (
-                <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, fontSize: '0.68rem', fontWeight: 700, px: 1, py: 0.35, borderRadius: 1, bgcolor: 'hsla(var(--primary) / 0.1)', color: 'hsl(var(--primary))', border: '1px solid hsla(var(--primary) / 0.25)' }}>
+                <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, fontSize: '0.68rem', fontWeight: 700, px: 1, py: 0.35, borderRadius: 1, bgcolor: 'hsla(24, 100%, 50%, 0.1)', color: PRIMARY, border: '1px solid hsla(24, 100%, 50%, 0.25)' }}>
                   <Flame size={11} />
                   Priority {flow.priority}
                 </Box>
               )}
             </Box>
-            <Typography sx={{ fontSize: '0.88rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.7 }}>
+            <Typography sx={{ fontSize: '0.88rem', color: MUTED, lineHeight: 1.7 }}>
               {flow.description || 'No description available.'}
             </Typography>
             {flow.tags.length > 0 && (
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mt: 1.5 }}>
                 {flow.tags.map((tag) => (
-                  <Typography key={tag} sx={{ fontSize: '0.7rem', px: 0.9, py: 0.35, borderRadius: 1, bgcolor: 'hsla(var(--muted-foreground) / 0.08)', color: 'hsl(var(--muted-foreground))', border: '1px solid hsla(var(--muted-foreground) / 0.18)', fontWeight: 600 }}>
+                  <Typography key={tag} sx={{ fontSize: '0.7rem', px: 0.9, py: 0.35, borderRadius: 1, bgcolor: 'hsla(0, 0%, 60%, 0.08)', color: MUTED, border: '1px solid hsla(0, 0%, 60%, 0.18)', fontWeight: 600 }}>
                     {tag}
                   </Typography>
                 ))}
@@ -1685,34 +1700,34 @@ function UsecaseDetailContent({
         </Box>
       </Box>
 
-      <Box sx={{ p: 3, borderRadius: 2, border: '1px solid hsl(var(--border))', bgcolor: 'hsl(var(--card))', mb: 3 }}>
-        <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.06em', mb: 1.5 }}>
+      <Box sx={{ p: 3, borderRadius: 2, border: CARD_BORDER, bgcolor: CARD_BG, mb: 3 }}>
+        <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', mb: 1.5 }}>
           Connection Path
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'stretch', gap: 2, flexDirection: { xs: 'column', md: 'row' } }}>
           {[{ title: 'Source', meta: sourceCat, details: sourceDetails, appNames: categoryAppNames[flow.source] || [] }, { title: 'Destination', meta: targetCat, details: targetDetails, appNames: categoryAppNames[flow.target] || [] }].map((endpoint, index) => (
             <Box key={endpoint.title} sx={{ flex: 1, minWidth: 0 }}>
-              <Typography sx={{ fontSize: '0.66rem', fontWeight: 700, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.06em', mb: 1 }}>
+              <Typography sx={{ fontSize: '0.66rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', mb: 1 }}>
                 {endpoint.title}
               </Typography>
-              <Box sx={{ p: 1.5, borderRadius: 1.5, bgcolor: `hsla(var(${endpoint.meta?.color || '--primary'}) / 0.06)`, border: `1px solid hsla(var(${endpoint.meta?.color || '--primary'}) / 0.15)`, mb: 1.25 }}>
+              <Box sx={{ p: 1.5, borderRadius: 1.5, bgcolor: accentBg(endpoint.meta?.color, 0.06), border: `1px solid ${accentBg(endpoint.meta?.color, 0.15)}`, mb: 1.25 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                  <Box sx={{ width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: `hsla(var(${endpoint.meta?.color || '--primary'}) / 0.12)`, color: `hsl(var(${endpoint.meta?.color || '--primary'}))`, flexShrink: 0 }}>
+                  <Box sx={{ width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: accentBg(endpoint.meta?.color, 0.12), color: accent(endpoint.meta?.color), flexShrink: 0 }}>
                     {endpoint.meta?.icon}
                   </Box>
                   <Box sx={{ minWidth: 0 }}>
-                    <Typography sx={{ fontSize: '0.9rem', fontWeight: 700, color: `hsl(var(${endpoint.meta?.color || '--primary'}))` }}>
+                    <Typography sx={{ fontSize: '0.9rem', fontWeight: 700, color: accent(endpoint.meta?.color) }}>
                       {endpoint.meta?.label || 'Unknown'}
                     </Typography>
                     {endpoint.details && (
-                      <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.5 }}>
+                      <Typography sx={{ fontSize: '0.72rem', color: MUTED, lineHeight: 1.5 }}>
                         {endpoint.details.description.split('—')[0].trim()}
                       </Typography>
                     )}
                   </Box>
                 </Box>
               </Box>
-              <Typography sx={{ fontSize: '0.64rem', fontWeight: 700, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.06em', mb: 0.75 }}>
+              <Typography sx={{ fontSize: '0.64rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', mb: 0.75 }}>
                 Your Tools
               </Typography>
               <IntegrationStatusLite filterApps={endpoint.appNames} />
@@ -1722,23 +1737,23 @@ function UsecaseDetailContent({
       </Box>
 
       {(flow.referenceImage || flow.video || flow.blogpost) && (
-        <Box sx={{ p: 3, borderRadius: 2, border: '1px solid hsl(var(--border))', bgcolor: 'hsl(var(--card))', mb: 3 }}>
-          <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.06em', mb: 1.5 }}>
+        <Box sx={{ p: 3, borderRadius: 2, border: CARD_BORDER, bgcolor: CARD_BG, mb: 3 }}>
+          <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', mb: 1.5 }}>
             Resources
           </Typography>
           {flow.referenceImage && (
-            <Box component="a" href={flow.referenceImage} target="_blank" rel="noopener noreferrer" sx={{ display: 'block', mb: (flow.video || flow.blogpost) ? 2 : 0, borderRadius: 1.5, overflow: 'hidden', border: '1px solid hsl(var(--border))' }}>
+            <Box component="a" href={flow.referenceImage} target="_blank" rel="noopener noreferrer" sx={{ display: 'block', mb: (flow.video || flow.blogpost) ? 2 : 0, borderRadius: 1.5, overflow: 'hidden', border: CARD_BORDER }}>
               <Box component="img" src={flow.referenceImage} alt={`${flow.label} reference`} loading="lazy" sx={{ display: 'block', width: '100%', height: 'auto', maxHeight: 420, objectFit: 'contain' }} />
             </Box>
           )}
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
             {flow.video && (
-              <Button href={flow.video} target="_blank" rel="noopener noreferrer" startIcon={<PlayCircle size={16} />} sx={{ textTransform: 'none', fontSize: '0.8rem', fontWeight: 600, color: 'hsl(var(--primary))', border: '1px solid hsla(var(--primary) / 0.3)', bgcolor: 'hsla(var(--primary) / 0.06)' }}>
+              <Button href={flow.video} target="_blank" rel="noopener noreferrer" startIcon={<PlayCircle size={16} />} sx={{ textTransform: 'none', fontSize: '0.8rem', fontWeight: 600, color: PRIMARY, border: '1px solid hsla(24, 100%, 50%, 0.3)', bgcolor: 'hsla(24, 100%, 50%, 0.06)' }}>
                 Watch video
               </Button>
             )}
             {flow.blogpost && (
-              <Button href={flow.blogpost} target="_blank" rel="noopener noreferrer" startIcon={<BookOpen size={16} />} sx={{ textTransform: 'none', fontSize: '0.8rem', fontWeight: 600, color: 'hsl(var(--foreground))', border: '1px solid hsl(var(--border))', bgcolor: 'hsla(var(--muted-foreground) / 0.04)' }}>
+              <Button href={flow.blogpost} target="_blank" rel="noopener noreferrer" startIcon={<BookOpen size={16} />} sx={{ textTransform: 'none', fontSize: '0.8rem', fontWeight: 600, color: FG, border: CARD_BORDER, bgcolor: 'hsla(0, 0%, 60%, 0.04)' }}>
                 Read blogpost
               </Button>
             )}
