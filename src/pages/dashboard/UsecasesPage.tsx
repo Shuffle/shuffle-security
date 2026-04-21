@@ -816,10 +816,10 @@ function UsecaseCard({
     setToggling(true);
     setOptimisticEnabled(willBeEnabled);
     try {
-      const res = await fetch(getApiUrl('/api/v2/workflows/generate'), {
+      const res = await fetch(apiUrl('/api/v2/workflows/generate'), {
         method: 'POST',
         credentials: 'include',
-        headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+        headers: { ...authHeader(), 'Content-Type': 'application/json' },
         body: JSON.stringify({
           label: flow.automationLabel,
           ...(flow.automationCategory ? { category: flow.automationCategory } : {}),
