@@ -131,6 +131,83 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
   const responseActionsOn = !!responseActionsRaw && raLower !== 'false' && raLower !== '0' && raLower !== 'no' && raLower !== 'off';
   const logForwardingOn = !!host.log_forwarding;
 
+  // ── Vulnerability matching ──────────────────────────────────────────────
+  // `vulnerabilities` is already pre-filtered to this host by the caller.
+  // We further classify each vuln so we can render badges next to the matching
+  // installed-software / code-scanner row.
+  const openVulns = (vulnerabilities || []).filter(v => v.status === 'open' || v.status === 'in_progress');
+  const sevCounts: Record<VulnSeverity, number> = { critical: 0, high: 0, medium: 0, low: 0, info: 0 };
+  for (const v of openVulns) sevCounts[v.severity] = (sevCounts[v.severity] || 0) + 1;
+  const totalOpenVulns = openVulns.length;
+
+  const vulnsBySoftwareName = new Map<string, Vulnerability[]>();
+  const vulnsByCodePath = new Map<string, Vulnerability[]>();
+  const vulnsByCodePackage = new Map<string, Vulnerability[]>();
+  for (const v of openVulns) {
+    const pname = v.package_name ? normalize(v.package_name) : '';
+    if (pname) {
+      const list = vulnsBySoftwareName.get(pname) || [];
+      list.push(v);
+      vulnsBySoftwareName.set(pname, list);
+      const plist = vulnsByCodePackage.get(pname) || [];
+      plist.push(v);
+      vulnsByCodePackage.set(pname, plist);
+    }
+    for (const p of v.paths || []) {
+      if (!p.path) continue;
+      const key = normalize(p.path);
+      const list = vulnsByCodePath.get(key) || [];
+      list.push(v);
+      vulnsByCodePath.set(key, list);
+    }
+  }
+
+  const SeverityBadgeRow = ({ counts, size = 'sm' }: { counts: Record<VulnSeverity, number>; size?: 'sm' | 'xs' }) => {
+    const pad = size === 'xs' ? 'px-1.5 py-0.5 text-[0.6rem]' : 'px-2 py-0.5 text-[0.65rem]';
+    return (
+      <div className="inline-flex items-center gap-1">
+        {SEV_ORDER.filter(s => counts[s] > 0).map(s => (
+          <span key={s} className={`inline-flex items-center gap-0.5 rounded border font-medium ${pad} ${SEV_CLASSES[s]}`}>
+            {counts[s]} {s.charAt(0).toUpperCase()}
+          </span>
+        ))}
+      </div>
+    );
+  };
+
+  const RowVulnBadge = ({ vulns }: { vulns: Vulnerability[] }) => {
+    if (!vulns || vulns.length === 0) return null;
+    const counts: Record<VulnSeverity, number> = { critical: 0, high: 0, medium: 0, low: 0, info: 0 };
+    for (const v of vulns) counts[v.severity] = (counts[v.severity] || 0) + 1;
+    const top = SEV_ORDER.find(s => counts[s] > 0) || 'info';
+    return (
+      <TooltipProvider delayDuration={200}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[0.6rem] font-medium cursor-help ${SEV_CLASSES[top]}`}>
+              <AlertTriangle size={9} />
+              {vulns.length} vuln{vulns.length !== 1 ? 's' : ''}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="left" className="z-[9999] max-w-xs">
+            <div className="space-y-1">
+              <p className="text-[0.65rem] font-semibold">Open vulnerabilities</p>
+              <div className="space-y-0.5">
+                {vulns.slice(0, 6).map(v => (
+                  <p key={v.id} className="text-[0.6rem] font-mono">
+                    <span className={`uppercase mr-1 ${SEV_CLASSES[v.severity].split(' ').filter(c => c.startsWith('text-')).join(' ')}`}>{v.severity}</span>
+                    {v.cve_id || v.record_id || v.id.split('::')[0]}
+                  </p>
+                ))}
+                {vulns.length > 6 && <p className="text-[0.6rem] text-muted-foreground italic">+ {vulns.length - 6} more</p>}
+              </div>
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  };
+
   const wrapperClass = variant === 'page'
     ? 'rounded-lg border border-border bg-card p-5 space-y-5'
     : 'border-b border-border bg-muted/10 px-5 py-4 space-y-4';
