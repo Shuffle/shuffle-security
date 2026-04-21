@@ -2063,6 +2063,11 @@ function UsecasesPageInner() {
       list = list.filter((u) => u.animated === true);
     }
 
+    // Always hide "Logs" usecases (even for guests) — not a primary entry point.
+    if (!(isSupport && showAllAsSupport)) {
+      list = list.filter((u) => !u.tags.includes('Logs'));
+    }
+
     if (phaseFilter !== 'all') {
       list = list.filter((u) => u.phase === phaseFilter);
     }
