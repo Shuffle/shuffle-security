@@ -209,6 +209,10 @@ async function fetchUsecases(): Promise<FetchResult> {
         ...existing,
         // Enrich with API data where available
         description: api.description || existing.description,
+        priority: typeof api.priority === 'number' ? api.priority : existing.priority,
+        video: api.video || existing.video,
+        blogpost: api.blogpost || existing.blogpost,
+        referenceImage: api.reference_image || existing.referenceImage,
       });
     }
 

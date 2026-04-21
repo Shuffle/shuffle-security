@@ -312,6 +312,14 @@ export interface Usecase {
   status?: 'enabled' | 'disabled' | 'misconfigured';
   /** True if this flow requires manual verification (e.g. log forwarding can't be auto-detected) */
   manualVerification?: boolean;
+  /** Importance ranking 0–100; 100 = highest priority (most-used). */
+  priority?: number;
+  /** Optional video URL (YouTube, Vimeo, mp4) showcasing the usecase. */
+  video?: string;
+  /** Optional blogpost / article URL with deeper context. */
+  blogpost?: string;
+  /** Optional reference image URL (architecture diagram, screenshot). */
+  referenceImage?: string;
 }
 
 // ── API usecase types (from /api/v1/workflows/usecases) ────────────────────────
@@ -710,6 +718,14 @@ export interface UsecaseJsonEntry {
   automation_area?: Usecase['automationArea'];
   /** Manual verification required (e.g. log forwarding) */
   manual_verification?: boolean;
+  /** Importance ranking 0–100; 100 = highest priority. */
+  priority?: number;
+  /** Optional video URL. */
+  video?: string;
+  /** Optional blogpost / article URL. */
+  blogpost?: string;
+  /** Optional reference image URL. */
+  reference_image?: string;
 }
 
 export interface UsecaseCategoryJson {
@@ -771,6 +787,10 @@ export function getUsecasesJson(
         ...(uc.automationCategory ? { automation_category: uc.automationCategory } : {}),
         ...(uc.automationArea ? { automation_area: uc.automationArea } : {}),
         ...(uc.manualVerification ? { manual_verification: true } : {}),
+        ...(typeof uc.priority === 'number' ? { priority: uc.priority } : {}),
+        ...(uc.video ? { video: uc.video } : {}),
+        ...(uc.blogpost ? { blogpost: uc.blogpost } : {}),
+        ...(uc.referenceImage ? { reference_image: uc.referenceImage } : {}),
       })),
   }));
 }

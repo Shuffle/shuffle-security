@@ -6,7 +6,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Typography, Chip, Button, Avatar, IconButton, Tooltip } from '@mui/material';
-import { ArrowRight, ArrowLeft, Bot, Link as LinkIcon, Plus } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Bot, Link as LinkIcon, Plus, PlayCircle, BookOpen, Image as ImageIcon, Flame } from 'lucide-react';
 import UsecaseAlluvialDiagram from '@/components/usecases/UsecaseAlluvialDiagram';
 import { IntegrationStatus } from '@/components/layout/IntegrationStatus';
 import { Clock } from 'lucide-react';
@@ -365,6 +365,26 @@ const DataFlowDetailPage = () => {
                 Manual Verification
               </Typography>
             )}
+            {typeof flow.priority === 'number' && (
+              <Tooltip title={`Priority ${flow.priority} / 100 — higher means more important / commonly used`} placement="top" arrow>
+                <Box sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 0.4,
+                  fontSize: '0.65rem',
+                  fontWeight: 700,
+                  px: 1,
+                  py: 0.3,
+                  borderRadius: 1,
+                  bgcolor: 'hsla(var(--primary) / 0.1)',
+                  color: 'hsl(var(--primary))',
+                  border: '1px solid hsla(var(--primary) / 0.25)',
+                }}>
+                  <Flame size={11} />
+                  Priority {flow.priority}
+                </Box>
+              </Tooltip>
+            )}
           </Box>
           {/* Tags */}
           {flow.tags.length > 0 && (
@@ -450,8 +470,90 @@ const DataFlowDetailPage = () => {
         )}
       </Box>
 
+      {/* Resources — video / blogpost / reference image */}
+      {(flow.video || flow.blogpost || flow.referenceImage) && (
+        <Box sx={{
+          p: 3,
+          borderRadius: 3,
+          border: '1px solid hsl(var(--border))',
+          bgcolor: 'hsl(var(--card))',
+          mb: 3,
+        }}>
+          <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.06em', mb: 1.5 }}>
+            Resources
+          </Typography>
 
+          {flow.referenceImage && (
+            <Box
+              component="a"
+              href={flow.referenceImage}
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={{
+                display: 'block',
+                mb: (flow.video || flow.blogpost) ? 2 : 0,
+                borderRadius: 2,
+                overflow: 'hidden',
+                border: '1px solid hsl(var(--border))',
+                bgcolor: 'hsla(var(--muted-foreground) / 0.04)',
+              }}
+            >
+              <Box
+                component="img"
+                src={flow.referenceImage}
+                alt={`${flow.label} reference diagram`}
+                loading="lazy"
+                sx={{ display: 'block', width: '100%', height: 'auto', maxHeight: 420, objectFit: 'contain' }}
+              />
+            </Box>
+          )}
 
+          {(flow.video || flow.blogpost) && (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              {flow.video && (
+                <Button
+                  href={flow.video}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  startIcon={<PlayCircle size={16} />}
+                  sx={{
+                    textTransform: 'none',
+                    fontSize: '0.78rem',
+                    fontWeight: 600,
+                    color: 'hsl(var(--primary))',
+                    border: '1px solid hsla(var(--primary) / 0.3)',
+                    bgcolor: 'hsla(var(--primary) / 0.06)',
+                    px: 1.5,
+                    '&:hover': { bgcolor: 'hsla(var(--primary) / 0.12)', borderColor: 'hsl(var(--primary))' },
+                  }}
+                >
+                  Watch video
+                </Button>
+              )}
+              {flow.blogpost && (
+                <Button
+                  href={flow.blogpost}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  startIcon={<BookOpen size={16} />}
+                  sx={{
+                    textTransform: 'none',
+                    fontSize: '0.78rem',
+                    fontWeight: 600,
+                    color: 'hsl(var(--foreground))',
+                    border: '1px solid hsl(var(--border))',
+                    bgcolor: 'hsla(var(--muted-foreground) / 0.04)',
+                    px: 1.5,
+                    '&:hover': { bgcolor: 'hsla(var(--muted-foreground) / 0.08)' },
+                  }}
+                >
+                  Read blogpost
+                </Button>
+              )}
+            </Box>
+          )}
+        </Box>
+      )}
 
 
       {/* Prev / Next navigation */}
