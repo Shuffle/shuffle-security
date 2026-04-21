@@ -493,8 +493,11 @@ export const DemoTourDrawer = () => {
                 <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.75, px: 2, pb: 1.5 }}>
                   {TOUR_STEPS.map((s, i) => {
                     const isCurrent = i === step;
-                    const isComplete = !!completedSteps[s.id];
-                    const hasReq = !!s.requirement;
+                    const hasSubGoals = !!s.subGoals && s.subGoals.length > 0;
+                    const isComplete = hasSubGoals
+                      ? s.subGoals!.every(g => !!completedSteps[g.id])
+                      : !!completedSteps[s.id];
+                    const hasReq = !!s.requirement || hasSubGoals;
                     return (
                       <Box
                         key={s.id}
