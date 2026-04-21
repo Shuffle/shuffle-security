@@ -603,11 +603,13 @@ const DashboardPage = () => {
         icon: <KeyRound size={20} />,
         status: hasAuthenticatedApps ? 'complete' : hasActivatedApps ? 'action-needed' : 'not-started',
         ctaLabel: 'Set Up Auth',
-        ctaPath: '/apps',
+        ctaPath: '/onboarding/authenticate',
         priority: 3,
         detail: hasActivatedApps && !hasAuthenticatedApps
           ? `${activatedApps.length} activated — add credentials to connect.`
           : undefined,
+        disabled: activatedApps.length < 2,
+        disabledReason: activatedApps.length < 2 ? 'Activate at least 2 apps first' : undefined,
       },
       {
         id: 'enable-ingest',
