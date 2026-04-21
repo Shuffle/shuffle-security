@@ -1711,7 +1711,7 @@ export default function UsecasesPage() {
             }}
           >
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              <IntegrationStatusLite />
+              <IntegrationStatusLite singleLine />
             </Box>
             <Button
               component={Link}
