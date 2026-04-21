@@ -118,7 +118,9 @@ export const DemoModeCard = () => {
           <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))', mt: 0.5, lineHeight: 1.5 }}>
             {active
               ? `Sample data is loaded into your account: ${stats.incidents} incidents, ${stats.assets} assets, ${stats.users} users. Take the tour to see how everything works, then clean up when you're done.`
-              : "See how Shuffle handles incidents, assets, vulnerabilities, and AI agent activity — no setup required. We'll seed sample data into your account and walk you through it."}
+              : disableStart
+                ? `${disableReason} You're already past the demo — explore your real data instead.`
+                : "See how Shuffle handles incidents, assets, vulnerabilities, and AI agent activity — no setup required. We'll seed sample data into your account and walk you through it."}
           </Typography>
         </Box>
 
