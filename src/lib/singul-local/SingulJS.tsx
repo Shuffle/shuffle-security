@@ -37,6 +37,7 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
   singulBaseUrl = 'https://singul.io',
   hideAuthStatus = false,
   authenticatedApps: externalAuthenticatedApps,
+  pinnedApps,
   customStyles = {},
   className = '',
   renderItem,
@@ -265,7 +266,7 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
     switch (event.key) {
       case 'ArrowDown':
         event.preventDefault();
-        setSelectedIndex((prev) => Math.min(prev + 1, results.length - 1));
+        setSelectedIndex((prev) => Math.min(prev + 1, displayResults.length - 1));
         break;
       case 'ArrowUp':
         event.preventDefault();
@@ -273,8 +274,8 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
         break;
       case 'Enter':
         event.preventDefault();
-        if (selectedIndex >= 0 && results[selectedIndex]) {
-          selectApp(results[selectedIndex]);
+        if (selectedIndex >= 0 && displayResults[selectedIndex]) {
+          selectApp(displayResults[selectedIndex]);
         }
         break;
       case 'Escape':
@@ -290,6 +291,15 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
   const isAppSelected = useCallback((app: AlgoliaSearchApp) => {
     return internalSelectedApps.some((a) => a.objectID === app.objectID);
   }, [internalSelectedApps]);
+
+  // Merge pinned apps at the top of the results, deduped by normalized name
+  const displayResults = useMemo(() => {
+    if (!pinnedApps || pinnedApps.length === 0) return results;
+    const norm = (n: string) => (n || '').toLowerCase().replace(/[\s_\-]+/g, '');
+    const pinnedNames = new Set(pinnedApps.map(a => norm(a.name)));
+    const filtered = results.filter(a => !pinnedNames.has(norm(a.name)));
+    return [...pinnedApps, ...filtered];
+  }, [pinnedApps, results]);
 
   // Get grid columns style
   const getGridColumnsStyle = useMemo(() => {
@@ -434,9 +444,9 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
               ...(layout === 'grid' ? { display: 'grid' } : {}),
             }}
           >
-            {results.length > 0 ? (
+            {displayResults.length > 0 ? (
               <>
-                {results.map((app, index) => renderAppItem(app, index))}
+                {displayResults.map((app, index) => renderAppItem(app, index))}
                 <div className="singul-end-of-results" style={{
                   padding: '10px 16px',
                   color: 'rgba(255, 255, 255, 0.3)',
@@ -473,8 +483,8 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
               ...(layout === 'grid' ? { display: 'grid' } : {}),
             }}
           >
-            {results.length > 0 ? (
-              results.map((app, index) => renderAppItem(app, index))
+            {displayResults.length > 0 ? (
+              displayResults.map((app, index) => renderAppItem(app, index))
             ) : (
               <div className="singul-empty-state" style={customStyles.emptyState}>
                 {renderEmptyState ? (

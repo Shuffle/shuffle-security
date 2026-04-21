@@ -122,6 +122,8 @@ interface AppSearchDrawerProps {
   priorityCategory?: string;
   /** Apps currently in the connection path diagram — shown first in the drawer */
   connectionPathApps?: ConnectionPathApp[];
+  /** Apps to pin at the top of the SingulJS search results (deduped by name). */
+  pinnedApps?: Array<{ name: string; image_url: string; categories?: string[]; objectID?: string }>;
 }
 
 export default function AppSearchDrawer({
@@ -139,6 +141,7 @@ export default function AppSearchDrawer({
   onAddToCanvas,
   priorityCategory,
   connectionPathApps,
+  pinnedApps,
 }: AppSearchDrawerProps) {
   const [detailAppName, setDetailAppName] = useState<string | null>(null);
 
@@ -287,6 +290,25 @@ export default function AppSearchDrawer({
                 multiSelect={false}
                 preventDefault={true}
                 onAppSelected={handleAppSelected}
+                pinnedApps={pinnedApps?.map(p => ({
+                  name: p.name,
+                  image_url: p.image_url,
+                  categories: p.categories || [],
+                  objectID: p.objectID || `pinned-${p.name}`,
+                  description: '',
+                  creator: '',
+                  app_version: '1.0.0',
+                  time_edited: 0,
+                  generated: false,
+                  invalid: false,
+                  priority: 0,
+                  actions: 0,
+                  tags: [],
+                  accessible_by: [],
+                  action_labels: [],
+                  triggers: [],
+                  verified: true,
+                }))}
                 customStyles={singulStyles}
               />
             </motion.div>

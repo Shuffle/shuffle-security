@@ -2860,16 +2860,18 @@ const IncidentsPage = () => {
         }}
         title="Add Ingestion Source"
         subtitle={isAddOutlookStep ? 'Add both "Outlook Office365" and "Microsoft 365 Defender" — we will pretend-authenticate them for the demo' : 'Search and authenticate a tool to ingest incidents from'}
-        connectionPathApps={isAddOutlookStep ? [
+        pinnedApps={isAddOutlookStep ? [
           {
             name: 'Outlook_Office365',
-            icon: 'https://storage.googleapis.com/shuffle_public/app_images/Outlook_Office365_accdaaf2eeba6a6ed43b2efc0112032d.png',
-            hasValidAuth: demoInjectedApps.some(a => /outlook|office365/i.test(a.name)),
+            image_url: 'https://storage.googleapis.com/shuffle_public/app_images/Outlook_Office365_accdaaf2eeba6a6ed43b2efc0112032d.png',
+            categories: ['email'],
+            objectID: 'demo-outlook-office365',
           },
           {
             name: 'Microsoft_365_Defender',
-            icon: 'https://storage.googleapis.com/shuffle_public/app_images/Microsoft_365_Defender_29c926c37334c191666f6470caa05e1c.png',
-            hasValidAuth: demoInjectedApps.some(a => /defender/i.test(a.name)),
+            image_url: 'https://storage.googleapis.com/shuffle_public/app_images/Microsoft_365_Defender_29c926c37334c191666f6470caa05e1c.png',
+            categories: ['edr'],
+            objectID: 'demo-microsoft-365-defender',
           },
         ] : undefined}
         onSelectOverride={isAddOutlookStep ? (app) => {

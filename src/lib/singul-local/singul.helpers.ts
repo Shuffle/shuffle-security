@@ -130,7 +130,9 @@ export interface SingulJSProps {
   authenticatedApps?: AppAuthentication[];
   /** Hide the auth status chips (Configured/Not configured, Tested/Not tested) */
   hideAuthStatus?: boolean;
-  
+  /** Apps to pin at the top of the results (prepended, deduped by name). */
+  pinnedApps?: AlgoliaSearchApp[];
+
   // Styling
   customStyles?: CustomStyles;
   className?: string;
