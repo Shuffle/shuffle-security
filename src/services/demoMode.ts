@@ -15,10 +15,13 @@ import {
   buildDemoIncidentsBatch2,
   buildDemoAssets,
   buildDemoUsers,
+  buildDemoVulnerabilities,
   DEMO_FLAG_KEY,
   DEMO_ACTIVE_KEY,
   DEMO_SEEDED_STEPS_KEY,
 } from '@/lib/demoSeedData';
+
+const VULNS_CATEGORY = 'shuffle-security_vulnerabilities';
 
 interface SeededIndex {
   [category: string]: string[]; // category -> list of keys we wrote
