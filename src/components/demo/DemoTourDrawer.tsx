@@ -46,6 +46,8 @@ export const DemoTourDrawer = () => {
     toggleDock,
     forceCreateIncidents,
     isForceCreatingIncidents,
+    forceGenerateSingleIncident,
+    isForceGeneratingSingle,
     hasDemoIncidents,
   } = useDemo();
 
