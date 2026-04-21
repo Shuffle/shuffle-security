@@ -15,10 +15,13 @@ import {
   buildDemoIncidentsBatch2,
   buildDemoAssets,
   buildDemoUsers,
+  buildDemoVulnerabilities,
   DEMO_FLAG_KEY,
   DEMO_ACTIVE_KEY,
   DEMO_SEEDED_STEPS_KEY,
 } from '@/lib/demoSeedData';
+
+const VULNS_CATEGORY = 'shuffle-security_vulnerabilities';
 
 interface SeededIndex {
   [category: string]: string[]; // category -> list of keys we wrote
@@ -106,8 +109,16 @@ export const STEP_SEEDERS: Record<string, () => Promise<number>> = {
     return items.length;
   },
 
-  // Step 4: vulnerabilities — nothing yet (page is preview-only today)
-  vulnerabilities: async () => 0,
+  // Step 4: vulnerabilities — seed CVE-2024-5274 (the Chrome RCE the
+  // phishing link in the demo "exploits" against FIN-LAPTOP-04).
+  vulnerabilities: async () => {
+    const items = buildDemoVulnerabilities();
+    const res = await setDatastoreItems(items, VULNS_CATEGORY);
+    if (!res.success) return 0;
+    recordSeed(VULNS_CATEGORY, items.map(i => i.key));
+    broadcastRefresh(VULNS_CATEGORY);
+    return items.length;
+  },
 
   // Step 5: agent — seed users (used as stakeholders the agent acts on behalf of)
   agent: async () => {
@@ -173,7 +184,7 @@ export const cleanupDemoData = async (): Promise<CleanupResult> => {
     }
   }
 
-  const safetyCategories = [DATASTORE_CATEGORIES.INCIDENTS, DATASTORE_CATEGORIES.ASSETS, DATASTORE_CATEGORIES.USERS];
+  const safetyCategories = [DATASTORE_CATEGORIES.INCIDENTS, DATASTORE_CATEGORIES.ASSETS, DATASTORE_CATEGORIES.USERS, VULNS_CATEGORY];
   for (const category of safetyCategories) {
     try {
       const res = await getDatastoreByCategory(category);
