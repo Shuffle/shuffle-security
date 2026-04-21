@@ -298,14 +298,16 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
   }, [refreshStats]);
 
   const value = useMemo<DemoContextValue>(() => ({
-    active, isSeeding, isCleaning, drawerOpen, step, stats,
+    active, isSeeding, isCleaning, drawerOpen, minimized, dock, step, stats,
     completedSteps, currentStepUnlocked,
-    startDemo, openTour, closeTour, nextStep, prevStep, goToStep, cleanup,
+    startDemo, openTour, closeTour, minimizeTour, restoreTour, toggleDock, setDock,
+    nextStep, prevStep, goToStep, cleanup,
     markStepCompleted,
   }), [
-    active, isSeeding, isCleaning, drawerOpen, step, stats,
+    active, isSeeding, isCleaning, drawerOpen, minimized, dock, step, stats,
     completedSteps, currentStepUnlocked,
-    startDemo, openTour, closeTour, nextStep, prevStep, goToStep, cleanup,
+    startDemo, openTour, closeTour, minimizeTour, restoreTour, toggleDock, setDock,
+    nextStep, prevStep, goToStep, cleanup,
     markStepCompleted,
   ]);
 
