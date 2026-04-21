@@ -2645,6 +2645,13 @@ function UsecaseCard({
               </Box>
             </Tooltip>
           )}
+          {hasInterest && (
+            <Tooltip title="Interest shown" placement="top" arrow>
+              <Box sx={{ display: 'inline-flex' }}>
+                <Sparkles size={13} style={{ color: 'hsl(var(--primary))' }} />
+              </Box>
+            </Tooltip>
+          )}
           {isComingSoon && (
             <Tooltip title="Coming soon" placement="top" arrow>
               <Box sx={{ display: 'inline-flex' }}>
