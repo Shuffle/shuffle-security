@@ -2873,7 +2873,7 @@ const IncidentsPage = () => {
                     image: app.icon || '',
                     validated: true,
                     enabled: true,
-                    category: isOutlook ? 'email' : 'edr',
+                    category: 'email',
                   },
                 ];
                 const hasOutlook = next.some(a => /outlook|office365/i.test(a.name));
