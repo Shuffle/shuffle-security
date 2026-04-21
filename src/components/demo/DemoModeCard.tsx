@@ -147,10 +147,10 @@ export const DemoModeCard = () => {
           </Box>
           <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))', mt: 0.5, lineHeight: 1.5 }}>
             {active
-              ? `Sample data is loaded into your account: ${stats.incidents} incidents, ${stats.assets} assets, ${stats.users} users. Take the tour to see how everything works, then clean up when you are done.`
+              ? `${stats.incidents} incidents, ${stats.assets} assets, ${stats.users} users loaded. Continue the tour or clean up when done.`
               : disableStart
-                ? `${disableReason} You are already past the demo — explore your real data instead.`
-                : 'A guided, hands-on tour: we will enable apps in your account for real, seed sample incidents, assets and users, and let an AI agent perform live actions on your approval. Everything we create can be removed in one click when you are done.'}
+                ? disableReason
+                : 'Guided tour with sample incidents, assets and live AI agent actions. One-click cleanup.'}
           </Typography>
         </Box>
 
