@@ -199,6 +199,12 @@ interface DemoContextValue {
   /** Set a step's completion explicitly — supports reverting (e.g. webhook
    *  re-stopped after being started). */
   setStepCompleted: (stepId: string, done: boolean) => void;
+  /** Force delete + recreate the demo incidents (manual rescue button). */
+  forceCreateIncidents: () => Promise<void>;
+  /** True while a force-create is running. */
+  isForceCreatingIncidents: boolean;
+  /** True when at least one demo incident is present in the datastore. */
+  hasDemoIncidents: boolean;
 }
 
 const DemoContext = createContext<DemoContextValue | null>(null);
