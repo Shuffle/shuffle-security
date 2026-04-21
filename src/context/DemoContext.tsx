@@ -77,6 +77,10 @@ export const TOUR_STEPS: TourStep[] = [
       label: 'Add both Outlook Office365 and Microsoft 365 Defender',
       targetSelector: '[data-tour="add-ingestion-source-button"]',
     },
+    subGoals: [
+      { id: 'add-outlook:outlook', label: 'Add Outlook Office365' },
+      { id: 'add-outlook:defender', label: 'Add Microsoft 365 Defender' },
+    ],
   },
   {
     id: 'ingest-webhook',
