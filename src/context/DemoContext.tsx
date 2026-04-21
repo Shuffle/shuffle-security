@@ -234,6 +234,7 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
   const [stats, setStats] = useState(() => getDemoStats());
   const [completedSteps, setCompletedSteps] = useState<Record<string, boolean>>({});
   const [isForceCreatingIncidents, setIsForceCreatingIncidents] = useState(false);
+  const [isForceGeneratingSingle, setIsForceGeneratingSingle] = useState(false);
   const [hasDemoIncidents, setHasDemoIncidents] = useState(false);
 
   // GA dedupe: each step view fires at most once per session, each completion
