@@ -77,9 +77,13 @@ const toIncident = (item: RawInc): { key: string; value: OCSFIncidentFinding } =
 // ─── Incidents ────────────────────────────────────────────────────────────────
 // Demo narrative (the "phishing → host compromise" funnel):
 //   1. Sarah Chen reports a phishing email and admits she clicked the link.
-//   2. CrowdStrike fires on her laptop FIN-LAPTOP-04 minutes later — Cobalt
-//      Strike beacon spawned by chrome.exe (her outdated Chrome was
+//   2. Wazuh fires on her laptop FIN-LAPTOP-04 minutes later — Sliver implant
+//      beaconing out, spawned by chrome.exe (her outdated Chrome was
 //      vulnerable to CVE-2024-5274, a V8 type-confusion RCE).
+// Sliver (Bishop Fox, Go) is now the most-observed real-world C2 framework
+// per Microsoft TI / Vectra / Bishop Fox 2025-26 reporting — it's overtaken
+// Cobalt Strike for both red-team and live-intrusion telemetry, so a Wazuh
+// rule firing on a Sliver implant is a realistic 2026 detection.
 // Both incidents share the same user, hostname, attacker IP and URL so the
 // Correlations panel links them automatically and the agent knows to focus
 // on isolating FIN-LAPTOP-04.
@@ -109,10 +113,10 @@ export const buildDemoIncidentsBatch1 = (): { key: string; value: OCSFIncidentFi
     },
     {
       _key: `demo-inc-malware-${t}-2`,
-      title: `CrowdStrike: Cobalt Strike beacon on ${PHISH_HOST}`,
-      desc: `EDR detected a Cobalt Strike beacon executing from %APPDATA%\\Roaming\\svchost.exe on ${PHISH_HOST} (owner: Sarah Chen). Process tree shows chrome.exe (v124.0.6367.91 — outdated, vulnerable to CVE-2024-5274) spawning the payload after the user visited ${PHISH_LURE_URL}. Beacon callbacks observed to ${PHISH_ATTACKER_IP}.`,
+      title: `Wazuh: Sliver C2 implant beaconing on ${PHISH_HOST}`,
+      desc: `Wazuh agent flagged an unsigned Go binary at %APPDATA%\\Roaming\\Microsoft\\Edge\\msedge_proxy.exe on ${PHISH_HOST} (owner: Sarah Chen) making low-and-slow HTTPS callbacks to ${PHISH_ATTACKER_IP} every ~57s with jitter — Sliver implant signature (rule 100221, level 12). Process tree: chrome.exe (v124.0.6367.91 — outdated, vulnerable to CVE-2024-5274) → cmd.exe → msedge_proxy.exe, triggered after the user visited ${PHISH_LURE_URL}. Sysmon EID 1 + 3 correlated; persistence created via Run key "EdgeUpdate".`,
       severity_id: 5, severity: 'Critical', status_id: 1, status: 'New',
-      product: { name: 'CrowdStrike Falcon' },
+      product: { name: 'Wazuh' },
       first_seen_time: minsAgo(12),
       types: ['malware', 'c2', 'exploit'],
       observables: [
@@ -122,6 +126,7 @@ export const buildDemoIncidentsBatch1 = (): { key: string; value: OCSFIncidentFi
         { type: 'url', value: PHISH_LURE_URL },
         { type: 'sha256', value: PHISH_PAYLOAD_SHA256 },
         { type: 'cve', value: 'CVE-2024-5274' },
+        { type: 'tool_name', value: 'Sliver' },
       ],
     },
   ] as RawInc[]).map(toIncident);
