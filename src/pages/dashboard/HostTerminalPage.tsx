@@ -138,6 +138,7 @@ const HostTerminalPage = () => {
   const [hostSearchQuery, setHostSearchQuery] = useState('');
   const [hostSwitcherOpen, setHostSwitcherOpen] = useState(false);
   const [singleEnvFallback, setSingleEnvFallback] = useState<string>('');
+  const [datastoreLookupDone, setDatastoreLookupDone] = useState(false);
   // Hostname resolved from sensors/assets datastores when the URL :hostUuid
   // doesn't match any env-stub host (covers cases where the env API and the
   // datastores use different UUIDs for the same machine).
@@ -162,8 +163,18 @@ const HostTerminalPage = () => {
   const mode = hostState?.mode || resolvedHost?.mode || 'full';
   const isFull = mode === 'full';
   const needsLoading = !hostState?.hostname && !hostsLoaded;
+  const hasResolvedHostname = Boolean(hostname && hostname !== 'Unknown Host' && hostname !== hostUuid);
+  const hostLookupFailed = hostsLoaded && datastoreLookupDone && !hasResolvedHostname;
+  const missingSensorGroup = hostsLoaded && datastoreLookupDone && hasResolvedHostname && !groupName;
+  const canRunActions = hasResolvedHostname && Boolean(groupName) && !hostLookupFailed && !missingSensorGroup;
+  const resolutionErrorMessage = hostLookupFailed
+    ? `This terminal URL did not resolve to a monitor. We finished loading /getenvironments and the monitor datastores, but could not map ID ${hostUuid} to a hostname.`
+    : missingSensorGroup
+      ? `This monitor resolved as ${hostname}, but its environment Name was empty so no sensor_group could be sent.`
+      : '';
+  const displayHostname = hasResolvedHostname ? hostname : 'Unresolved monitor';
 
-  usePageMeta({ title: `Terminal · ${hostname}`, description: `Terminal session for ${hostname}` });
+  usePageMeta({ title: `Terminal · ${displayHostname}`, description: `Terminal session for ${displayHostname}` });
 
   const [customAction, setCustomAction] = useState('');
   const [historyIndex, setHistoryIndex] = useState(-1);
@@ -228,9 +239,10 @@ const HostTerminalPage = () => {
   // their `uuid` field. Avoids showing the raw UUID in the header.
   useEffect(() => {
     if (!hostsLoaded || !hostUuid) return;
-    if (hostState?.hostname) return;
-    if (resolvedHost) return;
-    if (datastoreResolvedHostname) return;
+    if (hostState?.hostname || resolvedHost || datastoreResolvedHostname) {
+      setDatastoreLookupDone(true);
+      return;
+    }
     let cancelled = false;
     (async () => {
       try {
@@ -248,9 +260,23 @@ const HostTerminalPage = () => {
         const found = search(supplements.sensorsByHost) || search(supplements.assetsByHost);
         if (!cancelled && found) setDatastoreResolvedHostname(found);
       } catch { /* ignore */ }
+      finally {
+        if (!cancelled) setDatastoreLookupDone(true);
+      }
     })();
     return () => { cancelled = true; };
   }, [hostsLoaded, hostUuid, hostState?.hostname, resolvedHost, datastoreResolvedHostname]);
+
+  const resolutionToastRef = useRef('');
+  useEffect(() => {
+    if (!datastoreLookupDone) return;
+    const nextKey = hostLookupFailed ? `host:${hostUuid}` : missingSensorGroup ? `group:${hostUuid}` : '';
+    if (!nextKey || resolutionToastRef.current === nextKey) return;
+    resolutionToastRef.current = nextKey;
+    toast.error(hostLookupFailed ? 'Monitor not found' : 'Sensor group missing', {
+      description: resolutionErrorMessage,
+    });
+  }, [datastoreLookupDone, hostLookupFailed, hostUuid, missingSensorGroup, resolutionErrorMessage]);
 
   // Load stored session on mount / host change
   useEffect(() => {
@@ -310,10 +336,10 @@ const HostTerminalPage = () => {
     // Hard guard: backend rejects empty sensor_group / hosts with a confusing
     // "'sensor_group' can't be empty" error. Surface a clear message instead.
     if (!groupName || !hostname || hostname === 'Unknown Host' || hostname === hostUuid) {
-      toast.error('Host context not ready', {
-        description: !groupName
-          ? 'Sensor group not loaded yet — wait for the host list to finish loading, or open this terminal from the Monitors page.'
-          : 'Hostname could not be resolved. Open this terminal from the Monitors page.',
+      toast.error(hostLookupFailed ? 'Monitor could not be resolved' : 'Sensor group missing', {
+        description: hostLookupFailed
+          ? `This terminal URL did not match a monitor returned by /getenvironments or the monitor datastores. ID: ${hostUuid}`
+          : 'The monitor resolved, but no environment Name was available to use as sensor_group.',
       });
       return;
     }
@@ -460,7 +486,7 @@ const HostTerminalPage = () => {
       pollingActiveRef.current.delete(abortKey);
       abortControllersRef.current.delete(abortKey);
     }
-  }, [hostUuid, hostname, groupName]);
+  }, [groupName, hostLookupFailed, hostUuid, hostname]);
 
   // Auto-run an action passed via navigation state (e.g. "CBOM Scan" from /monitors/:id).
   // Fires once per navigation entry, after hostname + groupName have resolved.
@@ -650,7 +676,16 @@ const HostTerminalPage = () => {
 
       {/* Scrollable session log */}
       <div className="flex-1 overflow-y-auto min-h-0" ref={scrollRef}>
-        {actionHistory.length === 0 && (
+        {resolutionErrorMessage && (
+          <div className="mx-6 mt-6 rounded-md border border-destructive/40 bg-destructive/5 px-4 py-3">
+            <p className="text-sm font-medium text-destructive">
+              {hostLookupFailed ? 'Monitor resolution failed' : 'Sensor group missing'}
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">{resolutionErrorMessage}</p>
+          </div>
+        )}
+
+        {actionHistory.length === 0 && !resolutionErrorMessage && (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-3">
             <Terminal size={40} className="opacity-30" />
             <p className="text-sm">No commands run yet. Type a command or use the predefined actions below.</p>
@@ -770,6 +805,7 @@ const HostTerminalPage = () => {
       <div className="px-6 py-3 flex flex-wrap gap-1.5 border-t border-border/50 shrink-0">
         <button
           key="disable_rce"
+          disabled={!canRunActions}
           className="px-3 py-1.5 text-xs rounded-md border border-destructive/40 text-destructive hover:bg-destructive/10 transition-colors"
           onClick={() => executeHostAction('disable_rce', 'Disable RCE', true)}
         >
@@ -796,11 +832,12 @@ const HostTerminalPage = () => {
         <div className="flex gap-2 items-center max-w-4xl">
           <span className="text-sm font-mono text-primary shrink-0">$</span>
           <Input
-            placeholder={isFull ? 'Type command…' : 'Custom action…'}
+            placeholder={canRunActions ? (isFull ? 'Type command…' : 'Custom action…') : 'Monitor resolution required before running commands'}
             value={customAction}
             onChange={e => setCustomAction(e.target.value)}
             className="h-9 text-sm flex-1 font-mono"
             ref={inputRef}
+            disabled={!canRunActions}
             onKeyDown={e => {
               // Full ordered history, every entry (no dedup), most recent first
               const history = [...actionHistory].reverse().map(e => e.actionName).filter(Boolean);
@@ -830,7 +867,7 @@ const HostTerminalPage = () => {
             size="icon"
             variant="ghost"
             className="h-9 w-9 shrink-0"
-            disabled={!customAction.trim()}
+            disabled={!canRunActions || !customAction.trim()}
             onClick={() => {
               if (customAction.trim()) {
                 
