@@ -2415,6 +2415,7 @@ function UsecasesPageInner() {
                 usecases={usecases}
                 isEnabled={drawerEnabled}
                 canToggle={drawerCanToggle}
+                isAuthenticated={isAuthenticated}
                 onToggled={refetchWorkflows}
               />
             );
