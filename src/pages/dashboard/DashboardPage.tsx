@@ -52,6 +52,7 @@ import { useWorkflows } from '@/hooks/useWorkflows';
 import { findIngestTicketsWorkflow } from '@/lib/ingestionDetection';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 import { toast } from 'sonner';
+import { DemoModeCard } from '@/components/demo/DemoModeCard';
 
 // ── Setup Step ─────────────────────────────────────────────────────────────────
 
@@ -716,6 +717,9 @@ const DashboardPage = () => {
       <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.875rem', mb: 4 }}>
         Get started by completing the setup steps below, then monitor agent activity.
       </Typography>
+
+      {/* ── Demo Mode CTA ────────────────────────────────────────────────────── */}
+      <DemoModeCard />
 
       {/* ── Setup Checklist ──────────────────────────────────────────────────── */}
       <Box sx={{ mb: 5 }}>
