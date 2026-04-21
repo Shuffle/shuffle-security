@@ -606,7 +606,7 @@ const DashboardPage = () => {
         icon: <Monitor size={20} />,
         status: 'not-started',
         ctaLabel: 'Set Up',
-        ctaPath: '/monitors',
+        ctaPath: '/monitors?add_host=true',
         priority: 1,
       },
       {
