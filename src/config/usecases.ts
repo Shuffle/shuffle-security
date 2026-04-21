@@ -787,6 +787,10 @@ export function getUsecasesJson(
         ...(uc.automationCategory ? { automation_category: uc.automationCategory } : {}),
         ...(uc.automationArea ? { automation_area: uc.automationArea } : {}),
         ...(uc.manualVerification ? { manual_verification: true } : {}),
+        ...(typeof uc.priority === 'number' ? { priority: uc.priority } : {}),
+        ...(uc.video ? { video: uc.video } : {}),
+        ...(uc.blogpost ? { blogpost: uc.blogpost } : {}),
+        ...(uc.referenceImage ? { reference_image: uc.referenceImage } : {}),
       })),
   }));
 }
