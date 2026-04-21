@@ -883,10 +883,21 @@ const getStoredApiKey = (): string | null => {
 // API base resolved from env/host, auth via `shuffle_api_key` localStorage,
 // and authentication probed via `/api/v1/getinfo`.
 // ============================================================================
+/**
+ * Raw response body from `GET /api/v1/getinfo`. Host apps typically already
+ * have this loaded and pass it down as `userdata`.
+ */
 export interface UsecasesUserData {
+  success?: boolean;
   id?: string;
   username?: string;
   support?: boolean;
+  active_org?: { id?: string; name?: string; [key: string]: any };
+  orgs?: any[];
+  region_url?: string;
+  app_execution_limit?: number;
+  app_execution_usage?: number;
+  /** Optional API key — if present it's used as bearer token for requests. */
   api_key?: string;
   apikey?: string;
   [key: string]: any;
