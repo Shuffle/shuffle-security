@@ -90,6 +90,7 @@ function parseRecord(raw: any): Vulnerability[] {
       if (hosts.length === 0) {
         return [{
           id: data.id,
+          record_id: data.id,
           title,
           description,
           severity,
@@ -100,6 +101,8 @@ function parseRecord(raw: any): Vulnerability[] {
           asset_id: pkgName,
           asset_name: pkgName,
           cve_id: cveId,
+          package_name: pkgName,
+          ecosystem: ecosystem || undefined,
           first_seen: firstSeen,
           last_seen: lastSeen,
           resolved_at: rootResolvedAt,
@@ -117,6 +120,7 @@ function parseRecord(raw: any): Vulnerability[] {
         const resolvedAt = hasHostResolution ? (hostResolution.at || '') : rootResolvedAt;
         return {
           id: `${data.id}::${h.hostname}`,
+          record_id: data.id,
           title,
           description,
           severity,
@@ -127,6 +131,9 @@ function parseRecord(raw: any): Vulnerability[] {
           asset_id: h.hostname,
           asset_name: h.hostname,
           cve_id: cveId,
+          package_name: pkgName,
+          ecosystem: ecosystem || undefined,
+          paths: Array.isArray(h.paths) ? h.paths : undefined,
           first_seen: firstSeen,
           last_seen: lastSeen,
           resolved_at: resolvedAt,
