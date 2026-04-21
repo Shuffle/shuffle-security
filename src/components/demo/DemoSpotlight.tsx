@@ -92,18 +92,18 @@ export const DemoSpotlight = () => {
     };
     raf = window.requestAnimationFrame(tick);
     return () => window.cancelAnimationFrame(raf);
-  }, [drawerOpen, selector, currentStepUnlocked]);
+  }, [drawerOpen, selector, currentStepUnlocked, modalOpen]);
 
   // Scroll target into view once when it first appears
   useEffect(() => {
-    if (!selector || currentStepUnlocked) return;
+    if (!selector || currentStepUnlocked || modalOpen) return;
     const el = document.querySelector(selector) as HTMLElement | null;
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
-  }, [selector, currentStepUnlocked, step]);
+  }, [selector, currentStepUnlocked, step, modalOpen]);
 
-  if (!drawerOpen || !rect || currentStepUnlocked) return null;
+  if (!drawerOpen || !rect || currentStepUnlocked || modalOpen) return null;
 
   const x = rect.left - PADDING;
   const y = rect.top - PADDING;
