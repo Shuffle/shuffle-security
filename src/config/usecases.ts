@@ -76,7 +76,7 @@ export interface ToolCategory {
 export const TOOL_CATEGORIES: ToolCategory[] = [
   {
     id: 'case_management',
-    label: 'Case Management',
+    label: 'Cases',
     description: 'Central hub for incident tracking, task assignment, and case lifecycle management.',
     icon: React.createElement(LayoutGrid, { size: 22 }),
     color: '--infra-case-mgmt',
