@@ -173,7 +173,6 @@ const HostTerminalPage = () => {
     .filter(p => p.hostActionable && !p.disabled);
 
   // Fetch all hosts for the switcher
-  const [singleEnvFallback, setSingleEnvFallback] = useState<string>('');
   useEffect(() => {
     (async () => {
       try {
