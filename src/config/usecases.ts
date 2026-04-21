@@ -718,6 +718,14 @@ export interface UsecaseJsonEntry {
   automation_area?: Usecase['automationArea'];
   /** Manual verification required (e.g. log forwarding) */
   manual_verification?: boolean;
+  /** Importance ranking 0–100; 100 = highest priority. */
+  priority?: number;
+  /** Optional video URL. */
+  video?: string;
+  /** Optional blogpost / article URL. */
+  blogpost?: string;
+  /** Optional reference image URL. */
+  reference_image?: string;
 }
 
 export interface UsecaseCategoryJson {
