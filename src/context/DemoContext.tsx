@@ -47,17 +47,6 @@ export const TOUR_STEPS: TourStep[] = [
     route: '/dashboard',
   },
   {
-    id: 'apps',
-    title: 'Connect your tools',
-    body: 'Detection sources feed into Shuffle.',
-    bullets: [
-      'Microsoft Defender — email alerts',
-      'CrowdStrike — endpoint alerts',
-      "We'll simulate these for the demo",
-    ],
-    route: '/onboarding/sources',
-  },
-  {
     id: 'ingest-webhook',
     title: 'Turn on the ingestion webhook',
     body: 'A webhook URL where tools can post incidents.',
@@ -85,6 +74,17 @@ export const TOUR_STEPS: TourStep[] = [
       label: 'Add Outlook Office365 as an ingestion source',
       targetSelector: '[data-tour="add-ingestion-source-button"]',
     },
+  },
+  {
+    id: 'apps',
+    title: 'Connect your tools',
+    body: 'Detection sources feed into Shuffle.',
+    bullets: [
+      'Microsoft Defender — email alerts',
+      'CrowdStrike — endpoint alerts',
+      "We'll simulate these for the demo",
+    ],
+    route: '/onboarding/sources',
   },
   {
     id: 'incidents-list',
