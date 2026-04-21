@@ -21,6 +21,19 @@ export interface TourStepRequirement {
   targetSelector: string;
 }
 
+/**
+ * A sub-goal is one of several discrete things the user must complete inside
+ * a single tour step. Each sub-goal tracks completion under its own id (which
+ * is stored in the same `completedSteps` map). The step is unlocked only when
+ * every sub-goal id is marked complete.
+ */
+export interface TourStepSubGoal {
+  /** Stable id used as the key in `completedSteps`. */
+  id: string;
+  /** Short human label shown in the drawer. */
+  label: string;
+}
+
 export interface TourStep {
   id: string;
   title: string;
@@ -31,6 +44,8 @@ export interface TourStep {
   route?: string;
   /** If set, Next is disabled until completedSteps[id] is true. */
   requirement?: TourStepRequirement;
+  /** If set, Next is disabled until every sub-goal id is in completedSteps. */
+  subGoals?: TourStepSubGoal[];
 }
 
 export const TOUR_STEPS: TourStep[] = [
