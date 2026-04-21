@@ -50,7 +50,7 @@ const phaseIcon = (phase: FlowPhase) => {
 };
 
 export default function UsecasesPage() {
-  usePageMeta({ title: 'Automations', description: 'Overview of all security data flows grouped by implementation phase.' });
+  usePageMeta({ title: 'Usecases', description: 'Overview of all security data flows grouped by implementation phase.' });
 
   const [search, setSearch] = useState('');
   const [phaseFilter, setPhaseFilter] = useState<FlowPhase | 'all'>('all');
@@ -96,10 +96,10 @@ export default function UsecasesPage() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      toast.success('Automations exported');
+      toast.success('Usecases exported');
     } catch (err) {
       console.error('[UsecasesPage] export failed', err);
-      toast.error('Failed to export automations');
+      toast.error('Failed to export usecases');
     }
   };
 
@@ -156,7 +156,7 @@ export default function UsecasesPage() {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3, flexWrap: 'wrap', gap: 2 }}>
         <Box>
           <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5, color: 'hsl(var(--foreground))', fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
-            Automations
+            Usecases
           </Typography>
           <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
             All data flows across your security stack — grouped by implementation phase.
@@ -267,8 +267,8 @@ export default function UsecasesPage() {
             <AlertTriangle size={14} style={{ color: 'hsl(45 93% 47%)' }} />
             <Typography variant="body2" sx={{ color: 'hsl(45 93% 47%)', fontWeight: 500 }}>
               {showAllAsSupport
-                ? `Support view — showing all ${usecases.length} automations (including ${usecases.filter(u => !u.animated).length} inactive hidden from users)`
-                : `Viewing as normal user — showing ${usecases.filter(u => u.animated).length} active automations`
+                ? `Support view — showing all ${usecases.length} usecases (including ${usecases.filter(u => !u.animated).length} inactive hidden from users)`
+                : `Viewing as normal user — showing ${usecases.filter(u => u.animated).length} active usecases`
               }
             </Typography>
           </Box>
@@ -295,7 +295,7 @@ export default function UsecasesPage() {
         }}>
           <Zap size={14} style={{ color: 'hsl(var(--primary))' }} />
           <Typography variant="body2" sx={{ color: 'hsl(var(--primary))', fontWeight: 500 }}>
-            More automations coming soon — we're actively building new integrations.
+            More usecases coming soon — we're actively building new integrations.
           </Typography>
         </Box>
       )}
@@ -304,7 +304,7 @@ export default function UsecasesPage() {
       <Box sx={{ display: 'flex', gap: 1.5, mb: 4, flexWrap: 'wrap', alignItems: 'center' }}>
         <TextField
           size="small"
-          placeholder="Search automations…"
+          placeholder="Search usecases…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           sx={{
@@ -436,7 +436,7 @@ export default function UsecasesPage() {
 
       {filtered.length === 0 && (
         <Typography sx={{ color: 'hsl(var(--muted-foreground))', textAlign: 'center', py: 8 }}>
-          No automations match your search.
+          No usecases match your search.
         </Typography>
       )}
 
