@@ -457,6 +457,49 @@ export const DemoTourDrawer = () => {
                       );
                     })()}
 
+                    {isIncidentsListStep && (
+                      <Box
+                        sx={{
+                          mt: 2,
+                          p: 1.75,
+                          borderRadius: 2,
+                          border: '1px dashed hsl(var(--border))',
+                          backgroundColor: 'hsl(var(--muted) / 0.3)',
+                        }}
+                      >
+                        <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', mb: 1, lineHeight: 1.5 }}>
+                          {hasDemoIncidents
+                            ? 'Demo incidents are present. If something looks wrong, you can wipe and recreate them.'
+                            : 'No demo incidents detected yet. Use the button below to force-create them.'}
+                        </Typography>
+                        <Button
+                          data-tour="demo-force-create-incidents"
+                          onClick={forceCreateIncidents}
+                          disabled={isForceCreatingIncidents}
+                          variant="outlined"
+                          size="small"
+                          fullWidth
+                          sx={{
+                            textTransform: 'none',
+                            fontSize: '0.78rem',
+                            fontWeight: 600,
+                            borderColor: 'hsl(var(--primary) / 0.5)',
+                            color: 'hsl(var(--primary))',
+                            '&:hover': {
+                              borderColor: 'hsl(var(--primary))',
+                              backgroundColor: 'hsl(var(--primary) / 0.08)',
+                            },
+                          }}
+                        >
+                          {isForceCreatingIncidents
+                            ? 'Recreating incidents…'
+                            : hasDemoIncidents
+                              ? 'Recreate demo incidents'
+                              : 'Force-create demo incidents'}
+                        </Button>
+                      </Box>
+                    )}
+
                     {isLast && (
                       <Box
                         sx={{
