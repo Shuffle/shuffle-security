@@ -97,7 +97,9 @@ function mapApiUsecaseToFrontend(apiCategory: ApiUsecaseCategory, apiUsecase: Ap
     agenticDescription: localUsecase?.agenticDescription || apiUsecase.description || '',
     phase: apiCategoryToPhase(apiCategory.name),
     tags: localUsecase?.tags || [],
-    animated: localUsecase?.animated,
+    // Backend is the source of truth — anything returned by the API counts as
+    // active/animated unless the local override explicitly says otherwise.
+    animated: localUsecase ? localUsecase.animated : true,
     automationLabel: localUsecase?.automationLabel,
     automationCategory: localUsecase?.automationCategory,
     automationArea: localUsecase?.automationArea,
