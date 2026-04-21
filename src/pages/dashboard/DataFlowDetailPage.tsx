@@ -646,38 +646,40 @@ export const UsecaseDetailContent = ({
 
 
       {/* Prev / Next navigation */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mt: 2 }}>
-        {prevFlow ? (
-          <Button
-            onClick={() => navigate(`/usecases/${prevFlow.id}`)}
-            startIcon={<ArrowLeft size={14} />}
-            sx={{
-              color: 'hsl(var(--muted-foreground))',
-              textTransform: 'none',
-              fontSize: '0.78rem',
-              fontWeight: 600,
-              '&:hover': { color: 'hsl(var(--foreground))', bgcolor: 'hsla(var(--muted-foreground) / 0.08)' },
-            }}
-          >
-            {prevFlow.label}
-          </Button>
-        ) : <Box />}
-        {nextFlow ? (
-          <Button
-            onClick={() => navigate(`/usecases/${nextFlow.id}`)}
-            endIcon={<ArrowRight size={14} />}
-            sx={{
-              color: 'hsl(var(--muted-foreground))',
-              textTransform: 'none',
-              fontSize: '0.78rem',
-              fontWeight: 600,
-              '&:hover': { color: 'hsl(var(--foreground))', bgcolor: 'hsla(var(--muted-foreground) / 0.08)' },
-            }}
-          >
-            {nextFlow.label}
-          </Button>
-        ) : <Box />}
-      </Box>
+      {!hidePrevNext && (
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mt: 2 }}>
+          {prevFlow ? (
+            <Button
+              onClick={() => goToUsecase(prevFlow.id)}
+              startIcon={<ArrowLeft size={14} />}
+              sx={{
+                color: 'hsl(var(--muted-foreground))',
+                textTransform: 'none',
+                fontSize: '0.78rem',
+                fontWeight: 600,
+                '&:hover': { color: 'hsl(var(--foreground))', bgcolor: 'hsla(var(--muted-foreground) / 0.08)' },
+              }}
+            >
+              {prevFlow.label}
+            </Button>
+          ) : <Box />}
+          {nextFlow ? (
+            <Button
+              onClick={() => goToUsecase(nextFlow.id)}
+              endIcon={<ArrowRight size={14} />}
+              sx={{
+                color: 'hsl(var(--muted-foreground))',
+                textTransform: 'none',
+                fontSize: '0.78rem',
+                fontWeight: 600,
+                '&:hover': { color: 'hsl(var(--foreground))', bgcolor: 'hsla(var(--muted-foreground) / 0.08)' },
+              }}
+            >
+              {nextFlow.label}
+            </Button>
+          ) : <Box />}
+        </Box>
+      )}
 
       {/* App search drawer */}
       <AppSearchDrawer
