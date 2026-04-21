@@ -20,10 +20,45 @@ export const DemoSpotlight = () => {
   const selector = current?.requirement?.targetSelector;
 
   const [rect, setRect] = useState<DOMRect | null>(null);
+  // True when the user has opened a modal/drawer (e.g. AppSearchDrawer) on top
+  // of the highlighted target. We hide the spotlight in that case so it does
+  // not keep pointing at the now-obscured "+" button.
+  const [modalOpen, setModalOpen] = useState(false);
+
+  // Watch for any MUI modal/drawer being mounted into the DOM. The spotlight
+  // is hidden whenever one is present so it does not double-up with the
+  // surface the user just opened.
+  useEffect(() => {
+    if (!drawerOpen) {
+      setModalOpen(false);
+      return;
+    }
+    const check = () => {
+      // Exclude the demo tour drawer itself (it carries a data-demo-tour attr).
+      const modals = document.querySelectorAll(
+        '.MuiModal-root:not([data-demo-tour]), .MuiDrawer-root:not([data-demo-tour])'
+      );
+      let found = false;
+      modals.forEach((m) => {
+        if (found) return;
+        const el = m as HTMLElement;
+        // MUI keeps modals mounted but hidden; skip those.
+        if (el.getAttribute('aria-hidden') === 'true') return;
+        if (el.style.visibility === 'hidden' || el.style.display === 'none') return;
+        if (el.offsetParent === null && el.getClientRects().length === 0) return;
+        found = true;
+      });
+      setModalOpen(found);
+    };
+    check();
+    const observer = new MutationObserver(check);
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['aria-hidden', 'style'] });
+    return () => observer.disconnect();
+  }, [drawerOpen]);
 
   // Find + track the target element. Polls because the DOM may load async.
   useEffect(() => {
-    if (!drawerOpen || !selector || currentStepUnlocked) {
+    if (!drawerOpen || !selector || currentStepUnlocked || modalOpen) {
       setRect(null);
       return;
     }
@@ -57,18 +92,18 @@ export const DemoSpotlight = () => {
     };
     raf = window.requestAnimationFrame(tick);
     return () => window.cancelAnimationFrame(raf);
-  }, [drawerOpen, selector, currentStepUnlocked]);
+  }, [drawerOpen, selector, currentStepUnlocked, modalOpen]);
 
   // Scroll target into view once when it first appears
   useEffect(() => {
-    if (!selector || currentStepUnlocked) return;
+    if (!selector || currentStepUnlocked || modalOpen) return;
     const el = document.querySelector(selector) as HTMLElement | null;
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
-  }, [selector, currentStepUnlocked, step]);
+  }, [selector, currentStepUnlocked, step, modalOpen]);
 
-  if (!drawerOpen || !rect || currentStepUnlocked) return null;
+  if (!drawerOpen || !rect || currentStepUnlocked || modalOpen) return null;
 
   const x = rect.left - PADDING;
   const y = rect.top - PADDING;
