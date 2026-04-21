@@ -744,6 +744,13 @@ export interface UsecaseJsonEntry {
   blogpost?: string;
   /** Optional reference image URL. */
   reference_image?: string;
+  /** Optional custom CTA — overrides the default workflow-generation flow. */
+  custom_action?: {
+    label: string;
+    href?: string;
+    url?: string;
+    description?: string;
+  };
 }
 
 export interface UsecaseCategoryJson {
