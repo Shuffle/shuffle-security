@@ -2059,13 +2059,18 @@ function UsecasesPageInner() {
   const [drawerFlowId, setDrawerFlowIdState] = useState<string | null>(null);
 
   // Resolve a label from the URL to a flow id once usecases load (and whenever
-  // the URL segment changes).
+  // the URL segment changes). Match is permissive: exact label, case-insensitive
+  // label, or by id — so deep-links work even if the backend renames the usecase.
   useEffect(() => {
     if (!drawerLabel) {
       setDrawerFlowIdState(null);
       return;
     }
-    const match = usecases.find(u => u.label === drawerLabel);
+    const target = drawerLabel.trim().toLowerCase();
+    const match =
+      usecases.find(u => u.label === drawerLabel) ||
+      usecases.find(u => u.label?.toLowerCase() === target) ||
+      usecases.find(u => u.id?.toLowerCase() === target);
     if (match) setDrawerFlowIdState(match.id);
   }, [drawerLabel, usecases]);
 
