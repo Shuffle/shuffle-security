@@ -2859,7 +2859,7 @@ const IncidentsPage = () => {
           fetchIngestionApps();
         }}
         title="Add Ingestion Source"
-        subtitle={isAddOutlookStep ? 'Add "Outlook Office365" and "Microsoft Defender 365" — we\'ll pretend-authenticate them for the demo' : 'Search and authenticate a tool to ingest incidents from'}
+        subtitle={isAddOutlookStep ? 'Add "Outlook Office365" and "Microsoft Defender 365" — we will pretend-authenticate them for the demo' : 'Search and authenticate a tool to ingest incidents from'}
         initialQuery={isAddOutlookStep ? (demoInjectedApps.some(a => /outlook|office365/i.test(a.name)) ? 'Microsoft Defender 365' : 'Outlook Office365') : undefined}
         onSelectOverride={isAddOutlookStep ? (app) => {
           // Pretend-authenticate flow: only Outlook Office365 or Microsoft

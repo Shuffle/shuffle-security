@@ -37,7 +37,7 @@ export const TOUR_STEPS: TourStep[] = [
   {
     id: 'welcome',
     title: 'Welcome to your demo',
-    body: "Here's what we'll do, in order:",
+    body: 'Here is what we will do, in order:',
     bullets: [
       '1. Add ingestion sources (Outlook Office365 + Microsoft Defender 365)',
       '2. Turn on the ingestion webhook',
@@ -54,7 +54,7 @@ export const TOUR_STEPS: TourStep[] = [
     body: 'Pull alerts from real tools.',
     bullets: [
       'Click the highlighted "+" button',
-      'Add "Outlook Office365" — pretend-authenticate it',
+      'Add "Outlook Office365" — we will pretend-authenticate it',
       'Click "+" again and add "Microsoft Defender 365"',
     ],
     route: '/incidents',
@@ -133,8 +133,8 @@ export const TOUR_STEPS: TourStep[] = [
   },
   {
     id: 'wrap',
-    title: 'You\'re all set',
-    body: 'That\'s the tour.',
+    title: 'You are all set',
+    body: 'That is the tour.',
     bullets: [
       'Click "Clean up demo data" on the dashboard when done',
       'Every sample item we added gets removed',
