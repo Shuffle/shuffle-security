@@ -787,4 +787,11 @@ const CategoryCard = ({ category, role }: { category: typeof TOOL_CATEGORIES[num
   );
 };
 
+// ── Page wrapper ───────────────────────────────────────────────────────────────
+
+const DataFlowDetailPage = () => {
+  const { flowId } = useParams<{ flowId: string }>();
+  return <UsecaseDetailContent flowId={flowId} />;
+};
+
 export default DataFlowDetailPage;
