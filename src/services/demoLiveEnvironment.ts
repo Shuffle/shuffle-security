@@ -248,6 +248,50 @@ const initIOCTypesDefaults = async (): Promise<void> => {
   }
 };
 
+/** Seed a "Security Analyst" agent persona into the agents datastore. */
+export const DEMO_AGENTS_CATEGORY = 'shuffle-security_agents';
+export const DEMO_SECURITY_ANALYST_KEY = 'demo-agent-security-analyst';
+
+const buildDemoSecurityAnalystAgent = () => ({
+  id: DEMO_SECURITY_ANALYST_KEY,
+  name: 'Security Analyst',
+  role: 'security_analyst',
+  description:
+    'A focused AI analyst that supports you on incident triage, evidence gathering, and recommended response actions. Acts as your second pair of eyes — never takes high-risk actions without approval.',
+  goals: [
+    'Triage new incidents and surface the ones that need a human first',
+    'Pull together host, user, and threat-intel context for each incident',
+    'Recommend a clear next action and ask for approval on anything risky',
+  ],
+  capabilities: [
+    'Read incidents, assets, users, and host monitors',
+    'Enrich observables against threat feeds',
+    'Propose response actions (e.g. isolate host) for human approval',
+  ],
+  status: 'active',
+  created_at: new Date().toISOString(),
+  metadata: {
+    uid: DEMO_SECURITY_ANALYST_KEY,
+    extensions: { custom_attributes: { demo: true } },
+  },
+});
+
+const initDemoAgents = async (): Promise<void> => {
+  try {
+    const res = await getDatastoreByCategory(DEMO_AGENTS_CATEGORY);
+    if (res.success && res.data) {
+      const exists = res.data.some(item => item.key === DEMO_SECURITY_ANALYST_KEY);
+      if (exists) return;
+    }
+    await setDatastoreItems(
+      [{ key: DEMO_SECURITY_ANALYST_KEY, value: buildDemoSecurityAnalystAgent() }],
+      DEMO_AGENTS_CATEGORY,
+    );
+  } catch (err) {
+    console.warn('[demo] agents init failed', err);
+  }
+};
+
 /**
  * Run the full live-environment bootstrap. Safe to call multiple times —
  * all sub-steps are idempotent. Resolves once everything has settled.
@@ -258,5 +302,6 @@ export const enableLiveDemoEnvironment = async (): Promise<void> => {
     initThreatFeedsDefaults(),
     initIOCTypesDefaults(),
     initDemoMonitorHost(),
+    initDemoAgents(),
   ]);
 };
