@@ -1,9 +1,15 @@
 /**
  * UsecasesPage — Card grid overview of all data flows grouped by Phase 1/2/3.
+ *
+ * Self-contained / portable: this file intentionally avoids project-specific
+ * hooks (`@/hooks/*`), context (`@/context/*`), api config (`@/config/api`),
+ * and the `sonner` toast library so it can be lifted into other platforms
+ * with minimal changes. All those concerns are inlined below.
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import {
   Box,
   Typography,
@@ -23,23 +29,265 @@ import {
   IconButton,
 } from '@mui/material';
 import { Search, ArrowRight, Download, Zap, Activity, CheckCircle2, Circle, AlertTriangle, Network, Clock, Power, PowerOff, FileJson, X, ExternalLink } from 'lucide-react';
-import { toast } from 'sonner';
-import { usePageMeta } from '@/hooks/usePageMeta';
 import {
   FLOW_PHASES,
   TOOL_CATEGORIES,
+  DEFAULT_USECASES,
   getUsecasesJson,
+  apiCategoryToPhase,
+  normalizeCategory,
   type FlowPhase,
   type Usecase,
+  type ApiUsecase,
+  type ApiUsecaseCategory,
 } from '@/config/usecases';
-import { useUsecases, type UsecaseDrift } from '@/hooks/useUsecases';
-import UsecaseAlluvialDiagram from '@/components/usecases/UsecaseAlluvialDiagram';
 import { UsecaseDetailContent } from '@/pages/dashboard/DataFlowDetailPage';
-import { useAuth } from '@/context/AuthContext';
-import { useWorkflows } from '@/hooks/useWorkflows';
-import { getApiUrl, getAuthHeader, API_CONFIG } from '@/config/api';
 import { IntegrationStatus } from '@/components/layout/IntegrationStatus';
 
+// ============================================================================
+// Inlined: API config (was @/config/api)
+// ============================================================================
+const API_BASE_URL: string =
+  (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_SHUFFLE_API_URL) ||
+  (typeof window !== 'undefined' ? window.location.origin : 'https://shuffler.io');
+
+const getStoredApiKey = (): string | null => {
+  try { return typeof window !== 'undefined' ? window.localStorage.getItem('shuffle_api_key') : null; }
+  catch { return null; }
+};
+
+const apiUrl = (endpoint: string): string => `${API_BASE_URL}${endpoint}`;
+
+const authHeader = (): Record<string, string> => {
+  const key = getStoredApiKey();
+  return key ? { Authorization: `Bearer ${key}` } : {};
+};
+
+// ============================================================================
+// Inlined: minimal toast (was `sonner`)
+// ============================================================================
+const toast = {
+  success: (msg: string, _opts?: { duration?: number }) => {
+    if (typeof window !== 'undefined') console.info('[toast]', msg);
+  },
+  error: (msg: string, _opts?: { duration?: number }) => {
+    if (typeof window !== 'undefined') console.error('[toast]', msg);
+  },
+};
+
+// ============================================================================
+// Inlined: usePageMeta (was @/hooks/usePageMeta) — title-only
+// ============================================================================
+function usePageTitle(title: string) {
+  useEffect(() => {
+    const prev = document.title;
+    document.title = title;
+    return () => { document.title = prev; };
+  }, [title]);
+}
+
+// ============================================================================
+// Inlined: useAuth (was @/context/AuthContext)
+// ============================================================================
+interface UserInfoLite {
+  id?: string;
+  username?: string;
+  support?: boolean;
+}
+function useAuthLite() {
+  const { data } = useQuery<{ userInfo: UserInfoLite | null; isAuthenticated: boolean }>({
+    queryKey: ['usecases-page-auth'],
+    queryFn: async () => {
+      try {
+        const res = await fetch(apiUrl('/api/v1/getinfo'), {
+          credentials: 'include',
+          headers: { ...authHeader(), 'Content-Type': 'application/json' },
+        });
+        if (!res.ok) return { userInfo: null, isAuthenticated: false };
+        const body = await res.json();
+        if (body?.success !== true) return { userInfo: null, isAuthenticated: false };
+        return {
+          userInfo: { id: body.id, username: body.username, support: body.support === true },
+          isAuthenticated: true,
+        };
+      } catch {
+        return { userInfo: null, isAuthenticated: false };
+      }
+    },
+    staleTime: 5 * 60 * 1000,
+    retry: 0,
+  });
+  return {
+    userInfo: data?.userInfo ?? null,
+    isAuthenticated: data?.isAuthenticated ?? false,
+  };
+}
+
+// ============================================================================
+// Inlined: useWorkflows (was @/hooks/useWorkflows)
+// ============================================================================
+interface WorkflowSummary {
+  id: string;
+  name: string;
+  tags?: string[];
+  [key: string]: any;
+}
+function useWorkflowsLite() {
+  return useQuery<WorkflowSummary[]>({
+    queryKey: ['usecases-page-workflows'],
+    queryFn: async () => {
+      const res = await fetch(apiUrl('/api/v1/workflows'), {
+        credentials: 'include',
+        headers: { ...authHeader() },
+      });
+      if (!res.ok) return [];
+      const data = await res.json();
+      return Array.isArray(data) ? data : (data.workflows || []);
+    },
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+// ============================================================================
+// Inlined: useUsecases (was @/hooks/useUsecases)
+// ============================================================================
+type DriftType = 'api_only' | 'local_only' | 'phase_mismatch' | 'description_added';
+export interface UsecaseDrift {
+  usecaseId: string;
+  drifts: DriftType[];
+  apiUsecase?: ApiUsecase;
+  apiCategory?: string;
+  localValue?: Usecase;
+}
+
+const ROUTE_ALIASES: Record<string, string[]> = {
+  communication: ['email'],
+  email: ['communication'],
+};
+
+const slugify = (value: string) =>
+  value.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'usecase';
+
+const getApiSource = (u: ApiUsecase) => normalizeCategory(u.source_id || u.type);
+const getApiTarget = (u: ApiUsecase) =>
+  normalizeCategory(u.target_id || u.last || u.destination || '');
+
+const buildApiOnlyId = (u: ApiUsecase) =>
+  `api_${getApiSource(u)}_${getApiTarget(u)}_${slugify(u.name)}`;
+
+const LOCAL_ROUTE_MAP = (() => {
+  const map = new Map<string, Usecase[]>();
+  for (const uc of DEFAULT_USECASES) {
+    const key = `${uc.source}→${uc.target}`;
+    const existing = map.get(key) || [];
+    existing.push(uc);
+    map.set(key, existing);
+  }
+  return map;
+})();
+
+function getMatchingLocal(api: ApiUsecase, matched: Set<string>): Usecase | undefined {
+  const candidates = [getApiSource(api), ...(ROUTE_ALIASES[getApiSource(api)] || [])];
+  for (const src of candidates) {
+    const locals = LOCAL_ROUTE_MAP.get(`${src}→${getApiTarget(api)}`) || [];
+    const unmatched = locals.find((l) => !matched.has(l.id));
+    if (unmatched) return unmatched;
+  }
+  return undefined;
+}
+
+function mapApiToFrontend(cat: ApiUsecaseCategory, api: ApiUsecase, local?: Usecase): Usecase {
+  return {
+    id: local?.id || buildApiOnlyId(api),
+    source: getApiSource(api),
+    target: getApiTarget(api),
+    label: api.name || local?.label || 'Untitled usecase',
+    description: api.description || local?.description || '',
+    agenticDescription: local?.agenticDescription || api.agentic_description || api.description || '',
+    phase: apiCategoryToPhase(cat.name),
+    tags: api.tags || local?.tags || [],
+    animated: typeof api.disabled === 'boolean' ? !api.disabled : (local ? local.animated : true),
+    automationLabel: api.automation_label || local?.automationLabel,
+    automationCategory: api.automation_category || local?.automationCategory,
+    automationArea: (api.automation_area as Usecase['automationArea'] | undefined) || local?.automationArea,
+    status: local?.status,
+    manualVerification: typeof api.manual_verification === 'boolean' ? api.manual_verification : local?.manualVerification,
+    priority: typeof api.priority === 'number' ? api.priority : local?.priority,
+    video: api.video || local?.video,
+    blogpost: api.blogpost || local?.blogpost,
+    referenceImage: api.reference_image || local?.referenceImage,
+    customAction: api.custom_action || local?.customAction,
+  };
+}
+
+function buildBackendUsecases(cats: ApiUsecaseCategory[]) {
+  const matched = new Set<string>();
+  const usecases: Usecase[] = [];
+  const drifts: UsecaseDrift[] = [];
+  for (const cat of cats) {
+    for (const api of cat.list || []) {
+      if (!getApiSource(api) || !getApiTarget(api)) continue;
+      const local = getMatchingLocal(api, matched);
+      if (local) matched.add(local.id);
+      const mapped = mapApiToFrontend(cat, api, local);
+      const driftTypes: DriftType[] = [];
+      if (!local) driftTypes.push('api_only');
+      else {
+        if (mapped.phase !== local.phase) driftTypes.push('phase_mismatch');
+        if (api.description && !local.description) driftTypes.push('description_added');
+      }
+      usecases.push(mapped);
+      drifts.push({ usecaseId: mapped.id, drifts: driftTypes, apiUsecase: api, apiCategory: cat.name, ...(local ? { localValue: local } : {}) });
+    }
+  }
+  for (const local of DEFAULT_USECASES) {
+    if (matched.has(local.id)) continue;
+    drifts.push({ usecaseId: local.id, drifts: ['local_only'], localValue: local });
+  }
+  return { usecases, drifts };
+}
+
+function useUsecasesLite() {
+  const query = useQuery({
+    queryKey: ['usecases-page-usecases'],
+    queryFn: async () => {
+      try {
+        const res = await fetch(apiUrl('/api/v1/workflows/usecases'), {
+          credentials: 'include',
+          headers: { ...authHeader() },
+        });
+        if (!res.ok) return { usecases: DEFAULT_USECASES, apiCategories: [] as ApiUsecaseCategory[], drifts: [] as UsecaseDrift[] };
+        const data = await res.json();
+        const cats: ApiUsecaseCategory[] = Array.isArray(data) ? data : [];
+        if (cats.length === 0) return { usecases: DEFAULT_USECASES, apiCategories: [], drifts: [] };
+        const built = buildBackendUsecases(cats);
+        return { usecases: built.usecases, apiCategories: cats, drifts: built.drifts };
+      } catch {
+        return { usecases: DEFAULT_USECASES, apiCategories: [] as ApiUsecaseCategory[], drifts: [] as UsecaseDrift[] };
+      }
+    },
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  });
+  const usecases = query.data?.usecases ?? DEFAULT_USECASES;
+  const apiCategories = query.data?.apiCategories ?? [];
+  const drifts = query.data?.drifts ?? [];
+  const driftMap = useMemo(() => {
+    const m = new Map<string, UsecaseDrift>();
+    for (const d of drifts) m.set(d.usecaseId, d);
+    return m;
+  }, [drifts]);
+  return {
+    usecases,
+    apiLoaded: apiCategories.length > 0,
+    getDrift: (id: string) => driftMap.get(id),
+  };
+}
+
+// ============================================================================
+// Helpers
+// ============================================================================
 const categoryLabel = (id: string) =>
   TOOL_CATEGORIES.find((c) => c.id === id)?.label || id;
 
