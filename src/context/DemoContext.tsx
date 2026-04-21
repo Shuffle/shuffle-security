@@ -129,7 +129,8 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
   const openTour = useCallback(() => {
     setDrawerOpen(true);
     navigateForStep(step);
-  }, [navigateForStep, step]);
+    runStepSeed(step);
+  }, [navigateForStep, runStepSeed, step]);
 
   const closeTour = useCallback(() => setDrawerOpen(false), []);
 
@@ -137,23 +138,26 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
     setStep(prev => {
       const next = Math.min(prev + 1, TOUR_STEPS.length - 1);
       navigateForStep(next);
+      runStepSeed(next);
       return next;
     });
-  }, [navigateForStep]);
+  }, [navigateForStep, runStepSeed]);
 
   const prevStep = useCallback(() => {
     setStep(prev => {
       const next = Math.max(prev - 1, 0);
       navigateForStep(next);
+      runStepSeed(next);
       return next;
     });
-  }, [navigateForStep]);
+  }, [navigateForStep, runStepSeed]);
 
   const goToStep = useCallback((i: number) => {
     const clamped = Math.max(0, Math.min(i, TOUR_STEPS.length - 1));
     setStep(clamped);
     navigateForStep(clamped);
-  }, [navigateForStep]);
+    runStepSeed(clamped);
+  }, [navigateForStep, runStepSeed]);
 
   const cleanup = useCallback(async () => {
     setIsCleaning(true);
