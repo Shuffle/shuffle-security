@@ -423,6 +423,71 @@ const DataFlowDetailPage = () => {
         )}
       </Box>
 
+      {/* Custom action CTA — shown when the usecase has a one-click in-app destination
+          (e.g. "Add Monitors" → /monitors?add_host=true) instead of a generated workflow. */}
+      {flow.customAction && (() => {
+        const ca = flow.customAction;
+        const isExternal = !!ca.url;
+        const target = ca.url || ca.href || '#';
+        const handleClick = (e: React.MouseEvent) => {
+          if (isExternal) return; // let the anchor handle it
+          e.preventDefault();
+          navigate(target);
+        };
+        return (
+          <Box sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+            p: 2.5,
+            mb: 3,
+            borderRadius: 3,
+            border: '1px solid hsla(var(--primary) / 0.3)',
+            bgcolor: 'hsla(var(--primary) / 0.05)',
+          }}>
+            <Box sx={{
+              width: 40, height: 40, borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              bgcolor: 'hsla(var(--primary) / 0.12)',
+              color: 'hsl(var(--primary))',
+              flexShrink: 0,
+            }}>
+              <Zap size={18} />
+            </Box>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: 'hsl(var(--foreground))' }}>
+                {ca.label}
+              </Typography>
+              {ca.description && (
+                <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', mt: 0.25, lineHeight: 1.5 }}>
+                  {ca.description}
+                </Typography>
+              )}
+            </Box>
+            <Button
+              href={isExternal ? target : undefined}
+              target={isExternal ? '_blank' : undefined}
+              rel={isExternal ? 'noopener noreferrer' : undefined}
+              onClick={handleClick}
+              endIcon={isExternal ? <ExternalLink size={14} /> : <ArrowRight size={14} />}
+              sx={{
+                textTransform: 'none',
+                fontSize: '0.82rem',
+                fontWeight: 700,
+                color: 'hsl(var(--primary-foreground))',
+                bgcolor: 'hsl(var(--primary))',
+                px: 2,
+                py: 0.75,
+                whiteSpace: 'nowrap',
+                '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)' },
+              }}
+            >
+              {ca.label}
+            </Button>
+          </Box>
+        );
+      })()}
+
       {/* Connection Path */}
       <Box sx={{
         p: 3,
