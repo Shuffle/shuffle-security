@@ -93,21 +93,55 @@ const PHISH_ATTACKER_IP = '185.220.101.47';
 const PHISH_LURE_URL = 'https://it-support-portal[.]live/mfa-reset?u=schen';
 const PHISH_PAYLOAD_SHA256 = '7b1c4f9a2e3d8b6f1a0c5d7e9b2a4c6e8d1f3a5b7c9e1d2f4a6b8c0e2d4f6a8b';
 
+// Diego Ruiz is the colleague who reports the phishing email — same Finance
+// department as Sarah Chen. He noticed Sarah received the same email and
+// flagged it; only Sarah actually clicked the link, which is what makes the
+// later Wazuh detection on FIN-LAPTOP-04 the critical follow-up.
+const PHISH_REPORTER_NAME = 'Diego Ruiz';
+const PHISH_REPORTER_EMAIL = 'diego.ruiz@example.com';
+
 /**
- * Single "focus" incident — the Wazuh/Sliver C2 detection on Sarah Chen's
- * laptop. This is the centerpiece of the demo narrative (host isolation
- * approval flow), used by the "Force generate" button on the tour so the
- * user can focus on one incident before the others arrive for correlation.
+ * Single "focus" incident — a phishing email reported by Diego Ruiz (Finance)
+ * who noticed his colleague Sarah Chen received the same lure. Source is
+ * Outlook Office365. This is the centerpiece of the demo narrative; the
+ * Wazuh / Sliver C2 detection on Sarah's laptop arrives later as the user
+ * is exploring this incident.
  */
 export const buildDemoFocusIncident = (): { key: string; value: OCSFIncidentFinding } => {
   const t = now();
   return toIncident({
-    _key: `demo-inc-malware-${t}-focus`,
+    _key: `demo-inc-phish-${t}-focus`,
+    title: `Phishing email reported by ${PHISH_REPORTER_NAME}`,
+    desc: `${PHISH_REPORTER_NAME} (Senior Accountant, Finance) reported a suspicious email impersonating IT support and asking the recipient to reset MFA. He noticed his colleague Sarah Chen (Finance Analyst) received the same message addressed to her ${PHISH_HOST} laptop. Diego did not click the link; it is unclear yet whether Sarah did. URL resolves to a known credential-harvesting kit hosted at ${PHISH_ATTACKER_IP}.`,
+    severity_id: 4, severity: 'High', status_id: 1, status: 'New',
+    product: { name: 'Outlook Office365' },
+    first_seen_time: minsAgo(38),
+    types: ['phishing', 'credential-theft'],
+    observables: [
+      { type: 'email', value: PHISH_REPORTER_EMAIL },
+      { type: 'email', value: PHISH_USER_EMAIL },
+      { type: 'hostname', value: PHISH_HOST },
+      { type: 'url', value: PHISH_LURE_URL },
+      { type: 'ip', value: PHISH_ATTACKER_IP },
+    ],
+  });
+};
+
+/**
+ * The follow-up Wazuh / Sliver C2 implant detection on FIN-LAPTOP-04. This
+ * arrives after the user has spent some time exploring the phishing
+ * incident — confirming that Sarah did click the link and that her outdated
+ * Chrome (CVE-2024-5274) was exploited. Source is Wazuh.
+ */
+export const buildDemoWazuhImplantIncident = (): { key: string; value: OCSFIncidentFinding } => {
+  const t = now();
+  return toIncident({
+    _key: `demo-inc-malware-${t}-wazuh`,
     title: `Wazuh: Sliver C2 implant beaconing on ${PHISH_HOST}`,
     desc: `Wazuh agent flagged an unsigned Go binary at %APPDATA%\\Roaming\\Microsoft\\Edge\\msedge_proxy.exe on ${PHISH_HOST} (owner: Sarah Chen) making low-and-slow HTTPS callbacks to ${PHISH_ATTACKER_IP} every ~57s with jitter — Sliver implant signature (rule 100221, level 12). Process tree: chrome.exe (v124.0.6367.91 — outdated, vulnerable to CVE-2024-5274) → cmd.exe → msedge_proxy.exe, triggered after the user visited ${PHISH_LURE_URL}. Sysmon EID 1 + 3 correlated; persistence created via Run key "EdgeUpdate".`,
     severity_id: 5, severity: 'Critical', status_id: 1, status: 'New',
     product: { name: 'Wazuh' },
-    first_seen_time: minsAgo(12),
+    first_seen_time: minsAgo(2),
     types: ['malware', 'c2', 'exploit'],
     observables: [
       { type: 'hostname', value: PHISH_HOST },
