@@ -408,8 +408,20 @@ const IncidentsPage = () => {
    // the app into the Ingest row.
    const [fakeAuth, setFakeAuth] = useState<{ name: string; image: string } | null>(null);
    // Optimistically-injected ingestion apps from the demo flow (e.g. Outlook
-   // Office365 after fake auth). Merged with the real list for rendering.
-   const [demoInjectedApps, setDemoInjectedApps] = useState<ValidatedIngestionApp[]>([]);
+   // Office365 after fake auth). Persisted in localStorage so they survive
+   // page reloads, route changes, and any component remount during the tour.
+   // Cleared by the demo cleanup flow.
+   const [demoInjectedApps, setDemoInjectedApps] = useState<ValidatedIngestionApp[]>(() => {
+     try {
+       const raw = localStorage.getItem('shuffle_demo_injected_apps');
+       return raw ? JSON.parse(raw) : [];
+     } catch { return []; }
+   });
+   useEffect(() => {
+     try {
+       localStorage.setItem('shuffle_demo_injected_apps', JSON.stringify(demoInjectedApps));
+     } catch { /* ignore */ }
+   }, [demoInjectedApps]);
 
    // ─── Demo tour gating ─────────────────────────────────────────────────────
    // While the demo tour is open and on the "add-outlook" step, we strip the
