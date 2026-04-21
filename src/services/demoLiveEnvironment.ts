@@ -109,6 +109,130 @@ const initThreatFeedsDefaults = async (): Promise<void> => {
   }
 };
 
+// ─── Fake Host Monitor injection ────────────────────────────────────────────
+// The demo narrative pivots on Sarah Chen's compromised laptop FIN-LAPTOP-04.
+// To let the AI agent propose "Isolate host" and the user approve it, the
+// host must show up on /monitors. We do this in two parts:
+//   1. Seed `shuffle-security_sensors` with the rich host record so the
+//      Monitors UI renders software, code-scanner, response-actions, etc.
+//   2. PUT /api/v1/setenvironments to inject a stub host into a sensor_group
+//      environment (creating "shuffle_sensors" if none exists yet).
+// Both records are tagged demo:true so cleanup can find them later.
+
+export const DEMO_HOST_HOSTNAME = 'FIN-LAPTOP-04';
+export const DEMO_HOST_UUID = 'demo-host-fin-laptop-04';
+export const DEMO_HOST_GROUP = 'shuffle_sensors';
+const SENSORS_CATEGORY = 'shuffle-security_sensors';
+
+const buildDemoSensorHost = () => {
+  const nowSec = Math.floor(Date.now() / 1000);
+  return {
+    uuid: DEMO_HOST_UUID,
+    hostname: DEMO_HOST_HOSTNAME,
+    os: 'windows',
+    arch: 'amd64',
+    serial: 'FIN-LAPTOP-04-SN-9821',
+    checkin: nowSec,
+    last_checkin: nowSec,
+    hd_encrypted: true,
+    automatic_screen_lock_enabled: true,
+    elevated_access: true,
+    sensor_mode: true,
+    response_actions: 'full',
+    log_forwarding: '',
+    installed_software: [
+      { name: 'Google Chrome', version: '124.0.6367.91', vendor: 'Google LLC' },
+      { name: 'Microsoft Edge', version: '125.0.2535.51', vendor: 'Microsoft' },
+      { name: 'Slack', version: '4.38.121', vendor: 'Slack Technologies' },
+      { name: 'Zoom', version: '5.17.11', vendor: 'Zoom Video Communications' },
+      { name: '1Password', version: '8.10.30', vendor: 'AgileBits' },
+      { name: 'Microsoft 365 Apps', version: '16.0.17328.20184', vendor: 'Microsoft' },
+    ],
+    code_scanner: [],
+    metadata: {
+      uid: DEMO_HOST_UUID,
+      extensions: { custom_attributes: { demo: true } },
+    },
+  };
+};
+
+/** Seed the rich sensor record into the datastore. Idempotent on key. */
+const initDemoSensorRecord = async (): Promise<void> => {
+  try {
+    await setDatastoreItems(
+      [{ key: DEMO_HOST_HOSTNAME.toLowerCase(), value: buildDemoSensorHost() }],
+      SENSORS_CATEGORY,
+    );
+  } catch (err) {
+    console.warn('[demo] sensor record init failed', err);
+  }
+};
+
+interface OrbEnv {
+  Name: string;
+  Type?: string;
+  id?: string;
+  sensor_group?: boolean;
+  sensor_hosts?: Array<Record<string, unknown>>;
+  archived?: boolean;
+  [key: string]: unknown;
+}
+
+/** Inject a fake sensor host into a sensor_group environment. */
+const injectDemoMonitorHost = async (): Promise<void> => {
+  try {
+    // 1. Pull current environments
+    const getRes = await fetch(getApiUrl('/api/v1/getenvironments'), {
+      credentials: 'include',
+      headers: { ...getAuthHeader() },
+    });
+    if (!getRes.ok) {
+      console.warn('[demo] getenvironments failed', getRes.status);
+      return;
+    }
+    const envs: OrbEnv[] = await getRes.json();
+    const live = Array.isArray(envs) ? envs.filter(e => !e.archived) : [];
+
+    // 2. Find an existing sensor_group, or queue creation of "shuffle_sensors"
+    let targetIdx = live.findIndex(e => e.sensor_group === true);
+    if (targetIdx === -1) {
+      live.push({ Name: DEMO_HOST_GROUP, Type: 'onprem', sensor_group: true, sensor_hosts: [] });
+      targetIdx = live.length - 1;
+    }
+    const target = live[targetIdx];
+    const existing = Array.isArray(target.sensor_hosts) ? target.sensor_hosts : [];
+
+    // 3. Skip if our demo host is already present
+    const already = existing.some(h => {
+      const hn = String((h as { hostname?: string }).hostname || '').toLowerCase();
+      const uid = String((h as { uuid?: string }).uuid || '');
+      return hn === DEMO_HOST_HOSTNAME.toLowerCase() || uid === DEMO_HOST_UUID;
+    });
+    if (already) return;
+
+    // 4. Append the stub (env API merges runtime data; sensors datastore has the rest)
+    target.sensor_hosts = [...existing, buildDemoSensorHost()];
+
+    // 5. Persist via setenvironments — full-state PUT
+    const putRes = await fetch(getApiUrl('/api/v1/setenvironments'), {
+      method: 'PUT',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+      body: JSON.stringify(live),
+    });
+    if (!putRes.ok) {
+      console.warn('[demo] setenvironments failed', putRes.status);
+    }
+  } catch (err) {
+    console.warn('[demo] inject monitor host failed', err);
+  }
+};
+
+/** Seed sensor record + inject into environments in parallel. */
+const initDemoMonitorHost = async (): Promise<void> => {
+  await Promise.allSettled([initDemoSensorRecord(), injectDemoMonitorHost()]);
+};
+
 /** Initialize IOC Types defaults if the category is empty. */
 const initIOCTypesDefaults = async (): Promise<void> => {
   try {
@@ -133,5 +257,6 @@ export const enableLiveDemoEnvironment = async (): Promise<void> => {
     generateOnboardingWorkflows(),
     initThreatFeedsDefaults(),
     initIOCTypesDefaults(),
+    initDemoMonitorHost(),
   ]);
 };
