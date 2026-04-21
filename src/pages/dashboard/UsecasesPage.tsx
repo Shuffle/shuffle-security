@@ -37,7 +37,8 @@ import UsecaseAlluvialDiagram from '@/components/usecases/UsecaseAlluvialDiagram
 import { UsecaseDetailContent } from '@/pages/dashboard/DataFlowDetailPage';
 import { useAuth } from '@/context/AuthContext';
 import { useWorkflows } from '@/hooks/useWorkflows';
-import { getApiUrl, getAuthHeader } from '@/config/api';
+import { getApiUrl, getAuthHeader, API_CONFIG } from '@/config/api';
+import { IntegrationStatus } from '@/components/layout/IntegrationStatus';
 
 const categoryLabel = (id: string) =>
   TOOL_CATEGORIES.find((c) => c.id === id)?.label || id;
