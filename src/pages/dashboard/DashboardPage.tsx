@@ -663,18 +663,6 @@ const DashboardPage = () => {
         ctaPath: '/vulnerabilities',
         priority: 5,
       },
-      {
-        id: 'setup-detection',
-        title: 'Set up log ingestion',
-        description: hasDetection
-          ? 'Log ingestion is running and forwarding events to detection.'
-          : 'Set up log ingestion to collect logs, network traffic, and endpoint events.',
-        icon: <Radar size={20} />,
-        status: hasDetection ? 'complete' : 'not-started',
-        ctaLabel: 'Set Up',
-        ctaPath: '/detection',
-        priority: 6,
-      },
     ];
     // Preserve the explicit priority order requested by the user
     steps.sort((a, b) => a.priority - b.priority);
