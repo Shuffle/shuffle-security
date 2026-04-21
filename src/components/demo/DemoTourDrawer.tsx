@@ -325,13 +325,56 @@ export const DemoTourDrawer = () => {
                     </Typography>
                     <Typography
                       sx={{
-                        fontSize: '0.875rem',
-                        lineHeight: 1.65,
-                        color: 'hsl(var(--muted-foreground))',
+                        fontSize: '0.9rem',
+                        lineHeight: 1.5,
+                        color: 'hsl(var(--foreground))',
+                        fontWeight: 500,
                       }}
                     >
                       {current.body}
                     </Typography>
+                    {current.bullets && current.bullets.length > 0 && (
+                      <Box
+                        component="ul"
+                        sx={{
+                          mt: 1.5,
+                          mb: 0,
+                          pl: 0,
+                          listStyle: 'none',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 0.75,
+                        }}
+                      >
+                        {current.bullets.map((b, i) => (
+                          <Box
+                            key={i}
+                            component="li"
+                            sx={{
+                              fontSize: '0.85rem',
+                              lineHeight: 1.5,
+                              color: 'hsl(var(--muted-foreground))',
+                              display: 'flex',
+                              alignItems: 'flex-start',
+                              gap: 1,
+                            }}
+                          >
+                            <Box
+                              component="span"
+                              sx={{
+                                mt: '0.55em',
+                                width: 4,
+                                height: 4,
+                                borderRadius: '50%',
+                                backgroundColor: 'hsl(var(--primary))',
+                                flexShrink: 0,
+                              }}
+                            />
+                            <span>{b}</span>
+                          </Box>
+                        ))}
+                      </Box>
+                    )}
 
                     {requirement && (
                       <Box
