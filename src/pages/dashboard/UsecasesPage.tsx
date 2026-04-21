@@ -37,7 +37,8 @@ import UsecaseAlluvialDiagram from '@/components/usecases/UsecaseAlluvialDiagram
 import { UsecaseDetailContent } from '@/pages/dashboard/DataFlowDetailPage';
 import { useAuth } from '@/context/AuthContext';
 import { useWorkflows } from '@/hooks/useWorkflows';
-import { getApiUrl, getAuthHeader } from '@/config/api';
+import { getApiUrl, getAuthHeader, API_CONFIG } from '@/config/api';
+import { IntegrationStatus } from '@/components/layout/IntegrationStatus';
 
 const categoryLabel = (id: string) =>
   TOOL_CATEGORIES.find((c) => c.id === id)?.label || id;
@@ -224,6 +225,35 @@ export default function UsecasesPage() {
           </Box>
         </Box>
       </Box>
+
+      {/* Selected apps — same format as the AppSearchDrawer's "Your Apps" row */}
+      {API_CONFIG.apiKey && (
+        <Box sx={{ mb: 3 }}>
+          <Typography
+            sx={{
+              color: 'hsl(var(--muted-foreground))',
+              fontSize: '0.7rem',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              mb: 1,
+              px: 1,
+            }}
+          >
+            Selected apps
+          </Typography>
+          <Box
+            sx={{
+              p: 1,
+              borderRadius: 1.5,
+              border: '1px solid hsl(var(--border))',
+              bgcolor: 'hsl(var(--card))',
+            }}
+          >
+            <IntegrationStatus collapsed={false} showAll hideAddButton />
+          </Box>
+        </Box>
+      )}
 
       {/* Banner */}
       {isSupport ? (
