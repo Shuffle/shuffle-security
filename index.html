@@ -9,14 +9,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     
-    <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YSYM9JDVEE"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-YSYM9JDVEE');
-    </script>
+    <!-- Google Analytics is initialized in code via react-ga4 (see src/lib/analytics.ts).
+         It only fires on Shuffle Cloud domains (*.shuffler.io / shutdown.no). -->
     <link rel="canonical" href="https://security.shuffler.io/" />
     <title>Shuffle Security - Open Source Alert & Case Management</title>
     <meta name="description" content="Open-source cybersecurity alert and case management platform. Manage alerts, cases, tasks, and observables with seamless automation integration." />

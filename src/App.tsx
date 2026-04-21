@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { ThemeProvider as MuiThemeProvider, CssBaseline, Box } from '@mui/material';
 import { Navigate } from 'react-router-dom';
 import { AppDetailProvider } from '@/context/AppDetailContext';
-import { trackReferralParams } from '@/lib/analytics';
+import { trackReferralParams, initAnalytics } from '@/lib/analytics';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
 import { Toaster } from 'sonner';
@@ -192,7 +192,7 @@ const ThemedApp = () => {
 };
 
 const App = () => {
-  useEffect(() => { trackReferralParams(); }, []);
+  useEffect(() => { initAnalytics(); trackReferralParams(); }, []);
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>

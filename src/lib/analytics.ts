@@ -1,22 +1,33 @@
-// Google Analytics event tracking helper
-// Only fires on allowed domains: *.shuffler.io, shutdown.no
+// Google Analytics tracking via react-ga4
+// All events are funneled through a single isCloud()-gated wrapper:
+// GA only fires on Shuffle Cloud (*.shuffler.io / shutdown.no). On Lovable
+// preview and self-hosted (onprem) deployments, every call is a safe no-op.
 
-declare global {
-  interface Window {
-    gtag?: (...args: unknown[]) => void;
-    dataLayer?: unknown[];
-  }
+import ReactGA from 'react-ga4';
+import { isCloud } from '@/config/api';
+
+const GA_MEASUREMENT_ID = 'G-YSYM9JDVEE';
+
+let _initialized = false;
+
+/**
+ * Initialize ReactGA. Safe to call multiple times — only the first call
+ * on a cloud deployment actually initializes the library.
+ */
+export function initAnalytics(): void {
+  if (_initialized) return;
+  if (!isCloud()) return;
+  if (typeof window === 'undefined') return;
+
+  ReactGA.initialize(GA_MEASUREMENT_ID);
+  _initialized = true;
 }
 
-/** Returns true if the current hostname is an allowed tracking domain */
-const isAllowedDomain = (): boolean => {
-  if (typeof window === 'undefined') return false;
-  const hostname = window.location.hostname;
-  return hostname.endsWith('.shuffler.io') || hostname === 'shuffler.io' || hostname === 'shutdown.no';
-};
+/** True when ReactGA is initialized AND we're on a cloud deployment. */
+const canTrack = (): boolean => isCloud() && _initialized;
 
 // Event categories for organization
-export type EventCategory = 
+export type EventCategory =
   | 'auth'
   | 'onboarding'
   | 'navigation'
@@ -34,7 +45,7 @@ export const GA_EVENTS = {
   REGISTER_START: { category: 'auth', action: 'register_start' },
   REGISTER_SUCCESS: { category: 'auth', action: 'register_success' },
   LOGOUT: { category: 'auth', action: 'logout' },
-  
+
   // Onboarding events
   ONBOARDING_START: { category: 'onboarding', action: 'onboarding_start' },
   ONBOARDING_STEP: { category: 'onboarding', action: 'onboarding_step' },
@@ -45,17 +56,17 @@ export const GA_EVENTS = {
   ONBOARDING_AUTH_TEST_SUCCESS: { category: 'onboarding', action: 'auth_test_success' },
   ONBOARDING_AUTH_TEST_FAILURE: { category: 'onboarding', action: 'auth_test_failure' },
   ONBOARDING_AUTOMATION_TOGGLE: { category: 'onboarding', action: 'automation_toggle' },
-  
+
   // Navigation events
   CTA_CLICK: { category: 'navigation', action: 'cta_click' },
   NAV_CLICK: { category: 'navigation', action: 'nav_click' },
   EXTERNAL_LINK: { category: 'navigation', action: 'external_link' },
-  
+
   // Engagement events
   SEARCH_USED: { category: 'engagement', action: 'search_used' },
   CATEGORY_FILTER: { category: 'engagement', action: 'category_filter' },
   APP_VIEWED: { category: 'engagement', action: 'app_viewed' },
-  
+
   // Conversion events
   FREE_TRIAL_START: { category: 'conversion', action: 'free_trial_start' },
   INTEGRATION_CONNECTED: { category: 'conversion', action: 'integration_connected' },
@@ -88,26 +99,22 @@ interface TrackEventParams {
 }
 
 /**
- * Track a custom event in Google Analytics.
- * Only fires on *.shuffler.io and shutdown.no domains.
+ * Track a custom event in Google Analytics via ReactGA.
+ * No-op unless we're on a Shuffle Cloud deployment (isCloud()).
  */
 export function trackEvent({ category, action, label, value, custom }: TrackEventParams): void {
-  if (!isAllowedDomain()) return;
+  if (!canTrack()) return;
 
-  if (typeof window === 'undefined' || !window.gtag) {
-    return;
-  }
-
-  window.gtag('event', action, {
+  ReactGA.event(action, {
     event_category: category,
     event_label: label,
-    value: value,
+    value,
     ...custom,
   });
 }
 
 /**
- * Track a predefined event
+ * Track a predefined event from GA_EVENTS.
  */
 export function trackPredefinedEvent(
   event: typeof GA_EVENTS[keyof typeof GA_EVENTS],
@@ -125,20 +132,20 @@ export function trackPredefinedEvent(
 }
 
 /**
- * Track page views (useful for SPA navigation)
+ * Track page views (useful for SPA navigation).
  */
 export function trackPageView(path: string, title?: string): void {
-  if (!isAllowedDomain()) return;
-  if (typeof window === 'undefined' || !window.gtag) return;
+  if (!canTrack()) return;
 
-  window.gtag('event', 'page_view', {
-    page_path: path,
-    page_title: title || document.title,
+  ReactGA.send({
+    hitType: 'pageview',
+    page: path,
+    title: title || (typeof document !== 'undefined' ? document.title : undefined),
   });
 }
 
 /**
- * Track CTA button clicks with common pattern
+ * Track CTA button clicks with common pattern.
  */
 export function trackCTA(ctaName: string, location?: string): void {
   trackPredefinedEvent(GA_EVENTS.CTA_CLICK, ctaName, undefined, {
@@ -147,7 +154,7 @@ export function trackCTA(ctaName: string, location?: string): void {
 }
 
 /**
- * Track onboarding step progression
+ * Track onboarding step progression.
  */
 export function trackOnboardingStep(stepNumber: number, stepName: string): void {
   trackPredefinedEvent(GA_EVENTS.ONBOARDING_STEP, stepName, stepNumber);
