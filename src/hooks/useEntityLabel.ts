@@ -5,6 +5,7 @@ import { getDatastoreItem, setDatastoreItem, DATASTORE_CATEGORIES } from '@/serv
 export const ENTITY_OPTIONS = [
   { value: 'incidents', singular: 'Incident', plural: 'Incidents', path: '/incidents' },
   { value: 'alerts', singular: 'Alert', plural: 'Alerts', path: '/alerts' },
+  { value: 'cases', singular: 'Case', plural: 'Cases', path: '/cases' },
   { value: 'tickets', singular: 'Ticket', plural: 'Tickets', path: '/tickets' },
   { value: 'jobs', singular: 'Job', plural: 'Jobs', path: '/jobs' },
 ] as const;
