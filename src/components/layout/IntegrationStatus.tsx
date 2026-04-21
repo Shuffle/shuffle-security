@@ -40,6 +40,8 @@ interface IntegrationStatusProps {
   showAll?: boolean;
   /** Hide the Add Integration button */
   hideAddButton?: boolean;
+  /** Hide the "Integrations" section header */
+  hideHeader?: boolean;
   /** When set, apps matching this category are sorted to the top */
   priorityCategory?: string;
 }
