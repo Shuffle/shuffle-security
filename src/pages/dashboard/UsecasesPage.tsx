@@ -458,14 +458,21 @@ function UsecaseCard({
           ...(willBeEnabled ? {} : { action_name: 'remove' }),
         }),
       });
-      if (!res.ok) throw new Error('Failed');
+      let body: any = null;
+      try { body = await res.json(); } catch { /* ignore */ }
+      const reason = typeof body?.reason === 'string' ? body.reason : '';
+      const ok = res.ok && body?.success !== false;
+      if (!ok) {
+        throw new Error(reason || `Request failed (${res.status})`);
+      }
       toast.success(willBeEnabled ? `${flow.label} enabled` : `${flow.label} disabled`);
       onToggled?.();
       // Clear optimistic after a short delay so refetch can land
       setTimeout(() => setOptimisticEnabled(null), 1500);
-    } catch {
+    } catch (err: any) {
       setOptimisticEnabled(null);
-      toast.error('Failed to update automation');
+      const msg = err?.message || 'Failed to update automation';
+      toast.error(msg, { duration: 6000 });
     } finally {
       setToggling(false);
     }
