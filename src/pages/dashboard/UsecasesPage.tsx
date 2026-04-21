@@ -2496,7 +2496,11 @@ function UsecasesPageInner() {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             {drawerFlowId && (
               <Button
-                onClick={() => { const id = drawerFlowId; navigate(`/usecases/${encodeURIComponent(usecases.find(u => u.id === id)?.label || id || '')}/details`); }}
+                onClick={() => {
+                  const id = drawerFlowId;
+                  const name = usecases.find(u => u.id === id)?.label || id || '';
+                  window.open(`https://security.shuffler.io/usecases/${encodeURIComponent(name)}/details`, '_blank', 'noopener,noreferrer');
+                }}
                 endIcon={<ExternalLink size={14} />}
                 sx={{
                   textTransform: 'none',
