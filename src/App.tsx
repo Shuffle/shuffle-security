@@ -180,6 +180,7 @@ const ThemedApp = () => {
             
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </DemoProvider>
         </BrowserRouter>
       </AuthProvider>
     </MuiThemeProvider>
