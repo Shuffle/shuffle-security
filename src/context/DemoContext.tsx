@@ -19,7 +19,7 @@ export const TOUR_STEPS: TourStep[] = [
   {
     id: 'welcome',
     title: 'Welcome to your demo',
-    body: "We've seeded 8 incidents, 6 assets, and 5 users into your account so you can explore. Use Next/Previous to walk through the platform — you can also click around freely.",
+    body: "We'll walk you through the platform step by step. Sample data will appear as you go — use Next/Previous to advance, or click around freely.",
     route: '/dashboard',
   },
   {
@@ -118,7 +118,7 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
       setActive(true);
       setStep(0);
       setDrawerOpen(true);
-      toast.success('Demo started — data will appear as you tour the platform.');
+      // No toast — the drawer itself narrates what's happening.
       navigateForStep(0);
       await runStepSeed(0);
     } finally {
