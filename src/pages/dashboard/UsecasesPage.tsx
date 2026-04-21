@@ -2551,6 +2551,7 @@ function UsecaseCard({
   drift,
   apiLoaded,
   isEnabled,
+  hasInterest = false,
   canToggle,
   isAuthenticated = true,
   onToggled,
@@ -2560,6 +2561,7 @@ function UsecaseCard({
   drift?: UsecaseDrift;
   apiLoaded: boolean;
   isEnabled: boolean;
+  hasInterest?: boolean;
   canToggle: boolean;
   isAuthenticated?: boolean;
   onToggled?: () => void;
