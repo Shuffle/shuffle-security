@@ -17,8 +17,11 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  Button,
+  CircularProgress,
 } from '@mui/material';
-import { Search, ArrowRight, Download, Zap, Activity, CheckCircle2, Circle, AlertTriangle, Network, Clock } from 'lucide-react';
+import { Search, ArrowRight, Download, Zap, Activity, CheckCircle2, Circle, AlertTriangle, Network, Clock, Power, PowerOff } from 'lucide-react';
+import { toast } from 'sonner';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import {
   FLOW_PHASES,
@@ -29,6 +32,8 @@ import {
 import { useUsecases, type UsecaseDrift } from '@/hooks/useUsecases';
 import UsecaseAlluvialDiagram from '@/components/usecases/UsecaseAlluvialDiagram';
 import { useAuth } from '@/context/AuthContext';
+import { useWorkflows } from '@/hooks/useWorkflows';
+import { getApiUrl, getAuthHeader } from '@/config/api';
 
 const categoryLabel = (id: string) =>
   TOOL_CATEGORIES.find((c) => c.id === id)?.label || id;
