@@ -47,20 +47,6 @@ export const TOUR_STEPS: TourStep[] = [
     route: '/dashboard',
   },
   {
-    id: 'ingest-webhook',
-    title: 'Turn on the ingestion webhook',
-    body: 'A webhook URL where tools can post incidents.',
-    bullets: [
-      'Click the highlighted Webhook button',
-      'Enable it to receive incoming alerts',
-    ],
-    route: '/incidents',
-    requirement: {
-      label: 'Enable the ingestion webhook',
-      targetSelector: '[data-tour="webhook-ingestion-button"]',
-    },
-  },
-  {
     id: 'add-outlook',
     title: 'Add an ingestion source',
     body: 'Pull alerts from a real tool.',
@@ -73,6 +59,20 @@ export const TOUR_STEPS: TourStep[] = [
     requirement: {
       label: 'Add Outlook Office365 as an ingestion source',
       targetSelector: '[data-tour="add-ingestion-source-button"]',
+    },
+  },
+  {
+    id: 'ingest-webhook',
+    title: 'Turn on the ingestion webhook',
+    body: 'A webhook URL where tools can post incidents.',
+    bullets: [
+      'Click the highlighted Webhook button',
+      'Enable it to receive incoming alerts',
+    ],
+    route: '/incidents',
+    requirement: {
+      label: 'Enable the ingestion webhook',
+      targetSelector: '[data-tour="webhook-ingestion-button"]',
     },
   },
   {
