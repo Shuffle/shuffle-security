@@ -355,6 +355,7 @@ const NotificationRow = ({ notification, entityBasePath, onApprove, onQuickView,
         {isApproval ? (
           <>
             <Button
+              data-tour="agent-approve-button"
               onClick={() => onApprove(notification)}
               size="small"
               variant="contained"

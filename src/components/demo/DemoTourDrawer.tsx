@@ -4,18 +4,20 @@
  * underlying page — users can still freely explore.
  */
 
-import { Box, IconButton, Typography, Button, LinearProgress } from '@mui/material';
-import { ChevronLeft, ChevronRight, X, Sparkles } from 'lucide-react';
+import { Box, IconButton, Typography, Button, LinearProgress, Tooltip } from '@mui/material';
+import { ChevronLeft, ChevronRight, X, Sparkles, Lock, Check } from 'lucide-react';
 import { useDemo, TOUR_STEPS } from '@/context/DemoContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const DemoTourDrawer = () => {
-  const { drawerOpen, step, nextStep, prevStep, closeTour, goToStep, cleanup, isCleaning } = useDemo();
+  const { drawerOpen, step, nextStep, prevStep, closeTour, goToStep, cleanup, isCleaning, currentStepUnlocked, completedSteps } = useDemo();
 
   const total = TOUR_STEPS.length;
   const current = TOUR_STEPS[step];
   const progress = ((step + 1) / total) * 100;
   const isLast = step === total - 1;
+  const requirement = current?.requirement;
+  const locked = !!requirement && !currentStepUnlocked;
 
   return (
     <AnimatePresence>
@@ -125,6 +127,45 @@ export const DemoTourDrawer = () => {
                     {current.body}
                   </Typography>
 
+                  {requirement && (
+                    <Box
+                      sx={{
+                        mt: 2.5,
+                        p: 1.75,
+                        borderRadius: 2,
+                        border: '1px solid',
+                        borderColor: locked ? 'hsl(var(--primary) / 0.35)' : 'hsl(var(--severity-low) / 0.35)',
+                        backgroundColor: locked ? 'hsl(var(--primary) / 0.06)' : 'hsl(var(--severity-low) / 0.08)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1.25,
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: 24,
+                          height: 24,
+                          borderRadius: 1,
+                          display: 'grid',
+                          placeItems: 'center',
+                          backgroundColor: locked ? 'hsl(var(--primary) / 0.18)' : 'hsl(var(--severity-low) / 0.2)',
+                          color: locked ? 'hsl(var(--primary))' : 'hsl(var(--severity-low))',
+                          flexShrink: 0,
+                        }}
+                      >
+                        {locked ? <Lock size={13} /> : <Check size={14} />}
+                      </Box>
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: locked ? 'hsl(var(--primary))' : 'hsl(var(--severity-low))', mb: 0.25 }}>
+                          {locked ? 'Required to continue' : 'Done'}
+                        </Typography>
+                        <Typography sx={{ fontSize: '0.78rem', fontWeight: 500, color: 'hsl(var(--foreground))', lineHeight: 1.4 }}>
+                          {requirement.label}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  )}
+
                   {isLast && (
                     <Box
                       sx={{
@@ -167,21 +208,30 @@ export const DemoTourDrawer = () => {
 
             {/* Step dots */}
             <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.75, px: 2, pb: 1.5 }}>
-              {TOUR_STEPS.map((s, i) => (
-                <Box
-                  key={s.id}
-                  onClick={() => goToStep(i)}
-                  sx={{
-                    cursor: 'pointer',
-                    width: i === step ? 18 : 6,
-                    height: 6,
-                    borderRadius: 3,
-                    backgroundColor: i === step ? 'hsl(var(--primary))' : 'hsl(var(--muted))',
-                    transition: 'all 0.2s ease',
-                    '&:hover': { backgroundColor: i === step ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground) / 0.5)' },
-                  }}
-                />
-              ))}
+              {TOUR_STEPS.map((s, i) => {
+                const isCurrent = i === step;
+                const isComplete = !!completedSteps[s.id];
+                const hasReq = !!s.requirement;
+                return (
+                  <Box
+                    key={s.id}
+                    onClick={() => goToStep(i)}
+                    sx={{
+                      cursor: 'pointer',
+                      width: isCurrent ? 18 : 6,
+                      height: 6,
+                      borderRadius: 3,
+                      backgroundColor: isCurrent
+                        ? 'hsl(var(--primary))'
+                        : hasReq && !isComplete
+                          ? 'hsl(var(--primary) / 0.35)'
+                          : 'hsl(var(--muted))',
+                      transition: 'all 0.2s ease',
+                      '&:hover': { backgroundColor: isCurrent ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground) / 0.5)' },
+                    }}
+                  />
+                );
+              })}
             </Box>
 
             {/* Footer */}
@@ -213,24 +263,38 @@ export const DemoTourDrawer = () => {
               >
                 Previous
               </Button>
-              <Button
-                onClick={isLast ? closeTour : nextStep}
-                variant="contained"
-                size="small"
-                endIcon={!isLast && <ChevronRight size={14} />}
-                sx={{
-                  flex: 1.4,
-                  textTransform: 'none',
-                  fontSize: '0.78rem',
-                  fontWeight: 600,
-                  backgroundColor: 'hsl(var(--primary))',
-                  color: 'hsl(var(--primary-foreground))',
-                  boxShadow: 'none',
-                  '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.9)', boxShadow: 'none' },
-                }}
+              <Tooltip
+                title={locked && requirement ? `Complete: ${requirement.label}` : ''}
+                arrow
+                disableHoverListener={!locked}
               >
-                {isLast ? 'Finish' : 'Next'}
-              </Button>
+                <span style={{ flex: 1.4, display: 'flex' }}>
+                  <Button
+                    onClick={isLast ? closeTour : nextStep}
+                    disabled={locked}
+                    variant="contained"
+                    size="small"
+                    startIcon={locked ? <Lock size={13} /> : undefined}
+                    endIcon={!isLast && !locked ? <ChevronRight size={14} /> : undefined}
+                    sx={{
+                      flex: 1,
+                      textTransform: 'none',
+                      fontSize: '0.78rem',
+                      fontWeight: 600,
+                      backgroundColor: 'hsl(var(--primary))',
+                      color: 'hsl(var(--primary-foreground))',
+                      boxShadow: 'none',
+                      '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.9)', boxShadow: 'none' },
+                      '&.Mui-disabled': {
+                        backgroundColor: 'hsl(var(--muted))',
+                        color: 'hsl(var(--muted-foreground))',
+                      },
+                    }}
+                  >
+                    {locked ? 'Locked' : isLast ? 'Finish' : 'Next'}
+                  </Button>
+                </span>
+              </Tooltip>
             </Box>
           </Box>
         </motion.div>

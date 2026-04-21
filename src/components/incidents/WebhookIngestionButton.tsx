@@ -87,7 +87,7 @@ export const WebhookIngestionButton = ({ webhook, onToggled }: WebhookIngestionB
   };
 
   return (
-    <Box sx={{ position: 'relative' }}>
+    <Box sx={{ position: 'relative' }} data-tour="webhook-ingestion-button">
       <Tooltip title={isEnabled ? 'Ingestion Webhook (push)' : 'Ingestion Webhook (inactive)'} placement="bottom">
         <IconButton
           onClick={(e) => setAnchorEl(e.currentTarget)}

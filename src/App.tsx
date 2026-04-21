@@ -52,6 +52,8 @@ import NotFound from './pages/NotFound';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { DemoProvider } from '@/context/DemoContext';
 import { DemoTourDrawer } from '@/components/demo/DemoTourDrawer';
+import { DemoSpotlight } from '@/components/demo/DemoSpotlight';
+import { DemoCompletionWatcher } from '@/components/demo/DemoCompletionWatcher';
 
 /** Layout that conditionally shows sidebar for authenticated users, navbar + content for guests */
 const ConditionalDashboardLayout = () => {
@@ -101,6 +103,8 @@ const ThemedApp = () => {
           <ScrollToTop />
           <DemoProvider>
           <DemoTourDrawer />
+          <DemoSpotlight />
+          <DemoCompletionWatcher />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/apps" element={<AppsPage />} />
