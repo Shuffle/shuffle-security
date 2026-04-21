@@ -172,28 +172,36 @@ export const DemoModeCard = () => {
               </Button>
             </>
           ) : (
-            <Button
-              onClick={startDemo}
-              disabled={isSeeding}
-              variant="contained"
-              size="medium"
-              endIcon={isSeeding ? <CircularProgress size={14} sx={{ color: 'inherit' }} /> : <ArrowRight size={16} />}
-              sx={{
-                textTransform: 'none',
-                fontSize: '0.85rem',
-                fontWeight: 600,
-                backgroundColor: 'hsl(var(--primary))',
-                color: 'hsl(var(--primary-foreground))',
-                px: 2.5,
-                py: 1,
-                boxShadow: 'none',
-                whiteSpace: 'nowrap',
-                width: { xs: '100%', sm: 'auto' },
-                '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.9)', boxShadow: 'none' },
-              }}
-            >
-              {isSeeding ? 'Seeding sample data…' : 'Start demo tour'}
-            </Button>
+            <Tooltip title={disableStart ? disableReason : ''} arrow disableHoverListener={!disableStart}>
+              <span>
+                <Button
+                  onClick={startDemo}
+                  disabled={isSeeding || disableStart}
+                  variant="contained"
+                  size="medium"
+                  endIcon={isSeeding ? <CircularProgress size={14} sx={{ color: 'inherit' }} /> : <ArrowRight size={16} />}
+                  sx={{
+                    textTransform: 'none',
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                    backgroundColor: 'hsl(var(--primary))',
+                    color: 'hsl(var(--primary-foreground))',
+                    px: 2.5,
+                    py: 1,
+                    boxShadow: 'none',
+                    whiteSpace: 'nowrap',
+                    width: { xs: '100%', sm: 'auto' },
+                    '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.9)', boxShadow: 'none' },
+                    '&.Mui-disabled': {
+                      backgroundColor: 'hsl(var(--muted))',
+                      color: 'hsl(var(--muted-foreground))',
+                    },
+                  }}
+                >
+                  {isSeeding ? 'Seeding sample data…' : 'Start demo tour'}
+                </Button>
+              </span>
+            </Tooltip>
           )}
         </Box>
       </Box>
