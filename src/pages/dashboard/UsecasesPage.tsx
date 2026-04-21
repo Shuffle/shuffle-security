@@ -2124,7 +2124,7 @@ function UsecasesPageInner() {
             </Box>
             <Button
               component={Link}
-              to="/apps"
+              to="/apps?tab=all_apps"
               size="small"
               variant="outlined"
               startIcon={<Search size={14} />}
