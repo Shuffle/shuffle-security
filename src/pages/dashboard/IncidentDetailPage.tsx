@@ -651,6 +651,42 @@ const IncidentDetailPage = () => {
      const paramStr = newParams.toString();
      window.history.replaceState(null, '', `${window.location.pathname}${paramStr ? '?' + paramStr : ''}`);
    };
+
+   /**
+    * Jump to the Observables tab and flash the row matching the given
+    * `${type}::${value}` (lowercase) key. Used by clickable timeline pills so
+    * the user can see exactly which observable the timeline entry refers to.
+    */
+   const focusObservableFromTimeline = (typeValueKey: string) => {
+     setActiveTab(2);
+     setFlashedObsKey(typeValueKey);
+     if (flashedObsTimerRef.current) clearTimeout(flashedObsTimerRef.current);
+     flashedObsTimerRef.current = setTimeout(() => setFlashedObsKey(null), 2200);
+     // Defer scroll until the tab content has mounted.
+     setTimeout(() => {
+       const el = document.querySelector(`[data-obs-highlight-key="${typeValueKey}"]`) as HTMLElement | null;
+       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+     }, 80);
+   };
+
+   /**
+    * Jump to the Correlations tab and flash the row with the given
+    * correlation key. When `correlationKey` is null we just switch tabs
+    * (used for the "incident-level correlations" pill that has no key).
+    */
+   const focusCorrelationFromTimeline = (correlationKey: string | null) => {
+     setActiveTab(3);
+     if (correlationKey) {
+       setFlashedCorrelationKey(correlationKey);
+       if (flashedCorrTimerRef.current) clearTimeout(flashedCorrTimerRef.current);
+       flashedCorrTimerRef.current = setTimeout(() => setFlashedCorrelationKey(null), 2200);
+       setTimeout(() => {
+         const el = document.querySelector(`[data-corr-key="${CSS.escape(correlationKey)}"]`) as HTMLElement | null;
+         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+       }, 80);
+     }
+   };
+
    const [rawJsonText, setRawJsonText] = useState('');
    const [rawJsonValid, setRawJsonValid] = useState(true);
   // File editor state
