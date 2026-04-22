@@ -280,6 +280,7 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
   const restoreTour = useCallback(() => {
     setMinimized(false);
     setDrawerOpen(true);
+    setAttentionPulse(p => p + 1);
     try { localStorage.setItem('shuffle_demo_minimized', 'false'); } catch { /* ignore */ }
     trackPredefinedEvent(GA_EVENTS.DEMO_RESTORE, TOUR_STEPS[step]?.id, step);
   }, [step]);
