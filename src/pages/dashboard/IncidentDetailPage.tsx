@@ -2577,7 +2577,10 @@ const IncidentDetailPage = () => {
           position: 'relative',
           pl: 4.5,
           py: 2,
-          // Vertical rail behind every item
+          // Vertical rail — anchored at the bottom (oldest) and growing
+          // upward toward the newest item, matching the timeline direction
+          // (newest-first / top). A subtle fade at the top reinforces that
+          // the latest events are the "growing edge" of the thread.
           '&::before': {
             content: '""',
             position: 'absolute',
@@ -2585,7 +2588,7 @@ const IncidentDetailPage = () => {
             top: 18,
             bottom: 18,
             width: '2px',
-            bgcolor: 'hsl(var(--border))',
+            background: 'linear-gradient(to top, hsl(var(--border)) 0%, hsl(var(--border)) 70%, hsl(var(--border) / 0.15) 100%)',
             borderRadius: 1,
           },
           // Each direct child gets a dot anchored to the rail
