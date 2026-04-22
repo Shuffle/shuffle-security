@@ -202,6 +202,8 @@ export const STEP_SEEDERS: Record<string, () => Promise<number>> = {
     if (!res.success) throw new Error(res.error || 'Failed to seed demo focus incident');
     recordSeed(DATASTORE_CATEGORIES.INCIDENTS, [item.key]);
     broadcastRefresh(DATASTORE_CATEGORIES.INCIDENTS);
+    // Trickle the observables in over the next ~20s as background enrichments.
+    scheduleDemoObservableEnrichment(item.key, item.pendingObservables);
     return 1;
   },
 
