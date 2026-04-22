@@ -176,7 +176,7 @@ export const DemoModeCard = () => {
                   },
                 }}
               >
-                Continue tour
+                Continue demo mode
               </Button>
               <Button
                 onClick={cleanup}
