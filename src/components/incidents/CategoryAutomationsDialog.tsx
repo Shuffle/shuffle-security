@@ -29,6 +29,7 @@ import AgentIcon from '@/components/agent/AgentIcon';
 import EnhancedEncryptionIcon from '@mui/icons-material/EnhancedEncryption';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import SecurityIcon from '@mui/icons-material/Security';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { toast } from 'sonner';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import DownloadIcon from '@mui/icons-material/Download';
