@@ -435,6 +435,7 @@ export const DemoTourDrawer = () => {
                         ? current.subGoals.map(g => ({
                             id: g.id,
                             label: g.label,
+                            optional: !!g.optional,
                             // Special-cases for live-state sub-goals — these
                             // ignore the persisted completedSteps map.
                             done: g.id === 'incidents-list:present'
@@ -447,12 +448,18 @@ export const DemoTourDrawer = () => {
                           ? [{
                               id: current.id,
                               label: requirement.label,
+                              optional: false,
                               done: isIncidentsListStep
                                 ? hasDemoIncidents
                                 : !!completedSteps[current.id],
                             }]
                           : [];
-                      const allDone = goals.every(g => g.done);
+                      // Required goals decide the "Done" header. Optional
+                      // goals are shown but do not affect step gating.
+                      const requiredGoals = goals.filter(g => !g.optional);
+                      const allDone = requiredGoals.length === 0
+                        ? goals.every(g => g.done)
+                        : requiredGoals.every(g => g.done);
                       return (
                         <Box
                           sx={{
@@ -477,6 +484,19 @@ export const DemoTourDrawer = () => {
                               // next to the label when not yet satisfied.
                               const showForceGenerate =
                                 isIncidentsListStep && g.id === 'incidents-list:present' && !g.done;
+                              // Optional goals use a softer palette and an
+                              // "Optional" pill instead of a lock so they do
+                              // not read as blockers.
+                              const baseColor = g.optional
+                                ? 'hsl(var(--muted-foreground))'
+                                : g.done
+                                  ? 'hsl(var(--severity-low))'
+                                  : 'hsl(var(--primary))';
+                              const baseBg = g.optional
+                                ? 'hsl(var(--muted) / 0.6)'
+                                : g.done
+                                  ? 'hsl(var(--severity-low) / 0.2)'
+                                  : 'hsl(var(--primary) / 0.18)';
                               return (
                                 <Box key={g.id} sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
                                   <motion.div
@@ -493,10 +513,8 @@ export const DemoTourDrawer = () => {
                                       borderRadius: 6,
                                       display: 'grid',
                                       placeItems: 'center',
-                                      backgroundColor: g.done
-                                        ? 'hsl(var(--severity-low) / 0.2)'
-                                        : 'hsl(var(--primary) / 0.18)',
-                                      color: g.done ? 'hsl(var(--severity-low))' : 'hsl(var(--primary))',
+                                      backgroundColor: g.done ? 'hsl(var(--severity-low) / 0.2)' : baseBg,
+                                      color: g.done ? 'hsl(var(--severity-low))' : baseColor,
                                       flexShrink: 0,
                                       boxShadow: g.done ? '0 0 0 0 hsl(var(--severity-low) / 0)' : 'none',
                                     }}
@@ -512,6 +530,16 @@ export const DemoTourDrawer = () => {
                                           style={{ display: 'inline-flex' }}
                                         >
                                           <Check size={13} strokeWidth={3} />
+                                        </motion.span>
+                                      ) : g.optional ? (
+                                        <motion.span
+                                          key="sparkle"
+                                          initial={{ opacity: 0 }}
+                                          animate={{ opacity: 1 }}
+                                          exit={{ opacity: 0 }}
+                                          style={{ display: 'inline-flex' }}
+                                        >
+                                          <Sparkles size={12} />
                                         </motion.span>
                                       ) : (
                                         <motion.span
@@ -539,6 +567,25 @@ export const DemoTourDrawer = () => {
                                   >
                                     {g.label}
                                   </Typography>
+                                  {g.optional && !g.done && (
+                                    <Box
+                                      sx={{
+                                        flexShrink: 0,
+                                        px: 0.85,
+                                        py: 0.15,
+                                        borderRadius: 999,
+                                        fontSize: '0.62rem',
+                                        fontWeight: 700,
+                                        letterSpacing: '0.05em',
+                                        textTransform: 'uppercase',
+                                        color: 'hsl(var(--muted-foreground))',
+                                        border: '1px solid hsl(var(--border))',
+                                        backgroundColor: 'hsl(var(--muted) / 0.5)',
+                                      }}
+                                    >
+                                      Optional
+                                    </Box>
+                                  )}
                                   {showForceGenerate && (
                                     <Button
                                       data-tour="demo-force-generate-single"
