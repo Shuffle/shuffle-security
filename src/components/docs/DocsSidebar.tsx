@@ -40,6 +40,13 @@ const docLinks: DocLink[] = [
 
 const externalLinks: DocLink[] = [
   {
+    label: 'Agent Skill (SHUFFLE.md)',
+    slug: 'shuffle-md',
+    icon: <DownloadIcon />,
+    external: true,
+    href: '/SHUFFLE.md',
+  },
+  {
     label: 'Shuffle API Docs',
     slug: 'api',
     icon: <OpenInNewIcon />,
