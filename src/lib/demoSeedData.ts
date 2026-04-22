@@ -135,15 +135,19 @@ const PHISH_REPORTER_EMAIL = 'diego.ruiz@example.com';
  * Wazuh / Sliver C2 detection on Sarah's laptop arrives later as the user
  * is exploring this incident.
  */
-export const buildDemoFocusIncident = (): { key: string; value: OCSFIncidentFinding } => {
+export const buildDemoFocusIncident = (): {
+  key: string;
+  value: OCSFIncidentFinding;
+  pendingObservables: PendingObservable[];
+} => {
   const t = now();
-  return toIncident({
+  return toIncidentWithPending({
     _key: `demo-inc-phish-${t}-focus`,
     title: `Phishing email reported by ${PHISH_REPORTER_NAME}`,
     desc: `From: ${PHISH_REPORTER_NAME} <${PHISH_REPORTER_EMAIL}>
 To: phishing@example.com
 Subject: FW: [SUSPICIOUS] IT Support — Action required: reset your MFA
-Date: ${new Date(now() - 38 * 60 * 1000).toUTCString()}
+Date: ${new Date(now()).toUTCString()}
 
 Hi security team,
 
@@ -159,7 +163,7 @@ Senior Accountant, Finance
 From: IT Support <it-support@itsupport-portal.live>
 To: ${PHISH_REPORTER_EMAIL}
 Subject: [Action required] Reset your MFA within 24 hours
-Date: ${new Date(now() - 52 * 60 * 1000).toUTCString()}
+Date: ${new Date(now() - 14 * 60 * 1000).toUTCString()}
 
 Dear user,
 
@@ -173,7 +177,7 @@ Thank you,
 IT Support Team`,
     severity_id: 4, severity: 'High', status_id: 1, status: 'New',
     product: { name: 'outlook_office365' },
-    first_seen_time: minsAgo(38),
+    first_seen_time: minsAgo(0),
     types: ['phishing'],
     observables: [
       { type: 'email', value: PHISH_REPORTER_EMAIL },
@@ -190,15 +194,19 @@ IT Support Team`,
  * incident — confirming that Sarah did click the link and that her outdated
  * Chrome (CVE-2024-5274) was exploited. Source is Wazuh.
  */
-export const buildDemoWazuhImplantIncident = (): { key: string; value: OCSFIncidentFinding } => {
+export const buildDemoWazuhImplantIncident = (): {
+  key: string;
+  value: OCSFIncidentFinding;
+  pendingObservables: PendingObservable[];
+} => {
   const t = now();
-  return toIncident({
+  return toIncidentWithPending({
     _key: `demo-inc-malware-${t}-wazuh`,
     title: `Sliver C2 implant beaconing on ${PHISH_HOST}`,
     desc: `Wazuh agent flagged an unsigned Go binary at %APPDATA%\\Roaming\\Microsoft\\Edge\\msedge_proxy.exe on ${PHISH_HOST} (owner: Sarah Chen) making low-and-slow HTTPS callbacks to ${PHISH_ATTACKER_IP} every ~57s with jitter — Sliver implant signature (rule 100221, level 12). Process tree: chrome.exe (v124.0.6367.91 — outdated, vulnerable to CVE-2024-5274) → cmd.exe → msedge_proxy.exe, triggered after the user visited ${PHISH_LURE_URL}. Sysmon EID 1 + 3 correlated; persistence created via Run key "EdgeUpdate".`,
     severity_id: 5, severity: 'Critical', status_id: 1, status: 'New',
     product: { name: 'Wazuh' },
-    first_seen_time: minsAgo(2),
+    first_seen_time: minsAgo(0),
     types: ['malware', 'c2', 'exploit'],
     observables: [
       { type: 'hostname', value: PHISH_HOST },
