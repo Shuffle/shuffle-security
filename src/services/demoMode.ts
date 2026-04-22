@@ -150,25 +150,69 @@ const clearIocOverrides = () => {
   try { localStorage.removeItem(DEMO_IOC_OVERRIDES_KEY); } catch { /* ignore */ }
 };
 
+/** Label of the workflow that ingests the configured threat feeds. */
+const THREAT_FEEDS_WORKFLOW_LABEL = 'Enable Threat feeds';
+/** Session guard so we only kick the workflow once per demo run. */
+const DEMO_THREAT_FEEDS_RAN_KEY = 'shuffle_demo_threat_feeds_workflow_ran';
+
 /**
- * Ensure the user's threat feed list is populated with the curated defaults.
- * Idempotent: skips writes when the threat-feeds datastore already has at
- * least one entry. Best-effort — failures are logged but never thrown.
+ * Look up "Enable Threat feeds" in the user's workflow list and POST
+ * /execute. Fire-and-forget — used to populate the IOC datastores with
+ * fresh entries shortly after we enable the feeds in the demo.
+ */
+const runEnableThreatFeedsWorkflow = async (): Promise<void> => {
+  try {
+    if (sessionStorage.getItem(DEMO_THREAT_FEEDS_RAN_KEY) === '1') return;
+    const res = await fetch(getApiUrl('/api/v1/workflows'), {
+      credentials: 'include',
+      headers: { ...getAuthHeader() },
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    const workflows = Array.isArray(data) ? data : (data?.workflows || []);
+    const wf = workflows.find(
+      (w: { name?: string }) => typeof w?.name === 'string' && w.name === THREAT_FEEDS_WORKFLOW_LABEL,
+    );
+    const wfId = (wf as { id?: string } | undefined)?.id;
+    if (!wfId) return;
+    await fetch(getApiUrl(`/api/v1/workflows/${wfId}/execute`), {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+      body: JSON.stringify({ execution_source: 'demo', start: '' }),
+    });
+    sessionStorage.setItem(DEMO_THREAT_FEEDS_RAN_KEY, '1');
+  } catch (err) {
+    console.warn('[demo] enable threat feeds workflow execute failed', err);
+  }
+};
+
+/**
+ * Ensure the user's threat feed list is populated with the curated defaults
+ * AND that the "Enable Threat feeds" workflow has been kicked off so the
+ * IOC datastores get freshly populated. Both steps are idempotent and
+ * best-effort — failures are logged but never thrown.
  */
 export const forceEnableDefaultThreatFeeds = async (): Promise<void> => {
   try {
     const existing = await getDatastoreByCategory(DATASTORE_CATEGORIES.THREAT_FEEDS);
-    if (existing.success && (existing.data?.length || 0) > 0) return;
-    const items = DEFAULT_THREAT_FEEDS.map((feed: ThreatFeed) => ({
-      key: feed.id,
-      value: { ...feed, enabled: true },
-    }));
-    const res = await setDatastoreItems(items, DATASTORE_CATEGORIES.THREAT_FEEDS);
-    if (!res.success) {
-      console.warn('[demo] failed to seed default threat feeds', res.error);
-      return;
+    const alreadySeeded = existing.success && (existing.data?.length || 0) > 0;
+    if (!alreadySeeded) {
+      const items = DEFAULT_THREAT_FEEDS.map((feed: ThreatFeed) => ({
+        key: feed.id,
+        value: { ...feed, enabled: true },
+      }));
+      const res = await setDatastoreItems(items, DATASTORE_CATEGORIES.THREAT_FEEDS);
+      if (!res.success) {
+        console.warn('[demo] failed to seed default threat feeds', res.error);
+      } else {
+        broadcastRefresh(DATASTORE_CATEGORIES.THREAT_FEEDS);
+      }
     }
-    broadcastRefresh(DATASTORE_CATEGORIES.THREAT_FEEDS);
+    // Always (best-effort) run the workflow once per session so the IOC
+    // categories get populated with fresh entries — even when the feed
+    // list was already seeded by a previous session.
+    void runEnableThreatFeedsWorkflow();
   } catch (err) {
     console.warn('[demo] forceEnableDefaultThreatFeeds error', err);
   }
