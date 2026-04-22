@@ -188,6 +188,24 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
   const [replyText, setReplyText] = useState('');
   const [threadCollapsed, setThreadCollapsed] = useState(false);
 
+  // Auto-collapse the email thread when the user reaches the demo tour's
+  // "incident-detail" step (step #5). Focus shifts to the Activity timeline
+  // which the spotlight is highlighting. Only fires once per visit so the
+  // user can manually re-expand without it snapping shut again.
+  const { drawerOpen: demoDrawerOpen, step: demoStep } = useDemo();
+  const autoCollapsedRef = useRef(false);
+  useEffect(() => {
+    if (!demoDrawerOpen) {
+      autoCollapsedRef.current = false;
+      return;
+    }
+    const stepId = TOUR_STEPS[demoStep]?.id;
+    if (stepId === 'incident-detail' && !autoCollapsedRef.current) {
+      autoCollapsedRef.current = true;
+      setThreadCollapsed(true);
+    }
+  }, [demoDrawerOpen, demoStep]);
+
   const messages = useMemo(
     () => parseEmailThread(descriptionText, descriptionHtml),
     [descriptionText, descriptionHtml],
