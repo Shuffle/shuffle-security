@@ -43,6 +43,7 @@ import {
 import { hasOutputWarning, getFailureInfo } from '@/components/agent/AgentRunResultViewer';
 import { getTimeAgo, formatDuration, getRunTitle } from '@/components/agent/AgentRunHeader';
 import InlineMarkdown from '@/components/shared/InlineMarkdown';
+import { getShuffleCoreFormUrl, isAgentApprovalFormUrl } from '@/config/api';
 
 export type QuickViewItem =
   | { type: 'notification'; notification: AgentNotification }
@@ -68,6 +69,12 @@ interface UnifiedData {
   timeline: TimelineEntry[];
   pendingAction: string | null;
   incidentLink: string | null;
+  /** Label for the bottom CTA — defaults to "View Full Incident" but
+   *  switches to "Open Agent Approval" for /forms/{id} approval URLs. */
+  incidentLinkLabel: string;
+  /** When true, render the link as an external <a> in a new tab instead of
+   *  an in-app react-router navigation. */
+  incidentLinkExternal: boolean;
   isApproval: boolean;
   isQuestion: boolean;
   questions: string[];
@@ -91,8 +98,6 @@ const SEVERITY_TOKEN_MAP: Record<string, string> = {
 };
 
 const buildFromNotification = (n: AgentNotification, entityBasePath: string): UnifiedData => {
-  const incidentId = n.incident_id || n.reference_url;
-
   // Build timeline from available data
   const timeline: TimelineEntry[] = [];
   if (n.description) {
@@ -104,6 +109,27 @@ const buildFromNotification = (n: AgentNotification, entityBasePath: string): Un
 
   const hasQuestions = n.questions && n.questions.length > 0;
 
+  // Resolve the bottom CTA link.
+  //  • incident_id → in-app incident detail page
+  //  • reference_url that points at /forms/{id} → original Shuffle Core
+  //    agent approval form (always shuffler.io on cloud)
+  //  • any other reference_url → use as-is
+  let incidentLink: string | null = null;
+  let incidentLinkLabel = 'View Full Incident';
+  let incidentLinkExternal = false;
+  if (n.incident_id) {
+    incidentLink = `${entityBasePath}/${n.incident_id}`;
+  } else if (n.reference_url) {
+    if (isAgentApprovalFormUrl(n.reference_url)) {
+      incidentLink = getShuffleCoreFormUrl(n.reference_url);
+      incidentLinkLabel = 'Open Agent Approval';
+      incidentLinkExternal = true;
+    } else {
+      incidentLink = n.reference_url;
+      incidentLinkExternal = /^https?:\/\//i.test(n.reference_url);
+    }
+  }
+
   return {
     title: n.title || 'Agent Notification',
     severity: null,
@@ -112,7 +138,9 @@ const buildFromNotification = (n: AgentNotification, entityBasePath: string): Un
     errorExplanation: n.description || null,
     timeline,
     pendingAction: n.action || n.description || null,
-    incidentLink: incidentId ? `${entityBasePath}/${n.incident_id}` : null,
+    incidentLink,
+    incidentLinkLabel,
+    incidentLinkExternal,
     isApproval: !hasQuestions,
     isQuestion: !!hasQuestions,
     questions: hasQuestions ? n.questions! : [],
@@ -234,6 +262,8 @@ const buildFromRun = (run: AgentRun, entityBasePath: string): UnifiedData => {
     timeline,
     pendingAction,
     incidentLink: incidentKey ? `${entityBasePath}/${incidentKey}?agent_action=${run.execution_id}` : null,
+    incidentLinkLabel: 'View Full Incident',
+    incidentLinkExternal: false,
     isApproval: false,
     isQuestion: false,
     questions: [],
@@ -610,10 +640,25 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
           </>
         )}
         {data.incidentLink && (
-          <Button component={Link} to={data.incidentLink} fullWidth variant="outlined"
-            endIcon={<ArrowRight size={14} />} sx={outlineButtonSx}>
-            View Full Incident
-          </Button>
+          data.incidentLinkExternal ? (
+            <Button
+              component="a"
+              href={data.incidentLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              fullWidth
+              variant="outlined"
+              endIcon={<ArrowRight size={14} />}
+              sx={outlineButtonSx}
+            >
+              {data.incidentLinkLabel}
+            </Button>
+          ) : (
+            <Button component={Link} to={data.incidentLink} fullWidth variant="outlined"
+              endIcon={<ArrowRight size={14} />} sx={outlineButtonSx}>
+              {data.incidentLinkLabel}
+            </Button>
+          )
         )}
       </Box>
     </Drawer>
