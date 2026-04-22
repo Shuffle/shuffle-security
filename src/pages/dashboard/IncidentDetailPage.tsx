@@ -80,6 +80,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useDatastore } from '@/hooks/useDatastore';
 import { CorrelationRow, getEffectiveCorrelationCount, filterMeaningfulCorrelations, hasIocMatch } from '@/components/incidents/CorrelationRow';
+import { IocDetailsCard } from '@/components/incidents/IocDetailsCard';
 import { useAuth } from '@/context/AuthContext';
 import { useAppDetail } from '@/context/AppDetailContext';
 import { DATASTORE_CATEGORIES, getDatastoreItem, getDatastoreItemPublic, setDatastoreItem } from '@/services/datastore';
@@ -996,6 +997,18 @@ const IncidentDetailPage = () => {
   const [correlationsDiscoveredAt, setCorrelationsDiscoveredAt] = useState<number | null>(null);
   const [obsCorrelations, setObsCorrelations] = useState<Record<string, { loading: boolean; data: Array<{ key: string; amount: number; ref: string[] }>; discoveredAt?: number }>>({});
   const [obsCorrelationAnchor, setObsCorrelationAnchor] = useState<{ el: HTMLElement; obsKey: string } | null>(null);
+  // Set of `${type}::${value}` (lowercase) observable keys whose correlations
+  // include at least one ref into a known IOC / threat-feed datastore. Used to
+  // surface a red "Known IOC" treatment everywhere the observable appears
+  // (Observables tab, timeline pills, drawers).
+  const iocObservableKeys = useMemo(() => {
+    const set = new Set<string>();
+    Object.entries(obsCorrelations).forEach(([obsKey, entry]) => {
+      if (!entry?.data?.length) return;
+      if (entry.data.some(hasIocMatch)) set.add(obsKey.toLowerCase());
+    });
+    return set;
+  }, [obsCorrelations]);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingSaveRef = useRef(false);
   // Track the initial normalized values so auto-save doesn't fire on load
@@ -3521,6 +3534,24 @@ const IncidentDetailPage = () => {
           }
         }
         const isClickable = !!pillOnClick;
+        // Detect whether the pill represents (or correlates to) an observable
+        // already known to match an IOC / threat-feed entry. We pull the obs
+        // key out of the synthetic `step-obs-` / `step-corr-obs-` id format.
+        let pillObsKey: string | null = null;
+        if (item.kind === 'observable-added' && item.id.startsWith('step-obs-')) {
+          pillObsKey = item.id.slice('step-obs-'.length).toLowerCase();
+        } else if (item.kind === 'correlation-found' && item.id.startsWith('step-corr-obs-')) {
+          pillObsKey = item.id.slice('step-corr-obs-'.length).toLowerCase();
+        }
+        const isIocPill = !!pillObsKey && iocObservableKeys.has(pillObsKey);
+        // IOC pills override the kind-based color with the destructive token
+        // so the user immediately sees that *this* observable is known-bad —
+        // not just that an observable was added.
+        const pillColor = isIocPill ? 'hsl(var(--destructive))' : cfg.color;
+        const pillBg = isIocPill ? 'hsl(var(--destructive) / 0.08)' : `${cfg.color}0F`;
+        const pillBorder = isIocPill ? 'hsl(var(--destructive) / 0.5)' : `${cfg.color}33`;
+        const pillBgHover = isIocPill ? 'hsl(var(--destructive) / 0.14)' : `${cfg.color}1F`;
+        const pillBorderHover = isIocPill ? 'hsl(var(--destructive) / 0.7)' : `${cfg.color}66`;
         return (
           <Box
             key={item.id}
@@ -3535,30 +3566,48 @@ const IncidentDetailPage = () => {
               py: 0.5,
               ml: 0.5,
               borderRadius: 999,
-              bgcolor: `${cfg.color}0F`,
-              border: `1px solid ${cfg.color}33`,
+              bgcolor: pillBg,
+              border: `1px solid ${pillBorder}`,
               maxWidth: 'fit-content',
               cursor: isClickable ? 'pointer' : 'default',
               transition: 'background-color 0.15s ease, border-color 0.15s ease',
               ...(isClickable && {
                 '&:hover': {
-                  bgcolor: `${cfg.color}1F`,
-                  borderColor: `${cfg.color}66`,
+                  bgcolor: pillBgHover,
+                  borderColor: pillBorderHover,
                 },
               }),
             }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center', color: cfg.color }}>
-              {cfg.icon}
+            <Box sx={{ display: 'flex', alignItems: 'center', color: pillColor }}>
+              {isIocPill ? <WarningAmberIcon sx={{ fontSize: 12 }} /> : cfg.icon}
             </Box>
-            <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: cfg.color }}>
+            <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: pillColor }}>
               {item.label}
             </Typography>
+            {isIocPill && (
+              <Typography
+                sx={{
+                  fontSize: '0.6rem',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.4,
+                  px: 0.6,
+                  py: 0.05,
+                  borderRadius: 999,
+                  bgcolor: 'hsl(var(--destructive) / 0.15)',
+                  color: 'hsl(var(--destructive))',
+                  border: '1px solid hsl(var(--destructive) / 0.4)',
+                }}
+              >
+                Known IOC
+              </Typography>
+            )}
             {item.detail && (
               <Typography
                 sx={{
                   fontSize: '0.7rem',
-                  color: 'text.secondary',
+                  color: isIocPill ? 'hsl(var(--destructive))' : 'text.secondary',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
@@ -5832,6 +5881,8 @@ const IncidentDetailPage = () => {
                                     </Typography>
                                   )}
                                 </Box>
+                                {/* Surface STIX IOC context (pattern + sources) when any correlation hits a known IOC. */}
+                                <IocDetailsCard correlations={meaningfulCorr} compact />
                               </Box>
                             );
                           })()}
@@ -5889,63 +5940,32 @@ const IncidentDetailPage = () => {
             onClose={() => setObsCorrelationAnchor(null)}
             anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
             transformOrigin={{ vertical: 'top', horizontal: 'left' }}
-            slotProps={{ paper: { sx: { bgcolor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 2, maxWidth: 400, maxHeight: 320, overflow: 'auto' } } }}
+            slotProps={{ paper: { sx: { bgcolor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 2, maxWidth: 460, maxHeight: 460, overflow: 'auto' } } }}
           >
             {obsCorrelationAnchor && (() => {
               const corr = obsCorrelations[obsCorrelationAnchor.obsKey];
               const [type, ...valueParts] = obsCorrelationAnchor.obsKey.split('::');
               const value = valueParts.join('::');
+              // Reuse the same filtering logic as the inline view so the popover
+              // never shows correlations whose only ref is the current incident.
+              const meaningful = filterMeaningfulCorrelations(corr?.data || [], id);
               return (
                 <Box sx={{ p: 2 }}>
                   <Typography variant="caption" sx={{ fontWeight: 600, textTransform: 'uppercase', color: 'hsl(var(--muted-foreground))', letterSpacing: '0.05em', fontSize: '0.65rem' }}>
                     Correlations for {type}: {value}
                   </Typography>
-                  <Box sx={{ mt: 1.5, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    {corr?.data?.map((c, i) => (
-                      <Box key={i} sx={{ p: 1, borderRadius: 1, bgcolor: 'hsl(var(--muted) / 0.5)', border: '1px solid hsl(var(--border-subtle))' }}>
-                        <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.8rem', wordBreak: 'break-all' }}>
-                          {c.key}
-                        </Typography>
-                        <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.65rem' }}>
-                          Found in {c.amount} location{c.amount !== 1 ? 's' : ''}
-                        </Typography>
-                        {c.ref?.length > 0 && (
-                          <Box sx={{ mt: 0.5, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                            {c.ref.slice(0, 5).map((ref, ri) => {
-                              // Check if ref looks like an incident ID (contains category prefix)
-                              const isIncident = ref.includes('incident') || ref.includes('security');
-                              const refId = ref.split('::').pop() || ref;
-                              return isIncident ? (
-                                <Chip
-                                  key={ri}
-                                  label={refId.slice(0, 12) + (refId.length > 12 ? '…' : '')}
-                                  size="small"
-                                  variant="outlined"
-                                  component={Link}
-                                  to={`/incidents/${refId}`}
-                                  clickable
-                                  sx={{ height: 20, fontSize: '0.6rem', bgcolor: 'transparent', borderColor: 'rgba(59,130,246,0.4)', color: '#3b82f6' }}
-                                />
-                              ) : (
-                                <Chip
-                                  key={ri}
-                                  label={ref.length > 30 ? ref.slice(0, 30) + '…' : ref}
-                                  size="small"
-                                  variant="outlined"
-                                  sx={{ height: 20, fontSize: '0.6rem', bgcolor: 'transparent', borderColor: 'hsl(var(--border))', color: 'hsl(var(--muted-foreground))' }}
-                                />
-                              );
-                            })}
-                            {c.ref.length > 5 && (
-                              <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.6rem', alignSelf: 'center' }}>
-                                +{c.ref.length - 5} more
-                              </Typography>
-                            )}
-                          </Box>
-                        )}
-                      </Box>
+                  <Box sx={{ mt: 1.5, display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+                    {meaningful.map((c, i) => (
+                      <CorrelationRow
+                        key={c.key || i}
+                        correlation={c}
+                        currentIncidentId={id}
+                        compact
+                      />
                     ))}
                   </Box>
+                  {/* STIX context for any IOC matches in this observable. */}
+                  <IocDetailsCard correlations={meaningful} compact />
                 </Box>
               );
             })()}
@@ -6038,6 +6058,8 @@ const IncidentDetailPage = () => {
                   />
                 ))}
               </Box>
+              {/* STIX context for any IOC matches at the incident level. */}
+              <IocDetailsCard correlations={correlations} />
             </Box>
           )}
         </Box>
