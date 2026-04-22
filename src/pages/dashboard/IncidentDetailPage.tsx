@@ -5666,7 +5666,7 @@ const IncidentDetailPage = () => {
                                 </Typography>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mt: 0.5 }}>
                                   {corr.data.slice(0, 8).map((c: any, ci: number) => (
-                                    <Box key={ci} sx={{ p: 0.75, borderRadius: 1, bgcolor: 'rgba(0,0,0,0.15)', border: '1px solid hsl(var(--border-subtle))' }}>
+                                    <Box key={ci} sx={{ p: 0.75, borderRadius: 1, bgcolor: 'hsl(var(--muted) / 0.5)', border: '1px solid hsl(var(--border-subtle))' }}>
                                       <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.75rem', wordBreak: 'break-all' }}>
                                         {c.key}
                                       </Typography>
@@ -5785,7 +5785,7 @@ const IncidentDetailPage = () => {
                   </Typography>
                   <Box sx={{ mt: 1.5, display: 'flex', flexDirection: 'column', gap: 1 }}>
                     {corr?.data?.map((c, i) => (
-                      <Box key={i} sx={{ p: 1, borderRadius: 1, bgcolor: 'rgba(0,0,0,0.15)', border: '1px solid hsl(var(--border-subtle))' }}>
+                      <Box key={i} sx={{ p: 1, borderRadius: 1, bgcolor: 'hsl(var(--muted) / 0.5)', border: '1px solid hsl(var(--border-subtle))' }}>
                         <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.8rem', wordBreak: 'break-all' }}>
                           {c.key}
                         </Typography>

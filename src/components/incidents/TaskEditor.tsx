@@ -408,7 +408,7 @@ export const TaskEditor = ({
                 <Collapse in={isExpanded}>
                   <Box sx={{ 
                     p: 2, 
-                    bgcolor: 'rgba(0,0,0,0.15)',
+                    bgcolor: 'hsl(var(--muted) / 0.5)',
                     border: '1px solid rgba(255,255,255,0.08)',
                     borderTop: 'none',
                     borderRadius: '0 0 8px 8px',
