@@ -411,6 +411,12 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
       // a stale "minimized" state from a previous session.
       setMinimized(false);
       try { localStorage.setItem('shuffle_demo_minimized', 'false'); } catch { /* ignore */ }
+      // Auto-collapse the sidebar to give the tour drawer + main content
+      // more room. The DashboardLayout listens for this event.
+      try {
+        localStorage.setItem('shuffle-security-sidebar-collapsed', 'true');
+        window.dispatchEvent(new Event('shuffle:sidebar-collapse'));
+      } catch { /* ignore */ }
       // Reset GA dedupes for a fresh funnel run
       viewedStepsRef.current = new Set();
       completedStepsGARef.current = new Set();

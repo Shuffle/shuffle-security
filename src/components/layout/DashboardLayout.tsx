@@ -46,6 +46,15 @@ export const DashboardLayout = ({ children, defaultCollapsed }: DashboardLayoutP
     }
   }, [isOnboarding]);
 
+  // Allow other parts of the app (e.g. demo mode startup) to request the
+  // sidebar be collapsed for more screen real-estate. Dispatched as a
+  // window event so callers do not need access to this component's state.
+  useEffect(() => {
+    const onCollapse = () => setSidebarCollapsed(true);
+    window.addEventListener('shuffle:sidebar-collapse', onCollapse);
+    return () => window.removeEventListener('shuffle:sidebar-collapse', onCollapse);
+  }, []);
+
   // Only persist state when NOT on onboarding page
   useEffect(() => {
     if (!isOnboarding) {
