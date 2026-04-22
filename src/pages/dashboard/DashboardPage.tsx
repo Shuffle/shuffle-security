@@ -276,6 +276,15 @@ const NotificationRow = ({ notification, entityBasePath, onApprove, onQuickView,
 
   return (
     <Box
+      onClick={() => onQuickView(notification)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onQuickView(notification);
+        }
+      }}
       sx={{
         display: 'flex',
         alignItems: 'center',
@@ -285,22 +294,31 @@ const NotificationRow = ({ notification, entityBasePath, onApprove, onQuickView,
         borderRadius: 2,
         border: '1px solid hsl(var(--border))',
         backgroundColor: 'hsl(var(--card))',
-        transition: 'border-color 0.15s ease',
-        '&:hover': { borderColor: 'hsl(var(--primary) / 0.4)' },
+        cursor: 'pointer',
+        transition: 'border-color 0.15s ease, background-color 0.15s ease',
+        '&:hover': {
+          borderColor: 'hsl(var(--primary) / 0.4)',
+          backgroundColor: 'hsl(var(--primary) / 0.04)',
+        },
+        '&:focus-visible': {
+          outline: '2px solid hsl(var(--primary))',
+          outlineOffset: 2,
+        },
       }}
     >
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography sx={{
+          <Box sx={{
             fontSize: '0.85rem',
             fontWeight: 600,
             color: 'hsl(var(--foreground))',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
+            minWidth: 0,
           }}>
-            {notification.title}
-          </Typography>
+            <InlineMarkdown text={notification.title} />
+          </Box>
           {notification.severity && (
             <Chip
               label={notification.severity}
