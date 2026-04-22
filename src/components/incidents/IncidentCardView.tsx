@@ -449,7 +449,7 @@ export const IncidentCardView = ({
                           sx={{ width: '100%', height: '100%', display: 'flex', alignItems: 'stretch', justifyContent: 'stretch', cursor: 'pointer' }}
                         >
                           <img
-                            src={sourceApp.image}
+                            src={resolvedImage}
                             alt={incident.source}
                             style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px', display: 'block' }}
                           />
