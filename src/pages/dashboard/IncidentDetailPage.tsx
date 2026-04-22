@@ -3524,7 +3524,13 @@ const IncidentDetailPage = () => {
         let pillOnClick: (() => void) | undefined;
         if (item.kind === 'observable-added' && item.id.startsWith('step-obs-')) {
           const obsKey = item.id.slice('step-obs-'.length);
-          pillOnClick = () => focusObservableFromTimeline(obsKey);
+          pillOnClick = () => {
+            // Demo mode: notify the tour when the user clicks an IP pill.
+            if (obsKey.toLowerCase().startsWith('ip::') || obsKey.toLowerCase().startsWith('ipv4::') || obsKey.toLowerCase().startsWith('ipv6::')) {
+              try { window.dispatchEvent(new CustomEvent('demo:timeline-ip-clicked', { detail: { obsKey } })); } catch { /* ignore */ }
+            }
+            focusObservableFromTimeline(obsKey);
+          };
         } else if (item.kind === 'correlation-found') {
           if (item.id.startsWith('step-corr-obs-')) {
             const obsKey = item.id.slice('step-corr-obs-'.length).toLowerCase();
