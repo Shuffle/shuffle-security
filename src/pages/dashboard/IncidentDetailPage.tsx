@@ -3641,7 +3641,7 @@ const IncidentDetailPage = () => {
         // Bulked correlations have no single underlying obs — they never
         // light up as IOC pills.
         let pillObsKey: string | null = null;
-        if (item.kind === 'observable-added' && item.id.startsWith('step-obs-')) {
+        if (item.kind === 'observable-added' && item.id.startsWith('step-obs-') && !item.id.startsWith('step-obs-bulk-')) {
           pillObsKey = item.id.slice('step-obs-'.length).toLowerCase();
         } else if (
           item.kind === 'correlation-found'
