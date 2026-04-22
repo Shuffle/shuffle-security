@@ -55,6 +55,7 @@ interface Props {
   item: QuickViewItem | null;
   entityBasePath: string;
   onApprove?: (notification: AgentNotification) => void;
+  onDeny?: (notification: AgentNotification, note?: string) => void;
   onConfigureApprove?: (notificationId: string, modifiedAction?: string) => void;
   onSubmitAnswers?: (notificationId: string, answers: Record<number, string>) => void;
 }
