@@ -501,7 +501,10 @@ export const forceCreateSingleDemoIncident = async (): Promise<number> => {
     }
   } catch { /* best-effort */ }
 
-  const item = buildDemoFocusIncident();
+  // Same as the step seeder: ensure feeds are enabled and reuse / pick real IOCs.
+  void forceEnableDefaultThreatFeeds();
+  const overrides = await resolveIocOverrides();
+  const item = buildDemoFocusIncident(overrides);
   const res = await setDatastoreItems([item], DATASTORE_CATEGORIES.INCIDENTS);
   if (!res.success) throw new Error(res.error || 'Failed to create demo focus incident');
   recordSeed(DATASTORE_CATEGORIES.INCIDENTS, [item.key]);
