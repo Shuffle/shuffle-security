@@ -18,6 +18,7 @@ import { useWorkflows } from '@/hooks/useWorkflows';
 import { useAgentNotifications } from '@/hooks/useNotifications';
 import { isWorkflowScheduleStopped } from '@/lib/ingestionDetection';
 import { seedDemoWazuhImplantIncident } from '@/services/demoMode';
+import { useEntityPreference } from '@/hooks/useEntityLabel';
 
 /** How long the user must dwell on the incident-detail step before the
  *  Wazuh / Sliver follow-up incident is auto-seeded ("arrives" mid-investigation). */
@@ -29,7 +30,20 @@ export const DemoCompletionWatcher = () => {
   const { notifications } = useAgentNotifications();
   const queryClient = useQueryClient();
   const location = useLocation();
+  const { basePath: entityBasePath } = useEntityPreference();
   const wazuhSeededRef = useRef(false);
+
+  // ─── welcome: bidirectional sync — the user must navigate to the Incidents
+  // page from the sidebar themselves. Completes the moment the route matches
+  // the configured incidents base path (or any sub-route under it). Reverts
+  // to incomplete if they leave again, so the gate stays honest.
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const onIncidents =
+      location.pathname === entityBasePath ||
+      location.pathname.startsWith(entityBasePath + '/');
+    setStepCompleted('welcome', onIncidents);
+  }, [drawerOpen, location.pathname, entityBasePath, setStepCompleted]);
 
   // ─── ingest-webhook: bidirectional sync with the live workflow state ──────
   // Mark complete when the Ingestion Webhook workflow exists AND its trigger
