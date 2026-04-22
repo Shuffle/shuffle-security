@@ -43,6 +43,7 @@ import {
 import { hasOutputWarning, getFailureInfo } from '@/components/agent/AgentRunResultViewer';
 import { getTimeAgo, formatDuration, getRunTitle } from '@/components/agent/AgentRunHeader';
 import InlineMarkdown from '@/components/shared/InlineMarkdown';
+import { getShuffleCoreFormUrl, isAgentApprovalFormUrl } from '@/config/api';
 
 export type QuickViewItem =
   | { type: 'notification'; notification: AgentNotification }
