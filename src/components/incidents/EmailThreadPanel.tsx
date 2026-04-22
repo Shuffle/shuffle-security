@@ -443,6 +443,7 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
           );
         })}
       </Box>
+      </Collapse>
 
       {/* Reply box */}
       <Collapse in={showReplyBox}>
