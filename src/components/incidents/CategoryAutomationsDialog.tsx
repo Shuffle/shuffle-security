@@ -78,6 +78,17 @@ const WEEKS_OPTIONS = [
 
 const automationConfigs = [
   {
+    type: 'ai_agent',
+    name: 'Run AI Agent',
+    description: 'Runs an AI Agent to process the updated value. Uses built-in ShuffleAI configs. Learn more: https://shuffler.io/docs/AI',
+    icon: (props: any) => <AgentIcon size={props?.sx?.fontSize || 20} />,
+    color: '#10b981',
+    apiIcon: '',
+    apiType: 'singul',
+    optionKey: 'prompts',
+    hasConfig: true,
+  },
+  {
     type: 'workflow',
     name: 'Run workflow',
     description: 'Runs one or more workflows with the updated value as runtime argument',
@@ -95,17 +106,6 @@ const automationConfigs = [
     color: '#8b5cf6',
     apiIcon: '',
     optionKey: 'webhook_url',
-    hasConfig: true,
-  },
-  {
-    type: 'ai_agent',
-    name: 'Run AI Agent',
-    description: 'Runs an AI Agent to process the updated value. Uses built-in ShuffleAI configs. Learn more: https://shuffler.io/docs/AI',
-    icon: (props: any) => <AgentIcon size={props?.sx?.fontSize || 20} />,
-    color: '#10b981',
-    apiIcon: '',
-    apiType: 'singul',
-    optionKey: 'prompts',
     hasConfig: true,
   },
   {
