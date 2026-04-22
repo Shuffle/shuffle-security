@@ -114,9 +114,9 @@ export const buildDemoFocusIncident = (): { key: string; value: OCSFIncidentFind
     title: `Phishing email reported by ${PHISH_REPORTER_NAME}`,
     desc: `${PHISH_REPORTER_NAME} (Senior Accountant, Finance) reported a suspicious email impersonating IT support and asking the recipient to reset MFA. He noticed his colleague Sarah Chen (Finance Analyst) received the same message addressed to her ${PHISH_HOST} laptop. Diego did not click the link; it is unclear yet whether Sarah did. URL resolves to a known credential-harvesting kit hosted at ${PHISH_ATTACKER_IP}.`,
     severity_id: 4, severity: 'High', status_id: 1, status: 'New',
-    product: { name: 'Outlook Office365' },
+    product: { name: 'outlook_office365' },
     first_seen_time: minsAgo(38),
-    types: ['phishing', 'credential-theft'],
+    types: ['phishing'],
     observables: [
       { type: 'email', value: PHISH_REPORTER_EMAIL },
       { type: 'email', value: PHISH_USER_EMAIL },
