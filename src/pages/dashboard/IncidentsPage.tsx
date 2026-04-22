@@ -1740,10 +1740,6 @@ const IncidentsPage = () => {
               Retry
             </Button>
           </Box>
-        ) : demoActive ? (
-          // Demo mode owns the page narrative — hide the generic empty state
-          // so the tour drawer is the only thing telling the user what to do.
-          null
         ) : (
           <IncidentsEmptyState 
             ingestionApps={ingestionApps} 
@@ -1755,6 +1751,11 @@ const IncidentsPage = () => {
             isLoading={ingestionLoading}
             onSyncNow={ingestWorkflowId ? triggerSync : undefined}
             onCreateIncident={() => setCreateDialogOpen(true)}
+            // During the demo tour, the "Add ingestion source" button must
+            // open the in-page AppSearchDrawer (so the tour spotlight has a
+            // valid target on /incidents) instead of navigating away to
+            // /onboarding/sources.
+            onAddSource={demoActive ? () => setAppSearchOpen(true) : undefined}
           />
         )}
 
