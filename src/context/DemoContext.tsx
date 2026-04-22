@@ -624,7 +624,12 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
       setIsForceGeneratingWazuh(false);
     }
   }, [refreshStats]);
-  // re-checks on the demo:refresh broadcast that the seeder fires.
+  // Tracks whether any demo-tagged incidents currently exist. Re-checks ONLY
+  // on the `demo:refresh` broadcast that the seeder/reset code fires — which
+  // covers every code path that can mutate demo state. We deliberately do NOT
+  // poll on a timer: that previously fired a `list_cache` request every 4
+  // seconds for the entire session, even while the user was deep inside an
+  // incident detail page. The event-driven approach is exact and free.
   useEffect(() => {
     if (!active) {
       setHasDemoIncidents(false);
@@ -636,12 +641,10 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
       if (!cancelled) setHasDemoIncidents(n > 0);
     };
     check();
-    const interval = window.setInterval(check, 4000);
     const onRefresh = () => check();
     window.addEventListener('demo:refresh', onRefresh as EventListener);
     return () => {
       cancelled = true;
-      window.clearInterval(interval);
       window.removeEventListener('demo:refresh', onRefresh as EventListener);
     };
   }, [active]);
