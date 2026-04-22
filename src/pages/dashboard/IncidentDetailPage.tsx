@@ -534,6 +534,11 @@ const IncidentDetailPage = () => {
   const [expandedObsKey, setExpandedObsKey] = useState<string | null>(null);
   const [refreshingObservables, setRefreshingObservables] = useState(false);
   const obsRefreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // When an incident was just created (within the last 2 minutes) we keep the
+  // observables area in a "loading" state so the user can see automated
+  // enrichments stream in shortly after, instead of an empty list.
+  const FRESH_OBS_WINDOW_MS = 2 * 60 * 1000;
+  const [nowTick, setNowTick] = useState(() => Date.now());
   const [showThreatIntelDrawer, setShowThreatIntelDrawer] = useState(false);
   const [showForwardAppsDrawer, setShowForwardAppsDrawer] = useState(false);
   const [newObservableType, setNewObservableType] = useState('ip');
