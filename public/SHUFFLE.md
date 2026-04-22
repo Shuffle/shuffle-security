@@ -18,15 +18,23 @@ hand-holding.
 
 ## 0. Quick start
 
-1. **Pick a base URL** - `https://shuffler.io` (EU), `https://us.shuffler.io`
-   (US), or your self-hosted host.
+1. **Pick a base URL** - any Shuffle backend works:
+   - `https://shuffler.io` (Shuffle Cloud, EU)
+   - `https://us.shuffler.io` (Shuffle Cloud, US)
+   - **Your own self-hosted Shuffle** (e.g. `https://shuffle.yourdomain.com`
+     or `http://localhost:3001` for a local dev install). Stand one up with
+     the official install guide:
+     <https://github.com/shuffle/shuffle/blob/main/.github/install-guide.md>.
+     The API surface is identical to Cloud, so an agent can fully bootstrap
+     a self-hosted instance using the exact same calls below.
 2. **Get an API key** - either grab one from UI -> user settings -> "API key",
    or bootstrap from scratch with the register / generateapikey flow below
    (section 0.1). Send as `Authorization: Bearer <key>` on every request, or
    use a session cookie (never both).
 3. **Call `GET /api/v1/getinfo`** - source of truth for the active user, the
    active org, and the user's `region_url`. Retarget your client to that URL
-   if it differs from where you logged in.
+   if it differs from where you logged in. (On self-hosted, `region_url` is
+   normally just your own host - no retargeting needed.)
 
 ```js
 const BASE = 'https://shuffler.io';
