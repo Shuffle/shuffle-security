@@ -1814,7 +1814,9 @@ const IncidentsPage = () => {
           <Box
             className="automation-pipeline"
             sx={{
-              display: { xs: 'none', md: 'flex' },
+              // In demo mode the Ingest area is the focal point of the tour,
+              // so it must remain visible regardless of viewport width.
+              display: demoActive ? 'flex' : { xs: 'none', md: 'flex' },
               alignItems: 'center',
               gap: 0,
               position: 'relative',
