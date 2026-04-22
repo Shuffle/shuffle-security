@@ -12,8 +12,6 @@
 import { setDatastoreItems, deleteDatastoreItem, DATASTORE_CATEGORIES, getDatastoreByCategory } from '@/services/datastore';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 import {
-  buildDemoIncidentsBatch1,
-  buildDemoIncidentsBatch2,
   buildDemoFocusIncident,
   buildDemoWazuhImplantIncident,
   buildDemoAssets,
@@ -114,7 +112,7 @@ const recordSeed = (category: string, keys: string[]) => {
   localStorage.setItem(DEMO_ACTIVE_KEY, 'true');
 };
 
-const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
+
 
 // ─── Per-step seeders ────────────────────────────────────────────────────────
 // Each returns the number of items written (or 0 if already seeded).
@@ -127,21 +125,19 @@ export const STEP_SEEDERS: Record<string, () => Promise<number>> = {
   // tools. Real auth setup is intentionally not faked so cleanup stays simple.
   apps: async () => 0,
 
-  // incidents list — 2 incidents from the apps the user just "connected",
-  // followed by 1 more after a short delay so the list visibly populates.
+  // incidents list — seed ONLY the single "Phishing email reported by Diego
+  // Ruiz" focus incident. The Wazuh / Sliver C2 follow-up arrives later once
+  // the user is on the incident-detail step (see DemoCompletionWatcher), and
+  // any other supporting incidents are seeded later still. We intentionally
+  // do not drop the full batch here so the user is not overwhelmed on
+  // arrival to /incidents.
   'incidents-list': async () => {
-    let total = 0;
-    const batches = [buildDemoIncidentsBatch1(), buildDemoIncidentsBatch2()];
-    for (let i = 0; i < batches.length; i++) {
-      const batch = batches[i];
-      const res = await setDatastoreItems(batch, DATASTORE_CATEGORIES.INCIDENTS);
-      if (!res.success) throw new Error(res.error || 'Failed to seed demo incidents');
-      recordSeed(DATASTORE_CATEGORIES.INCIDENTS, batch.map(b => b.key));
-      broadcastRefresh(DATASTORE_CATEGORIES.INCIDENTS);
-      total += batch.length;
-      if (i < batches.length - 1) await sleep(1400);
-    }
-    return total;
+    const item = buildDemoFocusIncident();
+    const res = await setDatastoreItems([item], DATASTORE_CATEGORIES.INCIDENTS);
+    if (!res.success) throw new Error(res.error || 'Failed to seed demo focus incident');
+    recordSeed(DATASTORE_CATEGORIES.INCIDENTS, [item.key]);
+    broadcastRefresh(DATASTORE_CATEGORIES.INCIDENTS);
+    return 1;
   },
 
   // incident-detail — no new data, user is exploring an existing one
