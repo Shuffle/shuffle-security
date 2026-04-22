@@ -309,69 +309,9 @@ const initDemoSensorRecord = async (): Promise<void> => {
   }
 };
 
-interface OrbEnv {
-  Name: string;
-  Type?: string;
-  id?: string;
-  sensor_group?: boolean;
-  sensor_hosts?: Array<Record<string, unknown>>;
-  archived?: boolean;
-  [key: string]: unknown;
-}
-
-/** Inject a fake sensor host into a sensor_group environment. */
-const injectDemoMonitorHost = async (): Promise<void> => {
-  try {
-    // 1. Pull current environments
-    const getRes = await fetch(getApiUrl('/api/v1/getenvironments'), {
-      credentials: 'include',
-      headers: { ...getAuthHeader() },
-    });
-    if (!getRes.ok) {
-      console.warn('[demo] getenvironments failed', getRes.status);
-      return;
-    }
-    const envs: OrbEnv[] = await getRes.json();
-    const live = Array.isArray(envs) ? envs.filter(e => !e.archived) : [];
-
-    // 2. Find an existing sensor_group, or queue creation of "shuffle_sensors"
-    let targetIdx = live.findIndex(e => e.sensor_group === true);
-    if (targetIdx === -1) {
-      live.push({ Name: DEMO_HOST_GROUP, Type: 'onprem', sensor_group: true, sensor_hosts: [] });
-      targetIdx = live.length - 1;
-    }
-    const target = live[targetIdx];
-    const existing = Array.isArray(target.sensor_hosts) ? target.sensor_hosts : [];
-
-    // 3. Skip if our demo host is already present
-    const already = existing.some(h => {
-      const hn = String((h as { hostname?: string }).hostname || '').toLowerCase();
-      const uid = String((h as { uuid?: string }).uuid || '');
-      return hn === DEMO_HOST_HOSTNAME.toLowerCase() || uid === DEMO_HOST_UUID;
-    });
-    if (already) return;
-
-    // 4. Append the stub (env API merges runtime data; sensors datastore has the rest)
-    target.sensor_hosts = [...existing, buildDemoSensorHost()];
-
-    // 5. Persist via setenvironments — full-state PUT
-    const putRes = await fetch(getApiUrl('/api/v1/setenvironments'), {
-      method: 'PUT',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
-      body: JSON.stringify(live),
-    });
-    if (!putRes.ok) {
-      console.warn('[demo] setenvironments failed', putRes.status);
-    }
-  } catch (err) {
-    console.warn('[demo] inject monitor host failed', err);
-  }
-};
-
-/** Seed sensor record + inject into environments in parallel. */
+/** Seed the demo sensor record into the sensors datastore. */
 const initDemoMonitorHost = async (): Promise<void> => {
-  await Promise.allSettled([initDemoSensorRecord(), injectDemoMonitorHost()]);
+  await initDemoSensorRecord();
 };
 
 /** Initialize IOC Types defaults if the category is empty. */
