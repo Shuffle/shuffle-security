@@ -65,12 +65,20 @@ const toIncident = (item: RawInc): { key: string; value: OCSFIncidentFinding } =
   // surfaced observables seconds later". The pending observables are
   // returned via `pendingObservables` (see toIncidentWithPending below) so
   // the seeder can schedule the background enrichment.
+  //
+  // Timestamps are computed AT BUILD TIME (not pre-baked on the RawInc) so
+  // every call lands a fresh "this just happened" moment. `created_time`
+  // and `first_seen_time` are captured once at the top so they agree, and
+  // `last_seen_time` advances a few ms later to feel naturally non-zero.
+  const findingUid = generateDemoFindingUid();
+  const nowIso = new Date().toISOString();
+  const lastSeenIso = new Date(now() + 1).toISOString();
   return {
     key: item._key,
     value: {
       class_uid: 2005,
       class_name: 'Incident Finding',
-      finding_uid: item._key,
+      finding_uid: findingUid,
       title: item.title,
       desc: item.desc,
       severity_id: item.severity_id,
@@ -78,17 +86,18 @@ const toIncident = (item: RawInc): { key: string; value: OCSFIncidentFinding } =
       status_id: item.status_id,
       status: item.status,
       confidence: 75,
-      created_time: item.first_seen_time,
-      first_seen_time: item.first_seen_time,
-      last_seen_time: item.first_seen_time,
+      created_time: nowIso,
+      first_seen_time: nowIso,
+      last_seen_time: lastSeenIso,
+      modified_time: lastSeenIso,
       types: item.types,
       product: item.product,
       enrichments: [],
       metadata: {
-        ...demoMeta(item._key),
+        ...demoMeta(findingUid),
         extensions: {
           custom_attributes: {
-            ...(demoMeta(item._key).extensions.custom_attributes),
+            ...(demoMeta(findingUid).extensions.custom_attributes),
           },
         },
       },
