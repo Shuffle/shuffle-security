@@ -6207,6 +6207,60 @@ const IncidentDetailPage = () => {
         subtitle="Authenticate Gmail, Outlook, or another tool to forward incidents"
         priorityCategory="Email"
       />
+
+      {/*
+        Soft-delete confirmation for timeline comments. We do NOT remove the
+        activity item from the array — instead we flip `deleted: true` on the
+        original entity so the timestamp, author and thread anchoring stay
+        intact. The renderer shows a muted "Comment deleted" placeholder.
+      */}
+      <AlertDialog
+        open={commentToDelete !== null}
+        onOpenChange={(o) => { if (!o) setCommentToDelete(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this comment?</AlertDialogTitle>
+            <AlertDialogDescription>
+              The comment text will be removed, but the entry stays in the
+              timeline so the original timestamp, author and thread position
+              are preserved. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                const id = commentToDelete;
+                if (!id) return;
+                setActivity(prev => prev.map(a =>
+                  a.id === id
+                    ? {
+                        ...a,
+                        deleted: true,
+                        deletedAt: Date.now(),
+                        // Strip body + attachments so the deleted text and
+                        // any uploaded files are not still present in the
+                        // persisted incident JSON. The shell of the entity
+                        // (id, type, user, timestamp, replyTo*) survives.
+                        content: '',
+                        attachments: [],
+                      }
+                    : a
+                ));
+                pendingSaveRef.current = true;
+                if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+                saveTimeoutRef.current = setTimeout(() => { saveToDatastore(); }, 500);
+                toast.success('Comment deleted');
+                setCommentToDelete(null);
+              }}
+            >
+              Delete comment
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </motion.div>
   );
 };
