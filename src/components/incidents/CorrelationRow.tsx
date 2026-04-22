@@ -1,5 +1,30 @@
 import { Box, Typography, Chip, Tooltip } from '@mui/material';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { Link } from 'react-router-dom';
+
+/**
+ * Returns true when a datastore category represents a threat-intelligence
+ * source (known IOCs, threat feeds). A correlation pointing to one of these
+ * means the observable matches a *known bad* indicator and should be
+ * surfaced loudly to the user.
+ */
+export const isIocCategory = (category: string): boolean => {
+  const c = (category || '').toLowerCase();
+  return c.includes('ioc') || c.includes('threat-feed') || c.includes('threat_feed');
+};
+
+/**
+ * Returns true if any ref in the correlation points to an IOC / threat-feed
+ * category — i.e. the correlated value is a known indicator of compromise.
+ */
+export const hasIocMatch = (correlation: Pick<Correlation, 'ref'>): boolean => {
+  if (!correlation?.ref?.length) return false;
+  return correlation.ref.some((r) => {
+    const [category] = r.split('|');
+    return category ? isIocCategory(category) : false;
+  });
+};
+
 
 export interface Correlation {
   key: string;
@@ -74,9 +99,13 @@ export const CorrelationRow = ({ correlation, currentIncidentId, className, comp
   const categories = Object.keys(refsByCategory);
   // Effective match count after filtering out the current incident.
   const effectiveAmount = categories.reduce((sum, c) => sum + refsByCategory[c].length, 0);
+  // IOC / threat-feed matches override severity coloring — known-bad always wins.
+  const iocMatch = categories.some(isIocCategory);
   const isHighMatch = effectiveAmount >= 5;
   const isMediumMatch = effectiveAmount >= 3 && effectiveAmount < 5;
-  const dotColor = isHighMatch ? '#ff6600' : isMediumMatch ? '#eab308' : 'hsl(var(--muted-foreground))';
+  const dotColor = iocMatch
+    ? 'hsl(var(--destructive))'
+    : isHighMatch ? '#ff6600' : isMediumMatch ? '#eab308' : 'hsl(var(--muted-foreground))';
 
   const formatCategory = (cat: string) => cat.replace('shuffle-', '').replace(/_/g, ' ');
 
