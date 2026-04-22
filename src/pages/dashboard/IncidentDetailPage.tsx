@@ -5426,6 +5426,8 @@ const IncidentDetailPage = () => {
                     : [];
                   const actionName = `search_ioc_${obs.type.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
                   const obsRowKey = `${obs._source}-${obs._idx}`;
+                  const obsHighlightKey = `${(obs.type || '').toLowerCase()}::${(obs.value || '').toLowerCase()}`;
+                  const isNewlyArrived = newlyArrivedObservables.has(obsHighlightKey);
                   const isExpanded = expandedObsKey === obsRowKey;
                   const firstSeen = (obs as any).first_seen;
                   const lastSeen = (obs as any).last_seen;
@@ -5438,6 +5440,7 @@ const IncidentDetailPage = () => {
                   return (
                     <Box
                       key={obsRowKey}
+                      className={isNewlyArrived ? 'incident-new-flash' : undefined}
                       sx={{
                         display: 'flex',
                         flexDirection: 'column',
