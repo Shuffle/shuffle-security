@@ -479,20 +479,53 @@ export const DemoTourDrawer = () => {
                                 isIncidentsListStep && g.id === 'incidents-list:present' && !g.done;
                               return (
                                 <Box key={g.id} sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                                  <Box
-                                    sx={{
+                                  <motion.div
+                                    initial={false}
+                                    animate={
+                                      g.done
+                                        ? { scale: [1, 1.3, 1], rotate: [0, -8, 0] }
+                                        : { scale: 1, rotate: 0 }
+                                    }
+                                    transition={{ duration: 0.5, ease: 'easeOut' }}
+                                    style={{
                                       width: 22,
                                       height: 22,
-                                      borderRadius: 1,
+                                      borderRadius: 6,
                                       display: 'grid',
                                       placeItems: 'center',
-                                      backgroundColor: g.done ? 'hsl(var(--severity-low) / 0.2)' : 'hsl(var(--primary) / 0.18)',
+                                      backgroundColor: g.done
+                                        ? 'hsl(var(--severity-low) / 0.2)'
+                                        : 'hsl(var(--primary) / 0.18)',
                                       color: g.done ? 'hsl(var(--severity-low))' : 'hsl(var(--primary))',
                                       flexShrink: 0,
+                                      boxShadow: g.done ? '0 0 0 0 hsl(var(--severity-low) / 0)' : 'none',
                                     }}
                                   >
-                                    {g.done ? <Check size={13} /> : <Lock size={12} />}
-                                  </Box>
+                                    <AnimatePresence mode="wait" initial={false}>
+                                      {g.done ? (
+                                        <motion.span
+                                          key="check"
+                                          initial={{ scale: 0, opacity: 0 }}
+                                          animate={{ scale: 1, opacity: 1 }}
+                                          exit={{ scale: 0, opacity: 0 }}
+                                          transition={{ type: 'spring', stiffness: 500, damping: 18 }}
+                                          style={{ display: 'inline-flex' }}
+                                        >
+                                          <Check size={13} strokeWidth={3} />
+                                        </motion.span>
+                                      ) : (
+                                        <motion.span
+                                          key="lock"
+                                          initial={{ opacity: 0 }}
+                                          animate={{ opacity: 1 }}
+                                          exit={{ opacity: 0 }}
+                                          style={{ display: 'inline-flex' }}
+                                        >
+                                          <Lock size={12} />
+                                        </motion.span>
+                                      )}
+                                    </AnimatePresence>
+                                  </motion.div>
                                   <Typography
                                     sx={{
                                       flex: 1,
