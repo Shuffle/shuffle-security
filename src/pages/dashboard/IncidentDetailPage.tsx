@@ -2666,14 +2666,17 @@ const IncidentDetailPage = () => {
             background: 'linear-gradient(to top, hsl(var(--border)) 0%, hsl(var(--border)) 70%, hsl(var(--border) / 0.15) 100%)',
             borderRadius: 1,
           },
-          // Each direct child gets a dot anchored to the rail
+          // Each direct child gets a dot anchored to the rail. Default
+          // alignment matches taller cards (avatar at top: 12, size 24 →
+          // visual centre ~24px). Compact step pills (Observable/Correlation/
+          // Task markers) opt-in to a higher dot via data-timeline-compact.
           '& > *': {
             position: 'relative',
             '&::before': {
               content: '""',
               position: 'absolute',
               left: -22,
-              top: 16,
+              top: 18,
               width: 12,
               height: 12,
               borderRadius: '50%',
@@ -2681,6 +2684,11 @@ const IncidentDetailPage = () => {
               border: '2px solid #ff6600',
               zIndex: 1,
               boxShadow: '0 0 0 3px hsl(var(--background))',
+            },
+            '&[data-timeline-compact="true"]::before': {
+              // Pill content centre is roughly 12px from its top
+              // (py: 0.5 = 4px + 12px icon / 2). Dot half-height = 6.
+              top: 6,
             },
           },
         }),
@@ -3231,6 +3239,7 @@ const IncidentDetailPage = () => {
         return (
           <Box
             key={item.id}
+            data-timeline-compact="true"
             sx={{
               display: 'flex',
               alignItems: 'center',
