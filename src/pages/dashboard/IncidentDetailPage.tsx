@@ -1439,7 +1439,14 @@ const IncidentDetailPage = () => {
             'unknown', 'none', 'null', 'undefined', 'true', 'false',
             id?.toLowerCase(),
           ].filter(Boolean));
-          setCorrelations(correlationData.filter((c: { key: string }) => !noiseKeys.has(c.key.toLowerCase())));
+          const filteredCorr = correlationData.filter((c: { key: string }) => !noiseKeys.has(c.key.toLowerCase()));
+          setCorrelations(filteredCorr);
+          // Capture the discovery time so the timeline can place this event
+          // chronologically. Only set on the first non-empty discovery so the
+          // timestamp is stable across re-renders / refetches.
+          if (filteredCorr.length > 0) {
+            setCorrelationsDiscoveredAt((prev) => prev ?? Date.now());
+          }
         }
       } catch (error) {
         console.error('Failed to fetch correlations:', error);
