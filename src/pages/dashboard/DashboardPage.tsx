@@ -45,6 +45,7 @@ import AgentQuickViewDrawer, { type QuickViewItem } from '@/components/agent/Age
 import InlineMarkdown from '@/components/shared/InlineMarkdown';
 import { useAgentNotifications } from '@/hooks/useNotifications';
 import { isApprovalNotification, approveAgentAction, type AgentNotification } from '@/services/notifications';
+import { getShuffleCoreFormUrl, isAgentApprovalFormUrl } from '@/config/api';
 import { getTimeAgo } from '@/components/agent/AgentRunHeader';
 import { useEntityPreference } from '@/hooks/useEntityLabel';
 import { useAppAuth } from '@/hooks/useAppAuth';
