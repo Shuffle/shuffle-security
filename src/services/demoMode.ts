@@ -322,11 +322,14 @@ export const forceCreateSingleDemoIncident = async (): Promise<number> => {
 };
 
 /**
- * Seed the follow-up Wazuh / Sliver C2 implant detection. Called after the
- * user has been exploring the phishing focus incident for a bit, so the
- * critical malware finding visibly "arrives" mid-investigation. Idempotent
- * on the wazuh key suffix — already-seeded calls are a no-op.
+ * Seed the follow-up Sliver C2 implant detection. Instead of writing the
+ * incident directly to the datastore, this POSTs the OCSF payload to the
+ * user's enabled "Ingestion Webhook" (set up in step #2 of the tour) — so
+ * the incident actually flows through the real ingest pipeline they just
+ * configured. Falls back to a direct datastore write if the webhook is not
+ * available (e.g. the user disabled it).
  *
+ * Idempotent on the wazuh key suffix — already-seeded calls are a no-op.
  * Returns the number of incidents written (0 or 1).
  */
 export const seedDemoWazuhImplantIncident = async (): Promise<number> => {
@@ -335,8 +338,56 @@ export const seedDemoWazuhImplantIncident = async (): Promise<number> => {
   if (existing.some(k => k.includes('-wazuh'))) return 0;
 
   const item = buildDemoWazuhImplantIncident();
+
+  // Try to resolve the Ingestion Webhook URL from the user's workflows.
+  let webhookUrl: string | null = null;
+  try {
+    const wfRes = await fetch(getApiUrl('/api/v1/workflows'), {
+      credentials: 'include',
+      headers: { ...getAuthHeader() },
+    });
+    if (wfRes.ok) {
+      const workflows = await wfRes.json();
+      if (Array.isArray(workflows)) {
+        const webhookWorkflow = workflows.find((w: { name?: string }) => w?.name === 'Ingestion Webhook');
+        const triggers = (webhookWorkflow?.triggers || []) as Array<{
+          id?: string;
+          trigger_id?: string;
+          trigger_type?: string;
+          app_name?: string;
+          status?: string;
+        }>;
+        const webhookTrigger = triggers.find(t => t.trigger_type === 'WEBHOOK' || t.app_name === 'Webhook');
+        const triggerStopped = !webhookTrigger || (webhookTrigger.status || '').toLowerCase() === 'stopped';
+        const hookId = webhookTrigger?.id || webhookTrigger?.trigger_id;
+        if (hookId && !triggerStopped) {
+          webhookUrl = getApiUrl(`/api/v1/hooks/webhook_${hookId}`);
+        }
+      }
+    }
+  } catch { /* best-effort — fall through to datastore write */ }
+
+  if (webhookUrl) {
+    try {
+      const res = await fetch(webhookUrl, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(item.value),
+      });
+      if (res.ok) {
+        // Record the key so cleanup still removes it once the pipeline
+        // materializes it into the datastore.
+        recordSeed(DATASTORE_CATEGORIES.INCIDENTS, [item.key]);
+        broadcastRefresh(DATASTORE_CATEGORIES.INCIDENTS);
+        return 1;
+      }
+    } catch { /* fall through to datastore write */ }
+  }
+
+  // Fallback: webhook unavailable — write directly to the datastore.
   const res = await setDatastoreItems([item], DATASTORE_CATEGORIES.INCIDENTS);
-  if (!res.success) throw new Error(res.error || 'Failed to seed Wazuh implant incident');
+  if (!res.success) throw new Error(res.error || 'Failed to seed Sliver implant incident');
   recordSeed(DATASTORE_CATEGORIES.INCIDENTS, [item.key]);
   broadcastRefresh(DATASTORE_CATEGORIES.INCIDENTS);
   return 1;
