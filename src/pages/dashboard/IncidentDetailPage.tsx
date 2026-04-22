@@ -3534,6 +3534,24 @@ const IncidentDetailPage = () => {
           }
         }
         const isClickable = !!pillOnClick;
+        // Detect whether the pill represents (or correlates to) an observable
+        // already known to match an IOC / threat-feed entry. We pull the obs
+        // key out of the synthetic `step-obs-` / `step-corr-obs-` id format.
+        let pillObsKey: string | null = null;
+        if (item.kind === 'observable-added' && item.id.startsWith('step-obs-')) {
+          pillObsKey = item.id.slice('step-obs-'.length).toLowerCase();
+        } else if (item.kind === 'correlation-found' && item.id.startsWith('step-corr-obs-')) {
+          pillObsKey = item.id.slice('step-corr-obs-'.length).toLowerCase();
+        }
+        const isIocPill = !!pillObsKey && iocObservableKeys.has(pillObsKey);
+        // IOC pills override the kind-based color with the destructive token
+        // so the user immediately sees that *this* observable is known-bad —
+        // not just that an observable was added.
+        const pillColor = isIocPill ? 'hsl(var(--destructive))' : cfg.color;
+        const pillBg = isIocPill ? 'hsl(var(--destructive) / 0.08)' : `${cfg.color}0F`;
+        const pillBorder = isIocPill ? 'hsl(var(--destructive) / 0.5)' : `${cfg.color}33`;
+        const pillBgHover = isIocPill ? 'hsl(var(--destructive) / 0.14)' : `${cfg.color}1F`;
+        const pillBorderHover = isIocPill ? 'hsl(var(--destructive) / 0.7)' : `${cfg.color}66`;
         return (
           <Box
             key={item.id}
@@ -3548,30 +3566,48 @@ const IncidentDetailPage = () => {
               py: 0.5,
               ml: 0.5,
               borderRadius: 999,
-              bgcolor: `${cfg.color}0F`,
-              border: `1px solid ${cfg.color}33`,
+              bgcolor: pillBg,
+              border: `1px solid ${pillBorder}`,
               maxWidth: 'fit-content',
               cursor: isClickable ? 'pointer' : 'default',
               transition: 'background-color 0.15s ease, border-color 0.15s ease',
               ...(isClickable && {
                 '&:hover': {
-                  bgcolor: `${cfg.color}1F`,
-                  borderColor: `${cfg.color}66`,
+                  bgcolor: pillBgHover,
+                  borderColor: pillBorderHover,
                 },
               }),
             }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center', color: cfg.color }}>
-              {cfg.icon}
+            <Box sx={{ display: 'flex', alignItems: 'center', color: pillColor }}>
+              {isIocPill ? <WarningAmberIcon sx={{ fontSize: 12 }} /> : cfg.icon}
             </Box>
-            <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: cfg.color }}>
+            <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: pillColor }}>
               {item.label}
             </Typography>
+            {isIocPill && (
+              <Typography
+                sx={{
+                  fontSize: '0.6rem',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.4,
+                  px: 0.6,
+                  py: 0.05,
+                  borderRadius: 999,
+                  bgcolor: 'hsl(var(--destructive) / 0.15)',
+                  color: 'hsl(var(--destructive))',
+                  border: '1px solid hsl(var(--destructive) / 0.4)',
+                }}
+              >
+                Known IOC
+              </Typography>
+            )}
             {item.detail && (
               <Typography
                 sx={{
                   fontSize: '0.7rem',
-                  color: 'text.secondary',
+                  color: isIocPill ? 'hsl(var(--destructive))' : 'text.secondary',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
