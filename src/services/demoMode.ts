@@ -447,6 +447,11 @@ export const seedDemoWazuhImplantIncident = async (): Promise<number> => {
         // materializes it into the datastore.
         recordSeed(DATASTORE_CATEGORIES.INCIDENTS, [item.key]);
         broadcastRefresh(DATASTORE_CATEGORIES.INCIDENTS);
+        // Background-enrich the webhook-fed incident too. The first
+        // enrichment delay (4s) is comfortably longer than the typical
+        // webhook->datastore materialization latency, so the patch will
+        // land on the freshly-materialized record.
+        scheduleDemoObservableEnrichment(item.key, item.pendingObservables);
         return 1;
       }
     } catch { /* fall through to datastore write */ }
@@ -457,6 +462,7 @@ export const seedDemoWazuhImplantIncident = async (): Promise<number> => {
   if (!res.success) throw new Error(res.error || 'Failed to seed Sliver implant incident');
   recordSeed(DATASTORE_CATEGORIES.INCIDENTS, [item.key]);
   broadcastRefresh(DATASTORE_CATEGORIES.INCIDENTS);
+  scheduleDemoObservableEnrichment(item.key, item.pendingObservables);
   return 1;
 };
 
