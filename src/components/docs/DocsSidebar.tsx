@@ -23,7 +23,6 @@ interface DocLink {
   icon: React.ReactNode;
   external?: boolean;
   href?: string;
-  download?: boolean;
 }
 
 interface DocsSidebarProps {
@@ -46,7 +45,6 @@ const externalLinks: DocLink[] = [
     icon: <DownloadIcon />,
     external: true,
     href: '/SHUFFLE.md',
-    download: true,
   },
   {
     label: 'Shuffle API Docs',
@@ -152,16 +150,43 @@ export const DocsSidebar = ({ onNavigate }: DocsSidebarProps) => {
               href={link.href}
               target="_blank"
               rel="noopener noreferrer"
-              {...(link.download ? { download: '' } : {})}
               sx={{
                 borderRadius: 1,
                 mx: 1,
+                py: 1,
+                gap: 0.5,
+                color: 'text.secondary',
+                transition: 'background-color 120ms ease, color 120ms ease',
+                '&:hover': {
+                  backgroundColor: 'action.hover',
+                  color: 'text.primary',
+                  '& .MuiListItemIcon-root, & .ext-indicator': {
+                    color: 'primary.main',
+                  },
+                },
               }}
             >
-              <ListItemIcon sx={{ minWidth: 40, color: 'text.secondary' }}>
+              <ListItemIcon sx={{ minWidth: 36, color: 'text.secondary' }}>
                 {link.icon}
               </ListItemIcon>
-              <ListItemText primary={link.label} />
+              <ListItemText
+                primary={link.label}
+                primaryTypographyProps={{
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  sx: { color: 'inherit' },
+                }}
+              />
+              <OpenInNewIcon
+                className="ext-indicator"
+                sx={{
+                  fontSize: 14,
+                  color: 'text.disabled',
+                  ml: 1,
+                  flexShrink: 0,
+                  transition: 'color 120ms ease',
+                }}
+              />
             </ListItemButton>
           </ListItem>
         ))}
