@@ -4130,7 +4130,7 @@ const IncidentDetailPage = () => {
           })()}
 
           {/* Metadata Section */}
-          <Section title="Metadata" icon={DescriptionIcon} defaultOpen={true}>
+          <Section title="Metadata" icon={DescriptionIcon} defaultOpen={false}>
             <Box sx={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
                 <Box>
