@@ -8,6 +8,7 @@ import BlockIcon from '@mui/icons-material/Block';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 import { trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 export interface WebhookIngestionInfo {
   /** Webhook URL to display (null if workflow doesn't exist yet) */
