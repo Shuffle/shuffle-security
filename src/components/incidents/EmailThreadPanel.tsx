@@ -228,16 +228,23 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
       bgcolor: 'hsl(var(--card))',
       overflow: 'hidden',
     }}>
-      {/* Thread header */}
-      <Box sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        px: 2,
-        py: 1.25,
-        borderBottom: '1px solid hsl(var(--border))',
-        bgcolor: (t) => t.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
-      }}>
+      {/* Thread header — click to collapse the whole panel */}
+      <Box
+        onClick={() => setThreadCollapsed(c => !c)}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          px: 2,
+          py: 1.25,
+          borderBottom: threadCollapsed ? 'none' : '1px solid hsl(var(--border))',
+          bgcolor: (t) => t.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
+          cursor: 'pointer',
+          '&:hover': {
+            bgcolor: (t) => t.palette.mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
+          },
+        }}
+      >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <EmailIcon sx={{ fontSize: 18, color: '#ff6600' }} />
           <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: '0.8rem' }}>
@@ -256,7 +263,7 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
             }}
           />
         </Box>
-        <Box sx={{ display: 'flex', gap: 0.5 }}>
+        <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }} onClick={(e) => e.stopPropagation()}>
           {onReply && (
             <Tooltip title="Reply">
               <IconButton size="small" onClick={() => setShowReplyBox(!showReplyBox)} sx={{
@@ -277,8 +284,19 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
               </IconButton>
             </Tooltip>
           )}
+          <Tooltip title={threadCollapsed ? 'Expand' : 'Collapse'}>
+            <IconButton
+              size="small"
+              onClick={() => setThreadCollapsed(c => !c)}
+              sx={{ color: 'text.secondary', '&:hover': { color: '#ff6600' } }}
+            >
+              {threadCollapsed ? <ExpandMoreIcon sx={{ fontSize: 18 }} /> : <ExpandLessIcon sx={{ fontSize: 18 }} />}
+            </IconButton>
+          </Tooltip>
         </Box>
       </Box>
+
+      <Collapse in={!threadCollapsed}>
 
       {/* Subject line */}
       {threadSubject && (
