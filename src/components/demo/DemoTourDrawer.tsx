@@ -47,6 +47,7 @@ export const DemoTourDrawer = () => {
     forceGenerateSingleIncident,
     isForceGeneratingSingle,
     hasDemoIncidents,
+    isOnIncidentDetail,
   } = useDemo();
 
   const total = TOUR_STEPS.length;
