@@ -778,13 +778,12 @@ const IncidentsPage = () => {
       setIngestionLoading(false);
       ingestionLoadedOnceRef.current = true;
     }
-  }, []);
+  }, [currentOrgId]);
 
   useEffect(() => {
     fetchIngestionApps();
-    // Run only once on mount; fetchIngestionApps is now stable
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    // Re-runs when fetchIngestionApps identity changes (e.g. when currentOrgId resolves)
+  }, [fetchIngestionApps]);
 
   // Debounced handler: collects app toggles for 3s then fires one generate call
   const handleToggleApp = useCallback((appName: string, enabled: boolean) => {
