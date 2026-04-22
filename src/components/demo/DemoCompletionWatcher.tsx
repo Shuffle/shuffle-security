@@ -26,13 +26,14 @@ import { useEntityPreference } from '@/hooks/useEntityLabel';
 const WAZUH_FOLLOWUP_DELAY_MS = 6000;
 
 export const DemoCompletionWatcher = () => {
-  const { drawerOpen, step, setStepCompleted, markStepCompleted } = useDemo();
+  const { drawerOpen, step, setStepCompleted, markStepCompleted, goToStep, setDock, dock } = useDemo();
   const { data: workflows } = useWorkflows();
   const { notifications } = useAgentNotifications();
   const queryClient = useQueryClient();
   const location = useLocation();
   const { basePath: entityBasePath } = useEntityPreference();
   const wazuhSeededRef = useRef(false);
+  const autoAdvancedRef = useRef(false);
 
   // ─── welcome: bidirectional sync — the user must navigate to the Incidents
   // page from the sidebar themselves. Completes the moment the route matches
@@ -66,6 +67,24 @@ export const DemoCompletionWatcher = () => {
     return () => clearInterval(id);
   }, [drawerOpen, queryClient]);
 
+  // ─── auto-advance: when the user is on step 4 (incidents-list) and opens
+  // an incident detail page, jump straight into step 5 (incident-detail) and
+  // dock the drawer to the right rail — the timeline is the focus now and
+  // the bottom dock would cover it. We only auto-advance once per session so
+  // the user can navigate back without us hijacking them again.
+  useEffect(() => {
+    if (!drawerOpen) return;
+    if (autoAdvancedRef.current) return;
+    const stepId = TOUR_STEPS[step]?.id;
+    if (stepId !== 'incidents-list') return;
+    const onDetail = /^\/(?:incidents|alerts|tickets|jobs)\/[^/]+/.test(location.pathname);
+    if (!onDetail) return;
+    autoAdvancedRef.current = true;
+    if (dock !== 'right') setDock('right');
+    const targetIdx = TOUR_STEPS.findIndex(s => s.id === 'incident-detail');
+    if (targetIdx >= 0) goToStep(targetIdx);
+  }, [drawerOpen, step, location.pathname, dock, setDock, goToStep]);
+
   // Note: the `add-outlook` step is marked complete directly from the
   // IncidentsPage AppSearchDrawer override when the user picks Outlook
   // Office365 from the popup (pretend-authenticated for the demo).
@@ -75,26 +94,29 @@ export const DemoCompletionWatcher = () => {
   // so leaving the detail page reverts the gate immediately.
 
   // ─── incident-detail sub-goals ─────────────────────────────────────────────
-  // Step #5 is now a guided walkthrough: open Tasks, open Observables, ask
-  // the agent a question, then watch the Wazuh / Sliver C2 follow-up arrive.
-  // Each sub-goal flips on as the user performs the action — and the Wazuh
-  // incident is intentionally NOT auto-seeded on a timer anymore. Instead we
-  // wait until the user has actually asked the agent a question, so the new
-  // correlated detection feels like a direct response to the investigation.
+  // Step #5 is a guided observation: wait for the background enrichment to
+  // surface observables, ask the agent a question, then watch the Wazuh /
+  // Sliver C2 follow-up arrive. Each sub-goal flips on as evidence appears.
 
-  // Tabs — poll the active tab via data-active="true" on the data-tour nodes.
+  // Observables-present — poll the Observables tab badge for a numeric count.
+  // The tab renders a child <span> with the count when > 0, so the presence
+  // of a number means background enrichment has populated something. This
+  // also flips back off if the count drops to zero again.
   useEffect(() => {
     if (!drawerOpen) return;
     const stepId = TOUR_STEPS[step]?.id;
     if (stepId !== 'incident-detail') return;
     const id = window.setInterval(() => {
-      const tasksTab = document.querySelector('[data-tour="incident-tab-tasks"][data-active="true"]');
-      if (tasksTab) markStepCompleted('incident-detail:tasks');
-      const obsTab = document.querySelector('[data-tour="incident-tab-observables"][data-active="true"]');
-      if (obsTab) markStepCompleted('incident-detail:observables');
-    }, 500);
+      const tab = document.querySelector('[data-tour="incident-tab-observables"]');
+      if (!tab) return;
+      const badge = tab.querySelector('span');
+      const txt = badge?.textContent?.trim() || '';
+      const n = parseInt(txt, 10);
+      const present = Number.isFinite(n) && n > 0;
+      setStepCompleted('incident-detail:observables-present', present);
+    }, 800);
     return () => window.clearInterval(id);
-  }, [drawerOpen, step, markStepCompleted]);
+  }, [drawerOpen, step, setStepCompleted]);
 
   // Comment-sent — listens for the custom event dispatched by the incident
   // detail page when the user adds a comment. Doubles as "ask the agent".
