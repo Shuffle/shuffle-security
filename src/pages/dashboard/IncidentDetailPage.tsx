@@ -2731,7 +2731,25 @@ const IncidentDetailPage = () => {
       });
     });
 
-    if (activityFilter === 'all' || activityFilter === 'agent') {
+    // Synthetic "Incident created" step — guarantees the timeline always
+    // shows when the incident was created, even before any revision has
+    // been written (e.g., a freshly created manual incident). Suppressed
+    // when revisions exist because the oldest revision already renders as
+    // "Incident created".
+    if (revisions.length === 0 && incident?.createdTs) {
+      const createdTs = normalizeToMs(incident.createdTs);
+      if (createdTs > 0 && (activityFilter === 'all' || activityFilter === 'steps')) {
+        const sourceLabel = incident.source ? ` from ${incident.source}` : '';
+        items.push({
+          type: 'step',
+          kind: 'incident-created',
+          timestamp: createdTs,
+          id: 'step-incident-created',
+          label: 'Incident created',
+          detail: `${incident.title || 'Untitled incident'}${sourceLabel}`,
+        });
+      }
+    }
       agentRuns.forEach((run) => {
         const ts = normalizeToMs(run.started_at);
         items.push({ type: 'agent', timestamp: ts, data: run });
