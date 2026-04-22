@@ -129,24 +129,32 @@ export const DemoCompletionWatcher = () => {
     return () => window.removeEventListener('demo:incident-comment-sent', onSent);
   }, [drawerOpen, step, markStepCompleted]);
 
-  // Wazuh sub-goal — also flips on if the incident is already in the
-  // datastore (e.g. user force-generated it from the tour drawer, or seeded
-  // it on a previous run).
+  // Wazuh sub-goal — also flips on if the incident is already seeded (e.g.
+  // user force-generated it from the tour drawer, or it landed on a previous
+  // run). We read the seeded-keys index from localStorage instead of poking
+  // the datastore directly so this stays cheap.
   useEffect(() => {
     if (!drawerOpen) return;
     const stepId = TOUR_STEPS[step]?.id;
     if (stepId !== 'incident-detail') return;
+    const check = () => {
+      try {
+        const idx = JSON.parse(localStorage.getItem('shuffle_demo_seeded_keys') || '{}');
+        const incidents = idx['shuffle-security_incidents'];
+        if (Array.isArray(incidents) && incidents.some((k: string) => typeof k === 'string' && k.includes('-wazuh'))) {
+          wazuhSeededRef.current = true;
+          markStepCompleted('incident-detail:wazuh');
+          return true;
+        }
+      } catch { /* ignore */ }
+      return false;
+    };
+    if (check()) return;
     const id = window.setInterval(() => {
-      const items = (queryClient.getQueryData(['datastore', 'shuffle-security_incidents']) as Array<{ key?: string }> | undefined) || [];
-      const hasWazuh = Array.isArray(items) && items.some(it => typeof it?.key === 'string' && it.key.includes('-wazuh'));
-      if (hasWazuh) {
-        wazuhSeededRef.current = true;
-        markStepCompleted('incident-detail:wazuh');
-        window.clearInterval(id);
-      }
-    }, 1500);
+      if (check()) window.clearInterval(id);
+    }, 2000);
     return () => window.clearInterval(id);
-  }, [drawerOpen, step, markStepCompleted, queryClient]);
+  }, [drawerOpen, step, markStepCompleted]);
 
   // ─── agent: at least one approval notification has been cleared ───────────
   // Snapshot the open approvals when the user lands on the step, then mark
