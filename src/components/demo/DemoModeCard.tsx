@@ -129,7 +129,7 @@ export const DemoModeCard = () => {
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
             <Typography sx={{ fontSize: '0.95rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-              {active ? 'Demo mode is active' : 'Try the platform with sample data'}
+              {active ? 'Demo mode is active' : 'See the platform respond to a real incident'}
             </Typography>
             {active && (
               <Chip
@@ -148,10 +148,10 @@ export const DemoModeCard = () => {
           </Box>
           <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))', mt: 0.5, lineHeight: 1.5 }}>
             {active
-              ? `${stats.incidents} incidents, ${stats.assets} assets, ${stats.users} users loaded. Continue demo mode or clean up when done.`
+              ? `${stats.incidents} incidents, ${stats.assets} assets, ${stats.users} users loaded. Real IOCs, live enrichment and AI agents you can interact with — only the incident itself is seeded.`
               : disableStart
                 ? disableReason
-                : 'Guided demo mode with sample incidents, assets and live AI agent actions. One-click cleanup.'}
+                : 'We seed one realistic incident, then everything else is real: live threat-feed IOCs, real enrichments and AI agents you can actually approve or question. One-click cleanup when you are done.'}
           </Typography>
         </Box>
 
