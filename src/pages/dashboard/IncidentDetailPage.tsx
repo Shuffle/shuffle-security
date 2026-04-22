@@ -6058,6 +6058,8 @@ const IncidentDetailPage = () => {
                   />
                 ))}
               </Box>
+              {/* STIX context for any IOC matches at the incident level. */}
+              <IocDetailsCard correlations={correlations} />
             </Box>
           )}
         </Box>
