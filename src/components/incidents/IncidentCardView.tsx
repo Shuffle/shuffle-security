@@ -61,6 +61,9 @@ interface IncidentCardViewProps {
   orgFilterNames?: string[];
   totalOrgCount?: number;
   onResetOrgFilter?: () => void;
+  /** Whether the current org has sub-tenants. When false, per-incident
+   *  tenant chips are hidden because there is only one tenant in play. */
+  isParentOrg?: boolean;
 }
 
 // Skeleton card component for loading state
@@ -218,6 +221,7 @@ export const IncidentCardView = ({
   orgFilterNames,
   totalOrgCount,
   onResetOrgFilter,
+  isParentOrg = false,
 }: IncidentCardViewProps) => {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [hasRendered, setHasRendered] = useState(false);
@@ -596,7 +600,7 @@ export const IncidentCardView = ({
                       />
                     </>
                   )}
-                  {incident.orgName && !(incident.sharedOrgs && incident.sharedOrgs.length > 1) && (
+                  {isParentOrg && incident.orgName && !(incident.sharedOrgs && incident.sharedOrgs.length > 1) && (
                     <>
                       <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
                         •
