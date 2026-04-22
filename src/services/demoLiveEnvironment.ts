@@ -24,6 +24,28 @@ import { getDatastoreByCategory, setDatastoreItems, DATASTORE_CATEGORIES } from 
 import { DEFAULT_THREAT_FEEDS } from '@/hooks/useThreatFeeds';
 import { DEFAULT_IOC_TYPES, DEFAULT_ENABLED_IOCS } from '@/hooks/useIOCTypes';
 import { DEFAULT_AGENT_PERMISSIONS } from '@/hooks/useAgentPermissions';
+import { DEMO_FLAG_KEY, DEMO_ACTIVE_KEY } from '@/lib/demoSeedData';
+
+/**
+ * Local de-duped writer into the demo cleanup index. Mirrors `recordSeed`
+ * in services/demoMode.ts (importing it here would create a cycle, since
+ * demoMode already imports from this file). Keeps the SENSORS_CATEGORY key
+ * tracked so getDemoStats counts the host as an asset and cleanup removes
+ * it on tear-down.
+ */
+const recordSeedLocal = (category: string, keys: string[]) => {
+  try {
+    const raw = localStorage.getItem(DEMO_FLAG_KEY) || '{}';
+    const idx = JSON.parse(raw) as Record<string, string[]>;
+    const existing = new Set(idx[category] || []);
+    for (const k of keys) existing.add(k);
+    idx[category] = Array.from(existing);
+    localStorage.setItem(DEMO_FLAG_KEY, JSON.stringify(idx));
+    localStorage.setItem(DEMO_ACTIVE_KEY, 'true');
+  } catch (err) {
+    console.warn('[demo] recordSeedLocal failed', err);
+  }
+};
 
 /**
  * localStorage key holding the JSON-encoded list of app names that were on
@@ -312,8 +334,8 @@ const initDemoSensorRecord = async (): Promise<void> => {
       SENSORS_CATEGORY,
     );
     // Track in the demo cleanup index so the asset stat reflects the host
-    // and cleanup removes it on tear-down. recordDemoSeed de-duplicates.
-    recordDemoSeed(SENSORS_CATEGORY, [key]);
+    // and cleanup removes it on tear-down. recordSeedLocal de-duplicates.
+    recordSeedLocal(SENSORS_CATEGORY, [key]);
   } catch (err) {
     console.warn('[demo] sensor record init failed', err);
   }
