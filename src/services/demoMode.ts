@@ -224,26 +224,69 @@ const pickRandom = <T,>(arr: T[]): T | undefined => {
 };
 
 /**
- * Try to pick a random IP from `ioc_ip` and a random domain from `ioc_domain`.
- * Returns undefined fields when a category is empty (the backend parser may
- * not have populated it yet — caller should fall back to static defaults).
+ * Static fallback pools used when the live `ioc_ip` / `ioc_domain` datastore
+ * categories have not been populated yet (the threat-feed parser may take a
+ * moment to catch up after we enable feeds at demo start). We still pick at
+ * random so the demo gets some variety run-over-run.
+ *
+ * IPs are drawn from well-known abuse / TOR-exit ranges; domains follow
+ * common phishing-lure naming patterns. Neither list is meant to be
+ * authoritative — they exist purely so the demo never falls back to the
+ * same static value twice in a row.
+ */
+const FALLBACK_IOC_IPS = [
+  '185.220.101.47',
+  '194.165.16.78',
+  '45.137.21.134',
+  '91.219.236.222',
+  '103.232.86.14',
+  '198.98.51.189',
+  '141.98.10.63',
+  '23.129.64.213',
+];
+
+const FALLBACK_IOC_DOMAINS = [
+  'it-support-portal.live',
+  'secure-login-helpdesk.com',
+  'office365-verify.app',
+  'onedrive-shared-doc.net',
+  'mfa-reset-portal.cc',
+  'corp-vpn-update.co',
+  'docusign-review.click',
+  'sharepoint-secure.cloud',
+];
+
+/**
+ * Pick a random IP from `ioc_ip` and a random domain from `ioc_domain`.
+ * If a category is empty (parser hasn't caught up yet), fall back to the
+ * static pools above so the demo always gets some IOC variety.
  */
 export const pickRandomIocs = async (): Promise<DemoIocOverrides> => {
   const out: DemoIocOverrides = {};
   try {
     const ipRes = await getDatastoreByCategory(IOC_IP_CATEGORY);
-    if (ipRes.success && ipRes.data) {
-      const ipKey = pickRandom(ipRes.data.map(i => i.key).filter(Boolean));
-      if (ipKey) out.attackerIp = ipKey;
-    }
-  } catch (err) { console.warn('[demo] pick ioc_ip failed', err); }
+    const liveKeys = ipRes.success && ipRes.data
+      ? ipRes.data.map(i => i.key).filter(Boolean)
+      : [];
+    const ipKey = pickRandom(liveKeys.length > 0 ? liveKeys : FALLBACK_IOC_IPS);
+    if (ipKey) out.attackerIp = ipKey;
+  } catch (err) {
+    console.warn('[demo] pick ioc_ip failed', err);
+    const ipKey = pickRandom(FALLBACK_IOC_IPS);
+    if (ipKey) out.attackerIp = ipKey;
+  }
   try {
     const domRes = await getDatastoreByCategory(IOC_DOMAIN_CATEGORY);
-    if (domRes.success && domRes.data) {
-      const domKey = pickRandom(domRes.data.map(i => i.key).filter(Boolean));
-      if (domKey) out.lureDomain = domKey;
-    }
-  } catch (err) { console.warn('[demo] pick ioc_domain failed', err); }
+    const liveKeys = domRes.success && domRes.data
+      ? domRes.data.map(i => i.key).filter(Boolean)
+      : [];
+    const domKey = pickRandom(liveKeys.length > 0 ? liveKeys : FALLBACK_IOC_DOMAINS);
+    if (domKey) out.lureDomain = domKey;
+  } catch (err) {
+    console.warn('[demo] pick ioc_domain failed', err);
+    const domKey = pickRandom(FALLBACK_IOC_DOMAINS);
+    if (domKey) out.lureDomain = domKey;
+  }
   return out;
 };
 
