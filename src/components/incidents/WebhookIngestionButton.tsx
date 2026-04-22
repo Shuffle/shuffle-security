@@ -128,6 +128,10 @@ export const WebhookIngestionButton = ({ webhook, onToggled }: WebhookIngestionB
       }, 15000);
     } catch (error) {
       setOptimisticEnabled(null);
+      // Roll back the demo step flip so the tour mirrors the real (failed) state.
+      if (demoDrawerOpen) {
+        setDemoStepCompleted('ingest-webhook', !willBeEnabled);
+      }
       console.error('Failed to toggle webhook:', error);
       toast.error('Failed to update webhook status');
     }
