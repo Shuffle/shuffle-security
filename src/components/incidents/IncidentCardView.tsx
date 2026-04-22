@@ -332,6 +332,12 @@ export const IncidentCardView = ({
           : undefined;
 
         return (
+          <ResolvedSourceImage
+            key={incident.id}
+            source={incident.source}
+            directImage={sourceApp?.image}
+          >
+            {(resolvedImage) => (
           <motion.div
             key={incident.id}
             initial={index < 10 ? { opacity: 0, y: 10 } : false}
