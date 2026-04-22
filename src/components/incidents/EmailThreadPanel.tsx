@@ -186,12 +186,15 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
   const [expandedMessages, setExpandedMessages] = useState<Set<string>>(new Set());
   const [showReplyBox, setShowReplyBox] = useState(false);
   const [replyText, setReplyText] = useState('');
-  const [threadCollapsed, setThreadCollapsed] = useState(false);
+  // Default the thread to collapsed — the Activity timeline is the primary
+  // narrative on the incident page; users can expand the email when they
+  // need to read it. This avoids the long forwarded chain pushing the
+  // timeline below the fold on first open.
+  const [threadCollapsed, setThreadCollapsed] = useState(true);
 
-  // Auto-collapse the email thread when the user reaches the demo tour's
-  // "incident-detail" step (step #5). Focus shifts to the Activity timeline
-  // which the spotlight is highlighting. Only fires once per visit so the
-  // user can manually re-expand without it snapping shut again.
+  // Demo tour: keep the auto-collapse behaviour explicit so the spotlight on
+  // step #5 lands on the timeline. Reset the one-shot guard between demo
+  // sessions so a re-opened tour can collapse it again if the user expanded.
   const { drawerOpen: demoDrawerOpen, step: demoStep } = useDemo();
   const autoCollapsedRef = useRef(false);
   useEffect(() => {
