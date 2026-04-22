@@ -62,15 +62,14 @@ export const TOUR_STEPS: TourStep[] = [
   {
     id: 'welcome',
     title: 'Welcome to your demo',
-    body: 'Here is what we will do, in order:',
+    body: 'We will get you familiar with the platform — incident management, enrichment, automation, and AI agent actions. Here is the plan:',
     bullets: [
-      '1. Open the Incidents page from the sidebar',
-      '2. Add ingestion sources (Outlook Office365 + Microsoft 365 Defender)',
-      '3. Turn on the ingestion webhook',
-      '4. Watch incidents arrive and open one',
-      '5. Explore assets and vulnerabilities',
-      '6. Approve a live AI agent action',
-      '7. Clean up — removes everything we added',
+      '1. Get familiar with incident management',
+      '2. Connect ingestion sources',
+      '3. See real-time enrichment in action',
+      '4. Explore automation and workflows',
+      '5. Approve a live AI agent action',
+      '6. Clean up — removes everything we added',
     ],
     route: '/dashboard',
     requirement: {
