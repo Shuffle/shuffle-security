@@ -5204,7 +5204,33 @@ const IncidentDetailPage = () => {
               return true;
             });
 
+            // While the incident is fresh (created within the last 2 minutes)
+            // we render a loading state so users can see automatic enrichments
+            // stream in shortly after creation, instead of an empty list.
+            const createdTs = incident?.createdTs || 0;
+            const isFreshIncident = createdTs > 0 && (nowTick - createdTs) < FRESH_OBS_WINDOW_MS;
+
+            const loadingSkeleton = (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: allObs.length > 0 ? 1 : 0 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, px: 1.5, py: 1, mb: 0.5, borderRadius: 1.5, bgcolor: 'rgba(99, 179, 237, 0.08)', border: '1px solid rgba(99, 179, 237, 0.18)' }}>
+                  <CircularProgress size={14} sx={{ color: '#63b3ed' }} />
+                  <Typography variant="caption" sx={{ color: '#63b3ed', fontWeight: 500 }}>
+                    Processing observables in the background…
+                  </Typography>
+                </Box>
+                {[0, 1, 2].map((i) => (
+                  <Skeleton
+                    key={`obs-skel-${i}`}
+                    variant="rounded"
+                    height={48}
+                    sx={{ bgcolor: 'rgba(255,255,255,0.04)', borderRadius: 1 }}
+                  />
+                ))}
+              </Box>
+            );
+
             if (allObsRaw.length === 0) {
+              if (isFreshIncident) return loadingSkeleton;
               return (
                 <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic', textAlign: 'center', py: 4 }}>
                   No observables added. Add IOCs, IPs, domains, hashes, or other indicators.
@@ -5214,9 +5240,12 @@ const IncidentDetailPage = () => {
 
             if (allObs.length === 0) {
               return (
-                <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic', textAlign: 'center', py: 4 }}>
-                  No observables match the current filter. {allObsRaw.length} total.
-                </Typography>
+                <>
+                  {isFreshIncident && loadingSkeleton}
+                  <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic', textAlign: 'center', py: 4 }}>
+                    No observables match the current filter. {allObsRaw.length} total.
+                  </Typography>
+                </>
               );
             }
 
