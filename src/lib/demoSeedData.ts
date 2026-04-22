@@ -121,7 +121,7 @@ Hi security team,
 
 Forwarding the email below — it looks like a phishing attempt impersonating IT support. I did not click the link.
 
-I also noticed my colleague Sarah Chen (Finance Analyst, ${PHISH_HOST}) received the exact same message. I have not been able to confirm yet whether she clicked it. Could you take a look?
+I also noticed my colleague Sarah Chen (Finance Analyst) received the exact same message. I have not been able to confirm yet whether she clicked it. Could you take a look?
 
 Thanks,
 Diego Ruiz
@@ -150,7 +150,6 @@ IT Support Team`,
     observables: [
       { type: 'email', value: PHISH_REPORTER_EMAIL },
       { type: 'email', value: PHISH_USER_EMAIL },
-      { type: 'hostname', value: PHISH_HOST },
       { type: 'url', value: PHISH_LURE_URL },
       { type: 'ip', value: PHISH_ATTACKER_IP },
     ],
