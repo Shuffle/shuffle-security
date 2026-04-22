@@ -34,6 +34,7 @@ export const WebhookIngestionButton = ({ webhook, onToggled }: WebhookIngestionB
   const popoverOpen = Boolean(anchorEl);
   const optimisticTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const queryClient = useQueryClient();
+  const { drawerOpen: demoDrawerOpen, setStepCompleted: setDemoStepCompleted } = useDemo();
 
   const isEnabled = optimisticEnabled !== null ? optimisticEnabled : webhook.enabled;
 
