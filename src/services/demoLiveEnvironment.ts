@@ -17,9 +17,18 @@ import { getApiUrl, getAuthHeader } from '@/config/api';
 import { getAutomationLabels } from '@/config/usecases';
 import {
   extractValidatedIngestionApps,
+  findIngestTicketsWorkflow,
+  extractWorkflowAppNames,
   type ValidatedIngestionApp,
 } from '@/lib/ingestionDetection';
 import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
+
+/**
+ * localStorage key holding the JSON-encoded list of app names that were on
+ * the user's "Ingest Tickets" workflow before demo mode took it over. On
+ * cleanup we use this to restore the original sources.
+ */
+export const DEMO_INGEST_APPS_BACKUP_KEY = 'shuffle_demo_ingest_apps_backup';
 import { getDatastoreByCategory, setDatastoreItems, DATASTORE_CATEGORIES } from '@/services/datastore';
 import { DEFAULT_THREAT_FEEDS } from '@/hooks/useThreatFeeds';
 import { DEFAULT_IOC_TYPES, DEFAULT_ENABLED_IOCS } from '@/hooks/useIOCTypes';
