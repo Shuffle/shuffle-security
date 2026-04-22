@@ -5495,7 +5495,9 @@ const IncidentDetailPage = () => {
 
             return (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                {isFreshIncident && loadingSkeleton}
+                {/* Only show the "still processing" banner when the list is
+                    actually empty. Once observables exist, the user can see
+                    them — keeping the banner visible reads as a stuck loader. */}
                 {allObs.map((obs) => {
                   const iocDef = iocTypes.find(t => t.name === obs.type);
                   const pattern = iocDef?.regex;
