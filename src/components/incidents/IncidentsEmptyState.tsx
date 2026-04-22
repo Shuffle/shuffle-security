@@ -125,8 +125,10 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, on
             ))}
             <Tooltip title="Add ingestion source" placement="bottom">
               <IconButton
-                component={Link}
-                to="/onboarding/sources"
+                data-tour="add-ingestion-source-button"
+                {...(onAddSource
+                  ? { onClick: onAddSource }
+                  : { component: Link, to: '/onboarding/sources' })}
                 size="small"
                 sx={{
                   width: 28,
