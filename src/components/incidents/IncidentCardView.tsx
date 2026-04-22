@@ -600,7 +600,7 @@ export const IncidentCardView = ({
                       />
                     </>
                   )}
-                  {incident.orgName && !(incident.sharedOrgs && incident.sharedOrgs.length > 1) && (
+                  {isParentOrg && incident.orgName && !(incident.sharedOrgs && incident.sharedOrgs.length > 1) && (
                     <>
                       <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
                         •
