@@ -144,6 +144,36 @@ export const getApiUrl = (endpoint: string): string => {
 };
 
 /**
+ * Resolve an agent approval / form URL (typically `/forms/{id}`) to the
+ * original Shuffle Core where the form actually lives. On Cloud this is
+ * always https://shuffler.io (regardless of the active region URL — forms
+ * are served from core), and onprem / dev fall back to the configured
+ * backend baseUrl. Absolute URLs are returned unchanged.
+ */
+export const getShuffleCoreFormUrl = (refUrl: string): string => {
+  if (!refUrl) return refUrl;
+  // Already absolute — trust it.
+  if (/^https?:\/\//i.test(refUrl)) return refUrl;
+  const path = refUrl.startsWith('/') ? refUrl : `/${refUrl}`;
+  // Cloud always points at shuffler.io for forms.
+  if (isCloud()) return `https://shuffler.io${path}`;
+  // Self-hosted / dev — use the active backend.
+  return `${API_CONFIG.baseUrl}${path}`;
+};
+
+/** True when a notification.reference_url points at an agent approval form. */
+export const isAgentApprovalFormUrl = (refUrl: string | undefined | null): boolean => {
+  if (!refUrl) return false;
+  try {
+    // Strip an optional origin so we can match the path consistently.
+    const path = /^https?:\/\//i.test(refUrl) ? new URL(refUrl).pathname : refUrl;
+    return /^\/forms\/[^/?#]+/.test(path);
+  } catch {
+    return false;
+  }
+};
+
+/**
  * Central fetch wrapper that ALWAYS includes credentials and auth headers.
  * Use this instead of raw fetch() for all Shuffle API calls.
  */
