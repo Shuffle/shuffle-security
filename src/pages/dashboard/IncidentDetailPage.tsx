@@ -5881,6 +5881,8 @@ const IncidentDetailPage = () => {
                                     </Typography>
                                   )}
                                 </Box>
+                                {/* Surface STIX IOC context (pattern + sources) when any correlation hits a known IOC. */}
+                                <IocDetailsCard correlations={meaningfulCorr} compact />
                               </Box>
                             );
                           })()}
