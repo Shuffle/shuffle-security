@@ -335,6 +335,10 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
       setActive(true);
       setStep(0);
       setDrawerOpen(true);
+      // Always force the tour open in its full size when starting — never inherit
+      // a stale "minimized" state from a previous session.
+      setMinimized(false);
+      try { localStorage.setItem('shuffle_demo_minimized', 'false'); } catch { /* ignore */ }
       // Reset GA dedupes for a fresh funnel run
       viewedStepsRef.current = new Set();
       completedStepsGARef.current = new Set();
