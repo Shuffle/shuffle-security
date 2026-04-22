@@ -1,6 +1,6 @@
 
 
-## Vulnerabilities Page — Full Build Plan
+## Vulnerabilities Page - Full Build Plan
 
 ### Overview
 
@@ -20,13 +20,13 @@ Vulnerabilities stored in the datastore with this shape:
 
 ### Tab Structure
 
-**Assets tab** — shows vulnerabilities where `asset_type === 'asset'`, grouped/filterable by:
+**Assets tab** - shows vulnerabilities where `asset_type === 'asset'`, grouped/filterable by:
 - Severity (Critical / High / Medium / Low)
 - Category (Software/CVEs, Cloud Misconfigs, Code/Dependencies)
 - Source scanner
 - Status (Open / In Progress / Resolved)
 
-**Users tab** — shows vulnerabilities where `asset_type === 'user'`, grouped/filterable by:
+**Users tab** - shows vulnerabilities where `asset_type === 'user'`, grouped/filterable by:
 - Severity
 - Category (User/Identity issues)
 - Source (e.g. "azure_ad", "okta")
@@ -35,8 +35,8 @@ Vulnerabilities stored in the datastore with this shape:
 ### Ingestion Pipeline (similar to Incidents automation strip)
 
 A compact automation strip at the top (between stats and tabs) showing:
-1. **Sources** — connected scanner apps (Qualys, Tenable, Snyk, AWS Config, etc.) pulled from authenticated apps, filtered by new `VULN_SCANNER_PATTERNS`
-2. **Arrow → Shuffle** — processing/normalization
+1. **Sources** - connected scanner apps (Qualys, Tenable, Snyk, AWS Config, etc.) pulled from authenticated apps, filtered by new `VULN_SCANNER_PATTERNS`
+2. **Arrow -> Shuffle** - processing/normalization
 3. **"Add Source"** button opens the AppSearchDrawer filtered to vuln scanner category
 
 New pattern list in `ingestionDetection.ts`:
@@ -65,14 +65,14 @@ Each tab shows a sortable table with columns:
 
 ### Remediate CTA
 
-A "Remediate" button appears on each vulnerability row and in the detail view. For now it's a placeholder — shows a tooltip "Coming soon: automated remediation workflows". The button is visible and styled but triggers a toast saying remediation config is coming soon.
+A "Remediate" button appears on each vulnerability row and in the detail view. For now it's a placeholder - shows a tooltip "Coming soon: automated remediation workflows". The button is visible and styled but triggers a toast saying remediation config is coming soon.
 
 ### File Changes
 
-1. **`src/lib/ingestionDetection.ts`** — Add `VULN_SCANNER_PATTERNS` and `isVulnScannerApp()` helper
-2. **`src/hooks/useVulnerabilities.ts`** (new) — Fetch from datastore category `shuffle-vulnerabilities`, parse, filter by tab
-3. **`src/pages/dashboard/VulnerabilitiesPage.tsx`** — Full rebuild: stats from live data, automation strip, table with filters, AI scan button, remediate CTAs
-4. **`src/services/ai.ts`** — No changes needed (reuse `askAI`)
+1. **`src/lib/ingestionDetection.ts`** - Add `VULN_SCANNER_PATTERNS` and `isVulnScannerApp()` helper
+2. **`src/hooks/useVulnerabilities.ts`** (new) - Fetch from datastore category `shuffle-vulnerabilities`, parse, filter by tab
+3. **`src/pages/dashboard/VulnerabilitiesPage.tsx`** - Full rebuild: stats from live data, automation strip, table with filters, AI scan button, remediate CTAs
+4. **`src/services/ai.ts`** - No changes needed (reuse `askAI`)
 
 ### Stats Cards
 

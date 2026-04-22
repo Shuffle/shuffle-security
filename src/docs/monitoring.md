@@ -1,6 +1,6 @@
 # Monitoring
 
-Monitors provide endpoint-level visibility and control across your environment. They let you track device compliance, inspect host telemetry, and execute response actions — all from a single interface.
+Monitors provide endpoint-level visibility and control across your environment. They let you track device compliance, inspect host telemetry, and execute response actions - all from a single interface.
 
 ---
 
@@ -10,9 +10,9 @@ Traditional security tools give you visibility at the network or cloud layer, bu
 
 This gives your security team:
 
-- **Real-time compliance checks** — encryption status, screenlock policies, software inventory, active monitoring, and response action readiness
-- **Direct endpoint interaction** — execute commands and response actions on hosts without switching tools
-- **Centralized visibility** — see all monitored hosts across your environment in one place
+- **Real-time compliance checks** - encryption status, screenlock policies, software inventory, active monitoring, and response action readiness
+- **Direct endpoint interaction** - execute commands and response actions on hosts without switching tools
+- **Centralized visibility** - see all monitored hosts across your environment in one place
 
 ---
 
@@ -33,7 +33,7 @@ Monitors use the Shuffle agent (`orborus`) deployed on each endpoint. The agent 
 
 ### Deployment
 
-Monitors are deployed by running the Shuffle agent on your endpoints. For a detailed, step-by-step walkthrough with environment-specific commands, **we recommend following the deployment guide on the [Monitors page](/monitors)** — it generates the correct command for your setup automatically.
+Monitors are deployed by running the Shuffle agent on your endpoints. For a detailed, step-by-step walkthrough with environment-specific commands, **we recommend following the deployment guide on the [Monitors page](/monitors)** - it generates the correct command for your setup automatically.
 
 The basic deployment command looks like this:
 
@@ -54,13 +54,13 @@ Once deployed, each host is evaluated against five compliance checks:
 
 | Check | What It Collects | Source on Host |
 |-------|-------------------|----------------|
-| **Encryption** | Disk encryption status — whether BitLocker (Windows), FileVault (macOS), or LUKS/dm-crypt (Linux) is enabled on the primary disk | `manage-bde -status` (Windows), `fdesetup status` (macOS), `lsblk --fs` / `dmsetup status` (Linux) |
-| **Screenlock** | Whether an idle screenlock policy is enforced within 15 minutes — checks OS-level power/lock settings | Registry `HKCU\...\ScreenSaverIsSecure` + timeout (Windows), `sysadminctl -screenLock status` (macOS), `gsettings` / `xdg-screensaver` (Linux) |
-| **Software** | Full list of installed applications with name and version — used for vulnerability correlation and inventory audits | `wmic product` / registry uninstall keys (Windows), `system_profiler SPApplicationsDataType` (macOS), `dpkg -l` / `rpm -qa` (Linux) |
-| **Response Actions** | Whether the agent is authorized to accept and execute remote commands from Shuffle Core | Agent startup flag `--response_actions=full` — reports capability on each check-in |
-| **Active Monitoring** | Continuous monitoring of host activity such as process creation, file changes, and network connections *(not generally available yet)* | OS audit subsystem — e.g., `auditd` (Linux), ETW (Windows) |
+| **Encryption** | Disk encryption status - whether BitLocker (Windows), FileVault (macOS), or LUKS/dm-crypt (Linux) is enabled on the primary disk | `manage-bde -status` (Windows), `fdesetup status` (macOS), `lsblk --fs` / `dmsetup status` (Linux) |
+| **Screenlock** | Whether an idle screenlock policy is enforced within 15 minutes - checks OS-level power/lock settings | Registry `HKCU\...\ScreenSaverIsSecure` + timeout (Windows), `sysadminctl -screenLock status` (macOS), `gsettings` / `xdg-screensaver` (Linux) |
+| **Software** | Full list of installed applications with name and version - used for vulnerability correlation and inventory audits | `wmic product` / registry uninstall keys (Windows), `system_profiler SPApplicationsDataType` (macOS), `dpkg -l` / `rpm -qa` (Linux) |
+| **Response Actions** | Whether the agent is authorized to accept and execute remote commands from Shuffle Core | Agent startup flag `--response_actions=full` - reports capability on each check-in |
+| **Active Monitoring** | Continuous monitoring of host activity such as process creation, file changes, and network connections *(not generally available yet)* | OS audit subsystem - e.g., `auditd` (Linux), ETW (Windows) |
 
-Each check is shown as a status dot in the host table — green for passing, orange for partial, and grey for disabled or unavailable.
+Each check is shown as a status dot in the host table - green for passing, orange for partial, and grey for disabled or unavailable.
 
 ---
 
@@ -70,11 +70,11 @@ Each check is shown as a status dot in the host table — green for passing, ora
 
 The main view displays all monitored hosts in a sortable table:
 
-- **OS icon** — Apple, Windows, or Linux, shown as the first column
-- **Hostname** — Normalized (domain suffixes like `.local` and `.lan` are stripped)
-- **Serial number** — For asset tracking and correlation
-- **Compliance dots** — Five status indicators for each check
-- **Terminal trigger** — A play icon to open the interactive terminal
+- **OS icon** - Apple, Windows, or Linux, shown as the first column
+- **Hostname** - Normalized (domain suffixes like `.local` and `.lan` are stripped)
+- **Serial number** - For asset tracking and correlation
+- **Compliance dots** - Five status indicators for each check
+- **Terminal trigger** - A play icon to open the interactive terminal
 
 Click any row to expand and see full host metadata, installed software, and detailed status for each compliance check.
 
@@ -90,9 +90,9 @@ Hosts are organized into monitoring groups. Use the **Group Sync** dropdown to s
 
 ## Code Execution
 
-One of the most powerful features of Monitors is the ability to **execute commands directly on any monitored endpoint** — no SSH, no VPN, no additional tooling required.
+One of the most powerful features of Monitors is the ability to **execute commands directly on any monitored endpoint** - no SSH, no VPN, no additional tooling required.
 
-When a host has Response Actions enabled, you get a fully interactive terminal that lets you run arbitrary commands on the remote machine in real-time. This turns every monitored endpoint into an actionable asset: investigate incidents, collect forensic data, deploy patches, or isolate compromised hosts — all from the Monitors page.
+When a host has Response Actions enabled, you get a fully interactive terminal that lets you run arbitrary commands on the remote machine in real-time. This turns every monitored endpoint into an actionable asset: investigate incidents, collect forensic data, deploy patches, or isolate compromised hosts - all from the Monitors page.
 
 ### Opening the Terminal
 
@@ -110,17 +110,17 @@ The terminal interface includes:
 - **Auto-focusing input** at the bottom for custom commands
 
 Commands can be:
-- `script:<actionId>` — Run a predefined response action
-- Any raw string — Execute as a custom command on the host
+- `script:<actionId>` - Run a predefined response action
+- Any raw string - Execute as a custom command on the host
 
 ### Terminal Features
 
-- **Parallel execution** — Run multiple commands simultaneously
-- **Arrow-key history** — Navigate through previous commands
-- **Auto-scrolling** — Output scrolls to latest result automatically
-- **Abort support** — Click "Stop" to cancel a running command (sends server-side abort)
-- **Session persistence** — Terminal sessions are saved per-host in your browser's localStorage
-- **Real-time status** — Green dot indicator if the host checked in within the last 5 minutes
+- **Parallel execution** - Run multiple commands simultaneously
+- **Arrow-key history** - Navigate through previous commands
+- **Auto-scrolling** - Output scrolls to latest result automatically
+- **Abort support** - Click "Stop" to cancel a running command (sends server-side abort)
+- **Session persistence** - Terminal sessions are saved per-host in your browser's localStorage
+- **Real-time status** - Green dot indicator if the host checked in within the last 5 minutes
 
 ---
 
@@ -152,7 +152,7 @@ Once hosts are reporting, you can:
 
 ## Tips
 
-- **Hostnames are normalized** — Domain suffixes (`.local`, `.lan`, etc.) are automatically stripped for cleaner display
-- **Compliance tiles hide automatically** — The top-level compliance summary tiles disappear once at least one monitor is active, keeping the interface clean
-- **Terminal history is local** — Command history is stored in your browser, not on the server. A privacy disclaimer is shown in the terminal
-- **Host identification** — Endpoints are identified by hostname + serial number as the primary stable identifier
+- **Hostnames are normalized** - Domain suffixes (`.local`, `.lan`, etc.) are automatically stripped for cleaner display
+- **Compliance tiles hide automatically** - The top-level compliance summary tiles disappear once at least one monitor is active, keeping the interface clean
+- **Terminal history is local** - Command history is stored in your browser, not on the server. A privacy disclaimer is shown in the terminal
+- **Host identification** - Endpoints are identified by hostname + serial number as the primary stable identifier

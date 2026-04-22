@@ -1,6 +1,6 @@
 # Self-Hosting Guide
 
-Shuffle Security is a **frontend-only application** — it contains no backend, no database, and no server-side logic. It is a purpose-built UI layer on top of your existing [Shuffle Automation](https://shuffler.io) instance, focused entirely on security operations: incident triage, case management, and automated response.
+Shuffle Security is a **frontend-only application** - it contains no backend, no database, and no server-side logic. It is a purpose-built UI layer on top of your existing [Shuffle Automation](https://shuffler.io) instance, focused entirely on security operations: incident triage, case management, and automated response.
 
 All data, workflows, authentication, and integrations are handled by your Shuffle backend. This app simply presents them through a security-focused interface.
 
@@ -55,7 +55,7 @@ cp .env.example .env
 Edit `.env`:
 
 ```env
-# Shuffle Cloud (EU) — default
+# Shuffle Cloud (EU) - default
 VITE_SHUFFLE_API_URL=https://shuffler.io
 
 # Shuffle Cloud (US)
@@ -146,7 +146,7 @@ Shuffle Security uses the same authentication as your Shuffle backend:
 3. Shuffle returns a session cookie
 4. All subsequent API calls include the cookie via `credentials: 'include'`
 
-There is no separate user database, no social login, and no password recovery — all of that is managed by Shuffle Automation.
+There is no separate user database, no social login, and no password recovery - all of that is managed by Shuffle Automation.
 
 For development or automation, you can also authenticate with a Shuffle API key using the **Developer: Use API Key** option on the login page.
 
@@ -167,7 +167,7 @@ Without this, the browser will block API requests due to cross-origin restrictio
 
 ---
 
-## What This App Does — and Doesn't Do
+## What This App Does - and Doesn't Do
 
 ### It does:
 
@@ -200,6 +200,6 @@ Without this, the browser will block API requests due to cross-origin restrictio
 
 ## Next Steps
 
-- **[Getting Started](/docs/getting-started)** — Walk through the onboarding flow
-- **[Shuffle API Documentation](https://shuffler.io/docs/API)** — Full API reference
-- **[Shuffle Automation](https://shuffler.io)** — Manage workflows, apps, and backend configuration
+- **[Getting Started](/docs/getting-started)** - Walk through the onboarding flow
+- **[Shuffle API Documentation](https://shuffler.io/docs/API)** - Full API reference
+- **[Shuffle Automation](https://shuffler.io)** - Manage workflows, apps, and backend configuration

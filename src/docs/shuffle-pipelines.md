@@ -1,6 +1,6 @@
-# Shuffle Pipelines — Lightweight Detection Without Heavy Infrastructure
+# Shuffle Pipelines - Lightweight Detection Without Heavy Infrastructure
 
-Don't have a SIEM? No problem. With **Shuffle Pipelines**, you can ingest, parse, correlate, and forward security events directly — powered by [Tenzir](https://tenzir.com), a blazing-fast security data pipeline engine. You stay in full control of your data and infrastructure.
+Don't have a SIEM? No problem. With **Shuffle Pipelines**, you can ingest, parse, correlate, and forward security events directly - powered by [Tenzir](https://tenzir.com), a blazing-fast security data pipeline engine. You stay in full control of your data and infrastructure.
 
 ---
 
@@ -8,10 +8,10 @@ Don't have a SIEM? No problem. With **Shuffle Pipelines**, you can ingest, parse
 
 Traditional SIEMs are expensive, complex, and slow to deploy. Shuffle Pipelines give you:
 
-- **On-prem data control** — Your logs never leave your network unless you say so
-- **Instant deployment** — A single Docker command gets you started in minutes
-- **Sigma rule matching** — Apply community detection rules without vendor lock-in
-- **Flexible forwarding** — Route matched events to any destination: SIEM, ticketing system, webhook, or Shuffle workflow
+- **On-prem data control** - Your logs never leave your network unless you say so
+- **Instant deployment** - A single Docker command gets you started in minutes
+- **Sigma rule matching** - Apply community detection rules without vendor lock-in
+- **Flexible forwarding** - Route matched events to any destination: SIEM, ticketing system, webhook, or Shuffle workflow
 
 ---
 
@@ -22,10 +22,10 @@ Traditional SIEMs are expensive, complex, and slow to deploy. Shuffle Pipelines 
 │  Log Sources  │────▶│  Shuffle Sensor   │────▶│  Shuffle Cloud   │
 │  (Syslog,     │     │  (Tenzir Engine)  │     │  (Orchestration) │
 │   Filebeat,   │     │                  │     │                  │
-│   API polls)  │     │  • Ingest        │     │  • Sigma Rules   │
-│              │     │  • Parse         │     │  • Workflows     │
-│              │     │  • Match         │     │  • Case Mgmt     │
-│              │     │  • Forward       │     │  • Response       │
+│   API polls)  │     │  * Ingest        │     │  * Sigma Rules   │
+│              │     │  * Parse         │     │  * Workflows     │
+│              │     │  * Match         │     │  * Case Mgmt     │
+│              │     │  * Forward       │     │  * Response       │
 └──────────────┘     └──────────────────┘     └─────────────────┘
 ```
 
@@ -65,7 +65,7 @@ Head to [Detection Rules](/detection/sigma) to manage your Sigma rules.
 - Upload your own `.yml` Sigma rules
 - Rules are automatically distributed to your running sensors
 
-**What are Sigma rules?** Sigma is an open standard for writing detection rules that work across any log source. Think of it as "YARA for logs" — write once, detect everywhere.
+**What are Sigma rules?** Sigma is an open standard for writing detection rules that work across any log source. Think of it as "YARA for logs" - write once, detect everywhere.
 
 Example Sigma rule:
 ```yaml
@@ -141,11 +141,11 @@ subscribe alerts | to https://elastic:9200 write elastic_bulk
 
 Unlike cloud-only SIEM solutions:
 
-- **Your sensor, your infrastructure** — The Tenzir engine runs on machines you control
-- **Your rules, your logic** — Use open Sigma rules, no proprietary query language
-- **Your data, your routing** — Decide exactly where events go: local storage, cloud SIEM, ticketing system, or nowhere
-- **No vendor lock-in** — Tenzir pipelines use a standardized syntax that's portable
-- **No per-GB pricing** — Process as much data as your hardware allows
+- **Your sensor, your infrastructure** - The Tenzir engine runs on machines you control
+- **Your rules, your logic** - Use open Sigma rules, no proprietary query language
+- **Your data, your routing** - Decide exactly where events go: local storage, cloud SIEM, ticketing system, or nowhere
+- **No vendor lock-in** - Tenzir pipelines use a standardized syntax that's portable
+- **No per-GB pricing** - Process as much data as your hardware allows
 
 ---
 
@@ -153,12 +153,12 @@ Unlike cloud-only SIEM solutions:
 
 Matched events from pipelines can trigger Shuffle workflows for automated response:
 
-1. Pipeline detects a Sigma match → publishes to `alerts` topic
-2. Shuffle picks up the alert → creates an incident
+1. Pipeline detects a Sigma match -> publishes to `alerts` topic
+2. Shuffle picks up the alert -> creates an incident
 3. Workflow runs automated triage: enrichment, containment, notification
 4. Case lands in your ticketing system (Jira, ServiceNow, TheHive, etc.)
 
-This creates a complete **detect → triage → respond** loop without requiring a traditional SIEM.
+This creates a complete **detect -> triage -> respond** loop without requiring a traditional SIEM.
 
 ---
 
@@ -172,7 +172,7 @@ This creates a complete **detect → triage → respond** loop without requiring
 
 ## Next Steps
 
-- [Deploy your first sensor →](/detection)
-- [Load Sigma detection rules →](/detection/sigma)
-- [Create data pipelines →](/detection/pipelines)
-- [Set up automated incident response →](/usecases)
+- [Deploy your first sensor ->](/detection)
+- [Load Sigma detection rules ->](/detection/sigma)
+- [Create data pipelines ->](/detection/pipelines)
+- [Set up automated incident response ->](/usecases)
