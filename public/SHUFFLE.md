@@ -7,7 +7,7 @@ orchestration platform with 3,000+ apps. This skill teaches an agent how to
 use Shuffle as the backend for a security product without per-call
 hand-holding.
 
-> Authoritative spec: <https://shuffler.io/docs/API> · Source: <https://github.com/Shuffle/Shuffle>
+> Authoritative spec: <https://shuffler.io/docs/API> * Source: <https://github.com/Shuffle/Shuffle>
 >
 > Every endpoint, payload shape and gotcha below is taken from a real
 > production client (the Shuffle Security frontend in this repo). Where the
@@ -20,7 +20,7 @@ hand-holding.
 
 1. **Pick a base URL** - `https://shuffler.io` (EU), `https://us.shuffler.io`
    (US), or your self-hosted host.
-2. **Get an API key** - UI → user settings → "API key". Send as
+2. **Get an API key** - UI -> user settings -> "API key". Send as
    `Authorization: Bearer <key>` on every request, or use a session cookie
    (never both).
 3. **Call `GET /api/v1/getinfo`** - source of truth for the active user, the
@@ -33,7 +33,7 @@ const KEY  = process.env.SHUFFLE_API_KEY;
 const H    = { Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' };
 
 const me = await fetch(`${BASE}/api/v1/getinfo`, { headers: H }).then(r => r.json());
-console.log(me.username, '→', me.active_org.id);
+console.log(me.username, '->', me.active_org.id);
 ```
 
 That single call gives you everything else you need: `active_org.id` (used in
@@ -214,14 +214,14 @@ const r = await fetch(
   `${BASE}/api/v2/correlations?key=ip&value=1.2.3.4`,
   { headers: H }
 ).then(r => r.json());
-// r.data → entries from every category that reference 1.2.3.4
+// r.data -> entries from every category that reference 1.2.3.4
 ```
 
 ### OCSF schema crib
 
 Incidents follow **OCSF 2005 (Incident Finding)**. Required:
 `class_uid: 2005`, `category_uid: 2`, `time` (epoch ms), `severity_id`
-(1=Info → 5=Critical), `status_id` + matching `status` string,
+(1=Info -> 5=Critical), `status_id` + matching `status` string,
 `finding_info: { uid, title, desc, types[], created_time }`, `assignee`.
 Canonical status pairs: `1/New`, `2/In Progress`, `3/Resolved`, `4/Closed`.
 
@@ -265,7 +265,7 @@ Content-Type: application/json
 { "execution_id": "<id>", "authorization": "<auth or execution_id>" }
 ```
 
-Lifecycle: `EXECUTING` → optionally `WAITING` (sub-flow / pending approval) →
+Lifecycle: `EXECUTING` -> optionally `WAITING` (sub-flow / pending approval) ->
 `FINISHED` | `ABORTED`. Poll every 1-2 s until `status` is terminal.
 
 The real output lives at `response.result`. When `result` is an object,
@@ -280,7 +280,7 @@ and emit a notification of `type=agent_question`. Approvals flow through the
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
 | `GET`  | `/api/v1/notifications?type=agent_question&status=open` | Pending approvals |
-| `POST` | `/api/v1/notifications/{id}/markasread` | Approve / acknowledge → resumes the run |
+| `POST` | `/api/v1/notifications/{id}/markasread` | Approve / acknowledge -> resumes the run |
 
 ### Inspect run history
 
@@ -291,7 +291,7 @@ and emit a notification of `type=agent_question`. Approvals flow through the
 ### Reference client
 
 `src/services/agentRun.ts` in this repo implements the full pattern (build
-payload → fetch → detect stub → poll → unwrap). Mirror it instead of
+payload -> fetch -> detect stub -> poll -> unwrap). Mirror it instead of
 re-deriving the lifecycle.
 
 ### Recipe - ask the agent to triage an alert
@@ -531,7 +531,7 @@ The body becomes `exec.execution_argument` as a string - parse with
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
-| `POST` | `/api/v1/login` | `{username, password}` → sets session cookie, returns user info |
+| `POST` | `/api/v1/login` | `{username, password}` -> sets session cookie, returns user info |
 | `POST` | `/api/v1/logout` | Invalidate session |
 | `GET`  | `/api/v1/getinfo` | **Source of truth** - call on every reload |
 | `GET`  | `/api/v1/getsettings` | Org-level settings (timezone, branding, MFA policy) |
@@ -565,7 +565,7 @@ combination.
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
-| `POST` | `/api/v1/files/create` | Reserve a file slot. Body: `{ filename, namespace?, workflow_id? }` → `{ file_id }` |
+| `POST` | `/api/v1/files/create` | Reserve a file slot. Body: `{ filename, namespace?, workflow_id? }` -> `{ file_id }` |
 | `POST` | `/api/v1/files/{file_id}/upload` | `multipart/form-data` with field `shuffle_file` |
 | `GET`  | `/api/v1/files/{file_id}/content` | Download bytes |
 | `PUT`  | `/api/v1/files/{file_id}/edit` | Overwrite text contents in place |
@@ -655,7 +655,7 @@ These wrap the underlying datastore with security-aware logic
 
 ## 14. Pitfalls & gotchas (read these once)
 
-- **`setenvironments` is destructive.** Always GET → mutate → PUT the full
+- **`setenvironments` is destructive.** Always GET -> mutate -> PUT the full
   list, never PUT a subset.
 - **Datastore keys** must be the raw entity ID. Namespaced (`cat::id`)
   strings break read-after-write.

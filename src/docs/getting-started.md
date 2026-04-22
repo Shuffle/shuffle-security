@@ -1,14 +1,14 @@
 # Getting Started
 
-This guide walks you through the onboarding process — from first login to running your first automated workflow.
+This guide walks you through the onboarding process - from first login to running your first automated workflow.
 
 ## Overview
 
 Onboarding follows three steps:
 
-1. **Sources** — Choose the tools you already use
-2. **Authenticate** — Connect your credentials
-3. **Automate** — Enable data flows between your tools
+1. **Sources** - Choose the tools you already use
+2. **Authenticate** - Connect your credentials
+3. **Automate** - Enable data flows between your tools
 
 After completing these steps, Shuffle Security will begin ingesting and managing incidents from your connected tools automatically.
 
@@ -43,7 +43,7 @@ Different tools support different authentication methods:
 
 | Method | Description |
 |--------|-------------|
-| **API Key** | Most common — paste your tool's API key |
+| **API Key** | Most common - paste your tool's API key |
 | **OAuth 2.0** | Redirects you to the tool's login page |
 | **Basic Auth** | Username and password combination |
 | **Custom Fields** | Tool-specific fields (e.g., tenant ID, region) |
@@ -52,9 +52,9 @@ Different tools support different authentication methods:
 
 Each tool shows its connection status:
 
-- 🟢 **Verified** — Credentials tested and working
-- 🟡 **Configured** — Credentials saved but not yet verified
-- 🔴 **Failed** — Credentials invalid or expired
+- 🟢 **Verified** - Credentials tested and working
+- 🟡 **Configured** - Credentials saved but not yet verified
+- 🔴 **Failed** - Credentials invalid or expired
 
 Use the **Test Connection** button to verify each tool before proceeding. If a test fails, you'll see a specific error message explaining what went wrong (e.g., invalid API key, permission denied, network timeout).
 
@@ -93,11 +93,11 @@ Once you click **Finish Setup**, you'll be redirected to the [Incidents](/incide
 
 ### What to Explore Next
 
-- **[Incidents](/incidents)** — Triage, investigate, and resolve security incidents
-- **[Infrastructure](/infrastructure)** — View your connected tools and data flows as a graph
-- **[Usecases](/usecases)** — Browse all 22 automation patterns and enable new ones
-- **[Templates](/templates)** — Create reusable incident response playbooks
-- **[Apps Catalog](/apps)** — Discover 3,000+ integrations
+- **[Incidents](/incidents)** - Triage, investigate, and resolve security incidents
+- **[Infrastructure](/infrastructure)** - View your connected tools and data flows as a graph
+- **[Usecases](/usecases)** - Browse all 22 automation patterns and enable new ones
+- **[Templates](/templates)** - Create reusable incident response playbooks
+- **[Apps Catalog](/apps)** - Discover 3,000+ integrations
 
 ---
 
@@ -118,7 +118,7 @@ The tool will automatically appear in relevant data flows and become available f
 
 | Issue | Solution |
 |-------|----------|
-| Tool not found in search | Try searching by vendor name. If it's not listed, Shuffle supports any REST API — contact support to add it |
+| Tool not found in search | Try searching by vendor name. If it's not listed, Shuffle supports any REST API - contact support to add it |
 | Authentication fails | Double-check your API key, permissions, and that the tool's API is reachable from Shuffle |
 | No incidents after setup | Verify that Automatic Ingestion is enabled and that your source tool has recent alerts |
 | Sync seems slow | First sync may take longer depending on the volume of existing alerts. Subsequent syncs are incremental |
