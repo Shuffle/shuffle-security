@@ -2634,7 +2634,18 @@ const IncidentDetailPage = () => {
     });
 
     revisions.forEach((rev, idx) => {
-      const ts = normalizeToMs(rev.edited ?? rev.created);
+      // For the "Incident created" item (the oldest revision), prefer the
+      // incident's true creation timestamp instead of the revision's `edited`
+      // field. The first stored revision is often written *after* the user's
+      // first comment (the comment triggers the save), so its `edited` time
+      // can be later than that comment's `Date.now()` — which would
+      // incorrectly push the first comment below "Incident created" in the
+      // newest-first feed. Anchoring to `incident.createdTs` keeps creation
+      // at the bottom of the timeline where it belongs.
+      const isOldest = idx === revisions.length - 1;
+      const ts = isOldest && incident?.createdTs
+        ? normalizeToMs(incident.createdTs)
+        : normalizeToMs(rev.edited ?? rev.created);
       items.push({
         type: 'revision',
         timestamp: ts,
