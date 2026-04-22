@@ -386,7 +386,8 @@ export const forceCreateSingleDemoIncident = async (): Promise<number> => {
   if (!res.success) throw new Error(res.error || 'Failed to create demo focus incident');
   recordSeed(DATASTORE_CATEGORIES.INCIDENTS, [item.key]);
   broadcastRefresh(DATASTORE_CATEGORIES.INCIDENTS);
-  scheduleDemoObservableEnrichment(item.key, item.pendingObservables);
+  // The focus phishing incident lands "raw" — Shuffle will dynamically add
+  // observables in the background once it analyses the incident.
   return 1;
 };
 
