@@ -3888,6 +3888,7 @@ const IncidentDetailPage = () => {
                 <Box
                   key={tab.label}
                   data-tour={tab.tour}
+                  data-active={activeTab === index ? 'true' : 'false'}
                   onClick={() => setActiveTab(index)}
                   sx={{
                     px: 2,
