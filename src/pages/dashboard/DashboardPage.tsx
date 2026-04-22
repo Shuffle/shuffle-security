@@ -1047,6 +1047,7 @@ const DashboardPage = () => {
       item={quickViewItem}
       entityBasePath={entityBasePath}
       onApprove={handleApprove}
+      onDeny={handleDeny}
       onConfigureApprove={handleConfigureApprove}
       onSubmitAnswers={handleSubmitAnswers}
     />
