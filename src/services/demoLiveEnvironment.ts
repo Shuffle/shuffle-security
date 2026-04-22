@@ -434,6 +434,43 @@ const initDemoAgents = async (): Promise<void> => {
 };
 
 /**
+ * Seed the AI Agent's default Response Action permissions into the
+ * `shuffle-security_configuration` datastore under the `agent_permissions`
+ * key (same shape the Response Actions page reads/writes via
+ * useAgentPermissions). For the demo we want at least one high-impact
+ * action — "Isolate Systems" — enabled out of the box so the agent has
+ * something meaningful to act on. We never overwrite an existing config so
+ * users that already configured permissions keep their choices.
+ */
+const AGENT_PERMISSIONS_KEY = 'agent_permissions';
+
+const buildDemoAgentPermissions = () =>
+  DEFAULT_AGENT_PERMISSIONS.map(cat => ({
+    ...cat,
+    permissions: cat.permissions.map(p =>
+      // Enable "Isolate Systems" by default for the demo so the agent has
+      // a high-impact host action available without extra setup.
+      p.id === 'isolate_systems' ? { ...p, enabled: true } : p,
+    ),
+  }));
+
+const initAgentPermissionsDefaults = async (): Promise<void> => {
+  try {
+    const res = await getDatastoreByCategory(DATASTORE_CATEGORIES.CONFIGURATION);
+    if (res.success && res.data) {
+      const exists = res.data.some(item => item.key === AGENT_PERMISSIONS_KEY);
+      if (exists) return;
+    }
+    await setDatastoreItems(
+      [{ key: AGENT_PERMISSIONS_KEY, value: buildDemoAgentPermissions() }],
+      DATASTORE_CATEGORIES.CONFIGURATION,
+    );
+  } catch (err) {
+    console.warn('[demo] agent permissions init failed', err);
+  }
+};
+
+/**
  * Run the full live-environment bootstrap. Safe to call multiple times —
  * all sub-steps are idempotent. Resolves once everything has settled.
  */
@@ -444,5 +481,6 @@ export const enableLiveDemoEnvironment = async (): Promise<void> => {
     initIOCTypesDefaults(),
     initDemoMonitorHost(),
     initDemoAgents(),
+    initAgentPermissionsDefaults(),
   ]);
 };
