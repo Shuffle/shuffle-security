@@ -16,6 +16,27 @@
 import { useEffect, useState } from 'react';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 
+/**
+ * Sources that are NOT real integrations and therefore must not trigger any
+ * logo lookup. Without this guard, querying Algolia with "Manual" returns
+ * the top hit (currently AWS) and we end up showing the wrong brand on
+ * manually-created incidents. Matched after normalization
+ * (lowercase + strip spaces/_/-).
+ */
+const NON_APP_SOURCES = new Set([
+  'manual',
+  'manualentry',
+  'unknown',
+  'custom',
+  'customentry',
+  'shuffle',
+  'shufflesecurity',
+  'system',
+  'user',
+  'other',
+  'none',
+]);
+
 export const useSourceAppImage = (
   source: string | undefined | null,
   crossOrgId?: string | null,
@@ -28,6 +49,12 @@ export const useSourceAppImage = (
       return;
     }
     const normalized = source.toLowerCase().replace(/[\s_-]/g, '');
+    // Skip lookups for non-integration sources — let the caller render its
+    // own colored placeholder instead of a wrong brand logo.
+    if (!normalized || NON_APP_SOURCES.has(normalized)) {
+      setImage(null);
+      return;
+    }
     const headers: Record<string, string> = {
       ...getAuthHeader(),
       ...(crossOrgId ? { 'Org-Id': crossOrgId } : {}),
@@ -44,10 +71,13 @@ export const useSourceAppImage = (
         });
         if (cancelled) return;
         const hits = ((res as any)?.results?.[0]?.hits || []) as any[];
+        // Require an EXACT normalized-name match. Falling back to hits[0]
+        // would surface unrelated brand logos (e.g. AWS) for generic
+        // search terms like "Manual" or "Custom Script".
         const match = hits.find((h) => {
           const name = (h.name || '').toLowerCase().replace(/[\s_-]/g, '');
           return name === normalized;
-        }) || hits[0];
+        });
         if (match?.image_url) setImage(match.image_url);
       } catch {
         /* ignore — image is optional */
