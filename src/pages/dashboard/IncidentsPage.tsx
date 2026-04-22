@@ -1923,9 +1923,13 @@ const IncidentsPage = () => {
                 textTransform: 'uppercase',
                 whiteSpace: 'nowrap',
               }}>
-                <Tooltip title="Apps with authentication appear here. Verified apps show in green, unverified in yellow. Toggle them to control which tools automatically pull in incidents." placement="top" arrow>
-                  <span style={{ cursor: 'help' }}>Ingest</span>
-                </Tooltip>
+                {demoActive ? (
+                  <span>Ingest</span>
+                ) : (
+                  <Tooltip title="Apps with authentication appear here. Verified apps show in green, unverified in yellow. Toggle them to control which tools automatically pull in incidents." placement="top" arrow>
+                    <span style={{ cursor: 'help' }}>Ingest</span>
+                  </Tooltip>
+                )}
               </Typography>
               {/* Webhook counts as 1 of the 5 visible slots */}
               <WebhookIngestionButton webhook={webhookIngestion} onToggled={fetchIngestionApps} />
