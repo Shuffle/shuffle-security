@@ -61,6 +61,9 @@ interface IncidentCardViewProps {
   orgFilterNames?: string[];
   totalOrgCount?: number;
   onResetOrgFilter?: () => void;
+  /** Whether the current org has sub-tenants. When false, per-incident
+   *  tenant chips are hidden because there is only one tenant in play. */
+  isParentOrg?: boolean;
 }
 
 // Skeleton card component for loading state
