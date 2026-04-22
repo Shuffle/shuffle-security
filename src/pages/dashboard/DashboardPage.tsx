@@ -23,7 +23,6 @@ import {
   Loader2,
   HelpCircle,
   Clock,
-  Eye,
   MessageSquare,
   ChevronRight,
   Plug,
