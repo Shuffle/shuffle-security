@@ -341,7 +341,11 @@ export const IncidentCardView = ({
                 },
               }}
             >
-              {/* Icon container with checkbox overlay on hover */}
+              {/* Icon container with checkbox overlay on hover.
+                  When the incident has a source app logo, render it as the
+                  primary icon and overlay the status icon as a small badge
+                  in the bottom-right corner — keeps both pieces of context
+                  visible while reclaiming horizontal space on the right. */}
               <Box
                 sx={{
                   width: 48,
@@ -352,10 +356,10 @@ export const IncidentCardView = ({
                   justifyContent: 'center',
                   backgroundColor: showCheck 
                     ? 'transparent' 
-                    : `${iconColor}15`,
+                    : (sourceApp?.image ? 'hsl(var(--muted) / 0.4)' : `${iconColor}15`),
                   border: showCheck 
                     ? 'none' 
-                    : `1px solid ${iconColor}30`,
+                    : (sourceApp?.image ? '1px solid hsl(var(--border))' : `1px solid ${iconColor}30`),
                   flexShrink: 0,
                   position: 'relative',
                 }}
@@ -389,6 +393,32 @@ export const IncidentCardView = ({
                         onClick={(e) => handleCheckboxChange(incident.id, !selected, e)}
                       />
                     </motion.div>
+                  ) : sourceApp?.image ? (
+                    <motion.div
+                      key="source-img"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      transition={{ duration: 0.15 }}
+                      style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                      <Tooltip title={`Filter by ${incident.source}`} placement="right">
+                        <Box
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            onFilterChange?.('source', incident.source || '');
+                          }}
+                          sx={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                        >
+                          <img
+                            src={sourceApp.image}
+                            alt={incident.source}
+                            style={{ width: 30, height: 30, objectFit: 'contain', borderRadius: '6px' }}
+                          />
+                        </Box>
+                      </Tooltip>
+                    </motion.div>
                   ) : (
                     <motion.div
                       key="icon"
@@ -401,6 +431,28 @@ export const IncidentCardView = ({
                     </motion.div>
                   )}
                 </AnimatePresence>
+
+                {/* Status badge overlay — only when source logo is the
+                    primary icon, so the user still sees status at a glance. */}
+                {!showCheck && sourceApp?.image && (
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      bottom: -4,
+                      right: -4,
+                      width: 18,
+                      height: 18,
+                      borderRadius: '50%',
+                      backgroundColor: `${iconColor}`,
+                      border: '2px solid hsl(var(--card))',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <IconComponent size={10} color="#fff" />
+                  </Box>
+                )}
               </Box>
 
               {/* Content */}
