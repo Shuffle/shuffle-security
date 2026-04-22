@@ -677,6 +677,10 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
     forceCreateIncidents, isForceCreatingIncidents,
     forceGenerateSingleIncident, isForceGeneratingSingle,
     forceGenerateWazuhIncident, isForceGeneratingWazuh,
+    hasDemoIncidents,
+    isOnIncidentDetail,
+    attentionPulse,
+  }), [
     active, isSeeding, isCleaning, drawerOpen, minimized, dock, step, stats,
     completedSteps, currentStepUnlocked,
     startDemo, openTour, closeTour, minimizeTour, restoreTour, toggleDock, setDock,
@@ -684,6 +688,7 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
     markStepCompleted, setStepCompleted,
     forceCreateIncidents, isForceCreatingIncidents,
     forceGenerateSingleIncident, isForceGeneratingSingle,
+    forceGenerateWazuhIncident, isForceGeneratingWazuh,
     hasDemoIncidents,
     isOnIncidentDetail,
     attentionPulse,
