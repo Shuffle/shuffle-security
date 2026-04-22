@@ -3875,20 +3875,10 @@ const IncidentDetailPage = () => {
         />
       )}
 
-      {activeTab === 0 && (
-        /* Details Tab */
-        <Box sx={{
-          display: 'grid',
-          // Two columns on desktop: narrative + timeline on the left,
-          // metadata on the right. Stacks on smaller viewports.
-          gridTemplateColumns: { xs: '1fr', lg: 'minmax(0, 1fr) 360px' },
-          gap: { xs: 2, lg: 3 },
-          alignItems: 'start',
-        }}>
-          {/* ============ LEFT: Description, Email thread, Timeline ============ */}
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-          {/* Description Section */}
-          <Section title="Description" icon={DescriptionIcon} defaultOpen={false}>
+      {activeTab === 0 && (() => {
+        const hasEmail = !!incident && isEmailContent(editedMessage || '', rawDescriptionHtml || '', incident.rawOCSF);
+        const descriptionBody = (
+          <>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 {(hasHtmlDescription || editedMessage) && !isEditingDescription && (
@@ -3914,10 +3904,10 @@ const IncidentDetailPage = () => {
                   </Box>
                 )}
               </Box>
-              <IconButton 
-                size="small" 
+              <IconButton
+                size="small"
                 onClick={() => setIsEditingDescription(!isEditingDescription)}
-                sx={{ 
+                sx={{
                   color: isEditingDescription ? '#FF6600' : 'text.secondary',
                   '&:hover': { color: '#FF6600' },
                 }}
@@ -3940,10 +3930,10 @@ const IncidentDetailPage = () => {
                 />
               </Box>
             ) : descriptionView === 'rendered' && hasHtmlDescription ? (
-              <Box 
-                sx={{ 
-                  p: 1.5, 
-                  bgcolor: (t) => t.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.95)' : 'rgba(255, 255, 255, 1)', 
+              <Box
+                sx={{
+                  p: 1.5,
+                  bgcolor: (t) => t.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.95)' : 'rgba(255, 255, 255, 1)',
                   borderRadius: 1,
                   border: '1px solid',
                   borderColor: 'divider',
@@ -3962,10 +3952,10 @@ const IncidentDetailPage = () => {
                 dangerouslySetInnerHTML={{ __html: sanitizedDescriptionHtml }}
               />
             ) : descriptionView === 'readable' || (descriptionView === 'rendered' && !hasHtmlDescription) ? (
-              <Box 
-                sx={{ 
-                  p: 2, 
-                  bgcolor: 'rgba(0, 0, 0, 0.2)', 
+              <Box
+                sx={{
+                  p: 2,
+                  bgcolor: 'rgba(0, 0, 0, 0.2)',
                   borderRadius: 1,
                   border: '1px solid rgba(255,255,255,0.1)',
                   minHeight: 120,
@@ -3973,8 +3963,8 @@ const IncidentDetailPage = () => {
                   overflow: 'auto',
                 }}
               >
-                <Typography variant="body2" sx={{ 
-                  color: 'text.primary', 
+                <Typography variant="body2" sx={{
+                  color: 'text.primary',
                   whiteSpace: 'pre-wrap',
                   fontSize: '0.85rem',
                   lineHeight: 1.75,
@@ -3997,10 +3987,10 @@ const IncidentDetailPage = () => {
                 </Typography>
               </Box>
             ) : (
-              <Box 
-                sx={{ 
-                  p: 1.5, 
-                  bgcolor: 'rgba(0, 0, 0, 0.2)', 
+              <Box
+                sx={{
+                  p: 1.5,
+                  bgcolor: 'rgba(0, 0, 0, 0.2)',
                   borderRadius: 1,
                   border: '1px solid rgba(255,255,255,0.1)',
                   minHeight: 120,
@@ -4023,10 +4013,34 @@ const IncidentDetailPage = () => {
                 )}
               </Box>
             )}
+          </>
+        );
+
+        return (
+        /* Details Tab */
+        <Box sx={{
+          display: 'grid',
+          // Two columns on desktop: narrative + timeline on the left,
+          // metadata on the right. Stacks on smaller viewports.
+          gridTemplateColumns: { xs: '1fr', lg: 'minmax(0, 1fr) 360px' },
+          gap: { xs: 2, lg: 3 },
+          alignItems: 'start',
+        }}>
+          {/* ============ LEFT: Description (when no email), Email thread, Timeline ============
+              When the incident IS an email thread, we move the Description to
+              the right column (collapsed by default) so the parsed thread
+              becomes the primary narrative on the left. */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+          {/* Description Section — only render here when there is NO email
+              thread. Otherwise it lives on the right column collapsed. */}
+          {!hasEmail && (
+          <Section title="Description" icon={DescriptionIcon} defaultOpen={false}>
+            {descriptionBody}
           </Section>
+          )}
 
           {/* Email Thread Panel — shown below Description when email content is detected */}
-          {incident && isEmailContent(editedMessage || '', rawDescriptionHtml || '', incident.rawOCSF) && (
+          {hasEmail && (
             <EmailThreadPanel
               descriptionHtml={rawDescriptionHtml || ''}
               descriptionText={editedMessage || ''}
@@ -4077,177 +4091,17 @@ const IncidentDetailPage = () => {
 
           {/* ============ RIGHT: Metadata column ============ */}
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-          {/* Stakeholders - collapsed by default */}
-          <Section
-            title="Stakeholders"
-            icon={PeopleIcon}
-            defaultOpen={false}
-            badge={editedStakeholders.length > 0 ? editedStakeholders.length : undefined}
-          >
+          {/* Description on the right — only when an email thread occupies
+              the left column. Collapsed by default; users open it for the
+              raw / readable / rendered views without losing focus on the
+              parsed thread. */}
+          {hasEmail && (
+            <Section title="Description" icon={DescriptionIcon} defaultOpen={false}>
+              {descriptionBody}
+            </Section>
+          )}
 
-            {/* Inline autocomplete input */}
-            {!isPublicView && (
-              <Box sx={{ position: 'relative', mb: 2 }}>
-                <TextField
-                  size="small"
-                  value={stakeholderSearch}
-                  onChange={(e) => {
-                    setStakeholderSearch(e.target.value);
-                    setShowStakeholderSuggestions(true);
-                  }}
-                  onFocus={() => { if (stakeholderSearch.trim()) setShowStakeholderSuggestions(true); }}
-                  placeholder="Add stakeholder — type name or email..."
-                  fullWidth
-                  sx={inputSx}
-                  InputProps={{
-                    startAdornment: <PeopleIcon sx={{ fontSize: 16, color: 'text.secondary', mr: 1 }} />,
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && stakeholderSearch.trim()) {
-                      e.preventDefault();
-                      // If there's a matching suggestion, use it; otherwise open new form
-                      const match = stakeholderSuggestions.find(s => 
-                        s.name.toLowerCase() === stakeholderSearch.toLowerCase() ||
-                        s.email?.toLowerCase() === stakeholderSearch.toLowerCase()
-                      );
-                      if (match && !editedStakeholders.some(x => x.name === match.name && x.email === match.email)) {
-                        const newS: Stakeholder = { ...match, id: `sh-${Date.now()}` };
-                        setEditedStakeholders([...editedStakeholders, newS]);
-                        setStakeholderSearch('');
-                        setShowStakeholderSuggestions(false);
-                        autoProgressStatus();
-                      } else {
-                        setNewStakeholder(s => ({ ...s, name: stakeholderSearch }));
-                        setShowAddStakeholder(true);
-                        setShowStakeholderSuggestions(false);
-                      }
-                    }
-                    if (e.key === 'Escape') setShowStakeholderSuggestions(false);
-                  }}
-                />
-                {/* Suggestions dropdown */}
-                {showStakeholderSuggestions && stakeholderSuggestions.length > 0 && (
-                  <Paper sx={{ 
-                    position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 20, 
-                    mt: 0.5, maxHeight: 200, overflow: 'auto',
-                    bgcolor: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))',
-                  }}>
-                    {stakeholderSuggestions.map((s, idx) => (
-                      <MenuItem 
-                        key={idx}
-                        onClick={() => {
-                          if (!editedStakeholders.some(x => x.name === s.name && x.email === s.email)) {
-                            const newS: Stakeholder = { ...s, id: `sh-${Date.now()}` };
-                            setEditedStakeholders([...editedStakeholders, newS]);
-                            autoProgressStatus();
-                          }
-                          setStakeholderSearch('');
-                          setShowStakeholderSuggestions(false);
-                        }}
-                        sx={{ fontSize: '0.8rem', gap: 1.5 }}
-                      >
-                        <Avatar sx={{ width: 24, height: 24, fontSize: '0.65rem', bgcolor: s.type === 'technical' ? 'hsl(var(--severity-info))' : 'hsl(var(--severity-medium))' }}>
-                          {s.name.charAt(0).toUpperCase()}
-                        </Avatar>
-                        <Box>
-                          <Typography variant="body2" sx={{ fontWeight: 500 }}>{s.name}</Typography>
-                          {s.email && <Typography variant="caption" sx={{ color: 'text.secondary' }}>{s.email}</Typography>}
-                        </Box>
-                        <Chip label={s.type === 'technical' ? 'Tech' : 'Business'} size="small" sx={{ ml: 'auto', height: 18, fontSize: '0.6rem' }} />
-                      </MenuItem>
-                    ))}
-                  </Paper>
-                )}
-              </Box>
-            )}
 
-            {/* New stakeholder form */}
-            <Collapse in={showAddStakeholder}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, p: 2, mb: 2, borderRadius: 1.5, bgcolor: 'hsl(var(--muted))', border: '1px solid hsl(var(--border))' }}>
-                <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>New Stakeholder</Typography>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <TextField size="small" label="Name" value={newStakeholder.name} onChange={(e) => setNewStakeholder(s => ({ ...s, name: e.target.value }))} fullWidth sx={inputSx} autoFocus />
-                  <FormControl size="small" sx={{ minWidth: 130 }}>
-                    <InputLabel>Type</InputLabel>
-                    <Select value={newStakeholder.type} label="Type" onChange={(e) => setNewStakeholder(s => ({ ...s, type: e.target.value as 'technical' | 'business' }))}>
-                      <MenuItem value="technical">Technical</MenuItem>
-                      <MenuItem value="business">Business</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Box>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <TextField size="small" label="Email" value={newStakeholder.email || ''} onChange={(e) => setNewStakeholder(s => ({ ...s, email: e.target.value }))} fullWidth sx={inputSx} />
-                  <TextField size="small" label="Role" value={newStakeholder.role || ''} onChange={(e) => setNewStakeholder(s => ({ ...s, role: e.target.value }))} fullWidth sx={inputSx} placeholder="e.g. CISO, Dev Lead" />
-                </Box>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <TextField size="small" label="Location" value={newStakeholder.location || ''} onChange={(e) => setNewStakeholder(s => ({ ...s, location: e.target.value }))} fullWidth sx={inputSx} />
-                  <TextField size="small" label="Phone" value={newStakeholder.phone || ''} onChange={(e) => setNewStakeholder(s => ({ ...s, phone: e.target.value }))} fullWidth sx={inputSx} />
-                </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-                  <Button size="small" onClick={() => { setShowAddStakeholder(false); setNewStakeholder({ name: '', type: 'technical' }); setStakeholderSearch(''); }}>Cancel</Button>
-                  <Button 
-                    size="small" variant="contained" disabled={!newStakeholder.name.trim()}
-                    onClick={() => {
-                      const stakeholder: Stakeholder = {
-                        ...newStakeholder, id: `sh-${Date.now()}`,
-                        email: newStakeholder.email || undefined,
-                        role: newStakeholder.role || undefined,
-                        location: newStakeholder.location || undefined,
-                        phone: newStakeholder.phone || undefined,
-                      };
-                      setEditedStakeholders([...editedStakeholders, stakeholder]);
-                      saveStakeholderToRegistry(stakeholder);
-                      setNewStakeholder({ name: '', type: 'technical' });
-                      setShowAddStakeholder(false);
-                      setStakeholderSearch('');
-                      autoProgressStatus();
-                    }}
-                  >Add Stakeholder</Button>
-                </Box>
-              </Box>
-            </Collapse>
-
-            {/* Stakeholder list - grouped */}
-            {editedStakeholders.length > 0 ? (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                {editedStakeholders.map((s) => (
-                  <Box key={s.id} sx={{ 
-                    display: 'flex', alignItems: 'center', gap: 1.5, px: 1.5, py: 1, 
-                    borderRadius: 1.5, bgcolor: 'hsl(var(--muted))', border: '1px solid hsl(var(--border))',
-                    transition: 'background 0.15s',
-                    '&:hover': { bgcolor: 'hsl(var(--accent) / 0.06)' },
-                  }}>
-                    <Avatar sx={{ width: 30, height: 30, fontSize: '0.75rem', bgcolor: s.type === 'technical' ? 'hsl(var(--severity-info))' : 'hsl(var(--severity-medium))' }}>
-                      {s.name.charAt(0).toUpperCase()}
-                    </Avatar>
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.2 }}>{s.name}</Typography>
-                        <Chip label={s.type === 'technical' ? 'Tech' : 'Business'} size="small" variant="outlined" sx={{ 
-                          height: 18, fontSize: '0.6rem', 
-                          bgcolor: 'transparent',
-                          borderColor: s.type === 'technical' ? 'hsl(var(--severity-info) / 0.4)' : 'hsl(var(--severity-medium) / 0.4)',
-                          color: s.type === 'technical' ? 'hsl(var(--severity-info))' : 'hsl(var(--severity-medium))',
-                        }} />
-                      </Box>
-                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                        {[s.role, s.email, s.location].filter(Boolean).join(' · ')}
-                      </Typography>
-                    </Box>
-                    {!isPublicView && (
-                      <IconButton size="small" onClick={() => setEditedStakeholders(editedStakeholders.filter(x => x.id !== s.id))} sx={{ opacity: 0.5, '&:hover': { opacity: 1 } }}>
-                        <DeleteIcon sx={{ fontSize: 16 }} />
-                      </IconButton>
-                    )}
-                  </Box>
-                ))}
-              </Box>
-            ) : (
-              <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic', textAlign: 'center', py: 1 }}>
-                No stakeholders yet — type above to add
-              </Typography>
-            )}
-          </Section>
 
           {/* Custom Fields */}
           {(() => {
@@ -4276,7 +4130,7 @@ const IncidentDetailPage = () => {
           })()}
 
           {/* Metadata Section */}
-          <Section title="Metadata" icon={DescriptionIcon} defaultOpen={true}>
+          <Section title="Metadata" icon={DescriptionIcon} defaultOpen={false}>
             <Box sx={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
                 <Box>
@@ -4547,7 +4401,8 @@ const IncidentDetailPage = () => {
           </Section>
           </Box>
         </Box>
-      )}
+        );
+      })()}
 
       {activeTab === 2 && (
         /* Observables Tab */
