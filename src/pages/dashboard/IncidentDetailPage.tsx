@@ -5710,6 +5710,7 @@ const IncidentDetailPage = () => {
         </Box>
         )}
       </Box>
+      </LayoutGroup>
 
 
       {/* Revision Data Dialog */}
