@@ -649,13 +649,21 @@ export const DemoTourDrawer = () => {
                         textTransform: 'none',
                         fontSize: '0.78rem',
                         fontWeight: 600,
-                        backgroundColor: 'hsl(var(--primary))',
-                        color: 'hsl(var(--primary-foreground))',
-                        boxShadow: 'none',
-                        '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.9)', boxShadow: 'none' },
+                        // Unlocked → green CTA (clear "go" affordance).
+                        // Locked → muted/neutral so it does not steal focus
+                        // from the actual unlock target on the page.
+                        backgroundColor: locked ? 'hsl(var(--muted))' : 'hsl(var(--severity-low))',
+                        color: locked ? 'hsl(var(--muted-foreground))' : 'hsl(0 0% 100%)',
+                        boxShadow: locked ? 'none' : '0 6px 16px -8px hsl(var(--severity-low) / 0.6)',
+                        transition: 'background-color 0.2s ease, box-shadow 0.2s ease',
+                        '&:hover': {
+                          backgroundColor: locked ? 'hsl(var(--muted))' : 'hsl(var(--severity-low) / 0.9)',
+                          boxShadow: locked ? 'none' : '0 8px 20px -8px hsl(var(--severity-low) / 0.7)',
+                        },
                         '&.Mui-disabled': {
                           backgroundColor: 'hsl(var(--muted))',
                           color: 'hsl(var(--muted-foreground))',
+                          boxShadow: 'none',
                         },
                       }}
                     >
