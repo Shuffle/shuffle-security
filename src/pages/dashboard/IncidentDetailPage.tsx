@@ -3174,7 +3174,8 @@ const IncidentDetailPage = () => {
             timestamp: e.ts,
             id: `step-obs-${e.key}`,
             label: 'Observable',
-            detail: `${e.type}: ${e.value}`,
+            obsType: e.type,
+            obsValue: e.value,
             corrCount: corrCount > 0 ? corrCount : undefined,
             corrObsKeys: corrCount > 0 ? [e.key] : undefined,
           });
