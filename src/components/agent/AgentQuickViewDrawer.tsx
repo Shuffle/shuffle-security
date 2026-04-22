@@ -262,6 +262,8 @@ const buildFromRun = (run: AgentRun, entityBasePath: string): UnifiedData => {
     timeline,
     pendingAction,
     incidentLink: incidentKey ? `${entityBasePath}/${incidentKey}?agent_action=${run.execution_id}` : null,
+    incidentLinkLabel: 'View Full Incident',
+    incidentLinkExternal: false,
     isApproval: false,
     isQuestion: false,
     questions: [],
