@@ -56,7 +56,18 @@ export const useSubOrgs = (currentOrgId: string | undefined): UseSubOrgsReturn =
       if (data.success !== false) {
         // Handle both { subOrgs: [...] } and direct array formats
         const orgs = Array.isArray(data) ? data : (data.child_orgs || data.orgs || data.subOrgs || []);
-        setSubOrgs(orgs.map((org: any) => ({
+        // Only keep TRUE descendants of the current org. The API can return
+        // peers/siblings in some configurations, which would otherwise make a
+        // sub-tenant look like a parent and pull in data from other tenants.
+        // Multi-tenant fan-out must always distribute downwards only.
+        const trueChildren = orgs.filter((org: any) => {
+          if (!org?.id || org.id === currentOrgId) return false;
+          // If creator_org is present, it must point to the current org.
+          // If absent, fall back to accepting it (older API responses).
+          if (org.creator_org) return org.creator_org === currentOrgId;
+          return true;
+        });
+        setSubOrgs(trueChildren.map((org: any) => ({
           id: org.id,
           name: org.name || org.id,
           image: org.image,
