@@ -5583,51 +5583,27 @@ const IncidentDetailPage = () => {
                             />
                           );
                         })()}
-                        <Tooltip title={`Run ${actionName} via threat intel apps`} arrow>
-                          <IconButton
-                            size="small"
-                            onClick={async (e) => {
-                              e.stopPropagation();
-                              try {
-                              const resp = await fetch(getApiUrl('/api/v1/apps/categories/run'), {
-                                  method: 'POST',
-                                  credentials: 'include',
-                                  headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
-                                  body: JSON.stringify({
-                                    category: 'threat_intel',
-                                    action: actionName,
-                                    fields: [{ key: 'ioc', value: obs.value }],
-                                  }),
-                                });
-                                const result = await resp.json().catch(() => null);
-                                if (resp.ok) {
-                                  // Check if no apps were found/executed
-                                  if (result?.success === false || (Array.isArray(result) && result.length === 0) || result?.reason?.toLowerCase()?.includes('no app')) {
-                                    toast.info('No threat intel apps configured. Add one to run enrichments.');
-                                    setShowThreatIntelDrawer(true);
-                                    return;
-                                  }
-                                  console.log(`[Observable] ${actionName} result:`, result);
-                                  toast.success(`Search completed for ${obs.type}: ${obs.value}`);
-                                } else {
-                                  const reason = result?.reason || result?.error || result?.message || '';
-                                  // Any non-ok response from this endpoint means the user needs to configure threat intel apps
-                                  toast.info(reason || 'No threat intel apps configured. Add one to run enrichments.');
-                                  setShowThreatIntelDrawer(true);
-                                }
-                              } catch (err) {
-                                console.error('[Observable] search error:', err);
-                                toast.error('Failed to run enrichment search');
-                              }
-                            }}
-                            sx={{
-                              p: 0.5,
-                              color: 'hsl(var(--muted-foreground))',
-                              '&:hover': { color: 'hsl(var(--primary))', bgcolor: 'hsl(var(--accent))' },
-                            }}
-                          >
-                            <SearchIcon sx={{ fontSize: 16 }} />
-                          </IconButton>
+                        <Tooltip
+                          title={`"${actionName}" is not enabled for your organization yet — we will be turning this on in a future update.`}
+                          arrow
+                        >
+                          {/* Span wrapper lets the tooltip still fire on a disabled IconButton. */}
+                          <span>
+                            <IconButton
+                              size="small"
+                              disabled
+                              onClick={(e) => e.stopPropagation()}
+                              sx={{
+                                p: 0.5,
+                                color: 'hsl(var(--muted-foreground))',
+                                '&.Mui-disabled': {
+                                  color: 'hsl(var(--muted-foreground) / 0.5)',
+                                },
+                              }}
+                            >
+                              <SearchIcon sx={{ fontSize: 16 }} />
+                            </IconButton>
+                          </span>
                         </Tooltip>
                         {obs._source === 'manual' && (
                           <IconButton
