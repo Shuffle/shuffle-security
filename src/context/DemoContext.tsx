@@ -146,22 +146,22 @@ export const TOUR_STEPS: TourStep[] = [
   },
   {
     id: 'incident-detail',
-    title: 'Watch the timeline come alive',
-    body: 'Background automation is enriching this incident in real time — observables get extracted, threat intel runs, and the agent looks for related activity. Ask a question, then watch a correlated detection arrive.',
+    title: 'Read the timeline',
+    body: 'Background automation is enriching this incident in real time. Find the attacker IP on the timeline, ask the agent a question, and watch a correlated detection arrive.',
     bullets: [
-      'Wait for Observables to populate — that proves background enrichment is running',
+      'Open the Timeline and click the IP observable that was extracted',
       'Ask the agent a question in the Timeline (e.g. "@agent what should I do next?")',
       'A correlated Sliver C2 detection will then arrive on its own',
     ],
     requirement: {
-      label: 'Wait for enrichment, ask the agent, see the correlation',
+      label: 'Find the IP on the timeline, ask the agent, see the correlation',
       targetSelector: '[data-tour="incident-activity-feed"]',
     },
     subGoals: [
       {
-        id: 'incident-detail:observables-present',
-        label: 'Observables show up — background enrichment is running',
-        targetSelector: '[data-tour="incident-tab-observables"]',
+        id: 'incident-detail:timeline-ip',
+        label: 'Find the attacker IP on the Timeline',
+        targetSelector: '[data-tour="incident-activity-feed"]',
       },
       {
         id: 'incident-detail:ask-agent',
