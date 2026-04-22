@@ -4325,8 +4325,8 @@ const IncidentDetailPage = () => {
           {/* Metrics Section */}
           <Section title="Metrics" icon={TrendingUpIcon} defaultOpen={false}>
             <Box sx={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(2, 1fr)', 
+              display: 'flex',
+              flexDirection: 'column',
               gap: 2, 
             }}>
               {/* MTTD */}
