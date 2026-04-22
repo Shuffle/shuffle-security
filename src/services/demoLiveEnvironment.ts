@@ -253,12 +253,12 @@ const initThreatFeedsDefaults = async (): Promise<void> => {
 // ─── Fake Host Monitor injection ────────────────────────────────────────────
 // The demo narrative pivots on Sarah Chen's compromised laptop FIN-LAPTOP-04.
 // To let the AI agent propose "Isolate host" and the user approve it, the
-// host must show up on /monitors. We do this in two parts:
-//   1. Seed `shuffle-security_sensors` with the rich host record so the
-//      Monitors UI renders software, code-scanner, response-actions, etc.
-//   2. PUT /api/v1/setenvironments to inject a stub host into a sensor_group
-//      environment (creating "shuffle_sensors" if none exists yet).
-// Both records are tagged demo:true so cleanup can find them later.
+// host must show up on /monitors. We do this purely on the frontend by
+// seeding `shuffle-security_sensors` with the rich host record (recent
+// checkin included). The Monitors list page surfaces sensor-datastore
+// records that aren't backed by a real environment host, so no
+// /api/v1/setenvironments mutation is required. The record is tagged
+// demo:true so cleanup can find it later.
 
 export const DEMO_HOST_HOSTNAME = 'FIN-LAPTOP-04';
 export const DEMO_HOST_UUID = 'demo-host-fin-laptop-04';
