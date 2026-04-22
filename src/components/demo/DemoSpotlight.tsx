@@ -77,9 +77,13 @@ export const DemoSpotlight = () => {
     return () => observer.disconnect();
   }, [drawerOpen]);
 
+  // For optional targets, keep the spotlight active even after the step is
+  // unlocked — the goal is to nudge engagement, not to gate progress.
+  const suppressForUnlock = currentStepUnlocked && !isOptionalTarget;
+
   // Find + track the target element. Polls because the DOM may load async.
   useEffect(() => {
-    if (!drawerOpen || !selector || currentStepUnlocked || modalOpen) {
+    if (!drawerOpen || !selector || suppressForUnlock || modalOpen) {
       setRect(null);
       return;
     }
@@ -113,18 +117,18 @@ export const DemoSpotlight = () => {
     };
     raf = window.requestAnimationFrame(tick);
     return () => window.cancelAnimationFrame(raf);
-  }, [drawerOpen, selector, currentStepUnlocked, modalOpen]);
+  }, [drawerOpen, selector, suppressForUnlock, modalOpen]);
 
   // Scroll target into view once when it first appears
   useEffect(() => {
-    if (!selector || currentStepUnlocked || modalOpen) return;
+    if (!selector || suppressForUnlock || modalOpen) return;
     const el = document.querySelector(selector) as HTMLElement | null;
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
-  }, [selector, currentStepUnlocked, step, modalOpen]);
+  }, [selector, suppressForUnlock, step, modalOpen]);
 
-  if (!drawerOpen || !rect || currentStepUnlocked || modalOpen) return null;
+  if (!drawerOpen || !rect || suppressForUnlock || modalOpen) return null;
 
   const x = rect.left - PADDING;
   const y = rect.top - PADDING;
