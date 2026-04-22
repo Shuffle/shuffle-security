@@ -1755,7 +1755,7 @@ const IncidentsPage = () => {
             isSyncing={isSyncing}
             isUpdatingApps={isUpdatingApps}
             isLoading={ingestionLoading}
-            onSyncNow={ingestWorkflowId ? triggerSync : undefined}
+            onSyncNow={ingestWorkflowId ? () => triggerSync() : undefined}
             onCreateIncident={() => setCreateDialogOpen(true)}
             // During the demo tour, the "Add ingestion source" button must
             // open the in-page AppSearchDrawer (so the tour spotlight has a
