@@ -62,7 +62,7 @@ export const TOUR_STEPS: TourStep[] = [
   {
     id: 'welcome',
     title: 'Welcome to your demo',
-    body: 'We will get you familiar with the platform — incident management, enrichment, automation, and AI agent actions. Here is the plan:',
+    body: 'We will walk you through incident management, enrichment, automation, and a live AI agent action. Just follow the highlighted prompts at each step — open "Detailed steps" any time you want the full picture.',
     bullets: [
       '1. Get familiar with incident management',
       '2. Connect ingestion sources',
