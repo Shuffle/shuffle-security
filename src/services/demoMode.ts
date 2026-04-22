@@ -131,6 +131,10 @@ const recordSeed = (category: string, keys: string[]) => {
 const FIRST_ENRICHMENT_DELAY_MS = 4000;
 const ENRICHMENT_INTERVAL_MS = 3500;
 
+// Kept for future use — no demo incident currently pre-bakes enrichments,
+// but the helper stays available for any seeder that needs to drip observables
+// onto a freshly-written incident over time.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const scheduleDemoObservableEnrichment = (
   key: string,
   observables: PendingObservable[],
