@@ -33,6 +33,15 @@ export interface TourStepSubGoal {
   id: string;
   /** Short human label shown in the drawer. */
   label: string;
+  /** When true, this sub-goal does NOT block the step from advancing. It is
+   *  shown as an "Optional" suggestion and gets its own (secondary) spotlight
+   *  once all required sub-goals are done. */
+  optional?: boolean;
+  /** Optional CSS selector for a per-sub-goal spotlight target. Used when
+   *  the spotlight should move to a different element after a previous
+   *  sub-goal is completed (e.g. point at the Automation button after the
+   *  webhook is enabled). */
+  targetSelector?: string;
 }
 
 export interface TourStep {
