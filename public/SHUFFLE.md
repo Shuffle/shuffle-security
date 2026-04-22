@@ -20,9 +20,10 @@ hand-holding.
 
 1. **Pick a base URL** - `https://shuffler.io` (EU), `https://us.shuffler.io`
    (US), or your self-hosted host.
-2. **Get an API key** - UI -> user settings -> "API key". Send as
-   `Authorization: Bearer <key>` on every request, or use a session cookie
-   (never both).
+2. **Get an API key** - either grab one from UI -> user settings -> "API key",
+   or bootstrap from scratch with the register / generateapikey flow below
+   (section 0.1). Send as `Authorization: Bearer <key>` on every request, or
+   use a session cookie (never both).
 3. **Call `GET /api/v1/getinfo`** - source of truth for the active user, the
    active org, and the user's `region_url`. Retarget your client to that URL
    if it differs from where you logged in.
