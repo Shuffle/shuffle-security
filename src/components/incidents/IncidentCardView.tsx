@@ -33,20 +33,18 @@ import { useSourceAppImage } from '@/hooks/useSourceAppImage';
  *      when the user has not explicitly added that app to their ingestion
  *      pipeline yet.
  */
-const useResolvedSourceImage = (
-  source: string | undefined,
-  ingestionApps: IngestionApp[],
-): string | undefined => {
-  const direct = source
-    ? ingestionApps.find(app =>
-        app.name.toLowerCase().replace(/[\s_-]/g, '') ===
-          source.toLowerCase().replace(/[\s_-]/g, ''),
-      )?.image
-    : undefined;
-  // Always call the hook (rules of hooks) — but skip the lookup work when we
-  // already have a direct match by passing null.
-  const fallback = useSourceAppImage(direct ? null : source);
-  return direct || fallback || undefined;
+const ResolvedSourceImage = ({
+  source,
+  directImage,
+  children,
+}: {
+  source: string | undefined | null;
+  directImage: string | undefined;
+  children: (image: string | undefined) => React.ReactNode;
+}) => {
+  // Only run Algolia/auth-app lookup when we don't already have a direct hit.
+  const fallback = useSourceAppImage(directImage ? null : source ?? null);
+  return <>{children(directImage || fallback || undefined)}</>;
 };
 
 interface DisplayIncident {
