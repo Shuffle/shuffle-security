@@ -305,8 +305,19 @@ export const STEP_SEEDERS: Record<string, () => Promise<number>> = {
   // any other supporting incidents are seeded later still. We intentionally
   // do not drop the full batch here so the user is not overwhelmed on
   // arrival to /incidents.
+  //
+  // BACKGROUND: Force-enable the curated default threat feeds (no-op when
+  // already populated) so the IOC parser starts ingesting real indicators
+  // *before* the incident lands. We then try to pick a real IP + domain
+  // from `ioc_ip` / `ioc_domain` so the incident's observables match known
+  // IOCs out of the box — much more realistic than fake "example" values.
   'incidents-list': async () => {
-    const item = buildDemoFocusIncident();
+    // Fire-and-forget: we don't want to block the UI on a feed write.
+    void forceEnableDefaultThreatFeeds();
+    // Try to pick real IOCs. If categories are empty (parser hasn't caught
+    // up yet) the builder falls back to its static defaults.
+    const overrides = await resolveIocOverrides();
+    const item = buildDemoFocusIncident(overrides);
     const res = await setDatastoreItems([item], DATASTORE_CATEGORIES.INCIDENTS);
     if (!res.success) throw new Error(res.error || 'Failed to seed demo focus incident');
     recordSeed(DATASTORE_CATEGORIES.INCIDENTS, [item.key]);
