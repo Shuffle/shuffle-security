@@ -47,6 +47,8 @@ export const DemoTourDrawer = () => {
     toggleDock,
     forceGenerateSingleIncident,
     isForceGeneratingSingle,
+    forceGenerateWazuhIncident,
+    isForceGeneratingWazuh,
     hasDemoIncidents,
     isOnIncidentDetail,
     attentionPulse,
