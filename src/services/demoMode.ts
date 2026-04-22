@@ -202,8 +202,10 @@ export const STEP_SEEDERS: Record<string, () => Promise<number>> = {
     if (!res.success) throw new Error(res.error || 'Failed to seed demo focus incident');
     recordSeed(DATASTORE_CATEGORIES.INCIDENTS, [item.key]);
     broadcastRefresh(DATASTORE_CATEGORIES.INCIDENTS);
-    // Trickle the observables in over the next ~20s as background enrichments.
-    scheduleDemoObservableEnrichment(item.key, item.pendingObservables);
+    // NOTE: The focus phishing incident intentionally lands WITHOUT any
+    // background-trickled enrichments. Real Shuffle will surface observables
+    // dynamically once it analyses the incident, and we want that flow to
+    // feel organic instead of pre-baked by the demo.
     return 1;
   },
 
@@ -384,7 +386,8 @@ export const forceCreateSingleDemoIncident = async (): Promise<number> => {
   if (!res.success) throw new Error(res.error || 'Failed to create demo focus incident');
   recordSeed(DATASTORE_CATEGORIES.INCIDENTS, [item.key]);
   broadcastRefresh(DATASTORE_CATEGORIES.INCIDENTS);
-  scheduleDemoObservableEnrichment(item.key, item.pendingObservables);
+  // The focus phishing incident lands "raw" — Shuffle will dynamically add
+  // observables in the background once it analyses the incident.
   return 1;
 };
 
