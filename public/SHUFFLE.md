@@ -87,8 +87,11 @@ Notes:
 - `generateapikey` rotates the key - any previous key for that user stops
   working. Only call it when the user has no key, or when you explicitly want
   to rotate.
-- On Shuffle Cloud, public registration may be disabled per-tenant. Self-hosted
-  installs always allow it unless the admin turns it off.
+- On Shuffle Cloud, public registration may be disabled per-tenant. A
+  self-hosted Shuffle (deployed via the
+  [install guide](https://github.com/shuffle/shuffle/blob/main/.github/install-guide.md))
+  always allows it unless the admin turns it off - making it the easiest
+  target for fully automated, agent-driven bootstrap.
 
 ---
 
