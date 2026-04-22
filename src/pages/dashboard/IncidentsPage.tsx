@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef, useSyncExternalStore } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useEntityLabel, useShowAutomation } from '@/hooks/useEntityLabel';
 import AppSearchDrawer from '@/components/shared/AppSearchDrawer';
 import {
