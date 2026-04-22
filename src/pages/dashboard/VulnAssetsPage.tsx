@@ -161,6 +161,19 @@ const fetchSensorGroups = async (): Promise<{ groups: MonitoringGroup[]; allEnvs
       console.warn('[VulnAssets] Host supplement load issues:', supplements.errors);
     }
 
+    // While demo mode is active, force the demo host's check-in to within
+    // the last minute so /monitors always shows it as freshly online —
+    // regardless of how stale the seeded datastore record may be.
+    const demoActive = isDemoActive();
+    const demoHostnameLower = DEMO_HOST_HOSTNAME.toLowerCase();
+    const bumpDemoCheckin = <T extends Record<string, unknown>>(h: T): T => {
+      if (!demoActive) return h;
+      const hn = String((h as { hostname?: string }).hostname || '').toLowerCase().trim();
+      if (hn !== demoHostnameLower) return h;
+      const fresh = Math.floor(Date.now() / 1000) - Math.floor(Math.random() * 55) - 5;
+      return { ...h, checkin: fresh, last_checkin: fresh };
+    };
+
     const groups = envs
       .filter(e => e.sensor_group === true)
       .map(e => ({
@@ -169,7 +182,7 @@ const fetchSensorGroups = async (): Promise<{ groups: MonitoringGroup[]; allEnvs
         queue: e.Name.replace(/ +/g, '-'),
         auth: String(e.auth || ''),
         org_id: String(e.org_id || ''),
-        hosts: mergeHosts<SensorHost>(Array.isArray(e.sensor_hosts) ? e.sensor_hosts : [], supplements),
+        hosts: mergeHosts<SensorHost>(Array.isArray(e.sensor_hosts) ? e.sensor_hosts : [], supplements).map(bumpDemoCheckin),
       }));
 
     // Surface sensor-datastore-only hosts (records present in
@@ -186,7 +199,8 @@ const fetchSensorGroups = async (): Promise<{ groups: MonitoringGroup[]; allEnvs
     const orphanSensorHosts: SensorHost[] = [];
     for (const [hostname, sensor] of supplements.sensorsByHost.entries()) {
       if (knownHostnames.has(hostname)) continue;
-      orphanSensorHosts.push({ hostname, ...(sensor as Record<string, unknown>) } as unknown as SensorHost);
+      const stub = { hostname, ...(sensor as Record<string, unknown>) } as unknown as SensorHost;
+      orphanSensorHosts.push(bumpDemoCheckin(stub));
     }
     if (orphanSensorHosts.length > 0) {
       if (groups.length > 0) {
