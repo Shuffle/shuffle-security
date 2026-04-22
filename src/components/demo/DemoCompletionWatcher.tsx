@@ -76,7 +76,7 @@ export const DemoCompletionWatcher = () => {
         const added = await seedDemoWazuhImplantIncident();
         wazuhSeededRef.current = true;
         if (added > 0) {
-          toast.warning('New critical incident: Wazuh detected a Sliver C2 implant.', {
+          toast.warning('New critical incident: Sliver C2 implant detected.', {
             duration: 4500,
           });
         }
