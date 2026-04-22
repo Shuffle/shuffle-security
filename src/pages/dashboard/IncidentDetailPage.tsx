@@ -2484,7 +2484,7 @@ const IncidentDetailPage = () => {
                 </IconButton>
               </Box>
             )}
-            <Box sx={{ position: 'relative' }}>
+            <Box data-tour="incident-comment-input" sx={{ position: 'relative' }}>
               <MentionInput
                 value={newComment}
                 onChange={setNewComment}
