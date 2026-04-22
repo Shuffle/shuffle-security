@@ -12,6 +12,7 @@
 import { setDatastoreItems, setDatastoreItem, getDatastoreItem, deleteDatastoreItem, DATASTORE_CATEGORIES, getDatastoreByCategory } from '@/services/datastore';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 import { restoreOriginalIngestTicketsApps } from '@/services/demoLiveEnvironment';
+import { DEFAULT_THREAT_FEEDS, type ThreatFeed } from '@/hooks/useThreatFeeds';
 import {
   buildDemoFocusIncident,
   buildDemoWazuhImplantIncident,
@@ -21,12 +22,20 @@ import {
   DEMO_FLAG_KEY,
   DEMO_ACTIVE_KEY,
   DEMO_SEEDED_STEPS_KEY,
+  type DemoIocOverrides,
   type PendingObservable,
 } from '@/lib/demoSeedData';
 
 const VULNS_CATEGORY = 'shuffle-security_vulnerabilities';
 const SENSORS_CATEGORY = 'shuffle-security_sensors';
 const AGENTS_CATEGORY = 'shuffle-security_agents';
+// Real-IOC categories populated by the backend's threat-feed parser. Keys
+// are raw IPs / domains; values are STIX 2.1 indicators.
+const IOC_IP_CATEGORY = 'ioc_ip';
+const IOC_DOMAIN_CATEGORY = 'ioc_domain';
+// Stash the IOC overrides chosen at step 1 so the Wazuh follow-up reuses
+// the exact same IP + domain (correlations rely on byte-identical values).
+const DEMO_IOC_OVERRIDES_KEY = 'shuffle_demo_ioc_overrides';
 
 
 /**
@@ -114,6 +123,102 @@ const recordSeed = (category: string, keys: string[]) => {
   localStorage.setItem(DEMO_ACTIVE_KEY, 'true');
 };
 
+// ─── IOC helpers ─────────────────────────────────────────────────────────────
+// We want demo incidents to feature *real* IOCs from the user's threat feeds
+// instead of made-up "example" values, so the IOC parser will (a) recognise
+// them as known-bad and (b) link the incident to the actual STIX indicator.
+//
+// 1. `forceEnableDefaultThreatFeeds` writes the curated DEFAULT_THREAT_FEEDS
+//    list into the threat-feeds datastore (no-op if already populated). This
+//    causes the backend parser to start ingesting the feeds in the background.
+// 2. `pickRandomIocs` reads `ioc_ip` / `ioc_domain` and picks one of each at
+//    random. If the categories are empty (parser hasn't caught up yet) we
+//    return undefined so the caller can fall back to static defaults.
+// 3. The chosen pair is cached in localStorage so the Wazuh follow-up
+//    incident reuses the exact same IP + domain → correlations match.
+
+const readIocOverrides = (): DemoIocOverrides | null => {
+  try {
+    const raw = localStorage.getItem(DEMO_IOC_OVERRIDES_KEY);
+    return raw ? JSON.parse(raw) as DemoIocOverrides : null;
+  } catch { return null; }
+};
+const writeIocOverrides = (overrides: DemoIocOverrides) => {
+  try { localStorage.setItem(DEMO_IOC_OVERRIDES_KEY, JSON.stringify(overrides)); } catch { /* ignore */ }
+};
+const clearIocOverrides = () => {
+  try { localStorage.removeItem(DEMO_IOC_OVERRIDES_KEY); } catch { /* ignore */ }
+};
+
+/**
+ * Ensure the user's threat feed list is populated with the curated defaults.
+ * Idempotent: skips writes when the threat-feeds datastore already has at
+ * least one entry. Best-effort — failures are logged but never thrown.
+ */
+export const forceEnableDefaultThreatFeeds = async (): Promise<void> => {
+  try {
+    const existing = await getDatastoreByCategory(DATASTORE_CATEGORIES.THREAT_FEEDS);
+    if (existing.success && (existing.data?.length || 0) > 0) return;
+    const items = DEFAULT_THREAT_FEEDS.map((feed: ThreatFeed) => ({
+      key: feed.id,
+      value: { ...feed, enabled: true },
+    }));
+    const res = await setDatastoreItems(items, DATASTORE_CATEGORIES.THREAT_FEEDS);
+    if (!res.success) {
+      console.warn('[demo] failed to seed default threat feeds', res.error);
+      return;
+    }
+    broadcastRefresh(DATASTORE_CATEGORIES.THREAT_FEEDS);
+  } catch (err) {
+    console.warn('[demo] forceEnableDefaultThreatFeeds error', err);
+  }
+};
+
+const pickRandom = <T,>(arr: T[]): T | undefined => {
+  if (!arr || arr.length === 0) return undefined;
+  return arr[Math.floor(Math.random() * arr.length)];
+};
+
+/**
+ * Try to pick a random IP from `ioc_ip` and a random domain from `ioc_domain`.
+ * Returns undefined fields when a category is empty (the backend parser may
+ * not have populated it yet — caller should fall back to static defaults).
+ */
+export const pickRandomIocs = async (): Promise<DemoIocOverrides> => {
+  const out: DemoIocOverrides = {};
+  try {
+    const ipRes = await getDatastoreByCategory(IOC_IP_CATEGORY);
+    if (ipRes.success && ipRes.data) {
+      const ipKey = pickRandom(ipRes.data.map(i => i.key).filter(Boolean));
+      if (ipKey) out.attackerIp = ipKey;
+    }
+  } catch (err) { console.warn('[demo] pick ioc_ip failed', err); }
+  try {
+    const domRes = await getDatastoreByCategory(IOC_DOMAIN_CATEGORY);
+    if (domRes.success && domRes.data) {
+      const domKey = pickRandom(domRes.data.map(i => i.key).filter(Boolean));
+      if (domKey) out.lureDomain = domKey;
+    }
+  } catch (err) { console.warn('[demo] pick ioc_domain failed', err); }
+  return out;
+};
+
+/**
+ * Resolve IOC overrides for the demo, preferring values cached at step 1 so
+ * the focus + Wazuh incidents share the exact same IP/domain. Falls back to
+ * a fresh pick if nothing is cached.
+ */
+const resolveIocOverrides = async (): Promise<DemoIocOverrides> => {
+  const cached = readIocOverrides();
+  if (cached?.attackerIp && cached?.lureDomain) return cached;
+  const fresh = await pickRandomIocs();
+  // Merge with whatever was cached (in case only one half resolved earlier).
+  const merged: DemoIocOverrides = { ...cached, ...fresh };
+  if (merged.attackerIp || merged.lureDomain) writeIocOverrides(merged);
+  return merged;
+};
+
+
 /**
  * Demo enrichment scheduler.
  *
@@ -200,8 +305,19 @@ export const STEP_SEEDERS: Record<string, () => Promise<number>> = {
   // any other supporting incidents are seeded later still. We intentionally
   // do not drop the full batch here so the user is not overwhelmed on
   // arrival to /incidents.
+  //
+  // BACKGROUND: Force-enable the curated default threat feeds (no-op when
+  // already populated) so the IOC parser starts ingesting real indicators
+  // *before* the incident lands. We then try to pick a real IP + domain
+  // from `ioc_ip` / `ioc_domain` so the incident's observables match known
+  // IOCs out of the box — much more realistic than fake "example" values.
   'incidents-list': async () => {
-    const item = buildDemoFocusIncident();
+    // Fire-and-forget: we don't want to block the UI on a feed write.
+    void forceEnableDefaultThreatFeeds();
+    // Try to pick real IOCs. If categories are empty (parser hasn't caught
+    // up yet) the builder falls back to its static defaults.
+    const overrides = await resolveIocOverrides();
+    const item = buildDemoFocusIncident(overrides);
     const res = await setDatastoreItems([item], DATASTORE_CATEGORIES.INCIDENTS);
     if (!res.success) throw new Error(res.error || 'Failed to seed demo focus incident');
     recordSeed(DATASTORE_CATEGORIES.INCIDENTS, [item.key]);
@@ -385,7 +501,10 @@ export const forceCreateSingleDemoIncident = async (): Promise<number> => {
     }
   } catch { /* best-effort */ }
 
-  const item = buildDemoFocusIncident();
+  // Same as the step seeder: ensure feeds are enabled and reuse / pick real IOCs.
+  void forceEnableDefaultThreatFeeds();
+  const overrides = await resolveIocOverrides();
+  const item = buildDemoFocusIncident(overrides);
   const res = await setDatastoreItems([item], DATASTORE_CATEGORIES.INCIDENTS);
   if (!res.success) throw new Error(res.error || 'Failed to create demo focus incident');
   recordSeed(DATASTORE_CATEGORIES.INCIDENTS, [item.key]);
@@ -411,7 +530,11 @@ export const seedDemoWazuhImplantIncident = async (): Promise<number> => {
   const existing = idx[DATASTORE_CATEGORIES.INCIDENTS] || [];
   if (existing.some(k => k.includes('-wazuh'))) return 0;
 
-  const item = buildDemoWazuhImplantIncident();
+  // Reuse the same IOC overrides chosen at step 1 so the IP + domain on the
+  // Wazuh follow-up are byte-identical to the focus incident — required for
+  // the correlation engine to link them.
+  const overrides = await resolveIocOverrides();
+  const item = buildDemoWazuhImplantIncident(overrides);
 
   // Try to resolve the Ingestion Webhook URL from the user's workflows.
   let webhookUrl: string | null = null;
