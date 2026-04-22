@@ -550,6 +550,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                     <ListItemButton
                       component={Link}
                       to={item.path!}
+                      data-tour={item.path === entityBasePath ? 'sidebar-incidents-link' : undefined}
                       onClick={() => {
                         // Always switch the expanded group to this item synchronously
                         // (avoids a brief flicker where the previously-open group stays
