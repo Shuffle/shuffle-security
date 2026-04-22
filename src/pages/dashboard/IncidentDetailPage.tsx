@@ -3464,11 +3464,30 @@ const IncidentDetailPage = () => {
         const isStepHighlighted = item.kind === 'observable-added'
           && item.id.startsWith('step-obs-')
           && newlyArrivedObservables.has(item.id.slice('step-obs-'.length));
+
+        // Decide whether the pill should be clickable and where it jumps to.
+        // Observable pills jump to the matching row in the Observables tab;
+        // correlation pills jump to the Correlations tab (and to the matching
+        // observable row when the correlation was discovered per-observable).
+        let pillOnClick: (() => void) | undefined;
+        if (item.kind === 'observable-added' && item.id.startsWith('step-obs-')) {
+          const obsKey = item.id.slice('step-obs-'.length);
+          pillOnClick = () => focusObservableFromTimeline(obsKey);
+        } else if (item.kind === 'correlation-found') {
+          if (item.id.startsWith('step-corr-obs-')) {
+            const obsKey = item.id.slice('step-corr-obs-'.length).toLowerCase();
+            pillOnClick = () => focusObservableFromTimeline(obsKey);
+          } else {
+            pillOnClick = () => focusCorrelationFromTimeline(null);
+          }
+        }
+        const isClickable = !!pillOnClick;
         return (
           <Box
             key={item.id}
             data-timeline-compact="true"
             className={isStepHighlighted ? 'incident-new-flash' : undefined}
+            onClick={pillOnClick}
             sx={{
               display: 'flex',
               alignItems: 'center',
@@ -3480,6 +3499,14 @@ const IncidentDetailPage = () => {
               bgcolor: `${cfg.color}0F`,
               border: `1px solid ${cfg.color}33`,
               maxWidth: 'fit-content',
+              cursor: isClickable ? 'pointer' : 'default',
+              transition: 'background-color 0.15s ease, border-color 0.15s ease',
+              ...(isClickable && {
+                '&:hover': {
+                  bgcolor: `${cfg.color}1F`,
+                  borderColor: `${cfg.color}66`,
+                },
+              }),
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', color: cfg.color }}>
