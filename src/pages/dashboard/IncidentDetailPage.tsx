@@ -5613,23 +5613,39 @@ const IncidentDetailPage = () => {
                           // Only count correlations with refs OTHER than the current incident.
                           const meaningful = filterMeaningfulCorrelations(corr.data, id);
                           if (meaningful.length === 0) return null;
+                          // Highlight the badge in red when ANY correlation
+                          // points to a known IOC / threat-feed entry.
+                          const iocHit = meaningful.some(hasIocMatch);
                           return (
-                            <Chip
-                              label={`${meaningful.length} corr`}
-                              size="small"
-                              variant="outlined"
-                              onClick={(e) => { e.stopPropagation(); setObsCorrelationAnchor({ el: e.currentTarget, obsKey }); }}
-                              sx={{
-                                height: 20,
-                                fontSize: '0.6rem',
-                                fontWeight: 600,
-                                cursor: 'pointer',
-                                bgcolor: 'transparent',
-                                borderColor: 'rgba(59, 130, 246, 0.4)',
-                                color: '#3b82f6',
-                                '&:hover': { bgcolor: 'rgba(59, 130, 246, 0.08)' },
-                              }}
-                            />
+                            <Tooltip
+                              title={
+                                iocHit
+                                  ? 'This observable matches a known Indicator of Compromise — open to investigate.'
+                                  : `${meaningful.length} correlation${meaningful.length !== 1 ? 's' : ''} found`
+                              }
+                              arrow
+                            >
+                              <Chip
+                                icon={iocHit ? <WarningAmberIcon sx={{ fontSize: 12, color: 'hsl(var(--destructive)) !important' }} /> : undefined}
+                                label={iocHit ? `${meaningful.length} IOC` : `${meaningful.length} corr`}
+                                size="small"
+                                variant="outlined"
+                                onClick={(e) => { e.stopPropagation(); setObsCorrelationAnchor({ el: e.currentTarget, obsKey }); }}
+                                sx={{
+                                  height: 20,
+                                  fontSize: '0.6rem',
+                                  fontWeight: 700,
+                                  cursor: 'pointer',
+                                  bgcolor: iocHit ? 'hsl(var(--destructive) / 0.1)' : 'transparent',
+                                  borderColor: iocHit ? 'hsl(var(--destructive) / 0.5)' : 'rgba(59, 130, 246, 0.4)',
+                                  color: iocHit ? 'hsl(var(--destructive))' : '#3b82f6',
+                                  '& .MuiChip-icon': { ml: 0.5, mr: -0.25 },
+                                  '&:hover': {
+                                    bgcolor: iocHit ? 'hsl(var(--destructive) / 0.16)' : 'rgba(59, 130, 246, 0.08)',
+                                  },
+                                }}
+                              />
+                            </Tooltip>
                           );
                         })()}
                         <Tooltip
