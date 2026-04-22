@@ -309,6 +309,28 @@
   }
 }
 
+/* Highlight pulse used when new observables / activity items arrive
+   in the background, so the user can spot them without losing focus. */
+@keyframes incident-new-flash {
+  0% {
+    box-shadow: 0 0 0 0 hsl(var(--primary) / 0.55);
+    background-color: hsl(var(--primary) / 0.18);
+  }
+  60% {
+    box-shadow: 0 0 0 4px hsl(var(--primary) / 0);
+    background-color: hsl(var(--primary) / 0.10);
+  }
+  100% {
+    box-shadow: 0 0 0 0 hsl(var(--primary) / 0);
+    background-color: transparent;
+  }
+}
+
+.incident-new-flash {
+  animation: incident-new-flash 5.5s ease-out 1;
+  border-radius: 8px;
+}
+
 /* Make the edge updater handle bigger and more visible */
 .react-flow__edgeupdater {
   width: 20px !important;

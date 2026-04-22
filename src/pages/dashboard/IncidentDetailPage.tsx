@@ -539,6 +539,14 @@ const IncidentDetailPage = () => {
   // enrichments stream in shortly after, instead of an empty list.
   const FRESH_OBS_WINDOW_MS = 2 * 60 * 1000;
   const [nowTick, setNowTick] = useState(() => Date.now());
+  // Keys of items that arrived via background poll — used to flash a
+  // highlight so the user can spot the new content without losing focus.
+  // Observable keys: `${type}::${value}` (lowercase). Activity keys: actItem.id.
+  const [newlyArrivedObservables, setNewlyArrivedObservables] = useState<Set<string>>(() => new Set());
+  const [newlyArrivedActivity, setNewlyArrivedActivity] = useState<Set<string>>(() => new Set());
+  // Track the user's most recent keystroke so background polls can defer
+  // while they're actively typing in a textfield.
+  const lastKeystrokeRef = useRef<number>(0);
   const [showThreatIntelDrawer, setShowThreatIntelDrawer] = useState(false);
   const [showForwardAppsDrawer, setShowForwardAppsDrawer] = useState(false);
   const [newObservableType, setNewObservableType] = useState('ip');
@@ -1504,6 +1512,158 @@ const IncidentDetailPage = () => {
     const expireId = window.setTimeout(() => setNowTick(Date.now()), FRESH_OBS_WINDOW_MS - age + 50);
     return () => { window.clearInterval(tickId); window.clearTimeout(expireId); };
   }, [incident?.createdTs]);
+
+  // ── Keystroke tracker ──────────────────────────────────────────────────
+  // The background poll defers when the user has typed in the last 1.5s so
+  // we never disrupt active typing in a textfield.
+  useEffect(() => {
+    const onKey = () => { lastKeystrokeRef.current = Date.now(); };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, []);
+
+  // ── Background incident poll ───────────────────────────────────────────
+  // Periodically re-fetches the incident from the datastore so freshly
+  // computed observables / enrichments / activity stream in without a
+  // page reload. Carefully avoids touching any field the user is editing.
+  useEffect(() => {
+    if (!incident || !id || isPublicView || loading) return;
+    // Poll faster while the incident is "fresh" (just created), then slow
+    // down to a gentle background heartbeat for the rest of the session.
+    const ageMs = Date.now() - (incident.createdTs || 0);
+    const intervalMs = ageMs < FRESH_OBS_WINDOW_MS ? 5000 : 15000;
+
+    let cancelled = false;
+    const tick = async () => {
+      // Defer if the user is actively typing — we'll catch up on the next tick.
+      if (Date.now() - lastKeystrokeRef.current < 1500) return;
+      // Defer if a save is queued / in flight to avoid a stale overwrite.
+      if (pendingSaveRef.current || isSaving) return;
+      try {
+        const result = await getDatastoreItem(id, DATASTORE_CATEGORIES.INCIDENTS, crossOrgId || undefined);
+        if (cancelled || !result.success || !result.item) return;
+        const reParsed = parseIncidentFromDatastore({
+          key: result.item.key || id,
+          value: result.item.value,
+          created: result.item.created,
+          edited: result.item.edited,
+          enrichments: result.item.enrichments,
+        });
+        if (!reParsed) return;
+
+        // ─ Enrichments: always replace, these are server-managed ───────
+        const newEnrichments = reParsed.enrichments || [];
+        setEnrichments(prev => {
+          const prevKeys = new Set(prev.map(e => `${(e.type || '').toLowerCase()}::${(e.value || e.data || '').toLowerCase()}`));
+          const added: string[] = [];
+          for (const e of newEnrichments) {
+            const k = `${(e.type || '').toLowerCase()}::${(e.value || e.data || '').toLowerCase()}`;
+            if (!prevKeys.has(k)) added.push(k);
+          }
+          if (added.length > 0) {
+            setNewlyArrivedObservables(s => {
+              const next = new Set(s);
+              added.forEach(k => next.add(k));
+              return next;
+            });
+            // Fade out the highlight after the animation completes.
+            window.setTimeout(() => {
+              setNewlyArrivedObservables(s => {
+                const next = new Set(s);
+                added.forEach(k => next.delete(k));
+                return next;
+              });
+            }, 6000);
+          }
+          return newEnrichments;
+        });
+
+        // ─ Manual observables: only adopt if not dirty (user hasn't edited)
+        const newObs = reParsed.observables || [];
+        const obsDirty = obsJsonRef.current !== initialValuesRef.current?.observables;
+        if (!obsDirty) {
+          setEditedObservables(prev => {
+            const prevKeys = new Set(prev.map(o => `${(o.type || '').toLowerCase()}::${(o.value || '').toLowerCase()}`));
+            const added: string[] = [];
+            for (const o of newObs) {
+              const k = `${(o.type || '').toLowerCase()}::${(o.value || '').toLowerCase()}`;
+              if (!prevKeys.has(k)) added.push(k);
+            }
+            if (added.length > 0) {
+              setNewlyArrivedObservables(s => {
+                const next = new Set(s);
+                added.forEach(k => next.add(k));
+                return next;
+              });
+              window.setTimeout(() => {
+                setNewlyArrivedObservables(s => {
+                  const next = new Set(s);
+                  added.forEach(k => next.delete(k));
+                  return next;
+                });
+              }, 6000);
+            }
+            return newObs;
+          });
+          // Keep snapshot in sync so auto-save doesn't fire from background poll.
+          if (initialValuesRef.current) {
+            initialValuesRef.current.observables = JSON.stringify(newObs);
+          }
+        }
+
+        // ─ Activity feed: only adopt if not dirty ──────────────────────
+        const newActivity = reParsed.activity || [];
+        setActivity(prev => {
+          // Only replace if the server has more / different items, otherwise
+          // we'd risk wiping an optimistic local addition (e.g. a comment
+          // posted milliseconds before the poll completed).
+          if (newActivity.length <= prev.length) return prev;
+          const prevIds = new Set(prev.map(a => a.id));
+          const added: string[] = [];
+          for (const a of newActivity) {
+            if (a.id && !prevIds.has(a.id)) added.push(a.id);
+          }
+          if (added.length > 0) {
+            setNewlyArrivedActivity(s => {
+              const next = new Set(s);
+              added.forEach(k => next.add(k));
+              return next;
+            });
+            window.setTimeout(() => {
+              setNewlyArrivedActivity(s => {
+                const next = new Set(s);
+                added.forEach(k => next.delete(k));
+                return next;
+              });
+            }, 6000);
+          }
+          return newActivity;
+        });
+
+        // ─ incident.editedTs / lightweight metadata refresh ────────────
+        setIncident(curr => {
+          if (!curr) return curr;
+          if ((reParsed.editedTs || 0) <= (curr.editedTs || 0)) return curr;
+          // Only refresh server-managed fields; preserve any in-flight user edits.
+          return {
+            ...curr,
+            editedTs: reParsed.editedTs,
+            enrichments: newEnrichments,
+            observables: obsDirty ? curr.observables : newObs,
+            activity: (reParsed.activity || []).length > (curr.activity?.length || 0) ? reParsed.activity : curr.activity,
+            rawOCSF: reParsed.rawOCSF,
+          };
+        });
+      } catch (err) {
+        // Silent: this is a background heartbeat, not a user action.
+        console.debug('[IncidentPoll] tick failed:', err);
+      }
+    };
+
+    const intervalId = window.setInterval(tick, intervalMs);
+    return () => { cancelled = true; window.clearInterval(intervalId); };
+  }, [incident?.id, id, isPublicView, loading, crossOrgId, isSaving, FRESH_OBS_WINDOW_MS, incident?.createdTs]);
+
 
   // Fetch per-observable correlations when observables tab is active
   useEffect(() => {
@@ -3254,10 +3414,18 @@ const IncidentDetailPage = () => {
           'incident-created':     { color: '#6495ed', icon: <HistoryIcon sx={{ fontSize: 12 }} /> },
         };
         const cfg = stepStyle[item.kind];
+        // Highlight observable-added pills when the underlying observable
+        // arrived in the most recent background poll. The id format is
+        // `step-obs-${type::value}` (lowercase) — matched against
+        // newlyArrivedObservables which uses the same key format.
+        const isStepHighlighted = item.kind === 'observable-added'
+          && item.id.startsWith('step-obs-')
+          && newlyArrivedObservables.has(item.id.slice('step-obs-'.length));
         return (
           <Box
             key={item.id}
             data-timeline-compact="true"
+            className={isStepHighlighted ? 'incident-new-flash' : undefined}
             sx={{
               display: 'flex',
               alignItems: 'center',
@@ -3307,9 +3475,11 @@ const IncidentDetailPage = () => {
       const canDelete = !isDeleted && isOwnMessage && actItem.type === 'comment' && messageAge < 5 * 60 * 1000;
       const timeRemaining = Math.max(0, Math.ceil((5 * 60 * 1000 - messageAge) / 60000));
 
+      const isActHighlighted = !!actItem.id && newlyArrivedActivity.has(actItem.id);
       return (
         <Box
           key={actItem.id}
+          className={isActHighlighted ? 'incident-new-flash' : undefined}
           sx={{
             display: 'flex',
             gap: 1.5,
@@ -5266,6 +5436,8 @@ const IncidentDetailPage = () => {
                     : [];
                   const actionName = `search_ioc_${obs.type.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
                   const obsRowKey = `${obs._source}-${obs._idx}`;
+                  const obsHighlightKey = `${(obs.type || '').toLowerCase()}::${(obs.value || '').toLowerCase()}`;
+                  const isNewlyArrived = newlyArrivedObservables.has(obsHighlightKey);
                   const isExpanded = expandedObsKey === obsRowKey;
                   const firstSeen = (obs as any).first_seen;
                   const lastSeen = (obs as any).last_seen;
@@ -5278,6 +5450,7 @@ const IncidentDetailPage = () => {
                   return (
                     <Box
                       key={obsRowKey}
+                      className={isNewlyArrived ? 'incident-new-flash' : undefined}
                       sx={{
                         display: 'flex',
                         flexDirection: 'column',
