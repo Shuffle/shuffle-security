@@ -24,6 +24,7 @@ import {
   PanelRight,
   PanelBottom,
 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { useDemo, TOUR_STEPS } from '@/context/DemoContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
