@@ -728,9 +728,6 @@ export const cleanupDemoData = async (): Promise<CleanupResult> => {
     } catch { /* best-effort */ }
   }
 
-  // Strip the injected sensor host stub from the environments API.
-  await removeDemoMonitorHostFromEnvs();
-
   // Restore the user's original "Ingest Tickets" apps (snapshotted at demo
   // start). Best-effort — never block cleanup on this.
   try {
