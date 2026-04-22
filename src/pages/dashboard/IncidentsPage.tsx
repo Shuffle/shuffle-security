@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef, useSyncExternalStore } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useEntityLabel, useShowAutomation } from '@/hooks/useEntityLabel';
 import AppSearchDrawer from '@/components/shared/AppSearchDrawer';
 import {
@@ -372,6 +372,7 @@ const IncidentsPage = () => {
   const isParentOrg = subOrgs.length > 0;
 
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   // Default child orgs to showing only their own incidents immediately
   const [filters, setFilters] = useState<Filters>(() => ({
     severity: null, status: null, tlp: null, assignee: null, source: null, tag: null,
@@ -1416,6 +1417,9 @@ const IncidentsPage = () => {
     await addItem(key, ocsf);
     await fetchItems();
     trackPredefinedEvent(GA_EVENTS.INCIDENT_CREATE);
+    // Auto-open the freshly created incident so the user can immediately
+    // see it materialize (and watch background enrichments stream in).
+    navigate(`/incidents/${key}`);
   };
 
   const resetToDefaults = () => {
