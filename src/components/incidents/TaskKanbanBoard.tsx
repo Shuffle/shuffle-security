@@ -32,21 +32,46 @@ const getLane = (
 ): LaneKey => {
   if (task.completed) return 'done';
   if (task._lane && laneKeys.includes(task._lane)) return task._lane;
+  // No explicit lane → always default to the first non-`done` lane (typically
+  // "To Do"). We deliberately do NOT auto-bump assigned/aiWorking tasks into
+  // a later lane: that hid genuine state-changes from the timeline and made
+  // it impossible to tell whether a task had actually been moved.
   const openLanes = laneKeys.filter((k) => k !== 'done');
-  if ((task.aiWorking || task.assignee) && openLanes.length > 1) {
-    return openLanes[1];
-  }
   return openLanes[0] || laneKeys[0];
 };
 
 const applyLane = (
   task: IncidentTask & { _lane?: LaneKey },
   lane: LaneKey,
+  laneKeys: LaneKey[],
+  by?: string,
 ): IncidentTask & { _lane?: LaneKey } => {
+  const previousLane = getLane(task, laneKeys);
+  if (previousLane === lane) return task;
+  const historyEntry = {
+    from: previousLane,
+    to: lane,
+    at: Date.now(),
+    by: by || undefined,
+  };
+  const nextHistory = [...(task.statusHistory || []), historyEntry];
   if (lane === 'done') {
-    return { ...task, _lane: 'done', completed: true, completedAt: task.completedAt || Date.now() };
+    return {
+      ...task,
+      _lane: 'done',
+      completed: true,
+      completedAt: task.completedAt || Date.now(),
+      statusHistory: nextHistory,
+    };
   }
-  return { ...task, _lane: lane, completed: false, completedAt: 0, aiWorking: false };
+  return {
+    ...task,
+    _lane: lane,
+    completed: false,
+    completedAt: 0,
+    aiWorking: false,
+    statusHistory: nextHistory,
+  };
 };
 
 interface TaskKanbanBoardProps {
