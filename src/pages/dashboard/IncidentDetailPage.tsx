@@ -3689,6 +3689,41 @@ const IncidentDetailPage = () => {
                 {item.detail}
               </Typography>
             )}
+            {item.kind === 'observable-added' && !!item.corrCount && (
+              <Typography
+                onClick={(ev) => {
+                  ev.stopPropagation();
+                  // Single observable → flash its row in the Observables tab.
+                  // Bulked → just send to the Correlations tab.
+                  if (item.corrObsKeys && item.corrObsKeys.length === 1) {
+                    focusObservableFromTimeline(item.corrObsKeys[0]);
+                  } else {
+                    focusCorrelationFromTimeline(null);
+                  }
+                }}
+                sx={{
+                  fontSize: '0.6rem',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.4,
+                  px: 0.6,
+                  py: 0.05,
+                  borderRadius: 999,
+                  bgcolor: 'hsl(var(--warning, 38 92% 50%) / 0.15)',
+                  color: 'hsl(38 92% 50%)',
+                  border: '1px solid hsl(38 92% 50% / 0.4)',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  '&:hover': { bgcolor: 'hsl(38 92% 50% / 0.22)' },
+                }}
+                title={`${item.corrCount} correlation match${item.corrCount === 1 ? '' : 'es'}`}
+              >
+                <LinkIcon sx={{ fontSize: 10 }} />
+                {item.corrCount} match{item.corrCount === 1 ? '' : 'es'}
+              </Typography>
+            )}
             <Typography sx={{ fontSize: '0.65rem', color: 'text.disabled', ml: 'auto', pl: 1 }}>
               {item.timestamp ? formatRelativeTime(item.timestamp) : ''}
             </Typography>
