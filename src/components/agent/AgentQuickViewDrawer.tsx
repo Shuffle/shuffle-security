@@ -68,6 +68,12 @@ interface UnifiedData {
   timeline: TimelineEntry[];
   pendingAction: string | null;
   incidentLink: string | null;
+  /** Label for the bottom CTA — defaults to "View Full Incident" but
+   *  switches to "Open Agent Approval" for /forms/{id} approval URLs. */
+  incidentLinkLabel: string;
+  /** When true, render the link as an external <a> in a new tab instead of
+   *  an in-app react-router navigation. */
+  incidentLinkExternal: boolean;
   isApproval: boolean;
   isQuestion: boolean;
   questions: string[];
