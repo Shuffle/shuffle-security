@@ -55,14 +55,19 @@ export const TOUR_STEPS: TourStep[] = [
     title: 'Welcome to your demo',
     body: 'Here is what we will do, in order:',
     bullets: [
-      '1. Add ingestion sources (Outlook Office365 + Microsoft 365 Defender)',
-      '2. Turn on the ingestion webhook',
-      '3. Watch incidents arrive and open one',
-      '4. Explore assets and vulnerabilities',
-      '5. Approve a live AI agent action',
-      '6. Clean up — removes everything we added',
+      '1. Open the Incidents page from the sidebar',
+      '2. Add ingestion sources (Outlook Office365 + Microsoft 365 Defender)',
+      '3. Turn on the ingestion webhook',
+      '4. Watch incidents arrive and open one',
+      '5. Explore assets and vulnerabilities',
+      '6. Approve a live AI agent action',
+      '7. Clean up — removes everything we added',
     ],
     route: '/dashboard',
+    requirement: {
+      label: 'Click "Incidents" in the left sidebar',
+      targetSelector: '[data-tour="sidebar-incidents-link"]',
+    },
   },
   {
     id: 'add-outlook',
@@ -73,7 +78,10 @@ export const TOUR_STEPS: TourStep[] = [
       'Add "Outlook Office365" — we will pretend-authenticate it',
       'Click "+" again and add "Microsoft 365 Defender"',
     ],
-    route: '/incidents',
+    // No `route` here on purpose — the previous welcome step required the
+    // user to navigate to /incidents themselves, so we should not yank them
+    // away if they happen to be elsewhere. The spotlight + sidebar
+    // highlight will guide them back if needed.
     requirement: {
       label: 'Add both Outlook Office365 and Microsoft 365 Defender',
       targetSelector: '[data-tour="add-ingestion-source-button"]',
