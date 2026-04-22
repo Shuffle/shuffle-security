@@ -3152,10 +3152,11 @@ const IncidentDetailPage = () => {
         // observable added / correlation found) injected on the frontend so
         // the user can see *when* every artefact appeared on the timeline.
         const stepStyle: Record<StepKind, { color: string; icon: React.ReactNode }> = {
-          'task-created':       { color: '#a855f7', icon: <TaskAltIcon sx={{ fontSize: 12 }} /> },
-          'task-completed':     { color: '#22c55e', icon: <CheckCircleIcon sx={{ fontSize: 12 }} /> },
-          'observable-added':   { color: '#06b6d4', icon: <VisibilityIcon sx={{ fontSize: 12 }} /> },
-          'correlation-found':  { color: '#f59e0b', icon: <LinkIcon sx={{ fontSize: 12 }} /> },
+          'task-created':         { color: '#a855f7', icon: <TaskAltIcon sx={{ fontSize: 12 }} /> },
+          'task-completed':       { color: '#22c55e', icon: <CheckCircleIcon sx={{ fontSize: 12 }} /> },
+          'task-status-changed':  { color: '#3b82f6', icon: <ForwardIcon sx={{ fontSize: 12 }} /> },
+          'observable-added':     { color: '#06b6d4', icon: <VisibilityIcon sx={{ fontSize: 12 }} /> },
+          'correlation-found':    { color: '#f59e0b', icon: <LinkIcon sx={{ fontSize: 12 }} /> },
         };
         const cfg = stepStyle[item.kind];
         return (
