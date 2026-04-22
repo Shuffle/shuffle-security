@@ -150,7 +150,7 @@ export const DemoModeCard = () => {
               ? `${stats.incidents} incidents, ${stats.assets} assets, ${stats.users} users loaded. Continue demo mode or clean up when done.`
               : disableStart
                 ? disableReason
-                : 'Guided tour with sample incidents, assets and live AI agent actions. One-click cleanup.'}
+                : 'Guided demo mode with sample incidents, assets and live AI agent actions. One-click cleanup.'}
           </Typography>
         </Box>
 
