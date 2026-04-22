@@ -55,14 +55,9 @@ export const DemoCompletionWatcher = () => {
   // IncidentsPage AppSearchDrawer override when the user picks Outlook
   // Office365 from the popup (pretend-authenticated for the demo).
 
-  // ─── incidents-list:open — user clicked into an incident detail page ──────
-  // The detail page lives at /incidents/:id (and aliases /alerts|tickets|jobs/:id).
-  // Detect the route match and flip the sub-goal complete.
-  useEffect(() => {
-    if (!drawerOpen) return;
-    const match = /^\/(?:incidents|alerts|tickets|jobs)\/[^/]+/.test(location.pathname);
-    if (match) markStepCompleted('incidents-list:open');
-  }, [drawerOpen, location.pathname, markStepCompleted]);
+  // Note: the `incidents-list:open` sub-goal is no longer set here. It is
+  // computed live from the current route in DemoContext (`isOnIncidentDetail`)
+  // so leaving the detail page reverts the gate immediately.
 
   // ─── Auto-seed the Wazuh / Sliver follow-up incident ──────────────────────
   // Once the user lands on the incident-detail step (i.e. they have opened
