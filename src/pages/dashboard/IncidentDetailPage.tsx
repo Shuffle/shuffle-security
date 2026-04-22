@@ -4091,13 +4091,16 @@ const IncidentDetailPage = () => {
 
           {/* ============ RIGHT: Metadata column ============ */}
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-          {/* Stakeholders - collapsed by default */}
-          <Section
-            title="Stakeholders"
-            icon={PeopleIcon}
-            defaultOpen={false}
-            badge={editedStakeholders.length > 0 ? editedStakeholders.length : undefined}
-          >
+          {/* Description on the right — only when an email thread occupies
+              the left column. Collapsed by default; users open it for the
+              raw / readable / rendered views without losing focus on the
+              parsed thread. */}
+          {hasEmail && (
+            <Section title="Description" icon={DescriptionIcon} defaultOpen={false}>
+              {descriptionBody}
+            </Section>
+          )}
+
 
             {/* Inline autocomplete input */}
             {!isPublicView && (
