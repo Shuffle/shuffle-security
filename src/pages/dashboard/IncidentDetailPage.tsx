@@ -4088,8 +4088,6 @@ const IncidentDetailPage = () => {
             {renderTimelinePanel('inline')}
           </Box>
           </Box>
-            );
-          })()}
 
           {/* ============ RIGHT: Metadata column ============ */}
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
@@ -4563,7 +4561,8 @@ const IncidentDetailPage = () => {
           </Section>
           </Box>
         </Box>
-      )}
+        );
+      })()}
 
       {activeTab === 2 && (
         /* Observables Tab */
