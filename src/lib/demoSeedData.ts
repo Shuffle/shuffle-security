@@ -20,6 +20,18 @@ const now = () => Date.now();
 const hoursAgo = (h: number) => new Date(now() - h * 3600 * 1000).toISOString();
 const minsAgo = (m: number) => new Date(now() - m * 60 * 1000).toISOString();
 
+/**
+ * Generate a fresh, unique OCSF finding_uid for a demo incident. Combines a
+ * short random suffix with the current unix timestamp (ms) so two seedings
+ * within the same tick still get distinct ids.
+ */
+let __findingUidCounter = 0;
+const generateDemoFindingUid = (): string => {
+  __findingUidCounter += 1;
+  const rand = Math.random().toString(36).slice(2, 8);
+  return `demo-${now()}-${__findingUidCounter}-${rand}`;
+};
+
 const demoMeta = (uid: string) => ({
   uid,
   extensions: {
