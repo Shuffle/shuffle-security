@@ -472,23 +472,35 @@ const NotificationRow = ({ notification, entityBasePath, onApprove, onQuickView,
             </IconButton>
           </Tooltip>
         )}
-        {notification.reference_url && !notification.incident_id && (
-          <Tooltip title="Open incident">
-            <IconButton
-              component={Link}
-              to={notification.reference_url}
-              size="small"
-              onClick={(e) => e.stopPropagation()}
-              sx={{
-                color: 'hsl(var(--muted-foreground))',
-                flexShrink: 0,
-                '&:hover': { color: 'hsl(var(--primary))', backgroundColor: 'hsl(var(--primary) / 0.08)' },
-              }}
-            >
-              <OpenInNewIcon sx={{ fontSize: 18 }} />
-            </IconButton>
-          </Tooltip>
-        )}
+        {notification.reference_url && !notification.incident_id && (() => {
+          const isApprovalForm = isAgentApprovalFormUrl(notification.reference_url);
+          const href = isApprovalForm
+            ? getShuffleCoreFormUrl(notification.reference_url)
+            : notification.reference_url;
+          const tooltipLabel = isApprovalForm ? 'Open agent approval' : 'Open incident';
+          // Approval forms live on Shuffle Core (or the configured backend
+          // for self-hosted), so we always open them as an external link in
+          // a new tab — never as an in-app react-router navigation.
+          return (
+            <Tooltip title={tooltipLabel}>
+              <IconButton
+                component="a"
+                href={href}
+                target={isApprovalForm ? '_blank' : undefined}
+                rel={isApprovalForm ? 'noopener noreferrer' : undefined}
+                size="small"
+                onClick={(e) => e.stopPropagation()}
+                sx={{
+                  color: 'hsl(var(--muted-foreground))',
+                  flexShrink: 0,
+                  '&:hover': { color: 'hsl(var(--primary))', backgroundColor: 'hsl(var(--primary) / 0.08)' },
+                }}
+              >
+                <OpenInNewIcon sx={{ fontSize: 18 }} />
+              </IconButton>
+            </Tooltip>
+          );
+        })()}
       </Box>
     </Box>
   );
