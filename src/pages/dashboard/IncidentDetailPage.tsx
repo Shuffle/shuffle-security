@@ -3205,6 +3205,7 @@ const IncidentDetailPage = () => {
           'task-status-changed':  { color: '#3b82f6', icon: <ForwardIcon sx={{ fontSize: 12 }} /> },
           'observable-added':     { color: '#06b6d4', icon: <VisibilityIcon sx={{ fontSize: 12 }} /> },
           'correlation-found':    { color: '#f59e0b', icon: <LinkIcon sx={{ fontSize: 12 }} /> },
+          'incident-created':     { color: '#6495ed', icon: <HistoryIcon sx={{ fontSize: 12 }} /> },
         };
         const cfg = stepStyle[item.kind];
         return (
