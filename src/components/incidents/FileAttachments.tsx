@@ -220,6 +220,7 @@ export const FileAttachments = ({
   namespace = 'incidents',
   labels = [],
   compact = false,
+  hideAddButton = false,
 }: FileAttachmentsProps) => {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
