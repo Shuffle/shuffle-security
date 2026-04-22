@@ -287,7 +287,10 @@ export const TaskKanbanBoard = ({
                 border: '1px solid hsl(var(--border))',
                 borderRadius: 2,
                 p: 1.5,
-                minHeight: 460,
+                // On mobile the lanes stack vertically — a 460px min-height per
+                // empty lane creates a wall of dead space. Only enforce the tall
+                // min-height on md+ where the lanes sit side-by-side.
+                minHeight: { xs: 'auto', md: 460 },
                 transition: 'background-color 120ms, border-color 120ms',
                 ...(isHover && {
                   bgcolor: `${lane.color}10`,
