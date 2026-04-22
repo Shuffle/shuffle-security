@@ -4471,8 +4471,8 @@ const IncidentDetailPage = () => {
               </Box>
             </Box>
           </Section>
-          </Box>{/* /right metadata column */}
-        </Box>{/* /Details grid */}
+          </Box>
+        </Box>
       )}
 
       {activeTab === 2 && (
