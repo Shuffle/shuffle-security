@@ -138,9 +138,25 @@ export const toIncidentWithPending = (item: RawInc): {
 // on isolating FIN-LAPTOP-04.
 const PHISH_USER_EMAIL = 'sarah.chen@example.com';
 const PHISH_HOST = 'FIN-LAPTOP-04';
-const PHISH_ATTACKER_IP = '185.220.101.47';
-const PHISH_LURE_URL = 'https://it-support-portal[.]live/mfa-reset?u=schen';
+// Defaults are only used as a fallback when the demo is unable to pick a real
+// IOC from the user's threat feeds (e.g. the feeds have not yet been parsed
+// by the backend). The orchestrator in `services/demoMode.ts` will normally
+// override both via `DemoIocOverrides`.
+const PHISH_ATTACKER_IP_DEFAULT = '185.220.101.47';
+const PHISH_LURE_DOMAIN_DEFAULT = 'it-support-portal.live';
 const PHISH_PAYLOAD_SHA256 = '7b1c4f9a2e3d8b6f1a0c5d7e9b2a4c6e8d1f3a5b7c9e1d2f4a6b8c0e2d4f6a8b';
+
+/** Real-IOC overrides used by the focus + Wazuh follow-up demo incidents. */
+export interface DemoIocOverrides {
+  /** Attacker IP — ideally a key pulled from the `ioc_ip` datastore category. */
+  attackerIp?: string;
+  /** Lure domain — ideally a key pulled from the `ioc_domain` datastore category. */
+  lureDomain?: string;
+}
+
+/** Compose the credential-harvesting URL from a domain override (or default). */
+const composeLureUrl = (domain: string): string =>
+  `https://${domain}/mfa-reset?u=schen`;
 
 // Diego Ruiz is the colleague who reports the phishing email — same Finance
 // department as Sarah Chen. He noticed Sarah received the same email and
