@@ -789,6 +789,21 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
             <Autocomplete
               value={selectedOrg}
               onChange={(_, newValue) => handleOrgChange(newValue)}
+              onOpen={() => {
+                // Scroll the currently-selected tenant into the middle of the
+                // listbox so users in deeply-nested child tenants don't have
+                // to hunt from the top of an alphabetised list.
+                requestAnimationFrame(() => {
+                  // The listbox is portaled into a popper outside the sidebar.
+                  const listboxes = document.querySelectorAll<HTMLElement>('.MuiAutocomplete-listbox');
+                  const listbox = listboxes[listboxes.length - 1];
+                  if (!listbox) return;
+                  const selected = listbox.querySelector<HTMLElement>('li[aria-selected="true"]');
+                  if (selected) {
+                    selected.scrollIntoView({ block: 'center' });
+                  }
+                });
+              }}
               options={sortedOrgs.map(item => item.org)}
               getOptionLabel={(option) => option.name}
               isOptionEqualToValue={(option, value) => option.id === value.id}
