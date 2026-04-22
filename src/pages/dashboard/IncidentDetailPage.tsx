@@ -1457,7 +1457,18 @@ const IncidentDetailPage = () => {
             'unknown', 'none', 'null', 'undefined', 'true', 'false',
             id?.toLowerCase(),
           ].filter(Boolean));
-          const filteredCorr = correlationData.filter((c: { key: string }) => !noiseKeys.has(c.key.toLowerCase()));
+          const currentIdLower = (id || '').toLowerCase();
+          const filteredCorr = correlationData.filter((c: { key: string; ref?: string[] }) => {
+            if (noiseKeys.has(c.key.toLowerCase())) return false;
+            // Exclude correlations whose only reference is the current incident itself —
+            // a correlation needs at least one OTHER incident to be meaningful.
+            const refs = Array.isArray(c.ref) ? c.ref : [];
+            const otherRefs = refs.filter((r) => {
+              const tail = (r.includes('|') ? r.split('|').pop() : r.split('/').pop()) || '';
+              return tail.toLowerCase() !== currentIdLower;
+            });
+            return otherRefs.length > 0;
+          });
           setCorrelations(filteredCorr);
           // Capture the discovery time so the timeline can place this event
           // chronologically. Only set on the first non-empty discovery so the
