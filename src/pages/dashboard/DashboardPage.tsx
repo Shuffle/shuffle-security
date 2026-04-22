@@ -403,59 +403,35 @@ const NotificationRow = ({ notification, entityBasePath, onApprove, onQuickView,
         </Box>
       </Box>
 
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
         {isApproval ? (
-          <>
-            <Button
-              data-tour="agent-approve-button"
-              onClick={() => onApprove(notification)}
-              size="small"
-              variant="contained"
-              startIcon={<CheckCircle size={14} />}
-              sx={{
-                fontSize: '0.75rem',
-                textTransform: 'none',
-                fontWeight: 600,
-                backgroundColor: 'hsl(var(--primary))',
-                color: 'hsl(var(--primary-foreground))',
-                px: 2,
-                py: 0.5,
+          <Button
+            data-tour="agent-approve-button"
+            onClick={(e) => { e.stopPropagation(); onApprove(notification); }}
+            size="small"
+            variant="contained"
+            startIcon={<CheckCircle size={14} />}
+            sx={{
+              fontSize: '0.75rem',
+              textTransform: 'none',
+              fontWeight: 600,
+              backgroundColor: 'hsl(var(--primary))',
+              color: 'hsl(var(--primary-foreground))',
+              px: 2,
+              py: 0.5,
+              boxShadow: 'none',
+              whiteSpace: 'nowrap',
+              '&:hover': {
+                backgroundColor: 'hsl(var(--primary) / 0.9)',
                 boxShadow: 'none',
-                whiteSpace: 'nowrap',
-                '&:hover': {
-                  backgroundColor: 'hsl(var(--primary) / 0.9)',
-                  boxShadow: 'none',
-                },
-              }}
-            >
-              Approve
-            </Button>
-            <Button
-              onClick={() => onQuickView(notification)}
-              size="small"
-              variant="outlined"
-              startIcon={<Eye size={14} />}
-              sx={{
-                fontSize: '0.75rem',
-                textTransform: 'none',
-                fontWeight: 500,
-                borderColor: 'hsl(var(--border))',
-                color: 'hsl(var(--foreground))',
-                px: 1.5,
-                py: 0.5,
-                whiteSpace: 'nowrap',
-                '&:hover': {
-                  borderColor: 'hsl(var(--primary) / 0.5)',
-                  backgroundColor: 'hsl(var(--primary) / 0.08)',
-                },
-              }}
-            >
-              Quick View
-            </Button>
-          </>
+              },
+            }}
+          >
+            Approve
+          </Button>
         ) : (
           <Button
-            onClick={() => onAnswer(notification)}
+            onClick={(e) => { e.stopPropagation(); onAnswer(notification); }}
             size="small"
             variant="contained"
             startIcon={<MessageSquare size={14} />}
@@ -485,6 +461,7 @@ const NotificationRow = ({ notification, entityBasePath, onApprove, onQuickView,
               component={Link}
               to={`${entityBasePath}/${notification.incident_id}`}
               size="small"
+              onClick={(e) => e.stopPropagation()}
               sx={{
                 color: 'hsl(var(--muted-foreground))',
                 flexShrink: 0,
@@ -501,6 +478,7 @@ const NotificationRow = ({ notification, entityBasePath, onApprove, onQuickView,
               component={Link}
               to={notification.reference_url}
               size="small"
+              onClick={(e) => e.stopPropagation()}
               sx={{
                 color: 'hsl(var(--muted-foreground))',
                 flexShrink: 0,
