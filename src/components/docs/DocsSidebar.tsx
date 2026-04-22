@@ -23,6 +23,7 @@ interface DocLink {
   icon: React.ReactNode;
   external?: boolean;
   href?: string;
+  download?: boolean;
 }
 
 interface DocsSidebarProps {
