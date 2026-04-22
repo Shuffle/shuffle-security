@@ -1417,6 +1417,9 @@ const IncidentsPage = () => {
     await addItem(key, ocsf);
     await fetchItems();
     trackPredefinedEvent(GA_EVENTS.INCIDENT_CREATE);
+    // Auto-open the freshly created incident so the user can immediately
+    // see it materialize (and watch background enrichments stream in).
+    navigate(`/incidents/${key}`);
   };
 
   const resetToDefaults = () => {
