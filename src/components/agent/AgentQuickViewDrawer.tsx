@@ -306,6 +306,11 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
     handleClose();
   };
 
+  const handleDeny = () => {
+    if (data.notification) onDeny?.(data.notification);
+    handleClose();
+  };
+
   const handleConfigureSubmit = () => {
     if (data.notification) onConfigureApprove?.(data.notification.id, modifiedAction);
     setModifiedAction('');
