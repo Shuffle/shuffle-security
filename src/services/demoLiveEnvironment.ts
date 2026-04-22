@@ -281,6 +281,12 @@ const buildDemoSensorHost = () => {
     sensor_mode: true,
     response_actions: 'full',
     log_forwarding: '',
+    // Owner identity — drives automatic cross-correlation with the
+    // phishing/Sliver incidents (which share sarah.chen@example.com) and the
+    // stakeholder registry seeded later in the tour.
+    owner: { name: 'Sarah Chen', email: 'sarah.chen@example.com' },
+    user: 'sarah.chen@example.com',
+    username: 'sarah.chen',
     installed_software: [
       { name: 'Google Chrome', version: '124.0.6367.91', vendor: 'Google LLC' },
       { name: 'Microsoft Edge', version: '125.0.2535.51', vendor: 'Microsoft' },
