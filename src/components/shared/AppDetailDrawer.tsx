@@ -315,8 +315,17 @@ export default function AppDetailDrawer({
           credentials: 'include', headers: { ...getAuthHeader() },
         });
         if (!searchRes.ok) throw new Error(`Config fetch failed (${searchRes.status})`);
-        const data = await searchRes.json();
-        const appId = data.id;
+        const data = await searchRes.json().catch(() => ({} as any));
+        // Resolve the app ID to activate. The /config endpoint shape varies:
+        // it may return { id }, { app: { id } }, { app_id }, or just echo
+        // back the body. Fall back to the configId we already have — that
+        // is the canonical app ID the user clicked on.
+        const appId =
+          data?.id ||
+          data?.app?.id ||
+          data?.app_id ||
+          (typeof data?.app === 'string' ? data.app : undefined) ||
+          configId;
         console.log('[Activate] Got app ID:', appId);
         if (!appId) throw new Error('No app ID in config response');
         const activateRes = await fetch(getApiUrl(`/api/v1/apps/${appId}/activate`), {
