@@ -2549,7 +2549,7 @@ const IncidentDetailPage = () => {
                 fullWidth
                 multiline
                 rows={2}
-                placeholder="Add a comment... (Enter to send, Shift+Enter for new line)"
+                placeholder={replyingTo ? `Reply to ${replyingTo.label}…` : 'Add a comment... (Enter to send, Shift+Enter for new line)'}
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     bgcolor: 'rgba(0, 0, 0, 0.2)',
