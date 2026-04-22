@@ -46,7 +46,6 @@ const externalLinks: DocLink[] = [
     icon: <DownloadIcon />,
     external: true,
     href: '/SHUFFLE.md',
-    download: true,
   },
   {
     label: 'Shuffle API Docs',
