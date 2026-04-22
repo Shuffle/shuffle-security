@@ -32,7 +32,7 @@ import {
 } from '@mui/material';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
-import { motion } from 'framer-motion';
+import { motion, LayoutGroup } from 'framer-motion';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import AddIcon from '@mui/icons-material/Add';
@@ -3850,6 +3850,11 @@ const IncidentDetailPage = () => {
       </Box>
 
       {/* Main content with Activity sidebar */}
+      {/* LayoutGroup enables shared-element layout animation for the
+          Timeline panel — when the active tab changes, the timeline morphs
+          between its inline position (Details tab) and the right sidebar
+          position (other tabs) instead of unmount/remount jumping. */}
+      <LayoutGroup>
       <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 2, mt: 2 }}>
         {/* Left content area */}
         <Box sx={{ flex: 1, minWidth: 0, order: { xs: 1, lg: 0 } }}>
@@ -4279,20 +4284,23 @@ const IncidentDetailPage = () => {
           {/* Inline Timeline — the heart of the Details tab. Renders the same
               comment input + unified feed as the right sidebar, but styled
               with a vertical rail so the chronology reads at a glance. */}
-          <Box
+          <motion.div
+            layoutId="incident-timeline-panel"
+            layout
+            transition={{ type: 'spring', stiffness: 260, damping: 30 }}
             data-tour="incident-activity-feed"
-            sx={{
+            style={{
               display: 'flex',
               flexDirection: 'column',
-              bgcolor: 'hsl(var(--card))',
-              borderRadius: 2,
+              backgroundColor: 'hsl(var(--card))',
+              borderRadius: 8,
               border: '1px solid hsl(var(--border))',
               overflow: 'hidden',
-              ...(isPublicView && { pointerEvents: 'none' }),
+              ...(isPublicView ? { pointerEvents: 'none' as const } : {}),
             }}
           >
             {renderTimelinePanel('inline')}
-          </Box>
+          </motion.div>
           </Box>
 
           {/* ============ RIGHT: Metadata column ============ */}
@@ -5688,23 +5696,29 @@ const IncidentDetailPage = () => {
 
         {/* Right Timeline Sidebar — hidden on Details (inlined there) and on Original / Translation / OCSF tabs */}
         {activeTab !== 0 && activeTab !== 4 && activeTab !== 5 && activeTab !== 6 && (
-        <Box
-          data-tour="incident-activity-feed"
-          sx={{ 
-          width: { xs: '100%', lg: 380 },
-          flexShrink: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          bgcolor: 'hsl(var(--card))',
-          borderRadius: 2,
-          border: '1px solid hsl(var(--border))',
-          order: { xs: 2, lg: 0 },
-          ...(isPublicView && { pointerEvents: 'none' }),
-        }}>
-          {renderTimelinePanel('sidebar')}
+        <Box sx={{ width: { xs: '100%', lg: 380 }, flexShrink: 0, order: { xs: 2, lg: 0 } }}>
+          <motion.div
+            layoutId="incident-timeline-panel"
+            layout
+            transition={{ type: 'spring', stiffness: 260, damping: 30 }}
+            data-tour="incident-activity-feed"
+            style={{
+              width: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              backgroundColor: 'hsl(var(--card))',
+              borderRadius: 8,
+              border: '1px solid hsl(var(--border))',
+              overflow: 'hidden',
+              ...(isPublicView ? { pointerEvents: 'none' as const } : {}),
+            }}
+          >
+            {renderTimelinePanel('sidebar')}
+          </motion.div>
         </Box>
         )}
       </Box>
+      </LayoutGroup>
 
 
       {/* Revision Data Dialog */}
