@@ -145,7 +145,7 @@ export const TaskKanbanBoard = ({
       setDropIndex(null);
       return;
     }
-    const updatedDragged = applyLane(dragged, lane);
+    const updatedDragged = applyLane(dragged, lane, laneKeys, currentUser);
     const laneItems = tasks.filter(
       (t) => t.id !== draggedTaskId && getLane(t, laneKeys) === lane,
     );
