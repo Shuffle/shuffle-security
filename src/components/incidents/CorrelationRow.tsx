@@ -7,6 +7,41 @@ export interface Correlation {
   ref: string[];
 }
 
+/**
+ * Count the effective correlation refs after filtering out the current incident.
+ * Mirrors the filtering logic inside CorrelationRow so callers can show accurate
+ * "X correlations" counts without including self-references.
+ */
+export const getEffectiveCorrelationCount = (
+  correlation: Pick<Correlation, 'ref'>,
+  currentIncidentId?: string,
+): number => {
+  if (!correlation?.ref?.length) return 0;
+  let count = 0;
+  for (const r of correlation.ref) {
+    const [category, key] = r.split('|');
+    if (!category || !key) continue;
+    if (
+      category === 'shuffle-security_incidents' &&
+      currentIncidentId &&
+      key.toLowerCase() === currentIncidentId.toLowerCase()
+    ) {
+      continue;
+    }
+    count += 1;
+  }
+  return count;
+};
+
+/**
+ * Returns only correlations that have at least one ref OTHER than the current
+ * incident — useful for hiding noise from list counts and badges.
+ */
+export const filterMeaningfulCorrelations = <T extends Pick<Correlation, 'ref'>>(
+  correlations: T[],
+  currentIncidentId?: string,
+): T[] => correlations.filter((c) => getEffectiveCorrelationCount(c, currentIncidentId) > 0);
+
 interface CorrelationRowProps {
   correlation: Correlation;
   /** Current incident ID — references to it will be filtered out so the row only shows OTHER matches. */

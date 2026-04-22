@@ -78,7 +78,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useDatastore } from '@/hooks/useDatastore';
-import { CorrelationRow } from '@/components/incidents/CorrelationRow';
+import { CorrelationRow, getEffectiveCorrelationCount, filterMeaningfulCorrelations } from '@/components/incidents/CorrelationRow';
 import { useAuth } from '@/context/AuthContext';
 import { useAppDetail } from '@/context/AppDetailContext';
 import { DATASTORE_CATEGORIES, getDatastoreItem, getDatastoreItemPublic, setDatastoreItem } from '@/services/datastore';
@@ -5610,9 +5610,12 @@ const IncidentDetailPage = () => {
                           const corr = obsCorrelations[obsKey];
                           if (corr?.loading) return <CircularProgress size={14} sx={{ mx: 0.5 }} />;
                           if (!corr?.data?.length) return null;
+                          // Only count correlations with refs OTHER than the current incident.
+                          const meaningful = filterMeaningfulCorrelations(corr.data, id);
+                          if (meaningful.length === 0) return null;
                           return (
                             <Chip
-                              label={`${corr.data.length} corr`}
+                              label={`${meaningful.length} corr`}
                               size="small"
                               variant="outlined"
                               onClick={(e) => { e.stopPropagation(); setObsCorrelationAnchor({ el: e.currentTarget, obsKey }); }}
@@ -5763,11 +5766,29 @@ const IncidentDetailPage = () => {
                                 </Box>
                               );
                             }
+                            // Drop correlations whose only ref is the current incident itself.
+                            const meaningfulCorr = filterMeaningfulCorrelations(corr.data, id);
+                            if (meaningfulCorr.length === 0) {
+                              return (
+                                <Box sx={{ mt: 0.5, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                  <Typography variant="body2" sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', fontStyle: 'italic' }}>No correlations found</Typography>
+                                  <Tooltip title="Re-run correlation search for this observable" arrow>
+                                    <IconButton
+                                      size="small"
+                                      onClick={(e) => { e.stopPropagation(); refetchObsCorrelation(obs); }}
+                                      sx={{ p: 0.25, color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--foreground))' } }}
+                                    >
+                                      <RefreshIcon sx={{ fontSize: 12 }} />
+                                    </IconButton>
+                                  </Tooltip>
+                                </Box>
+                              );
+                            }
                             return (
                               <Box sx={{ mt: 0.5 }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.75 }}>
                                   <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.6rem', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                                    Correlations ({corr.data.length})
+                                    Correlations ({meaningfulCorr.length})
                                   </Typography>
                                   <Tooltip title="Re-run correlation search for this observable" arrow>
                                     <IconButton
@@ -5780,7 +5801,7 @@ const IncidentDetailPage = () => {
                                   </Tooltip>
                                 </Box>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
-                                  {corr.data.slice(0, 8).map((c, ci) => (
+                                  {meaningfulCorr.slice(0, 8).map((c, ci) => (
                                     <CorrelationRow
                                       key={c.key || ci}
                                       correlation={c}
@@ -5788,9 +5809,9 @@ const IncidentDetailPage = () => {
                                       compact
                                     />
                                   ))}
-                                  {corr.data.length > 8 && (
+                                  {meaningfulCorr.length > 8 && (
                                     <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.6rem' }}>
-                                      +{corr.data.length - 8} more correlations
+                                      +{meaningfulCorr.length - 8} more correlations
                                     </Typography>
                                   )}
                                 </Box>
