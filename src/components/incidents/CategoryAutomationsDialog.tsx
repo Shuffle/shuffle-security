@@ -29,6 +29,7 @@ import AgentIcon from '@/components/agent/AgentIcon';
 import EnhancedEncryptionIcon from '@mui/icons-material/EnhancedEncryption';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import SecurityIcon from '@mui/icons-material/Security';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { toast } from 'sonner';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -78,6 +79,17 @@ const WEEKS_OPTIONS = [
 
 const automationConfigs = [
   {
+    type: 'ai_agent',
+    name: 'Run AI Agent',
+    description: 'Runs an AI Agent to process the updated value. Uses built-in ShuffleAI configs. Learn more: https://shuffler.io/docs/AI',
+    icon: (props: any) => <AgentIcon size={props?.sx?.fontSize || 20} />,
+    color: '#10b981',
+    apiIcon: '',
+    apiType: 'singul',
+    optionKey: 'prompts',
+    hasConfig: true,
+  },
+  {
     type: 'workflow',
     name: 'Run workflow',
     description: 'Runs one or more workflows with the updated value as runtime argument',
@@ -95,17 +107,6 @@ const automationConfigs = [
     color: '#8b5cf6',
     apiIcon: '',
     optionKey: 'webhook_url',
-    hasConfig: true,
-  },
-  {
-    type: 'ai_agent',
-    name: 'Run AI Agent',
-    description: 'Runs an AI Agent to process the updated value. Uses built-in ShuffleAI configs. Learn more: https://shuffler.io/docs/AI',
-    icon: (props: any) => <AgentIcon size={props?.sx?.fontSize || 20} />,
-    color: '#10b981',
-    apiIcon: '',
-    apiType: 'singul',
-    optionKey: 'prompts',
     hasConfig: true,
   },
   {
@@ -165,6 +166,15 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
   const [ingestionApps, setIngestionApps] = useState<ValidatedIngestionApp[]>([]);
   const [securityRulesText, setSecurityRulesText] = useState('');
   const [aiAgentPrompts, setAiAgentPrompts] = useState<string[]>(['']);
+  /**
+   * Tracks which automation rows have their config section expanded.
+   * Enabling an automation no longer auto-expands it — the user explicitly
+   * clicks the chevron on the row header to reveal/hide configuration.
+   * Keyed by automation type (e.g. 'workflow', 'webhook', 'security_rules').
+   */
+  const [expandedTypes, setExpandedTypes] = useState<Record<string, boolean>>({});
+  const toggleExpanded = (type: string) =>
+    setExpandedTypes(prev => ({ ...prev, [type]: !prev[type] }));
 
   const fetchIngestionApps = async () => {
     try {
@@ -560,10 +570,32 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
                     >
                       {config.name}
                     </Typography>
+                    {/* Chevron — only for automations that have a config
+                        section. Clicking expands/collapses the config without
+                        toggling the enabled state. Enabling no longer auto-
+                        opens the config; the user controls visibility. */}
+                    {config.hasConfig && (
+                      <IconButton
+                        size="small"
+                        aria-label={expandedTypes[automation.type!] ? 'Collapse configuration' : 'Expand configuration'}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleExpanded(automation.type!);
+                        }}
+                        sx={{
+                          color: 'hsl(var(--muted-foreground))',
+                          p: 0.5,
+                          transition: 'transform 0.15s',
+                          transform: expandedTypes[automation.type!] ? 'rotate(180deg)' : 'rotate(0deg)',
+                        }}
+                      >
+                        <ExpandMoreIcon sx={{ fontSize: 20 }} />
+                      </IconButton>
+                    )}
                   </Box>
 
                   {/* Workflow Configuration */}
-                  {automation.enabled && automation.type === 'workflow' && (
+                  {automation.enabled && automation.type === 'workflow' && expandedTypes['workflow'] && (
                     <Box sx={{ px: 2, pb: 2, pt: 0.5 }}>
                       <Autocomplete
                         multiple
@@ -624,7 +656,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
                   )}
 
                   {/* AI Agent Configuration - multiple prompts */}
-                  {automation.enabled && automation.type === 'ai_agent' && (
+                  {automation.enabled && automation.type === 'ai_agent' && expandedTypes['ai_agent'] && (
                     <Box sx={{ px: 2, pb: 2, pt: 0.5, display: 'flex', flexDirection: 'column', gap: 1 }}>
                       {aiAgentPrompts.map((prompt, idx) => (
                         <Box key={idx} sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
@@ -674,7 +706,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
                   )}
 
                   {/* Webhook Configuration */}
-                  {automation.enabled && automation.type === 'webhook' && (
+                  {automation.enabled && automation.type === 'webhook' && expandedTypes['webhook'] && (
                     <Box sx={{ px: 2, pb: 2, pt: 0.5 }}>
                       <TextField
                         size="small"
@@ -695,7 +727,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
                   )}
 
                   {/* Security Rules Configuration */}
-                  {automation.enabled && automation.type === 'security_rules' && (
+                  {automation.enabled && automation.type === 'security_rules' && expandedTypes['security_rules'] && (
                     <Box sx={{ px: 2, pb: 2, pt: 0.5 }}>
                       <TextField
                         size="small"
