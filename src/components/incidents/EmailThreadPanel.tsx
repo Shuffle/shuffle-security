@@ -320,19 +320,19 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
             <Box key={msg.id} sx={{
               borderBottom: idx < messages.length - 1 ? '1px solid hsl(var(--border))' : 'none',
             }}>
-              {/* Message header - always visible */}
+              {/* Message header - always visible, click to toggle */}
               <Box
-                onClick={() => !msg.isLatest && toggleMessage(msg.id)}
+                onClick={() => toggleMessage(msg.id)}
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: 1.5,
                   px: 2,
                   py: 1,
-                  cursor: msg.isLatest ? 'default' : 'pointer',
-                  '&:hover': !msg.isLatest ? {
+                  cursor: 'pointer',
+                  '&:hover': {
                     bgcolor: (t) => t.palette.mode === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
-                  } : {},
+                  },
                   transition: 'background-color 0.15s',
                 }}
               >
