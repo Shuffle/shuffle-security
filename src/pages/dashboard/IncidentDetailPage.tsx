@@ -914,7 +914,11 @@ const IncidentDetailPage = () => {
   }, [showForwardDialog]);
   const [correlations, setCorrelations] = useState<Array<{ key: string; amount: number; ref: string[] }>>([]);
   const [correlationsLoading, setCorrelationsLoading] = useState(false);
-  const [obsCorrelations, setObsCorrelations] = useState<Record<string, { loading: boolean; data: Array<{ key: string; amount: number; ref: string[] }> }>>({});
+  // Track when the incident-level correlations finished loading. Correlations
+  // have no native timestamp so we use "discovered at" (when the API returned
+  // them) to place them on the unified timeline.
+  const [correlationsDiscoveredAt, setCorrelationsDiscoveredAt] = useState<number | null>(null);
+  const [obsCorrelations, setObsCorrelations] = useState<Record<string, { loading: boolean; data: Array<{ key: string; amount: number; ref: string[] }>; discoveredAt?: number }>>({});
   const [obsCorrelationAnchor, setObsCorrelationAnchor] = useState<{ el: HTMLElement; obsKey: string } | null>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingSaveRef = useRef(false);
