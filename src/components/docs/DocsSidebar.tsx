@@ -54,11 +54,11 @@ const externalLinks: DocLink[] = [
     href: 'https://shuffler.io',
   },
   {
-    label: 'Agent Skill (SHUFFLE.md)',
-    slug: 'shuffle-md',
+    label: 'Agent Skill (SHUFFLE_CORE.md)',
+    slug: 'shuffle-core-md',
     icon: <DownloadIcon />,
     external: true,
-    href: '/SHUFFLE.md',
+    href: '/SHUFFLE_CORE.md',
   },
 ];
 
