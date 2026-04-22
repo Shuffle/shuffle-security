@@ -530,7 +530,11 @@ export const seedDemoWazuhImplantIncident = async (): Promise<number> => {
   const existing = idx[DATASTORE_CATEGORIES.INCIDENTS] || [];
   if (existing.some(k => k.includes('-wazuh'))) return 0;
 
-  const item = buildDemoWazuhImplantIncident();
+  // Reuse the same IOC overrides chosen at step 1 so the IP + domain on the
+  // Wazuh follow-up are byte-identical to the focus incident — required for
+  // the correlation engine to link them.
+  const overrides = await resolveIocOverrides();
+  const item = buildDemoWazuhImplantIncident(overrides);
 
   // Try to resolve the Ingestion Webhook URL from the user's workflows.
   let webhookUrl: string | null = null;
