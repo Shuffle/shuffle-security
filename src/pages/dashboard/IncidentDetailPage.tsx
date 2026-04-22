@@ -37,6 +37,8 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import AddIcon from '@mui/icons-material/Add';
 import SendIcon from '@mui/icons-material/Send';
+import AttachFileIcon from '@mui/icons-material/AttachFile';
+import { createAndUploadFile } from '@/services/files';
 import PersonIcon from '@mui/icons-material/Person';
 import EditIcon from '@mui/icons-material/Edit';
 import HistoryIcon from '@mui/icons-material/History';
@@ -534,6 +536,33 @@ const IncidentDetailPage = () => {
   // Activity/comments
   const [newComment, setNewComment] = useState('');
   const [commentAttachments, setCommentAttachments] = useState<FileAttachment[]>([]);
+  const commentFileInputRef = useRef<HTMLInputElement>(null);
+  const [commentUploading, setCommentUploading] = useState(false);
+  const handleCommentAttach = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setCommentUploading(true);
+    const newAttachments: FileAttachment[] = [];
+    for (const file of Array.from(files)) {
+      const result = await createAndUploadFile(file, 'incidents', incident?.id ? [incident.id, 'comments'] : ['comments']);
+      if (result.success && result.file) {
+        newAttachments.push({
+          id: result.file.id,
+          filename: result.file.filename,
+          filesize: result.file.filesize,
+          uploadedAt: Date.now(),
+        });
+        toast.success(`Uploaded ${file.name}`);
+      } else {
+        toast.error(`Failed to upload ${file.name}: ${result.reason}`);
+      }
+    }
+    if (newAttachments.length > 0) {
+      setCommentAttachments(prev => [...prev, ...newAttachments]);
+    }
+    setCommentUploading(false);
+    if (commentFileInputRef.current) commentFileInputRef.current.value = '';
+  };
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   
   // Tasks
@@ -2473,13 +2502,40 @@ const IncidentDetailPage = () => {
                   '& .MuiOutlinedInput-root': {
                     bgcolor: 'rgba(0, 0, 0, 0.2)',
                     fontSize: '0.8rem',
-                    pr: 5,
+                    pr: 9,
                     '& fieldset': { borderColor: 'rgba(255,255,255,0.08)' },
                     '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.15)' },
                     '&.Mui-focused fieldset': { borderColor: '#FF6600' },
                   },
                 }}
               />
+              <input
+                type="file"
+                ref={commentFileInputRef}
+                onChange={handleCommentAttach}
+                style={{ display: 'none' }}
+                multiple
+              />
+              <Tooltip title="Attach file">
+                <IconButton
+                  size="small"
+                  onClick={() => commentFileInputRef.current?.click()}
+                  disabled={commentUploading}
+                  sx={{
+                    position: 'absolute',
+                    right: 36,
+                    bottom: 8,
+                    color: 'text.secondary',
+                    '&:hover': { color: '#ff6600', bgcolor: 'rgba(255, 102, 0, 0.08)' },
+                  }}
+                >
+                  {commentUploading ? (
+                    <CircularProgress size={14} sx={{ color: 'text.secondary' }} />
+                  ) : (
+                    <AttachFileIcon sx={{ fontSize: 16 }} />
+                  )}
+                </IconButton>
+              </Tooltip>
               <IconButton
                 size="small"
                 onClick={handleAddComment}
@@ -2496,13 +2552,16 @@ const IncidentDetailPage = () => {
                 <SendIcon sx={{ fontSize: 16 }} />
               </IconButton>
             </Box>
-            <FileAttachments
-              attachments={commentAttachments}
-              onChange={setCommentAttachments}
-              namespace="incidents"
-              labels={[incident.id, 'comments']}
-              compact
-            />
+            {commentAttachments.length > 0 && (
+              <FileAttachments
+                attachments={commentAttachments}
+                onChange={setCommentAttachments}
+                namespace="incidents"
+                labels={[incident.id, 'comments']}
+                compact
+                hideAddButton
+              />
+            )}
           </Box>
         </Box>
       </Box>

@@ -38,6 +38,7 @@ interface FileAttachmentsProps {
   namespace?: string;
   labels?: string[];
   compact?: boolean;
+  hideAddButton?: boolean;
 }
 
 const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
@@ -219,6 +220,7 @@ export const FileAttachments = ({
   namespace = 'incidents',
   labels = [],
   compact = false,
+  hideAddButton = false,
 }: FileAttachmentsProps) => {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -331,25 +333,27 @@ export const FileAttachments = ({
           />
         ))}
         
-        <Tooltip title="Attach file">
-          <IconButton
-            size="small"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            sx={{
-              color: 'text.secondary',
-              border: '1px dashed hsl(var(--border))',
-              borderRadius: 1,
-              '&:hover': { borderColor: 'hsl(var(--primary))', color: 'hsl(var(--primary))' },
-            }}
-          >
-            {uploading ? (
-              <CircularProgress size={16} sx={{ color: 'text.secondary' }} />
-            ) : (
-              <AttachFileIcon sx={{ fontSize: 16 }} />
-            )}
-          </IconButton>
-        </Tooltip>
+        {!hideAddButton && (
+          <Tooltip title="Attach file">
+            <IconButton
+              size="small"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              sx={{
+                color: 'text.secondary',
+                border: '1px dashed hsl(var(--border))',
+                borderRadius: 1,
+                '&:hover': { borderColor: 'hsl(var(--primary))', color: 'hsl(var(--primary))' },
+              }}
+            >
+              {uploading ? (
+                <CircularProgress size={16} sx={{ color: 'text.secondary' }} />
+              ) : (
+                <AttachFileIcon sx={{ fontSize: 16 }} />
+              )}
+            </IconButton>
+          </Tooltip>
+        )}
       </Box>
     );
   }
