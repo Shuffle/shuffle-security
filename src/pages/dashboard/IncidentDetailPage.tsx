@@ -3575,7 +3575,12 @@ const IncidentDetailPage = () => {
             focusObservableFromTimeline(obsKey);
           };
         } else if (item.kind === 'correlation-found') {
-          if (item.id.startsWith('step-corr-obs-')) {
+          // Bulked observable correlations (id prefix `step-corr-obs-bulk-`)
+          // can't jump to a single observable row — send the user to the
+          // Correlations tab instead.
+          if (item.id.startsWith('step-corr-obs-bulk-')) {
+            pillOnClick = () => focusCorrelationFromTimeline(null);
+          } else if (item.id.startsWith('step-corr-obs-')) {
             const obsKey = item.id.slice('step-corr-obs-'.length).toLowerCase();
             pillOnClick = () => focusObservableFromTimeline(obsKey);
           } else {
@@ -3586,10 +3591,16 @@ const IncidentDetailPage = () => {
         // Detect whether the pill represents (or correlates to) an observable
         // already known to match an IOC / threat-feed entry. We pull the obs
         // key out of the synthetic `step-obs-` / `step-corr-obs-` id format.
+        // Bulked correlations have no single underlying obs — they never
+        // light up as IOC pills.
         let pillObsKey: string | null = null;
         if (item.kind === 'observable-added' && item.id.startsWith('step-obs-')) {
           pillObsKey = item.id.slice('step-obs-'.length).toLowerCase();
-        } else if (item.kind === 'correlation-found' && item.id.startsWith('step-corr-obs-')) {
+        } else if (
+          item.kind === 'correlation-found'
+          && item.id.startsWith('step-corr-obs-')
+          && !item.id.startsWith('step-corr-obs-bulk-')
+        ) {
           pillObsKey = item.id.slice('step-corr-obs-'.length).toLowerCase();
         }
         const isIocPill = !!pillObsKey && iocObservableKeys.has(pillObsKey);
