@@ -221,6 +221,7 @@ export const IncidentCardView = ({
   orgFilterNames,
   totalOrgCount,
   onResetOrgFilter,
+  isParentOrg = false,
 }: IncidentCardViewProps) => {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [hasRendered, setHasRendered] = useState(false);
