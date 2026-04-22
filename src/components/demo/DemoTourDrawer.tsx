@@ -536,10 +536,15 @@ export const DemoTourDrawer = () => {
                           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.85 }}>
                             {goals.map(g => {
                               // For the incidents-list "present" sub-goal,
-                              // render a tiny "Force generate" button inline
-                              // next to the label when not yet satisfied.
+                              // ALWAYS render the inline "Force generate"
+                              // button — even when the goal is already done.
+                              // This is a safety net: if the seeded phishing
+                              // incident is missing or got manually deleted
+                              // (and the live presence check has not flipped
+                              // yet), the user can still recover with one
+                              // click and the tour keeps working.
                               const showForceGenerate =
-                                (isIncidentsListStep && g.id === 'incidents-list:present' && !g.done) ||
+                                (isIncidentsListStep && g.id === 'incidents-list:present') ||
                                 (g.id === 'incident-detail:wazuh' && !g.done);
                               const isWazuhForce = g.id === 'incident-detail:wazuh';
                               // Optional goals use a softer palette and an

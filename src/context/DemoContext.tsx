@@ -629,12 +629,13 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
       setIsForceGeneratingWazuh(false);
     }
   }, [refreshStats]);
-  // Tracks whether any demo-tagged incidents currently exist. Re-checks ONLY
-  // on the `demo:refresh` broadcast that the seeder/reset code fires — which
-  // covers every code path that can mutate demo state. We deliberately do NOT
-  // poll on a timer: that previously fired a `list_cache` request every 4
-  // seconds for the entire session, even while the user was deep inside an
-  // incident detail page. The event-driven approach is exact and free.
+  // Tracks whether any demo-tagged incidents currently exist. Re-checks on
+  // every `demo:refresh` broadcast (covers seeder/cleanup paths) AND on a
+  // light interval + window focus while the tour drawer is open on the
+  // `incidents-list` step. The interval is intentionally scoped so we do
+  // not poll the datastore for the entire session — only when the user is
+  // actually on the step that needs the live "is the phishing email still
+  // there?" signal (e.g. they manually deleted it from the list).
   useEffect(() => {
     if (!active) {
       setHasDemoIncidents(false);
@@ -648,11 +649,27 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
     check();
     const onRefresh = () => check();
     window.addEventListener('demo:refresh', onRefresh as EventListener);
+
+    // Live polling — only while on step `incidents-list` with the drawer
+    // open. Picks up manual deletions of the seeded phishing incident so the
+    // sub-goal (and the "Force generate" button) stay accurate in real time.
+    const onIncidentsListStep =
+      drawerOpen && TOUR_STEPS[step]?.id === 'incidents-list';
+    let intervalId: number | undefined;
+    let onFocus: (() => void) | undefined;
+    if (onIncidentsListStep) {
+      intervalId = window.setInterval(check, 4000);
+      onFocus = () => check();
+      window.addEventListener('focus', onFocus);
+    }
+
     return () => {
       cancelled = true;
       window.removeEventListener('demo:refresh', onRefresh as EventListener);
+      if (intervalId !== undefined) window.clearInterval(intervalId);
+      if (onFocus) window.removeEventListener('focus', onFocus);
     };
-  }, [active]);
+  }, [active, drawerOpen, step]);
 
   // Funnel signal: whenever the user lands on a new step (via start/next/prev/
   // goToStep/openTour), fire DEMO_STEP_VIEW exactly once per step per session.
