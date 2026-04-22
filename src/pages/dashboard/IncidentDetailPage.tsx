@@ -2648,6 +2648,25 @@ const IncidentDetailPage = () => {
 
         if (activityFilter !== 'revisions' && !isFirst && diff && totalChanges === 0) return null;
 
+        // Outside the dedicated "Changes" filter, the very first revision
+        // reads as the incident's creation event — show its original title +
+        // description instead of a "Revision #1" technical label so the
+        // timeline starts with what actually arrived. The "Revision #N"
+        // numbering is reserved for the Changes filter where it's useful.
+        const showAsCreation = isFirst && activityFilter !== 'revisions';
+        const initialTitle = showAsCreation
+          ? (item.parsedCurrent?.title
+              || item.parsedCurrent?.finding_info?.title
+              || item.parsedCurrent?.message
+              || '')
+          : '';
+        const initialDescription = showAsCreation
+          ? (item.parsedCurrent?.desc
+              || item.parsedCurrent?.description
+              || item.parsedCurrent?.supporting_data
+              || '')
+          : '';
+
         return (
           <Box
             key={`rev-${rev.id || rev.key || item.idx}`}
@@ -2665,15 +2684,15 @@ const IncidentDetailPage = () => {
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexWrap: 'wrap' }}>
                   <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.73rem' }}>
-                    Revision #{revisions.length - item.idx}
+                    {showAsCreation ? 'Incident created' : `Revision #${revisions.length - item.idx}`}
                   </Typography>
-                  {isLatest && (
+                  {isLatest && !showAsCreation && (
                     <Chip label="Latest" size="small" variant="outlined" sx={{ height: 16, fontSize: '0.58rem', bgcolor: 'transparent', borderColor: 'rgba(255, 102, 0, 0.4)', color: '#ff6600', fontWeight: 600 }} />
                   )}
-                  {isFirst && !isLatest && (
+                  {isFirst && !isLatest && !showAsCreation && (
                     <Chip label="Initial" size="small" variant="outlined" sx={{ height: 16, fontSize: '0.58rem', bgcolor: 'transparent', borderColor: 'rgba(255,255,255,0.12)', color: 'text.secondary', fontWeight: 600 }} />
                   )}
-                  {totalChanges > 0 && (
+                  {totalChanges > 0 && !showAsCreation && (
                     <Chip label={`${totalChanges} change${totalChanges !== 1 ? 's' : ''}`} size="small" variant="outlined" sx={{ height: 16, fontSize: '0.58rem', bgcolor: 'transparent', borderColor: 'rgba(255, 102, 0, 0.4)', color: '#ff6600' }} />
                   )}
                 </Box>
@@ -2714,7 +2733,33 @@ const IncidentDetailPage = () => {
               )}
             </Box>
 
-            {diff && totalChanges > 0 && (
+            {showAsCreation && (initialTitle || initialDescription) && (
+              <Box sx={{ mt: 0.75, ml: 4, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                {initialTitle && (
+                  <Typography sx={{ fontSize: '0.78rem', fontWeight: 600, color: 'hsl(var(--foreground))', lineHeight: 1.35 }}>
+                    {initialTitle}
+                  </Typography>
+                )}
+                {initialDescription && (
+                  <Typography sx={{
+                    fontSize: '0.72rem',
+                    color: 'hsl(var(--muted-foreground))',
+                    lineHeight: 1.5,
+                    whiteSpace: 'pre-wrap',
+                    // Keep the timeline scannable — the full description still
+                    // lives in the Description section above.
+                    display: '-webkit-box',
+                    WebkitLineClamp: 6,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                  }}>
+                    {String(initialDescription).replace(/<[^>]*>/g, '').trim()}
+                  </Typography>
+                )}
+              </Box>
+            )}
+
+            {diff && totalChanges > 0 && !showAsCreation && (
               <Box sx={{ mt: 0.75, ml: 4, display: 'flex', flexDirection: 'column', gap: 0.25 }}>
                 {diff.changed.map(({ field, from, to }) => (
                   <Box key={field} sx={{ display: 'flex', flexDirection: 'column', gap: 0.15 }}>
@@ -2752,7 +2797,7 @@ const IncidentDetailPage = () => {
                 ))}
               </Box>
             )}
-            {isFirst && !diff && (
+            {isFirst && !diff && !showAsCreation && (
               <Typography variant="caption" sx={{ ml: 4, color: 'text.disabled', fontSize: '0.6rem', fontStyle: 'italic' }}>
                 Initial revision
               </Typography>
