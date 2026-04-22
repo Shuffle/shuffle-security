@@ -185,6 +185,7 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
   const [expandedMessages, setExpandedMessages] = useState<Set<string>>(new Set());
   const [showReplyBox, setShowReplyBox] = useState(false);
   const [replyText, setReplyText] = useState('');
+  const [threadCollapsed, setThreadCollapsed] = useState(false);
 
   const messages = useMemo(
     () => parseEmailThread(descriptionText, descriptionHtml),
@@ -227,16 +228,23 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
       bgcolor: 'hsl(var(--card))',
       overflow: 'hidden',
     }}>
-      {/* Thread header */}
-      <Box sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        px: 2,
-        py: 1.25,
-        borderBottom: '1px solid hsl(var(--border))',
-        bgcolor: (t) => t.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
-      }}>
+      {/* Thread header — click to collapse the whole panel */}
+      <Box
+        onClick={() => setThreadCollapsed(c => !c)}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          px: 2,
+          py: 1.25,
+          borderBottom: threadCollapsed ? 'none' : '1px solid hsl(var(--border))',
+          bgcolor: (t) => t.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
+          cursor: 'pointer',
+          '&:hover': {
+            bgcolor: (t) => t.palette.mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
+          },
+        }}
+      >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <EmailIcon sx={{ fontSize: 18, color: '#ff6600' }} />
           <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: '0.8rem' }}>
@@ -255,7 +263,7 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
             }}
           />
         </Box>
-        <Box sx={{ display: 'flex', gap: 0.5 }}>
+        <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }} onClick={(e) => e.stopPropagation()}>
           {onReply && (
             <Tooltip title="Reply">
               <IconButton size="small" onClick={() => setShowReplyBox(!showReplyBox)} sx={{
@@ -276,8 +284,19 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
               </IconButton>
             </Tooltip>
           )}
+          <Tooltip title={threadCollapsed ? 'Expand' : 'Collapse'}>
+            <IconButton
+              size="small"
+              onClick={() => setThreadCollapsed(c => !c)}
+              sx={{ color: 'text.secondary', '&:hover': { color: '#ff6600' } }}
+            >
+              {threadCollapsed ? <ExpandMoreIcon sx={{ fontSize: 18 }} /> : <ExpandLessIcon sx={{ fontSize: 18 }} />}
+            </IconButton>
+          </Tooltip>
         </Box>
       </Box>
+
+      <Collapse in={!threadCollapsed}>
 
       {/* Subject line */}
       {threadSubject && (
@@ -291,7 +310,9 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
       {/* Messages */}
       <Box sx={{ maxHeight: 500, overflow: 'auto' }}>
         {messages.map((msg, idx) => {
-          const isExpanded = msg.isLatest || expandedMessages.has(msg.id);
+          // Latest defaults to expanded but is now collapsible too — toggling
+          // collapses it; older messages start collapsed and toggle open.
+          const isExpanded = msg.isLatest ? !expandedMessages.has(msg.id) : expandedMessages.has(msg.id);
           const { name, email } = extractEmail(msg.from);
           const avatarColor = hashColor(msg.from);
 
@@ -299,19 +320,19 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
             <Box key={msg.id} sx={{
               borderBottom: idx < messages.length - 1 ? '1px solid hsl(var(--border))' : 'none',
             }}>
-              {/* Message header - always visible */}
+              {/* Message header - always visible, click to toggle */}
               <Box
-                onClick={() => !msg.isLatest && toggleMessage(msg.id)}
+                onClick={() => toggleMessage(msg.id)}
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: 1.5,
                   px: 2,
                   py: 1,
-                  cursor: msg.isLatest ? 'default' : 'pointer',
-                  '&:hover': !msg.isLatest ? {
+                  cursor: 'pointer',
+                  '&:hover': {
                     bgcolor: (t) => t.palette.mode === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
-                  } : {},
+                  },
                   transition: 'background-color 0.15s',
                 }}
               >
@@ -378,11 +399,9 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
                       {msg.date}
                     </Typography>
                   )}
-                  {!msg.isLatest && (
-                    <IconButton size="small" sx={{ color: 'text.secondary' }}>
-                      {isExpanded ? <ExpandLessIcon sx={{ fontSize: 16 }} /> : <ExpandMoreIcon sx={{ fontSize: 16 }} />}
-                    </IconButton>
-                  )}
+                  <IconButton size="small" sx={{ color: 'text.secondary' }}>
+                    {isExpanded ? <ExpandLessIcon sx={{ fontSize: 16 }} /> : <ExpandMoreIcon sx={{ fontSize: 16 }} />}
+                  </IconButton>
                 </Box>
               </Box>
 
@@ -424,6 +443,7 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
           );
         })}
       </Box>
+      </Collapse>
 
       {/* Reply box */}
       <Collapse in={showReplyBox}>
