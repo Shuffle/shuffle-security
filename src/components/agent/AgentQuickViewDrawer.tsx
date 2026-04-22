@@ -631,8 +631,14 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
                 Approve
               </Button>
               {!isConfiguring && (
-                <Button onClick={() => setIsConfiguring(true)} fullWidth variant="outlined" startIcon={<Settings size={15} />}
-                  sx={outlineButtonSx}>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  startIcon={<Settings size={15} />}
+                  disabled
+                  sx={outlineButtonSx}
+                  title="Configure is temporarily disabled"
+                >
                   Configure
                 </Button>
               )}
