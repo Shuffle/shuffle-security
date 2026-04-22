@@ -80,7 +80,7 @@ export const TOUR_STEPS: TourStep[] = [
   {
     id: 'add-outlook',
     title: 'Add ingestion sources',
-    body: 'Pull alerts from real tools.',
+    body: 'Pull alerts in from the tools you already use. Follow the highlighted spots — the goals on the right will tick off as you go.',
     bullets: [
       'Click the highlighted "+" button',
       'Add "Outlook Office365" — we will pretend-authenticate it',
