@@ -430,7 +430,7 @@ export const IncidentCardView = ({
                         onClick={(e) => handleCheckboxChange(incident.id, !selected, e)}
                       />
                     </motion.div>
-                  ) : sourceApp?.image ? (
+                  ) : resolvedImage ? (
                     <motion.div
                       key="source-img"
                       initial={{ opacity: 0, scale: 0.8 }}
