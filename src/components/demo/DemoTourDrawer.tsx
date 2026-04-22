@@ -654,11 +654,11 @@ export const DemoTourDrawer = () => {
                         // from the actual unlock target on the page.
                         backgroundColor: locked ? 'hsl(var(--muted))' : 'hsl(var(--severity-low))',
                         color: locked ? 'hsl(var(--muted-foreground))' : 'hsl(0 0% 100%)',
-                        boxShadow: locked ? 'none' : '0 6px 16px -8px hsl(var(--severity-low) / 0.6)',
-                        transition: 'background-color 0.2s ease, box-shadow 0.2s ease',
+                        boxShadow: 'none',
+                        transition: 'background-color 0.2s ease',
                         '&:hover': {
-                          backgroundColor: locked ? 'hsl(var(--muted))' : 'hsl(var(--severity-low) / 0.9)',
-                          boxShadow: locked ? 'none' : '0 8px 20px -8px hsl(var(--severity-low) / 0.7)',
+                          backgroundColor: locked ? 'hsl(var(--muted))' : 'hsl(var(--severity-low) / 0.85)',
+                          boxShadow: 'none',
                         },
                         '&.Mui-disabled': {
                           backgroundColor: 'hsl(var(--muted))',
