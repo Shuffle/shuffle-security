@@ -100,19 +100,19 @@ export const TOUR_STEPS: TourStep[] = [
   {
     id: 'incidents-list',
     title: 'Incidents arriving',
-    body: 'Alerts from your tools land here. Open one to dig in.',
+    body: 'The phishing email reported by Diego Ruiz just landed. Open it to start investigating — the rest of the related alerts will arrive while you dig in.',
     bullets: [
       'Severity, source tool, assignee, status',
       'Filter, sort, bulk-resolve',
     ],
     route: '/incidents',
     requirement: {
-      label: 'At least one demo incident must be present',
+      label: 'The "Phishing email" incident must be present',
       targetSelector: '[data-tour="demo-force-create-incidents"]',
     },
     subGoals: [
-      { id: 'incidents-list:present', label: 'At least one demo incident must be present' },
-      { id: 'incidents-list:open', label: 'Open the incident' },
+      { id: 'incidents-list:present', label: 'The "Phishing email" incident must be present' },
+      { id: 'incidents-list:open', label: 'Click the "Phishing email reported by Diego Ruiz" row to open it' },
     ],
   },
   {
