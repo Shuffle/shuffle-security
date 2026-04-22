@@ -10,6 +10,7 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import { Link } from 'react-router-dom';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
+import { fetchAuthenticatedApps } from '@/services/authenticatedApps';
 import { deduplicateAuthApps, backfillAppImages, type AuthAppEntry } from '@/lib/utils';
 import { useAppDetail } from '@/context/AppDetailContext';
 import { SIEM_PATTERNS, CASES_PATTERNS, EDR_PATTERNS, EMAIL_APP_PATTERNS } from '@/lib/ingestionDetection';
@@ -86,36 +87,32 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
   const fetchIntegrations = useCallback(async () => {
     setLoading(true);
     try {
-      const authResponse = await fetch(getApiUrl('/api/v1/apps/authentication'), {
-        credentials: 'include',
-        headers: { ...getAuthHeader() },
-      });
-      
+      // Use the coalesced shared fetcher so we share a single in-flight
+      // request with other consumers (e.g. the incident header source-app
+      // logo). Without this, every detail-page navigation triggered 3+
+      // identical /apps/authentication requests.
+      const authData = (await fetchAuthenticatedApps().catch(() => [])) as unknown as AuthAppEntry[];
+
       let dedupedIntegrations: Integration[] = [];
       const authNameSet = new Set<string>();
 
-      if (authResponse.ok) {
-        const result = await authResponse.json();
-        const authData: AuthAppEntry[] = result.data || result;
-        
-        if (Array.isArray(authData)) {
-          const dedupedApps = deduplicateAuthApps(authData);
-          await backfillAppImages(dedupedApps);
-          
-          dedupedIntegrations = dedupedApps
-            .map(({ app, instances, hasValidAuth, bestImage }) => {
-              authNameSet.add(app.name.toLowerCase());
-              return {
-                id: app.id,
-                name: app.name,
-                icon: bestImage || app.large_image || '',
-                category: app.categories?.[0] || 'Integration',
-                hasValidAuth,
-                authInstances: instances,
-                isActiveOnly: false,
-              };
-            });
-        }
+      if (Array.isArray(authData) && authData.length > 0) {
+        const dedupedApps = deduplicateAuthApps(authData);
+        await backfillAppImages(dedupedApps);
+
+        dedupedIntegrations = dedupedApps
+          .map(({ app, instances, hasValidAuth, bestImage }) => {
+            authNameSet.add(app.name.toLowerCase());
+            return {
+              id: app.id,
+              name: app.name,
+              icon: bestImage || app.large_image || '',
+              category: app.categories?.[0] || 'Integration',
+              hasValidAuth,
+              authInstances: instances,
+              isActiveOnly: false,
+            };
+          });
       }
 
       if (dedupedIntegrations.length < 10) {

@@ -14,7 +14,7 @@
  *      with a blank avatar.
  */
 import { useEffect, useState } from 'react';
-import { getApiUrl, getAuthHeader } from '@/config/api';
+import { fetchAuthenticatedApps } from '@/services/authenticatedApps';
 
 /**
  * Sources that are NOT real integrations and therefore must not trigger any
@@ -55,10 +55,6 @@ export const useSourceAppImage = (
       setImage(null);
       return;
     }
-    const headers: Record<string, string> = {
-      ...getAuthHeader(),
-      ...(crossOrgId ? { 'Org-Id': crossOrgId } : {}),
-    };
     let cancelled = false;
 
     const fallbackToAlgolia = async () => {
@@ -84,23 +80,16 @@ export const useSourceAppImage = (
       }
     };
 
-    fetch(getApiUrl('/api/v1/apps/authentication'), {
-      credentials: 'include',
-      headers,
-    })
-      .then((r) => r.json())
-      .then((result) => {
+    fetchAuthenticatedApps(crossOrgId)
+      .then((authData) => {
         if (cancelled) return;
-        const authData = result.data || result;
-        if (Array.isArray(authData)) {
-          const match = authData.find((a: any) => {
-            const appName = (a.app?.name || '').toLowerCase().replace(/[\s_-]/g, '');
-            return appName === normalized;
-          });
-          if (match?.app?.large_image) {
-            setImage(match.app.large_image);
-            return;
-          }
+        const match = authData.find((a) => {
+          const appName = (a.app?.name || '').toLowerCase().replace(/[\s_-]/g, '');
+          return appName === normalized;
+        });
+        if (match?.app?.large_image) {
+          setImage(match.app.large_image);
+          return;
         }
         // No authenticated match — try the public Algolia catalog.
         fallbackToAlgolia();

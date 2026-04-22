@@ -84,6 +84,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUserInfo(info);
         // Store in localStorage so datastore service can access org ID
         localStorage.setItem('shuffle_user_info', JSON.stringify(info));
+        // Broadcast the raw getinfo payload so other contexts (e.g. ThemeContext)
+        // can read fields like `theme` without firing their own duplicate request.
+        try {
+          window.dispatchEvent(new CustomEvent('shuffle:getinfo', { detail: data }));
+        } catch { /* ignore */ }
         return true;
       } else {
         console.warn('getinfo failed:', data.reason || 'Unknown error');
