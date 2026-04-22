@@ -65,6 +65,13 @@ export interface ActivityItem {
    *  #4", "Agent run"). Captured at reply time so we can display it inside
    *  the threaded child without re-resolving the parent. */
   replyToLabel?: string;
+  /** Soft-delete flag. We never hard-delete comments — instead we mark them
+   *  deleted so the original timestamp, author and thread position stay put.
+   *  The renderer shows a muted "Comment deleted" placeholder in place of
+   *  the original content (and attachments are stripped). */
+  deleted?: boolean;
+  /** When the comment was soft-deleted (ms epoch). */
+  deletedAt?: number;
 }
 
 // TLP levels for UI display (using new integer-based system)
