@@ -86,11 +86,14 @@ const SetupStepCard = ({ step, index, ignored, onIgnore, onRestore }: {
   onRestore?: (id: string) => void;
 }) => {
   const navigate = useNavigate();
-  const colors = ignored
-    ? { dot: 'hsl(var(--muted-foreground))', bg: 'hsl(var(--muted) / 0.15)', border: 'hsl(var(--border))' }
-    : statusColors[step.status];
   const isComplete = step.status === 'complete';
   const isDisabled = !!step.disabled && !isComplete && !ignored;
+  // When the step is locked/disabled or ignored, fall back to a neutral
+  // muted palette so the card does not steal focus with the bright
+  // "action-needed" orange that doesn't apply to it.
+  const colors = ignored || isDisabled
+    ? { dot: 'hsl(var(--muted-foreground))', bg: 'hsl(var(--muted) / 0.15)', border: 'hsl(var(--border))' }
+    : statusColors[step.status];
   const isInteractive = !isComplete && !ignored && !isDisabled;
 
   const cardContent = (
