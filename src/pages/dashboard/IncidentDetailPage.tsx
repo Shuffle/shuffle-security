@@ -2415,36 +2415,36 @@ const IncidentDetailPage = () => {
         py: 1.5,
         borderBottom: '1px solid hsl(var(--border))',
       }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, flexWrap: 'wrap' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <HistoryIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
             <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Timeline</Typography>
+            {revisionsLoading && <CircularProgress size={14} sx={{ color: '#ff6600' }} />}
           </Box>
-          {revisionsLoading && <CircularProgress size={14} sx={{ color: '#ff6600' }} />}
-        </Box>
-        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-          {([
-            { key: 'all' as const, label: 'All', count: undefined as number | undefined },
-            { key: 'revisions' as const, label: 'Changes', count: revisions.length },
-            { key: 'agent' as const, label: 'Agent', count: agentRuns.length },
-            { key: 'manual' as const, label: 'Comments', count: activity.length },
-          ]).map(({ key, label, count }) => (
-            <Chip
-              key={key}
-              label={count !== undefined ? `${label} (${count})` : label}
-              size="small"
-              variant="outlined"
-              onClick={() => setActivityFilter(key)}
-              sx={{
-                height: 24,
-                fontSize: '0.7rem',
-                bgcolor: 'transparent',
-                borderColor: activityFilter === key ? 'rgba(255, 102, 0, 0.5)' : 'rgba(255,255,255,0.12)',
-                color: activityFilter === key ? '#ff6600' : 'text.secondary',
-                '&:hover': { bgcolor: 'rgba(255, 102, 0, 0.06)' },
-              }}
-            />
-          ))}
+          <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+            {([
+              { key: 'all' as const, label: 'All', count: undefined as number | undefined },
+              { key: 'revisions' as const, label: 'Changes', count: revisions.length },
+              { key: 'agent' as const, label: 'Agent', count: agentRuns.length },
+              { key: 'manual' as const, label: 'Comments', count: activity.length },
+            ]).map(({ key, label, count }) => (
+              <Chip
+                key={key}
+                label={count !== undefined ? `${label} (${count})` : label}
+                size="small"
+                variant="outlined"
+                onClick={() => setActivityFilter(key)}
+                sx={{
+                  height: 24,
+                  fontSize: '0.7rem',
+                  bgcolor: 'transparent',
+                  borderColor: activityFilter === key ? 'rgba(255, 102, 0, 0.5)' : 'rgba(255,255,255,0.12)',
+                  color: activityFilter === key ? '#ff6600' : 'text.secondary',
+                  '&:hover': { bgcolor: 'rgba(255, 102, 0, 0.06)' },
+                }}
+              />
+            ))}
+          </Box>
         </Box>
       </Box>
 
