@@ -676,10 +676,7 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
     markStepCompleted, setStepCompleted,
     forceCreateIncidents, isForceCreatingIncidents,
     forceGenerateSingleIncident, isForceGeneratingSingle,
-    hasDemoIncidents,
-    isOnIncidentDetail,
-    attentionPulse,
-  }), [
+    forceGenerateWazuhIncident, isForceGeneratingWazuh,
     active, isSeeding, isCleaning, drawerOpen, minimized, dock, step, stats,
     completedSteps, currentStepUnlocked,
     startDemo, openTour, closeTour, minimizeTour, restoreTour, toggleDock, setDock,
