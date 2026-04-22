@@ -384,6 +384,7 @@ export const forceCreateSingleDemoIncident = async (): Promise<number> => {
   if (!res.success) throw new Error(res.error || 'Failed to create demo focus incident');
   recordSeed(DATASTORE_CATEGORIES.INCIDENTS, [item.key]);
   broadcastRefresh(DATASTORE_CATEGORIES.INCIDENTS);
+  scheduleDemoObservableEnrichment(item.key, item.pendingObservables);
   return 1;
 };
 
