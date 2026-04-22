@@ -5920,6 +5920,25 @@ const IncidentDetailPage = () => {
                 <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                   · linked across other datastore items
                 </Typography>
+                <Tooltip title="Re-run correlation search" arrow>
+                  <span>
+                    <IconButton
+                      size="small"
+                      onClick={() => fetchCorrelations()}
+                      disabled={correlationsLoading}
+                      sx={{
+                        ml: 'auto',
+                        p: 0.5,
+                        color: 'hsl(var(--muted-foreground))',
+                        '&:hover': { color: 'hsl(var(--primary))', bgcolor: 'hsl(var(--accent))' },
+                      }}
+                    >
+                      {correlationsLoading
+                        ? <CircularProgress size={14} />
+                        : <RefreshIcon sx={{ fontSize: 16 }} />}
+                    </IconButton>
+                  </span>
+                </Tooltip>
               </Box>
 
               {/* Correlation list */}
