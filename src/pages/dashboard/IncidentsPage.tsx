@@ -1611,7 +1611,9 @@ const IncidentsPage = () => {
   const primaryFetchFailed = !!error;
   const subOrgDataAvailable = subOrgItems.size > 0 && Array.from(subOrgItems.values()).some(v => v.items.length > 0);
 
-  if (hasFetched && !isLoading && !isRefreshing && !hasAnyIncidents && !(primaryFetchFailed && subOrgDataAvailable)) {
+  // During the demo tour, always render the full incidents UI (with seeded
+  // demo data) instead of the empty state, so users see the real layout.
+  if (hasFetched && !isLoading && !isRefreshing && !hasAnyIncidents && !(primaryFetchFailed && subOrgDataAvailable) && !demoActive) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
