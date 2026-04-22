@@ -748,19 +748,29 @@ export const DemoTourDrawer = () => {
                           fontSize: '0.78rem',
                           fontWeight: 700,
                           // Unlocked → green CTA (clear "go" affordance).
-                          // Locked → muted/neutral so it does not steal focus
-                          // from the actual unlock target on the page.
-                          backgroundColor: locked ? 'hsl(var(--muted))' : 'hsl(var(--severity-low))',
+                          // Locked → outlined / neutral so it does not look
+                          // clickable and does not steal focus from the actual
+                          // unlock target on the page. We must override
+                          // `background` (not just `backgroundColor`) because
+                          // MUI's containedPrimary theme override paints a
+                          // gradient on the `background` shorthand which would
+                          // otherwise leak through.
+                          background: locked ? 'transparent' : 'hsl(var(--severity-low))',
+                          backgroundColor: locked ? 'transparent' : 'hsl(var(--severity-low))',
                           color: locked ? 'hsl(var(--muted-foreground))' : 'hsl(0 0% 100%)',
+                          border: locked ? '1px solid hsl(var(--border))' : 'none',
                           boxShadow: !locked && justUnlocked ? '0 6px 22px -6px hsl(var(--severity-low) / 0.7)' : 'none',
                           transition: 'background-color 0.2s ease, box-shadow 0.3s ease',
                           '&:hover': {
-                            backgroundColor: locked ? 'hsl(var(--muted))' : 'hsl(var(--severity-low) / 0.85)',
+                            background: locked ? 'transparent' : 'hsl(var(--severity-low) / 0.85)',
+                            backgroundColor: locked ? 'transparent' : 'hsl(var(--severity-low) / 0.85)',
                             boxShadow: !locked ? '0 6px 22px -6px hsl(var(--severity-low) / 0.7)' : 'none',
                           },
                           '&.Mui-disabled': {
-                            backgroundColor: 'hsl(var(--muted))',
+                            background: 'transparent',
+                            backgroundColor: 'transparent',
                             color: 'hsl(var(--muted-foreground))',
+                            border: '1px solid hsl(var(--border))',
                             boxShadow: 'none',
                           },
                         }}
