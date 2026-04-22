@@ -5696,20 +5696,25 @@ const IncidentDetailPage = () => {
 
         {/* Right Timeline Sidebar — hidden on Details (inlined there) and on Original / Translation / OCSF tabs */}
         {activeTab !== 0 && activeTab !== 4 && activeTab !== 5 && activeTab !== 6 && (
-        <Box
-          data-tour="incident-activity-feed"
-          sx={{ 
-          width: { xs: '100%', lg: 380 },
-          flexShrink: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          bgcolor: 'hsl(var(--card))',
-          borderRadius: 2,
-          border: '1px solid hsl(var(--border))',
-          order: { xs: 2, lg: 0 },
-          ...(isPublicView && { pointerEvents: 'none' }),
-        }}>
-          {renderTimelinePanel('sidebar')}
+        <Box sx={{ width: { xs: '100%', lg: 380 }, flexShrink: 0, order: { xs: 2, lg: 0 } }}>
+          <motion.div
+            layoutId="incident-timeline-panel"
+            layout
+            transition={{ type: 'spring', stiffness: 260, damping: 30 }}
+            data-tour="incident-activity-feed"
+            style={{
+              width: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              backgroundColor: 'hsl(var(--card))',
+              borderRadius: 8,
+              border: '1px solid hsl(var(--border))',
+              overflow: 'hidden',
+              ...(isPublicView ? { pointerEvents: 'none' as const } : {}),
+            }}
+          >
+            {renderTimelinePanel('sidebar')}
+          </motion.div>
         </Box>
         )}
       </Box>
