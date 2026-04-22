@@ -72,6 +72,19 @@ export interface IncidentTask {
   aiWorking?: boolean;
   attachments?: FileAttachment[];
   disabled?: boolean; // Soft-delete flag - hidden in UI but preserved in data
+  // Persisted lane key (e.g. 'todo', 'in_progress'). When omitted the task
+  // defaults to the first non-`done` lane ("To Do"). Mirrored on disk so
+  // status changes survive reloads.
+  _lane?: string;
+  // Append-only audit log of status transitions. Each entry captures the
+  // lane the task moved between and when/who triggered it. Used to power
+  // the incident timeline's "task moved" markers.
+  statusHistory?: Array<{
+    from: string;
+    to: string;
+    at: number;
+    by?: string;
+  }>;
 }
 
 // Task categories for organization

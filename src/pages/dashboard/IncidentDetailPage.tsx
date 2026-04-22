@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef, forwardRef } from 'r
 import DOMPurify from 'dompurify';
 import AgentIcon from '@/components/agent/AgentIcon';
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { useEntityLabel } from '@/hooks/useEntityLabel';
+import { useEntityLabel, useTaskStatuses } from '@/hooks/useEntityLabel';
 import {
   Box,
   Typography,
@@ -484,6 +484,7 @@ const IncidentDetailPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { plural: entityPlural, singular: entitySingular, basePath: entityBasePath } = useEntityLabel();
+  const taskStatuses = useTaskStatuses();
   const { userInfo } = useAuth();
   const { openApp } = useAppDetail();
   const currentUsername = userInfo?.username || '';
@@ -2195,15 +2196,29 @@ const IncidentDetailPage = () => {
 
   const handleToggleTask = (taskId: string) => {
     autoProgressStatus();
-    setTasks(tasks.map(task => 
-      task.id === taskId 
-        ? { 
-            ...task, 
-            completed: !task.completed, 
-            completedAt: !task.completed ? Date.now() : 0 
-          } 
-        : task
-    ));
+    const laneKeys = taskStatuses.map((s) => s.key);
+    const defaultOpenLane = laneKeys.find((k) => k !== 'done') || laneKeys[0] || 'todo';
+    setTasks(tasks.map(task => {
+      if (task.id !== taskId) return task;
+      const becomingDone = !task.completed;
+      const previousLane = task.completed
+        ? 'done'
+        : (task._lane && laneKeys.includes(task._lane) ? task._lane : defaultOpenLane);
+      const nextLane = becomingDone ? 'done' : defaultOpenLane;
+      const historyEntry = {
+        from: previousLane,
+        to: nextLane,
+        at: Date.now(),
+        by: currentUsername || undefined,
+      };
+      return {
+        ...task,
+        completed: becomingDone,
+        completedAt: becomingDone ? Date.now() : 0,
+        _lane: nextLane,
+        statusHistory: [...(task.statusHistory || []), historyEntry],
+      };
+    }));
   };
 
   const handleUpdateTaskAssignee = (taskId: string, assignee: string) => {
@@ -2667,7 +2682,7 @@ const IncidentDetailPage = () => {
   // Builder for the unified timeline items (revisions + agent runs + comments).
   // Returns an array of JSX nodes (or a single empty-state node).
   const renderTimelineFeedItems = () => {
-    type StepKind = 'task-created' | 'task-completed' | 'observable-added' | 'correlation-found';
+    type StepKind = 'task-created' | 'task-completed' | 'task-status-changed' | 'observable-added' | 'correlation-found';
     type TimelineItem =
       | { type: 'revision'; timestamp: number; data: any; idx: number; parsedCurrent: any; parsedPrevious: any | null }
       | { type: 'agent'; timestamp: number; data: typeof agentRuns[number] }
@@ -2733,7 +2748,12 @@ const IncidentDetailPage = () => {
     if (activityFilter === 'all' || activityFilter === 'steps') {
       const fallbackTs = incident?.createdTs ? normalizeToMs(incident.createdTs) : 0;
 
-      // Tasks — both creation and completion produce a step.
+      // Tasks — creation, status transitions, and completion each produce
+      // a step so the user can see exactly when state changed and by whom.
+      const laneLabel = (key: string): string =>
+        taskStatuses.find((s) => s.key === key)?.label
+        || (key === 'done' ? 'Done' : key.replace(/[_-]+/g, ' '));
+
       tasks.filter(t => !t.disabled).forEach((t) => {
         const createdTs = t.createdAt ? normalizeToMs(t.createdAt) : fallbackTs;
         if (createdTs > 0) {
@@ -2746,6 +2766,23 @@ const IncidentDetailPage = () => {
             detail: t.title,
           });
         }
+        // Status transitions captured in `statusHistory` (every drag between
+        // kanban columns appends an entry). Skip the trivial → Done case
+        // because the dedicated 'task-completed' step already covers it.
+        (t.statusHistory || []).forEach((entry, hIdx) => {
+          if (!entry?.at) return;
+          if (entry.to === 'done') return;
+          const ts = normalizeToMs(entry.at);
+          if (ts <= 0) return;
+          items.push({
+            type: 'step',
+            kind: 'task-status-changed',
+            timestamp: ts,
+            id: `step-task-status-${t.id}-${hIdx}`,
+            label: 'Task moved',
+            detail: `${t.title} · ${laneLabel(entry.from)} → ${laneLabel(entry.to)}${entry.by ? ` by ${entry.by}` : ''}`,
+          });
+        });
         if (t.completed && t.completedAt) {
           const completedTs = normalizeToMs(t.completedAt);
           if (completedTs > 0) {
@@ -3152,10 +3189,11 @@ const IncidentDetailPage = () => {
         // observable added / correlation found) injected on the frontend so
         // the user can see *when* every artefact appeared on the timeline.
         const stepStyle: Record<StepKind, { color: string; icon: React.ReactNode }> = {
-          'task-created':       { color: '#a855f7', icon: <TaskAltIcon sx={{ fontSize: 12 }} /> },
-          'task-completed':     { color: '#22c55e', icon: <CheckCircleIcon sx={{ fontSize: 12 }} /> },
-          'observable-added':   { color: '#06b6d4', icon: <VisibilityIcon sx={{ fontSize: 12 }} /> },
-          'correlation-found':  { color: '#f59e0b', icon: <LinkIcon sx={{ fontSize: 12 }} /> },
+          'task-created':         { color: '#a855f7', icon: <TaskAltIcon sx={{ fontSize: 12 }} /> },
+          'task-completed':       { color: '#22c55e', icon: <CheckCircleIcon sx={{ fontSize: 12 }} /> },
+          'task-status-changed':  { color: '#3b82f6', icon: <ForwardIcon sx={{ fontSize: 12 }} /> },
+          'observable-added':     { color: '#06b6d4', icon: <VisibilityIcon sx={{ fontSize: 12 }} /> },
+          'correlation-found':    { color: '#f59e0b', icon: <LinkIcon sx={{ fontSize: 12 }} /> },
         };
         const cfg = stepStyle[item.kind];
         return (
