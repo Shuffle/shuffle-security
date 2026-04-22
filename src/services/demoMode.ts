@@ -114,6 +114,69 @@ const recordSeed = (category: string, keys: string[]) => {
   localStorage.setItem(DEMO_ACTIVE_KEY, 'true');
 };
 
+/**
+ * Demo enrichment scheduler.
+ *
+ * After a demo incident lands in the datastore, schedule the observables to
+ * be added one-by-one in the background — exactly the way real Shuffle
+ * enrichment runs after an incident is ingested. The first observable
+ * shows up after a short delay, with each subsequent one a few seconds
+ * later, so the user sees enrichments stream in on the timeline rather
+ * than appearing pre-baked.
+ *
+ * Best-effort: any failure (incident not yet materialized via the webhook
+ * pipeline, network blip, etc.) is logged and skipped — we never throw out
+ * of a background timer.
+ */
+const FIRST_ENRICHMENT_DELAY_MS = 4000;
+const ENRICHMENT_INTERVAL_MS = 3500;
+
+const scheduleDemoObservableEnrichment = (
+  key: string,
+  observables: PendingObservable[],
+): void => {
+  if (!observables || observables.length === 0) return;
+
+  observables.forEach((obs, idx) => {
+    const delay = FIRST_ENRICHMENT_DELAY_MS + idx * ENRICHMENT_INTERVAL_MS;
+    window.setTimeout(async () => {
+      try {
+        // Pull the latest incident state so we don't clobber edits the user
+        // (or other background processes) made in the meantime.
+        const fetched = await getDatastoreItem(key, DATASTORE_CATEGORIES.INCIDENTS);
+        if (!fetched.success || !fetched.item) return;
+        const raw = fetched.item.value;
+        const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+        if (!parsed || typeof parsed !== 'object') return;
+
+        const seenAt = new Date().toISOString();
+        const existingEnrichments = Array.isArray(parsed.enrichments) ? parsed.enrichments : [];
+        // De-dupe on (type+value) so re-runs don't pile duplicates on.
+        const alreadyPresent = existingEnrichments.some((e: { type?: string; value?: string }) =>
+          e?.type === obs.type && e?.value === obs.value,
+        );
+        if (alreadyPresent) return;
+
+        const updated = {
+          ...parsed,
+          last_seen_time: seenAt,
+          enrichments: [
+            ...existingEnrichments,
+            { type: obs.type, value: obs.value, first_seen: seenAt, last_seen: seenAt },
+          ],
+        };
+
+        const res = await setDatastoreItem(key, updated, DATASTORE_CATEGORIES.INCIDENTS);
+        if (res.success) {
+          broadcastRefresh(DATASTORE_CATEGORIES.INCIDENTS);
+        }
+      } catch (err) {
+        console.warn('[demo] background enrichment failed', { key, obs, err });
+      }
+    }, delay);
+  });
+};
+
 
 
 // ─── Per-step seeders ────────────────────────────────────────────────────────
