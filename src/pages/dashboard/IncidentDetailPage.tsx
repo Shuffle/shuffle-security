@@ -5967,6 +5967,8 @@ const IncidentDetailPage = () => {
                   return (
                     <Box
                       key={corr.key || idx}
+                      data-corr-key={corr.key}
+                      className={flashedCorrelationKey === corr.key ? 'incident-new-flash' : undefined}
                       sx={{
                         p: 1.75,
                         borderRadius: 1.5,
