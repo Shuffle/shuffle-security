@@ -2495,7 +2495,47 @@ const IncidentDetailPage = () => {
           <Avatar sx={{ width: 28, height: 28, bgcolor: 'rgba(255, 102, 0, 0.2)' }}>
             <PersonIcon sx={{ fontSize: 16, color: '#ff6600' }} />
           </Avatar>
-          <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }} ref={commentInputRef}>
+            {replyingTo && (
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  px: 1.25,
+                  py: 0.75,
+                  borderRadius: 1,
+                  bgcolor: 'rgba(255, 102, 0, 0.08)',
+                  border: '1px solid rgba(255, 102, 0, 0.25)',
+                }}
+              >
+                <ReplyIcon sx={{ fontSize: 14, color: '#ff6600' }} />
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: '#ff6600', lineHeight: 1.2 }}>
+                    Replying to {replyingTo.label}
+                  </Typography>
+                  {replyingTo.preview && (
+                    <Typography sx={{
+                      fontSize: '0.68rem',
+                      color: 'text.secondary',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      lineHeight: 1.3,
+                    }}>
+                      {replyingTo.preview}
+                    </Typography>
+                  )}
+                </Box>
+                <IconButton
+                  size="small"
+                  onClick={() => setReplyingTo(null)}
+                  sx={{ width: 20, height: 20, color: 'text.secondary', '&:hover': { color: '#ff6600' } }}
+                >
+                  <DeleteIcon sx={{ fontSize: 12 }} />
+                </IconButton>
+              </Box>
+            )}
             <Box sx={{ position: 'relative' }}>
               <MentionInput
                 value={newComment}
