@@ -165,6 +165,15 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
   const [ingestionApps, setIngestionApps] = useState<ValidatedIngestionApp[]>([]);
   const [securityRulesText, setSecurityRulesText] = useState('');
   const [aiAgentPrompts, setAiAgentPrompts] = useState<string[]>(['']);
+  /**
+   * Tracks which automation rows have their config section expanded.
+   * Enabling an automation no longer auto-expands it — the user explicitly
+   * clicks the chevron on the row header to reveal/hide configuration.
+   * Keyed by automation type (e.g. 'workflow', 'webhook', 'security_rules').
+   */
+  const [expandedTypes, setExpandedTypes] = useState<Record<string, boolean>>({});
+  const toggleExpanded = (type: string) =>
+    setExpandedTypes(prev => ({ ...prev, [type]: !prev[type] }));
 
   const fetchIngestionApps = async () => {
     try {
