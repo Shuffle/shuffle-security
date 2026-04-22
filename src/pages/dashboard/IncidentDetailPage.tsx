@@ -2844,6 +2844,7 @@ const IncidentDetailPage = () => {
         return `rev-${rev.id || rev.key || it.idx}`;
       }
       if (it.type === 'agent') return `agent-${it.data.execution_id}`;
+      if (it.type === 'step') return it.id;
       return it.data.id;
     };
     const getItemLabel = (it: TimelineItem): string => {
@@ -2852,6 +2853,7 @@ const IncidentDetailPage = () => {
         return `Revision #${revisions.length - it.idx}`;
       }
       if (it.type === 'agent') return 'Agent run';
+      if (it.type === 'step') return it.label;
       return `${it.data.user || 'Comment'}`;
     };
     const getItemPreview = (it: TimelineItem): string => {
@@ -2863,6 +2865,7 @@ const IncidentDetailPage = () => {
         const r: any = it.data;
         return String(r.run_input || r.summary || r.status || '').slice(0, 80);
       }
+      if (it.type === 'step') return (it.detail || '').slice(0, 80);
       const text = it.data.content && /<[a-z][\s\S]*>/i.test(it.data.content)
         ? htmlToPlainText(it.data.content).trim()
         : (it.data.content || '');
