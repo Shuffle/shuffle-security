@@ -3239,6 +3239,7 @@ const IncidentDetailPage = () => {
         return (
           <Box
             key={item.id}
+            data-timeline-compact="true"
             sx={{
               display: 'flex',
               alignItems: 'center',
