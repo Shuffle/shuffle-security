@@ -2750,6 +2750,8 @@ const IncidentDetailPage = () => {
         });
       }
     }
+
+    if (activityFilter === 'all' || activityFilter === 'agent') {
       agentRuns.forEach((run) => {
         const ts = normalizeToMs(run.started_at);
         items.push({ type: 'agent', timestamp: ts, data: run });
