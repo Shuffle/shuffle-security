@@ -1492,6 +1492,19 @@ const IncidentDetailPage = () => {
     fetchCorrelations();
   }, [id, loading]);
 
+  // Tick periodically while the incident is "fresh" (created within the last
+  // 2 minutes) so the observables area can show a loading state until the
+  // background enrichment window has elapsed.
+  useEffect(() => {
+    const createdTs = incident?.createdTs || 0;
+    if (!createdTs) return;
+    const age = Date.now() - createdTs;
+    if (age >= FRESH_OBS_WINDOW_MS) return;
+    const tickId = window.setInterval(() => setNowTick(Date.now()), 2000);
+    const expireId = window.setTimeout(() => setNowTick(Date.now()), FRESH_OBS_WINDOW_MS - age + 50);
+    return () => { window.clearInterval(tickId); window.clearTimeout(expireId); };
+  }, [incident?.createdTs]);
+
   // Fetch per-observable correlations when observables tab is active
   useEffect(() => {
     if (activeTab !== 2 || loading) return;
