@@ -22,6 +22,9 @@ import {
   type ValidatedIngestionApp,
 } from '@/lib/ingestionDetection';
 import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
+import { getDatastoreByCategory, setDatastoreItems, DATASTORE_CATEGORIES } from '@/services/datastore';
+import { DEFAULT_THREAT_FEEDS } from '@/hooks/useThreatFeeds';
+import { DEFAULT_IOC_TYPES, DEFAULT_ENABLED_IOCS } from '@/hooks/useIOCTypes';
 
 /**
  * localStorage key holding the JSON-encoded list of app names that were on
@@ -29,18 +32,31 @@ import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
  * cleanup we use this to restore the original sources.
  */
 export const DEMO_INGEST_APPS_BACKUP_KEY = 'shuffle_demo_ingest_apps_backup';
-import { getDatastoreByCategory, setDatastoreItems, DATASTORE_CATEGORIES } from '@/services/datastore';
-import { DEFAULT_THREAT_FEEDS } from '@/hooks/useThreatFeeds';
-import { DEFAULT_IOC_TYPES, DEFAULT_ENABLED_IOCS } from '@/hooks/useIOCTypes';
 
-/** Same shape as AutomationConfig.generateWorkflow — POSTs to v2 generate. */
+/** The label "Ingest Tickets" comes from the usecase registry — keep in sync. */
+const INGEST_TICKETS_LABEL = 'Ingest Tickets';
+
+/**
+ * POST to /api/v2/workflows/generate.
+ *
+ * If `enabledAppNames` is empty:
+ *   - by default we skip the call (matches the original onboarding semantics);
+ *   - when `allowEmpty` is true, we still POST without an `app_name` so the
+ *     workflow gets generated with no apps wired up. Used in demo mode for
+ *     "Ingest Tickets" so we never touch the user's real integrations.
+ */
 const generateWorkflow = async (
   label: string,
   enabledAppNames: string[],
   category: string = 'cases',
+  options: { allowEmpty?: boolean } = {},
 ): Promise<void> => {
-  if (enabledAppNames.length === 0) return;
+  if (enabledAppNames.length === 0 && !options.allowEmpty) return;
   try {
+    const body: Record<string, string> = { label, category };
+    if (enabledAppNames.length > 0) {
+      body.app_name = enabledAppNames.join(',');
+    }
     await fetch(getApiUrl('/api/v2/workflows/generate'), {
       method: 'POST',
       credentials: 'include',
@@ -48,11 +64,7 @@ const generateWorkflow = async (
         ...getAuthHeader(),
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        label,
-        app_name: enabledAppNames.join(','),
-        category,
-      }),
+      body: JSON.stringify(body),
     });
   } catch (err) {
     console.warn(`[demo] workflow generate failed for ${label}`, err);
@@ -75,22 +87,54 @@ const fetchAuthenticatedApps = async (): Promise<AuthAppEntry[]> => {
   }
 };
 
+/** Fetch all workflows. */
+const fetchWorkflows = async (): Promise<any[]> => {
+  try {
+    const res = await fetch(getApiUrl('/api/v1/workflows'), {
+      credentials: 'include',
+      headers: { ...getAuthHeader() },
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : (data?.workflows || []);
+  } catch {
+    return [];
+  }
+};
+
 /**
- * Generate the four onboarding workflows (Ingest + Threat Intel) using the
- * user's currently-authenticated apps. Mirrors AutomationConfig's logic:
- * each automation area yields multiple labels (including `_webhook` variants
- * for ingestion), and each label is sent to `/api/v2/workflows/generate`.
+ * Snapshot the apps currently wired into the user's "Ingest Tickets"
+ * workflow (if any) so we can restore them when the demo ends. We only
+ * write the backup the first time — subsequent demo runs must not
+ * overwrite the real snapshot with an already-cleared workflow.
+ */
+const backupExistingIngestTicketsApps = async (): Promise<void> => {
+  if (localStorage.getItem(DEMO_INGEST_APPS_BACKUP_KEY) !== null) return;
+  const workflows = await fetchWorkflows();
+  const ingest = findIngestTicketsWorkflow(workflows);
+  const names = ingest ? Array.from(extractWorkflowAppNames(ingest)) : [];
+  localStorage.setItem(DEMO_INGEST_APPS_BACKUP_KEY, JSON.stringify(names));
+};
+
+/**
+ * Generate the onboarding workflows (Ingest + Threat Intel).
+ *
+ * Demo-mode behavior for "Ingest Tickets": we explicitly DO NOT pass any of
+ * the user's real apps. We snapshot whatever apps were on the existing
+ * workflow first (so cleanup can restore them), then generate the workflow
+ * empty so the demo runs in isolation. Threat Intel and the webhook variant
+ * keep the original behavior.
  */
 const generateOnboardingWorkflows = async (): Promise<void> => {
   const authedApps = await fetchAuthenticatedApps();
   const valid = authedApps.filter(a => a.active || a.validation?.valid);
 
-  // Pull the deduplicated app names — mirrors what AutomationConfig sends.
-  const ingestionApps: ValidatedIngestionApp[] = extractValidatedIngestionApps(valid, undefined);
-  const ingestionAppNames = Array.from(new Set(ingestionApps.map(a => a.name)));
-
+  // Threat-intel apps still get wired up — only Ingest Tickets is sandboxed.
   const dedupAll = deduplicateAuthApps(valid).map(d => d.app.name);
   const threatIntelAppNames = Array.from(new Set(dedupAll));
+
+  // Snapshot the user's real Ingest Tickets apps before we overwrite them.
+  await backupExistingIngestTicketsApps();
 
   const ingestLabels = getAutomationLabels('automatic_ingestion');
   const threatLabels = getAutomationLabels('threat_intel');
@@ -98,12 +142,66 @@ const generateOnboardingWorkflows = async (): Promise<void> => {
   // Fire all generations in parallel — each is independent.
   const tasks: Promise<void>[] = [];
   for (const label of ingestLabels) {
-    tasks.push(generateWorkflow(label, ingestionAppNames, 'cases'));
+    if (label === INGEST_TICKETS_LABEL) {
+      // Demo: generate with NO apps so we never touch the user's integrations.
+      tasks.push(generateWorkflow(label, [], 'cases', { allowEmpty: true }));
+    } else {
+      // Webhook variant + anything else keeps original behavior.
+      tasks.push(generateWorkflow(label, [], 'cases', { allowEmpty: true }));
+    }
   }
   for (const label of threatLabels) {
     tasks.push(generateWorkflow(label, threatIntelAppNames, 'cases'));
   }
   await Promise.allSettled(tasks);
+};
+
+/**
+ * Restore the user's original "Ingest Tickets" apps from the backup
+ * snapshot. Called from cleanupDemoData. If the backup recorded zero apps
+ * (the workflow was empty or absent before the demo), we explicitly clear
+ * the workflow so the demo state isn't left behind.
+ */
+export const restoreOriginalIngestTicketsApps = async (): Promise<void> => {
+  const raw = localStorage.getItem(DEMO_INGEST_APPS_BACKUP_KEY);
+  if (raw === null) return; // nothing to restore
+  let names: string[] = [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) names = parsed.filter(n => typeof n === 'string');
+  } catch { /* ignore corrupt backup */ }
+
+  try {
+    if (names.length > 0) {
+      // Re-generate with the original apps.
+      await fetch(getApiUrl('/api/v2/workflows/generate'), {
+        method: 'POST',
+        credentials: 'include',
+        headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          label: INGEST_TICKETS_LABEL,
+          category: 'cases',
+          app_name: names.join(','),
+        }),
+      });
+    } else {
+      // Original workflow had no apps — explicitly remove the demo placeholder.
+      await fetch(getApiUrl('/api/v2/workflows/generate'), {
+        method: 'POST',
+        credentials: 'include',
+        headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          label: INGEST_TICKETS_LABEL,
+          category: 'cases',
+          action_name: 'remove',
+        }),
+      });
+    }
+  } catch (err) {
+    console.warn('[demo] restore ingest tickets apps failed', err);
+  } finally {
+    localStorage.removeItem(DEMO_INGEST_APPS_BACKUP_KEY);
+  }
 };
 
 /** Initialize Threat Feeds defaults if the category is empty. */
