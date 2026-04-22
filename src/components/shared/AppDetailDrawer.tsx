@@ -308,26 +308,8 @@ export default function AppDetailDrawer({
         setActivatedAppId(null);
         toast.success(`${displayName} deactivated`);
       } else {
-        const configId = resolvedAlgoliaId;
-        if (!configId) throw new Error('App ID not resolved yet');
-        console.log('[Activate] Fetching config for:', configId);
-        const searchRes = await fetch(getApiUrl(`/api/v1/apps/${encodeURIComponent(configId)}/config`), {
-          credentials: 'include', headers: { ...getAuthHeader() },
-        });
-        if (!searchRes.ok) throw new Error(`Config fetch failed (${searchRes.status})`);
-        const data = await searchRes.json().catch(() => ({} as any));
-        // Resolve the app ID to activate. The /config endpoint shape varies:
-        // it may return { id }, { app: { id } }, { app_id }, or just echo
-        // back the body. Fall back to the configId we already have — that
-        // is the canonical app ID the user clicked on.
-        const appId =
-          data?.id ||
-          data?.app?.id ||
-          data?.app_id ||
-          (typeof data?.app === 'string' ? data.app : undefined) ||
-          configId;
-        console.log('[Activate] Got app ID:', appId);
-        if (!appId) throw new Error('No app ID in config response');
+        const appId = resolvedAlgoliaId;
+        if (!appId) throw new Error('App ID not resolved yet');
         const activateRes = await fetch(getApiUrl(`/api/v1/apps/${appId}/activate`), {
           method: 'GET', credentials: 'include', headers: { ...getAuthHeader() },
         });
