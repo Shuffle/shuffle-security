@@ -15,6 +15,7 @@ import SensorsIcon from '@mui/icons-material/Sensors';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import ReportProblemIcon from '@mui/icons-material/ReportProblem';
 import RadarIcon from '@mui/icons-material/Radar';
+import DownloadIcon from '@mui/icons-material/Download';
 
 interface DocLink {
   label: string;
