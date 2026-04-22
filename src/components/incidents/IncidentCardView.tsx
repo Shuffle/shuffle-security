@@ -19,6 +19,35 @@ import {
 } from 'lucide-react';
 import { statusConfig, severityColors, isKnownStatus } from '@/config/incidentConfig';
 import { useState, useEffect, useRef } from 'react';
+import { useSourceAppImage } from '@/hooks/useSourceAppImage';
+
+/**
+ * Resolves a source-app logo for an incident card.
+ *
+ * Strategy:
+ *   1. First check `ingestionApps` (the user's wired-up integrations) — fast,
+ *      no network, and respects user's authenticated apps.
+ *   2. If no match, fall back to `useSourceAppImage` which queries the
+ *      authenticated apps endpoint and the public Algolia catalog. This
+ *      ensures sources like `outlook_office365` still render a logo even
+ *      when the user has not explicitly added that app to their ingestion
+ *      pipeline yet.
+ */
+const useResolvedSourceImage = (
+  source: string | undefined,
+  ingestionApps: IngestionApp[],
+): string | undefined => {
+  const direct = source
+    ? ingestionApps.find(app =>
+        app.name.toLowerCase().replace(/[\s_-]/g, '') ===
+          source.toLowerCase().replace(/[\s_-]/g, ''),
+      )?.image
+    : undefined;
+  // Always call the hook (rules of hooks) — but skip the lookup work when we
+  // already have a direct match by passing null.
+  const fallback = useSourceAppImage(direct ? null : source);
+  return direct || fallback || undefined;
+};
 
 interface DisplayIncident {
   id: string;
