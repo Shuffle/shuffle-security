@@ -2429,6 +2429,7 @@ const IncidentDetailPage = () => {
               { key: 'revisions' as const, label: 'Changes', count: revisions.length },
               { key: 'agent' as const, label: 'Agent', count: agentRuns.length },
               { key: 'manual' as const, label: 'Comments', count: activity.length },
+              { key: 'steps' as const, label: 'Steps', count: undefined as number | undefined },
             ]).map(({ key, label, count }) => (
               <Chip
                 key={key}
