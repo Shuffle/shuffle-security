@@ -5091,7 +5091,7 @@ const IncidentDetailPage = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <HistoryIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Activity</Typography>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Timeline</Typography>
               </Box>
               {revisionsLoading && <CircularProgress size={14} sx={{ color: '#ff6600' }} />}
             </Box>
