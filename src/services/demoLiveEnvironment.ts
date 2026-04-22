@@ -16,10 +16,8 @@
 import { getApiUrl, getAuthHeader } from '@/config/api';
 import { getAutomationLabels } from '@/config/usecases';
 import {
-  extractValidatedIngestionApps,
   findIngestTicketsWorkflow,
   extractWorkflowAppNames,
-  type ValidatedIngestionApp,
 } from '@/lib/ingestionDetection';
 import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
 import { getDatastoreByCategory, setDatastoreItems, DATASTORE_CATEGORIES } from '@/services/datastore';
