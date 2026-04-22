@@ -5520,7 +5520,8 @@ const IncidentDetailPage = () => {
                   return (
                     <Box
                       key={obsRowKey}
-                      className={isNewlyArrived ? 'incident-new-flash' : undefined}
+                      data-obs-highlight-key={obsHighlightKey}
+                      className={(isNewlyArrived || flashedObsKey === obsHighlightKey) ? 'incident-new-flash' : undefined}
                       sx={{
                         display: 'flex',
                         flexDirection: 'column',
