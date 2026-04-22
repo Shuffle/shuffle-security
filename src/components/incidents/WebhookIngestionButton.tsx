@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Box, IconButton, Popover, Typography, Tooltip, InputBase, Button, Chip } from '@mui/material';
 import WebhookIcon from '@mui/icons-material/Webhook';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -8,6 +8,7 @@ import BlockIcon from '@mui/icons-material/Block';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 import { trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 export interface WebhookIngestionInfo {
   /** Webhook URL to display (null if workflow doesn't exist yet) */
@@ -30,8 +31,30 @@ export const WebhookIngestionButton = ({ webhook, onToggled }: WebhookIngestionB
   const [copied, setCopied] = useState(false);
   const [optimisticEnabled, setOptimisticEnabled] = useState<boolean | null>(null);
   const popoverOpen = Boolean(anchorEl);
+  const optimisticTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const queryClient = useQueryClient();
 
   const isEnabled = optimisticEnabled !== null ? optimisticEnabled : webhook.enabled;
+
+  // Clear the optimistic override only once the real prop catches up to it.
+  // This prevents the UI from snapping back to the stale value while the
+  // backend is still propagating the change.
+  useEffect(() => {
+    if (optimisticEnabled !== null && webhook.enabled === optimisticEnabled) {
+      setOptimisticEnabled(null);
+      if (optimisticTimeoutRef.current) {
+        clearTimeout(optimisticTimeoutRef.current);
+        optimisticTimeoutRef.current = null;
+      }
+    }
+  }, [webhook.enabled, optimisticEnabled]);
+
+  // Cleanup any pending safety timeout on unmount.
+  useEffect(() => {
+    return () => {
+      if (optimisticTimeoutRef.current) clearTimeout(optimisticTimeoutRef.current);
+    };
+  }, []);
 
   const handleCopy = async () => {
     if (!webhook.url) return;
@@ -46,7 +69,6 @@ export const WebhookIngestionButton = ({ webhook, onToggled }: WebhookIngestionB
   };
 
   const handleToggle = async () => {
-
     const willBeEnabled = !isEnabled;
     setOptimisticEnabled(willBeEnabled);
     setAnchorEl(null);
@@ -79,8 +101,21 @@ export const WebhookIngestionButton = ({ webhook, onToggled }: WebhookIngestionB
       }
 
       toast.success(willBeEnabled ? 'Ingestion Webhook enabled' : 'Ingestion Webhook disabled');
-      setOptimisticEnabled(null);
+      // Do NOT clear optimisticEnabled here — keep the optimistic state until
+      // the parent's refetch reports the new value (handled by the effect
+      // above). Otherwise the UI snaps back to the stale prop.
       onToggled?.();
+      // Also bust the shared workflows cache so global consumers (e.g. the
+      // WebhookActiveChip in the top bar) update immediately.
+      queryClient.invalidateQueries({ queryKey: ['workflows'] });
+
+      // Safety net: if the backend never catches up (e.g. failed refetch),
+      // release the optimistic lock after 15s so the UI doesn't get stuck.
+      if (optimisticTimeoutRef.current) clearTimeout(optimisticTimeoutRef.current);
+      optimisticTimeoutRef.current = setTimeout(() => {
+        setOptimisticEnabled(null);
+        optimisticTimeoutRef.current = null;
+      }, 15000);
     } catch (error) {
       setOptimisticEnabled(null);
       console.error('Failed to toggle webhook:', error);
