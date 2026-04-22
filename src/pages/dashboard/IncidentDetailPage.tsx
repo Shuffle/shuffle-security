@@ -4284,20 +4284,23 @@ const IncidentDetailPage = () => {
           {/* Inline Timeline — the heart of the Details tab. Renders the same
               comment input + unified feed as the right sidebar, but styled
               with a vertical rail so the chronology reads at a glance. */}
-          <Box
+          <motion.div
+            layoutId="incident-timeline-panel"
+            layout
+            transition={{ type: 'spring', stiffness: 260, damping: 30 }}
             data-tour="incident-activity-feed"
-            sx={{
+            style={{
               display: 'flex',
               flexDirection: 'column',
-              bgcolor: 'hsl(var(--card))',
-              borderRadius: 2,
+              backgroundColor: 'hsl(var(--card))',
+              borderRadius: 8,
               border: '1px solid hsl(var(--border))',
               overflow: 'hidden',
-              ...(isPublicView && { pointerEvents: 'none' }),
+              ...(isPublicView ? { pointerEvents: 'none' as const } : {}),
             }}
           >
             {renderTimelinePanel('inline')}
-          </Box>
+          </motion.div>
           </Box>
 
           {/* ============ RIGHT: Metadata column ============ */}
