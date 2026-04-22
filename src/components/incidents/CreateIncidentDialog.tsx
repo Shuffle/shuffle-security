@@ -54,6 +54,17 @@ export interface ActivityItem {
   content: string;
   details?: Record<string, unknown>;
   attachments?: FileAttachment[];
+  /** When set, this comment is a reply to another timeline item (revision id,
+   *  agent execution_id, or another activity id). Used to render the reply
+   *  indented under its parent so users can pivot between threads. */
+  replyToId?: string;
+  /** Short snippet of the parent item, captured at reply time so the thread
+   *  reads sensibly even if the parent later changes or scrolls off. */
+  replyToPreview?: string;
+  /** Human label for what the reply targets ("Comment by Alice", "Revision
+   *  #4", "Agent run"). Captured at reply time so we can display it inside
+   *  the threaded child without re-resolving the parent. */
+  replyToLabel?: string;
 }
 
 // TLP levels for UI display (using new integer-based system)
