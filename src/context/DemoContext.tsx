@@ -225,6 +225,11 @@ const DemoContext = createContext<DemoContextValue | null>(null);
 
 export const DemoProvider = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  // Real-time route check: are we currently on an incident-detail page?
+  // Used to gate the `incidents-list:open` sub-goal so the gate flips back
+  // off if the user navigates away from the detail page.
+  const isOnIncidentDetail = /^\/(?:incidents|alerts|tickets|jobs)\/[^/]+/.test(location.pathname);
   const [active, setActive] = useState(() => isDemoActive());
   const [isSeeding, setIsSeeding] = useState(false);
   const [isCleaning, setIsCleaning] = useState(false);
