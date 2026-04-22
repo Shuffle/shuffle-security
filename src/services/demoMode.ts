@@ -463,7 +463,8 @@ export const seedDemoWazuhImplantIncident = async (): Promise<number> => {
   if (!res.success) throw new Error(res.error || 'Failed to seed Sliver implant incident');
   recordSeed(DATASTORE_CATEGORIES.INCIDENTS, [item.key]);
   broadcastRefresh(DATASTORE_CATEGORIES.INCIDENTS);
-  scheduleDemoObservableEnrichment(item.key, item.pendingObservables);
+  // No pre-baked enrichments — Shuffle is responsible for surfacing
+  // observables on the Wazuh / Sliver follow-up incident.
   return 1;
 };
 
