@@ -3486,12 +3486,12 @@ const IncidentDetailPage = () => {
             p: 1.5,
             borderRadius: 1.5,
             bgcolor: isDeleted
-              ? 'rgba(255,255,255,0.02)'
-              : actItem.type === 'comment' ? 'rgba(255, 102, 0, 0.05)' : 'rgba(0,0,0,0.15)',
+              ? 'hsl(var(--muted) / 0.3)'
+              : actItem.type === 'comment' ? 'rgba(255, 102, 0, 0.05)' : 'hsl(var(--muted) / 0.5)',
             border: '1px solid',
             borderColor: isDeleted
-              ? 'rgba(255,255,255,0.05)'
-              : actItem.type === 'comment' ? 'rgba(255, 102, 0, 0.1)' : 'rgba(255,255,255,0.04)',
+              ? 'hsl(var(--border-subtle))'
+              : actItem.type === 'comment' ? 'rgba(255, 102, 0, 0.1)' : 'hsl(var(--border-subtle))',
             position: 'relative',
             opacity: isDeleted ? 0.7 : 1,
             '&:hover .delete-btn': { opacity: 1 },
