@@ -5251,6 +5251,7 @@ const IncidentDetailPage = () => {
 
             return (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                {isFreshIncident && loadingSkeleton}
                 {allObs.map((obs) => {
                   const iocDef = iocTypes.find(t => t.name === obs.type);
                   const pattern = iocDef?.regex;
