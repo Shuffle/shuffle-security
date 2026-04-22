@@ -539,6 +539,14 @@ const IncidentDetailPage = () => {
   // enrichments stream in shortly after, instead of an empty list.
   const FRESH_OBS_WINDOW_MS = 2 * 60 * 1000;
   const [nowTick, setNowTick] = useState(() => Date.now());
+  // Keys of items that arrived via background poll — used to flash a
+  // highlight so the user can spot the new content without losing focus.
+  // Observable keys: `${type}::${value}` (lowercase). Activity keys: actItem.id.
+  const [newlyArrivedObservables, setNewlyArrivedObservables] = useState<Set<string>>(() => new Set());
+  const [newlyArrivedActivity, setNewlyArrivedActivity] = useState<Set<string>>(() => new Set());
+  // Track the user's most recent keystroke so background polls can defer
+  // while they're actively typing in a textfield.
+  const lastKeystrokeRef = useRef<number>(0);
   const [showThreatIntelDrawer, setShowThreatIntelDrawer] = useState(false);
   const [showForwardAppsDrawer, setShowForwardAppsDrawer] = useState(false);
   const [newObservableType, setNewObservableType] = useState('ip');
