@@ -169,6 +169,40 @@ const fetchSensorGroups = async (): Promise<{ groups: MonitoringGroup[]; allEnvs
         org_id: String(e.org_id || ''),
         hosts: mergeHosts<SensorHost>(Array.isArray(e.sensor_hosts) ? e.sensor_hosts : [], supplements),
       }));
+
+    // Surface sensor-datastore-only hosts (records present in
+    // shuffle-security_sensors that aren't backed by any env stub) so they
+    // still show up on /monitors. Used by demo mode to inject a fake host
+    // without mutating the user's environments via /api/v1/setenvironments.
+    const knownHostnames = new Set<string>();
+    for (const g of groups) {
+      for (const h of g.hosts) {
+        const hn = String((h as { hostname?: string }).hostname || '').toLowerCase().trim();
+        if (hn) knownHostnames.add(hn);
+      }
+    }
+    const orphanSensorHosts: SensorHost[] = [];
+    for (const [hostname, sensor] of supplements.sensorsByHost.entries()) {
+      if (knownHostnames.has(hostname)) continue;
+      orphanSensorHosts.push({ hostname, ...(sensor as Record<string, unknown>) } as unknown as SensorHost);
+    }
+    if (orphanSensorHosts.length > 0) {
+      if (groups.length > 0) {
+        // Attach to the first sensor group so terminal actions get a valid
+        // sensor_group when the user opens the host detail page.
+        groups[0] = { ...groups[0], hosts: [...groups[0].hosts, ...orphanSensorHosts] };
+      } else {
+        groups.push({
+          id: 'shuffle_sensors',
+          name: 'shuffle_sensors',
+          queue: 'shuffle_sensors',
+          auth: '',
+          org_id: '',
+          hosts: orphanSensorHosts,
+        });
+      }
+    }
+
     return { groups, allEnvs: envs };
   } catch (err) {
     return { groups: [], allEnvs: [], error: `Failed to load monitors — could not reach the API` };
