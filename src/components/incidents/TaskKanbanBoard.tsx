@@ -108,12 +108,14 @@ export const TaskKanbanBoard = ({
   const handleAddTask = () => {
     const title = newTaskTitle.trim();
     if (!title) return;
+    const defaultLane = laneKeys.find((k) => k !== 'done') || laneKeys[0];
     const t: IncidentTask = {
       id: `task-${Date.now()}`,
       title,
       completed: false,
       createdAt: Date.now(),
       createdBy: currentUser,
+      _lane: defaultLane,
     };
     onTasksChange([...tasks, t]);
     setNewTaskTitle('');
