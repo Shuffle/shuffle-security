@@ -602,7 +602,23 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
       setIsForceGeneratingSingle(false);
     }
   }, [refreshStats]);
-  // incidents-list step gate flips automatically as soon as data lands. Also
+
+  const forceGenerateWazuhIncident = useCallback(async () => {
+    setIsForceGeneratingWazuh(true);
+    try {
+      const added = await seedDemoWazuhImplantIncident();
+      refreshStats();
+      if (added > 0) {
+        toast.warning('New correlation found: Sliver C2 implant detected on the same host.', { duration: 5000 });
+      } else {
+        toast.info('Sliver C2 detection is already present.');
+      }
+    } catch {
+      toast.error('Failed to generate the Sliver C2 detection.');
+    } finally {
+      setIsForceGeneratingWazuh(false);
+    }
+  }, [refreshStats]);
   // re-checks on the demo:refresh broadcast that the seeder fires.
   useEffect(() => {
     if (!active) {
