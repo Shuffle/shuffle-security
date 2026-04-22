@@ -3087,7 +3087,7 @@ const IncidentDetailPage = () => {
             kind: 'observable-added',
             timestamp: ts,
             id: `step-obs-${k}`,
-            label: o.source === 'enrichment' ? 'Observable enriched' : 'Observable added',
+            label: 'Observable',
             detail: `${o.type}: ${o.value}`,
           });
         }
