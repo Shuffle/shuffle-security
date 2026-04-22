@@ -2196,15 +2196,29 @@ const IncidentDetailPage = () => {
 
   const handleToggleTask = (taskId: string) => {
     autoProgressStatus();
-    setTasks(tasks.map(task => 
-      task.id === taskId 
-        ? { 
-            ...task, 
-            completed: !task.completed, 
-            completedAt: !task.completed ? Date.now() : 0 
-          } 
-        : task
-    ));
+    const laneKeys = taskStatuses.map((s) => s.key);
+    const defaultOpenLane = laneKeys.find((k) => k !== 'done') || laneKeys[0] || 'todo';
+    setTasks(tasks.map(task => {
+      if (task.id !== taskId) return task;
+      const becomingDone = !task.completed;
+      const previousLane = task.completed
+        ? 'done'
+        : (task._lane && laneKeys.includes(task._lane) ? task._lane : defaultOpenLane);
+      const nextLane = becomingDone ? 'done' : defaultOpenLane;
+      const historyEntry = {
+        from: previousLane,
+        to: nextLane,
+        at: Date.now(),
+        by: currentUsername || undefined,
+      };
+      return {
+        ...task,
+        completed: becomingDone,
+        completedAt: becomingDone ? Date.now() : 0,
+        _lane: nextLane,
+        statusHistory: [...(task.statusHistory || []), historyEntry],
+      };
+    }));
   };
 
   const handleUpdateTaskAssignee = (taskId: string, assignee: string) => {
