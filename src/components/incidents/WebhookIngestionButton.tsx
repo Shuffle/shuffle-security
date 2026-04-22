@@ -76,6 +76,14 @@ export const WebhookIngestionButton = ({ webhook, onToggled }: WebhookIngestionB
     setAnchorEl(null);
     trackPredefinedEvent(GA_EVENTS.INCIDENT_INGESTION_TOGGLE, 'webhook', willBeEnabled ? 1 : 0);
 
+    // If the demo tour is open, flip the `ingest-webhook` step state right
+    // away so the tour reacts in real time. The DemoCompletionWatcher will
+    // re-confirm against the live workflow state once it refetches, but we
+    // don't want the user to wait for that to feel the change.
+    if (demoDrawerOpen) {
+      setDemoStepCompleted('ingest-webhook', willBeEnabled);
+    }
+
     try {
       if (willBeEnabled) {
         // Generate/enable the webhook workflow
