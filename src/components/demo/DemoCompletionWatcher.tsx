@@ -67,23 +67,33 @@ export const DemoCompletionWatcher = () => {
     return () => clearInterval(id);
   }, [drawerOpen, queryClient]);
 
-  // ─── auto-advance: when the user is on step 4 (incidents-list) and opens
-  // an incident detail page, jump straight into step 5 (incident-detail) and
-  // dock the drawer to the right rail — the timeline is the focus now and
-  // the bottom dock would cover it. We only auto-advance once per session so
-  // the user can navigate back without us hijacking them again.
+  // ─── auto-advance: when the user opens an incident detail page from any
+  // earlier step, jump straight to step 5 (incident-detail) and dock the
+  // drawer to the right rail — the timeline is the focus now and the bottom
+  // dock would cover it. Re-arms whenever the user leaves the detail page,
+  // so coming back jumps them again. We only auto-advance forward, never
+  // backward — if they're already past step 5 we leave them alone.
   useEffect(() => {
     if (!drawerOpen) return;
-    if (autoAdvancedRef.current) return;
-    const stepId = TOUR_STEPS[step]?.id;
-    if (stepId !== 'incidents-list') return;
     const onDetail = /^\/(?:incidents|alerts|tickets|jobs)\/[^/]+/.test(location.pathname);
-    if (!onDetail) return;
+    if (!onDetail) {
+      autoAdvancedRef.current = false;
+      return;
+    }
+    if (autoAdvancedRef.current) return;
+    const targetIdx = TOUR_STEPS.findIndex(s => s.id === 'incident-detail');
+    if (targetIdx < 0) return;
+    if (step >= targetIdx) return;
     autoAdvancedRef.current = true;
     if (dock !== 'right') setDock('right');
-    const targetIdx = TOUR_STEPS.findIndex(s => s.id === 'incident-detail');
-    if (targetIdx >= 0) goToStep(targetIdx);
-  }, [drawerOpen, step, location.pathname, dock, setDock, goToStep]);
+    // Force-mark the gating sub-goals on the previous step so the forward
+    // jump is allowed even if the user hasn't ticked everything off (e.g.
+    // they navigated directly into a deep link).
+    setStepCompleted('incidents-list:present', true);
+    setStepCompleted('incidents-list:open', true);
+    // Defer so the unlock state propagates before goToStep evaluates it.
+    window.setTimeout(() => goToStep(targetIdx), 0);
+  }, [drawerOpen, step, location.pathname, dock, setDock, goToStep, setStepCompleted]);
 
   // Note: the `add-outlook` step is marked complete directly from the
   // IncidentsPage AppSearchDrawer override when the user picks Outlook
