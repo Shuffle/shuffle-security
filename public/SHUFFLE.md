@@ -2,7 +2,7 @@
 
 A Claude Code / agent skill for building security platforms on top of the
 **Shuffle Core** backend API. Shuffle Core is the engine behind
-[shuffler.io](https://shuffler.io) — a workflow automation, integration, and
+[shuffler.io](https://shuffler.io) - a workflow automation, integration, and
 orchestration platform with 3,000+ apps. This skill teaches an agent how to
 use Shuffle as the backend for a security product without per-call
 hand-holding.
@@ -11,19 +11,19 @@ hand-holding.
 >
 > Every endpoint, payload shape and gotcha below is taken from a real
 > production client (the Shuffle Security frontend in this repo). Where the
-> public reference and the live API disagree, the live API wins — this
+> public reference and the live API disagree, the live API wins - this
 > document tracks the live API.
 
 ---
 
 ## 0. Quick start
 
-1. **Pick a base URL** — `https://shuffler.io` (EU), `https://us.shuffler.io`
+1. **Pick a base URL** - `https://shuffler.io` (EU), `https://us.shuffler.io`
    (US), or your self-hosted host.
-2. **Get an API key** — UI → user settings → "API key". Send as
+2. **Get an API key** - UI → user settings → "API key". Send as
    `Authorization: Bearer <key>` on every request, or use a session cookie
    (never both).
-3. **Call `GET /api/v1/getinfo`** — source of truth for the active user, the
+3. **Call `GET /api/v1/getinfo`** - source of truth for the active user, the
    active org, and the user's `region_url`. Retarget your client to that URL
    if it differs from where you logged in.
 
@@ -62,7 +62,7 @@ Shuffle is multi-tenant by design. Every org can have **sub-organisations**
 |--------|----------|------|---------|
 | `POST` | `/api/v1/orgs/{parent_org_id}/create_sub_org` | `{ org_id: parent_org_id, name }` | Create a sub-tenant |
 | `PUT`  | `/api/v1/orgs/{org_id}` | partial org JSON | Update name, image, settings |
-| `POST` | `/api/v1/orgs/{org_id}/change` | — | Switch the current session's active org. **Rotates cookies — do a full client reload after.** |
+| `POST` | `/api/v1/orgs/{org_id}/change` | - | Switch the current session's active org. **Rotates cookies - do a full client reload after.** |
 
 ### Cross-tenant requests without switching
 
@@ -76,7 +76,7 @@ Org-Id: <suborg_uuid>
 This works on virtually every endpoint and is the safe way to fan out across
 tenants from a parent org.
 
-### Recipe — list every incident across every tenant
+### Recipe - list every incident across every tenant
 
 ```js
 const me = await fetch(`${BASE}/api/v1/getinfo`, { headers: H }).then(r => r.json());
@@ -98,7 +98,7 @@ for (const org of orgs) {
 ## 2. Tickets / incidents via the built-in KV store
 
 Shuffle ships a namespaced key/value store ("datastore" / "cache") that backs
-most security state — incidents, tickets, assets, IOCs, settings. It is the
+most security state - incidents, tickets, assets, IOCs, settings. It is the
 fastest path to a working security backend: no schema migrations, no separate
 DB.
 
@@ -108,8 +108,8 @@ DB.
 |--------|----------|--------------|---------|
 | `POST` | `/api/v1/orgs/{org_id}/set_cache` | `{ key, value, category, ignore_security_rules?: true }` | Upsert one item |
 | `POST` | `/api/v1/orgs/{org_id}/get_cache` | `{ key, category, org_id }` | Read one. **404 = not found, treat as empty (success).** |
-| `GET`  | `/api/v1/orgs/{org_id}/list_cache?category=<cat>&top=<n>&cursor=<c>` | — | Paginated list |
-| `GET`  | `/api/v1/orgs/{org_id}/cache/{key}?authorization=<token>` | — | Public read (no session) — used for share links |
+| `GET`  | `/api/v1/orgs/{org_id}/list_cache?category=<cat>&top=<n>&cursor=<c>` | - | Paginated list |
+| `GET`  | `/api/v1/orgs/{org_id}/cache/{key}?authorization=<token>` | - | Public read (no session) - used for share links |
 | `DELETE` | `/api/v1/orgs/{org_id}/delete_cache` | `{ key, category }` | Remove one |
 
 ### Bulk + history + automation (v2)
@@ -134,7 +134,7 @@ DB.
 
 ### Hard rules (read once, save weeks of debugging)
 
-1. **`key` MUST be the raw entity ID** — the final `::`-separated segment of
+1. **`key` MUST be the raw entity ID** - the final `::`-separated segment of
    any namespaced string. Namespaced keys (`incidents::abc-123`) silently
    break round-trips.
 2. **`value` is a JSON string.** Stringify your object client-side; the
@@ -146,7 +146,7 @@ DB.
 5. **Some list endpoints return HTTP 4xx with valid JSON in the body.**
    Parse before treating non-2xx as fatal.
 
-### Recipe — create, read, update, list a ticket
+### Recipe - create, read, update, list a ticket
 
 ```js
 const orgId = me.active_org.id;
@@ -187,7 +187,7 @@ const got = await fetch(`${BASE}/api/v1/orgs/${orgId}/get_cache`, {
 }).then(r => r.json());
 const current = JSON.parse(got.value);
 
-// UPDATE — fetch, mutate, write back (last-write-wins)
+// UPDATE - fetch, mutate, write back (last-write-wins)
 current.status_id = 2; current.status = 'In Progress';
 await fetch(`${BASE}/api/v1/orgs/${orgId}/set_cache`, {
   method: 'POST', headers: H,
@@ -206,7 +206,7 @@ const list = await fetch(
 ).then(r => r.json());
 ```
 
-### Recipe — find every entry that references an observable
+### Recipe - find every entry that references an observable
 
 ```js
 // "Show me everything that touched 1.2.3.4"
@@ -266,7 +266,7 @@ Content-Type: application/json
 ```
 
 Lifecycle: `EXECUTING` → optionally `WAITING` (sub-flow / pending approval) →
-`FINISHED` | `ABORTED`. Poll every 1–2 s until `status` is terminal.
+`FINISHED` | `ABORTED`. Poll every 1-2 s until `status` is terminal.
 
 The real output lives at `response.result`. When `result` is an object,
 `result.message` is the human-readable summary; the rest is structured data.
@@ -275,7 +275,7 @@ The real output lives at `response.result`. When `result` is an object,
 
 Actions like **isolate host**, **disable user**, **mass delete** pause the run
 and emit a notification of `type=agent_question`. Approvals flow through the
-**Notifications API** — there is no dedicated `/decide` endpoint:
+**Notifications API** - there is no dedicated `/decide` endpoint:
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
@@ -294,7 +294,7 @@ and emit a notification of `type=agent_question`. Approvals flow through the
 payload → fetch → detect stub → poll → unwrap). Mirror it instead of
 re-deriving the lifecycle.
 
-### Recipe — ask the agent to triage an alert
+### Recipe - ask the agent to triage an alert
 
 ```js
 const stub = await fetch(`${BASE}/api/v1/agent`, {
@@ -335,9 +335,9 @@ the workflow + webhook + automations for you.
 POST /api/v2/workflows/generate
 {
   "label":       "Ingest Tickets",   // canonical usecase label
-  "category":    "cases",            // optional — singul category
-  "app_name":    "servicenow",       // optional — single app, comma-separated for multiple
-  "action_name": "remove"            // optional — pass to disable / tear down
+  "category":    "cases",            // optional - singul category
+  "app_name":    "servicenow",       // optional - single app, comma-separated for multiple
+  "action_name": "remove"            // optional - pass to disable / tear down
 }
 ```
 
@@ -359,7 +359,7 @@ Re-POST the same `label` (+ `app_name` if scoped to one app) with
 `"action_name": "remove"`. The platform removes the generated workflow and
 unsubscribes the webhook.
 
-### Recipe — turn on ticket ingestion from ServiceNow + Jira
+### Recipe - turn on ticket ingestion from ServiceNow + Jira
 
 ```js
 await fetch(`${BASE}/api/v2/workflows/generate`, {
@@ -402,7 +402,7 @@ them directly from your own UI for "talk to my SIEM" features.
 | `DELETE` | `/api/v1/apps/authentication/{id}` | Remove |
 
 `fields` are app-specific (apikey, url, username/password, OAuth tokens).
-**Always send the App ID UUID, not the name** — names collide and change.
+**Always send the App ID UUID, not the name** - names collide and change.
 
 ### Talk to an app (MCP)
 
@@ -425,7 +425,7 @@ Same response shape as `/api/v1/agent`: either an inline `result` (string,
 or `{ message, ...structured }`) or an execution stub to poll on
 `/api/v1/streams/results`.
 
-### Recipe — activate Splunk, authenticate it, ask it a question
+### Recipe - activate Splunk, authenticate it, ask it a question
 
 ```js
 // 1. activate
@@ -436,7 +436,7 @@ await fetch(`${BASE}/api/v1/apps/authentication`, {
   method: 'POST', headers: H,
   body: JSON.stringify({
     app_id: '<splunk_app_id>',
-    label:  'Splunk — prod',
+    label:  'Splunk - prod',
     fields: [
       { key: 'url',    value: 'https://splunk.acme.com:8089' },
       { key: 'apikey', value: process.env.SPLUNK_TOKEN },
@@ -460,7 +460,7 @@ console.log(r.result?.message ?? r.result);
 
 ---
 
-## 6. Singul — categorised actions (vendor-agnostic)
+## 6. Singul - categorised actions (vendor-agnostic)
 
 Singul lets you call an action by **category + label** instead of binding to
 one tool. The platform routes to whatever app the org has authenticated for
@@ -491,7 +491,7 @@ POST /api/v1/apps/categories/run
 | `assets` | `get_asset`, `list_assets`, `update_asset` |
 | `intel`  | `get_ioc`, `search_ioc`, `submit_ioc` |
 
-Response: same as a workflow execution — inline data or an execution stub to
+Response: same as a workflow execution - inline data or an execution stub to
 poll.
 
 ---
@@ -522,7 +522,7 @@ Create a webhook node, then `POST` arbitrary JSON or text to:
 https://<host>/api/v1/hooks/webhook_<UUID>
 ```
 
-The body becomes `exec.execution_argument` as a string — parse with
+The body becomes `exec.execution_argument` as a string - parse with
 `JSON.parse` on the workflow side. No auth needed if the hook is public.
 
 ---
@@ -533,12 +533,12 @@ The body becomes `exec.execution_argument` as a string — parse with
 |--------|----------|---------|
 | `POST` | `/api/v1/login` | `{username, password}` → sets session cookie, returns user info |
 | `POST` | `/api/v1/logout` | Invalidate session |
-| `GET`  | `/api/v1/getinfo` | **Source of truth** — call on every reload |
+| `GET`  | `/api/v1/getinfo` | **Source of truth** - call on every reload |
 | `GET`  | `/api/v1/getsettings` | Org-level settings (timezone, branding, MFA policy) |
 | `GET`  | `/api/v1/getusers` | List users in current org (note: NOT `/users/getusers`) |
 
 Auth: send `Authorization: Bearer <key>` **or** rely on the `session_token`
-cookie with `credentials: 'include'`. Never both — some endpoints reject the
+cookie with `credentials: 'include'`. Never both - some endpoints reject the
 combination.
 
 `getinfo` returns (selected fields):
@@ -547,7 +547,7 @@ combination.
 {
   "id": "<user_uuid>",
   "username": "alice@example.com",
-  "role": "admin",                 // admin | org-reader | …
+  "role": "admin",                 // admin | org-reader | ...
   "support": false,                 // staff flag
   "active_org": { "id": "...", "name": "..." },
   "orgs": [ /* every org the user can see */ ],
@@ -578,7 +578,7 @@ Use namespaces to attach files to entities (e.g. `incident_<id>`, `sigma`,
 
 ---
 
-## 10. Detection — Sigma rules & Tenzir pipelines
+## 10. Detection - Sigma rules & Tenzir pipelines
 
 ### Sigma
 
@@ -598,7 +598,7 @@ Use namespaces to attach files to entities (e.g. `incident_<id>`, `sigma`,
 | `POST` | `/api/v1/triggers/pipeline` | Create or update a Tenzir pipeline trigger |
 
 A "Pipeline Sensor" is an `environment` with `Type: onprem` and
-`data_lake.enabled: true` running an orborus + tenzir stack — see §11.
+`data_lake.enabled: true` running an orborus + tenzir stack - see §11.
 
 ---
 
@@ -609,7 +609,7 @@ Environments define **where** workflows execute (cloud, on-prem agent).
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
 | `GET`  | `/api/v1/getenvironments` | List |
-| `PUT`  | `/api/v1/setenvironments` | **Full-state replace** — send the entire array. Read first, mutate, write back. Otherwise you delete other envs. |
+| `PUT`  | `/api/v1/setenvironments` | **Full-state replace** - send the entire array. Read first, mutate, write back. Otherwise you delete other envs. |
 
 Orborus runner deployment (Docker):
 
@@ -659,7 +659,7 @@ These wrap the underlying datastore with security-aware logic
   list, never PUT a subset.
 - **Datastore keys** must be the raw entity ID. Namespaced (`cat::id`)
   strings break read-after-write.
-- **App identity is the `app_id` UUID** — names collide and change. The MCP
+- **App identity is the `app_id` UUID** - names collide and change. The MCP
   endpoint is the one place you use the *name* in the URL.
 - **Org switch reloads cookies.** After `/orgs/{id}/change`, do a full client
   reload or all subsequent requests fail with stale auth.
@@ -676,7 +676,7 @@ These wrap the underlying datastore with security-aware logic
   `agent_question` notification as read to approve the pending action.
 - **Do not send `Authorization` _and_ a session cookie.** Pick one per
   request; some endpoints reject the combination.
-- **404 from `get_cache`** means "key not found", not a transport error —
+- **404 from `get_cache`** means "key not found", not a transport error -
   treat as empty success.
 - **Some list endpoints return 4xx with valid JSON in the body.** Inspect
   the body before declaring failure.
@@ -698,6 +698,6 @@ These wrap the underlying datastore with security-aware logic
 
 *Drop this file into a Claude Code skill (`~/.claude/skills/shuffle/SKILL.md`)
 or any agent that supports markdown skill files. With these endpoints you can
-build a full multi-tenant security platform on Shuffle Core — tickets,
-agents, automations, integrations and MCPs included — without per-call
+build a full multi-tenant security platform on Shuffle Core - tickets,
+agents, automations, integrations and MCPs included - without per-call
 hand-holding.*
