@@ -522,6 +522,8 @@ const DashboardPage = () => {
       return JSON.parse(localStorage.getItem(IGNORED_STEPS_KEY) || '[]');
     } catch { return []; }
   });
+  const [showCompleted, setShowCompleted] = useState(false);
+  const [showIgnored, setShowIgnored] = useState(false);
   const [questionNotification, setQuestionNotification] = useState<AgentNotification | null>(null);
   const [quickViewItem, setQuickViewItem] = useState<QuickViewItem | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
@@ -696,7 +698,9 @@ const DashboardPage = () => {
 
   const visibleSteps = setupSteps.filter(s => !ignoredSteps.includes(s.id));
   const ignoredStepsList = setupSteps.filter(s => ignoredSteps.includes(s.id));
-  const completedCount = visibleSteps.filter(s => s.status === 'complete').length;
+  const incompleteVisibleSteps = visibleSteps.filter(s => s.status !== 'complete');
+  const completedVisibleSteps = visibleSteps.filter(s => s.status === 'complete');
+  const completedCount = completedVisibleSteps.length;
   const totalSteps = visibleSteps.length;
   const progressPercent = totalSteps > 0 ? Math.round((completedCount / totalSteps) * 100) : 100;
   const allComplete = completedCount === totalSteps;
@@ -803,10 +807,44 @@ const DashboardPage = () => {
           </Box>
         ) : (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            {visibleSteps.map((step, i) => (
+            {(showCompleted ? visibleSteps : incompleteVisibleSteps).map((step, i) => (
               <SetupStepCard key={step.id} step={step} index={i} onIgnore={handleIgnoreStep} onRestore={handleRestoreStep} />
             ))}
-            {ignoredStepsList.length > 0 && (
+            {(completedVisibleSteps.length > 0 || ignoredStepsList.length > 0) && (
+              <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>
+                {completedVisibleSteps.length > 0 && (
+                  <Chip
+                    size="small"
+                    label={showCompleted ? `Hide finished (${completedVisibleSteps.length})` : `Show finished (${completedVisibleSteps.length})`}
+                    onClick={() => setShowCompleted(v => !v)}
+                    variant="outlined"
+                    sx={{
+                      fontSize: '0.72rem',
+                      height: 24,
+                      borderColor: 'hsl(var(--border))',
+                      color: 'hsl(var(--muted-foreground))',
+                      '&:hover': { bgcolor: 'hsl(var(--muted))' },
+                    }}
+                  />
+                )}
+                {ignoredStepsList.length > 0 && (
+                  <Chip
+                    size="small"
+                    label={showIgnored ? `Hide ignored (${ignoredStepsList.length})` : `Show ignored (${ignoredStepsList.length})`}
+                    onClick={() => setShowIgnored(v => !v)}
+                    variant="outlined"
+                    sx={{
+                      fontSize: '0.72rem',
+                      height: 24,
+                      borderColor: 'hsl(var(--border))',
+                      color: 'hsl(var(--muted-foreground))',
+                      '&:hover': { bgcolor: 'hsl(var(--muted))' },
+                    }}
+                  />
+                )}
+              </Box>
+            )}
+            {showIgnored && ignoredStepsList.length > 0 && (
               <>
                 <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', mt: 1, opacity: 0.7 }}>
                   Ignored ({ignoredStepsList.length})
