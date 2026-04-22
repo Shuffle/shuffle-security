@@ -78,6 +78,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useDatastore } from '@/hooks/useDatastore';
+import { CorrelationRow } from '@/components/incidents/CorrelationRow';
 import { useAuth } from '@/context/AuthContext';
 import { useAppDetail } from '@/context/AppDetailContext';
 import { DATASTORE_CATEGORIES, getDatastoreItem, getDatastoreItemPublic, setDatastoreItem } from '@/services/datastore';
@@ -5764,7 +5765,7 @@ const IncidentDetailPage = () => {
                             }
                             return (
                               <Box sx={{ mt: 0.5 }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.75 }}>
                                   <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.6rem', textTransform: 'uppercase', letterSpacing: 0.5 }}>
                                     Correlations ({corr.data.length})
                                   </Typography>
@@ -5778,50 +5779,14 @@ const IncidentDetailPage = () => {
                                     </IconButton>
                                   </Tooltip>
                                 </Box>
-                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mt: 0.5 }}>
-                                  {corr.data.slice(0, 8).map((c: any, ci: number) => (
-                                    <Box key={ci} sx={{ p: 0.75, borderRadius: 1, bgcolor: 'hsl(var(--muted) / 0.5)', border: '1px solid hsl(var(--border-subtle))' }}>
-                                      <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.75rem', wordBreak: 'break-all' }}>
-                                        {c.key}
-                                      </Typography>
-                                      <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.6rem' }}>
-                                        Found in {c.amount} location{c.amount !== 1 ? 's' : ''}
-                                      </Typography>
-                                      {c.ref?.length > 0 && (
-                                        <Box sx={{ mt: 0.5, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                                          {c.ref.slice(0, 5).map((ref: string, ri: number) => {
-                                            const isIncident = ref.includes('incident') || ref.includes('security');
-                                            const refId = ref.split('::').pop() || ref;
-                                            return isIncident ? (
-                                              <Chip
-                                                key={ri}
-                                                label={refId.slice(0, 12) + (refId.length > 12 ? '…' : '')}
-                                                size="small"
-                                                variant="outlined"
-                                                component={Link}
-                                                to={`/incidents/${refId}`}
-                                                clickable
-                                                onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                                                sx={{ height: 20, fontSize: '0.6rem', bgcolor: 'transparent', borderColor: 'rgba(59,130,246,0.4)', color: '#3b82f6' }}
-                                              />
-                                            ) : (
-                                              <Chip
-                                                key={ri}
-                                                label={ref.length > 30 ? ref.slice(0, 30) + '…' : ref}
-                                                size="small"
-                                                variant="outlined"
-                                                sx={{ height: 20, fontSize: '0.6rem', bgcolor: 'transparent', borderColor: 'hsl(var(--border))', color: 'hsl(var(--muted-foreground))' }}
-                                              />
-                                            );
-                                          })}
-                                          {c.ref.length > 5 && (
-                                            <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.6rem' }}>
-                                              +{c.ref.length - 5} more
-                                            </Typography>
-                                          )}
-                                        </Box>
-                                      )}
-                                    </Box>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+                                  {corr.data.slice(0, 8).map((c, ci) => (
+                                    <CorrelationRow
+                                      key={c.key || ci}
+                                      correlation={c}
+                                      currentIncidentId={id}
+                                      compact
+                                    />
                                   ))}
                                   {corr.data.length > 8 && (
                                     <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.6rem' }}>
@@ -6026,128 +5991,14 @@ const IncidentDetailPage = () => {
 
               {/* Correlation list */}
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                {correlations.map((corr, idx) => {
-                  // Group refs by category
-                  const refsByCategory: Record<string, string[]> = {};
-                  corr.ref.forEach(r => {
-                    const [category, key] = r.split('|');
-                    if (!refsByCategory[category]) refsByCategory[category] = [];
-                    // Exclude current incident from shuffle-security_incidents
-                    if (!(category === 'shuffle-security_incidents' && key.toLowerCase() === id?.toLowerCase())) {
-                      refsByCategory[category].push(key);
-                    }
-                  });
-
-                  const categories = Object.keys(refsByCategory);
-                  const isHighMatch = corr.amount >= 5;
-                  const isMediumMatch = corr.amount >= 3 && corr.amount < 5;
-                  const dotColor = isHighMatch ? '#ff6600' : isMediumMatch ? '#eab308' : 'hsl(var(--muted-foreground))';
-
-                  // Helper to format category name
-                  const formatCategory = (cat: string) => cat.replace('shuffle-', '').replace(/_/g, ' ');
-
-                  return (
-                    <Box
-                      key={corr.key || idx}
-                      data-corr-key={corr.key}
-                      className={flashedCorrelationKey === corr.key ? 'incident-new-flash' : undefined}
-                      sx={{
-                        p: 1.75,
-                        borderRadius: 1.5,
-                        bgcolor: 'transparent',
-                        border: '1px solid hsl(var(--border))',
-                        transition: 'border-color 120ms ease',
-                        '&:hover': { borderColor: 'hsl(var(--border) / 0.8)' },
-                      }}
-                    >
-                      {/* Correlation header */}
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, mb: categories.length > 0 ? 1.25 : 0 }}>
-                        <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: dotColor, flexShrink: 0 }} />
-                        <Typography
-                          sx={{
-                            fontFamily: 'monospace',
-                            fontSize: '0.78rem',
-                            fontWeight: 600,
-                            color: 'text.primary',
-                            wordBreak: 'break-all',
-                          }}
-                        >
-                          {corr.key}
-                        </Typography>
-                        <Typography variant="caption" sx={{ color: 'text.secondary', ml: 'auto', flexShrink: 0 }}>
-                          {corr.amount} match{corr.amount !== 1 ? 'es' : ''}
-                        </Typography>
-                      </Box>
-
-                      {/* Refs by category */}
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
-                        {categories.map(category => {
-                          const keys = refsByCategory[category];
-                          const isIncidentCategory = category === 'shuffle-security_incidents';
-
-                          return (
-                            <Box key={category} sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-                              <Typography
-                                variant="caption"
-                                sx={{
-                                  color: 'text.disabled',
-                                  minWidth: 100,
-                                  textTransform: 'capitalize',
-                                  pt: 0.25,
-                                  fontSize: '0.7rem',
-                                }}
-                              >
-                                {formatCategory(category)}
-                              </Typography>
-                              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                                {keys.slice(0, 5).map((key) => (
-                                  <Chip
-                                    key={key}
-                                    label={key}
-                                    size="small"
-                                    variant="outlined"
-                                    component={isIncidentCategory ? Link : 'div'}
-                                    to={isIncidentCategory ? `/incidents/${key}` : undefined}
-                                    clickable={isIncidentCategory}
-                                    sx={{
-                                      height: 22,
-                                      fontSize: '0.7rem',
-                                      fontFamily: 'monospace',
-                                      bgcolor: 'transparent',
-                                      borderColor: 'hsl(var(--border))',
-                                      color: isIncidentCategory ? 'hsl(var(--primary))' : 'text.secondary',
-                                      cursor: isIncidentCategory ? 'pointer' : 'default',
-                                      '&:hover': isIncidentCategory ? {
-                                        bgcolor: 'hsl(var(--primary) / 0.06)',
-                                        borderColor: 'hsl(var(--primary) / 0.5)',
-                                      } : {},
-                                    }}
-                                  />
-                                ))}
-                                {keys.length > 5 && (
-                                  <Tooltip title={keys.slice(5).join(', ')} arrow>
-                                    <Chip
-                                      label={`+${keys.length - 5}`}
-                                      size="small"
-                                      variant="outlined"
-                                      sx={{
-                                        height: 22,
-                                        fontSize: '0.7rem',
-                                        bgcolor: 'transparent',
-                                        borderColor: 'hsl(var(--border))',
-                                        color: 'text.disabled',
-                                      }}
-                                    />
-                                  </Tooltip>
-                                )}
-                              </Box>
-                            </Box>
-                          );
-                        })}
-                      </Box>
-                    </Box>
-                  );
-                })}
+                {correlations.map((corr, idx) => (
+                  <CorrelationRow
+                    key={corr.key || idx}
+                    correlation={corr}
+                    currentIncidentId={id}
+                    className={flashedCorrelationKey === corr.key ? 'incident-new-flash' : undefined}
+                  />
+                ))}
               </Box>
             </Box>
           )}
