@@ -2674,6 +2674,7 @@ const IncidentsPage = () => {
               return allIds.size;
             })()}
             onResetOrgFilter={resetToDefaults}
+            isParentOrg={isParentOrg}
             onFilterChange={(type, value) => {
               setFilters(prev => {
                 if (type === 'org') {
