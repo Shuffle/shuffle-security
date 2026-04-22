@@ -56,9 +56,14 @@ export const isDemoActive = (): boolean => localStorage.getItem(DEMO_ACTIVE_KEY)
 
 export const getDemoStats = () => {
   const idx = readIndex();
+  // Sensor-datastore hosts surface on /monitors and read as assets to the
+  // user, so include them in the asset count even before the dedicated
+  // "assets" tour step seeds the OCSF asset records.
+  const assetCount = (idx[DATASTORE_CATEGORIES.ASSETS]?.length || 0)
+    + (idx[SENSORS_CATEGORY]?.length || 0);
   return {
     incidents: idx[DATASTORE_CATEGORIES.INCIDENTS]?.length || 0,
-    assets: idx[DATASTORE_CATEGORIES.ASSETS]?.length || 0,
+    assets: assetCount,
     users: idx[DATASTORE_CATEGORIES.USERS]?.length || 0,
   };
 };
@@ -75,10 +80,18 @@ const broadcastRefresh = (category: string) => {
 
 const recordSeed = (category: string, keys: string[]) => {
   const idx = readIndex();
-  idx[category] = [...(idx[category] || []), ...keys];
+  // De-duplicate so callers (e.g. live-env init) can call this on every
+  // demo start without inflating counts on repeat runs.
+  const existing = new Set(idx[category] || []);
+  for (const k of keys) existing.add(k);
+  idx[category] = Array.from(existing);
   writeIndex(idx);
   localStorage.setItem(DEMO_ACTIVE_KEY, 'true');
 };
+
+/** Public wrapper so demoLiveEnvironment can register pre-tour seeds (e.g.
+ * the sensor host injected at demo start) into the same cleanup index. */
+export const recordDemoSeed = (category: string, keys: string[]) => recordSeed(category, keys);
 
 // ─── IOC helpers ─────────────────────────────────────────────────────────────
 // We want demo incidents to feature *real* IOCs from the user's threat feeds
