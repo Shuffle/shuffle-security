@@ -1502,7 +1502,7 @@ const IncidentDetailPage = () => {
           const data = await resp.json();
           const corrData = Array.isArray(data) ? data : (data.correlations || data.data || []);
           const filtered = corrData.filter((c: { key: string }) => !noiseKeys.has(c.key.toLowerCase()));
-          setObsCorrelations(prev => ({ ...prev, [obsKey]: { loading: false, data: filtered } }));
+          setObsCorrelations(prev => ({ ...prev, [obsKey]: { loading: false, data: filtered, discoveredAt: filtered.length > 0 ? Date.now() : undefined } }));
         } else {
           setObsCorrelations(prev => ({ ...prev, [obsKey]: { loading: false, data: [] } }));
         }
