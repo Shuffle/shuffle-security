@@ -5534,13 +5534,19 @@ const IncidentDetailPage = () => {
                         borderRadius: 1,
                         bgcolor: 'hsl(var(--input))',
                         border: mismatch ? '1px solid rgba(251, 146, 60, 0.3)' : isExpanded ? '1px solid hsl(var(--primary) / 0.3)' : '1px solid hsl(var(--border-subtle))',
-                        cursor: 'pointer',
                         transition: 'border-color 0.15s ease',
                         '&:hover': { borderColor: 'hsl(var(--primary) / 0.2)' },
                       }}
-                      onClick={() => setExpandedObsKey(isExpanded ? null : obsRowKey)}
                     >
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Box
+                        sx={{ display: 'flex', alignItems: 'center', gap: 2, cursor: 'pointer' }}
+                        onClick={() => {
+                          // Don't toggle when the user is selecting text inside the row.
+                          const sel = typeof window !== 'undefined' ? window.getSelection() : null;
+                          if (sel && sel.toString().length > 0) return;
+                          setExpandedObsKey(isExpanded ? null : obsRowKey);
+                        }}
+                      >
                         <Chip
                           label={obs.type}
                           size="small"
