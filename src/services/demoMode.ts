@@ -11,6 +11,7 @@
 
 import { setDatastoreItems, deleteDatastoreItem, DATASTORE_CATEGORIES, getDatastoreByCategory } from '@/services/datastore';
 import { getApiUrl, getAuthHeader } from '@/config/api';
+import { restoreOriginalIngestTicketsApps } from '@/services/demoLiveEnvironment';
 import {
   buildDemoFocusIncident,
   buildDemoWazuhImplantIncident,
