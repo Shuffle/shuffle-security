@@ -86,6 +86,14 @@ export const DemoTourDrawer = () => {
   // pulse the Next button + run a one-shot success ripple so they cannot miss
   // that the tour is ready to advance. The pulse auto-clears after ~2.5s.
   const [justUnlocked, setJustUnlocked] = useState(false);
+  // The "Detailed steps" disclosure is collapsed by default. The spotlight +
+  // Required-to-Continue list usually communicates enough; the bullets are
+  // there for users who want the explicit click-by-click breakdown.
+  const [bulletsOpen, setBulletsOpen] = useState(false);
+  // Reset the disclosure whenever the user advances to a new step.
+  useEffect(() => {
+    setBulletsOpen(false);
+  }, [step]);
   const wasLockedRef = useRef(locked);
   useEffect(() => {
     if (wasLockedRef.current && !locked) {
