@@ -38,6 +38,7 @@ interface FileAttachmentsProps {
   namespace?: string;
   labels?: string[];
   compact?: boolean;
+  hideAddButton?: boolean;
 }
 
 const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
