@@ -78,6 +78,27 @@ export const DemoTourDrawer = () => {
   const locked = !!requirement && !currentStepUnlocked;
   const isIncidentsListStep = current?.id === 'incidents-list';
 
+  // ── Celebrate the moment a step's requirement flips to "done" ─────────────
+  // When the user satisfies the gate (e.g. opens an incident on step 4), we
+  // pulse the Next button + run a one-shot success ripple so they cannot miss
+  // that the tour is ready to advance. The pulse auto-clears after ~2.5s.
+  const [justUnlocked, setJustUnlocked] = useState(false);
+  const wasLockedRef = useRef(locked);
+  useEffect(() => {
+    if (wasLockedRef.current && !locked) {
+      setJustUnlocked(true);
+      const t = window.setTimeout(() => setJustUnlocked(false), 2600);
+      return () => window.clearTimeout(t);
+    }
+    wasLockedRef.current = locked;
+  }, [locked, step]);
+  // Reset the celebration whenever the user advances to a new step.
+  useEffect(() => {
+    setJustUnlocked(false);
+    wasLockedRef.current = locked;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+
   // ── Minimized pill ────────────────────────────────────────────────────────
   if (drawerOpen && minimized) {
     return (
