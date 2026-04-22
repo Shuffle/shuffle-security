@@ -112,7 +112,37 @@ export const buildDemoFocusIncident = (): { key: string; value: OCSFIncidentFind
   return toIncident({
     _key: `demo-inc-phish-${t}-focus`,
     title: `Phishing email reported by ${PHISH_REPORTER_NAME}`,
-    desc: `${PHISH_REPORTER_NAME} (Senior Accountant, Finance) reported a suspicious email impersonating IT support and asking the recipient to reset MFA. He noticed his colleague Sarah Chen (Finance Analyst) received the same message addressed to her ${PHISH_HOST} laptop. Diego did not click the link; it is unclear yet whether Sarah did. URL resolves to a known credential-harvesting kit hosted at ${PHISH_ATTACKER_IP}.`,
+    desc: `From: ${PHISH_REPORTER_NAME} <${PHISH_REPORTER_EMAIL}>
+To: phishing@example.com
+Subject: FW: [SUSPICIOUS] IT Support — Action required: reset your MFA
+Date: ${new Date(now() - 38 * 60 * 1000).toUTCString()}
+
+Hi security team,
+
+Forwarding the email below — it looks like a phishing attempt impersonating IT support. I did not click the link.
+
+I also noticed my colleague Sarah Chen (Finance Analyst, ${PHISH_HOST}) received the exact same message. I have not been able to confirm yet whether she clicked it. Could you take a look?
+
+Thanks,
+Diego Ruiz
+Senior Accountant, Finance
+
+---------- Forwarded message ----------
+From: IT Support <it-support@itsupport-portal.live>
+To: ${PHISH_REPORTER_EMAIL}
+Subject: [Action required] Reset your MFA within 24 hours
+Date: ${new Date(now() - 52 * 60 * 1000).toUTCString()}
+
+Dear user,
+
+Our records indicate that your multi-factor authentication enrollment is out of date. To avoid losing access to your account, please reset your MFA within the next 24 hours by visiting the secure portal below:
+
+  ${PHISH_LURE_URL}
+
+If you do not complete this step, your account will be temporarily suspended.
+
+Thank you,
+IT Support Team`,
     severity_id: 4, severity: 'High', status_id: 1, status: 'New',
     product: { name: 'outlook_office365' },
     first_seen_time: minsAgo(38),
