@@ -10,7 +10,7 @@
  * in this tiny module means HMR almost never re-runs it.
  */
 import { createContext, useContext } from 'react';
-import type { DemoContextValue } from './demoContextTypes';
+import type { DemoContextValue } from './DemoContext';
 
 export const DemoContext = createContext<DemoContextValue | null>(null);
 
