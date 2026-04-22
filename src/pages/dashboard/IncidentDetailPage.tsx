@@ -1766,6 +1766,39 @@ const IncidentDetailPage = () => {
     });
   }, [activeTab, loading, editedObservables, enrichments, id]);
 
+  // Re-run correlation lookup for a single observable on demand. Used by the
+  // small refresh button next to each observable's "Correlations" header so
+  // the user can poke at it without leaving the row.
+  const refetchObsCorrelation = useCallback(async (obs: { type: string; value: string }) => {
+    if (!obs?.value) return;
+    const obsKey = `${obs.type}::${obs.value}`;
+    const noiseKeys = new Set([
+      'new', 'in_progress', 'resolved', 'escalated', 'closed', 'open', 'pending',
+      'critical', 'high', 'medium', 'low', 'informational', 'info', 'warning', 'error',
+      'unknown', 'none', 'null', 'undefined', 'true', 'false',
+      id?.toLowerCase(),
+    ].filter(Boolean));
+    setObsCorrelations(prev => ({ ...prev, [obsKey]: { loading: true, data: prev[obsKey]?.data || [] } }));
+    try {
+      const resp = await fetch(getApiUrl('/api/v2/correlations'), {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader(), ...crossOrgHeaders },
+        body: JSON.stringify({ type: 'value', key: obs.value }),
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        const corrData = Array.isArray(data) ? data : (data.correlations || data.data || []);
+        const filtered = corrData.filter((c: { key: string }) => !noiseKeys.has(c.key.toLowerCase()));
+        setObsCorrelations(prev => ({ ...prev, [obsKey]: { loading: false, data: filtered, discoveredAt: filtered.length > 0 ? Date.now() : prev[obsKey]?.discoveredAt } }));
+      } else {
+        setObsCorrelations(prev => ({ ...prev, [obsKey]: { loading: false, data: [] } }));
+      }
+    } catch {
+      setObsCorrelations(prev => ({ ...prev, [obsKey]: { loading: false, data: [] } }));
+    }
+  }, [id, crossOrgHeaders]);
+
 
   const saveToDatastore = useCallback(async () => {
     if (!incident?.id) return;
