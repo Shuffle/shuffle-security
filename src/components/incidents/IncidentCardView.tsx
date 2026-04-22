@@ -418,7 +418,7 @@ export const IncidentCardView = ({
                           <img
                             src={sourceApp.image}
                             alt={incident.source}
-                            style={{ width: 30, height: 30, objectFit: 'contain', borderRadius: '6px' }}
+                            style={{ width: 40, height: 40, objectFit: 'contain', borderRadius: '6px' }}
                           />
                         </Box>
                       </Tooltip>
@@ -436,27 +436,8 @@ export const IncidentCardView = ({
                   )}
                 </AnimatePresence>
 
-                {/* Status badge overlay — only when source logo is the
-                    primary icon, so the user still sees status at a glance. */}
-                {!showCheck && sourceApp?.image && (
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      bottom: -4,
-                      right: -4,
-                      width: 18,
-                      height: 18,
-                      borderRadius: '50%',
-                      backgroundColor: `${iconColor}`,
-                      border: '2px solid hsl(var(--card))',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <IconComponent size={10} color="#fff" />
-                  </Box>
-                )}
+                {/* Status is conveyed by the status chip in the card body —
+                    no need for a duplicate badge overlay on the icon. */}
               </Box>
 
               {/* Content */}
