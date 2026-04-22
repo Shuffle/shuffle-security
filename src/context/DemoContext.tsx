@@ -402,13 +402,16 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
         // Special-case the incidents-list:present sub-goal — it is satisfied
         // by the live datastore presence check, not by the completedSteps map.
         if (g.id === 'incidents-list:present') return hasDemoIncidents;
+        // Special-case the incidents-list:open sub-goal — it tracks the live
+        // route, so leaving the detail page reverts the gate.
+        if (g.id === 'incidents-list:open') return isOnIncidentDetail;
         return !!completedSteps[g.id];
       });
     }
     // Step-level requirement gate (legacy single-goal).
     if (s.requirement && !completedSteps[s.id]) return false;
     return true;
-  }, [completedSteps, hasDemoIncidents]);
+  }, [completedSteps, hasDemoIncidents, isOnIncidentDetail]);
 
   const currentStep = TOUR_STEPS[step];
   const currentStepUnlocked = isStepUnlocked(currentStep);
