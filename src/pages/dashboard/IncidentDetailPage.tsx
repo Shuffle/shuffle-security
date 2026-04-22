@@ -2023,7 +2023,6 @@ const IncidentDetailPage = () => {
           }
         }
       }, 7000);
-      toast.error('Failed to save changes');
     } finally {
       setIsSaving(false);
     }
