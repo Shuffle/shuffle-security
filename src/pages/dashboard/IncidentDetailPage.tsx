@@ -985,16 +985,41 @@ const IncidentDetailPage = () => {
   // Fetch agent runs for this incident — deferred until incident loaded
   const { runsForIncident: agentRuns, isLoading: agentRunsLoading } = useIncidentAgentRuns(!loading ? id : undefined);
 
-  // Fetch source app image when incident source is known
+  // Fetch source app image when incident source is known. We prefer the
+  // user's authenticated apps (same logo they see in the integrations list),
+  // and fall back to the public Algolia catalog so unauthenticated sources
+  // (e.g. a freshly-arrived demo incident from a tool the user has not
+  // connected yet — like Outlook Office365) still render an icon.
   useEffect(() => {
     if (!incident?.source) return;
-    const source = incident.source.toLowerCase().replace(/[\s_-]/g, '');
+    const rawSource = incident.source;
+    const source = rawSource.toLowerCase().replace(/[\s_-]/g, '');
+    let cancelled = false;
+
+    const fallbackToAlgolia = async () => {
+      try {
+        const { algoliasearch } = await import('algoliasearch');
+        const client = algoliasearch('JNSS5CFDZZ', '33e4e3564f4f060e96e0531957bed552');
+        const res = await client.search({
+          requests: [{ indexName: 'appsearch', query: rawSource.replace(/_/g, ' '), hitsPerPage: 10 }],
+        });
+        if (cancelled) return;
+        const hits = ((res as any)?.results?.[0]?.hits || []) as any[];
+        const match = hits.find((h) => {
+          const name = (h.name || '').toLowerCase().replace(/[\s_-]/g, '');
+          return name === source;
+        }) || hits[0];
+        if (match?.image_url) setSourceAppImage(match.image_url);
+      } catch { /* image is optional */ }
+    };
+
     fetch(getApiUrl('/api/v1/apps/authentication'), {
       credentials: 'include',
       headers: { ...getAuthHeader(), ...crossOrgHeaders },
     })
       .then(r => r.json())
       .then(result => {
+        if (cancelled) return;
         const authData = result.data || result;
         if (Array.isArray(authData)) {
           const match = authData.find((a: any) => {
@@ -1003,10 +1028,14 @@ const IncidentDetailPage = () => {
           });
           if (match?.app?.large_image) {
             setSourceAppImage(match.app.large_image);
+            return;
           }
         }
+        fallbackToAlgolia();
       })
-      .catch(() => {});
+      .catch(() => { fallbackToAlgolia(); });
+
+    return () => { cancelled = true; };
   }, [incident?.source]);
 
   // Load incident function (reusable for refresh)
