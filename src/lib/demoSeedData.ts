@@ -45,23 +45,14 @@ type RawInc = {
 };
 
 const toIncident = (item: RawInc): { key: string; value: OCSFIncidentFinding } => {
-  // Stagger enrichment timestamps a few seconds after the incident's
-  // first_seen so the unified timeline reads as "incident landed → Shuffle
-  // analysed it and added observables seconds later". This is what makes the
-  // demo feel like real-time enrichment instead of pre-baked data.
-  const incidentTs = new Date(item.first_seen_time).getTime();
-  const enrichments = (item.observables || []).map((o, idx) => {
-    // 4s, 8s, 12s … after incident creation. Capped well within the minute.
-    const offsetMs = (idx + 1) * 4000;
-    const seenAt = new Date(incidentTs + offsetMs).toISOString();
-    return {
-      type: o.type,
-      value: o.value,
-      first_seen: seenAt,
-      last_seen: seenAt,
-    };
-  });
-
+  // NOTE: Observables are intentionally NOT seeded directly on the incident
+  // anymore. The incident lands "raw" with no enrichments; a background
+  // process (see `enrichDemoIncidentObservables` in services/demoMode.ts)
+  // adds them dynamically a few seconds after the incident is written, so
+  // the timeline reads as "incident landed → Shuffle analysed it and
+  // surfaced observables seconds later". The pending observables are
+  // returned via `pendingObservables` (see toIncidentWithPending below) so
+  // the seeder can schedule the background enrichment.
   return {
     key: item._key,
     value: {
@@ -80,12 +71,7 @@ const toIncident = (item: RawInc): { key: string; value: OCSFIncidentFinding } =
       last_seen_time: item.first_seen_time,
       types: item.types,
       product: item.product,
-      // Observables are intentionally NOT seeded as native incident
-      // observables. We surface them as `enrichments` (system-added) so the
-      // user sees Shuffle adding them in real time on the timeline, instead
-      // of them being inherent to the incident. Correlations still light up
-      // because shared values are detected across the same indicator pool.
-      enrichments,
+      enrichments: [],
       metadata: {
         ...demoMeta(item._key),
         extensions: {
@@ -94,7 +80,25 @@ const toIncident = (item: RawInc): { key: string; value: OCSFIncidentFinding } =
           },
         },
       },
-    } as OCSFIncidentFinding & { enrichments: typeof enrichments },
+    } as OCSFIncidentFinding & { enrichments: { type: string; value: string; first_seen: string; last_seen: string }[] },
+  };
+};
+
+/**
+ * Wrapper around `toIncident` that also returns the observables that should
+ * be added in the background after the incident lands. Used by the demo
+ * seeders to kick off the dynamic enrichment process.
+ */
+export type PendingObservable = { type: string; value: string };
+export const toIncidentWithPending = (item: RawInc): {
+  key: string;
+  value: OCSFIncidentFinding;
+  pendingObservables: PendingObservable[];
+} => {
+  const built = toIncident(item);
+  return {
+    ...built,
+    pendingObservables: (item.observables || []).map(o => ({ type: o.type, value: o.value })),
   };
 };
 
@@ -131,15 +135,19 @@ const PHISH_REPORTER_EMAIL = 'diego.ruiz@example.com';
  * Wazuh / Sliver C2 detection on Sarah's laptop arrives later as the user
  * is exploring this incident.
  */
-export const buildDemoFocusIncident = (): { key: string; value: OCSFIncidentFinding } => {
+export const buildDemoFocusIncident = (): {
+  key: string;
+  value: OCSFIncidentFinding;
+  pendingObservables: PendingObservable[];
+} => {
   const t = now();
-  return toIncident({
+  return toIncidentWithPending({
     _key: `demo-inc-phish-${t}-focus`,
     title: `Phishing email reported by ${PHISH_REPORTER_NAME}`,
     desc: `From: ${PHISH_REPORTER_NAME} <${PHISH_REPORTER_EMAIL}>
 To: phishing@example.com
 Subject: FW: [SUSPICIOUS] IT Support — Action required: reset your MFA
-Date: ${new Date(now() - 38 * 60 * 1000).toUTCString()}
+Date: ${new Date(now()).toUTCString()}
 
 Hi security team,
 
@@ -155,7 +163,7 @@ Senior Accountant, Finance
 From: IT Support <it-support@itsupport-portal.live>
 To: ${PHISH_REPORTER_EMAIL}
 Subject: [Action required] Reset your MFA within 24 hours
-Date: ${new Date(now() - 52 * 60 * 1000).toUTCString()}
+Date: ${new Date(now() - 14 * 60 * 1000).toUTCString()}
 
 Dear user,
 
@@ -169,7 +177,7 @@ Thank you,
 IT Support Team`,
     severity_id: 4, severity: 'High', status_id: 1, status: 'New',
     product: { name: 'outlook_office365' },
-    first_seen_time: minsAgo(38),
+    first_seen_time: minsAgo(0),
     types: ['phishing'],
     observables: [
       { type: 'email', value: PHISH_REPORTER_EMAIL },
@@ -186,15 +194,19 @@ IT Support Team`,
  * incident — confirming that Sarah did click the link and that her outdated
  * Chrome (CVE-2024-5274) was exploited. Source is Wazuh.
  */
-export const buildDemoWazuhImplantIncident = (): { key: string; value: OCSFIncidentFinding } => {
+export const buildDemoWazuhImplantIncident = (): {
+  key: string;
+  value: OCSFIncidentFinding;
+  pendingObservables: PendingObservable[];
+} => {
   const t = now();
-  return toIncident({
+  return toIncidentWithPending({
     _key: `demo-inc-malware-${t}-wazuh`,
     title: `Sliver C2 implant beaconing on ${PHISH_HOST}`,
     desc: `Wazuh agent flagged an unsigned Go binary at %APPDATA%\\Roaming\\Microsoft\\Edge\\msedge_proxy.exe on ${PHISH_HOST} (owner: Sarah Chen) making low-and-slow HTTPS callbacks to ${PHISH_ATTACKER_IP} every ~57s with jitter — Sliver implant signature (rule 100221, level 12). Process tree: chrome.exe (v124.0.6367.91 — outdated, vulnerable to CVE-2024-5274) → cmd.exe → msedge_proxy.exe, triggered after the user visited ${PHISH_LURE_URL}. Sysmon EID 1 + 3 correlated; persistence created via Run key "EdgeUpdate".`,
     severity_id: 5, severity: 'Critical', status_id: 1, status: 'New',
     product: { name: 'Wazuh' },
-    first_seen_time: minsAgo(2),
+    first_seen_time: minsAgo(0),
     types: ['malware', 'c2', 'exploit'],
     observables: [
       { type: 'hostname', value: PHISH_HOST },

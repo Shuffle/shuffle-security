@@ -9,7 +9,7 @@
  * safety-net scan for items tagged `metadata.extensions.custom_attributes.demo`.
  */
 
-import { setDatastoreItems, deleteDatastoreItem, DATASTORE_CATEGORIES, getDatastoreByCategory } from '@/services/datastore';
+import { setDatastoreItems, setDatastoreItem, getDatastoreItem, deleteDatastoreItem, DATASTORE_CATEGORIES, getDatastoreByCategory } from '@/services/datastore';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 import { restoreOriginalIngestTicketsApps } from '@/services/demoLiveEnvironment';
 import {
@@ -21,6 +21,7 @@ import {
   DEMO_FLAG_KEY,
   DEMO_ACTIVE_KEY,
   DEMO_SEEDED_STEPS_KEY,
+  type PendingObservable,
 } from '@/lib/demoSeedData';
 
 const VULNS_CATEGORY = 'shuffle-security_vulnerabilities';
@@ -113,6 +114,69 @@ const recordSeed = (category: string, keys: string[]) => {
   localStorage.setItem(DEMO_ACTIVE_KEY, 'true');
 };
 
+/**
+ * Demo enrichment scheduler.
+ *
+ * After a demo incident lands in the datastore, schedule the observables to
+ * be added one-by-one in the background — exactly the way real Shuffle
+ * enrichment runs after an incident is ingested. The first observable
+ * shows up after a short delay, with each subsequent one a few seconds
+ * later, so the user sees enrichments stream in on the timeline rather
+ * than appearing pre-baked.
+ *
+ * Best-effort: any failure (incident not yet materialized via the webhook
+ * pipeline, network blip, etc.) is logged and skipped — we never throw out
+ * of a background timer.
+ */
+const FIRST_ENRICHMENT_DELAY_MS = 4000;
+const ENRICHMENT_INTERVAL_MS = 3500;
+
+const scheduleDemoObservableEnrichment = (
+  key: string,
+  observables: PendingObservable[],
+): void => {
+  if (!observables || observables.length === 0) return;
+
+  observables.forEach((obs, idx) => {
+    const delay = FIRST_ENRICHMENT_DELAY_MS + idx * ENRICHMENT_INTERVAL_MS;
+    window.setTimeout(async () => {
+      try {
+        // Pull the latest incident state so we don't clobber edits the user
+        // (or other background processes) made in the meantime.
+        const fetched = await getDatastoreItem(key, DATASTORE_CATEGORIES.INCIDENTS);
+        if (!fetched.success || !fetched.item) return;
+        const raw = fetched.item.value;
+        const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+        if (!parsed || typeof parsed !== 'object') return;
+
+        const seenAt = new Date().toISOString();
+        const existingEnrichments = Array.isArray(parsed.enrichments) ? parsed.enrichments : [];
+        // De-dupe on (type+value) so re-runs don't pile duplicates on.
+        const alreadyPresent = existingEnrichments.some((e: { type?: string; value?: string }) =>
+          e?.type === obs.type && e?.value === obs.value,
+        );
+        if (alreadyPresent) return;
+
+        const updated = {
+          ...parsed,
+          last_seen_time: seenAt,
+          enrichments: [
+            ...existingEnrichments,
+            { type: obs.type, value: obs.value, first_seen: seenAt, last_seen: seenAt },
+          ],
+        };
+
+        const res = await setDatastoreItem(key, updated, DATASTORE_CATEGORIES.INCIDENTS);
+        if (res.success) {
+          broadcastRefresh(DATASTORE_CATEGORIES.INCIDENTS);
+        }
+      } catch (err) {
+        console.warn('[demo] background enrichment failed', { key, obs, err });
+      }
+    }, delay);
+  });
+};
+
 
 
 // ─── Per-step seeders ────────────────────────────────────────────────────────
@@ -138,6 +202,8 @@ export const STEP_SEEDERS: Record<string, () => Promise<number>> = {
     if (!res.success) throw new Error(res.error || 'Failed to seed demo focus incident');
     recordSeed(DATASTORE_CATEGORIES.INCIDENTS, [item.key]);
     broadcastRefresh(DATASTORE_CATEGORIES.INCIDENTS);
+    // Trickle the observables in over the next ~20s as background enrichments.
+    scheduleDemoObservableEnrichment(item.key, item.pendingObservables);
     return 1;
   },
 
@@ -318,6 +384,7 @@ export const forceCreateSingleDemoIncident = async (): Promise<number> => {
   if (!res.success) throw new Error(res.error || 'Failed to create demo focus incident');
   recordSeed(DATASTORE_CATEGORIES.INCIDENTS, [item.key]);
   broadcastRefresh(DATASTORE_CATEGORIES.INCIDENTS);
+  scheduleDemoObservableEnrichment(item.key, item.pendingObservables);
   return 1;
 };
 
@@ -380,6 +447,11 @@ export const seedDemoWazuhImplantIncident = async (): Promise<number> => {
         // materializes it into the datastore.
         recordSeed(DATASTORE_CATEGORIES.INCIDENTS, [item.key]);
         broadcastRefresh(DATASTORE_CATEGORIES.INCIDENTS);
+        // Background-enrich the webhook-fed incident too. The first
+        // enrichment delay (4s) is comfortably longer than the typical
+        // webhook->datastore materialization latency, so the patch will
+        // land on the freshly-materialized record.
+        scheduleDemoObservableEnrichment(item.key, item.pendingObservables);
         return 1;
       }
     } catch { /* fall through to datastore write */ }
@@ -390,6 +462,7 @@ export const seedDemoWazuhImplantIncident = async (): Promise<number> => {
   if (!res.success) throw new Error(res.error || 'Failed to seed Sliver implant incident');
   recordSeed(DATASTORE_CATEGORIES.INCIDENTS, [item.key]);
   broadcastRefresh(DATASTORE_CATEGORIES.INCIDENTS);
+  scheduleDemoObservableEnrichment(item.key, item.pendingObservables);
   return 1;
 };
 
