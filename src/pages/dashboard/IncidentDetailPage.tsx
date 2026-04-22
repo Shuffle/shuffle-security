@@ -3790,70 +3790,71 @@ const IncidentDetailPage = () => {
               border: '1px solid hsl(var(--border))',
               flexShrink: 0,
             }}>
-              {/* Original tab - always visible, disabled when no data */}
-              <Tooltip title={unmappedOriginal ? 'The raw data before any translation' : 'No original data available for this incident'} arrow>
-                <Box
-                  onClick={() => unmappedOriginal && setActiveTab(6)}
-                  sx={{
-                    px: 2,
-                    py: 1,
-                    borderRadius: 1.5,
-                    cursor: unmappedOriginal ? 'pointer' : 'not-allowed',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1,
-                    transition: 'all 0.2s ease',
-                    opacity: unmappedOriginal ? 1 : 0.4,
-                    bgcolor: activeTab === 6 ? '#ff6600' : 'transparent',
-                    color: activeTab === 6 ? '#ffffff' : 'text.secondary',
-                    fontWeight: activeTab === 6 ? 600 : 400,
-                    fontSize: '0.875rem',
-                    '&:hover': unmappedOriginal ? {
-                      bgcolor: activeTab === 6 ? '#ff6600' : 'rgba(255,255,255,0.05)',
-                    } : {},
-                  }}
-                >
-                  Original
-                </Box>
-              </Tooltip>
-
-              {/* Arrow: Original → Translation */}
-              <ChevronRightIcon sx={{ fontSize: 16, color: 'text.disabled', mx: -0.25 }} />
-
-              {/* File tab */}
-              {(() => {
-                const hasFile = !!incidentFileRef;
-                return (
-                  <Tooltip title={hasFile ? 'The translation file that maps original data to OCSF' : 'No translation file linked to this incident'} arrow>
+              {/* Original tab - only visible when data exists */}
+              {unmappedOriginal && (
+                <>
+                  <Tooltip title="The raw data before any translation" arrow>
                     <Box
-                      onClick={() => hasFile && setActiveTab(5)}
+                      onClick={() => setActiveTab(6)}
                       sx={{
                         px: 2,
                         py: 1,
                         borderRadius: 1.5,
-                        cursor: hasFile ? 'pointer' : 'not-allowed',
+                        cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
                         gap: 1,
                         transition: 'all 0.2s ease',
-                        opacity: hasFile ? 1 : 0.4,
+                        bgcolor: activeTab === 6 ? '#ff6600' : 'transparent',
+                        color: activeTab === 6 ? '#ffffff' : 'text.secondary',
+                        fontWeight: activeTab === 6 ? 600 : 400,
+                        fontSize: '0.875rem',
+                        '&:hover': {
+                          bgcolor: activeTab === 6 ? '#ff6600' : 'rgba(255,255,255,0.05)',
+                        },
+                      }}
+                    >
+                      Original
+                    </Box>
+                  </Tooltip>
+
+                  {/* Arrow: Original → Translation */}
+                  <ChevronRightIcon sx={{ fontSize: 16, color: 'text.disabled', mx: -0.25 }} />
+                </>
+              )}
+
+              {/* File tab - only visible when translation file exists */}
+              {!!incidentFileRef && (
+                <>
+                  <Tooltip title="The translation file that maps original data to OCSF" arrow>
+                    <Box
+                      onClick={() => setActiveTab(5)}
+                      sx={{
+                        px: 2,
+                        py: 1,
+                        borderRadius: 1.5,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        transition: 'all 0.2s ease',
                         bgcolor: activeTab === 5 ? '#ff6600' : 'transparent',
                         color: activeTab === 5 ? '#ffffff' : 'text.secondary',
                         fontWeight: activeTab === 5 ? 600 : 400,
                         fontSize: '0.875rem',
-                        '&:hover': hasFile ? {
+                        '&:hover': {
                           bgcolor: activeTab === 5 ? '#ff6600' : 'rgba(255,255,255,0.05)',
-                        } : {},
+                        },
                       }}
                     >
                       Translation
                     </Box>
                   </Tooltip>
-                );
-              })()}
 
-              {/* Arrow: Translation → OCSF */}
-              <ChevronRightIcon sx={{ fontSize: 16, color: 'text.disabled', mx: -0.25 }} />
+                  {/* Arrow: Translation → OCSF */}
+                  <ChevronRightIcon sx={{ fontSize: 16, color: 'text.disabled', mx: -0.25 }} />
+                </>
+              )}
 
               <Tooltip title="The normalized OCSF Incident Finding output" arrow>
                 <Box
