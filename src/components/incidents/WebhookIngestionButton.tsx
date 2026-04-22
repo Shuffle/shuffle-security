@@ -105,6 +105,9 @@ export const WebhookIngestionButton = ({ webhook, onToggled }: WebhookIngestionB
       // the parent's refetch reports the new value (handled by the effect
       // above). Otherwise the UI snaps back to the stale prop.
       onToggled?.();
+      // Also bust the shared workflows cache so global consumers (e.g. the
+      // WebhookActiveChip in the top bar) update immediately.
+      queryClient.invalidateQueries({ queryKey: ['workflows'] });
 
       // Safety net: if the backend never catches up (e.g. failed refetch),
       // release the optimistic lock after 15s so the UI doesn't get stuck.
