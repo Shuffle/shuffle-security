@@ -1,5 +1,30 @@
 import { Box, Typography, Chip, Tooltip } from '@mui/material';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { Link } from 'react-router-dom';
+
+/**
+ * Returns true when a datastore category represents a threat-intelligence
+ * source (known IOCs, threat feeds). A correlation pointing to one of these
+ * means the observable matches a *known bad* indicator and should be
+ * surfaced loudly to the user.
+ */
+export const isIocCategory = (category: string): boolean => {
+  const c = (category || '').toLowerCase();
+  return c.includes('ioc') || c.includes('threat-feed') || c.includes('threat_feed');
+};
+
+/**
+ * Returns true if any ref in the correlation points to an IOC / threat-feed
+ * category — i.e. the correlated value is a known indicator of compromise.
+ */
+export const hasIocMatch = (correlation: Pick<Correlation, 'ref'>): boolean => {
+  if (!correlation?.ref?.length) return false;
+  return correlation.ref.some((r) => {
+    const [category] = r.split('|');
+    return category ? isIocCategory(category) : false;
+  });
+};
+
 
 export interface Correlation {
   key: string;
@@ -74,9 +99,13 @@ export const CorrelationRow = ({ correlation, currentIncidentId, className, comp
   const categories = Object.keys(refsByCategory);
   // Effective match count after filtering out the current incident.
   const effectiveAmount = categories.reduce((sum, c) => sum + refsByCategory[c].length, 0);
+  // IOC / threat-feed matches override severity coloring — known-bad always wins.
+  const iocMatch = categories.some(isIocCategory);
   const isHighMatch = effectiveAmount >= 5;
   const isMediumMatch = effectiveAmount >= 3 && effectiveAmount < 5;
-  const dotColor = isHighMatch ? '#ff6600' : isMediumMatch ? '#eab308' : 'hsl(var(--muted-foreground))';
+  const dotColor = iocMatch
+    ? 'hsl(var(--destructive))'
+    : isHighMatch ? '#ff6600' : isMediumMatch ? '#eab308' : 'hsl(var(--muted-foreground))';
 
   const formatCategory = (cat: string) => cat.replace('shuffle-', '').replace(/_/g, ' ');
 
@@ -90,10 +119,14 @@ export const CorrelationRow = ({ correlation, currentIncidentId, className, comp
       sx={{
         p: compact ? 1.25 : 1.75,
         borderRadius: 1.5,
-        bgcolor: 'transparent',
-        border: '1px solid hsl(var(--border))',
+        bgcolor: iocMatch ? 'hsl(var(--destructive) / 0.06)' : 'transparent',
+        border: iocMatch
+          ? '1px solid hsl(var(--destructive) / 0.5)'
+          : '1px solid hsl(var(--border))',
         transition: 'border-color 120ms ease',
-        '&:hover': { borderColor: 'hsl(var(--border) / 0.8)' },
+        '&:hover': {
+          borderColor: iocMatch ? 'hsl(var(--destructive) / 0.7)' : 'hsl(var(--border) / 0.8)',
+        },
       }}
     >
       {/* Header */}
@@ -104,12 +137,35 @@ export const CorrelationRow = ({ correlation, currentIncidentId, className, comp
             fontFamily: 'monospace',
             fontSize: compact ? '0.72rem' : '0.78rem',
             fontWeight: 600,
-            color: 'text.primary',
+            color: iocMatch ? 'hsl(var(--destructive))' : 'text.primary',
             wordBreak: 'break-all',
           }}
         >
           {correlation.key}
         </Typography>
+        {iocMatch && (
+          <Tooltip
+            title="This value matches a known Indicator of Compromise (IOC) or threat-feed entry. Investigate immediately."
+            arrow
+          >
+            <Chip
+              icon={<WarningAmberIcon sx={{ fontSize: 12, color: 'hsl(var(--destructive)) !important' }} />}
+              label="Known IOC"
+              size="small"
+              sx={{
+                height: compact ? 18 : 20,
+                fontSize: compact ? '0.6rem' : '0.65rem',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: 0.4,
+                bgcolor: 'hsl(var(--destructive) / 0.12)',
+                color: 'hsl(var(--destructive))',
+                border: '1px solid hsl(var(--destructive) / 0.4)',
+                '& .MuiChip-icon': { ml: 0.5, mr: -0.25 },
+              }}
+            />
+          </Tooltip>
+        )}
         <Typography
           variant="caption"
           sx={{ color: 'text.secondary', ml: 'auto', flexShrink: 0, fontSize: compact ? '0.65rem' : undefined }}
@@ -123,13 +179,15 @@ export const CorrelationRow = ({ correlation, currentIncidentId, className, comp
         {categories.map((category) => {
           const keys = refsByCategory[category];
           const isIncidentCategory = category === 'shuffle-security_incidents';
+          const isIoc = isIocCategory(category);
 
           return (
             <Box key={category} sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
               <Typography
                 variant="caption"
                 sx={{
-                  color: 'text.disabled',
+                  color: isIoc ? 'hsl(var(--destructive))' : 'text.disabled',
+                  fontWeight: isIoc ? 700 : undefined,
                   minWidth: compact ? 84 : 100,
                   textTransform: 'capitalize',
                   pt: 0.25,
@@ -153,9 +211,13 @@ export const CorrelationRow = ({ correlation, currentIncidentId, className, comp
                       height: compact ? 20 : 22,
                       fontSize: compact ? '0.65rem' : '0.7rem',
                       fontFamily: 'monospace',
-                      bgcolor: 'transparent',
-                      borderColor: 'hsl(var(--border))',
-                      color: isIncidentCategory ? 'hsl(var(--primary))' : 'text.secondary',
+                      bgcolor: isIoc ? 'hsl(var(--destructive) / 0.08)' : 'transparent',
+                      borderColor: isIoc
+                        ? 'hsl(var(--destructive) / 0.5)'
+                        : 'hsl(var(--border))',
+                      color: isIoc
+                        ? 'hsl(var(--destructive))'
+                        : isIncidentCategory ? 'hsl(var(--primary))' : 'text.secondary',
                       cursor: isIncidentCategory ? 'pointer' : 'default',
                       '&:hover': isIncidentCategory
                         ? {
@@ -176,8 +238,8 @@ export const CorrelationRow = ({ correlation, currentIncidentId, className, comp
                         height: compact ? 20 : 22,
                         fontSize: compact ? '0.65rem' : '0.7rem',
                         bgcolor: 'transparent',
-                        borderColor: 'hsl(var(--border))',
-                        color: 'text.disabled',
+                        borderColor: isIoc ? 'hsl(var(--destructive) / 0.4)' : 'hsl(var(--border))',
+                        color: isIoc ? 'hsl(var(--destructive))' : 'text.disabled',
                       }}
                     />
                   </Tooltip>
