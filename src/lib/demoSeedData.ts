@@ -44,35 +44,59 @@ type RawInc = {
   observables?: { type: string; value: string }[];
 };
 
-const toIncident = (item: RawInc): { key: string; value: OCSFIncidentFinding } => ({
-  key: item._key,
-  value: {
-    class_uid: 2005,
-    class_name: 'Incident Finding',
-    finding_uid: item._key,
-    title: item.title,
-    desc: item.desc,
-    severity_id: item.severity_id,
-    severity: item.severity,
-    status_id: item.status_id,
-    status: item.status,
-    confidence: 75,
-    created_time: item.first_seen_time,
-    first_seen_time: item.first_seen_time,
-    last_seen_time: item.first_seen_time,
-    types: item.types,
-    product: item.product,
-    metadata: {
-      ...demoMeta(item._key),
-      extensions: {
-        custom_attributes: {
-          ...(demoMeta(item._key).extensions.custom_attributes),
-          ...(item.observables ? { observables: item.observables } : {}),
+const toIncident = (item: RawInc): { key: string; value: OCSFIncidentFinding } => {
+  // Stagger enrichment timestamps a few seconds after the incident's
+  // first_seen so the unified timeline reads as "incident landed → Shuffle
+  // analysed it and added observables seconds later". This is what makes the
+  // demo feel like real-time enrichment instead of pre-baked data.
+  const incidentTs = new Date(item.first_seen_time).getTime();
+  const enrichments = (item.observables || []).map((o, idx) => {
+    // 4s, 8s, 12s … after incident creation. Capped well within the minute.
+    const offsetMs = (idx + 1) * 4000;
+    const seenAt = new Date(incidentTs + offsetMs).toISOString();
+    return {
+      type: o.type,
+      value: o.value,
+      first_seen: seenAt,
+      last_seen: seenAt,
+    };
+  });
+
+  return {
+    key: item._key,
+    value: {
+      class_uid: 2005,
+      class_name: 'Incident Finding',
+      finding_uid: item._key,
+      title: item.title,
+      desc: item.desc,
+      severity_id: item.severity_id,
+      severity: item.severity,
+      status_id: item.status_id,
+      status: item.status,
+      confidence: 75,
+      created_time: item.first_seen_time,
+      first_seen_time: item.first_seen_time,
+      last_seen_time: item.first_seen_time,
+      types: item.types,
+      product: item.product,
+      // Observables are intentionally NOT seeded as native incident
+      // observables. We surface them as `enrichments` (system-added) so the
+      // user sees Shuffle adding them in real time on the timeline, instead
+      // of them being inherent to the incident. Correlations still light up
+      // because shared values are detected across the same indicator pool.
+      enrichments,
+      metadata: {
+        ...demoMeta(item._key),
+        extensions: {
+          custom_attributes: {
+            ...(demoMeta(item._key).extensions.custom_attributes),
+          },
         },
       },
-    },
-  } as OCSFIncidentFinding,
-});
+    } as OCSFIncidentFinding & { enrichments: typeof enrichments },
+  };
+};
 
 // ─── Incidents ────────────────────────────────────────────────────────────────
 // Demo narrative (the "phishing → host compromise" funnel):
