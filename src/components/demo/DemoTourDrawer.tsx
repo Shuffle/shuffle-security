@@ -485,7 +485,9 @@ export const DemoTourDrawer = () => {
                               // render a tiny "Force generate" button inline
                               // next to the label when not yet satisfied.
                               const showForceGenerate =
-                                isIncidentsListStep && g.id === 'incidents-list:present' && !g.done;
+                                (isIncidentsListStep && g.id === 'incidents-list:present' && !g.done) ||
+                                (g.id === 'incident-detail:wazuh' && !g.done);
+                              const isWazuhForce = g.id === 'incident-detail:wazuh';
                               // Optional goals use a softer palette and an
                               // "Optional" pill instead of a lock so they do
                               // not read as blockers.
