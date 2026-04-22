@@ -3098,6 +3098,61 @@ const IncidentDetailPage = () => {
         );
       }
 
+      if (item.type === 'step') {
+        // Compact "step" pill — these are derived events (task created /
+        // observable added / correlation found) injected on the frontend so
+        // the user can see *when* every artefact appeared on the timeline.
+        const stepStyle: Record<StepKind, { color: string; icon: React.ReactNode }> = {
+          'task-created':       { color: '#a855f7', icon: <TaskAltIcon sx={{ fontSize: 12 }} /> },
+          'task-completed':     { color: '#22c55e', icon: <CheckCircleIcon sx={{ fontSize: 12 }} /> },
+          'observable-added':   { color: '#06b6d4', icon: <VisibilityIcon sx={{ fontSize: 12 }} /> },
+          'correlation-found':  { color: '#f59e0b', icon: <LinkIcon sx={{ fontSize: 12 }} /> },
+        };
+        const cfg = stepStyle[item.kind];
+        return (
+          <Box
+            key={item.id}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              px: 1.25,
+              py: 0.5,
+              ml: 0.5,
+              borderRadius: 999,
+              bgcolor: `${cfg.color}0F`,
+              border: `1px solid ${cfg.color}33`,
+              maxWidth: 'fit-content',
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', color: cfg.color }}>
+              {cfg.icon}
+            </Box>
+            <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: cfg.color }}>
+              {item.label}
+            </Typography>
+            {item.detail && (
+              <Typography
+                sx={{
+                  fontSize: '0.7rem',
+                  color: 'text.secondary',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  maxWidth: 320,
+                }}
+                title={item.detail}
+              >
+                {item.detail}
+              </Typography>
+            )}
+            <Typography sx={{ fontSize: '0.65rem', color: 'text.disabled', ml: 'auto', pl: 1 }}>
+              {item.timestamp ? formatRelativeTime(item.timestamp) : ''}
+            </Typography>
+          </Box>
+        );
+      }
+
       // Manual activity
       const actItem = item.data;
       const isOwnMessage = actItem.user === currentUsername;
