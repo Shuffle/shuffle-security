@@ -2631,10 +2631,12 @@ const IncidentDetailPage = () => {
   // Builder for the unified timeline items (revisions + agent runs + comments).
   // Returns an array of JSX nodes (or a single empty-state node).
   const renderTimelineFeedItems = () => {
+    type StepKind = 'task-created' | 'task-completed' | 'observable-added' | 'correlation-found';
     type TimelineItem =
       | { type: 'revision'; timestamp: number; data: any; idx: number; parsedCurrent: any; parsedPrevious: any | null }
       | { type: 'agent'; timestamp: number; data: typeof agentRuns[number] }
-      | { type: 'manual'; timestamp: number; data: ActivityItem };
+      | { type: 'manual'; timestamp: number; data: ActivityItem }
+      | { type: 'step'; timestamp: number; kind: StepKind; id: string; label: string; detail?: string; count?: number };
 
     const items: TimelineItem[] = [];
 
@@ -2677,6 +2679,113 @@ const IncidentDetailPage = () => {
     if (activityFilter === 'all' || activityFilter === 'manual') {
       activity.forEach((item) => {
         items.push({ type: 'manual', timestamp: normalizeToMs(item.timestamp), data: item });
+      });
+    }
+
+    // ── Step injection ─────────────────────────────────────────────────────
+    // Render Tasks, Observables and Correlations as small "step" markers in
+    // the timeline so users can see *when* each artefact appeared. These are
+    // injected purely on the frontend — no persistence needed.
+    //
+    // Timestamp sources:
+    //   • Tasks → `createdAt` (and `completedAt` for completion steps).
+    //     Falls back to incident creation time if missing on legacy data.
+    //   • Observables (manual + enrichments) → `first_seen` when present,
+    //     otherwise the incident creation time.
+    //   • Correlations → "discovered at" (when the correlations API returned
+    //     them); they have no native timestamp.
+    if (activityFilter === 'all' || activityFilter === 'steps') {
+      const fallbackTs = incident?.createdTs ? normalizeToMs(incident.createdTs) : 0;
+
+      // Tasks — both creation and completion produce a step.
+      tasks.filter(t => !t.disabled).forEach((t) => {
+        const createdTs = t.createdAt ? normalizeToMs(t.createdAt) : fallbackTs;
+        if (createdTs > 0) {
+          items.push({
+            type: 'step',
+            kind: 'task-created',
+            timestamp: createdTs,
+            id: `step-task-created-${t.id}`,
+            label: 'Task created',
+            detail: t.title,
+          });
+        }
+        if (t.completed && t.completedAt) {
+          const completedTs = normalizeToMs(t.completedAt);
+          if (completedTs > 0) {
+            items.push({
+              type: 'step',
+              kind: 'task-completed',
+              timestamp: completedTs,
+              id: `step-task-completed-${t.id}`,
+              label: 'Task completed',
+              detail: t.title,
+            });
+          }
+        }
+      });
+
+      // Observables — manual entries + automated enrichments. Dedupe by
+      // type+value so the same indicator does not appear twice.
+      const seenObs = new Set<string>();
+      const allObservables: Array<{ type: string; value: string; first_seen?: string | number; source: 'manual' | 'enrichment' }> = [
+        ...editedObservables.filter(o => !o.archived).map(o => ({
+          type: o.type,
+          value: o.value,
+          first_seen: o.first_seen,
+          source: 'manual' as const,
+        })),
+        ...enrichments.map(e => ({
+          type: e.type || 'unknown',
+          value: e.value || e.data || '',
+          first_seen: e.first_seen,
+          source: 'enrichment' as const,
+        })),
+      ];
+      allObservables.forEach((o) => {
+        if (!o.value) return;
+        const k = `${o.type}::${o.value}`.toLowerCase();
+        if (seenObs.has(k)) return;
+        seenObs.add(k);
+        const ts = o.first_seen ? normalizeToMs(o.first_seen) : fallbackTs;
+        if (ts > 0) {
+          items.push({
+            type: 'step',
+            kind: 'observable-added',
+            timestamp: ts,
+            id: `step-obs-${k}`,
+            label: o.source === 'enrichment' ? 'Observable enriched' : 'Observable added',
+            detail: `${o.type}: ${o.value}`,
+          });
+        }
+      });
+
+      // Correlations — collapsed into a single "discovered" step (the count
+      // tells the story; listing every key would drown the timeline).
+      if (correlationsDiscoveredAt && correlations.length > 0) {
+        items.push({
+          type: 'step',
+          kind: 'correlation-found',
+          timestamp: correlationsDiscoveredAt,
+          id: `step-corr-incident`,
+          label: 'Correlations found',
+          detail: `${correlations.length} shared attribute${correlations.length === 1 ? '' : 's'} across other incidents`,
+          count: correlations.length,
+        });
+      }
+      // Per-observable correlations — one step per observable that returned
+      // matches. Useful when an enrichment surfaces a known-bad indicator.
+      Object.entries(obsCorrelations).forEach(([obsKey, entry]) => {
+        if (!entry.discoveredAt || entry.data.length === 0) return;
+        items.push({
+          type: 'step',
+          kind: 'correlation-found',
+          timestamp: entry.discoveredAt,
+          id: `step-corr-obs-${obsKey}`,
+          label: 'Observable correlation',
+          detail: `${entry.data.length} match${entry.data.length === 1 ? '' : 'es'} for ${obsKey.split('::')[1] || obsKey}`,
+          count: entry.data.length,
+        });
       });
     }
 
