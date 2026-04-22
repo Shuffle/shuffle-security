@@ -229,7 +229,7 @@ export const DemoModeCard = () => {
                     },
                   }}
                 >
-                  {isSeeding ? 'Seeding sample data…' : 'Start demo tour'}
+                  {isSeeding ? 'Seeding sample data…' : 'Start demo mode'}
                 </Button>
               </span>
             </Tooltip>
