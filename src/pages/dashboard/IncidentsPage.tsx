@@ -695,9 +695,16 @@ const IncidentsPage = () => {
             if (!scheduleStopped) {
               workflowAppNames = extractWorkflowAppNames(ingestWorkflow);
             }
-            setIngestWorkflowId(ingestWorkflow.id);
+            // Only expose the workflow ID for execution when it is owned by
+            // the active org. Workflows distributed from a parent tenant show
+            // up in /api/v1/workflows but cannot be executed in the child
+            // context (server returns "Workflow ID to execute is not valid").
+            const wfOrgId = ingestWorkflow.org_id || ingestWorkflow.org || ingestWorkflow.execution_org;
+            const ownedByActiveOrg = !wfOrgId || !currentOrgId || wfOrgId === currentOrgId;
+            setIngestWorkflowId(ownedByActiveOrg ? ingestWorkflow.id : null);
           } else {
             setIngestScheduleStopped(false);
+            setIngestWorkflowId(null);
           }
 
           // Detect "Forward Tickets" workflow
