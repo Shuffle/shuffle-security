@@ -413,12 +413,12 @@ export const IncidentCardView = ({
                             e.preventDefault();
                             onFilterChange?.('source', incident.source || '');
                           }}
-                          sx={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                          sx={{ width: '100%', height: '100%', display: 'flex', alignItems: 'stretch', justifyContent: 'stretch', cursor: 'pointer' }}
                         >
                           <img
                             src={sourceApp.image}
                             alt={incident.source}
-                            style={{ width: 40, height: 40, objectFit: 'contain', borderRadius: '6px' }}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px', display: 'block' }}
                           />
                         </Box>
                       </Tooltip>
