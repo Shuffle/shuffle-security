@@ -5059,8 +5059,8 @@ const IncidentDetailPage = () => {
       </Box>{/* End isPublicView pointer-events wrapper */}
         </Box>
 
-        {/* Right Activity Sidebar - Hidden on Original/Translation/OCSF tabs */}
-        {activeTab !== 4 && activeTab !== 5 && activeTab !== 6 && (
+        {/* Right Timeline Sidebar — hidden on Details (inlined there) and on Original / Translation / OCSF tabs */}
+        {activeTab !== 0 && activeTab !== 4 && activeTab !== 5 && activeTab !== 6 && (
         <Box
           data-tour="incident-activity-feed"
           sx={{ 
