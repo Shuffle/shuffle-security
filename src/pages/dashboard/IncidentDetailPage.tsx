@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef, forwardRef } from 'r
 import DOMPurify from 'dompurify';
 import AgentIcon from '@/components/agent/AgentIcon';
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { useEntityLabel } from '@/hooks/useEntityLabel';
+import { useEntityLabel, useTaskStatuses } from '@/hooks/useEntityLabel';
 import {
   Box,
   Typography,
@@ -484,6 +484,7 @@ const IncidentDetailPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { plural: entityPlural, singular: entitySingular, basePath: entityBasePath } = useEntityLabel();
+  const taskStatuses = useTaskStatuses();
   const { userInfo } = useAuth();
   const { openApp } = useAppDetail();
   const currentUsername = userInfo?.username || '';
