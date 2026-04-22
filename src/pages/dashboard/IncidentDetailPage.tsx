@@ -538,6 +538,11 @@ const IncidentDetailPage = () => {
   const [newComment, setNewComment] = useState('');
   const [commentAttachments, setCommentAttachments] = useState<FileAttachment[]>([]);
   const commentFileInputRef = useRef<HTMLInputElement>(null);
+  // When the user clicks "Reply" on a timeline item we capture enough context
+  // here to render the chip above the input AND attach the parent reference
+  // to the new comment when it's submitted. Cleared after submit / cancel.
+  const [replyingTo, setReplyingTo] = useState<{ id: string; label: string; preview: string } | null>(null);
+  const commentInputRef = useRef<HTMLDivElement>(null);
   const [commentUploading, setCommentUploading] = useState(false);
   const handleCommentAttach = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
