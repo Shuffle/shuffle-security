@@ -2693,7 +2693,7 @@ const IncidentDetailPage = () => {
   // Builder for the unified timeline items (revisions + agent runs + comments).
   // Returns an array of JSX nodes (or a single empty-state node).
   const renderTimelineFeedItems = () => {
-    type StepKind = 'task-created' | 'task-completed' | 'task-status-changed' | 'observable-added' | 'correlation-found';
+    type StepKind = 'task-created' | 'task-completed' | 'task-status-changed' | 'observable-added' | 'correlation-found' | 'incident-created';
     type TimelineItem =
       | { type: 'revision'; timestamp: number; data: any; idx: number; parsedCurrent: any; parsedPrevious: any | null }
       | { type: 'agent'; timestamp: number; data: typeof agentRuns[number] }
@@ -2730,6 +2730,26 @@ const IncidentDetailPage = () => {
         parsedPrevious: idx < revisions.length - 1 ? parsedRevisions[idx + 1] : null,
       });
     });
+
+    // Synthetic "Incident created" step — guarantees the timeline always
+    // shows when the incident was created, even before any revision has
+    // been written (e.g., a freshly created manual incident). Suppressed
+    // when revisions exist because the oldest revision already renders as
+    // "Incident created".
+    if (revisions.length === 0 && incident?.createdTs) {
+      const createdTs = normalizeToMs(incident.createdTs);
+      if (createdTs > 0 && (activityFilter === 'all' || activityFilter === 'steps')) {
+        const sourceLabel = incident.source ? ` from ${incident.source}` : '';
+        items.push({
+          type: 'step',
+          kind: 'incident-created',
+          timestamp: createdTs,
+          id: 'step-incident-created',
+          label: 'Incident created',
+          detail: `${incident.title || 'Untitled incident'}${sourceLabel}`,
+        });
+      }
+    }
 
     if (activityFilter === 'all' || activityFilter === 'agent') {
       agentRuns.forEach((run) => {
@@ -3205,6 +3225,7 @@ const IncidentDetailPage = () => {
           'task-status-changed':  { color: '#3b82f6', icon: <ForwardIcon sx={{ fontSize: 12 }} /> },
           'observable-added':     { color: '#06b6d4', icon: <VisibilityIcon sx={{ fontSize: 12 }} /> },
           'correlation-found':    { color: '#f59e0b', icon: <LinkIcon sx={{ fontSize: 12 }} /> },
+          'incident-created':     { color: '#6495ed', icon: <HistoryIcon sx={{ fontSize: 12 }} /> },
         };
         const cfg = stepStyle[item.kind];
         return (
