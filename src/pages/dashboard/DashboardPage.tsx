@@ -44,7 +44,7 @@ import AgentQuestionDialog from '@/components/agent/AgentQuestionDialog';
 import AgentQuickViewDrawer, { type QuickViewItem } from '@/components/agent/AgentQuickViewDrawer';
 import InlineMarkdown from '@/components/shared/InlineMarkdown';
 import { useAgentNotifications } from '@/hooks/useNotifications';
-import { isApprovalNotification, approveAgentAction, type AgentNotification } from '@/services/notifications';
+import { isApprovalNotification, approveAgentAction, continueAgentExecution, type AgentNotification } from '@/services/notifications';
 import { getShuffleCoreFormUrl, isAgentApprovalFormUrl } from '@/config/api';
 import { getTimeAgo } from '@/components/agent/AgentRunHeader';
 import { useEntityPreference } from '@/hooks/useEntityLabel';
@@ -563,30 +563,73 @@ const DashboardPage = () => {
 
   const handleApprove = async (notification: AgentNotification) => {
     try {
-      await approveAgentAction(notification.id);
+      // Resume the agent run with answer=true. Then dismiss the notification.
+      await continueAgentExecution({ notification, approve: true });
+      await approveAgentAction(notification.id).catch(() => { /* non-fatal */ });
       toast.success('Action approved — the agent will continue.');
       refreshNotifications();
-    } catch {
+    } catch (err) {
+      console.error('[Agent] Approve failed:', err);
       toast.error('Failed to approve action.');
     }
   };
 
-  const handleConfigureApprove = async (notificationId: string, modifiedAction?: string) => {
+  const handleDeny = async (notification: AgentNotification, note?: string) => {
     try {
-      await approveAgentAction(notificationId);
+      await continueAgentExecution({ notification, approve: false, note });
+      await approveAgentAction(notification.id).catch(() => { /* non-fatal */ });
+      toast.success('Action denied — the agent will continue accordingly.');
+      refreshNotifications();
+    } catch (err) {
+      console.error('[Agent] Deny failed:', err);
+      toast.error('Failed to deny action.');
+    }
+  };
+
+  const handleConfigureApprove = async (notificationId: string, modifiedAction?: string) => {
+    const notification = notifications.find(n => n.id === notificationId);
+    if (!notification) {
+      toast.error('Notification no longer available.');
+      return;
+    }
+    try {
+      await continueAgentExecution({
+        notification,
+        approve: true,
+        note: modifiedAction,
+      });
+      await approveAgentAction(notificationId).catch(() => { /* non-fatal */ });
       toast.success(modifiedAction ? 'Modified action submitted.' : 'Action approved.');
       refreshNotifications();
-    } catch {
+    } catch (err) {
+      console.error('[Agent] Configure approve failed:', err);
       toast.error('Failed to approve action.');
     }
   };
 
   const handleSubmitAnswers = async (notificationId: string, answers: Record<number, string>) => {
+    const notification = notifications.find(n => n.id === notificationId);
+    if (!notification) {
+      toast.error('Notification no longer available.');
+      return;
+    }
     try {
-      await approveAgentAction(notificationId);
+      // Build the same `note={"question_0":"…"}` payload the original
+      // approval form posts back to the agent.
+      const noteMap: Record<string, string> = {};
+      Object.entries(answers).forEach(([idx, value]) => {
+        noteMap[`question_${idx}`] = value;
+      });
+      await continueAgentExecution({
+        notification,
+        approve: true,
+        note: noteMap,
+      });
+      await approveAgentAction(notificationId).catch(() => { /* non-fatal */ });
       toast.success('Answers submitted — the agent will continue.');
       refreshNotifications();
-    } catch {
+    } catch (err) {
+      console.error('[Agent] Submit answers failed:', err);
       toast.error('Failed to submit answers.');
     }
   };
@@ -1004,6 +1047,7 @@ const DashboardPage = () => {
       item={quickViewItem}
       entityBasePath={entityBasePath}
       onApprove={handleApprove}
+      onDeny={handleDeny}
       onConfigureApprove={handleConfigureApprove}
       onSubmitAnswers={handleSubmitAnswers}
     />

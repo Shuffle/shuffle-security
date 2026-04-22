@@ -55,6 +55,7 @@ interface Props {
   item: QuickViewItem | null;
   entityBasePath: string;
   onApprove?: (notification: AgentNotification) => void;
+  onDeny?: (notification: AgentNotification, note?: string) => void;
   onConfigureApprove?: (notificationId: string, modifiedAction?: string) => void;
   onSubmitAnswers?: (notificationId: string, answers: Record<number, string>) => void;
 }
@@ -274,7 +275,7 @@ const buildFromRun = (run: AgentRun, entityBasePath: string): UnifiedData => {
 // ── Visible timeline count before expand ──
 const VISIBLE_TIMELINE_COUNT = 3;
 
-const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, onConfigureApprove, onSubmitAnswers }: Props) => {
+const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, onDeny, onConfigureApprove, onSubmitAnswers }: Props) => {
   const [isConfiguring, setIsConfiguring] = useState(false);
   const [modifiedAction, setModifiedAction] = useState('');
   const [timelineExpanded, setTimelineExpanded] = useState(false);
@@ -302,6 +303,11 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
 
   const handleApprove = () => {
     if (data.notification) onApprove?.(data.notification);
+    handleClose();
+  };
+
+  const handleDeny = () => {
+    if (data.notification) onDeny?.(data.notification);
     handleClose();
   };
 
@@ -629,6 +635,23 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
               <Button onClick={handleApprove} fullWidth variant="contained" startIcon={<CheckCircle size={15} />}
                 sx={approveButtonSx}>
                 Approve
+              </Button>
+              <Button
+                onClick={handleDeny}
+                fullWidth
+                variant="outlined"
+                startIcon={<XCircle size={15} />}
+                sx={{
+                  ...outlineButtonSx,
+                  borderColor: 'hsl(var(--severity-high) / 0.4)',
+                  color: 'hsl(var(--severity-high))',
+                  '&:hover': {
+                    borderColor: 'hsl(var(--severity-high))',
+                    backgroundColor: 'hsl(var(--severity-high) / 0.08)',
+                  },
+                }}
+              >
+                Deny
               </Button>
               {!isConfiguring && (
                 <Button
