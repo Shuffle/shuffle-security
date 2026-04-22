@@ -601,6 +601,7 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
     forceGenerateSingleIncident, isForceGeneratingSingle,
     hasDemoIncidents,
     isOnIncidentDetail,
+    attentionPulse,
   }), [
     active, isSeeding, isCleaning, drawerOpen, minimized, dock, step, stats,
     completedSteps, currentStepUnlocked,
@@ -611,6 +612,7 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
     forceGenerateSingleIncident, isForceGeneratingSingle,
     hasDemoIncidents,
     isOnIncidentDetail,
+    attentionPulse,
   ]);
 
   return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;
