@@ -474,8 +474,6 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
       } else {
         toast.warning(`Removed ${res.deleted} items, ${res.failed} failed. You can run cleanup again.`);
       }
-      // Reload to clear any in-memory caches in hooks
-      setTimeout(() => window.location.reload(), 800);
     } finally {
       setIsCleaning(false);
     }
