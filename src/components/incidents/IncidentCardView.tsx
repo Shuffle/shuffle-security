@@ -808,6 +808,8 @@ export const IncidentCardView = ({
 
             </Box>
           </motion.div>
+            )}
+          </ResolvedSourceImage>
         );
       })}
 
