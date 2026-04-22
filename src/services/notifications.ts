@@ -66,7 +66,9 @@ export const fetchAgentNotifications = async (): Promise<NotificationsResponse> 
 };
 
 /**
- * Approve an agent action (mark notification as read / acknowledge)
+ * Approve an agent action (mark notification as read / acknowledge).
+ * Note: this only dismisses the notification locally — to actually let the
+ * agent continue, callers should pair this with continueAgentExecution().
  */
 export const approveAgentAction = async (notificationId: string): Promise<boolean> => {
   const res = await shuffleFetch(
@@ -85,4 +87,99 @@ export const dismissNotification = async (notificationId: string): Promise<boole
   );
   const data = await res.json();
   return data.success === true;
+};
+
+/**
+ * Parse the agent-approval params out of a notification's reference_url.
+ * The Shuffle Core agent emits `/forms/{id}?execution_id=…&authorization=…&decision_id=…`.
+ * Returns null if the URL does not look like an agent-approval form.
+ */
+export const parseAgentApprovalParams = (refUrl: string | undefined | null): {
+  executionId: string;
+  authorization: string;
+  decisionId: string;
+} | null => {
+  if (!refUrl) return null;
+  try {
+    // Build a URL — works for both absolute and root-relative paths.
+    const u = /^https?:\/\//i.test(refUrl)
+      ? new URL(refUrl)
+      : new URL(refUrl, 'https://placeholder.local');
+    const executionId = u.searchParams.get('execution_id') || '';
+    const authorization = u.searchParams.get('authorization') || '';
+    const decisionId = u.searchParams.get('decision_id') || '';
+    if (!executionId || !authorization) return null;
+    return { executionId, authorization, decisionId };
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Continue (or reject) an agent execution that is currently waiting on a
+ * user decision. Mirrors the Shuffle Core agent approval flow:
+ *
+ *   GET /api/v1/workflows/{execution_id}/run
+ *     ?reference_execution={execution_id}
+ *     &authorization={authorization}
+ *     &answer={true|false}
+ *     &note={"question_0":"…"}
+ *     &agentic=true
+ *     &decision_id={decision_id}
+ *
+ * Approve / Deny share the same endpoint — only `answer` and `note` differ.
+ */
+export const continueAgentExecution = async (params: {
+  notification: AgentNotification;
+  approve: boolean;
+  /** Free-form note (e.g. modified-action text or a "question_N" map). */
+  note?: string | Record<string, string>;
+}): Promise<boolean> => {
+  const { notification, approve, note } = params;
+
+  // Prefer the params on the notification body, then fall back to the
+  // ones embedded in the approval form URL (legacy / Shuffle Core path).
+  const fromUrl = parseAgentApprovalParams(notification.reference_url);
+  const executionId = notification.execution_id || fromUrl?.executionId || '';
+  const authorization = fromUrl?.authorization || '';
+  const decisionId = fromUrl?.decisionId || '';
+
+  if (!executionId || !authorization) {
+    throw new Error(
+      'Missing execution_id / authorization for agent continuation. ' +
+      'The notification did not include the data needed to resume the run.',
+    );
+  }
+
+  // Encode `note` consistently. If the caller passed an object (e.g. for
+  // question answers) we serialize it as JSON exactly like the original
+  // form does: note={"question_0":"..."}.
+  let noteParam: string | null = null;
+  if (note !== undefined && note !== null) {
+    if (typeof note === 'string') {
+      if (note.trim()) noteParam = note;
+    } else if (typeof note === 'object') {
+      noteParam = JSON.stringify(note);
+    }
+  }
+
+  const qs = new URLSearchParams({
+    reference_execution: executionId,
+    authorization,
+    answer: approve ? 'true' : 'false',
+    agentic: 'true',
+  });
+  if (decisionId) qs.set('decision_id', decisionId);
+  if (noteParam) qs.set('note', noteParam);
+
+  const res = await shuffleFetch(
+    getApiUrl(`/api/v1/workflows/${executionId}/run?${qs.toString()}`),
+  );
+
+  if (!res.ok) {
+    throw new Error(`Agent continue failed (${res.status})`);
+  }
+  // The endpoint returns 200 with an execution body on success — we don't
+  // need the body, just the status.
+  return true;
 };
