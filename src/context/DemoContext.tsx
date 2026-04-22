@@ -219,6 +219,8 @@ interface DemoContextValue {
   isForceGeneratingSingle: boolean;
   /** True when at least one demo incident is present in the datastore. */
   hasDemoIncidents: boolean;
+  /** True when the user is currently on an incident-detail route. Live. */
+  isOnIncidentDetail: boolean;
 }
 
 const DemoContext = createContext<DemoContextValue | null>(null);
