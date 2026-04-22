@@ -3875,7 +3875,148 @@ const IncidentDetailPage = () => {
         />
       )}
 
-      {activeTab === 0 && (
+      {activeTab === 0 && (() => {
+        const hasEmail = !!incident && isEmailContent(editedMessage || '', rawDescriptionHtml || '', incident.rawOCSF);
+        const descriptionBody = (
+          <>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                {(hasHtmlDescription || editedMessage) && !isEditingDescription && (
+                  <Box sx={{ display: 'flex', gap: 0.25 }}>
+                    {(['rendered', 'readable', 'raw'] as const).map((view) => (
+                      <Chip
+                        key={view}
+                        label={view === 'readable' ? 'Clean' : view.charAt(0).toUpperCase() + view.slice(1)}
+                        size="small"
+                        variant="outlined"
+                        onClick={() => setDescriptionView(view)}
+                        sx={{
+                          height: 20,
+                          fontSize: '0.65rem',
+                          cursor: 'pointer',
+                          bgcolor: 'transparent',
+                          borderColor: descriptionView === view ? 'rgba(255, 102, 0, 0.5)' : 'rgba(255,255,255,0.12)',
+                          color: descriptionView === view ? '#ff6600' : 'text.secondary',
+                          '&:hover': { bgcolor: 'rgba(255,255,255,0.05)' },
+                        }}
+                      />
+                    ))}
+                  </Box>
+                )}
+              </Box>
+              <IconButton
+                size="small"
+                onClick={() => setIsEditingDescription(!isEditingDescription)}
+                sx={{
+                  color: isEditingDescription ? '#FF6600' : 'text.secondary',
+                  '&:hover': { color: '#FF6600' },
+                }}
+              >
+                {isEditingDescription ? <CheckCircleIcon sx={{ fontSize: 16 }} /> : <EditIcon sx={{ fontSize: 16 }} />}
+              </IconButton>
+            </Box>
+            {isEditingDescription ? (
+              <Box sx={{ maxHeight: 350, overflow: 'auto' }}>
+                <MentionInput
+                  value={editedMessage}
+                  onChange={setEditedMessage}
+                  fullWidth
+                  multiline
+                  minRows={4}
+                  maxRows={12}
+                  placeholder="Add a description... (type @ to mention)"
+                  size="small"
+                  sx={inputSx}
+                />
+              </Box>
+            ) : descriptionView === 'rendered' && hasHtmlDescription ? (
+              <Box
+                sx={{
+                  p: 1.5,
+                  bgcolor: (t) => t.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.95)' : 'rgba(255, 255, 255, 1)',
+                  borderRadius: 1,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  minHeight: 120,
+                  maxHeight: 450,
+                  overflow: 'auto',
+                  color: 'text.primary',
+                  '& img': { maxWidth: '100%', height: 'auto' },
+                  '& a': { color: 'primary.main', textDecoration: 'underline' },
+                  '& table': { borderCollapse: 'collapse', maxWidth: '100%' },
+                  '& td, & th': { padding: '4px 8px' },
+                  '& *': { maxWidth: '100%', boxSizing: 'border-box' },
+                  fontSize: '0.875rem',
+                  lineHeight: 1.6,
+                }}
+                dangerouslySetInnerHTML={{ __html: sanitizedDescriptionHtml }}
+              />
+            ) : descriptionView === 'readable' || (descriptionView === 'rendered' && !hasHtmlDescription) ? (
+              <Box
+                sx={{
+                  p: 2,
+                  bgcolor: 'rgba(0, 0, 0, 0.2)',
+                  borderRadius: 1,
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  minHeight: 120,
+                  maxHeight: 450,
+                  overflow: 'auto',
+                }}
+              >
+                <Typography variant="body2" sx={{
+                  color: 'text.primary',
+                  whiteSpace: 'pre-wrap',
+                  fontSize: '0.85rem',
+                  lineHeight: 1.75,
+                  letterSpacing: '0.01em',
+                }}>
+                  {(() => {
+                    if (hasHtmlDescription) {
+                      const tmp = document.createElement('div');
+                      tmp.innerHTML = sanitizedDescriptionHtml;
+                      tmp.querySelectorAll('br').forEach(el => el.replaceWith('\n'));
+                      tmp.querySelectorAll('p, div, tr, li, h1, h2, h3, h4, h5, h6').forEach(el => {
+                        el.prepend(document.createTextNode('\n'));
+                        el.append(document.createTextNode('\n'));
+                      });
+                      const text = (tmp.textContent || '').replace(/\n{3,}/g, '\n\n').trim();
+                      return text || 'No description.';
+                    }
+                    return editedMessage || 'No description.';
+                  })()}
+                </Typography>
+              </Box>
+            ) : (
+              <Box
+                sx={{
+                  p: 1.5,
+                  bgcolor: 'rgba(0, 0, 0, 0.2)',
+                  borderRadius: 1,
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  minHeight: 120,
+                  maxHeight: 350,
+                  overflow: 'auto',
+                  whiteSpace: 'pre-wrap',
+                  cursor: 'pointer',
+                  '&:hover': { borderColor: 'rgba(255,255,255,0.2)' },
+                }}
+                onClick={() => setIsEditingDescription(true)}
+              >
+                {editedMessage ? (
+                  <Typography variant="body2" sx={{ color: 'text.primary', whiteSpace: 'pre-wrap' }}>
+                    {editedMessage}
+                  </Typography>
+                ) : (
+                  <Typography variant="body2" sx={{ color: 'text.disabled', fontStyle: 'italic' }}>
+                    No description. Click to add one.
+                  </Typography>
+                )}
+              </Box>
+            )}
+          </>
+        );
+
+        return (
         /* Details Tab */
         <Box sx={{
           display: 'grid',
@@ -3889,15 +4030,12 @@ const IncidentDetailPage = () => {
               When the incident IS an email thread, we move the Description to
               the right column (collapsed by default) so the parsed thread
               becomes the primary narrative on the left. */}
-          {(() => {
-            const hasEmail = !!incident && isEmailContent(editedMessage || '', rawDescriptionHtml || '', incident.rawOCSF);
-            return (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
           {/* Description Section — only render here when there is NO email
               thread. Otherwise it lives on the right column collapsed. */}
           {!hasEmail && (
           <Section title="Description" icon={DescriptionIcon} defaultOpen={false}>
-            {renderDescriptionBody()}
+            {descriptionBody}
           </Section>
           )}
 
