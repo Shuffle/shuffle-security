@@ -450,11 +450,9 @@ export const seedDemoWazuhImplantIncident = async (): Promise<number> => {
         // materializes it into the datastore.
         recordSeed(DATASTORE_CATEGORIES.INCIDENTS, [item.key]);
         broadcastRefresh(DATASTORE_CATEGORIES.INCIDENTS);
-        // Background-enrich the webhook-fed incident too. The first
-        // enrichment delay (4s) is comfortably longer than the typical
-        // webhook->datastore materialization latency, so the patch will
-        // land on the freshly-materialized record.
-        scheduleDemoObservableEnrichment(item.key, item.pendingObservables);
+        // Like the focus phishing incident, the Wazuh / Sliver follow-up
+        // lands "raw" — Shuffle is what actually surfaces observables in
+        // the background, so the demo no longer pre-bakes them.
         return 1;
       }
     } catch { /* fall through to datastore write */ }
