@@ -3803,7 +3803,16 @@ const IncidentDetailPage = () => {
 
       {activeTab === 0 && (
         /* Details Tab */
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Box sx={{
+          display: 'grid',
+          // Two columns on desktop: narrative + timeline on the left,
+          // metadata on the right. Stacks on smaller viewports.
+          gridTemplateColumns: { xs: '1fr', lg: 'minmax(0, 1fr) 360px' },
+          gap: { xs: 2, lg: 3 },
+          alignItems: 'start',
+        }}>
+          {/* ============ LEFT: Description, Email thread, Timeline ============ */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
           {/* Description Section */}
           <Section title="Description" icon={DescriptionIcon} defaultOpen={false}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
