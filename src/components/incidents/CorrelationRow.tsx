@@ -119,10 +119,14 @@ export const CorrelationRow = ({ correlation, currentIncidentId, className, comp
       sx={{
         p: compact ? 1.25 : 1.75,
         borderRadius: 1.5,
-        bgcolor: 'transparent',
-        border: '1px solid hsl(var(--border))',
+        bgcolor: iocMatch ? 'hsl(var(--destructive) / 0.06)' : 'transparent',
+        border: iocMatch
+          ? '1px solid hsl(var(--destructive) / 0.5)'
+          : '1px solid hsl(var(--border))',
         transition: 'border-color 120ms ease',
-        '&:hover': { borderColor: 'hsl(var(--border) / 0.8)' },
+        '&:hover': {
+          borderColor: iocMatch ? 'hsl(var(--destructive) / 0.7)' : 'hsl(var(--border) / 0.8)',
+        },
       }}
     >
       {/* Header */}
@@ -133,12 +137,35 @@ export const CorrelationRow = ({ correlation, currentIncidentId, className, comp
             fontFamily: 'monospace',
             fontSize: compact ? '0.72rem' : '0.78rem',
             fontWeight: 600,
-            color: 'text.primary',
+            color: iocMatch ? 'hsl(var(--destructive))' : 'text.primary',
             wordBreak: 'break-all',
           }}
         >
           {correlation.key}
         </Typography>
+        {iocMatch && (
+          <Tooltip
+            title="This value matches a known Indicator of Compromise (IOC) or threat-feed entry. Investigate immediately."
+            arrow
+          >
+            <Chip
+              icon={<WarningAmberIcon sx={{ fontSize: 12, color: 'hsl(var(--destructive)) !important' }} />}
+              label="Known IOC"
+              size="small"
+              sx={{
+                height: compact ? 18 : 20,
+                fontSize: compact ? '0.6rem' : '0.65rem',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: 0.4,
+                bgcolor: 'hsl(var(--destructive) / 0.12)',
+                color: 'hsl(var(--destructive))',
+                border: '1px solid hsl(var(--destructive) / 0.4)',
+                '& .MuiChip-icon': { ml: 0.5, mr: -0.25 },
+              }}
+            />
+          </Tooltip>
+        )}
         <Typography
           variant="caption"
           sx={{ color: 'text.secondary', ml: 'auto', flexShrink: 0, fontSize: compact ? '0.65rem' : undefined }}
