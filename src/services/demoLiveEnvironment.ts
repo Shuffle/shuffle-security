@@ -306,10 +306,14 @@ const buildDemoSensorHost = () => {
 /** Seed the rich sensor record into the datastore. Idempotent on key. */
 const initDemoSensorRecord = async (): Promise<void> => {
   try {
+    const key = DEMO_HOST_HOSTNAME.toLowerCase();
     await setDatastoreItems(
-      [{ key: DEMO_HOST_HOSTNAME.toLowerCase(), value: buildDemoSensorHost() }],
+      [{ key, value: buildDemoSensorHost() }],
       SENSORS_CATEGORY,
     );
+    // Track in the demo cleanup index so the asset stat reflects the host
+    // and cleanup removes it on tear-down. recordDemoSeed de-duplicates.
+    recordDemoSeed(SENSORS_CATEGORY, [key]);
   } catch (err) {
     console.warn('[demo] sensor record init failed', err);
   }
