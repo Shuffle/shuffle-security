@@ -395,45 +395,90 @@ export const DemoTourDrawer = () => {
                       {current.body}
                     </Typography>
                     {current.bullets && current.bullets.length > 0 && (
-                      <Box
-                        component="ul"
-                        sx={{
-                          mt: 1.5,
-                          mb: 0,
-                          pl: 0,
-                          listStyle: 'none',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: 0.75,
-                        }}
-                      >
-                        {current.bullets.map((b, i) => (
-                          <Box
-                            key={i}
-                            component="li"
-                            sx={{
-                              fontSize: '0.85rem',
-                              lineHeight: 1.5,
-                              color: 'hsl(var(--muted-foreground))',
-                              display: 'flex',
-                              alignItems: 'flex-start',
-                              gap: 1,
+                      <Box sx={{ mt: 1.5 }}>
+                        <Box
+                          component="button"
+                          type="button"
+                          onClick={() => setBulletsOpen(o => !o)}
+                          aria-expanded={bulletsOpen}
+                          sx={{
+                            all: 'unset',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 0.5,
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            letterSpacing: '0.04em',
+                            textTransform: 'uppercase',
+                            color: 'hsl(var(--muted-foreground))',
+                            opacity: 0.85,
+                            py: 0.25,
+                            '&:hover': { color: 'hsl(var(--foreground))', opacity: 1 },
+                          }}
+                        >
+                          <ChevronDown
+                            size={13}
+                            style={{
+                              transition: 'transform 150ms ease',
+                              transform: bulletsOpen ? 'rotate(0deg)' : 'rotate(-90deg)',
                             }}
-                          >
-                            <Box
-                              component="span"
-                              sx={{
-                                mt: '0.55em',
-                                width: 4,
-                                height: 4,
-                                borderRadius: '50%',
-                                backgroundColor: 'hsl(var(--primary))',
-                                flexShrink: 0,
-                              }}
-                            />
-                            <span>{b}</span>
-                          </Box>
-                        ))}
+                          />
+                          Detailed steps
+                        </Box>
+                        <AnimatePresence initial={false}>
+                          {bulletsOpen && (
+                            <motion.div
+                              key="bullets"
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.18, ease: 'easeOut' }}
+                              style={{ overflow: 'hidden' }}
+                            >
+                              <Box
+                                component="ul"
+                                sx={{
+                                  mt: 1,
+                                  mb: 0,
+                                  pl: 0,
+                                  listStyle: 'none',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  gap: 0.75,
+                                }}
+                              >
+                                {current.bullets.map((b, i) => (
+                                  <Box
+                                    key={i}
+                                    component="li"
+                                    sx={{
+                                      fontSize: '0.85rem',
+                                      lineHeight: 1.5,
+                                      color: 'hsl(var(--muted-foreground))',
+                                      display: 'flex',
+                                      alignItems: 'flex-start',
+                                      gap: 1,
+                                    }}
+                                  >
+                                    <Box
+                                      component="span"
+                                      sx={{
+                                        mt: '0.55em',
+                                        width: 4,
+                                        height: 4,
+                                        borderRadius: '50%',
+                                        backgroundColor: 'hsl(var(--primary))',
+                                        flexShrink: 0,
+                                      }}
+                                    />
+                                    <span>{b}</span>
+                                  </Box>
+                                ))}
+                              </Box>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </Box>
                     )}
 
