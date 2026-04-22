@@ -147,10 +147,10 @@ export const DemoModeCard = () => {
           </Box>
           <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))', mt: 0.5, lineHeight: 1.5 }}>
             {active
-              ? `${stats.incidents} incidents, ${stats.assets} assets, ${stats.users} users loaded. Continue the tour or clean up when done.`
+              ? `${stats.incidents} incidents, ${stats.assets} assets, ${stats.users} users loaded. Continue demo mode or clean up when done.`
               : disableStart
                 ? disableReason
-                : 'Guided tour with sample incidents, assets and live AI agent actions. One-click cleanup.'}
+                : 'Guided demo mode with sample incidents, assets and live AI agent actions. One-click cleanup.'}
           </Typography>
         </Box>
 
@@ -176,7 +176,7 @@ export const DemoModeCard = () => {
                   },
                 }}
               >
-                Continue tour
+                Continue demo mode
               </Button>
               <Button
                 onClick={cleanup}
@@ -229,7 +229,7 @@ export const DemoModeCard = () => {
                     },
                   }}
                 >
-                  {isSeeding ? 'Seeding sample data…' : 'Start demo tour'}
+                  {isSeeding ? 'Seeding sample data…' : 'Start demo mode'}
                 </Button>
               </span>
             </Tooltip>

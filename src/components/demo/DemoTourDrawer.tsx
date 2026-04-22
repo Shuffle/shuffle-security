@@ -252,7 +252,7 @@ export const DemoTourDrawer = () => {
                   <Sparkles size={15} />
                 </Box>
                 <Typography sx={{ fontSize: '0.78rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-                  Demo tour · {step + 1}/{total}
+                  Demo mode · {step + 1}/{total}
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, ml: isBottom ? 0 : 'auto' }}>
@@ -266,7 +266,7 @@ export const DemoTourDrawer = () => {
                     <Minus size={16} />
                   </IconButton>
                 </Tooltip>
-                <Tooltip title="Close tour" arrow>
+                <Tooltip title="Close demo mode" arrow>
                   <IconButton onClick={closeTour} size="small" sx={{ color: 'hsl(var(--muted-foreground))' }}>
                     <X size={16} />
                   </IconButton>

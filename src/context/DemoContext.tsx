@@ -166,7 +166,7 @@ export const TOUR_STEPS: TourStep[] = [
   {
     id: 'wrap',
     title: 'You are all set',
-    body: 'That is the tour.',
+    body: 'That is demo mode.',
     bullets: [
       'Click "Clean up demo data" on the dashboard when done',
       'Every sample item we added gets removed',
