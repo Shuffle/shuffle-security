@@ -78,6 +78,27 @@ export const DemoTourDrawer = () => {
   const locked = !!requirement && !currentStepUnlocked;
   const isIncidentsListStep = current?.id === 'incidents-list';
 
+  // ── Celebrate the moment a step's requirement flips to "done" ─────────────
+  // When the user satisfies the gate (e.g. opens an incident on step 4), we
+  // pulse the Next button + run a one-shot success ripple so they cannot miss
+  // that the tour is ready to advance. The pulse auto-clears after ~2.5s.
+  const [justUnlocked, setJustUnlocked] = useState(false);
+  const wasLockedRef = useRef(locked);
+  useEffect(() => {
+    if (wasLockedRef.current && !locked) {
+      setJustUnlocked(true);
+      const t = window.setTimeout(() => setJustUnlocked(false), 2600);
+      return () => window.clearTimeout(t);
+    }
+    wasLockedRef.current = locked;
+  }, [locked, step]);
+  // Reset the celebration whenever the user advances to a new step.
+  useEffect(() => {
+    setJustUnlocked(false);
+    wasLockedRef.current = locked;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+
   // ── Minimized pill ────────────────────────────────────────────────────────
   if (drawerOpen && minimized) {
     return (
@@ -458,20 +479,53 @@ export const DemoTourDrawer = () => {
                                 isIncidentsListStep && g.id === 'incidents-list:present' && !g.done;
                               return (
                                 <Box key={g.id} sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                                  <Box
-                                    sx={{
+                                  <motion.div
+                                    initial={false}
+                                    animate={
+                                      g.done
+                                        ? { scale: [1, 1.3, 1], rotate: [0, -8, 0] }
+                                        : { scale: 1, rotate: 0 }
+                                    }
+                                    transition={{ duration: 0.5, ease: 'easeOut' }}
+                                    style={{
                                       width: 22,
                                       height: 22,
-                                      borderRadius: 1,
+                                      borderRadius: 6,
                                       display: 'grid',
                                       placeItems: 'center',
-                                      backgroundColor: g.done ? 'hsl(var(--severity-low) / 0.2)' : 'hsl(var(--primary) / 0.18)',
+                                      backgroundColor: g.done
+                                        ? 'hsl(var(--severity-low) / 0.2)'
+                                        : 'hsl(var(--primary) / 0.18)',
                                       color: g.done ? 'hsl(var(--severity-low))' : 'hsl(var(--primary))',
                                       flexShrink: 0,
+                                      boxShadow: g.done ? '0 0 0 0 hsl(var(--severity-low) / 0)' : 'none',
                                     }}
                                   >
-                                    {g.done ? <Check size={13} /> : <Lock size={12} />}
-                                  </Box>
+                                    <AnimatePresence mode="wait" initial={false}>
+                                      {g.done ? (
+                                        <motion.span
+                                          key="check"
+                                          initial={{ scale: 0, opacity: 0 }}
+                                          animate={{ scale: 1, opacity: 1 }}
+                                          exit={{ scale: 0, opacity: 0 }}
+                                          transition={{ type: 'spring', stiffness: 500, damping: 18 }}
+                                          style={{ display: 'inline-flex' }}
+                                        >
+                                          <Check size={13} strokeWidth={3} />
+                                        </motion.span>
+                                      ) : (
+                                        <motion.span
+                                          key="lock"
+                                          initial={{ opacity: 0 }}
+                                          animate={{ opacity: 1 }}
+                                          exit={{ opacity: 0 }}
+                                          style={{ display: 'inline-flex' }}
+                                        >
+                                          <Lock size={12} />
+                                        </motion.span>
+                                      )}
+                                    </AnimatePresence>
+                                  </motion.div>
                                   <Typography
                                     sx={{
                                       flex: 1,
@@ -636,39 +690,90 @@ export const DemoTourDrawer = () => {
                   arrow
                   disableHoverListener={!locked}
                 >
-                  <span style={{ flex: 1.4, display: 'flex' }}>
-                    <Button
-                      onClick={isLast ? closeTour : nextStep}
-                      disabled={locked}
-                      variant="contained"
-                      size="small"
-                      startIcon={locked ? <Lock size={13} /> : undefined}
-                      endIcon={!isLast && !locked ? <ChevronRight size={14} /> : undefined}
-                      sx={{
-                        flex: 1,
-                        textTransform: 'none',
-                        fontSize: '0.78rem',
-                        fontWeight: 600,
-                        // Unlocked → green CTA (clear "go" affordance).
-                        // Locked → muted/neutral so it does not steal focus
-                        // from the actual unlock target on the page.
-                        backgroundColor: locked ? 'hsl(var(--muted))' : 'hsl(var(--severity-low))',
-                        color: locked ? 'hsl(var(--muted-foreground))' : 'hsl(0 0% 100%)',
-                        boxShadow: 'none',
-                        transition: 'background-color 0.2s ease',
-                        '&:hover': {
-                          backgroundColor: locked ? 'hsl(var(--muted))' : 'hsl(var(--severity-low) / 0.85)',
-                          boxShadow: 'none',
-                        },
-                        '&.Mui-disabled': {
-                          backgroundColor: 'hsl(var(--muted))',
-                          color: 'hsl(var(--muted-foreground))',
-                          boxShadow: 'none',
-                        },
-                      }}
+                  <span style={{ flex: 1.4, display: 'flex', position: 'relative' }}>
+                    {/* Celebration ring — pulses out from the Next button the moment the gate clears */}
+                    <AnimatePresence>
+                      {justUnlocked && (
+                        <>
+                          <motion.span
+                            key="ring-1"
+                            initial={{ opacity: 0.6, scale: 1 }}
+                            animate={{ opacity: 0, scale: 1.35 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 1.2, ease: 'easeOut', repeat: 1, repeatDelay: 0.2 }}
+                            style={{
+                              position: 'absolute',
+                              inset: -2,
+                              borderRadius: 8,
+                              border: '2px solid hsl(var(--severity-low))',
+                              pointerEvents: 'none',
+                            }}
+                          />
+                          <motion.span
+                            key="ring-2"
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 0.5, scale: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.4, ease: 'easeOut' }}
+                            style={{
+                              position: 'absolute',
+                              inset: -2,
+                              borderRadius: 8,
+                              boxShadow: '0 0 0 4px hsl(var(--severity-low) / 0.25)',
+                              pointerEvents: 'none',
+                            }}
+                          />
+                        </>
+                      )}
+                    </AnimatePresence>
+                    <motion.div
+                      style={{ flex: 1, display: 'flex' }}
+                      animate={
+                        !locked && justUnlocked
+                          ? { scale: [1, 1.05, 1, 1.03, 1] }
+                          : { scale: 1 }
+                      }
+                      transition={{ duration: 1.4, ease: 'easeInOut' }}
                     >
-                      {locked ? 'Locked' : isLast ? 'Finish' : 'Next'}
-                    </Button>
+                      <Button
+                        onClick={isLast ? closeTour : nextStep}
+                        disabled={locked}
+                        variant="contained"
+                        size="small"
+                        startIcon={locked ? <Lock size={13} /> : !isLast && justUnlocked ? <Check size={14} strokeWidth={3} /> : undefined}
+                        endIcon={!isLast && !locked ? <ChevronRight size={14} /> : undefined}
+                        sx={{
+                          flex: 1,
+                          textTransform: 'none',
+                          fontSize: '0.78rem',
+                          fontWeight: 700,
+                          // Unlocked → green CTA (clear "go" affordance).
+                          // Locked → muted/neutral so it does not steal focus
+                          // from the actual unlock target on the page.
+                          backgroundColor: locked ? 'hsl(var(--muted))' : 'hsl(var(--severity-low))',
+                          color: locked ? 'hsl(var(--muted-foreground))' : 'hsl(0 0% 100%)',
+                          boxShadow: !locked && justUnlocked ? '0 6px 22px -6px hsl(var(--severity-low) / 0.7)' : 'none',
+                          transition: 'background-color 0.2s ease, box-shadow 0.3s ease',
+                          '&:hover': {
+                            backgroundColor: locked ? 'hsl(var(--muted))' : 'hsl(var(--severity-low) / 0.85)',
+                            boxShadow: !locked ? '0 6px 22px -6px hsl(var(--severity-low) / 0.7)' : 'none',
+                          },
+                          '&.Mui-disabled': {
+                            backgroundColor: 'hsl(var(--muted))',
+                            color: 'hsl(var(--muted-foreground))',
+                            boxShadow: 'none',
+                          },
+                        }}
+                      >
+                        {locked
+                          ? 'Locked'
+                          : isLast
+                            ? 'Finish'
+                            : justUnlocked
+                              ? 'Ready — Next'
+                              : 'Next'}
+                      </Button>
+                    </motion.div>
                   </span>
                 </Tooltip>
               </Box>
