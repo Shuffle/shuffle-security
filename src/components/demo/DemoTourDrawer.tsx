@@ -266,7 +266,7 @@ export const DemoTourDrawer = () => {
                     <Minus size={16} />
                   </IconButton>
                 </Tooltip>
-                <Tooltip title="Close tour" arrow>
+                <Tooltip title="Close demo mode" arrow>
                   <IconButton onClick={closeTour} size="small" sx={{ color: 'hsl(var(--muted-foreground))' }}>
                     <X size={16} />
                   </IconButton>
