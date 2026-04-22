@@ -8,7 +8,7 @@
  * at the element identified by `targetSelector`.
  */
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { seedForStep, cleanupDemoData, isDemoActive, getDemoStats, forceRecreateDemoIncidents, forceCreateSingleDemoIncident, countDemoIncidents, seedDemoWazuhImplantIncident } from '@/services/demoMode';
@@ -229,7 +229,7 @@ export const TOUR_STEPS: TourStep[] = [
 
 export type DemoDock = 'right' | 'bottom';
 
-interface DemoContextValue {
+export interface DemoContextValue {
   active: boolean;
   isSeeding: boolean;
   isCleaning: boolean;
@@ -284,7 +284,12 @@ interface DemoContextValue {
   attentionPulse: number;
 }
 
-const DemoContext = createContext<DemoContextValue | null>(null);
+// DemoContext + useDemo are defined in ./demoContextObject so HMR cannot
+// desync the context identity between provider and consumers. Re-exported
+// here so existing `import { useDemo } from '@/context/DemoContext'` calls
+// keep working without touching every call site.
+import { DemoContext, useDemo } from './demoContextObject';
+export { useDemo };
 
 export const DemoProvider = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
@@ -705,8 +710,5 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
   return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;
 };
 
-export const useDemo = (): DemoContextValue => {
-  const ctx = useContext(DemoContext);
-  if (!ctx) throw new Error('useDemo must be used within DemoProvider');
-  return ctx;
-};
+// useDemo is re-exported above from ./demoContextObject.
+
