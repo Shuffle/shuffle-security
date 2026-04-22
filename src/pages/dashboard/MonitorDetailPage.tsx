@@ -136,7 +136,17 @@ const MonitorDetailPage = () => {
         }
       }
 
-      const merged = mergeHost(envHost as unknown as Record<string, unknown>, supplements.sensorsByHost, supplements.assetsByHost) as unknown as SensorHost;
+      let merged = mergeHost(envHost as unknown as Record<string, unknown>, supplements.sensorsByHost, supplements.assetsByHost) as unknown as SensorHost;
+
+      // Demo mode: keep the demo host's check-in within the last minute so
+      // the detail header always reads as freshly online.
+      if (
+        isDemoActive() &&
+        String((merged as { hostname?: string }).hostname || '').toLowerCase() === DEMO_HOST_HOSTNAME.toLowerCase()
+      ) {
+        const fresh = Math.floor(Date.now() / 1000) - Math.floor(Math.random() * 55) - 5;
+        merged = { ...merged, checkin: fresh, last_checkin: fresh } as SensorHost;
+      }
 
       setHost(merged);
       setGroupName(envGroupName);
