@@ -997,6 +997,18 @@ const IncidentDetailPage = () => {
   const [correlationsDiscoveredAt, setCorrelationsDiscoveredAt] = useState<number | null>(null);
   const [obsCorrelations, setObsCorrelations] = useState<Record<string, { loading: boolean; data: Array<{ key: string; amount: number; ref: string[] }>; discoveredAt?: number }>>({});
   const [obsCorrelationAnchor, setObsCorrelationAnchor] = useState<{ el: HTMLElement; obsKey: string } | null>(null);
+  // Set of `${type}::${value}` (lowercase) observable keys whose correlations
+  // include at least one ref into a known IOC / threat-feed datastore. Used to
+  // surface a red "Known IOC" treatment everywhere the observable appears
+  // (Observables tab, timeline pills, drawers).
+  const iocObservableKeys = useMemo(() => {
+    const set = new Set<string>();
+    Object.entries(obsCorrelations).forEach(([obsKey, entry]) => {
+      if (!entry?.data?.length) return;
+      if (entry.data.some(hasIocMatch)) set.add(obsKey.toLowerCase());
+    });
+    return set;
+  }, [obsCorrelations]);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingSaveRef = useRef(false);
   // Track the initial normalized values so auto-save doesn't fire on load
