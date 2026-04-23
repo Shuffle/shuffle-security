@@ -235,6 +235,37 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, on
                   Manage Sources
                 </Button>
               </>
+            ) : hasNonWebhookSources && onToggleApp ? (
+              // Apps exist but none are enabled — surface the fastest path
+              // forward: flip the first disabled app on, right here, instead
+              // of bouncing the user to /onboarding/sources.
+              (() => {
+                const firstDisabled = ingestionApps.find(a => !a.enabled);
+                const target = firstDisabled ?? ingestionApps[0];
+                const label = target ? `Enable ${target.name}` : 'Enable Sync';
+                return (
+                  <Button
+                    variant="contained"
+                    size="large"
+                    disabled={isUpdatingApps || !target}
+                    startIcon={isUpdatingApps ? <CircularProgress size={18} color="inherit" /> : <PlayArrowIcon />}
+                    onClick={() => target && onToggleApp(target.name, true)}
+                    sx={{
+                      px: 3,
+                      py: 1.5,
+                      borderRadius: 2,
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      fontSize: '0.95rem',
+                      backgroundColor: '#FF6600',
+                      boxShadow: 'none',
+                      '&:hover': { backgroundColor: '#e55c00' },
+                    }}
+                  >
+                    {label}
+                  </Button>
+                );
+              })()
             ) : (
               <Button
                 component={Link}
