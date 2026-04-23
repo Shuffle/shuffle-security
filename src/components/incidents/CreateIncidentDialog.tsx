@@ -73,6 +73,11 @@ export interface ActivityItem {
   deleted?: boolean;
   /** When the comment was soft-deleted (ms epoch). */
   deletedAt?: number;
+  /** Marks whether automation / AI agents have already processed this comment.
+   *  Defaults to `false` on every new human comment so agents can pick it up
+   *  exactly once; agents flip it to `true` after acting on it to prevent
+   *  re-running on the same data. */
+  ai_handled?: boolean;
 }
 
 // TLP levels for UI display (using new integer-based system)
