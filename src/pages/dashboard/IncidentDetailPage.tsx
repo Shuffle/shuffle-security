@@ -83,6 +83,8 @@ import { CorrelationRow, getEffectiveCorrelationCount, filterMeaningfulCorrelati
 import { IocDetailsCard } from '@/components/incidents/IocDetailsCard';
 import { useAuth } from '@/context/AuthContext';
 import { useAppDetail } from '@/context/AppDetailContext';
+import { useDemo } from '@/context/DemoContext';
+import { forceCreateSingleDemoIncidentReturningKey } from '@/services/demoMode';
 import { DATASTORE_CATEGORIES, getDatastoreItem, getDatastoreItemPublic, setDatastoreItem } from '@/services/datastore';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { resyncState } from '@/lib/resyncState';
@@ -516,6 +518,14 @@ const IncidentDetailPage = () => {
 
   const [incident, setIncident] = useState<DisplayIncident | null>(null);
   const [loading, setLoading] = useState(true);
+  // Demo-mode self-heal: when the user lands on a demo focus incident URL
+  // that no longer exists in the datastore (e.g. it was force-regenerated
+  // with a fresh timestamp suffix while the list was cached), we recreate
+  // the focus incident and redirect to the new key — no "Incident not found"
+  // dead-end during the tour. See "Incidents arriving" step 4.
+  const { active: demoActive } = useDemo();
+  const [demoRecovering, setDemoRecovering] = useState(false);
+  const demoRecoveryTriedRef = useRef(false);
   
   // Editable fields
   const [editedTitle, setEditedTitle] = useState('');
@@ -2745,7 +2755,35 @@ const IncidentDetailPage = () => {
 
   // Agent runs are rendered separately using AgentActivityFeed component
 
-  if (loading) {
+  // Demo-aware self-heal: if loading finished without an incident, the URL
+  // looks like a demo focus key, and demo mode is active, recreate the focus
+  // incident under a fresh key and navigate the user to it. This avoids the
+  // dead-end "Incident not found" screen on tour step 4 when the user clicks
+  // a row whose datastore entry was rotated out underneath them.
+  useEffect(() => {
+    if (loading || incident || demoRecoveryTriedRef.current) return;
+    if (!demoActive || isPublicView || !id) return;
+    const isDemoFocusKey = /^demo-inc-phish-.*-focus$/.test(id);
+    if (!isDemoFocusKey) return;
+    demoRecoveryTriedRef.current = true;
+    setDemoRecovering(true);
+    (async () => {
+      try {
+        const newKey = await forceCreateSingleDemoIncidentReturningKey();
+        if (newKey) {
+          // Replace the URL so the back button does not bounce the user back
+          // to the dead key.
+          navigate(`${entityBasePath}/${newKey}`, { replace: true });
+        } else {
+          setDemoRecovering(false);
+        }
+      } catch {
+        setDemoRecovering(false);
+      }
+    })();
+  }, [loading, incident, demoActive, isPublicView, id, navigate, entityBasePath]);
+
+  if (loading || demoRecovering) {
     return (
       <Box sx={{ p: 4 }}>
         <Skeleton variant="rectangular" height={120} sx={{ mb: 3, borderRadius: 2 }} />
