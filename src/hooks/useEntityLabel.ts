@@ -2,6 +2,7 @@ import { useLocation } from 'react-router-dom';
 import { useMemo, useEffect, useCallback, useSyncExternalStore } from 'react';
 import { getDatastoreItem, setDatastoreItem, DATASTORE_CATEGORIES } from '@/services/datastore';
 import { SIDEBAR_NAV, ALL_SIDEBAR_KEYS, SidebarItemKey } from '@/config/sidebarNav';
+import { applyEntityTerminology } from '@/lib/entityTerminology';
 
 export const ENTITY_OPTIONS = [
   { value: 'incidents', singular: 'Incident', plural: 'Incidents', path: '/incidents' },
@@ -285,6 +286,31 @@ export function useEntityPreference() {
     const pref = ENTITY_OPTIONS.find(o => o.value === preference) || ENTITY_OPTIONS[0];
     return { singular: pref.singular, plural: pref.plural, basePath: pref.path, value: pref.value };
   }, [preference]);
+}
+
+/** Returns a `t()` function that rewrites the words "incident"/"incidents" in
+ *  any user-facing string to match the org's configured terminology (Alert,
+ *  Case, Ticket, Job). Use everywhere we render copy that mentions incidents.
+ *
+ *  Example:
+ *    const t = useEntityText();
+ *    toast.error(t('Incident not found'));
+ *    <Typography>{t('Search incidents…')}</Typography>
+ */
+export function useEntityText() {
+  const { singular, plural } = useEntityLabel();
+  return useCallback(
+    (text: string) => applyEntityTerminology(text, singular, plural),
+    [singular, plural],
+  );
+}
+
+/** Non-React lookup of the current terminology — for use in services,
+ *  contexts, and other places that cannot call hooks. Reads the cached
+ *  preference (which is hydrated from the datastore on app boot). */
+export function getEntityTerminology(): { singular: string; plural: string } {
+  const pref = ENTITY_OPTIONS.find(o => o.value === getSnapshot()) || ENTITY_OPTIONS[0];
+  return { singular: pref.singular, plural: pref.plural };
 }
 
 /** Save sidebar tab visibility */

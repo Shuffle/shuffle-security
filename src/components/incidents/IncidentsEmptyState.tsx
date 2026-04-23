@@ -9,6 +9,7 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { ValidatedIngestionApp } from '@/lib/ingestionDetection';
 import { IngestionSourceButton } from './IngestionSourceButton';
 import { WebhookIngestionButton, WebhookIngestionInfo } from './WebhookIngestionButton';
+import { useEntityText } from '@/hooks/useEntityLabel';
 
 interface IncidentsEmptyStateProps {
   ingestionApps?: ValidatedIngestionApp[];
@@ -27,6 +28,7 @@ interface IncidentsEmptyStateProps {
 }
 
 export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, onToggleApp, webhook, isSyncing = false, isUpdatingApps = false, isLoading = false, onSyncNow, onCreateIncident, onAddSource }: IncidentsEmptyStateProps) => {
+  const t = useEntityText();
   const hasApps = ingestionApps.length > 0 || !!webhook?.exists || !!webhook?.enabled;
   const hasNonWebhookSources = ingestionApps.length > 0;
 
@@ -86,7 +88,7 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, on
             mb: 1.5,
           }}
         >
-          No incidents yet
+          {t('No incidents yet')}
         </Typography>
 
         {/* Description */}
@@ -100,8 +102,8 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, on
           }}
         >
           {hasApps
-            ? 'Your valid ingestion sources are visible below. Incidents will appear here once alerts start flowing in. Disabled apps show in grey. Click to enable them.'
-            : 'Connect your security tools to start ingesting alerts and incidents automatically. Set up your sources in just a few minutes.'}
+            ? t('Your valid ingestion sources are visible below. Incidents will appear here once alerts start flowing in. Disabled apps show in grey. Click to enable them.')
+            : t('Connect your security tools to start ingesting alerts and incidents automatically. Set up your sources in just a few minutes.')}
         </Typography>
 
         {/* Ingestion sources bar */}
@@ -260,7 +262,7 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, on
               },
             }}
           >
-            Create Incident
+            {t('Create Incident')}
           </Button>
         </Box>
 

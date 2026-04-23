@@ -44,6 +44,7 @@ import { hasOutputWarning, getFailureInfo } from '@/components/agent/AgentRunRes
 import { getTimeAgo, formatDuration, getRunTitle } from '@/components/agent/AgentRunHeader';
 import InlineMarkdown from '@/components/shared/InlineMarkdown';
 import { getShuffleCoreFormUrl, isAgentApprovalFormUrl } from '@/config/api';
+import { useEntityText } from '@/hooks/useEntityLabel';
 
 export type QuickViewItem =
   | { type: 'notification'; notification: AgentNotification }
@@ -276,6 +277,7 @@ const buildFromRun = (run: AgentRun, entityBasePath: string): UnifiedData => {
 const VISIBLE_TIMELINE_COUNT = 3;
 
 const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, onDeny, onConfigureApprove, onSubmitAnswers }: Props) => {
+  const t = useEntityText();
   const [isConfiguring, setIsConfiguring] = useState(false);
   const [modifiedAction, setModifiedAction] = useState('');
   const [timelineExpanded, setTimelineExpanded] = useState(false);
@@ -680,12 +682,12 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
               endIcon={<ArrowRight size={14} />}
               sx={outlineButtonSx}
             >
-              {data.incidentLinkLabel}
+              {t(data.incidentLinkLabel)}
             </Button>
           ) : (
             <Button component={Link} to={data.incidentLink} fullWidth variant="outlined"
               endIcon={<ArrowRight size={14} />} sx={outlineButtonSx}>
-              {data.incidentLinkLabel}
+              {t(data.incidentLinkLabel)}
             </Button>
           )
         )}

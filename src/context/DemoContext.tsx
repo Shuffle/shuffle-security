@@ -14,6 +14,13 @@ import { toast } from 'sonner';
 import { seedForStep, cleanupDemoData, isDemoActive, getDemoStats, forceRecreateDemoIncidents, forceCreateSingleDemoIncident, countDemoIncidents, seedDemoWazuhImplantIncident } from '@/services/demoMode';
 import { enableLiveDemoEnvironment } from '@/services/demoLiveEnvironment';
 import { trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
+import { applyEntityTerminology } from '@/lib/entityTerminology';
+import { getEntityTerminology } from '@/hooks/useEntityLabel';
+
+const tDemo = (s: string) => {
+  const { singular, plural } = getEntityTerminology();
+  return applyEntityTerminology(s, singular, plural);
+};
 
 export interface TourStepRequirement {
   /** Short human label shown in the drawer (e.g. "Enable the ingestion webhook"). */
@@ -586,17 +593,17 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
         present,
       });
       if (added > 0) {
-        toast.success(`Recreated ${added} demo incident${added === 1 ? '' : 's'}.`);
+        toast.success(tDemo(`Recreated ${added} demo incident${added === 1 ? '' : 's'}.`));
       } else if (present > 0) {
-        toast.success(`Demo incidents are present (${present}).`);
+        toast.success(tDemo(`Demo incidents are present (${present}).`));
       } else {
-        toast.error('Could not create demo incidents. Please try again.');
+        toast.error(tDemo('Could not create demo incidents. Please try again.'));
       }
     } catch (err) {
       trackPredefinedEvent(GA_EVENTS.DEMO_FORCE_CREATE_INCIDENTS, 'error', 0, {
         error: String((err as Error)?.message || 'unknown'),
       });
-      toast.error('Failed to recreate demo incidents.');
+      toast.error(tDemo('Failed to recreate demo incidents.'));
     } finally {
       setIsForceCreatingIncidents(false);
     }
@@ -615,16 +622,16 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
         mode: 'single',
       });
       if (added > 0) {
-        toast.success('Generated focus incident — others will follow.');
+        toast.success(tDemo('Generated focus incident — others will follow.'));
       } else {
-        toast.error('Could not generate the focus incident. Please try again.');
+        toast.error(tDemo('Could not generate the focus incident. Please try again.'));
       }
     } catch (err) {
       trackPredefinedEvent(GA_EVENTS.DEMO_FORCE_CREATE_INCIDENTS, 'error-single', 0, {
         error: String((err as Error)?.message || 'unknown'),
         mode: 'single',
       });
-      toast.error('Failed to generate the focus incident.');
+      toast.error(tDemo('Failed to generate the focus incident.'));
     } finally {
       setIsForceGeneratingSingle(false);
     }

@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef, forwardRef } from 'r
 import DOMPurify from 'dompurify';
 import AgentIcon from '@/components/agent/AgentIcon';
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { useEntityLabel, useTaskStatuses } from '@/hooks/useEntityLabel';
+import { useEntityLabel, useTaskStatuses, useEntityText } from '@/hooks/useEntityLabel';
 import {
   Box,
   Typography,
@@ -489,6 +489,7 @@ const IncidentDetailPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { plural: entityPlural, singular: entitySingular, basePath: entityBasePath } = useEntityLabel();
+  const t = useEntityText();
   const taskStatuses = useTaskStatuses();
   const { userInfo } = useAuth();
   const { openApp } = useAppDetail();
@@ -1481,7 +1482,7 @@ const IncidentDetailPage = () => {
     const hasSource = !!incident.source;
     if (!hasTitle && !hasSource) {
       invalidDataToastShown.current = true;
-      toast.error('This incident is not in a valid OCSF format. Validate your ingest pipeline or contact support@shuffler.io', { duration: 8000 });
+      toast.error(t('This incident is not in a valid OCSF format. Validate your ingest pipeline or contact support@shuffler.io'), { duration: 8000 });
     }
   }, [loading, incident]);
 
@@ -2504,7 +2505,7 @@ const IncidentDetailPage = () => {
     await addItem(incident.id, resolvedData);
     setIsSaving(false);
     setShowResolveDialog(false);
-    toast.success('Incident resolved');
+    toast.success(t('Incident resolved'));
     navigate('/incidents');
   };
 
@@ -2799,7 +2800,7 @@ const IncidentDetailPage = () => {
     return (
       <Box sx={{ p: 4, textAlign: 'center' }}>
         <Typography variant="h6" sx={{ color: 'text.secondary', mb: 2 }}>
-          Incident not found
+          {entitySingular} not found
         </Typography>
         <Button 
           component={Link} 
@@ -4504,9 +4505,9 @@ const IncidentDetailPage = () => {
               PaperProps={{ sx: { bgcolor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 2 } }}
             >
               <DialogTitle sx={{ pb: 1 }}>
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>Share Incident</Typography>
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>{t('Share Incident')}</Typography>
                 <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-                  Anyone with this link can view the incident without logging in.
+                  {t('Anyone with this link can view the incident without logging in.')}
                 </Typography>
               </DialogTitle>
               <DialogContent>
@@ -6698,14 +6699,14 @@ const IncidentDetailPage = () => {
         }}
       >
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1 }}>
-          <Typography variant="h6" sx={{ fontSize: '1rem' }}>Forward Incident</Typography>
+          <Typography variant="h6" sx={{ fontSize: '1rem' }}>{t('Forward Incident')}</Typography>
           <IconButton size="small" onClick={() => setShowForwardDialog(false)}>
             <CloseIcon fontSize="small" />
           </IconButton>
         </DialogTitle>
         <DialogContent sx={{ pt: 1 }}>
           <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-            Choose a tool to forward this incident to.
+            {t('Choose a tool to forward this incident to.')}
           </Typography>
           {forwardingAppsLoading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>

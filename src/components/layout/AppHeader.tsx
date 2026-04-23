@@ -20,12 +20,14 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import PersonIcon from '@mui/icons-material/Person';
 import LogoutIcon from '@mui/icons-material/Logout';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import { useEntityText } from '@/hooks/useEntityLabel';
 
 interface AppHeaderProps {
   title?: string;
 }
 
 export const AppHeader = ({ title = 'Dashboard' }: AppHeaderProps) => {
+  const t = useEntityText();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
@@ -65,7 +67,7 @@ export const AppHeader = ({ title = 'Dashboard' }: AppHeaderProps) => {
           >
             <SearchIcon sx={{ color: 'text.secondary', mr: 1 }} />
             <InputBase
-              placeholder="Search incidents..."
+              placeholder={t('Search incidents...')}
               sx={{
                 color: 'inherit',
                 width: { xs: 150, sm: 250 },
