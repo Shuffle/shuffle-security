@@ -42,6 +42,9 @@ export const IncidentCorrelationPreview = ({
   const [preview, setPreview] = useState<IncidentPreview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Distinguish "deleted / never existed" from a transport error so the user
+  // sees a meaningful empty state and the Pivot button is disabled.
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
