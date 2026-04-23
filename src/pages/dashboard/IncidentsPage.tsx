@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef, useSyncExternalStore } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useEntityLabel, useShowAutomation } from '@/hooks/useEntityLabel';
+import { useEntityLabel, useShowAutomation, useEntityText } from '@/hooks/useEntityLabel';
 import AppSearchDrawer from '@/components/shared/AppSearchDrawer';
 import {
   Box,
@@ -359,6 +359,7 @@ interface Filters {
 
 const IncidentsPage = () => {
   const { plural: entityPlural, singular: entitySingular, basePath: entityBasePath } = useEntityLabel();
+  const t = useEntityText();
   const showAutomation = useShowAutomation();
   const { userInfo } = useAuth();
   const currentUsername = userInfo?.username || '';
@@ -895,7 +896,7 @@ const IncidentsPage = () => {
       });
       if (resp.ok) {
         trackPredefinedEvent(GA_EVENTS.INCIDENT_SYNC);
-        toast.success('Sync started — polling for new incidents…');
+        toast.success(t('Sync started — polling for new incidents…'));
         let pollCount = 0;
         const pollInterval = setInterval(async () => {
           pollCount++;
@@ -1393,9 +1394,9 @@ const IncidentsPage = () => {
     setIsBulkResolving(false);
 
     if (successCount > 0) {
-      toast.success(`Reopened ${successCount} incident${successCount !== 1 ? 's' : ''}`);
+      toast.success(t(`Reopened ${successCount} incident${successCount !== 1 ? 's' : ''}`));
     } else {
-      toast.warning('Failed to reopen incidents');
+      toast.warning(t('Failed to reopen incidents'));
     }
 
     setSelectedIds(new Set());
@@ -1473,7 +1474,7 @@ const IncidentsPage = () => {
     }
 
     if (result.success) {
-      toast.success(`Deleted ${result.deleted} incident${result.deleted !== 1 ? 's' : ''}`);
+      toast.success(t(`Deleted ${result.deleted} incident${result.deleted !== 1 ? 's' : ''}`));
       setSelectedIds(new Set());
       await fetchItems();
     } else {
@@ -1567,9 +1568,9 @@ const IncidentsPage = () => {
     setBulkResolveDialogOpen(false);
     
     if (successCount === selectedIds.size) {
-      toast.success(`Resolved ${successCount} incident${successCount !== 1 ? 's' : ''}`);
+      toast.success(t(`Resolved ${successCount} incident${successCount !== 1 ? 's' : ''}`));
     } else {
-      toast.warning(`Resolved ${successCount} of ${selectedIds.size} incidents`);
+      toast.warning(t(`Resolved ${successCount} of ${selectedIds.size} incidents`));
     }
     
     setSelectedIds(new Set());
@@ -1937,7 +1938,7 @@ const IncidentsPage = () => {
                 {demoActive ? (
                   <span>Ingest</span>
                 ) : (
-                  <Tooltip title="Apps with authentication appear here. Verified apps show in green, unverified in yellow. Toggle them to control which tools automatically pull in incidents." placement="top" arrow>
+                  <Tooltip title={t('Apps with authentication appear here. Verified apps show in green, unverified in yellow. Toggle them to control which tools automatically pull in incidents.')} placement="top" arrow>
                     <span style={{ cursor: 'help' }}>Ingest</span>
                   </Tooltip>
                 )}
