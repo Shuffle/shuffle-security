@@ -94,7 +94,15 @@ function getSidebarTabsSnapshot(): Record<SidebarTabKey, boolean> {
   _cachedSidebarTabsRaw = raw;
   try {
     if (raw) {
-      _cachedSidebarTabs = { ...DEFAULT_SIDEBAR_TABS, ...JSON.parse(raw) };
+      // Merge over defaults so newly-added items default to visible, and
+      // drop any persisted keys that no longer exist in the current nav
+      // tree (avoids ghost toggles after a rename/removal in sidebarNav).
+      const parsed = JSON.parse(raw) as Record<string, unknown>;
+      const merged = { ...DEFAULT_SIDEBAR_TABS };
+      for (const k of ALL_SIDEBAR_KEYS) {
+        if (typeof parsed[k] === 'boolean') merged[k] = parsed[k] as boolean;
+      }
+      _cachedSidebarTabs = merged;
     } else {
       _cachedSidebarTabs = DEFAULT_SIDEBAR_TABS;
     }
