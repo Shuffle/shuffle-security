@@ -126,98 +126,101 @@ export const DemoTourDrawer = () => {
   // sample dataset, with a single click to re-open the tour.
   if (!drawerOpen && onDemoObject) {
     return (
-      <AnimatePresence>
-        <motion.div
-          key="demo-anchor-pill"
-          initial={{ opacity: 0, y: 16, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 16, scale: 0.95 }}
-          transition={{ type: 'spring', damping: 26, stiffness: 320 }}
-          style={{
-            position: 'fixed',
-            right: 24,
-            bottom: 24,
-            zIndex: 1300,
-            pointerEvents: 'auto',
-          }}
+      <motion.div
+        key="demo-anchor-pill"
+        initial={{ opacity: 0, y: 16, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ type: 'spring', damping: 26, stiffness: 320 }}
+        style={{
+          position: 'fixed',
+          right: 24,
+          bottom: 24,
+          zIndex: 2147483000,
+          pointerEvents: 'auto',
+        }}
+      >
+        <Tooltip
+          title="You are viewing fake demo data. Click to re-open the demo tour."
+          arrow
+          placement="left"
         >
-          <Tooltip
-            title="You're viewing fake demo data. Click to re-open the demo tour."
-            arrow
-            placement="left"
+          <Box
+            onClick={openTour}
+            role="button"
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.25,
+              pl: 1.5,
+              pr: 2,
+              py: 1,
+              borderRadius: 999,
+              cursor: 'pointer',
+              border: '1px solid hsl(var(--primary) / 0.5)',
+              backgroundColor: 'hsl(var(--card))',
+              position: 'relative',
+              boxShadow:
+                '0 0 0 4px hsl(var(--primary) / 0.12), 0 16px 36px -12px hsl(var(--primary) / 0.55), 0 0 24px hsl(var(--primary) / 0.4)',
+              animation: 'demoAnchorPulse 2.4s ease-in-out infinite',
+              '@keyframes demoAnchorPulse': {
+                '0%, 100%': {
+                  boxShadow:
+                    '0 0 0 4px hsl(var(--primary) / 0.12), 0 16px 36px -12px hsl(var(--primary) / 0.55), 0 0 24px hsl(var(--primary) / 0.4)',
+                },
+                '50%': {
+                  boxShadow:
+                    '0 0 0 8px hsl(var(--primary) / 0.18), 0 18px 40px -12px hsl(var(--primary) / 0.7), 0 0 36px hsl(var(--primary) / 0.6)',
+                },
+              },
+              transition: 'transform 0.15s ease',
+              '&:hover': { transform: 'translateY(-1px)' },
+              maxWidth: 320,
+            }}
           >
             <Box
-              onClick={openTour}
-              role="button"
               sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1.25,
-                pl: 1.5,
-                pr: 2,
-                py: 1,
-                borderRadius: 999,
-                cursor: 'pointer',
-                border: '1px solid hsl(var(--primary) / 0.5)',
-                backgroundColor: 'hsl(var(--card))',
-                position: 'relative',
-                // Two-layer glow: a soft primary halo plus a slow pulsing ring
-                // so the anchor pill is impossible to miss without being
-                // visually obnoxious.
-                boxShadow:
-                  '0 0 0 4px hsl(var(--primary) / 0.12), 0 16px 36px -12px hsl(var(--primary) / 0.55), 0 0 24px hsl(var(--primary) / 0.4)',
-                animation: 'demoAnchorPulse 2.4s ease-in-out infinite',
-                '@keyframes demoAnchorPulse': {
-                  '0%, 100%': {
-                    boxShadow:
-                      '0 0 0 4px hsl(var(--primary) / 0.12), 0 16px 36px -12px hsl(var(--primary) / 0.55), 0 0 24px hsl(var(--primary) / 0.4)',
-                  },
-                  '50%': {
-                    boxShadow:
-                      '0 0 0 8px hsl(var(--primary) / 0.18), 0 18px 40px -12px hsl(var(--primary) / 0.7), 0 0 36px hsl(var(--primary) / 0.6)',
-                  },
-                },
-                transition: 'transform 0.15s ease',
-                '&:hover': { transform: 'translateY(-1px)' },
-                maxWidth: 320,
+                width: 26,
+                height: 26,
+                borderRadius: '50%',
+                display: 'grid',
+                placeItems: 'center',
+                background:
+                  'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.6))',
+                color: 'hsl(var(--primary-foreground))',
+                flexShrink: 0,
               }}
             >
-              <Box
+              <Sparkles size={14} />
+            </Box>
+            <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 0, lineHeight: 1.15 }}>
+              <Typography
                 sx={{
-                  width: 26,
-                  height: 26,
-                  borderRadius: '50%',
-                  display: 'grid',
-                  placeItems: 'center',
-                  background: 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.6))',
-                  color: 'hsl(var(--primary-foreground))',
-                  flexShrink: 0,
+                  fontSize: '0.65rem',
+                  fontWeight: 700,
+                  color: 'hsl(var(--primary))',
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.5,
                 }}
               >
-                <Sparkles size={14} />
-              </Box>
-              <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 0, lineHeight: 1.15 }}>
-                <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, color: 'hsl(var(--primary))', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                  Demo data
-                </Typography>
-                <Typography
-                  sx={{
-                    fontSize: '0.75rem',
-                    fontWeight: 600,
-                    color: 'hsl(var(--foreground))',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    maxWidth: 220,
-                  }}
-                >
-                  Re-open demo tour
-                </Typography>
-              </Box>
+                Demo data
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  color: 'hsl(var(--foreground))',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  maxWidth: 220,
+                }}
+              >
+                Re-open demo tour
+              </Typography>
             </Box>
-          </Tooltip>
-        </motion.div>
-      </AnimatePresence>
+          </Box>
+        </Tooltip>
+      </motion.div>
     );
   }
 
