@@ -159,6 +159,16 @@ export const TOUR_STEPS: TourStep[] = [
     },
     subGoals: [
       {
+        id: 'incident-detail:hover-title',
+        label: 'Notice the incident Title at the top',
+        targetSelector: '[data-tour="incident-title"]',
+      },
+      {
+        id: 'incident-detail:hover-description',
+        label: 'Notice the Description / Email body',
+        targetSelector: '[data-tour="incident-description"]',
+      },
+      {
         id: 'incident-detail:timeline-ip',
         label: 'Find the attacker IP on the Timeline',
         targetSelector: '[data-tour="incident-activity-feed"]',
