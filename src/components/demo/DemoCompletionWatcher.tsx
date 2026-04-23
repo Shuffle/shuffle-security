@@ -75,7 +75,7 @@ export const DemoCompletionWatcher = () => {
   // backward — if they're already past step 5 we leave them alone.
   useEffect(() => {
     if (!drawerOpen) return;
-    const onDetail = /^\/(?:incidents|alerts|tickets|jobs)\/[^/]+/.test(location.pathname);
+    const onDetail = /^\/(?:incidents|cases|alerts|tickets|jobs)\/[^/]+/.test(location.pathname);
     if (!onDetail) {
       autoAdvancedRef.current = false;
       return;

@@ -314,7 +314,7 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
   // Real-time route check: are we currently on an incident-detail page?
   // Used to gate the `incidents-list:open` sub-goal so the gate flips back
   // off if the user navigates away from the detail page.
-  const isOnIncidentDetail = /^\/(?:incidents|alerts|tickets|jobs)\/[^/]+/.test(location.pathname);
+  const isOnIncidentDetail = /^\/(?:incidents|cases|alerts|tickets|jobs)\/[^/]+/.test(location.pathname);
   const [active, setActive] = useState(() => isDemoActive());
   const [isSeeding, setIsSeeding] = useState(false);
   const [isCleaning, setIsCleaning] = useState(false);
