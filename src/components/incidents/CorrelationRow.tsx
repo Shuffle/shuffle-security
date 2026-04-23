@@ -1,6 +1,7 @@
-import { Box, Typography, Chip, Tooltip } from '@mui/material';
+import { useState } from 'react';
+import { Box, Typography, Chip, Tooltip, Popover } from '@mui/material';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import { Link } from 'react-router-dom';
+import IncidentCorrelationPreview from './IncidentCorrelationPreview';
 
 /**
  * Returns true when a datastore category represents a threat-intelligence
@@ -86,6 +87,11 @@ interface CorrelationRowProps {
  * incident, and renders incident chips as links.
  */
 export const CorrelationRow = ({ correlation, currentIncidentId, className, compact = false, focusedIncidentKey }: CorrelationRowProps) => {
+  // Pivot popover state — keyed by the incident key the user clicked so two
+  // chips in the same row don't fight over the same anchor element.
+  const [pivotAnchor, setPivotAnchor] = useState<{ el: HTMLElement; key: string; category: string } | null>(null);
+  const closePivot = () => setPivotAnchor(null);
+
   // Group refs by category, excluding the current incident itself.
   const refsByCategory: Record<string, string[]> = {};
   correlation.ref.forEach((r) => {
@@ -213,23 +219,25 @@ export const CorrelationRow = ({ correlation, currentIncidentId, className, comp
               </Typography>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                 {keys.slice(0, 5).map((key) => {
-                  // For incident pivots, jump into the target incident's Correlations tab
-                  // and pass back the current incident as `focus` so the matching chip
-                  // there pulses — making the bidirectional link obvious.
-                  const incidentTo = isIncidentCategory
-                    ? `/incidents/${key}?tab=correlations&correlation=${encodeURIComponent(correlation.key)}${currentIncidentId ? `&focus=${encodeURIComponent(currentIncidentId)}` : ''}`
-                    : undefined;
                   const isFocused = isIncidentCategory && focusedIncidentKey && key.toLowerCase() === focusedIncidentKey.toLowerCase();
+                  // Incident chips open a preview popover instead of hard-navigating.
+                  // The popover loads the target incident and lets the user decide
+                  // whether to actually pivot — keeps context, avoids churn.
+                  const handleClick = isIncidentCategory
+                    ? (e: React.MouseEvent<HTMLDivElement>) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        setPivotAnchor({ el: e.currentTarget, key, category });
+                      }
+                    : undefined;
                   return (
                     <Chip
                       key={key}
                       label={key}
                       size="small"
                       variant="outlined"
-                      component={isIncidentCategory ? Link : 'div'}
-                      to={incidentTo}
                       clickable={isIncidentCategory}
-                      onClick={isIncidentCategory ? (e: React.MouseEvent) => e.stopPropagation() : undefined}
+                      onClick={handleClick}
                       className={isFocused ? 'incident-new-flash' : undefined}
                       sx={{
                         height: compact ? 20 : 22,
@@ -280,6 +288,35 @@ export const CorrelationRow = ({ correlation, currentIncidentId, className, comp
           );
         })}
       </Box>
+
+      {/* Pivot preview popover — opens when an incident chip is clicked. */}
+      <Popover
+        open={!!pivotAnchor}
+        anchorEl={pivotAnchor?.el}
+        onClose={closePivot}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+        slotProps={{
+          paper: {
+            onClick: (e: React.MouseEvent) => e.stopPropagation(),
+            sx: {
+              mt: 0.5,
+              border: '1px solid hsl(var(--border))',
+              bgcolor: 'hsl(var(--popover))',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+            },
+          },
+        }}
+      >
+        {pivotAnchor && (
+          <IncidentCorrelationPreview
+            incidentKey={pivotAnchor.key}
+            category={pivotAnchor.category}
+            correlationKey={correlation.key}
+            currentIncidentId={currentIncidentId}
+          />
+        )}
+      </Popover>
     </Box>
   );
 };
