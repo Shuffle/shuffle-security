@@ -1637,19 +1637,6 @@ const IncidentsPage = () => {
             {entityPlural}
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Tooltip title="Refresh">
-              <IconButton 
-                onClick={() => { sessionStorage.removeItem('shuffle_auto_resync_done'); autoResyncQueueRef.current.clear(); fetchItems(); fetchSubOrgIncidents(); }} 
-                disabled={isLoading}
-                sx={{ 
-                  width: 36, height: 36, color: 'text.secondary',
-                  border: '1px solid', borderColor: 'divider', borderRadius: 1,
-                  '&:hover': { borderColor: 'text.secondary' },
-                }}
-              >
-                <RefreshIcon fontSize="small" sx={isRefreshing ? { animation: 'spin 1s linear infinite', '@keyframes spin': { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } } } : undefined} />
-              </IconButton>
-            </Tooltip>
             {showAutomation && (
               <Tooltip title={(() => {
                 const workflowAuto = categoryAutomations?.find(a => a.type === 'workflow' && a.enabled);
@@ -1683,6 +1670,19 @@ const IncidentsPage = () => {
                 </IconButton>
               </Tooltip>
             )}
+            <Tooltip title="Refresh">
+              <IconButton 
+                onClick={() => { sessionStorage.removeItem('shuffle_auto_resync_done'); autoResyncQueueRef.current.clear(); fetchItems(); fetchSubOrgIncidents(); }} 
+                disabled={isLoading}
+                sx={{ 
+                  width: 36, height: 36, color: 'text.secondary',
+                  border: '1px solid', borderColor: 'divider', borderRadius: 1,
+                  '&:hover': { borderColor: 'text.secondary' },
+                }}
+              >
+                <RefreshIcon fontSize="small" sx={isRefreshing ? { animation: 'spin 1s linear infinite', '@keyframes spin': { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } } } : undefined} />
+              </IconButton>
+            </Tooltip>
             <Tooltip title={`Create ${entitySingular}`}>
               <IconButton 
                 onClick={() => setCreateDialogOpen(true)}
