@@ -345,6 +345,12 @@ export const IncidentCardView = ({
             transition={index < 10 ? { duration: 0.2, delay: index * 0.03 } : { duration: 0 }}
             onMouseEnter={() => setHoveredId(incident.id)}
             onMouseLeave={() => setHoveredId(null)}
+            data-tour={
+              (incident as any)?.extensions?.custom_attributes?.demo === true ||
+              /phishing email reported by diego/i.test(incident.title || '')
+                ? 'demo-incident-row'
+                : undefined
+            }
           >
             <Box
               component={!showCheck && getIncidentUrl ? Link : 'div'}
