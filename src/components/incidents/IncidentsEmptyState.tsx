@@ -153,11 +153,19 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, on
               </IconButton>
             </Tooltip>
             {onSyncNow && (
-              <Tooltip title={isUpdatingApps ? "Updating sources…" : isSyncing ? "Syncing…" : "Sync now"} placement="bottom">
+              <Tooltip
+                title={
+                  isUpdatingApps ? "Updating sources…"
+                  : isSyncing ? "Syncing…"
+                  : !hasEnabledSource ? "Enable at least one source to sync"
+                  : "Sync now"
+                }
+                placement="bottom"
+              >
                 <span>
                 <IconButton
                   size="small"
-                  disabled={isSyncing || isUpdatingApps}
+                  disabled={isSyncing || isUpdatingApps || !hasEnabledSource}
                   onClick={onSyncNow}
                   sx={{
                     width: 28,
