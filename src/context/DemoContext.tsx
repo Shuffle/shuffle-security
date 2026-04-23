@@ -276,6 +276,12 @@ export interface DemoContextValue {
    *  to flash an attention pulse so repeated clicks of "Continue demo mode"
    *  visibly do something even when the drawer is already open. */
   attentionPulse: number;
+  /** When set (via hovering a goal row in the drawer), the spotlight should
+   *  override its target and point at this selector with stronger emphasis.
+   *  This lets the user "preview" where each goal lives on the page without
+   *  losing focus on the drawer. Cleared on mouse-leave. */
+  hoveredGoalSelector: string | null;
+  setHoveredGoalSelector: (selector: string | null) => void;
 }
 
 // DemoContext + useDemo are defined in ./demoContextObject so HMR cannot
@@ -313,6 +319,7 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
   const [isForceGeneratingWazuh, setIsForceGeneratingWazuh] = useState(false);
   const [hasDemoIncidents, setHasDemoIncidents] = useState(false);
   const [attentionPulse, setAttentionPulse] = useState(0);
+  const [hoveredGoalSelector, setHoveredGoalSelector] = useState<string | null>(null);
 
   // GA dedupe: each step view fires at most once per session, each completion
   // fires at most once per step. Refs survive re-renders without retriggering.
@@ -704,6 +711,7 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
     hasDemoIncidents,
     isOnIncidentDetail,
     attentionPulse,
+    hoveredGoalSelector, setHoveredGoalSelector,
   }), [
     active, isSeeding, isCleaning, drawerOpen, minimized, dock, step, stats,
     completedSteps, currentStepUnlocked,
@@ -716,6 +724,7 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
     hasDemoIncidents,
     isOnIncidentDetail,
     attentionPulse,
+    hoveredGoalSelector,
   ]);
 
   return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;

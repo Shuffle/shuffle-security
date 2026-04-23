@@ -15,7 +15,7 @@ const PADDING = 8;
 const Z_BASE = 1290; // just below the drawer (1300)
 
 export const DemoSpotlight = () => {
-  const { drawerOpen, step, currentStepUnlocked, completedSteps, hasDemoIncidents, isOnIncidentDetail } = useDemo();
+  const { drawerOpen, step, currentStepUnlocked, completedSteps, hasDemoIncidents, isOnIncidentDetail, hoveredGoalSelector } = useDemo();
   const current = TOUR_STEPS[step];
 
   // If the current step has sub-goals with their own targetSelector, point at
@@ -37,7 +37,11 @@ export const DemoSpotlight = () => {
     if (optional) return optional.targetSelector!;
     return null;
   })();
-  const selector = subGoalSelector ?? current?.requirement?.targetSelector ?? null;
+  // Hover takes top priority — if the user is hovering a goal in the drawer,
+  // point the spotlight there with extra emphasis (see `isHoverOverride`).
+  const baseSelector = subGoalSelector ?? current?.requirement?.targetSelector ?? null;
+  const selector = hoveredGoalSelector ?? baseSelector;
+  const isHoverOverride = !!hoveredGoalSelector;
   const isOptionalTarget = !!(subGoalSelector && current?.subGoals?.find(g => g.targetSelector === subGoalSelector)?.optional);
 
   const [rect, setRect] = useState<DOMRect | null>(null);
@@ -79,7 +83,9 @@ export const DemoSpotlight = () => {
 
   // For optional targets, keep the spotlight active even after the step is
   // unlocked — the goal is to nudge engagement, not to gate progress.
-  const suppressForUnlock = currentStepUnlocked && !isOptionalTarget;
+  // Hover preview also bypasses the unlock suppression (the user is asking
+  // to see *that* goal, even if the step is already unlocked).
+  const suppressForUnlock = currentStepUnlocked && !isOptionalTarget && !isHoverOverride;
 
   // Find + track the target element. Polls because the DOM may load async.
   useEffect(() => {
@@ -130,11 +136,16 @@ export const DemoSpotlight = () => {
 
   if (!drawerOpen || !rect || suppressForUnlock || modalOpen) return null;
 
-  const x = rect.left - PADDING;
-  const y = rect.top - PADDING;
-  const w = rect.width + PADDING * 2;
-  const h = rect.height + PADDING * 2;
+  // Hover-preview gets a wider halo so the user can clearly trace the link
+  // between the goal row in the drawer and its target on the page.
+  const haloPad = isHoverOverride ? PADDING + 6 : PADDING;
+  const x = rect.left - haloPad;
+  const y = rect.top - haloPad;
+  const w = rect.width + haloPad * 2;
+  const h = rect.height + haloPad * 2;
   const radius = 10;
+  const dimOpacity = isHoverOverride ? 0.7 : 0.55;
+  const animationName = isHoverOverride ? 'demo-spotlight-pulse-strong' : 'demo-spotlight-pulse';
 
   // SVG mask: full-screen black, cut a rounded-rect transparent hole.
   // pointerEvents="none" on the SVG lets clicks pass through everywhere,
@@ -150,6 +161,7 @@ export const DemoSpotlight = () => {
           height: '100vh',
           zIndex: Z_BASE,
           pointerEvents: 'none',
+          transition: 'all 120ms ease-out',
         }}
       >
         <defs>
@@ -164,7 +176,7 @@ export const DemoSpotlight = () => {
           width="100%"
           height="100%"
           fill="hsl(0 0% 0%)"
-          fillOpacity="0.55"
+          fillOpacity={dimOpacity}
           mask="url(#demo-spotlight-mask)"
         />
       </svg>
@@ -182,7 +194,8 @@ export const DemoSpotlight = () => {
           zIndex: Z_BASE + 1,
           pointerEvents: 'none',
           boxShadow: '0 0 0 3px hsl(var(--primary)), 0 0 0 8px hsl(var(--primary) / 0.25)',
-          animation: 'demo-spotlight-pulse 1.6s ease-in-out infinite',
+          animation: `${animationName} 1.6s ease-in-out infinite`,
+          transition: 'left 160ms ease-out, top 160ms ease-out, width 160ms ease-out, height 160ms ease-out',
         }}
       />
 
@@ -199,6 +212,20 @@ export const DemoSpotlight = () => {
               0 0 0 3px hsl(var(--primary)),
               0 0 0 14px hsl(var(--primary) / 0.10),
               0 0 36px 10px hsl(var(--primary) / 0.55);
+          }
+        }
+        @keyframes demo-spotlight-pulse-strong {
+          0%, 100% {
+            box-shadow:
+              0 0 0 4px hsl(var(--primary)),
+              0 0 0 10px hsl(var(--primary) / 0.45),
+              0 0 32px 8px hsl(var(--primary) / 0.65);
+          }
+          50% {
+            box-shadow:
+              0 0 0 4px hsl(var(--primary)),
+              0 0 0 22px hsl(var(--primary) / 0.18),
+              0 0 56px 16px hsl(var(--primary) / 0.8);
           }
         }
       `}</style>
