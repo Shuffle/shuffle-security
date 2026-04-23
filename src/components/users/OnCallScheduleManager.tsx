@@ -386,6 +386,75 @@ export const OnCallScheduleManager = ({ users, loading = false, compact = false 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, configLoading, users, config]);
 
+  // ── Ensure the current user is always present in the rotation ──────────────
+  // Even if the schedule was set up by someone else (auto-init already ran, or
+  // another admin populated it), the currently signed-in user must appear at
+  // Tier 1 plus the three escalation tiers so all escalations route back to
+  // them by default. Missing entries are appended without touching anything
+  // already configured.
+  useEffect(() => {
+    if (loading || configLoading || users.length === 0) return;
+
+    let currentUserId: string | null = null;
+    try {
+      const raw = localStorage.getItem('shuffle_user_info');
+      if (raw) currentUserId = JSON.parse(raw)?.id || null;
+    } catch { /* ignore */ }
+    if (!currentUserId) return;
+
+    const currentUser = users.find(u => u.id === currentUserId);
+    if (!currentUser) return;
+
+    const alwaysOnEntry = (): ScheduleEntry => ({
+      id: generateId(),
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      startTime: '00:00',
+      endTime: '23:59',
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      daysOfWeek: [0, 1, 2, 3, 4, 5, 6],
+    });
+
+    const additions: UserSchedule[] = [];
+    const requiredLevels: { level: EscalationLevel; userId: string; alwaysOn: boolean }[] = [
+      { level: 'tier1',   userId: currentUser.id,                         alwaysOn: false },
+      { level: 'tier2',   userId: `${currentUser.id}::tier2`,             alwaysOn: true  },
+      { level: 'tier3',   userId: `${currentUser.id}::tier3`,             alwaysOn: true  },
+      { level: 'manager', userId: `${currentUser.id}::manager`,           alwaysOn: true  },
+    ];
+
+    for (const req of requiredLevels) {
+      // Already covered if any enabled entry exists for this user at this tier
+      // (raw user id OR the namespaced escalation id).
+      const covered = config.userSchedules.some(s =>
+        s.enabled
+        && s.escalationLevel === req.level
+        && (s.userId === req.userId
+            || s.userId === currentUser.id
+            || s.userId.startsWith(`${currentUser.id}::`))
+        && s.userName === currentUser.username
+      );
+      if (covered) continue;
+
+      additions.push({
+        userId: req.userId,
+        userName: currentUser.username,
+        userEmail: currentUser.username,
+        escalationLevel: req.level,
+        schedules: [req.alwaysOn ? alwaysOnEntry() : createDefaultSchedule()],
+        enabled: true,
+      });
+    }
+
+    if (additions.length === 0) return;
+
+    void saveConfig({
+      ...config,
+      userSchedules: [...config.userSchedules, ...additions],
+    }, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, configLoading, users, config]);
+
   // ── Helpers ────────────────────────────────────────────────────────────────
   const toggleRow = (userId: string) => {
     setExpandedRows(prev => {
