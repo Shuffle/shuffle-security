@@ -4287,7 +4287,7 @@ const IncidentDetailPage = () => {
           </Box>
 
           {/* Title and meta */}
-          <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Box sx={{ flex: 1, minWidth: 0 }} data-tour="incident-title">
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
               <TextField
                 value={editedTitle}
@@ -5179,40 +5179,44 @@ const IncidentDetailPage = () => {
           {/* Description Section — only render here when there is NO email
               thread. Otherwise it lives on the right column collapsed. */}
           {!hasEmail && (
-          <Section title="Description" icon={DescriptionIcon} defaultOpen={false}>
-            {descriptionBody}
-          </Section>
+          <Box data-tour="incident-description">
+            <Section title="Description" icon={DescriptionIcon} defaultOpen={false}>
+              {descriptionBody}
+            </Section>
+          </Box>
           )}
 
           {/* Email Thread Panel — shown below Description when email content is detected */}
           {hasEmail && (
-            <EmailThreadPanel
-              descriptionHtml={rawDescriptionHtml || ''}
-              descriptionText={editedMessage || ''}
-              rawOCSF={incident.rawOCSF}
-              onReply={(to, subject, body) => {
-                // Use the existing forward/send mechanism via Singul
-                const sendPayload = {
-                  action: 'send_message',
-                  category: 'cases',
-                  key: incident.id,
-                  body: {
-                    ...(incident.rawOCSF || {}),
-                    reply_to: to,
-                    reply_subject: subject,
-                    reply_body: body,
-                  },
-                  fields: {
-                    to,
-                    subject,
-                    body,
-                  },
-                };
-                // Open forward dialog to pick which email tool to send via
-                setShowForwardDialog(true);
-              }}
-              onForward={() => setShowForwardDialog(true)}
-            />
+            <Box data-tour="incident-description">
+              <EmailThreadPanel
+                descriptionHtml={rawDescriptionHtml || ''}
+                descriptionText={editedMessage || ''}
+                rawOCSF={incident.rawOCSF}
+                onReply={(to, subject, body) => {
+                  // Use the existing forward/send mechanism via Singul
+                  const sendPayload = {
+                    action: 'send_message',
+                    category: 'cases',
+                    key: incident.id,
+                    body: {
+                      ...(incident.rawOCSF || {}),
+                      reply_to: to,
+                      reply_subject: subject,
+                      reply_body: body,
+                    },
+                    fields: {
+                      to,
+                      subject,
+                      body,
+                    },
+                  };
+                  // Open forward dialog to pick which email tool to send via
+                  setShowForwardDialog(true);
+                }}
+                onForward={() => setShowForwardDialog(true)}
+              />
+            </Box>
           )}
 
           {/* Inline Timeline — the heart of the Details tab. Renders the same
