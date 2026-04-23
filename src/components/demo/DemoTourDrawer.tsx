@@ -216,50 +216,55 @@ export const DemoTourDrawer = () => {
   // ── Expanded drawer ──────────────────────────────────────────────────────
   const isBottom = dock === 'bottom';
 
-  // Per-dock framer-motion + position styles
-  const motionPos = isBottom
-    ? { initial: { y: 320, opacity: 0 }, animate: { y: 0, opacity: 1 }, exit: { y: 320, opacity: 0 } }
-    : { initial: { x: 480, opacity: 0 }, animate: { x: 0, opacity: 1 }, exit: { x: 480, opacity: 0 } };
-
-  const containerStyle: React.CSSProperties = isBottom
+  // Single persistent container that animates between docks instead of being
+  // unmounted + remounted. Position/size are driven by `animate` so framer
+  // tweens them; the initial mount still slides in from the right edge.
+  const dockedAnimate = isBottom
     ? {
-        position: 'fixed',
+        top: 'auto' as const,
         left: 24,
         right: 24,
         bottom: 24,
-        maxWidth: 'min(960px, calc(100vw - 32px))',
-        marginLeft: 'auto',
-        marginRight: 'auto',
-        zIndex: 1300,
-        pointerEvents: 'auto',
+        width: 'auto' as const,
+        opacity: 1,
+        x: 0,
+        y: 0,
       }
     : {
-        position: 'fixed',
-        // Anchored to the bottom-right so the panel doesn't dominate the
-        // viewport vertically. Height is intrinsic, capped to ~70vh, which
-        // keeps the demo guidance visible without crowding the underlying
-        // incident view.
+        top: 'auto' as const,
+        left: 'auto' as const,
         right: 24,
         bottom: 24,
         width: 380,
-        maxWidth: 'calc(100vw - 32px)',
-        maxHeight: 'min(640px, 70vh)',
-        zIndex: 1300,
-        pointerEvents: 'auto',
+        opacity: 1,
+        x: 0,
+        y: 0,
       };
+
+  const containerStyle: React.CSSProperties = {
+    position: 'fixed',
+    maxWidth: isBottom ? 'min(960px, calc(100vw - 32px))' : 'calc(100vw - 32px)',
+    maxHeight: isBottom ? 'min(360px, 60vh)' : 'min(640px, 70vh)',
+    marginLeft: isBottom ? 'auto' : undefined,
+    marginRight: isBottom ? 'auto' : undefined,
+    zIndex: 1300,
+    pointerEvents: 'auto',
+  };
 
   return (
     <AnimatePresence>
       {drawerOpen && (
         <motion.div
-          key={`demo-drawer-${dock}`}
-          {...motionPos}
+          key="demo-drawer"
+          initial={{ x: 480, opacity: 0 }}
+          animate={dockedAnimate}
+          exit={{ x: 480, opacity: 0 }}
           transition={{ type: 'spring', damping: 28, stiffness: 260 }}
           style={containerStyle}
         >
           <Box
             sx={{
-              height: isBottom ? 'auto' : 'auto',
+              height: 'auto',
               maxHeight: isBottom ? 'min(360px, 60vh)' : 'min(640px, 70vh)',
               display: 'flex',
               flexDirection: isBottom ? 'row' : 'column',
@@ -270,7 +275,8 @@ export const DemoTourDrawer = () => {
                 ? '0 24px 60px -16px hsl(0 0% 0% / 0.45), 0 0 0 3px hsl(var(--primary)), 0 0 0 10px hsl(var(--primary) / 0.25), 0 0 40px 6px hsl(var(--primary) / 0.5)'
                 : '0 24px 60px -16px hsl(0 0% 0% / 0.35), 0 0 0 1px hsl(var(--primary) / 0.08)',
               transform: flash ? 'scale(1.015)' : 'scale(1)',
-              transition: 'box-shadow 0.35s ease, transform 0.35s ease',
+              // Smoothly tween between dock layouts (column ↔ row, color flash).
+              transition: 'box-shadow 0.35s ease, transform 0.35s ease, flex-direction 0.35s ease, max-height 0.35s ease',
               overflow: 'hidden',
             }}
           >
