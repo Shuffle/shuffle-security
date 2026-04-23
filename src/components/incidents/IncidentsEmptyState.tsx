@@ -31,6 +31,10 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, on
   const t = useEntityText();
   const hasApps = ingestionApps.length > 0 || !!webhook?.exists || !!webhook?.enabled;
   const hasNonWebhookSources = ingestionApps.length > 0;
+  // Sync only makes sense when at least one source is actually enabled —
+  // a disabled app cannot pull anything, so the action would be a no-op.
+  const hasEnabledSource = ingestionApps.some(a => a.enabled);
+  const canSync = hasEnabledSource && !!onSyncNow;
 
   if (isLoading) {
     return (
@@ -149,11 +153,19 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, on
               </IconButton>
             </Tooltip>
             {onSyncNow && (
-              <Tooltip title={isUpdatingApps ? "Updating sources…" : isSyncing ? "Syncing…" : "Sync now"} placement="bottom">
+              <Tooltip
+                title={
+                  isUpdatingApps ? "Updating sources…"
+                  : isSyncing ? "Syncing…"
+                  : !hasEnabledSource ? "Enable at least one source to sync"
+                  : "Sync now"
+                }
+                placement="bottom"
+              >
                 <span>
                 <IconButton
                   size="small"
-                  disabled={isSyncing || isUpdatingApps}
+                  disabled={isSyncing || isUpdatingApps || !hasEnabledSource}
                   onClick={onSyncNow}
                   sx={{
                     width: 28,
@@ -178,7 +190,7 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, on
         {/* CTA buttons */}
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.5 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            {hasNonWebhookSources && onSyncNow ? (
+            {canSync ? (
               <>
                 <Button
                   variant="contained"
