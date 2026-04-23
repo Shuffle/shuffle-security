@@ -711,6 +711,7 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
     hasDemoIncidents,
     isOnIncidentDetail,
     attentionPulse,
+    hoveredGoalSelector, setHoveredGoalSelector,
   }), [
     active, isSeeding, isCleaning, drawerOpen, minimized, dock, step, stats,
     completedSteps, currentStepUnlocked,
@@ -723,6 +724,7 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
     hasDemoIncidents,
     isOnIncidentDetail,
     attentionPulse,
+    hoveredGoalSelector,
   ]);
 
   return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;
