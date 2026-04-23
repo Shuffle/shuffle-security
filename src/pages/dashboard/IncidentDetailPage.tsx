@@ -4287,7 +4287,7 @@ const IncidentDetailPage = () => {
           </Box>
 
           {/* Title and meta */}
-          <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Box sx={{ flex: 1, minWidth: 0 }} data-tour="incident-title">
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
               <TextField
                 value={editedTitle}
