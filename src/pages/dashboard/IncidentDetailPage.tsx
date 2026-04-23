@@ -224,46 +224,8 @@ const formatDuration = (ms: number): string => {
 
 const parseTimestamp = (timestamp: number | string | undefined): number => {
   return normalizeToMs(timestamp);
-   };
+};
 
-   /**
-    * Demo-style "Ask the agent" affordance: when the user clicks a Known IOC
-    * pill on the Timeline, prefill the comment input with an @agent question
-    * about that observable, switch to the Details/Timeline tab so the input
-    * is visible, then focus and scroll to it. The user just hits Enter to
-    * actually send — they're never tricked into sending something they didn't
-    * see. This makes it obvious the AI agent is real and reachable from any
-    * observable, not just a label in the sidebar.
-    */
-   const askAgentAboutObservable = (obsKey: string) => {
-     // Split `${type}::${value}` (lowercase) back into pieces for a friendlier
-     // question. If the key isn't in that shape we fall back to the raw value.
-     const sepIdx = obsKey.indexOf('::');
-     const type = sepIdx > -1 ? obsKey.slice(0, sepIdx) : '';
-     const value = sepIdx > -1 ? obsKey.slice(sepIdx + 2) : obsKey;
-     const labelType = type ? type.toUpperCase() : 'observable';
-     const prompt = `@agent This ${labelType} \`${value}\` is flagged as a Known IOC on the timeline. What do we know about it (threat-feed sources, related campaigns), and what should we do next — block, isolate, or investigate further?`;
-     // Switch to Details/Timeline so the comment input is visible.
-     setActiveTab(0);
-     setNewComment((cur) => (cur && cur.trim() ? cur : prompt));
-     // Focus + scroll once the tab content has mounted.
-     setTimeout(() => {
-       const wrapper = document.querySelector('[data-tour="incident-comment-input"]') as HTMLElement | null;
-       if (!wrapper) return;
-       wrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
-       const input = wrapper.querySelector('textarea, input') as HTMLTextAreaElement | HTMLInputElement | null;
-       if (input) {
-         input.focus();
-         try {
-           const len = (input.value || '').length;
-           (input as HTMLTextAreaElement).setSelectionRange(len, len);
-         } catch { /* ignore */ }
-       }
-     }, 120);
-     try {
-       toast.success('Question drafted for the AI agent — press Enter to send.', { duration: 3500 });
-     } catch { /* ignore */ }
-   };
 
 // Strict check: only return string if it has meaningful non-whitespace content
 // Also rejects raw JSON objects/arrays that shouldn't be displayed as text
