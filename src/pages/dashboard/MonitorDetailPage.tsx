@@ -95,12 +95,18 @@ const MonitorDetailPage = () => {
       }
 
       if (!envHost) {
-        // Try to locate by hostname in the sensors/assets datastores directly.
+        // Try to locate by hostname OR uuid in the sensors/assets datastores.
+        // Demo / synthetic hosts are linked from the list page by `host.uuid`,
+        // so deep links like /monitors/demo-host-fin-laptop-04 must resolve
+        // even when no environment stub exists for that uuid.
         const findInMap = (map: Map<string, Record<string, unknown>>) => {
           if (map.has(idLower)) return map.get(idLower)!;
           if (map.has(idStripped)) return map.get(idStripped)!;
-          for (const [key, val] of map.entries()) {
-            if (stripDomain(key) === idStripped) return val;
+          for (const [, val] of map.entries()) {
+            const valHost = String((val as Record<string, unknown>).hostname || '').toLowerCase().trim();
+            const valUuid = String((val as Record<string, unknown>).uuid || '').toLowerCase().trim();
+            if (valUuid && valUuid === idLower) return val;
+            if (valHost && stripDomain(valHost) === idStripped) return val;
           }
           return null;
         };
@@ -112,7 +118,8 @@ const MonitorDetailPage = () => {
           setLoading(false);
           return;
         }
-        envHost = { hostname: decodedId, ...(fallback as Record<string, unknown>) } as unknown as SensorHost;
+        const fallbackHostnameStr = String((fallback as Record<string, unknown>).hostname || decodedId);
+        envHost = { hostname: fallbackHostnameStr, ...(fallback as Record<string, unknown>) } as unknown as SensorHost;
 
         // Even though there's no env stub for this host, scan envs for any
         // group that *mentions* this hostname/uuid so terminal actions get a
