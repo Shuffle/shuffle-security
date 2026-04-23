@@ -712,7 +712,34 @@ export const DemoTourDrawer = () => {
                                   ? 'hsl(var(--severity-low) / 0.2)'
                                   : 'hsl(var(--primary) / 0.18)';
                               return (
-                                <Box key={g.id} sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+                                <Box
+                                  key={g.id}
+                                  onMouseEnter={() => g.selector && setHoveredGoalSelector(g.selector)}
+                                  onMouseLeave={() => setHoveredGoalSelector(null)}
+                                  onFocus={() => g.selector && setHoveredGoalSelector(g.selector)}
+                                  onBlur={() => setHoveredGoalSelector(null)}
+                                  tabIndex={g.selector ? 0 : -1}
+                                  sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1.25,
+                                    p: 0.6,
+                                    mx: -0.6,
+                                    borderRadius: 1.25,
+                                    cursor: g.selector ? 'pointer' : 'default',
+                                    transition: 'background-color 140ms ease, transform 140ms ease, box-shadow 140ms ease',
+                                    '&:hover': g.selector ? {
+                                      backgroundColor: 'hsl(var(--primary) / 0.12)',
+                                      transform: 'translateX(2px)',
+                                      boxShadow: 'inset 3px 0 0 hsl(var(--primary))',
+                                    } : undefined,
+                                    '&:focus-visible': g.selector ? {
+                                      outline: 'none',
+                                      backgroundColor: 'hsl(var(--primary) / 0.12)',
+                                      boxShadow: 'inset 3px 0 0 hsl(var(--primary))',
+                                    } : undefined,
+                                  }}
+                                >
                                   <motion.div
                                     initial={false}
                                     animate={
