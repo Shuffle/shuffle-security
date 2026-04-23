@@ -33,6 +33,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import LinkIcon from '@mui/icons-material/Link';
 import RestoreIcon from '@mui/icons-material/Restore';
+import BugReportIcon from '@mui/icons-material/BugReport';
+import { AssignmentScheduleConfig } from '@/components/settings/AssignmentScheduleConfig';
 import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
 import {
   EMAIL_APP_PATTERNS, CASES_PATTERNS, EDR_PATTERNS, SIEM_PATTERNS,
@@ -157,6 +159,14 @@ const baseEnrichmentOptions: (Omit<EnrichmentOption, 'connectedApps'> & { isDyna
     description: 'Route incidents to the right analyst based on on-call schedules and escalate if unacknowledged.',
     icon: <AssignmentIndIcon />,
     color: '#6366f1',
+    category: 'response',
+  },
+  {
+    id: 'vulnerability_comparison',
+    name: 'Vulnerability Automation',
+    description: 'Runs the Vulnerability Comparison workflow in the background to compare scanner results across runs and surface new findings. Automated remediation comes later.',
+    icon: <BugReportIcon />,
+    color: '#f97316',
     category: 'response',
     disabled: true,
   },
@@ -970,12 +980,14 @@ export const AutomationConfig = ({
             const isDisabled = option.disabled || (option.id === 'notifications' && !hasNotificationSources);
             const allTools = getAllToolsForOption(option);
             const hasExpandableTools = allTools.length > 0 && !isDisabled;
+            const isAssignEscalate = option.id === 'assign_escalate' && !isDisabled;
+            const isExpandable = hasExpandableTools || (hasConfig && state.enabled) || isAssignEscalate;
 
             return (
               <motion.div key={option.id} variants={itemVariants}>
                 <Card
                   onClick={() => {
-                    if (!isExpanded && (hasExpandableTools || (hasConfig && state.enabled))) {
+                    if (!isExpanded && isExpandable) {
                       setExpandedId(option.id);
                     }
                   }}
@@ -987,7 +999,7 @@ export const AutomationConfig = ({
                     backdropFilter: 'blur(10px)',
                     transition: 'all 0.3s ease',
                     opacity: isDisabled ? 0.5 : 1,
-                    cursor: (!isExpanded && (hasExpandableTools || (hasConfig && state.enabled))) ? 'pointer' : 'default',
+                    cursor: (!isExpanded && isExpandable) ? 'pointer' : 'default',
                     '&:hover': {
                       borderColor: isDisabled ? 'hsl(var(--border))' : (state.enabled ? option.color : 'hsl(var(--primary) / 0.3)'),
                       transform: isDisabled ? 'none' : 'translateY(-2px)',
@@ -1075,7 +1087,7 @@ export const AutomationConfig = ({
                         </Box>
                       )}
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, pt: 0.5 }}>
-                        {(hasExpandableTools || (hasConfig && state.enabled)) && (
+                        {isExpandable && (
                           <Box
                             onClick={(e) => {
                               e.stopPropagation();
@@ -1298,6 +1310,25 @@ export const AutomationConfig = ({
                               ))
                             ) : null}
                           </Box>
+                        </Box>
+                      </Collapse>
+                    )}
+
+                    {/* On-call schedule editor - only for assign_escalate */}
+                    {isAssignEscalate && (
+                      <Collapse in={isExpanded}>
+                        <Box sx={{ mt: 2, pl: 7 }}>
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              color: 'hsl(var(--muted-foreground))',
+                              mb: 1.5,
+                              display: 'block',
+                            }}
+                          >
+                            Configure on-call schedules. Incoming incidents are auto-assigned to whoever is on-call at their tier; if not acknowledged in time, they escalate to the next tier.
+                          </Typography>
+                          <AssignmentScheduleConfig />
                         </Box>
                       </Collapse>
                     )}
