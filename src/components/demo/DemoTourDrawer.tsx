@@ -54,7 +54,15 @@ export const DemoTourDrawer = () => {
     hasDemoIncidents,
     isOnIncidentDetail,
     attentionPulse,
+    openTour,
   } = useDemo();
+  const location = useLocation();
+  // True whenever the current route deep-links into a demo-seeded object
+  // (incident, asset, host, user, etc.). All demo data uses the `demo-…`
+  // key prefix, so the URL itself is enough to detect this without round-
+  // tripping the datastore. We surface a glowing anchor pill below so the
+  // user always understands "this object is fake demo data".
+  const onDemoObject = /\/demo-[a-z0-9-]+/i.test(location.pathname);
 
   // Trigger a brief attention flash whenever attentionPulse increments while
   // the drawer is already visible — so repeatedly clicking "Continue demo
