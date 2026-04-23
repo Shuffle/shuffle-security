@@ -226,10 +226,33 @@ export const OnCallScheduleManager = ({ users, loading = false, compact = false 
     try {
       const response = await getDatastoreItem('assignment_schedules', DATASTORE_CATEGORIES.CONFIGURATION);
       if (response.success && response.item?.value) {
-        const data = typeof response.item.value === 'string'
+        const data: AssignmentConfig = typeof response.item.value === 'string'
           ? JSON.parse(response.item.value)
           : response.item.value;
-        setConfig(data);
+
+        // Backfill the default policy on legacy configs that pre-date it so
+        // the cached payload always exposes a usable Assign & Escalate plan.
+        if (!data.defaultPolicy) {
+          const backfilled: AssignmentConfig = {
+            ...data,
+            defaultPolicy: computeDefaultPolicy(data.userSchedules || []),
+            updatedAt: new Date().toISOString(),
+          };
+          setConfig(backfilled);
+          void setDatastoreItem('assignment_schedules', backfilled, DATASTORE_CATEGORIES.CONFIGURATION);
+        } else {
+          setConfig(data);
+        }
+      } else {
+        // No saved config yet — seed the cache with the AI-Agent-handles-Tier-1
+        // default so downstream consumers always have a routing plan to read.
+        const seed: AssignmentConfig = {
+          userSchedules: [],
+          updatedAt: new Date().toISOString(),
+          defaultPolicy: computeDefaultPolicy([]),
+        };
+        setConfig(seed);
+        void setDatastoreItem('assignment_schedules', seed, DATASTORE_CATEGORIES.CONFIGURATION);
       }
     } catch (err) {
       setConfigError(err instanceof Error ? err.message : 'Failed to load configuration');
@@ -244,7 +267,13 @@ export const OnCallScheduleManager = ({ users, loading = false, compact = false 
     setIsSaving(true);
     setConfigError(null);
     try {
-      const configToSave = { ...newConfig, updatedAt: new Date().toISOString() };
+      // Recompute the default policy on every save so the cache stays in sync
+      // with the latest tier coverage (AI Agent fills any gaps at Tier 1).
+      const configToSave: AssignmentConfig = {
+        ...newConfig,
+        updatedAt: new Date().toISOString(),
+        defaultPolicy: computeDefaultPolicy(newConfig.userSchedules),
+      };
       const response = await setDatastoreItem('assignment_schedules', configToSave, DATASTORE_CATEGORIES.CONFIGURATION);
       if (response.success) {
         setConfig(configToSave);
