@@ -1314,6 +1314,25 @@ export const AutomationConfig = ({
                       </Collapse>
                     )}
 
+                    {/* On-call schedule editor - only for assign_escalate */}
+                    {isAssignEscalate && (
+                      <Collapse in={isExpanded}>
+                        <Box sx={{ mt: 2, pl: 7 }}>
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              color: 'hsl(var(--muted-foreground))',
+                              mb: 1.5,
+                              display: 'block',
+                            }}
+                          >
+                            Configure on-call schedules. Incoming incidents are auto-assigned to whoever is on-call at their tier; if not acknowledged in time, they escalate to the next tier.
+                          </Typography>
+                          <AssignmentScheduleConfig />
+                        </Box>
+                      </Collapse>
+                    )}
+
                     {/* Threat Feed URLs section - only for threat_intel */}
                     {option.id === 'threat_intel' && (
                       <Collapse in={isExpanded}>
