@@ -235,11 +235,15 @@ export const DemoTourDrawer = () => {
       }
     : {
         position: 'fixed',
-        top: 24,
+        // Anchored to the bottom-right so the panel doesn't dominate the
+        // viewport vertically. Height is intrinsic, capped to ~70vh, which
+        // keeps the demo guidance visible without crowding the underlying
+        // incident view.
         right: 24,
         bottom: 24,
-        width: 420,
+        width: 380,
         maxWidth: 'calc(100vw - 32px)',
+        maxHeight: 'min(640px, 70vh)',
         zIndex: 1300,
         pointerEvents: 'auto',
       };
