@@ -288,6 +288,35 @@ export const CorrelationRow = ({ correlation, currentIncidentId, className, comp
           );
         })}
       </Box>
+
+      {/* Pivot preview popover — opens when an incident chip is clicked. */}
+      <Popover
+        open={!!pivotAnchor}
+        anchorEl={pivotAnchor?.el}
+        onClose={closePivot}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+        slotProps={{
+          paper: {
+            onClick: (e: React.MouseEvent) => e.stopPropagation(),
+            sx: {
+              mt: 0.5,
+              border: '1px solid hsl(var(--border))',
+              bgcolor: 'hsl(var(--popover))',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+            },
+          },
+        }}
+      >
+        {pivotAnchor && (
+          <IncidentCorrelationPreview
+            incidentKey={pivotAnchor.key}
+            category={pivotAnchor.category}
+            correlationKey={correlation.key}
+            currentIncidentId={currentIncidentId}
+          />
+        )}
+      </Popover>
     </Box>
   );
 };
