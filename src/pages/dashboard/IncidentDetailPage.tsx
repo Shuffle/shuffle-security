@@ -3236,6 +3236,10 @@ const IncidentDetailPage = () => {
             detail: `${sample}${more}`,
             corrCount: corrCount > 0 ? corrCount : undefined,
             corrObsKeys: corrObsKeys.length > 0 ? corrObsKeys : undefined,
+            // Carry every observable key in the bulk so clicking the pill can
+            // scroll the Observables tab to the first row from this burst,
+            // not just swap tabs.
+            obsKeys: b.entries.map((e) => e.key),
           });
         }
       });
