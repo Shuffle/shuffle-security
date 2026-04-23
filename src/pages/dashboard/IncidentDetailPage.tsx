@@ -3827,7 +3827,7 @@ const IncidentDetailPage = () => {
                 </Typography>
               </Tooltip>
             )}
-            <Typography sx={{ fontSize: '0.65rem', color: 'text.disabled', ml: 'auto', pl: 1 }}>
+            <Typography sx={{ fontSize: '0.65rem', color: 'text.disabled', ml: 'auto', pl: 1, whiteSpace: 'nowrap', flexShrink: 0 }}>
               {item.timestamp ? formatRelativeTime(item.timestamp) : ''}
             </Typography>
           </Box>
