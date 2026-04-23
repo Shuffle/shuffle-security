@@ -83,6 +83,8 @@ import { CorrelationRow, getEffectiveCorrelationCount, filterMeaningfulCorrelati
 import { IocDetailsCard } from '@/components/incidents/IocDetailsCard';
 import { useAuth } from '@/context/AuthContext';
 import { useAppDetail } from '@/context/AppDetailContext';
+import { useDemo } from '@/context/DemoContext';
+import { forceCreateSingleDemoIncidentReturningKey } from '@/services/demoMode';
 import { DATASTORE_CATEGORIES, getDatastoreItem, getDatastoreItemPublic, setDatastoreItem } from '@/services/datastore';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { resyncState } from '@/lib/resyncState';
