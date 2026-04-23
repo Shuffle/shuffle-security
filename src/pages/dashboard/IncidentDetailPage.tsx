@@ -6246,7 +6246,7 @@ const IncidentDetailPage = () => {
 
               {/* Correlation list */}
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                {correlations.map((corr, idx) => (
+                {[...correlations].reverse().map((corr, idx) => (
                   <CorrelationRow
                     key={corr.key || idx}
                     correlation={corr}
