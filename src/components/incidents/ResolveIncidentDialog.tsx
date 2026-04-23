@@ -19,6 +19,7 @@ import {
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { useCustomFields, CustomField } from '@/hooks/useCustomFields';
+import { useEntityText } from '@/hooks/useEntityLabel';
 
 export interface ResolutionData {
   reason: string;
