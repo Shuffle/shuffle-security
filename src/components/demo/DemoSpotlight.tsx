@@ -164,7 +164,7 @@ export const DemoSpotlight = () => {
           width="100%"
           height="100%"
           fill="hsl(0 0% 0%)"
-          fillOpacity="0.08"
+          fillOpacity="0.55"
           mask="url(#demo-spotlight-mask)"
         />
       </svg>
