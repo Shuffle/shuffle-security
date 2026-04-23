@@ -163,7 +163,29 @@ export const IncidentCorrelationPreview = ({
         </Typography>
       )}
 
-      {!loading && !error && preview && (
+      {!loading && !error && notFound && (
+        <Alert
+          severity="warning"
+          icon={<DeleteOutlineIcon sx={{ fontSize: 18 }} />}
+          sx={{
+            py: 0.75,
+            px: 1.25,
+            fontSize: '0.72rem',
+            bgcolor: 'hsl(var(--muted) / 0.5)',
+            color: 'hsl(var(--foreground))',
+            border: '1px solid hsl(var(--border))',
+            '& .MuiAlert-message': { p: 0, lineHeight: 1.4 },
+            '& .MuiAlert-icon': { color: 'hsl(var(--muted-foreground))', mr: 1, p: 0, alignItems: 'center' },
+          }}
+        >
+          <Box sx={{ fontWeight: 700, mb: 0.25 }}>Incident no longer exists</Box>
+          <Box sx={{ color: 'hsl(var(--muted-foreground))' }}>
+            The correlation still references <Box component="span" sx={{ fontFamily: 'monospace', color: 'hsl(var(--foreground))' }}>{incidentKey}</Box>, but the incident has been deleted. Pivoting will land on an empty page.
+          </Box>
+        </Alert>
+      )}
+
+      {!loading && !error && !notFound && preview && (
         <>
           <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: 'hsl(var(--foreground))', lineHeight: 1.3 }}>
             {preview.title}
