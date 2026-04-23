@@ -2755,7 +2755,35 @@ const IncidentDetailPage = () => {
 
   // Agent runs are rendered separately using AgentActivityFeed component
 
-  if (loading) {
+  // Demo-aware self-heal: if loading finished without an incident, the URL
+  // looks like a demo focus key, and demo mode is active, recreate the focus
+  // incident under a fresh key and navigate the user to it. This avoids the
+  // dead-end "Incident not found" screen on tour step 4 when the user clicks
+  // a row whose datastore entry was rotated out underneath them.
+  useEffect(() => {
+    if (loading || incident || demoRecoveryTriedRef.current) return;
+    if (!demoActive || isPublicView || !id) return;
+    const isDemoFocusKey = /^demo-inc-phish-.*-focus$/.test(id);
+    if (!isDemoFocusKey) return;
+    demoRecoveryTriedRef.current = true;
+    setDemoRecovering(true);
+    (async () => {
+      try {
+        const newKey = await forceCreateSingleDemoIncidentReturningKey();
+        if (newKey) {
+          // Replace the URL so the back button does not bounce the user back
+          // to the dead key.
+          navigate(`${entityBasePath}/${newKey}`, { replace: true });
+        } else {
+          setDemoRecovering(false);
+        }
+      } catch {
+        setDemoRecovering(false);
+      }
+    })();
+  }, [loading, incident, demoActive, isPublicView, id, navigate, entityBasePath]);
+
+  if (loading || demoRecovering) {
     return (
       <Box sx={{ p: 4 }}>
         <Skeleton variant="rectangular" height={120} sx={{ mb: 3, borderRadius: 2 }} />
