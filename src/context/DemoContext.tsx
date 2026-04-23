@@ -308,8 +308,10 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
   const [dock, setDockState] = useState<DemoDock>(() => {
     try {
       const v = localStorage.getItem('shuffle_demo_dock');
-      return v === 'right' ? 'right' : 'bottom';
-    } catch { return 'bottom'; }
+      // Default to bottom-right ("right") so the drawer hugs the corner
+      // instead of stretching full-width across the bottom of the screen.
+      return v === 'bottom' ? 'bottom' : 'right';
+    } catch { return 'right'; }
   });
   const [step, setStep] = useState(0);
   const [stats, setStats] = useState(() => getDemoStats());
