@@ -5405,6 +5405,34 @@ const IncidentDetailPage = () => {
             </Box>
           </Section>
 
+          {/* Custom Fields — sits directly below Metadata so editable
+              org-defined attributes flow naturally after the read-only
+              system metadata block. */}
+          {(() => {
+            // Get keys from defined custom fields
+            const definedFieldKeys = new Set(customFields.map(f => f.key));
+            // Get keys from actual data that don't have definitions
+            const dataFieldKeys = Object.keys(editedCustomFields).filter(k => !definedFieldKeys.has(k));
+            // Create dynamic fields for data that doesn't have definitions
+            const dynamicFields: CustomField[] = dataFieldKeys.map(key => ({
+              name: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+              key,
+              type: typeof editedCustomFields[key] === 'boolean' ? 'boolean' as const :
+                    typeof editedCustomFields[key] === 'number' ? 'number' as const : 'text' as const,
+              required: false,
+            }));
+            // Combine defined fields + dynamic fields from data
+            const allFields = [...customFields, ...dynamicFields];
+
+            return allFields.length > 0 || Object.keys(editedCustomFields).length > 0 ? (
+              <Section title="Custom Fields" icon={SettingsIcon} defaultOpen={Object.keys(editedCustomFields).length > 0}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 2 }}>
+                  {allFields.map((field) => renderCustomField(field))}
+                </Box>
+              </Section>
+            ) : null;
+          })()}
+
           {/* Metrics Section */}
           <Section title="Metrics" icon={TrendingUpIcon} defaultOpen={false}>
             <Box sx={{ 
