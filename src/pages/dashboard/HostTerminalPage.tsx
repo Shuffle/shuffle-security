@@ -825,8 +825,8 @@ const HostTerminalPage = () => {
       <div className="px-6 py-3 flex flex-wrap gap-1.5 border-t border-border/50 shrink-0">
         <button
           key="disable_rce"
-          disabled={!canRunActions}
-          className="px-3 py-1.5 text-xs rounded-md border border-destructive/40 text-destructive hover:bg-destructive/10 transition-colors"
+          disabled={!canRunActions || isDemoHost}
+          className="px-3 py-1.5 text-xs rounded-md border border-destructive/40 text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={() => executeHostAction('disable_rce', 'Disable RCE', true)}
         >
           Disable RCE
@@ -835,16 +835,58 @@ const HostTerminalPage = () => {
           { id: 'isolate_host', name: 'Isolate Host' },
           { id: 'disable_user', name: 'Disable User Accounts' },
           { id: 'restart_now', name: 'Restart Endpoint' },
-        ].map(s => (
-          <button
-            key={s.id}
-            disabled
-            title="Not yet available on the endpoint"
-            className="px-3 py-1.5 text-xs rounded-md border border-border text-muted-foreground opacity-50 cursor-not-allowed"
-          >
-            {s.name}
-          </button>
-        ))}
+        ].map(s => {
+          // Demo terminal: enable ONLY "Isolate Host" so the user can run the
+          // headline AI-agent action against FIN-LAPTOP-04 without hitting
+          // the real backend. Other chips stay disabled.
+          const enabledForDemo = isDemoHost && s.id === 'isolate_host';
+          if (enabledForDemo) {
+            return (
+              <button
+                key={s.id}
+                className="px-3 py-1.5 text-xs rounded-md border border-primary/40 text-primary hover:bg-primary/10 transition-colors"
+                onClick={() => {
+                  const startedAt = Date.now();
+                  const entryId = ++entryIdCounter;
+                  const sendingEntry: ActionDebugEntry = {
+                    entryId,
+                    hostUuid: hostUuid || '',
+                    actionName: s.name,
+                    hostname,
+                    status: 'sending',
+                    requestBody: { demo: true, action: s.id, host: hostname },
+                    startedAt,
+                  };
+                  setActionHistory(prev => [...prev, sendingEntry]);
+                  // Brief pretend "running" pause, then a successful result
+                  // so the AI-agent isolate flow feels real in the demo.
+                  setTimeout(() => {
+                    setActionHistory(prev => prev.map(e => e.entryId === entryId ? {
+                      ...e,
+                      status: 'success',
+                      finishedAt: Date.now(),
+                      actionOutput: `Network isolation policy applied to ${hostname}.\nAll outbound connections blocked except to the security platform.\nUser session preserved. Awaiting analyst review.`,
+                      actionSuccess: true,
+                    } : e));
+                    toast.success(`${s.name} applied to ${hostname}`);
+                  }, 1200);
+                }}
+              >
+                {s.name}
+              </button>
+            );
+          }
+          return (
+            <button
+              key={s.id}
+              disabled
+              title="Not yet available on the endpoint"
+              className="px-3 py-1.5 text-xs rounded-md border border-border text-muted-foreground opacity-50 cursor-not-allowed"
+            >
+              {s.name}
+            </button>
+          );
+        })}
       </div>
 
       {/* Command input */}
