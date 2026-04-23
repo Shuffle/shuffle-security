@@ -144,7 +144,7 @@ export const DemoSpotlight = () => {
   const w = rect.width + haloPad * 2;
   const h = rect.height + haloPad * 2;
   const radius = 10;
-  const dimOpacity = isHoverOverride ? 0.45 : 0.3;
+  const dimOpacity = isHoverOverride ? 0.22 : 0.12;
   const animationName = isHoverOverride ? 'demo-spotlight-pulse-strong' : 'demo-spotlight-pulse';
 
   // SVG mask: full-screen black, cut a rounded-rect transparent hole.
