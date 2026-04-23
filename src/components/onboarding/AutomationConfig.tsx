@@ -1337,7 +1337,7 @@ export const AutomationConfig = ({
                           >
                             Configure on-call schedules. Incoming incidents are auto-assigned to whoever is on-call at their tier; if not acknowledged in time, they escalate to the next tier.
                           </Typography>
-                          <AssignmentScheduleConfig />
+                          <OnCallScheduleManager users={scheduleUsers} loading={scheduleUsersLoading} compact />
                         </Box>
                       </Collapse>
                     )}
