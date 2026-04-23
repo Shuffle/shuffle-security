@@ -319,6 +319,7 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
   const [isForceGeneratingWazuh, setIsForceGeneratingWazuh] = useState(false);
   const [hasDemoIncidents, setHasDemoIncidents] = useState(false);
   const [attentionPulse, setAttentionPulse] = useState(0);
+  const [hoveredGoalSelector, setHoveredGoalSelector] = useState<string | null>(null);
 
   // GA dedupe: each step view fires at most once per session, each completion
   // fires at most once per step. Refs survive re-renders without retriggering.
