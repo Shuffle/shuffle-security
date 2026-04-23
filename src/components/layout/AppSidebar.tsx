@@ -44,7 +44,7 @@ import { IntegrationStatus } from './IntegrationStatus';
 import { SidebarSearchDialog } from './SidebarSearchDialog';
 import AgentPermissionsDrawer from '@/components/agent/AgentPermissionsDrawer';
 import { useEntityPreference, useSidebarTabs } from '@/hooks/useEntityLabel';
-import { SIDEBAR_NAV, SidebarItemSpec, SidebarChildSpec } from '@/config/sidebarNav';
+import { SIDEBAR_NAV, SidebarChildSpec } from '@/config/sidebarNav';
 import { getRegionFlag } from '@/lib/regionFlag';
 
 const drawerWidth = 260;
