@@ -288,6 +288,24 @@ export function useEntityPreference() {
   }, [preference]);
 }
 
+/** Returns a `t()` function that rewrites the words "incident"/"incidents" in
+ *  any user-facing string to match the org's configured terminology (Alert,
+ *  Case, Ticket, Job). Use everywhere we render copy that mentions incidents.
+ *
+ *  Example:
+ *    const t = useEntityText();
+ *    toast.error(t('Incident not found'));
+ *    <Typography>{t('Search incidents…')}</Typography>
+ */
+export function useEntityText() {
+  const { singular, plural } = useEntityLabel();
+  return useCallback(
+    (text: string) => applyEntityTerminology(text, singular, plural),
+    [singular, plural],
+  );
+}
+
+
 /** Save sidebar tab visibility */
 export async function setSidebarTabVisibility(tabs: Record<SidebarTabKey, boolean>) {
   localStorage.setItem(LOCAL_SIDEBAR_TABS_KEY, JSON.stringify(tabs));
