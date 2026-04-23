@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { seedForStep, cleanupDemoData, isDemoActive, getDemoStats, forceRecreateDemoIncidents, forceCreateSingleDemoIncident, countDemoIncidents, seedDemoWazuhImplantIncident } from '@/services/demoMode';
 import { enableLiveDemoEnvironment } from '@/services/demoLiveEnvironment';
 import { trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
+import { applyEntityTerminology } from '@/lib/entityTerminology';
 
 export interface TourStepRequirement {
   /** Short human label shown in the drawer (e.g. "Enable the ingestion webhook"). */
