@@ -3273,8 +3273,8 @@ const IncidentDetailPage = () => {
           kind: 'correlation-found',
           timestamp: correlationsDiscoveredAt,
           id: `step-corr-incident`,
-          label: 'Correlations found',
-          detail: `${correlations.length} shared attribute${correlations.length === 1 ? '' : 's'} across other incidents`,
+          label: `${correlations.length} Correlation${correlations.length === 1 ? '' : 's'}`,
+          detail: `shared attribute${correlations.length === 1 ? '' : 's'} across other incidents`,
           count: correlations.length,
         });
       }
