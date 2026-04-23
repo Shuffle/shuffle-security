@@ -34,7 +34,8 @@ import EditIcon from '@mui/icons-material/Edit';
 import LinkIcon from '@mui/icons-material/Link';
 import RestoreIcon from '@mui/icons-material/Restore';
 import BugReportIcon from '@mui/icons-material/BugReport';
-import { AssignmentScheduleConfig } from '@/components/settings/AssignmentScheduleConfig';
+import { OnCallScheduleManager } from '@/components/users/OnCallScheduleManager';
+import { useUsers } from '@/hooks/useUsers';
 import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
 import {
   EMAIL_APP_PATTERNS, CASES_PATTERNS, EDR_PATTERNS, SIEM_PATTERNS,
@@ -329,6 +330,8 @@ export const AutomationConfig = ({
   // Threat feeds management
   const { threatFeeds, saveFeed, deleteFeed, toggleFeed, initializeDefaults: initThreatFeeds } = useThreatFeeds();
   const enrichmentStatus = useEnrichmentStatus();
+  // Users powering the on-call schedule editor inside the Assign & Escalate card
+  const { users: scheduleUsers, loading: scheduleUsersLoading } = useUsers();
   const [editingFeed, setEditingFeed] = useState<ThreatFeed | null>(null);
   const [newFeedUrl, setNewFeedUrl] = useState('');
   const [newFeedName, setNewFeedName] = useState('');
@@ -1334,7 +1337,7 @@ export const AutomationConfig = ({
                           >
                             Configure on-call schedules. Incoming incidents are auto-assigned to whoever is on-call at their tier; if not acknowledged in time, they escalate to the next tier.
                           </Typography>
-                          <AssignmentScheduleConfig />
+                          <OnCallScheduleManager users={scheduleUsers} loading={scheduleUsersLoading} compact />
                         </Box>
                       </Collapse>
                     )}
