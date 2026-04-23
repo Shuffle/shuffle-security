@@ -62,7 +62,28 @@ export const DemoTourDrawer = () => {
   // key prefix, so the URL itself is enough to detect this without round-
   // tripping the datastore. We surface a glowing anchor pill below so the
   // user always understands "this object is fake demo data".
-  const onDemoObject = /\/demo-[a-z0-9-]+/i.test(location.pathname);
+  const onDemoObjectByUrl = /\/demo-[a-z0-9-]+/i.test(location.pathname);
+
+  // Some demo objects are surfaced inline (e.g. expanding the FIN-LAPTOP-04
+  // row on /monitors) without a URL change. Components broadcast a
+  // `demo-object-context` event with `{ active: true|false }` so we can keep
+  // the anchor pill visible while the user is engaging with that fake data.
+  const [inlineDemoActive, setInlineDemoActive] = useState(false);
+  useEffect(() => {
+    const onCtx = (e: Event) => {
+      const detail = (e as CustomEvent<{ active: boolean }>).detail;
+      setInlineDemoActive(!!detail?.active);
+    };
+    window.addEventListener('demo-object-context', onCtx as EventListener);
+    return () => window.removeEventListener('demo-object-context', onCtx as EventListener);
+  }, []);
+  // Reset the inline flag whenever the route changes — the broadcasting
+  // component will re-emit if it still applies on the new page.
+  useEffect(() => {
+    setInlineDemoActive(false);
+  }, [location.pathname]);
+
+  const onDemoObject = onDemoObjectByUrl || inlineDemoActive;
 
   // Trigger a brief attention flash whenever attentionPulse increments while
   // the drawer is already visible — so repeatedly clicking "Continue demo

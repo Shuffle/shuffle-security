@@ -174,6 +174,26 @@ const HostTerminalPage = () => {
       : '';
   const displayHostname = hasResolvedHostname ? hostname : 'Unresolved monitor';
 
+  // Demo terminal: when the URL points at a `demo-…` host (e.g.
+  // /monitors/demo-host-fin-laptop-04/terminal) we lock the free-form
+  // command input so the demo cannot be derailed by typing real shell
+  // commands, but we still let the user click the "Isolate Host" predefined
+  // chip so the agent's headline action remains demonstrable. We also
+  // broadcast `demo-object-context` so the floating "Re-open demo tour"
+  // pill stays visible while the terminal is open.
+  const isDemoHost = /^demo-/i.test(hostUuid || '');
+  useEffect(() => {
+    if (!isDemoHost) return;
+    window.dispatchEvent(
+      new CustomEvent('demo-object-context', { detail: { active: true } }),
+    );
+    return () => {
+      window.dispatchEvent(
+        new CustomEvent('demo-object-context', { detail: { active: false } }),
+      );
+    };
+  }, [isDemoHost]);
+
   usePageMeta({ title: `Terminal · ${displayHostname}`, description: `Terminal session for ${displayHostname}` });
 
   const [customAction, setCustomAction] = useState('');
@@ -805,8 +825,8 @@ const HostTerminalPage = () => {
       <div className="px-6 py-3 flex flex-wrap gap-1.5 border-t border-border/50 shrink-0">
         <button
           key="disable_rce"
-          disabled={!canRunActions}
-          className="px-3 py-1.5 text-xs rounded-md border border-destructive/40 text-destructive hover:bg-destructive/10 transition-colors"
+          disabled={!canRunActions || isDemoHost}
+          className="px-3 py-1.5 text-xs rounded-md border border-destructive/40 text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={() => executeHostAction('disable_rce', 'Disable RCE', true)}
         >
           Disable RCE
@@ -815,16 +835,58 @@ const HostTerminalPage = () => {
           { id: 'isolate_host', name: 'Isolate Host' },
           { id: 'disable_user', name: 'Disable User Accounts' },
           { id: 'restart_now', name: 'Restart Endpoint' },
-        ].map(s => (
-          <button
-            key={s.id}
-            disabled
-            title="Not yet available on the endpoint"
-            className="px-3 py-1.5 text-xs rounded-md border border-border text-muted-foreground opacity-50 cursor-not-allowed"
-          >
-            {s.name}
-          </button>
-        ))}
+        ].map(s => {
+          // Demo terminal: enable ONLY "Isolate Host" so the user can run the
+          // headline AI-agent action against FIN-LAPTOP-04 without hitting
+          // the real backend. Other chips stay disabled.
+          const enabledForDemo = isDemoHost && s.id === 'isolate_host';
+          if (enabledForDemo) {
+            return (
+              <button
+                key={s.id}
+                className="px-3 py-1.5 text-xs rounded-md border border-primary/40 text-primary hover:bg-primary/10 transition-colors"
+                onClick={() => {
+                  const startedAt = Date.now();
+                  const entryId = ++entryIdCounter;
+                  const sendingEntry: ActionDebugEntry = {
+                    entryId,
+                    hostUuid: hostUuid || '',
+                    actionName: s.name,
+                    hostname,
+                    status: 'sending',
+                    requestBody: { demo: true, action: s.id, host: hostname },
+                    startedAt,
+                  };
+                  setActionHistory(prev => [...prev, sendingEntry]);
+                  // Brief pretend "running" pause, then a successful result
+                  // so the AI-agent isolate flow feels real in the demo.
+                  setTimeout(() => {
+                    setActionHistory(prev => prev.map(e => e.entryId === entryId ? {
+                      ...e,
+                      status: 'success',
+                      finishedAt: Date.now(),
+                      actionOutput: `Network isolation policy applied to ${hostname}.\nAll outbound connections blocked except to the security platform.\nUser session preserved. Awaiting analyst review.`,
+                      actionSuccess: true,
+                    } : e));
+                    toast.success(`${s.name} applied to ${hostname}`);
+                  }, 1200);
+                }}
+              >
+                {s.name}
+              </button>
+            );
+          }
+          return (
+            <button
+              key={s.id}
+              disabled
+              title="Not yet available on the endpoint"
+              className="px-3 py-1.5 text-xs rounded-md border border-border text-muted-foreground opacity-50 cursor-not-allowed"
+            >
+              {s.name}
+            </button>
+          );
+        })}
       </div>
 
       {/* Command input */}
@@ -832,12 +894,18 @@ const HostTerminalPage = () => {
         <div className="flex gap-2 items-center max-w-4xl">
           <span className="text-sm font-mono text-primary shrink-0">$</span>
           <Input
-            placeholder={canRunActions ? (isFull ? 'Type command…' : 'Custom action…') : 'Monitor resolution required before running commands'}
+            placeholder={
+              isDemoHost
+                ? 'Custom commands are disabled in the demo — use "Isolate Host"'
+                : canRunActions
+                  ? (isFull ? 'Type command…' : 'Custom action…')
+                  : 'Monitor resolution required before running commands'
+            }
             value={customAction}
             onChange={e => setCustomAction(e.target.value)}
             className="h-9 text-sm flex-1 font-mono"
             ref={inputRef}
-            disabled={!canRunActions}
+            disabled={!canRunActions || isDemoHost}
             onKeyDown={e => {
               // Full ordered history, every entry (no dedup), most recent first
               const history = [...actionHistory].reverse().map(e => e.actionName).filter(Boolean);
@@ -867,10 +935,9 @@ const HostTerminalPage = () => {
             size="icon"
             variant="ghost"
             className="h-9 w-9 shrink-0"
-            disabled={!canRunActions || !customAction.trim()}
+            disabled={!canRunActions || isDemoHost || !customAction.trim()}
             onClick={() => {
               if (customAction.trim()) {
-                
                 executeHostAction(customAction.trim(), customAction.trim());
                 setCustomAction('');
               }
@@ -879,7 +946,11 @@ const HostTerminalPage = () => {
             <Play size={14} />
           </Button>
         </div>
-        <p className="text-[0.65rem] text-muted-foreground/60 mt-2.5 text-center">No session is created — each command is standalone. History is stored locally in your browser.</p>
+        <p className="text-[0.65rem] text-muted-foreground/60 mt-2.5 text-center">
+          {isDemoHost
+            ? 'Demo terminal — only the "Isolate Host" predefined action is enabled.'
+            : 'No session is created — each command is standalone. History is stored locally in your browser.'}
+        </p>
       </div>
 
       <AlertDialog open={!!pendingDisableRce} onOpenChange={(o) => { if (!o) setPendingDisableRce(null); }}>

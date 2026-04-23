@@ -7,7 +7,7 @@
  * Both /monitors (VulnAssetsPage) and /assets (AssetsPage) render this so
  * any future column / dot / action work happens in one place.
  */
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ChevronRight, HardDrive, Lock, Package, FileCode, Zap, Send, Laptop,
@@ -140,6 +140,28 @@ export const MonitorHostTable = ({ hosts, onRefresh }: MonitorHostTableProps) =>
   const [historyIndex, setHistoryIndex] = useState(-1);
   const abortControllersRef = useRef<Map<string, AbortController>>(new Map());
   const pollingActiveRef = useRef<Map<string, boolean>>(new Map());
+
+  // Broadcast a "demo object in view" signal whenever a demo-seeded host row
+  // is currently expanded. The DemoTourDrawer listens to this and surfaces
+  // the glowing "Re-open demo tour" pill so the user is not left wondering
+  // whether the FIN-LAPTOP-04 row is real data.
+  useEffect(() => {
+    const expandedDemo = Array.from(expandedHosts).some(rowKey => {
+      const uuid = rowKey.startsWith('uuid:') ? rowKey.slice(5) : '';
+      if (uuid && /^demo-/i.test(uuid)) return true;
+      const matched = hosts.find(h => `uuid:${h.uuid}` === rowKey || rowKey.includes(`::${(h.hostname || '').toLowerCase()}::`));
+      return !!matched && /^demo-/i.test(String(matched.uuid || ''));
+    });
+    window.dispatchEvent(
+      new CustomEvent('demo-object-context', { detail: { active: expandedDemo } }),
+    );
+    return () => {
+      window.dispatchEvent(
+        new CustomEvent('demo-object-context', { detail: { active: false } }),
+      );
+    };
+  }, [expandedHosts, hosts]);
+
 
   const toggleSort = (col: string) => {
     if (sortCol === col) {
