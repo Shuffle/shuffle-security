@@ -11,6 +11,7 @@ import TenantManagement from '@/components/tenants/TenantManagement';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 import { useAuth } from '@/context/AuthContext';
 import { OnCallScheduleManager, type OnCallUser } from '@/components/users/OnCallScheduleManager';
+import { ScheduleHealthBanner } from '@/components/users/ScheduleHealthBanner';
 
 interface User extends OnCallUser {
   orgs?: string[];
@@ -101,7 +102,10 @@ const UsersPage = ({ embedded }: { embedded?: boolean }) => {
               <CircularProgress sx={{ color: 'hsl(var(--primary))' }} />
             </Box>
           ) : (
-            <OnCallScheduleManager users={users} loading={loading} />
+            <>
+              <ScheduleHealthBanner hideManageCta />
+              <OnCallScheduleManager users={users} loading={loading} />
+            </>
           )}
         </>
       )}

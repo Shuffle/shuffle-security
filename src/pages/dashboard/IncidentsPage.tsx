@@ -48,6 +48,7 @@ import { API_CONFIG, getApiUrl, getAuthHeader, isDevEnvironment } from '@/config
 import DownloadIcon from '@mui/icons-material/Download';
 import { IncidentCardView } from '@/components/incidents/IncidentCardView';
 import { IncidentStatsCards } from '@/components/incidents/IncidentStatsCards';
+import { ScheduleHealthBanner } from '@/components/users/ScheduleHealthBanner';
 import { IncidentsEmptyState } from '@/components/incidents/IncidentsEmptyState';
 import { IngestionSourceButton } from '@/components/incidents/IngestionSourceButton';
 import { WebhookIngestionButton, WebhookIngestionInfo } from '@/components/incidents/WebhookIngestionButton';
@@ -2851,6 +2852,7 @@ const IncidentsPage = () => {
               </RadixPopover>
             </Box>
           </Box>
+          <ScheduleHealthBanner compact />
           <IncidentStatsCards 
             incidents={filteredIncidents}
             currentUsername={currentUsername}
