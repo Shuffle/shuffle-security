@@ -2380,6 +2380,9 @@ const IncidentDetailPage = () => {
       content: newComment.trim() || (commentAttachments.length > 0 ? `Attached ${commentAttachments.length} file(s)` : ''),
       details: {},
       attachments: commentAttachments.length > 0 ? [...commentAttachments] : [],
+      // Default to unprocessed so AI agents pick up new human comments
+      // exactly once. Agents flip this to true after acting on the comment.
+      ai_handled: false,
       ...(replyingTo ? {
         replyToId: replyingTo.id,
         replyToLabel: replyingTo.label,
