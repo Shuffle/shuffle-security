@@ -37,7 +37,7 @@ import { htmlToPlainText, decodeIfBase64, isAIAssignee } from '@/lib/utils';
 import { IncidentActionsMenu } from '@/components/incidents/IncidentActionsMenu';
 import { IncidentMetaChips } from '@/components/incidents/IncidentMetaChips';
 import { useSourceAppImage } from '@/hooks/useSourceAppImage';
-import { useTaskStatuses } from '@/hooks/useEntityLabel';
+import { useTaskStatuses, useEntityText } from '@/hooks/useEntityLabel';
 import {
   ResolveIncidentDialog,
   ResolutionData,
@@ -63,6 +63,7 @@ const IncidentSimplePage = () => {
   const navigate = useNavigate();
   const { userInfo } = useAuth();
   const currentUser = userInfo?.username || 'You';
+  const t = useEntityText();
 
   const [loading, setLoading] = useState(true);
   // Manual refresh — distinct from initial load so we don't show the skeleton.
@@ -115,7 +116,7 @@ const IncidentSimplePage = () => {
     try {
       const result = await getDatastoreItem(id, DATASTORE_CATEGORIES.INCIDENTS);
       if (!result.success || !result.item?.value) {
-        toast.error('Incident not found');
+        toast.error(t('Incident not found'));
         if (showLoading) setLoading(false);
         return;
       }
@@ -139,7 +140,7 @@ const IncidentSimplePage = () => {
 
       setIncident({
         id,
-        title: data.title || findingInfo?.title || 'Untitled Incident',
+        title: data.title || findingInfo?.title || t('Untitled Incident'),
         description,
         severity: mapOCSFSeverity(sevId),
         status: normalizeStatus(statusRaw),
@@ -156,7 +157,7 @@ const IncidentSimplePage = () => {
       skipNextSaveRef.current = true;
     } catch (err) {
       console.error('[IncidentSimple] Load failed:', err);
-      toast.error('Failed to load incident');
+      toast.error(t('Failed to load incident'));
     } finally {
       if (showLoading) setLoading(false);
     }
@@ -350,7 +351,7 @@ const IncidentSimplePage = () => {
           toast.error('Failed to resolve');
           return;
         }
-        toast.success('Incident resolved');
+        toast.success(t('Incident resolved'));
         setShowResolveDialog(false);
         navigate('/incidents');
       } catch {
@@ -391,10 +392,10 @@ const IncidentSimplePage = () => {
     return (
       <Box sx={{ p: 6, textAlign: 'center' }}>
         <Typography variant="h6" sx={{ mb: 2 }}>
-          Incident not found
+          {t('Incident not found')}
         </Typography>
         <Button onClick={() => navigate('/incidents')} startIcon={<ArrowBackIcon />}>
-          Back to incidents
+          {t('Back to incidents')}
         </Button>
       </Box>
     );
