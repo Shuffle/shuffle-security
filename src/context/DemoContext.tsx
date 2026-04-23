@@ -276,6 +276,12 @@ export interface DemoContextValue {
    *  to flash an attention pulse so repeated clicks of "Continue demo mode"
    *  visibly do something even when the drawer is already open. */
   attentionPulse: number;
+  /** When set (via hovering a goal row in the drawer), the spotlight should
+   *  override its target and point at this selector with stronger emphasis.
+   *  This lets the user "preview" where each goal lives on the page without
+   *  losing focus on the drawer. Cleared on mouse-leave. */
+  hoveredGoalSelector: string | null;
+  setHoveredGoalSelector: (selector: string | null) => void;
 }
 
 // DemoContext + useDemo are defined in ./demoContextObject so HMR cannot
