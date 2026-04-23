@@ -97,18 +97,20 @@ export interface UserSchedule {
 /**
  * Default Assign & Escalate policy.
  *
- * Used as a fallback whenever the org has not configured human on-call
- * coverage for a tier (or has not configured any schedules at all). The
- * baseline is: AI Agent owns Tier 1; everything else escalates upward.
+ * Used as the routing fallback whenever no human is actively on-call for a
+ * given tier. The baseline rule is: AI Agent always backs Tier 1, and any
+ * uncovered tier escalates upward.
  *
  * The policy is recomputed and persisted alongside `userSchedules` on every
  * save, so the cached config always exposes a usable routing table.
  */
 export interface DefaultAssignmentPolicy {
-  /** Tier → { assignee, escalate } map. `assignee: 'ai_agent'` means the
-   *  AI Agent handles items at that tier when no human is on-call. */
+  /** Tier → routing entry. `primary` is the preferred assignee when the tier
+   *  is configured; `fallback` kicks in when no human is on-call right now.
+   *  Tier 1's fallback is always the AI Agent. */
   tiers: Record<EscalationLevel, {
-    assignee: 'ai_agent' | 'human' | 'none';
+    primary: 'ai_agent' | 'human' | 'none';
+    fallback: 'ai_agent' | 'none';
     /** Tier to escalate to if unacknowledged. `null` = top of chain. */
     escalateTo: EscalationLevel | null;
   }>;
@@ -125,8 +127,11 @@ export interface AssignmentConfig {
 
 /**
  * Build the default Assign & Escalate policy from the current schedules.
- * Tiers without any enabled human coverage fall back to the AI Agent for
- * Tier 1, and escalate upward for higher tiers.
+ *
+ * - Tier 1 always has the AI Agent as `fallback`. If no human covers Tier 1,
+ *   the AI Agent is also the `primary`.
+ * - Higher tiers fall back to escalation (no AI Agent) so high-stakes
+ *   incidents always reach a real responder.
  */
 export const computeDefaultPolicy = (schedules: UserSchedule[]): DefaultAssignmentPolicy => {
   const hasHumanCoverage = (level: EscalationLevel) =>
@@ -136,15 +141,20 @@ export const computeDefaultPolicy = (schedules: UserSchedule[]): DefaultAssignme
 
   const tiers = order.reduce((acc, level, idx) => {
     const next = order[idx + 1] ?? null;
+    const humanCovers = hasHumanCoverage(level);
+
     if (level === 'tier1') {
-      // Tier 1 is always backed by the AI Agent when no human is on-call.
+      // AI Agent is always the safety net for Tier 1, and becomes the primary
+      // assignee outright when no human is configured to cover it.
       acc[level] = {
-        assignee: hasHumanCoverage(level) ? 'human' : 'ai_agent',
+        primary: humanCovers ? 'human' : 'ai_agent',
+        fallback: 'ai_agent',
         escalateTo: next,
       };
     } else {
       acc[level] = {
-        assignee: hasHumanCoverage(level) ? 'human' : 'none',
+        primary: humanCovers ? 'human' : 'none',
+        fallback: 'none',
         escalateTo: next,
       };
     }
