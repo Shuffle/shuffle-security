@@ -177,8 +177,8 @@ export const TOUR_STEPS: TourStep[] = [
       },
       {
         id: 'incident-detail:timeline-ip',
-        label: 'Find the attacker IP on the Timeline',
-        targetSelector: '[data-tour="incident-activity-feed"]',
+        label: 'Click the Known IOC pill on the Timeline',
+        targetSelector: '[data-tour="timeline-ioc-pill"]',
       },
       {
         id: 'incident-detail:ask-agent',

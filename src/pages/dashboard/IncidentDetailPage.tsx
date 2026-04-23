@@ -3674,9 +3674,13 @@ const IncidentDetailPage = () => {
         if (item.kind === 'observable-added' && item.id.startsWith('step-obs-') && !item.id.startsWith('step-obs-bulk-')) {
           const obsKey = item.id.slice('step-obs-'.length);
           pillOnClick = () => {
-            // Demo mode: notify the tour when the user clicks an IP pill.
-            if (obsKey.toLowerCase().startsWith('ip::') || obsKey.toLowerCase().startsWith('ipv4::') || obsKey.toLowerCase().startsWith('ipv6::')) {
-              try { window.dispatchEvent(new CustomEvent('demo:timeline-ip-clicked', { detail: { obsKey } })); } catch { /* ignore */ }
+            // Demo mode: notify the tour when the user clicks an IP pill OR
+            // any pill flagged as a Known IOC (the demo guarantees a Known
+            // IOC will be present, so we make that the primary click target).
+            const lower = obsKey.toLowerCase();
+            const isIp = lower.startsWith('ip::') || lower.startsWith('ipv4::') || lower.startsWith('ipv6::');
+            if (isIp || iocObservableKeys.has(lower)) {
+              try { window.dispatchEvent(new CustomEvent('demo:timeline-ip-clicked', { detail: { obsKey, isIoc: iocObservableKeys.has(lower) } })); } catch { /* ignore */ }
             }
             focusObservableFromTimeline(obsKey);
           };
@@ -3694,7 +3698,12 @@ const IncidentDetailPage = () => {
             pillOnClick = () => focusCorrelationFromTimeline(null);
           } else if (item.id.startsWith('step-corr-obs-')) {
             const obsKey = item.id.slice('step-corr-obs-'.length).toLowerCase();
-            pillOnClick = () => focusObservableFromTimeline(obsKey);
+            pillOnClick = () => {
+              if (iocObservableKeys.has(obsKey)) {
+                try { window.dispatchEvent(new CustomEvent('demo:timeline-ip-clicked', { detail: { obsKey, isIoc: true } })); } catch { /* ignore */ }
+              }
+              focusObservableFromTimeline(obsKey);
+            };
           } else {
             pillOnClick = () => focusCorrelationFromTimeline(null);
           }
@@ -3728,6 +3737,8 @@ const IncidentDetailPage = () => {
           <Box
             key={item.id}
             data-timeline-compact="true"
+            data-tour={isIocPill ? 'timeline-ioc-pill' : undefined}
+            data-ioc-pill={isIocPill ? 'true' : undefined}
             className={isStepHighlighted ? 'incident-new-flash' : undefined}
             onClick={pillOnClick}
             sx={{
