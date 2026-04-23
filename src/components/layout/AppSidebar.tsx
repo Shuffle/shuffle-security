@@ -51,10 +51,10 @@ const drawerWidth = 260;
 const collapsedWidth = 64;
 const hoverCollapseDelay = 150;
 
-// Render-time nav node — derived from the shared SIDEBAR_NAV config plus
-// the user's entity-label preference (Incidents → Alerts/Cases/…). The
-// `__divider__` sentinel is inserted by `buildRuntimeNav` so the existing
-// rendering loop can keep its current grouping visuals.
+// Render-time nav node — derived inside the component from the shared
+// SIDEBAR_NAV config plus the user's entity-label preference (Incidents
+// adapts to Alerts/Cases/…). The `__divider__` sentinel keeps the existing
+// rendering loop's grouping visuals intact.
 interface NavChild {
   label: string;
   path: string;
@@ -77,33 +77,6 @@ const childToNav = (c: SidebarChildSpec): NavChild => ({
   icon: c.icon,
   supportOnly: c.supportOnly,
 });
-
-const itemToNav = (item: SidebarItemSpec, entityLabel: string, entityPath: string): NavItem => {
-  const isIncidents = item.tabKey === 'incidents';
-  return {
-    label: isIncidents ? entityLabel : item.label,
-    icon: item.icon,
-    path: isIncidents ? entityPath : item.path,
-    supportOnly: item.supportOnly,
-    children: item.children?.map(childToNav),
-  };
-};
-
-/** Build the runtime nav array from the shared config. We insert a single
- *  visual divider between the "Detection" group and the standalone trailing
- *  items (Agents / Documentation) to preserve the previous grouping. */
-const buildNavItems = (entityLabel: string, entityPath: string): NavItem[] => {
-  const items: NavItem[] = [];
-  for (let i = 0; i < SIDEBAR_NAV.length; i++) {
-    const spec = SIDEBAR_NAV[i];
-    items.push(itemToNav(spec, entityLabel, entityPath));
-    // Insert divider once, immediately after the Detection group.
-    if (spec.tabKey === 'detection') {
-      items.push({ label: '__divider__', icon: <></> });
-    }
-  }
-  return items;
-};
 
 interface AppSidebarProps {
   collapsed: boolean;
