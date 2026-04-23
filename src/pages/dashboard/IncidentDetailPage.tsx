@@ -2305,6 +2305,18 @@ const IncidentDetailPage = () => {
     setNewComment('');
     setCommentAttachments([]);
     setReplyingTo(null);
+
+    // Move focus to the newly created message instead of leaving it on the comment field.
+    const newCommentId = commentActivity.id;
+    setTimeout(() => {
+      const el = document.getElementById(`activity-item-${newCommentId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Make it focusable then focus, so screen readers/keyboard users land on the new message.
+        if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '-1');
+        try { (el as HTMLElement).focus({ preventScroll: true }); } catch { /* no-op */ }
+      }
+    }, 50);
     
     // CRITICAL: Never delete fields - always preserve existing structure
     const updatedOCSF = {
@@ -3780,6 +3792,7 @@ const IncidentDetailPage = () => {
       return (
         <Box
           key={actItem.id}
+          id={actItem.id ? `activity-item-${actItem.id}` : undefined}
           className={isActHighlighted ? 'incident-new-flash' : undefined}
           sx={{
             display: 'flex',
