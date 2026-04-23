@@ -176,7 +176,7 @@ const baseEnrichmentOptions: (Omit<EnrichmentOption, 'connectedApps'> & { isDyna
     description: 'Search across all connected tools simultaneously for IOCs and context (coming soon).',
     icon: <TravelExploreIcon />,
     color: '#3b82f6',
-    category: 'enrichment',
+    category: 'response',
     disabled: true,
   },
 ];
