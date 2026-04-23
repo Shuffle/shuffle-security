@@ -371,6 +371,34 @@ export const STEP_SEEDERS: Record<string, () => Promise<number>> = {
   'incidents-list': async () => {
     // Fire-and-forget: we don't want to block the UI on a feed write.
     void forceEnableDefaultThreatFeeds();
+    // Dedup guard: the focus key embeds `now()` so a stale "already seeded"
+    // marker (or a partially-failed previous run) would otherwise produce a
+    // second "Phishing email reported by Diego Ruiz" with a different key.
+    // Wipe any prior focus incident — both the indexed keys and a safety
+    // scan of demo-tagged incidents whose key contains `-focus` — before
+    // writing the fresh one.
+    try {
+      const idx = readIndex();
+      const existing = idx[DATASTORE_CATEGORIES.INCIDENTS] || [];
+      const focusKeys = existing.filter(k => k.includes('-focus'));
+      if (focusKeys.length > 0) {
+        await Promise.allSettled(focusKeys.map(k => deleteDatastoreItem(k, DATASTORE_CATEGORIES.INCIDENTS)));
+        idx[DATASTORE_CATEGORIES.INCIDENTS] = existing.filter(k => !k.includes('-focus'));
+        writeIndex(idx);
+      }
+    } catch { /* best-effort */ }
+    try {
+      const res = await getDatastoreByCategory(DATASTORE_CATEGORIES.INCIDENTS);
+      if (res.success && res.data) {
+        const orphans = res.data.filter(item =>
+          typeof item.key === 'string' && item.key.startsWith('demo-inc-phish-') && item.key.endsWith('-focus')
+        );
+        if (orphans.length > 0) {
+          await Promise.allSettled(orphans.map(o => deleteDatastoreItem(o.key, DATASTORE_CATEGORIES.INCIDENTS)));
+        }
+      }
+    } catch { /* best-effort */ }
+
     // Try to pick real IOCs. If categories are empty (parser hasn't caught
     // up yet) the builder falls back to its static defaults.
     const overrides = await resolveIocOverrides();
