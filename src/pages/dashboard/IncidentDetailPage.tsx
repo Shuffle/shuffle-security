@@ -3620,8 +3620,11 @@ const IncidentDetailPage = () => {
             focusObservableFromTimeline(obsKey);
           };
         } else if (item.kind === 'observable-added' && item.id.startsWith('step-obs-bulk-')) {
-          // Bulked observable pills jump to the Observables tab generally.
-          pillOnClick = () => focusObservableFromTimeline(null);
+          // Bulked observable pills: jump to the Observables tab and scroll
+          // to the first observable from this burst so the user lands at the
+          // actual content the pill is summarising — not the top of the tab.
+          const firstKey = item.obsKeys && item.obsKeys.length > 0 ? item.obsKeys[0] : null;
+          pillOnClick = () => focusObservableFromTimeline(firstKey);
         } else if (item.kind === 'correlation-found') {
           // Bulked observable correlations (id prefix `step-corr-obs-bulk-`)
           // can't jump to a single observable row — send the user to the
