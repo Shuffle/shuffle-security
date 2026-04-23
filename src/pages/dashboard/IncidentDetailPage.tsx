@@ -3690,6 +3690,7 @@ const IncidentDetailPage = () => {
             sx={{
               display: 'flex',
               alignItems: 'center',
+              flexWrap: 'nowrap',
               gap: 1,
               px: 1.25,
               py: 0.5,
@@ -3697,7 +3698,9 @@ const IncidentDetailPage = () => {
               borderRadius: 999,
               bgcolor: pillBg,
               border: `1px solid ${pillBorder}`,
-              maxWidth: 'fit-content',
+              maxWidth: '100%',
+              minWidth: 0,
+              overflow: 'hidden',
               cursor: isClickable ? 'pointer' : 'default',
               transition: 'background-color 0.15s ease, border-color 0.15s ease',
               ...(isClickable && {
@@ -3708,10 +3711,10 @@ const IncidentDetailPage = () => {
               }),
             }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center', color: pillColor }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', color: pillColor, flexShrink: 0 }}>
               {isIocPill ? <WarningAmberIcon sx={{ fontSize: 12 }} /> : cfg.icon}
             </Box>
-            <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: pillColor }}>
+            <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: pillColor, whiteSpace: 'nowrap', flexShrink: 0 }}>
               {item.label}
             </Typography>
             {isIocPill && (
