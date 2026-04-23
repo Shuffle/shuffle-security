@@ -1071,9 +1071,7 @@ export const DemoTourDrawer = () => {
                           ? 'Locked'
                           : isLast
                             ? 'Finish'
-                            : justUnlocked
-                              ? 'Ready — Next'
-                              : 'Next'}
+                            : 'Next'}
                       </Button>
                     </motion.div>
                   </span>
