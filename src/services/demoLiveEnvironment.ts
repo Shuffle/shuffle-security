@@ -124,16 +124,34 @@ const fetchWorkflows = async (): Promise<any[]> => {
 };
 
 /**
+ * Shuffle's own internal tool apps that should never be passed as
+ * `app_name` to /api/v2/workflows/generate — they are platform primitives,
+ * not integrations the user wired up. Mirrors the filter used by the
+ * usecase diagram (UsecaseAlluvialDiagram.tsx).
+ */
+const SHUFFLE_INTERNAL_PATTERNS = ['shuffle tools', 'shuffle_tools', 'shuffle datastore', 'shuffle workflow'];
+const isShuffleInternalApp = (name: string): boolean => {
+  const lower = name.toLowerCase().replace(/_/g, ' ');
+  return SHUFFLE_INTERNAL_PATTERNS.some(p => lower.includes(p.replace(/_/g, ' ')));
+};
+
+/**
  * Snapshot the apps currently wired into the user's "Ingest Tickets"
  * workflow (if any) so we can restore them when the demo ends. We only
  * write the backup the first time — subsequent demo runs must not
  * overwrite the real snapshot with an already-cleared workflow.
+ *
+ * Shuffle's own internal tools (Shuffle Tools, Datastore, etc.) are
+ * filtered out so we never POST `app_name: "shuffle_tools"` back to the
+ * generate endpoint, which would be meaningless.
  */
 const backupExistingIngestTicketsApps = async (): Promise<void> => {
   if (localStorage.getItem(DEMO_INGEST_APPS_BACKUP_KEY) !== null) return;
   const workflows = await fetchWorkflows();
   const ingest = findIngestTicketsWorkflow(workflows);
-  const names = ingest ? Array.from(extractWorkflowAppNames(ingest)) : [];
+  const names = ingest
+    ? Array.from(extractWorkflowAppNames(ingest)).filter(n => !isShuffleInternalApp(n))
+    : [];
   localStorage.setItem(DEMO_INGEST_APPS_BACKUP_KEY, JSON.stringify(names));
 };
 
