@@ -190,7 +190,7 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, on
         {/* CTA buttons */}
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.5 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            {hasNonWebhookSources && onSyncNow ? (
+            {canSync ? (
               <>
                 <Button
                   variant="contained"
