@@ -5849,16 +5849,30 @@ const IncidentDetailPage = () => {
               }
             }
             const toTs = (v: any) => !v ? 0 : typeof v === 'number' ? (v < 1e12 ? v * 1000 : v) : new Date(v).getTime() || 0;
-            // Default sort prioritizes observables flagged as malicious (IOC /
-            // threat-feed correlations) so the most important rows are always
-            // at the top regardless of recency. Secondary sort follows the
-            // user-selected field/direction.
+            // Default sort prioritizes: (1) observables flagged as known
+            // IOCs, (2) total correlation refs (more matches = more
+            // important), (3) the user-selected field/direction (defaults to
+            // first_seen desc). This keeps the most actionable rows always
+            // at the top regardless of recency.
             const isDefaultSort = obsSortField === 'first_seen' && obsSortDir === 'desc';
+            const corrCountFor = (o: any): number => {
+              const k = `${o.type}::${o.value}`;
+              const c = obsCorrelations[k];
+              if (!c?.data?.length) return 0;
+              const meaningful = filterMeaningfulCorrelations(c.data, id);
+              return meaningful.reduce(
+                (sum, x) => sum + getEffectiveCorrelationCount(x, id),
+                0,
+              );
+            };
             const allObsRaw = Array.from(deduped.values()).sort((a, b) => {
               if (isDefaultSort) {
                 const aIoc = iocObservableKeys.has(`${a.type}::${a.value}`.toLowerCase()) ? 1 : 0;
                 const bIoc = iocObservableKeys.has(`${b.type}::${b.value}`.toLowerCase()) ? 1 : 0;
                 if (aIoc !== bIoc) return bIoc - aIoc;
+                const aCorr = corrCountFor(a);
+                const bCorr = corrCountFor(b);
+                if (aCorr !== bCorr) return bCorr - aCorr;
               }
               let cmp = 0;
               if (obsSortField === 'first_seen' || obsSortField === 'last_seen') {
