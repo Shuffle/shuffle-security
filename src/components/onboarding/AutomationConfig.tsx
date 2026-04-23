@@ -987,7 +987,7 @@ export const AutomationConfig = ({
               <motion.div key={option.id} variants={itemVariants}>
                 <Card
                   onClick={() => {
-                    if (!isExpanded && (hasExpandableTools || (hasConfig && state.enabled))) {
+                    if (!isExpanded && isExpandable) {
                       setExpandedId(option.id);
                     }
                   }}
@@ -999,7 +999,7 @@ export const AutomationConfig = ({
                     backdropFilter: 'blur(10px)',
                     transition: 'all 0.3s ease',
                     opacity: isDisabled ? 0.5 : 1,
-                    cursor: (!isExpanded && (hasExpandableTools || (hasConfig && state.enabled))) ? 'pointer' : 'default',
+                    cursor: (!isExpanded && isExpandable) ? 'pointer' : 'default',
                     '&:hover': {
                       borderColor: isDisabled ? 'hsl(var(--border))' : (state.enabled ? option.color : 'hsl(var(--primary) / 0.3)'),
                       transform: isDisabled ? 'none' : 'translateY(-2px)',
