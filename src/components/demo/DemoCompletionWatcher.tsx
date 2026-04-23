@@ -122,6 +122,51 @@ export const DemoCompletionWatcher = () => {
     return () => window.removeEventListener('demo:timeline-ip-clicked', onIp);
   }, [drawerOpen, step, markStepCompleted]);
 
+  // ─── orientation sub-goals: complete on hover ──────────────────────────────
+  // Step #5 starts with two "notice this" goals (Title, Description/Email).
+  // They flip complete the moment the user hovers the actual element on the
+  // page OR the matching row in the drawer (which already drives a spotlight
+  // preview via `hoveredGoalSelector`). Either path counts as "noticed".
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const stepId = TOUR_STEPS[step]?.id;
+    if (stepId !== 'incident-detail') return;
+
+    const targets: Array<{ goalId: string; selector: string }> = [
+      { goalId: 'incident-detail:hover-title', selector: '[data-tour="incident-title"]' },
+      { goalId: 'incident-detail:hover-description', selector: '[data-tour="incident-description"]' },
+    ];
+
+    // 1) Drawer-row hover already updates `hoveredGoalSelector` — mark the
+    //    matching goal complete immediately when its selector is previewed.
+    const previewed = targets.find(t => t.selector === hoveredGoalSelector);
+    if (previewed) markStepCompleted(previewed.goalId);
+
+    // 2) Direct hover on the page element. We attach listeners to whatever
+    //    matches at this moment and re-bind via a small interval so newly
+    //    rendered targets (description loads async) get covered.
+    const cleanups: Array<() => void> = [];
+    const bind = () => {
+      targets.forEach(t => {
+        const el = document.querySelector(t.selector) as HTMLElement | null;
+        if (!el || (el as any).__demoHoverBound) return;
+        const handler = () => markStepCompleted(t.goalId);
+        el.addEventListener('mouseenter', handler, { once: true });
+        (el as any).__demoHoverBound = true;
+        cleanups.push(() => {
+          el.removeEventListener('mouseenter', handler);
+          delete (el as any).__demoHoverBound;
+        });
+      });
+    };
+    bind();
+    const id = window.setInterval(bind, 1500);
+    return () => {
+      window.clearInterval(id);
+      cleanups.forEach(fn => fn());
+    };
+  }, [drawerOpen, step, hoveredGoalSelector, markStepCompleted]);
+
   // Comment-sent — listens for the custom event dispatched by the incident
   // detail page when the user adds a comment. Doubles as "ask the agent".
   useEffect(() => {
