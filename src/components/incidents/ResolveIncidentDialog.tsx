@@ -60,6 +60,7 @@ export const ResolveIncidentDialog = React.forwardRef<HTMLDivElement, ResolveInc
   const [customValues, setCustomValues] = useState<Record<string, string>>({});
   const [resolved, setResolved] = useState(false);
   const { fields: allCustomFields } = useCustomFields();
+  const t = useEntityText();
 
   const missingRequiredFields = allCustomFields.filter(
     (f) => f.required && !incidentCustomFields?.[f.key]?.trim()
@@ -208,7 +209,7 @@ export const ResolveIncidentDialog = React.forwardRef<HTMLDivElement, ResolveInc
           <DialogTitle sx={{ pb: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
               <CheckCircleIcon sx={{ color: 'hsl(var(--severity-low))' }} />
-              <Typography variant="h6">Resolve Incident</Typography>
+              <Typography variant="h6">{t('Resolve Incident')}</Typography>
             </Box>
           </DialogTitle>
 
@@ -240,7 +241,7 @@ export const ResolveIncidentDialog = React.forwardRef<HTMLDivElement, ResolveInc
               multiline
               rows={3}
               label="Resolution Notes (optional)"
-              placeholder="Add any additional context about how this incident was resolved..."
+              placeholder={t('Add any additional context about how this incident was resolved...')}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               sx={inputSx}
