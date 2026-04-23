@@ -1179,11 +1179,16 @@ const IncidentsPage = () => {
     doResync();
   }, [hasFetched, incidents, resyncingId, fetchItems]);
 
-  // Active incident list based on irrelevant toggle
+  // Active incident list based on irrelevant toggle.
+  // While Demo Mode is active we hide all non-demo incidents so the user can
+  // focus on the seeded scenario without their real data muddying the view.
+  // Demo incidents are stable: their datastore key (and `id`) starts with
+  // `demo-` (see services/demoMode.ts).
   const activeIncidents = useMemo(() => {
-    if (showIrrelevant) return incidents;
-    return relevantIncidents;
-  }, [showIrrelevant, incidents, relevantIncidents]);
+    const base = showIrrelevant ? incidents : relevantIncidents;
+    if (!demoActive) return base;
+    return base.filter(i => typeof i.id === 'string' && i.id.startsWith('demo-'));
+  }, [showIrrelevant, incidents, relevantIncidents, demoActive]);
 
   // Apply smart defaults on initial load only - default to "New" OR "In Progress" status
   const [smartDefaultApplied, setSmartDefaultApplied] = useState(false);
