@@ -717,11 +717,46 @@ const IncidentDetailPage = () => {
        setTimeout(() => {
          const el = document.querySelector(`[data-corr-key="${CSS.escape(correlationKey)}"]`) as HTMLElement | null;
          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-       }, 80);
-     }
-   };
+        }, 80);
+      }
+    };
 
-   const [rawJsonText, setRawJsonText] = useState('');
+    /**
+     * Demo-style "Ask the agent" affordance: when the user clicks a Known IOC
+     * pill on the Timeline, prefill the comment input with an @agent question
+     * about that observable, switch to the Details/Timeline tab so the input
+     * is visible, then focus and scroll to it. The user just hits Enter to
+     * actually send — they're never tricked into sending something they didn't
+     * see. This makes it obvious the AI agent is real and reachable from any
+     * observable, not just a label in the sidebar.
+     */
+    const askAgentAboutObservable = (obsKey: string) => {
+      const sepIdx = obsKey.indexOf('::');
+      const type = sepIdx > -1 ? obsKey.slice(0, sepIdx) : '';
+      const value = sepIdx > -1 ? obsKey.slice(sepIdx + 2) : obsKey;
+      const labelType = type ? type.toUpperCase() : 'observable';
+      const prompt = `@agent This ${labelType} \`${value}\` is flagged as a Known IOC on the timeline. What do we know about it (threat-feed sources, related campaigns), and what should we do next — block, isolate, or investigate further?`;
+      setActiveTab(0);
+      setNewComment((cur) => (cur && cur.trim() ? cur : prompt));
+      setTimeout(() => {
+        const wrapper = document.querySelector('[data-tour="incident-comment-input"]') as HTMLElement | null;
+        if (!wrapper) return;
+        wrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const input = wrapper.querySelector('textarea, input') as HTMLTextAreaElement | HTMLInputElement | null;
+        if (input) {
+          input.focus();
+          try {
+            const len = (input.value || '').length;
+            (input as HTMLTextAreaElement).setSelectionRange(len, len);
+          } catch { /* ignore */ }
+        }
+      }, 120);
+      try {
+        toast.success('Question drafted for the AI agent — press Enter to send.', { duration: 3500 });
+      } catch { /* ignore */ }
+    };
+
+    const [rawJsonText, setRawJsonText] = useState('');
    const [rawJsonValid, setRawJsonValid] = useState(true);
   // File editor state
   const [fileContent, setFileContent] = useState('');
@@ -3674,15 +3709,24 @@ const IncidentDetailPage = () => {
         if (item.kind === 'observable-added' && item.id.startsWith('step-obs-') && !item.id.startsWith('step-obs-bulk-')) {
           const obsKey = item.id.slice('step-obs-'.length);
           pillOnClick = () => {
+            const lower = obsKey.toLowerCase();
+            const isIp = lower.startsWith('ip::') || lower.startsWith('ipv4::') || lower.startsWith('ipv6::');
+            const isIoc = iocObservableKeys.has(lower);
             // Demo mode: notify the tour when the user clicks an IP pill OR
             // any pill flagged as a Known IOC (the demo guarantees a Known
             // IOC will be present, so we make that the primary click target).
-            const lower = obsKey.toLowerCase();
-            const isIp = lower.startsWith('ip::') || lower.startsWith('ipv4::') || lower.startsWith('ipv6::');
-            if (isIp || iocObservableKeys.has(lower)) {
-              try { window.dispatchEvent(new CustomEvent('demo:timeline-ip-clicked', { detail: { obsKey, isIoc: iocObservableKeys.has(lower) } })); } catch { /* ignore */ }
+            if (isIp || isIoc) {
+              try { window.dispatchEvent(new CustomEvent('demo:timeline-ip-clicked', { detail: { obsKey, isIoc } })); } catch { /* ignore */ }
             }
-            focusObservableFromTimeline(obsKey);
+            // Known IOC pills route the user to the AI agent: prefill an
+            // @agent question about the observable instead of just jumping to
+            // the Observables tab. Plain (non-IOC) observable pills keep the
+            // original "show me where this observable lives" behaviour.
+            if (isIoc) {
+              askAgentAboutObservable(obsKey);
+            } else {
+              focusObservableFromTimeline(obsKey);
+            }
           };
         } else if (item.kind === 'observable-added' && item.id.startsWith('step-obs-bulk-')) {
           // Bulked observable pills: jump to the Observables tab and scroll
@@ -3699,10 +3743,13 @@ const IncidentDetailPage = () => {
           } else if (item.id.startsWith('step-corr-obs-')) {
             const obsKey = item.id.slice('step-corr-obs-'.length).toLowerCase();
             pillOnClick = () => {
-              if (iocObservableKeys.has(obsKey)) {
+              const isIoc = iocObservableKeys.has(obsKey);
+              if (isIoc) {
                 try { window.dispatchEvent(new CustomEvent('demo:timeline-ip-clicked', { detail: { obsKey, isIoc: true } })); } catch { /* ignore */ }
+                askAgentAboutObservable(obsKey);
+              } else {
+                focusObservableFromTimeline(obsKey);
               }
-              focusObservableFromTimeline(obsKey);
             };
           } else {
             pillOnClick = () => focusCorrelationFromTimeline(null);
@@ -3788,6 +3835,32 @@ const IncidentDetailPage = () => {
               >
                 Known IOC
               </Typography>
+            )}
+            {isIocPill && isClickable && (
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.4,
+                  ml: 'auto',
+                  pl: 0.5,
+                  flexShrink: 0,
+                }}
+              >
+                <AgentIcon size={12} />
+                <Typography
+                  sx={{
+                    fontSize: '0.6rem',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: 0.4,
+                    color: 'hsl(var(--destructive))',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  Ask agent →
+                </Typography>
+              </Box>
             )}
             {item.kind === 'observable-added' && item.obsType && item.obsValue ? (
               <>
