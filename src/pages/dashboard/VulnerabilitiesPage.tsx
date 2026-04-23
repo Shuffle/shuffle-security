@@ -269,18 +269,11 @@ const AuthenticatedVulnerabilitiesView = () => {
         <Button
           size="sm"
           variant="outline"
-          className="gap-1.5 shrink-0"
-          disabled={enablingAutomation}
-          onClick={automationEnabled ? handleDisableAutomation : handleEnableAutomation}
+          className="gap-1.5 shrink-0 opacity-50 cursor-not-allowed"
+          disabled
         >
-          {enablingAutomation ? (
-            <Loader2 size={14} className="animate-spin" />
-          ) : (
-            <Zap size={14} />
-          )}
-          {enablingAutomation
-            ? automationEnabled ? 'Disabling…' : 'Enabling…'
-            : automationEnabled ? 'Disable' : 'Enable'}
+          <Zap size={14} />
+          {automationEnabled ? 'Disable' : 'Enable'}
         </Button>
       </div>
 
