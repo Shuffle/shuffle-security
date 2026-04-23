@@ -428,6 +428,10 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
       // a stale "minimized" state from a previous session.
       setMinimized(false);
       try { localStorage.setItem('shuffle_demo_minimized', 'false'); } catch { /* ignore */ }
+      // Always start docked to the right — never inherit a stale "bottom"
+      // dock from a previous session. Users can still toggle after.
+      setDockState('right');
+      try { localStorage.setItem('shuffle_demo_dock', 'right'); } catch { /* ignore */ }
       // Auto-collapse the sidebar to give the tour drawer + main content
       // more room. The DashboardLayout listens for this event.
       try {
