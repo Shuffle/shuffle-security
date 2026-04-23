@@ -2983,14 +2983,10 @@ const IncidentsPage = () => {
                 return next;
               });
               setFakeAuth(null);
-              const friendly = app.name.replace(/_/g, ' ');
-              const remainingPrompt = isOutlook
-                ? 'Now click "+" again and add Microsoft 365 Defender.'
-                : 'Both sources connected. Moving on…';
-              toast.success(`${friendly} authenticated (demo)`, {
-                description: remainingPrompt,
-                duration: 2400,
-              });
+              // No toast in demo mode — the success toast was overlapping the
+              // "Next" button on the demo flow, and the visual state change in
+              // the source list already makes the connection obvious.
+              void app; void isOutlook;
             }, 1600);
             return true; // prevent the detail drawer from opening
           }
