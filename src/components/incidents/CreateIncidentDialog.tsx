@@ -28,6 +28,7 @@ import { useCustomFields, CustomField } from '@/hooks/useCustomFields';
 import { useIOCTypes } from '@/hooks/useIOCTypes';
 import { useCaseTemplates, CaseTemplate } from '@/hooks/useCaseTemplates';
 import { ObservableTypeSelector } from './ObservableTypeSelector';
+import { useEntityText } from '@/hooks/useEntityLabel';
 import {
   OCSFIncidentFinding,
   Observable,
@@ -113,6 +114,7 @@ interface CreateIncidentDialogProps {
 }
 
 export const CreateIncidentDialog = ({ open, onClose, onSubmit }: CreateIncidentDialogProps) => {
+  const t = useEntityText();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [severityId, setSeverityId] = useState(3);
@@ -367,7 +369,7 @@ export const CreateIncidentDialog = ({ open, onClose, onSubmit }: CreateIncident
     >
       <DialogTitle>
         <Typography variant="h6" sx={{ fontWeight: 600 }}>
-          Create Incident
+          {t('Create Incident')}
         </Typography>
         <Typography variant="caption" sx={{ color: 'text.secondary' }}>
           OCSF Incident Finding (class_uid: 2005)
@@ -393,7 +395,7 @@ export const CreateIncidentDialog = ({ open, onClose, onSubmit }: CreateIncident
             fullWidth
             multiline
             rows={3}
-            placeholder="Detailed description of the incident..."
+            placeholder={t('Detailed description of the incident...')}
           />
 
           {/* Severity */}
@@ -688,7 +690,7 @@ export const CreateIncidentDialog = ({ open, onClose, onSubmit }: CreateIncident
           onClick={handleSubmit}
           disabled={!title.trim() || isSubmitting}
         >
-          {isSubmitting ? 'Creating...' : 'Create Incident'}
+          {isSubmitting ? 'Creating...' : t('Create Incident')}
         </Button>
       </DialogActions>
     </Dialog>
