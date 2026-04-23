@@ -217,8 +217,9 @@ export const TaskKanbanBoard = ({
           }}
         />
         <Button
-          variant="contained"
+          variant={newTaskTitle.trim() ? 'contained' : 'outlined'}
           onClick={handleAddTask}
+          disabled={!newTaskTitle.trim()}
           startIcon={<AddIcon />}
           sx={{ height: 36, textTransform: 'none', whiteSpace: 'nowrap' }}
         >
