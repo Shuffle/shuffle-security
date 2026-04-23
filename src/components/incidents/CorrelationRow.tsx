@@ -85,7 +85,7 @@ interface CorrelationRowProps {
  * the Correlations page: groups refs by datastore category, dims the current
  * incident, and renders incident chips as links.
  */
-export const CorrelationRow = ({ correlation, currentIncidentId, className, compact = false }: CorrelationRowProps) => {
+export const CorrelationRow = ({ correlation, currentIncidentId, className, compact = false, focusedIncidentKey }: CorrelationRowProps) => {
   // Group refs by category, excluding the current incident itself.
   const refsByCategory: Record<string, string[]> = {};
   correlation.ref.forEach((r) => {
