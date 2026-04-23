@@ -28,6 +28,7 @@ import { getDatastoreByCategory, setDatastoreItem, DATASTORE_CATEGORIES } from '
 import { mapOCSFSeverity, mapOCSFStatus, Observable } from '@/config/ocsfIncidentSchema';
 import { severityColors, statusConfig } from '@/config/incidentConfig';
 import { toast } from 'sonner';
+import { useEntityText } from '@/hooks/useEntityLabel';
 
 interface IncidentSummary {
   id: string;
@@ -190,6 +191,7 @@ export const MergeIncidentDialog = ({
   currentIncidentTitle,
   onMergeComplete,
 }: MergeIncidentDialogProps) => {
+  const t = useEntityText();
   const [incidents, setIncidents] = useState<IncidentSummary[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
@@ -258,7 +260,7 @@ export const MergeIncidentDialog = ({
       );
 
       if (!saveResult.success) {
-        toast.error('Failed to save merged incident');
+        toast.error(t('Failed to save merged incident'));
         setMerging(false);
         return;
       }
@@ -308,11 +310,11 @@ export const MergeIncidentDialog = ({
         <DialogHeader className="px-6 pt-6 pb-4">
           <DialogTitle className="flex items-center gap-2">
             <MergeIcon sx={{ fontSize: 20, color: 'hsl(var(--primary))' }} />
-            {step === 'select' ? 'Merge Incident' : 'Confirm Merge'}
+            {step === 'select' ? t('Merge Incident') : 'Confirm Merge'}
           </DialogTitle>
           <DialogDescription>
             {step === 'select'
-              ? 'Select the target incident to merge this one into. All tasks, observables, and comments will be combined.'
+              ? t('Select the target incident to merge this one into. All tasks, observables, and comments will be combined.')
               : 'Review the merge details below. This action cannot be undone.'}
           </DialogDescription>
         </DialogHeader>
@@ -324,7 +326,7 @@ export const MergeIncidentDialog = ({
               <TextField
                 fullWidth
                 size="small"
-                placeholder="Search incidents by title, ID, or source..."
+                placeholder={t('Search incidents by title, ID, or source...')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 InputProps={{
