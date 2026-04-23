@@ -18,6 +18,7 @@ import {
   SidebarTabKey,
 } from '@/hooks/useEntityLabel';
 import { TaskStatusesEditor } from '@/components/settings/TaskStatusesEditor';
+import { SlaEditor } from '@/components/settings/SlaEditor';
 
 const TerminologySelector = () => {
   const { value } = useEntityPreference();
@@ -300,6 +301,31 @@ const OrgPreferencesPage = () => {
             </Typography>
           </Box>
           <TaskStatusesEditor />
+        </Paper>
+
+        {/* SLA targets per severity */}
+        <Paper
+          sx={{
+            p: 2.5,
+            bgcolor: 'hsl(var(--card))',
+            border: '1px solid hsl(var(--border))',
+            borderRadius: 2,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+          }}
+        >
+          <Box>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+              SLA Targets
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+              How quickly the team must respond to and resolve incidents at each severity. The
+              "Fallback" row is used when an incident has no severity. Defaults follow common
+              MSSP and NIST SP 800-61 guidance — adjust to match your service commitments.
+            </Typography>
+          </Box>
+          <SlaEditor />
         </Paper>
       </Box>
     </Box>
