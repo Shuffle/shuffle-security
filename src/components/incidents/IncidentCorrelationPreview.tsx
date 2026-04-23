@@ -179,8 +179,23 @@ export const IncidentCorrelationPreview = ({
           }}
         >
           <Box sx={{ fontWeight: 700, mb: 0.25 }}>Incident no longer exists</Box>
-          <Box sx={{ color: 'hsl(var(--muted-foreground))' }}>
+          <Box sx={{ color: 'hsl(var(--muted-foreground))', mb: 0.75 }}>
             The correlation still references <Box component="span" sx={{ fontFamily: 'monospace', color: 'hsl(var(--foreground))' }}>{incidentKey}</Box>, but the incident has been deleted. Pivoting will land on an empty page.
+          </Box>
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
+            <Button
+              component="a"
+              href={targetUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              size="small"
+              variant="outlined"
+              onClick={(e) => e.stopPropagation()}
+              startIcon={<LaunchIcon sx={{ fontSize: 12 }} />}
+              sx={{ height: 26, fontSize: '0.65rem', textTransform: 'none', borderColor: 'hsl(var(--border))', color: 'hsl(var(--muted-foreground))' }}
+            >
+              Open anyway
+            </Button>
           </Box>
         </Alert>
       )}
