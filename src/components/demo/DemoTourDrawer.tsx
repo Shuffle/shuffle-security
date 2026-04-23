@@ -107,7 +107,25 @@ export const DemoTourDrawer = () => {
   }, [attentionPulse, drawerOpen, minimized]);
 
   const total = TOUR_STEPS.length;
-  const current = TOUR_STEPS[step];
+  const rawCurrent = TOUR_STEPS[step];
+  // Swap the literal word "incident(s)" for the org's configured terminology
+  // (Alert, Case, Ticket, …) so every step's title/body/bullets/sub-goals
+  // matches what the rest of the app says.
+  const { singular: entitySingular, plural: entityPlural } = useEntityPreference();
+  const current = useMemo(() => {
+    if (!rawCurrent) return rawCurrent;
+    const t = (s: string) => applyEntityTerminology(s, entitySingular, entityPlural);
+    return {
+      ...rawCurrent,
+      title: t(rawCurrent.title),
+      body: t(rawCurrent.body),
+      bullets: rawCurrent.bullets?.map(t),
+      requirement: rawCurrent.requirement
+        ? { ...rawCurrent.requirement, label: t(rawCurrent.requirement.label) }
+        : undefined,
+      subGoals: rawCurrent.subGoals?.map(g => ({ ...g, label: t(g.label) })),
+    };
+  }, [rawCurrent, entitySingular, entityPlural]);
   const progress = ((step + 1) / total) * 100;
   const isLast = step === total - 1;
   const requirement = current?.requirement;
