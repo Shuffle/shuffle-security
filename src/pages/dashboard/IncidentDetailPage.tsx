@@ -3709,15 +3709,24 @@ const IncidentDetailPage = () => {
         if (item.kind === 'observable-added' && item.id.startsWith('step-obs-') && !item.id.startsWith('step-obs-bulk-')) {
           const obsKey = item.id.slice('step-obs-'.length);
           pillOnClick = () => {
+            const lower = obsKey.toLowerCase();
+            const isIp = lower.startsWith('ip::') || lower.startsWith('ipv4::') || lower.startsWith('ipv6::');
+            const isIoc = iocObservableKeys.has(lower);
             // Demo mode: notify the tour when the user clicks an IP pill OR
             // any pill flagged as a Known IOC (the demo guarantees a Known
             // IOC will be present, so we make that the primary click target).
-            const lower = obsKey.toLowerCase();
-            const isIp = lower.startsWith('ip::') || lower.startsWith('ipv4::') || lower.startsWith('ipv6::');
-            if (isIp || iocObservableKeys.has(lower)) {
-              try { window.dispatchEvent(new CustomEvent('demo:timeline-ip-clicked', { detail: { obsKey, isIoc: iocObservableKeys.has(lower) } })); } catch { /* ignore */ }
+            if (isIp || isIoc) {
+              try { window.dispatchEvent(new CustomEvent('demo:timeline-ip-clicked', { detail: { obsKey, isIoc } })); } catch { /* ignore */ }
             }
-            focusObservableFromTimeline(obsKey);
+            // Known IOC pills route the user to the AI agent: prefill an
+            // @agent question about the observable instead of just jumping to
+            // the Observables tab. Plain (non-IOC) observable pills keep the
+            // original "show me where this observable lives" behaviour.
+            if (isIoc) {
+              askAgentAboutObservable(obsKey);
+            } else {
+              focusObservableFromTimeline(obsKey);
+            }
           };
         } else if (item.kind === 'observable-added' && item.id.startsWith('step-obs-bulk-')) {
           // Bulked observable pills: jump to the Observables tab and scroll
@@ -3734,10 +3743,13 @@ const IncidentDetailPage = () => {
           } else if (item.id.startsWith('step-corr-obs-')) {
             const obsKey = item.id.slice('step-corr-obs-'.length).toLowerCase();
             pillOnClick = () => {
-              if (iocObservableKeys.has(obsKey)) {
+              const isIoc = iocObservableKeys.has(obsKey);
+              if (isIoc) {
                 try { window.dispatchEvent(new CustomEvent('demo:timeline-ip-clicked', { detail: { obsKey, isIoc: true } })); } catch { /* ignore */ }
+                askAgentAboutObservable(obsKey);
+              } else {
+                focusObservableFromTimeline(obsKey);
               }
-              focusObservableFromTimeline(obsKey);
             };
           } else {
             pillOnClick = () => focusCorrelationFromTimeline(null);
