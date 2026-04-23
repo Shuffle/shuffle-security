@@ -67,10 +67,13 @@ const generateWorkflow = async (
   label: string,
   enabledAppNames: string[],
   category: string = 'cases',
-  actionName?: string
+  actionName?: string,
+  allowEmpty: boolean = false,
 ): Promise<void> => {
-  // For disable action, we still need to send the request even with no apps
-  if (enabledAppNames.length === 0 && actionName !== 'disable') return;
+  // For disable action, we still need to send the request even with no apps.
+  // Some automations (e.g. Assign & Escalate) are schedule-based and have no
+  // app dependencies — they pass `allowEmpty` so the workflow is still created.
+  if (enabledAppNames.length === 0 && actionName !== 'disable' && !allowEmpty) return;
   
   const appNamesStr = enabledAppNames.join(',');
   
@@ -710,8 +713,11 @@ export const AutomationConfig = ({
 
     const enabledAppNames = enabledTools.map(tool => tool.name);
     const labels = AUTOMATION_WORKFLOW_LABELS[optionId] || [];
+    // Schedule-based automations (Assign & Escalate) have no app dependencies,
+    // so the generator must be allowed to fire with an empty app list.
+    const allowEmpty = optionId === 'assign_escalate';
     labels.forEach(label => {
-      generateWorkflow(label, enabledAppNames, 'cases', actionName);
+      generateWorkflow(label, enabledAppNames, 'cases', actionName, allowEmpty);
     });
 
     // Clear pending overrides after firing
