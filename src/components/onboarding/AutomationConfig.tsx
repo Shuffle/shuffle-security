@@ -980,6 +980,8 @@ export const AutomationConfig = ({
             const isDisabled = option.disabled || (option.id === 'notifications' && !hasNotificationSources);
             const allTools = getAllToolsForOption(option);
             const hasExpandableTools = allTools.length > 0 && !isDisabled;
+            const isAssignEscalate = option.id === 'assign_escalate' && !isDisabled;
+            const isExpandable = hasExpandableTools || (hasConfig && state.enabled) || isAssignEscalate;
 
             return (
               <motion.div key={option.id} variants={itemVariants}>
