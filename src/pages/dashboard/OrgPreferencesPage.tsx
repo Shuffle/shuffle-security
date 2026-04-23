@@ -12,13 +12,14 @@ import {
   useEntityPreference,
   useShowAutomation,
   setShowAutomation,
-  SIDEBAR_TAB_OPTIONS,
   useSidebarTabs,
   setSidebarTabVisibility,
   SidebarTabKey,
 } from '@/hooks/useEntityLabel';
+import { SIDEBAR_NAV } from '@/config/sidebarNav';
 import { TaskStatusesEditor } from '@/components/settings/TaskStatusesEditor';
 import { SlaEditor } from '@/components/settings/SlaEditor';
+import { useAuth } from '@/context/AuthContext';
 
 const TerminologySelector = () => {
   const { value } = useEntityPreference();
@@ -45,61 +46,31 @@ const TerminologySelector = () => {
   );
 };
 
+/**
+ * Renders one toggle row per item in `SIDEBAR_NAV` — the same config the
+ * actual left sidebar consumes. Adding/removing items there automatically
+ * shows up here (no path/label lookup tables to maintain).
+ *
+ * Toggling a parent off cascades and disables its children so the
+ * persisted state stays consistent with what the user sees in the sidebar.
+ */
 const SidebarTabsSelector = () => {
   const tabs = useSidebarTabs();
+  const { userInfo } = useAuth();
+  const isSupport = userInfo?.support === true;
 
-  const handleToggle = (key: SidebarTabKey) => {
-    const updated = { ...tabs, [key]: !tabs[key] };
-    // If disabling a parent, disable all its children too
-    if (!updated[key]) {
-      SIDEBAR_TAB_OPTIONS.forEach(opt => {
-        if (opt.parent === key) {
-          updated[opt.key] = false;
-        }
-      });
+  const handleToggle = (key: SidebarTabKey, currentValue: boolean) => {
+    const next = { ...tabs, [key]: !currentValue };
+    // If a parent group is being turned off, also turn off its children so
+    // they don't reappear later if the parent is re-enabled.
+    if (next[key] === false) {
+      const parent = SIDEBAR_NAV.find((item) => item.tabKey === key);
+      if (parent?.children) {
+        for (const c of parent.children) next[c.tabKey] = false;
+      }
     }
-    setSidebarTabVisibility(updated);
+    setSidebarTabVisibility(next);
   };
-
-  // Group items: top-level parents (null parent or 'incidents') with their children
-  const sections = [
-    {
-      title: 'Dashboard',
-      alwaysVisible: false,
-      key: 'dashboard' as SidebarTabKey,
-      children: [],
-    },
-    {
-      title: 'Incidents',
-      alwaysVisible: true,
-      key: null as SidebarTabKey | null,
-      children: SIDEBAR_TAB_OPTIONS.filter(o => o.parent === 'incidents'),
-    },
-    {
-      title: 'Detection',
-      alwaysVisible: false,
-      key: 'detection' as SidebarTabKey,
-      children: SIDEBAR_TAB_OPTIONS.filter(o => o.parent === 'detection'),
-    },
-    {
-      title: 'Automation',
-      alwaysVisible: false,
-      key: 'automation' as SidebarTabKey,
-      children: [],
-    },
-    {
-      title: 'Vulnerabilities',
-      alwaysVisible: false,
-      key: 'vulnerabilities' as SidebarTabKey,
-      children: [],
-    },
-    {
-      title: 'Documentation',
-      alwaysVisible: false,
-      key: 'documentation' as SidebarTabKey,
-      children: [],
-    },
-  ];
 
   const switchSx = {
     '& .MuiSwitch-switchBase.Mui-checked': {
@@ -112,11 +83,22 @@ const SidebarTabsSelector = () => {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, width: '100%' }}>
-      {sections.map((section) => {
-        const parentDisabled = section.key ? !tabs[section.key] : false;
+      {SIDEBAR_NAV.map((item) => {
+        // Hide support-only top-level items for non-support users so we don't
+        // expose toggles that would never affect the sidebar they see.
+        if (item.supportOnly && !isSupport) return null;
+
+        // For always-visible items (Incidents) the parent stays enabled but
+        // its children remain individually togglable.
+        const parentChecked = item.alwaysVisible ? true : tabs[item.tabKey] !== false;
+        const parentDisabled = !parentChecked;
+        // Visible children — drop support-only ones for non-support users.
+        const visibleChildren = (item.children ?? []).filter(
+          (c) => !c.supportOnly || isSupport,
+        );
 
         return (
-          <Box key={section.title}>
+          <Box key={item.tabKey}>
             {/* Parent row */}
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <Typography
@@ -126,52 +108,55 @@ const SidebarTabsSelector = () => {
                   color: parentDisabled ? 'hsl(var(--muted-foreground))' : 'hsl(var(--foreground))',
                 }}
               >
-                {section.title}
+                {item.label}
               </Typography>
-              {section.alwaysVisible ? (
+              {item.alwaysVisible ? (
                 <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontStyle: 'italic' }}>
                   Always visible
                 </Typography>
-              ) : section.key ? (
+              ) : (
                 <Switch
-                  checked={tabs[section.key]}
-                  onChange={() => handleToggle(section.key!)}
+                  checked={parentChecked}
+                  onChange={() => handleToggle(item.tabKey, parentChecked)}
                   size="small"
                   sx={switchSx}
                 />
-              ) : null}
+              )}
             </Box>
 
             {/* Children */}
-            {section.children.length > 0 && (
+            {visibleChildren.length > 0 && (
               <Box sx={{ ml: 2.5, mt: 0.5, display: 'flex', flexDirection: 'column', gap: 0 }}>
-                {section.children.map((child) => (
-                  <FormControlLabel
-                    key={child.key}
-                    disabled={parentDisabled}
-                    control={
-                      <Switch
-                        checked={!parentDisabled && tabs[child.key]}
-                        onChange={() => handleToggle(child.key)}
-                        size="small"
-                        disabled={parentDisabled}
-                        sx={switchSx}
-                      />
-                    }
-                    label={
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: parentDisabled ? 'hsl(var(--muted-foreground))' : 'hsl(var(--foreground))',
-                          opacity: parentDisabled ? 0.5 : 1,
-                        }}
-                      >
-                        {child.label}
-                      </Typography>
-                    }
-                    sx={{ ml: 0 }}
-                  />
-                ))}
+                {visibleChildren.map((child) => {
+                  const childChecked = !parentDisabled && tabs[child.tabKey] !== false;
+                  return (
+                    <FormControlLabel
+                      key={child.tabKey}
+                      disabled={parentDisabled}
+                      control={
+                        <Switch
+                          checked={childChecked}
+                          onChange={() => handleToggle(child.tabKey, childChecked)}
+                          size="small"
+                          disabled={parentDisabled}
+                          sx={switchSx}
+                        />
+                      }
+                      label={
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: parentDisabled ? 'hsl(var(--muted-foreground))' : 'hsl(var(--foreground))',
+                            opacity: parentDisabled ? 0.5 : 1,
+                          }}
+                        >
+                          {child.label}
+                        </Typography>
+                      }
+                      sx={{ ml: 0 }}
+                    />
+                  );
+                })}
               </Box>
             )}
           </Box>
@@ -256,29 +241,6 @@ const OrgPreferencesPage = () => {
           />
         </Paper>
 
-        {/* Sidebar Tabs */}
-        <Paper
-          sx={{
-            p: 2.5,
-            bgcolor: 'hsl(var(--card))',
-            border: '1px solid hsl(var(--border))',
-            borderRadius: 2,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 2,
-          }}
-        >
-          <Box>
-            <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-              Sidebar Navigation
-            </Typography>
-            <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-              Show or hide sections in the left sidebar. The main incidents tab is always visible.
-            </Typography>
-          </Box>
-          <SidebarTabsSelector />
-        </Paper>
-
         {/* Task Statuses (kanban lanes) */}
         <Paper
           sx={{
@@ -326,6 +288,35 @@ const OrgPreferencesPage = () => {
             </Typography>
           </Box>
           <SlaEditor />
+        </Paper>
+
+        {/*
+          Sidebar Navigation — kept as the LAST card on this page so users
+          always know where to find it. This card and the actual sidebar
+          read from the same SIDEBAR_NAV config, so toggling here is
+          guaranteed to match what the sidebar renders.
+        */}
+        <Paper
+          sx={{
+            p: 2.5,
+            bgcolor: 'hsl(var(--card))',
+            border: '1px solid hsl(var(--border))',
+            borderRadius: 2,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+          }}
+        >
+          <Box>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+              Sidebar Navigation
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+              Show or hide sections in the left sidebar. The Incidents tab is always visible.
+              These toggles map one-to-one to the items in the sidebar.
+            </Typography>
+          </Box>
+          <SidebarTabsSelector />
         </Paper>
       </Box>
     </Box>
