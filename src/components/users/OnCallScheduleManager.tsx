@@ -299,6 +299,11 @@ export const OnCallScheduleManager = ({ users, loading = false, compact = false 
   };
 
   // ── Auto-initialise rotation when no schedules exist yet ───────────────────
+  // Default policy on first setup:
+  //   • the current user is registered at every escalation level above Tier 1
+  //     (Tier 2, Tier 3, Manager) so all escalations route to them by default;
+  //   • other active users round-robin across Tier 1 / Tier 2 / Tier 3 to give
+  //     a sensible starting rotation that the admin can refine.
   useEffect(() => {
     if (loading || configLoading || users.length === 0 || config.autoInitialized) return;
     if (config.userSchedules.length > 0) return;
@@ -306,20 +311,71 @@ export const OnCallScheduleManager = ({ users, loading = false, compact = false 
     const activeUsers = users.filter(u => u.active !== false);
     if (activeUsers.length === 0) return;
 
-    const newSchedules: UserSchedule[] = activeUsers.map((user, index) => {
+    // Identify the current user from the cached getinfo payload so we can
+    // wire them in as the catch-all escalation target.
+    let currentUserId: string | null = null;
+    try {
+      const raw = localStorage.getItem('shuffle_user_info');
+      if (raw) currentUserId = JSON.parse(raw)?.id || null;
+    } catch { /* ignore */ }
+
+    const currentUser = currentUserId
+      ? activeUsers.find(u => u.id === currentUserId)
+      : undefined;
+
+    const newSchedules: UserSchedule[] = [];
+
+    // Always-on schedule used for the catch-all escalation entries so the
+    // current user is reachable 24/7 across every higher tier.
+    const alwaysOnEntry = (): ScheduleEntry => ({
+      id: generateId(),
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      startTime: '00:00',
+      endTime: '23:59',
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      daysOfWeek: [0, 1, 2, 3, 4, 5, 6],
+    });
+
+    if (currentUser) {
+      // Tier 1 stays a normal weekday window; Tier 2/3/Manager are 24/7
+      // catch-alls so escalations always reach the current user.
+      newSchedules.push({
+        userId: currentUser.id,
+        userName: currentUser.username,
+        userEmail: currentUser.username,
+        escalationLevel: 'tier1',
+        schedules: [createDefaultSchedule()],
+        enabled: true,
+      });
+      for (const level of ['tier2', 'tier3', 'manager'] as EscalationLevel[]) {
+        newSchedules.push({
+          userId: `${currentUser.id}::${level}`,
+          userName: currentUser.username,
+          userEmail: currentUser.username,
+          escalationLevel: level,
+          schedules: [alwaysOnEntry()],
+          enabled: true,
+        });
+      }
+    }
+
+    // Round-robin remaining users across Tier 1 / 2 / 3 so the rotation
+    // isn't a single-person setup.
+    const others = activeUsers.filter(u => u.id !== currentUser?.id);
+    others.forEach((user, index) => {
       let escalationLevel: EscalationLevel = 'tier1';
-      if (user.role === 'admin') escalationLevel = 'manager';
-      else if (index % 3 === 1) escalationLevel = 'tier2';
+      if (index % 3 === 1) escalationLevel = 'tier2';
       else if (index % 3 === 2) escalationLevel = 'tier3';
 
-      return {
+      newSchedules.push({
         userId: user.id,
         userName: user.username,
         userEmail: user.username,
         escalationLevel,
         schedules: [createDefaultSchedule()],
         enabled: true,
-      };
+      });
     });
 
     void saveConfig({
