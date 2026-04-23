@@ -141,7 +141,7 @@ export const TOUR_STEPS: TourStep[] = [
     },
     subGoals: [
       { id: 'incidents-list:present', label: 'The "Phishing email" incident must be present' },
-      { id: 'incidents-list:open', label: 'Click the "Phishing email reported by Diego Ruiz" row to open it' },
+      { id: 'incidents-list:open', label: 'Click the "Phishing email reported by Diego Ruiz" row to open it', targetSelector: '[data-tour="demo-incident-row"]' },
     ],
   },
   {
