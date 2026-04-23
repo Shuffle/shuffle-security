@@ -34,8 +34,7 @@ import FingerprintIcon from '@mui/icons-material/Fingerprint';
 import TuneIcon from '@mui/icons-material/Tune';
 import RssFeedIcon from '@mui/icons-material/RssFeed';
 import RadarIcon from '@mui/icons-material/Radar';
-import { Braces, Waypoints, Network, Activity, BookOpen, Sun, Moon, Monitor, LayoutDashboard, Shield, HardDrive, Radar, Users, MonitorCheck, Bug, Zap } from 'lucide-react';
-import AgentIcon from '@/components/agent/AgentIcon';
+import { Activity, Sun, Moon, Monitor, Shield, Radar, Users } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -44,13 +43,18 @@ import { SHUFFLE_AUTOMATION_URL } from '@/config/api';
 import { IntegrationStatus } from './IntegrationStatus';
 import { SidebarSearchDialog } from './SidebarSearchDialog';
 import AgentPermissionsDrawer from '@/components/agent/AgentPermissionsDrawer';
-import { useEntityPreference, useSidebarTabs, SidebarTabKey } from '@/hooks/useEntityLabel';
+import { useEntityPreference, useSidebarTabs } from '@/hooks/useEntityLabel';
+import { SIDEBAR_NAV, SidebarItemSpec, SidebarChildSpec } from '@/config/sidebarNav';
 import { getRegionFlag } from '@/lib/regionFlag';
 
 const drawerWidth = 260;
 const collapsedWidth = 64;
 const hoverCollapseDelay = 150;
 
+// Render-time nav node — derived from the shared SIDEBAR_NAV config plus
+// the user's entity-label preference (Incidents → Alerts/Cases/…). The
+// `__divider__` sentinel is inserted by `buildRuntimeNav` so the existing
+// rendering loop can keep its current grouping visuals.
 interface NavChild {
   label: string;
   path: string;
@@ -67,49 +71,39 @@ interface NavItem {
   supportOnly?: boolean;
 }
 
-const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: boolean): NavItem[] => [
-  { label: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/dashboard' },
-  { 
-    label: entityLabel, 
-    icon: <WarningAmberIcon />,
-    path: entityPath,
-    children: [
-      { label: 'Templates', path: '/templates', icon: <DescriptionIcon fontSize="small" /> },
-      { label: 'Custom Fields', path: '/incidents/custom-fields', icon: <TuneIcon fontSize="small" /> },
-    ],
-  },
-  {
-    label: 'Host Monitors',
-    icon: <MonitorCheck size={20} />,
-    path: '/monitors',
-    children: [
-      { label: 'Response', path: '/incidents/response-actions', icon: <Zap size={16} />, supportOnly: true },
-    ],
-  },
-  {
-    label: 'Vulnerabilities',
-    icon: <Bug size={20} />,
-    path: '/vulnerabilities',
-    children: [
-      { label: 'Assets', path: '/assets', icon: <HardDrive size={16} />, supportOnly: true },
-    ],
-  },
-  { 
-    label: 'Detection', 
-    icon: <RadarIcon />,
-    path: '/detection',
-    children: [
-      { label: 'Rules', path: '/detection/sigma', icon: <Braces size={16} /> },
-      { label: 'Pipelines', path: '/detection/pipelines', icon: <Network size={16} /> },
-      { label: 'ATT&CK', path: '/detection/mitre', icon: <Waypoints size={16} />, supportOnly: true },
-      { label: 'Threat Feeds', path: '/incidents/threat-feeds', icon: <RssFeedIcon fontSize="small" /> },
-      { label: 'IOC Types', path: '/incidents/ioc-types', icon: <FingerprintIcon fontSize="small" /> },
-    ],
-  },
-  { label: '__divider__', icon: <></> },
-  { label: 'Agents', icon: <AgentIcon size={20} />, path: '/agent' },
-  { label: 'Documentation', icon: <BookOpen size={20} />, path: '/docs' },
-];
+const childToNav = (c: SidebarChildSpec): NavChild => ({
+  label: c.label,
+  path: c.path,
+  icon: c.icon,
+  supportOnly: c.supportOnly,
+});
+
+const itemToNav = (item: SidebarItemSpec, entityLabel: string, entityPath: string): NavItem => {
+  const isIncidents = item.tabKey === 'incidents';
+  return {
+    label: isIncidents ? entityLabel : item.label,
+    icon: item.icon,
+    path: isIncidents ? entityPath : item.path,
+    supportOnly: item.supportOnly,
+    children: item.children?.map(childToNav),
+  };
+};
+
+/** Build the runtime nav array from the shared config. We insert a single
+ *  visual divider between the "Detection" group and the standalone trailing
+ *  items (Agents / Documentation) to preserve the previous grouping. */
+const buildNavItems = (entityLabel: string, entityPath: string): NavItem[] => {
+  const items: NavItem[] = [];
+  for (let i = 0; i < SIDEBAR_NAV.length; i++) {
+    const spec = SIDEBAR_NAV[i];
+    items.push(itemToNav(spec, entityLabel, entityPath));
+    // Insert divider once, immediately after the Detection group.
+    if (spec.tabKey === 'detection') {
+      items.push({ label: '__divider__', icon: <></> });
+    }
+  }
+  return items;
+};
 
 interface AppSidebarProps {
   collapsed: boolean;
