@@ -133,7 +133,20 @@ export const CorrelationRow = ({ correlation, currentIncidentId, className, comp
     >
       {/* Header */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, mb: categories.length > 0 ? (compact ? 1 : 1.25) : 0 }}>
-        <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: dotColor, flexShrink: 0 }} />
+        <Tooltip
+          arrow
+          title={
+            iocMatch
+              ? 'Known IOC / threat-feed match — investigate immediately.'
+              : isHighMatch
+                ? `High signal: ${effectiveAmount} matches across other incidents and sources.`
+                : isMediumMatch
+                  ? `Medium signal: ${effectiveAmount} matches across other incidents and sources.`
+                  : `Low signal: ${effectiveAmount} match${effectiveAmount === 1 ? '' : 'es'} — this indicator is not widespread.`
+          }
+        >
+          <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: dotColor, flexShrink: 0, cursor: 'help' }} />
+        </Tooltip>
         <Typography
           sx={{
             fontFamily: 'monospace',
