@@ -303,7 +303,14 @@ export function useEntityText() {
     (text: string) => applyEntityTerminology(text, singular, plural),
     [singular, plural],
   );
+/** Non-React lookup of the current terminology — for use in services,
+ *  contexts, and other places that cannot call hooks. Reads the cached
+ *  preference (which is hydrated from the datastore on app boot). */
+export function getEntityTerminology(): { singular: string; plural: string } {
+  const pref = ENTITY_OPTIONS.find(o => o.value === getSnapshot()) || ENTITY_OPTIONS[0];
+  return { singular: pref.singular, plural: pref.plural };
 }
+
 
 
 /** Save sidebar tab visibility */
