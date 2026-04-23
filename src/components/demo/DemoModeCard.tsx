@@ -12,6 +12,8 @@ import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { useDemo } from '@/context/DemoContext';
 import { useWorkflows } from '@/hooks/useWorkflows';
+import { useEntityPreference } from '@/hooks/useEntityLabel';
+import { applyEntityTerminology } from '@/lib/demoTerminology';
 import { findIngestTicketsWorkflow, isWorkflowScheduleStopped } from '@/lib/ingestionDetection';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 
@@ -74,6 +76,10 @@ export const DemoModeCard = () => {
   const { data: workflows } = useWorkflows();
   const { data: monitorCount = 0 } = useMonitorCount();
   const { data: incidentCount = 0 } = useIncidentCount();
+  const { singular: entitySingular, plural: entityPlural } = useEntityPreference();
+  const t = (s: string) => applyEntityTerminology(s, entitySingular, entityPlural);
+  const entityPluralLower = entityPlural.toLowerCase();
+  const entitySingularLower = entitySingular.toLowerCase();
 
   // Allow demo mode when the account is still light on real data:
   // ≤ 10 incidents AND ≤ 1 host monitor. Ingest workflow is informational only.
@@ -84,9 +90,9 @@ export const DemoModeCard = () => {
   const setupExists = tooManyIncidents || tooManyMonitors;
   const disableStart = !active && setupExists;
   const disableReason = tooManyIncidents && tooManyMonitors
-    ? `You already have ${incidentCount} incidents and ${monitorCount} host monitors — demo mode is for lightly-used accounts.`
+    ? `You already have ${incidentCount} ${entityPluralLower} and ${monitorCount} host monitors — demo mode is for lightly-used accounts.`
     : tooManyIncidents
-      ? `You already have ${incidentCount} incidents — demo mode is for accounts with fewer than ${INCIDENT_THRESHOLD}.`
+      ? `You already have ${incidentCount} ${entityPluralLower} — demo mode is for accounts with fewer than ${INCIDENT_THRESHOLD}.`
       : `You already have ${monitorCount} host monitors — demo mode is for accounts with ${MONITOR_THRESHOLD} or fewer.`;
 
   return (
@@ -129,7 +135,7 @@ export const DemoModeCard = () => {
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
             <Typography sx={{ fontSize: '0.95rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-              {active ? 'Demo mode is active' : 'See the platform respond to a real incident'}
+              {active ? 'Demo mode is active' : `See the platform respond to a real ${entitySingularLower}`}
             </Typography>
             {active && (
               <Chip
@@ -148,10 +154,10 @@ export const DemoModeCard = () => {
           </Box>
           <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))', mt: 0.5, lineHeight: 1.5 }}>
             {active
-              ? `${stats.incidents} incidents, ${stats.assets} assets, ${stats.users} users loaded. Real IOCs, live enrichment and AI agents you can interact with — only the incident itself is seeded.`
+              ? `${stats.incidents} ${entityPluralLower}, ${stats.assets} assets, ${stats.users} users loaded. Real IOCs, live enrichment and AI agents you can interact with — only the ${entitySingularLower} itself is seeded.`
               : disableStart
                 ? disableReason
-                : 'We seed one realistic incident, then everything else is real: live threat-feed IOCs, real enrichments and AI agents you can actually approve or question. One-click cleanup when you are done.'}
+                : `We seed one realistic ${entitySingularLower}, then everything else is real: live threat-feed IOCs, real enrichments and AI agents you can actually approve or question. One-click cleanup when you are done.`}
           </Typography>
         </Box>
 
