@@ -3780,6 +3780,7 @@ const IncidentDetailPage = () => {
       return (
         <Box
           key={actItem.id}
+          id={actItem.id ? `activity-item-${actItem.id}` : undefined}
           className={isActHighlighted ? 'incident-new-flash' : undefined}
           sx={{
             display: 'flex',
