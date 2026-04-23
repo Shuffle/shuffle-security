@@ -31,6 +31,7 @@ import { useDatastore } from '@/hooks/useDatastore';
 import { useAuth } from '@/context/AuthContext';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 import { resyncState } from '@/lib/resyncState';
+import { useEntityText } from '@/hooks/useEntityLabel';
 import {
   ResolveIncidentDialog,
   ResolutionData,
@@ -93,6 +94,7 @@ export const IncidentActionsMenu = ({
 }: IncidentActionsMenuProps) => {
   const navigate = useNavigate();
   const { userInfo } = useAuth();
+  const t = useEntityText();
   const currentUsername = userInfo?.username || '';
 
   const crossOrgHeaders: Record<string, string> = crossOrgId ? { 'Org-Id': crossOrgId } : {};
@@ -361,7 +363,7 @@ export const IncidentActionsMenu = ({
           ),
         );
       }
-      toast.success('Incident resolved');
+      toast.success(t('Incident resolved'));
       setShowResolveDialog(false);
       if (onAfterResolve) {
         onAfterResolve();
@@ -369,7 +371,7 @@ export const IncidentActionsMenu = ({
         navigate('/incidents');
       }
     } catch {
-      toast.error('Failed to resolve incident');
+      toast.error(t('Failed to resolve incident'));
     } finally {
       setIsSaving(false);
     }
@@ -522,10 +524,10 @@ export const IncidentActionsMenu = ({
       >
         <DialogTitle sx={{ pb: 1 }}>
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            Share Incident
+            {t('Share Incident')}
           </Typography>
           <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-            Anyone with this link can view the incident without logging in.
+            {t('Anyone with this link can view the incident without logging in.')}
           </Typography>
         </DialogTitle>
         <DialogContent>
@@ -621,7 +623,7 @@ export const IncidentActionsMenu = ({
           sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1 }}
         >
           <Typography variant="h6" sx={{ fontSize: '1rem' }}>
-            Forward Incident
+            {t('Forward Incident')}
           </Typography>
           <IconButton size="small" onClick={() => setShowForwardDialog(false)}>
             <CloseIcon fontSize="small" />
@@ -629,7 +631,7 @@ export const IncidentActionsMenu = ({
         </DialogTitle>
         <DialogContent sx={{ pt: 1 }}>
           <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-            Choose a tool to forward this incident to.
+            {t('Choose a tool to forward this incident to.')}
           </Typography>
           {forwardingAppsLoading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
