@@ -546,6 +546,16 @@ export const forceRecreateDemoIncidents = async (): Promise<number> => {
  * Returns the number of incidents written (0 or 1).
  */
 export const forceCreateSingleDemoIncident = async (): Promise<number> => {
+  const key = await forceCreateSingleDemoIncidentReturningKey();
+  return key ? 1 : 0;
+};
+
+/**
+ * Same as `forceCreateSingleDemoIncident` but returns the freshly-written
+ * datastore key so callers can navigate straight to it (used by
+ * IncidentDetailPage's demo-aware "not found" recovery).
+ */
+export const forceCreateSingleDemoIncidentReturningKey = async (): Promise<string | null> => {
   // Wipe any prior focus incident so this stays a single, fresh item.
   try {
     const idx = readIndex();
@@ -568,7 +578,7 @@ export const forceCreateSingleDemoIncident = async (): Promise<number> => {
   broadcastRefresh(DATASTORE_CATEGORIES.INCIDENTS);
   // The focus phishing incident lands "raw" — Shuffle will dynamically add
   // observables in the background once it analyses the incident.
-  return 1;
+  return item.key;
 };
 
 /**
