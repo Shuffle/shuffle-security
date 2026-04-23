@@ -3273,8 +3273,8 @@ const IncidentDetailPage = () => {
           kind: 'correlation-found',
           timestamp: correlationsDiscoveredAt,
           id: `step-corr-incident`,
-          label: 'Correlations found',
-          detail: `${correlations.length} shared attribute${correlations.length === 1 ? '' : 's'} across other incidents`,
+          label: `${correlations.length} Correlation${correlations.length === 1 ? '' : 's'}`,
+          detail: `shared attribute${correlations.length === 1 ? '' : 's'} across other incidents`,
           count: correlations.length,
         });
       }
@@ -3690,6 +3690,7 @@ const IncidentDetailPage = () => {
             sx={{
               display: 'flex',
               alignItems: 'center',
+              flexWrap: 'nowrap',
               gap: 1,
               px: 1.25,
               py: 0.5,
@@ -3697,7 +3698,9 @@ const IncidentDetailPage = () => {
               borderRadius: 999,
               bgcolor: pillBg,
               border: `1px solid ${pillBorder}`,
-              maxWidth: 'fit-content',
+              maxWidth: '100%',
+              minWidth: 0,
+              overflow: 'hidden',
               cursor: isClickable ? 'pointer' : 'default',
               transition: 'background-color 0.15s ease, border-color 0.15s ease',
               ...(isClickable && {
@@ -3708,10 +3711,10 @@ const IncidentDetailPage = () => {
               }),
             }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center', color: pillColor }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', color: pillColor, flexShrink: 0 }}>
               {isIocPill ? <WarningAmberIcon sx={{ fontSize: 12 }} /> : cfg.icon}
             </Box>
-            <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: pillColor }}>
+            <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: pillColor, whiteSpace: 'nowrap', flexShrink: 0 }}>
               {item.label}
             </Typography>
             {isIocPill && (
@@ -3761,7 +3764,8 @@ const IncidentDetailPage = () => {
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
-                    width: 280,
+                    minWidth: 0,
+                    flex: '1 1 auto',
                   }}
                   title={item.obsValue}
                 >
@@ -3776,7 +3780,8 @@ const IncidentDetailPage = () => {
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
-                  maxWidth: 320,
+                  minWidth: 0,
+                  flex: '1 1 auto',
                 }}
                 title={item.detail}
               >
@@ -3822,7 +3827,7 @@ const IncidentDetailPage = () => {
                 </Typography>
               </Tooltip>
             )}
-            <Typography sx={{ fontSize: '0.65rem', color: 'text.disabled', ml: 'auto', pl: 1 }}>
+            <Typography sx={{ fontSize: '0.65rem', color: 'text.disabled', ml: 'auto', pl: 1, whiteSpace: 'nowrap', flexShrink: 0 }}>
               {item.timestamp ? formatRelativeTime(item.timestamp) : ''}
             </Typography>
           </Box>
