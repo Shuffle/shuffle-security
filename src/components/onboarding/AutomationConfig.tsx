@@ -160,6 +160,14 @@ const baseEnrichmentOptions: (Omit<EnrichmentOption, 'connectedApps'> & { isDyna
     icon: <AssignmentIndIcon />,
     color: '#6366f1',
     category: 'response',
+  },
+  {
+    id: 'vulnerability_comparison',
+    name: 'Vulnerability Automation',
+    description: 'Runs the Vulnerability Comparison workflow in the background to compare scanner results across runs and surface new findings. Automated remediation comes later.',
+    icon: <BugReportIcon />,
+    color: '#f97316',
+    category: 'response',
     disabled: true,
   },
   {
