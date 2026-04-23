@@ -1832,7 +1832,7 @@ const IncidentDetailPage = () => {
         setObsCorrelations(prev => ({ ...prev, [obsKey]: { loading: false, data: [] } }));
       }
     });
-  }, [activeTab, loading, editedObservables, enrichments, id]);
+  }, [loading, editedObservables, enrichments, id]);
 
   // Re-run correlation lookup for a single observable on demand. Used by the
   // small refresh button next to each observable's "Correlations" header so
