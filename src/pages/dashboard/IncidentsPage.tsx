@@ -1650,6 +1650,39 @@ const IncidentsPage = () => {
                 <RefreshIcon fontSize="small" sx={isRefreshing ? { animation: 'spin 1s linear infinite', '@keyframes spin': { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } } } : undefined} />
               </IconButton>
             </Tooltip>
+            {showAutomation && (
+              <Tooltip title={(() => {
+                const workflowAuto = categoryAutomations?.find(a => a.type === 'workflow' && a.enabled);
+                const wfId = workflowAuto?.options?.find(o => o.key === 'workflow_id')?.value?.split(',')[0]?.trim();
+                return wfId ? "Click to open automation workflow" : "Automation for Incidents";
+              })()}>
+                <IconButton
+                  data-tour="incidents-automation-button"
+                  onClick={() => {
+                    const workflowAuto = categoryAutomations?.find(a => a.type === 'workflow' && a.enabled);
+                    const wfId = workflowAuto?.options?.find(o => o.key === 'workflow_id')?.value?.split(',')[0]?.trim();
+                    if (wfId) {
+                      window.open(`https://shuffler.io/workflows/${wfId}`, '_blank');
+                    } else {
+                      trackPredefinedEvent(GA_EVENTS.INCIDENT_AUTOMATION_CHANGE, 'open_dialog');
+                      setAutomationsDialogOpen(true);
+                    }
+                  }}
+                  sx={{
+                    width: 36, height: 36,
+                    color: categoryAutomations?.some(a => a.enabled) ? '#4ade80' : 'text.secondary',
+                    border: '1px solid',
+                    borderColor: categoryAutomations?.some(a => a.enabled) ? 'success.main' : 'divider',
+                    borderRadius: 1,
+                    '&:hover': {
+                      borderColor: categoryAutomations?.some(a => a.enabled) ? 'success.main' : 'text.secondary',
+                    },
+                  }}
+                >
+                  <RocketLaunchIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
             <Tooltip title={`Create ${entitySingular}`}>
               <IconButton 
                 onClick={() => setCreateDialogOpen(true)}
