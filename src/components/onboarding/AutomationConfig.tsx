@@ -33,6 +33,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import LinkIcon from '@mui/icons-material/Link';
 import RestoreIcon from '@mui/icons-material/Restore';
+import BugReportIcon from '@mui/icons-material/BugReport';
+import { AssignmentScheduleConfig } from '@/components/settings/AssignmentScheduleConfig';
 import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
 import {
   EMAIL_APP_PATTERNS, CASES_PATTERNS, EDR_PATTERNS, SIEM_PATTERNS,
