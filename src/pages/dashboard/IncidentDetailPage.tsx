@@ -570,9 +570,28 @@ const IncidentDetailPage = () => {
   const [newLabelInput, setNewLabelInput] = useState('');
   
   // Activity/comments
-  const [newComment, setNewComment] = useState('');
+  // Draft comments are persisted to localStorage per-incident so an accidental
+  // refresh doesn't lose what the user was typing. Key is scoped by incident id.
+  const commentDraftKey = rawId ? `incident-comment-draft::${rawId}` : '';
+  const [newComment, setNewComment] = useState<string>(() => {
+    if (typeof window === 'undefined' || !commentDraftKey) return '';
+    try { return window.localStorage.getItem(commentDraftKey) || ''; } catch { return ''; }
+  });
   const [commentAttachments, setCommentAttachments] = useState<FileAttachment[]>([]);
   const commentFileInputRef = useRef<HTMLInputElement>(null);
+
+  // Persist the draft on every change. Empty string clears the saved draft so
+  // we don't leak stale content between sessions.
+  useEffect(() => {
+    if (!commentDraftKey || typeof window === 'undefined') return;
+    try {
+      if (newComment) {
+        window.localStorage.setItem(commentDraftKey, newComment);
+      } else {
+        window.localStorage.removeItem(commentDraftKey);
+      }
+    } catch { /* ignore quota / privacy mode errors */ }
+  }, [commentDraftKey, newComment]);
   // When the user clicks "Reply" on a timeline item we capture enough context
   // here to render the chip above the input AND attach the parent reference
   // to the new comment when it's submitted. Cleared after submit / cancel.
@@ -2856,7 +2875,8 @@ const IncidentDetailPage = () => {
                 size="small"
                 fullWidth
                 multiline
-                rows={2}
+                minRows={2}
+                maxRows={15}
                 placeholder={replyingTo ? `Reply to ${replyingTo.label}…` : 'Add a comment... (Enter to send, Shift+Enter for new line)'}
                 sx={{
                   '& .MuiOutlinedInput-root': {
