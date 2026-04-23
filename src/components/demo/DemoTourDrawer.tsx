@@ -638,6 +638,10 @@ export const DemoTourDrawer = () => {
                             id: g.id,
                             label: g.label,
                             optional: !!g.optional,
+                            // Per-sub-goal selector falls back to the
+                            // step-level requirement so hover always has
+                            // *something* to point at.
+                            selector: g.targetSelector || requirement?.targetSelector || null,
                             // Special-cases for live-state sub-goals — these
                             // ignore the persisted completedSteps map.
                             done: g.id === 'incidents-list:present'
@@ -651,6 +655,7 @@ export const DemoTourDrawer = () => {
                               id: current.id,
                               label: requirement.label,
                               optional: false,
+                              selector: requirement.targetSelector,
                               done: isIncidentsListStep
                                 ? hasDemoIncidents
                                 : !!completedSteps[current.id],
