@@ -75,6 +75,8 @@ interface CorrelationRowProps {
   className?: string;
   /** Compact density variant for inline rendering inside observable rows. */
   compact?: boolean;
+  /** When set, the matching incident chip in this row gets a pulse highlight (used when arriving via ?focus=…). */
+  focusedIncidentKey?: string;
 }
 
 /**
@@ -83,7 +85,7 @@ interface CorrelationRowProps {
  * the Correlations page: groups refs by datastore category, dims the current
  * incident, and renders incident chips as links.
  */
-export const CorrelationRow = ({ correlation, currentIncidentId, className, compact = false }: CorrelationRowProps) => {
+export const CorrelationRow = ({ correlation, currentIncidentId, className, compact = false, focusedIncidentKey }: CorrelationRowProps) => {
   // Group refs by category, excluding the current incident itself.
   const refsByCategory: Record<string, string[]> = {};
   correlation.ref.forEach((r) => {
@@ -197,37 +199,53 @@ export const CorrelationRow = ({ correlation, currentIncidentId, className, comp
                 {formatCategory(category)}
               </Typography>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                {keys.slice(0, 5).map((key) => (
-                  <Chip
-                    key={key}
-                    label={key}
-                    size="small"
-                    variant="outlined"
-                    component={isIncidentCategory ? Link : 'div'}
-                    to={isIncidentCategory ? `/incidents/${key}` : undefined}
-                    clickable={isIncidentCategory}
-                    onClick={isIncidentCategory ? (e: React.MouseEvent) => e.stopPropagation() : undefined}
-                    sx={{
-                      height: compact ? 20 : 22,
-                      fontSize: compact ? '0.65rem' : '0.7rem',
-                      fontFamily: 'monospace',
-                      bgcolor: isIoc ? 'hsl(var(--destructive) / 0.08)' : 'transparent',
-                      borderColor: isIoc
-                        ? 'hsl(var(--destructive) / 0.5)'
-                        : 'hsl(var(--border))',
-                      color: isIoc
-                        ? 'hsl(var(--destructive))'
-                        : isIncidentCategory ? 'hsl(var(--primary))' : 'text.secondary',
-                      cursor: isIncidentCategory ? 'pointer' : 'default',
-                      '&:hover': isIncidentCategory
-                        ? {
-                            bgcolor: 'hsl(var(--primary) / 0.06)',
-                            borderColor: 'hsl(var(--primary) / 0.5)',
-                          }
-                        : {},
-                    }}
-                  />
-                ))}
+                {keys.slice(0, 5).map((key) => {
+                  // For incident pivots, jump into the target incident's Correlations tab
+                  // and pass back the current incident as `focus` so the matching chip
+                  // there pulses — making the bidirectional link obvious.
+                  const incidentTo = isIncidentCategory
+                    ? `/incidents/${key}?tab=correlations&correlation=${encodeURIComponent(correlation.key)}${currentIncidentId ? `&focus=${encodeURIComponent(currentIncidentId)}` : ''}`
+                    : undefined;
+                  const isFocused = isIncidentCategory && focusedIncidentKey && key.toLowerCase() === focusedIncidentKey.toLowerCase();
+                  return (
+                    <Chip
+                      key={key}
+                      label={key}
+                      size="small"
+                      variant="outlined"
+                      component={isIncidentCategory ? Link : 'div'}
+                      to={incidentTo}
+                      clickable={isIncidentCategory}
+                      onClick={isIncidentCategory ? (e: React.MouseEvent) => e.stopPropagation() : undefined}
+                      className={isFocused ? 'incident-new-flash' : undefined}
+                      sx={{
+                        height: compact ? 20 : 22,
+                        fontSize: compact ? '0.65rem' : '0.7rem',
+                        fontFamily: 'monospace',
+                        bgcolor: isFocused
+                          ? 'hsl(var(--primary) / 0.18)'
+                          : isIoc ? 'hsl(var(--destructive) / 0.08)' : 'transparent',
+                        borderColor: isFocused
+                          ? 'hsl(var(--primary))'
+                          : isIoc
+                            ? 'hsl(var(--destructive) / 0.5)'
+                            : 'hsl(var(--border))',
+                        borderWidth: isFocused ? 2 : 1,
+                        color: isIoc
+                          ? 'hsl(var(--destructive))'
+                          : isIncidentCategory ? 'hsl(var(--primary))' : 'text.secondary',
+                        fontWeight: isFocused ? 700 : undefined,
+                        cursor: isIncidentCategory ? 'pointer' : 'default',
+                        '&:hover': isIncidentCategory
+                          ? {
+                              bgcolor: 'hsl(var(--primary) / 0.06)',
+                              borderColor: 'hsl(var(--primary) / 0.5)',
+                            }
+                          : {},
+                      }}
+                    />
+                  );
+                })}
                 {keys.length > 5 && (
                   <Tooltip title={keys.slice(5).join(', ')} arrow>
                     <Chip

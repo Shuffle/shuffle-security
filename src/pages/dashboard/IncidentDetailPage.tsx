@@ -1581,6 +1581,24 @@ const IncidentDetailPage = () => {
     fetchCorrelations();
   }, [fetchCorrelations, loading]);
 
+  // ── Pivot landing: when arriving via ?correlation=…&focus=… (clicked a
+  // chip on another incident's Correlations tab), flash the matching row and
+  // scroll to it once the correlations have loaded. The `focus` param is
+  // surfaced separately so the originating-incident chip pulses inside the
+  // row, making the bidirectional link obvious.
+  const focusedReferrerIncidentKey = searchParams.get('focus') || undefined;
+  useEffect(() => {
+    const targetCorrKey = searchParams.get('correlation');
+    if (!targetCorrKey) return;
+    if (correlationsLoading) return;
+    if (!correlations.some((c) => c.key === targetCorrKey)) return;
+    focusCorrelationFromTimeline(targetCorrKey);
+    // Run only when the resolved correlations array changes, not on every
+    // searchParams tick.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [correlations, correlationsLoading]);
+
+
 
   // Tick periodically while the incident is "fresh" (created within the last
   // 2 minutes) so the observables area can show a loading state until the
@@ -6251,6 +6269,7 @@ const IncidentDetailPage = () => {
                     key={corr.key || idx}
                     correlation={corr}
                     currentIncidentId={id}
+                    focusedIncidentKey={focusedReferrerIncidentKey}
                     className={flashedCorrelationKey === corr.key ? 'incident-new-flash' : undefined}
                   />
                 ))}
