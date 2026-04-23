@@ -5802,11 +5802,6 @@ const IncidentDetailPage = () => {
                         <Typography variant="body2" sx={{ flex: 1, fontFamily: 'monospace', fontSize: '0.8rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
                           {obs.value}
                         </Typography>
-                        {firstSeen && (
-                          <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.55rem', whiteSpace: 'nowrap', lineHeight: 1.3 }}>
-                            {formatObsTime(firstSeen)}
-                          </Typography>
-                        )}
                         {/* Correlation badge */}
                         {(() => {
                           const obsKey = `${obs.type}::${obs.value}`;
@@ -5851,6 +5846,11 @@ const IncidentDetailPage = () => {
                             </Tooltip>
                           );
                         })()}
+                        {firstSeen && (
+                          <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.55rem', whiteSpace: 'nowrap', lineHeight: 1.3 }}>
+                            {formatObsTime(firstSeen)}
+                          </Typography>
+                        )}
                         <Tooltip
                           title={`"${actionName}" is not enabled for your organization yet — we will be turning this on in a future update.`}
                           arrow
