@@ -1,6 +1,7 @@
 import { useLocation } from 'react-router-dom';
 import { useMemo, useEffect, useCallback, useSyncExternalStore } from 'react';
 import { getDatastoreItem, setDatastoreItem, DATASTORE_CATEGORIES } from '@/services/datastore';
+import { SIDEBAR_NAV, ALL_SIDEBAR_KEYS, SidebarItemKey } from '@/config/sidebarNav';
 
 export const ENTITY_OPTIONS = [
   { value: 'incidents', singular: 'Incident', plural: 'Incidents', path: '/incidents' },
@@ -42,42 +43,37 @@ export const DEFAULT_TASK_STATUSES: TaskStatusOption[] = [
   { key: 'done', label: 'Done', color: '#22c55e' },
 ];
 
-// Sidebar tab keys that can be toggled (Incidents always visible)
-export const SIDEBAR_TAB_OPTIONS = [
-  // Incidents children
-  { key: 'threat_feeds', label: 'Threat Feeds', parent: 'incidents' },
-  { key: 'ioc_types', label: 'IOC Types', parent: 'incidents' },
-  { key: 'templates', label: 'Templates', parent: 'incidents' },
-  { key: 'custom_fields', label: 'Custom Fields', parent: 'incidents' },
-  // Detection (top-level toggle + children)
-  { key: 'detection', label: 'Detection', parent: null },
-  { key: 'detection_rules', label: 'Rules', parent: 'detection' },
-  { key: 'detection_pipelines', label: 'Pipelines', parent: 'detection' },
-  { key: 'detection_mitre', label: 'ATT&CK', parent: 'detection' },
-  // Standalone top-level items
-  { key: 'dashboard', label: 'Dashboard', parent: null },
-  { key: 'automation', label: 'Automation', parent: null },
-  { key: 'vulnerabilities', label: 'Vulnerabilities', parent: null },
-  { key: 'documentation', label: 'Documentation', parent: null },
-] as const;
+// ---------------------------------------------------------------------------
+// Sidebar tab visibility
+// ---------------------------------------------------------------------------
+// Both the sidebar and the /preferences toggles are driven by the SAME
+// declarative tree in `src/config/sidebarNav.tsx`. The persisted shape here
+// is just `{ [SidebarItemKey]: boolean }` — adding a new key in the nav
+// config automatically gets a default-true entry below, so newly-added
+// items show up in both places without any data migration.
+//
+// `SidebarTabKey` is re-exported as the original alias so existing call
+// sites (AppSidebar, etc.) keep compiling, but it now points at the shared
+// SidebarItemKey union.
+export type SidebarTabKey = SidebarItemKey;
 
-export type SidebarTabKey = (typeof SIDEBAR_TAB_OPTIONS)[number]['key'];
+/** Legacy export kept so downstream code can still import the option list.
+ *  Synthesised from SIDEBAR_NAV with `parent` populated, in tree order. */
+export const SIDEBAR_TAB_OPTIONS: ReadonlyArray<{
+  key: SidebarTabKey;
+  label: string;
+  parent: SidebarTabKey | null;
+}> = SIDEBAR_NAV.flatMap((item) => [
+  { key: item.tabKey, label: item.label, parent: null as SidebarTabKey | null },
+  ...(item.children?.map((c) => ({ key: c.tabKey, label: c.label, parent: item.tabKey })) ?? []),
+]);
 
-// All tabs visible by default
-const DEFAULT_SIDEBAR_TABS: Record<SidebarTabKey, boolean> = {
-  threat_feeds: true,
-  ioc_types: true,
-  templates: true,
-  custom_fields: true,
-  detection: true,
-  detection_rules: true,
-  detection_pipelines: true,
-  detection_mitre: true,
-  dashboard: true,
-  automation: true,
-  vulnerabilities: true,
-  documentation: true,
-};
+// All tabs visible by default — derived from the shared nav config so newly
+// added items automatically default to ON without touching this file.
+const DEFAULT_SIDEBAR_TABS: Record<SidebarTabKey, boolean> = ALL_SIDEBAR_KEYS.reduce(
+  (acc, key) => { acc[key] = true; return acc; },
+  {} as Record<SidebarTabKey, boolean>,
+);
 
 // Shared external store so all consumers react to changes instantly
 const listeners = new Set<() => void>();
@@ -98,7 +94,15 @@ function getSidebarTabsSnapshot(): Record<SidebarTabKey, boolean> {
   _cachedSidebarTabsRaw = raw;
   try {
     if (raw) {
-      _cachedSidebarTabs = { ...DEFAULT_SIDEBAR_TABS, ...JSON.parse(raw) };
+      // Merge over defaults so newly-added items default to visible, and
+      // drop any persisted keys that no longer exist in the current nav
+      // tree (avoids ghost toggles after a rename/removal in sidebarNav).
+      const parsed = JSON.parse(raw) as Record<string, unknown>;
+      const merged = { ...DEFAULT_SIDEBAR_TABS };
+      for (const k of ALL_SIDEBAR_KEYS) {
+        if (typeof parsed[k] === 'boolean') merged[k] = parsed[k] as boolean;
+      }
+      _cachedSidebarTabs = merged;
     } else {
       _cachedSidebarTabs = DEFAULT_SIDEBAR_TABS;
     }

@@ -34,8 +34,7 @@ import FingerprintIcon from '@mui/icons-material/Fingerprint';
 import TuneIcon from '@mui/icons-material/Tune';
 import RssFeedIcon from '@mui/icons-material/RssFeed';
 import RadarIcon from '@mui/icons-material/Radar';
-import { Braces, Waypoints, Network, Activity, BookOpen, Sun, Moon, Monitor, LayoutDashboard, Shield, HardDrive, Radar, Users, MonitorCheck, Bug, Zap } from 'lucide-react';
-import AgentIcon from '@/components/agent/AgentIcon';
+import { Activity, Sun, Moon, Monitor, Shield, Radar, Users } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -44,13 +43,18 @@ import { SHUFFLE_AUTOMATION_URL } from '@/config/api';
 import { IntegrationStatus } from './IntegrationStatus';
 import { SidebarSearchDialog } from './SidebarSearchDialog';
 import AgentPermissionsDrawer from '@/components/agent/AgentPermissionsDrawer';
-import { useEntityPreference, useSidebarTabs, SidebarTabKey } from '@/hooks/useEntityLabel';
+import { useEntityPreference, useSidebarTabs } from '@/hooks/useEntityLabel';
+import { SIDEBAR_NAV, SidebarChildSpec } from '@/config/sidebarNav';
 import { getRegionFlag } from '@/lib/regionFlag';
 
 const drawerWidth = 260;
 const collapsedWidth = 64;
 const hoverCollapseDelay = 150;
 
+// Render-time nav node — derived inside the component from the shared
+// SIDEBAR_NAV config plus the user's entity-label preference (Incidents
+// adapts to Alerts/Cases/…). The `__divider__` sentinel keeps the existing
+// rendering loop's grouping visuals intact.
 interface NavChild {
   label: string;
   path: string;
@@ -67,49 +71,12 @@ interface NavItem {
   supportOnly?: boolean;
 }
 
-const buildNavItems = (entityLabel: string, entityPath: string, isSupport?: boolean): NavItem[] => [
-  { label: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/dashboard' },
-  { 
-    label: entityLabel, 
-    icon: <WarningAmberIcon />,
-    path: entityPath,
-    children: [
-      { label: 'Templates', path: '/templates', icon: <DescriptionIcon fontSize="small" /> },
-      { label: 'Custom Fields', path: '/incidents/custom-fields', icon: <TuneIcon fontSize="small" /> },
-    ],
-  },
-  {
-    label: 'Host Monitors',
-    icon: <MonitorCheck size={20} />,
-    path: '/monitors',
-    children: [
-      { label: 'Response', path: '/incidents/response-actions', icon: <Zap size={16} />, supportOnly: true },
-    ],
-  },
-  {
-    label: 'Vulnerabilities',
-    icon: <Bug size={20} />,
-    path: '/vulnerabilities',
-    children: [
-      { label: 'Assets', path: '/assets', icon: <HardDrive size={16} />, supportOnly: true },
-    ],
-  },
-  { 
-    label: 'Detection', 
-    icon: <RadarIcon />,
-    path: '/detection',
-    children: [
-      { label: 'Rules', path: '/detection/sigma', icon: <Braces size={16} /> },
-      { label: 'Pipelines', path: '/detection/pipelines', icon: <Network size={16} /> },
-      { label: 'ATT&CK', path: '/detection/mitre', icon: <Waypoints size={16} />, supportOnly: true },
-      { label: 'Threat Feeds', path: '/incidents/threat-feeds', icon: <RssFeedIcon fontSize="small" /> },
-      { label: 'IOC Types', path: '/incidents/ioc-types', icon: <FingerprintIcon fontSize="small" /> },
-    ],
-  },
-  { label: '__divider__', icon: <></> },
-  { label: 'Agents', icon: <AgentIcon size={20} />, path: '/agent' },
-  { label: 'Documentation', icon: <BookOpen size={20} />, path: '/docs' },
-];
+const childToNav = (c: SidebarChildSpec): NavChild => ({
+  label: c.label,
+  path: c.path,
+  icon: c.icon,
+  supportOnly: c.supportOnly,
+});
 
 interface AppSidebarProps {
   collapsed: boolean;
@@ -159,47 +126,40 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
   const sidebarTabs = useSidebarTabs();
   const isSupport = userInfo?.support === true;
 
-  // Map sidebar tab keys to nav item labels/child paths for filtering
-  const tabKeyToChildPath: Record<string, string> = {
-    threat_feeds: '/incidents/threat-feeds',
-    ioc_types: '/incidents/ioc-types',
-    templates: '/templates',
-    custom_fields: '/incidents/custom-fields',
-    detection_rules: '/detection/sigma',
-    detection_pipelines: '/detection/pipelines',
-    detection_mitre: '/detection/mitre',
-  };
-  const tabKeyToNavLabel: Record<string, string> = {
-    dashboard: 'Dashboard',
-    detection: 'Detection',
-    automation: 'Automation',
-    vulnerabilities: 'Vulnerabilities',
-    documentation: 'Documentation',
-  };
-
+  // Filter the shared SIDEBAR_NAV against the user's preferences and
+  // support flag, then convert to runtime nav items. The visibility map is
+  // keyed by `tabKey`, so this stays in lock-step with /preferences without
+  // any path/label lookup tables.
   const navItems = useMemo(() => {
-    const items = buildNavItems(entityPlural, entityBasePath, isSupport);
-    return items
-      .filter(item => {
-        // Hide support-only top-level items for non-support users
-        if (item.supportOnly && !isSupport) return false;
-        // Check if this top-level item should be hidden
-        const hideKey = Object.entries(tabKeyToNavLabel).find(([, label]) => label === item.label)?.[0] as SidebarTabKey | undefined;
-        if (hideKey && !sidebarTabs[hideKey]) return false;
-        return true;
-      })
-      .map(item => {
-        if (!item.children) return item;
-        // Filter children based on tab visibility
-        const filteredChildren = item.children.filter(child => {
-          // Hide support-only children for non-support users
-          if (child.supportOnly && !isSupport) return false;
-          const hideKey = Object.entries(tabKeyToChildPath).find(([, path]) => path === child.path)?.[0] as SidebarTabKey | undefined;
-          if (hideKey && !sidebarTabs[hideKey]) return false;
+    const out: NavItem[] = [];
+    for (const spec of SIDEBAR_NAV) {
+      // Top-level visibility gate (Incidents is alwaysVisible).
+      if (spec.supportOnly && !isSupport) continue;
+      if (!spec.alwaysVisible && sidebarTabs[spec.tabKey] === false) continue;
+
+      const filteredChildren = spec.children
+        ?.filter((c) => {
+          if (c.supportOnly && !isSupport) return false;
+          if (sidebarTabs[c.tabKey] === false) return false;
           return true;
-        });
-        return { ...item, children: filteredChildren };
+        })
+        .map(childToNav);
+
+      const isIncidents = spec.tabKey === 'incidents';
+      out.push({
+        label: isIncidents ? entityPlural : spec.label,
+        icon: spec.icon,
+        path: isIncidents ? entityBasePath : spec.path,
+        supportOnly: spec.supportOnly,
+        children: filteredChildren && filteredChildren.length > 0 ? filteredChildren : undefined,
       });
+
+      // Divider after the Detection group, matching the previous layout.
+      if (spec.tabKey === 'detection') {
+        out.push({ label: '__divider__', icon: <></> });
+      }
+    }
+    return out;
   }, [entityPlural, entityBasePath, isSupport, sidebarTabs]);
   const [expandedItems, setExpandedItems] = useState<string[]>([entityPlural]);
   const [changingOrg, setChangingOrg] = useState(false);
