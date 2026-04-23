@@ -55,6 +55,7 @@ export const DemoTourDrawer = () => {
     isOnIncidentDetail,
     attentionPulse,
     openTour,
+    setHoveredGoalSelector,
   } = useDemo();
   const location = useLocation();
   // True whenever the current route deep-links into a demo-seeded object
