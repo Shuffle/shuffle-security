@@ -3836,6 +3836,32 @@ const IncidentDetailPage = () => {
                 Known IOC
               </Typography>
             )}
+            {isIocPill && isClickable && (
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.4,
+                  ml: 'auto',
+                  pl: 0.5,
+                  flexShrink: 0,
+                }}
+              >
+                <AgentIcon size={12} />
+                <Typography
+                  sx={{
+                    fontSize: '0.6rem',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: 0.4,
+                    color: 'hsl(var(--destructive))',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  Ask agent →
+                </Typography>
+              </Box>
+            )}
             {item.kind === 'observable-added' && item.obsType && item.obsValue ? (
               <>
                 <Typography
