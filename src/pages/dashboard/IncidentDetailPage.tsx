@@ -3739,6 +3739,7 @@ const IncidentDetailPage = () => {
             data-timeline-compact="true"
             data-tour={isIocPill ? 'timeline-ioc-pill' : undefined}
             data-ioc-pill={isIocPill ? 'true' : undefined}
+            className={isStepHighlighted ? 'incident-new-flash' : undefined}
             onClick={pillOnClick}
             sx={{
               display: 'flex',
