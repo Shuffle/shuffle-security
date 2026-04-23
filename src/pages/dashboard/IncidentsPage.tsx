@@ -1831,6 +1831,8 @@ const IncidentsPage = () => {
           }}
         />
       </motion.div>
+    );
+  }
 
   return (
     <motion.div
