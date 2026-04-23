@@ -3764,7 +3764,8 @@ const IncidentDetailPage = () => {
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
-                    width: 280,
+                    minWidth: 0,
+                    flex: '1 1 auto',
                   }}
                   title={item.obsValue}
                 >
@@ -3779,7 +3780,8 @@ const IncidentDetailPage = () => {
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
-                  maxWidth: 320,
+                  minWidth: 0,
+                  flex: '1 1 auto',
                 }}
                 title={item.detail}
               >
