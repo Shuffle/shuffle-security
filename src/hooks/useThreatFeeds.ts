@@ -82,6 +82,13 @@ export const DEFAULT_THREAT_FEEDS: ThreatFeed[] = [
     description: 'Known compromised IP addresses from Emerging Threats',
     enabled: true,
   },
+  {
+    id: 'threatview_domain_high_confidence',
+    url: 'https://threatview.io/Downloads/DOMAIN-High-Confidence-Feed.txt',
+    name: 'ThreatView High-Confidence Domains',
+    description: 'High-confidence malicious domains curated by ThreatView',
+    enabled: true,
+  },
 ];
 
 export const useThreatFeeds = () => {
