@@ -231,10 +231,15 @@ const ThreatFeedsPage = () => {
           icon={automationEnabled ? <CheckCircleIcon /> : <ErrorOutlineIcon />}
           sx={{ 
             mb: 2, 
+            alignItems: 'center',
             '& .MuiAlert-icon': { 
-              color: automationEnabled ? 'hsl(var(--severity-low))' : undefined 
+              color: automationEnabled ? 'hsl(var(--severity-low))' : undefined,
+              alignItems: 'center',
+              display: 'flex',
+              padding: 0,
+              marginRight: 1.5,
             },
-            '& .MuiAlert-message': { width: '100%' },
+            '& .MuiAlert-message': { width: '100%', padding: 0, display: 'flex', alignItems: 'center' },
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
