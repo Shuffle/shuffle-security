@@ -24,6 +24,7 @@ import {
 import { toast } from 'sonner';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 import { HostDetailPanel } from './HostDetailPanel';
+import { DEMO_HOST_HOSTNAME } from '@/services/demoLiveEnvironment';
 
 // ── Helpers (identical to the originals on VulnAssetsPage) ─────────────────
 const OsIcon = ({ os, size = 14, className = '' }: { os?: string; size?: number; className?: string }) => {
