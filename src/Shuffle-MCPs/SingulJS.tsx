@@ -247,7 +247,7 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
         },
       });
 
-      const hits = searchResult.hits as AlgoliaSearchApp[];
+      const hits = (searchResult.hits as AlgoliaSearchApp[]).map(h => ({ ...h, source: 'public' as const }));
       setResults(hits);
       setIsOpen(hits.length > 0);
       setSelectedIndex(-1);
