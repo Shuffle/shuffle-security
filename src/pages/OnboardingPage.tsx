@@ -5,7 +5,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { TicketingSystemSearch } from '@/components/onboarding/TicketingSystemSearch';
 import { WelcomeStep } from '@/components/onboarding/WelcomeStep';
 import { UnifiedSourceSetup } from '@/components/onboarding/UnifiedSourceSetup';
-import type { AlgoliaSearchApp } from '@/Shuffle-MCP';
+import type { AlgoliaSearchApp } from '@/Shuffle-MCPs';
 import { AppAuthConfig, AppAuthState, AuthStatus } from '@/components/onboarding/AppAuthConfig';
 import { AutomationConfig, EnrichmentState } from '@/components/onboarding/AutomationConfig';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';

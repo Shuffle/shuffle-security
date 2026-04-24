@@ -30,7 +30,7 @@
     "src"
   ],
   "exclude": [
-    "src/Shuffle-MCP/tsup.config.ts",
-    "src/Shuffle-MCP/dist"
+    "src/Shuffle-MCPs/tsup.config.ts",
+    "src/Shuffle-MCPs/dist"
   ]
 }

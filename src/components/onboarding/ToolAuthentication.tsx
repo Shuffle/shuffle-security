@@ -16,7 +16,7 @@ import { motion } from 'framer-motion';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
-import type { AlgoliaSearchApp } from '@/Shuffle-MCP';
+import type { AlgoliaSearchApp } from '@/Shuffle-MCPs';
 
 export type AuthStatus = 'pending' | 'testing' | 'connected' | 'error';
 

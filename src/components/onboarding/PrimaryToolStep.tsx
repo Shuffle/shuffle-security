@@ -7,8 +7,8 @@ import {
   CheckCircle2,
   Sparkles
 } from 'lucide-react';
-import { SingulJS } from '@/Shuffle-MCP';
-import type { AlgoliaSearchApp, SingulJSHandle } from '@/Shuffle-MCP';
+import { SingulJS } from '@/Shuffle-MCPs';
+import type { AlgoliaSearchApp, SingulJSHandle } from '@/Shuffle-MCPs';
 import { API_CONFIG } from '@/config/api';
 
 // Top integration options based on popularity

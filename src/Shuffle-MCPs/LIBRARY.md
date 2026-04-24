@@ -209,11 +209,11 @@ interface SingulJSHandle {
 Tag a commit:
 
 ```bash
-git tag shuffle-mcp-v0.1.0 && git push origin shuffle-mcp-v0.1.0
+git tag shuffle-mcps-v0.1.0 && git push origin shuffle-mcps-v0.1.0
 ```
 
-`.github/workflows/publish-shuffle-mcp.yml` then:
-1. Resolves version from the tag (`shuffle-mcp-v0.1.0` → `0.1.0`)
+`.github/workflows/publish-shuffle-mcps.yml` then:
+1. Resolves version from the tag (`shuffle-mcps-v0.1.0` → `0.1.0`)
 2. Materializes `package.json` from `package.tpl.json`
 3. `npm run build` (tsup → ESM + CJS + `.d.ts`)
 4. `npm publish --access public --provenance`
@@ -223,7 +223,7 @@ Requires the `NPM_TOKEN` repo secret. Trigger manually from the Actions tab with
 ### Local test
 
 ```bash
-cd src/Shuffle-MCP
+cd src/Shuffle-MCPs
 cp package.tpl.json package.json
 npm install && npm run build && npm pack
 ```
