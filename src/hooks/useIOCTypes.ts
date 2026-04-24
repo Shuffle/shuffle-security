@@ -45,7 +45,7 @@ export interface IOCType {
 // (and IPs embedded in URLs from being mistyped as domains).
 export const DEFAULT_IOC_TYPES: IOCType[] = [
   // === MOST COMMONLY USED ===
-  { name: 'url', regex: '^https?:\\/\\/[^\\s]+$', description: 'Full URL', category: 'common', enabled: true },
+  { name: 'url', regex: '^https?:\\/\\/[^\\s<>"\'`]+[^\\s<>"\'`.,;:!?)\\]}]$', description: 'Full URL', category: 'common', enabled: true },
   { name: 'ip', regex: '^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$', description: 'IPv4 address', category: 'common', enabled: true },
   { name: 'domain', regex: '^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\\.)+(?!data|json|xml|html|css|js|ts|tsx|jsx|yml|yaml|toml|log|tmp|bak|cfg|conf|env|lock|local|internal|example|invalid|test|localhost$)[a-zA-Z]{2,16}$', description: 'Domain name', category: 'common', enabled: true },
   { name: 'email', regex: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$', description: 'Email address', category: 'common', enabled: true },
