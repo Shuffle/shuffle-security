@@ -136,9 +136,18 @@ const wipeExistingDemoIncidents = async (
   } catch { /* best-effort */ }
 };
 
-/** Identify the demo focus phishing incident by key prefix or payload title. */
+/**
+ * Identify ANY demo phishing incident — focus key, batch1 numbered key, or
+ * a payload tagged demo with a "Phishing email reported by …" title.
+ *
+ * We deliberately match the broader `demo-inc-phish-` prefix (not just
+ * `-focus`) so re-seeding cleans up stragglers from earlier seeders /
+ * sessions / browsers (e.g. `demo-inc-phish-<ts>-1` from buildDemoIncidentsBatch1).
+ * Without this, repeat tour runs accumulate duplicate phishing incidents
+ * in the datastore even though the focus dedup "succeeds".
+ */
 const isDemoFocusIncident = (key: string, value: unknown): boolean => {
-  if (key.startsWith('demo-inc-phish-') && key.endsWith('-focus')) return true;
+  if (key.startsWith('demo-inc-phish-')) return true;
   if (!value || typeof value !== 'object') return false;
   const v = value as { metadata?: { extensions?: { custom_attributes?: { demo?: boolean } } }; finding_info?: { title?: string } };
   const isDemo = v?.metadata?.extensions?.custom_attributes?.demo === true;
@@ -148,7 +157,11 @@ const isDemoFocusIncident = (key: string, value: unknown): boolean => {
 
 /** Identify the demo Wazuh / Sliver implant follow-up incident. */
 const isDemoWazuhIncident = (key: string, value: unknown): boolean => {
+  // Cover both `-wazuh` (focus follow-up) and `demo-inc-malware-` keys
+  // (buildDemoIncidentsBatch1) so old Sliver C2 incidents get cleaned up
+  // before the new one lands.
   if (key.includes('-wazuh')) return true;
+  if (key.startsWith('demo-inc-malware-')) return true;
   if (!value || typeof value !== 'object') return false;
   const v = value as { metadata?: { extensions?: { custom_attributes?: { demo?: boolean } } }; finding_info?: { title?: string } };
   const isDemo = v?.metadata?.extensions?.custom_attributes?.demo === true;
