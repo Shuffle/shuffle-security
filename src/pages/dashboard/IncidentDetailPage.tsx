@@ -4505,7 +4505,7 @@ const IncidentDetailPage = () => {
               </Tooltip>
             </>
           ) : (
-            'Processing…'
+            'AI Agent is responding (no tools configured)'
           )}
         </Typography>
         {timedOut && commentId && (
