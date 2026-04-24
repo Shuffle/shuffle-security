@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="./docs/agent-icon.png" alt="Shuffle MCP" width="96" />
+<img src="./docs/agent-icon.png" alt="Shuffle MCPs" width="96" />
 
-# Shuffle MCP
+# Shuffle MCPs
 
 Turn 3,000+ SaaS tools into MCP servers your agents can use. One search, one click, authenticated.
 
