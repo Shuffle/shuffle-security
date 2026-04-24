@@ -500,6 +500,11 @@ export const MonitorHostTable = ({ hosts, onRefresh }: MonitorHostTableProps) =>
                   <div className="flex items-center gap-2 min-w-0">
                     <ChevronRight size={14} className={`text-muted-foreground shrink-0 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
                     <span className="text-sm font-medium text-foreground truncate">{host.hostname}</span>
+                    {(host.hostname || '').toLowerCase() === DEMO_HOST_HOSTNAME.toLowerCase() && (
+                      <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded border border-border bg-muted/40 text-muted-foreground">
+                        Demo
+                      </span>
+                    )}
                   </div>
                 </div>
                 <CheckDot on={hdEncrypted} state={hdState} tip={`hd_encrypted = ${fmtRaw(host.hd_encrypted)}`} />
