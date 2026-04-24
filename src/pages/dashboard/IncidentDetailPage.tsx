@@ -226,6 +226,29 @@ const parseTimestamp = (timestamp: number | string | undefined): number => {
   return normalizeToMs(timestamp);
 };
 
+// Quick OCSF-shape check used by the revision-fallback logic. Mirrors the
+// detection inside parseIncidentFromDatastore so we agree on what "valid OCSF"
+// means: a finding with finding_uid + title (new format), finding_info(_list)
+// (legacy), or a numeric severity_id.
+const isOcsfShapedData = (data: unknown): boolean => {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return false;
+  const d = data as any;
+  const isNewFormat = 'finding_uid' in d && 'title' in d;
+  const isLegacyOCSF = !!d.finding_info_list || !!d.finding_info || typeof d.severity_id === 'number';
+  return isNewFormat || isLegacyOCSF;
+};
+
+// Best-effort JSON parse for revision values (handles base64-encoded strings).
+const parseRevisionValue = (raw: unknown): any | null => {
+  if (raw == null) return null;
+  if (typeof raw === 'object') return raw;
+  if (typeof raw !== 'string') return null;
+  const decoded = decodeIfBase64(raw);
+  try { return JSON.parse(decoded); } catch {}
+  try { return JSON.parse(raw); } catch {}
+  return null;
+};
+
 
 // Strict check: only return string if it has meaningful non-whitespace content
 // Also rejects raw JSON objects/arrays that shouldn't be displayed as text
@@ -770,6 +793,16 @@ const IncidentDetailPage = () => {
   const [revisions, setRevisions] = useState<any[]>([]);
   const [revisionsLoading, setRevisionsLoading] = useState(false);
   const [revisionsLoaded, setRevisionsLoaded] = useState(false);
+
+  // Tracks an OCSF-recovery fallback: when the live incident is not OCSF-shaped,
+  // we look back through revisions for the most recent valid OCSF snapshot and
+  // overlay any new top-level fields from the latest (non-OCSF but valid JSON)
+  // revision on top of it. The banner explains this to the user.
+  const [ocsfFallbackInfo, setOcsfFallbackInfo] = useState<{
+    revisionTimestamp?: number;
+    overlaidFieldCount: number;
+  } | null>(null);
+  const ocsfFallbackAttemptedRef = useRef(false);
 
   const loadRevisions = useCallback(async () => {
     if (!id) return;
@@ -1509,17 +1542,106 @@ const IncidentDetailPage = () => {
     })();
   }, [loading, incident, isResyncing, isPublicView, loadIncident]);
 
-  // Show toast for invalid data incidents (no title + no source)
+  // Show toast for invalid data incidents (no title + no source). We wait for
+  // revisions to finish loading and for the OCSF-recovery fallback to attempt
+  // a merge — if recovery succeeds, the inline banner replaces the toast.
   const invalidDataToastShown = useRef(false);
   useEffect(() => {
     if (invalidDataToastShown.current || loading || !incident) return;
+    if (!revisionsLoaded || !ocsfFallbackAttemptedRef.current) return;
+    if (ocsfFallbackInfo) return; // Recovery succeeded — banner explains it
     const hasTitle = !!incident.title;
     const hasSource = !!incident.source;
     if (!hasTitle && !hasSource) {
       invalidDataToastShown.current = true;
       toast.error(t('This incident is not in a valid OCSF format. Validate your ingest pipeline or contact support@shuffler.io'), { duration: 8000 });
     }
-  }, [loading, incident]);
+  }, [loading, incident, revisionsLoaded, ocsfFallbackInfo, t]);
+
+  // OCSF-recovery fallback. Triggered once revisions have loaded for an incident
+  // whose live payload is NOT OCSF-shaped. Strategy:
+  //   1. Walk revisions newest → oldest, find the most recent OCSF-valid one.
+  //   2. If the newest revision (or live payload) is also valid JSON, overlay
+  //      its top-level fields onto the OCSF base so newer edits aren't lost.
+  //   3. Re-parse and apply the merged data into the page state.
+  // This is purely a display fallback — the underlying datastore item is not
+  // modified.
+  useEffect(() => {
+    if (loading || !incident || !revisionsLoaded) return;
+    if (ocsfFallbackAttemptedRef.current) return;
+
+    // Only run if the live payload is NOT OCSF-shaped.
+    if (isOcsfShapedData(incident.rawOCSF)) {
+      ocsfFallbackAttemptedRef.current = true;
+      return;
+    }
+
+    ocsfFallbackAttemptedRef.current = true;
+
+    // Find the newest OCSF-shaped revision.
+    let ocsfBase: any = null;
+    let ocsfBaseTs = 0;
+    for (const rev of revisions) {
+      const parsed = parseRevisionValue(rev?.value);
+      if (parsed && isOcsfShapedData(parsed)) {
+        ocsfBase = parsed;
+        ocsfBaseTs = normalizeToMs(rev?.edited ?? rev?.created);
+        break; // revisions are sorted newest-first
+      }
+    }
+    if (!ocsfBase) return; // Nothing to recover from
+
+    // Overlay newest valid JSON (the live payload) on top of the OCSF base so
+    // any new top-level fields added since the last valid OCSF edit are kept.
+    const liveData = incident.rawOCSF || {};
+    const liveTs = incident.editedTs || incident.createdTs || 0;
+    let merged: any;
+    let overlaidFieldCount = 0;
+    if (liveData && typeof liveData === 'object' && !Array.isArray(liveData)) {
+      try {
+        merged = deepMergeIncidents(ocsfBase, liveData, ocsfBaseTs, liveTs);
+        // Count top-level fields that exist on live but not on the OCSF base
+        overlaidFieldCount = Object.keys(liveData).filter(k => !(k in ocsfBase)).length;
+      } catch (err) {
+        console.warn('[OCSF Fallback] deepMergeIncidents failed, using base only:', err);
+        merged = ocsfBase;
+      }
+    } else {
+      merged = ocsfBase;
+    }
+
+    const reParsed = parseIncidentFromDatastore({
+      key: incident.id,
+      value: JSON.stringify(merged),
+      created: incident.createdTs ? Math.floor(incident.createdTs / 1000) : undefined,
+      edited: incident.editedTs ? Math.floor(incident.editedTs / 1000) : undefined,
+    });
+    if (!reParsed) return;
+
+    console.log('[OCSF Fallback] Recovered from revision', new Date(ocsfBaseTs).toISOString(),
+      `with ${overlaidFieldCount} new field(s) overlaid`);
+
+    setIncident(reParsed);
+    setEditedTitle(reParsed.title);
+    const rawDesc = reParsed.rawOCSF?.desc || reParsed.rawOCSF?.message || '';
+    const rawDecoded = decodeIfBase64(rawDesc);
+    setRawDescriptionHtml(rawDecoded !== rawDesc ? rawDecoded : rawDesc);
+    setEditedMessage(htmlToPlainText(rawDecoded !== rawDesc ? rawDecoded : decodeIfBase64(htmlToPlainText(rawDesc))));
+    setEditedSeverity(reParsed.severity);
+    const rawAssignee = reParsed.assignee || '';
+    setEditedAssignee(isAIAssignee(rawAssignee) ? 'AI Agent' : rawAssignee);
+    setEditedStatus(reParsed.status);
+    setEditedTlp(reParsed.tlp || 'TLP:AMBER');
+    setEditedReferences(Array.isArray(reParsed.references) ? reParsed.references : []);
+    setEditedObservables(reParsed.observables || []);
+    setEnrichments(reParsed.enrichments || []);
+    setEditedStakeholders(reParsed.stakeholders || []);
+    setEditedLabels(reParsed.labels || []);
+    setActivity(reParsed.activity || []);
+
+    setOcsfFallbackInfo({ revisionTimestamp: ocsfBaseTs, overlaidFieldCount });
+  }, [loading, incident, revisionsLoaded, revisions]);
+
 
   // Validate assignee against team members once users finish loading
   useEffect(() => {
@@ -4280,6 +4402,35 @@ const IncidentDetailPage = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
+      {/* OCSF recovery fallback banner — shown when the live payload was not
+          OCSF-shaped and we rebuilt the view from a previous valid revision. */}
+      {ocsfFallbackInfo && (
+        <Box sx={{
+          mb: 2,
+          p: 1.5,
+          borderRadius: 2,
+          bgcolor: 'hsl(38 92% 50% / 0.10)',
+          border: '1px solid hsl(38 92% 50% / 0.40)',
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: 1.25,
+        }}>
+          <HistoryIcon sx={{ fontSize: 20, color: 'hsl(38 92% 50%)', mt: 0.1 }} />
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography variant="body2" sx={{ color: 'hsl(38 92% 50%)', fontWeight: 600, fontSize: '0.8rem' }}>
+              Recovered from a previous OCSF revision
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.72rem', display: 'block', mt: 0.25 }}>
+              The latest payload is not in a valid OCSF format. We rebuilt this view from the most recent valid revision
+              {ocsfFallbackInfo.revisionTimestamp ? ` (${new Date(ocsfFallbackInfo.revisionTimestamp).toLocaleString()})` : ''}
+              {ocsfFallbackInfo.overlaidFieldCount > 0
+                ? ` and overlaid ${ocsfFallbackInfo.overlaidFieldCount} new field${ocsfFallbackInfo.overlaidFieldCount === 1 ? '' : 's'} from the latest edit.`
+                : '.'} Validate your ingest pipeline or contact support@shuffler.io.
+            </Typography>
+          </Box>
+        </Box>
+      )}
+
       {/* Read-only banner for shared/public view */}
       {isPublicView && (
         <Box sx={{
