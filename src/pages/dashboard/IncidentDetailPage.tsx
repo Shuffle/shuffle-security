@@ -794,6 +794,16 @@ const IncidentDetailPage = () => {
   const [revisionsLoading, setRevisionsLoading] = useState(false);
   const [revisionsLoaded, setRevisionsLoaded] = useState(false);
 
+  // Tracks an OCSF-recovery fallback: when the live incident is not OCSF-shaped,
+  // we look back through revisions for the most recent valid OCSF snapshot and
+  // overlay any new top-level fields from the latest (non-OCSF but valid JSON)
+  // revision on top of it. The banner explains this to the user.
+  const [ocsfFallbackInfo, setOcsfFallbackInfo] = useState<{
+    revisionTimestamp?: number;
+    overlaidFieldCount: number;
+  } | null>(null);
+  const ocsfFallbackAttemptedRef = useRef(false);
+
   const loadRevisions = useCallback(async () => {
     if (!id) return;
     setRevisionsLoading(true);
