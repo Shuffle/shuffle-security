@@ -1112,10 +1112,20 @@ const IncidentDetailPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showForwardDialog]);
   const [correlations, setCorrelations] = useState<Array<{ key: string; amount: number; ref: string[] }>>([]);
+  // Live ref to the latest incident snapshot — used by fetchCorrelations to
+  // persist correlation_first_seen without taking `incident` as a dep
+  // (which would cause refetch loops every time the incident state changes).
+  const incidentRef = useRef<{ rawOCSF?: Record<string, unknown> } | null>(null);
   const [correlationsLoading, setCorrelationsLoading] = useState(false);
-  // Track when the incident-level correlations finished loading. Correlations
-  // have no native timestamp so we use "discovered at" (when the API returned
-  // them) to place them on the unified timeline.
+  // Per-correlation "first seen" timestamps (epoch ms), keyed by correlation
+  // key. Persisted under metadata.extensions.custom_attributes.correlation_first_seen
+  // so the timeline stays stable across reloads / sessions without storing
+  // the full correlation payload (which is fetched live from /api/v2/correlations).
+  const [correlationFirstSeen, setCorrelationFirstSeen] = useState<Record<string, number>>({});
+  // Discovery time used to anchor the aggregated "N Correlations" pill on the
+  // timeline. Derived from the earliest persisted first-seen stamp; falls
+  // back to Date.now() the very first time we see correlations and haven't
+  // persisted anything yet.
   const [correlationsDiscoveredAt, setCorrelationsDiscoveredAt] = useState<number | null>(null);
   const [obsCorrelations, setObsCorrelations] = useState<Record<string, { loading: boolean; data: Array<{ key: string; amount: number; ref: string[] }>; discoveredAt?: number }>>({});
   const [obsCorrelationAnchor, setObsCorrelationAnchor] = useState<{ el: HTMLElement; obsKey: string } | null>(null);
@@ -1765,11 +1775,53 @@ const IncidentDetailPage = () => {
           return otherRefs.length > 0;
         });
         setCorrelations(filteredCorr);
-        // Capture the discovery time so the timeline can place this event
-        // chronologically. Only set on the first non-empty discovery so the
-        // timestamp is stable across re-renders / refetches.
+
+        // Stamp NEW correlation keys with a first-seen timestamp and persist
+        // a tiny `{ key: epochMs }` map under metadata.extensions.custom_attributes.
+        // We deliberately store ONLY the timestamp (not the full correlation
+        // payload) — the live data is always re-fetched from the API.
         if (filteredCorr.length > 0) {
-          setCorrelationsDiscoveredAt((prev) => prev ?? Date.now());
+          setCorrelationFirstSeen((prev) => {
+            const now = Date.now();
+            const next = { ...prev };
+            let added = 0;
+            for (const c of filteredCorr) {
+              if (!c?.key) continue;
+              if (next[c.key] === undefined) {
+                next[c.key] = now;
+                added += 1;
+              }
+            }
+            if (added === 0) return prev;
+            // Fire-and-forget persist of the tiny first-seen map. We update
+            // ONLY the correlation_first_seen field — everything else is
+            // copied through verbatim so we don't clobber concurrent edits.
+            const snap = incidentRef.current?.rawOCSF as Record<string, unknown> | undefined;
+            if (snap && id) {
+              const meta = (snap.metadata as Record<string, unknown> | undefined) || {};
+              const exts = (meta.extensions as Record<string, unknown> | undefined) || {};
+              const custom = (exts.custom_attributes as Record<string, unknown> | undefined) || {};
+              const updated = {
+                ...snap,
+                metadata: {
+                  ...meta,
+                  extensions: {
+                    ...exts,
+                    custom_attributes: {
+                      ...custom,
+                      correlation_first_seen: next,
+                    },
+                  },
+                },
+              };
+              setDatastoreItem(id, updated, DATASTORE_CATEGORIES.INCIDENTS, crossOrgId || undefined)
+                .catch((err) => console.warn('[Correlations] persist first-seen failed', err));
+            }
+            // Anchor the timeline pill at the earliest stamp we know about.
+            const earliest = Math.min(...Object.values(next));
+            setCorrelationsDiscoveredAt(earliest);
+            return next;
+          });
         }
       }
     } catch (error) {
@@ -1777,12 +1829,42 @@ const IncidentDetailPage = () => {
     } finally {
       setCorrelationsLoading(false);
     }
-  }, [id, crossOrgHeaders]);
+  }, [id, crossOrgHeaders, crossOrgId]);
 
   useEffect(() => {
     if (loading) return;
     fetchCorrelations();
   }, [fetchCorrelations, loading]);
+
+  // Hydrate correlation_first_seen from the persisted incident payload so the
+  // timeline shows the original discovery time across reloads, and keep the
+  // incidentRef pointed at the latest snapshot for the persist path inside
+  // fetchCorrelations.
+  useEffect(() => {
+    incidentRef.current = incident as { rawOCSF?: Record<string, unknown> } | null;
+    const raw = incident?.rawOCSF as Record<string, unknown> | undefined;
+    const persisted = (((raw?.metadata as Record<string, unknown> | undefined)
+      ?.extensions as Record<string, unknown> | undefined)
+      ?.custom_attributes as Record<string, unknown> | undefined)
+      ?.correlation_first_seen as Record<string, number> | undefined;
+    if (persisted && typeof persisted === 'object') {
+      setCorrelationFirstSeen((prev) => {
+        // Only seed missing keys — don't overwrite stamps we set this session.
+        let changed = false;
+        const next = { ...prev };
+        for (const [k, v] of Object.entries(persisted)) {
+          if (typeof v === 'number' && next[k] === undefined) {
+            next[k] = v;
+            changed = true;
+          }
+        }
+        if (!changed) return prev;
+        const earliest = Math.min(...Object.values(next));
+        setCorrelationsDiscoveredAt((d) => d ?? earliest);
+        return next;
+      });
+    }
+  }, [incident]);
 
   // ── Pivot landing: when arriving via ?correlation=…&focus=… (clicked a
   // chip on another incident's Correlations tab), flash the matching row and
