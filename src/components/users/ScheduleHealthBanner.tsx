@@ -83,9 +83,27 @@ export const ScheduleHealthBanner = ({
   }, []);
 
   if (loading || issues.length === 0) return null;
+  if (dismissed && dismissKey) {
+    // Resurface if the issue signature has changed since the last dismissal
+    try {
+      const lastSig = window.localStorage.getItem(`${dismissKey}:sig`);
+      if (lastSig === issuesSignature) return null;
+    } catch {
+      return null;
+    }
+  }
 
   const top = highestSeverity(issues);
   if (!top) return null;
+
+  const handleDismiss = () => {
+    if (!dismissKey) return;
+    try {
+      window.localStorage.setItem(dismissKey, '1');
+      window.localStorage.setItem(`${dismissKey}:sig`, issuesSignature);
+    } catch { /* ignore */ }
+    setDismissed(true);
+  };
 
   const severity: 'error' | 'warning' | 'info' =
     top === 'critical' ? 'error' : top === 'warning' ? 'warning' : 'info';
