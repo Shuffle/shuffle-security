@@ -44,7 +44,7 @@ import AgentQuestionDialog from '@/components/agent/AgentQuestionDialog';
 import AgentQuickViewDrawer, { type QuickViewItem } from '@/components/agent/AgentQuickViewDrawer';
 import InlineMarkdown from '@/components/shared/InlineMarkdown';
 import { useAgentNotifications } from '@/hooks/useNotifications';
-import { isApprovalNotification, approveAgentAction, continueAgentExecution, type AgentNotification } from '@/services/notifications';
+import { isApprovalNotification, approveAgentAction, continueAgentExecution, stripAgentTitlePrefix, type AgentNotification } from '@/services/notifications';
 import { getShuffleCoreFormUrl, isAgentApprovalFormUrl } from '@/config/api';
 import { getTimeAgo } from '@/components/agent/AgentRunHeader';
 import { useEntityPreference } from '@/hooks/useEntityLabel';
@@ -317,7 +317,7 @@ const NotificationRow = ({ notification, entityBasePath, onApprove, onQuickView,
             whiteSpace: 'nowrap',
             minWidth: 0,
           }}>
-            <InlineMarkdown text={notification.title} />
+            <InlineMarkdown text={stripAgentTitlePrefix(notification.title)} />
           </Box>
           {notification.severity && (
             <Chip

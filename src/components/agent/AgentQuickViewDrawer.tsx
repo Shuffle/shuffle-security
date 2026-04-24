@@ -30,7 +30,7 @@ import {
   Mail,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import type { AgentNotification } from '@/services/notifications';
+import { stripAgentTitlePrefix, type AgentNotification } from '@/services/notifications';
 import type { AgentRun, AgentDecision } from '@/services/agentActivity';
 import {
   parseDatastoreReference,
@@ -133,7 +133,7 @@ const buildFromNotification = (n: AgentNotification, entityBasePath: string): Un
   }
 
   return {
-    title: n.title || 'Agent Notification',
+    title: stripAgentTitlePrefix(n.title) || 'Agent Notification',
     severity: null,
     severityRaw: n.severity || null,
     timestamp: n.created_at ? new Date(n.created_at * 1000).toLocaleString() : '—',
