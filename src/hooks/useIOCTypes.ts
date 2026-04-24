@@ -38,12 +38,16 @@ export interface IOCType {
   enabled?: boolean;
 }
 
-// Default IOC types organized by Pyramid of Pain levels
+// Default IOC types organized by Pyramid of Pain levels.
+// IMPORTANT: order matters — url MUST come before ip, and ip MUST come before
+// domain. Parsers iterate this list and pick the first matching regex, so
+// keeping URL > IP > domain prevents URLs from being mistyped as domains
+// (and IPs embedded in URLs from being mistyped as domains).
 export const DEFAULT_IOC_TYPES: IOCType[] = [
   // === MOST COMMONLY USED ===
+  { name: 'url', regex: '^https?:\\/\\/[^\\s]+$', description: 'Full URL', category: 'common', enabled: true },
   { name: 'ip', regex: '^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$', description: 'IPv4 address', category: 'common', enabled: true },
   { name: 'domain', regex: '^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\\.)+(?!data|json|xml|html|css|js|ts|tsx|jsx|yml|yaml|toml|log|tmp|bak|cfg|conf|env|lock|local|internal|example|invalid|test|localhost$)[a-zA-Z]{2,16}$', description: 'Domain name', category: 'common', enabled: true },
-  { name: 'url', regex: '^https?:\\/\\/[^\\s]+$', description: 'Full URL', category: 'common', enabled: true },
   { name: 'email', regex: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$', description: 'Email address', category: 'common', enabled: true },
   { name: 'hash_md5', regex: '^[a-fA-F0-9]{32}$', description: 'MD5 hash (32 hex chars)', category: 'common', enabled: true },
   { name: 'hash_sha256', regex: '^[a-fA-F0-9]{64}$', description: 'SHA256 hash (64 hex chars)', category: 'common', enabled: true },
