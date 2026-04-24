@@ -184,28 +184,24 @@ const isAnyDemoIncident = (key: string, value: unknown): boolean => {
 };
 
 /**
- * Sweep orphan demo incidents from the datastore. Behaviour:
- *  - Demo NOT active → wipe ALL demo incidents (none should exist).
- *  - Demo active     → wipe only demo incidents NOT tracked in the local
- *    seed index (stragglers from earlier sessions / browsers / partial runs).
+ * Sweep orphan demo incidents from the datastore.
+ *
+ * Only runs when demo mode is NOT active — wipes every demo-flagged
+ * incident left behind from a previous session. While demo IS active we
+ * leave cleanup to the per-seeder dedup helpers (`wipeExistingDemoIncidents`)
+ * to avoid racing with in-flight seeds (e.g. the `incidents-list` step that
+ * writes the focus phishing incident the moment the user advances).
  *
  * Idempotent and best-effort. Returns the number of items deleted so callers
  * can refresh the UI when something actually changed.
  */
 export const sweepOrphanDemoIncidents = async (): Promise<number> => {
+  if (isDemoActive()) return 0;
   try {
     const res = await getDatastoreByCategory(DATASTORE_CATEGORIES.INCIDENTS);
     if (!res.success || !res.data) return 0;
 
-    const active = isDemoActive();
-    const tracked = new Set(active ? (readIndex()[DATASTORE_CATEGORIES.INCIDENTS] || []) : []);
-
-    const orphans = res.data.filter(item => {
-      if (!isAnyDemoIncident(item.key, item.value)) return false;
-      if (!active) return true; // outside demo, every demo incident is an orphan
-      return !tracked.has(item.key);
-    });
-
+    const orphans = res.data.filter(item => isAnyDemoIncident(item.key, item.value));
     if (orphans.length === 0) return 0;
     await Promise.allSettled(
       orphans.map(o => deleteDatastoreItem(o.key, DATASTORE_CATEGORIES.INCIDENTS)),
