@@ -31,7 +31,7 @@ import { Link } from 'react-router-dom';
 import { AppAuthCard } from '@/components/onboarding/AppAuthConfig';
 import AppMcpChat from '@/components/app/AppMcpChat';
 import ApiCallViewer from '@/components/shared/ApiCallViewer';
-import type { AlgoliaSearchApp } from '@/lib/singul-local';
+import type { AlgoliaSearchApp } from '@/Singul-Integrations-Library';
 import { useAppAuth } from '@/hooks/useAppAuth';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { useAuth } from '@/context/AuthContext';

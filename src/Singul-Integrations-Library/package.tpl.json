@@ -1,5 +1,5 @@
 {
-  "name": "@shuffle/singul.js",
+  "name": "singul-integrations",
   "version": "0.0.0-VERSION",
   "description": "Headless React component for searching, selecting, and authenticating against a catalog of 3,000+ SaaS integrations.",
   "license": "MIT",

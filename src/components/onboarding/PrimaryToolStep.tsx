@@ -7,8 +7,8 @@ import {
   CheckCircle2,
   Sparkles
 } from 'lucide-react';
-import { SingulJS } from '@/lib/singul-local';
-import type { AlgoliaSearchApp, SingulJSHandle } from '@/lib/singul-local';
+import { SingulJS } from '@/Singul-Integrations-Library';
+import type { AlgoliaSearchApp, SingulJSHandle } from '@/Singul-Integrations-Library';
 import { API_CONFIG } from '@/config/api';
 
 // Top integration options based on popularity

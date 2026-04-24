@@ -20,8 +20,8 @@ import {
   Dialog,
   DialogContent,
 } from '@/components/ui/dialog';
-import { SingulJS } from '@/lib/singul-local';
-import type { AppSelectedEvent } from '@/lib/singul-local';
+import { SingulJS } from '@/Singul-Integrations-Library';
+import type { AppSelectedEvent } from '@/Singul-Integrations-Library';
 import { AppAuthCard } from '@/components/onboarding/AppAuthConfig';
 import { API_CONFIG } from '@/config/api';
 import { useAppAuthFlow } from '@/hooks/useAppAuthFlow';

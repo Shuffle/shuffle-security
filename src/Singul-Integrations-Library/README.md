@@ -1,8 +1,14 @@
-# SingulJS
+# 📦 Singul-Integrations-Library
 
-A standalone React component for searching, selecting, and authenticating against a catalog of 3,000+ SaaS integrations. Powers the integration drawer, onboarding flows, and app pickers.
+> **Standalone React library** — `singul-integrations` on npm
+> Search, select, and authenticate against a catalog of **3,000+ SaaS integrations**. Powers integration drawers, onboarding flows, and app pickers.
 
-> Local copy. Upstream: [github.com/Shuffle/singul.js](https://github.com/Shuffle/singul.js)
+[![npm](https://img.shields.io/npm/v/singul-integrations.svg)](https://www.npmjs.com/package/singul-integrations)
+[![license](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+
+This folder is **self-contained**. The host app consumes it via `@/Singul-Integrations-Library`, and CI publishes the same folder to npm as `singul-integrations`. Source lives here for fast iteration; the package is shipped to npm by `.github/workflows/publish-singul.yml`.
+
+> Upstream: [github.com/Shuffle/singul.js](https://github.com/Shuffle/singul.js)
 
 ---
 
@@ -25,8 +31,8 @@ npm i react algoliasearch
 
 Then import:
 ```tsx
-import { SingulJS } from '@/lib/singul-local';
-import type { AppSelectedEvent, AlgoliaSearchApp, SingulJSHandle } from '@/lib/singul-local';
+import { SingulJS } from '@/Singul-Integrations-Library';
+import type { AppSelectedEvent, AlgoliaSearchApp, SingulJSHandle } from '@/Singul-Integrations-Library';
 ```
 
 ---
@@ -55,7 +61,7 @@ The most common pattern: open a drawer, pre-fill the query, let the user pick an
 ```tsx
 import { Drawer } from '@mui/material';
 import { useState } from 'react';
-import { SingulJS } from '@/lib/singul-local';
+import { SingulJS } from '@/Singul-Integrations-Library';
 
 export function IntegrationDrawer({ open, onClose, category }: {
   open: boolean;
@@ -230,14 +236,14 @@ import type {
   AppSelectedEvent,
   AppAuthentication,
   CustomStyles,
-} from '@/lib/singul-local';
+} from '@/Singul-Integrations-Library';
 ```
 
 ---
 
 ## Publishing (CI/CD)
 
-This folder doubles as a publishable npm package. The source lives here so the host app can keep importing it via `@/lib/singul-local`, while CI bundles + ships it to npm as `@shuffle/singul.js`.
+This folder doubles as a publishable npm package. The source lives here so the host app can keep importing it via `@/Singul-Integrations-Library`, while CI bundles + ships it to npm as `singul-integrations`.
 
 ### Files in this folder
 
@@ -260,7 +266,7 @@ git push origin singul-v0.1.0
 The `.github/workflows/publish-singul.yml` workflow then:
 1. Resolves the version from the tag (`singul-v0.1.0` → `0.1.0`)
 2. Materializes `package.json` from `package.tpl.json` with that version
-3. Runs `npm run build` (tsup) inside `src/lib/singul-local`
+3. Runs `npm run build` (tsup) inside `src/Singul-Integrations-Library`
 4. Runs `npm publish --access public --provenance`
 
 You can also trigger the workflow manually from the Actions tab with a custom version, or with `dry_run: true` to only produce the `.tgz` artifact.
@@ -272,7 +278,7 @@ You can also trigger the workflow manually from the Actions tab with a custom ve
 ### Local test
 
 ```bash
-cd src/lib/singul-local
+cd src/Singul-Integrations-Library
 cp package.tpl.json package.json
 # edit version manually for local test
 npm install
@@ -280,4 +286,4 @@ npm run build
 npm pack
 ```
 
-The resulting `shuffle-singul.js-X.Y.Z.tgz` is installable in any project with `npm i ./shuffle-singul.js-X.Y.Z.tgz`.
+The resulting `singul-integrations-X.Y.Z.tgz` is installable in any project with `npm i ./singul-integrations-X.Y.Z.tgz`.
