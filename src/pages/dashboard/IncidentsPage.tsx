@@ -1853,6 +1853,7 @@ const IncidentsPage = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
+      <HighlightSpotlight />
       <ScheduleHealthBanner
         compact
         dismissKey="shuffle:schedule-health-banner:dismissed"
