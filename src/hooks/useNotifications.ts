@@ -11,8 +11,11 @@ export const useAgentNotifications = () => {
   const { data, isLoading, error } = useQuery({
     queryKey: ['agent-notifications'],
     queryFn: fetchAgentNotifications,
-    refetchInterval: 30_000,
-    staleTime: 15_000,
+    // Poll once per minute. Stuck-agent handoffs are rare, so 60s strikes a
+    // balance between freshness and API load. The global watcher in
+    // DashboardLayout uses the same query key so polling is shared, not duplicated.
+    refetchInterval: 60_000,
+    staleTime: 30_000,
   });
 
   const refresh = () => {
