@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { HelpCircle, Send } from 'lucide-react';
-import type { AgentNotification } from '@/services/notifications';
+import { stripAgentTitlePrefix, type AgentNotification } from '@/services/notifications';
 
 interface Props {
   open: boolean;
