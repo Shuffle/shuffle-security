@@ -326,27 +326,34 @@ const ThreatFeedsPage = () => {
                       />
                     </TableCell>
                     <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <RssFeedIcon sx={{ fontSize: 16, color: feed.enabled ? 'hsl(var(--primary))' : 'text.disabled' }} />
                         <Typography variant="body2" sx={{ fontWeight: 500 }}>
                           {feed.name}
                         </Typography>
-                        {feed.type && (
-                          <Chip
-                            label={feed.type}
-                            size="small"
-                            variant="outlined"
-                            sx={{
-                              height: 18,
-                              fontSize: '0.65rem',
-                              fontFamily: 'JetBrains Mono, monospace',
-                              borderColor: 'hsl(var(--primary) / 0.4)',
-                              color: 'hsl(var(--primary))',
-                              '& .MuiChip-label': { px: 0.75 },
-                            }}
-                          />
-                        )}
                       </Box>
+                    </TableCell>
+                    <TableCell>
+                      {feed.type ? (
+                        <Chip
+                          label={feed.type}
+                          size="small"
+                          variant="outlined"
+                          sx={{
+                            height: 20,
+                            fontSize: '0.7rem',
+                            fontFamily: 'JetBrains Mono, monospace',
+                            borderColor: 'hsl(var(--primary) / 0.4)',
+                            color: 'hsl(var(--primary))',
+                            bgcolor: 'hsl(var(--primary) / 0.06)',
+                            '& .MuiChip-label': { px: 0.75 },
+                          }}
+                        />
+                      ) : (
+                        <Typography variant="caption" sx={{ color: 'text.disabled', fontStyle: 'italic' }}>
+                          auto
+                        </Typography>
+                      )}
                     </TableCell>
                     <TableCell>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
