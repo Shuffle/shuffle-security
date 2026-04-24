@@ -989,7 +989,7 @@ const DashboardPage = () => {
                   entityBasePath={entityBasePath}
                   onApprove={handleApprove}
                   onQuickView={(n) => setQuickViewItem({ type: 'notification', notification: n })}
-                  onAnswer={setQuestionNotification}
+                  onAnswer={(n) => setQuickViewItem({ type: 'notification', notification: n })}
                 />
               </motion.div>
             ))}
