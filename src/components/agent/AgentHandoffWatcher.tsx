@@ -134,7 +134,7 @@ const AgentHandoffWatcher = () => {
         });
       }
     });
-  }, [notifications, isAuthenticated, location.pathname, entityBasePath, navigate]);
+  }, [notifications, isAuthenticated, location.pathname, entityBasePath, navigate, refresh]);
 
   return null;
 };
