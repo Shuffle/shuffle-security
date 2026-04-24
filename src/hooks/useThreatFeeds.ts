@@ -55,7 +55,7 @@ export const DEFAULT_THREAT_FEEDS: ThreatFeed[] = [
     url: 'https://www.circl.lu/doc/misp/feed-osint',
     name: 'CIRCL OSINT Feed',
     description: 'CIRCL curated OSINT feed in MISP format',
-    // Mixed MISP feed — leave type unset so the parser auto-detects per row.
+    type: 'domain',
     enabled: true,
   },
   {
