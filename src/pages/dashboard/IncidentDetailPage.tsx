@@ -4654,7 +4654,13 @@ const IncidentDetailPage = () => {
               gap: 1,
             }}
           >
-            {showAgentProcessing && renderAgentProcessingPlaceholder(itemKey, isTimedOut, (item.data as any)?.id)}
+            {showAgentProcessing && renderAgentProcessingPlaceholder(
+              itemKey,
+              isTimedOut,
+              (item.data as any)?.id,
+              reruns.length,
+              lastRerun || (isManualActivity ? (item.data as any)?.timestamp : 0) || item.timestamp || 0,
+            )}
             {replies.map((reply) => renderThread(reply, depth + 1, true))}
           </Box>
         </Box>
