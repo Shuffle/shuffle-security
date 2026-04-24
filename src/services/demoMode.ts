@@ -657,9 +657,27 @@ export const forceCreateSingleDemoIncidentReturningKey = async (): Promise<strin
  * Returns the number of incidents written (0 or 1).
  */
 export const seedDemoWazuhImplantIncident = async (): Promise<number> => {
-  const idx = readIndex();
-  const existing = idx[DATASTORE_CATEGORIES.INCIDENTS] || [];
-  if (existing.some(k => k.includes('-wazuh'))) return 0;
+  // Server-side dedup: skip seeding if a demo Wazuh / Sliver implant
+  // incident already exists anywhere (local index OR backend), and wipe any
+  // duplicates that crept in across sessions.
+  try {
+    const res = await getDatastoreByCategory(DATASTORE_CATEGORIES.INCIDENTS);
+    if (res.success && res.data) {
+      const matches = res.data.filter(item =>
+        isDemoWazuhIncident(typeof item.key === 'string' ? item.key : '', item.value),
+      );
+      if (matches.length > 0) {
+        // Keep the first one, delete any extras to converge to a single copy.
+        const extras = matches.slice(1);
+        if (extras.length > 0) {
+          await Promise.allSettled(
+            extras.map(o => deleteDatastoreItem(o.key, DATASTORE_CATEGORIES.INCIDENTS)),
+          );
+        }
+        return 0;
+      }
+    }
+  } catch { /* best-effort — fall through to seed */ }
 
   // Reuse the same IOC overrides chosen at step 1 so the IP + domain on the
   // Wazuh follow-up are byte-identical to the focus incident — required for
