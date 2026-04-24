@@ -9,8 +9,9 @@ import { algoliasearch, SearchClient } from 'algoliasearch';
 import type { AlgoliaSearchApp, AppSelectedEvent, SingulJSProps, AppAuthentication } from './singul.helpers';
 import './singul.css';
 
-const ALGOLIA_APP_ID = 'JNSS5CFDZZ';
-const ALGOLIA_API_KEY = '33e4e3564f4f060e96e0531957bed552';
+const DEFAULT_ALGOLIA_APP_ID = 'JNSS5CFDZZ';
+const DEFAULT_ALGOLIA_API_KEY = '33e4e3564f4f060e96e0531957bed552';
+const DEFAULT_ALGOLIA_INDEX = 'appsearch';
 
 export interface SingulJSHandle {
   search: (query: string) => void;
@@ -34,10 +35,15 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
   hitsPerPage = 15,
   apiKey,
   apiBaseUrl = 'https://shuffler.io',
+  authPath = '/api/v1/apps/authentication',
+  appAuthPath = '/appauth',
   singulBaseUrl = 'https://singul.io',
   hideAuthStatus = false,
   authenticatedApps: externalAuthenticatedApps,
   pinnedApps,
+  algoliaAppId = DEFAULT_ALGOLIA_APP_ID,
+  algoliaApiKey = DEFAULT_ALGOLIA_API_KEY,
+  algoliaIndexName = DEFAULT_ALGOLIA_INDEX,
   customStyles = {},
   className = '',
   renderItem,
