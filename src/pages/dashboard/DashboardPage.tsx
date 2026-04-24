@@ -705,7 +705,7 @@ const DashboardPage = () => {
         icon: <ArrowDownToLine size={20} />,
         status: hasIngest ? 'complete' : hasAuthenticatedApps ? 'action-needed' : 'not-started',
         ctaLabel: 'Configure',
-        ctaPath: '/incidents',
+        ctaPath: '/incidents?highlight=ingest',
         priority: 4,
       },
       {
