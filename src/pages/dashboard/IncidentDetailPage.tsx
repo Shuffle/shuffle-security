@@ -4283,11 +4283,26 @@ const IncidentDetailPage = () => {
     // indicator so users know the agent didn't get back to them.
     const AI_RESPONSE_TIMEOUT_MS = 2 * 60 * 1000;
 
+    // Reruns the AI Agent for a comment that previously timed out by flipping
+    // ai_handled back to false. Background automation re-picks unprocessed
+    // comments, so this effectively retriggers the agent run.
+    const handleRerunAgent = (commentId: string) => {
+      setActivity(prev => prev.map(a =>
+        a.id === commentId
+          ? { ...a, ai_handled: false, timestamp: Date.now() } as ActivityItem
+          : a
+      ));
+      pendingSaveRef.current = true;
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = setTimeout(() => { saveToDatastore(); }, 300);
+      toast.success('Re-running AI Agent');
+    };
+
     // Renders a compact inline indicator beneath any activity item that
     // explicitly @-mentions the AI Agent and is still flagged ai_handled.
     // While waiting we show a small spinning loader; once the 2-minute
     // timeout has elapsed we show a muted "timed out" pill instead.
-    const renderAgentProcessingPlaceholder = (key: string, timedOut: boolean) => (
+    const renderAgentProcessingPlaceholder = (key: string, timedOut: boolean, commentId?: string) => (
       <Box
         key={`ai-processing-${key}`}
         sx={{
@@ -4320,8 +4335,40 @@ const IncidentDetailPage = () => {
         >
           {timedOut ? 'AI Agent timed out' : 'AI Agent is responding…'}
         </Typography>
+        {timedOut && commentId && (
+          <Box
+            component="button"
+            onClick={(e) => { e.stopPropagation(); handleRerunAgent(commentId); }}
+            sx={{
+              ml: 0.5,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 0.25,
+              px: 0.75,
+              py: 0.2,
+              borderRadius: 999,
+              border: '1px solid hsl(var(--border))',
+              background: 'hsl(var(--background))',
+              color: 'text.primary',
+              fontSize: '0.68rem',
+              fontWeight: 500,
+              cursor: 'pointer',
+              lineHeight: 1,
+              transition: 'background 0.15s ease, border-color 0.15s ease',
+              '&:hover': {
+                background: 'hsl(var(--muted) / 0.6)',
+                borderColor: 'rgba(156, 90, 242, 0.5)',
+              },
+            }}
+            aria-label="Rerun AI Agent"
+          >
+            <RotateCw size={10} />
+            Rerun
+          </Box>
+        )}
       </Box>
     );
+
 
     // Recursively render an item plus any nested replies (and their replies).
     // Depth controls the indent rail color/spacing — we cap visual indent at 4
