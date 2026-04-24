@@ -5,6 +5,7 @@ import { AppSidebar } from './AppSidebar';
 import { MobileBottomNav } from './MobileBottomNav';
 import { AppDetailProvider, useAppDetail } from '@/context/AppDetailContext';
 import AppDetailDrawer from '@/components/shared/AppDetailDrawer';
+import AgentHandoffWatcher from '@/components/agent/AgentHandoffWatcher';
 import { useAuth } from '@/context/AuthContext';
 
 const drawerWidth = 260;
@@ -118,6 +119,10 @@ export const DashboardLayout = ({ children, defaultCollapsed }: DashboardLayoutP
         </Box>
         <MobileBottomNav />
         <GlobalAppDetailDrawer />
+        {/* Global watcher: surfaces stuck AI Agent handoffs (approvals + open
+            questions) as toasts on every page. Polls once per minute via the
+            shared useAgentNotifications query. */}
+        <AgentHandoffWatcher />
       </Box>
     </AppDetailProvider>
   );
