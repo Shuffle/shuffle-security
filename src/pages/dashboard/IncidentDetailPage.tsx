@@ -4457,7 +4457,10 @@ const IncidentDetailPage = () => {
         ? ((item.data as any).rerun_timestamps as number[])
         : [];
       const lastRerun = reruns.length > 0 ? Math.max(...reruns) : 0;
-      const ageBasis = lastRerun || (item.data as any)?.timestamp || item.timestamp || 0;
+      const ageBasis = lastRerun
+        || (isManualActivity ? (item.data as any)?.timestamp : 0)
+        || item.timestamp
+        || 0;
       const ageMs = isManualActivity ? Date.now() - ageBasis : 0;
       const showAgentProcessing = aiHandled && mentionsAgent && !hasAgentReply;
       const isTimedOut = showAgentProcessing && ageMs > AI_RESPONSE_TIMEOUT_MS;
