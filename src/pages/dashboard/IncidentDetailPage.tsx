@@ -4333,10 +4333,14 @@ const IncidentDetailPage = () => {
       const node = renderItem(item, { isReply });
       if (!node) return null;
 
-      // Show processing/timeout placeholder when this item is flagged
-      // ai_handled but no agent reply has landed yet.
+      // Show processing/timeout placeholder ONLY when this comment explicitly
+      // @-mentions the AI Agent (e.g. @AIAgent / @aiagent / @ai_agent) and is
+      // still flagged ai_handled with no agent reply landed yet. Without an
+      // explicit mention we render nothing — silence is the right default.
       const isManualActivity = item.type === 'manual';
       const aiHandled = isManualActivity && (item.data as any)?.ai_handled === true;
+      const commentText = isManualActivity ? String((item.data as any)?.content || '') : '';
+      const mentionsAgent = /@\s*ai[\s_-]*agent\b/i.test(commentText);
       const hasAgentReply = replies.some((r) => {
         if (r.type !== 'manual') return false;
         const u = (r.data as any)?.user || '';
@@ -4345,7 +4349,7 @@ const IncidentDetailPage = () => {
       const ageMs = isManualActivity
         ? Date.now() - ((item.data as any)?.timestamp || item.timestamp || 0)
         : 0;
-      const showAgentProcessing = aiHandled && !hasAgentReply;
+      const showAgentProcessing = aiHandled && mentionsAgent && !hasAgentReply;
       const isTimedOut = showAgentProcessing && ageMs > AI_RESPONSE_TIMEOUT_MS;
 
       if (replies.length === 0 && !showAgentProcessing) return node;
