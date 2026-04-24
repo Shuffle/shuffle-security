@@ -1,6 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { getApiUrl, getAuthHeader, API_CONFIG } from '@/config/api';
 
+export interface UserPublicProfile {
+  github_avatar?: string;
+  github_url?: string;
+  github_username?: string;
+  [key: string]: unknown;
+}
+
 export interface User {
   id: string;
   username: string;
@@ -8,6 +15,7 @@ export interface User {
   active: boolean;
   orgs?: string[];
   created_at?: number;
+  public_profile?: UserPublicProfile;
 }
 
 // Shared cache to prevent multiple fetches across component instances

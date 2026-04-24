@@ -1,7 +1,8 @@
 /**
  * UserHoverCard — renders a username with a hover popover containing
- * profile details (role, status, schedule hint). Used in the activity
- * feed to give users a definitive way to verify who posted a comment.
+ * profile details (role, status, schedule hint, github attribution).
+ * Used in the activity feed to give users a definitive way to verify
+ * who posted a comment.
  *
  * Identity rules:
  *  - AI Agent: matches `isAIAssignee(name)` OR `is_agent === true` AND
@@ -11,11 +12,13 @@
  *  - Real user: name matches an entry in the org user list.
  *  - Unknown: neither — rendered as plain text without a hover card.
  */
-import { Box, Typography, Avatar, Chip } from '@mui/material';
+import { Box, Typography, Avatar, Chip, Link as MuiLink } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
+import GitHubIcon from '@mui/icons-material/GitHub';
 import { useNavigate } from 'react-router-dom';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import AgentIcon from '@/components/agent/AgentIcon';
+import singulAgentIcon from '@/assets/singul-agent-icon.png';
 import { isAIAssignee } from '@/lib/utils';
 import { useUsers, type User } from '@/hooks/useUsers';
 
@@ -34,15 +37,38 @@ const findRealUser = (users: User[], name: string): User | undefined => {
   return users.find((u) => u.username.toLowerCase() === lower);
 };
 
+/**
+ * Resolve the avatar image URL for a username, taking AI agent identity
+ * and GitHub/Gravatar sync into account. Returns null when nothing usable
+ * is available so callers can fall back to a generic Avatar icon.
+ */
+export const resolveUserAvatar = (
+  username: string,
+  users: User[],
+  isAgent?: boolean,
+): { src: string | null; isAgent: boolean; user?: User } => {
+  const realUser = findRealUser(users, username);
+  const looksLikeAgent = isAIAssignee(username);
+  const verifiedAgent = looksLikeAgent || (isAgent === true && !realUser);
+  if (verifiedAgent) {
+    return { src: singulAgentIcon, isAgent: true };
+  }
+  return {
+    src: realUser?.public_profile?.github_avatar || null,
+    isAgent: false,
+    user: realUser,
+  };
+};
+
 export const UserHoverCard = ({ username, isAgent, className }: UserHoverCardProps) => {
   const { users } = useUsers();
   const navigate = useNavigate();
 
   const realUser = findRealUser(users, username);
-  // Trust AI Agent identity only when the name itself looks like the agent
-  // OR `is_agent: true` is set AND the name does NOT match a real user.
   const looksLikeAgent = isAIAssignee(username);
   const verifiedAgent = looksLikeAgent || (isAgent === true && !realUser);
+  const githubUrl = realUser?.public_profile?.github_url;
+  const githubAvatar = realUser?.public_profile?.github_avatar;
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -76,7 +102,6 @@ export const UserHoverCard = ({ username, isAgent, className }: UserHoverCardPro
           sx={{
             display: 'inline-flex',
             alignItems: 'center',
-            gap: 0.4,
             cursor: 'pointer',
             borderRadius: 0.75,
             px: 0.4,
@@ -87,7 +112,6 @@ export const UserHoverCard = ({ username, isAgent, className }: UserHoverCardPro
             },
           }}
         >
-          {verifiedAgent && <AgentIcon size={12} />}
           <Typography
             component="span"
             variant="caption"
@@ -109,6 +133,7 @@ export const UserHoverCard = ({ username, isAgent, className }: UserHoverCardPro
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, mb: 1.25 }}>
           <Avatar
+            src={verifiedAgent ? singulAgentIcon : githubAvatar || undefined}
             sx={{
               width: 36,
               height: 36,
@@ -203,6 +228,40 @@ export const UserHoverCard = ({ username, isAgent, className }: UserHoverCardPro
                   See on-call
                 </Typography>
               </Box>
+              {githubUrl && (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 1,
+                    mt: 0.25,
+                  }}
+                >
+                  <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem' }}>
+                    GitHub
+                  </Typography>
+                  <MuiLink
+                    href={githubUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    sx={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 0.4,
+                      fontSize: '0.7rem',
+                      fontWeight: 500,
+                      color: 'hsl(var(--primary))',
+                      textDecoration: 'none',
+                      '&:hover': { textDecoration: 'underline' },
+                    }}
+                  >
+                    <GitHubIcon sx={{ fontSize: 11 }} />
+                    {githubUrl.replace(/^https?:\/\/(www\.)?github\.com\//, '')}
+                  </MuiLink>
+                </Box>
+              )}
             </>
           )}
         </Box>

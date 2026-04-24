@@ -116,7 +116,7 @@ import { normalizeStatus } from '@/config/incidentConfig';
 import { ResolveIncidentDialog, ResolutionData, RESOLUTION_REASONS } from '@/components/incidents/ResolveIncidentDialog';
 import { MergeIncidentDialog } from '@/components/incidents/MergeIncidentDialog';
 import { MentionText } from '@/components/incidents/MentionText';
-import { UserHoverCard } from '@/components/incidents/UserHoverCard';
+import { UserHoverCard, resolveUserAvatar } from '@/components/incidents/UserHoverCard';
 import { TaskKanbanBoard } from '@/components/incidents/TaskKanbanBoard';
 import { MentionInput } from '@/components/incidents/MentionInput';
 import { TaskDateTimePicker } from '@/components/incidents/TaskDateTimePicker';
@@ -4194,15 +4194,25 @@ const IncidentDetailPage = () => {
             '&:hover .reply-btn': { opacity: 1 },
           }}
         >
-          <Avatar sx={{
-            width: 24,
-            height: 24,
-            bgcolor: isDeleted
-              ? 'hsl(var(--border-subtle))'
-              : actItem.type === 'comment' ? 'rgba(255, 102, 0, 0.2)' : 'rgba(255,255,255,0.08)',
-          }}>
-            {getActivityIcon(actItem.type)}
-          </Avatar>
+          {(() => {
+            const avatarInfo = resolveUserAvatar(actItem.user, users, (actItem as any).is_agent === true);
+            return (
+              <Avatar
+                src={!isDeleted && avatarInfo.src ? avatarInfo.src : undefined}
+                sx={{
+                  width: 24,
+                  height: 24,
+                  bgcolor: isDeleted
+                    ? 'hsl(var(--border-subtle))'
+                    : avatarInfo.isAgent
+                      ? 'hsl(var(--primary) / 0.18)'
+                      : actItem.type === 'comment' ? 'rgba(255, 102, 0, 0.2)' : 'rgba(255,255,255,0.08)',
+                }}
+              >
+                {getActivityIcon(actItem.type)}
+              </Avatar>
+            );
+          })()}
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.25 }}>
               <UserHoverCard
