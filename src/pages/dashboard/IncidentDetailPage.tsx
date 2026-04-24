@@ -4332,25 +4332,47 @@ const IncidentDetailPage = () => {
     // the spinner immediately resumes for another full timeout window.
     // Background automation watches `rerun_timestamps` to pick the comment
     // back up — see the assign_escalate workflow.
-    const handleRerunAgent = (commentId: string) => {
+    const handleRerunAgent = async (commentId: string) => {
+      if (!incident?.id) return;
       const now = Date.now();
-      setActivity(prev => prev.map(a => {
+      // Build the updated activity synchronously so we can both update local
+      // state AND persist via addItem in the same tick. Relying on the
+      // debounced auto-save effect doesn't work here because that effect
+      // doesn't watch `activity` as a dependency.
+      const updatedActivity = activity.map((a) => {
         if (a.id !== commentId) return a;
         const existing = Array.isArray((a as any).rerun_timestamps)
-          ? (a as any).rerun_timestamps as number[]
+          ? ((a as any).rerun_timestamps as number[])
           : [];
         return {
           ...a,
           ai_handled: true,
           rerun_timestamps: [...existing, now],
         } as ActivityItem;
-      }));
-      pendingSaveRef.current = true;
-      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-      saveTimeoutRef.current = setTimeout(() => { saveToDatastore(); }, 300);
+      });
+      setActivity(updatedActivity);
       // Force the placeholder to recompute "age" right away.
       setAiPlaceholderTick((t) => t + 1);
-      toast.success('Re-running AI Agent');
+
+      // Persist immediately via set_cache (addItem) — same pattern as
+      // handleAddComment — so the background automation sees the new
+      // rerun_timestamps entry without waiting for the next auto-save.
+      if (incident.rawOCSF) {
+        const updatedOCSF = {
+          ...incident.rawOCSF,
+          activity: updatedActivity,
+        };
+        try {
+          pendingSaveRef.current = true;
+          await addItem(incident.id, updatedOCSF);
+          toast.success('Re-running AI Agent');
+        } catch (err) {
+          console.error('[Rerun] Failed to persist activity update:', err);
+          toast.error('Failed to re-run AI Agent');
+        } finally {
+          pendingSaveRef.current = false;
+        }
+      }
     };
 
     // Renders a compact inline indicator beneath any activity item that
