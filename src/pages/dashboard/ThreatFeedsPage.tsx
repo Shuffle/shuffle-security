@@ -23,6 +23,7 @@ import {
   Switch,
   Tooltip,
   Alert,
+  MenuItem,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import AddIcon from '@mui/icons-material/Add';
@@ -35,6 +36,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { useThreatFeeds, ThreatFeed, DEFAULT_THREAT_FEEDS } from '@/hooks/useThreatFeeds';
+import { useIOCTypes } from '@/hooks/useIOCTypes';
 import { getDatastoreItem, setDatastoreItem, DATASTORE_CATEGORIES } from '@/services/datastore';
 
 // Datastore keys for onboarding config
@@ -43,6 +45,7 @@ const AUTOMATION_CONFIG_KEY = 'automation_config';
 
 const ThreatFeedsPage = () => {
   const { threatFeeds: feeds, isLoading, saveFeed, deleteFeed, toggleFeed, initializeDefaults, refetch } = useThreatFeeds();
+  const { iocTypes } = useIOCTypes();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingFeed, setEditingFeed] = useState<ThreatFeed | null>(null);
   const [formData, setFormData] = useState<Partial<ThreatFeed>>({ 
@@ -114,9 +117,10 @@ const ThreatFeedsPage = () => {
       name: formData.name,
       url: formData.url,
       description: formData.description || '',
+      type: formData.type || undefined,
       enabled: formData.enabled ?? true,
     };
-    
+
     if (editingFeed && editingFeed.id !== feedToSave.id) {
       await deleteFeed(editingFeed.id);
     }
@@ -321,11 +325,26 @@ const ThreatFeedsPage = () => {
                       />
                     </TableCell>
                     <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                         <RssFeedIcon sx={{ fontSize: 16, color: feed.enabled ? 'hsl(var(--primary))' : 'text.disabled' }} />
                         <Typography variant="body2" sx={{ fontWeight: 500 }}>
                           {feed.name}
                         </Typography>
+                        {feed.type && (
+                          <Chip
+                            label={feed.type}
+                            size="small"
+                            variant="outlined"
+                            sx={{
+                              height: 18,
+                              fontSize: '0.65rem',
+                              fontFamily: 'JetBrains Mono, monospace',
+                              borderColor: 'hsl(var(--primary) / 0.4)',
+                              color: 'hsl(var(--primary))',
+                              '& .MuiChip-label': { px: 0.75 },
+                            }}
+                          />
+                        )}
                       </Box>
                     </TableCell>
                     <TableCell>
@@ -421,6 +440,30 @@ const ThreatFeedsPage = () => {
             rows={2}
             placeholder="Optional description of the feed contents"
           />
+          <TextField
+            select
+            label="IOC Type"
+            value={formData.type || ''}
+            onChange={(e) => setFormData({ ...formData, type: e.target.value || undefined })}
+            fullWidth
+            helperText="The IOC type this feed contains. Leave empty to auto-detect per row."
+          >
+            <MenuItem value="">
+              <em>Auto-detect (mixed feed)</em>
+            </MenuItem>
+            {iocTypes.map((t) => (
+              <MenuItem key={t.name} value={t.name}>
+                <Box component="span" sx={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.8rem' }}>
+                  {t.name}
+                </Box>
+                {t.description && (
+                  <Typography component="span" variant="caption" sx={{ ml: 1, color: 'text.secondary' }}>
+                    — {t.description}
+                  </Typography>
+                )}
+              </MenuItem>
+            ))}
+          </TextField>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Switch
               checked={formData.enabled ?? true}
