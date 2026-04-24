@@ -22,6 +22,12 @@ export interface AlgoliaSearchApp {
   action_labels: string[];
   triggers: string[];
   verified: boolean;
+  /**
+   * Where this app came from in the merged search results.
+   * - 'public'  — Algolia public catalog
+   * - 'private' — your own /api/v1/apps (requires apiKey)
+   */
+  source?: 'public' | 'private';
 }
 
 export interface AppSelectedEvent {
@@ -128,6 +134,12 @@ export interface SingulJSProps {
   authPath?: string;
   /** Path appended to apiBaseUrl when redirecting to start OAuth/auth (default: /appauth) */
   appAuthPath?: string;
+  /** Path appended to apiBaseUrl to fetch the user's private apps (default: /api/v1/apps). Requires apiKey. */
+  privateAppsPath?: string;
+  /** Disable fetching private apps even when apiKey is set (default: false) */
+  disablePrivateApps?: boolean;
+  /** Show the All / Public / Private source filter when private apps are available (default: true) */
+  showSourceFilter?: boolean;
   /** Base URL for Singul API calls (default: https://singul.io) */
   singulBaseUrl?: string;
   /** Manually provided authenticated apps (used when apiKey is not provided) */
