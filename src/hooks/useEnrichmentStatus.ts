@@ -114,6 +114,33 @@ export const useEnrichmentStatus = (
       ]);
       await new Promise((resolve) => setTimeout(resolve, 3000));
       await refetchAll();
+
+      // Force-run "Enable Threat feeds" so ingestion starts immediately
+      // instead of waiting for the next scheduled tick.
+      try {
+        const wfRes = await fetch(getApiUrl('/api/v1/workflows'), {
+          credentials: 'include',
+          headers: { ...getAuthHeader() },
+        });
+        if (wfRes.ok) {
+          const data = await wfRes.json();
+          const workflows = Array.isArray(data) ? data : (data?.workflows || []);
+          const wf = workflows.find(
+            (w: { name?: string }) => w?.name === THREAT_FEEDS_WORKFLOW,
+          );
+          const wfId = (wf as { id?: string } | undefined)?.id;
+          if (wfId) {
+            await fetch(getApiUrl(`/api/v1/workflows/${wfId}/execute`), {
+              method: 'POST',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+              body: JSON.stringify({ execution_source: 'enrichment-enable', start: '' }),
+            });
+          }
+        }
+      } catch (err) {
+        console.warn('[enrichment] force-run Enable Threat feeds failed', err);
+      }
     } finally {
       setIsEnabling(false);
       setOptimistic(null);
