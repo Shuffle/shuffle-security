@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { HelpCircle, Send } from 'lucide-react';
-import type { AgentNotification } from '@/services/notifications';
+import { stripAgentTitlePrefix, type AgentNotification } from '@/services/notifications';
 
 interface Props {
   open: boolean;
@@ -74,7 +74,7 @@ const AgentQuestionDialog = ({ open, onClose, notification, onSubmit }: Props) =
               </Typography>
             </Box>
             <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))' }}>
-              {notification.title}
+              {stripAgentTitlePrefix(notification.title)}
             </Typography>
           </Box>
           <IconButton onClick={onClose} size="small" sx={{ color: 'hsl(var(--muted-foreground))', mt: -0.5 }}>

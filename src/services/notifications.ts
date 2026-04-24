@@ -62,6 +62,23 @@ export const isApprovalNotification = (n: AgentNotification): boolean => {
 };
 
 /**
+ * Strip the noisy `Agent - input required: '…'` / `Agent - approval required: '…'`
+ * wrapper from a notification title so the UI shows just the underlying
+ * question or action. Tolerates straight and curly quotes, and leaves
+ * already-clean titles untouched.
+ */
+export const stripAgentTitlePrefix = (raw: string | undefined | null): string => {
+  if (!raw) return '';
+  let s = String(raw).trim();
+  // Match: "Agent - <whatever> required:" optionally followed by an opening quote.
+  const prefix = /^agent\s*[-–—:]\s*[a-z ]*required\s*:\s*['"“‘]?/i;
+  s = s.replace(prefix, '');
+  // Drop a single trailing closing quote if we opened one.
+  s = s.replace(/['"”’]\s*$/, '');
+  return s.trim();
+};
+
+/**
  * Fetch agent question notifications
  */
 export const fetchAgentNotifications = async (): Promise<NotificationsResponse> => {
