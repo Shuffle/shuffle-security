@@ -2977,6 +2977,7 @@ const IncidentsPage = () => {
             </Box>
           )}
         </Box>
+        )}
       </Box>
 
       <CreateIncidentDialog
