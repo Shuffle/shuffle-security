@@ -658,6 +658,24 @@ const IncidentDetailPage = () => {
     if (commentFileInputRef.current) commentFileInputRef.current.value = '';
   };
   const [activity, setActivity] = useState<ActivityItem[]>([]);
+  // Tick used to re-render the timeline so the AI processing placeholder can
+  // flip into a "timed out" state once 2 minutes have elapsed without an
+  // agent reply, even when no other state changes.
+  const [, setAiPlaceholderTick] = useState(0);
+  useEffect(() => {
+    const hasPendingAgentResponse = activity.some((a: any) => {
+      if (a?.ai_handled !== true) return false;
+      const replied = activity.some((r: any) => {
+        if (r?.replyToId !== a.id) return false;
+        const u = r?.user || '';
+        return /agent|ai\s*agent|aiagent/i.test(u);
+      });
+      return !replied;
+    });
+    if (!hasPendingAgentResponse) return;
+    const i = setInterval(() => setAiPlaceholderTick((t) => t + 1), 15_000);
+    return () => clearInterval(i);
+  }, [activity]);
   /**
    * Pending soft-delete confirmation. We never hard-delete a comment — the
    * confirm dialog flips `deleted: true` on the original entity so the
