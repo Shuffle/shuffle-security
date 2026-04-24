@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Box, Typography } from '@mui/material';
 import { AppAuthCard } from '@/components/onboarding/AppAuthConfig';
-import type { AlgoliaSearchApp } from '@/Shuffle-MCP';
+import type { AlgoliaSearchApp } from '@/Shuffle-MCPs';
 import { useAppAuth } from '@/hooks/useAppAuth';
 import singulAgentIcon from '@/assets/singul-agent-icon.png';
 

@@ -1,5 +1,5 @@
 {
-  "name": "shuffle-mcp",
+  "name": "shuffle-mcps",
   "version": "0.0.0-VERSION",
   "description": "Turn 3,000+ SaaS tools into MCP servers your agents can use. Headless React component for search, selection, and OAuth handoff.",
   "license": "MIT",

@@ -7,7 +7,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { Mail, Radar, Search, Globe, Cloud, Shield } from 'lucide-react';
 import { LandingNavbar } from '@/components/landing/LandingNavbar';
 import { Footer } from '@/components/landing/Footer';
-import { SingulJS, SingulJSHandle } from '@/Shuffle-MCP';
+import { SingulJS, SingulJSHandle } from '@/Shuffle-MCPs';
 import { trackCTA, trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
 import { usePageMeta } from '@/hooks/usePageMeta';
 

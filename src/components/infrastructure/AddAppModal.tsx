@@ -20,8 +20,8 @@ import {
   Dialog,
   DialogContent,
 } from '@/components/ui/dialog';
-import { SingulJS } from '@/Shuffle-MCP';
-import type { AppSelectedEvent } from '@/Shuffle-MCP';
+import { SingulJS } from '@/Shuffle-MCPs';
+import type { AppSelectedEvent } from '@/Shuffle-MCPs';
 import { AppAuthCard } from '@/components/onboarding/AppAuthConfig';
 import { API_CONFIG } from '@/config/api';
 import { useAppAuthFlow } from '@/hooks/useAppAuthFlow';

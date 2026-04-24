@@ -1,12 +1,12 @@
 <div align="center">
 
-<img src="./docs/agent-icon.png" alt="Shuffle MCP" width="96" />
+<img src="./docs/agent-icon.png" alt="Shuffle MCPs" width="96" />
 
-# Shuffle MCP
+# Shuffle MCPs
 
 Turn 3,000+ SaaS tools into MCP servers your agents can use. One search, one click, authenticated.
 
-[![npm](https://img.shields.io/npm/v/shuffle-mcp.svg)](https://www.npmjs.com/package/shuffle-mcp)
+[![npm](https://img.shields.io/npm/v/shuffle-mcps.svg)](https://www.npmjs.com/package/shuffle-mcps)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![upstream](https://img.shields.io/badge/upstream-Shuffle%2Fsingul.js-orange)](https://github.com/Shuffle/singul.js)
 
