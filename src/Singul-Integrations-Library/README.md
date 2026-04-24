@@ -1,12 +1,12 @@
 <div align="center">
 
-[<img src="https://shuffler.io/images/logos/singul.svg" alt="Singul Logo" width="100"/>](https://singul.io)
+<img src="./docs/agent-icon.png" alt="Shuffle MCP" width="96" />
 
-# Singul Integrations Library
+# Shuffle MCP
 
-Search, select, and authenticate against 3,000+ SaaS integrations.
+Turn 3,000+ SaaS tools into MCP servers your agents can use. One search, one click, authenticated.
 
-[![npm](https://img.shields.io/npm/v/singul-integrations.svg)](https://www.npmjs.com/package/singul-integrations)
+[![npm](https://img.shields.io/npm/v/shuffle-mcp.svg)](https://www.npmjs.com/package/shuffle-mcp)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![upstream](https://img.shields.io/badge/upstream-Shuffle%2Fsingul.js-orange)](https://github.com/Shuffle/singul.js)
 

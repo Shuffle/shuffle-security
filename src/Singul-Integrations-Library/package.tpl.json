@@ -1,7 +1,7 @@
 {
-  "name": "singul-integrations",
+  "name": "shuffle-mcp",
   "version": "0.0.0-VERSION",
-  "description": "Headless React component for searching, selecting, and authenticating against a catalog of 3,000+ SaaS integrations.",
+  "description": "Turn 3,000+ SaaS tools into MCP servers your agents can use. Headless React component for search, selection, and OAuth handoff.",
   "license": "MIT",
   "repository": {
     "type": "git",
