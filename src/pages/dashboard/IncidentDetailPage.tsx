@@ -4505,7 +4505,26 @@ const IncidentDetailPage = () => {
               </Tooltip>
             </>
           ) : (
-            'AI Agent is responding (no tools configured)'
+            <>
+              <span>AI Agent has no tools —</span>
+              <Box
+                component={Link}
+                to="/incidents/response-actions"
+                onClick={(e) => e.stopPropagation()}
+                sx={{
+                  fontWeight: 600,
+                  color: 'rgba(236, 81, 124, 0.95)',
+                  textDecoration: 'none',
+                  borderBottom: '1px dashed rgba(236, 81, 124, 0.5)',
+                  '&:hover': {
+                    color: 'rgba(236, 81, 124, 1)',
+                    borderBottomColor: 'rgba(236, 81, 124, 0.9)',
+                  },
+                }}
+              >
+                Configure tools
+              </Box>
+            </>
           )}
         </Typography>
         {timedOut && commentId && (
