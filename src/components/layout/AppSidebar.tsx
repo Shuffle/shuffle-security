@@ -497,8 +497,9 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
 
       <Divider sx={{ borderColor: 'hsl(var(--border))', mx: visuallyCollapsed ? 1 : 2 }} />
 
-      {/* Navigation Items */}
-      <List sx={{ px: 1, py: 2, flexGrow: 1, overflowY: 'auto', overflowX: 'hidden' }}>
+      {/* Scrollable area: nav items + integrations */}
+      <Box sx={{ flexGrow: 1, overflowY: 'auto', overflowX: 'hidden', minHeight: 0 }}>
+        <List sx={{ px: 1, py: 2 }}>
         {navItems.map((item, idx) => (
           <Box key={item.label === '__divider__' ? `divider-${idx}` : item.label}>
             {item.label === '__divider__' ? (
@@ -733,11 +734,11 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
           </Box>
         ))}
       </List>
-      {/* Integrations Section */}
-      <Box sx={{ mt: 2, overflow: 'hidden' }}>
-        <Divider sx={{ borderColor: 'hsl(var(--border))', mx: visuallyCollapsed ? 1 : 2, mb: 1 }} />
-        <IntegrationStatus collapsed={visuallyCollapsed} />
-        
+        {/* Integrations Section — inside scrollable area so all rows are reachable */}
+        <Box sx={{ mt: 2 }}>
+          <Divider sx={{ borderColor: 'hsl(var(--border))', mx: visuallyCollapsed ? 1 : 2, mb: 1 }} />
+          <IntegrationStatus collapsed={visuallyCollapsed} />
+        </Box>
       </Box>
 
       {/* Bottom Section */}
