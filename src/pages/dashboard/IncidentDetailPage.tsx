@@ -665,6 +665,9 @@ const IncidentDetailPage = () => {
   useEffect(() => {
     const hasPendingAgentResponse = activity.some((a: any) => {
       if (a?.ai_handled !== true) return false;
+      const text = String(a?.content || '');
+      // Only items that explicitly @-mention the AI Agent show a placeholder.
+      if (!/@\s*ai[\s_-]*agent\b/i.test(text)) return false;
       const replied = activity.some((r: any) => {
         if (r?.replyToId !== a.id) return false;
         const u = r?.user || '';
@@ -4280,122 +4283,43 @@ const IncidentDetailPage = () => {
     // indicator so users know the agent didn't get back to them.
     const AI_RESPONSE_TIMEOUT_MS = 2 * 60 * 1000;
 
-    // Renders a placeholder "AI Agent is responding..." card beneath any
-    // activity item where ai_handled === true. This makes it visually clear
-    // that the agent has picked up the comment and is composing a response.
-    // When `timedOut` is true we render a compact "Agent timed out" card
-    // instead of the loading skeleton.
+    // Renders a compact inline indicator beneath any activity item that
+    // explicitly @-mentions the AI Agent and is still flagged ai_handled.
+    // While waiting we show a small spinning loader; once the 2-minute
+    // timeout has elapsed we show a muted "timed out" pill instead.
     const renderAgentProcessingPlaceholder = (key: string, timedOut: boolean) => (
       <Box
         key={`ai-processing-${key}`}
         sx={{
-          display: 'flex',
-          gap: 1.5,
-          p: 1.5,
-          borderRadius: 1.5,
-          position: 'relative',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 0.75,
+          alignSelf: 'flex-start',
+          px: 1,
+          py: 0.4,
+          borderRadius: 999,
+          fontSize: '0.7rem',
           background: timedOut ? 'hsl(var(--muted) / 0.4)' : 'var(--agent-gradient-subtle)',
           border: '1px solid',
           borderColor: timedOut ? 'hsl(var(--border))' : 'rgba(156, 90, 242, 0.35)',
-          overflow: 'hidden',
-          ...(!timedOut && {
-            '&::before': {
-              content: '""',
-              position: 'absolute',
-              inset: 0,
-              background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)',
-              backgroundSize: '200% 100%',
-              animation: 'shimmer 2s linear infinite',
-              pointerEvents: 'none',
-            },
-          }),
+          color: timedOut ? 'text.secondary' : 'text.primary',
         }}
       >
-        <Box
-          sx={{
-            width: 24,
-            height: 24,
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: timedOut ? 'hsl(var(--muted))' : 'var(--agent-gradient)',
-            flexShrink: 0,
-            opacity: timedOut ? 0.7 : 1,
-          }}
+        {timedOut ? (
+          <AgentIcon size={12} style={{ opacity: 0.7 }} />
+        ) : (
+          <CircularProgress
+            size={10}
+            thickness={6}
+            sx={{ color: 'rgba(156, 90, 242, 0.9)' }}
+          />
+        )}
+        <Typography
+          variant="caption"
+          sx={{ fontSize: '0.7rem', fontWeight: 500, color: 'inherit', lineHeight: 1 }}
         >
-          <AgentIcon size={14} />
-        </Box>
-        <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography
-              variant="caption"
-              sx={{
-                fontWeight: 600,
-                fontSize: '0.75rem',
-                ...(timedOut
-                  ? { color: 'text.secondary' }
-                  : {
-                      background: 'var(--agent-gradient)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      backgroundClip: 'text',
-                    }),
-              }}
-            >
-              AI Agent
-            </Typography>
-            <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.65rem' }}>
-              {timedOut ? 'timed out' : 'is responding…'}
-            </Typography>
-            {!timedOut && (
-              <Box sx={{ display: 'inline-flex', gap: 0.4, ml: 0.5 }}>
-                {[0, 1, 2].map((i) => (
-                  <Box
-                    key={i}
-                    sx={{
-                      width: 4,
-                      height: 4,
-                      borderRadius: '50%',
-                      bgcolor: 'rgba(156, 90, 242, 0.7)',
-                      animation: 'pulse-glow 1.2s ease-in-out infinite',
-                      animationDelay: `${i * 0.18}s`,
-                    }}
-                  />
-                ))}
-              </Box>
-            )}
-          </Box>
-          {timedOut ? (
-            <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.7rem', mt: 0.25 }}>
-              No response received after 2 minutes. The agent may be unavailable — try mentioning @AIAgent again.
-            </Typography>
-          ) : (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mt: 0.25 }}>
-              <Box
-                sx={{
-                  height: 8,
-                  borderRadius: 1,
-                  width: '70%',
-                  background: 'linear-gradient(90deg, hsl(var(--muted)) 0%, hsl(var(--muted) / 0.5) 50%, hsl(var(--muted)) 100%)',
-                  backgroundSize: '200% 100%',
-                  animation: 'shimmer 1.8s linear infinite',
-                }}
-              />
-              <Box
-                sx={{
-                  height: 8,
-                  borderRadius: 1,
-                  width: '45%',
-                  background: 'linear-gradient(90deg, hsl(var(--muted)) 0%, hsl(var(--muted) / 0.5) 50%, hsl(var(--muted)) 100%)',
-                  backgroundSize: '200% 100%',
-                  animation: 'shimmer 1.8s linear infinite',
-                  animationDelay: '0.3s',
-                }}
-              />
-            </Box>
-          )}
-        </Box>
+          {timedOut ? 'AI Agent timed out' : 'AI Agent is responding…'}
+        </Typography>
       </Box>
     );
 
@@ -4412,10 +4336,14 @@ const IncidentDetailPage = () => {
       const node = renderItem(item, { isReply });
       if (!node) return null;
 
-      // Show processing/timeout placeholder when this item is flagged
-      // ai_handled but no agent reply has landed yet.
+      // Show processing/timeout placeholder ONLY when this comment explicitly
+      // @-mentions the AI Agent (e.g. @AIAgent / @aiagent / @ai_agent) and is
+      // still flagged ai_handled with no agent reply landed yet. Without an
+      // explicit mention we render nothing — silence is the right default.
       const isManualActivity = item.type === 'manual';
       const aiHandled = isManualActivity && (item.data as any)?.ai_handled === true;
+      const commentText = isManualActivity ? String((item.data as any)?.content || '') : '';
+      const mentionsAgent = /@\s*ai[\s_-]*agent\b/i.test(commentText);
       const hasAgentReply = replies.some((r) => {
         if (r.type !== 'manual') return false;
         const u = (r.data as any)?.user || '';
@@ -4424,7 +4352,7 @@ const IncidentDetailPage = () => {
       const ageMs = isManualActivity
         ? Date.now() - ((item.data as any)?.timestamp || item.timestamp || 0)
         : 0;
-      const showAgentProcessing = aiHandled && !hasAgentReply;
+      const showAgentProcessing = aiHandled && mentionsAgent && !hasAgentReply;
       const isTimedOut = showAgentProcessing && ageMs > AI_RESPONSE_TIMEOUT_MS;
 
       if (replies.length === 0 && !showAgentProcessing) return node;
