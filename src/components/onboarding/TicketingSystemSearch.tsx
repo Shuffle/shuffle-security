@@ -5,8 +5,8 @@ import {
   Chip,
 } from '@mui/material';
 import { Mail, Radar, Search, Globe, Ticket } from 'lucide-react';
-import { SingulJS } from '@/Singul-Integrations-Library';
-import type { AlgoliaSearchApp, SingulJSHandle } from '@/Singul-Integrations-Library';
+import { SingulJS } from '@/Shuffle-MCP';
+import type { AlgoliaSearchApp, SingulJSHandle } from '@/Shuffle-MCP';
 import { API_CONFIG } from '@/config/api';
 
 interface TicketingSystemSearchProps {

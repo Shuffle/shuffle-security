@@ -33,7 +33,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import LockIcon from '@mui/icons-material/Lock';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import CloseIcon from '@mui/icons-material/Close';
-import type { AlgoliaSearchApp } from '@/Singul-Integrations-Library';
+import type { AlgoliaSearchApp } from '@/Shuffle-MCP';
 import { API_CONFIG, getApiUrl, getAuthHeader, isDevEnvironment, isCloudDomain } from '@/config/api';
 import { getIngestionCategory } from '@/lib/ingestionDetection';
 import ReactMarkdown from 'react-markdown';

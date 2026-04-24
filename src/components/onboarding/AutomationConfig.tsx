@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { IntegrationStatus } from '@/components/layout/IntegrationStatus';
 import { AppAuthCard, type AppAuthState, type ApiAuthEntry as AppAuthApiEntry } from '@/components/onboarding/AppAuthConfig';
-import type { AlgoliaSearchApp } from '@/Singul-Integrations-Library';
+import type { AlgoliaSearchApp } from '@/Shuffle-MCP';
 import {
   Box,
   Typography,

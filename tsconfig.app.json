@@ -30,7 +30,7 @@
     "src"
   ],
   "exclude": [
-    "src/Singul-Integrations-Library/tsup.config.ts",
-    "src/Singul-Integrations-Library/dist"
+    "src/Shuffle-MCP/tsup.config.ts",
+    "src/Shuffle-MCP/dist"
   ]
 }

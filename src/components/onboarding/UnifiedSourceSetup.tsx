@@ -15,8 +15,8 @@ import {
   ChevronDown,
   CheckCircle2,
 } from 'lucide-react';
-import { SingulJS } from '@/Singul-Integrations-Library';
-import type { AlgoliaSearchApp, SingulJSHandle } from '@/Singul-Integrations-Library';
+import { SingulJS } from '@/Shuffle-MCP';
+import type { AlgoliaSearchApp, SingulJSHandle } from '@/Shuffle-MCP';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { getIngestionCategory, type IngestionCategory } from '@/lib/ingestionDetection';
 

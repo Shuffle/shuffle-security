@@ -5,7 +5,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import type { AlgoliaSearchApp } from '@/Singul-Integrations-Library';
+import type { AlgoliaSearchApp } from '@/Shuffle-MCP';
 import type { AppAuthState, ApiAuthEntry } from '@/components/onboarding/AppAuthConfig';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { refreshAllIntegrationStatus } from '@/components/layout/IntegrationStatus';
