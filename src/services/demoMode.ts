@@ -93,6 +93,69 @@ const recordSeed = (category: string, keys: string[]) => {
  * the sensor host injected at demo start) into the same cleanup index. */
 export const recordDemoSeed = (category: string, keys: string[]) => recordSeed(category, keys);
 
+/**
+ * Server-side dedup: remove any existing demo incidents whose key matches
+ * the given suffix predicate, OR whose payload looks like a demo item with
+ * the matching marker. Local index is also pruned so cleanup stays accurate.
+ *
+ * This guards against duplicates when the local seed index has been wiped
+ * (different browser, cleared storage, partial failure) — without this the
+ * focus phishing or Wazuh implant incidents can accumulate every time the
+ * user re-enters the tour or hits "Force generate".
+ */
+const wipeExistingDemoIncidents = async (
+  matcher: (key: string, value: unknown) => boolean,
+): Promise<void> => {
+  // 1. Local index — quick path
+  try {
+    const idx = readIndex();
+    const existing = idx[DATASTORE_CATEGORIES.INCIDENTS] || [];
+    const localMatches = existing.filter(k => matcher(k, null));
+    if (localMatches.length > 0) {
+      await Promise.allSettled(localMatches.map(k => deleteDatastoreItem(k, DATASTORE_CATEGORIES.INCIDENTS)));
+      idx[DATASTORE_CATEGORIES.INCIDENTS] = existing.filter(k => !localMatches.includes(k));
+      writeIndex(idx);
+    }
+  } catch { /* best-effort */ }
+
+  // 2. Server scan — catches keys the local index never saw (e.g. different
+  // browser / cleared storage / pipeline-assigned keys).
+  try {
+    const res = await getDatastoreByCategory(DATASTORE_CATEGORIES.INCIDENTS);
+    if (res.success && res.data) {
+      const orphans = res.data.filter(item => {
+        const key = typeof item.key === 'string' ? item.key : '';
+        return matcher(key, item.value);
+      });
+      if (orphans.length > 0) {
+        await Promise.allSettled(
+          orphans.map(o => deleteDatastoreItem(o.key, DATASTORE_CATEGORIES.INCIDENTS)),
+        );
+      }
+    }
+  } catch { /* best-effort */ }
+};
+
+/** Identify the demo focus phishing incident by key prefix or payload title. */
+const isDemoFocusIncident = (key: string, value: unknown): boolean => {
+  if (key.startsWith('demo-inc-phish-') && key.endsWith('-focus')) return true;
+  if (!value || typeof value !== 'object') return false;
+  const v = value as { metadata?: { extensions?: { custom_attributes?: { demo?: boolean } } }; finding_info?: { title?: string } };
+  const isDemo = v?.metadata?.extensions?.custom_attributes?.demo === true;
+  const title = v?.finding_info?.title || '';
+  return isDemo && /Phishing email reported by/i.test(title);
+};
+
+/** Identify the demo Wazuh / Sliver implant follow-up incident. */
+const isDemoWazuhIncident = (key: string, value: unknown): boolean => {
+  if (key.includes('-wazuh')) return true;
+  if (!value || typeof value !== 'object') return false;
+  const v = value as { metadata?: { extensions?: { custom_attributes?: { demo?: boolean } } }; finding_info?: { title?: string } };
+  const isDemo = v?.metadata?.extensions?.custom_attributes?.demo === true;
+  const title = v?.finding_info?.title || '';
+  return isDemo && /Sliver C2|implant beaconing/i.test(title);
+};
+
 // ─── IOC helpers ─────────────────────────────────────────────────────────────
 // We want demo incidents to feature *real* IOCs from the user's threat feeds
 // instead of made-up "example" values, so the IOC parser will (a) recognise
