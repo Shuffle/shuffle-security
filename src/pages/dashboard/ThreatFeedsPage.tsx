@@ -147,6 +147,10 @@ const ThreatFeedsPage = () => {
         await deleteDatastoreItems(feeds.map(f => f.id), DSC.THREAT_FEEDS);
       }
       await initializeDefaults();
+      toast.success(`Restored ${DEFAULT_THREAT_FEEDS.length} default threat feeds`);
+    } catch (err) {
+      console.error('Failed to reset threat feeds:', err);
+      toast.error('Failed to reset threat feeds');
     } finally {
       setIsInitializing(false);
     }
