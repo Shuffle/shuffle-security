@@ -1,0 +1,57 @@
+{
+  "name": "@shuffle/singul.js",
+  "version": "0.0.0-VERSION",
+  "description": "Headless React component for searching, selecting, and authenticating against a catalog of 3,000+ SaaS integrations.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Shuffle/singul.js.git"
+  },
+  "homepage": "https://github.com/Shuffle/singul.js#readme",
+  "keywords": [
+    "react",
+    "integrations",
+    "oauth",
+    "mcp",
+    "algolia",
+    "search",
+    "shuffle",
+    "singul"
+  ],
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./singul.css": "./dist/singul.css"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "prepublishOnly": "npm run build"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18"
+  },
+  "dependencies": {
+    "algoliasearch": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0"
+  }
+}
