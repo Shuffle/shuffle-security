@@ -4797,6 +4797,7 @@ const IncidentDetailPage = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
+      style={{ maxWidth: 1400, width: '100%', marginLeft: 'auto', marginRight: 'auto' }}
     >
       {/* OCSF recovery fallback banner — shown when the live payload was not
           OCSF-shaped and we rebuilt the view from a previous valid revision. */}
