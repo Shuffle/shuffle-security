@@ -317,7 +317,7 @@ const NotificationRow = ({ notification, entityBasePath, onApprove, onQuickView,
             whiteSpace: 'nowrap',
             minWidth: 0,
           }}>
-            <InlineMarkdown text={notification.title} />
+            <InlineMarkdown text={stripAgentTitlePrefix(notification.title)} />
           </Box>
           {notification.severity && (
             <Chip
