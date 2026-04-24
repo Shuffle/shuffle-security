@@ -216,6 +216,8 @@ export const sweepOrphanDemoIncidents = async (): Promise<number> => {
     return 0;
   }
 };
+
+// ─── IOC helpers ─────────────────────────────────────────────────────────────
 // We want demo incidents to feature *real* IOCs from the user's threat feeds
 // instead of made-up "example" values, so the IOC parser will (a) recognise
 // them as known-bad and (b) link the incident to the actual STIX indicator.
