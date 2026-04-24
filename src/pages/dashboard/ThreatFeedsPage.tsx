@@ -199,14 +199,18 @@ const ThreatFeedsPage = () => {
             </IconButton>
           </Tooltip>
           {feeds.length > 0 && (
-            <Button 
-              variant="outlined" 
-              onClick={handleResetDefaults} 
-              disabled={isInitializing}
-              sx={{ height: 36 }}
-            >
-              Reset to Defaults
-            </Button>
+            <Tooltip title="Remove all current feeds and restore the curated default list">
+              <span>
+                <Button 
+                  variant="outlined" 
+                  onClick={handleResetDefaults} 
+                  disabled={isInitializing}
+                  sx={{ height: 36 }}
+                >
+                  Reset to Defaults
+                </Button>
+              </span>
+            </Tooltip>
           )}
           {feeds.length === 0 && !isLoading && !isInitializing && (
             <Button 
