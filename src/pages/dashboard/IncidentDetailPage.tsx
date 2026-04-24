@@ -2196,8 +2196,11 @@ const IncidentDetailPage = () => {
           }
 
           if (issues.length > 0) {
+            // Suppressed user-facing toast — rapid sequential updates often
+            // cause the verify snapshot to lag behind the latest in-memory
+            // state, producing false-positive mismatches. Keep the console
+            // warning for debugging but do not alarm the user.
             console.warn('[SaveVerify] Mismatch detected in:', issues);
-            toast.error(`Save may not have persisted: ${issues.join(', ')} did not match. This is usually caused by security rules — try disabling them in "Automation for Incidents". Contact support@shuffler.io if the issue persists.`);
           } else {
             console.log('[SaveVerify] Verified successfully');
           }
