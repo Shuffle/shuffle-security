@@ -4414,7 +4414,8 @@ const IncidentDetailPage = () => {
           alignItems: 'center',
           gap: 0.75,
           alignSelf: 'flex-start',
-          px: 1,
+          pl: 0.4,
+          pr: 1,
           py: 0.4,
           borderRadius: 999,
           fontSize: '0.7rem',
@@ -4425,13 +4426,39 @@ const IncidentDetailPage = () => {
           maxWidth: '100%',
         }}
       >
-        {timedOut ? (
-          <AgentIcon size={12} style={{ opacity: 0.7 }} />
-        ) : (
+        {/* Left-side AI Agent badge — clickable, links to /agents. */}
+        <Tooltip title="Open Agent activity" arrow disableInteractive>
+          <Box
+            component={Link}
+            to="/agents"
+            onClick={(e) => e.stopPropagation()}
+            aria-label="Open Agent activity"
+            sx={{
+              width: 18,
+              height: 18,
+              borderRadius: '50%',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              background: 'rgba(0, 0, 0, 0.25)',
+              color: 'inherit',
+              textDecoration: 'none',
+              transition: 'background 0.15s ease, transform 0.15s ease',
+              '&:hover': {
+                background: 'rgba(0, 0, 0, 0.4)',
+                transform: 'scale(1.05)',
+              },
+            }}
+          >
+            <AgentIcon size={11} style={{ opacity: timedOut ? 0.7 : 1 }} />
+          </Box>
+        </Tooltip>
+        {!timedOut && (
           <CircularProgress
             size={10}
             thickness={6}
-            sx={{ color: 'rgba(156, 90, 242, 0.9)' }}
+            sx={{ color: 'rgba(156, 90, 242, 0.9)', flexShrink: 0 }}
           />
         )}
         <Typography
@@ -4451,7 +4478,7 @@ const IncidentDetailPage = () => {
             'AI Agent timed out'
           ) : toolsSummary ? (
             <>
-              <span>AI Agent is responding with</span>
+              <span>Processing using the tools</span>
               <Tooltip
                 title={enabledAgentTools.map(formatToolName).join(', ')}
                 arrow
@@ -4473,7 +4500,7 @@ const IncidentDetailPage = () => {
               </Tooltip>
             </>
           ) : (
-            'AI Agent is responding…'
+            'Processing…'
           )}
         </Typography>
         {timedOut && commentId && (
