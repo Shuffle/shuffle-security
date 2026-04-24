@@ -348,14 +348,38 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
     return internalSelectedApps.some((a) => a.objectID === app.objectID);
   }, [internalSelectedApps]);
 
-  // Merge pinned apps at the top of the results, deduped by normalized name
+  // Filter the user's private apps client-side by the current query.
+  const filteredPrivateApps = useMemo(() => {
+    if (privateApps.length === 0) return [];
+    const q = query.trim().toLowerCase();
+    if (!q) return privateApps;
+    return privateApps.filter(a =>
+      a.name.toLowerCase().includes(q) ||
+      (a.description || '').toLowerCase().includes(q) ||
+      (a.categories || []).some(c => c.toLowerCase().includes(q))
+    );
+  }, [privateApps, query]);
+
+  // Merge private + public apps, apply source filter, prepend pinned, dedupe by name.
   const displayResults = useMemo(() => {
-    if (!pinnedApps || pinnedApps.length === 0) return results;
     const norm = (n: string) => (n || '').toLowerCase().replace(/[\s_\-]+/g, '');
+
+    let merged: AlgoliaSearchApp[];
+    if (sourceFilter === 'public') {
+      merged = results;
+    } else if (sourceFilter === 'private') {
+      merged = filteredPrivateApps;
+    } else {
+      // 'all' — private apps first (your own tools win), then public, deduped by name
+      const privateNames = new Set(filteredPrivateApps.map(a => norm(a.name)));
+      const publicOnly = results.filter(a => !privateNames.has(norm(a.name)));
+      merged = [...filteredPrivateApps, ...publicOnly];
+    }
+
+    if (!pinnedApps || pinnedApps.length === 0) return merged;
     const pinnedNames = new Set(pinnedApps.map(a => norm(a.name)));
-    const filtered = results.filter(a => !pinnedNames.has(norm(a.name)));
-    return [...pinnedApps, ...filtered];
-  }, [pinnedApps, results]);
+    return [...pinnedApps, ...merged.filter(a => !pinnedNames.has(norm(a.name)))];
+  }, [pinnedApps, results, filteredPrivateApps, sourceFilter]);
 
   // Get grid columns style
   const getGridColumnsStyle = useMemo(() => {
