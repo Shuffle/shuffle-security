@@ -23,7 +23,7 @@ import { Network, Braces, Waypoints, Link2, Workflow, Activity, BookOpen, Layout
 import AgentIcon from '@/components/agent/AgentIcon';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 import { useWorkflows } from '@/hooks/useWorkflows';
-import type { AlgoliaSearchApp } from '@/Singul-Integrations-Library/singul.helpers';
+import type { AlgoliaSearchApp } from '@/Shuffle-MCP/singul.helpers';
 
 const ALGOLIA_APP_ID = 'JNSS5CFDZZ';
 const ALGOLIA_API_KEY = '33e4e3564f4f060e96e0531957bed552';

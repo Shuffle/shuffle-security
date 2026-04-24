@@ -5,7 +5,7 @@ import { defineConfig } from 'tsup';
  *
  * This is only used by CI when packaging the library — it is NOT used by the
  * host app's Vite build. The host app keeps importing source directly via the
- * `@/Singul-Integrations-Library` path alias.
+ * `@/Shuffle-MCP` path alias.
  */
 export default defineConfig({
   entry: ['index.ts'],

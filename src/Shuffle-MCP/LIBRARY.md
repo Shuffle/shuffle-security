@@ -223,7 +223,7 @@ Requires the `NPM_TOKEN` repo secret. Trigger manually from the Actions tab with
 ### Local test
 
 ```bash
-cd src/Singul-Integrations-Library
+cd src/Shuffle-MCP
 cp package.tpl.json package.json
 npm install && npm run build && npm pack
 ```

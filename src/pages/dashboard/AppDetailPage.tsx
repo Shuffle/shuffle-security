@@ -25,7 +25,7 @@ import TimelineIcon from '@mui/icons-material/Timeline';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { AppAuthCard } from '@/components/onboarding/AppAuthConfig';
-import type { AlgoliaSearchApp } from '@/Singul-Integrations-Library';
+import type { AlgoliaSearchApp } from '@/Shuffle-MCP';
 import { useAppAuth } from '@/hooks/useAppAuth';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { useAuth } from '@/context/AuthContext';
