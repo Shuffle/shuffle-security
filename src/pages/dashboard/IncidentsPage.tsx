@@ -2377,6 +2377,7 @@ const IncidentsPage = () => {
               )}
             </Box>
 
+            {incidents.length >= 3 && (
             <TextField
               size="small"
               placeholder="Filter"
@@ -2392,6 +2393,7 @@ const IncidentsPage = () => {
               }}
               sx={{ width: { xs: 100, sm: 140 }, minWidth: 0, flexShrink: 1 }}
       />
+            )}
 
       <AppSearchDrawer
         open={forwardAppSearchOpen}
