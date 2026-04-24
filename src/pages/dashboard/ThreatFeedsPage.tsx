@@ -301,6 +301,7 @@ const ThreatFeedsPage = () => {
                 <TableRow>
                   <TableCell>Enabled</TableCell>
                   <TableCell>Name</TableCell>
+                  <TableCell>Type</TableCell>
                   <TableCell>URL</TableCell>
                   <TableCell>Description</TableCell>
                   <TableCell align="right">Actions</TableCell>
