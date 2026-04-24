@@ -4402,6 +4402,35 @@ const IncidentDetailPage = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
+      {/* OCSF recovery fallback banner — shown when the live payload was not
+          OCSF-shaped and we rebuilt the view from a previous valid revision. */}
+      {ocsfFallbackInfo && (
+        <Box sx={{
+          mb: 2,
+          p: 1.5,
+          borderRadius: 2,
+          bgcolor: 'hsl(38 92% 50% / 0.10)',
+          border: '1px solid hsl(38 92% 50% / 0.40)',
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: 1.25,
+        }}>
+          <HistoryIcon sx={{ fontSize: 20, color: 'hsl(38 92% 50%)', mt: 0.1 }} />
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography variant="body2" sx={{ color: 'hsl(38 92% 50%)', fontWeight: 600, fontSize: '0.8rem' }}>
+              Recovered from a previous OCSF revision
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.72rem', display: 'block', mt: 0.25 }}>
+              The latest payload is not in a valid OCSF format. We rebuilt this view from the most recent valid revision
+              {ocsfFallbackInfo.revisionTimestamp ? ` (${new Date(ocsfFallbackInfo.revisionTimestamp).toLocaleString()})` : ''}
+              {ocsfFallbackInfo.overlaidFieldCount > 0
+                ? ` and overlaid ${ocsfFallbackInfo.overlaidFieldCount} new field${ocsfFallbackInfo.overlaidFieldCount === 1 ? '' : 's'} from the latest edit.`
+                : '.'} Validate your ingest pipeline or contact support@shuffler.io.
+            </Typography>
+          </Box>
+        </Box>
+      )}
+
       {/* Read-only banner for shared/public view */}
       {isPublicView && (
         <Box sx={{
