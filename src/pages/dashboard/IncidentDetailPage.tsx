@@ -116,6 +116,7 @@ import { normalizeStatus } from '@/config/incidentConfig';
 import { ResolveIncidentDialog, ResolutionData, RESOLUTION_REASONS } from '@/components/incidents/ResolveIncidentDialog';
 import { MergeIncidentDialog } from '@/components/incidents/MergeIncidentDialog';
 import { MentionText } from '@/components/incidents/MentionText';
+import { UserHoverCard } from '@/components/incidents/UserHoverCard';
 import { TaskKanbanBoard } from '@/components/incidents/TaskKanbanBoard';
 import { MentionInput } from '@/components/incidents/MentionInput';
 import { TaskDateTimePicker } from '@/components/incidents/TaskDateTimePicker';
