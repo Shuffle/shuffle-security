@@ -2081,17 +2081,18 @@ const IncidentsPage = () => {
             </Box>
           )}
 
-          {/* Arrow between Ingest and Forward - hidden until workflows loaded.
-              Also hidden whenever the demo tour drawer is open. */}
-          {!ingestionLoading && !isDemoTourActive && (
+          {/* Arrow between Ingest and Forward — hidden until workflows loaded,
+              while the demo tour drawer is open, while in demo mode, and
+              when no ingestion source has been set up yet (Forward only
+              makes sense once at least one app is ingesting). */}
+          {!ingestionLoading && !isDemoTourActive && !demoActive && ingestionApps.length > 0 && (
           <Box className="automation-arrow" sx={{ display: 'flex', alignItems: 'center', color: 'hsl(var(--muted-foreground))', mx: -0.25, maxWidth: 30, opacity: 1 }}>
             <ChevronRightIcon sx={{ fontSize: 18 }} />
           </Box>
           )}
 
-          {/* Forward Destinations - visible after workflows loaded.
-              Hidden entirely whenever the demo tour drawer is open. */}
-          {!ingestionLoading && !isDemoTourActive && (
+          {/* Forward Destinations — same visibility rules as the arrow above. */}
+          {!ingestionLoading && !isDemoTourActive && !demoActive && ingestionApps.length > 0 && (
             <Box className={`automation-section-forward${forwardHovered ? ' is-hovered' : ''}`}
               onMouseEnter={handleForwardEnter}
               onMouseLeave={handleForwardLeave}
