@@ -152,10 +152,13 @@ When `apiKey` is set, status dots are populated: validated, configured, selected
 ### Backend / auth
 | Prop | Type | Default | Description |
 |---|---|---|---|
-| `apiKey` | `string` | — | Bearer token; enables status dots |
+| `apiKey` | `string` | — | Bearer token. Enables status dots **and** loads the user's private apps from `/api/v1/apps`. |
 | `apiBaseUrl` | `string` | `"https://shuffler.io"` | API base URL |
 | `authPath` | `string` | `"/api/v1/apps/authentication"` | Authenticated-apps path |
 | `appAuthPath` | `string` | `"/appauth"` | OAuth handoff path |
+| `privateAppsPath` | `string` | `"/api/v1/apps"` | Private apps endpoint. Results are merged into search and tagged with `source: 'private'`. |
+| `disablePrivateApps` | `boolean` | `false` | Skip the private-apps fetch even when `apiKey` is set. |
+| `showSourceFilter` | `boolean` | `true` | Show the **All / Public / Private** filter pills above results when private apps are loaded. |
 | `singulBaseUrl` | `string` | `"https://singul.io"` | Singul API base |
 | `authenticatedApps` | `AppAuthentication[]` | — | Inject manually instead of fetching |
 
