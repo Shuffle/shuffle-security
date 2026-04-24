@@ -4204,9 +4204,10 @@ const IncidentDetailPage = () => {
           </Avatar>
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.25 }}>
-              <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.75rem' }}>
-                {actItem.user}
-              </Typography>
+              <UserHoverCard
+                username={actItem.user}
+                isAgent={(actItem as any).is_agent === true}
+              />
               <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.65rem' }}>
                 {formatRelativeTime(actItem.timestamp)}
               </Typography>
