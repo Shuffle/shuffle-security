@@ -14,9 +14,20 @@ Search, select, and authenticate against 3,000+ SaaS integrations.
 
 ---
 
-<div align="center">
-  <img width="746" alt="Singul search preview" src="https://github.com/user-attachments/assets/774a6c5e-a8aa-4a12-9931-a952147b0992" />
-</div>
+<table align="center">
+  <tr>
+    <td align="center" width="50%">
+      <img src="https://github.com/user-attachments/assets/774a6c5e-a8aa-4a12-9931-a952147b0992" alt="Singul search" width="380" style="border-radius: 12px;" />
+      <br/><sub><b>1. Search</b></sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="./docs/app-detail-preview.png" alt="App detail" width="380" style="border-radius: 12px;" />
+      <br/><sub><b>2. Configure</b></sub>
+    </td>
+  </tr>
+</table>
+
+&nbsp;
 
 A headless React component for app discovery, selection, and OAuth handoff. Powers integration drawers, onboarding flows, and app pickers. Works zero-config against Shuffle's public Algolia index, or point it at your own.
 
