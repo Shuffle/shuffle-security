@@ -22,19 +22,36 @@ Turn 3,000+ SaaS tools into MCP servers your agents can use. One search, one cli
     </td>
     <td align="center" width="50%">
       <img src="./docs/app-detail-preview.png" alt="Authenticate and use as MCP" width="380" style="border-radius: 12px;" />
-      <br/><sub><b>2. Authenticate and use as MCP</b></sub>
+      <br/><sub><b>2. Authenticate — your agent uses it instantly</b></sub>
     </td>
   </tr>
 </table>
 
 &nbsp;
 
-A headless React component for app discovery, selection, and OAuth handoff. Powers integration drawers, onboarding flows, and app pickers. Works zero-config against Shuffle's public Algolia index, or point it at your own.
+> **No SDK required.** Once a tool is authenticated in Shuffle, it is live as an MCP server immediately — call it from any agent over plain HTTP. This npm package is the optional UI layer for embedding the search-and-connect flow inside your own product.
+
+## Try it in 30 seconds
+
+Authenticate any tool at [shuffler.io](https://shuffler.io), grab your API key, and call it:
+
+```bash
+curl https://shuffler.io/api/v1/apps/YOUR_APP/run \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"action": "send_message", "fields": {"channel": "general", "text": "hi"}}'
+```
+
+That is the MCP. Any agent, any language, no install. Full API reference: [shuffler.io/docs/API](https://shuffler.io/docs/API).
+
+## When to use this package
+
+Install `shuffle-mcps` when you want to **embed** the search, authenticate, and manage flow inside your own React/Vue/Next.js app — onboarding wizards, integration drawers, app pickers. If your agent is just calling MCPs, you do not need this; use the HTTP API directly.
 
 ## Install
 
 ```bash
-npm install singul-integrations
+npm install shuffle-mcps
 ```
 
 Peer deps: `react >= 18`, `react-dom >= 18`, `algoliasearch >= 5`.
@@ -42,7 +59,7 @@ Peer deps: `react >= 18`, `react-dom >= 18`, `algoliasearch >= 5`.
 ## Quick start
 
 ```tsx
-import { SingulJS } from 'singul-integrations';
+import { SingulJS } from 'shuffle-mcps';
 
 export default function App() {
   return (

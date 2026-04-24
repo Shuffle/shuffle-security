@@ -1,8 +1,8 @@
 # Singul Integrations Library — Reference
 
-Full API reference for [`singul-integrations`](./README.md). For a quick start, see the [README](./README.md).
+Full API reference for [`shuffle-mcps`](./README.md). For a quick start, see the [README](./README.md).
 
-> **Contributor note:** this folder is a standalone, publishable npm package (`singul-integrations`). The only allowed imports are `react`, `react-dom`, `algoliasearch`, and relative paths inside this folder. Anything else will break the npm build. Publishing is handled by `.github/workflows/publish-singul.yml`.
+> **Contributor note:** this folder is a standalone, publishable npm package (`shuffle-mcps`). The only allowed imports are `react`, `react-dom`, `algoliasearch`, and relative paths inside this folder. Anything else will break the npm build. Publishing is handled by `.github/workflows/publish-shuffle-mcps.yml`.
 
 ## Table of contents
 
@@ -19,7 +19,7 @@ Full API reference for [`singul-integrations`](./README.md). For a quick start, 
 ### React
 
 ```tsx
-import { SingulJS } from 'singul-integrations';
+import { SingulJS } from 'shuffle-mcps';
 
 <SingulJS authToken="..." onAppSelected={(d) => console.log(d)} />
 ```
@@ -30,7 +30,7 @@ The component touches `window` for the auth handoff, so render it client-side:
 
 ```tsx
 'use client';
-import { SingulJS } from 'singul-integrations';
+import { SingulJS } from 'shuffle-mcps';
 ```
 
 Or import dynamically:
@@ -38,7 +38,7 @@ Or import dynamically:
 ```tsx
 import dynamic from 'next/dynamic';
 const SingulJS = dynamic(
-  () => import('singul-integrations').then((m) => m.SingulJS),
+  () => import('shuffle-mcps').then((m) => m.SingulJS),
   { ssr: false }
 );
 ```
@@ -51,7 +51,7 @@ const SingulJS = dynamic(
 </template>
 
 <script>
-import { SingulJS } from 'singul-integrations/vue';
+import { SingulJS } from 'shuffle-mcps/vue';
 export default { components: { SingulJS } /* ... */ };
 </script>
 ```
