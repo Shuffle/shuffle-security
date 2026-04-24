@@ -665,6 +665,9 @@ const IncidentDetailPage = () => {
   useEffect(() => {
     const hasPendingAgentResponse = activity.some((a: any) => {
       if (a?.ai_handled !== true) return false;
+      const text = String(a?.content || '');
+      // Only items that explicitly @-mention the AI Agent show a placeholder.
+      if (!/@\s*ai[\s_-]*agent\b/i.test(text)) return false;
       const replied = activity.some((r: any) => {
         if (r?.replyToId !== a.id) return false;
         const u = r?.user || '';
