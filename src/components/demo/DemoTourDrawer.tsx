@@ -219,15 +219,22 @@ export const DemoTourDrawer = () => {
     return (
       <motion.div
         key="demo-anchor-pill"
-        initial={{ opacity: 0, y: 16, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
         transition={{ type: 'spring', damping: 26, stiffness: 320 }}
+        drag
+        dragMomentum={false}
+        onDragEnd={drag.onDragEnd}
         style={{
           position: 'fixed',
           right: 24,
-          bottom: 24,
+          bottom: 104,
           zIndex: 2147483000,
           pointerEvents: 'auto',
+          x: drag.x,
+          y: drag.y,
+          cursor: 'grab',
+          touchAction: 'none',
         }}
       >
         <Tooltip
