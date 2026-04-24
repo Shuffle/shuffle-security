@@ -120,10 +120,14 @@ export interface SingulJSProps {
   hitsPerPage?: number;
   
   // Authentication
-  /** API key for fetching authenticated apps from /api/v1/apps/authentication */
+  /** API key for fetching authenticated apps from the auth endpoint */
   apiKey?: string;
-  /** Base URL for Shuffle API calls (default: https://shuffler.io) */
+  /** Base URL for backend API calls (default: https://shuffler.io) */
   apiBaseUrl?: string;
+  /** Path appended to apiBaseUrl to fetch authenticated apps (default: /api/v1/apps/authentication) */
+  authPath?: string;
+  /** Path appended to apiBaseUrl when redirecting to start OAuth/auth (default: /appauth) */
+  appAuthPath?: string;
   /** Base URL for Singul API calls (default: https://singul.io) */
   singulBaseUrl?: string;
   /** Manually provided authenticated apps (used when apiKey is not provided) */
@@ -132,6 +136,14 @@ export interface SingulJSProps {
   hideAuthStatus?: boolean;
   /** Apps to pin at the top of the results (prepended, deduped by name). */
   pinnedApps?: AlgoliaSearchApp[];
+
+  // Algolia (override defaults to point at your own index)
+  /** Algolia application ID (default: Shuffle's public index) */
+  algoliaAppId?: string;
+  /** Algolia search-only API key (default: Shuffle's public key) */
+  algoliaApiKey?: string;
+  /** Algolia index name (default: appsearch) */
+  algoliaIndexName?: string;
 
   // Styling
   customStyles?: CustomStyles;

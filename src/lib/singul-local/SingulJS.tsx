@@ -9,8 +9,9 @@ import { algoliasearch, SearchClient } from 'algoliasearch';
 import type { AlgoliaSearchApp, AppSelectedEvent, SingulJSProps, AppAuthentication } from './singul.helpers';
 import './singul.css';
 
-const ALGOLIA_APP_ID = 'JNSS5CFDZZ';
-const ALGOLIA_API_KEY = '33e4e3564f4f060e96e0531957bed552';
+const DEFAULT_ALGOLIA_APP_ID = 'JNSS5CFDZZ';
+const DEFAULT_ALGOLIA_API_KEY = '33e4e3564f4f060e96e0531957bed552';
+const DEFAULT_ALGOLIA_INDEX = 'appsearch';
 
 export interface SingulJSHandle {
   search: (query: string) => void;
@@ -34,10 +35,15 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
   hitsPerPage = 15,
   apiKey,
   apiBaseUrl = 'https://shuffler.io',
+  authPath = '/api/v1/apps/authentication',
+  appAuthPath = '/appauth',
   singulBaseUrl = 'https://singul.io',
   hideAuthStatus = false,
   authenticatedApps: externalAuthenticatedApps,
   pinnedApps,
+  algoliaAppId = DEFAULT_ALGOLIA_APP_ID,
+  algoliaApiKey = DEFAULT_ALGOLIA_API_KEY,
+  algoliaIndexName = DEFAULT_ALGOLIA_INDEX,
   customStyles = {},
   className = '',
   renderItem,
@@ -66,7 +72,7 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
     if (apiKey) {
       const fetchAuthenticatedApps = async () => {
         try {
-          const response = await fetch(`${apiBaseUrl}/api/v1/apps/authentication`, {
+          const response = await fetch(`${apiBaseUrl}${authPath}`, {
             headers: {
               'Authorization': `Bearer ${apiKey}`,
             },
@@ -120,7 +126,7 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
 
   // Initialize Algolia client and run initial search
   useEffect(() => {
-    searchClient.current = algoliasearch(ALGOLIA_APP_ID, ALGOLIA_API_KEY);
+    searchClient.current = algoliasearch(algoliaAppId, algoliaApiKey);
     
     // Run initial search after client is ready
     if (!hasInitialized.current) {
@@ -184,7 +190,7 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
     setIsLoading(true);
     try {
       const searchResult = await searchClient.current.searchSingleIndex({
-        indexName: 'appsearch',
+        indexName: algoliaIndexName,
         searchParams: {
           query: searchQuery || '', // Empty string gets top results
           hitsPerPage,
@@ -236,7 +242,7 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
 
   // Handle app selection
   const selectApp = useCallback((app: AlgoliaSearchApp) => {
-    const authUrl = `https://shuffler.io/appauth?app_id=${app.objectID}&auth=${authToken}&source=shuffle`;
+    const authUrl = `${apiBaseUrl}${appAuthPath}?app_id=${app.objectID}&auth=${authToken}&source=shuffle`;
     
     if (multiSelect) {
       const isAlreadySelected = internalSelectedApps.some((a) => a.objectID === app.objectID);
@@ -257,7 +263,7 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
       setQuery('');
       setResults([]);
     }
-  }, [authToken, multiSelect, internalSelectedApps, onAppSelected, onSelectionChange, preventDefault]);
+  }, [authToken, apiBaseUrl, appAuthPath, multiSelect, internalSelectedApps, onAppSelected, onSelectionChange, preventDefault]);
 
   // Handle keyboard navigation
   const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
