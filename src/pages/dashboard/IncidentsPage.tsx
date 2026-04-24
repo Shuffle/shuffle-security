@@ -1852,7 +1852,6 @@ const IncidentsPage = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      style={{ maxWidth: 1400, width: '100%', marginLeft: 'auto', marginRight: 'auto' }}
     >
       <HighlightSpotlight />
       <ScheduleHealthBanner
