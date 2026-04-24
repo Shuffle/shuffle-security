@@ -398,7 +398,7 @@ const ThreatFeedsPage = () => {
                 ))}
                 {filteredFeeds.length === 0 && !isLoading && !isInitializing && (
                   <TableRow>
-                    <TableCell colSpan={5} sx={{ textAlign: 'center', py: 4 }}>
+                    <TableCell colSpan={6} sx={{ textAlign: 'center', py: 4 }}>
                       <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                         {searchQuery ? 'No feeds match your search' : 'No threat feeds configured'}
                       </Typography>
