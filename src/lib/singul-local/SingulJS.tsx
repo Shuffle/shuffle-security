@@ -242,7 +242,7 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
 
   // Handle app selection
   const selectApp = useCallback((app: AlgoliaSearchApp) => {
-    const authUrl = `https://shuffler.io/appauth?app_id=${app.objectID}&auth=${authToken}&source=shuffle`;
+    const authUrl = `${apiBaseUrl}${appAuthPath}?app_id=${app.objectID}&auth=${authToken}&source=shuffle`;
     
     if (multiSelect) {
       const isAlreadySelected = internalSelectedApps.some((a) => a.objectID === app.objectID);
