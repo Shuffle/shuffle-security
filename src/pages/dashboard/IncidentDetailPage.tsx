@@ -1561,6 +1561,18 @@ const IncidentDetailPage = () => {
     return () => clearInterval(intervalId);
   }, [loadIncident, isSaving]);
 
+  // Refresh when the tab becomes visible again so the user always sees the
+  // latest content after switching away and back.
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState !== 'visible') return;
+      if (pendingSaveRef.current || isSaving) return;
+      loadIncident(false);
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [loadIncident, isSaving]);
+
   // Fetch correlations — extracted into a callback so the "Re-run" button on
   // the Correlations tab header can refresh on demand. Deferred until the
   // incident is loaded to avoid blocking the UI.
