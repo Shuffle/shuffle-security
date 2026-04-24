@@ -4133,12 +4133,126 @@ const IncidentDetailPage = () => {
     // Render top-level items, threading replies indented underneath. The
     // indent + left rail visually groups the conversation while keeping the
     // outer chronology intact.
+    // Renders a placeholder "AI Agent is responding..." card beneath any
+    // activity item where ai_handled === true. This makes it visually clear
+    // that the agent has picked up the comment and is composing a response.
+    const renderAgentProcessingPlaceholder = (key: string) => (
+      <Box
+        key={`ai-processing-${key}`}
+        sx={{
+          display: 'flex',
+          gap: 1.5,
+          p: 1.5,
+          borderRadius: 1.5,
+          position: 'relative',
+          background: 'var(--agent-gradient-subtle)',
+          border: '1px solid',
+          borderColor: 'rgba(156, 90, 242, 0.35)',
+          overflow: 'hidden',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            inset: 0,
+            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)',
+            backgroundSize: '200% 100%',
+            animation: 'shimmer 2s linear infinite',
+            pointerEvents: 'none',
+          },
+        }}
+      >
+        <Box
+          sx={{
+            width: 24,
+            height: 24,
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'var(--agent-gradient)',
+            flexShrink: 0,
+          }}
+        >
+          <AgentIcon size={14} />
+        </Box>
+        <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                fontWeight: 600,
+                fontSize: '0.75rem',
+                background: 'var(--agent-gradient)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            >
+              AI Agent
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.65rem' }}>
+              is responding…
+            </Typography>
+            <Box sx={{ display: 'inline-flex', gap: 0.4, ml: 0.5 }}>
+              {[0, 1, 2].map((i) => (
+                <Box
+                  key={i}
+                  sx={{
+                    width: 4,
+                    height: 4,
+                    borderRadius: '50%',
+                    bgcolor: 'rgba(156, 90, 242, 0.7)',
+                    animation: 'pulse-glow 1.2s ease-in-out infinite',
+                    animationDelay: `${i * 0.18}s`,
+                  }}
+                />
+              ))}
+            </Box>
+          </Box>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mt: 0.25 }}>
+            <Box
+              sx={{
+                height: 8,
+                borderRadius: 1,
+                width: '70%',
+                background: 'linear-gradient(90deg, hsl(var(--muted)) 0%, hsl(var(--muted) / 0.5) 50%, hsl(var(--muted)) 100%)',
+                backgroundSize: '200% 100%',
+                animation: 'shimmer 1.8s linear infinite',
+              }}
+            />
+            <Box
+              sx={{
+                height: 8,
+                borderRadius: 1,
+                width: '45%',
+                background: 'linear-gradient(90deg, hsl(var(--muted)) 0%, hsl(var(--muted) / 0.5) 50%, hsl(var(--muted)) 100%)',
+                backgroundSize: '200% 100%',
+                animation: 'shimmer 1.8s linear infinite',
+                animationDelay: '0.3s',
+              }}
+            />
+          </Box>
+        </Box>
+      </Box>
+    );
+
     return topLevel.map((item) => {
       const itemKey = getItemKey(item);
       const replies = repliesByParent.get(itemKey) || [];
       const node = renderItem(item);
       if (!node) return null;
-      if (replies.length === 0) return node;
+
+      // Show the processing placeholder when the item is flagged ai_handled
+      // but no reply from the agent has landed yet.
+      const isManualActivity = item.kind === 'activity';
+      const aiHandled = isManualActivity && (item as any).data?.ai_handled === true;
+      const hasAgentReply = replies.some((r) => {
+        const u = (r as any).data?.user || '';
+        return /agent|ai\s*agent|aiagent/i.test(u);
+      });
+      const showAgentProcessing = aiHandled && !hasAgentReply;
+
+      if (replies.length === 0 && !showAgentProcessing) return node;
+
       return (
         <Box key={`thread-${itemKey}`} sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           {node}
@@ -4153,6 +4267,7 @@ const IncidentDetailPage = () => {
             }}
           >
             {replies.map((reply) => renderItem(reply, { isReply: true }))}
+            {showAgentProcessing && renderAgentProcessingPlaceholder(itemKey)}
           </Box>
         </Box>
       );
