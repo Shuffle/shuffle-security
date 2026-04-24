@@ -107,6 +107,7 @@ export const DemoTourDrawer = () => {
     openTour,
     setHoveredGoalSelector,
   } = useDemo();
+  const drag = useDraggableDemoOffset();
   const location = useLocation();
   // True whenever the current route deep-links into a demo-seeded object
   // (incident, asset, host, user, etc.). All demo data uses the `demo-…`
