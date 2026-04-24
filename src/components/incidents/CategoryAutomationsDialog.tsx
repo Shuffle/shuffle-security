@@ -222,7 +222,20 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
           if (response.ok) {
             const data = await response.json();
             const workflowList = Array.isArray(data) ? data : data.workflows || [];
-            setWorkflows(workflowList.filter((w: any) => !w.background_processing).map((w: any) => ({ id: w.id, name: w.name || w.id })));
+            // Pre-collect already-selected workflow IDs from the existing config so
+            // background_processing workflows that are already in use stay visible
+            // (otherwise the picker would show their raw ID instead of the name).
+            const preselectedIds = new Set<string>();
+            const wfAutomation = (initialAutomations || []).find(a => a.name === 'Run workflow');
+            const wfOption = wfAutomation?.options?.find(o => o.key === 'workflow_id');
+            if (wfOption?.value) {
+              wfOption.value.split(',').map(s => s.trim()).filter(Boolean).forEach(id => preselectedIds.add(id));
+            }
+            setWorkflows(
+              workflowList
+                .filter((w: any) => !w.background_processing || preselectedIds.has(w.id))
+                .map((w: any) => ({ id: w.id, name: w.name || w.id })),
+            );
           }
         } catch (error) {
           console.error('Failed to fetch workflows:', error);
