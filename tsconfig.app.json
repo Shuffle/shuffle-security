@@ -28,5 +28,9 @@
   },
   "include": [
     "src"
+  ],
+  "exclude": [
+    "src/lib/singul-local/tsup.config.ts",
+    "src/lib/singul-local/dist"
   ]
 }
