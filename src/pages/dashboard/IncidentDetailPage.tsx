@@ -4621,7 +4621,11 @@ const IncidentDetailPage = () => {
         || item.timestamp
         || 0;
       const ageMs = isManualActivity ? Date.now() - ageBasis : 0;
-      const showAgentProcessing = aiHandled && mentionsAgent && !hasAgentReply;
+      // Show placeholder when the agent is actively handling OR when the user
+      // has clicked Rerun (which sets ai_handled=false and adds a timestamp;
+      // the backend automation will flip ai_handled back to true shortly).
+      const hasPendingRerun = reruns.length > 0;
+      const showAgentProcessing = (aiHandled || hasPendingRerun) && mentionsAgent && !hasAgentReply;
       const isTimedOut = showAgentProcessing && ageMs > AI_RESPONSE_TIMEOUT_MS;
 
       if (replies.length === 0 && !showAgentProcessing) return node;
