@@ -256,9 +256,10 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
       <Box
         onClick={() => setThreadCollapsed(c => {
           const next = !c;
-          // When the user expands the email thread, broadcast it so the demo
-          // tour can tick off the "open email thread" sub-goal on step #5.
-          if (!next === false) {
+          // When the user expands the email thread (collapsed -> not
+          // collapsed), broadcast it so the demo tour can tick off the
+          // "open email thread" sub-goal on step #5.
+          if (next === false) {
             try { window.dispatchEvent(new CustomEvent('demo:email-thread-opened')); } catch { /* ignore */ }
           }
           return next;
