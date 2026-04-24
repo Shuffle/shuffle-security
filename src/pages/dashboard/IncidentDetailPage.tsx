@@ -937,7 +937,7 @@ const IncidentDetailPage = () => {
   const hasHtmlDescription = sanitizedDescriptionHtml.length > 0;
 
   const enrichmentStatus = useEnrichmentStatus();
-
+  const assignEscalateStatus = useAssignEscalateStatus();
 
   const incidentFileRef = useMemo(() => {
     const raw = incident?.rawOCSF;
