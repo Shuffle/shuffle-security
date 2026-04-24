@@ -172,13 +172,20 @@ export const useThreatFeeds = () => {
     await fetchItems();
   }, [fetchItems]);
 
-  // Toggle feed enabled state
+  // Toggle feed enabled state (optimistic — flips Switch instantly,
+  // persists in background, rolls back on failure).
   const toggleFeed = useCallback(async (id: string) => {
     const feed = threatFeeds.find(f => f.id === id);
-    if (feed) {
-      await saveFeed({ ...feed, enabled: !feed.enabled });
+    if (!feed) return;
+    const updated = { ...feed, enabled: !feed.enabled };
+    setThreatFeeds(prev => prev.map(f => (f.id === id ? updated : f)));
+    try {
+      await addItem(updated.id, updated);
+    } catch (err) {
+      setThreatFeeds(prev => prev.map(f => (f.id === id ? feed : f)));
+      console.error('Failed to toggle threat feed:', err);
     }
-  }, [threatFeeds, saveFeed]);
+  }, [threatFeeds, addItem]);
 
   return {
     threatFeeds,
