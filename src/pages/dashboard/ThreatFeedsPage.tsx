@@ -114,9 +114,10 @@ const ThreatFeedsPage = () => {
       name: formData.name,
       url: formData.url,
       description: formData.description || '',
+      type: formData.type || undefined,
       enabled: formData.enabled ?? true,
     };
-    
+
     if (editingFeed && editingFeed.id !== feedToSave.id) {
       await deleteFeed(editingFeed.id);
     }
