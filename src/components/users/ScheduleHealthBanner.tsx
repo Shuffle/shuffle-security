@@ -93,6 +93,7 @@ export const ScheduleHealthBanner = ({
   }, []);
 
   if (loading || issues.length === 0) return null;
+  if (typeof minIncidents === 'number' && (incidentCount ?? 0) < minIncidents) return null;
   if (dismissed && dismissKey) {
     // Resurface if the issue signature has changed since the last dismissal
     try {
