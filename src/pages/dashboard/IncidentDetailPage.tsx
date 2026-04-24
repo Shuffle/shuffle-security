@@ -4357,6 +4357,33 @@ const IncidentDetailPage = () => {
     // explicitly @-mentions the AI Agent and is still flagged ai_handled.
     // While waiting we show a small spinning loader; once the 2-minute
     // timeout has elapsed we show a muted "timed out" pill instead.
+    // Read the agent's currently-enabled tools (set on the Agent Permissions
+    // drawer). We surface up to 3 names inline so users can see exactly what
+    // capabilities the agent has access to while it's responding.
+    const enabledAgentTools: string[] = (() => {
+      try {
+        const stored = localStorage.getItem('agent_enabled_tools');
+        if (!stored) return [];
+        const parsed = JSON.parse(stored);
+        return Array.isArray(parsed) ? parsed.filter((n: unknown) => typeof n === 'string') : [];
+      } catch {
+        return [];
+      }
+    })();
+    const formatToolName = (name: string): string =>
+      name
+        .replace(/[_-]+/g, ' ')
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+    const buildToolsSummary = (): string => {
+      if (enabledAgentTools.length === 0) return '';
+      const display = enabledAgentTools.slice(0, 3).map(formatToolName);
+      const remaining = enabledAgentTools.length - display.length;
+      const list = display.join(', ');
+      if (remaining > 0) return `${list} +${remaining} more`;
+      return list;
+    };
+    const toolsSummary = buildToolsSummary();
+
     const renderAgentProcessingPlaceholder = (key: string, timedOut: boolean, commentId?: string) => (
       <Box
         key={`ai-processing-${key}`}
@@ -4373,6 +4400,7 @@ const IncidentDetailPage = () => {
           border: '1px solid',
           borderColor: timedOut ? 'hsl(var(--border))' : 'rgba(156, 90, 242, 0.35)',
           color: timedOut ? 'text.secondary' : 'text.primary',
+          maxWidth: '100%',
         }}
       >
         {timedOut ? (
@@ -4386,9 +4414,45 @@ const IncidentDetailPage = () => {
         )}
         <Typography
           variant="caption"
-          sx={{ fontSize: '0.7rem', fontWeight: 500, color: 'inherit', lineHeight: 1 }}
+          sx={{
+            fontSize: '0.7rem',
+            fontWeight: 500,
+            color: 'inherit',
+            lineHeight: 1,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 0.5,
+            minWidth: 0,
+          }}
         >
-          {timedOut ? 'AI Agent timed out' : 'AI Agent is responding…'}
+          {timedOut ? (
+            'AI Agent timed out'
+          ) : toolsSummary ? (
+            <>
+              <span>AI Agent is responding with</span>
+              <Tooltip
+                title={enabledAgentTools.map(formatToolName).join(', ')}
+                arrow
+                disableInteractive
+              >
+                <Box
+                  component="span"
+                  sx={{
+                    fontWeight: 600,
+                    color: 'rgba(236, 81, 124, 0.95)',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    maxWidth: 220,
+                  }}
+                >
+                  {toolsSummary}
+                </Box>
+              </Tooltip>
+            </>
+          ) : (
+            'AI Agent is responding…'
+          )}
         </Typography>
         {timedOut && commentId && (
           <Box
