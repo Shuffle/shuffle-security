@@ -4362,7 +4362,7 @@ const IncidentDetailPage = () => {
             }}
             aria-label="Rerun AI Agent"
           >
-            <RotateCw size={10} />
+            <RefreshIcon sx={{ fontSize: 11 }} />
             Rerun
           </Box>
         )}
