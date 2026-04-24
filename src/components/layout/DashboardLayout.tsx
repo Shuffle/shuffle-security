@@ -119,6 +119,10 @@ export const DashboardLayout = ({ children, defaultCollapsed }: DashboardLayoutP
         </Box>
         <MobileBottomNav />
         <GlobalAppDetailDrawer />
+        {/* Global watcher: surfaces stuck AI Agent handoffs (approvals + open
+            questions) as toasts on every page. Polls once per minute via the
+            shared useAgentNotifications query. */}
+        <AgentHandoffWatcher />
       </Box>
     </AppDetailProvider>
   );
