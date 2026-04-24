@@ -26,6 +26,8 @@ interface ScheduleHealthBannerProps {
   hideManageCta?: boolean;
   /** Compact spacing for use inside denser pages like /incidents. */
   compact?: boolean;
+  /** localStorage key used to persist a user dismissal. When set, the banner shows a close button. */
+  dismissKey?: string;
 }
 
 const SEVERITY_LABEL = {
@@ -38,11 +40,22 @@ export const ScheduleHealthBanner = ({
   manageHref = '/users',
   hideManageCta = false,
   compact = false,
+  dismissKey,
 }: ScheduleHealthBannerProps) => {
   const navigate = useNavigate();
   const [issues, setIssues] = useState<ScheduleIssue[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
+  const [dismissed, setDismissed] = useState<boolean>(() => {
+    if (!dismissKey || typeof window === 'undefined') return false;
+    try { return window.localStorage.getItem(dismissKey) === '1'; } catch { return false; }
+  });
+
+  // Signature of current issues so a new/different issue resurfaces the banner
+  const issuesSignature = useMemo(
+    () => issues.map(i => `${i.severity}:${i.id}`).sort().join('|'),
+    [issues],
+  );
 
   useEffect(() => {
     let cancelled = false;
