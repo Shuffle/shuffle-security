@@ -39,10 +39,25 @@ export interface NotificationsResponse {
 
 /**
  * Determine if a notification is an approval request vs a question.
- * Approvals have an action field or no questions array.
- * Questions have a questions array with items.
+ *
+ * Both flows arrive via `?type=agent_question`, so we disambiguate using the
+ * signals the backend sets:
+ *  - Approvals → severity "medium" and/or wording "approval required"
+ *  - Questions → severity "low"  and/or wording "input required"
+ *
+ * Fall back to the legacy heuristic (presence of a `questions[]` array means
+ * it is a question) so older notifications still render correctly.
  */
 export const isApprovalNotification = (n: AgentNotification): boolean => {
+  const sev = (n.severity || '').toLowerCase().trim();
+  if (sev === 'medium') return true;
+  if (sev === 'low') return false;
+
+  const haystack = `${n.title || ''} ${n.description || ''}`.toLowerCase();
+  if (haystack.includes('approval required')) return true;
+  if (haystack.includes('input required')) return false;
+
+  // Legacy fallback: questions[] populated → it's a question.
   return !n.questions || n.questions.length === 0;
 };
 
