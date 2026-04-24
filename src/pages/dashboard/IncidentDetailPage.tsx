@@ -4336,36 +4336,21 @@ const IncidentDetailPage = () => {
       if (!incident?.id || !incident.rawOCSF) return;
       const now = Date.now();
 
-      // Step 1: write `ai_handled: false` so the backend automation
-      // ("Assign & Escalate") observes a clean false→true transition and
-      // re-picks the comment, exactly as if the user had just tagged the
-      // agent fresh. We persist this immediately via set_cache (addItem).
-      const clearedActivity = activity.map((a) => {
-        if (a.id !== commentId) return a;
-        return { ...a, ai_handled: false } as ActivityItem;
-      });
-      try {
-        pendingSaveRef.current = true;
-        await addItem(incident.id, { ...incident.rawOCSF, activity: clearedActivity });
-      } catch (err) {
-        console.error('[Rerun] Failed to clear ai_handled:', err);
-        toast.error('Failed to re-run AI Agent');
-        pendingSaveRef.current = false;
-        return;
-      }
-
-      // Step 2: flip back to `ai_handled: true` and append a fresh entry to
-      // `rerun_timestamps`. The placeholder/timeout logic uses the latest
-      // rerun timestamp as the "age" basis, so the spinner immediately
-      // resumes for another full timeout window.
-      const updatedActivity = clearedActivity.map((a) => {
+      // Set `ai_handled: false` and append a fresh entry to `rerun_timestamps`.
+      // The backend automation ("Assign & Escalate") watches for this and is
+      // responsible for flipping `ai_handled` back to `true` once it picks the
+      // comment up — we MUST NOT do that flip from the client.
+      // The placeholder/timeout logic uses the latest rerun timestamp as the
+      // "age" basis, so the spinner immediately resumes for another full
+      // timeout window.
+      const updatedActivity = activity.map((a) => {
         if (a.id !== commentId) return a;
         const existing = Array.isArray((a as any).rerun_timestamps)
           ? ((a as any).rerun_timestamps as number[])
           : [];
         return {
           ...a,
-          ai_handled: true,
+          ai_handled: false,
           rerun_timestamps: [...existing, now],
         } as ActivityItem;
       });
@@ -4373,10 +4358,11 @@ const IncidentDetailPage = () => {
       setAiPlaceholderTick((t) => t + 1);
 
       try {
+        pendingSaveRef.current = true;
         await addItem(incident.id, { ...incident.rawOCSF, activity: updatedActivity });
         toast.success('Re-running AI Agent');
       } catch (err) {
-        console.error('[Rerun] Failed to persist rerun_timestamps:', err);
+        console.error('[Rerun] Failed to persist rerun:', err);
         toast.error('Failed to re-run AI Agent');
       } finally {
         pendingSaveRef.current = false;
