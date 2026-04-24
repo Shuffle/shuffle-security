@@ -1112,6 +1112,10 @@ const IncidentDetailPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showForwardDialog]);
   const [correlations, setCorrelations] = useState<Array<{ key: string; amount: number; ref: string[] }>>([]);
+  // Live ref to the latest incident snapshot — used by fetchCorrelations to
+  // persist correlation_first_seen without taking `incident` as a dep
+  // (which would cause refetch loops every time the incident state changes).
+  const incidentRef = useRef<typeof incident | null>(null);
   const [correlationsLoading, setCorrelationsLoading] = useState(false);
   // Per-correlation "first seen" timestamps (epoch ms), keyed by correlation
   // key. Persisted under metadata.extensions.custom_attributes.correlation_first_seen
