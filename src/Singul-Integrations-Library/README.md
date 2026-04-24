@@ -8,6 +8,7 @@ Search, select, and authenticate against 3,000+ SaaS integrations.
 
 [![npm](https://img.shields.io/npm/v/singul-integrations.svg)](https://www.npmjs.com/package/singul-integrations)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+[![upstream](https://img.shields.io/badge/upstream-Shuffle%2Fsingul.js-orange)](https://github.com/Shuffle/singul.js)
 
 </div>
 
@@ -15,13 +16,17 @@ Search, select, and authenticate against 3,000+ SaaS integrations.
 
 <img width="746" height="758" alt="image" src="https://github.com/user-attachments/assets/774a6c5e-a8aa-4a12-9931-a952147b0992" />
 
+A headless React component for app discovery, selection, and OAuth handoff. Powers integration drawers, onboarding flows, and app pickers. Works zero-config against Shuffle's public Algolia index, or point it at your own.
+
 ## Install
 
 ```bash
 npm install singul-integrations
 ```
 
-## Use
+Peer deps: `react >= 18`, `react-dom >= 18`, `algoliasearch >= 5`.
+
+## Quick start
 
 ```tsx
 import { SingulJS } from 'singul-integrations';
@@ -31,17 +36,19 @@ export default function App() {
     <SingulJS
       authToken="any-token"
       inline
+      layout="grid"
+      gridColumns={3}
       onAppSelected={(d) => console.log('picked', d.app.name)}
     />
   );
 }
 ```
 
-That's it. Works zero-config against the public Shuffle index.
+## Recipes
 
-## Common recipe: search → detail drawer
+### Search → detail drawer
 
-Set `preventDefault` and handle `onAppSelected` yourself to chain into your own auth or detail UI:
+The most common pattern. Set `preventDefault` and handle `onAppSelected` to chain into your own auth or detail UI:
 
 ```tsx
 <SingulJS
@@ -52,8 +59,74 @@ Set `preventDefault` and handle `onAppSelected` yourself to chain into your own 
 />
 ```
 
-A full two-drawer reference implementation lives in [`src/components/shared/AppSearchDrawer.tsx`](../components/shared/AppSearchDrawer.tsx).
+Full two-drawer reference implementation: [`src/components/shared/AppSearchDrawer.tsx`](../components/shared/AppSearchDrawer.tsx).
 
-## Docs
+### Predefined search
 
-Full prop reference, framework setup (Next.js, Vue), styling, multi-select, custom backends, and publishing: see **[LIBRARY.md](./LIBRARY.md)**.
+```tsx
+<SingulJS
+  authToken="..."
+  inline
+  initialFilterQuery="siem"
+  placeholder="Search SIEM tools..."
+/>
+```
+
+### Multi-select
+
+```tsx
+const [picked, setPicked] = useState<AlgoliaSearchApp[]>([]);
+
+<SingulJS
+  authToken="..."
+  inline
+  multiSelect
+  showCheckbox
+  selectedApps={picked}
+  onSelectionChange={setPicked}
+/>
+```
+
+### Your own backend
+
+```tsx
+<SingulJS
+  authToken={user.token}
+  apiKey={user.apiKey}
+  apiBaseUrl="https://your-backend.example.com"
+  algoliaAppId="YOUR_APP_ID"
+  algoliaApiKey="YOUR_SEARCH_KEY"
+/>
+```
+
+When `apiKey` is set, status dots appear: validated, configured, selected, inactive.
+
+## Common props
+
+| Prop | Type | Description |
+|---|---|---|
+| `authToken` | `string` | Required. Forwarded into the auth URL. |
+| `inline` | `boolean` | Inline results vs floating dropdown. |
+| `layout` | `'list' \| 'grid'` | Result layout. Default `'list'`. |
+| `initialFilterQuery` | `string` | Pre-filter without filling the input. |
+| `preventDefault` | `boolean` | Skip default `window.open(authUrl)` so you can handle selection. |
+| `onAppSelected` | `(detail) => void` | Fires on single-select pick. |
+| `multiSelect` | `boolean` | Allow selecting multiple apps. |
+| `apiKey` | `string` | Bearer token. Enables status dots. |
+| `customStyles` | `CustomStyles` | Per-slot style overrides. |
+
+Full prop reference, framework setup (Next.js, Vue), styling slots, custom rendering, and publishing: [**LIBRARY.md**](./LIBRARY.md).
+
+## Imperative handle
+
+```tsx
+const ref = useRef<SingulJSHandle>(null);
+<SingulJS ref={ref} authToken="..." inline />
+
+ref.current?.search('slack');
+ref.current?.clear();
+```
+
+## Next.js
+
+The component touches `window`, so render it client-side with `'use client'` or `next/dynamic({ ssr: false })`. See [LIBRARY.md](./LIBRARY.md#nextjs) for details.
