@@ -2466,7 +2466,7 @@ function UsecasesPageInner() {
                 drift={getDrift(flow.id)}
                 apiLoaded={apiLoaded}
                 isEnabled={!!flow.automationLabel && enabledLabels.has(flow.automationLabel)}
-                hasInterest={interestNames.has(flow.label)}
+                hasInterest={isSupport && interestNames.has(flow.label)}
                 canToggle={isAuthenticated && !!flow.automationLabel}
                 isAuthenticated={isAuthenticated}
                 onToggled={refetchWorkflows}
