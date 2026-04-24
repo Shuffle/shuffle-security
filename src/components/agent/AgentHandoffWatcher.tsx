@@ -38,7 +38,12 @@ import { useAuth } from '@/context/AuthContext';
 import AgentQuestionDialog from './AgentQuestionDialog';
 
 const AgentHandoffWatcher = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, userInfo } = useAuth();
+  // GATING: while this flow is still being validated, only surface the
+  // sticky toasts to support users. Everyone else gets the inline dashboard
+  // experience only. The "(beta — support only)" label in the toast makes
+  // this restriction obvious to internal testers.
+  const isSupport = userInfo?.support === true;
   // Subscribes to the same shared query as the dashboard. The hook is a no-op
   // network-wise when other consumers are already polling.
   const { notifications, refresh } = useAgentNotifications();
