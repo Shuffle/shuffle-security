@@ -8,8 +8,15 @@ that surfaces stuck AI Agent runs outside the dashboard. It subscribes to the
 shared `useAgentNotifications` query (60s poll, 30s stale) so polling is never
 duplicated.
 
-Two distinct handoff systems share the same notification feed and MUST be kept
-visually + functionally separate:
+Two distinct handoff systems share the same notification feed (both polled via
+`?type=agent_question`) and MUST be kept visually + functionally separate.
+Disambiguation lives in `isApprovalNotification(n)` and uses, in order:
+  1. `severity` — "medium" → approval, "low" → question
+  2. Title/description wording — "approval required" → approval,
+     "input required" → question
+  3. Legacy fallback — `questions[]` populated → question
+
+The two flows:
  1. **Approval** (`isApprovalNotification(n) === true`) — agent wants to perform
     an action and needs go/no-go. Toast headline "AI Agent needs approval" and
     exposes inline `Approve` (action) + `Deny` (cancel) buttons that call
