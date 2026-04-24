@@ -38,6 +38,7 @@ import { useDemo, TOUR_STEPS } from '@/context/DemoContext';
 import { useSubOrgs } from '@/hooks/useSubOrgs';
 import { useUsers } from '@/hooks/useUsers';
 import { DATASTORE_CATEGORIES, getDatastoreByCategory, getDatastoreItem, setDatastoreItem, setDatastoreItems, CategoryAutomation, deleteDatastoreItem, deleteDatastoreItems } from '@/services/datastore';
+import { sweepOrphanDemoIncidents } from '@/services/demoMode';
 import { CreateIncidentDialog, ActivityItem } from '@/components/incidents/CreateIncidentDialog';
 import { OCSFIncidentFinding, Observable, TLP_LABELS, convertLegacyTlp, mapOCSFSeverity, mapOCSFStatus } from '@/config/ocsfIncidentSchema';
 import { deduplicateTasks, decodeHtmlEntities } from '@/lib/utils';
@@ -651,7 +652,19 @@ const IncidentsPage = () => {
       if (migratedCount > 0) {
         await new Promise(resolve => setTimeout(resolve, 1500));
       }
+      // Sweep orphan demo incidents BEFORE fetching so the list never
+      // briefly shows demo stragglers from a prior session. Outside demo
+      // mode this wipes every demo-flagged incident; inside demo mode it
+      // only removes items not tracked in the local seed index.
+      const sweptBefore = await sweepOrphanDemoIncidents();
       await fetchItems();
+      // Run a second pass after the fetch so anything that landed via the
+      // ingest pipeline mid-flight (e.g. queued webhook deliveries) also
+      // gets reconciled — and refresh once more if we deleted anything.
+      const sweptAfter = await sweepOrphanDemoIncidents();
+      if (sweptBefore + sweptAfter > 0) {
+        await fetchItems();
+      }
     };
     init();
   }, [fetchItems]);
