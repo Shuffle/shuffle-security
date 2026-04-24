@@ -122,6 +122,20 @@ export const DemoCompletionWatcher = () => {
     return () => window.removeEventListener('demo:timeline-ip-clicked', onIp);
   }, [drawerOpen, step, markStepCompleted]);
 
+  // Email-thread-opened — fires when the user expands the EmailThreadPanel.
+  // This is required so the user actually sees the email evidence before the
+  // tour lets them advance.
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const onOpen = () => {
+      const stepId = TOUR_STEPS[step]?.id;
+      if (stepId !== 'incident-detail') return;
+      markStepCompleted('incident-detail:open-email-thread');
+    };
+    window.addEventListener('demo:email-thread-opened', onOpen);
+    return () => window.removeEventListener('demo:email-thread-opened', onOpen);
+  }, [drawerOpen, step, markStepCompleted]);
+
   // ─── orientation sub-goals: complete on hover ──────────────────────────────
   // Step #5 starts with two "notice this" goals (Title, Description/Email).
   // They flip complete only when the user hovers the actual element on the

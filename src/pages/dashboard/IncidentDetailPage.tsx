@@ -3737,11 +3737,37 @@ const IncidentDetailPage = () => {
         return (
           <Box
             key={`rev-${rev.id || rev.key || item.idx}`}
+            onClick={showAsCreation ? () => {
+              // The "Incident created" entry points to the email evidence
+              // when this incident is an email-sourced one. Scroll to the
+              // EmailThreadPanel and expand it if it's currently collapsed.
+              const el = document.querySelector('[data-tour="incident-email-thread"]') as HTMLElement | null;
+              if (!el) return;
+              el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              // The header is the first interactive child — click it to
+              // toggle expansion if the panel is currently collapsed. We
+              // detect collapsed state by absence of the inner border on
+              // the header (matches the panel's existing logic).
+              const header = el.querySelector(':scope > div') as HTMLElement | null;
+              if (header && header.getBoundingClientRect().height > 0) {
+                // Only auto-expand if collapsed (no sibling content rendered yet).
+                const expanded = el.children.length > 1;
+                if (!expanded) header.click();
+              }
+            } : undefined}
             sx={{
               p: 1.5,
               borderRadius: 1.5,
               bgcolor: 'rgba(100, 149, 237, 0.04)',
               border: '1px solid rgba(100, 149, 237, 0.12)',
+              ...(showAsCreation && {
+                cursor: 'pointer',
+                transition: 'background-color 0.15s ease, border-color 0.15s ease',
+                '&:hover': {
+                  bgcolor: 'rgba(100, 149, 237, 0.08)',
+                  borderColor: 'rgba(100, 149, 237, 0.24)',
+                },
+              }),
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>

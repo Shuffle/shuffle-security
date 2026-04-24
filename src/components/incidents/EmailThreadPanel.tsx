@@ -244,7 +244,9 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
   if (messages.length === 0) return null;
 
   return (
-    <Box sx={{
+    <Box
+      data-tour="incident-email-thread"
+      sx={{
       border: '1px solid hsl(var(--border))',
       borderRadius: 1.5,
       bgcolor: 'hsl(var(--card))',
@@ -252,7 +254,16 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
     }}>
       {/* Thread header — click to collapse the whole panel */}
       <Box
-        onClick={() => setThreadCollapsed(c => !c)}
+        onClick={() => setThreadCollapsed(c => {
+          const next = !c;
+          // When the user expands the email thread (collapsed -> not
+          // collapsed), broadcast it so the demo tour can tick off the
+          // "open email thread" sub-goal on step #5.
+          if (next === false) {
+            try { window.dispatchEvent(new CustomEvent('demo:email-thread-opened')); } catch { /* ignore */ }
+          }
+          return next;
+        })}
         sx={{
           display: 'flex',
           alignItems: 'center',
