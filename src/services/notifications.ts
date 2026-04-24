@@ -40,7 +40,7 @@ export interface NotificationsResponse {
 /**
  * Determine if a notification is an approval request vs a question.
  *
- * Both flows arrive via `?type=agent_question`, so we disambiguate using the
+ * Both flows arrive via `?type=agent_approval`, so we disambiguate using the
  * signals the backend sets:
  *  - Approvals → severity "medium" and/or wording "approval required"
  *  - Questions → severity "low"  and/or wording "input required"
