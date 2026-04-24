@@ -126,7 +126,7 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
 
   // Initialize Algolia client and run initial search
   useEffect(() => {
-    searchClient.current = algoliasearch(ALGOLIA_APP_ID, ALGOLIA_API_KEY);
+    searchClient.current = algoliasearch(algoliaAppId, algoliaApiKey);
     
     // Run initial search after client is ready
     if (!hasInitialized.current) {
