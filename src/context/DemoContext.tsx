@@ -176,6 +176,11 @@ export const TOUR_STEPS: TourStep[] = [
         targetSelector: '[data-tour="incident-description"]',
       },
       {
+        id: 'incident-detail:open-email-thread',
+        label: 'Open the Email Thread to read the full message',
+        targetSelector: '[data-tour="incident-email-thread"]',
+      },
+      {
         id: 'incident-detail:timeline-ip',
         label: 'Click the Known IOC pill on the Timeline',
         targetSelector: '[data-tour="timeline-ioc-pill"]',
