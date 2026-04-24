@@ -21,7 +21,11 @@ import { useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAgentNotifications } from '@/hooks/useNotifications';
-import { isApprovalNotification } from '@/services/notifications';
+import {
+  isApprovalNotification,
+  approveAgentAction,
+  continueAgentExecution,
+} from '@/services/notifications';
 import { useEntityPreference } from '@/hooks/useEntityLabel';
 import { useAuth } from '@/context/AuthContext';
 
@@ -29,7 +33,7 @@ const AgentHandoffWatcher = () => {
   const { isAuthenticated } = useAuth();
   // Subscribes to the same shared query as the dashboard. The hook is a no-op
   // network-wise when other consumers are already polling.
-  const { notifications } = useAgentNotifications();
+  const { notifications, refresh } = useAgentNotifications();
   const navigate = useNavigate();
   const location = useLocation();
   const { basePath: entityBasePath } = useEntityPreference();
@@ -66,32 +70,71 @@ const AgentHandoffWatcher = () => {
       if (onDashboard) return;
 
       const isApproval = isApprovalNotification(n);
-      const headline = isApproval
-        ? 'AI Agent needs approval'
-        : 'AI Agent has a question';
-      const body = n.title || n.description || 'An agent run is paused waiting on you.';
-
-      // Where to send the user: the linked incident if we have one, otherwise
-      // the global Agent activity page where they can resolve the handoff.
+      // Where to send the user when they want full context: the linked incident
+      // if we have one, otherwise the global Agent activity page.
       const target = n.incident_id
         ? `${entityBasePath}/${n.incident_id}`
         : '/agent';
+      const toastId = `agent-handoff-${n.id}`;
 
-      toast(headline, {
-        id: `agent-handoff-${n.id}`,
-        description: body,
-        duration: Infinity,
-        action: {
-          label: 'Open',
-          onClick: () => navigate(target),
-        },
-        cancel: {
-          label: 'Dismiss',
-          onClick: () => { /* sonner closes the toast on cancel click */ },
-        },
-      });
+      if (isApproval) {
+        // System #1 — agent wants to perform an action and needs go/no-go.
+        // Inline Approve + Deny so the user does not have to context-switch
+        // for a single binary decision. "Open" is still available by
+        // clicking the toast body (navigates via the action).
+        toast('AI Agent needs approval', {
+          id: toastId,
+          description: n.title || n.description || 'An agent action is paused waiting on you.',
+          duration: Infinity,
+          action: {
+            label: 'Approve',
+            onClick: async () => {
+              try {
+                await continueAgentExecution({ notification: n, approve: true });
+                await approveAgentAction(n.id).catch(() => { /* non-fatal */ });
+                toast.success('Action approved — the agent will continue.');
+                refresh();
+              } catch (err) {
+                console.error('[AgentHandoffWatcher] approve failed:', err);
+                toast.error('Failed to approve action.');
+              }
+            },
+          },
+          cancel: {
+            label: 'Deny',
+            onClick: async () => {
+              try {
+                await continueAgentExecution({ notification: n, approve: false });
+                await approveAgentAction(n.id).catch(() => { /* non-fatal */ });
+                toast.success('Action denied — the agent will continue accordingly.');
+                refresh();
+              } catch (err) {
+                console.error('[AgentHandoffWatcher] deny failed:', err);
+                toast.error('Failed to deny action.');
+              }
+            },
+          },
+        });
+      } else {
+        // System #2 — agent has open questions that require typed answers.
+        // We cannot answer those inline from a toast, so route the user to
+        // the place where they can fill in the question form.
+        toast('AI Agent has a question', {
+          id: toastId,
+          description: n.title || n.description || 'An agent run is paused waiting on your input.',
+          duration: Infinity,
+          action: {
+            label: 'Answer',
+            onClick: () => navigate(target),
+          },
+          cancel: {
+            label: 'Dismiss',
+            onClick: () => { /* sonner closes the toast on cancel click */ },
+          },
+        });
+      }
     });
-  }, [notifications, isAuthenticated, location.pathname, entityBasePath, navigate]);
+  }, [notifications, isAuthenticated, location.pathname, entityBasePath, navigate, refresh]);
 
   return null;
 };
