@@ -89,6 +89,13 @@ export const DEFAULT_THREAT_FEEDS: ThreatFeed[] = [
     description: 'High-confidence malicious domains curated by ThreatView',
     enabled: true,
   },
+  {
+    id: 'threatview_url_high_confidence',
+    url: 'https://threatview.io/Downloads/URL-High-Confidence-Feed.txt',
+    name: 'ThreatView High-Confidence URLs',
+    description: 'High-confidence malicious URLs/domains curated by ThreatView',
+    enabled: true,
+  },
 ];
 
 export const useThreatFeeds = () => {
