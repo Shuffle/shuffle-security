@@ -1816,11 +1816,10 @@ const IncidentsPage = () => {
             isLoading={ingestionLoading}
             onSyncNow={ingestWorkflowId ? () => triggerSync() : undefined}
             onCreateIncident={() => setCreateDialogOpen(true)}
-            // During the demo tour, the "Add ingestion source" button must
-            // open the in-page AppSearchDrawer (so the tour spotlight has a
-            // valid target on /incidents) instead of navigating away to
-            // /onboarding/sources.
-            onAddSource={demoActive ? () => setAppSearchOpen(true) : undefined}
+            // The "Add ingestion source" button opens the in-page
+            // AppSearchDrawer — same behavior as the populated-list "+"
+            // button — instead of navigating away to /onboarding/sources.
+            onAddSource={() => setAppSearchOpen(true)}
           />
         )}
 
