@@ -734,11 +734,11 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
           </Box>
         ))}
       </List>
-      {/* Integrations Section */}
-      <Box sx={{ mt: 2, overflow: 'hidden' }}>
-        <Divider sx={{ borderColor: 'hsl(var(--border))', mx: visuallyCollapsed ? 1 : 2, mb: 1 }} />
-        <IntegrationStatus collapsed={visuallyCollapsed} />
-        
+        {/* Integrations Section — inside scrollable area so all rows are reachable */}
+        <Box sx={{ mt: 2 }}>
+          <Divider sx={{ borderColor: 'hsl(var(--border))', mx: visuallyCollapsed ? 1 : 2, mb: 1 }} />
+          <IntegrationStatus collapsed={visuallyCollapsed} />
+        </Box>
       </Box>
 
       {/* Bottom Section */}
