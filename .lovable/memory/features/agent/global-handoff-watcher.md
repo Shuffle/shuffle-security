@@ -1,15 +1,29 @@
 ---
 name: Global agent handoff watcher
-description: Single global toast watcher for stuck AI Agent handoffs (approvals + questions), polled per minute via shared query
+description: Single global toast watcher for stuck AI Agent handoffs — splits approval (Approve/Deny inline) vs question (Answer/Dismiss) flows
 type: feature
 ---
 `AgentHandoffWatcher` (mounted once in `DashboardLayout`) is the sole component
-that surfaces stuck AI Agent runs (approvals + open questions) outside the
-dashboard. It subscribes to the shared `useAgentNotifications` query (60s
-poll, 30s stale) so polling is never duplicated. Rules:
+that surfaces stuck AI Agent runs outside the dashboard. It subscribes to the
+shared `useAgentNotifications` query (60s poll, 30s stale) so polling is never
+duplicated.
+
+Two distinct handoff systems share the same notification feed and MUST be kept
+visually + functionally separate:
+ 1. **Approval** (`isApprovalNotification(n) === true`) — agent wants to perform
+    an action and needs go/no-go. Toast headline "AI Agent needs approval" and
+    exposes inline `Approve` (action) + `Deny` (cancel) buttons that call
+    `continueAgentExecution({ approve })` followed by `approveAgentAction(id)`.
+    Both buttons refresh the shared notifications query on success.
+ 2. **Question** (`questions[]` present) — agent needs typed answers. Toast
+    headline "AI Agent has a question" with `Answer` (navigates to incident or
+    `/agent` where the question form lives) + `Dismiss`. Cannot be answered
+    inline because answers require a multi-field form.
+
+Other rules:
  - Skip toasts on `/dashboard` and `/` — already shown inline there.
  - Track toasted IDs per-session; baseline existing notifications on first load
    so users are not bombarded on sign-in.
  - Toasts are sticky (`duration: Infinity`) — handoffs are rare and important.
- - Action button opens `${entityBasePath}/${incident_id}` if present, else `/agent`.
+ - Navigation target: `${entityBasePath}/${incident_id}` if present, else `/agent`.
 Do NOT add additional pollers for `/api/v1/notifications` — extend this watcher.
