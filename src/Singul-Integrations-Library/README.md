@@ -1,67 +1,211 @@
 # 📦 Singul-Integrations-Library
 
-> **Standalone React library** — `singul-integrations` on npm
-> Search, select, and authenticate against a catalog of **3,000+ SaaS integrations**. Powers integration drawers, onboarding flows, and app pickers.
+> **Standalone React library** — published to npm as `singul-integrations`
+> Search, select, and authenticate against a catalog of **3,000+ SaaS integrations**.
+> Powers integration drawers, onboarding flows, app pickers, MCP setup, and OAuth handoff.
 
 [![npm](https://img.shields.io/npm/v/singul-integrations.svg)](https://www.npmjs.com/package/singul-integrations)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+[![upstream](https://img.shields.io/badge/upstream-Shuffle%2Fsingul.js-orange)](https://github.com/Shuffle/singul.js)
 
-This folder is **self-contained**. The host app consumes it via `@/Singul-Integrations-Library`, and CI publishes the same folder to npm as `singul-integrations`. Source lives here for fast iteration; the package is shipped to npm by `.github/workflows/publish-singul.yml`.
+This folder is **self-contained**. The host app consumes it via the path alias `@/Singul-Integrations-Library`, and CI publishes the same folder to npm as `singul-integrations` via `.github/workflows/publish-singul.yml`.
 
-> Upstream: [github.com/Shuffle/singul.js](https://github.com/Shuffle/singul.js)
+---
+
+## Table of Contents
+
+- [Features](#features)
+- [Installation](#installation)
+- [Quick start](#quick-start)
+- [Framework integration](#framework-integration)
+  - [React](#react-integration)
+  - [Next.js](#nextjs-integration)
+  - [Vue](#vue-integration)
+- [Common patterns](#common-patterns)
+  - [Drawer with predefined search](#drawer-with-predefined-search)
+  - [Imperative search via ref](#imperative-search-via-ref)
+  - [Multi-select with controlled state](#multi-select-with-controlled-state)
+  - [Pointing at your own backend](#pointing-at-your-own-backend)
+  - [Pointing at your own Algolia index](#pointing-at-your-own-algolia-index)
+- [Component properties](#component-properties)
+  - [Required](#required)
+  - [Search input](#search-input)
+  - [Layout](#layout)
+  - [Display options](#display-options)
+  - [Selection](#selection)
+  - [Backend / authentication](#backend--authentication)
+  - [Algolia](#algolia)
+  - [Styling](#styling)
+  - [Custom rendering](#custom-rendering)
+- [Events](#events)
+- [Imperative handle (ref)](#imperative-handle-ref)
+- [Types](#types)
+- [Troubleshooting](#troubleshooting)
+- [Publishing (CI/CD)](#publishing-cicd)
 
 ---
 
 ## Features
 
-- Headless, fully prop-driven — no global state, no context, no platform imports
-- Algolia-backed search across 3,000+ apps (defaults to Shuffle's public index, swappable)
-- Optional auth-status badges (configured / validated) when an `apiKey` is provided
-- Inline grid, inline list, or floating dropdown layouts
-- Single- or multi-select with controlled or uncontrolled selection
-- Pinned apps, custom render functions, full styling override
-- Imperative `search()` / `clear()` via `ref`
-
-## Install
-
-Peer deps:
-```bash
-npm i react algoliasearch
-```
-
-Then import:
-```tsx
-import { SingulJS } from '@/Singul-Integrations-Library';
-import type { AppSelectedEvent, AlgoliaSearchApp, SingulJSHandle } from '@/Singul-Integrations-Library';
-```
+- 🪶 **Headless and prop-driven** — no global state, no context, no platform imports
+- 🔎 **Algolia-backed search** across 3,000+ apps (defaults to Shuffle's public index, swappable)
+- 🟢 **Auth-status badges** (configured / validated) when an `apiKey` is provided
+- 📐 **Inline grid, inline list, or floating dropdown** layouts
+- ✅ **Single- or multi-select** with controlled or uncontrolled selection
+- 📌 **Pinned apps**, custom render functions, full styling override
+- 🎯 **Imperative API** (`search()` / `clear()`) via `ref`
+- ⚡ **Tiny** — only `react` + `algoliasearch` as dependencies
 
 ---
 
-## Quick start — bare search
+## Installation
+
+```bash
+npm install singul-integrations
+# or
+yarn add singul-integrations
+# or
+pnpm add singul-integrations
+```
+
+Peer dependencies: `react >= 18`, `react-dom >= 18`, `algoliasearch >= 5`.
+
+> **Inside this monorepo:** import directly from the source folder via the path alias — no install needed.
+> ```ts
+> import { SingulJS } from '@/Singul-Integrations-Library';
+> ```
+
+---
+
+## Quick start
 
 ```tsx
-<SingulJS
-  authToken="any-token"
-  inline
-  layout="grid"
-  gridColumns={3}
-  hitsPerPage={12}
-  onAppSelected={(detail) => console.log('picked', detail.app.name)}
-/>
+import { SingulJS } from 'singul-integrations';
+
+export default function App() {
+  return (
+    <SingulJS
+      authToken="any-token"
+      inline
+      layout="grid"
+      gridColumns={3}
+      hitsPerPage={12}
+      onAppSelected={(detail) => console.log('picked', detail.app.name)}
+    />
+  );
+}
 ```
 
 That's it — search works against the default public Algolia index with zero backend.
 
 ---
 
-## Use it inside a drawer (predefined search)
+## Framework integration
+
+### React integration
+
+```tsx
+import { SingulJS } from 'singul-integrations';
+
+const AUTH_TOKEN = 'replace-with-your-token';
+const CUSTOM_STYLES = { container: { width: '400px' } };
+
+export default function App() {
+  return (
+    <div>
+      <h1>Singul Search</h1>
+      <SingulJS
+        authToken={AUTH_TOKEN}
+        customStyles={CUSTOM_STYLES}
+        onAppSelected={(detail) => console.log('selected', detail)}
+      />
+    </div>
+  );
+}
+```
+
+### Next.js integration
+
+The component touches `window` for the auth handoff, so render it on the client only:
+
+```tsx
+'use client';
+
+import { SingulJS } from 'singul-integrations';
+
+const AUTH_TOKEN = 'replace-with-your-token';
+const CUSTOM_STYLES = { container: { width: '400px' } };
+
+export default function Page() {
+  return (
+    <div>
+      <h1>Singul Search</h1>
+      <SingulJS
+        authToken={AUTH_TOKEN}
+        customStyles={CUSTOM_STYLES}
+        onAppSelected={(detail) => console.log('selected', detail)}
+      />
+    </div>
+  );
+}
+```
+
+If you prefer dynamic import:
+
+```tsx
+import dynamic from 'next/dynamic';
+
+const SingulJS = dynamic(
+  () => import('singul-integrations').then((m) => m.SingulJS),
+  { ssr: false }
+);
+```
+
+### Vue integration
+
+A Vue wrapper is published as `singul-integrations/vue` (mirrors the React API as `@app-selected` / `@selection-change` / `@search-change`):
+
+```vue
+<template>
+  <SingulJS
+    :auth-token="authToken"
+    :custom-styles="customStyles"
+    @app-selected="handleAppSelected"
+  />
+</template>
+
+<script>
+import { SingulJS } from 'singul-integrations/vue';
+
+export default {
+  name: 'IntegrationsSearch',
+  components: { SingulJS },
+  data() {
+    return {
+      authToken: 'replace-with-your-token',
+      customStyles: { container: { width: '400px' } },
+    };
+  },
+  methods: {
+    handleAppSelected(detail) {
+      console.log('selected app', detail);
+    },
+  },
+};
+</script>
+```
+
+---
+
+## Common patterns
+
+### Drawer with predefined search
 
 The most common pattern: open a drawer, pre-fill the query, let the user pick an app, then react.
 
 ```tsx
 import { Drawer } from '@mui/material';
-import { useState } from 'react';
-import { SingulJS } from '@/Singul-Integrations-Library';
+import { SingulJS } from 'singul-integrations';
 
 export function IntegrationDrawer({ open, onClose, category }: {
   open: boolean;
@@ -75,7 +219,7 @@ export function IntegrationDrawer({ open, onClose, category }: {
         inline
         layout="grid"
         gridColumns={2}
-        // Predefined search: opens already filtered to "siem", "edr", etc.
+        // Predefined search — opens already filtered to "siem", "edr", etc.
         initialFilterQuery={category}
         placeholder={`Search ${category} integrations...`}
         hitsPerPage={12}
@@ -90,20 +234,37 @@ export function IntegrationDrawer({ open, onClose, category }: {
 }
 ```
 
-For a richer pattern that also opens an authentication drawer after selection, see `src/components/shared/AppSearchDrawer.tsx` in this project.
+For a richer pattern that also opens an authentication drawer after selection, see `src/components/shared/AppSearchDrawer.tsx` in this repo.
 
-### Imperative search (change query from outside)
+### Imperative search via ref
 
 ```tsx
+import { useRef } from 'react';
+import { SingulJS } from 'singul-integrations';
+import type { SingulJSHandle } from 'singul-integrations';
+
 const ref = useRef<SingulJSHandle>(null);
 
 <button onClick={() => ref.current?.search('slack')}>Find Slack</button>
 <SingulJS ref={ref} authToken="..." inline />
 ```
 
----
+### Multi-select with controlled state
 
-## Pointing it at your own backend
+```tsx
+const [picked, setPicked] = useState<AlgoliaSearchApp[]>([]);
+
+<SingulJS
+  authToken="..."
+  inline
+  multiSelect
+  showCheckbox
+  selectedApps={picked}
+  onSelectionChange={setPicked}
+/>
+```
+
+### Pointing at your own backend
 
 If you have a Shuffle-compatible API for authenticated apps and OAuth handoff:
 
@@ -112,14 +273,21 @@ If you have a Shuffle-compatible API for authenticated apps and OAuth handoff:
   authToken={user.token}
   apiKey={user.apiKey}
   apiBaseUrl="https://your-backend.example.com"
-  authPath="/api/v1/apps/authentication"  // optional override
-  appAuthPath="/appauth"                  // optional override
+  authPath="/api/v1/apps/authentication" // optional override
+  appAuthPath="/appauth"                 // optional override
 />
 ```
 
-When `apiKey` is set, the component fetches authenticated apps and renders status dots (green = validated, yellow = configured, blue = selected, gray = inactive).
+When `apiKey` is set, the component fetches authenticated apps and renders status dots:
 
-## Pointing it at your own Algolia index
+| Dot | Meaning |
+|---|---|
+| 🟢 Green | Authentication validated (test ran successfully) |
+| 🟡 Yellow | Configured, not yet validated |
+| 🔵 Blue | Currently selected |
+| ⚫ Gray | Inactive |
+
+### Pointing at your own Algolia index
 
 ```tsx
 <SingulJS
@@ -132,7 +300,7 @@ When `apiKey` is set, the component fetches authenticated apps and renders statu
 
 ---
 
-## Props
+## Component properties
 
 ### Required
 
@@ -154,7 +322,7 @@ When `apiKey` is set, the component fetches authenticated apps and renders statu
 | Prop | Type | Default | Description |
 |---|---|---|---|
 | `layout` | `'list' \| 'grid'` | `'list'` | Result layout |
-| `gridColumns` | `number \| { xs?: number; sm?: number; md?: number; lg?: number }` | `3` | Grid columns when `layout="grid"` |
+| `gridColumns` | `number \| { xs?, sm?, md?, lg? }` | `3` | Grid columns when `layout="grid"` |
 | `inline` | `boolean` | `false` | When `true`, results render inline. When `false`, results render as a floating dropdown |
 
 ### Display options
@@ -186,7 +354,7 @@ When `apiKey` is set, the component fetches authenticated apps and renders statu
 | `singulBaseUrl` | `string` | `"https://singul.io"` | Base URL for Singul API |
 | `authenticatedApps` | `AppAuthentication[]` | — | Manually provide authenticated apps (used when `apiKey` is not set) |
 
-### Algolia (override defaults)
+### Algolia
 
 | Prop | Type | Default | Description |
 |---|---|---|---|
@@ -198,7 +366,7 @@ When `apiKey` is set, the component fetches authenticated apps and renders statu
 
 | Prop | Type | Description |
 |---|---|---|
-| `customStyles` | `CustomStyles` | Per-element style overrides — see `singul.helpers.ts` for the full slot list (container, inputWrapper, input, dropdown, dropdownItem, selectedItem, appIcon, appName, appCategory, checkbox, emptyState, etc.) |
+| `customStyles` | `CustomStyles` | Per-element style overrides — see [`singul.helpers.ts`](./singul.helpers.ts) for the full slot list (container, inputWrapper, input, dropdown, dropdownItem, selectedItem, appIcon, appName, appCategory, checkbox, emptyState, etc.) |
 | `className` | `string` | Extra class on the root container |
 
 ### Custom rendering
@@ -209,20 +377,28 @@ When `apiKey` is set, the component fetches authenticated apps and renders statu
 | `renderEmptyState` | `() => ReactNode` | Replace the empty state |
 | `renderLoadingState` | `() => ReactNode` | Replace the loading spinner |
 
-### Events
+---
 
-| Prop | Type | Description |
+## Events
+
+| Event | Type | Fired when |
 |---|---|---|
-| `onAppSelected` | `(detail: { app: AlgoliaSearchApp; authUrl: string }) => void` | Fired when a single app is selected (single-select mode) |
-| `onSelectionChange` | `(apps: AlgoliaSearchApp[]) => void` | Fired when the selection set changes (multi-select mode) |
-| `onSearchChange` | `(query: string) => void` | Fired on every keystroke |
+| `onAppSelected` | `(detail: { app: AlgoliaSearchApp; authUrl: string }) => void` | A single app is selected (single-select mode) |
+| `onSelectionChange` | `(apps: AlgoliaSearchApp[]) => void` | The selection set changes (multi-select mode) |
+| `onSearchChange` | `(query: string) => void` | Every keystroke in the search input |
 
-### Imperative handle (`ref`)
+> In Vue these become `@app-selected`, `@selection-change`, `@search-change`.
 
-| Method | Description |
-|---|---|
-| `search(query: string)` | Set the input value and run a search |
-| `clear()` | Clear the input and show top results |
+---
+
+## Imperative handle (ref)
+
+```ts
+interface SingulJSHandle {
+  search: (query: string) => void;  // set the input value and run a search
+  clear: () => void;                 // clear the input and show top results
+}
+```
 
 ---
 
@@ -236,8 +412,22 @@ import type {
   AppSelectedEvent,
   AppAuthentication,
   CustomStyles,
-} from '@/Singul-Integrations-Library';
+} from 'singul-integrations';
 ```
+
+---
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| **Empty results / no apps shown** | Algolia credentials misconfigured | Verify `algoliaAppId` / `algoliaApiKey` / `algoliaIndexName`. Defaults work out of the box against Shuffle's public index. |
+| **`window is not defined` in Next.js** | Server-side rendering | Add `'use client'` to the page, or import via `next/dynamic` with `{ ssr: false }`. |
+| **Status dots never appear** | `apiKey` not provided OR backend unreachable | Pass `apiKey`. Check `apiBaseUrl + authPath` returns `{ data: [...] }` or a raw array of `AppAuthentication`. |
+| **Auth window opens to the wrong URL** | `apiBaseUrl` / `appAuthPath` not configured | Override both — the auth URL is `${apiBaseUrl}${appAuthPath}?app_id=...&auth=...&source=shuffle`. |
+| **Selection click does not call my handler** | `preventDefault` is `false` so the default `window.open` runs | Set `preventDefault` to handle selection yourself. |
+| **Double-render in React 18 dev** | StrictMode | Expected — only affects dev mode. |
+| **Cannot import in Vite project** | Missing peer dep | Install `algoliasearch`. |
 
 ---
 
@@ -254,6 +444,7 @@ This folder doubles as a publishable npm package. The source lives here so the h
 | `tsup.config.ts` | Bundler config for emitting ESM + CJS + `.d.ts` to `dist/` |
 | `tsconfig.build.json` | Standalone tsconfig for the library build (host app's tsconfig excludes it) |
 | `.npmignore` | Whitelist `dist/`, README, LICENSE only |
+| `LIBRARY.md` | Boundary rules — no app-specific imports allowed in this folder |
 
 ### How to publish
 
@@ -273,7 +464,7 @@ You can also trigger the workflow manually from the Actions tab with a custom ve
 
 ### Required secret
 
-- `NPM_TOKEN` — npm automation token with publish rights to the `@shuffle` scope.
+- `NPM_TOKEN` — npm automation token with publish rights.
 
 ### Local test
 
