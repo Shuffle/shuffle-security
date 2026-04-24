@@ -166,15 +166,18 @@ const ThreatFeedsPage = () => {
 
         if (orgId) {
           const { getApiUrl, getAuthHeader } = await import('@/config/api');
+          // Use /list_cache (no category param) — its response includes a
+          // top-level "categories" array enumerating every datastore category
+          // for this org.
           const catRes = await fetch(
-            getApiUrl(`/api/v1/orgs/${orgId}/list_categories`),
+            getApiUrl(`/api/v1/orgs/${orgId}/list_cache`),
             { credentials: 'include', headers: { ...getAuthHeader() } },
           );
           if (catRes.ok) {
             const catData = await catRes.json();
-            const rawCats: Array<{ name?: string } | string> = Array.isArray(catData)
-              ? catData
-              : (catData?.categories || catData?.data || []);
+            const rawCats: Array<{ name?: string } | string> = Array.isArray(catData?.categories)
+              ? catData.categories
+              : (catData?.data || []);
             const isIntel = (n: string) => {
               const c = (n || '').toLowerCase();
               return c.includes('ioc') || c.includes('threat-feed') || c.includes('threat_feed');
