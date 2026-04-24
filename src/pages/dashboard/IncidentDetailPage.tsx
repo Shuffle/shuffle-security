@@ -4640,7 +4640,13 @@ const IncidentDetailPage = () => {
       // has clicked Rerun (which sets ai_handled=false and adds a timestamp;
       // the backend automation will flip ai_handled back to true shortly).
       const hasPendingRerun = reruns.length > 0;
-      const showAgentProcessing = (aiHandled || hasPendingRerun) && mentionsAgent && !hasAgentReply;
+      // Show processing as soon as a comment that mentions the agent is posted,
+      // regardless of whether the backend has flipped ai_handled yet. The backend
+      // workflow needs a few seconds to ingest the comment and set ai_handled=true,
+      // and we don't want the user staring at silence in the meantime. Once the
+      // age exceeds the timeout window we still flip to the timed-out state, and
+      // an actual agent reply removes the placeholder entirely.
+      const showAgentProcessing = (aiHandled || hasPendingRerun || isManualActivity) && mentionsAgent && !hasAgentReply;
       const isTimedOut = showAgentProcessing && ageMs > AI_RESPONSE_TIMEOUT_MS;
 
       if (replies.length === 0 && !showAgentProcessing) return node;
