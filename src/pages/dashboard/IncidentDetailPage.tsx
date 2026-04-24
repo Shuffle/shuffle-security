@@ -658,6 +658,24 @@ const IncidentDetailPage = () => {
     if (commentFileInputRef.current) commentFileInputRef.current.value = '';
   };
   const [activity, setActivity] = useState<ActivityItem[]>([]);
+  // Tick used to re-render the timeline so the AI processing placeholder can
+  // flip into a "timed out" state once 2 minutes have elapsed without an
+  // agent reply, even when no other state changes.
+  const [, setAiPlaceholderTick] = useState(0);
+  useEffect(() => {
+    const hasPendingAgentResponse = activity.some((a: any) => {
+      if (a?.ai_handled !== true) return false;
+      const replied = activity.some((r: any) => {
+        if (r?.replyToId !== a.id) return false;
+        const u = r?.user || '';
+        return /agent|ai\s*agent|aiagent/i.test(u);
+      });
+      return !replied;
+    });
+    if (!hasPendingAgentResponse) return;
+    const i = setInterval(() => setAiPlaceholderTick((t) => t + 1), 15_000);
+    return () => clearInterval(i);
+  }, [activity]);
   /**
    * Pending soft-delete confirmation. We never hard-delete a comment — the
    * confirm dialog flips `deleted: true` on the original entity so the
@@ -4254,11 +4272,20 @@ const IncidentDetailPage = () => {
 
     // Render top-level items, threading replies indented underneath. The
     // indent + left rail visually groups the conversation while keeping the
-    // outer chronology intact.
+    // outer chronology intact. Threads are recursive — replies-to-replies
+    // nest at deeper indent levels.
+
+    // Window during which we keep showing the "AI Agent is responding…" card
+    // for an unanswered ai_handled comment. After this we swap to a timed-out
+    // indicator so users know the agent didn't get back to them.
+    const AI_RESPONSE_TIMEOUT_MS = 2 * 60 * 1000;
+
     // Renders a placeholder "AI Agent is responding..." card beneath any
     // activity item where ai_handled === true. This makes it visually clear
     // that the agent has picked up the comment and is composing a response.
-    const renderAgentProcessingPlaceholder = (key: string) => (
+    // When `timedOut` is true we render a compact "Agent timed out" card
+    // instead of the loading skeleton.
+    const renderAgentProcessingPlaceholder = (key: string, timedOut: boolean) => (
       <Box
         key={`ai-processing-${key}`}
         sx={{
@@ -4267,19 +4294,21 @@ const IncidentDetailPage = () => {
           p: 1.5,
           borderRadius: 1.5,
           position: 'relative',
-          background: 'var(--agent-gradient-subtle)',
+          background: timedOut ? 'hsl(var(--muted) / 0.4)' : 'var(--agent-gradient-subtle)',
           border: '1px solid',
-          borderColor: 'rgba(156, 90, 242, 0.35)',
+          borderColor: timedOut ? 'hsl(var(--border))' : 'rgba(156, 90, 242, 0.35)',
           overflow: 'hidden',
-          '&::before': {
-            content: '""',
-            position: 'absolute',
-            inset: 0,
-            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)',
-            backgroundSize: '200% 100%',
-            animation: 'shimmer 2s linear infinite',
-            pointerEvents: 'none',
-          },
+          ...(!timedOut && {
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              inset: 0,
+              background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)',
+              backgroundSize: '200% 100%',
+              animation: 'shimmer 2s linear infinite',
+              pointerEvents: 'none',
+            },
+          }),
         }}
       >
         <Box
@@ -4290,8 +4319,9 @@ const IncidentDetailPage = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'var(--agent-gradient)',
+            background: timedOut ? 'hsl(var(--muted))' : 'var(--agent-gradient)',
             flexShrink: 0,
+            opacity: timedOut ? 0.7 : 1,
           }}
         >
           <AgentIcon size={14} />
@@ -4303,84 +4333,109 @@ const IncidentDetailPage = () => {
               sx={{
                 fontWeight: 600,
                 fontSize: '0.75rem',
-                background: 'var(--agent-gradient)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
+                ...(timedOut
+                  ? { color: 'text.secondary' }
+                  : {
+                      background: 'var(--agent-gradient)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                    }),
               }}
             >
               AI Agent
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.65rem' }}>
-              is responding…
+              {timedOut ? 'timed out' : 'is responding…'}
             </Typography>
-            <Box sx={{ display: 'inline-flex', gap: 0.4, ml: 0.5 }}>
-              {[0, 1, 2].map((i) => (
-                <Box
-                  key={i}
-                  sx={{
-                    width: 4,
-                    height: 4,
-                    borderRadius: '50%',
-                    bgcolor: 'rgba(156, 90, 242, 0.7)',
-                    animation: 'pulse-glow 1.2s ease-in-out infinite',
-                    animationDelay: `${i * 0.18}s`,
-                  }}
-                />
-              ))}
+            {!timedOut && (
+              <Box sx={{ display: 'inline-flex', gap: 0.4, ml: 0.5 }}>
+                {[0, 1, 2].map((i) => (
+                  <Box
+                    key={i}
+                    sx={{
+                      width: 4,
+                      height: 4,
+                      borderRadius: '50%',
+                      bgcolor: 'rgba(156, 90, 242, 0.7)',
+                      animation: 'pulse-glow 1.2s ease-in-out infinite',
+                      animationDelay: `${i * 0.18}s`,
+                    }}
+                  />
+                ))}
+              </Box>
+            )}
+          </Box>
+          {timedOut ? (
+            <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.7rem', mt: 0.25 }}>
+              No response received after 2 minutes. The agent may be unavailable — try mentioning @AIAgent again.
+            </Typography>
+          ) : (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mt: 0.25 }}>
+              <Box
+                sx={{
+                  height: 8,
+                  borderRadius: 1,
+                  width: '70%',
+                  background: 'linear-gradient(90deg, hsl(var(--muted)) 0%, hsl(var(--muted) / 0.5) 50%, hsl(var(--muted)) 100%)',
+                  backgroundSize: '200% 100%',
+                  animation: 'shimmer 1.8s linear infinite',
+                }}
+              />
+              <Box
+                sx={{
+                  height: 8,
+                  borderRadius: 1,
+                  width: '45%',
+                  background: 'linear-gradient(90deg, hsl(var(--muted)) 0%, hsl(var(--muted) / 0.5) 50%, hsl(var(--muted)) 100%)',
+                  backgroundSize: '200% 100%',
+                  animation: 'shimmer 1.8s linear infinite',
+                  animationDelay: '0.3s',
+                }}
+              />
             </Box>
-          </Box>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mt: 0.25 }}>
-            <Box
-              sx={{
-                height: 8,
-                borderRadius: 1,
-                width: '70%',
-                background: 'linear-gradient(90deg, hsl(var(--muted)) 0%, hsl(var(--muted) / 0.5) 50%, hsl(var(--muted)) 100%)',
-                backgroundSize: '200% 100%',
-                animation: 'shimmer 1.8s linear infinite',
-              }}
-            />
-            <Box
-              sx={{
-                height: 8,
-                borderRadius: 1,
-                width: '45%',
-                background: 'linear-gradient(90deg, hsl(var(--muted)) 0%, hsl(var(--muted) / 0.5) 50%, hsl(var(--muted)) 100%)',
-                backgroundSize: '200% 100%',
-                animation: 'shimmer 1.8s linear infinite',
-                animationDelay: '0.3s',
-              }}
-            />
-          </Box>
+          )}
         </Box>
       </Box>
     );
 
-    return topLevel.map((item) => {
+    // Recursively render an item plus any nested replies (and their replies).
+    // Depth controls the indent rail color/spacing — we cap visual indent at 4
+    // levels so deeply-nested threads don't run off the side.
+    const renderThread = (
+      item: TimelineItem,
+      depth: number,
+      isReply: boolean,
+    ): React.ReactNode => {
       const itemKey = getItemKey(item);
       const replies = repliesByParent.get(itemKey) || [];
-      const node = renderItem(item);
+      const node = renderItem(item, { isReply });
       if (!node) return null;
 
-      // Show the processing placeholder when the item is flagged ai_handled
-      // but no reply from the agent has landed yet.
-      const isManualActivity = (item as any).type === 'activity' || (item as any).kind === 'activity';
-      const aiHandled = isManualActivity && (item as any).data?.ai_handled === true;
+      // Show processing/timeout placeholder when this item is flagged
+      // ai_handled but no agent reply has landed yet.
+      const isManualActivity = item.type === 'manual';
+      const aiHandled = isManualActivity && (item.data as any)?.ai_handled === true;
       const hasAgentReply = replies.some((r) => {
-        const u = (r as any).data?.user || '';
+        if (r.type !== 'manual') return false;
+        const u = (r.data as any)?.user || '';
         return /agent|ai\s*agent|aiagent/i.test(u);
       });
+      const ageMs = isManualActivity
+        ? Date.now() - ((item.data as any)?.timestamp || item.timestamp || 0)
+        : 0;
       const showAgentProcessing = aiHandled && !hasAgentReply;
+      const isTimedOut = showAgentProcessing && ageMs > AI_RESPONSE_TIMEOUT_MS;
 
       if (replies.length === 0 && !showAgentProcessing) return node;
 
+      const cappedDepth = Math.min(depth, 4);
       return (
         <Box key={`thread-${itemKey}`} sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           {node}
           <Box
             sx={{
-              ml: 4,
+              ml: cappedDepth === 0 ? 4 : 3,
               pl: 2,
               borderLeft: '2px solid rgba(255, 102, 0, 0.25)',
               display: 'flex',
@@ -4388,12 +4443,14 @@ const IncidentDetailPage = () => {
               gap: 1,
             }}
           >
-            {replies.map((reply) => renderItem(reply, { isReply: true }))}
-            {showAgentProcessing && renderAgentProcessingPlaceholder(itemKey)}
+            {replies.map((reply) => renderThread(reply, depth + 1, true))}
+            {showAgentProcessing && renderAgentProcessingPlaceholder(itemKey, isTimedOut)}
           </Box>
         </Box>
       );
-    });
+    };
+
+    return topLevel.map((item) => renderThread(item, 0, false));
   };
 
   return (
