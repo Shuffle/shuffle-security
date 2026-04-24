@@ -99,6 +99,51 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
     }
   }, [apiKey, apiBaseUrl]);
 
+  // Fetch the user's private apps from /api/v1/apps when apiKey is provided.
+  // These get merged into search results so users can find their own apps too.
+  useEffect(() => {
+    if (!apiKey || disablePrivateApps) {
+      setPrivateApps([]);
+      return;
+    }
+    const fetchPrivateApps = async () => {
+      try {
+        const response = await fetch(`${apiBaseUrl}${privateAppsPath}`, {
+          headers: { 'Authorization': `Bearer ${apiKey}` },
+          credentials: 'include',
+        });
+        if (!response.ok) return;
+        const data = await response.json();
+        const apps = Array.isArray(data) ? data : (data?.data || []);
+        // Normalize to AlgoliaSearchApp shape, tagged as 'private' source.
+        const normalized: AlgoliaSearchApp[] = apps.map((a: any) => ({
+          name: a.name || '',
+          description: a.description || '',
+          objectID: a.id || a.objectID || `private-${a.name}`,
+          creator: a.owner || a.creator || '',
+          app_version: a.app_version || '1.0.0',
+          image_url: a.large_image || a.image_url || '',
+          time_edited: a.edited || 0,
+          generated: !!a.generated,
+          invalid: !!a.invalid,
+          priority: a.priority || 0,
+          actions: Array.isArray(a.actions) ? a.actions.length : (a.actions || 0),
+          tags: a.tags || [],
+          accessible_by: a.accessible_by || [],
+          categories: a.categories || [],
+          action_labels: a.action_labels || [],
+          triggers: a.triggers || [],
+          verified: !!a.verified,
+          source: 'private',
+        }));
+        setPrivateApps(normalized);
+      } catch (error) {
+        console.error('Failed to fetch private apps:', error);
+      }
+    };
+    fetchPrivateApps();
+  }, [apiKey, apiBaseUrl, privateAppsPath, disablePrivateApps]);
+
   // Auto-select validated apps when they're loaded (validated = tests ran successfully)
   useEffect(() => {
     if (authenticatedApps.length > 0 && results.length > 0) {
