@@ -4501,7 +4501,22 @@ const IncidentDetailPage = () => {
           }}
         >
           {timedOut ? (
-            'AI Agent timed out'
+            <>
+              <span>AI Agent timed out</span>
+              {(rerunCount > 0 || lastActionTs > 0) && (
+                <Box
+                  component="span"
+                  sx={{
+                    color: 'text.secondary',
+                    fontWeight: 400,
+                    fontSize: '0.65rem',
+                  }}
+                >
+                  {rerunCount > 0 && `· ${rerunCount} rerun${rerunCount === 1 ? '' : 's'}`}
+                  {lastActionTs > 0 && ` · last action ${formatRelativeShort(Date.now() - lastActionTs)}`}
+                </Box>
+              )}
+            </>
           ) : toolsSummary ? (
             <>
               <span>Processing using the tools</span>
