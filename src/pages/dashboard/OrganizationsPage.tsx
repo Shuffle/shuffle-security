@@ -64,7 +64,7 @@ const OrganizationsPage = () => {
   }, [sessionToken]);
 
   return (
-    <Box sx={{ p: 4 }}>
+    <Box sx={{ p: 4, maxWidth: 1400, width: '100%', mx: 'auto' }}>
       <Typography variant="h4" sx={{ fontWeight: 600, mb: 4 }}>
         Tenants
       </Typography>
