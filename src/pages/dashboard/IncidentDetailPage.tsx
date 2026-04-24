@@ -1789,9 +1789,10 @@ const IncidentDetailPage = () => {
               }
             }
             if (added === 0) return prev;
-            // Fire-and-forget persist. Re-read the latest incident snapshot
-            // off the ref so we don't clobber concurrent edits.
-            const snap = incidentRef.current?.rawOCSF as Record<string, unknown> | undefined;
+            // Fire-and-forget persist of the tiny first-seen map. We update
+            // ONLY the correlation_first_seen field — everything else is
+            // copied through verbatim so we don't clobber concurrent edits.
+            const snap = incident?.rawOCSF as Record<string, unknown> | undefined;
             if (snap && id) {
               const meta = (snap.metadata as Record<string, unknown> | undefined) || {};
               const exts = (meta.extensions as Record<string, unknown> | undefined) || {};
@@ -1824,7 +1825,7 @@ const IncidentDetailPage = () => {
     } finally {
       setCorrelationsLoading(false);
     }
-  }, [id, crossOrgHeaders, crossOrgId]);
+  }, [id, crossOrgHeaders, crossOrgId, incident]);
 
   useEffect(() => {
     if (loading) return;
