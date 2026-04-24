@@ -4243,7 +4243,7 @@ const IncidentDetailPage = () => {
 
       // Show the processing placeholder when the item is flagged ai_handled
       // but no reply from the agent has landed yet.
-      const isManualActivity = item.kind === 'activity';
+      const isManualActivity = (item as any).type === 'activity' || (item as any).kind === 'activity';
       const aiHandled = isManualActivity && (item as any).data?.ai_handled === true;
       const hasAgentReply = replies.some((r) => {
         const u = (r as any).data?.user || '';
