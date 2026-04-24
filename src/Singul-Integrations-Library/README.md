@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://singul.io/logo.png" alt="Singul" width="120" />
+[<img src="https://shuffler.io/images/logos/singul.svg" alt="Singul Logo" width="100"/>](https://singul.io)
 
 # Singul Integrations Library
 
@@ -30,6 +30,10 @@ A headless, prop-driven React component for app discovery, selection, and OAuth 
 - [Publishing](#publishing)
 
 ---
+
+<img width="746" height="758" alt="image" src="https://github.com/user-attachments/assets/774a6c5e-a8aa-4a12-9931-a952147b0992" />
+
+<img width="766" height="974" alt="image" src="https://github.com/user-attachments/assets/e31ec066-c921-4db3-b1be-5f12ff43d8bb" />
 
 ## Features
 
