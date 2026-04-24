@@ -40,7 +40,7 @@ export interface NotificationsResponse {
 /**
  * Determine if a notification is an approval request vs a question.
  *
- * Both flows arrive via `?type=agent_question`, so we disambiguate using the
+ * Both flows arrive via `?type=agent_approval`, so we disambiguate using the
  * signals the backend sets:
  *  - Approvals → severity "medium" and/or wording "approval required"
  *  - Questions → severity "low"  and/or wording "input required"
@@ -83,7 +83,7 @@ export const stripAgentTitlePrefix = (raw: string | undefined | null): string =>
  */
 export const fetchAgentNotifications = async (): Promise<NotificationsResponse> => {
   const res = await shuffleFetch(
-    getApiUrl('/api/v1/notifications?type=agent_question&status=open'),
+    getApiUrl('/api/v1/notifications?type=agent_approval&status=open'),
   );
 
   if (!res.ok) {
