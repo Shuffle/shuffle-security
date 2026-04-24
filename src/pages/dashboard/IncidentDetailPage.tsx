@@ -1836,6 +1836,36 @@ const IncidentDetailPage = () => {
     fetchCorrelations();
   }, [fetchCorrelations, loading]);
 
+  // Hydrate correlation_first_seen from the persisted incident payload so the
+  // timeline shows the original discovery time across reloads, and keep the
+  // incidentRef pointed at the latest snapshot for the persist path inside
+  // fetchCorrelations.
+  useEffect(() => {
+    incidentRef.current = incident as { rawOCSF?: Record<string, unknown> } | null;
+    const raw = incident?.rawOCSF as Record<string, unknown> | undefined;
+    const persisted = (((raw?.metadata as Record<string, unknown> | undefined)
+      ?.extensions as Record<string, unknown> | undefined)
+      ?.custom_attributes as Record<string, unknown> | undefined)
+      ?.correlation_first_seen as Record<string, number> | undefined;
+    if (persisted && typeof persisted === 'object') {
+      setCorrelationFirstSeen((prev) => {
+        // Only seed missing keys — don't overwrite stamps we set this session.
+        let changed = false;
+        const next = { ...prev };
+        for (const [k, v] of Object.entries(persisted)) {
+          if (typeof v === 'number' && next[k] === undefined) {
+            next[k] = v;
+            changed = true;
+          }
+        }
+        if (!changed) return prev;
+        const earliest = Math.min(...Object.values(next));
+        setCorrelationsDiscoveredAt((d) => d ?? earliest);
+        return next;
+      });
+    }
+  }, [incident]);
+
   // ── Pivot landing: when arriving via ?correlation=…&focus=… (clicked a
   // chip on another incident's Correlations tab), flash the matching row and
   // scroll to it once the correlations have loaded. The `focus` param is
