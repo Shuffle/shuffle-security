@@ -4371,8 +4371,8 @@ const IncidentDetailPage = () => {
               gap: 1,
             }}
           >
-            {replies.map((reply) => renderThread(reply, depth + 1, true))}
             {showAgentProcessing && renderAgentProcessingPlaceholder(itemKey, isTimedOut)}
+            {replies.map((reply) => renderThread(reply, depth + 1, true))}
           </Box>
         </Box>
       );
