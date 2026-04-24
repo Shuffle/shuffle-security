@@ -72,7 +72,7 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
     if (apiKey) {
       const fetchAuthenticatedApps = async () => {
         try {
-          const response = await fetch(`${apiBaseUrl}/api/v1/apps/authentication`, {
+          const response = await fetch(`${apiBaseUrl}${authPath}`, {
             headers: {
               'Authorization': `Bearer ${apiKey}`,
             },
