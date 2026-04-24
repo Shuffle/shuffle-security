@@ -628,16 +628,9 @@ export const forceCreateSingleDemoIncident = async (): Promise<number> => {
  */
 export const forceCreateSingleDemoIncidentReturningKey = async (): Promise<string | null> => {
   // Wipe any prior focus incident so this stays a single, fresh item.
-  try {
-    const idx = readIndex();
-    const existing = idx[DATASTORE_CATEGORIES.INCIDENTS] || [];
-    const focusKeys = existing.filter(k => k.includes('-focus'));
-    if (focusKeys.length > 0) {
-      await Promise.allSettled(focusKeys.map(k => deleteDatastoreItem(k, DATASTORE_CATEGORIES.INCIDENTS)));
-      idx[DATASTORE_CATEGORIES.INCIDENTS] = existing.filter(k => !k.includes('-focus'));
-      writeIndex(idx);
-    }
-  } catch { /* best-effort */ }
+  // Uses the shared helper so duplicates can't slip in via a different
+  // browser / cleared storage / pipeline-renamed key.
+  await wipeExistingDemoIncidents(isDemoFocusIncident);
 
   // Same as the step seeder: ensure feeds are enabled and reuse / pick real IOCs.
   void forceEnableDefaultThreatFeeds();
