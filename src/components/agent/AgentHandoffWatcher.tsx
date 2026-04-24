@@ -21,7 +21,11 @@ import { useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAgentNotifications } from '@/hooks/useNotifications';
-import { isApprovalNotification } from '@/services/notifications';
+import {
+  isApprovalNotification,
+  approveAgentAction,
+  continueAgentExecution,
+} from '@/services/notifications';
 import { useEntityPreference } from '@/hooks/useEntityLabel';
 import { useAuth } from '@/context/AuthContext';
 
