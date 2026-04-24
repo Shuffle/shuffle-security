@@ -7,9 +7,9 @@
  * `analyzeSchedules` analyzer. Renders nothing when the config is healthy.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Alert, AlertTitle, Box, Button, Collapse, IconButton, Stack, Typography } from '@mui/material';
-import { ExpandMore as ExpandMoreIcon, OpenInNew as OpenInNewIcon } from '@mui/icons-material';
+import { Close as CloseIcon, ExpandMore as ExpandMoreIcon, OpenInNew as OpenInNewIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { getDatastoreItem, DATASTORE_CATEGORIES } from '@/services/datastore';
 import {
