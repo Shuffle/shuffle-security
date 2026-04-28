@@ -487,7 +487,7 @@ export const DEFAULT_USECASES: Usecase[] = [
     tags: ['Intel', 'Correlation', 'Context'],
     description: 'Threat intelligence enriches cases with reputation scores, malware families, threat actor attribution, and related IOCs — giving analysts immediate context.',
     agenticDescription: 'An agent autonomously enriches all observables in a case, maps findings to MITRE ATT&CK, identifies related campaigns, and updates case severity and recommended playbook based on findings.',
-    automationLabel: 'Enable Threat feeds',
+    automationLabel: 'Enable Threat feeds_webhook',
     automationCategory: 'cases',
     automationArea: 'threat_intel',
   },
@@ -497,6 +497,8 @@ export const DEFAULT_USECASES: Usecase[] = [
     tags: ['Intel', 'Response', 'Prevention'],
     description: 'Threat intel feeds pushed to network devices include IPs, domains, URLs, and ASNs for perimeter blocking, as well as MITRE ATT&CK techniques used to inform detection rule tuning on IDS/IPS and NDR sensors. Network controls act at layer 3–7, so indicator types must be network-observable.',
     agenticDescription: 'An agent curates and validates IOC feeds before pushing, deduplicates against existing block rules, removes expired indicators, and maps active techniques to IDS/IPS signatures — ensuring network policy stays accurate without manual review.',
+    automationLabel: 'Enable Threat feeds',
+    automationCategory: 'cases',
     automationArea: 'threat_intel',
   },
   {
@@ -505,6 +507,8 @@ export const DEFAULT_USECASES: Usecase[] = [
     tags: ['Intel', 'Response', 'Prevention', 'Detection'],
     description: 'Endpoint-targeted IOC feeds include file hashes (MD5/SHA256), process names, registry keys, certificate thumbprints, and parent-child process trees for behavioral blocking. MITRE ATT&CK technique mappings inform custom detection rules. Unlike network devices, EDR can act on host-observable artifacts invisible to the perimeter.',
     agenticDescription: 'An agent validates hash and behavioral indicator accuracy against multiple intel sources, maps techniques to EDR rule coverage gaps, prioritizes by threat severity, and generates a blocking report with rollback instructions.',
+    automationLabel: 'Enable Threat feeds',
+    automationCategory: 'cases',
     automationArea: 'threat_intel',
   },
   {
@@ -581,6 +585,8 @@ export const DEFAULT_USECASES: Usecase[] = [
     tags: ['Intel', 'Correlation', 'Detection'],
     description: 'Pushing IOC feeds to cloud-native security tools (GuardDuty, Sentinel, SCC) enables detection of known-malicious activity within cloud workloads.',
     agenticDescription: 'An agent maps threat intel IOCs to active cloud workloads, identifies which resources are communicating with known-malicious infrastructure, and auto-creates remediation tasks in cloud security tools.',
+    automationLabel: 'Enable Threat feeds',
+    automationCategory: 'cases',
     automationArea: 'threat_intel',
   },
   {
