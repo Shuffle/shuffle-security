@@ -4125,7 +4125,47 @@ const IncidentDetailPage = () => {
         const pillBorder = isIocPill ? 'hsl(var(--destructive) / 0.5)' : `${cfg.color}33`;
         const pillBgHover = isIocPill ? 'hsl(var(--destructive) / 0.14)' : `${cfg.color}1F`;
         const pillBorderHover = isIocPill ? 'hsl(var(--destructive) / 0.7)' : `${cfg.color}66`;
-        return (
+
+        // Sparse-correlation context strip: when this pill represents a
+        // correlation (or an observable that has correlations) and the set
+        // of *other* referenced incidents is small (≤2), surface the same
+        // recency + severity strip we render on the Correlations tab so the
+        // timeline is not just a "something happened" feed but a triage
+        // surface — relevance depends on more than just IOC flagging.
+        let sparseIncidentRefs: string[] = [];
+        if (item.kind === 'correlation-found' && pillObsKey) {
+          const corrEntry = obsCorrelations[pillObsKey];
+          if (corrEntry?.data?.length) {
+            const idsSet = new Set<string>();
+            corrEntry.data.forEach((c) => {
+              c.ref.forEach((r) => {
+                const [cat, key] = r.split('|');
+                if (cat !== 'shuffle-security_incidents' || !key) return;
+                if (id && key.toLowerCase() === id.toLowerCase()) return;
+                idsSet.add(key);
+              });
+            });
+            const ids = Array.from(idsSet);
+            if (ids.length > 0 && ids.length < 3) sparseIncidentRefs = ids;
+          }
+        } else if (item.kind === 'observable-added' && pillObsKey) {
+          const corrEntry = obsCorrelations[pillObsKey];
+          if (corrEntry?.data?.length) {
+            const idsSet = new Set<string>();
+            corrEntry.data.forEach((c) => {
+              c.ref.forEach((r) => {
+                const [cat, key] = r.split('|');
+                if (cat !== 'shuffle-security_incidents' || !key) return;
+                if (id && key.toLowerCase() === id.toLowerCase()) return;
+                idsSet.add(key);
+              });
+            });
+            const ids = Array.from(idsSet);
+            if (ids.length > 0 && ids.length < 3) sparseIncidentRefs = ids;
+          }
+        }
+
+        const pill = (
           <Box
             key={item.id}
             data-timeline-compact="true"
