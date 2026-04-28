@@ -290,6 +290,19 @@ export const CorrelationRow = ({ correlation, currentIncidentId, className, comp
         })}
       </Box>
 
+      {/* When the correlation is sparse (≤2 other incidents), eagerly fetch
+          each referenced incident and show severity + recency inline. Being
+          a "Known IOC" is just one signal — relevance also depends on how
+          recent and how severe the related incidents are. We deliberately
+          gate this on a small ref count so we don't fan out N requests on
+          high-signal correlations (those already have enough metadata to
+          justify a click). */}
+      {(() => {
+        const incidentRefs = refsByCategory['shuffle-security_incidents'] || [];
+        if (incidentRefs.length === 0 || incidentRefs.length >= 3) return null;
+        return <CorrelationContextStrip incidentKeys={incidentRefs} compact={compact} />;
+      })()}
+
       {/* Pivot preview popover — opens when an incident chip is clicked. */}
       <Popover
         open={!!pivotAnchor}
