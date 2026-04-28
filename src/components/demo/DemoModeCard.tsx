@@ -45,10 +45,30 @@ const useIncidentCount = () => {
 
 const INCIDENT_THRESHOLD = 10;
 
+/** Detect leftover demo incidents in the datastore so we can offer a cleanup
+ *  even when demo mode is no longer "active" (e.g. another browser/session
+ *  ran the tour, or the active flag was cleared but the seeded incidents
+ *  remain). Polled lazily — uses the same auth + datastore API the demo
+ *  itself uses, no extra wiring required. */
+const useLeftoverDemoCount = (active: boolean) => {
+  return useQuery<number>({
+    queryKey: ['demo-card', 'leftover-demo-count'],
+    queryFn: async () => {
+      try { return await countDemoIncidents(); } catch { return 0; }
+    },
+    // While active, the in-context stats already drive the UI — skip the
+    // extra probe to avoid duplicate work.
+    enabled: !active,
+    staleTime: 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+};
+
 export const DemoModeCard = () => {
   const { active, isSeeding, isCleaning, stats, startDemo, openTour, cleanup } = useDemo();
   const { data: workflows } = useWorkflows();
   const { data: incidentCount = 0 } = useIncidentCount();
+  const { data: leftoverDemoCount = 0 } = useLeftoverDemoCount(active);
   const { singular: entitySingular, plural: entityPlural } = useEntityPreference();
   const t = (s: string) => applyEntityTerminology(s, entitySingular, entityPlural);
   const entityPluralLower = entityPlural.toLowerCase();
@@ -61,6 +81,9 @@ export const DemoModeCard = () => {
   const tooManyIncidents = incidentCount >= INCIDENT_THRESHOLD;
   const disableStart = !active && tooManyIncidents;
   const disableReason = `You already have ${incidentCount} ${entityPluralLower} — demo mode is for accounts with fewer than ${INCIDENT_THRESHOLD}.`;
+  // Show the Clean Up button whenever demo data exists, even if the demo
+  // mode flag itself is no longer active.
+  const hasLeftoverDemoData = !active && leftoverDemoCount > 0;
 
   return (
     <motion.div
