@@ -289,18 +289,21 @@ const runThreatFeedsWorkflow = async (): Promise<void> => {
 };
 
 /**
- * Initialize Threat Feeds defaults if the category is empty. Does NOT run
- * the enablement workflow — the caller (Stage B) does that explicitly so
- * we keep the dependency order clear.
+ * Initialize Threat Feeds defaults — but ONLY if the user has not already
+ * customised the list. Delegates to the canonical `seedDefaultThreatFeeds`
+ * so the write itself is identical to the Threat Feeds page reset button.
+ *
+ * Does NOT run the enablement workflow — the caller (Stage B) does that
+ * explicitly so we keep the dependency order clear.
  */
 const initThreatFeedsDefaults = async (): Promise<void> => {
   try {
     const res = await getDatastoreByCategory(DATASTORE_CATEGORIES.THREAT_FEEDS);
     const alreadySeeded = res.success && res.data && res.data.length > 0;
-    if (!alreadySeeded) {
-      const items = DEFAULT_THREAT_FEEDS.map(feed => ({ key: feed.id, value: feed }));
-      await setDatastoreItems(items, DATASTORE_CATEGORIES.THREAT_FEEDS);
-    }
+    // Respect the user's existing configuration — never overwrite their
+    // custom feeds just because demo mode started.
+    if (alreadySeeded) return;
+    await seedDefaultThreatFeeds();
   } catch (err) {
     console.warn('[demo] threat feeds init failed', err);
   }
