@@ -1654,6 +1654,7 @@ function UsecaseDetailContent({
   canToggle = false,
   isAuthenticated = true,
   onToggled,
+  workflows = [],
 }: {
   flowId: string | undefined;
   hideBackNav?: boolean;
@@ -1668,6 +1669,8 @@ function UsecaseDetailContent({
   isAuthenticated?: boolean;
   /** Called after successful generation so the parent can trust the requested workflow state */
   onToggled?: (label: string, enabled: boolean) => void;
+  /** Org workflows from /api/v1/workflows — used to render the "Linked Workflows" section */
+  workflows?: WorkflowSummary[];
 }) {
   const navigate = useNavigate();
   const { apiUrl, authHeader } = useApi();
