@@ -29,7 +29,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useDemo, TOUR_STEPS } from '@/context/DemoContext';
 import { useEntityPreference } from '@/hooks/useEntityLabel';
-import { applyEntityTerminology } from '@/lib/demoTerminology';
+import { applyEntityTerminology } from '@/lib/entityTerminology';
 import { motion, AnimatePresence, useMotionValue, type PanInfo } from 'framer-motion';
 
 // Persisted drag offset for the floating demo UI (anchor pill, minimized
