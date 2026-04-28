@@ -2745,6 +2745,7 @@ function UsecasesPageInner() {
                 canToggle={drawerCanToggle}
                 isAuthenticated={isAuthenticated}
                 onToggled={handleUsecaseWorkflowGenerated}
+                workflows={workflows}
               />
             );
           })()}
