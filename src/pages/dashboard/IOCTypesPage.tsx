@@ -22,7 +22,6 @@ import {
   Chip,
   InputAdornment,
   MenuItem,
-  LinearProgress,
   Tooltip,
   ToggleButton,
   ToggleButtonGroup,
@@ -63,8 +62,6 @@ const IOCTypesPage = () => {
   const [editingType, setEditingType] = useState<IOCType | null>(null);
   const [formData, setFormData] = useState<Partial<IOCType>>({ name: '', regex: '', description: '', category: 'other', needsPattern: false });
   const [searchQuery, setSearchQuery] = useState('');
-  const [isInitializing, setIsInitializing] = useState(false);
-  const [initProgress, setInitProgress] = useState(0);
   const [filterMode, setFilterMode] = useState<'all' | 'todo'>('all');
   
   // Regex tester state
@@ -90,8 +87,6 @@ const IOCTypesPage = () => {
         optimisticDeletes.current.clear();
         defaults.forEach(type => optimisticOverrides.current.set(type.name, type));
         setIocTypes(defaults);
-        setIsInitializing(false);
-        setInitProgress(0);
         
         void (async () => {
           try {
@@ -146,8 +141,6 @@ const IOCTypesPage = () => {
       .forEach(name => optimisticDeletes.current.add(name));
     defaults.forEach(type => optimisticOverrides.current.set(type.name, type));
     setIocTypes(defaults);
-    setIsInitializing(false);
-    setInitProgress(0);
     toast.success(`Restored ${defaults.length} default IOC types`);
 
     void (async () => {
