@@ -222,13 +222,21 @@ const ThreatFeedsPage = () => {
 
   // Filter feeds by search query
   const filteredFeeds = useMemo(() => {
-    if (!searchQuery.trim()) return feeds;
-    const query = searchQuery.toLowerCase();
-    return feeds.filter(f => 
-      f.name.toLowerCase().includes(query) ||
-      f.url.toLowerCase().includes(query) ||
-      f.description?.toLowerCase().includes(query)
-    );
+    const base = !searchQuery.trim()
+      ? feeds
+      : feeds.filter(f => {
+          const query = searchQuery.toLowerCase();
+          return (
+            f.name.toLowerCase().includes(query) ||
+            f.url.toLowerCase().includes(query) ||
+            f.description?.toLowerCase().includes(query)
+          );
+        });
+    // Default sort: enabled feeds first, then alphabetical by name.
+    return [...base].sort((a, b) => {
+      if (a.enabled !== b.enabled) return a.enabled ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    });
   }, [feeds, searchQuery]);
 
   const enabledCount = useMemo(() => feeds.filter(f => f.enabled).length, [feeds]);
