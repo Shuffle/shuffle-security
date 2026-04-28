@@ -360,8 +360,11 @@ const ThreatFeedsPage = () => {
                   '&:hover': { bgcolor: 'warning.dark' },
                 }),
               }}
+              startIcon={enrichmentStatus.isEnabling ? <CircularProgress size={14} color="inherit" /> : undefined}
             >
-              {enrichmentStatus.isEnabling ? '...' : (automationEnabled ? 'Disable' : 'Enable')}
+              {enrichmentStatus.isEnabling
+                ? (automationEnabled ? 'Disabling…' : 'Enabling…')
+                : (automationEnabled ? 'Disable' : 'Enable')}
             </Button>
           </Box>
         </Alert>
