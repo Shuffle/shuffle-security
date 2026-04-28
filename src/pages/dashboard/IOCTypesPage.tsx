@@ -395,7 +395,7 @@ const IOCTypesPage = () => {
           </Tooltip>
         </Box>
       )}
-      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+      <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Typography variant="h5" sx={{ fontWeight: 600 }}>IOC Types</Typography>
           {isLoading && <CircularProgress size={20} />}
@@ -403,99 +403,68 @@ const IOCTypesPage = () => {
           <Chip label={`${enabledCount} enabled`} size="small" sx={{ bgcolor: 'hsl(var(--severity-low) / 0.12)', color: 'hsl(var(--severity-low))' }} />
         </Box>
         <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
-          {/* TODO Filter Toggle */}
-          <ToggleButtonGroup
-            value={filterMode}
-            exclusive
-            onChange={(_, val) => val && setFilterMode(val)}
-            size="small"
-            sx={{ height: 36 }}
-          >
-            <ToggleButton value="all" sx={{ px: 2, textTransform: 'none', height: 36 }}>
-              All
-            </ToggleButton>
-            <ToggleButton 
-              value="todo" 
-              sx={{ 
-                px: 2, 
-                textTransform: 'none',
-                gap: 0.5,
-                height: 36,
-                '&.Mui-selected': {
-                  bgcolor: 'rgba(245, 158, 11, 0.15)',
-                  color: '#f59e0b',
-                  '&:hover': { bgcolor: 'rgba(245, 158, 11, 0.25)' },
-                },
-              }}
+          <Tooltip title="Reset all IOC types to defaults" arrow>
+            <Button
+              variant="outlined"
+              color="warning"
+              startIcon={<RestartAltIcon />}
+              onClick={handleInitDefaults}
+              sx={{ height: 36 }}
             >
-              <BuildIcon sx={{ fontSize: 16 }} />
-              TODO ({todoCount})
-            </ToggleButton>
-          </ToggleButtonGroup>
-          
-          <TextField
-            size="small"
-            placeholder="Search IOC types..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
-                </InputAdornment>
-              ),
-              sx: { height: 36 },
-            }}
-            sx={{ minWidth: 220 }}
-          />
-          {iocTypes.length === 0 && !isLoading && (
-            <Button variant="outlined" onClick={handleInitDefaults} sx={{ height: 36 }}>
               Reset to Defaults
             </Button>
-          )}
-          {iocTypes.length > 0 && (
-            <>
-              <Tooltip title="Enable all IOC types" arrow>
-                <Button
-                  variant="outlined"
-                  color="success"
-                  startIcon={<CheckBoxIcon />}
-                  onClick={() => handleBulkEnable(true)}
-                  disabled={enabledCount === iocTypes.length}
-                  sx={{ height: 36 }}
-                >
-                  All
-                </Button>
-              </Tooltip>
-              <Tooltip title="Disable all IOC types" arrow>
-                <Button
-                  variant="outlined"
-                  color="error"
-                  startIcon={<CheckBoxOutlineBlankIcon />}
-                  onClick={() => handleBulkEnable(false)}
-                  disabled={enabledCount === 0}
-                  sx={{ height: 36 }}
-                >
-                  None
-                </Button>
-              </Tooltip>
-              <Tooltip title="Reset all IOC types to defaults" arrow>
-                <Button
-                  variant="outlined"
-                  color="warning"
-                  startIcon={<RestartAltIcon />}
-                  onClick={handleInitDefaults}
-                  sx={{ height: 36 }}
-                >
-                  Reset to Defaults
-                </Button>
-              </Tooltip>
-            </>
-          )}
+          </Tooltip>
           <Button variant="outlined" startIcon={<AddIcon />} onClick={() => handleOpenDialog()} sx={{ height: 36 }}>
             Add IOC Type
           </Button>
         </Box>
+      </Box>
+      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'flex-start', alignItems: 'center', flexWrap: 'wrap', gap: 1.5 }}>
+        {/* TODO Filter Toggle */}
+        <ToggleButtonGroup
+          value={filterMode}
+          exclusive
+          onChange={(_, val) => val && setFilterMode(val)}
+          size="small"
+          sx={{ height: 36 }}
+        >
+          <ToggleButton value="all" sx={{ px: 2, textTransform: 'none', height: 36 }}>
+            All
+          </ToggleButton>
+          <ToggleButton
+            value="todo"
+            sx={{
+              px: 2,
+              textTransform: 'none',
+              gap: 0.5,
+              height: 36,
+              '&.Mui-selected': {
+                bgcolor: 'rgba(245, 158, 11, 0.15)',
+                color: '#f59e0b',
+                '&:hover': { bgcolor: 'rgba(245, 158, 11, 0.25)' },
+              },
+            }}
+          >
+            <BuildIcon sx={{ fontSize: 16 }} />
+            TODO ({todoCount})
+          </ToggleButton>
+        </ToggleButtonGroup>
+
+        <TextField
+          size="small"
+          placeholder="Search IOC types..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+              </InputAdornment>
+            ),
+            sx: { height: 36 },
+          }}
+          sx={{ minWidth: 260, flex: 1, maxWidth: 480 }}
+        />
       </Box>
 
       {/* Regex Tester Bar */}
