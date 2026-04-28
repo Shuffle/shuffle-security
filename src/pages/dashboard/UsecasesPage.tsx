@@ -2740,8 +2740,15 @@ function UsecaseCard({
       setTimeout(() => setOptimisticEnabled(null), 8000);
     } catch (err: any) {
       setOptimisticEnabled(null);
-      const msg = err?.message || 'Failed to update automation';
-      toast.error(msg, { duration: 6000 });
+      const raw = err?.message || '';
+      const isNetwork = /failed to fetch|networkerror|load failed/i.test(raw);
+      const description = isNetwork
+        ? 'Could not reach the Shuffle API. Check your connection or backend status and try again.'
+        : (raw || 'The backend rejected the request.');
+      toast.error(`Failed to ${willBeEnabled ? 'enable' : 'disable'} ${flow.label}`, {
+        description,
+        duration: 8000,
+      });
     } finally {
       setToggling(false);
     }
