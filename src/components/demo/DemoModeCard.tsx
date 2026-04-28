@@ -17,32 +17,6 @@ import { applyEntityTerminology } from '@/lib/entityTerminology';
 import { findIngestTicketsWorkflow, isWorkflowScheduleStopped } from '@/lib/ingestionDetection';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 
-/** Returns the total number of host monitors across all sensor_group environments. */
-const useMonitorCount = () => {
-  return useQuery<number>({
-    queryKey: ['demo-card', 'monitor-count'],
-    queryFn: async () => {
-      try {
-        const res = await fetch(getApiUrl('/api/v1/getenvironments'), {
-          credentials: 'include',
-          headers: { ...getAuthHeader() },
-        });
-        if (!res.ok) return 0;
-        const data = await res.json();
-        const envs = Array.isArray(data) ? data : [];
-        return envs.reduce((sum: number, e: any) => {
-          if (e?.archived || e?.sensor_group !== true) return sum;
-          return sum + (Array.isArray(e?.sensor_hosts) ? e.sensor_hosts.length : 0);
-        }, 0);
-      } catch {
-        return 0;
-      }
-    },
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
-  });
-};
-
 /** Returns the total number of incidents in the org's datastore. */
 const useIncidentCount = () => {
   return useQuery<number>({
@@ -69,31 +43,23 @@ const useIncidentCount = () => {
 };
 
 const INCIDENT_THRESHOLD = 10;
-const MONITOR_THRESHOLD = 1;
 
 export const DemoModeCard = () => {
   const { active, isSeeding, isCleaning, stats, startDemo, openTour, cleanup } = useDemo();
   const { data: workflows } = useWorkflows();
-  const { data: monitorCount = 0 } = useMonitorCount();
   const { data: incidentCount = 0 } = useIncidentCount();
   const { singular: entitySingular, plural: entityPlural } = useEntityPreference();
   const t = (s: string) => applyEntityTerminology(s, entitySingular, entityPlural);
   const entityPluralLower = entityPlural.toLowerCase();
   const entitySingularLower = entitySingular.toLowerCase();
 
-  // Allow demo mode when the account is still light on real data:
-  // ≤ 10 incidents AND ≤ 1 host monitor. Ingest workflow is informational only.
+  // Allow demo mode when the account is still light on real incidents (≤ 10).
+  // Host monitors are NOT considered — production deployments often have them.
   const ingestWorkflow = workflows ? findIngestTicketsWorkflow(workflows) : null;
   const hasIngest = !!ingestWorkflow && !isWorkflowScheduleStopped(ingestWorkflow);
   const tooManyIncidents = incidentCount >= INCIDENT_THRESHOLD;
-  const tooManyMonitors = monitorCount > MONITOR_THRESHOLD;
-  const setupExists = tooManyIncidents || tooManyMonitors;
-  const disableStart = !active && setupExists;
-  const disableReason = tooManyIncidents && tooManyMonitors
-    ? `You already have ${incidentCount} ${entityPluralLower} and ${monitorCount} host monitors — demo mode is for lightly-used accounts.`
-    : tooManyIncidents
-      ? `You already have ${incidentCount} ${entityPluralLower} — demo mode is for accounts with fewer than ${INCIDENT_THRESHOLD}.`
-      : `You already have ${monitorCount} host monitors — demo mode is for accounts with ${MONITOR_THRESHOLD} or fewer.`;
+  const disableStart = !active && tooManyIncidents;
+  const disableReason = `You already have ${incidentCount} ${entityPluralLower} — demo mode is for accounts with fewer than ${INCIDENT_THRESHOLD}.`;
 
   return (
     <motion.div
