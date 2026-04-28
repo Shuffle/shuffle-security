@@ -376,8 +376,15 @@ const ThreatFeedsPage = () => {
       {/* Info Card */}
       <Card sx={{ mb: 2, p: 2, bgcolor: 'hsl(var(--primary) / 0.05)', border: '1px solid hsl(var(--primary) / 0.2)' }}>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          Threat feeds are external intelligence sources that provide indicators of compromise (IOCs) such as malicious IPs, domains, and file hashes. 
+          Threat feeds are external intelligence sources that provide indicators of compromise (IOCs) such as malicious IPs, domains, and file hashes.
           Enable feeds to automatically enrich incidents with threat intelligence data.
+        </Typography>
+        <Typography variant="body2" sx={{ mt: 1, color: 'hsl(var(--severity-medium))', fontWeight: 500 }}>
+          Note: IOC-based threat feeds alone are not enough for full protection. They do not cover adversary tactics and techniques (such as MITRE ATT&CK behaviors), which require detection rules, telemetry, and response automation.
+          {' '}For a complete coverage assessment, please reach out to{' '}
+          <Box component="a" href="mailto:support@shuffler.io" sx={{ color: 'hsl(var(--primary))', textDecoration: 'underline', fontWeight: 600 }}>
+            support@shuffler.io
+          </Box>.
         </Typography>
       </Card>
 
