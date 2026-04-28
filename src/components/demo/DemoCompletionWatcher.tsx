@@ -299,7 +299,12 @@ export const DemoCompletionWatcher = () => {
     const onClick = (e: Event) => {
       const target = e.target as HTMLElement | null;
       if (!target) return;
-      if (target.closest('[data-corr-key]')) {
+      const row = target.closest('[data-corr-key]') as HTMLElement | null;
+      if (!row) return;
+      // Only count clicks on the URL correlation row — that is the specific
+      // pivot point the demo is calling out (lure URL → Sliver C2 incident).
+      const key = row.getAttribute('data-corr-key') || '';
+      if (/^https?:\/\//i.test(key)) {
         markStepCompleted('correlations:pivot');
       }
     };
