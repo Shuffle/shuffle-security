@@ -2,12 +2,28 @@
  * Demo Mode — "make the environment live" bootstrap.
  *
  * Runs the same enablement steps an operator would normally do on
- * /onboarding/automate, so the demo tour starts in a working state:
- *   1. Generate the four ingest + threat-intel workflows (matching the
- *      `automatic_ingestion` and `threat_intel` automation areas, plus the
- *      `_webhook` variants), using the apps the user already has authed.
- *   2. Initialize Threat Feeds defaults (no-op if already populated).
- *   3. Initialize IOC Types defaults (no-op if already populated).
+ * /onboarding/automate, so the demo tour starts in a working state.
+ *
+ * The indicator-pipeline portion runs in a strict sequence so step 4 can
+ * actually pick a real IOC instead of falling back to a static pool:
+ *
+ *   Stage A (parallel):
+ *     1. Initialize IOC Types defaults     (no-op if already populated)
+ *     2. Initialize Threat Feeds defaults  (no-op if already populated)
+ *
+ *   Stage B (after A):
+ *     3. Run the "Enable Threat feeds" workflow so feeds get parsed into
+ *        the `ioc_domain` / `ioc_ip` datastore categories.
+ *
+ *   Stage C (after B):
+ *     4. Poll `ioc_domain` until at least one indicator is present (or we
+ *        give up after a short budget). The indicator-availability promise
+ *        is exposed as `indicatorReady` so the incidents-list seeder can
+ *        await it before picking real IOCs.
+ *
+ * Independent steps (workflow generation, monitor host, agents, agent
+ * permissions) fire in parallel alongside Stage A — they do not gate the
+ * indicator pipeline.
  *
  * Best-effort: all failures are swallowed and logged; the tour continues
  * regardless so a flaky API does not block the user.
