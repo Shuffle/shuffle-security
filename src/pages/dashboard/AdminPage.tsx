@@ -204,22 +204,40 @@ const AdminPage = () => {
         Manage your tenant settings, users, and sub-tenants.
       </Typography>
 
-      <Tabs
-        value={activeTab}
-        onChange={handleTabChange}
-        sx={{
-          mb: 4,
-          '& .MuiTabs-indicator': { bgcolor: 'hsl(var(--primary))' },
-          '& .MuiTab-root': {
-            color: 'hsl(var(--muted-foreground))',
-            '&.Mui-selected': { color: 'hsl(var(--primary))' },
-          },
-        }}
-      >
-        <Tab label="Overview" />
-        <Tab label="Users" />
-        <Tab label="Tenants" />
-      </Tabs>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
+        <Box sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 0.5,
+          p: 0.5,
+          bgcolor: 'hsl(var(--card))',
+          borderRadius: 2,
+          border: '1px solid hsl(var(--border))',
+        }}>
+          {['Overview', 'Users', 'Tenants'].map((label, index) => (
+            <Box
+              key={label}
+              onClick={() => handleTabChange(null, index)}
+              sx={{
+                px: 2,
+                py: 1,
+                borderRadius: 1.5,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                bgcolor: activeTab === index ? '#ff6600' : 'transparent',
+                color: activeTab === index ? '#ffffff' : 'hsl(var(--muted-foreground))',
+                fontWeight: activeTab === index ? 600 : 400,
+                fontSize: '0.875rem',
+                '&:hover': {
+                  bgcolor: activeTab === index ? '#ff6600' : 'hsl(var(--muted))',
+                },
+              }}
+            >
+              {label}
+            </Box>
+          ))}
+        </Box>
+      </Box>
 
       {activeTab === 0 && (
         <>
