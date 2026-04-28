@@ -83,7 +83,36 @@ const ThreatFeedsPage = () => {
 
   // No auto-initialization — the list must reflect the actual datastore.
   // Defaults are only seeded when the user clicks "Reset to Defaults" or
-  // "Load default feeds" from the empty state.
+  // the empty-state CTA below.
+
+  // Combined CTA: seed default feeds AND enable the Threat Intel automation
+  // so the user gets a working setup in one click.
+  const handleEnableThreatFeeds = async () => {
+    setIsInitializing(true);
+    try {
+      await initializeDefaults();
+      try {
+        const response = await getDatastoreItem(AUTOMATION_CONFIG_KEY, ONBOARDING_CONFIG_CATEGORY);
+        let config: any = {};
+        if (response.success && response.item?.value) {
+          config = typeof response.item.value === 'string'
+            ? JSON.parse(response.item.value)
+            : response.item.value;
+        }
+        config.threat_intel = { ...config.threat_intel, enabled: true };
+        await setDatastoreItem(AUTOMATION_CONFIG_KEY, config, ONBOARDING_CONFIG_CATEGORY);
+        setAutomationEnabled(true);
+      } catch (err) {
+        console.error('Failed to enable threat intel automation:', err);
+      }
+      toast.success('Threat feeds enabled');
+    } catch (err) {
+      console.error('Failed to enable threat feeds:', err);
+      toast.error('Failed to enable threat feeds');
+    } finally {
+      setIsInitializing(false);
+    }
+  };
 
   const handleOpenDialog = (feed?: ThreatFeed) => {
     if (feed) {
