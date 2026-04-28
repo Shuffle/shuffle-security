@@ -198,13 +198,13 @@ export const useEnrichmentStatus = (
       setPendingAction(null);
       setOptimistic(null);
     }
-  }, [pollAfterGenerate]);
+  }, [validateWorkflowIds, refetchAll]);
 
   const disable = useCallback(async () => {
     setOptimistic(false);
     setPendingAction('disable');
     try {
-      await Promise.allSettled([
+      const [r1, r2] = await Promise.all([
         fetch(getApiUrl('/api/v2/workflows/generate'), {
           method: 'POST',
           credentials: 'include',
@@ -218,12 +218,19 @@ export const useEnrichmentStatus = (
           body: JSON.stringify({ label: 'Enable Threat feeds_webhook', action_name: 'disable' }),
         }),
       ]);
-      await pollAfterGenerate();
+      const ids = (await Promise.all([parseGenerateId(r1), parseGenerateId(r2)])).filter(
+        (x): x is string => !!x,
+      );
+      if (ids.length > 0) {
+        await validateWorkflowIds(ids, 'disabled');
+      } else {
+        await refetchAll();
+      }
     } finally {
       setPendingAction(null);
       setOptimistic(null);
     }
-  }, [pollAfterGenerate]);
+  }, [validateWorkflowIds, refetchAll]);
 
   const result = useMemo(() => {
     const hasThreatFeeds = !!workflows?.some(
