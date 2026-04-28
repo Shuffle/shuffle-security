@@ -5,36 +5,42 @@
  *
  * Reads the `assignment_schedules` config datastore item and runs the shared
  * `analyzeSchedules` analyzer. Renders nothing when the config is healthy.
+ *
+ * For the common fixable issues (empty Tier 2 / Tier 3 / Manager) the banner
+ * also exposes an inline user-picker so the admin can assign someone to that
+ * tier without leaving the page — the global `assignment_schedules` config is
+ * updated in place and the banner refreshes.
  */
 
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, AlertTitle, Box, Button, Collapse, IconButton, Stack, Typography } from '@mui/material';
+import {
+  Alert, AlertTitle, Box, Button, Collapse, IconButton, Stack, Typography,
+  Select, MenuItem, FormControl, CircularProgress,
+} from '@mui/material';
 import { Close as CloseIcon, ExpandMore as ExpandMoreIcon, OpenInNew as OpenInNewIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { getDatastoreItem, DATASTORE_CATEGORIES } from '@/services/datastore';
+import { toast } from 'sonner';
+import { getDatastoreItem, setDatastoreItem, DATASTORE_CATEGORIES } from '@/services/datastore';
 import {
   analyzeSchedules,
   highestSeverity,
   type ScheduleIssue,
 } from '@/lib/scheduleHealth';
-import type { AssignmentConfig, UserSchedule } from '@/components/users/OnCallScheduleManager';
+import type {
+  AssignmentConfig,
+  UserSchedule,
+  EscalationLevel,
+  ScheduleEntry,
+} from '@/components/users/OnCallScheduleManager';
+import { computeDefaultPolicy } from '@/components/users/OnCallScheduleManager';
+import { useUsers } from '@/hooks/useUsers';
 
 interface ScheduleHealthBannerProps {
-  /** Override the default destination for the "Manage schedules" CTA. */
   manageHref?: string;
-  /** Hide the CTA entirely (e.g. when already rendered on /users). */
   hideManageCta?: boolean;
-  /** Compact spacing for use inside denser pages like /incidents. */
   compact?: boolean;
-  /** localStorage key used to persist a user dismissal. When set, the banner shows a close button. */
   dismissKey?: string;
-  /**
-   * Suppress rendering until the workspace has at least this many real
-   * (non-demo) incidents. Avoids nagging brand-new orgs about on-call
-   * coverage before they have any traffic to route.
-   */
   minIncidents?: number;
-  /** Current count of real (non-demo) incidents. Required when `minIncidents` is set. */
   incidentCount?: number;
 }
 
@@ -43,6 +49,33 @@ const SEVERITY_LABEL = {
   warning: 'On-call schedule could be improved',
   info: 'On-call schedule notes',
 } as const;
+
+// Map fixable issues to the tier they need a user assigned to.
+const ISSUE_TO_TIER: Record<string, EscalationLevel> = {
+  'orphan-tier2': 'tier2',
+  'orphan-tier3': 'tier3',
+  'no-manager': 'manager',
+  'no-escalation-path': 'tier2',
+};
+
+const TIER_LABEL: Record<EscalationLevel, string> = {
+  tier1: 'Tier 1',
+  tier2: 'Tier 2',
+  tier3: 'Tier 3',
+  manager: 'Manager',
+};
+
+const generateId = () => Math.random().toString(36).substring(2, 12);
+
+const alwaysOnEntry = (): ScheduleEntry => ({
+  id: generateId(),
+  startDate: new Date().toISOString().split('T')[0],
+  endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+  startTime: '00:00',
+  endTime: '23:59',
+  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  daysOfWeek: [0, 1, 2, 3, 4, 5, 6],
+});
 
 export const ScheduleHealthBanner = ({
   manageHref = '/users',
@@ -53,49 +86,101 @@ export const ScheduleHealthBanner = ({
   incidentCount,
 }: ScheduleHealthBannerProps) => {
   const navigate = useNavigate();
+  const { users } = useUsers();
+  const [config, setConfig] = useState<AssignmentConfig | null>(null);
   const [issues, setIssues] = useState<ScheduleIssue[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
+  const [savingIssue, setSavingIssue] = useState<string | null>(null);
   const [dismissed, setDismissed] = useState<boolean>(() => {
     if (!dismissKey || typeof window === 'undefined') return false;
     try { return window.localStorage.getItem(dismissKey) === '1'; } catch { return false; }
   });
 
-  // Signature of current issues so a new/different issue resurfaces the banner
   const issuesSignature = useMemo(
     () => issues.map(i => `${i.severity}:${i.id}`).sort().join('|'),
     [issues],
   );
 
+  const reload = async () => {
+    try {
+      const response = await getDatastoreItem(
+        'assignment_schedules',
+        DATASTORE_CATEGORIES.CONFIGURATION,
+      );
+      let data: AssignmentConfig = { userSchedules: [], updatedAt: '' };
+      if (response.success && response.item?.value) {
+        data = typeof response.item.value === 'string'
+          ? JSON.parse(response.item.value)
+          : response.item.value;
+      }
+      setConfig(data);
+      setIssues(analyzeSchedules(data.userSchedules || []));
+    } catch {
+      setConfig(null);
+      setIssues([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      try {
-        const response = await getDatastoreItem(
-          'assignment_schedules',
-          DATASTORE_CATEGORIES.CONFIGURATION,
-        );
-        let schedules: UserSchedule[] = [];
-        if (response.success && response.item?.value) {
-          const data: AssignmentConfig = typeof response.item.value === 'string'
-            ? JSON.parse(response.item.value)
-            : response.item.value;
-          schedules = data.userSchedules || [];
-        }
-        if (!cancelled) setIssues(analyzeSchedules(schedules));
-      } catch {
-        if (!cancelled) setIssues([]);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
+    (async () => { if (!cancelled) await reload(); })();
     return () => { cancelled = true; };
   }, []);
+
+  // Users not yet assigned to the given tier — used to populate the picker.
+  const availableUsersForTier = (tier: EscalationLevel) => {
+    const assignedIds = new Set(
+      (config?.userSchedules || [])
+        .filter(s => s.enabled && s.escalationLevel === tier)
+        .map(s => s.userId.split('::')[0]),
+    );
+    return users.filter(u => u.active !== false && !assignedIds.has(u.id));
+  };
+
+  const handleAssign = async (issueId: string, tier: EscalationLevel, userId: string) => {
+    if (!config) return;
+    const user = users.find(u => u.id === userId);
+    if (!user) return;
+    setSavingIssue(issueId);
+    try {
+      const newSchedule: UserSchedule = {
+        userId: tier === 'tier1' ? user.id : `${user.id}::${tier}`,
+        userName: user.username,
+        userEmail: user.username,
+        escalationLevel: tier,
+        schedules: [alwaysOnEntry()],
+        enabled: true,
+      };
+      const newConfig: AssignmentConfig = {
+        ...config,
+        userSchedules: [...config.userSchedules, newSchedule],
+        updatedAt: new Date().toISOString(),
+        defaultPolicy: computeDefaultPolicy([...config.userSchedules, newSchedule]),
+      };
+      const response = await setDatastoreItem(
+        'assignment_schedules',
+        newConfig,
+        DATASTORE_CATEGORIES.CONFIGURATION,
+      );
+      if (response.success) {
+        toast.success(`${user.username} assigned to ${TIER_LABEL[tier]}`);
+        await reload();
+      } else {
+        throw new Error(response.error || 'Failed to update schedule');
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to assign user');
+    } finally {
+      setSavingIssue(null);
+    }
+  };
 
   if (loading || issues.length === 0) return null;
   if (typeof minIncidents === 'number' && (incidentCount ?? 0) < minIncidents) return null;
   if (dismissed && dismissKey) {
-    // Resurface if the issue signature has changed since the last dismissal
     try {
       const lastSig = window.localStorage.getItem(`${dismissKey}:sig`);
       if (lastSig === issuesSignature) return null;
@@ -189,27 +274,75 @@ export const ScheduleHealthBanner = ({
         </Typography>
         <Collapse in={expanded} timeout="auto" unmountOnExit>
           <Stack spacing={1.25} sx={{ mt: 1.5 }}>
-            {issues.map(issue => (
-              <Box
-                key={issue.id}
-                sx={{
-                  p: 1.5,
-                  borderRadius: 1.5,
-                  border: '1px solid hsl(var(--border))',
-                  bgcolor: 'hsl(var(--muted) / 0.3)',
-                }}
-              >
-                <Typography
-                  variant="body2"
-                  sx={{ fontWeight: 600, color: 'hsl(var(--foreground))', mb: 0.25 }}
+            {issues.map(issue => {
+              const tier = ISSUE_TO_TIER[issue.id];
+              const candidates = tier ? availableUsersForTier(tier) : [];
+              const isSaving = savingIssue === issue.id;
+
+              return (
+                <Box
+                  key={issue.id}
+                  sx={{
+                    p: 1.5,
+                    borderRadius: 1.5,
+                    border: '1px solid hsl(var(--border))',
+                    bgcolor: 'hsl(var(--muted) / 0.3)',
+                  }}
                 >
-                  {issue.title}
-                </Typography>
-                <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-                  {issue.detail}
-                </Typography>
-              </Box>
-            ))}
+                  <Typography
+                    variant="body2"
+                    sx={{ fontWeight: 600, color: 'hsl(var(--foreground))', mb: 0.25 }}
+                  >
+                    {issue.title}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                    {issue.detail}
+                  </Typography>
+
+                  {tier && (
+                    <Box sx={{ mt: 1.25, display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                        Assign {TIER_LABEL[tier]}:
+                      </Typography>
+                      <FormControl size="small" sx={{ minWidth: 220 }}>
+                        <Select
+                          displayEmpty
+                          value=""
+                          disabled={isSaving || candidates.length === 0}
+                          onChange={(e) => handleAssign(issue.id, tier, String(e.target.value))}
+                          sx={{
+                            height: 32,
+                            fontSize: 13,
+                            color: 'hsl(var(--foreground))',
+                            bgcolor: 'hsl(var(--background))',
+                            '& .MuiOutlinedInput-notchedOutline': {
+                              borderColor: 'hsl(var(--border))',
+                            },
+                            '&:hover .MuiOutlinedInput-notchedOutline': {
+                              borderColor: 'hsl(var(--primary))',
+                            },
+                          }}
+                        >
+                          <MenuItem value="" disabled>
+                            {candidates.length === 0
+                              ? 'No available users'
+                              : `Select a user…`}
+                          </MenuItem>
+                          {candidates.map(u => (
+                            <MenuItem key={u.id} value={u.id}>
+                              {u.username}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                      {isSaving && (
+                        <CircularProgress size={14} sx={{ color: 'hsl(var(--primary))' }} />
+                      )}
+                    </Box>
+                  )}
+                </Box>
+              );
+            })}
           </Stack>
         </Collapse>
       </Alert>
