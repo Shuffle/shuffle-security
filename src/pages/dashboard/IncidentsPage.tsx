@@ -1867,16 +1867,18 @@ const IncidentsPage = () => {
           <Typography variant="h5" sx={{ fontWeight: 600, fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
             {entityPlural}
           </Typography>
-          {isLoading && <CircularProgress size={20} />}
-          {subOrgLoading.size > 0 && (() => {
+          {(isLoading || subOrgLoading.size > 0) && (() => {
             const totalOrgs = subOrgs.filter(o => o.id !== currentOrgId).length;
             const loaded = totalOrgs - subOrgLoading.size;
+            const showOrgProgress = totalOrgs > 0 && subOrgLoading.size > 0;
             return (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <CircularProgress size={16} />
-                <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem', fontWeight: 500 }}>
-                  Loading orgs {loaded}/{totalOrgs}
-                </Typography>
+                <CircularProgress size={18} />
+                {showOrgProgress && (
+                  <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem', fontWeight: 500 }}>
+                    Loading orgs {loaded}/{totalOrgs}
+                  </Typography>
+                )}
               </Box>
             );
           })()}
