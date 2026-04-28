@@ -126,7 +126,7 @@ export const useEnrichmentStatus = (
           body: JSON.stringify({ label: 'Enable Threat feeds_webhook' }),
         }),
       ]);
-      await waitForServerState(true);
+      await pollAfterGenerate();
 
       // Force-run "Enable Threat feeds" so ingestion starts immediately
       // instead of waiting for the next scheduled tick.
@@ -158,7 +158,7 @@ export const useEnrichmentStatus = (
       setIsEnabling(false);
       setOptimistic(null);
     }
-  }, [waitForServerState]);
+  }, [pollAfterGenerate]);
 
   const disable = useCallback(async () => {
     setOptimistic(false);
@@ -178,12 +178,12 @@ export const useEnrichmentStatus = (
           body: JSON.stringify({ label: 'Enable Threat feeds_webhook', action_name: 'disable' }),
         }),
       ]);
-      await waitForServerState(false);
+      await pollAfterGenerate();
     } finally {
       setIsEnabling(false);
       setOptimistic(null);
     }
-  }, [waitForServerState]);
+  }, [pollAfterGenerate]);
 
   const result = useMemo(() => {
     const hasThreatFeeds = !!workflows?.some(
