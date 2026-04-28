@@ -157,9 +157,23 @@ export const useThreatFeeds = () => {
       setThreatFeeds(merged);
       setInitialized(true);
     } else if (!initialized) {
-      // If no items and not yet initialized, use defaults
+      // No items in datastore — show defaults immediately AND persist them
+      // so the raw datastore reflects what the UI shows (otherwise the list
+      // is purely "pretend" until the user toggles something).
       setThreatFeeds(DEFAULT_THREAT_FEEDS);
       setInitialized(true);
+      void (async () => {
+        try {
+          const { setDatastoreItems, DATASTORE_CATEGORIES } = await import('@/services/datastore');
+          const seedItems = DEFAULT_THREAT_FEEDS.map(feed => ({
+            key: feed.id,
+            value: feed,
+          }));
+          await setDatastoreItems(seedItems, DATASTORE_CATEGORIES.THREAT_FEEDS);
+        } catch (err) {
+          console.warn('[useThreatFeeds] Failed to seed defaults:', err);
+        }
+      })();
     }
   }, [items, isLoading, initialized]);
 
