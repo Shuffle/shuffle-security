@@ -37,6 +37,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { useThreatFeeds, ThreatFeed, DEFAULT_THREAT_FEEDS } from '@/hooks/useThreatFeeds';
 import { useIOCTypes } from '@/hooks/useIOCTypes';
+import { useEnrichmentStatus } from '@/hooks/useEnrichmentStatus';
 import { getDatastoreItem, setDatastoreItem, DATASTORE_CATEGORIES } from '@/services/datastore';
 import { toast } from 'sonner';
 
@@ -47,35 +48,21 @@ const AUTOMATION_CONFIG_KEY = 'automation_config';
 const ThreatFeedsPage = () => {
   const { threatFeeds: feeds, isLoading, saveFeed, deleteFeed, toggleFeed, initializeDefaults, refetch } = useThreatFeeds();
   const { iocTypes } = useIOCTypes();
+  const enrichmentStatus = useEnrichmentStatus();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingFeed, setEditingFeed] = useState<ThreatFeed | null>(null);
-  const [formData, setFormData] = useState<Partial<ThreatFeed>>({ 
-    name: '', 
-    url: '', 
-    description: '', 
-    enabled: true 
+  const [formData, setFormData] = useState<Partial<ThreatFeed>>({
+    name: '',
+    url: '',
+    description: '',
+    enabled: true
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [isInitializing, setIsInitializing] = useState(false);
-  const [automationEnabled, setAutomationEnabled] = useState<boolean | null>(null);
 
-  // Fetch automation status from onboarding config
-  useEffect(() => {
-    const fetchAutomationStatus = async () => {
-      try {
-        const response = await getDatastoreItem(AUTOMATION_CONFIG_KEY, ONBOARDING_CONFIG_CATEGORY);
-        if (response.success && response.item?.value) {
-          const config = typeof response.item.value === 'string'
-            ? JSON.parse(response.item.value)
-            : response.item.value;
-          setAutomationEnabled(config?.threat_intel?.enabled ?? null);
-        }
-      } catch (error) {
-        console.error('Failed to fetch automation status:', error);
-      }
-    };
-    fetchAutomationStatus();
-  }, []);
+  // Canonical Threat Intel automation state — same hook used by the
+  // onboarding "Threat Intel" toggle, so behaviour stays consistent.
+  const automationEnabled = enrichmentStatus.active;
 
   useEffect(() => {
     refetch();
@@ -86,22 +73,14 @@ const ThreatFeedsPage = () => {
   // the empty-state CTA below.
 
   // Combined CTA: seed default feeds AND enable the Threat Intel automation
+  // (which runs /api/v2/workflows/generate for the threat-feeds workflows)
   // so the user gets a working setup in one click.
   const handleEnableThreatFeeds = async () => {
     setIsInitializing(true);
     try {
       await initializeDefaults();
       try {
-        const response = await getDatastoreItem(AUTOMATION_CONFIG_KEY, ONBOARDING_CONFIG_CATEGORY);
-        let config: any = {};
-        if (response.success && response.item?.value) {
-          config = typeof response.item.value === 'string'
-            ? JSON.parse(response.item.value)
-            : response.item.value;
-        }
-        config.threat_intel = { ...config.threat_intel, enabled: true };
-        await setDatastoreItem(AUTOMATION_CONFIG_KEY, config, ONBOARDING_CONFIG_CATEGORY);
-        setAutomationEnabled(true);
+        await enrichmentStatus.enable();
       } catch (err) {
         console.error('Failed to enable threat intel automation:', err);
       }
@@ -349,24 +328,19 @@ const ThreatFeedsPage = () => {
             <Button
               size="small"
               variant={automationEnabled ? 'outlined' : 'contained'}
+              disabled={enrichmentStatus.isEnabling}
               onClick={async () => {
                 try {
-                  const response = await getDatastoreItem(AUTOMATION_CONFIG_KEY, ONBOARDING_CONFIG_CATEGORY);
-                  let config: any = {};
-                  if (response.success && response.item?.value) {
-                    config = typeof response.item.value === 'string'
-                      ? JSON.parse(response.item.value)
-                      : response.item.value;
+                  if (automationEnabled) {
+                    await enrichmentStatus.disable();
+                  } else {
+                    await enrichmentStatus.enable();
                   }
-                  const newEnabled = !automationEnabled;
-                  config.threat_intel = { ...config.threat_intel, enabled: newEnabled };
-                  await setDatastoreItem(AUTOMATION_CONFIG_KEY, config, ONBOARDING_CONFIG_CATEGORY);
-                  setAutomationEnabled(newEnabled);
                 } catch (error) {
                   console.error('Failed to toggle threat intel:', error);
                 }
               }}
-              sx={{ 
+              sx={{
                 whiteSpace: 'nowrap',
                 ml: 0.5,
               ...(automationEnabled ? {
@@ -379,7 +353,7 @@ const ThreatFeedsPage = () => {
                 }),
               }}
             >
-              {automationEnabled ? 'Disable' : 'Enable'}
+              {enrichmentStatus.isEnabling ? '...' : (automationEnabled ? 'Disable' : 'Enable')}
             </Button>
           </Box>
         </Alert>
