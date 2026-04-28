@@ -1,4 +1,5 @@
 import { createRoot } from "react-dom/client";
+import App from "./App.tsx";
 import "./index.css";
 
 const cleanupServiceWorkers = async (): Promise<boolean> => {
@@ -27,22 +28,15 @@ const cleanupServiceWorkers = async (): Promise<boolean> => {
   return hadController;
 };
 
-const startApp = async () => {
-  const needsReload = await cleanupServiceWorkers();
+// Render immediately — never gate the app on SW cleanup or a dynamic import.
+createRoot(document.getElementById("root")!).render(<App />);
 
-  // If a SW was controlling this page, the current document was loaded
-  // through it and module requests will keep 404'ing. Force a reload —
-  // but only once per page load to avoid loops. Use a window-level flag
-  // that resets on real navigation instead of sessionStorage (which can
-  // persist across iframe reloads in the Lovable preview).
-  if (needsReload && !(window as unknown as { __swCleaned?: boolean }).__swCleaned) {
-    (window as unknown as { __swCleaned?: boolean }).__swCleaned = true;
+// Run SW cleanup in the background. Only force a one-time reload if a SW
+// was actively controlling this document (it would intercept module fetches).
+void cleanupServiceWorkers().then((hadController) => {
+  const flag = window as unknown as { __swCleaned?: boolean };
+  if (hadController && !flag.__swCleaned) {
+    flag.__swCleaned = true;
     window.location.reload();
-    return;
   }
-
-  const { default: App } = await import("./App.tsx");
-  createRoot(document.getElementById("root")!).render(<App />);
-};
-
-void startApp();
+});
