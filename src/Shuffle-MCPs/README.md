@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://unpkg.com/@shuffleio/shuffle-mcps/docs/agent-icon.png" alt="Shuffle MCPs" width="96" />
+<img src="https://security.shuffler.io/mcp/agent-icon.png" alt="Shuffle MCPs" width="96" />
 
 # Shuffle MCPs
 
@@ -17,11 +17,11 @@ Turn 3,000+ SaaS tools into MCP servers your agents can use. One search, one cli
 <table align="center">
   <tr>
     <td align="center" width="50%">
-      <img src="https://unpkg.com/@shuffleio/shuffle-mcps/docs/search-preview.png" alt="Search 3,000+ integrations" width="380" style="border-radius: 12px;" />
+      <img src="https://security.shuffler.io/mcp/search-preview.png" alt="Search 3,000+ integrations" width="380" style="border-radius: 12px;" />
       <br/><sub><b>1. Search any of 3,000+ tools</b></sub>
     </td>
     <td align="center" width="50%">
-      <img src="https://unpkg.com/@shuffleio/shuffle-mcps/docs/app-detail-preview.png" alt="Authenticate and use as MCP" width="380" style="border-radius: 12px;" />
+      <img src="https://security.shuffler.io/mcp/app-detail-preview.png" alt="Authenticate and use as MCP" width="380" style="border-radius: 12px;" />
       <br/><sub><b>2. Authenticate — your agent uses it instantly</b></sub>
     </td>
   </tr>
