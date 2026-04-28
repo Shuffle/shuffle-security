@@ -43,6 +43,7 @@ import { useDatastore } from '@/hooks/useDatastore';
 import { DEFAULT_IOC_TYPES, IOCType, IOC_CATEGORIES, IOCCategory, DEFAULT_ENABLED_IOCS } from '@/hooks/useIOCTypes';
 import { DATASTORE_CATEGORIES } from '@/services/datastore';
 import { toast } from 'sonner';
+import ThreatIntelAutomationBanner from '@/components/incidents/ThreatIntelAutomationBanner';
 
 const CATEGORY = DATASTORE_CATEGORIES.IOCS;
 
