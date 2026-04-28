@@ -61,7 +61,7 @@ export const DEFAULT_THREAT_FEEDS: ThreatFeed[] = [
     description: 'CIRCL curated OSINT feed in MISP format',
     // MISP feeds carry mixed indicator types per attribute — leave `type`
     // unset so the parser auto-detects each row.
-    enabled: true,
+    enabled: false,
   },
   {
     id: 'openphish',
@@ -85,7 +85,7 @@ export const DEFAULT_THREAT_FEEDS: ThreatFeed[] = [
     name: 'IPsum Level 3',
     description: 'Aggregated malicious IP feed – low false positive rate',
     type: 'ip',
-    enabled: true,
+    enabled: false,
   },
   {
     id: 'phishtank',
