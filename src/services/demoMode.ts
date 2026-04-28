@@ -404,6 +404,10 @@ export const pickRandomIocs = async (): Promise<DemoIocOverrides> => {
 const resolveIocOverrides = async (): Promise<DemoIocOverrides> => {
   const cached = readIocOverrides();
   if (cached?.attackerIp && cached?.lureDomain) return cached;
+  // Wait for the live-environment bootstrap to populate `ioc_domain` so
+  // we pick a real indicator instead of the static fallback. Best-effort:
+  // if the poll times out, pickRandomIocs falls back to FALLBACK_IOC_*.
+  await awaitPendingIndicators();
   const fresh = await pickRandomIocs();
   // Merge with whatever was cached (in case only one half resolved earlier).
   const merged: DemoIocOverrides = { ...cached, ...fresh };
