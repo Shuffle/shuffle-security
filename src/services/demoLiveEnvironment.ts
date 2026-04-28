@@ -73,40 +73,9 @@ export const DEMO_INGEST_APPS_BACKUP_KEY = 'shuffle_demo_ingest_apps_backup';
 /** The label "Ingest Tickets" comes from the usecase registry — keep in sync. */
 const INGEST_TICKETS_LABEL = 'Ingest Tickets';
 
-/**
- * POST to /api/v2/workflows/generate.
- *
- * If `enabledAppNames` is empty:
- *   - by default we skip the call (matches the original onboarding semantics);
- *   - when `allowEmpty` is true, we still POST without an `app_name` so the
- *     workflow gets generated with no apps wired up. Used in demo mode for
- *     "Ingest Tickets" so we never touch the user's real integrations.
- */
-const generateWorkflow = async (
-  label: string,
-  enabledAppNames: string[],
-  category: string = 'cases',
-  options: { allowEmpty?: boolean } = {},
-): Promise<void> => {
-  if (enabledAppNames.length === 0 && !options.allowEmpty) return;
-  try {
-    const body: Record<string, string> = { label, category };
-    if (enabledAppNames.length > 0) {
-      body.app_name = enabledAppNames.join(',');
-    }
-    await fetch(getApiUrl('/api/v2/workflows/generate'), {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        ...getAuthHeader(),
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    });
-  } catch (err) {
-    console.warn(`[demo] workflow generate failed for ${label}`, err);
-  }
-};
+// Workflow generation delegates to the shared canonical helper so the
+// demo bootstrap and the onboarding AutomationConfig page stay in
+// lockstep — any backend contract change touches one file.
 
 /** Fetch the current authenticated apps. */
 const fetchAuthenticatedApps = async (): Promise<AuthAppEntry[]> => {
