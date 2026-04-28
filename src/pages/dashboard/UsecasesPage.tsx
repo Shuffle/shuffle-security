@@ -2731,7 +2731,31 @@ function UsecaseCard({
             transition: 'opacity 0.15s ease',
           }}
         >
-          {isComingSoon ? (
+          {flow.customAction?.href || flow.customAction?.url ? (
+            <Button
+              {...(flow.customAction.url
+                ? { component: 'a' as const, href: flow.customAction.url, target: '_blank', rel: 'noopener noreferrer' }
+                : { component: Link, to: flow.customAction.href! })}
+              size="small"
+              variant="contained"
+              disableElevation
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
+              startIcon={<ArrowRight size={12} />}
+              sx={{
+                textTransform: 'none',
+                fontSize: '0.7rem',
+                fontWeight: 600,
+                minHeight: 0,
+                py: 0.4,
+                px: 1,
+                bgcolor: 'hsl(var(--primary))',
+                color: 'hsl(var(--primary-foreground))',
+                '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)' },
+              }}
+            >
+              {flow.customAction.label || 'Configure'}
+            </Button>
+          ) : isComingSoon ? (
             <Button
               size="small"
               variant="contained"
