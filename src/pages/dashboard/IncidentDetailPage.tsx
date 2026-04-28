@@ -802,6 +802,38 @@ const IncidentDetailPage = () => {
       } catch { /* ignore */ }
     };
 
+    /**
+     * Demo tour hook: when the user clicks the "Ask the agent a question"
+     * sub-goal pill in the DemoTourDrawer, prefill the comment input with a
+     * sample @AIAgent message so they only have to hit Enter to send. Same
+     * UX pattern as askAgentAboutObservable but triggered from the drawer.
+     */
+    useEffect(() => {
+      const onInject = () => {
+        const sample = '@AIAgent What should I do next with this incident? Are there other indicators I should look at?';
+        setActiveTab(0);
+        setNewComment((cur) => (cur && cur.trim() ? cur : sample));
+        setTimeout(() => {
+          const wrapper = document.querySelector('[data-tour="incident-comment-input"]') as HTMLElement | null;
+          if (!wrapper) return;
+          wrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          const input = wrapper.querySelector('textarea, input') as HTMLTextAreaElement | HTMLInputElement | null;
+          if (input) {
+            input.focus();
+            try {
+              const len = (input.value || '').length;
+              (input as HTMLTextAreaElement).setSelectionRange(len, len);
+            } catch { /* ignore */ }
+          }
+        }, 120);
+        try {
+          toast.success('Sample question drafted for the AI Agent — press Enter to send.', { duration: 3500 });
+        } catch { /* ignore */ }
+      };
+      window.addEventListener('demo:inject-agent-mention', onInject);
+      return () => window.removeEventListener('demo:inject-agent-mention', onInject);
+    }, []);
+
     const [rawJsonText, setRawJsonText] = useState('');
    const [rawJsonValid, setRawJsonValid] = useState(true);
   // File editor state
