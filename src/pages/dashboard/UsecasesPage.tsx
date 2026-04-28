@@ -2718,8 +2718,8 @@ function UsecaseCard({
         </Box>
       </CardActionArea>
 
-      {/* Hover-revealed Enable / Notify-me / Sign-up CTA */}
-      {(isComingSoon || canToggle || (!isAuthenticated && flow.automationLabel)) && (
+      {/* Hover-revealed Custom-action / Enable / Notify-me / Sign-up CTA */}
+      {(flow.customAction?.href || flow.customAction?.url || isComingSoon || canToggle || (!isAuthenticated && flow.automationLabel)) && (
         <Box
           className="uc-toggle-btn"
           sx={{
