@@ -159,9 +159,9 @@ export const useEnrichmentStatus = (
           body: JSON.stringify({ label: 'Enable Threat feeds_webhook' }),
         }),
       ]);
-      const ids = (await Promise.all([parseGenerateId(r1), parseGenerateId(r2)])).filter(
-        (x): x is string => !!x,
-      );
+      const threatFeedsId = await parseGenerateId(r1);
+      const webhookId = await parseGenerateId(r2);
+      const ids = [threatFeedsId, webhookId].filter((x): x is string => !!x);
       if (ids.length > 0) {
         await validateWorkflowIds(ids, 'enabled');
       } else {
@@ -170,9 +170,8 @@ export const useEnrichmentStatus = (
 
       // Force-run "Enable Threat feeds" so ingestion starts immediately
       // instead of waiting for the next scheduled tick. The first generate
-      // call (r1) is the "Enable Threat feeds" workflow, so we already have
-      // its id — no need to re-list every workflow in the org.
-      const threatFeedsId = await parseGenerateId(r1.clone()).catch(() => null);
+      // call returns the workflow id directly — no need to re-list every
+      // workflow in the org just to find it again.
       if (threatFeedsId) {
         try {
           await fetch(getApiUrl(`/api/v1/workflows/${threatFeedsId}/execute`), {
