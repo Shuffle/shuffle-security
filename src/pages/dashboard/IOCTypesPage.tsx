@@ -85,23 +85,25 @@ const IOCTypesPage = () => {
         
         sessionStorage.setItem(initKey, 'true');
         
-        setIsInitializing(true);
-        setInitProgress(50); // Show progress immediately
-        
         const defaults = getDefaultIOCTypes();
+        optimisticOverrides.current.clear();
+        optimisticDeletes.current.clear();
+        defaults.forEach(type => optimisticOverrides.current.set(type.name, type));
         setIocTypes(defaults);
-
-        // Use bulk API for faster initialization
-        const { setDatastoreItems } = await import('@/services/datastore');
-        const bulkItems = defaults.map(ioc => ({
-          key: ioc.name,
-          value: ioc,
-        }));
-        await setDatastoreItems(bulkItems, CATEGORY);
-        
-        setInitProgress(100);
         setIsInitializing(false);
-        await fetchItems();
+        setInitProgress(0);
+        
+        void (async () => {
+          try {
+            const { setDatastoreItems } = await import('@/services/datastore');
+            const bulkItems = defaults.map(ioc => ({ key: ioc.name, value: ioc }));
+            const result = await setDatastoreItems(bulkItems, CATEGORY);
+            if (!result.success) throw new Error(result.error || 'Failed to save default IOC types');
+          } catch (err) {
+            console.error('Failed to initialize IOC type defaults:', err);
+            toast.error('Failed to persist IOC type defaults');
+          }
+        })();
       }
     };
     
@@ -454,7 +456,7 @@ const IOCTypesPage = () => {
             sx={{ minWidth: 220 }}
           />
           {iocTypes.length === 0 && !isLoading && !isInitializing && (
-            <Button variant="outlined" onClick={handleInitDefaults} disabled={isInitializing} sx={{ height: 36 }}>
+            <Button variant="outlined" onClick={handleInitDefaults} sx={{ height: 36 }}>
               Reset to Defaults
             </Button>
           )}
