@@ -448,7 +448,7 @@ const IOCTypesPage = () => {
             }}
             sx={{ minWidth: 220 }}
           />
-          {iocTypes.length === 0 && !isLoading && !isInitializing && (
+          {iocTypes.length === 0 && !isLoading && (
             <Button variant="outlined" onClick={handleInitDefaults} sx={{ height: 36 }}>
               Reset to Defaults
             </Button>
@@ -497,22 +497,6 @@ const IOCTypesPage = () => {
           </Button>
         </Box>
       </Box>
-
-      {/* Initialization Progress */}
-      {isInitializing && (
-        <Card sx={{ mb: 3, p: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-            <CircularProgress size={20} />
-            <Typography variant="body2">
-              Initializing {DEFAULT_IOC_TYPES.length} default IOC types...
-            </Typography>
-          </Box>
-          <LinearProgress variant="determinate" value={initProgress} sx={{ height: 6, borderRadius: 1 }} />
-          <Typography variant="caption" sx={{ color: 'text.secondary', mt: 0.5, display: 'block' }}>
-            {Math.round(initProgress)}% complete
-          </Typography>
-        </Card>
-      )}
 
       {/* Regex Tester Bar */}
       <Card sx={{ mb: 2, p: 1.5 }}>
@@ -668,7 +652,7 @@ const IOCTypesPage = () => {
                     ))
                   ];
                 })}
-                {filteredAndSortedTypes.length === 0 && !isLoading && !isInitializing && (
+                {filteredAndSortedTypes.length === 0 && !isLoading && (
                   <TableRow>
                     <TableCell colSpan={Object.keys(testResults).length > 0 ? 7 : 6} align="center" sx={{ py: 4 }}>
                       <Typography color="text.secondary">
