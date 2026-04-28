@@ -153,8 +153,8 @@ export const SIDEBAR_NAV: SidebarItemSpec[] = [
       { tabKey: 'detection_rules',        label: 'Rules',        path: '/detection/sigma',          icon: <Braces size={16} /> },
       { tabKey: 'detection_pipelines',    label: 'Pipelines',    path: '/detection/pipelines',      icon: <Network size={16} /> },
       { tabKey: 'detection_mitre',        label: 'ATT&CK',       path: '/detection/mitre',          icon: <Waypoints size={16} />, supportOnly: true },
-      { tabKey: 'detection_threat_feeds', label: 'Threat Feeds', path: '/incidents/threat-feeds',   icon: <RssFeedIcon fontSize="small" /> },
-      { tabKey: 'detection_ioc_types',    label: 'IOC Types',    path: '/incidents/ioc-types',      icon: <FingerprintIcon fontSize="small" /> },
+      { tabKey: 'detection_threat_feeds', label: 'Threat Feeds', path: '/detection/threat-feeds',   icon: <RssFeedIcon fontSize="small" /> },
+      { tabKey: 'detection_ioc_types',    label: 'IOC Types',    path: '/detection/ioc-types',      icon: <FingerprintIcon fontSize="small" /> },
     ],
   },
   {
