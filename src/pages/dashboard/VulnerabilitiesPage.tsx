@@ -256,6 +256,9 @@ const AuthenticatedVulnerabilitiesView = () => {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 mb-0.5">
             <span className="text-sm font-semibold text-foreground">Vulnerability Automation</span>
+            <span className="px-1.5 py-0.5 text-[0.55rem] font-bold tracking-wide uppercase rounded bg-muted text-muted-foreground leading-none">
+              Coming soon
+            </span>
             {automationEnabled && (
               <span className="px-1.5 py-0.5 text-[0.55rem] font-bold tracking-wide uppercase rounded bg-green-500/15 text-green-600 dark:text-green-400 leading-none">
                 Active
