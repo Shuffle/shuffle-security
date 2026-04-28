@@ -11,7 +11,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
-import { seedForStep, cleanupDemoData, isDemoActive, getDemoStats, forceRecreateDemoIncidents, forceCreateSingleDemoIncident, countDemoIncidents, seedDemoWazuhImplantIncident } from '@/services/demoMode';
+import { seedForStep, cleanupDemoData, isDemoActive, getDemoStats, forceRecreateDemoIncidents, forceCreateSingleDemoIncident, countDemoIncidents, seedDemoWazuhImplantIncident, setPendingIndicatorReady } from '@/services/demoMode';
 import { enableLiveDemoEnvironment } from '@/services/demoLiveEnvironment';
 import { trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
 import { applyEntityTerminology } from '@/lib/entityTerminology';
