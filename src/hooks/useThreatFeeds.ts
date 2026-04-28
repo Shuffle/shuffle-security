@@ -12,6 +12,10 @@ export interface ThreatFeed {
    *  'domain', 'hash_md5', 'hash_sha256'). The parser uses this to skip
    *  type-detection entirely and apply the right regex directly. */
   type?: string;
+  /** Optional custom HTTP headers sent during ingest. Stored as a
+   *  semicolon-separated `key=value;key2=value2` string (e.g. for
+   *  Authorization or API-Key headers required by gated feeds). */
+  headers?: string;
 }
 
 // Default threat feed URLs (curated from MISP default feeds).
