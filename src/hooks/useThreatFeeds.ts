@@ -35,7 +35,7 @@ export const DEFAULT_THREAT_FEEDS: ThreatFeed[] = [
     url: 'https://feodotracker.abuse.ch/downloads/ipblocklist.csv',
     name: 'Feodo IP Blocklist (abuse.ch)',
     description: 'Botnet C&C server IPs tracked by Feodo Tracker',
-    type: 'ip',
+    type: 'ipv4',
     enabled: true,
   },
   {
@@ -51,7 +51,7 @@ export const DEFAULT_THREAT_FEEDS: ThreatFeed[] = [
     url: 'https://reputation.alienvault.com/reputation.generic',
     name: 'AlienVault Reputation',
     description: 'Generic IP reputation data from AlienVault OTX',
-    type: 'ip',
+    type: 'ipv4',
     enabled: true,
   },
   {
@@ -76,7 +76,7 @@ export const DEFAULT_THREAT_FEEDS: ThreatFeed[] = [
     url: 'https://lists.blocklist.de/lists/all.txt',
     name: 'Blocklist.de',
     description: 'IPs reported for attacks on services (SSH, mail, web, etc.)',
-    type: 'ip',
+    type: 'ipv4',
     enabled: true,
   },
   {
@@ -84,7 +84,7 @@ export const DEFAULT_THREAT_FEEDS: ThreatFeed[] = [
     url: 'https://raw.githubusercontent.com/stamparm/ipsum/master/levels/3.txt',
     name: 'IPsum Level 3',
     description: 'Aggregated malicious IP feed – low false positive rate',
-    type: 'ip',
+    type: 'ipv4',
     enabled: false,
   },
   {
@@ -100,7 +100,7 @@ export const DEFAULT_THREAT_FEEDS: ThreatFeed[] = [
     url: 'https://rules.emergingthreats.net/blockrules/compromised-ips.txt',
     name: 'Emerging Threats Compromised IPs',
     description: 'Known compromised IP addresses from Emerging Threats',
-    type: 'ip',
+    type: 'ipv4',
     enabled: true,
   },
   {
