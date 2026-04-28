@@ -51,7 +51,7 @@ const UsersPage = ({ embedded }: { embedded?: boolean }) => {
   }, [sessionToken]);
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1400, width: '100%', mx: 'auto' }}>
+    <Box sx={{ p: embedded ? 0 : { xs: 2, md: 4 }, maxWidth: 1400, width: '100%', mx: embedded ? 0 : 'auto' }}>
       {!embedded && (
         <>
           <Typography
