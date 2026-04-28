@@ -1873,7 +1873,22 @@ const IncidentsPage = () => {
             const showOrgProgress = totalOrgs > 0 && subOrgLoading.size > 0;
             return (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <CircularProgress size={18} />
+                <Box
+                  aria-label="Loading incidents"
+                  sx={{
+                    width: 18,
+                    height: 18,
+                    flexShrink: 0,
+                    borderRadius: '50%',
+                    border: '2px solid hsl(var(--primary) / 0.22)',
+                    borderTopColor: 'hsl(var(--primary))',
+                    animation: 'casesHeaderLoaderSpin 0.8s linear infinite',
+                    '@keyframes casesHeaderLoaderSpin': {
+                      '0%': { transform: 'rotate(0deg)' },
+                      '100%': { transform: 'rotate(360deg)' },
+                    },
+                  }}
+                />
                 {showOrgProgress && (
                   <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem', fontWeight: 500 }}>
                     Loading orgs {loaded}/{totalOrgs}
