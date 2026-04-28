@@ -803,6 +803,17 @@ export const DemoTourDrawer = () => {
                                   onMouseLeave={() => setHoveredGoalSelector(null)}
                                   onFocus={() => g.selector && setHoveredGoalSelector(g.selector)}
                                   onBlur={() => setHoveredGoalSelector(null)}
+                                  onClick={() => {
+                                    // Special: clicking the "Ask the agent"
+                                    // sub-goal injects a sample @AIAgent
+                                    // mention into the comment input so the
+                                    // user only has to press Enter to send.
+                                    if (g.id === 'incident-detail:ask-agent') {
+                                      try {
+                                        window.dispatchEvent(new CustomEvent('demo:inject-agent-mention'));
+                                      } catch { /* ignore */ }
+                                    }
+                                  }}
                                   tabIndex={g.selector ? 0 : -1}
                                   sx={{
                                     display: 'flex',
