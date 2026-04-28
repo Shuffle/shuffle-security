@@ -13,8 +13,6 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Tabs,
-  Tab,
 } from '@mui/material';
 import { Save as SaveIcon } from '@mui/icons-material';
 import { toast } from 'sonner';
