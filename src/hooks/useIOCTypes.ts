@@ -65,7 +65,13 @@ export const DEFAULT_IOC_TYPES: IOCType[] = [
   { name: 'url', regex: '^https?:\\/\\/[^\\s<>"\'`]+[^\\s<>"\'`.,;:!?)\\]}]$', description: 'Full URL', category: 'common', enabled: true },
   { name: 'ipv4', regex: '^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$', description: 'IPv4 address (STIX ipv4-addr)', category: 'common', enabled: true },
   { name: 'ipv6', regex: '^(?:[A-Fa-f0-9]{1,4}:){7}[A-Fa-f0-9]{1,4}$|^::1$|^::$|^(?:[A-Fa-f0-9]{1,4}:){1,7}:$|^(?:[A-Fa-f0-9]{1,4}:){1,6}:[A-Fa-f0-9]{1,4}$', description: 'IPv6 address (STIX ipv6-addr)', category: 'common', enabled: true },
-  { name: 'domain', regex: '^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\\.)+(?!data|json|xml|html|css|js|ts|tsx|jsx|yml|yaml|toml|log|tmp|bak|cfg|conf|env|lock|local|internal|example|invalid|test|localhost$)[a-zA-Z]{2,16}$', description: 'Domain name', category: 'common', enabled: true },
+  // Domain regex: enforces FQDN structure (1+ labels + TLD), total length 4-253,
+  // valid label chars (no leading/trailing hyphens), TLD 2-24 alpha chars, and
+  // rejects common file extensions / reserved/dev TLDs that are NOT real domains
+  // (html, json, png, exe, local, test, invalid, example, localhost, ...).
+  // Case-insensitive blocklist matching is approximated by listing lowercase
+  // forms — domains in real telemetry are normalized to lowercase.
+  { name: 'domain', regex: '^(?=.{4,253}$)(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\\.)+(?!(?:data|html?|json|xml|css|jsx?|tsx?|mjs|cjs|yml|yaml|toml|log|tmp|bak|cfg|conf|env|lock|local|internal|example|invalid|test|localhost|md|txt|csv|tsv|png|jpe?g|gif|svg|webp|ico|pdf|docx?|xlsx?|pptx?|zip|tar|gz|tgz|bz2|xz|7z|rar|exe|dll|so|dylib|bin|app|dmg|iso|img|py|rb|go|rs|java|class|jar|sh|bash|zsh|fish|bat|ps1|cmd|ini|sql|db|sqlite|map|woff2?|ttf|otf|eot|mp[34]|wav|flac|ogg|webm|mkv|mov|avi|wmv)$)[a-zA-Z]{2,24}$', description: 'Domain name (FQDN, excludes file extensions and reserved TLDs)', category: 'common', enabled: true },
   { name: 'email', regex: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$', description: 'Email address', category: 'common', enabled: true },
   { name: 'hash_md5', regex: '^[a-fA-F0-9]{32}$', description: 'MD5 hash (32 hex chars)', category: 'common', enabled: true },
   { name: 'hash_sha256', regex: '^[a-fA-F0-9]{64}$', description: 'SHA256 hash (64 hex chars)', category: 'common', enabled: true },
