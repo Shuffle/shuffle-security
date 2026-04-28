@@ -63,46 +63,9 @@ const AUTOMATION_WORKFLOW_LABELS: Record<string, string[]> = {
   notifications: getAutomationLabels('notifications'),
 };
 
-// Generate workflow for an automation area
-const generateWorkflow = async (
-  label: string,
-  enabledAppNames: string[],
-  category: string = 'cases',
-  actionName?: string,
-  allowEmpty: boolean = false,
-): Promise<void> => {
-  // For disable action, we still need to send the request even with no apps.
-  // Some automations (e.g. Assign & Escalate) are schedule-based and have no
-  // app dependencies — they pass `allowEmpty` so the workflow is still created.
-  if (enabledAppNames.length === 0 && actionName !== 'disable' && !allowEmpty) return;
-  
-  const appNamesStr = enabledAppNames.join(',');
-  
-  try {
-    const body: Record<string, string> = {
-      label,
-      app_name: appNamesStr,
-      category,
-    };
-    
-    if (actionName) {
-      body.action_name = actionName;
-    }
-    
-    await fetch(getApiUrl('/api/v2/workflows/generate'), {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        ...getAuthHeader(),
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    });
-    console.log(`Workflow generated: ${label} with apps: ${appNamesStr}${actionName ? ` (action: ${actionName})` : ''}`);
-  } catch (error) {
-    console.error(`Failed to generate workflow ${label}:`, error);
-  }
-};
+// Workflow generation now lives in the shared canonical helper so the
+// onboarding flow and demo-mode bootstrap stay in lockstep.
+import { generateWorkflow } from '@/lib/workflowGenerate';
 
 interface EnrichmentOption {
   id: string;
