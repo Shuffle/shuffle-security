@@ -683,7 +683,7 @@ export const AutomationConfig = ({
     // so the generator must be allowed to fire with an empty app list.
     const allowEmpty = optionId === 'assign_escalate';
     labels.forEach(label => {
-      generateWorkflow(label, enabledAppNames, 'cases', actionName, allowEmpty);
+      generateWorkflow({ label, enabledAppNames, category: 'cases', actionName, allowEmpty });
     });
 
     // Clear pending overrides after firing
