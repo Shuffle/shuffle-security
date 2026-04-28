@@ -246,15 +246,14 @@ const ThreatFeedsPage = () => {
           <RssFeedIcon sx={{ fontSize: 28, color: 'hsl(var(--primary))' }} />
           <Typography variant="h5" sx={{ fontWeight: 600 }}>Threat Feeds</Typography>
           {isLoading && <CircularProgress size={20} />}
-          <Chip label={`${feeds.length} feeds`} size="small" variant="outlined" />
-          <Chip 
-            label={`${enabledCount} active`} 
-            size="small" 
-            sx={{ 
+          <Chip
+            label={`${enabledCount}/${feeds.length} active feeds`}
+            size="small"
+            sx={{
               bgcolor: enabledCount > 0 ? 'hsl(var(--severity-low) / 0.15)' : 'transparent',
               color: enabledCount > 0 ? 'hsl(var(--severity-low))' : 'text.secondary',
               borderColor: enabledCount > 0 ? 'hsl(var(--severity-low))' : undefined,
-            }} 
+            }}
             variant="outlined"
           />
         </Box>
