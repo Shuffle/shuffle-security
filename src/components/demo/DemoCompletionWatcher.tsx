@@ -26,7 +26,8 @@ import { useEntityPreference } from '@/hooks/useEntityLabel';
 const WAZUH_FOLLOWUP_DELAY_MS = 6000;
 
 export const DemoCompletionWatcher = () => {
-  const { drawerOpen, step, setStepCompleted, markStepCompleted, goToStep, setDock, dock, hoveredGoalSelector } = useDemo();
+  const { drawerOpen, step, setStepCompleted, markStepCompleted, goToStep, setDock, dock, hoveredGoalSelector, completedSteps } = useDemo();
+  const askAgentInjectedRef = useRef(false);
   const { data: workflows } = useWorkflows();
   const { notifications } = useAgentNotifications();
   const queryClient = useQueryClient();
@@ -213,7 +214,33 @@ export const DemoCompletionWatcher = () => {
     return () => window.removeEventListener('demo:incident-comment-sent', onSent);
   }, [drawerOpen, step, markStepCompleted]);
 
-  // Wazuh sub-goal — also flips on if the incident is already seeded (e.g.
+  // Auto-inject a sample @AIAgent question into the timeline comment field
+  // once the user has reached the "Ask the agent" sub-goal. Without this,
+  // users do not realise THEY are supposed to type something — pre-filling
+  // makes it obvious they just need to press Enter to send. We only inject
+  // once per session and skip if the comment input already has content.
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const stepId = TOUR_STEPS[step]?.id;
+    if (stepId !== 'incident-detail') return;
+    if (completedSteps['incident-detail:ask-agent']) return;
+    if (askAgentInjectedRef.current) return;
+    // Wait for the comment input to be in the DOM before firing.
+    const tryInject = () => {
+      const wrapper = document.querySelector('[data-tour="incident-comment-input"]');
+      if (!wrapper) return false;
+      askAgentInjectedRef.current = true;
+      window.dispatchEvent(new CustomEvent('demo:inject-agent-mention'));
+      return true;
+    };
+    if (tryInject()) return;
+    const id = window.setInterval(() => {
+      if (tryInject()) window.clearInterval(id);
+    }, 500);
+    return () => window.clearInterval(id);
+  }, [drawerOpen, step, completedSteps]);
+
+
   // user force-generated it from the tour drawer, or it landed on a previous
   // run). We read the seeded-keys index from localStorage instead of poking
   // the datastore directly so this stays cheap.
