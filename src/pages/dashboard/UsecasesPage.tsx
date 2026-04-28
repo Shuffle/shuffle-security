@@ -1625,6 +1625,9 @@ function UsecaseDetailContent({
   const [toggling, setToggling] = useState(false);
   const [optimisticEnabled, setOptimisticEnabled] = useState<boolean | null>(null);
   const effectiveEnabled = optimisticEnabled !== null ? optimisticEnabled : isEnabled;
+  // Mirror the card's "Coming soon" gate so the detail page does not show a
+  // live "Enable" button for usecases that are not yet wired up server-side.
+  const isComingSoon = !!flow && !ACTIVE_USECASE_IDS.includes(flow.id);
 
   const handleToggle = async () => {
     if (!flow?.automationLabel || toggling) return;
