@@ -4,12 +4,12 @@
  * https://github.com/Shuffle/singul.js
  */
 
-export { SingulJS, default } from './SingulJS';
-export type { SingulJSHandle } from './SingulJS';
+export { ShuffleMCP, default } from './ShuffleMCP';
+export type { ShuffleMCPHandle } from './ShuffleMCP';
 export type {
   AlgoliaSearchApp,
   AppSelectedEvent,
   AppAuthentication,
   CustomStyles,
-  SingulJSProps,
+  ShuffleMCPProps,
 } from './singul.helpers';

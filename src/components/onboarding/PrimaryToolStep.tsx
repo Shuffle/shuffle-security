@@ -7,8 +7,8 @@ import {
   CheckCircle2,
   Sparkles
 } from 'lucide-react';
-import { SingulJS } from '@/Shuffle-MCPs';
-import type { AlgoliaSearchApp, SingulJSHandle } from '@/Shuffle-MCPs';
+import { ShuffleMCP } from '@/Shuffle-MCPs';
+import type { AlgoliaSearchApp, ShuffleMCPHandle } from '@/Shuffle-MCPs';
 import { API_CONFIG } from '@/config/api';
 
 // Top integration options based on popularity
@@ -70,7 +70,7 @@ export const PrimaryToolStep = ({
 }: PrimaryToolStepProps) => {
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const singulRef = useRef<SingulJSHandle>(null);
+  const singulRef = useRef<ShuffleMCPHandle>(null);
 
   // Challenge-specific messaging
   const getChallengeContext = () => {
@@ -306,7 +306,7 @@ export const PrimaryToolStep = ({
                 borderRadius: 3,
               }}
             >
-              <SingulJS
+              <ShuffleMCP
                 ref={singulRef}
                 authToken="demo-token"
                 apiKey={API_CONFIG.apiKey || undefined}

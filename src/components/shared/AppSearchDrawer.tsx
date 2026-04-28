@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { Box, Typography, IconButton, Drawer, Avatar, Tooltip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SingulJS } from '@/Shuffle-MCPs';
+import { ShuffleMCP } from '@/Shuffle-MCPs';
 import type { AppSelectedEvent } from '@/Shuffle-MCPs';
 import { API_CONFIG } from '@/config/api';
 import AppDetailDrawer from '@/components/shared/AppDetailDrawer';
@@ -122,7 +122,7 @@ interface AppSearchDrawerProps {
   priorityCategory?: string;
   /** Apps currently in the connection path diagram — shown first in the drawer */
   connectionPathApps?: ConnectionPathApp[];
-  /** Apps to pin at the top of the SingulJS search results (deduped by name). */
+  /** Apps to pin at the top of the ShuffleMCP search results (deduped by name). */
   pinnedApps?: Array<{ name: string; image_url: string; categories?: string[]; objectID?: string }>;
 }
 
@@ -274,7 +274,7 @@ export default function AppSearchDrawer({
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.2 }}
             >
-              <SingulJS
+              <ShuffleMCP
                 authToken={API_CONFIG.apiKey || ''}
                 apiKey={API_CONFIG.apiKey || undefined}
                 apiBaseUrl={API_CONFIG.baseUrl}

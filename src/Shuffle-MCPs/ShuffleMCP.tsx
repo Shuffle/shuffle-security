@@ -6,19 +6,19 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo, useImperativeHandle } from 'react';
 import { algoliasearch, SearchClient } from 'algoliasearch';
-import type { AlgoliaSearchApp, AppSelectedEvent, SingulJSProps, AppAuthentication } from './singul.helpers';
+import type { AlgoliaSearchApp, AppSelectedEvent, ShuffleMCPProps, AppAuthentication } from './singul.helpers';
 import './singul.css';
 
 const DEFAULT_ALGOLIA_APP_ID = 'JNSS5CFDZZ';
 const DEFAULT_ALGOLIA_API_KEY = '33e4e3564f4f060e96e0531957bed552';
 const DEFAULT_ALGOLIA_INDEX = 'appsearch';
 
-export interface SingulJSHandle {
+export interface ShuffleMCPHandle {
   search: (query: string) => void;
   clear: () => void;
 }
 
-export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
+export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
   authToken,
   placeholder = 'Search apps...',
   layout = 'list',
@@ -607,6 +607,6 @@ export const SingulJS = React.forwardRef<SingulJSHandle, SingulJSProps>(({
   );
 });
 
-SingulJS.displayName = 'SingulJS';
+ShuffleMCP.displayName = 'ShuffleMCP';
 
-export default SingulJS;
+export default ShuffleMCP;

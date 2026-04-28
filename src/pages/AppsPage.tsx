@@ -7,7 +7,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { Mail, Radar, Search, Globe, Cloud, Shield } from 'lucide-react';
 import { LandingNavbar } from '@/components/landing/LandingNavbar';
 import { Footer } from '@/components/landing/Footer';
-import { SingulJS, SingulJSHandle } from '@/Shuffle-MCPs';
+import { ShuffleMCP, ShuffleMCPHandle } from '@/Shuffle-MCPs';
 import { trackCTA, trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
 import { usePageMeta } from '@/hooks/usePageMeta';
 
@@ -22,7 +22,7 @@ const categories = [
 const catchAllCategory = { id: 'other', label: 'Browse All 3,000+ Integrations', icon: Globe, searchTerm: '' };
 
 export default function AppsPage() {
-  const singulRef = useRef<SingulJSHandle>(null);
+  const singulRef = useRef<ShuffleMCPHandle>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
@@ -323,7 +323,7 @@ export default function AppsPage() {
                 },
               }}
             >
-              <SingulJS
+              <ShuffleMCP
                 ref={singulRef}
                 authToken=""
                 placeholder="Search integrations... (e.g., Splunk, CrowdStrike)"

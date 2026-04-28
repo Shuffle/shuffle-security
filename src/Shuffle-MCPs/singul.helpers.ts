@@ -93,7 +93,7 @@ export interface AppAuthentication {
   };
 }
 
-export interface SingulJSProps {
+export interface ShuffleMCPProps {
   // Required
   authToken: string;
   
