@@ -2574,15 +2574,11 @@ const IncidentsPage = () => {
               {(() => {
                 const localCount = sortedIncidents.length;
                 const totalPages = Math.max(1, Math.ceil(localCount / ITEMS_PER_PAGE));
-                const base = `${localCount} incident${localCount !== 1 ? 's' : ''}${totalPages > 1 ? ` · Page ${currentPage} of ${totalPages}` : ''}`;
-                // Show server total as a separate hint instead of overwriting
-                // the visible count — otherwise the header reads "2160 · Page 1
-                // of 44" while the list is empty.
                 const serverTotal = typeof totalAmount === 'number' ? totalAmount : 0;
-                if (serverTotal > localCount) {
-                  return `${base} · ${serverTotal} on server`;
-                }
-                return base;
+                const countLabel = serverTotal > localCount
+                  ? `${localCount}/${serverTotal} incidents`
+                  : `${localCount} incident${localCount !== 1 ? 's' : ''}`;
+                return `${countLabel}${totalPages > 1 ? ` · Page ${currentPage} of ${totalPages}` : ''}`;
               })()}
             </Typography>
 
