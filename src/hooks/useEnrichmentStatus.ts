@@ -95,24 +95,18 @@ export const useEnrichmentStatus = (
   }, [refetchWorkflows, queryClient]);
 
   /**
-   * Poll workflows + category config until the server-side state matches
-   * the desired value, or we run out of attempts. This is necessary because
-   * `/api/v2/workflows/generate` returns success the moment the request is
-   * accepted, but it can take a few seconds for the workflow list /
-   * background_processing flag to actually reflect the change.
+   * After both generate requests have completed, poll workflows a few times
+   * over a short window so the UI picks up the updated background_processing
+   * flags. We don't gate on a desired state — just refresh.
    */
-  const waitForServerState = useCallback(async (desired: boolean) => {
-    const MAX_ATTEMPTS = 8;
-    const DELAY_MS = 1500;
-    for (let i = 0; i < MAX_ATTEMPTS; i++) {
+  const pollAfterGenerate = useCallback(async () => {
+    const ATTEMPTS = 4;
+    const DELAY_MS = 1000;
+    for (let i = 0; i < ATTEMPTS; i++) {
       await new Promise((resolve) => setTimeout(resolve, DELAY_MS));
       await refetchAll();
-      const wfs = queryClient.getQueryData<Array<{ name: string; background_processing?: boolean }>>(['workflows']) || [];
-      const cfg = queryClient.getQueryData<CategoryConfig | null>(['enrichment-category-config']);
-      const status = checkEnrichmentStatus(wfs, cfg);
-      if (status.active === desired) return;
     }
-  }, [refetchAll, queryClient]);
+  }, [refetchAll]);
 
   const enable = useCallback(async () => {
     setOptimistic(true);
