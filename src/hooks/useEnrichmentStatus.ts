@@ -94,6 +94,26 @@ export const useEnrichmentStatus = (
     ]);
   }, [refetchWorkflows, queryClient]);
 
+  /**
+   * Poll workflows + category config until the server-side state matches
+   * the desired value, or we run out of attempts. This is necessary because
+   * `/api/v2/workflows/generate` returns success the moment the request is
+   * accepted, but it can take a few seconds for the workflow list /
+   * background_processing flag to actually reflect the change.
+   */
+  const waitForServerState = useCallback(async (desired: boolean) => {
+    const MAX_ATTEMPTS = 8;
+    const DELAY_MS = 1500;
+    for (let i = 0; i < MAX_ATTEMPTS; i++) {
+      await new Promise((resolve) => setTimeout(resolve, DELAY_MS));
+      await refetchAll();
+      const wfs = queryClient.getQueryData<Array<{ name: string; background_processing?: boolean }>>(['workflows']) || [];
+      const cfg = queryClient.getQueryData<CategoryConfig | null>(['enrichment-category-config']);
+      const status = checkEnrichmentStatus(wfs, cfg);
+      if (status.active === desired) return;
+    }
+  }, [refetchAll, queryClient]);
+
   const enable = useCallback(async () => {
     setOptimistic(true);
     setIsEnabling(true);
@@ -112,8 +132,7 @@ export const useEnrichmentStatus = (
           body: JSON.stringify({ label: 'Enable Threat feeds_webhook' }),
         }),
       ]);
-      await new Promise((resolve) => setTimeout(resolve, 3000));
-      await refetchAll();
+      await waitForServerState(true);
 
       // Force-run "Enable Threat feeds" so ingestion starts immediately
       // instead of waiting for the next scheduled tick.
@@ -145,7 +164,7 @@ export const useEnrichmentStatus = (
       setIsEnabling(false);
       setOptimistic(null);
     }
-  }, [refetchAll]);
+  }, [waitForServerState]);
 
   const disable = useCallback(async () => {
     setOptimistic(false);
@@ -165,13 +184,12 @@ export const useEnrichmentStatus = (
           body: JSON.stringify({ label: 'Enable Threat feeds_webhook', action_name: 'disable' }),
         }),
       ]);
-      await new Promise((resolve) => setTimeout(resolve, 3000));
-      await refetchAll();
+      await waitForServerState(false);
     } finally {
       setIsEnabling(false);
       setOptimistic(null);
     }
-  }, [refetchAll]);
+  }, [waitForServerState]);
 
   const result = useMemo(() => {
     const hasThreatFeeds = !!workflows?.some(
