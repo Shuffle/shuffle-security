@@ -29,6 +29,8 @@ Turn 3,000+ SaaS tools into MCP servers your agents can use. One search, one cli
 
 &nbsp;
 
+> **See it live:** [security.shuffler.io/apps](https://security.shuffler.io/apps) uses this package in production to power its 3,000+ integration picker.
+
 > **No SDK required.** Once a tool is authenticated in Shuffle, it is live as an MCP server immediately — call it from any agent over plain HTTP. This npm package is the optional UI layer for embedding the search-and-connect flow inside your own product.
 
 ## Try it in 30 seconds
