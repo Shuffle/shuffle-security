@@ -143,7 +143,17 @@ const PHISH_HOST = 'FIN-LAPTOP-04';
 // by the backend). The orchestrator in `services/demoMode.ts` will normally
 // override both via `DemoIocOverrides`.
 const PHISH_ATTACKER_IP_DEFAULT = '185.220.101.47';
-const PHISH_LURE_DOMAIN_DEFAULT = 'it-support-portal.live';
+// Defanged at rest — this is a KNOWN MALICIOUS URL and must never be a
+// live-clickable string in source. `refangDefangedUrl` reconstitutes it at
+// the moment it is handed to the seeder.
+const PHISH_LURE_URL_DEFANGED_DEFAULT =
+  'hxxp://hr-organization[.]com/s/63BZGFSVBWSFCDX7Y9/584dd8/90eab167-7429-489f-99f6-ce86e8d0d81a';
+const refangDefangedUrl = (defanged: string): string =>
+  defanged.replace(/^hxxps?/i, m => m.toLowerCase().replace('hxxp', 'http')).replace(/\[\.\]/g, '.');
+const PHISH_LURE_URL_DEFAULT = refangDefangedUrl(PHISH_LURE_URL_DEFANGED_DEFAULT);
+const PHISH_LURE_DOMAIN_DEFAULT = (() => {
+  try { return new URL(PHISH_LURE_URL_DEFAULT).hostname; } catch { return 'hr-organization.com'; }
+})();
 const PHISH_PAYLOAD_SHA256 = '7b1c4f9a2e3d8b6f1a0c5d7e9b2a4c6e8d1f3a5b7c9e1d2f4a6b8c0e2d4f6a8b';
 
 /** Real-IOC overrides used by the focus + Wazuh follow-up demo incidents. */
@@ -182,7 +192,7 @@ export const buildDemoFocusIncident = (overrides: DemoIocOverrides = {}): {
   const t = now();
   const attackerIp = overrides.attackerIp || PHISH_ATTACKER_IP_DEFAULT;
   const lureDomain = overrides.lureDomain || PHISH_LURE_DOMAIN_DEFAULT;
-  const lureUrl = overrides.lureUrl || composeLureUrl(lureDomain);
+  const lureUrl = overrides.lureUrl || (overrides.lureDomain ? composeLureUrl(lureDomain) : PHISH_LURE_URL_DEFAULT);
   return toIncidentWithPending({
     _key: `demo-inc-phish-${t}-focus`,
     title: `Phishing email reported by ${PHISH_REPORTER_NAME}`,
@@ -245,7 +255,7 @@ export const buildDemoWazuhImplantIncident = (overrides: DemoIocOverrides = {}):
   const t = now();
   const attackerIp = overrides.attackerIp || PHISH_ATTACKER_IP_DEFAULT;
   const lureDomain = overrides.lureDomain || PHISH_LURE_DOMAIN_DEFAULT;
-  const lureUrl = overrides.lureUrl || composeLureUrl(lureDomain);
+  const lureUrl = overrides.lureUrl || (overrides.lureDomain ? composeLureUrl(lureDomain) : PHISH_LURE_URL_DEFAULT);
   return toIncidentWithPending({
     _key: `demo-inc-malware-${t}-wazuh`,
     title: `Sliver C2 implant beaconing on ${PHISH_HOST}`,
@@ -271,7 +281,7 @@ export const buildDemoIncidentsBatch1 = (overrides: DemoIocOverrides = {}): { ke
   const t = now();
   const attackerIp = overrides.attackerIp || PHISH_ATTACKER_IP_DEFAULT;
   const lureDomain = overrides.lureDomain || PHISH_LURE_DOMAIN_DEFAULT;
-  const lureUrl = overrides.lureUrl || composeLureUrl(lureDomain);
+  const lureUrl = overrides.lureUrl || (overrides.lureDomain ? composeLureUrl(lureDomain) : PHISH_LURE_URL_DEFAULT);
   return ([
     {
       _key: `demo-inc-phish-${t}-1`,
