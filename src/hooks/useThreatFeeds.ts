@@ -23,14 +23,6 @@ export interface ThreatFeed {
 // guess — it just maps the type to the regex from DEFAULT_IOC_TYPES.
 export const DEFAULT_THREAT_FEEDS: ThreatFeed[] = [
   {
-    id: 'sslbl_abuse',
-    url: 'https://sslbl.abuse.ch/blacklist/sslblacklist.csv',
-    name: 'SSL Blacklist (abuse.ch)',
-    description: 'SSL certificate blacklist from abuse.ch – malicious SSL connections',
-    type: 'ssl_cert_hash',
-    enabled: true,
-  },
-  {
     id: 'feodo_ipblocklist',
     url: 'https://feodotracker.abuse.ch/downloads/ipblocklist.csv',
     name: 'Feodo IP Blocklist (abuse.ch)',
