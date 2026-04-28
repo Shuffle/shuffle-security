@@ -85,7 +85,7 @@ export const DEFAULT_THREAT_FEEDS: ThreatFeed[] = [
     name: 'IPsum Level 3',
     description: 'Aggregated malicious IP feed – low false positive rate',
     type: 'ip',
-    enabled: true,
+    enabled: false,
   },
   {
     id: 'phishtank',
