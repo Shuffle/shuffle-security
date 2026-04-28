@@ -137,45 +137,26 @@ export const useThreatFeeds = () => {
     fetchItems();
   }, [fetchItems]);
 
-  // Parse threat feeds from datastore
   useEffect(() => {
     if (isLoading) return;
-    
-    if (items.length > 0) {
-      const parsed: ThreatFeed[] = items.map(item => {
-        try {
-          return JSON.parse(item.value) as ThreatFeed;
-        } catch {
-          return { id: item.key, url: item.value, name: item.key, enabled: true };
-        }
-      });
-      // Apply any pending optimistic overrides so a network refetch never
-      // reverts a toggle the user just made.
-      const merged = optimisticOverrides.current.size === 0
-        ? parsed
-        : parsed.map(f => optimisticOverrides.current.get(f.id) || f);
-      setThreatFeeds(merged);
-      setInitialized(true);
-    } else if (!initialized) {
-      // No items in datastore — show defaults immediately AND persist them
-      // so the raw datastore reflects what the UI shows (otherwise the list
-      // is purely "pretend" until the user toggles something).
-      setThreatFeeds(DEFAULT_THREAT_FEEDS);
-      setInitialized(true);
-      void (async () => {
-        try {
-          const { setDatastoreItems, DATASTORE_CATEGORIES } = await import('@/services/datastore');
-          const seedItems = DEFAULT_THREAT_FEEDS.map(feed => ({
-            key: feed.id,
-            value: feed,
-          }));
-          await setDatastoreItems(seedItems, DATASTORE_CATEGORIES.THREAT_FEEDS);
-        } catch (err) {
-          console.warn('[useThreatFeeds] Failed to seed defaults:', err);
-        }
-      })();
-    }
-  }, [items, isLoading, initialized]);
+
+    // The UI must always reflect what is actually in the datastore.
+    // No in-memory fallback to DEFAULT_THREAT_FEEDS — if the category is
+    // empty, the list is empty. Defaults are only inserted when the user
+    // explicitly clicks "Reset to Defaults".
+    const parsed: ThreatFeed[] = items.map(item => {
+      try {
+        return JSON.parse(item.value) as ThreatFeed;
+      } catch {
+        return { id: item.key, url: item.value, name: item.key, enabled: true };
+      }
+    });
+    const merged = optimisticOverrides.current.size === 0
+      ? parsed
+      : parsed.map(f => optimisticOverrides.current.get(f.id) || f);
+    setThreatFeeds(merged);
+    setInitialized(true);
+  }, [items, isLoading]);
 
   // Add or update a threat feed
   const saveFeed = useCallback(async (feed: ThreatFeed) => {
