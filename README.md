@@ -46,7 +46,7 @@ npm run dev
 
 ### Environment Variables
 
-Copy `.env.example` to `.env` and configure:
+Create a `.env` file in the project root and configure:
 
 ```env
 VITE_SHUFFLE_API_URL=https://shuffler.io

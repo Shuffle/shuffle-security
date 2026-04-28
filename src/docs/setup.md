@@ -46,13 +46,7 @@ cd security
 
 ### 2. Configure the backend URL
 
-Create a `.env` file pointing to your Shuffle instance:
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env`:
+Create a `.env` file in the project root pointing to your Shuffle instance:
 
 ```env
 # Shuffle Cloud (EU) - default
