@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useWorkflows } from './useWorkflows';
 import { CategoryAutomation, CategoryConfig, DATASTORE_CATEGORIES } from '@/services/datastore';
@@ -167,6 +167,10 @@ export const useEnrichmentStatus = (
       } else {
         await refetchAll();
       }
+      // NOTE: do NOT clear optimistic in finally — clearing it before the
+      // workflow list / category config caches catch up causes a quick
+      // Active → Inactive → Active flicker. The reconciliation effect
+      // below clears it once serverActive matches.
 
       // Force-run "Enable Threat feeds" so ingestion starts immediately
       // instead of waiting for the next scheduled tick. The first generate
@@ -186,7 +190,6 @@ export const useEnrichmentStatus = (
       }
     } finally {
       setPendingAction(null);
-      setOptimistic(null);
     }
   }, [validateWorkflowIds, refetchAll]);
 
@@ -218,38 +221,60 @@ export const useEnrichmentStatus = (
       }
     } finally {
       setPendingAction(null);
-      setOptimistic(null);
     }
   }, [validateWorkflowIds, refetchAll]);
 
-  const result = useMemo(() => {
+  const serverActive = useMemo(() => {
     const hasThreatFeeds = !!workflows?.some(
       (w) => w.name === THREAT_FEEDS_WORKFLOW && w.background_processing === true,
     );
-
     const hasIOCExtraction = !!workflows?.some(
       (w) => w.name === IOC_EXTRACTION_WORKFLOW && w.background_processing === true,
     );
-
     const automations: CategoryAutomation[] = categoryConfig?.automations || [];
     const enrichAutomation = automations.find(
       (a) => a.type === 'enrich' || a.name === 'Enrich',
     );
     const hasEnrichEnabled = !!enrichAutomation?.enabled;
+    return { hasThreatFeeds, hasIOCExtraction, hasEnrichEnabled };
+  }, [workflows, categoryConfig]);
 
+  // Clear optimistic override once the server-side state catches up to
+  // what we expect, OR after a 15s safety timeout — whichever comes first.
+  // This is what kills the Active → Inactive → Active flicker on disable:
+  // we keep the optimistic value sticky until the workflows list reflects
+  // the deletion, instead of clearing it the moment the request resolves.
+  useEffect(() => {
+    if (optimistic === null) return;
+    const computedActive =
+      serverActive.hasThreatFeeds &&
+      serverActive.hasIOCExtraction &&
+      serverActive.hasEnrichEnabled;
+    if (computedActive === optimistic) {
+      setOptimistic(null);
+      return;
+    }
+    if (pendingAction !== null) return;
+    const t = setTimeout(() => setOptimistic(null), 15000);
+    return () => clearTimeout(t);
+  }, [optimistic, serverActive, pendingAction]);
+
+  const result = useMemo(() => {
     const checks: EnrichmentStatusCheck[] = [
-      { label: 'Threat feeds', active: hasThreatFeeds },
-      { label: 'IOC extraction', active: hasIOCExtraction },
-      { label: 'Enrich automation', active: hasEnrichEnabled },
+      { label: 'Threat feeds', active: serverActive.hasThreatFeeds },
+      { label: 'IOC extraction', active: serverActive.hasIOCExtraction },
+      { label: 'Enrich automation', active: serverActive.hasEnrichEnabled },
     ];
-
-    const serverActive = hasThreatFeeds && hasIOCExtraction && hasEnrichEnabled;
+    const computedActive =
+      serverActive.hasThreatFeeds &&
+      serverActive.hasIOCExtraction &&
+      serverActive.hasEnrichEnabled;
     return {
-      active: optimistic !== null ? optimistic : serverActive,
+      active: optimistic !== null ? optimistic : computedActive,
       checks,
       isLoading,
     };
-  }, [workflows, categoryConfig, isLoading, optimistic]);
+  }, [serverActive, isLoading, optimistic]);
 
   return {
     ...result,
