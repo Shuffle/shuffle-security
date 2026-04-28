@@ -230,6 +230,20 @@ export const UsecaseDetailContent = ({
   // Fetch apps from API and match to categories
   const [categoryAppNames, setCategoryAppNames] = useState<Record<string, string[]>>({});
   const [searchDrawerQuery, setSearchDrawerQuery] = useState<string | null>(null);
+  // Fetch workflows so we can render "Linked Workflows" for this usecase
+  const [workflows, setWorkflows] = useState<UsecaseWorkflowCandidate[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    fetch(getApiUrl('/api/v1/workflows'), { credentials: 'include', headers: getAuthHeader() })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((body) => {
+        if (cancelled) return;
+        const list = Array.isArray(body) ? body : (body?.workflows || []);
+        setWorkflows(list);
+      })
+      .catch(() => { /* keep empty */ });
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     const fetchApps = async () => {
