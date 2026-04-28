@@ -307,16 +307,8 @@ const ThreatFeedsPage = () => {
               </span>
             </Tooltip>
           )}
-          {feeds.length === 0 && !isLoading && !isInitializing && (
-            <Button 
-              variant="outlined" 
-              onClick={initializeDefaults} 
-              disabled={isInitializing} 
-              sx={{ height: 36 }}
-            >
-              Initialize Defaults
-            </Button>
-          )}
+          {/* Header CTA omitted when feeds are empty — the in-table CTA below
+              is the primary call-to-action in that state. */}
           <Button variant="outlined" startIcon={<AddIcon />} onClick={() => handleOpenDialog()} sx={{ height: 36 }}>
             Add Feed
           </Button>
