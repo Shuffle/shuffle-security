@@ -30,11 +30,13 @@ const VULNS_CATEGORY = 'shuffle-security_vulnerabilities';
 const SENSORS_CATEGORY = 'shuffle-security_sensors';
 const AGENTS_CATEGORY = 'shuffle-security_agents';
 // Real-IOC categories populated by the backend's threat-feed parser. Keys
-// are raw IPs / domains; values are STIX 2.1 indicators.
+// are raw IPs / URLs; values are STIX 2.1 indicators. We pick from `ioc_url`
+// (rather than `ioc_domain`) because URL feeds tend to carry richer, more
+// reliably-typed entries — the host portion gives us the lure domain too.
 const IOC_IP_CATEGORY = 'ioc_ip';
-const IOC_DOMAIN_CATEGORY = 'ioc_domain';
+const IOC_URL_CATEGORY = 'ioc_url';
 // Stash the IOC overrides chosen at step 1 so the Wazuh follow-up reuses
-// the exact same IP + domain (correlations rely on byte-identical values).
+// the exact same IP + URL (correlations rely on byte-identical values).
 const DEMO_IOC_OVERRIDES_KEY = 'shuffle_demo_ioc_overrides';
 
 
@@ -351,21 +353,28 @@ const FALLBACK_IOC_IPS = [
   '23.129.64.213',
 ];
 
-const FALLBACK_IOC_DOMAINS = [
-  'it-support-portal.live',
-  'secure-login-helpdesk.com',
-  'office365-verify.app',
-  'onedrive-shared-doc.net',
-  'mfa-reset-portal.cc',
-  'corp-vpn-update.co',
-  'docusign-review.click',
-  'sharepoint-secure.cloud',
+const FALLBACK_IOC_URLS = [
+  'https://it-support-portal.live/mfa-reset?u=schen',
+  'https://secure-login-helpdesk.com/verify',
+  'https://office365-verify.app/auth/login',
+  'https://onedrive-shared-doc.net/shared/file',
+  'https://mfa-reset-portal.cc/reset',
+  'https://corp-vpn-update.co/install',
+  'https://docusign-review.click/sign',
+  'https://sharepoint-secure.cloud/portal',
 ];
 
+/** Extract the host portion of a URL (best-effort). Returns undefined when
+ *  the input is not a parseable absolute URL. */
+const extractHost = (url: string): string | undefined => {
+  try { return new URL(url).hostname || undefined; } catch { return undefined; }
+};
+
 /**
- * Pick a random IP from `ioc_ip` and a random domain from `ioc_domain`.
+ * Pick a random IP from `ioc_ip` and a random URL from `ioc_url`.
  * If a category is empty (parser hasn't caught up yet), fall back to the
- * static pools above so the demo always gets some IOC variety.
+ * static pools above so the demo always gets some IOC variety. The lure
+ * domain is derived from the URL's host so domain + URL stay consistent.
  */
 export const pickRandomIocs = async (): Promise<DemoIocOverrides> => {
   const out: DemoIocOverrides = {};
@@ -382,16 +391,24 @@ export const pickRandomIocs = async (): Promise<DemoIocOverrides> => {
     if (ipKey) out.attackerIp = ipKey;
   }
   try {
-    const domRes = await getDatastoreByCategory(IOC_DOMAIN_CATEGORY);
-    const liveKeys = domRes.success && domRes.data
-      ? domRes.data.map(i => i.key).filter(Boolean)
+    const urlRes = await getDatastoreByCategory(IOC_URL_CATEGORY);
+    const liveKeys = urlRes.success && urlRes.data
+      ? urlRes.data.map(i => i.key).filter(Boolean)
       : [];
-    const domKey = pickRandom(liveKeys.length > 0 ? liveKeys : FALLBACK_IOC_DOMAINS);
-    if (domKey) out.lureDomain = domKey;
+    const urlKey = pickRandom(liveKeys.length > 0 ? liveKeys : FALLBACK_IOC_URLS);
+    if (urlKey) {
+      out.lureUrl = urlKey;
+      const host = extractHost(urlKey);
+      if (host) out.lureDomain = host;
+    }
   } catch (err) {
-    console.warn('[demo] pick ioc_domain failed', err);
-    const domKey = pickRandom(FALLBACK_IOC_DOMAINS);
-    if (domKey) out.lureDomain = domKey;
+    console.warn('[demo] pick ioc_url failed', err);
+    const urlKey = pickRandom(FALLBACK_IOC_URLS);
+    if (urlKey) {
+      out.lureUrl = urlKey;
+      const host = extractHost(urlKey);
+      if (host) out.lureDomain = host;
+    }
   }
   return out;
 };
@@ -403,7 +420,7 @@ export const pickRandomIocs = async (): Promise<DemoIocOverrides> => {
  */
 const resolveIocOverrides = async (): Promise<DemoIocOverrides> => {
   const cached = readIocOverrides();
-  if (cached?.attackerIp && cached?.lureDomain) return cached;
+  if (cached?.attackerIp && cached?.lureUrl && cached?.lureDomain) return cached;
   // Wait for the live-environment bootstrap to populate `ioc_domain` so
   // we pick a real indicator instead of the static fallback. Best-effort:
   // if the poll times out, pickRandomIocs falls back to FALLBACK_IOC_*.

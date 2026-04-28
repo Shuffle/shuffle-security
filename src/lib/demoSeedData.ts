@@ -150,8 +150,10 @@ const PHISH_PAYLOAD_SHA256 = '7b1c4f9a2e3d8b6f1a0c5d7e9b2a4c6e8d1f3a5b7c9e1d2f4a
 export interface DemoIocOverrides {
   /** Attacker IP — ideally a key pulled from the `ioc_ip` datastore category. */
   attackerIp?: string;
-  /** Lure domain — ideally a key pulled from the `ioc_domain` datastore category. */
+  /** Lure domain — derived from the picked `ioc_url` (host portion). */
   lureDomain?: string;
+  /** Full lure URL — ideally a key pulled from the `ioc_url` datastore category. */
+  lureUrl?: string;
 }
 
 /** Compose the credential-harvesting URL from a domain override (or default). */
@@ -180,7 +182,7 @@ export const buildDemoFocusIncident = (overrides: DemoIocOverrides = {}): {
   const t = now();
   const attackerIp = overrides.attackerIp || PHISH_ATTACKER_IP_DEFAULT;
   const lureDomain = overrides.lureDomain || PHISH_LURE_DOMAIN_DEFAULT;
-  const lureUrl = composeLureUrl(lureDomain);
+  const lureUrl = overrides.lureUrl || composeLureUrl(lureDomain);
   return toIncidentWithPending({
     _key: `demo-inc-phish-${t}-focus`,
     title: `Phishing email reported by ${PHISH_REPORTER_NAME}`,
@@ -243,7 +245,7 @@ export const buildDemoWazuhImplantIncident = (overrides: DemoIocOverrides = {}):
   const t = now();
   const attackerIp = overrides.attackerIp || PHISH_ATTACKER_IP_DEFAULT;
   const lureDomain = overrides.lureDomain || PHISH_LURE_DOMAIN_DEFAULT;
-  const lureUrl = composeLureUrl(lureDomain);
+  const lureUrl = overrides.lureUrl || composeLureUrl(lureDomain);
   return toIncidentWithPending({
     _key: `demo-inc-malware-${t}-wazuh`,
     title: `Sliver C2 implant beaconing on ${PHISH_HOST}`,
@@ -269,7 +271,7 @@ export const buildDemoIncidentsBatch1 = (overrides: DemoIocOverrides = {}): { ke
   const t = now();
   const attackerIp = overrides.attackerIp || PHISH_ATTACKER_IP_DEFAULT;
   const lureDomain = overrides.lureDomain || PHISH_LURE_DOMAIN_DEFAULT;
-  const lureUrl = composeLureUrl(lureDomain);
+  const lureUrl = overrides.lureUrl || composeLureUrl(lureDomain);
   return ([
     {
       _key: `demo-inc-phish-${t}-1`,
