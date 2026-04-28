@@ -1593,6 +1593,24 @@ function IntegrationStatusLite({ filterApps, singleLine = false }: { filterApps?
   );
 }
 
+// IDs of usecases whose backend automation is fully wired. Anything not in
+// this list renders a "Coming soon" affordance instead of a live Enable
+// button — both in the list cards and inside the detail page, so the two
+// stay in sync.
+const ACTIVE_USECASE_IDS = [
+  'siem_case_management_1',
+  'edr_case_management_1',
+  'email_case_management_1',
+  'threat_intel_case_management_1',
+  'asset_management_case_management_vuln_1',
+  'case_management_cases_forward_1',
+  'case_management_asset_management_monitors_1',
+  'case_management_assign_escalate_1',
+  'threat_intel_network_1',
+  'threat_intel_edr_1',
+  'threat_intel_cloud_1',
+];
+
 function UsecaseDetailContent({
   flowId,
   hideBackNav = false,
@@ -1625,6 +1643,9 @@ function UsecaseDetailContent({
   const [toggling, setToggling] = useState(false);
   const [optimisticEnabled, setOptimisticEnabled] = useState<boolean | null>(null);
   const effectiveEnabled = optimisticEnabled !== null ? optimisticEnabled : isEnabled;
+  // Mirror the card's "Coming soon" gate so the detail page does not show a
+  // live "Enable" button for usecases that are not yet wired up server-side.
+  const isComingSoon = !!flow && !ACTIVE_USECASE_IDS.includes(flow.id);
 
   const handleToggle = async () => {
     if (!flow?.automationLabel || toggling) return;
@@ -1848,7 +1869,28 @@ function UsecaseDetailContent({
               <Typography sx={{ fontSize: '1.35rem', fontWeight: 800, color: FG, lineHeight: 1.2, flex: 1, minWidth: 0 }}>
                 {flow.label}
               </Typography>
-              {canToggle && flow.automationLabel && (
+              {isComingSoon ? (
+                <Box
+                  sx={{
+                    flexShrink: 0,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 0.6,
+                    textTransform: 'none',
+                    fontSize: '0.78rem',
+                    fontWeight: 600,
+                    py: 0.6,
+                    px: 1.25,
+                    borderRadius: 1,
+                    bgcolor: 'hsl(var(--card))',
+                    color: 'hsl(45 93% 47%)',
+                    border: '1px solid hsl(45 93% 47% / 0.4)',
+                  }}
+                >
+                  <Clock size={14} />
+                  Coming soon
+                </Box>
+              ) : canToggle && flow.automationLabel && (
                 <Button
                   size="small"
                   variant="contained"
@@ -2577,19 +2619,6 @@ function UsecasesPageInner() {
   );
 }
 
-const ACTIVE_USECASE_IDS = [
-  'siem_case_management_1',
-  'edr_case_management_1',
-  'email_case_management_1',
-  'threat_intel_case_management_1',
-  'asset_management_case_management_vuln_1',
-  'case_management_cases_forward_1',
-  'case_management_asset_management_monitors_1',
-  'case_management_assign_escalate_1',
-  'threat_intel_network_1',
-  'threat_intel_edr_1',
-  'threat_intel_cloud_1',
-];
 
 function UsecaseCard({
   flow,
