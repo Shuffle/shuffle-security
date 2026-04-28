@@ -579,6 +579,66 @@ export const UsecaseDetailContent = ({
         )}
       </Box>
 
+      {/* Linked Workflows — workflows whose name matches the usecase's automationLabel */}
+      {(() => {
+        const linkedWorkflows = findWorkflowsForUsecase(flow, workflows);
+        if (linkedWorkflows.length === 0) return null;
+        return (
+          <Box sx={{
+            p: 3,
+            borderRadius: 3,
+            border: '1px solid hsl(var(--border))',
+            bgcolor: 'hsl(var(--card))',
+            mb: 3,
+          }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, gap: 2, flexWrap: 'wrap' }}>
+              <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                Linked Workflows ({linkedWorkflows.length})
+              </Typography>
+              <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))' }}>
+                Matched on label "{flow.automationLabel}"
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {linkedWorkflows.map((wf) => (
+                <Box
+                  key={wf.id}
+                  component="a"
+                  href={`https://shuffler.io/workflows/${wf.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 2,
+                    p: 1.25,
+                    borderRadius: 1.5,
+                    border: '1px solid hsl(var(--border))',
+                    bgcolor: 'hsl(var(--muted) / 0.3)',
+                    textDecoration: 'none',
+                    color: 'hsl(var(--foreground))',
+                    transition: 'background-color 120ms ease, border-color 120ms ease',
+                    '&:hover': {
+                      bgcolor: 'hsl(var(--primary) / 0.08)',
+                      borderColor: 'hsl(var(--primary) / 0.35)',
+                    },
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, minWidth: 0 }}>
+                    <Zap size={14} style={{ color: 'hsl(var(--primary))', flexShrink: 0 }} />
+                    <Typography sx={{ fontSize: '0.85rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {wf.name || 'Untitled workflow'}
+                    </Typography>
+                  </Box>
+                  <ExternalLink size={13} style={{ color: 'hsl(var(--muted-foreground))', flexShrink: 0 }} />
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        );
+      })()}
+
       {/* Resources — video / blogpost / reference image */}
       {(flow.video || flow.blogpost || flow.referenceImage) && (
         <Box sx={{
