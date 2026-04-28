@@ -418,6 +418,10 @@ const VulnAssetsPage = () => {
   if (userInfo?.support !== true) {
     return <Navigate to="/dashboard" replace />;
   }
+  return <AuthenticatedVulnAssetsPage />;
+};
+
+const AuthenticatedVulnAssetsPage = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
