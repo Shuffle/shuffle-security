@@ -170,14 +170,9 @@ export const useThreatFeeds = () => {
     await fetchItems();
   }, [removeItem, fetchItems]);
 
-  // Initialize defaults in datastore using bulk API
+  // Initialize defaults in datastore using the shared canonical helper.
   const initializeDefaults = useCallback(async () => {
-    const { setDatastoreItems, DATASTORE_CATEGORIES } = await import('@/services/datastore');
-    const items = DEFAULT_THREAT_FEEDS.map(feed => ({
-      key: feed.id,
-      value: feed,
-    }));
-    await setDatastoreItems(items, DATASTORE_CATEGORIES.THREAT_FEEDS);
+    await seedDefaultThreatFeeds();
     optimisticOverrides.current.clear();
     await fetchItems();
   }, [fetchItems]);
