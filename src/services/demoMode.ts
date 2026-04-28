@@ -353,16 +353,27 @@ const FALLBACK_IOC_IPS = [
   '23.129.64.213',
 ];
 
-const FALLBACK_IOC_URLS = [
-  'https://it-support-portal.live/mfa-reset?u=schen',
-  'https://secure-login-helpdesk.com/verify',
-  'https://office365-verify.app/auth/login',
-  'https://onedrive-shared-doc.net/shared/file',
-  'https://mfa-reset-portal.cc/reset',
-  'https://corp-vpn-update.co/install',
-  'https://docusign-review.click/sign',
-  'https://sharepoint-secure.cloud/portal',
+// Defanged using the standard threat-intel convention (hxxp + [.]). These
+// URLs are KNOWN MALICIOUS — they must never be live-clickable strings in
+// the source tree. `refangUrl` reconstitutes them right before they are
+// handed to the demo seeder so the actual incident still carries a real
+// indicator value.
+const FALLBACK_IOC_URLS_DEFANGED = [
+  'hxxp://allegrolokalnie[.]pl48284725[.]cyou',
+  'hxxps://it-support-portal[.]live/mfa-reset?u=schen',
+  'hxxps://secure-login-helpdesk[.]com/verify',
+  'hxxps://office365-verify[.]app/auth/login',
+  'hxxps://onedrive-shared-doc[.]net/shared/file',
+  'hxxps://mfa-reset-portal[.]cc/reset',
+  'hxxps://corp-vpn-update[.]co/install',
+  'hxxps://docusign-review[.]click/sign',
+  'hxxps://sharepoint-secure[.]cloud/portal',
 ];
+
+const refangUrl = (defanged: string): string =>
+  defanged.replace(/^hxxps?/i, m => m.toLowerCase().replace('hxxp', 'http')).replace(/\[\.\]/g, '.');
+
+const FALLBACK_IOC_URLS = FALLBACK_IOC_URLS_DEFANGED.map(refangUrl);
 
 /** Extract the host portion of a URL (best-effort). Returns undefined when
  *  the input is not a parseable absolute URL. */
