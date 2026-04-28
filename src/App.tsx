@@ -152,8 +152,11 @@ const ThemedApp = () => {
               <Route path="/detection/sigma" element={<RulesPage />} />
               <Route path="/detection/pipelines" element={<PipelinesPage />} />
               <Route path="/detection/mitre" element={<SupportOnly><MitreAttackPage /></SupportOnly>} />
-              <Route path="/incidents/ioc-types" element={<IOCTypesPage />} />
-              <Route path="/incidents/threat-feeds" element={<ThreatFeedsPage />} />
+              <Route path="/detection/ioc-types" element={<IOCTypesPage />} />
+              <Route path="/detection/threat-feeds" element={<ThreatFeedsPage />} />
+              {/* Legacy redirects — these pages used to live under /incidents */}
+              <Route path="/incidents/ioc-types" element={<Navigate to="/detection/ioc-types" replace />} />
+              <Route path="/incidents/threat-feeds" element={<Navigate to="/detection/threat-feeds" replace />} />
               <Route path="/incidents/custom-fields" element={<CustomFieldsPage />} />
               <Route path="/incidents/response-actions" element={<ResponseActionsPage />} />
               <Route path="/agent" element={<AgentActivityPage />} />
