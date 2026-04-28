@@ -264,8 +264,159 @@ const createSensorGroupEnv = async (name: string, allEnvs: OrbEnvironment[]): Pr
   }
 };
 
+/**
+ * Public, unauthenticated explainer for /monitors. Mirrors the pattern used by
+ * /vulnerabilities (PublicVulnerabilitiesView): give visitors enough context
+ * to understand what Host Monitors do and a clear path to sign up / sign in.
+ * Only the top-level /monitors route is public; detail/terminal subpaths
+ * remain support-gated in App.tsx.
+ */
+const PublicMonitorsView = () => {
+  const navigate = useNavigate();
+  const features = [
+    {
+      icon: <ShieldCheck size={16} />,
+      title: 'Compliance Checks',
+      desc: 'Verify disk encryption, screen lock policies and other posture controls across every host.',
+    },
+    {
+      icon: <Package size={16} />,
+      title: 'Installed Software',
+      desc: 'Continuous inventory of installed applications and versions for vulnerability correlation.',
+    },
+    {
+      icon: <FileCode size={16} />,
+      title: 'Code Package Scanner',
+      desc: 'Discover language packages and dependencies in source directories on each host.',
+    },
+    {
+      icon: <Zap size={16} />,
+      title: 'Response Actions',
+      desc: 'Run pre-approved remediation actions on a target host straight from an incident.',
+    },
+    {
+      icon: <Terminal size={16} />,
+      title: 'Remote Terminal',
+      desc: 'Open an interactive shell to a deployed host for hands-on investigation.',
+    },
+    {
+      icon: <Send size={16} />,
+      title: 'Active Monitoring',
+      desc: 'Stream host activity and forward logs (preview — not generally available yet).',
+    },
+  ];
+
+  const platforms = [
+    { id: 'linux', label: 'Linux', desc: 'Single-line install script for Debian, Ubuntu, RHEL and CentOS.' },
+    { id: 'macos', label: 'macOS', desc: 'Pkg installer that registers the monitor as a launchd service.' },
+    { id: 'windows', label: 'Windows', desc: 'Run-as-admin installer that registers a Windows service.' },
+  ];
+
+  return (
+    <div className="p-6 max-w-[1100px] mx-auto space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-primary/15 text-primary shrink-0">
+          <Radar size={20} />
+        </div>
+        <div>
+          <h1 className="text-xl font-semibold text-foreground">Host Monitors</h1>
+          <p className="text-sm text-muted-foreground">
+            Lightweight agents you deploy to laptops and servers for posture, inventory and response.
+          </p>
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-border bg-card p-5">
+        <div className="flex items-start gap-3 mb-4">
+          <div className="w-8 h-8 rounded-full flex items-center justify-center bg-primary/15 text-primary shrink-0">
+            <Activity size={14} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-foreground mb-0.5">What you can do with Host Monitors</p>
+            <p className="text-xs text-muted-foreground">
+              Each monitor is a small agent that reports back to Shuffle. Pick the checks you want, deploy the
+              installer, and the host shows up here within seconds.
+            </p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {features.map((f) => (
+            <div key={f.title} className="rounded-md border border-border bg-background p-3">
+              <div className="flex items-center gap-2 mb-1.5 text-foreground">
+                <span className="text-primary">{f.icon}</span>
+                <span className="text-sm font-semibold">{f.title}</span>
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed">{f.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-border bg-card p-5">
+        <div className="flex items-start gap-3 mb-4">
+          <div className="w-8 h-8 rounded-full flex items-center justify-center bg-primary/15 text-primary shrink-0">
+            <HardDrive size={14} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-foreground mb-0.5">Supported platforms</p>
+            <p className="text-xs text-muted-foreground">
+              Deploy with a single installer on any of the major desktop and server operating systems.
+            </p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {platforms.map((p) => (
+            <div key={p.id} className="rounded-md border border-border bg-background p-3">
+              <div className="flex items-center gap-2 mb-1.5 text-foreground">
+                <OsIcon os={p.id} size={14} className="text-primary" />
+                <span className="text-sm font-semibold">{p.label}</span>
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed">{p.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-border bg-card p-5">
+        <div className="flex items-start gap-3">
+          <div className="w-8 h-8 rounded-full flex items-center justify-center bg-primary/15 text-primary shrink-0">
+            <Plus size={14} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-foreground mb-0.5">Get started with Host Monitors</p>
+            <p className="text-xs text-muted-foreground mb-3">
+              Sign in to generate your install command and see deployed hosts as they connect. Creating an
+              account is free.
+            </p>
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="default" className="gap-1.5" onClick={() => navigate('/register?returnUrl=%2Fmonitors')}>
+                <Plus size={14} />
+                Create account
+              </Button>
+              <Button size="sm" variant="outline" className="gap-1.5" onClick={() => navigate('/login?returnUrl=%2Fmonitors')}>
+                Sign in
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => navigate('/vulnerabilities')}>
+                Browse vulnerabilities instead
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const VulnAssetsPage = () => {
   usePageMeta({ title: 'Assets — Vulnerabilities', description: 'Monitor host compliance and security posture' });
+  const { isAuthenticated, isLoading: authLoading, userInfo } = useAuth();
+  if (authLoading) return null;
+  if (!isAuthenticated) return <PublicMonitorsView />;
+  // Auth gate that previously lived in App.tsx as <SupportOnly>. Non-support
+  // users still land on the dashboard; only support users see the live app.
+  if (userInfo?.support !== true) {
+    return <Navigate to="/dashboard" replace />;
+  }
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
