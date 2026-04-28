@@ -9,9 +9,9 @@ WORKDIR /app
 ARG VITE_SHUFFLE_API_URL
 ENV VITE_SHUFFLE_API_URL=$VITE_SHUFFLE_API_URL
 
-# Install dependencies
-COPY package.json bun.lock* package-lock.json* ./
-RUN npm install --frozen-lockfile 2>/dev/null || npm install
+# Install dependencies (npm + package-lock.json is the standard build system)
+COPY package.json package-lock.json ./
+RUN npm ci
 
 # Copy source and build
 COPY . .
