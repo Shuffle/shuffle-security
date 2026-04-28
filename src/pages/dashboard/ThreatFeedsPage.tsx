@@ -81,23 +81,9 @@ const ThreatFeedsPage = () => {
     refetch();
   }, [refetch]);
 
-  // Auto-initialize defaults if no feeds exist
-  useEffect(() => {
-    const autoInitialize = async () => {
-      if (isLoading) return;
-      if (feeds.length === 0) {
-        const initKey = 'shuffle_threat_feeds_checked';
-        if (sessionStorage.getItem(initKey)) return;
-        
-        sessionStorage.setItem(initKey, 'true');
-        setIsInitializing(true);
-        await initializeDefaults();
-        setIsInitializing(false);
-      }
-    };
-    
-    autoInitialize();
-  }, [feeds, isLoading, initializeDefaults]);
+  // No auto-initialization — the list must reflect the actual datastore.
+  // Defaults are only seeded when the user clicks "Reset to Defaults" or
+  // "Load default feeds" from the empty state.
 
   const handleOpenDialog = (feed?: ThreatFeed) => {
     if (feed) {
