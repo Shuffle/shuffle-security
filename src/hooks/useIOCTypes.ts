@@ -25,9 +25,26 @@ export type IOCCategory = typeof IOC_CATEGORIES[number]['id'];
 
 // IOC types that are enabled by default (most commonly used in SOC operations)
 export const DEFAULT_ENABLED_IOCS = new Set([
-  'ip', 'domain', 'url', 'email', 'hash_md5', 'hash_sha256',
+  'ipv4', 'ipv6', 'domain', 'url', 'email', 'hash_md5', 'hash_sha256',
   'file_name', 'hostname', 'username', 'cve',
 ]);
+
+/**
+ * Backward-compat alias map. Older datastore entries / payloads may still
+ * use the legacy 'ip' name — normalize to STIX-style 'ipv4'.
+ * STIX 2.1 uses `ipv4-addr` and `ipv6-addr` as distinct SCO types.
+ */
+export const IOC_TYPE_ALIASES: Record<string, string> = {
+  ip: 'ipv4',
+  'ipv4-addr': 'ipv4',
+  'ipv6-addr': 'ipv6',
+};
+
+export const normalizeIOCType = (name: string | undefined | null): string => {
+  if (!name) return '';
+  const lower = String(name).toLowerCase();
+  return IOC_TYPE_ALIASES[lower] || lower;
+};
 
 export interface IOCType {
   name: string;
