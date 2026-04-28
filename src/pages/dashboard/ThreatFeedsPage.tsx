@@ -83,7 +83,36 @@ const ThreatFeedsPage = () => {
 
   // No auto-initialization — the list must reflect the actual datastore.
   // Defaults are only seeded when the user clicks "Reset to Defaults" or
-  // "Load default feeds" from the empty state.
+  // the empty-state CTA below.
+
+  // Combined CTA: seed default feeds AND enable the Threat Intel automation
+  // so the user gets a working setup in one click.
+  const handleEnableThreatFeeds = async () => {
+    setIsInitializing(true);
+    try {
+      await initializeDefaults();
+      try {
+        const response = await getDatastoreItem(AUTOMATION_CONFIG_KEY, ONBOARDING_CONFIG_CATEGORY);
+        let config: any = {};
+        if (response.success && response.item?.value) {
+          config = typeof response.item.value === 'string'
+            ? JSON.parse(response.item.value)
+            : response.item.value;
+        }
+        config.threat_intel = { ...config.threat_intel, enabled: true };
+        await setDatastoreItem(AUTOMATION_CONFIG_KEY, config, ONBOARDING_CONFIG_CATEGORY);
+        setAutomationEnabled(true);
+      } catch (err) {
+        console.error('Failed to enable threat intel automation:', err);
+      }
+      toast.success('Threat feeds enabled');
+    } catch (err) {
+      console.error('Failed to enable threat feeds:', err);
+      toast.error('Failed to enable threat feeds');
+    } finally {
+      setIsInitializing(false);
+    }
+  };
 
   const handleOpenDialog = (feed?: ThreatFeed) => {
     if (feed) {
@@ -278,16 +307,8 @@ const ThreatFeedsPage = () => {
               </span>
             </Tooltip>
           )}
-          {feeds.length === 0 && !isLoading && !isInitializing && (
-            <Button 
-              variant="outlined" 
-              onClick={initializeDefaults} 
-              disabled={isInitializing} 
-              sx={{ height: 36 }}
-            >
-              Initialize Defaults
-            </Button>
-          )}
+          {/* Header CTA omitted when feeds are empty — the in-table CTA below
+              is the primary call-to-action in that state. */}
           <Button variant="outlined" startIcon={<AddIcon />} onClick={() => handleOpenDialog()} sx={{ height: 36 }}>
             Add Feed
           </Button>
@@ -295,7 +316,7 @@ const ThreatFeedsPage = () => {
       </Box>
 
       {/* Automation Status Alert */}
-      {automationEnabled !== null && (
+      {automationEnabled !== null && feeds.length > 0 && (
         <Alert 
           severity={automationEnabled ? 'success' : 'warning'}
           icon={automationEnabled ? <CheckCircleIcon /> : <ErrorOutlineIcon />}
@@ -473,18 +494,32 @@ const ThreatFeedsPage = () => {
                 ))}
                 {filteredFeeds.length === 0 && !isLoading && !isInitializing && (
                   <TableRow>
-                    <TableCell colSpan={6} sx={{ textAlign: 'center', py: 4 }}>
-                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                        {searchQuery ? 'No feeds match your search' : 'No threat feeds configured'}
-                      </Typography>
-                      {!searchQuery && (
-                        <Button 
-                          variant="text" 
-                          onClick={initializeDefaults} 
-                          sx={{ mt: 1 }}
-                        >
-                          Load default feeds
-                        </Button>
+                    <TableCell colSpan={6} sx={{ textAlign: 'center', py: 6 }}>
+                      {searchQuery ? (
+                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                          No feeds match your search
+                        </Typography>
+                      ) : (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                          <RssFeedIcon sx={{ fontSize: 40, color: 'hsl(var(--primary) / 0.5)' }} />
+                          <Box sx={{ textAlign: 'center' }}>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 0.5 }}>
+                              No threat feeds configured
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: 'text.secondary', maxWidth: 480 }}>
+                              Load the curated default feed list and turn on automatic incident enrichment in one click.
+                            </Typography>
+                          </Box>
+                          <Button
+                            variant="contained"
+                            onClick={handleEnableThreatFeeds}
+                            disabled={isInitializing}
+                            startIcon={isInitializing ? <CircularProgress size={16} color="inherit" /> : <RssFeedIcon />}
+                            sx={{ height: 36, mt: 1 }}
+                          >
+                            Enable Threat Feeds
+                          </Button>
+                        </Box>
                       )}
                     </TableCell>
                   </TableRow>
