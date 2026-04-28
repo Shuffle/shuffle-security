@@ -558,6 +558,15 @@ const ThreatFeedsPage = () => {
               </MenuItem>
             ))}
           </TextField>
+          <TextField
+            label="Custom Headers"
+            value={formData.headers || ''}
+            onChange={(e) => setFormData({ ...formData, headers: e.target.value })}
+            fullWidth
+            placeholder="Authorization=Bearer abc123;X-Api-Key=xyz"
+            helperText="Optional HTTP headers sent during ingest. Format: key=value;key2=value2"
+            InputProps={{ sx: { fontFamily: 'JetBrains Mono, monospace', fontSize: '0.85rem' } }}
+          />
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Switch
               checked={formData.enabled ?? true}
