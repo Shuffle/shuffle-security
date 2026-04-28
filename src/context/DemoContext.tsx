@@ -463,9 +463,9 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
       // seeder can pick a real IOC instead of the static fallback.
       const liveEnvStartedAt = Date.now();
       const { ready, indicatorReady } = enableLiveDemoEnvironment();
-      // Hand the indicator-availability promise to the step seeders so
-      // the incidents-list seeder can await it before picking IOCs.
-      setDemoIndicatorReady(indicatorReady);
+      // Publish the indicator-availability promise so the incidents-list
+      // step seeder can await it before picking IOCs.
+      setPendingIndicatorReady(indicatorReady);
       const liveEnvPromise = ready
         .then(() => {
           trackPredefinedEvent(GA_EVENTS.DEMO_LIVE_ENV_SUCCESS, undefined, Date.now() - liveEnvStartedAt);
