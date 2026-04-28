@@ -99,28 +99,53 @@ export const useEnrichmentStatus = (
   }, [refetchWorkflows, queryClient]);
 
   /**
-   * After both generate requests have completed, poll workflows a few times
-   * over a short window so the UI picks up the updated background_processing
-   * flags. We don't gate on a desired state — just refresh.
+   * Validate by fetching each generated workflow directly by ID.
+   * Polls /api/v1/workflows/{id} until background_processing is true (enable)
+   * or false/missing (disable), with a short timeout cap.
    */
-  const pollAfterGenerate = useCallback(async () => {
-    const ATTEMPTS = 4;
-    const DELAY_MS = 1000;
-    const POLL_TIMEOUT_MS = 2500;
-    for (let i = 0; i < ATTEMPTS; i++) {
-      await new Promise((resolve) => setTimeout(resolve, DELAY_MS));
-      await Promise.race([
-        refetchAll(),
-        new Promise((resolve) => setTimeout(resolve, POLL_TIMEOUT_MS)),
-      ]);
+  const validateWorkflowIds = useCallback(
+    async (ids: string[], expect: 'enabled' | 'disabled') => {
+      const ATTEMPTS = 6;
+      const DELAY_MS = 800;
+      const checkOne = async (id: string): Promise<boolean> => {
+        try {
+          const res = await fetch(getApiUrl(`/api/v1/workflows/${id}`), {
+            credentials: 'include',
+            headers: { ...getAuthHeader() },
+          });
+          if (!res.ok) return expect === 'disabled';
+          const wf = await res.json();
+          const bg = !!wf?.background_processing;
+          return expect === 'enabled' ? bg : !bg;
+        } catch {
+          return false;
+        }
+      };
+      for (let i = 0; i < ATTEMPTS; i++) {
+        await new Promise((r) => setTimeout(r, DELAY_MS));
+        const results = await Promise.all(ids.map(checkOne));
+        if (results.every(Boolean)) break;
+      }
+      await refetchAll();
+    },
+    [refetchAll],
+  );
+
+  const parseGenerateId = async (res: Response): Promise<string | null> => {
+    try {
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data?.id || data?.workflow_id || null;
+    } catch {
+      return null;
     }
-  }, [refetchAll]);
+  };
 
   const enable = useCallback(async () => {
     setOptimistic(true);
     setPendingAction('enable');
     try {
-      await Promise.allSettled([
+      const [r1, r2] = await Promise.all([
         fetch(getApiUrl('/api/v2/workflows/generate'), {
           method: 'POST',
           credentials: 'include',
@@ -134,7 +159,14 @@ export const useEnrichmentStatus = (
           body: JSON.stringify({ label: 'Enable Threat feeds_webhook' }),
         }),
       ]);
-      await pollAfterGenerate();
+      const ids = (await Promise.all([parseGenerateId(r1), parseGenerateId(r2)])).filter(
+        (x): x is string => !!x,
+      );
+      if (ids.length > 0) {
+        await validateWorkflowIds(ids, 'enabled');
+      } else {
+        await refetchAll();
+      }
 
       // Force-run "Enable Threat feeds" so ingestion starts immediately
       // instead of waiting for the next scheduled tick.
