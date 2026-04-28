@@ -38,10 +38,18 @@ Turn 3,000+ SaaS tools into MCP servers your agents can use. One search, one cli
 Authenticate any tool at [shuffler.io](https://shuffler.io), grab your API key, and call it:
 
 ```bash
-curl https://shuffler.io/api/v1/apps/YOUR_APP/run \
+curl https://shuffler.io/api/v1/apps/YOUR_APP/mcp \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"action": "send_message", "fields": {"channel": "general", "text": "hi"}}'
+  -d '{
+    "jsonrpc": "2.0",
+    "id": "1",
+    "method": "tools/call",
+    "params": {
+      "tool_name": "YOUR_APP",
+      "input": { "text": "send a hi message to #general on slack" }
+    }
+  }'
 ```
 
 That is the MCP. Any agent, any language, no install. Full API reference: [shuffler.io/docs/API](https://shuffler.io/docs/API).
