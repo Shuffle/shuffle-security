@@ -40,6 +40,7 @@ import { useIOCTypes } from '@/hooks/useIOCTypes';
 import { useEnrichmentStatus } from '@/hooks/useEnrichmentStatus';
 import { getDatastoreItem, setDatastoreItem, DATASTORE_CATEGORIES } from '@/services/datastore';
 import { toast } from 'sonner';
+import ThreatIntelAutomationBanner from '@/components/incidents/ThreatIntelAutomationBanner';
 
 // Datastore keys for onboarding config
 const ONBOARDING_CONFIG_CATEGORY = 'shuffle-security_onboarding';
@@ -307,71 +308,8 @@ const ThreatFeedsPage = () => {
         </Box>
       </Box>
 
-      {/* Automation Status Alert */}
-      {automationEnabled !== null && feeds.length > 0 && (
-        <Alert 
-          severity={automationEnabled ? 'success' : 'warning'}
-          icon={automationEnabled ? <CheckCircleIcon /> : <ErrorOutlineIcon />}
-          sx={{ 
-            mb: 2, 
-            alignItems: 'center',
-            '& .MuiAlert-icon': { 
-              color: automationEnabled ? 'hsl(var(--severity-low))' : undefined,
-              alignItems: 'center',
-              display: 'flex',
-              padding: 0,
-              marginRight: 1.5,
-            },
-            '& .MuiAlert-message': { width: '100%', padding: 0, display: 'flex', alignItems: 'center' },
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
-            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-              Threat Intel Automation: {automationEnabled ? 'Active' : 'Inactive'}
-            </Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              {automationEnabled 
-                ? '— Incidents will be automatically enriched with threat intelligence from enabled feeds.'
-                : '— Enable to automatically enrich incidents with threat intelligence.'}
-            </Typography>
-            <Button
-              size="small"
-              variant={automationEnabled ? 'outlined' : 'contained'}
-              disabled={enrichmentStatus.isEnabling}
-              onClick={async () => {
-                try {
-                  if (automationEnabled) {
-                    await enrichmentStatus.disable();
-                  } else {
-                    await enrichmentStatus.enable();
-                  }
-                } catch (error) {
-                  console.error('Failed to toggle threat intel:', error);
-                }
-              }}
-              sx={{
-                whiteSpace: 'nowrap',
-                ml: 0.5,
-              ...(automationEnabled ? {
-                  borderColor: 'success.main',
-                  color: 'success.main',
-                } : {
-                  bgcolor: 'warning.main',
-                  color: 'warning.contrastText',
-                  '&:hover': { bgcolor: 'warning.dark' },
-                }),
-              }}
-              startIcon={enrichmentStatus.isEnabling ? <CircularProgress size={14} color="inherit" /> : undefined}
-            >
-              {automationAction === 'disable'
-                ? 'Disabling…'
-                : automationAction === 'enable'
-                  ? 'Enabling…'
-                  : automationEnabled ? 'Disable' : 'Enable'}
-            </Button>
-          </Box>
-        </Alert>
-      )}
+      {/* Automation Status Alert (shared with /detection/ioc-types) */}
+      {feeds.length > 0 && <ThreatIntelAutomationBanner />}
 
       {/* Info Card */}
       <Card sx={{ mb: 2, p: 2, bgcolor: 'hsl(var(--primary) / 0.05)', border: '1px solid hsl(var(--primary) / 0.2)' }}>
