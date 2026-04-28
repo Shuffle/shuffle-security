@@ -2679,7 +2679,7 @@ function UsecaseCard({
   hasInterest?: boolean;
   canToggle: boolean;
   isAuthenticated?: boolean;
-  onToggled?: () => void;
+  onToggled?: (label: string, enabled: boolean) => void;
   onClick: () => void;
 }) {
   const sourceCat = categoryLabel(flow.source);
@@ -2725,8 +2725,7 @@ function UsecaseCard({
         throw new Error(reason || `Request failed (${res.status})`);
       }
       toast.success(willBeEnabled ? `${flow.label} enabled` : `${flow.label} disabled`);
-      // Wait for the backend to register the change before refetching.
-      setTimeout(() => onToggled?.(), 1500);
+      onToggled?.(flow.automationLabel, willBeEnabled);
       // Hard safety net in case the server never reflects the change.
       setTimeout(() => setOptimisticEnabled(null), 8000);
     } catch (err: any) {
