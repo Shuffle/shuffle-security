@@ -16,6 +16,7 @@ import { useEntityPreference } from '@/hooks/useEntityLabel';
 import { applyEntityTerminology } from '@/lib/entityTerminology';
 import { findIngestTicketsWorkflow, isWorkflowScheduleStopped } from '@/lib/ingestionDetection';
 import { getApiUrl, getAuthHeader } from '@/config/api';
+import { countDemoIncidents } from '@/services/demoMode';
 
 /** Returns the total number of incidents in the org's datastore. */
 const useIncidentCount = () => {
@@ -44,10 +45,30 @@ const useIncidentCount = () => {
 
 const INCIDENT_THRESHOLD = 10;
 
+/** Detect leftover demo incidents in the datastore so we can offer a cleanup
+ *  even when demo mode is no longer "active" (e.g. another browser/session
+ *  ran the tour, or the active flag was cleared but the seeded incidents
+ *  remain). Polled lazily — uses the same auth + datastore API the demo
+ *  itself uses, no extra wiring required. */
+const useLeftoverDemoCount = (active: boolean) => {
+  return useQuery<number>({
+    queryKey: ['demo-card', 'leftover-demo-count'],
+    queryFn: async () => {
+      try { return await countDemoIncidents(); } catch { return 0; }
+    },
+    // While active, the in-context stats already drive the UI — skip the
+    // extra probe to avoid duplicate work.
+    enabled: !active,
+    staleTime: 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+};
+
 export const DemoModeCard = () => {
   const { active, isSeeding, isCleaning, stats, startDemo, openTour, cleanup } = useDemo();
   const { data: workflows } = useWorkflows();
   const { data: incidentCount = 0 } = useIncidentCount();
+  const { data: leftoverDemoCount = 0 } = useLeftoverDemoCount(active);
   const { singular: entitySingular, plural: entityPlural } = useEntityPreference();
   const t = (s: string) => applyEntityTerminology(s, entitySingular, entityPlural);
   const entityPluralLower = entityPlural.toLowerCase();
@@ -60,6 +81,9 @@ export const DemoModeCard = () => {
   const tooManyIncidents = incidentCount >= INCIDENT_THRESHOLD;
   const disableStart = !active && tooManyIncidents;
   const disableReason = `You already have ${incidentCount} ${entityPluralLower} — demo mode is for accounts with fewer than ${INCIDENT_THRESHOLD}.`;
+  // Show the Clean Up button whenever demo data exists, even if the demo
+  // mode flag itself is no longer active.
+  const hasLeftoverDemoData = !active && leftoverDemoCount > 0;
 
   return (
     <motion.div
@@ -176,36 +200,65 @@ export const DemoModeCard = () => {
               </Button>
             </>
           ) : (
-            <Tooltip title={disableStart ? disableReason : ''} arrow disableHoverListener={!disableStart}>
-              <span>
+            <>
+              {/* Demo data left over from a previous session — surface the
+                  cleanup so the user is not stuck with seeded incidents. */}
+              {hasLeftoverDemoData && (
                 <Button
-                  onClick={startDemo}
-                  disabled={isSeeding || disableStart}
-                  variant="contained"
-                  size="medium"
-                  endIcon={isSeeding ? <CircularProgress size={14} sx={{ color: 'inherit' }} /> : <ArrowRight size={16} />}
+                  onClick={cleanup}
+                  disabled={isCleaning}
+                  variant="outlined"
+                  size="small"
+                  startIcon={isCleaning ? <CircularProgress size={12} sx={{ color: 'inherit' }} /> : <Trash2 size={14} />}
                   sx={{
                     textTransform: 'none',
-                    fontSize: '0.85rem',
+                    fontSize: '0.8rem',
                     fontWeight: 600,
-                    backgroundColor: 'hsl(var(--primary))',
-                    color: 'hsl(var(--primary-foreground))',
-                    px: 2.5,
-                    py: 1,
-                    boxShadow: 'none',
+                    borderColor: 'hsl(var(--border))',
+                    color: 'hsl(var(--foreground))',
+                    px: 2,
                     whiteSpace: 'nowrap',
-                    width: { xs: '100%', sm: 'auto' },
-                    '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.9)', boxShadow: 'none' },
-                    '&.Mui-disabled': {
-                      backgroundColor: 'hsl(var(--muted))',
-                      color: 'hsl(var(--muted-foreground))',
+                    '&:hover': {
+                      borderColor: 'hsl(var(--destructive) / 0.5)',
+                      backgroundColor: 'hsl(var(--destructive) / 0.06)',
+                      color: 'hsl(var(--destructive))',
                     },
                   }}
                 >
-                  {isSeeding ? 'Seeding sample data…' : 'Start demo mode'}
+                  {isCleaning ? 'Cleaning…' : `Clean up demo data (${leftoverDemoCount})`}
                 </Button>
-              </span>
-            </Tooltip>
+              )}
+              <Tooltip title={disableStart ? disableReason : ''} arrow disableHoverListener={!disableStart}>
+                <span>
+                  <Button
+                    onClick={startDemo}
+                    disabled={isSeeding || disableStart}
+                    variant="contained"
+                    size="medium"
+                    endIcon={isSeeding ? <CircularProgress size={14} sx={{ color: 'inherit' }} /> : <ArrowRight size={16} />}
+                    sx={{
+                      textTransform: 'none',
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                      backgroundColor: 'hsl(var(--primary))',
+                      color: 'hsl(var(--primary-foreground))',
+                      px: 2.5,
+                      py: 1,
+                      boxShadow: 'none',
+                      whiteSpace: 'nowrap',
+                      width: { xs: '100%', sm: 'auto' },
+                      '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.9)', boxShadow: 'none' },
+                      '&.Mui-disabled': {
+                        backgroundColor: 'hsl(var(--muted))',
+                        color: 'hsl(var(--muted-foreground))',
+                      },
+                    }}
+                  >
+                    {isSeeding ? 'Seeding sample data…' : 'Start demo mode'}
+                  </Button>
+                </span>
+              </Tooltip>
+            </>
           )}
         </Box>
       </Box>
