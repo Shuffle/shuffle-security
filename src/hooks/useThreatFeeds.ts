@@ -121,6 +121,34 @@ export const DEFAULT_THREAT_FEEDS: ThreatFeed[] = [
   },
 ];
 
+/**
+ * Canonical Threat Feeds defaults seeder. SINGLE source of truth — used by:
+ *   - The Threat Feeds page "Reset to Defaults" (via the hook's
+ *     initializeDefaults).
+ *   - The demo-mode live environment bootstrap.
+ *
+ * Writes the curated DEFAULT_THREAT_FEEDS into the datastore using the
+ * bulk API. Caller is responsible for deciding *whether* to call this —
+ * this helper unconditionally writes (it is what "Reset to Defaults"
+ * needs).
+ *
+ * Returns true on success, false on failure.
+ */
+export const seedDefaultThreatFeeds = async (): Promise<boolean> => {
+  try {
+    const { setDatastoreItems, DATASTORE_CATEGORIES } = await import('@/services/datastore');
+    const items = DEFAULT_THREAT_FEEDS.map(feed => ({
+      key: feed.id,
+      value: feed,
+    }));
+    const res = await setDatastoreItems(items, DATASTORE_CATEGORIES.THREAT_FEEDS);
+    return !!res?.success;
+  } catch (err) {
+    console.warn('[seedDefaultThreatFeeds] failed', err);
+    return false;
+  }
+};
+
 export const useThreatFeeds = () => {
   const { items, isLoading, fetchItems, addItem, removeItem } = useDatastore({ 
     category: DATASTORE_CATEGORIES.THREAT_FEEDS 
