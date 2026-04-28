@@ -316,7 +316,7 @@ const ThreatFeedsPage = () => {
       </Box>
 
       {/* Automation Status Alert */}
-      {automationEnabled !== null && (
+      {automationEnabled !== null && feeds.length > 0 && (
         <Alert 
           severity={automationEnabled ? 'success' : 'warning'}
           icon={automationEnabled ? <CheckCircleIcon /> : <ErrorOutlineIcon />}
