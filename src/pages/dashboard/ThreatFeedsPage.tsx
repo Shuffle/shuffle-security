@@ -148,8 +148,20 @@ const ThreatFeedsPage = () => {
         DATASTORE_CATEGORIES: DSC,
       } = await import('@/services/datastore');
 
-      if (feeds.length > 0) {
-        await deleteDatastoreItems(feeds.map(f => f.id), DSC.THREAT_FEEDS);
+      // Fetch the canonical list straight from the datastore (paginated) so
+      // we delete EVERY existing key — including any stale or server-seeded
+      // feeds that may not be in the React `feeds` state yet.
+      const allKeys: string[] = [];
+      let cursor: string | undefined;
+      for (let i = 0; i < 50; i++) {
+        const page = await getDatastoreByCategory(DSC.THREAT_FEEDS, cursor);
+        const items = page?.data || [];
+        items.forEach(it => { if (it?.key) allKeys.push(it.key); });
+        if (!page?.cursor || items.length === 0) break;
+        cursor = page.cursor;
+      }
+      if (allKeys.length > 0) {
+        await deleteDatastoreItems(allKeys, DSC.THREAT_FEEDS);
       }
 
       // Also wipe the ingested threat intel so users get a clean slate.
