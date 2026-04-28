@@ -127,6 +127,11 @@ export const useThreatFeeds = () => {
   });
   const [threatFeeds, setThreatFeeds] = useState<ThreatFeed[]>([]);
   const [initialized, setInitialized] = useState(false);
+  // Tracks feed IDs whose enabled-state was just flipped optimistically.
+  // While a flip is in-flight (or recently completed) we trust the local
+  // value over whatever `items` currently says, so a stale refetch cannot
+  // visually un-flip the Switch.
+  const optimisticOverrides = useRef<Map<string, ThreatFeed>>(new Map());
 
   useEffect(() => {
     fetchItems();
@@ -144,7 +149,12 @@ export const useThreatFeeds = () => {
           return { id: item.key, url: item.value, name: item.key, enabled: true };
         }
       });
-      setThreatFeeds(parsed);
+      // Apply any pending optimistic overrides so a network refetch never
+      // reverts a toggle the user just made.
+      const merged = optimisticOverrides.current.size === 0
+        ? parsed
+        : parsed.map(f => optimisticOverrides.current.get(f.id) || f);
+      setThreatFeeds(merged);
       setInitialized(true);
     } else if (!initialized) {
       // If no items and not yet initialized, use defaults
@@ -173,6 +183,7 @@ export const useThreatFeeds = () => {
       value: feed,
     }));
     await setDatastoreItems(items, DATASTORE_CATEGORIES.THREAT_FEEDS);
+    optimisticOverrides.current.clear();
     await fetchItems();
   }, [fetchItems]);
 
@@ -182,10 +193,16 @@ export const useThreatFeeds = () => {
     const feed = threatFeeds.find(f => f.id === id);
     if (!feed) return;
     const updated = { ...feed, enabled: !feed.enabled };
+    // Record the override BEFORE state update so any concurrent refetch
+    // also picks it up.
+    optimisticOverrides.current.set(id, updated);
     setThreatFeeds(prev => prev.map(f => (f.id === id ? updated : f)));
     try {
       await addItem(updated.id, updated);
+      // Keep override in place — the persisted value matches it now, so
+      // it is harmless and protects against any in-flight stale fetch.
     } catch (err) {
+      optimisticOverrides.current.delete(id);
       setThreatFeeds(prev => prev.map(f => (f.id === id ? feed : f)));
       console.error('Failed to toggle threat feed:', err);
     }
