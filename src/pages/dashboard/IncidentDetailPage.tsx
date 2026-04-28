@@ -4344,6 +4344,26 @@ const IncidentDetailPage = () => {
             </Typography>
           </Box>
         );
+
+        if (sparseIncidentRefs.length === 0) return pill;
+        return (
+          <Box key={item.id} sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, minWidth: 0 }}>
+            {pill}
+            <Box
+              sx={{
+                ml: 3,
+                mr: 0.5,
+                px: 1.25,
+                py: 0.75,
+                borderRadius: 1.5,
+                border: `1px dashed ${pillBorder}`,
+                bgcolor: 'transparent',
+              }}
+            >
+              <CorrelationContextStrip incidentKeys={sparseIncidentRefs} compact />
+            </Box>
+          </Box>
+        );
       }
 
       // Manual activity
