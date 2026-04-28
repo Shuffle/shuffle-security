@@ -81,23 +81,9 @@ const ThreatFeedsPage = () => {
     refetch();
   }, [refetch]);
 
-  // Auto-initialize defaults if no feeds exist
-  useEffect(() => {
-    const autoInitialize = async () => {
-      if (isLoading) return;
-      if (feeds.length === 0) {
-        const initKey = 'shuffle_threat_feeds_checked';
-        if (sessionStorage.getItem(initKey)) return;
-        
-        sessionStorage.setItem(initKey, 'true');
-        setIsInitializing(true);
-        await initializeDefaults();
-        setIsInitializing(false);
-      }
-    };
-    
-    autoInitialize();
-  }, [feeds, isLoading, initializeDefaults]);
+  // No auto-initialization — the list must reflect the actual datastore.
+  // Defaults are only seeded when the user clicks "Reset to Defaults" or
+  // "Load default feeds" from the empty state.
 
   const handleOpenDialog = (feed?: ThreatFeed) => {
     if (feed) {
@@ -246,15 +232,14 @@ const ThreatFeedsPage = () => {
           <RssFeedIcon sx={{ fontSize: 28, color: 'hsl(var(--primary))' }} />
           <Typography variant="h5" sx={{ fontWeight: 600 }}>Threat Feeds</Typography>
           {isLoading && <CircularProgress size={20} />}
-          <Chip label={`${feeds.length} feeds`} size="small" variant="outlined" />
-          <Chip 
-            label={`${enabledCount} active`} 
-            size="small" 
-            sx={{ 
+          <Chip
+            label={`${enabledCount}/${feeds.length} active feeds`}
+            size="small"
+            sx={{
               bgcolor: enabledCount > 0 ? 'hsl(var(--severity-low) / 0.15)' : 'transparent',
               color: enabledCount > 0 ? 'hsl(var(--severity-low))' : 'text.secondary',
               borderColor: enabledCount > 0 ? 'hsl(var(--severity-low))' : undefined,
-            }} 
+            }}
             variant="outlined"
           />
         </Box>
