@@ -15,8 +15,8 @@ import {
   ChevronDown,
   CheckCircle2,
 } from 'lucide-react';
-import { SingulJS } from '@/Shuffle-MCPs';
-import type { AlgoliaSearchApp, SingulJSHandle } from '@/Shuffle-MCPs';
+import { ShuffleMCP } from '@/Shuffle-MCPs';
+import type { AlgoliaSearchApp, ShuffleMCPHandle } from '@/Shuffle-MCPs';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { getIngestionCategory, type IngestionCategory } from '@/lib/ingestionDetection';
 
@@ -154,7 +154,7 @@ const CategorySection = ({
   onToggleOpen,
   sectionRef,
 }: CategorySectionProps) => {
-  const singulRef = useRef<SingulJSHandle>(null);
+  const singulRef = useRef<ShuffleMCPHandle>(null);
   const [singulKey, setSingulKey] = useState(0);
 
   const Icon = category.icon;
@@ -352,7 +352,7 @@ const CategorySection = ({
               transition: 'border-color 0.3s ease',
             }}
           >
-            <SingulJS
+            <ShuffleMCP
               key={singulKey}
               ref={singulRef}
               authToken="demo-token"

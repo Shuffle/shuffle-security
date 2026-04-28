@@ -69,11 +69,11 @@ Peer deps: `react >= 18`, `react-dom >= 18`, `algoliasearch >= 5`.
 ## Quick start
 
 ```tsx
-import { SingulJS } from 'shuffle-mcps';
+import { ShuffleMCP } from 'shuffle-mcps';
 
 export default function App() {
   return (
-    <SingulJS
+    <ShuffleMCP
       authToken="any-token"
       inline
       layout="grid"
@@ -91,7 +91,7 @@ export default function App() {
 The most common pattern. Set `preventDefault` and handle `onAppSelected` to chain into your own auth or detail UI:
 
 ```tsx
-<SingulJS
+<ShuffleMCP
   authToken={token}
   inline
   preventDefault
@@ -104,7 +104,7 @@ Full two-drawer reference implementation: [`src/components/shared/AppSearchDrawe
 ### Predefined search
 
 ```tsx
-<SingulJS
+<ShuffleMCP
   authToken="..."
   inline
   initialFilterQuery="siem"
@@ -117,7 +117,7 @@ Full two-drawer reference implementation: [`src/components/shared/AppSearchDrawe
 ```tsx
 const [picked, setPicked] = useState<AlgoliaSearchApp[]>([]);
 
-<SingulJS
+<ShuffleMCP
   authToken="..."
   inline
   multiSelect
@@ -130,7 +130,7 @@ const [picked, setPicked] = useState<AlgoliaSearchApp[]>([]);
 ### Your own backend
 
 ```tsx
-<SingulJS
+<ShuffleMCP
   authToken={user.token}
   apiKey={user.apiKey}
   apiBaseUrl="https://your-backend.example.com"
@@ -161,8 +161,8 @@ Full prop reference, framework setup (Next.js, Vue), styling slots, custom rende
 ## Imperative handle
 
 ```tsx
-const ref = useRef<SingulJSHandle>(null);
-<SingulJS ref={ref} authToken="..." inline />
+const ref = useRef<ShuffleMCPHandle>(null);
+<ShuffleMCP ref={ref} authToken="..." inline />
 
 ref.current?.search('slack');
 ref.current?.clear();

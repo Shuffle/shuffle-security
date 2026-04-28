@@ -14,6 +14,6 @@
     "allowSyntheticDefaultImports": true,
     "lib": ["DOM", "DOM.Iterable", "ES2020"]
   },
-  "include": ["index.ts", "SingulJS.tsx", "singul.helpers.ts"],
+  "include": ["index.ts", "ShuffleMCP.tsx", "singul.helpers.ts"],
   "exclude": ["dist", "node_modules"]
 }

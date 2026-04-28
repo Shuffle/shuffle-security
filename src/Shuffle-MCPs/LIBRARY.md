@@ -19,9 +19,9 @@ Full API reference for [`shuffle-mcps`](./README.md). For a quick start, see the
 ### React
 
 ```tsx
-import { SingulJS } from 'shuffle-mcps';
+import { ShuffleMCP } from 'shuffle-mcps';
 
-<SingulJS authToken="..." onAppSelected={(d) => console.log(d)} />
+<ShuffleMCP authToken="..." onAppSelected={(d) => console.log(d)} />
 ```
 
 ### Next.js
@@ -30,15 +30,15 @@ The component touches `window` for the auth handoff, so render it client-side:
 
 ```tsx
 'use client';
-import { SingulJS } from 'shuffle-mcps';
+import { ShuffleMCP } from 'shuffle-mcps';
 ```
 
 Or import dynamically:
 
 ```tsx
 import dynamic from 'next/dynamic';
-const SingulJS = dynamic(
-  () => import('shuffle-mcps').then((m) => m.SingulJS),
+const ShuffleMCP = dynamic(
+  () => import('shuffle-mcps').then((m) => m.ShuffleMCP),
   { ssr: false }
 );
 ```
@@ -47,12 +47,12 @@ const SingulJS = dynamic(
 
 ```vue
 <template>
-  <SingulJS :auth-token="token" @app-selected="onPick" />
+  <ShuffleMCP :auth-token="token" @app-selected="onPick" />
 </template>
 
 <script>
-import { SingulJS } from 'shuffle-mcps/vue';
-export default { components: { SingulJS } /* ... */ };
+import { ShuffleMCP } from 'shuffle-mcps/vue';
+export default { components: { ShuffleMCP } /* ... */ };
 </script>
 ```
 
@@ -62,7 +62,7 @@ export default { components: { SingulJS } /* ... */ };
 
 ```tsx
 <Drawer open={open} onClose={onClose} PaperProps={{ sx: { width: 560 } }}>
-  <SingulJS
+  <ShuffleMCP
     authToken="..."
     inline
     layout="grid"
@@ -80,9 +80,9 @@ A full two-drawer reference (search → detail/auth) lives in [`src/components/s
 ### Imperative search
 
 ```tsx
-const ref = useRef<SingulJSHandle>(null);
+const ref = useRef<ShuffleMCPHandle>(null);
 <button onClick={() => ref.current?.search('slack')}>Find Slack</button>
-<SingulJS ref={ref} authToken="..." inline />
+<ShuffleMCP ref={ref} authToken="..." inline />
 ```
 
 ### Multi-select
@@ -90,7 +90,7 @@ const ref = useRef<SingulJSHandle>(null);
 ```tsx
 const [picked, setPicked] = useState<AlgoliaSearchApp[]>([]);
 
-<SingulJS
+<ShuffleMCP
   authToken="..."
   inline
   multiSelect
@@ -103,7 +103,7 @@ const [picked, setPicked] = useState<AlgoliaSearchApp[]>([]);
 ### Your own backend / Algolia index
 
 ```tsx
-<SingulJS
+<ShuffleMCP
   authToken={user.token}
   apiKey={user.apiKey}
   apiBaseUrl="https://your-backend.example.com"
@@ -191,7 +191,7 @@ In Vue: `@app-selected`, `@selection-change`, `@search-change`.
 ## Imperative handle
 
 ```ts
-interface SingulJSHandle {
+interface ShuffleMCPHandle {
   search: (query: string) => void;
   clear: () => void;
 }

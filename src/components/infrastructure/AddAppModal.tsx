@@ -1,6 +1,6 @@
 /**
  * AddAppModal — Two-phase modal for the Infrastructure page category drawer.
- * Phase 1: SingulJS search (same style as /onboarding/sources)
+ * Phase 1: ShuffleMCP search (same style as /onboarding/sources)
  * Phase 2: AppAuthCard for the selected app (same as /onboarding/authenticate)
  *
  * Refactored to use the shared useAppAuthFlow hook.
@@ -20,7 +20,7 @@ import {
   Dialog,
   DialogContent,
 } from '@/components/ui/dialog';
-import { SingulJS } from '@/Shuffle-MCPs';
+import { ShuffleMCP } from '@/Shuffle-MCPs';
 import type { AppSelectedEvent } from '@/Shuffle-MCPs';
 import { AppAuthCard } from '@/components/onboarding/AppAuthConfig';
 import { API_CONFIG } from '@/config/api';
@@ -217,7 +217,7 @@ export const AddAppModal = ({ open, onClose, initialQuery, categoryLabel }: AddA
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.2 }}
               >
-                <SingulJS
+                <ShuffleMCP
                   authToken={API_CONFIG.apiKey || ''}
                   apiKey={API_CONFIG.apiKey || undefined}
                   apiBaseUrl={API_CONFIG.baseUrl}

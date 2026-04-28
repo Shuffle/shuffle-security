@@ -5,8 +5,8 @@ import {
   Chip,
 } from '@mui/material';
 import { Mail, Radar, Search, Globe, Ticket } from 'lucide-react';
-import { SingulJS } from '@/Shuffle-MCPs';
-import type { AlgoliaSearchApp, SingulJSHandle } from '@/Shuffle-MCPs';
+import { ShuffleMCP } from '@/Shuffle-MCPs';
+import type { AlgoliaSearchApp, ShuffleMCPHandle } from '@/Shuffle-MCPs';
 import { API_CONFIG } from '@/config/api';
 
 interface TicketingSystemSearchProps {
@@ -22,7 +22,7 @@ export const TicketingSystemSearch = ({
   searchQuery,
   onSearchQueryChange,
 }: TicketingSystemSearchProps) => {
-  const singulRef = useRef<SingulJSHandle>(null);
+  const singulRef = useRef<ShuffleMCPHandle>(null);
 
   const mainCategories = [
     { id: 'email', label: 'Email', icon: Mail, description: 'Inboxes & mail servers', searchTerm: 'email' },
@@ -172,7 +172,7 @@ export const TicketingSystemSearch = ({
         </Typography>
       </Box>
 
-      <SingulJS
+      <ShuffleMCP
         ref={singulRef}
         authToken="demo-token"
         apiKey={API_CONFIG.apiKey || undefined}
