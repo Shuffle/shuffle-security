@@ -173,14 +173,14 @@ const generateOnboardingWorkflows = async (): Promise<void> => {
   for (const label of ingestLabels) {
     if (label === INGEST_TICKETS_LABEL) {
       // Demo: generate with NO apps so we never touch the user's integrations.
-      tasks.push(generateWorkflow(label, [], 'cases', { allowEmpty: true }));
+      tasks.push(generateWorkflow({ label, enabledAppNames: [], category: 'cases', allowEmpty: true }));
     } else {
       // Webhook variant + anything else keeps original behavior.
-      tasks.push(generateWorkflow(label, [], 'cases', { allowEmpty: true }));
+      tasks.push(generateWorkflow({ label, enabledAppNames: [], category: 'cases', allowEmpty: true }));
     }
   }
   for (const label of threatLabels) {
-    tasks.push(generateWorkflow(label, threatIntelAppNames, 'cases'));
+    tasks.push(generateWorkflow({ label, enabledAppNames: threatIntelAppNames, category: 'cases' }));
   }
   await Promise.allSettled(tasks);
 };
