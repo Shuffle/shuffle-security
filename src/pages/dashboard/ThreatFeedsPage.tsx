@@ -40,6 +40,7 @@ import { useIOCTypes } from '@/hooks/useIOCTypes';
 import { useEnrichmentStatus } from '@/hooks/useEnrichmentStatus';
 import { getDatastoreItem, setDatastoreItem, DATASTORE_CATEGORIES } from '@/services/datastore';
 import { toast } from 'sonner';
+import ThreatIntelAutomationBanner from '@/components/incidents/ThreatIntelAutomationBanner';
 
 // Datastore keys for onboarding config
 const ONBOARDING_CONFIG_CATEGORY = 'shuffle-security_onboarding';
