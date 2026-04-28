@@ -80,6 +80,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useDatastore } from '@/hooks/useDatastore';
 import { CorrelationRow, getEffectiveCorrelationCount, filterMeaningfulCorrelations, hasIocMatch } from '@/components/incidents/CorrelationRow';
+import CorrelationContextStrip from '@/components/incidents/CorrelationContextStrip';
 import { IocDetailsCard } from '@/components/incidents/IocDetailsCard';
 import { useAuth } from '@/context/AuthContext';
 import { useAppDetail } from '@/context/AppDetailContext';
@@ -4124,7 +4125,47 @@ const IncidentDetailPage = () => {
         const pillBorder = isIocPill ? 'hsl(var(--destructive) / 0.5)' : `${cfg.color}33`;
         const pillBgHover = isIocPill ? 'hsl(var(--destructive) / 0.14)' : `${cfg.color}1F`;
         const pillBorderHover = isIocPill ? 'hsl(var(--destructive) / 0.7)' : `${cfg.color}66`;
-        return (
+
+        // Sparse-correlation context strip: when this pill represents a
+        // correlation (or an observable that has correlations) and the set
+        // of *other* referenced incidents is small (≤2), surface the same
+        // recency + severity strip we render on the Correlations tab so the
+        // timeline is not just a "something happened" feed but a triage
+        // surface — relevance depends on more than just IOC flagging.
+        let sparseIncidentRefs: string[] = [];
+        if (item.kind === 'correlation-found' && pillObsKey) {
+          const corrEntry = obsCorrelations[pillObsKey];
+          if (corrEntry?.data?.length) {
+            const idsSet = new Set<string>();
+            corrEntry.data.forEach((c) => {
+              c.ref.forEach((r) => {
+                const [cat, key] = r.split('|');
+                if (cat !== 'shuffle-security_incidents' || !key) return;
+                if (id && key.toLowerCase() === id.toLowerCase()) return;
+                idsSet.add(key);
+              });
+            });
+            const ids = Array.from(idsSet);
+            if (ids.length > 0 && ids.length < 3) sparseIncidentRefs = ids;
+          }
+        } else if (item.kind === 'observable-added' && pillObsKey) {
+          const corrEntry = obsCorrelations[pillObsKey];
+          if (corrEntry?.data?.length) {
+            const idsSet = new Set<string>();
+            corrEntry.data.forEach((c) => {
+              c.ref.forEach((r) => {
+                const [cat, key] = r.split('|');
+                if (cat !== 'shuffle-security_incidents' || !key) return;
+                if (id && key.toLowerCase() === id.toLowerCase()) return;
+                idsSet.add(key);
+              });
+            });
+            const ids = Array.from(idsSet);
+            if (ids.length > 0 && ids.length < 3) sparseIncidentRefs = ids;
+          }
+        }
+
+        const pill = (
           <Box
             key={item.id}
             data-timeline-compact="true"
@@ -4301,6 +4342,26 @@ const IncidentDetailPage = () => {
             <Typography sx={{ fontSize: '0.65rem', color: 'text.disabled', ml: 'auto', pl: 1, whiteSpace: 'nowrap', flexShrink: 0 }}>
               {item.timestamp ? formatRelativeTime(item.timestamp) : ''}
             </Typography>
+          </Box>
+        );
+
+        if (sparseIncidentRefs.length === 0) return pill;
+        return (
+          <Box key={item.id} sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, minWidth: 0 }}>
+            {pill}
+            <Box
+              sx={{
+                ml: 3,
+                mr: 0.5,
+                px: 1.25,
+                py: 0.75,
+                borderRadius: 1.5,
+                border: `1px dashed ${pillBorder}`,
+                bgcolor: 'transparent',
+              }}
+            >
+              <CorrelationContextStrip incidentKeys={sparseIncidentRefs} compact />
+            </Box>
           </Box>
         );
       }
