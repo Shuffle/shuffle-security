@@ -563,7 +563,7 @@ export const enableLiveDemoEnvironment = (): LiveDemoEnvironmentResult => {
 
   // Stage C — poll `ioc_domain` until an indicator exists. Resolves false
   // on timeout so callers can fall back gracefully.
-  const indicatorReady = stageB.then(() => waitForFirstIndicatorDomain());
+  const indicatorReady = stageB.then(() => waitForFirstIndicatorUrl());
 
   const ready = stageB.then(() => undefined);
   return { ready, indicatorReady };
