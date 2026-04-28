@@ -448,6 +448,15 @@ const IncidentsPage = () => {
      if (hasDefender) markStepCompleted('add-outlook:defender');
    }, [demoActive, demoInjectedApps, markStepCompleted]);
 
+   // When demo mode is off, drop any stale injected apps so they don't keep
+   // appearing in the Ingest bar after cleanup (or in fresh sessions where
+   // localStorage still has leftovers from a prior demo run).
+   useEffect(() => {
+     if (!demoActive && demoInjectedApps.length > 0) {
+       setDemoInjectedApps([]);
+     }
+   }, [demoActive, demoInjectedApps.length]);
+
    // When the demo lands on a step that depends on the seeded incidents being
    // visible, make sure the user's current filters are not silently hiding
    // the demo data we just wrote into their org. We clear narrowing filters
@@ -2032,9 +2041,9 @@ const IncidentsPage = () => {
               </Typography>
               {/* Webhook counts as 1 of the 5 visible slots */}
               <WebhookIngestionButton webhook={webhookIngestion} onToggled={fetchIngestionApps} />
-              {/* Demo-injected apps (e.g. Outlook after fake auth) always render
-                  so the user sees the result of step 2 even while the tour is open. */}
-              {demoInjectedApps.map(app => (
+              {/* Demo-injected apps (e.g. Outlook after fake auth) only render
+                  while demo mode is active, so they vanish after cleanup. */}
+              {demoActive && demoInjectedApps.map(app => (
                 <IngestionSourceButton key={`demo-${app.name}`} app={app} onToggle={() => { /* no-op for demo apps */ }} incidentCount={0} />
               ))}
               {!isDemoTourActive && ingestionApps.slice(0, 3).map(app => (
