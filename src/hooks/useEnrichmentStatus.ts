@@ -159,9 +159,9 @@ export const useEnrichmentStatus = (
           body: JSON.stringify({ label: 'Enable Threat feeds_webhook' }),
         }),
       ]);
-      const ids = (await Promise.all([parseGenerateId(r1), parseGenerateId(r2)])).filter(
-        (x): x is string => !!x,
-      );
+      const threatFeedsId = await parseGenerateId(r1);
+      const webhookId = await parseGenerateId(r2);
+      const ids = [threatFeedsId, webhookId].filter((x): x is string => !!x);
       if (ids.length > 0) {
         await validateWorkflowIds(ids, 'enabled');
       } else {
@@ -169,30 +169,20 @@ export const useEnrichmentStatus = (
       }
 
       // Force-run "Enable Threat feeds" so ingestion starts immediately
-      // instead of waiting for the next scheduled tick.
-      try {
-        const wfRes = await fetch(getApiUrl('/api/v1/workflows'), {
-          credentials: 'include',
-          headers: { ...getAuthHeader() },
-        });
-        if (wfRes.ok) {
-          const data = await wfRes.json();
-          const workflows = Array.isArray(data) ? data : (data?.workflows || []);
-          const wf = workflows.find(
-            (w: { name?: string }) => w?.name === THREAT_FEEDS_WORKFLOW,
-          );
-          const wfId = (wf as { id?: string } | undefined)?.id;
-          if (wfId) {
-            await fetch(getApiUrl(`/api/v1/workflows/${wfId}/execute`), {
-              method: 'POST',
-              credentials: 'include',
-              headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
-              body: JSON.stringify({ execution_source: 'enrichment-enable', start: '' }),
-            });
-          }
+      // instead of waiting for the next scheduled tick. The first generate
+      // call returns the workflow id directly — no need to re-list every
+      // workflow in the org just to find it again.
+      if (threatFeedsId) {
+        try {
+          await fetch(getApiUrl(`/api/v1/workflows/${threatFeedsId}/execute`), {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+            body: JSON.stringify({ execution_source: 'enrichment-enable', start: '' }),
+          });
+        } catch (err) {
+          console.warn('[enrichment] force-run Enable Threat feeds failed', err);
         }
-      } catch (err) {
-        console.warn('[enrichment] force-run Enable Threat feeds failed', err);
       }
     } finally {
       setPendingAction(null);
