@@ -1051,14 +1051,16 @@ function useApi() {
 }
 
 // ============================================================================
-// Inlined: minimal toast (was `sonner`)
-// ============================================================================
+// Real sonner toast — visible UI feedback for success/error.
+import { toast as sonnerToast } from 'sonner';
 const toast = {
-  success: (msg: string, _opts?: { duration?: number }) => {
+  success: (msg: string, opts?: { duration?: number; description?: string }) => {
     if (typeof window !== 'undefined') console.info('[toast]', msg);
+    sonnerToast.success(msg, opts);
   },
-  error: (msg: string, _opts?: { duration?: number }) => {
+  error: (msg: string, opts?: { duration?: number; description?: string }) => {
     if (typeof window !== 'undefined') console.error('[toast]', msg);
+    sonnerToast.error(msg, opts);
   },
 };
 
