@@ -16,6 +16,7 @@ import { useEntityPreference } from '@/hooks/useEntityLabel';
 import { applyEntityTerminology } from '@/lib/entityTerminology';
 import { findIngestTicketsWorkflow, isWorkflowScheduleStopped } from '@/lib/ingestionDetection';
 import { getApiUrl, getAuthHeader } from '@/config/api';
+import { countDemoIncidents } from '@/services/demoMode';
 
 /** Returns the total number of incidents in the org's datastore. */
 const useIncidentCount = () => {
