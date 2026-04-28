@@ -2563,7 +2563,7 @@ function UsecasesPageInner() {
                 hasInterest={isSupport && interestNames.has(flow.label)}
                 canToggle={isAuthenticated && !!flow.automationLabel}
                 isAuthenticated={isAuthenticated}
-                onToggled={refetchWorkflows}
+                onToggled={handleUsecaseWorkflowGenerated}
                 onClick={() => setDrawerFlowId(flow.id)}
               />
             ))}
@@ -2650,7 +2650,7 @@ function UsecasesPageInner() {
                 isEnabled={drawerEnabled}
                 canToggle={drawerCanToggle}
                 isAuthenticated={isAuthenticated}
-                onToggled={refetchWorkflows}
+                onToggled={handleUsecaseWorkflowGenerated}
               />
             );
           })()}
