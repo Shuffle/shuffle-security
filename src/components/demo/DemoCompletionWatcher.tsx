@@ -267,6 +267,61 @@ export const DemoCompletionWatcher = () => {
     return () => window.clearInterval(id);
   }, [drawerOpen, step, markStepCompleted]);
 
+  // ─── correlations + cve-host-pivot: track tab clicks on the incident
+  // detail page. Both steps live entirely on the incident detail page so we
+  // do not yank the user away — we just spotlight the right tab and mark
+  // the sub-goal complete the moment they activate it.
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const stepId = TOUR_STEPS[step]?.id;
+    if (stepId !== 'correlations' && stepId !== 'cve-host-pivot') return;
+
+    const check = () => {
+      const corrTab = document.querySelector('[data-tour="incident-tab-correlations"]') as HTMLElement | null;
+      const obsTab = document.querySelector('[data-tour="incident-tab-observables"]') as HTMLElement | null;
+      if (corrTab?.getAttribute('data-active') === 'true') {
+        markStepCompleted('correlations:open-tab');
+      }
+      if (obsTab?.getAttribute('data-active') === 'true') {
+        markStepCompleted('cve-host-pivot:open-tab');
+      }
+    };
+    check();
+    const id = window.setInterval(check, 800);
+    return () => window.clearInterval(id);
+  }, [drawerOpen, step, markStepCompleted]);
+
+  // Listen for a correlation pivot click (optional sub-goal on step 6).
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const stepId = TOUR_STEPS[step]?.id;
+    if (stepId !== 'correlations') return;
+    const onClick = (e: Event) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      if (target.closest('[data-corr-key]')) {
+        markStepCompleted('correlations:pivot');
+      }
+    };
+    document.addEventListener('click', onClick, true);
+    return () => document.removeEventListener('click', onClick, true);
+  }, [drawerOpen, step, markStepCompleted]);
+
+  // Once Observables tab is open on step 7, auto-mark the CVE + host
+  // discovery sub-goals after a short reading pause. They are optional, so
+  // this is purely cosmetic — but it keeps the goal list feeling alive.
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const stepId = TOUR_STEPS[step]?.id;
+    if (stepId !== 'cve-host-pivot') return;
+    if (!completedSteps['cve-host-pivot:open-tab']) return;
+    const id = window.setTimeout(() => {
+      markStepCompleted('cve-host-pivot:cve');
+      markStepCompleted('cve-host-pivot:host');
+    }, 2500);
+    return () => window.clearTimeout(id);
+  }, [drawerOpen, step, completedSteps, markStepCompleted]);
+
   // ─── agent: at least one approval notification has been cleared ───────────
   // Snapshot the open approvals when the user lands on the step, then mark
   // complete the moment the count drops.
