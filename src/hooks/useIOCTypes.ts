@@ -192,14 +192,9 @@ export const useIOCTypes = () => {
     }
   }, [iocTypes]);
 
-  // Initialize defaults in datastore using bulk API
+  // Initialize defaults in datastore using the shared canonical helper.
   const initializeDefaults = useCallback(async () => {
-    const { setDatastoreItems, DATASTORE_CATEGORIES } = await import('@/services/datastore');
-    const dsItems = DEFAULT_IOC_TYPES.map(ioc => ({
-      key: ioc.name,
-      value: { ...ioc, enabled: ioc.enabled ?? DEFAULT_ENABLED_IOCS.has(ioc.name) },
-    }));
-    await setDatastoreItems(dsItems, DATASTORE_CATEGORIES.IOCS);
+    await seedDefaultIOCTypes();
     invalidate();
   }, [invalidate]);
 
