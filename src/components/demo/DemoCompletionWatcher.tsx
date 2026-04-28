@@ -150,7 +150,9 @@ export const DemoCompletionWatcher = () => {
 
     const targets: Array<{ goalId: string; selector: string }> = [
       { goalId: 'incident-detail:hover-title', selector: '[data-tour="incident-title"]' },
-      { goalId: 'incident-detail:hover-description', selector: '[data-tour="incident-description"]' },
+      // hover-description was intentionally removed — opening the Email
+      // Thread (a click, not a hover) is now the required action so the
+      // user actually sees the full thread details.
     ];
 
     // Direct hover on the page element. We attach listeners to whatever

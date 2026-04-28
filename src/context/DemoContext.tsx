@@ -171,13 +171,8 @@ export const TOUR_STEPS: TourStep[] = [
         targetSelector: '[data-tour="incident-title"]',
       },
       {
-        id: 'incident-detail:hover-description',
-        label: 'Notice the Description / Email body',
-        targetSelector: '[data-tour="incident-description"]',
-      },
-      {
         id: 'incident-detail:open-email-thread',
-        label: 'Open the Email Thread to read the full message',
+        label: 'Click the Email Thread header to expand the full message',
         targetSelector: '[data-tour="incident-email-thread"]',
       },
       {
