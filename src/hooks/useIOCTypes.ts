@@ -168,6 +168,33 @@ const fetchIOCTypes = async (): Promise<IOCType[]> => {
   return DEFAULT_IOC_TYPES;
 };
 
+/**
+ * Canonical IOC Types defaults seeder. SINGLE source of truth — used by:
+ *   - The IOC Types page reset button (via the hook's initializeDefaults).
+ *   - lib/initDefaults.ts (auto-init on /incidents load).
+ *   - The demo-mode live environment bootstrap.
+ *
+ * Writes the curated DEFAULT_IOC_TYPES into the datastore using the bulk
+ * API. Caller is responsible for deciding *whether* to call this — this
+ * helper unconditionally writes (it is what "Reset to Defaults" needs).
+ *
+ * Returns true on success, false on failure.
+ */
+export const seedDefaultIOCTypes = async (): Promise<boolean> => {
+  try {
+    const { setDatastoreItems, DATASTORE_CATEGORIES } = await import('@/services/datastore');
+    const dsItems = DEFAULT_IOC_TYPES.map(ioc => ({
+      key: ioc.name,
+      value: { ...ioc, enabled: ioc.enabled ?? DEFAULT_ENABLED_IOCS.has(ioc.name) },
+    }));
+    const res = await setDatastoreItems(dsItems, DATASTORE_CATEGORIES.IOCS);
+    return !!res?.success;
+  } catch (err) {
+    console.warn('[seedDefaultIOCTypes] failed', err);
+    return false;
+  }
+};
+
 export const useIOCTypes = () => {
   const queryClient = useQueryClient();
 
