@@ -195,15 +195,15 @@ export const TOUR_STEPS: TourStep[] = [
   },
   {
     id: 'correlations',
-    title: 'Correlate the two incidents',
-    body: 'The phishing email and the Sliver C2 detection share the same lure URL and attacker IP. Open the Correlations tab to see how Shuffle automatically linked them.',
+    title: 'Critical: same URL, two incidents',
+    body: 'The exact lure URL Sarah Chen clicked in the phishing email is the same URL the Sliver C2 implant on FIN-LAPTOP-04 is now beaconing to. That is not a coincidence — it is a confirmed compromise. Open Correlations and pivot through the URL to the Wazuh incident.',
     bullets: [
       'Open the Correlations tab',
-      'Notice the shared URL and IP — that is the pivot point',
-      'Click through to jump between the two related incidents',
+      'Find the red "Known IOC" row keyed by the lure URL',
+      'Click the linked Sliver C2 incident chip to pivot',
     ],
     requirement: {
-      label: 'Open the Correlations tab and inspect the shared URL',
+      label: 'Pivot through the shared URL to the Sliver C2 incident',
       targetSelector: '[data-tour="incident-tab-correlations"]',
     },
     subGoals: [
@@ -214,9 +214,8 @@ export const TOUR_STEPS: TourStep[] = [
       },
       {
         id: 'correlations:pivot',
-        label: 'Click a correlation to pivot to the related incident',
-        targetSelector: '[data-corr-key]',
-        optional: true,
+        label: 'Click the URL correlation linking to the Sliver C2 incident',
+        targetSelector: '[data-corr-key^="http"]',
       },
     ],
   },
