@@ -595,7 +595,7 @@ const IncidentDetailPage = () => {
   const lastKeystrokeRef = useRef<number>(0);
   const [showThreatIntelDrawer, setShowThreatIntelDrawer] = useState(false);
   const [showForwardAppsDrawer, setShowForwardAppsDrawer] = useState(false);
-  const [newObservableType, setNewObservableType] = useState('ip');
+  const [newObservableType, setNewObservableType] = useState('ipv4');
   const [newObservableValue, setNewObservableValue] = useState('');
   const [obsFilterTypes, setObsFilterTypes] = useState<string[]>([]);
   const [obsFilterText, setObsFilterText] = useState('');

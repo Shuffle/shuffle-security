@@ -130,7 +130,7 @@ export const CreateIncidentDialog = ({ open, onClose, onSubmit }: CreateIncident
   const [references, setReferences] = useState<string[]>([]);
   const [newReference, setNewReference] = useState('');
   const [observables, setObservables] = useState<Observable[]>([]);
-  const [newObservableType, setNewObservableType] = useState('ip');
+  const [newObservableType, setNewObservableType] = useState('ipv4');
   const [newObservableValue, setNewObservableValue] = useState('');
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, string | number | boolean>>({});
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
@@ -265,7 +265,7 @@ export const CreateIncidentDialog = ({ open, onClose, onSubmit }: CreateIncident
     setReferences([]);
     setNewReference('');
     setObservables([]);
-    setNewObservableType('ip');
+    setNewObservableType('ipv4');
     setNewObservableValue('');
     setCustomFieldValues({});
     setSelectedTemplateId('');
