@@ -494,18 +494,32 @@ const ThreatFeedsPage = () => {
                 ))}
                 {filteredFeeds.length === 0 && !isLoading && !isInitializing && (
                   <TableRow>
-                    <TableCell colSpan={6} sx={{ textAlign: 'center', py: 4 }}>
-                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                        {searchQuery ? 'No feeds match your search' : 'No threat feeds configured'}
-                      </Typography>
-                      {!searchQuery && (
-                        <Button 
-                          variant="text" 
-                          onClick={initializeDefaults} 
-                          sx={{ mt: 1 }}
-                        >
-                          Load default feeds
-                        </Button>
+                    <TableCell colSpan={6} sx={{ textAlign: 'center', py: 6 }}>
+                      {searchQuery ? (
+                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                          No feeds match your search
+                        </Typography>
+                      ) : (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                          <RssFeedIcon sx={{ fontSize: 40, color: 'hsl(var(--primary) / 0.5)' }} />
+                          <Box sx={{ textAlign: 'center' }}>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 0.5 }}>
+                              No threat feeds configured
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: 'text.secondary', maxWidth: 480 }}>
+                              Load the curated default feed list and turn on automatic incident enrichment in one click.
+                            </Typography>
+                          </Box>
+                          <Button
+                            variant="contained"
+                            onClick={handleEnableThreatFeeds}
+                            disabled={isInitializing}
+                            startIcon={isInitializing ? <CircularProgress size={16} color="inherit" /> : <RssFeedIcon />}
+                            sx={{ height: 36, mt: 1 }}
+                          >
+                            Enable Threat Feeds
+                          </Button>
+                        </Box>
                       )}
                     </TableCell>
                   </TableRow>
