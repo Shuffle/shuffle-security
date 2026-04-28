@@ -2054,6 +2054,56 @@ function UsecaseDetailContent({
         </Box>
       </Box>
 
+      {(() => {
+        const linkedWorkflows = findWorkflowsForUsecase(flow, workflows);
+        if (linkedWorkflows.length === 0) return null;
+        return (
+          <Box sx={{ p: 3, borderRadius: 2, border: CARD_BORDER, bgcolor: CARD_BG, mb: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, gap: 2, flexWrap: 'wrap' }}>
+              <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                Linked Workflows ({linkedWorkflows.length})
+              </Typography>
+              <Typography sx={{ fontSize: '0.72rem', color: MUTED }}>
+                Matched on label "{flow.automationLabel}"
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {linkedWorkflows.map((wf) => (
+                <Box
+                  key={wf.id}
+                  component="a"
+                  href={`https://shuffler.io/workflows/${wf.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 2,
+                    p: 1.25,
+                    borderRadius: 1.5,
+                    border: CARD_BORDER,
+                    bgcolor: 'hsla(0, 0%, 60%, 0.03)',
+                    textDecoration: 'none',
+                    color: FG,
+                    transition: 'background-color 120ms ease',
+                    '&:hover': { bgcolor: 'hsla(24, 100%, 50%, 0.06)', borderColor: 'hsla(24, 100%, 50%, 0.3)' },
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, minWidth: 0 }}>
+                    <Zap size={14} style={{ color: PRIMARY, flexShrink: 0 }} />
+                    <Typography sx={{ fontSize: '0.85rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {wf.name || 'Untitled workflow'}
+                    </Typography>
+                  </Box>
+                  <ExternalLink size={13} style={{ color: MUTED, flexShrink: 0 }} />
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        );
+      })()}
+
       {(flow.referenceImage || flow.video || flow.blogpost) && (
         <Box sx={{ p: 3, borderRadius: 2, border: CARD_BORDER, bgcolor: CARD_BG, mb: 3 }}>
           <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', mb: 1.5 }}>
