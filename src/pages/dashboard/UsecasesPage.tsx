@@ -1633,8 +1633,8 @@ function UsecaseDetailContent({
   canToggle?: boolean;
   /** Whether the viewer is logged in — drives the guest CTA banner */
   isAuthenticated?: boolean;
-  /** Called after a successful toggle so the parent can refetch workflows */
-  onToggled?: () => void;
+  /** Called after successful generation so the parent can trust the requested workflow state */
+  onToggled?: (label: string, enabled: boolean) => void;
 }) {
   const navigate = useNavigate();
   const { apiUrl, authHeader } = useApi();
@@ -1679,8 +1679,7 @@ function UsecaseDetailContent({
       const ok = res.ok && body?.success !== false;
       if (!ok) throw new Error(reason || `Request failed (${res.status})`);
       toast.success(willBeEnabled ? `${flow.label} enabled` : `${flow.label} disabled`);
-      // Give the backend a moment to register the change before refetching.
-      setTimeout(() => onToggled?.(), 1500);
+      onToggled?.(flow.automationLabel, willBeEnabled);
       // Hard safety net in case the server never reflects the change.
       setTimeout(() => setOptimisticEnabled(null), 8000);
     } catch (err: any) {
@@ -2105,6 +2104,7 @@ function UsecasesPageInner() {
   const [showAllAsSupport, setShowAllAsSupport] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
   const routeParams = useParams<{ flowId?: string }>();
+  const [trustedWorkflowStates, setTrustedWorkflowStates] = useState<Record<string, boolean>>({});
 
   // Locally-remembered usecase interests — survive the not-logged-in →
   // logged-in transition (and pre-fill before the first /getinfo lands).
@@ -2192,7 +2192,7 @@ function UsecasesPageInner() {
 
   // Map: automationLabel -> whether at least one workflow exists for it.
   // Match by workflow name OR tag containing the label (case-insensitive).
-  const enabledLabels = useMemo(() => {
+  const workflowEnabledLabels = useMemo(() => {
     const set = new Set<string>();
     for (const wf of workflows) {
       const name = (wf.name || '').toLowerCase();
@@ -2207,6 +2207,35 @@ function UsecasesPageInner() {
     }
     return set;
   }, [workflows, usecases]);
+
+  useEffect(() => {
+    setTrustedWorkflowStates((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      for (const [label, desiredEnabled] of Object.entries(prev)) {
+        if (workflowEnabledLabels.has(label) === desiredEnabled) {
+          delete next[label];
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [workflowEnabledLabels]);
+
+  const enabledLabels = useMemo(() => {
+    const set = new Set(workflowEnabledLabels);
+    for (const [label, trustedEnabled] of Object.entries(trustedWorkflowStates)) {
+      if (trustedEnabled) set.add(label);
+      else set.delete(label);
+    }
+    return set;
+  }, [trustedWorkflowStates, workflowEnabledLabels]);
+
+  const handleUsecaseWorkflowGenerated = React.useCallback((label: string, enabled: boolean) => {
+    setTrustedWorkflowStates((prev) => ({ ...prev, [label]: enabled }));
+    window.setTimeout(() => { refetchWorkflows(); }, 3000);
+    window.setTimeout(() => { refetchWorkflows(); }, 8000);
+  }, [refetchWorkflows]);
 
   // Set of usecase names the user has shown interest in. Sourced from both
   // /getinfo `.interests` (server-side, multi-device) and localStorage
@@ -2534,7 +2563,7 @@ function UsecasesPageInner() {
                 hasInterest={isSupport && interestNames.has(flow.label)}
                 canToggle={isAuthenticated && !!flow.automationLabel}
                 isAuthenticated={isAuthenticated}
-                onToggled={refetchWorkflows}
+                onToggled={handleUsecaseWorkflowGenerated}
                 onClick={() => setDrawerFlowId(flow.id)}
               />
             ))}
@@ -2621,7 +2650,7 @@ function UsecasesPageInner() {
                 isEnabled={drawerEnabled}
                 canToggle={drawerCanToggle}
                 isAuthenticated={isAuthenticated}
-                onToggled={refetchWorkflows}
+                onToggled={handleUsecaseWorkflowGenerated}
               />
             );
           })()}
@@ -2650,7 +2679,7 @@ function UsecaseCard({
   hasInterest?: boolean;
   canToggle: boolean;
   isAuthenticated?: boolean;
-  onToggled?: () => void;
+  onToggled?: (label: string, enabled: boolean) => void;
   onClick: () => void;
 }) {
   const sourceCat = categoryLabel(flow.source);
@@ -2696,8 +2725,7 @@ function UsecaseCard({
         throw new Error(reason || `Request failed (${res.status})`);
       }
       toast.success(willBeEnabled ? `${flow.label} enabled` : `${flow.label} disabled`);
-      // Wait for the backend to register the change before refetching.
-      setTimeout(() => onToggled?.(), 1500);
+      onToggled?.(flow.automationLabel, willBeEnabled);
       // Hard safety net in case the server never reflects the change.
       setTimeout(() => setOptimisticEnabled(null), 8000);
     } catch (err: any) {
