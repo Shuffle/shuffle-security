@@ -1647,6 +1647,16 @@ function UsecaseDetailContent({
   // live "Enable" button for usecases that are not yet wired up server-side.
   const isComingSoon = !!flow && !ACTIVE_USECASE_IDS.includes(flow.id);
 
+  // Clear the optimistic flag only once the server-side `isEnabled` actually
+  // reflects the new value. Without this, a fast refetch that lands before the
+  // backend has finished deleting the workflow would briefly flip the button
+  // back to its prior state (e.g. Disable -> Enable -> Disable).
+  useEffect(() => {
+    if (optimisticEnabled !== null && optimisticEnabled === isEnabled) {
+      setOptimisticEnabled(null);
+    }
+  }, [isEnabled, optimisticEnabled]);
+
   const handleToggle = async () => {
     if (!flow?.automationLabel || toggling) return;
     const willBeEnabled = !effectiveEnabled;
@@ -1669,8 +1679,10 @@ function UsecaseDetailContent({
       const ok = res.ok && body?.success !== false;
       if (!ok) throw new Error(reason || `Request failed (${res.status})`);
       toast.success(willBeEnabled ? `${flow.label} enabled` : `${flow.label} disabled`);
-      onToggled?.();
-      setTimeout(() => setOptimisticEnabled(null), 1500);
+      // Give the backend a moment to register the change before refetching.
+      setTimeout(() => onToggled?.(), 1500);
+      // Hard safety net in case the server never reflects the change.
+      setTimeout(() => setOptimisticEnabled(null), 8000);
     } catch (err: any) {
       setOptimisticEnabled(null);
       toast.error(err?.message || 'Failed to update automation', { duration: 6000 });
@@ -2649,6 +2661,15 @@ function UsecaseCard({
   const effectiveEnabled = optimisticEnabled !== null ? optimisticEnabled : isEnabled;
   const { apiUrl, authHeader } = useApi();
 
+  // Clear optimistic state only once the server has caught up. Otherwise a
+  // refetch that lands before the backend finished the mutation will briefly
+  // flip the button back to its previous state.
+  useEffect(() => {
+    if (optimisticEnabled !== null && optimisticEnabled === isEnabled) {
+      setOptimisticEnabled(null);
+    }
+  }, [isEnabled, optimisticEnabled]);
+
   const handleToggle = async (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
@@ -2675,9 +2696,10 @@ function UsecaseCard({
         throw new Error(reason || `Request failed (${res.status})`);
       }
       toast.success(willBeEnabled ? `${flow.label} enabled` : `${flow.label} disabled`);
-      onToggled?.();
-      // Clear optimistic after a short delay so refetch can land
-      setTimeout(() => setOptimisticEnabled(null), 1500);
+      // Wait for the backend to register the change before refetching.
+      setTimeout(() => onToggled?.(), 1500);
+      // Hard safety net in case the server never reflects the change.
+      setTimeout(() => setOptimisticEnabled(null), 8000);
     } catch (err: any) {
       setOptimisticEnabled(null);
       const msg = err?.message || 'Failed to update automation';
