@@ -2032,9 +2032,9 @@ const IncidentsPage = () => {
               </Typography>
               {/* Webhook counts as 1 of the 5 visible slots */}
               <WebhookIngestionButton webhook={webhookIngestion} onToggled={fetchIngestionApps} />
-              {/* Demo-injected apps (e.g. Outlook after fake auth) always render
-                  so the user sees the result of step 2 even while the tour is open. */}
-              {demoInjectedApps.map(app => (
+              {/* Demo-injected apps (e.g. Outlook after fake auth) only render
+                  while demo mode is active, so they vanish after cleanup. */}
+              {demoActive && demoInjectedApps.map(app => (
                 <IngestionSourceButton key={`demo-${app.name}`} app={app} onToggle={() => { /* no-op for demo apps */ }} incidentCount={0} />
               ))}
               {!isDemoTourActive && ingestionApps.slice(0, 3).map(app => (
