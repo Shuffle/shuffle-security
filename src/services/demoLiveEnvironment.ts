@@ -528,16 +528,62 @@ const initAgentPermissionsDefaults = async (): Promise<void> => {
 };
 
 /**
- * Run the full live-environment bootstrap. Safe to call multiple times —
- * all sub-steps are idempotent. Resolves once everything has settled.
+ * Result of the live-environment bootstrap.
+ *
+ * `indicatorReady` resolves with `true` once at least one entry exists in
+ * `ioc_domain` (i.e. step 4 succeeded), `false` if we gave up. Callers
+ * that pick real IOCs (the incidents-list seeder) should `await` this
+ * promise so they do not fall back to the static pool unnecessarily.
  */
-export const enableLiveDemoEnvironment = async (): Promise<void> => {
-  await Promise.allSettled([
-    generateOnboardingWorkflows(),
-    initThreatFeedsDefaults(),
+export interface LiveDemoEnvironmentResult {
+  /** Resolves once Stage A + B + the independent tasks have settled. */
+  ready: Promise<void>;
+  /** Resolves true once `ioc_domain` has at least one entry, false on timeout. */
+  indicatorReady: Promise<boolean>;
+}
+
+/**
+ * Run the full live-environment bootstrap. Safe to call multiple times —
+ * all sub-steps are idempotent.
+ *
+ * Sequencing for the indicator pipeline (1 → 2 → 3 → 4):
+ *   - Stage A: IOC Types + Threat Feeds defaults in parallel.
+ *   - Stage B: execute the "Enable Threat feeds" workflow.
+ *   - Stage C: poll `ioc_domain` for the first indicator.
+ *
+ * Independent steps (workflow generation, monitor host, agents, agent
+ * permissions) run in parallel alongside Stage A so the bootstrap is
+ * still quick — they do not depend on the indicator pipeline.
+ *
+ * The Stage-C poll is exposed separately as `indicatorReady` so callers
+ * can await indicators *before* picking IOCs without forcing the whole
+ * UI to wait on it.
+ */
+export const enableLiveDemoEnvironment = (): LiveDemoEnvironmentResult => {
+  // Stage A — defaults that the workflow + indicator polling depend on.
+  const stageA = Promise.allSettled([
     initIOCTypesDefaults(),
+    initThreatFeedsDefaults(),
+  ]);
+
+  // Independent steps — fire alongside Stage A.
+  const independent = Promise.allSettled([
+    generateOnboardingWorkflows(),
     initDemoMonitorHost(),
     initDemoAgents(),
     initAgentPermissionsDefaults(),
   ]);
+
+  // Stage B — only run the Threat Feeds workflow once defaults are in place.
+  // generateOnboardingWorkflows (in `independent`) is what actually creates
+  // the "Enable Threat feeds" workflow row, so we wait on both before
+  // looking it up + executing it.
+  const stageB = Promise.all([stageA, independent]).then(() => runThreatFeedsWorkflow());
+
+  // Stage C — poll `ioc_domain` until an indicator exists. Resolves false
+  // on timeout so callers can fall back gracefully.
+  const indicatorReady = stageB.then(() => waitForFirstIndicatorDomain());
+
+  const ready = stageB.then(() => undefined);
+  return { ready, indicatorReady };
 };
