@@ -2105,6 +2105,7 @@ function UsecasesPageInner() {
   const [showAllAsSupport, setShowAllAsSupport] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
   const routeParams = useParams<{ flowId?: string }>();
+  const [trustedWorkflowStates, setTrustedWorkflowStates] = useState<Record<string, boolean>>({});
 
   // Locally-remembered usecase interests — survive the not-logged-in →
   // logged-in transition (and pre-fill before the first /getinfo lands).
@@ -2192,7 +2193,7 @@ function UsecasesPageInner() {
 
   // Map: automationLabel -> whether at least one workflow exists for it.
   // Match by workflow name OR tag containing the label (case-insensitive).
-  const enabledLabels = useMemo(() => {
+  const workflowEnabledLabels = useMemo(() => {
     const set = new Set<string>();
     for (const wf of workflows) {
       const name = (wf.name || '').toLowerCase();
@@ -2207,6 +2208,35 @@ function UsecasesPageInner() {
     }
     return set;
   }, [workflows, usecases]);
+
+  useEffect(() => {
+    setTrustedWorkflowStates((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      for (const [label, desiredEnabled] of Object.entries(prev)) {
+        if (workflowEnabledLabels.has(label) === desiredEnabled) {
+          delete next[label];
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [workflowEnabledLabels]);
+
+  const enabledLabels = useMemo(() => {
+    const set = new Set(workflowEnabledLabels);
+    for (const [label, trustedEnabled] of Object.entries(trustedWorkflowStates)) {
+      if (trustedEnabled) set.add(label);
+      else set.delete(label);
+    }
+    return set;
+  }, [trustedWorkflowStates, workflowEnabledLabels]);
+
+  const handleUsecaseWorkflowGenerated = React.useCallback((label: string, enabled: boolean) => {
+    setTrustedWorkflowStates((prev) => ({ ...prev, [label]: enabled }));
+    window.setTimeout(() => { refetchWorkflows(); }, 3000);
+    window.setTimeout(() => { refetchWorkflows(); }, 8000);
+  }, [refetchWorkflows]);
 
   // Set of usecase names the user has shown interest in. Sourced from both
   // /getinfo `.interests` (server-side, multi-device) and localStorage
