@@ -128,13 +128,13 @@ export const DEFAULT_THREAT_FEEDS: ThreatFeed[] = [
  */
 export const seedDefaultThreatFeeds = async (): Promise<boolean> => {
   try {
-    const { setDatastoreItems, DATASTORE_CATEGORIES } = await import('@/services/datastore');
-    const items = DEFAULT_THREAT_FEEDS.map(feed => ({
-      key: feed.id,
-      value: feed,
-    }));
-    const res = await setDatastoreItems(items, DATASTORE_CATEGORIES.THREAT_FEEDS);
-    return !!res?.success;
+    const { setDatastoreItem, DATASTORE_CATEGORIES } = await import('@/services/datastore');
+    const results = await Promise.all(
+      DEFAULT_THREAT_FEEDS.map(feed =>
+        setDatastoreItem(feed.id, feed, DATASTORE_CATEGORIES.THREAT_FEEDS),
+      ),
+    );
+    return results.every(res => !!res?.success);
   } catch (err) {
     console.warn('[seedDefaultThreatFeeds] failed', err);
     return false;
