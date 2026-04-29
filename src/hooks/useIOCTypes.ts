@@ -161,6 +161,22 @@ export const DEFAULT_IOC_TYPES: IOCType[] = [
   { name: 'other', description: 'Other indicator type', category: 'other' },
 ];
 
+const CANONICAL_REGEX_IOC_TYPES = new Set(['url', 'domain']);
+
+export const normalizeDefaultIOCType = (iocType: IOCType): IOCType => {
+  const defaultType = DEFAULT_IOC_TYPES.find(type => type.name === iocType.name);
+  if (!defaultType) return iocType;
+
+  const useCanonicalRegex = CANONICAL_REGEX_IOC_TYPES.has(iocType.name);
+  return {
+    ...defaultType,
+    ...iocType,
+    regex: useCanonicalRegex ? defaultType.regex : (iocType.regex ?? defaultType.regex),
+    enabled: iocType.enabled ?? defaultType.enabled ?? DEFAULT_ENABLED_IOCS.has(iocType.name),
+    needsPattern: useCanonicalRegex ? false : (iocType.needsPattern ?? defaultType.needsPattern),
+  };
+};
+
 const QUERY_KEY = ['iocTypes'];
 const STALE_TIME = 5 * 60 * 1000; // 5 minutes
 
@@ -174,9 +190,9 @@ const fetchIOCTypes = async (): Promise<IOCType[]> => {
         if (obj.regex && obj.regex.includes('\\\\')) {
           obj.regex = obj.regex.replace(/\\\\/g, '\\');
         }
-        return obj;
+        return normalizeDefaultIOCType({ ...obj, name: obj.name || item.key });
       } catch {
-        return { name: item.key, regex: item.value, description: '' } as IOCType;
+        return normalizeDefaultIOCType({ name: item.key, regex: item.value, description: '' } as IOCType);
       }
     });
   }
