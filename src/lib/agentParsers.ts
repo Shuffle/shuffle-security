@@ -58,15 +58,46 @@ export const isIncidentReference = (ref: DatastoreReference): boolean => {
 };
 
 /**
+ * Collect every string field from an agent run that might reference an incident.
+ * Includes execution_argument, every result.result, decisions, and the result blob.
+ */
+const collectRunText = (run: AgentRun): string => {
+  const parts: string[] = [];
+  if (typeof run.execution_argument === 'string') parts.push(run.execution_argument);
+  if (typeof run.result === 'string') parts.push(run.result);
+  if (Array.isArray(run.results)) {
+    for (const r of run.results) {
+      if (r && typeof r.result === 'string') parts.push(r.result);
+    }
+  }
+  if (Array.isArray(run.decisions)) {
+    for (const d of run.decisions) {
+      try { parts.push(JSON.stringify(d)); } catch { /* ignore */ }
+    }
+  }
+  return parts.join('\n');
+};
+
+/**
  * Get agent runs that reference a specific incident key.
+ * Matches via:
+ *   1) Datastore reference (Key: / Category:)
+ *   2) Bare occurrence of the incident key/uid anywhere in run text
+ *      (covers OCSF finding.uid, incident_id, embedded JSON, URLs, etc.)
  */
 export const getAgentRunsForIncident = (
   runs: AgentRun[],
   incidentKey: string
 ): AgentRun[] => {
+  if (!incidentKey) return [];
+  const needle = incidentKey.toLowerCase();
   return runs.filter((run) => {
     const ref = parseDatastoreReference(run);
-    return ref && isIncidentReference(ref) && ref.key === incidentKey;
+    if (ref && isIncidentReference(ref) && ref.key === incidentKey) return true;
+    // Fallback: substring match in any run text field
+    const haystack = collectRunText(run).toLowerCase();
+    if (!haystack) return false;
+    return haystack.includes(needle);
   });
 };
 
