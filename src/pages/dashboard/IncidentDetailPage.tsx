@@ -4058,7 +4058,8 @@ const IncidentDetailPage = () => {
         const run = item.data;
         const status = run.status?.toUpperCase() || '';
         const statusCfg = AGENT_STATUS_CONFIG[status];
-        const accent = getRunIconColor(run);
+        const skip = getAgentSkipInfo(run);
+        const accent = skip.skipped ? 'hsl(var(--muted-foreground))' : getRunIconColor(run);
         const title = getRunTitle(run);
         const duration = formatAgentRunDuration(run);
         const timeAgo = run.started_at ? getAgentTimeAgo(run.started_at) : '';
@@ -4074,8 +4075,11 @@ const IncidentDetailPage = () => {
               px: 1.25,
               py: 0.75,
               borderRadius: 1.5,
-              border: '1px solid hsl(var(--border))',
-              bgcolor: 'hsl(var(--card))',
+              border: skip.skipped
+                ? '1px dashed hsl(var(--border))'
+                : '1px solid hsl(var(--border))',
+              bgcolor: skip.skipped ? 'hsl(var(--muted) / 0.2)' : 'hsl(var(--card))',
+              opacity: skip.skipped ? 0.85 : 1,
               cursor: 'pointer',
               transition: 'border-color 0.15s ease, background-color 0.15s ease',
               '&:hover': {
@@ -4089,7 +4093,7 @@ const IncidentDetailPage = () => {
               sx={{
                 fontSize: '0.8125rem',
                 fontWeight: 500,
-                color: 'hsl(var(--foreground))',
+                color: skip.skipped ? 'hsl(var(--muted-foreground))' : 'hsl(var(--foreground))',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -4099,7 +4103,24 @@ const IncidentDetailPage = () => {
             >
               {title}
             </Typography>
-            {statusCfg && (
+            {skip.skipped ? (
+              <Tooltip title={skip.reason || 'A workflow condition prevented the AI Agent from running.'} arrow>
+                <Typography
+                  sx={{
+                    fontSize: '0.7rem',
+                    color: 'hsl(var(--muted-foreground))',
+                    flexShrink: 0,
+                    fontStyle: 'italic',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: 999,
+                    px: 0.75,
+                    py: 0.1,
+                  }}
+                >
+                  Skipped — agent did not run
+                </Typography>
+              </Tooltip>
+            ) : statusCfg && (
               <Typography sx={{ fontSize: '0.7rem', color: statusCfg.color, flexShrink: 0 }}>
                 {statusCfg.label}
               </Typography>
