@@ -2405,7 +2405,6 @@ const IncidentsPage = () => {
               )}
             </Box>
 
-            {incidents.length >= 3 && (
             <TextField
               size="small"
               placeholder="Filter"
@@ -2421,7 +2420,6 @@ const IncidentsPage = () => {
               }}
               sx={{ width: { xs: 100, sm: 140 }, minWidth: 0, flexShrink: 1 }}
       />
-            )}
 
       <AppSearchDrawer
         open={forwardAppSearchOpen}
@@ -2599,13 +2597,10 @@ const IncidentsPage = () => {
             <Typography variant="body2" sx={{ ml: 'auto', color: 'text.secondary', whiteSpace: 'nowrap' }}>
               {(() => {
                 const localCount = sortedIncidents.length;
-                const totalIncidents = incidents.length;
+                const totalIncidents = Math.max(incidents.length, totalAmount ?? 0);
                 const totalPages = Math.max(1, Math.ceil(localCount / ITEMS_PER_PAGE));
-                // Compare against the locally-known incident count, NOT the server's
-                // `total_amount` (that field counts ALL datastore items across every
-                // category, not just incidents — using it produced misleading
-                // counters like "1/17"). Show "X of Y" only when filters/search are
-                // actively narrowing below the full incident list.
+                // `amount` is the loaded page size; `total_amount` is the category
+                // total. Keep the UI honest when the API returns a partial page.
                 const isNarrowed = totalIncidents > localCount;
                 const countLabel = isNarrowed
                   ? `${localCount} of ${totalIncidents} incidents`
