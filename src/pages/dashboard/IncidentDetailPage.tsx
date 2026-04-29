@@ -580,6 +580,20 @@ const IncidentDetailPage = () => {
   // has not fired yet.
   const obsRefreshBaselineRef = useRef<number | null>(null);
   const obsRefreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Early-clear the comment loader as soon as the visible observable/
+  // enrichment count grows past the baseline captured at send time. The
+  // 7s scheduled refresh is still useful as a safety net, but we should
+  // not keep the spinner visible after enrichments have already landed.
+  const _obsCount = editedObservables.filter(o => !o.archived).length + enrichments.length;
+  useEffect(() => {
+    if (!refreshingObservables) return;
+    const baseline = obsRefreshBaselineRef.current;
+    if (baseline === null) return;
+    if (_obsCount > baseline) {
+      setRefreshingObservables(false);
+      obsRefreshBaselineRef.current = null;
+    }
+  }, [_obsCount, refreshingObservables]);
   // When an incident was just created (within the last 2 minutes) we keep the
   // observables area in a "loading" state so the user can see automated
   // enrichments stream in shortly after, instead of an empty list.
