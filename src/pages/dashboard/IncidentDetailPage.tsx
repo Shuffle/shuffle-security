@@ -5873,6 +5873,35 @@ const IncidentDetailPage = () => {
               )}
             </Menu>
 
+            <IncidentReportDialog
+              open={showReportDialog}
+              onClose={() => setShowReportDialog(false)}
+              overrideOrgId={crossOrgId || undefined}
+              generatedBy={currentUsername}
+              buildInput={(): GenerateReportInput => ({
+                incidentId: incident?.id || id || '',
+                title: editedTitle || incident?.title || 'Untitled incident',
+                description: editedMessage || '',
+                source: incident?.source,
+                severity: editedSeverity || incident?.severity,
+                status: editedStatus || incident?.status,
+                assignee: editedAssignee || incident?.assignee || null,
+                created: incident?.created,
+                edited: incident?.edited,
+                tlp: editedTlp || incident?.tlp,
+                pap: incident?.pap,
+                labels: editedLabels,
+                references: editedReferences,
+                customFields: editedCustomFields,
+                observables: editedObservables,
+                enrichments,
+                tasks: visibleTasks,
+                activity: activity as any,
+                agentRuns: (agentRuns || []) as any,
+                rawOCSF: incident?.rawOCSF,
+              })}
+            />
+
           </Box>
         </Box>
       </Box>
