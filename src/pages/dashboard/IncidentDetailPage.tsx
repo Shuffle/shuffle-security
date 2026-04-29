@@ -3747,13 +3747,14 @@ const IncidentDetailPage = () => {
           });
         }
       });
+      } // end isFilterActive('observables')
 
       // Incident-level correlations stay as their own pill (these are
       // shared-attribute matches across other incidents, not per-observable).
       // Per-observable correlations have moved inline onto the observable pill
       // itself so the user can see the match next to the indicator that
       // triggered it instead of as a separate timeline row.
-      if (correlationsDiscoveredAt && correlations.length > 0) {
+      if (isFilterActive('correlations') && correlationsDiscoveredAt && correlations.length > 0) {
         items.push({
           type: 'step',
           kind: 'correlation-found',
