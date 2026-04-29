@@ -47,9 +47,11 @@ export const useAgentActivity = (autoFetch = true) => {
     setIsLoading(true);
     setError(null);
     try {
+      // SKIPPED is a client-side pseudo-status; don't send it to the API
+      const apiStatus = statusFilter === 'SKIPPED' ? '' : statusFilter;
       const result = await searchAgentActivity({
         limit: 50,
-        status: statusFilter,
+        status: apiStatus,
         ...params,
       });
       if (result.success) {
