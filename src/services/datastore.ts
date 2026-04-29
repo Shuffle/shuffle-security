@@ -473,13 +473,58 @@ export const getDatastoreByCategory = async (
           ? 'data'
           : 'unknown';
     const items = Array.isArray(data) ? data : data.keys || data.data || [];
+    const totalAmount = data.total_amount ?? data.total ?? data.amount;
+
+    // Some Shuffle deployments can return `total_amount` for the category but
+    // only include the currently visible key from the org-scoped endpoint, with
+    // an empty cursor. When that happens, retry the non-org datastore endpoint
+    // before reporting a misleading "1 of N" state to the UI.
+    if (!data.cursor && typeof totalAmount === 'number' && Array.isArray(items) && totalAmount > items.length) {
+      try {
+        const fallbackTop = Math.max(limit, Math.min(totalAmount, 1000));
+        const fallbackUrl = getApiUrl(`/api/v1/datastore/list_cache?category=${encodeURIComponent(category)}&top=${fallbackTop}`);
+        const fallbackResponse = await fetch(fallbackUrl, {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'Org-Id': orgId,
+            ...getAuthHeader(),
+          },
+        });
+        if (fallbackResponse.ok) {
+          const fallbackData = await fallbackResponse.json();
+          const fallbackItems = Array.isArray(fallbackData) ? fallbackData : fallbackData.keys || fallbackData.data || [];
+          const fallbackTotal = fallbackData.total_amount ?? fallbackData.total ?? fallbackData.amount ?? totalAmount;
+          if (Array.isArray(fallbackItems) && fallbackItems.length > items.length) {
+            return {
+              success: true,
+              data: fallbackItems,
+              categoryConfig: fallbackData.category_config || data.category_config,
+              cursor: fallbackData.cursor,
+              totalAmount: fallbackTotal,
+              diagnostics: {
+                ...baseDiagnostics,
+                url: fallbackUrl,
+                status: fallbackResponse.status,
+                statusText: fallbackResponse.statusText,
+                contentType: fallbackResponse.headers.get('content-type'),
+                responseShape: Array.isArray(fallbackData) ? 'array' : Array.isArray(fallbackData?.keys) ? 'keys' : Array.isArray(fallbackData?.data) ? 'data' : 'unknown',
+                itemCount: fallbackItems.length,
+                totalAmount: fallbackTotal ?? null,
+              },
+            };
+          }
+        }
+      } catch { /* keep the org-scoped response if fallback is unavailable */ }
+    }
 
     return {
       success: true,
       data: items,
       categoryConfig: data.category_config,
       cursor: data.cursor,
-      totalAmount: data.total_amount,
+      totalAmount,
       diagnostics: {
         ...baseDiagnostics,
         status: response.status,
@@ -487,7 +532,7 @@ export const getDatastoreByCategory = async (
         contentType,
         responseShape,
         itemCount: Array.isArray(items) ? items.length : 0,
-        totalAmount: data.total_amount ?? null,
+        totalAmount: totalAmount ?? null,
       },
     };
   } catch (error) {
