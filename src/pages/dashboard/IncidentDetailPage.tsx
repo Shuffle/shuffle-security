@@ -132,6 +132,7 @@ import AgentActionDrawer from '@/components/agent/AgentActionDrawer';
 import { getRunTitle, getRunIconColor, formatDuration as formatAgentRunDuration, getTimeAgo as getAgentTimeAgo, STATUS_CONFIG as AGENT_STATUS_CONFIG } from '@/components/agent/AgentRunHeader';
 import { Zap as ZapIcon } from 'lucide-react';
 import type { AgentRun } from '@/services/agentActivity';
+import { getAgentSkipInfo } from '@/lib/agentParsers';
 import HighlightedFileEditor from '@/components/incidents/HighlightedFileEditor';
 import EmailThreadPanel, { isEmailContent } from '@/components/incidents/EmailThreadPanel';
 import { useEnrichmentStatus } from '@/hooks/useEnrichmentStatus';
@@ -3512,6 +3513,12 @@ const IncidentDetailPage = () => {
 
     if (activityFilter === 'all' || activityFilter === 'agent') {
       agentRuns.forEach((run) => {
+        // Skipped runs (workflow-level decision_string.success === false) are
+        // hidden from the unified timeline because the agent itself never ran —
+        // only the routing check did. They remain visible when the user
+        // explicitly filters by "Agent" so debugging skipped runs is possible.
+        const skip = getAgentSkipInfo(run);
+        if (skip.skipped && activityFilter !== 'agent') return;
         const ts = normalizeToMs(run.started_at);
         items.push({ type: 'agent', timestamp: ts, data: run });
       });
@@ -4051,7 +4058,8 @@ const IncidentDetailPage = () => {
         const run = item.data;
         const status = run.status?.toUpperCase() || '';
         const statusCfg = AGENT_STATUS_CONFIG[status];
-        const accent = getRunIconColor(run);
+        const skip = getAgentSkipInfo(run);
+        const accent = skip.skipped ? 'hsl(var(--muted-foreground))' : getRunIconColor(run);
         const title = getRunTitle(run);
         const duration = formatAgentRunDuration(run);
         const timeAgo = run.started_at ? getAgentTimeAgo(run.started_at) : '';
@@ -4067,8 +4075,11 @@ const IncidentDetailPage = () => {
               px: 1.25,
               py: 0.75,
               borderRadius: 1.5,
-              border: '1px solid hsl(var(--border))',
-              bgcolor: 'hsl(var(--card))',
+              border: skip.skipped
+                ? '1px dashed hsl(var(--border))'
+                : '1px solid hsl(var(--border))',
+              bgcolor: skip.skipped ? 'hsl(var(--muted) / 0.2)' : 'hsl(var(--card))',
+              opacity: skip.skipped ? 0.85 : 1,
               cursor: 'pointer',
               transition: 'border-color 0.15s ease, background-color 0.15s ease',
               '&:hover': {
@@ -4082,7 +4093,7 @@ const IncidentDetailPage = () => {
               sx={{
                 fontSize: '0.8125rem',
                 fontWeight: 500,
-                color: 'hsl(var(--foreground))',
+                color: skip.skipped ? 'hsl(var(--muted-foreground))' : 'hsl(var(--foreground))',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -4092,7 +4103,24 @@ const IncidentDetailPage = () => {
             >
               {title}
             </Typography>
-            {statusCfg && (
+            {skip.skipped ? (
+              <Tooltip title={skip.reason || 'A workflow condition prevented the AI Agent from running.'} arrow>
+                <Typography
+                  sx={{
+                    fontSize: '0.7rem',
+                    color: 'hsl(var(--muted-foreground))',
+                    flexShrink: 0,
+                    fontStyle: 'italic',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: 999,
+                    px: 0.75,
+                    py: 0.1,
+                  }}
+                >
+                  Skipped — agent did not run
+                </Typography>
+              </Tooltip>
+            ) : statusCfg && (
               <Typography sx={{ fontSize: '0.7rem', color: statusCfg.color, flexShrink: 0 }}>
                 {statusCfg.label}
               </Typography>

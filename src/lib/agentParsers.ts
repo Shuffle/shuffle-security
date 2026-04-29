@@ -102,6 +102,43 @@ export const getAgentRunsForIncident = (
 };
 
 /**
+ * Detect a "skipped" agent run — the workflow checked whether the agent
+ * should run but a branch condition rejected it (decision_string.success === false).
+ * The agent itself never executed; only the routing decision did.
+ */
+export interface AgentSkipInfo {
+  skipped: boolean;
+  reason?: string;
+}
+
+export const getAgentSkipInfo = (run: AgentRun): AgentSkipInfo => {
+  const tryParse = (s: unknown): any => {
+    if (!s || typeof s !== 'string') return null;
+    try { return JSON.parse(s); } catch { return null; }
+  };
+
+  const candidates: any[] = [];
+  const top = tryParse((run as any).result) ?? (run as any).result;
+  if (top && typeof top === 'object') candidates.push(top);
+  if (Array.isArray(run.results)) {
+    for (const r of run.results) {
+      const parsed = tryParse(r?.result);
+      if (parsed && typeof parsed === 'object') candidates.push(parsed);
+    }
+  }
+
+  for (const obj of candidates) {
+    const ds = obj?.decision_string;
+    if (ds && typeof ds === 'object' && ds.success === false) {
+      return {
+        skipped: true,
+        reason: typeof ds.reason === 'string' ? ds.reason : undefined,
+      };
+    }
+  }
+  return { skipped: false };
+};
+/**
  * Get the output text summary from an agent run result.
  */
 export const getAgentRunOutput = (run: AgentRun): string | null => {
