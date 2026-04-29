@@ -475,14 +475,16 @@ export const getDatastoreByCategory = async (
     const items = Array.isArray(data) ? data : data.keys || data.data || [];
     const totalAmount = data.total_amount ?? data.total ?? data.amount;
 
-    // Some Shuffle deployments can return `total_amount` for the category but
-    // only include the currently visible key from the org-scoped endpoint, with
-    // an empty cursor. When that happens, retry the non-org datastore endpoint
-    // before reporting a misleading "1 of N" state to the UI.
-    if (!data.cursor && typeof totalAmount === 'number' && Array.isArray(items) && totalAmount > items.length) {
+    // Some Shuffle deployments return `total_amount` for the category but
+    // only include a subset of items via the org-scoped endpoint (regardless
+    // of whether a cursor is present). When totalAmount > items.length, retry
+    // the non-org datastore endpoint to grab the full list before reporting a
+    // misleading "X of N" state to the UI.
+    if (typeof totalAmount === 'number' && Array.isArray(items) && totalAmount > items.length) {
       try {
-        const fallbackTop = Math.max(limit, Math.min(totalAmount, 1000));
+        const fallbackTop = Math.max(limit, Math.min(totalAmount * 2, 5000));
         const fallbackUrl = getApiUrl(`/api/v1/datastore/list_cache?category=${encodeURIComponent(category)}&top=${fallbackTop}`);
+        console.warn(`[Datastore] org-scoped returned ${items.length}/${totalAmount} for category=${category} — falling back to ${fallbackUrl}`);
         const fallbackResponse = await fetch(fallbackUrl, {
           method: 'GET',
           credentials: 'include',
@@ -496,6 +498,7 @@ export const getDatastoreByCategory = async (
           const fallbackData = await fallbackResponse.json();
           const fallbackItems = Array.isArray(fallbackData) ? fallbackData : fallbackData.keys || fallbackData.data || [];
           const fallbackTotal = fallbackData.total_amount ?? fallbackData.total ?? fallbackData.amount ?? totalAmount;
+          console.warn(`[Datastore] fallback returned ${fallbackItems.length} items (total_amount=${fallbackTotal})`);
           if (Array.isArray(fallbackItems) && fallbackItems.length > items.length) {
             return {
               success: true,
@@ -515,8 +518,10 @@ export const getDatastoreByCategory = async (
               },
             };
           }
+        } else {
+          console.warn(`[Datastore] fallback request failed status=${fallbackResponse.status}`);
         }
-      } catch { /* keep the org-scoped response if fallback is unavailable */ }
+      } catch (e) { console.warn('[Datastore] fallback threw', e); }
     }
 
     return {
