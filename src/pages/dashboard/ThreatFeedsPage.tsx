@@ -33,12 +33,9 @@ import SearchIcon from '@mui/icons-material/Search';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import RssFeedIcon from '@mui/icons-material/RssFeed';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { useThreatFeeds, ThreatFeed, DEFAULT_THREAT_FEEDS } from '@/hooks/useThreatFeeds';
 import { useIOCTypes } from '@/hooks/useIOCTypes';
 import { useEnrichmentStatus } from '@/hooks/useEnrichmentStatus';
-import { getDatastoreItem, setDatastoreItem, DATASTORE_CATEGORIES } from '@/services/datastore';
 import { toast } from 'sonner';
 import ThreatIntelAutomationBanner from '@/components/incidents/ThreatIntelAutomationBanner';
 
@@ -135,37 +132,11 @@ const ThreatFeedsPage = () => {
   const handleResetDefaults = async () => {
     setIsInitializing(true);
     try {
-      const {
-        deleteDatastoreItems,
-        getDatastoreByCategory,
-        DATASTORE_CATEGORIES: DSC,
-      } = await import('@/services/datastore');
-
-      // STEP 1 — Wipe the feed list. Fetch the canonical list straight from
-      // the datastore (paginated) so we delete EVERY existing key, including
-      // any stale entries not yet in React state.
-      const allKeys: string[] = [];
-      let cursor: string | undefined;
-      for (let i = 0; i < 50; i++) {
-        const page = await getDatastoreByCategory(DSC.THREAT_FEEDS, cursor);
-        const items = page?.data || [];
-        items.forEach(it => { if (it?.key) allKeys.push(it.key); });
-        if (!page?.cursor || items.length === 0) break;
-        cursor = page.cursor;
-      }
-      if (allKeys.length > 0) {
-        await deleteDatastoreItems(allKeys, DSC.THREAT_FEEDS);
-      }
-
-      // STEP 2 — Re-seed the curated defaults. This is the fast, user-visible
-      // result of "Reset to Defaults".
+      // Re-seed the curated defaults without deleting any existing datastore
+      // keys. Deletes on the threat-feed category can fan out into IOC cleanup
+      // automation, which is not part of resetting feed configuration.
       await initializeDefaults();
       toast.success(`Restored ${DEFAULT_THREAT_FEEDS.length} default threat feeds`);
-
-      // NOTE: We intentionally do NOT touch ingested IOCs or other threat-intel
-      // datastore categories here. "Reset to Defaults" only restores the feed
-      // list itself — wiping ingested intel caused the UI to flicker/crash and
-      // destroyed user data unexpectedly.
     } catch (err) {
       console.error('Failed to reset threat feeds:', err);
       toast.error('Failed to reset threat feeds');
@@ -239,7 +210,7 @@ const ThreatFeedsPage = () => {
             </IconButton>
           </Tooltip>
           {feeds.length > 0 && (
-            <Tooltip title="Remove all current feeds and restore the curated default list">
+            <Tooltip title="Restore the curated default feed list without removing existing threat intelligence">
               <span>
                 <Button 
                   variant="outlined" 

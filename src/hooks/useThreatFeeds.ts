@@ -119,22 +119,21 @@ export const DEFAULT_THREAT_FEEDS: ThreatFeed[] = [
  *     initializeDefaults).
  *   - The demo-mode live environment bootstrap.
  *
- * Writes the curated DEFAULT_THREAT_FEEDS into the datastore using the
- * bulk API. Caller is responsible for deciding *whether* to call this —
- * this helper unconditionally writes (it is what "Reset to Defaults"
- * needs).
+ * Writes the curated DEFAULT_THREAT_FEEDS into the datastore. Caller is
+ * responsible for deciding *whether* to call this — this helper
+ * unconditionally writes default feed keys without deleting existing data.
  *
  * Returns true on success, false on failure.
  */
 export const seedDefaultThreatFeeds = async (): Promise<boolean> => {
   try {
-    const { setDatastoreItems, DATASTORE_CATEGORIES } = await import('@/services/datastore');
-    const items = DEFAULT_THREAT_FEEDS.map(feed => ({
-      key: feed.id,
-      value: feed,
-    }));
-    const res = await setDatastoreItems(items, DATASTORE_CATEGORIES.THREAT_FEEDS);
-    return !!res?.success;
+    const { setDatastoreItem, DATASTORE_CATEGORIES } = await import('@/services/datastore');
+    const results = await Promise.all(
+      DEFAULT_THREAT_FEEDS.map(feed =>
+        setDatastoreItem(feed.id, feed, DATASTORE_CATEGORIES.THREAT_FEEDS),
+      ),
+    );
+    return results.every(res => !!res?.success);
   } catch (err) {
     console.warn('[seedDefaultThreatFeeds] failed', err);
     return false;
