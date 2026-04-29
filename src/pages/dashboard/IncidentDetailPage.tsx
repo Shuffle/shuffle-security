@@ -574,7 +574,26 @@ const IncidentDetailPage = () => {
   const [enrichments, setEnrichments] = useState<Array<{ type: string; value?: string; data?: string; first_seen?: string | number; last_seen?: string | number }>>([]);
   const [expandedObsKey, setExpandedObsKey] = useState<string | null>(null);
   const [refreshingObservables, setRefreshingObservables] = useState(false);
+  // Baseline observable+enrichment count captured when a comment is sent.
+  // Used to early-clear the "Running indicator check" loader as soon as
+  // new enrichments/observables show up — even if the scheduled 7s refresh
+  // has not fired yet.
+  const obsRefreshBaselineRef = useRef<number | null>(null);
   const obsRefreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Early-clear the comment loader as soon as the visible observable/
+  // enrichment count grows past the baseline captured at send time. The
+  // 7s scheduled refresh is still useful as a safety net, but we should
+  // not keep the spinner visible after enrichments have already landed.
+  const _obsCount = editedObservables.filter(o => !o.archived).length + enrichments.length;
+  useEffect(() => {
+    if (!refreshingObservables) return;
+    const baseline = obsRefreshBaselineRef.current;
+    if (baseline === null) return;
+    if (_obsCount > baseline) {
+      setRefreshingObservables(false);
+      obsRefreshBaselineRef.current = null;
+    }
+  }, [_obsCount, refreshingObservables]);
   // When an incident was just created (within the last 2 minutes) we keep the
   // observables area in a "loading" state so the user can see automated
   // enrichments stream in shortly after, instead of an empty list.
@@ -2709,6 +2728,8 @@ const IncidentDetailPage = () => {
     // Backend may extract IOCs from comment text and create enrichments
     if (obsRefreshTimerRef.current) clearTimeout(obsRefreshTimerRef.current);
     setRefreshingObservables(true);
+    obsRefreshBaselineRef.current =
+      editedObservables.filter(o => !o.archived).length + enrichments.length;
     const refreshId = Date.now();
     (obsRefreshTimerRef as any)._activeId = refreshId;
     // Hard wall-clock safety: force the spinner off after 20s even if the
