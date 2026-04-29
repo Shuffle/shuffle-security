@@ -141,5 +141,6 @@ export const useAgentActivity = (autoFetch = true) => {
     loadMore,
     refresh,
     fetchActivity,
+    skippedCount,
   };
 };
