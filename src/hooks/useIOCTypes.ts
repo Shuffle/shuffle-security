@@ -73,15 +73,13 @@ export const DEFAULT_IOC_TYPES: IOCType[] = [
   { name: 'url', regex: '^(?:https?:\\/\\/\\S+|[A-Za-z0-9][A-Za-z0-9.-]*\\.[A-Za-z]{2,24}[\\/?#]\\S*)$', description: 'URL (scheme optional when a path or query is present)', category: 'common', enabled: true },
   { name: 'ipv4', regex: '^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$', description: 'IPv4 address (STIX ipv4-addr)', category: 'common', enabled: true },
   { name: 'ipv6', regex: '^(?:[A-Fa-f0-9]{1,4}:){7}[A-Fa-f0-9]{1,4}$|^::1$|^::$|^(?:[A-Fa-f0-9]{1,4}:){1,7}:$|^(?:[A-Fa-f0-9]{1,4}:){1,6}:[A-Fa-f0-9]{1,4}$', description: 'IPv6 address (STIX ipv6-addr)', category: 'common', enabled: true },
-  // Domain regex: matches a FQDN, optionally embedded in a URL.
-  // URLs are intentionally ALSO matched as domains (a URL contains a domain),
-  // while bare domains do NOT match the URL type. Accepts:
-  //   - bare:           example.com
-  //   - with scheme:    https://example.com
-  //   - with path/qs:   example.com/path?x=1   or   https://example.com/path
-  // The hostname portion enforces FQDN structure (labels + TLD 2-24 alpha),
-  // and rejects common file extensions / reserved/dev TLDs at the host's TLD.
-  { name: 'domain', regex: '^(?:https?:\\/\\/)?(?=[A-Za-z0-9.-]{4,253}(?:[\\/?#:]|$))(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\\.)+(?!(?:data|html?|json|xml|css|jsx?|tsx?|mjs|cjs|yml|yaml|toml|log|tmp|bak|cfg|conf|env|lock|local|internal|example|invalid|test|localhost|md|txt|csv|tsv|png|jpe?g|gif|svg|webp|ico|pdf|docx?|xlsx?|pptx?|zip|tar|gz|tgz|bz2|xz|7z|rar|exe|dll|so|dylib|bin|app|dmg|iso|img|py|rb|go|rs|java|class|jar|sh|bash|zsh|fish|bat|ps1|cmd|ini|sql|db|sqlite|map|woff2?|ttf|otf|eot|mp[34]|wav|flac|ogg|webm|mkv|mov|avi|wmv)(?:[\\/?#:]|$))[a-zA-Z]{2,24}(?:[\\/?#:]\\S+)?$', description: 'Domain name (FQDN — also matches URLs since a URL contains a domain)', category: 'common', enabled: true },
+  // Domain regex: matches ONLY a bare FQDN — no scheme, no path, no query,
+  // no trailing slash. URLs are matched by the `url` type, not here.
+  // Accepts:    example.com, sub.example.co.uk
+  // Rejects:    https://example.com, example.com/, example.com/path
+  // The hostname enforces FQDN structure (labels + TLD 2-24 alpha) and
+  // rejects common file extensions / reserved/dev TLDs at the host's TLD.
+  { name: 'domain', regex: '^(?=[A-Za-z0-9.-]{4,253}$)(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\\.)+(?!(?:data|html?|json|xml|css|jsx?|tsx?|mjs|cjs|yml|yaml|toml|log|tmp|bak|cfg|conf|env|lock|local|internal|example|invalid|test|localhost|md|txt|csv|tsv|png|jpe?g|gif|svg|webp|ico|pdf|docx?|xlsx?|pptx?|zip|tar|gz|tgz|bz2|xz|7z|rar|exe|dll|so|dylib|bin|app|dmg|iso|img|py|rb|go|rs|java|class|jar|sh|bash|zsh|fish|bat|ps1|cmd|ini|sql|db|sqlite|map|woff2?|ttf|otf|eot|mp[34]|wav|flac|ogg|webm|mkv|mov|avi|wmv)$)[a-zA-Z]{2,24}$', description: 'Bare domain name (FQDN only — no scheme, path, or trailing slash)', category: 'common', enabled: true },
   { name: 'email', regex: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$', description: 'Email address', category: 'common', enabled: true },
   { name: 'hash_md5', regex: '^[a-fA-F0-9]{32}$', description: 'MD5 hash (32 hex chars)', category: 'common', enabled: true },
   { name: 'hash_sha256', regex: '^[a-fA-F0-9]{64}$', description: 'SHA256 hash (64 hex chars)', category: 'common', enabled: true },
