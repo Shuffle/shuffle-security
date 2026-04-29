@@ -7924,6 +7924,13 @@ const IncidentDetailPage = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Agent execution drawer — opened when clicking an agent row in the timeline */}
+      <AgentActionDrawer
+        open={!!selectedAgentRun}
+        onClose={() => setSelectedAgentRun(null)}
+        run={selectedAgentRun}
+      />
     </motion.div>
   );
 };
