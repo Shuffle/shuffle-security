@@ -5697,6 +5697,16 @@ const IncidentDetailPage = () => {
                 <TaskAltIcon sx={{ fontSize: 16, mr: 1 }} />
                 Simple view
               </MenuItem>
+              {/* Generate Report */}
+              <MenuItem
+                onClick={() => {
+                  setActionsMenuAnchor(null);
+                  setShowReportDialog(true);
+                }}
+              >
+                <DescriptionIcon sx={{ fontSize: 16, mr: 1 }} />
+                Generate Report
+              </MenuItem>
               {/* Visit Source */}
               <MenuItem disabled>
                 <LinkIcon sx={{ fontSize: 16, mr: 1 }} />
