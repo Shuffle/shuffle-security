@@ -2759,13 +2759,11 @@ const IncidentsPage = () => {
         </CardContent>
       </Card>
 
-      {/* Card View with Stats — collapses to a single full-width column when
-          the stats sidebar is hidden (under the same `incidents.length >= 3`
-          gate as the sidebar itself) so cards fill the available space. */}
+      {/* Card View with Stats */}
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: incidents.length >= 3 ? { xs: '1fr', lg: '1fr 320px' } : '1fr',
+          gridTemplateColumns: { xs: '1fr', lg: '1fr 320px' },
           gap: 3,
           alignItems: 'start',
         }}
@@ -2838,10 +2836,7 @@ const IncidentsPage = () => {
           )}
         </Box>
         
-        {/* Stats sidebar — sticky on desktop. Hidden until the user has a few
-            incidents so a brand-new tenant is not greeted by empty charts and
-            zeroed-out stat cards (less weird stuff to focus on upfront). */}
-        {incidents.length >= 3 && (
+        {/* Stats sidebar — sticky on desktop. */}
         <Box sx={{ display: { xs: 'none', lg: 'block' }, position: 'sticky', top: 72, alignSelf: 'start', maxHeight: 'calc(100vh - 96px)', overflowY: 'auto', order: { xs: -1, lg: 0 } }}>
           {/* Date range filter */}
           {/* Date range filter */}
@@ -3014,7 +3009,6 @@ const IncidentsPage = () => {
             </Box>
           )}
         </Box>
-        )}
       </Box>
 
       <CreateIncidentDialog
