@@ -71,7 +71,7 @@ export const DEFAULT_IOC_TYPES: IOCType[] = [
   // delimiter trailing characters (including ?, =, &, #, %, .) so URLs
   // with query strings and fragments are matched without swallowing the JSON,
   // HTML, or CSV content around them.
-  { name: 'url', regex: '^(?:https?:\\/\\/[^\\\\s"\'<>\\\\{\\\\}\\\\[\\\\]]+|[A-Za-z0-9][A-Za-z0-9.-]*\\.[A-Za-z]{2,24}[\\/?#][^\\\\s"\'<>\\\\{\\\\}\\\\[\\\\]]*)$', description: 'URL (scheme optional when a path or query is present)', category: 'common', enabled: true },
+  { name: 'url', regex: '^(?:https?:\\/\\/[^\\s"\'<>\\{\\}\\[\\]]+|[A-Za-z0-9][A-Za-z0-9.-]*\\.[A-Za-z]{2,24}[\\/?#][^\\s"\'<>\\{\\}\\[\\]]*)$', description: 'URL (scheme optional when a path or query is present)', category: 'common', enabled: true },
   { name: 'ipv4', regex: '^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$', description: 'IPv4 address (STIX ipv4-addr)', category: 'common', enabled: true },
   { name: 'ipv6', regex: '^(?:[A-Fa-f0-9]{1,4}:){7}[A-Fa-f0-9]{1,4}$|^::1$|^::$|^(?:[A-Fa-f0-9]{1,4}:){1,7}:$|^(?:[A-Fa-f0-9]{1,4}:){1,6}:[A-Fa-f0-9]{1,4}$', description: 'IPv6 address (STIX ipv6-addr)', category: 'common', enabled: true },
   // Domain regex: matches ONLY a bare FQDN — no scheme, no path, no query,
