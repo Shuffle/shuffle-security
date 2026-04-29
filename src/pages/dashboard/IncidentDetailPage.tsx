@@ -3601,7 +3601,7 @@ const IncidentDetailPage = () => {
         taskStatuses.find((s) => s.key === key)?.label
         || (key === 'done' ? 'Done' : key.replace(/[_-]+/g, ' '));
 
-      tasks.filter(t => !t.disabled).forEach((t) => {
+      if (isFilterActive('tasks')) tasks.filter(t => !t.disabled).forEach((t) => {
         const createdTs = t.createdAt ? normalizeToMs(t.createdAt) : fallbackTs;
         if (createdTs > 0) {
           items.push({
