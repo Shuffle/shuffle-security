@@ -3549,7 +3549,10 @@ const IncidentDetailPage = () => {
     // "Incident created".
     if (revisions.length === 0 && incident?.createdTs) {
       const createdTs = normalizeToMs(incident.createdTs);
-      if (createdTs > 0 && (activityFilter === 'all' || activityFilter === 'steps')) {
+      // The synthetic "Incident created" marker rides along with the
+      // Changes filter (since it conceptually represents the very first
+      // change to the incident).
+      if (createdTs > 0 && isFilterActive('revisions')) {
         const sourceLabel = incident.source ? ` from ${incident.source}` : '';
         items.push({
           type: 'step',
@@ -3562,20 +3565,22 @@ const IncidentDetailPage = () => {
       }
     }
 
-    if (activityFilter === 'all' || activityFilter === 'agent') {
+    if (isFilterActive('agent')) {
+      // Skipped runs (workflow-level decision_string.success === false) are
+      // hidden from the unified timeline by default because the agent itself
+      // never ran — only the routing check did. They become visible when the
+      // user has narrowed the timeline to *only* the Agent filter so
+      // debugging skipped runs is still possible.
+      const onlyAgent = activeTimelineFilters.size === 1 && activeTimelineFilters.has('agent');
       agentRuns.forEach((run) => {
-        // Skipped runs (workflow-level decision_string.success === false) are
-        // hidden from the unified timeline because the agent itself never ran —
-        // only the routing check did. They remain visible when the user
-        // explicitly filters by "Agent" so debugging skipped runs is possible.
         const skip = getAgentSkipInfo(run);
-        if (skip.skipped && activityFilter !== 'agent') return;
+        if (skip.skipped && !onlyAgent) return;
         const ts = normalizeToMs(run.started_at);
         items.push({ type: 'agent', timestamp: ts, data: run });
       });
     }
 
-    if (activityFilter === 'all' || activityFilter === 'manual') {
+    if (isFilterActive('manual')) {
       activity.forEach((item) => {
         items.push({ type: 'manual', timestamp: normalizeToMs(item.timestamp), data: item });
       });
@@ -3584,16 +3589,10 @@ const IncidentDetailPage = () => {
     // ── Step injection ─────────────────────────────────────────────────────
     // Render Tasks, Observables and Correlations as small "step" markers in
     // the timeline so users can see *when* each artefact appeared. These are
-    // injected purely on the frontend — no persistence needed.
-    //
-    // Timestamp sources:
-    //   • Tasks → `createdAt` (and `completedAt` for completion steps).
-    //     Falls back to incident creation time if missing on legacy data.
-    //   • Observables (manual + enrichments) → `first_seen` when present,
-    //     otherwise the incident creation time.
-    //   • Correlations → "discovered at" (when the correlations API returned
-    //     them); they have no native timestamp.
-    if (activityFilter === 'all' || activityFilter === 'steps') {
+    // injected purely on the frontend — no persistence needed. Each artefact
+    // type gates on its own filter so the user can hide e.g. observables
+    // without also hiding tasks.
+    if (isFilterActive('tasks') || isFilterActive('observables') || isFilterActive('correlations')) {
       const fallbackTs = incident?.createdTs ? normalizeToMs(incident.createdTs) : 0;
 
       // Tasks — creation, status transitions, and completion each produce
