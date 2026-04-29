@@ -164,6 +164,9 @@ const AgentRunHeader = ({ run, onClick, showChevron, isExpanded }: AgentRunHeade
         gap: 2,
         px: 2.5,
         py: 2,
+        ...(isSkipped && {
+          bgcolor: 'hsla(var(--muted) / 0.2)',
+        }),
         ...(onClick && {
           cursor: 'pointer',
           transition: 'background 0.15s ease',
@@ -184,6 +187,10 @@ const AgentRunHeader = ({ run, onClick, showChevron, isExpanded }: AgentRunHeade
         bgcolor: `${iconColor}15`,
         color: iconColor,
         flexShrink: 0,
+        ...(isSkipped && {
+          border: '1px dashed hsl(var(--border))',
+          bgcolor: 'transparent',
+        }),
       }}>
         {getRunIcon(run)}
       </Box>
@@ -194,14 +201,34 @@ const AgentRunHeader = ({ run, onClick, showChevron, isExpanded }: AgentRunHeade
           <Typography sx={{
             fontSize: '0.9rem',
             fontWeight: 500,
-            color: 'hsl(var(--foreground))',
+            color: isSkipped ? 'hsl(var(--muted-foreground))' : 'hsl(var(--foreground))',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
           }}>
             {getRunTitle(run)}
           </Typography>
-          {isUnsure ? (
+          {isSkipped ? (
+            <Tooltip title={skipInfo.reason || 'Workflow check determined the agent should not run'} arrow>
+              <Box sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 0.5,
+                px: 0.75,
+                py: 0.125,
+                borderRadius: 1,
+                border: '1px dashed hsl(var(--border))',
+                bgcolor: 'hsla(var(--muted) / 0.4)',
+                color: 'hsl(var(--muted-foreground))',
+                fontSize: '0.7rem',
+                fontWeight: 500,
+                lineHeight: 1.4,
+              }}>
+                <MinusCircle size={12} />
+                Skipped — agent did not run
+              </Box>
+            </Tooltip>
+          ) : isUnsure ? (
             <Box sx={{ display: 'flex', alignItems: 'center', color: 'hsl(var(--severity-medium))' }}>
               <HelpCircle size={16} />
             </Box>
@@ -212,7 +239,21 @@ const AgentRunHeader = ({ run, onClick, showChevron, isExpanded }: AgentRunHeade
           )}
         </Box>
 
-        {isFailed && failureInfo ? (
+        {isSkipped && skipInfo.reason ? (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.25 }}>
+            <Typography sx={{
+              fontSize: '0.78rem',
+              color: 'hsl(var(--muted-foreground))',
+              fontStyle: 'italic',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              maxWidth: 400,
+            }}>
+              {skipInfo.reason}
+            </Typography>
+          </Box>
+        ) : isFailed && failureInfo ? (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.25 }}>
             <AlertTriangle size={12} style={{ color: 'hsl(var(--severity-critical))', flexShrink: 0 }} />
             <Typography sx={{
