@@ -4995,7 +4995,16 @@ const IncidentDetailPage = () => {
       const showAgentProcessing = (aiHandled || hasPendingRerun || isManualActivity) && mentionsAgent && !hasAgentReply;
       const isTimedOut = showAgentProcessing && ageMs > AI_RESPONSE_TIMEOUT_MS;
 
-      if (replies.length === 0 && !showAgentProcessing) return node;
+      // Indicator-check pill: attaches under the most recent top-level manual
+      // comment whenever a backend indicator scan is running.
+      const showIndicatorCheck =
+        !isReply
+        && isManualActivity
+        && itemKey === latestManualKey
+        && refreshingObservables
+        && enrichmentStatus.active;
+
+      if (replies.length === 0 && !showAgentProcessing && !showIndicatorCheck) return node;
 
       const cappedDepth = Math.min(depth, 4);
       return (
@@ -5011,6 +5020,7 @@ const IncidentDetailPage = () => {
               gap: 1,
             }}
           >
+            {showIndicatorCheck && renderIndicatorCheckPlaceholder(itemKey)}
             {showAgentProcessing && renderAgentProcessingPlaceholder(
               itemKey,
               isTimedOut,
