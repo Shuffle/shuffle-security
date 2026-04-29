@@ -2405,7 +2405,6 @@ const IncidentsPage = () => {
               )}
             </Box>
 
-            {incidents.length >= 3 && (
             <TextField
               size="small"
               placeholder="Filter"
@@ -2421,7 +2420,6 @@ const IncidentsPage = () => {
               }}
               sx={{ width: { xs: 100, sm: 140 }, minWidth: 0, flexShrink: 1 }}
       />
-            )}
 
       <AppSearchDrawer
         open={forwardAppSearchOpen}
@@ -2599,13 +2597,10 @@ const IncidentsPage = () => {
             <Typography variant="body2" sx={{ ml: 'auto', color: 'text.secondary', whiteSpace: 'nowrap' }}>
               {(() => {
                 const localCount = sortedIncidents.length;
-                const totalIncidents = incidents.length;
+                const totalIncidents = Math.max(incidents.length, totalAmount ?? 0);
                 const totalPages = Math.max(1, Math.ceil(localCount / ITEMS_PER_PAGE));
-                // Compare against the locally-known incident count, NOT the server's
-                // `total_amount` (that field counts ALL datastore items across every
-                // category, not just incidents — using it produced misleading
-                // counters like "1/17"). Show "X of Y" only when filters/search are
-                // actively narrowing below the full incident list.
+                // `amount` is the loaded page size; `total_amount` is the category
+                // total. Keep the UI honest when the API returns a partial page.
                 const isNarrowed = totalIncidents > localCount;
                 const countLabel = isNarrowed
                   ? `${localCount} of ${totalIncidents} incidents`
@@ -2764,13 +2759,11 @@ const IncidentsPage = () => {
         </CardContent>
       </Card>
 
-      {/* Card View with Stats — collapses to a single full-width column when
-          the stats sidebar is hidden (under the same `incidents.length >= 3`
-          gate as the sidebar itself) so cards fill the available space. */}
+      {/* Card View with Stats */}
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: incidents.length >= 3 ? { xs: '1fr', lg: '1fr 320px' } : '1fr',
+          gridTemplateColumns: { xs: '1fr', lg: '1fr 320px' },
           gap: 3,
           alignItems: 'start',
         }}
@@ -2843,10 +2836,7 @@ const IncidentsPage = () => {
           )}
         </Box>
         
-        {/* Stats sidebar — sticky on desktop. Hidden until the user has a few
-            incidents so a brand-new tenant is not greeted by empty charts and
-            zeroed-out stat cards (less weird stuff to focus on upfront). */}
-        {incidents.length >= 3 && (
+        {/* Stats sidebar — sticky on desktop. */}
         <Box sx={{ display: { xs: 'none', lg: 'block' }, position: 'sticky', top: 72, alignSelf: 'start', maxHeight: 'calc(100vh - 96px)', overflowY: 'auto', order: { xs: -1, lg: 0 } }}>
           {/* Date range filter */}
           {/* Date range filter */}
@@ -3019,7 +3009,6 @@ const IncidentsPage = () => {
             </Box>
           )}
         </Box>
-        )}
       </Box>
 
       <CreateIncidentDialog
