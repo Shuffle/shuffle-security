@@ -142,12 +142,18 @@ interface AgentRunHeaderProps {
 }
 
 const AgentRunHeader = ({ run, onClick, showChevron, isExpanded }: AgentRunHeaderProps) => {
-  const statusCfg = STATUS_CONFIG[run.status?.toUpperCase() || ''] || STATUS_CONFIG.WAITING;
-  const iconColor = getRunIconColor(run);
+  const skipInfo = getAgentSkipInfo(run);
+  const isSkipped = skipInfo.skipped;
+  const skipColor = 'hsl(var(--muted-foreground))';
+  const baseStatusCfg = STATUS_CONFIG[run.status?.toUpperCase() || ''] || STATUS_CONFIG.WAITING;
+  const statusCfg = isSkipped
+    ? { icon: <MinusCircle size={16} />, color: skipColor, label: 'Skipped' }
+    : baseStatusCfg;
+  const iconColor = isSkipped ? skipColor : getRunIconColor(run);
   const duration = formatDuration(run);
-  const isFailed = run.status?.toUpperCase() === 'FAILED' || run.status?.toUpperCase() === 'ABORTED';
+  const isFailed = !isSkipped && (run.status?.toUpperCase() === 'FAILED' || run.status?.toUpperCase() === 'ABORTED');
   const failureInfo = isFailed ? getFailureInfo(run) : null;
-  const isUnsure = !isFailed && hasOutputWarning(run);
+  const isUnsure = !isSkipped && !isFailed && hasOutputWarning(run);
 
   return (
     <Box
