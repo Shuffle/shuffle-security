@@ -326,8 +326,8 @@ export const getDatastoreByCategory = async (
     };
   }
 
-  // Use higher limit for incidents, default 100 for others
-  const limit = 100;
+  // Use higher limit so single-page fetches return everything for typical orgs
+  const limit = 1000;
   let url = `/api/v1/orgs/${orgId}/list_cache?category=${encodeURIComponent(category)}&top=${limit}`;
   if (cursor) {
     url += `&cursor=${encodeURIComponent(cursor)}`;
