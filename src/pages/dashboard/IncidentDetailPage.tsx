@@ -4137,7 +4137,7 @@ const IncidentDetailPage = () => {
                 {timeAgo}
               </Typography>
             )}
-            <Box sx={{ position: 'absolute', top: 4, right: 4 }} onClick={(e) => e.stopPropagation()}>{replyButton}</Box>
+            
           </Box>
         );
       }
