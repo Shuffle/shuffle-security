@@ -641,6 +641,7 @@ export const DATASTORE_CATEGORIES = {
   THREAT_FEEDS: 'shuffle-security_threat-feeds',
   INFRASTRUCTURE: 'shuffle-security_infrastructure',
   USERS: 'shuffle-security_users',
+  REPORTS: 'shuffle-security_reports',
   // Legacy - for migration purposes
   LEGACY_ALERTS: 'shuffle-security_alerts',
   LEGACY_CASES: 'shuffle-security_cases',
