@@ -128,6 +128,10 @@ import { isAIAssignee, deduplicateTasks, htmlToPlainText, decodeHtmlEntities, de
 import { useIncidentAgentRuns } from '@/hooks/useIncidentAgentRuns';
 import { useSourceAppImage } from '@/hooks/useSourceAppImage';
 import AgentActivityFeed from '@/components/agent/AgentActivityFeed';
+import AgentActionDrawer from '@/components/agent/AgentActionDrawer';
+import { getRunTitle, getRunIconColor, formatDuration, getTimeAgo, STATUS_CONFIG } from '@/components/agent/AgentRunHeader';
+import { ChevronRight as ChevronRightIcon, Zap as ZapIcon } from 'lucide-react';
+import type { AgentRun } from '@/services/agentActivity';
 import HighlightedFileEditor from '@/components/incidents/HighlightedFileEditor';
 import EmailThreadPanel, { isEmailContent } from '@/components/incidents/EmailThreadPanel';
 import { useEnrichmentStatus } from '@/hooks/useEnrichmentStatus';
