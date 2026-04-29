@@ -62,7 +62,14 @@ export interface IOCType {
 // (and IPs embedded in URLs from being mistyped as domains).
 export const DEFAULT_IOC_TYPES: IOCType[] = [
   // === MOST COMMONLY USED ===
-  { name: 'url', regex: '^https?:\\/\\/[^\\s<>"\'`]+[^\\s<>"\'`.,;:!?)\\]}]$', description: 'Full URL', category: 'common', enabled: true },
+  // URL regex — accepts either:
+  //   1. Full URLs with scheme:  https?://host[/path...]
+  //   2. Schemeless URLs:        host.tld/path...   (must contain a dot AND a slash)
+  // Schemeless bare hostnames (no path) are intentionally NOT matched here —
+  // those fall through to the `domain` IOC type. Trailing punctuation is
+  // stripped via the negative final-char class so URLs at end of sentences
+  // do not capture the period/comma.
+  { name: 'url', regex: '^(?:https?:\\/\\/[^\\s<>"\'`]+|[A-Za-z0-9][A-Za-z0-9.-]*\\.[A-Za-z]{2,24}\\/[^\\s<>"\'`]*)[^\\s<>"\'`.,;:!?)\\]}]$|^(?:https?:\\/\\/[^\\s<>"\'`]+|[A-Za-z0-9][A-Za-z0-9.-]*\\.[A-Za-z]{2,24}\\/)$', description: 'URL (scheme optional when a path is present)', category: 'common', enabled: true },
   { name: 'ipv4', regex: '^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$', description: 'IPv4 address (STIX ipv4-addr)', category: 'common', enabled: true },
   { name: 'ipv6', regex: '^(?:[A-Fa-f0-9]{1,4}:){7}[A-Fa-f0-9]{1,4}$|^::1$|^::$|^(?:[A-Fa-f0-9]{1,4}:){1,7}:$|^(?:[A-Fa-f0-9]{1,4}:){1,6}:[A-Fa-f0-9]{1,4}$', description: 'IPv6 address (STIX ipv6-addr)', category: 'common', enabled: true },
   // Domain regex: enforces FQDN structure (1+ labels + TLD), total length 4-253,
