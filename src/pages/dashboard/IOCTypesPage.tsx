@@ -40,7 +40,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { useDatastore } from '@/hooks/useDatastore';
-import { DEFAULT_IOC_TYPES, IOCType, IOC_CATEGORIES, IOCCategory, DEFAULT_ENABLED_IOCS } from '@/hooks/useIOCTypes';
+import { DEFAULT_IOC_TYPES, IOCType, IOC_CATEGORIES, IOCCategory, DEFAULT_ENABLED_IOCS, normalizeDefaultIOCType } from '@/hooks/useIOCTypes';
 import { DATASTORE_CATEGORIES } from '@/services/datastore';
 import { toast } from 'sonner';
 import ThreatIntelAutomationBanner from '@/components/incidents/ThreatIntelAutomationBanner';
@@ -115,9 +115,9 @@ const IOCTypesPage = () => {
           console.warn(`[IOC] Fixing double-escaped regex for ${obj.name}: ${obj.regex}`);
           obj.regex = obj.regex.replace(/\\\\/g, '\\');
         }
-        return obj;
+        return normalizeDefaultIOCType({ ...obj, name: obj.name || item.key });
       } catch {
-        return { name: item.key, regex: item.value, description: '' };
+        return normalizeDefaultIOCType({ name: item.key, regex: item.value, description: '' });
       }
     });
     const visibleParsed = parsed.filter(type => !optimisticDeletes.current.has(type.name));
