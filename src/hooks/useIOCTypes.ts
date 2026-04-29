@@ -77,13 +77,12 @@ export const DEFAULT_IOC_TYPES: IOCType[] = [
   { name: 'url', regex: '(?:^|(?<=[^A-Za-z0-9._%+\\-]))(?:h(?:tt|xx)ps?(?:://|\\[://\\])|)[A-Za-z0-9](?:[A-Za-z0-9\\-]*[A-Za-z0-9])?(?:(?:\\.|\\[\\.\\]|\\(\\.\\))[A-Za-z0-9](?:[A-Za-z0-9\\-]*[A-Za-z0-9])?)*(?:\\.|\\[\\.\\]|\\(\\.\\))[A-Za-z]{2,24}(?:\\[?\\/\\]?|[?#])[^\\s"\'<>\\{\\}\\[\\],]*', description: 'URL — matches embedded URLs, including defanged forms (host[.]tld, hxxp://)', category: 'common', enabled: true },
   { name: 'ipv4', regex: '^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$', description: 'IPv4 address (STIX ipv4-addr)', category: 'common', enabled: true },
   { name: 'ipv6', regex: '^(?:[A-Fa-f0-9]{1,4}:){7}[A-Fa-f0-9]{1,4}$|^::1$|^::$|^(?:[A-Fa-f0-9]{1,4}:){1,7}:$|^(?:[A-Fa-f0-9]{1,4}:){1,6}:[A-Fa-f0-9]{1,4}$', description: 'IPv6 address (STIX ipv6-addr)', category: 'common', enabled: true },
-  // Domain regex: matches a bare FQDN embedded anywhere in text. NO scheme,
-  // NO path, NO query, NO trailing slash — those go through the `url` type.
-  // Supports defanged forms with `[.]` and `(.)` separators between labels.
-  // Lookbehind: must not be preceded by an alnum/dot (would be mid-hostname).
-  // Lookahead: must NOT be followed by `/`, `?`, `#`, or another label dot —
-  // those indicate a URL or a longer hostname.
-  { name: 'domain', regex: '(?:^|(?<=[^A-Za-z0-9._%+\\-\\[\\(]))(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.|\\[\\.\\]|\\(\\.\\)))+(?!(?:data|html?|json|xml|css|jsx?|tsx?|mjs|cjs|yml|yaml|toml|log|tmp|bak|cfg|conf|env|lock|local|internal|example|invalid|test|localhost|md|txt|csv|tsv|png|jpe?g|gif|svg|webp|ico|pdf|docx?|xlsx?|pptx?|zip|tar|gz|tgz|bz2|xz|7z|rar|exe|dll|so|dylib|bin|app|dmg|iso|img|py|rb|go|rs|java|class|jar|sh|bash|zsh|fish|bat|ps1|cmd|ini|sql|db|sqlite|map|woff2?|ttf|otf|eot|mp[34]|wav|flac|ogg|webm|mkv|mov|avi|wmv)(?:[^A-Za-z]|$))[a-zA-Z]{2,24}(?![A-Za-z0-9\\-]|\\.|\\[\\.\\]|\\(\\.\\)|[\\/?#])', description: 'Bare domain name (FQDN, supports defanged [.] and (.) — no scheme, path, or trailing slash)', category: 'common', enabled: true },
+  // Domain regex: extracts the bare FQDN (host portion) from a string. The
+  // domain may stand alone OR sit at the front of a URL — in both cases we
+  // want the bare host. Supports defanged forms (`[.]`, `(.)`). The trailing
+  // lookahead allows `/`, `?`, `#`, end-of-string, or any non-host char to
+  // follow, but rejects another hostname label so we capture the full host.
+  { name: 'domain', regex: '(?:^|(?<=[^A-Za-z0-9._%+\\-\\[\\(]))(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.|\\[\\.\\]|\\(\\.\\)))+(?!(?:data|html?|json|xml|css|jsx?|tsx?|mjs|cjs|yml|yaml|toml|log|tmp|bak|cfg|conf|env|lock|local|internal|example|invalid|test|localhost|md|txt|csv|tsv|png|jpe?g|gif|svg|webp|ico|pdf|docx?|xlsx?|pptx?|zip|tar|gz|tgz|bz2|xz|7z|rar|exe|dll|so|dylib|bin|app|dmg|iso|img|py|rb|go|rs|java|class|jar|sh|bash|zsh|fish|bat|ps1|cmd|ini|sql|db|sqlite|map|woff2?|ttf|otf|eot|mp[34]|wav|flac|ogg|webm|mkv|mov|avi|wmv)(?:[^A-Za-z]|$))[a-zA-Z]{2,24}(?![A-Za-z0-9\\-]|\\.[A-Za-z]|\\[\\.\\]|\\(\\.\\))', description: 'Domain / FQDN host (supports defanged forms; extracts host even when part of a URL)', category: 'common', enabled: true },
   { name: 'email', regex: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$', description: 'Email address', category: 'common', enabled: true },
   { name: 'hash_md5', regex: '^[a-fA-F0-9]{32}$', description: 'MD5 hash (32 hex chars)', category: 'common', enabled: true },
   { name: 'hash_sha256', regex: '^[a-fA-F0-9]{64}$', description: 'SHA256 hash (64 hex chars)', category: 'common', enabled: true },
