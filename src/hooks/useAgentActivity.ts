@@ -5,6 +5,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { searchAgentActivity, AgentRun, AgentActivityParams } from '@/services/agentActivity';
 import { runMatchesSearch } from '@/components/agent/AgentRunResultViewer';
+import { getAgentSkipInfo } from '@/lib/agentParsers';
 
 export interface AgentActivityStats {
   totalRuns: number;
@@ -46,9 +47,11 @@ export const useAgentActivity = (autoFetch = true) => {
     setIsLoading(true);
     setError(null);
     try {
+      // SKIPPED is a client-side pseudo-status; don't send it to the API
+      const apiStatus = statusFilter === 'SKIPPED' ? '' : statusFilter;
       const result = await searchAgentActivity({
         limit: 50,
-        status: statusFilter,
+        status: apiStatus,
         ...params,
       });
       if (result.success) {
@@ -98,11 +101,25 @@ export const useAgentActivity = (autoFetch = true) => {
       : 0,
   };
 
-  // Filter runs by debounced search query (searches through results too)
+  // Filter runs by skipped state and debounced search query
+  const skippedCount = useMemo(
+    () => runs.filter(r => getAgentSkipInfo(r).skipped).length,
+    [runs]
+  );
+
   const filteredRuns = useMemo(() => {
-    if (!debouncedQuery) return runs;
-    return runs.filter(r => runMatchesSearch(r, debouncedQuery));
-  }, [runs, debouncedQuery]);
+    let list = runs;
+    if (statusFilter === 'SKIPPED') {
+      list = list.filter(r => getAgentSkipInfo(r).skipped);
+    } else if (!statusFilter) {
+      // Default: hide skipped
+      list = list.filter(r => !getAgentSkipInfo(r).skipped);
+    }
+    if (debouncedQuery) {
+      list = list.filter(r => runMatchesSearch(r, debouncedQuery));
+    }
+    return list;
+  }, [runs, debouncedQuery, statusFilter]);
 
   useEffect(() => {
     if (autoFetch) {
@@ -124,5 +141,6 @@ export const useAgentActivity = (autoFetch = true) => {
     loadMore,
     refresh,
     fetchActivity,
+    skippedCount,
   };
 };

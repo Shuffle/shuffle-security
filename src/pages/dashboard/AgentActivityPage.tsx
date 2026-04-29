@@ -50,6 +50,7 @@ const AgentActivityPage = () => {
     setSearchQuery,
     loadMore,
     refresh,
+    skippedCount,
   } = useAgentActivity();
 
   const { enabledPermissions, totalPermissions } = useAgentPermissions();
@@ -243,6 +244,25 @@ const AgentActivityPage = () => {
                   }}
                 />
               ))}
+
+              {/* Skipped pseudo-filter — only render if there are any skipped runs */}
+              {skippedCount > 0 && (
+                <Chip
+                  label={`${skippedCount} Skipped`}
+                  size="small"
+                  variant={statusFilter === 'SKIPPED' ? 'filled' : 'outlined'}
+                  onClick={() => setStatusFilter(statusFilter === 'SKIPPED' ? '' : 'SKIPPED')}
+                  sx={{
+                    fontSize: '0.75rem',
+                    height: 28,
+                    borderStyle: 'dashed',
+                    borderColor: statusFilter === 'SKIPPED' ? 'hsl(var(--primary))' : 'hsl(var(--border))',
+                    bgcolor: statusFilter === 'SKIPPED' ? 'hsla(var(--primary) / 0.15)' : 'transparent',
+                    color: statusFilter === 'SKIPPED' ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
+                    '&:hover': { bgcolor: 'hsl(var(--muted))' },
+                  }}
+                />
+              )}
 
               {/* Inline loading indicator — visible when switching filters with existing results */}
               {isLoading && runs.length > 0 && (
