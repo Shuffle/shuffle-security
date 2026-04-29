@@ -5,6 +5,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { searchAgentActivity, AgentRun, AgentActivityParams } from '@/services/agentActivity';
 import { runMatchesSearch } from '@/components/agent/AgentRunResultViewer';
+import { getAgentSkipInfo } from '@/lib/agentParsers';
 
 export interface AgentActivityStats {
   totalRuns: number;
