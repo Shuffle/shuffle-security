@@ -4891,8 +4891,61 @@ const IncidentDetailPage = () => {
       </Box>
     );
 
+    // Standardised "indicator check running" pill — same shape/placement as the
+    // AI Agent processing pill so all in-flight loaders attach BELOW the
+    // message that triggered them instead of floating at the top of the feed.
+    const renderIndicatorCheckPlaceholder = (key: string) => (
+      <Box
+        key={`indicator-check-${key}`}
+        sx={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 0.75,
+          alignSelf: 'flex-start',
+          pl: 0.4,
+          pr: 1,
+          py: 0.4,
+          borderRadius: 999,
+          fontSize: '0.7rem',
+          background: 'rgba(255, 102, 0, 0.08)',
+          border: '1px solid rgba(255, 102, 0, 0.35)',
+          color: 'text.primary',
+          maxWidth: '100%',
+        }}
+      >
+        <Box
+          sx={{
+            width: 18,
+            height: 18,
+            borderRadius: '50%',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            background: 'rgba(0, 0, 0, 0.25)',
+          }}
+        >
+          <CircularProgress size={10} thickness={6} sx={{ color: '#ff6600' }} />
+        </Box>
+        <Typography
+          variant="caption"
+          sx={{ fontSize: '0.7rem', fontWeight: 500, color: 'inherit', lineHeight: 1 }}
+        >
+          Running indicator check on your message…
+        </Typography>
+      </Box>
+    );
 
-    // Recursively render an item plus any nested replies (and their replies).
+    // Identify the most recent top-level manual comment so the indicator-check
+    // pill attaches under the latest user message (which triggered the check).
+    const latestManualKey: string | null = (() => {
+      const manuals = topLevel.filter((it) => it.type === 'manual');
+      if (manuals.length === 0) return null;
+      const newest = manuals.reduce((a, b) => (a.timestamp >= b.timestamp ? a : b));
+      return getItemKey(newest);
+    })();
+
+
     // Depth controls the indent rail color/spacing — we cap visual indent at 4
     // levels so deeply-nested threads don't run off the side.
     const renderThread = (
