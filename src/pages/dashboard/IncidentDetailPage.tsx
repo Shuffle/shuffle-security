@@ -132,6 +132,7 @@ import AgentActionDrawer from '@/components/agent/AgentActionDrawer';
 import { getRunTitle, getRunIconColor, formatDuration as formatAgentRunDuration, getTimeAgo as getAgentTimeAgo, STATUS_CONFIG as AGENT_STATUS_CONFIG } from '@/components/agent/AgentRunHeader';
 import { Zap as ZapIcon } from 'lucide-react';
 import type { AgentRun } from '@/services/agentActivity';
+import { getAgentSkipInfo } from '@/lib/agentParsers';
 import HighlightedFileEditor from '@/components/incidents/HighlightedFileEditor';
 import EmailThreadPanel, { isEmailContent } from '@/components/incidents/EmailThreadPanel';
 import { useEnrichmentStatus } from '@/hooks/useEnrichmentStatus';
