@@ -744,7 +744,46 @@ const IncidentDetailPage = () => {
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [publicAuthorization, setPublicAuthorization] = useState<string>('');
   const TAB_NAMES = ['details', 'tasks', 'observables', 'correlations', 'raw', 'file', 'original'] as const;
-  const [activityFilter, setActivityFilter] = useState<'all' | 'revisions' | 'agent' | 'manual' | 'steps'>('all');
+  // Timeline filter — multi-select. Each key can be toggled independently;
+  // all are enabled by default. Persisted to localStorage so the same set
+  // is restored across page loads. Substep filters (`tasks`, `observables`,
+  // `correlations`) split the legacy "steps" bucket so each artefact type
+  // can be hidden individually.
+  type TimelineFilterKey = 'revisions' | 'agent' | 'manual' | 'tasks' | 'observables' | 'correlations';
+  const ALL_TIMELINE_FILTERS: TimelineFilterKey[] = ['revisions', 'agent', 'manual', 'tasks', 'observables', 'correlations'];
+  const TIMELINE_FILTER_STORAGE_KEY = 'shuffle-incident-timeline-filters';
+  const [activeTimelineFilters, setActiveTimelineFilters] = useState<Set<TimelineFilterKey>>(() => {
+    if (typeof window === 'undefined') return new Set(ALL_TIMELINE_FILTERS);
+    try {
+      const raw = localStorage.getItem(TIMELINE_FILTER_STORAGE_KEY);
+      if (!raw) return new Set(ALL_TIMELINE_FILTERS);
+      const arr = JSON.parse(raw);
+      if (!Array.isArray(arr)) return new Set(ALL_TIMELINE_FILTERS);
+      const valid = arr.filter((k): k is TimelineFilterKey => ALL_TIMELINE_FILTERS.includes(k));
+      // Empty set is allowed — user explicitly hid everything.
+      return new Set(valid);
+    } catch {
+      return new Set(ALL_TIMELINE_FILTERS);
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem(TIMELINE_FILTER_STORAGE_KEY, JSON.stringify(Array.from(activeTimelineFilters)));
+    } catch { /* ignore quota */ }
+  }, [activeTimelineFilters]);
+  const toggleTimelineFilter = (key: TimelineFilterKey) => {
+    setActiveTimelineFilters((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  };
+  const isFilterActive = (key: TimelineFilterKey) => activeTimelineFilters.has(key);
+  // Legacy compatibility shim — a few render branches used to special-case
+  // the single-select "revisions" tab to relabel the oldest revision as
+  // "Incident created". The equivalent in the new multi-select model is
+  // "only the Changes filter is enabled".
+  const isOnlyRevisionsFilter = activeTimelineFilters.size === 1 && activeTimelineFilters.has('revisions');
   const [revisionDialogData, setRevisionDialogData] = useState<{ json: string; changedKeys: Set<string> } | null>(null);
   const initialTab = (() => {
     const t = searchParams.get('tab');
