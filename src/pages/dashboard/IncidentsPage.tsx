@@ -2601,8 +2601,14 @@ const IncidentsPage = () => {
                 const localCount = sortedIncidents.length;
                 const totalPages = Math.max(1, Math.ceil(localCount / ITEMS_PER_PAGE));
                 const serverTotal = typeof totalAmount === 'number' ? totalAmount : 0;
-                const countLabel = serverTotal > localCount
-                  ? `${localCount}/${serverTotal} incidents`
+                // Only show "X of Y" when filters/search are actively narrowing the
+                // result set below the total available. Otherwise show a simple count
+                // so users do not see a confusing "1/17" that looks like pagination.
+                const isNarrowed = serverTotal > localCount && (
+                  !isDefaultFilter || searchQuery.trim().length > 0 || !!dateFrom || !!dateTo
+                );
+                const countLabel = isNarrowed
+                  ? `${localCount} of ${serverTotal} incidents`
                   : `${localCount} incident${localCount !== 1 ? 's' : ''}`;
                 return `${countLabel}${totalPages > 1 ? ` · Page ${currentPage} of ${totalPages}` : ''}`;
               })()}
