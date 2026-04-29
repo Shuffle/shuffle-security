@@ -67,8 +67,8 @@ export const DEFAULT_IOC_TYPES: IOCType[] = [
   //   2. Schemeless URLs:        host.tld/path...    (host + TLD + slash + anything)
   //   3. Schemeless URLs w/ qs:  host.tld?key=val    (host + TLD + ? + query)
   // Bare hostnames (no slash, no query) are intentionally NOT matched here —
-  // those fall through to the `domain` IOC type. The pattern allows ANY non-
-  // non-delimiter trailing characters (including ?, =, &, #, %, .) so URLs
+  // those fall through to the `domain` IOC type. The pattern allows non-
+  // delimiter trailing characters (including ?, =, &, #, %, .) so URLs
   // with query strings and fragments are matched without swallowing the JSON,
   // HTML, or CSV content around them.
   { name: 'url', regex: '^(?:https?:\\/\\/[^\\\\s"\'<>\\\\{\\\\}\\\\[\\\\]]+|[A-Za-z0-9][A-Za-z0-9.-]*\\.[A-Za-z]{2,24}[\\/?#][^\\\\s"\'<>\\\\{\\\\}\\\\[\\\\]]*)$', description: 'URL (scheme optional when a path or query is present)', category: 'common', enabled: true },
