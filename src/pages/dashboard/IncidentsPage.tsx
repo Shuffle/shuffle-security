@@ -1217,17 +1217,6 @@ const IncidentsPage = () => {
     return base.filter(i => typeof i.id === 'string' && i.id.startsWith('demo-'));
   }, [showIrrelevant, incidents, relevantIncidents, demoActive]);
 
-  // Apply smart defaults on initial load only - default to "New" OR "In Progress" status
-  const [smartDefaultApplied, setSmartDefaultApplied] = useState(false);
-
-  useEffect(() => {
-    if (!smartDefaultApplied && incidents.length > 0) {
-      // Default to "New" OR "In Progress" status filter
-      setFilters(prev => ({ ...prev, status: ['new', 'in_progress'] }));
-      setSmartDefaultApplied(true);
-    }
-  }, [incidents, smartDefaultApplied]);
-
   // Filter incidents
   const filteredByAssignee = useMemo(() => {
     if (filters.assignee === null || filters.assignee === 'all') {
@@ -1466,7 +1455,7 @@ const IncidentsPage = () => {
     } else if (isChildOrg && currentOrgId) {
       defaultOrg = [currentOrgId];
     }
-    setFilters({ severity: null, status: ['new', 'in_progress'], tlp: null, assignee: null, source: null, tag: null, org: defaultOrg });
+    setFilters({ severity: null, status: null, tlp: null, assignee: null, source: null, tag: null, org: defaultOrg });
     setNegatedFilters(new Set());
     setDateFrom(undefined);
     setDateTo(undefined);
@@ -1608,7 +1597,7 @@ const IncidentsPage = () => {
     if (filters.severity || filters.tlp || filters.source || filters.tag) return false;
     if (negatedFilters.size > 0 || dateFrom || dateTo) return false;
     if (filters.assignee !== null || searchQuery.trim()) return false;
-    if (!Array.isArray(filters.status) || filters.status.length !== 2 || !filters.status.includes('new') || !filters.status.includes('in_progress')) return false;
+    if (filters.status !== null) return false;
 
     // Org filter check
     if (isParentOrg) {
@@ -2606,10 +2595,10 @@ const IncidentsPage = () => {
                 const apiTotal = totalAmount ?? 0;
                 const totalIncidents = Math.max(activeTotal, apiTotal, incidents.length);
                 const totalPages = Math.max(1, Math.ceil(localCount / ITEMS_PER_PAGE));
-                const isNarrowed = totalIncidents > localCount;
+                const isNarrowed = !isDefaultFilter && totalIncidents > localCount;
                 const countLabel = isNarrowed
                   ? `${localCount} of ${totalIncidents} incidents (filtered)`
-                  : `${localCount} incident${localCount !== 1 ? 's' : ''}`;
+                  : `${totalIncidents} incident${totalIncidents !== 1 ? 's' : ''}`;
                 return `${countLabel}${totalPages > 1 ? ` · Page ${currentPage} of ${totalPages}` : ''}`;
               })()}
             </Typography>
