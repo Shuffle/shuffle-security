@@ -3926,9 +3926,9 @@ const IncidentDetailPage = () => {
         const diff = item.parsedPrevious ? computeDiff(item.parsedCurrent, item.parsedPrevious) : null;
         const totalChanges = diff ? diff.added.length + diff.removed.length + diff.changed.length : 0;
 
-        if (activityFilter !== 'revisions' && !isFirst && diff && totalChanges === 0) return null;
+        if (!isOnlyRevisionsFilter && !isFirst && diff && totalChanges === 0) return null;
 
-        const showAsCreation = isFirst && activityFilter !== 'revisions';
+        const showAsCreation = isFirst && !isOnlyRevisionsFilter;
         const initialTitle = showAsCreation
           ? (item.parsedCurrent?.title
               || item.parsedCurrent?.finding_info?.title
