@@ -4063,9 +4063,13 @@ const IncidentDetailPage = () => {
         const title = getRunTitle(run);
         const duration = formatAgentRunDuration(run);
         const timeAgo = run.started_at ? getAgentTimeAgo(run.started_at) : '';
+        const exactTs = run.started_at
+          ? new Date(normalizeToMs(run.started_at)).toLocaleString()
+          : '';
         return (
           <Box
             key={`agent-${run.execution_id}`}
+            data-timeline-compact="true"
             onClick={() => setSelectedAgentRun(run)}
             sx={{
               position: 'relative',
@@ -4088,6 +4092,23 @@ const IncidentDetailPage = () => {
               },
             }}
           >
+            {/* Invisible hover target over the rail dot — provides exact timestamp tooltip */}
+            {exactTs && (
+              <Tooltip title={exactTs} arrow placement="left">
+                <Box
+                  onClick={(e) => e.stopPropagation()}
+                  sx={{
+                    position: 'absolute',
+                    left: -28,
+                    top: 0,
+                    width: 24,
+                    height: 24,
+                    cursor: 'help',
+                    zIndex: 2,
+                  }}
+                />
+              </Tooltip>
+            )}
             <Box sx={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0, opacity: skip.skipped ? 0.6 : 1 }}>
               <AgentIcon size={14} />
             </Box>
