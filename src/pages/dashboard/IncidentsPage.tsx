@@ -2599,16 +2599,16 @@ const IncidentsPage = () => {
             <Typography variant="body2" sx={{ ml: 'auto', color: 'text.secondary', whiteSpace: 'nowrap' }}>
               {(() => {
                 const localCount = sortedIncidents.length;
+                const totalIncidents = incidents.length;
                 const totalPages = Math.max(1, Math.ceil(localCount / ITEMS_PER_PAGE));
-                const serverTotal = typeof totalAmount === 'number' ? totalAmount : 0;
-                // Only show "X of Y" when filters/search are actively narrowing the
-                // result set below the total available. Otherwise show a simple count
-                // so users do not see a confusing "1/17" that looks like pagination.
-                const isNarrowed = serverTotal > localCount && (
-                  !isDefaultFilter || searchQuery.trim().length > 0 || !!dateFrom || !!dateTo
-                );
+                // Compare against the locally-known incident count, NOT the server's
+                // `total_amount` (that field counts ALL datastore items across every
+                // category, not just incidents — using it produced misleading
+                // counters like "1/17"). Show "X of Y" only when filters/search are
+                // actively narrowing below the full incident list.
+                const isNarrowed = totalIncidents > localCount;
                 const countLabel = isNarrowed
-                  ? `${localCount} of ${serverTotal} incidents`
+                  ? `${localCount} of ${totalIncidents} incidents`
                   : `${localCount} incident${localCount !== 1 ? 's' : ''}`;
                 return `${countLabel}${totalPages > 1 ? ` · Page ${currentPage} of ${totalPages}` : ''}`;
               })()}
