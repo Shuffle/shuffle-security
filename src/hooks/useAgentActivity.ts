@@ -87,18 +87,32 @@ export const useAgentActivity = (autoFetch = true) => {
     successRate: runs.length > 0
       ? (runs.filter(r => r.status === 'FINISHED' || r.status === 'SUCCESS').length / runs.length) * 100
       : 0,
-    avgDuration: runs.length > 0
-      ? runs.reduce((sum, r) => {
-          if (r.started_at && r.completed_at) {
-            const startSec = Number(r.started_at);
-            const endSec = Number(r.completed_at);
-            if (!isNaN(startSec) && !isNaN(endSec)) {
-              return sum + (endSec - startSec);
-            }
+    avgDuration: (() => {
+      // Only average successfully completed runs with valid start+end timestamps.
+      // Excludes still-Running, Aborted, or Failed runs that would otherwise
+      // skew the average (e.g. an in-flight run reporting 47m+).
+      const completed = runs.filter(r => {
+        const s = (r.status || '').toUpperCase();
+        return s === 'FINISHED' || s === 'SUCCESS';
+      });
+      const durations: number[] = [];
+      for (const r of completed) {
+        if (r.started_at && r.completed_at) {
+          const startSec = Number(r.started_at);
+          const endSec = Number(r.completed_at);
+          if (!isNaN(startSec) && !isNaN(endSec) && endSec >= startSec) {
+            durations.push(endSec - startSec);
+            continue;
           }
-          return sum + (r.duration || 0);
-        }, 0) / runs.length
-      : 0,
+        }
+        if (typeof r.duration === 'number' && r.duration > 0) {
+          durations.push(r.duration);
+        }
+      }
+      return durations.length > 0
+        ? durations.reduce((a, b) => a + b, 0) / durations.length
+        : 0;
+    })(),
   };
 
   // Filter runs by skipped state and debounced search query

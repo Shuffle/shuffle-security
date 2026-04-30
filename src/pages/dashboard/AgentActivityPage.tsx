@@ -114,7 +114,7 @@ const AgentActivityPage = () => {
           <Box sx={{ flex: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.25 }}>
               <Typography sx={{ fontWeight: 600, fontSize: '1.15rem', color: 'hsl(var(--foreground))' }}>
-                Security Agent
+                Security Agents
               </Typography>
               <Chip
                 label="Active"
@@ -139,7 +139,7 @@ const AgentActivityPage = () => {
               />
             </Box>
             <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))' }}>
-              Cybersecurity Agent · {enabledPermissions}/{totalPermissions} permissions enabled
+              {enabledPermissions}/{totalPermissions} permissions enabled
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
