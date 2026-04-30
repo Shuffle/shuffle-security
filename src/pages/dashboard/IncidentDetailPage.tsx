@@ -3319,6 +3319,63 @@ const IncidentDetailPage = () => {
         </Box>
       </Box>
 
+      {/* Timeline filters dropdown — single menu replacing the chip row. */}
+      <Menu
+        anchorEl={timelineFilterAnchor}
+        open={Boolean(timelineFilterAnchor)}
+        onClose={() => setTimelineFilterAnchor(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        PaperProps={{
+          sx: {
+            bgcolor: 'hsl(var(--card))',
+            border: '1px solid hsl(var(--border))',
+            minWidth: 220,
+          },
+        }}
+      >
+        {([
+          { key: 'revisions' as const, label: 'Changes', count: revisions.length },
+          { key: 'agent' as const, label: 'Agent', count: agentRuns.length },
+          { key: 'manual' as const, label: 'Comments', count: activity.length },
+          { key: 'tasks' as const, label: 'Tasks', count: tasks.filter(t => !t.disabled).length },
+          { key: 'observables' as const, label: 'Observables', count: editedObservables.filter(o => !o.archived).length + enrichments.length },
+          { key: 'correlations' as const, label: 'Correlations', count: correlations.length },
+        ]).map(({ key, label, count }) => {
+          const active = isFilterActive(key);
+          return (
+            <MenuItem
+              key={key}
+              dense
+              onClick={() => toggleTimelineFilter(key)}
+              sx={{ fontSize: '0.8rem', gap: 1, py: 0.5 }}
+            >
+              <Checkbox
+                checked={active}
+                size="small"
+                sx={{
+                  p: 0.25,
+                  color: 'hsl(var(--border))',
+                  '&.Mui-checked': { color: '#ff6600' },
+                }}
+              />
+              <Box sx={{ flex: 1 }}>{label}</Box>
+              <Box
+                component="span"
+                sx={{
+                  fontSize: '0.7rem',
+                  color: 'text.secondary',
+                  fontVariantNumeric: 'tabular-nums',
+                  ml: 1,
+                }}
+              >
+                {count}
+              </Box>
+            </MenuItem>
+          );
+        })}
+      </Menu>
+
       {!timelineCollapsed && (<>
       {/* Comment Input */}
       <Box sx={{ p: 2, borderBottom: '1px solid hsl(var(--border-subtle))' }}>
