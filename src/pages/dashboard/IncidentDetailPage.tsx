@@ -6287,7 +6287,11 @@ const IncidentDetailPage = () => {
         />
       )}
 
-      {activeTab === 0 && (() => {
+      {/* Details Tab — kept mounted (just hidden) when other tabs are active
+          so local UI state inside it (e.g. EmailThreadPanel collapsed/expanded,
+          description view mode) survives a tab switch. */}
+      <Box sx={{ display: activeTab === 0 ? 'block' : 'none' }}>
+      {(() => {
         const hasEmail = !!incident && isEmailContent(editedMessage || '', rawDescriptionHtml || '', incident.rawOCSF);
         const descriptionBody = (
           <>
