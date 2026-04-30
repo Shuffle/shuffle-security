@@ -687,6 +687,22 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
                               setAiAgentPrompts(updated);
                               setHasChanges(true);
                             }}
+                            InputProps={{
+                              endAdornment: (
+                                <IconButton
+                                  size="small"
+                                  onClick={() => setPromptEditor({ idx, value: prompt })}
+                                  title="Open editor"
+                                  sx={{
+                                    color: 'hsl(var(--muted-foreground))',
+                                    '&:hover': { color: 'hsl(var(--primary))' },
+                                    mr: -0.5,
+                                  }}
+                                >
+                                  <OpenInFullIcon sx={{ fontSize: 14 }} />
+                                </IconButton>
+                              ),
+                            }}
                             sx={{
                               '& .MuiOutlinedInput-root': {
                                 bgcolor: 'hsl(var(--background))',
