@@ -4945,7 +4945,7 @@ const IncidentDetailPage = () => {
           <Box
             key={actItem.id}
             id={actItem.id ? `activity-item-${actItem.id}` : undefined}
-            className={isActHighlightedStatus(actItem) ? 'incident-new-flash' : undefined}
+            className={!!actItem.id && newlyArrivedActivity.has(actItem.id) ? 'incident-new-flash' : undefined}
             sx={{
               display: 'flex',
               alignItems: 'center',
