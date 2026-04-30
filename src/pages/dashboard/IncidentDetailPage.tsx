@@ -792,6 +792,16 @@ const IncidentDetailPage = () => {
   // "Incident created". The equivalent in the new multi-select model is
   // "only the Changes filter is enabled".
   const isOnlyRevisionsFilter = activeTimelineFilters.size === 1 && activeTimelineFilters.has('revisions');
+  // Timeline expand/collapse — same UX as Email Thread / Description sections.
+  // Persisted per-browser so the choice survives navigation.
+  const TIMELINE_COLLAPSED_STORAGE_KEY = 'shuffle-incident-timeline-collapsed';
+  const [timelineCollapsed, setTimelineCollapsed] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    try { return localStorage.getItem(TIMELINE_COLLAPSED_STORAGE_KEY) === '1'; } catch { return false; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(TIMELINE_COLLAPSED_STORAGE_KEY, timelineCollapsed ? '1' : '0'); } catch { /* ignore */ }
+  }, [timelineCollapsed]);
   const [revisionDialogData, setRevisionDialogData] = useState<{ json: string; changedKeys: Set<string> } | null>(null);
   const initialTab = (() => {
     const t = searchParams.get('tab');
