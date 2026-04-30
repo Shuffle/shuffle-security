@@ -193,6 +193,7 @@ export const AppAuthCard = ({
   apiAuthEntries,
   onSelectAuth,
   onRefreshAuth,
+  disableUrlPrefill,
 }: AppAuthCardProps) => {
   // Helper to get best default auth: prioritize validated, otherwise last entry
   const getBestDefaultAuth = (entries: ApiAuthEntry[]): string => {
