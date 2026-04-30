@@ -107,6 +107,49 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth }: LocalLLMConfigProps) => {
 
   const currentUrl = (authState.credentials?.url as string) || '';
 
+  // Auto-delete OpenAI auth entries whose connection test failed and was
+  // never fixed. validation.valid === false means a test was actually run
+  // and rejected — undefined means "never tested", so we leave those alone.
+  // Track which IDs we already attempted to delete to avoid retrying every render.
+  const attemptedDeletionRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    // Don't auto-delete while a test is mid-flight.
+    if (authState.status === 'testing') return;
+
+    const failedEntries = openaiEntries.filter(
+      (e) => e.validation && e.validation.valid === false && e.id,
+    );
+    if (failedEntries.length === 0) return;
+
+    let cancelled = false;
+    (async () => {
+      let deletedAny = false;
+      for (const entry of failedEntries) {
+        const id = entry.id as string;
+        if (attemptedDeletionRef.current.has(id)) continue;
+        attemptedDeletionRef.current.add(id);
+        try {
+          const resp = await fetch(getApiUrl(`/api/v1/apps/authentication/${id}`), {
+            method: 'DELETE',
+            credentials: 'include',
+            headers: { ...getAuthHeader() },
+          });
+          if (resp.ok) deletedAny = true;
+        } catch (err) {
+          console.error('[LocalLLMConfig] Failed to auto-delete failed OpenAI auth:', err);
+        }
+      }
+      if (!cancelled && deletedAny) {
+        await refreshAuth();
+        refreshAllIntegrationStatus();
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [openaiEntries, authState.status, refreshAuth]);
+
   // Detect which preset matches the currently entered URL (so the dropdown
   // reflects an existing saved value).
   const effectivePreset = useMemo(() => {
