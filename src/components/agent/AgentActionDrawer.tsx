@@ -392,8 +392,8 @@ const DecisionItem = ({
                   columnGap: 1,
                 }}>
                   {extraEntries.map(([k, v]) => (
-                    <>
-                      <Typography key={`${k}-k`} sx={{
+                    <Box key={k} sx={{ display: 'contents' }}>
+                      <Typography sx={{
                         fontSize: '0.65rem',
                         fontWeight: 600,
                         color: 'hsl(var(--muted-foreground))',
@@ -401,7 +401,7 @@ const DecisionItem = ({
                       }}>
                         {k}
                       </Typography>
-                      <Typography key={`${k}-v`} sx={{
+                      <Typography sx={{
                         fontSize: '0.7rem',
                         color: 'hsl(var(--foreground))',
                         fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace',
@@ -410,7 +410,7 @@ const DecisionItem = ({
                       }}>
                         {typeof v === 'object' ? JSON.stringify(v, null, 2) : String(v)}
                       </Typography>
-                    </>
+                    </Box>
                   ))}
                 </Box>
               )}
