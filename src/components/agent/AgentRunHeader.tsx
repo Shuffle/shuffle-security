@@ -17,12 +17,13 @@ import {
   AlertTriangle,
   HelpCircle,
   MinusCircle,
+  ExternalLink,
 } from 'lucide-react';
 import { Tooltip } from '@mui/material';
 import { formatDistanceToNow } from 'date-fns';
 import { AgentRun } from '@/services/agentActivity';
 import { parseRunResult, getFailureInfo, hasOutputWarning } from '@/components/agent/AgentRunResultViewer';
-import { getAgentSkipInfo } from '@/lib/agentParsers';
+import { getAgentSkipInfo, parseDatastoreReference, isIncidentReference } from '@/lib/agentParsers';
 
 // ── Status config ──────────────────────────────────────────────────────────────
 
