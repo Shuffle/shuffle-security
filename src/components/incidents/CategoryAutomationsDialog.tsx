@@ -33,6 +33,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { toast } from 'sonner';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import DownloadIcon from '@mui/icons-material/Download';
+import OpenInFullIcon from '@mui/icons-material/OpenInFull';
 
 import { CategoryAutomation } from '@/services/datastore';
 import { extractValidatedIngestionApps, ValidatedIngestionApp, findIngestTicketsWorkflow, extractWorkflowAppNames } from '@/lib/ingestionDetection';
@@ -173,6 +174,8 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
    * Keyed by automation type (e.g. 'workflow', 'webhook', 'security_rules').
    */
   const [expandedTypes, setExpandedTypes] = useState<Record<string, boolean>>({});
+  // Popup editor for AI Agent prompts
+  const [promptEditor, setPromptEditor] = useState<{ idx: number; value: string } | null>(null);
   const toggleExpanded = (type: string) =>
     setExpandedTypes(prev => ({ ...prev, [type]: !prev[type] }));
 
@@ -439,6 +442,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
   const enabledCount = automations.filter(a => a.enabled).length;
 
   return (
+    <>
     <Dialog
       open={open}
       onClose={onClose}
@@ -684,6 +688,22 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
                               setAiAgentPrompts(updated);
                               setHasChanges(true);
                             }}
+                            InputProps={{
+                              endAdornment: (
+                                <IconButton
+                                  size="small"
+                                  onClick={() => setPromptEditor({ idx, value: prompt })}
+                                  title="Open editor"
+                                  sx={{
+                                    color: 'hsl(var(--muted-foreground))',
+                                    '&:hover': { color: 'hsl(var(--primary))' },
+                                    mr: -0.5,
+                                  }}
+                                >
+                                  <OpenInFullIcon sx={{ fontSize: 14 }} />
+                                </IconButton>
+                              ),
+                            }}
                             sx={{
                               '& .MuiOutlinedInput-root': {
                                 bgcolor: 'hsl(var(--background))',
@@ -873,6 +893,79 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
         </Box>
       </DialogActions>
     </Dialog>
+
+    {/* Popup editor for AI Agent prompts */}
+    <Dialog
+      open={!!promptEditor}
+      onClose={() => setPromptEditor(null)}
+      maxWidth="md"
+      fullWidth
+      PaperProps={{
+        sx: {
+          background: 'hsl(var(--card))',
+          border: '1px solid hsl(var(--border))',
+          borderRadius: 2,
+        },
+      }}
+    >
+      <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1.5, pb: 1.5 }}>
+        <AgentIcon size={20} />
+        <Box sx={{ flex: 1 }}>
+          <Typography sx={{ fontWeight: 600, fontSize: '1rem' }}>
+            Edit prompt {promptEditor ? promptEditor.idx + 1 : ''}
+          </Typography>
+          <Typography sx={{ fontSize: '0.78rem', color: 'hsl(var(--muted-foreground))' }}>
+            Full editor for the AI Agent prompt. More controls (permissions, variables) coming soon.
+          </Typography>
+        </Box>
+        <IconButton size="small" onClick={() => setPromptEditor(null)} sx={{ color: 'hsl(var(--muted-foreground))' }}>
+          <CloseIcon fontSize="small" />
+        </IconButton>
+      </DialogTitle>
+      <Divider sx={{ borderColor: 'hsl(var(--border))' }} />
+      <DialogContent sx={{ pt: 2.5 }}>
+        <TextField
+          autoFocus
+          fullWidth
+          multiline
+          minRows={14}
+          maxRows={28}
+          placeholder="Write your prompt here..."
+          value={promptEditor?.value ?? ''}
+          onChange={(e) => setPromptEditor((prev) => (prev ? { ...prev, value: e.target.value } : prev))}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              bgcolor: 'hsl(var(--background))',
+              fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+              fontSize: '0.85rem',
+              lineHeight: 1.55,
+              alignItems: 'flex-start',
+            },
+          }}
+        />
+      </DialogContent>
+      <Divider sx={{ borderColor: 'hsl(var(--border))' }} />
+      <DialogActions sx={{ px: 3, py: 2 }}>
+        <Button onClick={() => setPromptEditor(null)} sx={{ textTransform: 'none' }}>
+          Cancel
+        </Button>
+        <Button
+          variant="contained"
+          onClick={() => {
+            if (!promptEditor) return;
+            const updated = [...aiAgentPrompts];
+            updated[promptEditor.idx] = promptEditor.value;
+            setAiAgentPrompts(updated);
+            setHasChanges(true);
+            setPromptEditor(null);
+          }}
+          sx={{ textTransform: 'none' }}
+        >
+          Apply
+        </Button>
+      </DialogActions>
+    </Dialog>
+    </>
   );
 };
 
