@@ -33,7 +33,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { toast } from 'sonner';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import DownloadIcon from '@mui/icons-material/Download';
-import OpenInFullIcon from '@mui/icons-material/OpenInFull';
+import PopupTextEditor from '@/components/shared/PopupTextEditor';
 
 import { CategoryAutomation } from '@/services/datastore';
 import { extractValidatedIngestionApps, ValidatedIngestionApp, findIngestTicketsWorkflow, extractWorkflowAppNames } from '@/lib/ingestionDetection';
