@@ -7419,32 +7419,8 @@ const IncidentDetailPage = () => {
                           </IconButton>
                         )}
                       </Box>
-                      {/* Sparse-correlation context strip — surface recency +
-                          severity inline when this observable has 1-2 OTHER
-                          referenced incidents, so users see critical pivots
-                          without expanding or clicking the corr badge. */}
-                      {(() => {
-                        const obsKey = `${obs.type}::${obs.value}`;
-                        const corr = obsCorrelations[obsKey];
-                        if (!corr?.data?.length) return null;
-                        const idsSet = new Set<string>();
-                        corr.data.forEach((c) => {
-                          c.ref.forEach((r) => {
-                            const [cat, key] = r.split('|');
-                            if (cat !== 'shuffle-security_incidents' || !key) return;
-                            if (id && key.toLowerCase() === id.toLowerCase()) return;
-                            idsSet.add(key);
-                          });
-                        });
-                        const ids = Array.from(idsSet);
-                        if (ids.length === 0 || ids.length >= 3) return null;
-                        return (
-                          <Box sx={{ mt: 0.75, px: 1, py: 0.5, borderRadius: 1, border: '1px dashed hsl(var(--border-subtle))', bgcolor: 'transparent' }}>
-                            <CorrelationContextStrip incidentKeys={ids} compact />
-                          </Box>
-                        );
-                      })()}
                       {/* Expanded detail panel */}
+
 
                       {isExpanded && (
                         <Box sx={{ mt: 1, pt: 1, borderTop: '1px solid hsl(var(--border-subtle))', display: 'flex', flexDirection: 'column', gap: 0.75 }}>
