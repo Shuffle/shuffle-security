@@ -121,6 +121,8 @@ import {
 import { normalizeStatus } from '@/config/incidentConfig';
 import { ResolveIncidentDialog, ResolutionData, RESOLUTION_REASONS } from '@/components/incidents/ResolveIncidentDialog';
 import { MergeIncidentDialog } from '@/components/incidents/MergeIncidentDialog';
+import { MergeCandidatesBanner } from '@/components/incidents/MergeCandidatesBanner';
+import { useMergeCandidates } from '@/hooks/useMergeCandidates';
 import { MentionText } from '@/components/incidents/MentionText';
 import CollapsibleContent from '@/components/incidents/CollapsibleContent';
 import { UserHoverCard, resolveUserAvatar } from '@/components/incidents/UserHoverCard';
