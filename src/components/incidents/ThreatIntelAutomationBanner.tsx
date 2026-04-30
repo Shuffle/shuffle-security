@@ -2,6 +2,7 @@ import { Alert, Box, Button, CircularProgress, Typography } from '@mui/material'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { useEnrichmentStatus } from '@/hooks/useEnrichmentStatus';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 
 /**
  * Shared "Threat Intel Automation: Active/Inactive" banner.
@@ -10,12 +11,16 @@ import { useEnrichmentStatus } from '@/hooks/useEnrichmentStatus';
  * enable/disable affordance is identical and stays in sync. Backed by
  * `useEnrichmentStatus` (the single source of truth for whether the
  * threat-intel enrichment workflow is active).
+ *
+ * Admin-only: non-admins cannot toggle automations.
  */
 const ThreatIntelAutomationBanner = ({ sx }: { sx?: object }) => {
+  const isAdmin = useIsAdmin();
   const enrichmentStatus = useEnrichmentStatus();
   const automationEnabled = enrichmentStatus.active;
   const automationAction = enrichmentStatus.action;
 
+  if (!isAdmin) return null;
   if (enrichmentStatus.isLoading || automationEnabled === null) return null;
 
   return (
