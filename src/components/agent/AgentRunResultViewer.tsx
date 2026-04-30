@@ -3,8 +3,9 @@
  * Renders output as Markdown + JSON from results[0].result using react18-json-view.
  */
 
-import { Box, Typography } from '@mui/material';
-import { AlertTriangle, HelpCircle, ExternalLink } from 'lucide-react';
+import { Box, Typography, Collapse } from '@mui/material';
+import { useState } from 'react';
+import { AlertTriangle, HelpCircle, ExternalLink, ChevronRight, ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -168,6 +169,7 @@ const AgentRunResultViewer = ({ run }: AgentRunResultViewerProps) => {
   const outputText = getOutputText(parsed);
   const datastoreRef = parseDatastoreReference(run);
   const refPath = datastoreRef ? getReferencePath(datastoreRef) : null;
+  const [debugOpen, setDebugOpen] = useState(false);
 
   if (!raw) {
     return (
@@ -334,47 +336,77 @@ const AgentRunResultViewer = ({ run }: AgentRunResultViewerProps) => {
         </Box>
       )}
 
-      {/* JSON viewer */}
-      <Box sx={{
-        p: 1.5,
-        borderRadius: 1,
-        bgcolor: 'hsl(var(--muted))',
-        border: '1px solid hsl(var(--border))',
-        overflow: 'auto',
-        '&::-webkit-scrollbar': { width: 6 },
-        '&::-webkit-scrollbar-thumb': {
-          bgcolor: 'hsl(var(--muted-foreground) / 0.3)',
-          borderRadius: 3,
-        },
-        '& .json-view': {
-          fontSize: '0.75rem !important',
-          fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace !important',
-          bgcolor: 'transparent !important',
-        },
-      }}>
-        {parsed ? (
-          <JsonView
-            src={parsed}
-            dark
-            collapsed={2}
-            collapseStringMode="word"
-            collapseStringsAfterLength={120}
-            enableClipboard
-            displaySize
-          />
-        ) : (
-          <pre style={{
-            margin: 0,
-            fontSize: '0.72rem',
-            fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace',
-            color: 'hsl(var(--foreground))',
-            whiteSpace: 'pre-wrap',
-            wordBreak: 'break-word',
-            lineHeight: 1.6,
+      {/* DEBUG section — collapsed by default; contains raw JSON viewer */}
+      <Box sx={{ mt: 1 }}>
+        <Box
+          onClick={() => setDebugOpen((v) => !v)}
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 0.75,
+            cursor: 'pointer',
+            userSelect: 'none',
+            px: 0.5,
+            py: 0.5,
+            borderRadius: 0.75,
+            color: 'hsl(var(--muted-foreground))',
+            '&:hover': { color: 'hsl(var(--foreground))' },
+          }}
+        >
+          {debugOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+          <Typography sx={{
+            fontSize: '0.65rem',
+            fontWeight: 600,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
           }}>
-            {raw}
-          </pre>
-        )}
+            Debug
+          </Typography>
+        </Box>
+        <Collapse in={debugOpen} unmountOnExit>
+          <Box sx={{
+            mt: 0.75,
+            p: 1.5,
+            borderRadius: 1,
+            bgcolor: 'hsl(var(--muted))',
+            border: '1px solid hsl(var(--border))',
+            overflow: 'auto',
+            '&::-webkit-scrollbar': { width: 6 },
+            '&::-webkit-scrollbar-thumb': {
+              bgcolor: 'hsl(var(--muted-foreground) / 0.3)',
+              borderRadius: 3,
+            },
+            '& .json-view': {
+              fontSize: '0.75rem !important',
+              fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace !important',
+              bgcolor: 'transparent !important',
+            },
+          }}>
+            {parsed ? (
+              <JsonView
+                src={parsed}
+                dark
+                collapsed={2}
+                collapseStringMode="word"
+                collapseStringsAfterLength={120}
+                enableClipboard
+                displaySize
+              />
+            ) : (
+              <pre style={{
+                margin: 0,
+                fontSize: '0.72rem',
+                fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace',
+                color: 'hsl(var(--foreground))',
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word',
+                lineHeight: 1.6,
+              }}>
+                {raw}
+              </pre>
+            )}
+          </Box>
+        </Collapse>
       </Box>
     </Box>
   );
