@@ -1016,10 +1016,11 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
         subtitle="Restrict this AI Agent prompt to specific apps"
         onQuickSelect={(app) => {
           if (appPickerForIdx === null) return;
+          const appId = app.id || app.name; // fallback to name if no Algolia ID
           const updated = [...aiAgentApps];
           const current = updated[appPickerForIdx] || [];
-          if (!current.includes(app.name)) {
-            updated[appPickerForIdx] = [...current, app.name];
+          if (!current.includes(appId)) {
+            updated[appPickerForIdx] = [...current, appId];
             setAiAgentApps(updated);
             setHasChanges(true);
           }
