@@ -155,6 +155,7 @@ export default function AppSearchDrawer({
       name: detail.app.name,
       icon: detail.app.image_url || '',
       categories: detail.app.categories || [],
+      id: (detail.app as any).objectID || null,
     };
     if (onQuickSelect) {
       onQuickSelect(appInfo);
