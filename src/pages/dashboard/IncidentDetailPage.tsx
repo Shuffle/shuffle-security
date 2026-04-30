@@ -3242,22 +3242,55 @@ const IncidentDetailPage = () => {
               { key: 'correlations' as const, label: 'Correlations', count: correlations.length },
             ]).map(({ key, label, count }) => {
               const active = isFilterActive(key);
+              const isEmpty = count === 0;
               return (
                 <Tooltip key={key} title={active ? `Hide ${label.toLowerCase()}` : `Show ${label.toLowerCase()}`} arrow>
                   <Chip
-                    label={`${label} (${count})`}
+                    label={
+                      <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.625 }}>
+                        <Box
+                          component="span"
+                          sx={{
+                            width: 6,
+                            height: 6,
+                            borderRadius: '50%',
+                            bgcolor: active ? '#ff6600' : 'transparent',
+                            border: active ? 'none' : '1px solid hsl(var(--border))',
+                            transition: 'background-color 120ms ease',
+                          }}
+                        />
+                        <span>{label}</span>
+                        <Box
+                          component="span"
+                          sx={{
+                            fontSize: '0.65rem',
+                            opacity: 0.7,
+                            fontVariantNumeric: 'tabular-nums',
+                          }}
+                        >
+                          {count}
+                        </Box>
+                      </Box>
+                    }
                     size="small"
-                    variant="outlined"
                     onClick={() => toggleTimelineFilter(key)}
                     sx={{
                       height: 24,
                       fontSize: '0.7rem',
-                      bgcolor: 'transparent',
-                      borderColor: active ? 'rgba(255, 102, 0, 0.5)' : 'hsl(var(--border))',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      border: '1px solid',
+                      borderColor: active ? 'rgba(255, 102, 0, 0.45)' : 'hsl(var(--border))',
+                      bgcolor: active ? 'rgba(255, 102, 0, 0.1)' : 'transparent',
                       color: active ? '#ff6600' : 'text.secondary',
-                      opacity: active ? 1 : 0.5,
-                      textDecoration: active ? 'none' : 'line-through',
-                      '&:hover': { bgcolor: 'rgba(255, 102, 0, 0.06)', opacity: 1 },
+                      opacity: !active && isEmpty ? 0.45 : 1,
+                      transition: 'all 120ms ease',
+                      '& .MuiChip-label': { px: 0.875 },
+                      '&:hover': {
+                        bgcolor: active ? 'rgba(255, 102, 0, 0.16)' : 'hsl(var(--muted))',
+                        borderColor: active ? 'rgba(255, 102, 0, 0.6)' : 'hsl(var(--border))',
+                        opacity: 1,
+                      },
                     }}
                   />
                 </Tooltip>
