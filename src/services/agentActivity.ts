@@ -24,6 +24,14 @@ export interface AgentDecision {
   action?: string;
   result?: string;
   tool?: string;
+  /** Free-form rationale from the agent — often contains the *why* (e.g. failure reason). */
+  reason?: string;
+  category?: string;
+  confidence?: number;
+  runs?: string | number;
+  fields?: unknown;
+  approval_required?: boolean;
+  run_details?: unknown;
   [key: string]: unknown;
 }
 
