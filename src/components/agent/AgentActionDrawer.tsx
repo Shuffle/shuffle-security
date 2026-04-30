@@ -714,9 +714,11 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
         flexShrink: 0,
         display: 'flex',
         alignItems: 'center',
+        minWidth: 0,
+        width: '100%',
       }}>
         {isViewMode && liveRun ? (
-          <Box sx={{ flex: 1 }}>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
             <AgentRunHeader run={liveRun} />
           </Box>
         ) : (
