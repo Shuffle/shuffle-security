@@ -3276,7 +3276,7 @@ const IncidentDetailPage = () => {
               { key: 'agent' as const, label: 'Agent', count: agentRuns.length },
               { key: 'manual' as const, label: 'Comments', count: activity.length },
               { key: 'tasks' as const, label: 'Tasks', count: tasks.filter(t => !t.disabled).length },
-              { key: 'observables' as const, label: 'Observables', count: editedObservables.filter(o => !o.archived).length + enrichments.length },
+              { key: 'observables' as const, label: 'Observables', count: visibleObservablesCount },
               { key: 'correlations' as const, label: 'Correlations', count: correlations.length },
             ];
             const activeCount = filterDefs.filter(f => isFilterActive(f.key)).length;
