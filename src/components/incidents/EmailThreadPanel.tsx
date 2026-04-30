@@ -378,7 +378,7 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
 
   if (messages.length === 0) return null;
 
-  return (
+  const panel = (
     <Box
       data-tour="incident-email-thread"
       sx={{
@@ -386,6 +386,8 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
       borderRadius: 1.5,
       bgcolor: 'hsl(var(--card))',
       overflow: 'hidden',
+      // When floating, fill the popout window and let inner regions scroll.
+      ...(poppedOut ? { display: 'flex', flexDirection: 'column', height: '100%' } : {}),
     }}>
       {/* Thread header — click to collapse the whole panel */}
       <Box
