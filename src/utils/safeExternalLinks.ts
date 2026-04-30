@@ -29,7 +29,7 @@ const resolveHref = (raw: string | null): string | null => {
   if (/^(mailto|tel|sms):/i.test(trimmed)) return trimmed;
   try {
     return new URL(trimmed, window.location.href).toString();
-  } catch {{}
+  } catch {
     return trimmed;
   }
 };
