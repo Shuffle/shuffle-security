@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { getApiUrl, API_CONFIG, getAuthHeader, setRegionUrl, resetRegionUrl, getTrackedOrgId } from '@/config/api';
+import { setRuntimeOrgId } from '@/services/datastore';
 
 interface Organization {
   name: string;
@@ -84,7 +85,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           app_execution_usage: data.app_execution_usage,
         };
         setUserInfo(info);
+        // Make org ID available to non-React modules (e.g. datastore service)
+        // synchronously, BEFORE consumers re-render and start fetching.
+        setRuntimeOrgId(newOrgId);
         // Store in localStorage so datastore service can access org ID
+        // across reloads / new tabs.
         localStorage.setItem('shuffle_user_info', JSON.stringify(info));
         // Broadcast the raw getinfo payload so other contexts (e.g. ThemeContext)
         // can read fields like `theme` without firing their own duplicate request.
@@ -216,6 +221,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const currentToken = sessionToken;
     localStorage.removeItem('session_token');
     localStorage.removeItem('shuffle_user_info');
+    setRuntimeOrgId(null);
     API_CONFIG.setApiKey(null);
     resetRegionUrl();
     setSessionToken(null);
