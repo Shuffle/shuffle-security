@@ -111,7 +111,7 @@ interface AppSearchDrawerProps {
   /** Show the Shuffle Pipelines banner above search results */
   showPipelinesBanner?: boolean;
   /** If provided, selecting an app calls this instead of opening AppDetailDrawer */
-  onQuickSelect?: (app: { name: string; icon: string; categories: string[] }) => void;
+  onQuickSelect?: (app: { name: string; icon: string; categories: string[]; id: string | null }) => void;
   /** If provided, called before default behavior. Return true to prevent opening detail drawer. */
   onSelectOverride?: (app: { name: string; icon: string; categories: string[] }) => boolean;
   /** Called when the detail drawer closes, with the app name that was being configured */
