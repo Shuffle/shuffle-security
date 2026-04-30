@@ -380,6 +380,40 @@ const DecisionItem = ({
             </Box>
           )}
 
+          {/* Inline reason — shown prominently for finish decisions where the
+              reason is the actual outcome (and matters most on failure). */}
+          {showReasonInline && (
+            <Box sx={{
+              mx: 1.5, mb: 1, p: 1,
+              borderRadius: 1,
+              bgcolor: 'hsl(var(--background))',
+              border: '1px solid hsl(var(--border))',
+              '& p': {
+                fontSize: '0.78rem',
+                color: 'hsl(var(--foreground))',
+                lineHeight: 1.6,
+                m: 0,
+                mb: 0.5,
+              },
+              '& p:last-child': { mb: 0 },
+              '& strong': { color: 'hsl(var(--foreground))', fontWeight: 700 },
+              '& code': {
+                fontSize: '0.7rem',
+                bgcolor: 'hsl(var(--muted))',
+                px: 0.5,
+                py: 0.15,
+                borderRadius: 0.5,
+                fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace',
+              },
+              '& ul, & ol': { fontSize: '0.78rem', pl: 2.25, m: 0, mb: 0.5 },
+              '& a': { color: 'hsl(var(--primary))', textDecoration: 'none' },
+            }}>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {reasonText}
+              </ReactMarkdown>
+            </Box>
+          )}
+
           {/* Details (collapsible) — reason (markdown) + extra fields + nested Debug */}
           <Box sx={{ px: 1.5, pb: 1 }}>
             <Box
@@ -406,8 +440,9 @@ const DecisionItem = ({
             </Box>
             {detailsOpen && (
               <Box sx={{ mt: 0.75 }}>
-                {/* Reason — rendered as Markdown at the top of details */}
-                {hasReason && (
+                {/* Reason — rendered as Markdown at the top of details (skip if
+                    already shown inline above). */}
+                {hasReason && !showReasonInline && (
                   <Box sx={{
                     mb: 1,
                     p: 1,
@@ -435,7 +470,7 @@ const DecisionItem = ({
                     '& a': { color: 'hsl(var(--primary))', textDecoration: 'none' },
                   }}>
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {decision.reason as string}
+                      {reasonText}
                     </ReactMarkdown>
                   </Box>
                 )}
