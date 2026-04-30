@@ -28,6 +28,38 @@ import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import { Activity, CheckCircle2, Circle, AlertCircle, Clock, Wrench, MessageCircleQuestion, Flag, Play, Brain, ChevronRight, ChevronDown } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import JsonView from 'react18-json-view';
+import 'react18-json-view/src/style.css';
+import 'react18-json-view/src/dark.css';
+
+/** Recursively parse JSON-looking strings into objects/arrays so JsonView can collapse them. */
+const deepParseJsonStrings = (obj: any, depth = 0): any => {
+  if (depth > 5) return obj;
+  if (typeof obj === 'string') {
+    const trimmed = obj.trim();
+    if (
+      (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+      (trimmed.startsWith('[') && trimmed.endsWith(']'))
+    ) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (typeof parsed === 'object' && parsed !== null) {
+          return deepParseJsonStrings(parsed, depth + 1);
+        }
+      } catch { /* ignore */ }
+    }
+    return obj;
+  }
+  if (Array.isArray(obj)) return obj.map(item => deepParseJsonStrings(item, depth + 1));
+  if (obj && typeof obj === 'object') {
+    const result: Record<string, any> = {};
+    for (const [key, value] of Object.entries(obj)) {
+      result[key] = deepParseJsonStrings(value, depth + 1);
+    }
+    return result;
+  }
+  return obj;
+};
 import AgentIcon from '@/components/agent/AgentIcon';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 import { runAgent } from '@/services/agentRun';
@@ -424,18 +456,21 @@ const DecisionItem = ({
                     border: '1px solid hsl(var(--border))',
                     overflow: 'auto',
                     maxHeight: 320,
+                    '& .json-view': {
+                      fontSize: '0.7rem !important',
+                      fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace !important',
+                      bgcolor: 'transparent !important',
+                    },
                   }}>
-                    <pre style={{
-                      margin: 0,
-                      fontSize: '0.68rem',
-                      fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace',
-                      color: 'hsl(var(--foreground))',
-                      whiteSpace: 'pre-wrap',
-                      wordBreak: 'break-word',
-                      lineHeight: 1.5,
-                    }}>
-                      {JSON.stringify(decision, null, 2)}
-                    </pre>
+                    <JsonView
+                      src={deepParseJsonStrings(decision)}
+                      dark
+                      collapsed={2}
+                      collapseStringMode="word"
+                      collapseStringsAfterLength={120}
+                      enableClipboard
+                      displaySize
+                    />
                   </Box>
                 )}
               </Box>
