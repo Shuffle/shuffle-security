@@ -638,6 +638,20 @@ const IncidentDetailPage = () => {
   // chosen to hide from the default Observables view. Toggle reveals them.
   const ignoredObs = useIgnoredObservables();
   const [showIgnoredObs, setShowIgnoredObs] = useState(false);
+
+  // Single source of truth for "is this observable hidden?" — used by the
+  // Observables list filter, the Observables tab badge, and the Timeline
+  // observables filter so the counts always agree.
+  const isObservableIgnored = useCallback(
+    (type?: string, value?: string) => ignoredObs.isIgnored(type || '', value || ''),
+    [ignoredObs],
+  );
+  const visibleObservablesCount = useMemo(() => {
+    const manual = editedObservables.filter(o => !o.archived && !isObservableIgnored(o.type, o.value)).length;
+    const enr = enrichments.filter(e => !isObservableIgnored(e.type, e.value || (e as any).data)).length;
+    return manual + enr;
+  }, [editedObservables, enrichments, isObservableIgnored]);
+
   const [editedCustomFields, setEditedCustomFields] = useState<Record<string, string | number | boolean>>({});
   const [editedLabels, setEditedLabels] = useState<string[]>([]);
   const [newLabelInput, setNewLabelInput] = useState('');
@@ -3262,7 +3276,7 @@ const IncidentDetailPage = () => {
               { key: 'agent' as const, label: 'Agent', count: agentRuns.length },
               { key: 'manual' as const, label: 'Comments', count: activity.length },
               { key: 'tasks' as const, label: 'Tasks', count: tasks.filter(t => !t.disabled).length },
-              { key: 'observables' as const, label: 'Observables', count: editedObservables.filter(o => !o.archived).length + enrichments.length },
+              { key: 'observables' as const, label: 'Observables', count: visibleObservablesCount },
               { key: 'correlations' as const, label: 'Correlations', count: correlations.length },
             ];
             const activeCount = filterDefs.filter(f => isFilterActive(f.key)).length;
@@ -3339,7 +3353,7 @@ const IncidentDetailPage = () => {
           { key: 'agent' as const, label: 'Agent', count: agentRuns.length },
           { key: 'manual' as const, label: 'Comments', count: activity.length },
           { key: 'tasks' as const, label: 'Tasks', count: tasks.filter(t => !t.disabled).length },
-          { key: 'observables' as const, label: 'Observables', count: editedObservables.filter(o => !o.archived).length + enrichments.length },
+          { key: 'observables' as const, label: 'Observables', count: visibleObservablesCount },
           { key: 'correlations' as const, label: 'Correlations', count: correlations.length },
         ]).map(({ key, label, count }) => {
           const active = isFilterActive(key);
@@ -3782,6 +3796,9 @@ const IncidentDetailPage = () => {
       const obsEntries: ObsEntry[] = [];
       allObservables.forEach((o) => {
         if (!o.value) return;
+        // Hide ignored observables from the timeline as well — same source of
+        // truth as the Observables tab badge so the counts agree.
+        if (isObservableIgnored(o.type, o.value)) return;
         const k = `${o.type}::${o.value}`.toLowerCase();
         if (seenObs.has(k)) return;
         seenObs.add(k);
@@ -6147,7 +6164,7 @@ const IncidentDetailPage = () => {
               {[
                 { label: 'Details', count: null, tour: 'incident-tab-details' },
                 { label: 'Tasks', count: visibleTasks.length > 0 ? `${visibleTasks.filter(t => t.completed).length}/${visibleTasks.length}` : null, tour: 'incident-tab-tasks' },
-                { label: 'Observables', count: (editedObservables.filter(o => !o.archived).length + enrichments.length) > 0 ? (editedObservables.filter(o => !o.archived).length + enrichments.length) : null, loading: refreshingObservables, tour: 'incident-tab-observables' },
+                { label: 'Observables', count: visibleObservablesCount > 0 ? visibleObservablesCount : null, loading: refreshingObservables, tour: 'incident-tab-observables' },
                 { label: 'Correlations', count: correlations.length > 0 ? correlations.length : null, loading: correlationsLoading, tour: 'incident-tab-correlations' },
               ].map((tab, index) => (
                 <Box
