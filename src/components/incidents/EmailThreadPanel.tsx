@@ -16,6 +16,7 @@ import {
   TextField,
   Button,
   Divider,
+  Stack,
 } from '@mui/material';
 import EmailIcon from '@mui/icons-material/Email';
 import ReplyIcon from '@mui/icons-material/Reply';
@@ -187,10 +188,56 @@ const parseEmailThread = (text: string, html: string): EmailMessage[] => {
   return messages;
 };
 
+/** Inline header-style row for To/Cc/Bcc inputs in the reply box. */
+const RecipientRow = ({
+  label,
+  value,
+  onChange,
+  placeholder,
+  onRemove,
+  autoFocus,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  onRemove?: () => void;
+  autoFocus?: boolean;
+}) => (
+  <Box sx={{ display: 'flex', alignItems: 'center', px: 1.25, py: 0.25, gap: 1 }}>
+    <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'text.secondary', minWidth: 32 }}>
+      {label}
+    </Typography>
+    <TextField
+      variant="standard"
+      fullWidth
+      autoFocus={autoFocus}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      InputProps={{ disableUnderline: true, sx: { fontSize: '0.78rem', py: 0.25 } }}
+    />
+    {onRemove && (
+      <IconButton
+        size="small"
+        onClick={onRemove}
+        sx={{ p: 0.25, color: 'text.secondary', '&:hover': { color: '#ff6600' } }}
+      >
+        <ExpandLessIcon sx={{ fontSize: 14, transform: 'rotate(45deg)' }} />
+      </IconButton>
+    )}
+  </Box>
+);
+
 const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, onForward }: EmailThreadPanelProps) => {
   const [expandedMessages, setExpandedMessages] = useState<Set<string>>(new Set());
   const [showReplyBox, setShowReplyBox] = useState(false);
   const [replyText, setReplyText] = useState('');
+  const [replyTo, setReplyTo] = useState('');
+  const [replyCc, setReplyCc] = useState('');
+  const [replyBcc, setReplyBcc] = useState('');
+  const [showCc, setShowCc] = useState(false);
+  const [showBcc, setShowBcc] = useState(false);
   // Default the thread to collapsed — the Activity timeline is the primary
   // narrative on the incident page; users can expand the email when they
   // need to read it. This avoids the long forwarded chain pushing the
@@ -256,12 +303,36 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
     });
   };
 
+  // Prefill To/Cc when the reply box is opened, derived from the latest
+  // message: reply goes to the sender, Cc preserves any existing Cc recipients.
+  useEffect(() => {
+    if (!showReplyBox) return;
+    const latest = messages[0];
+    if (!latest) return;
+    const defaultTo = latest.fromEmail || latest.from || '';
+    setReplyTo(prev => prev || defaultTo);
+    if (latest.cc && !replyCc) {
+      setReplyCc(latest.cc);
+      setShowCc(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showReplyBox]);
+
   const handleReply = () => {
-    if (!replyText.trim()) return;
-    const latestFrom = messages[0]?.fromEmail || messages[0]?.from || '';
+    if (!replyText.trim() || !replyTo.trim()) return;
     const subject = threadSubject ? `Re: ${threadSubject}` : '';
-    onReply?.(latestFrom, subject, replyText);
+    // Encode Cc/Bcc into the body header so downstream consumers that only
+    // accept (to, subject, body) still receive the routing info.
+    const headerLines: string[] = [];
+    if (replyCc.trim()) headerLines.push(`Cc: ${replyCc.trim()}`);
+    if (replyBcc.trim()) headerLines.push(`Bcc: ${replyBcc.trim()}`);
+    const body = headerLines.length ? `${headerLines.join('\n')}\n\n${replyText}` : replyText;
+    onReply?.(replyTo.trim(), subject, body);
     setReplyText('');
+    setReplyCc('');
+    setReplyBcc('');
+    setShowCc(false);
+    setShowBcc(false);
     setShowReplyBox(false);
   };
 
@@ -550,12 +621,85 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
           p: 2,
           bgcolor: (t) => t.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)',
         }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-            <ReplyIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-            <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem' }}>
-              Reply to {messages[0]?.from || 'sender'}
-            </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mb: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <ReplyIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem' }}>
+                Reply to {messages[0]?.from || 'sender'}
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', gap: 0.5 }}>
+              {!showCc && (
+                <Button
+                  size="small"
+                  onClick={() => setShowCc(true)}
+                  sx={{ fontSize: '0.7rem', textTransform: 'none', minWidth: 0, px: 0.75, py: 0, color: 'text.secondary', '&:hover': { color: '#ff6600', bgcolor: 'transparent' } }}
+                >
+                  + Cc
+                </Button>
+              )}
+              {!showBcc && (
+                <Button
+                  size="small"
+                  onClick={() => setShowBcc(true)}
+                  sx={{ fontSize: '0.7rem', textTransform: 'none', minWidth: 0, px: 0.75, py: 0, color: 'text.secondary', '&:hover': { color: '#ff6600', bgcolor: 'transparent' } }}
+                >
+                  + Bcc
+                </Button>
+              )}
+            </Box>
           </Box>
+
+          {/* Recipient header rows — make it explicit who the reply is going to */}
+          <Stack spacing={0} sx={{
+            mb: 1,
+            border: '1px solid hsl(var(--border))',
+            borderRadius: 1,
+            overflow: 'hidden',
+            bgcolor: (t) => t.palette.mode === 'dark' ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.8)',
+          }}>
+            <RecipientRow
+              label="To"
+              value={replyTo}
+              onChange={setReplyTo}
+              placeholder="recipient@example.com"
+              autoFocus
+            />
+            {showCc && (
+              <>
+                <Divider sx={{ borderColor: 'hsl(var(--border))' }} />
+                <RecipientRow
+                  label="Cc"
+                  value={replyCc}
+                  onChange={setReplyCc}
+                  placeholder="cc@example.com"
+                  onRemove={() => { setShowCc(false); setReplyCc(''); }}
+                />
+              </>
+            )}
+            {showBcc && (
+              <>
+                <Divider sx={{ borderColor: 'hsl(var(--border))' }} />
+                <RecipientRow
+                  label="Bcc"
+                  value={replyBcc}
+                  onChange={setReplyBcc}
+                  placeholder="bcc@example.com"
+                  onRemove={() => { setShowBcc(false); setReplyBcc(''); }}
+                />
+              </>
+            )}
+            <Divider sx={{ borderColor: 'hsl(var(--border))' }} />
+            <Box sx={{ display: 'flex', alignItems: 'center', px: 1.25, py: 0.5, gap: 1 }}>
+              <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'text.secondary', minWidth: 32 }}>
+                Subject
+              </Typography>
+              <Typography sx={{ fontSize: '0.78rem', color: 'text.primary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {threadSubject ? `Re: ${threadSubject}` : '(no subject)'}
+              </Typography>
+            </Box>
+          </Stack>
+
           <TextField
             multiline
             minRows={3}
@@ -577,7 +721,14 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
             <Button
               size="small"
               variant="outlined"
-              onClick={() => { setShowReplyBox(false); setReplyText(''); }}
+              onClick={() => {
+                setShowReplyBox(false);
+                setReplyText('');
+                setReplyCc('');
+                setReplyBcc('');
+                setShowCc(false);
+                setShowBcc(false);
+              }}
               sx={{ fontSize: '0.75rem', textTransform: 'none' }}
             >
               Cancel
@@ -587,7 +738,7 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
               variant="contained"
               startIcon={<SendIcon sx={{ fontSize: 14 }} />}
               onClick={handleReply}
-              disabled={!replyText.trim()}
+              disabled={!replyText.trim() || !replyTo.trim()}
               sx={{
                 fontSize: '0.75rem',
                 textTransform: 'none',
