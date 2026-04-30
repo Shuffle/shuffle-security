@@ -3235,29 +3235,29 @@ const IncidentDetailPage = () => {
           '& .MuiLinearProgress-bar': { bgcolor: 'hsl(var(--primary))' },
         }} />
       )}
-      {/* Timeline header with filter chips */}
-      <Box sx={{
-        px: 2,
-        py: 1.5,
-        borderBottom: '1px solid hsl(var(--border))',
-      }}>
+      {/* Timeline header — entire bar toggles collapse, chevron sits far right
+          to match the Section pattern used by Description / Email Thread. */}
+      <Box
+        onClick={() => setTimelineCollapsed(v => !v)}
+        sx={{
+          px: 2,
+          py: 1.5,
+          borderBottom: '1px solid hsl(var(--border))',
+          cursor: 'pointer',
+          '&:hover': { bgcolor: 'hsl(var(--muted))' },
+        }}
+      >
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, flexWrap: 'wrap' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <HistoryIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
             <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Timeline</Typography>
             {revisionsLoading && <CircularProgress size={14} sx={{ color: '#ff6600' }} />}
-            <Tooltip title={timelineCollapsed ? 'Expand timeline' : 'Collapse timeline'} arrow>
-              <IconButton
-                size="small"
-                onClick={() => setTimelineCollapsed(v => !v)}
-                sx={{ ml: 0.25, width: 24, height: 24, color: 'text.secondary' }}
-              >
-                {timelineCollapsed ? <ExpandMoreIcon sx={{ fontSize: 18 }} /> : <ExpandLessIcon sx={{ fontSize: 18 }} />}
-              </IconButton>
-            </Tooltip>
           </Box>
           {!timelineCollapsed && (
-          <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <Box
+            onClick={(e) => e.stopPropagation()}
+            sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', justifyContent: 'flex-end', alignItems: 'center' }}
+          >
             {([
               { key: 'revisions' as const, label: 'Changes', count: revisions.length },
               { key: 'agent' as const, label: 'Agent', count: agentRuns.length },
@@ -3323,6 +3323,10 @@ const IncidentDetailPage = () => {
             })}
           </Box>
           )}
+          {/* Chevron — far right, mirroring the Section pattern. */}
+          {timelineCollapsed
+            ? <ExpandMoreIcon sx={{ color: 'text.secondary', ml: 'auto' }} />
+            : <ExpandLessIcon sx={{ color: 'text.secondary', ml: 'auto' }} />}
         </Box>
       </Box>
 
