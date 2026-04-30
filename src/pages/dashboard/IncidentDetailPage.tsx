@@ -3508,7 +3508,7 @@ const IncidentDetailPage = () => {
               content: '""',
               position: 'absolute',
               left: -22,
-              top: 18,
+              top: 21,
               width: 12,
               height: 12,
               borderRadius: '50%',
@@ -3520,7 +3520,7 @@ const IncidentDetailPage = () => {
             '&[data-timeline-compact="true"]::before': {
               // Pill content centre is roughly 12px from its top
               // (py: 0.5 = 4px + 12px icon / 2). Dot half-height = 6.
-              top: 6,
+              top: 9,
             },
           },
         }),
