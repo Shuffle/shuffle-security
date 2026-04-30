@@ -4932,8 +4932,63 @@ const IncidentDetailPage = () => {
       const isOwnMessage = actItem.user === currentUsername;
       const messageAge = Date.now() - actItem.timestamp;
       const isDeleted = !!actItem.deleted;
+      const isStatusActivity = actItem.type === 'status';
       const canDelete = !isDeleted && isOwnMessage && actItem.type === 'comment' && messageAge < 5 * 60 * 1000;
       const timeRemaining = Math.max(0, Math.ceil((5 * 60 * 1000 - messageAge) / 60000));
+
+      // Status activities are system-generated resolution events.
+      // They cannot be modified or replied to — render a distinct,
+      // resolution-themed badge instead of the comment-style card.
+      if (isStatusActivity) {
+        const resolvedColor = 'hsl(var(--status-resolved))';
+        return (
+          <Box
+            key={actItem.id}
+            id={actItem.id ? `activity-item-${actItem.id}` : undefined}
+            className={!!actItem.id && newlyArrivedActivity.has(actItem.id) ? 'incident-new-flash' : undefined}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.25,
+              px: 1.5,
+              py: 1,
+              borderRadius: 1.5,
+              bgcolor: 'hsl(var(--status-resolved) / 0.08)',
+              border: '1px solid hsl(var(--status-resolved) / 0.25)',
+            }}
+          >
+            <Avatar sx={{ width: 22, height: 22, bgcolor: 'hsl(var(--status-resolved) / 0.18)', color: resolvedColor }}>
+              <CheckCircleIcon sx={{ fontSize: 14 }} />
+            </Avatar>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexWrap: 'wrap' }}>
+                <Typography sx={{ fontSize: '0.73rem', fontWeight: 700, color: resolvedColor, letterSpacing: 0.3, textTransform: 'uppercase' }}>
+                  Incident resolution
+                </Typography>
+                <Chip
+                  label="System event"
+                  size="small"
+                  sx={{
+                    height: 16,
+                    fontSize: '0.58rem',
+                    fontWeight: 600,
+                    bgcolor: 'transparent',
+                    border: '1px solid hsl(var(--status-resolved) / 0.4)',
+                    color: resolvedColor,
+                    '& .MuiChip-label': { px: 0.6 },
+                  }}
+                />
+                <Typography sx={{ fontSize: '0.65rem', color: 'text.disabled', ml: 'auto' }}>
+                  {actItem.user ? `by ${actItem.user} · ` : ''}{formatRelativeTime(actItem.timestamp)}
+                </Typography>
+              </Box>
+              <Typography sx={{ fontSize: '0.78rem', color: 'hsl(var(--foreground))', mt: 0.25, whiteSpace: 'pre-wrap' }}>
+                {decodeHtmlEntities(actItem.content || '')}
+              </Typography>
+            </Box>
+          </Box>
+        );
+      }
 
       const isActHighlighted = !!actItem.id && newlyArrivedActivity.has(actItem.id);
       return (
