@@ -1707,6 +1707,11 @@ function UsecaseDetailContent({
   const { apiUrl, authHeader } = useApi();
   const flow = usecases.find((item) => item.id === flowId);
   const [categoryAppNames, setCategoryAppNames] = useState<Record<string, string[]>>({});
+  // Tracks whether the apps→category resolution has completed at least once.
+  // While false, the popup's per-endpoint tools section shows a loader so the
+  // user does not see a flash of "all apps" or "No apps selected" before the
+  // filtered list narrows down.
+  const [categoryAppsResolved, setCategoryAppsResolved] = useState(false);
   const [toggling, setToggling] = useState(false);
   const [optimisticEnabled, setOptimisticEnabled] = useState<boolean | null>(null);
   const effectiveEnabled = optimisticEnabled !== null ? optimisticEnabled : isEnabled;
