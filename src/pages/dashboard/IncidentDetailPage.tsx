@@ -3358,8 +3358,9 @@ const IncidentDetailPage = () => {
   }
 
   if (!incident) {
+    const isSupport = userInfo?.support === true;
     return (
-      <Box sx={{ p: 4, textAlign: 'center' }}>
+      <Box sx={{ p: 4, textAlign: 'center', maxWidth: 900, mx: 'auto' }}>
         <Typography variant="h6" sx={{ color: 'text.secondary', mb: 2 }}>
           {entitySingular} not found
         </Typography>
@@ -3371,6 +3372,51 @@ const IncidentDetailPage = () => {
         >
           Back to {entityPlural}
         </Button>
+        {isSupport && loadDebug && (
+          <Box
+            sx={{
+              mt: 4,
+              textAlign: 'left',
+              p: 2,
+              border: '1px solid hsl(var(--border))',
+              borderRadius: 1,
+              bgcolor: 'hsl(var(--muted) / 0.4)',
+            }}
+          >
+            <Typography
+              variant="caption"
+              sx={{
+                display: 'block',
+                mb: 1,
+                color: 'text.secondary',
+                textTransform: 'uppercase',
+                letterSpacing: 0.5,
+                fontWeight: 600,
+              }}
+            >
+              Support debug — load failure ({loadDebug.stage})
+            </Typography>
+            <Box
+              component="pre"
+              sx={{
+                m: 0,
+                p: 1.5,
+                fontFamily: 'monospace',
+                fontSize: 12,
+                lineHeight: 1.5,
+                color: 'hsl(var(--foreground))',
+                bgcolor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: 1,
+                overflow: 'auto',
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word',
+              }}
+            >
+              {JSON.stringify(loadDebug, null, 2)}
+            </Box>
+          </Box>
+        )}
       </Box>
     );
   }
