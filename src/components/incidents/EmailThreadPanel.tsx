@@ -319,6 +319,22 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
               color: '#ff6600',
             }}
           />
+          {sourceLabel && (
+            <Tooltip title={`Parsed from structured ${sourceLabel} payload (unmapped_original)`} arrow>
+              <Chip
+                label={sourceLabel}
+                size="small"
+                variant="outlined"
+                sx={{
+                  height: 18,
+                  fontSize: '0.65rem',
+                  bgcolor: 'transparent',
+                  borderColor: 'hsl(var(--border))',
+                  color: 'text.secondary',
+                }}
+              />
+            </Tooltip>
+          )}
         </Box>
         <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }} onClick={(e) => e.stopPropagation()}>
           {onReply && (
