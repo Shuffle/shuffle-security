@@ -670,22 +670,7 @@ export const IncidentCardView = ({
                       />
                     </>
                   )}
-                  {(incident.taskCount ?? 0) > 0 && (
-                    <>
-                      <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-                        •
-                      </Typography>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <ListTodo size={12} color="hsl(var(--muted-foreground))" />
-                        <Typography
-                          variant="caption"
-                          sx={{ color: 'hsl(var(--muted-foreground))' }}
-                        >
-                          {incident.taskCount}
-                        </Typography>
-                      </Box>
-                    </>
-                  )}
+                   {/* Task count intentionally hidden from the incidents list — too noisy. */}
                   {/* Labels / tags — moved down here from the right-side chip
                       cluster so the title row has more breathing room. They
                       sit alongside org / assignee / source as another piece
