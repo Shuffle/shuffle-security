@@ -3361,7 +3361,7 @@ const IncidentDetailPage = () => {
           { key: 'manual' as const, label: 'Comments', count: activity.length },
           { key: 'tasks' as const, label: 'Tasks', count: tasks.filter(t => !t.disabled).length },
           { key: 'observables' as const, label: 'Observables', count: visibleObservablesCount },
-          { key: 'correlations' as const, label: 'Correlations', count: correlations.length },
+          { key: 'correlations' as const, label: 'Correlations', count: visibleCorrelations.length },
         ]).map(({ key, label, count }) => {
           const active = isFilterActive(key);
           return (
