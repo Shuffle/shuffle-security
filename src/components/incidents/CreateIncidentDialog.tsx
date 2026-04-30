@@ -223,9 +223,9 @@ export const CreateIncidentDialog = ({ open, onClose, onSubmit }: CreateIncident
       confidence,
       created_time: now,
       first_seen_time: now,
-      types: source ? [source] : ['Manual'],
+      ...(source ? { types: [source] } : {}),
       product: {
-        name: source || 'Manual Entry',
+        name: source || 'Manual',
         uid: 'shuffle-security',
       },
       references: references, // Always include, even if empty array
