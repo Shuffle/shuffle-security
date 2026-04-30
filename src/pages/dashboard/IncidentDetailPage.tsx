@@ -7322,6 +7322,33 @@ const IncidentDetailPage = () => {
                             </IconButton>
                           </span>
                         </Tooltip>
+                        {/* Ignore / unignore — per-org list of uninteresting
+                            observables, persisted in the `ignored-observables`
+                            datastore category. Hidden by default in the list. */}
+                        {(() => {
+                          const isIgn = ignoredObs.isIgnored(obs.type, obs.value);
+                          return (
+                            <Tooltip title={isIgn ? 'Stop ignoring this observable' : 'Hide this observable from the default view'} arrow>
+                              <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (isIgn) ignoredObs.unignore(obs.type, obs.value);
+                                  else ignoredObs.ignore(obs.type, obs.value);
+                                }}
+                                sx={{
+                                  p: 0.5,
+                                  color: isIgn ? 'hsl(var(--primary))' : 'text.disabled',
+                                  '&:hover': { color: 'hsl(var(--primary))' },
+                                }}
+                              >
+                                {isIgn
+                                  ? <VisibilityIcon sx={{ fontSize: 16 }} />
+                                  : <VisibilityOffIcon sx={{ fontSize: 16 }} />}
+                              </IconButton>
+                            </Tooltip>
+                          );
+                        })()}
                         {obs._source === 'manual' && (
                           <IconButton
                             size="small"
