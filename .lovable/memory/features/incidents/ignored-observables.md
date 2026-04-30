@@ -10,9 +10,17 @@ in the Shuffle datastore.
 
 ## Storage
 - **Category**: `ignored-observables`
-- **Key**: `${type.toLowerCase()}::${value.toLowerCase()}` — same canonical
-  identity used for `iocObservableKeys`, correlations, and highlights elsewhere.
-- **Value**: JSON `{ type, value, reason?, ignored_at }`.
+- **Persisted key**: `encodeCompositeKey(type, value)` from
+  `src/utils/compositeKey.ts` — uses `||` (NOT `::`) because
+  `normalizeDatastoreKey` in `services/datastore.ts` greedily strips
+  `::`-segmented keys down to the last segment, which silently destroyed the
+  type prefix and broke round-tripping.
+- **In-memory canonical key**: `canonicalCompositeKey(type, value)` =
+  `${type.toLowerCase()}::${value.toLowerCase()}`. Use this for Set/Map
+  membership and lookups; never send it to the API.
+- **Value**: JSON `{ type, value, reason?, ignored_at }`. Type/value in the
+  JSON payload is the source of truth on read (key may be lossy for legacy
+  rows).
 - Datastore is org-scoped via session, so the list is automatically per-org.
 
 ## Hook
