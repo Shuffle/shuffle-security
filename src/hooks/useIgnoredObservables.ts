@@ -131,6 +131,20 @@ export const useIgnoredObservables = () => {
     [local],
   );
 
+  /** Type-agnostic check: is there ANY ignored observable with this raw value?
+   *  Useful when consumers (e.g. correlations) only have a value, not a type. */
+  const ignoredValues = useMemo(() => {
+    const s = new Set<string>();
+    for (const { entry } of local.values()) {
+      if (entry?.value) s.add(String(entry.value).toLowerCase());
+    }
+    return s;
+  }, [local]);
+  const isValueIgnored = useCallback(
+    (value: string) => !!value && ignoredValues.has(String(value).toLowerCase()),
+    [ignoredValues],
+  );
+
   const ignore = useCallback(
     async (type: string, value: string, reason?: string) => {
       const canonical = canonicalCompositeKey(type, value);
