@@ -535,7 +535,7 @@ const IncidentsPage = () => {
     if (!isSupport || !error) return [];
 
     const fallbackRequestUrl = currentOrgId
-      ? getApiUrl(`/api/v1/orgs/${currentOrgId}/list_cache?category=${encodeURIComponent(DATASTORE_CATEGORIES.INCIDENTS)}&top=100`)
+      ? getApiUrl(`/api/v1/orgs/${currentOrgId}/list_cache?category=${encodeURIComponent(DATASTORE_CATEGORIES.INCIDENTS)}&top=50`)
       : 'Unknown';
 
     return [
