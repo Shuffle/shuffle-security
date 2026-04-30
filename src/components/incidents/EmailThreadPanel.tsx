@@ -28,7 +28,6 @@ import AttachFileIcon from '@mui/icons-material/AttachFile';
 import PersonIcon from '@mui/icons-material/Person';
 import DOMPurify from 'dompurify';
 import { resolveEmailThread, type ResolvedEmailThread } from '@/lib/emailThreadAdapters';
-import { stripColorStyles } from '@/utils/sanitizeEmailHtml';
 
 export interface EmailMessage {
   id: string;
@@ -573,38 +572,34 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
                     pl: 5.5, // align with text after avatar
                   }}>
                     {msg.bodyHtml ? (
+                      // Render the provider HTML inside its own white "page"
+                      // so it looks like a real email client and provider
+                      // colors (dark text, brand accents) read correctly.
+                      // We do NOT try to recolor the email to match our dark
+                      // theme — that turned everything orange/illegible.
                       <Box
                         sx={{
+                          backgroundColor: '#ffffff',
+                          color: '#1f1f1f',
+                          borderRadius: 1,
+                          p: 2,
                           fontSize: '0.82rem',
                           lineHeight: 1.7,
-                          color: 'text.primary',
                           wordBreak: 'break-word',
-                          // Force theme-aware colors over the email's inline
-                          // styles. Most provider HTML hard-codes dark text
-                          // (and sometimes light backgrounds) which becomes
-                          // unreadable on our dark theme. We strip color/bg
-                          // declarations from the HTML below AND override any
-                          // that survive via CSS specificity here.
-                          '& *': {
-                            color: 'inherit !important',
-                            backgroundColor: 'transparent !important',
-                            backgroundImage: 'none !important',
-                            borderColor: 'hsl(var(--border)) !important',
-                          },
-                          '& a, & a *': { color: '#ff6600 !important' },
+                          '& a': { color: '#1a73e8' },
                           '& img': { maxWidth: '100%', height: 'auto' },
                           '& blockquote': {
-                            borderLeft: '3px solid hsl(var(--border)) !important',
+                            borderLeft: '3px solid #e0e0e0',
                             pl: 1.5,
                             ml: 0,
-                            color: 'text.secondary !important',
+                            color: '#5f6368',
                           },
                         }}
                         dangerouslySetInnerHTML={{
-                          __html: stripColorStyles(DOMPurify.sanitize(msg.bodyHtml, {
+                          __html: DOMPurify.sanitize(msg.bodyHtml, {
                             FORBID_TAGS: ['script', 'style', 'iframe', 'object', 'embed'],
-                            FORBID_ATTR: ['onerror', 'onload', 'onclick', 'bgcolor', 'color'],
-                          })),
+                            FORBID_ATTR: ['onerror', 'onload', 'onclick'],
+                          }),
                         }}
                       />
                     ) : (
