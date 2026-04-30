@@ -1,8 +1,11 @@
 import { useState } from 'react';
-import { Box, Typography, Chip, Tooltip, Popover } from '@mui/material';
+import { Box, Typography, Chip, Tooltip, Popover, IconButton } from '@mui/material';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import IncidentCorrelationPreview from './IncidentCorrelationPreview';
 import CorrelationContextStrip from './CorrelationContextStrip';
+import { useIgnoredObservables } from '@/hooks/useIgnoredObservables';
 
 /**
  * Returns true when a datastore category represents a threat-intelligence
