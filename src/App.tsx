@@ -95,6 +95,7 @@ const ThemedApp = () => {
   return (
     <MuiThemeProvider theme={muiTheme}>
       <CssBaseline />
+      <ExternalLinkConfirmDialog />
       <Toaster 
         position="bottom-right" 
         theme={resolvedTheme}
