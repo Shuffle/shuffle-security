@@ -171,6 +171,19 @@ export const useDatastore = ({ category, orgId: overrideOrgId }: UseDatastoreOpt
 
   const addItem = useCallback(async (key: string, value: string | object, skipRefresh = true): Promise<boolean> => {
     setError(null);
+    // Optimistic update: insert/replace locally immediately so UIs that filter
+    // off `items` react on the same click without waiting for a roundtrip.
+    const serializedValue = typeof value === 'string' ? value : JSON.stringify(value);
+    const optimisticItem = { key, value: serializedValue } as DatastoreItem;
+    let prevItems: DatastoreItem[] = [];
+    setItems(curr => {
+      prevItems = curr;
+      const idx = curr.findIndex(i => i.key === key);
+      if (idx === -1) return [...curr, optimisticItem];
+      const next = curr.slice();
+      next[idx] = { ...curr[idx], ...optimisticItem };
+      return next;
+    });
     try {
       const response = await setDatastoreItem(key, value, category, overrideOrgId);
       if (response.success) {
@@ -180,10 +193,13 @@ export const useDatastore = ({ category, orgId: overrideOrgId }: UseDatastoreOpt
         }
         return true;
       } else {
+        // Roll back optimistic insert on failure.
+        setItems(prevItems);
         setError(response.error || 'Failed to add item');
         return false;
       }
     } catch (err) {
+      setItems(prevItems);
       setError(err instanceof Error ? err.message : 'Unknown error');
       return false;
     }
