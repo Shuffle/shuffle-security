@@ -6136,157 +6136,193 @@ const IncidentDetailPage = () => {
                 Generate Report
               </MenuItem>
               {/* Visit Source */}
-              <MenuItem disabled>
-                <LinkIcon sx={{ fontSize: 16, mr: 1 }} />
-                Visit Source
-              </MenuItem>
+              <Tooltip
+                title="No source URL recorded for this incident"
+                placement="left"
+              >
+                <span>
+                  <MenuItem disabled sx={{ width: '100%' }}>
+                    <LinkIcon sx={{ fontSize: 16, mr: 1 }} />
+                    Visit Source
+                  </MenuItem>
+                </span>
+              </Tooltip>
               <Divider />
               {/* Resync */}
-              <MenuItem
-                disabled={isSaving || !incident?.source || incident?.source === 'Tenzir' || (() => {
-                  const product = incident?.rawOCSF?.product || incident?.rawOCSF?.metadata?.product;
-                  const name = product?.name;
-                  const id = product?.id;
-                  const uid = product?.uid;
-                  return name && (name === id || name === uid);
-                })()}
-                onClick={async () => {
-                  setActionsMenuAnchor(null);
-                  if (!incident?.id) return;
-                  const source = incident.source || '';
-                  setIsResyncing(true);
-                  resyncState.add(incident.id);
-                  const label = source ? `Resyncing from ${source}…` : 'Resyncing…';
-                  toast.success(label, { duration: 30000 });
-                  try {
-                    const preResult = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS, crossOrgId || undefined);
-                    const previousEdited = preResult.item?.edited || 0;
+              {(() => {
+                const product = incident?.rawOCSF?.product || incident?.rawOCSF?.metadata?.product;
+                const productName = product?.name;
+                const productId = product?.id;
+                const productUid = product?.uid;
+                const placeholderProduct = !!(productName && (productName === productId || productName === productUid));
+                let resyncReason = '';
+                if (isSaving) resyncReason = 'Saving in progress — please wait';
+                else if (!incident?.source) resyncReason = 'No source app recorded — cannot resync';
+                else if (incident?.source === 'Tenzir') resyncReason = 'Tenzir-ingested incidents cannot be resynced';
+                else if (placeholderProduct) resyncReason = 'Source product metadata is incomplete — cannot resync';
+                const resyncDisabled = !!resyncReason;
+                const resyncItem = (
+                  <MenuItem
+                    disabled={resyncDisabled}
+                    sx={{ width: '100%' }}
+                    onClick={async () => {
+                      setActionsMenuAnchor(null);
+                      if (!incident?.id) return;
+                      const source = incident.source || '';
+                      setIsResyncing(true);
+                      resyncState.add(incident.id);
+                      const label = source ? `Resyncing from ${source}…` : 'Resyncing…';
+                      toast.success(label, { duration: 30000 });
+                      try {
+                        const preResult = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS, crossOrgId || undefined);
+                        const previousEdited = preResult.item?.edited || 0;
 
-                    const response = await fetch(getApiUrl('/api/v1/apps/categories/run'), {
-                      method: 'POST',
-                      credentials: 'include',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        ...getAuthHeader(),
-                        ...crossOrgHeaders,
-                      },
-                      body: JSON.stringify({
-                        action: 'get_ticket',
-                        category: 'cases',
-                        fields: [{ key: 'id', value: incident.id }],
-                        app_name: source,
-                      }),
-                    });
-                    if (!response.ok) {
-                      toast.error('Resync failed');
-                      setIsResyncing(false);
-                      resyncState.remove(incident.id);
-                      return;
-                    }
-                    // Poll every 5s for up to 30s checking if the item was updated
-                    let pollCount = 0;
-                    const pollInterval = setInterval(async () => {
-                      pollCount++;
-                      const postResult = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS, crossOrgId || undefined);
-                      const newEdited = postResult.item?.edited || 0;
-                        if (newEdited && newEdited !== previousEdited) {
-                          clearInterval(pollInterval);
-                          await loadIncident(false);
+                        const response = await fetch(getApiUrl('/api/v1/apps/categories/run'), {
+                          method: 'POST',
+                          credentials: 'include',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            ...getAuthHeader(),
+                            ...crossOrgHeaders,
+                          },
+                          body: JSON.stringify({
+                            action: 'get_ticket',
+                            category: 'cases',
+                            fields: [{ key: 'id', value: incident.id }],
+                            app_name: source,
+                          }),
+                        });
+                        if (!response.ok) {
+                          toast.error('Resync failed');
                           setIsResyncing(false);
                           resyncState.remove(incident.id);
-                          toast.success('Resync complete — update found');
-                        } else if (pollCount >= 6) {
-                          clearInterval(pollInterval);
-                          await loadIncident(false);
-                          setIsResyncing(false);
-                          resyncState.remove(incident.id);
-                          toast.info('Resync complete — no changes detected');
+                          return;
                         }
-                    }, 5000);
-                  } catch {
-                    toast.error('Resync failed');
-                    setIsResyncing(false);
-                    resyncState.remove(incident.id);
-                  }
-                }}
-              >
-                <RefreshIcon sx={{ fontSize: 16, mr: 1 }} />
-                Resync
-              </MenuItem>
-              {/* Forward */}
-              <MenuItem
-                disabled
-                onClick={() => {
-                  setActionsMenuAnchor(null);
-                  setShowForwardDialog(true);
-                  setForwardingAppsLoading(true);
-                  fetch(getApiUrl('/api/v1/apps/authentication'), {
-                    credentials: 'include',
-                    headers: { ...getAuthHeader(), ...crossOrgHeaders },
-                  })
-                    .then(r => r.json())
-                    .then(result => {
-                      const authData = result.data || result;
-                      if (Array.isArray(authData)) {
-                        const seen = new Set<string>();
-                        const apps = authData
-                          .filter((a: any) => a.app?.name && a.validation?.valid)
-                          .filter((a: any) => {
-                            if (seen.has(a.app.name)) return false;
-                            seen.add(a.app.name);
-                            return true;
-                          })
-                          .map((a: any) => {
-                            const rawCategories = a.app?.categories ?? a.categories ?? a.app?.category ?? a.category ?? [];
-                            const categories = Array.isArray(rawCategories)
-                              ? rawCategories
-                              : typeof rawCategories === 'string'
-                                ? [rawCategories]
-                                : typeof rawCategories === 'object' && rawCategories !== null
-                                  ? Object.keys(rawCategories)
-                                  : [];
-                            return {
-                              id: a.app.name,
-                              name: (a.app.name || '').replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
-                              large_image: a.app.large_image || '',
-                              categories,
-                            };
-                          });
-                        setForwardingApps(apps);
+                        // Poll every 5s for up to 30s checking if the item was updated
+                        let pollCount = 0;
+                        const pollInterval = setInterval(async () => {
+                          pollCount++;
+                          const postResult = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS, crossOrgId || undefined);
+                          const newEdited = postResult.item?.edited || 0;
+                            if (newEdited && newEdited !== previousEdited) {
+                              clearInterval(pollInterval);
+                              await loadIncident(false);
+                              setIsResyncing(false);
+                              resyncState.remove(incident.id);
+                              toast.success('Resync complete — update found');
+                            } else if (pollCount >= 6) {
+                              clearInterval(pollInterval);
+                              await loadIncident(false);
+                              setIsResyncing(false);
+                              resyncState.remove(incident.id);
+                              toast.info('Resync complete — no changes detected');
+                            }
+                        }, 5000);
+                      } catch {
+                        toast.error('Resync failed');
+                        setIsResyncing(false);
+                        resyncState.remove(incident.id);
                       }
-                    })
-                    .catch(() => setForwardingApps([]))
-                    .finally(() => setForwardingAppsLoading(false));
-                }}
-              >
-                <ForwardIcon sx={{ fontSize: 16, mr: 1 }} />
-                Forward
-              </MenuItem>
+                    }}
+                  >
+                    <RefreshIcon sx={{ fontSize: 16, mr: 1 }} />
+                    Resync
+                  </MenuItem>
+                );
+                return resyncDisabled ? (
+                  <Tooltip title={resyncReason} placement="left">
+                    <span>{resyncItem}</span>
+                  </Tooltip>
+                ) : resyncItem;
+              })()}
+              {/* Forward */}
+              <Tooltip title="Forwarding is not yet available" placement="left">
+                <span>
+                  <MenuItem
+                    disabled
+                    sx={{ width: '100%' }}
+                    onClick={() => {
+                      setActionsMenuAnchor(null);
+                      setShowForwardDialog(true);
+                      setForwardingAppsLoading(true);
+                      fetch(getApiUrl('/api/v1/apps/authentication'), {
+                        credentials: 'include',
+                        headers: { ...getAuthHeader(), ...crossOrgHeaders },
+                      })
+                        .then(r => r.json())
+                        .then(result => {
+                          const authData = result.data || result;
+                          if (Array.isArray(authData)) {
+                            const seen = new Set<string>();
+                            const apps = authData
+                              .filter((a: any) => a.app?.name && a.validation?.valid)
+                              .filter((a: any) => {
+                                if (seen.has(a.app.name)) return false;
+                                seen.add(a.app.name);
+                                return true;
+                              })
+                              .map((a: any) => {
+                                const rawCategories = a.app?.categories ?? a.categories ?? a.app?.category ?? a.category ?? [];
+                                const categories = Array.isArray(rawCategories)
+                                  ? rawCategories
+                                  : typeof rawCategories === 'string'
+                                    ? [rawCategories]
+                                    : typeof rawCategories === 'object' && rawCategories !== null
+                                      ? Object.keys(rawCategories)
+                                      : [];
+                                return {
+                                  id: a.app.name,
+                                  name: (a.app.name || '').replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                                  large_image: a.app.large_image || '',
+                                  categories,
+                                };
+                              });
+                            setForwardingApps(apps);
+                          }
+                        })
+                        .catch(() => setForwardingApps([]))
+                        .finally(() => setForwardingAppsLoading(false));
+                    }}
+                  >
+                    <ForwardIcon sx={{ fontSize: 16, mr: 1 }} />
+                    Forward
+                  </MenuItem>
+                </span>
+              </Tooltip>
               <Divider />
               {/* Merge */}
-              <MenuItem
-                disabled={isSaving}
-                onClick={() => {
-                  setActionsMenuAnchor(null);
-                  setShowMergeDialog(true);
-                }}
-              >
-                <CallMergeIcon sx={{ fontSize: 16, mr: 1 }} />
-                Merge Into…
-              </MenuItem>
+              <Tooltip title={isSaving ? 'Saving in progress — please wait' : ''} placement="left" disableHoverListener={!isSaving}>
+                <span>
+                  <MenuItem
+                    disabled={isSaving}
+                    sx={{ width: '100%' }}
+                    onClick={() => {
+                      setActionsMenuAnchor(null);
+                      setShowMergeDialog(true);
+                    }}
+                  >
+                    <CallMergeIcon sx={{ fontSize: 16, mr: 1 }} />
+                    Merge Into…
+                  </MenuItem>
+                </span>
+              </Tooltip>
               {!isResolved && <Divider />}
               {!isResolved && (
-                <MenuItem
-                  disabled={isSaving}
-                  onClick={() => {
-                    setActionsMenuAnchor(null);
-                    setShowResolveDialog(true);
-                  }}
-                  sx={{ color: '#22c55e' }}
-                >
-                  <CheckCircleIcon sx={{ fontSize: 16, mr: 1 }} />
-                  Resolve
-                </MenuItem>
+                <Tooltip title={isSaving ? 'Saving in progress — please wait' : ''} placement="left" disableHoverListener={!isSaving}>
+                  <span>
+                    <MenuItem
+                      disabled={isSaving}
+                      sx={{ width: '100%' }}
+                      onClick={() => {
+                        setActionsMenuAnchor(null);
+                        setShowResolveDialog(true);
+                      }}
+                    >
+                      <CheckCircleIcon sx={{ fontSize: 16, mr: 1, color: '#22c55e' }} />
+                      <Box component="span" sx={{ color: '#22c55e' }}>Resolve</Box>
+                    </MenuItem>
+                  </span>
+                </Tooltip>
               )}
               {incident?.rawOCSF?.shuffle_execution_id && (
                 <MenuItem
