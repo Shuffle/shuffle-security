@@ -142,6 +142,7 @@ const PublicVulnerabilitiesView = () => {
 };
 
 const AuthenticatedVulnerabilitiesView = () => {
+  const isAdmin = useIsAdmin();
   const [searchQuery, setSearchQuery] = useState('');
   const [severityFilter, setSeverityFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
