@@ -7201,6 +7201,7 @@ const IncidentDetailPage = () => {
                     const d = typeof ts === 'number' ? new Date(ts < 1e12 ? ts * 1000 : ts) : new Date(ts);
                     return isNaN(d.getTime()) ? String(ts) : d.toLocaleString();
                   };
+                  const isThisIgnored = ignoredObs.isIgnored(obs.type, obs.value);
                   return (
                     <Box
                       key={obsRowKey}
@@ -7214,8 +7215,9 @@ const IncidentDetailPage = () => {
                         borderRadius: 1,
                         bgcolor: 'hsl(var(--input))',
                         border: mismatch ? '1px solid rgba(251, 146, 60, 0.3)' : isExpanded ? '1px solid hsl(var(--primary) / 0.3)' : '1px solid hsl(var(--border-subtle))',
-                        transition: 'border-color 0.15s ease',
-                        '&:hover': { borderColor: 'hsl(var(--primary) / 0.2)' },
+                        opacity: isThisIgnored ? 0.55 : 1,
+                        transition: 'border-color 0.15s ease, opacity 0.15s ease',
+                        '&:hover': { borderColor: 'hsl(var(--primary) / 0.2)', opacity: isThisIgnored ? 0.85 : 1 },
                       }}
                     >
                       <Box
