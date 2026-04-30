@@ -526,7 +526,7 @@ export const AppAuthCard = ({
     if (Object.keys(urlDefaults).length > 0) {
       setLocalCredentials(prev => ({ ...urlDefaults, ...prev }));
     }
-  }, [auth?.parameters]);
+  }, [auth?.parameters, disableUrlPrefill]);
 
   const [docsOpen, setDocsOpen] = useState(false);
   const [docsContent, setDocsContent] = useState<string>('');
