@@ -16,6 +16,7 @@ import { askAI } from '@/services/ai';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/context/AuthContext';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 import { useWorkflows } from '@/hooks/useWorkflows';
 
