@@ -87,6 +87,7 @@ export const ScheduleHealthBanner = ({
   incidentCount,
 }: ScheduleHealthBannerProps) => {
   const navigate = useNavigate();
+  const isAdmin = useIsAdmin();
   const { users } = useUsers();
   const [config, setConfig] = useState<AssignmentConfig | null>(null);
   const [issues, setIssues] = useState<ScheduleIssue[]>([]);
