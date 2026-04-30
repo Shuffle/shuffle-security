@@ -28,6 +28,7 @@ import AttachFileIcon from '@mui/icons-material/AttachFile';
 import PersonIcon from '@mui/icons-material/Person';
 import DOMPurify from 'dompurify';
 import { resolveEmailThread, type ResolvedEmailThread } from '@/lib/emailThreadAdapters';
+import { stripColorStyles } from '@/utils/sanitizeEmailHtml';
 
 export interface EmailMessage {
   id: string;
@@ -578,20 +579,32 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
                           lineHeight: 1.7,
                           color: 'text.primary',
                           wordBreak: 'break-word',
-                          '& a': { color: '#ff6600' },
+                          // Force theme-aware colors over the email's inline
+                          // styles. Most provider HTML hard-codes dark text
+                          // (and sometimes light backgrounds) which becomes
+                          // unreadable on our dark theme. We strip color/bg
+                          // declarations from the HTML below AND override any
+                          // that survive via CSS specificity here.
+                          '& *': {
+                            color: 'inherit !important',
+                            backgroundColor: 'transparent !important',
+                            backgroundImage: 'none !important',
+                            borderColor: 'hsl(var(--border)) !important',
+                          },
+                          '& a, & a *': { color: '#ff6600 !important' },
                           '& img': { maxWidth: '100%', height: 'auto' },
                           '& blockquote': {
-                            borderLeft: '3px solid hsl(var(--border))',
+                            borderLeft: '3px solid hsl(var(--border)) !important',
                             pl: 1.5,
                             ml: 0,
-                            color: 'text.secondary',
+                            color: 'text.secondary !important',
                           },
                         }}
                         dangerouslySetInnerHTML={{
-                          __html: DOMPurify.sanitize(msg.bodyHtml, {
+                          __html: stripColorStyles(DOMPurify.sanitize(msg.bodyHtml, {
                             FORBID_TAGS: ['script', 'style', 'iframe', 'object', 'embed'],
-                            FORBID_ATTR: ['onerror', 'onload', 'onclick'],
-                          }),
+                            FORBID_ATTR: ['onerror', 'onload', 'onclick', 'bgcolor', 'color'],
+                          })),
                         }}
                       />
                     ) : (
