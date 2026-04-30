@@ -4838,7 +4838,7 @@ const IncidentDetailPage = () => {
               <>
                 <CollapsibleContent maxHeight={240} storageKey={`incident-comment-expand::${rawId || ''}::${actItem.id || ''}`}>
                   <MentionText
-                    text={actItem.content && /<[a-z][\s\S]*>/i.test(actItem.content) ? htmlToPlainText(actItem.content).trim() : actItem.content}
+                    text={actItem.content && /<[a-z][\s\S]*>/i.test(actItem.content) ? htmlToPlainText(actItem.content).trim() : decodeHtmlEntities(actItem.content || '')}
                     sx={{ fontSize: '0.8rem', color: 'text.secondary', whiteSpace: 'pre-wrap' }}
                   />
                   {actItem.attachments && actItem.attachments.length > 0 && (
