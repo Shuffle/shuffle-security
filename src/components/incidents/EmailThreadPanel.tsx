@@ -826,6 +826,98 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
       </Collapse>
     </Box>
   );
+
+  if (!poppedOut) return panel;
+
+  // Popped out: render an inline placeholder so the user can see where the
+  // thread "lives", and the real panel as a draggable floating window via
+  // a portal. The portal target is document.body so the window sits above
+  // every other dashboard surface and survives section scroll.
+  return (
+    <>
+      <Box
+        sx={{
+          border: '1px dashed hsl(var(--border))',
+          borderRadius: 1.5,
+          bgcolor: 'transparent',
+          px: 2,
+          py: 1.5,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 1,
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary' }}>
+          <EmailIcon sx={{ fontSize: 16, color: '#ff6600' }} />
+          <Typography variant="caption" sx={{ fontSize: '0.75rem' }}>
+            Email thread opened in popout window
+          </Typography>
+        </Box>
+        <Button
+          size="small"
+          onClick={() => setPoppedOut(false)}
+          sx={{
+            fontSize: '0.7rem',
+            textTransform: 'none',
+            color: '#ff6600',
+            '&:hover': { bgcolor: 'transparent', color: '#e55a00' },
+          }}
+        >
+          Dock back inline
+        </Button>
+      </Box>
+      {typeof document !== 'undefined' && createPortal(
+        <Box
+          sx={{
+            position: 'fixed',
+            top: popPos.y,
+            left: popPos.x,
+            width: POP_W,
+            height: POP_H,
+            zIndex: 1400,
+            bgcolor: 'hsl(var(--card))',
+            border: '1px solid hsl(var(--border))',
+            borderRadius: 1.5,
+            boxShadow: '0 16px 48px rgba(0,0,0,0.45)',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+          }}
+        >
+          {/* Drag handle bar */}
+          <Box
+            onMouseDown={onDragStart}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              px: 1.25,
+              py: 0.75,
+              cursor: 'move',
+              userSelect: 'none',
+              borderBottom: '1px solid hsl(var(--border))',
+              bgcolor: (t) => t.palette.mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
+            }}
+          >
+            <DragIndicatorIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+            <Typography variant="caption" sx={{ fontSize: '0.7rem', color: 'text.secondary', flex: 1 }}>
+              {threadSubject || 'Email thread'} — drag to move
+            </Typography>
+            <Tooltip title="Dock back inline">
+              <IconButton size="small" onClick={() => setPoppedOut(false)} sx={{ color: 'text.secondary', '&:hover': { color: '#ff6600' } }}>
+                <CloseIcon sx={{ fontSize: 16 }} />
+              </IconButton>
+            </Tooltip>
+          </Box>
+          <Box sx={{ flex: 1, overflow: 'auto' }}>
+            {panel}
+          </Box>
+        </Box>,
+        document.body,
+      )}
+    </>
+  );
 };
 
 export default EmailThreadPanel;
