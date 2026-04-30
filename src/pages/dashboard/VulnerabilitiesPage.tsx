@@ -16,6 +16,7 @@ import { askAI } from '@/services/ai';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/context/AuthContext';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 import { useWorkflows } from '@/hooks/useWorkflows';
 
@@ -52,6 +53,7 @@ const STATUS_LABELS: Record<string, string> = {
 const VulnerabilitiesPage = () => {
   usePageMeta({ title: 'Vulnerabilities', description: 'Track and manage vulnerabilities across assets and users' });
   const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const isAdmin = useIsAdmin();
   if (authLoading) return null;
   if (!isAuthenticated) return <PublicVulnerabilitiesView />;
   return <AuthenticatedVulnerabilitiesView />;
@@ -140,6 +142,7 @@ const PublicVulnerabilitiesView = () => {
 };
 
 const AuthenticatedVulnerabilitiesView = () => {
+  const isAdmin = useIsAdmin();
   const [searchQuery, setSearchQuery] = useState('');
   const [severityFilter, setSeverityFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -238,47 +241,49 @@ const AuthenticatedVulnerabilitiesView = () => {
 
   return (
     <div className="p-6 max-w-[1400px] mx-auto space-y-6">
-      {/* Vulnerability Automation banner */}
-      <div
-        className={`flex items-center gap-3 px-4 py-3 rounded-lg border ${
-          automationEnabled
-            ? 'border-green-500/30 bg-green-500/[0.08]'
-            : 'border-primary/30 bg-primary/[0.06]'
-        }`}
-      >
+      {/* Vulnerability Automation banner — admin only */}
+      {isAdmin && (
         <div
-          className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-            automationEnabled ? 'bg-green-500/15 text-green-500' : 'bg-primary/15 text-primary'
+          className={`flex items-center gap-3 px-4 py-3 rounded-lg border ${
+            automationEnabled
+              ? 'border-green-500/30 bg-green-500/[0.08]'
+              : 'border-primary/30 bg-primary/[0.06]'
           }`}
         >
-          <Zap size={16} />
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 mb-0.5">
-            <span className="text-sm font-semibold text-foreground">Vulnerability Automation</span>
-            <span className="px-1.5 py-0.5 text-[0.55rem] font-bold tracking-wide uppercase rounded bg-muted text-muted-foreground leading-none">
-              Coming soon
-            </span>
-            {automationEnabled && (
-              <span className="px-1.5 py-0.5 text-[0.55rem] font-bold tracking-wide uppercase rounded bg-green-500/15 text-green-600 dark:text-green-400 leading-none">
-                Active
-              </span>
-            )}
+          <div
+            className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+              automationEnabled ? 'bg-green-500/15 text-green-500' : 'bg-primary/15 text-primary'
+            }`}
+          >
+            <Zap size={16} />
           </div>
-          <p className="text-xs text-muted-foreground leading-snug">
-            Runs the <span className="font-medium text-foreground">Vulnerability Comparison</span> workflow in the background to compare scanner results across runs and surface new findings. Automated remediation comes later.
-          </p>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 mb-0.5">
+              <span className="text-sm font-semibold text-foreground">Vulnerability Automation</span>
+              <span className="px-1.5 py-0.5 text-[0.55rem] font-bold tracking-wide uppercase rounded bg-muted text-muted-foreground leading-none">
+                Coming soon
+              </span>
+              {automationEnabled && (
+                <span className="px-1.5 py-0.5 text-[0.55rem] font-bold tracking-wide uppercase rounded bg-green-500/15 text-green-600 dark:text-green-400 leading-none">
+                  Active
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground leading-snug">
+              Runs the <span className="font-medium text-foreground">Vulnerability Comparison</span> workflow in the background to compare scanner results across runs and surface new findings. Automated remediation comes later.
+            </p>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1.5 shrink-0 opacity-50 cursor-not-allowed"
+            disabled
+          >
+            <Zap size={14} />
+            {automationEnabled ? 'Disable' : 'Enable'}
+          </Button>
         </div>
-        <Button
-          size="sm"
-          variant="outline"
-          className="gap-1.5 shrink-0 opacity-50 cursor-not-allowed"
-          disabled
-        >
-          <Zap size={14} />
-          {automationEnabled ? 'Disable' : 'Enable'}
-        </Button>
-      </div>
+      )}
 
       {/* Header */}
       <div className="flex items-center justify-between">

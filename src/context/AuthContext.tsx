@@ -7,6 +7,8 @@ interface Organization {
   image?: string;
   region_url?: string;
   creator_org?: string;
+  /** Role of the current user within this org (e.g. "admin", "user"). From /api/v1/getinfo => active_org.role */
+  role?: string;
 }
 
 interface UserInfo {

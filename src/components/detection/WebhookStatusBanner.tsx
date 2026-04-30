@@ -1,6 +1,7 @@
 import { Box, Typography, Button, CircularProgress, Chip } from '@mui/material';
 import WebhookIcon from '@mui/icons-material/Webhook';
 import { useWebhookStatus } from '@/hooks/useWebhookStatus';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { toast } from 'sonner';
 
 /**
@@ -34,8 +35,11 @@ export const WebhookActiveChip = () => {
  * Includes an enable button.
  */
 const WebhookStatusBanner = () => {
+  const isAdmin = useIsAdmin();
   const { exists, enabled, isLoading, enable, isEnabling } = useWebhookStatus();
 
+  // Admin-only: non-admins cannot enable webhooks anyway
+  if (!isAdmin) return null;
   // Don't render if loading or webhook is already active
   if (isLoading || (exists && enabled)) return null;
 

@@ -34,6 +34,7 @@ import type {
 } from '@/components/users/OnCallScheduleManager';
 import { computeDefaultPolicy } from '@/components/users/OnCallScheduleManager';
 import { useUsers } from '@/hooks/useUsers';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 
 interface ScheduleHealthBannerProps {
   manageHref?: string;
@@ -86,6 +87,7 @@ export const ScheduleHealthBanner = ({
   incidentCount,
 }: ScheduleHealthBannerProps) => {
   const navigate = useNavigate();
+  const isAdmin = useIsAdmin();
   const { users } = useUsers();
   const [config, setConfig] = useState<AssignmentConfig | null>(null);
   const [issues, setIssues] = useState<ScheduleIssue[]>([]);
@@ -178,6 +180,7 @@ export const ScheduleHealthBanner = ({
     }
   };
 
+  if (!isAdmin) return null;
   if (loading || issues.length === 0) return null;
   if (typeof minIncidents === 'number' && (incidentCount ?? 0) < minIncidents) return null;
   if (dismissed && dismissKey) {
