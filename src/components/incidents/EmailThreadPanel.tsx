@@ -32,6 +32,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import DOMPurify from 'dompurify';
 import { resolveEmailThread, type ResolvedEmailThread } from '@/lib/emailThreadAdapters';
+import { confirmExternalLinkClick } from '@/utils/safeExternalLinks';
 
 export interface EmailMessage {
   id: string;
