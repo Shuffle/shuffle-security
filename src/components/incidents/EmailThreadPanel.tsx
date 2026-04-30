@@ -580,12 +580,85 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
           p: 2,
           bgcolor: (t) => t.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)',
         }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-            <ReplyIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-            <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem' }}>
-              Reply to {messages[0]?.from || 'sender'}
-            </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mb: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <ReplyIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem' }}>
+                Reply to {messages[0]?.from || 'sender'}
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', gap: 0.5 }}>
+              {!showCc && (
+                <Button
+                  size="small"
+                  onClick={() => setShowCc(true)}
+                  sx={{ fontSize: '0.7rem', textTransform: 'none', minWidth: 0, px: 0.75, py: 0, color: 'text.secondary', '&:hover': { color: '#ff6600', bgcolor: 'transparent' } }}
+                >
+                  + Cc
+                </Button>
+              )}
+              {!showBcc && (
+                <Button
+                  size="small"
+                  onClick={() => setShowBcc(true)}
+                  sx={{ fontSize: '0.7rem', textTransform: 'none', minWidth: 0, px: 0.75, py: 0, color: 'text.secondary', '&:hover': { color: '#ff6600', bgcolor: 'transparent' } }}
+                >
+                  + Bcc
+                </Button>
+              )}
+            </Box>
           </Box>
+
+          {/* Recipient header rows — make it explicit who the reply is going to */}
+          <Stack spacing={0} sx={{
+            mb: 1,
+            border: '1px solid hsl(var(--border))',
+            borderRadius: 1,
+            overflow: 'hidden',
+            bgcolor: (t) => t.palette.mode === 'dark' ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.8)',
+          }}>
+            <RecipientRow
+              label="To"
+              value={replyTo}
+              onChange={setReplyTo}
+              placeholder="recipient@example.com"
+              autoFocus
+            />
+            {showCc && (
+              <>
+                <Divider sx={{ borderColor: 'hsl(var(--border))' }} />
+                <RecipientRow
+                  label="Cc"
+                  value={replyCc}
+                  onChange={setReplyCc}
+                  placeholder="cc@example.com"
+                  onRemove={() => { setShowCc(false); setReplyCc(''); }}
+                />
+              </>
+            )}
+            {showBcc && (
+              <>
+                <Divider sx={{ borderColor: 'hsl(var(--border))' }} />
+                <RecipientRow
+                  label="Bcc"
+                  value={replyBcc}
+                  onChange={setReplyBcc}
+                  placeholder="bcc@example.com"
+                  onRemove={() => { setShowBcc(false); setReplyBcc(''); }}
+                />
+              </>
+            )}
+            <Divider sx={{ borderColor: 'hsl(var(--border))' }} />
+            <Box sx={{ display: 'flex', alignItems: 'center', px: 1.25, py: 0.5, gap: 1 }}>
+              <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'text.secondary', minWidth: 32 }}>
+                Subject
+              </Typography>
+              <Typography sx={{ fontSize: '0.78rem', color: 'text.primary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {threadSubject ? `Re: ${threadSubject}` : '(no subject)'}
+              </Typography>
+            </Box>
+          </Stack>
+
           <TextField
             multiline
             minRows={3}
