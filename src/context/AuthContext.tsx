@@ -221,6 +221,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const currentToken = sessionToken;
     localStorage.removeItem('session_token');
     localStorage.removeItem('shuffle_user_info');
+    setRuntimeOrgId(null);
     API_CONFIG.setApiKey(null);
     resetRegionUrl();
     setSessionToken(null);
