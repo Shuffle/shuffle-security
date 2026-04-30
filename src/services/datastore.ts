@@ -326,8 +326,9 @@ export const getDatastoreByCategory = async (
     };
   }
 
-  // Use higher limit so single-page fetches return everything for typical orgs
-  const limit = 1000;
+  // Cap page size at 50 — large `top` values can blow up payloads (especially
+  // for incidents). Pagination via cursor handles the rest.
+  const limit = 50;
   let url = `/api/v1/orgs/${orgId}/list_cache?category=${encodeURIComponent(category)}&top=${limit}`;
   if (cursor) {
     url += `&cursor=${encodeURIComponent(cursor)}`;
