@@ -468,6 +468,22 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
               </IconButton>
             </Tooltip>
           )}
+          <Tooltip title={poppedOut ? 'Dock back inline' : 'Open in popout window'}>
+            <IconButton
+              size="small"
+              onClick={() => {
+                setPoppedOut(p => !p);
+                // Auto-expand when popping out — a collapsed popout window is useless.
+                if (!poppedOut) setThreadCollapsed(false);
+              }}
+              sx={{
+                color: poppedOut ? '#ff6600' : 'text.secondary',
+                '&:hover': { color: '#ff6600' },
+              }}
+            >
+              {poppedOut ? <CloseIcon sx={{ fontSize: 18 }} /> : <OpenInNewIcon sx={{ fontSize: 16 }} />}
+            </IconButton>
+          </Tooltip>
           <Tooltip title={threadCollapsed ? 'Expand' : 'Collapse'}>
             <IconButton
               size="small"
