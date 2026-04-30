@@ -79,7 +79,7 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
     ? allIntegrations.filter(i => filterApps.some(f => f.toLowerCase() === i.name.toLowerCase()))
     : allIntegrations;
 
-  const defaultLimit = showAll ? integrations.length : (collapsed ? 4 : 8);
+  const defaultLimit = showAll ? integrations.length : (collapsed ? 3 : 7);
   const displayLimit = showAll ? integrations.length : (expanded ? integrations.length : defaultLimit);
   const hasMore = !showAll && integrations.length > defaultLimit;
 
