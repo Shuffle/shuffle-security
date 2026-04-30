@@ -2070,11 +2070,15 @@ function UsecaseDetailContent({
             // surface "Shuffle Security" alongside any installed case-management
             // apps. Pre-pend it so it sorts first and the user immediately sees
             // that Shuffle covers this leg of the flow.
+            // Skip Shuffle Security on Destination when Source is also Cases —
+            // avoids duplicating the platform on both sides of the flow.
             const isCases = endpoint.categoryId === 'case_management';
-            const appNamesWithShuffle = isCases
+            const skipShuffle = endpoint.title === 'Destination' && flow.source === 'case_management';
+            const showShuffle = isCases && !skipShuffle;
+            const appNamesWithShuffle = showShuffle
               ? ['Shuffle Security', ...endpoint.appNames.filter((n) => n.toLowerCase() !== 'shuffle security')]
               : endpoint.appNames;
-            const synthetic = isCases
+            const synthetic = showShuffle
               ? [{
                   id: 'shuffle-security',
                   name: 'Shuffle Security',
