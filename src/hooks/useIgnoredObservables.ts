@@ -3,8 +3,9 @@
  * "uninteresting" so they are hidden from the default observables view.
  *
  * Storage: Shuffle datastore, category `ignored-observables`.
- * Key:     `${type.toLowerCase()}::${value.toLowerCase()}` — same canonical
- *          form used everywhere else for observable identity.
+ * Key:     encoded via `encodeCompositeKey(type, value)` so the persisted
+ *          key survives `normalizeDatastoreKey`'s legacy `::` stripping.
+ *          See `src/utils/compositeKey.ts` for the rationale.
  * Value:   { type, value, reason?, ignored_at } — JSON, so we can show
  *          context later (who/why/when) without another API.
  *
@@ -25,6 +26,12 @@ import {
   setDatastoreItem,
   deleteDatastoreItem,
 } from '@/services/datastore';
+import {
+  canonicalCompositeKey,
+  encodeCompositeKey,
+  decodeCompositeKey,
+  toCanonicalCompositeKey,
+} from '@/utils/compositeKey';
 
 export const IGNORED_OBSERVABLES_CATEGORY = 'ignored-observables';
 
@@ -35,23 +42,33 @@ export interface IgnoredObservableEntry {
   ignored_at: number;
 }
 
-/** Canonical key for an observable — keep in lockstep with the rest of the app. */
+/** Canonical in-memory key for an observable. Re-exported so other modules
+ *  that need to coordinate with this set use the exact same form. */
 export const ignoredObservableKey = (type: string, value: string): string =>
-  `${(type || '').toLowerCase()}::${(value || '').toLowerCase()}`;
+  canonicalCompositeKey(type, value);
 
 interface LocalEntry {
-  key: string;
+  storageKey: string; // what we'd send to the API to delete this row
   entry: IgnoredObservableEntry;
 }
 
-const decodeValue = (key: string, raw: unknown): IgnoredObservableEntry => {
+const decodeValue = (storedKey: string, raw: unknown): IgnoredObservableEntry => {
   if (typeof raw === 'string') {
-    try { return JSON.parse(raw) as IgnoredObservableEntry; } catch {
-      const [type, ...rest] = (key || '').split('::');
-      return { type, value: rest.join('::'), ignored_at: 0 };
-    }
+    try {
+      const parsed = JSON.parse(raw);
+      // Trust the JSON payload's type/value since legacy storage may have lost
+      // the type segment in the key itself.
+      if (parsed && typeof parsed === 'object' && parsed.type && parsed.value) {
+        return parsed as IgnoredObservableEntry;
+      }
+    } catch { /* fall through to key-based decode */ }
   }
-  return (raw as IgnoredObservableEntry) || { type: '', value: '', ignored_at: 0 };
+  if (raw && typeof raw === 'object') {
+    const obj = raw as Partial<IgnoredObservableEntry>;
+    if (obj.type && obj.value) return obj as IgnoredObservableEntry;
+  }
+  const { type, value } = decodeCompositeKey(storedKey);
+  return { type, value, ignored_at: 0 };
 };
 
 export const useIgnoredObservables = () => {
@@ -81,8 +98,14 @@ export const useIgnoredObservables = () => {
           }
           for (const item of response.data || []) {
             if (!item?.key) continue;
-            const k = item.key.toLowerCase();
-            next.set(k, { key: k, entry: decodeValue(item.key, item.value) });
+            const entry = decodeValue(item.key, item.value);
+            // Always key the local map by canonical (type::value) so lookups
+            // by `(obs.type, obs.value)` match regardless of how the row was
+            // originally stored (legacy `::`, new `||`, or value-only).
+            const k = canonicalCompositeKey(entry.type, entry.value)
+              || toCanonicalCompositeKey(item.key);
+            if (!k) continue;
+            next.set(k, { storageKey: item.key, entry });
           }
           cursor = response.cursor || undefined;
           if (!cursor) break;
@@ -104,13 +127,14 @@ export const useIgnoredObservables = () => {
   const entries = useMemo(() => Array.from(local.values()).map(v => v.entry), [local]);
 
   const isIgnored = useCallback(
-    (type: string, value: string) => local.has(ignoredObservableKey(type, value)),
+    (type: string, value: string) => local.has(canonicalCompositeKey(type, value)),
     [local],
   );
 
   const ignore = useCallback(
     async (type: string, value: string, reason?: string) => {
-      const key = ignoredObservableKey(type, value);
+      const canonical = canonicalCompositeKey(type, value);
+      const storageKey = encodeCompositeKey(type, value);
       const payload: IgnoredObservableEntry = {
         type,
         value,
@@ -122,11 +146,11 @@ export const useIgnoredObservables = () => {
       setLocal(curr => {
         prev = curr;
         const next = new Map(curr);
-        next.set(key, { key, entry: payload });
+        next.set(canonical, { storageKey, entry: payload });
         return next;
       });
       try {
-        const response = await setDatastoreItem(key, payload, IGNORED_OBSERVABLES_CATEGORY);
+        const response = await setDatastoreItem(storageKey, payload, IGNORED_OBSERVABLES_CATEGORY);
         if (!response.success) {
           if (prev) setLocal(prev);
           setError(response.error || 'Failed to ignore observable');
@@ -144,17 +168,20 @@ export const useIgnoredObservables = () => {
 
   const unignore = useCallback(
     async (type: string, value: string) => {
-      const key = ignoredObservableKey(type, value);
+      const canonical = canonicalCompositeKey(type, value);
       let prev: Map<string, LocalEntry> | null = null;
+      let storageKey = encodeCompositeKey(type, value);
       setLocal(curr => {
         prev = curr;
-        if (!curr.has(key)) return curr;
+        const existing = curr.get(canonical);
+        if (existing) storageKey = existing.storageKey; // delete the row we actually loaded
+        if (!curr.has(canonical)) return curr;
         const next = new Map(curr);
-        next.delete(key);
+        next.delete(canonical);
         return next;
       });
       try {
-        const response = await deleteDatastoreItem(key, IGNORED_OBSERVABLES_CATEGORY);
+        const response = await deleteDatastoreItem(storageKey, IGNORED_OBSERVABLES_CATEGORY);
         if (!response.success) {
           if (prev) setLocal(prev);
           setError(response.error || 'Failed to unignore observable');
@@ -171,7 +198,6 @@ export const useIgnoredObservables = () => {
   );
 
   const refetch = useCallback(async () => {
-    // Manual escape hatch — rarely needed. Resets the one-shot guard.
     fetchedRef.current = false;
     setHasFetched(false);
   }, []);
