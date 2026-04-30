@@ -143,17 +143,7 @@ const DecisionItem = ({
 
   const durationMs = typeof decision.duration === 'number' ? decision.duration * 1000 : 0;
 
-  // Extra fields not surfaced explicitly — shown inside Details (includes `reason`)
-  const extraEntries = Object.entries(decision).filter(([k, v]) => {
-    if (SURFACED_FIELDS.has(k)) return false;
-    if (v === null || v === undefined || v === '') return false;
-    if (Array.isArray(v) && v.length === 0) return false;
-    if (typeof v === 'object' && v !== null && Object.keys(v as object).length === 0) return false;
-    return true;
-  });
-
-  // `reason` is rendered separately as Markdown — exclude from key/value rows
-  const nonReasonEntries = extraEntries.filter(([k]) => k !== 'reason');
+  const hasReason = typeof decision.reason === 'string' && decision.reason.trim().length > 0;
 
   return (
     <Box>
