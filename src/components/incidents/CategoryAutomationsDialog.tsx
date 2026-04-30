@@ -332,9 +332,21 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
             return numA - numB;
           });
         const prompts = actionOptions.map(o => o.value).filter(Boolean);
-        setAiAgentPrompts(prompts.length > 0 ? prompts : ['']);
+        const finalPrompts = prompts.length > 0 ? prompts : [''];
+        setAiAgentPrompts(finalPrompts);
+
+        // Parse parallel "apps" / "apps-N" options (comma-separated app names)
+        const appsByIdx: string[][] = finalPrompts.map((_, i) => {
+          const key = i === 0 ? 'apps' : `apps-${i + 1}`;
+          const opt = aiAutomation.options.find(o => o.key === key);
+          return opt?.value
+            ? opt.value.split(',').map(s => s.trim()).filter(Boolean)
+            : [];
+        });
+        setAiAgentApps(appsByIdx);
       } else {
         setAiAgentPrompts(['']);
+        setAiAgentApps([[]]);
       }
     }
   }, [open, initialAutomations]);
