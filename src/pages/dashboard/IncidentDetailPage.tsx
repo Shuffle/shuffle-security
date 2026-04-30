@@ -3802,19 +3802,20 @@ const IncidentDetailPage = () => {
       }
     }
 
-    // Newest first. On exact-tie timestamps, force the "Incident created"
-    // marker (the oldest revision) to always sort *after* every other item
-    // so it stays anchored at the bottom of the feed — even when observables
-    // or steps were stamped with the same `createdTs`.
+    // Newest first. The "Incident created" marker is ALWAYS forced to the
+    // bottom of the feed regardless of timestamp — creation is conceptually
+    // the first event, even if upstream clock skew or trigger-vs-write gaps
+    // make an agent run's `started_at` appear slightly earlier.
     const oldestRevisionIdx = revisions.length - 1;
-    const isCreationItem = (it: TimelineItem) => it.type === 'revision' && it.idx === oldestRevisionIdx;
+    const isCreationItem = (it: TimelineItem) =>
+      (it.type === 'revision' && it.idx === oldestRevisionIdx) ||
+      (it.type === 'step' && it.id === 'step-incident-created');
     items.sort((a, b) => {
-      if (b.timestamp !== a.timestamp) return b.timestamp - a.timestamp;
       const aCreate = isCreationItem(a);
       const bCreate = isCreationItem(b);
-      if (aCreate && !bCreate) return 1;   // a goes after b
-      if (bCreate && !aCreate) return -1;  // b goes after a
-      return 0;
+      if (aCreate && !bCreate) return 1;   // creation always goes last
+      if (bCreate && !aCreate) return -1;
+      return b.timestamp - a.timestamp;     // otherwise newest first
     });
 
     if (items.length === 0) {
