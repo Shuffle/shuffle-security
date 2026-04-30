@@ -103,6 +103,350 @@ const DECISION_TYPE_CONFIG: Record<DecisionType, {
   },
 };
 
+// ── Decision Item (per-card with collapsible Details) ─────────────────────────
+
+/** Fields rendered explicitly on the card — excluded from the Details dump. */
+const SURFACED_FIELDS = new Set([
+  'title', 'description', 'status', 'timestamp', 'duration',
+  'action', 'result', 'tool', 'reason',
+]);
+
+const DecisionItem = ({
+  decision,
+  prev,
+  isLast,
+}: {
+  decision: AgentDecision;
+  prev?: AgentDecision;
+  isLast: boolean;
+}) => {
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const type = classifyDecision(decision);
+  const cfg = DECISION_TYPE_CONFIG[type];
+  const label = decision.title || decision.action?.replace(/_/g, ' ') || cfg.label;
+
+  // Thinking gap
+  let thinkingMs = 0;
+  if (prev && decision.timestamp) {
+    const prevEnd = prev.timestamp
+      ? (typeof prev.timestamp === 'number' ? prev.timestamp * 1000 : new Date(prev.timestamp).getTime())
+        + (typeof prev.duration === 'number' ? prev.duration * 1000 : 0)
+      : 0;
+    const thisStart = typeof decision.timestamp === 'number'
+      ? decision.timestamp * 1000
+      : new Date(decision.timestamp).getTime();
+    if (prevEnd && thisStart && thisStart > prevEnd) {
+      thinkingMs = thisStart - prevEnd;
+    }
+  }
+
+  const durationMs = typeof decision.duration === 'number' ? decision.duration * 1000 : 0;
+
+  // Extra fields not surfaced explicitly — shown inside Details
+  const extraEntries = Object.entries(decision).filter(([k, v]) => {
+    if (SURFACED_FIELDS.has(k)) return false;
+    if (v === null || v === undefined || v === '') return false;
+    if (Array.isArray(v) && v.length === 0) return false;
+    if (typeof v === 'object' && v !== null && Object.keys(v as object).length === 0) return false;
+    return true;
+  });
+
+  const hasReason = typeof decision.reason === 'string' && decision.reason.trim().length > 0;
+  const hasDetails = extraEntries.length > 0;
+
+  return (
+    <Box>
+      {/* Thinking gap indicator */}
+      {thinkingMs > 200 && (
+        <Box sx={{
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          my: 0.75,
+        }}>
+          <Box sx={{
+            position: 'absolute',
+            left: -22,
+            width: 14,
+            height: 14,
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            bgcolor: 'hsl(var(--background))',
+            color: 'hsl(var(--muted-foreground))',
+            zIndex: 1,
+          }}>
+            <Brain size={10} />
+          </Box>
+          <Box sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 0.5,
+            px: 1,
+            py: 0.25,
+            borderRadius: 1,
+            bgcolor: 'hsla(var(--muted-foreground) / 0.06)',
+            border: '1px dashed hsla(var(--muted-foreground) / 0.2)',
+          }}>
+            <Brain size={9} style={{ color: 'hsl(var(--muted-foreground))', opacity: 0.5 }} />
+            <Typography sx={{ fontSize: '0.58rem', color: 'hsl(var(--muted-foreground))', opacity: 0.6, fontWeight: 500 }}>
+              Thinking · {formatDecisionDuration(thinkingMs)}
+            </Typography>
+          </Box>
+        </Box>
+      )}
+
+      <Box sx={{ position: 'relative', mb: isLast ? 0 : 1.5 }}>
+        {/* Node dot */}
+        <Box sx={{
+          position: 'absolute',
+          left: -24,
+          top: 10,
+          width: 18,
+          height: 18,
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          bgcolor: cfg.bg,
+          border: `1.5px solid ${cfg.borderColor}`,
+          color: cfg.color,
+          zIndex: 1,
+        }}>
+          {cfg.icon}
+        </Box>
+
+        {/* Card */}
+        <Box sx={{
+          borderRadius: 2,
+          border: `1px solid ${cfg.borderColor}`,
+          borderLeft: `3px solid ${cfg.color}`,
+          bgcolor: cfg.bg,
+          overflow: 'hidden',
+        }}>
+          {/* Card header */}
+          <Box sx={{ px: 1.5, py: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography sx={{
+              fontSize: '0.78rem',
+              fontWeight: 600,
+              color: 'hsl(var(--foreground))',
+              flex: 1,
+              textTransform: 'capitalize',
+            }}>
+              {label}
+            </Typography>
+            {durationMs > 0 && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3, color: 'hsl(var(--muted-foreground))', opacity: 0.7 }}>
+                <Clock size={10} />
+                <Typography sx={{ fontSize: '0.6rem', fontWeight: 500 }}>
+                  {formatDecisionDuration(durationMs)}
+                </Typography>
+              </Box>
+            )}
+            <Chip
+              label={cfg.label}
+              size="small"
+              sx={{
+                height: 16,
+                fontSize: '0.58rem',
+                fontWeight: 700,
+                bgcolor: 'transparent',
+                color: cfg.color,
+                border: `1px solid ${cfg.borderColor}`,
+                '& .MuiChip-label': { px: 0.5 },
+              }}
+            />
+          </Box>
+
+          {/* Description */}
+          {decision.description && (
+            <Box sx={{ px: 1.5, pb: 1 }}>
+              <Typography sx={{ fontSize: '0.74rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.55 }}>
+                {decision.description}
+              </Typography>
+            </Box>
+          )}
+
+          {/* Reason — primary "why" rendered as Markdown */}
+          {hasReason && (
+            <Box sx={{
+              mx: 1.5, mb: 1, px: 1.25, py: 1,
+              borderRadius: 1,
+              bgcolor: 'hsl(var(--background))',
+              border: `1px solid ${cfg.borderColor}`,
+              borderLeft: `2px solid ${cfg.color}`,
+              '& p': {
+                fontSize: '0.76rem',
+                color: 'hsl(var(--foreground))',
+                lineHeight: 1.6,
+                m: 0,
+                mb: 0.5,
+              },
+              '& p:last-child': { mb: 0 },
+              '& strong': { color: cfg.color, fontWeight: 700 },
+              '& code': {
+                fontSize: '0.7rem',
+                bgcolor: 'hsl(var(--muted))',
+                px: 0.5,
+                py: 0.15,
+                borderRadius: 0.5,
+                fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace',
+              },
+              '& ul, & ol': { fontSize: '0.76rem', pl: 2.25, m: 0, mb: 0.5 },
+            }}>
+              <Typography sx={{
+                fontSize: '0.58rem',
+                fontWeight: 700,
+                color: cfg.color,
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+                mb: 0.5,
+                opacity: 0.85,
+              }}>
+                Reason
+              </Typography>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {decision.reason as string}
+              </ReactMarkdown>
+            </Box>
+          )}
+
+          {/* Tool badge */}
+          {decision.tool && (
+            <Box sx={{ px: 1.5, pb: 1 }}>
+              <Chip
+                icon={<Wrench size={10} />}
+                label={decision.tool}
+                size="small"
+                sx={{
+                  height: 20,
+                  fontSize: '0.65rem',
+                  bgcolor: 'hsla(var(--primary) / 0.08)',
+                  color: 'hsl(var(--primary))',
+                  '& .MuiChip-icon': { color: 'inherit', ml: 0.5 },
+                }}
+              />
+            </Box>
+          )}
+
+          {/* Result snippet (actions only) */}
+          {type === 'action' && decision.result && (
+            <Box sx={{
+              mx: 1.5, mb: 1, p: 1,
+              borderRadius: 1,
+              bgcolor: 'hsl(var(--background))',
+              border: '1px solid hsl(var(--border))',
+              maxHeight: 72,
+              overflow: 'auto',
+            }}>
+              <Typography sx={{
+                fontSize: '0.68rem',
+                fontFamily: "'JetBrains Mono', monospace",
+                color: 'hsl(var(--muted-foreground))',
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word',
+                m: 0,
+              }}>
+                {decision.result}
+              </Typography>
+            </Box>
+          )}
+
+          {/* Details (collapsible) — extra fields like category, confidence, runs, fields, run_details */}
+          {hasDetails && (
+            <Box sx={{ px: 1.5, pb: 1 }}>
+              <Box
+                onClick={() => setDetailsOpen((v) => !v)}
+                sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  cursor: 'pointer',
+                  userSelect: 'none',
+                  color: 'hsl(var(--muted-foreground))',
+                  '&:hover': { color: 'hsl(var(--foreground))' },
+                }}
+              >
+                {detailsOpen ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
+                <Typography sx={{
+                  fontSize: '0.6rem',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.06em',
+                }}>
+                  Details · {extraEntries.length}
+                </Typography>
+              </Box>
+              {detailsOpen && (
+                <Box sx={{
+                  mt: 0.75,
+                  p: 1,
+                  borderRadius: 1,
+                  bgcolor: 'hsl(var(--background))',
+                  border: '1px solid hsl(var(--border))',
+                  display: 'grid',
+                  gridTemplateColumns: 'auto 1fr',
+                  rowGap: 0.5,
+                  columnGap: 1,
+                }}>
+                  {extraEntries.map(([k, v]) => (
+                    <>
+                      <Typography key={`${k}-k`} sx={{
+                        fontSize: '0.65rem',
+                        fontWeight: 600,
+                        color: 'hsl(var(--muted-foreground))',
+                        fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace',
+                      }}>
+                        {k}
+                      </Typography>
+                      <Typography key={`${k}-v`} sx={{
+                        fontSize: '0.7rem',
+                        color: 'hsl(var(--foreground))',
+                        fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace',
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word',
+                      }}>
+                        {typeof v === 'object' ? JSON.stringify(v, null, 2) : String(v)}
+                      </Typography>
+                    </>
+                  ))}
+                </Box>
+              )}
+            </Box>
+          )}
+
+          {/* Footer */}
+          {(decision.status || decision.timestamp) && (
+            <Box sx={{
+              px: 1.5, py: 0.75,
+              borderTop: `1px solid ${cfg.borderColor}`,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+            }}>
+              {decision.status && (
+                <Typography sx={{ fontSize: '0.6rem', fontWeight: 600, color: cfg.color, textTransform: 'uppercase' }}>
+                  {decision.status}
+                </Typography>
+              )}
+              {decision.timestamp && (
+                <Typography sx={{ fontSize: '0.6rem', color: 'hsl(var(--muted-foreground))', opacity: 0.6, display: 'flex', alignItems: 'center', gap: 0.3, ml: 'auto' }}>
+                  <Clock size={9} />
+                  {typeof decision.timestamp === 'number'
+                    ? new Date(decision.timestamp * 1000).toLocaleTimeString()
+                    : decision.timestamp}
+                </Typography>
+              )}
+            </Box>
+          )}
+        </Box>
+      </Box>
+    </Box>
+  );
+};
+
 // ── Decisions Timeline ─────────────────────────────────────────────────────────
 
 const DecisionsTimeline = ({ decisions }: { decisions: AgentDecision[] }) => {
