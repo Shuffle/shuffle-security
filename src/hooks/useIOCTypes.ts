@@ -99,7 +99,7 @@ export const DEFAULT_IOC_TYPES: IOCType[] = [
   { name: 'hash_imphash', regex: '^[a-fA-F0-9]{32}$', description: 'PE Import hash', category: 'hash' },
   { name: 'hash_tlsh', description: 'TLSH locality-sensitive hash', category: 'hash', needsPattern: true },
   // === NETWORK ARTIFACTS ===
-  { name: 'ipv4_range', regex: '^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\/(?:[0-9]|[1-2][0-9]|3[0-2])$', description: 'IPv4 CIDR range (e.g., 192.168.1.0/24)', category: 'network' },
+  { name: 'ipv4_range', regex: '^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\/(?:[0-9]|[1-2][0-9]|3[0-2])$', description: 'IPv4 CIDR range (e.g., 192.168.1.0/24)', category: 'network' },
   { name: 'ipv6_range', description: 'IPv6 CIDR range (e.g., 2001:db8::/32)', category: 'network', needsPattern: true },
   { name: 'asn', regex: '^AS\\d+$', description: 'Autonomous System Number', category: 'network' },
   { name: 'subdomain', description: 'Subdomain pattern', category: 'network' },
