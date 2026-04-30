@@ -143,17 +143,7 @@ const DecisionItem = ({
 
   const durationMs = typeof decision.duration === 'number' ? decision.duration * 1000 : 0;
 
-  // Extra fields not surfaced explicitly — shown inside Details (includes `reason`)
-  const extraEntries = Object.entries(decision).filter(([k, v]) => {
-    if (SURFACED_FIELDS.has(k)) return false;
-    if (v === null || v === undefined || v === '') return false;
-    if (Array.isArray(v) && v.length === 0) return false;
-    if (typeof v === 'object' && v !== null && Object.keys(v as object).length === 0) return false;
-    return true;
-  });
-
-  // `reason` is rendered separately as Markdown — exclude from key/value rows
-  const nonReasonEntries = extraEntries.filter(([k]) => k !== 'reason');
+  const hasReason = typeof decision.reason === 'string' && decision.reason.trim().length > 0;
 
   return (
     <Box>
@@ -338,9 +328,9 @@ const DecisionItem = ({
             {detailsOpen && (
               <Box sx={{ mt: 0.75 }}>
                 {/* Reason — rendered as Markdown at the top of details */}
-                {typeof decision.reason === 'string' && decision.reason.trim() && (
+                {hasReason && (
                   <Box sx={{
-                    mb: nonReasonEntries.length > 0 ? 1 : 1,
+                    mb: 1,
                     p: 1,
                     borderRadius: 1,
                     bgcolor: 'hsl(var(--background))',
@@ -368,43 +358,6 @@ const DecisionItem = ({
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
                       {decision.reason as string}
                     </ReactMarkdown>
-                  </Box>
-                )}
-
-                {/* Other extra fields as key/value rows */}
-                {nonReasonEntries.length > 0 && (
-                  <Box sx={{
-                    mb: 1,
-                    p: 1,
-                    borderRadius: 1,
-                    bgcolor: 'hsl(var(--background))',
-                    border: '1px solid hsl(var(--border))',
-                    display: 'grid',
-                    gridTemplateColumns: 'auto 1fr',
-                    rowGap: 0.5,
-                    columnGap: 1,
-                  }}>
-                    {nonReasonEntries.map(([k, v]) => (
-                      <Box key={k} sx={{ display: 'contents' }}>
-                        <Typography sx={{
-                          fontSize: '0.65rem',
-                          fontWeight: 600,
-                          color: 'hsl(var(--muted-foreground))',
-                          fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace',
-                        }}>
-                          {k}
-                        </Typography>
-                        <Typography sx={{
-                          fontSize: '0.7rem',
-                          color: 'hsl(var(--foreground))',
-                          fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace',
-                          whiteSpace: 'pre-wrap',
-                          wordBreak: 'break-word',
-                        }}>
-                          {typeof v === 'object' ? JSON.stringify(v, null, 2) : String(v)}
-                        </Typography>
-                      </Box>
-                    ))}
                   </Box>
                 )}
 
