@@ -248,6 +248,42 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
   // timeline below the fold on first open.
   const [threadCollapsed, setThreadCollapsed] = useState(true);
 
+  // Popout mode — like Gmail's "open in new window" button. When enabled the
+  // entire panel is rendered into a draggable floating card via a React
+  // portal, so the user can keep reading the email while they navigate
+  // around the rest of the incident page.
+  const [poppedOut, setPoppedOut] = useState(false);
+  const POP_W = 720;
+  const POP_H = 600;
+  const [popPos, setPopPos] = useState<{ x: number; y: number }>(() => ({
+    x: typeof window !== 'undefined' ? Math.max(24, window.innerWidth - POP_W - 32) : 80,
+    y: 96,
+  }));
+  const dragRef = useRef<{ dx: number; dy: number } | null>(null);
+
+  const onDragStart = useCallback((e: React.MouseEvent) => {
+    dragRef.current = { dx: e.clientX - popPos.x, dy: e.clientY - popPos.y };
+    const onMove = (ev: MouseEvent) => {
+      if (!dragRef.current) return;
+      const nx = ev.clientX - dragRef.current.dx;
+      const ny = ev.clientY - dragRef.current.dy;
+      // Keep within viewport
+      const maxX = window.innerWidth - 80;
+      const maxY = window.innerHeight - 60;
+      setPopPos({
+        x: Math.min(Math.max(-POP_W + 80, nx), maxX),
+        y: Math.min(Math.max(0, ny), maxY),
+      });
+    };
+    const onUp = () => {
+      dragRef.current = null;
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  }, [popPos.x, popPos.y]);
+
   // Demo tour: keep the auto-collapse behaviour explicit so the spotlight on
   // step #5 lands on the timeline. Reset the one-shot guard between demo
   // sessions so a re-opened tour can collapse it again if the user expanded.
