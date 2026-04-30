@@ -25,9 +25,19 @@ export const useIncidentAgentRuns = (incidentKey?: string) => {
       return result.success ? result.runs : [];
     },
     // On the incident detail page, refresh aggressively so newly-started runs
-    // show up quickly. On list/quick-view contexts keep the gentle 60s cache.
+    // show up quickly. Poll faster while ANY run is currently in-flight so
+    // status flips (Running -> Completed) appear in near real-time.
     staleTime: isDetailContext ? 0 : 60_000,
-    refetchInterval: isDetailContext ? 15_000 : false,
+    refetchInterval: isDetailContext
+      ? (query) => {
+          const runs = (query.state.data as AgentRun[] | undefined) || [];
+          const hasInFlight = runs.some((r) => {
+            const s = (r.status || '').toUpperCase();
+            return s === 'EXECUTING' || s === 'WAITING' || s === 'RUNNING';
+          });
+          return hasInFlight ? 4_000 : 15_000;
+        }
+      : false,
     refetchOnWindowFocus: isDetailContext,
     gcTime: 5 * 60_000,
   });
