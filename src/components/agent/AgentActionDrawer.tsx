@@ -374,6 +374,56 @@ const DecisionItem = ({
             </Box>
           )}
 
+          {/* Debug (collapsible) — full raw decision JSON */}
+          <Box sx={{ px: 1.5, pb: 1 }}>
+            <Box
+              onClick={() => setDebugOpen((v) => !v)}
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 0.5,
+                cursor: 'pointer',
+                userSelect: 'none',
+                color: 'hsl(var(--muted-foreground))',
+                opacity: 0.7,
+                '&:hover': { color: 'hsl(var(--foreground))', opacity: 1 },
+              }}
+            >
+              {debugOpen ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
+              <Typography sx={{
+                fontSize: '0.6rem',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+              }}>
+                Debug
+              </Typography>
+            </Box>
+            {debugOpen && (
+              <Box sx={{
+                mt: 0.75,
+                p: 1,
+                borderRadius: 1,
+                bgcolor: 'hsl(var(--muted))',
+                border: '1px solid hsl(var(--border))',
+                overflow: 'auto',
+                maxHeight: 320,
+              }}>
+                <pre style={{
+                  margin: 0,
+                  fontSize: '0.68rem',
+                  fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace',
+                  color: 'hsl(var(--foreground))',
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
+                  lineHeight: 1.5,
+                }}>
+                  {JSON.stringify(decision, null, 2)}
+                </pre>
+              </Box>
+            )}
+          </Box>
+
           {/* Footer */}
           {(decision.status || decision.timestamp) && (
             <Box sx={{
