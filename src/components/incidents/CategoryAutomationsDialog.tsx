@@ -783,15 +783,17 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
                                     All authenticated apps
                                   </Typography>
                                 )}
-                                {apps.map((appName) => {
-                                  const img = appImageByName.get(appName) || `https://shuffler.io/images/apps/${appName}.png`;
+                                {apps.map((appKey) => {
+                                  const meta = appMetaById.get(appKey);
+                                  const displayName = meta?.name || appKey;
+                                  const img = meta?.image || `https://shuffler.io/images/apps/${displayName}.png`;
                                   return (
-                                    <Tooltip key={appName} title={`Remove ${appName.replace(/_/g, ' ')}`}>
+                                    <Tooltip key={appKey} title={`Remove ${displayName.replace(/_/g, ' ')}`}>
                                       <IconButton
                                         size="small"
                                         onClick={() => {
                                           const updated = [...aiAgentApps];
-                                          updated[idx] = (updated[idx] || []).filter(n => n !== appName);
+                                          updated[idx] = (updated[idx] || []).filter(n => n !== appKey);
                                           setAiAgentApps(updated);
                                           setHasChanges(true);
                                         }}
@@ -810,7 +812,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
                                         <Box
                                           component="img"
                                           src={img}
-                                          alt={appName}
+                                          alt={displayName}
                                           sx={{ width: 16, height: 16, borderRadius: '50%', objectFit: 'contain' }}
                                         />
                                       </IconButton>
