@@ -1008,6 +1008,23 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
           </Button>
         </Box>
       </DialogActions>
+
+      <AppSearchDrawer
+        open={appPickerForIdx !== null}
+        onClose={() => setAppPickerForIdx(null)}
+        title="Allow App"
+        subtitle="Restrict this AI Agent prompt to specific apps"
+        onQuickSelect={(app) => {
+          if (appPickerForIdx === null) return;
+          const updated = [...aiAgentApps];
+          const current = updated[appPickerForIdx] || [];
+          if (!current.includes(app.name)) {
+            updated[appPickerForIdx] = [...current, app.name];
+            setAiAgentApps(updated);
+            setHasChanges(true);
+          }
+        }}
+      />
     </Dialog>
   );
 };
