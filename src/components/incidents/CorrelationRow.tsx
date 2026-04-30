@@ -96,6 +96,11 @@ export const CorrelationRow = ({ correlation, currentIncidentId, className, comp
   const [pivotAnchor, setPivotAnchor] = useState<{ el: HTMLElement; key: string; category: string } | null>(null);
   const closePivot = () => setPivotAnchor(null);
 
+  // Per-org "ignored observables" list — same datastore the Observables tab
+  // uses, value-based so it filters correlations regardless of OCSF type.
+  const ignoredObs = useIgnoredObservables();
+  const isHidden = ignoredObs.isValueIgnored(correlation.key);
+
   // Group refs by category, excluding the current incident itself.
   const refsByCategory: Record<string, string[]> = {};
   correlation.ref.forEach((r) => {
