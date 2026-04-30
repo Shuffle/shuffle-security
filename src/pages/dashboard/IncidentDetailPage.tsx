@@ -7113,16 +7113,10 @@ const IncidentDetailPage = () => {
 
             // Apply filters
             const filterLower = obsFilterText.toLowerCase();
-            // Count of rows hidden purely because they are ignored — surfaces
-            // the "Show ignored (N)" toggle below the filter bar.
-            let hiddenIgnoredCount = 0;
             const allObs = allObsRaw.filter(obs => {
               if (obsFilterTypes.length > 0 && !obsFilterTypes.includes(obs.type)) return false;
               if (filterLower && !obs.value.toLowerCase().includes(filterLower) && !obs.type.toLowerCase().includes(filterLower)) return false;
-              if (!showIgnoredObs && ignoredObs.isIgnored(obs.type, obs.value)) {
-                hiddenIgnoredCount++;
-                return false;
-              }
+              if (!showIgnoredObs && ignoredObs.isIgnored(obs.type, obs.value)) return false;
               return true;
             });
 
