@@ -17,7 +17,7 @@ import {
 } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import LinkIcon from '@mui/icons-material/Link';
-import TaskAltIcon from '@mui/icons-material/TaskAlt';
+
 import RefreshIcon from '@mui/icons-material/Refresh';
 import ForwardIcon from '@mui/icons-material/Forward';
 import CallMergeIcon from '@mui/icons-material/CallMerge';
@@ -68,10 +68,6 @@ export interface IncidentActionsMenuProps {
   publicAuthorization?: string;
   /** Optional list of orgs that share this incident (for cross-org save). */
   sharedOrgs?: Array<{ id: string; name?: string; image?: string }>;
-  /** Show the "Simple view" entry. Hide when already in the simple view. */
-  showSimpleViewEntry?: boolean;
-  /** Show "Full view" entry instead of "Simple view". */
-  showFullViewEntry?: boolean;
 }
 
 const buttonSx = {
@@ -89,8 +85,6 @@ export const IncidentActionsMenu = ({
   crossOrgId = null,
   publicAuthorization = '',
   sharedOrgs = [],
-  showSimpleViewEntry = true,
-  showFullViewEntry = false,
 }: IncidentActionsMenuProps) => {
   const navigate = useNavigate();
   const { userInfo } = useAuth();
@@ -385,13 +379,7 @@ export const IncidentActionsMenu = ({
       )
     : {};
 
-  // Match the share link to whichever view the user is sharing from — the
-  // simplified kanban view has its own route (/incidents-simple/<id>) and
-  // recipients should land on the same UX the sender saw.
-  const sharePathBase = window.location.pathname.startsWith('/incidents-simple/')
-    ? '/incidents-simple'
-    : '/incidents';
-  const publicLink = `${window.location.origin}${sharePathBase}/${incident.id}?authorization=${publicAuthorization}&org=${orgId}`;
+  const publicLink = `${window.location.origin}/incidents/${incident.id}?authorization=${publicAuthorization}&org=${orgId}`;
 
   return (
     <>
@@ -423,29 +411,6 @@ export const IncidentActionsMenu = ({
           Share
         </MenuItem>
 
-        {showSimpleViewEntry && (
-          <MenuItem
-            onClick={() => {
-              setAnchor(null);
-              navigate(`/incidents-simple/${incident.id}`);
-            }}
-          >
-            <TaskAltIcon sx={{ fontSize: 16, mr: 1 }} />
-            Simple view
-          </MenuItem>
-        )}
-
-        {showFullViewEntry && (
-          <MenuItem
-            onClick={() => {
-              setAnchor(null);
-              navigate(`/incidents/${incident.id}`);
-            }}
-          >
-            <TaskAltIcon sx={{ fontSize: 16, mr: 1 }} />
-            Full view
-          </MenuItem>
-        )}
 
         <MenuItem disabled>
           <LinkIcon sx={{ fontSize: 16, mr: 1 }} />

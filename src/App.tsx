@@ -17,7 +17,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { LandingNavbar } from '@/components/landing/LandingNavbar';
 import IncidentsPage from '@/pages/dashboard/IncidentsPage';
 import IncidentDetailPage from '@/pages/dashboard/IncidentDetailPage';
-import IncidentSimplePage from '@/pages/dashboard/IncidentSimplePage';
+
 import TemplatesPage from '@/pages/dashboard/TemplatesPage';
 import IOCTypesPage from '@/pages/dashboard/IOCTypesPage';
 import RulesPage from '@/pages/dashboard/RulesPage';
@@ -75,6 +75,13 @@ const SupportOnly = ({ children }: { children: React.ReactNode }) => {
   const { userInfo } = useAuth();
   if (userInfo?.support !== true) return <Navigate to="/dashboard" replace />;
   return <>{children}</>;
+};
+
+/** Legacy /incidents-simple/:id → /incidents/:id redirect (preserves the id and query string). */
+const RedirectIncidentsSimple = () => {
+  const { pathname, search } = window.location;
+  const id = pathname.split('/').filter(Boolean)[1] || '';
+  return <Navigate to={`/incidents/${id}${search}`} replace />;
 };
 
 const queryClient = new QueryClient();
@@ -136,8 +143,9 @@ const ThemedApp = () => {
             >
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/incidents" element={<IncidentsPage />} />
+              {/* Simple incident view was removed — redirect any old links to the full view. */}
               <Route path="/incidents-simple" element={<Navigate to="/incidents" replace />} />
-              <Route path="/incidents-simple/:id" element={<IncidentSimplePage />} />
+              <Route path="/incidents-simple/:id" element={<RedirectIncidentsSimple />} />
               <Route path="/incidents/:id" element={<IncidentDetailPage />} />
               <Route path="/alerts" element={<IncidentsPage />} />
               <Route path="/alerts/:id" element={<IncidentDetailPage />} />
