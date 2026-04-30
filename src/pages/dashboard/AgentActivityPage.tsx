@@ -139,7 +139,7 @@ const AgentActivityPage = () => {
               />
             </Box>
             <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))' }}>
-              Cybersecurity Agent · {enabledPermissions}/{totalPermissions} permissions enabled
+              {enabledPermissions}/{totalPermissions} permissions enabled
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
