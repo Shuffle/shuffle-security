@@ -475,55 +475,6 @@ export const getDatastoreByCategory = async (
     const items = Array.isArray(data) ? data : data.keys || data.data || [];
     const totalAmount = data.total_amount ?? data.total ?? data.amount;
 
-    // Some Shuffle deployments return `total_amount` for the category but
-    // only include a subset of items via the org-scoped endpoint (regardless
-    // of whether a cursor is present). When totalAmount > items.length, retry
-    // the non-org datastore endpoint to grab the full list before reporting a
-    // misleading "X of N" state to the UI.
-    if (typeof totalAmount === 'number' && Array.isArray(items) && totalAmount > items.length) {
-      try {
-        const fallbackTop = Math.max(limit, Math.min(totalAmount * 2, 5000));
-        const fallbackUrl = getApiUrl(`/api/v1/datastore/list_cache?category=${encodeURIComponent(category)}&top=${fallbackTop}`);
-        console.warn(`[Datastore] org-scoped returned ${items.length}/${totalAmount} for category=${category} — falling back to ${fallbackUrl}`);
-        const fallbackResponse = await fetch(fallbackUrl, {
-          method: 'GET',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-            'Org-Id': orgId,
-            ...getAuthHeader(),
-          },
-        });
-        if (fallbackResponse.ok) {
-          const fallbackData = await fallbackResponse.json();
-          const fallbackItems = Array.isArray(fallbackData) ? fallbackData : fallbackData.keys || fallbackData.data || [];
-          const fallbackTotal = fallbackData.total_amount ?? fallbackData.total ?? fallbackData.amount ?? totalAmount;
-          console.warn(`[Datastore] fallback returned ${fallbackItems.length} items (total_amount=${fallbackTotal})`);
-          if (Array.isArray(fallbackItems) && fallbackItems.length > items.length) {
-            return {
-              success: true,
-              data: fallbackItems,
-              categoryConfig: fallbackData.category_config || data.category_config,
-              cursor: fallbackData.cursor,
-              totalAmount: fallbackTotal,
-              diagnostics: {
-                ...baseDiagnostics,
-                url: fallbackUrl,
-                status: fallbackResponse.status,
-                statusText: fallbackResponse.statusText,
-                contentType: fallbackResponse.headers.get('content-type'),
-                responseShape: Array.isArray(fallbackData) ? 'array' : Array.isArray(fallbackData?.keys) ? 'keys' : Array.isArray(fallbackData?.data) ? 'data' : 'unknown',
-                itemCount: fallbackItems.length,
-                totalAmount: fallbackTotal ?? null,
-              },
-            };
-          }
-        } else {
-          console.warn(`[Datastore] fallback request failed status=${fallbackResponse.status}`);
-        }
-      } catch (e) { console.warn('[Datastore] fallback threw', e); }
-    }
-
     return {
       success: true,
       data: items,
