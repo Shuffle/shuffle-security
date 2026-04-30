@@ -174,6 +174,7 @@ export default function AppSearchDrawer({
         anchor={anchor}
         open={open && detailAppName === null}
         onClose={handleClose}
+        sx={{ zIndex: 9999 }}
         PaperProps={{
           sx: {
             width,
