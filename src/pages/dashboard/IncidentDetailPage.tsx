@@ -638,6 +638,20 @@ const IncidentDetailPage = () => {
   // chosen to hide from the default Observables view. Toggle reveals them.
   const ignoredObs = useIgnoredObservables();
   const [showIgnoredObs, setShowIgnoredObs] = useState(false);
+
+  // Single source of truth for "is this observable hidden?" — used by the
+  // Observables list filter, the Observables tab badge, and the Timeline
+  // observables filter so the counts always agree.
+  const isObservableIgnored = useCallback(
+    (type?: string, value?: string) => ignoredObs.isIgnored(type || '', value || ''),
+    [ignoredObs],
+  );
+  const visibleObservablesCount = useMemo(() => {
+    const manual = editedObservables.filter(o => !o.archived && !isObservableIgnored(o.type, o.value)).length;
+    const enr = enrichments.filter(e => !isObservableIgnored(e.type, e.value || (e as any).data)).length;
+    return manual + enr;
+  }, [editedObservables, enrichments, isObservableIgnored]);
+
   const [editedCustomFields, setEditedCustomFields] = useState<Record<string, string | number | boolean>>({});
   const [editedLabels, setEditedLabels] = useState<string[]>([]);
   const [newLabelInput, setNewLabelInput] = useState('');
