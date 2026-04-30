@@ -1421,15 +1421,37 @@ function IntegrationStatusLite({
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(apiUrl('/api/v1/apps/authentication'), {
-          credentials: 'include',
-          headers: { ...authHeader() },
-        });
+        const [authRes, appsRes] = await Promise.all([
+          fetch(apiUrl('/api/v1/apps/authentication'), {
+            credentials: 'include',
+            headers: { ...authHeader() },
+          }),
+          fetch(apiUrl('/api/v1/apps'), {
+            credentials: 'include',
+            headers: { ...authHeader() },
+          }).catch(() => null),
+        ]);
+
+        // Build a name -> icon lookup from the full apps catalog so we can
+        // backfill icons for auth entries (e.g. Gmail) where the auth payload
+        // doesn't carry large_image/image.
+        const iconByName = new Map<string, string>();
+        if (appsRes && appsRes.ok) {
+          try {
+            const appsData = await appsRes.json();
+            const appsList = Array.isArray(appsData) ? appsData : (appsData?.data || []);
+            for (const a of Array.isArray(appsList) ? appsList : []) {
+              const n = a?.name ? String(a.name).toLowerCase() : '';
+              const icon = a?.large_image || a?.image || '';
+              if (n && icon && !iconByName.has(n)) iconByName.set(n, icon);
+            }
+          } catch { /* ignore */ }
+        }
 
         const items = new Map<string, IntegrationItem>();
 
-        if (res.ok) {
-          const authData = await res.json();
+        if (authRes.ok) {
+          const authData = await authRes.json();
           const authList = Array.isArray(authData) ? authData : (authData?.data || []);
           for (const entry of Array.isArray(authList) ? authList : []) {
             const app = entry?.app;
@@ -1437,20 +1459,21 @@ function IntegrationStatusLite({
             const key = String(app.name).toLowerCase();
             const validated = entry?.validation?.valid === true;
             const active = entry?.active === true;
+            const fallbackIcon = iconByName.get(key) || '';
             const existing = items.get(key);
             if (!existing) {
               items.set(key, {
                 id: app.id || key,
                 name: app.name,
-                icon: app.large_image || app.image || '',
+                icon: app.large_image || app.image || fallbackIcon,
                 validated,
                 active,
               });
             } else {
               existing.validated = existing.validated || validated;
               existing.active = existing.active || active;
-              if (!existing.icon && (app.large_image || app.image)) {
-                existing.icon = app.large_image || app.image;
+              if (!existing.icon) {
+                existing.icon = app.large_image || app.image || fallbackIcon;
               }
             }
           }
