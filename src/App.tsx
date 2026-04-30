@@ -15,6 +15,7 @@ import AuthPage from './pages/AuthPage';
 import OnboardingPage from './pages/OnboardingPage';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { LandingNavbar } from '@/components/landing/LandingNavbar';
+import ExternalLinkConfirmDialog from '@/components/common/ExternalLinkConfirmDialog';
 import IncidentsPage from '@/pages/dashboard/IncidentsPage';
 import IncidentDetailPage from '@/pages/dashboard/IncidentDetailPage';
 
@@ -94,6 +95,7 @@ const ThemedApp = () => {
   return (
     <MuiThemeProvider theme={muiTheme}>
       <CssBaseline />
+      <ExternalLinkConfirmDialog />
       <Toaster 
         position="bottom-right" 
         theme={resolvedTheme}
