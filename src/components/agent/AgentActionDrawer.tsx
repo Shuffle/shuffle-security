@@ -25,7 +25,9 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
-import { Activity, CheckCircle2, Circle, AlertCircle, Clock, Wrench, MessageCircleQuestion, Flag, Play, Brain } from 'lucide-react';
+import { Activity, CheckCircle2, Circle, AlertCircle, Clock, Wrench, MessageCircleQuestion, Flag, Play, Brain, ChevronRight, ChevronDown } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import AgentIcon from '@/components/agent/AgentIcon';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 import { runAgent } from '@/services/agentRun';
