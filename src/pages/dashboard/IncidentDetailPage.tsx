@@ -6291,29 +6291,38 @@ const IncidentDetailPage = () => {
               </Tooltip>
               <Divider />
               {/* Merge */}
-              <MenuItem
-                disabled={isSaving}
-                onClick={() => {
-                  setActionsMenuAnchor(null);
-                  setShowMergeDialog(true);
-                }}
-              >
-                <CallMergeIcon sx={{ fontSize: 16, mr: 1 }} />
-                Merge Into…
-              </MenuItem>
+              <Tooltip title={isSaving ? 'Saving in progress — please wait' : ''} placement="left" disableHoverListener={!isSaving}>
+                <span>
+                  <MenuItem
+                    disabled={isSaving}
+                    sx={{ width: '100%' }}
+                    onClick={() => {
+                      setActionsMenuAnchor(null);
+                      setShowMergeDialog(true);
+                    }}
+                  >
+                    <CallMergeIcon sx={{ fontSize: 16, mr: 1 }} />
+                    Merge Into…
+                  </MenuItem>
+                </span>
+              </Tooltip>
               {!isResolved && <Divider />}
               {!isResolved && (
-                <MenuItem
-                  disabled={isSaving}
-                  onClick={() => {
-                    setActionsMenuAnchor(null);
-                    setShowResolveDialog(true);
-                  }}
-                  sx={{ color: '#22c55e' }}
-                >
-                  <CheckCircleIcon sx={{ fontSize: 16, mr: 1 }} />
-                  Resolve
-                </MenuItem>
+                <Tooltip title={isSaving ? 'Saving in progress — please wait' : ''} placement="left" disableHoverListener={!isSaving}>
+                  <span>
+                    <MenuItem
+                      disabled={isSaving}
+                      sx={{ width: '100%' }}
+                      onClick={() => {
+                        setActionsMenuAnchor(null);
+                        setShowResolveDialog(true);
+                      }}
+                    >
+                      <CheckCircleIcon sx={{ fontSize: 16, mr: 1, color: '#22c55e' }} />
+                      <Box component="span" sx={{ color: '#22c55e' }}>Resolve</Box>
+                    </MenuItem>
+                  </span>
+                </Tooltip>
               )}
               {incident?.rawOCSF?.shuffle_execution_id && (
                 <MenuItem
