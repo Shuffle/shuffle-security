@@ -202,6 +202,30 @@ export const CorrelationRow = ({ correlation, currentIncidentId, className, comp
         >
           {effectiveAmount} match{effectiveAmount !== 1 ? 'es' : ''}
         </Typography>
+        {/* Hide / show — writes to the same per-org `ignored-observables`
+            datastore as the Observables tab, value-based so the same row
+            disappears from both places. */}
+        <Tooltip title={isHidden ? 'Stop ignoring this observable' : 'Hide this observable from the default view'} arrow>
+          <IconButton
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (isHidden) ignoredObs.unignore('value', correlation.key);
+              else ignoredObs.ignore('value', correlation.key);
+            }}
+            sx={{
+              p: 0.25,
+              ml: 0.25,
+              flexShrink: 0,
+              color: isHidden ? 'hsl(var(--primary))' : 'text.disabled',
+              '&:hover': { color: 'hsl(var(--primary))' },
+            }}
+          >
+            {isHidden
+              ? <VisibilityIcon sx={{ fontSize: compact ? 14 : 16 }} />
+              : <VisibilityOffIcon sx={{ fontSize: compact ? 14 : 16 }} />}
+          </IconButton>
+        </Tooltip>
       </Box>
 
       {/* Refs grouped by category */}
