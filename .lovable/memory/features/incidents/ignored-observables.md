@@ -46,6 +46,10 @@ endpoint had not yet caught up with the write. Do not switch this back to
   revealed they render at 55% opacity so they read as "muted but visible".
 
 ## Counts
-Tab badges and activity-feed deltas still count ignored observables (they
-remain in `editedObservables` / `enrichments`). Ignoring is purely a view
-filter, not a data deletion.
+The Observables tab badge and Timeline use `visibleObservablesCount` (in
+`IncidentDetailPage`) which excludes ignored entries. The Correlations tab
+badge, timeline pill, and Correlations tab body all use `visibleCorrelations`
+(filtered via `isValueIgnored`) so a correlation whose key is an ignored
+observable value is suppressed everywhere. Underlying `editedObservables`,
+`enrichments`, and `correlations` arrays still contain the raw data — ignoring
+is purely a view filter, not a data deletion.
