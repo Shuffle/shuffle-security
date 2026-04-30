@@ -2008,14 +2008,15 @@ function UsecaseDetailContent({
                     py: 0.6,
                     px: 1.25,
                     bgcolor: effectiveEnabled
-                      ? 'hsl(var(--destructive, 0 84% 60%))'
+                      ? 'transparent'
                       : 'hsl(var(--primary, 24 100% 50%))',
                     color: effectiveEnabled
-                      ? 'hsl(var(--destructive-foreground, 0 0% 100%))'
+                      ? 'hsl(var(--muted-foreground))'
                       : 'hsl(var(--primary-foreground, 0 0% 100%))',
+                    border: effectiveEnabled ? '1px solid hsl(var(--border))' : 'none',
                     '&:hover': {
                       bgcolor: effectiveEnabled
-                        ? 'hsla(0, 84%, 60%, 0.9)'
+                        ? 'hsl(var(--muted) / 0.6)'
                         : 'hsla(24, 100%, 50%, 0.9)',
                     },
                   }}
@@ -3103,10 +3104,11 @@ function UsecaseCard({
                 minHeight: 0,
                 py: 0.4,
                 px: 1,
-                bgcolor: effectiveEnabled ? 'hsl(var(--destructive))' : 'hsl(var(--primary))',
-                color: effectiveEnabled ? 'hsl(var(--destructive-foreground))' : 'hsl(var(--primary-foreground))',
+                bgcolor: effectiveEnabled ? 'transparent' : 'hsl(var(--primary))',
+                color: effectiveEnabled ? 'hsl(var(--muted-foreground))' : 'hsl(var(--primary-foreground))',
+                border: effectiveEnabled ? '1px solid hsl(var(--border))' : 'none',
                 '&:hover': {
-                  bgcolor: effectiveEnabled ? 'hsl(var(--destructive) / 0.9)' : 'hsl(var(--primary) / 0.9)',
+                  bgcolor: effectiveEnabled ? 'hsl(var(--muted) / 0.6)' : 'hsl(var(--primary) / 0.9)',
                 },
               }}
             >
