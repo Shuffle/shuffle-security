@@ -258,8 +258,26 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
   // Default the thread to collapsed — the Activity timeline is the primary
   // narrative on the incident page; users can expand the email when they
   // need to read it. This avoids the long forwarded chain pushing the
-  // timeline below the fold on first open.
-  const [threadCollapsed, setThreadCollapsed] = useState(true);
+  // timeline below the fold on first open. Persisted in localStorage so
+  // the user's chosen workflow (always-open vs always-collapsed) sticks
+  // across navigation between incidents.
+  const EMAIL_THREAD_OPEN_KEY = 'shuffle-incident-email-thread-open';
+  const [threadCollapsed, setThreadCollapsedState] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    try {
+      const v = localStorage.getItem(EMAIL_THREAD_OPEN_KEY);
+      if (v === '1') return false; // stored "open" -> not collapsed
+      if (v === '0') return true;
+    } catch { /* ignore */ }
+    return true;
+  });
+  const setThreadCollapsed: typeof setThreadCollapsedState = (value) => {
+    setThreadCollapsedState((prev) => {
+      const next = typeof value === 'function' ? (value as (p: boolean) => boolean)(prev) : value;
+      try { localStorage.setItem(EMAIL_THREAD_OPEN_KEY, next ? '0' : '1'); } catch { /* ignore */ }
+      return next;
+    });
+  };
 
   // Popout mode — like Gmail's "open in new window" button. When enabled the
   // entire panel is rendered into a draggable floating card via a React
