@@ -33,6 +33,7 @@ import AppSearchDrawer from '@/components/shared/AppSearchDrawer';
 import type { AgentRun, AgentDecision } from '@/services/agentActivity';
 import AgentRunResultViewer, { parseRunResult } from '@/components/agent/AgentRunResultViewer';
 import AgentRunHeader from '@/components/agent/AgentRunHeader';
+import { useExecutionPolling } from '@/hooks/useExecutionPolling';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -384,7 +385,11 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
   const [appSearchOpen, setAppSearchOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const isViewMode = !!run;
+  // Live-poll the run while it is in-progress. Returns the same reference
+  // when nothing changed, so the view does not re-render on every tick.
+  const liveRun = useExecutionPolling(run, { enabled: open && !!run });
+
+  const isViewMode = !!liveRun;
 
   const handleRunAgent = async () => {
     if (!agentInput.trim() || isRunning) return;
@@ -451,9 +456,9 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
         display: 'flex',
         alignItems: 'center',
       }}>
-        {isViewMode && run ? (
+        {isViewMode && liveRun ? (
           <Box sx={{ flex: 1 }}>
-            <AgentRunHeader run={run} />
+            <AgentRunHeader run={liveRun} />
           </Box>
         ) : (
           <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 2, px: 2.5, py: 2 }}>
@@ -490,9 +495,9 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
         {isViewMode ? (
           /* ── View Mode: decisions timeline + result ── */
           (() => {
-            const { parsed } = parseRunResult(run!);
+            const { parsed } = parseRunResult(liveRun!);
             const decisions: AgentDecision[] = Array.isArray(parsed?.decisions) ? parsed.decisions
-              : Array.isArray(run!.decisions) ? run!.decisions : [];
+              : Array.isArray(liveRun!.decisions) ? liveRun!.decisions : [];
             return (
               <Box>
                 {decisions.length > 0 && (
@@ -502,7 +507,7 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
                   <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>
                     Result
                   </Typography>
-                  <AgentRunResultViewer run={run!} />
+                  <AgentRunResultViewer run={liveRun!} />
                 </Box>
               </Box>
             );
