@@ -83,8 +83,11 @@ export const DemoModeCard = () => {
   const ingestWorkflow = workflows ? findIngestTicketsWorkflow(workflows) : null;
   const hasIngest = !!ingestWorkflow && !isWorkflowScheduleStopped(ingestWorkflow);
   const tooManyIncidents = incidentCount >= INCIDENT_THRESHOLD;
-  const disableStart = !active && tooManyIncidents;
-  const disableReason = `You already have ${incidentCount} ${entityPluralLower} — demo mode is for accounts with fewer than ${INCIDENT_THRESHOLD}.`;
+  // Don't block — just warn. Users with real data still deserve to try the tour.
+  const disableStart = false;
+  const warnReason = tooManyIncidents
+    ? `You already have ${incidentCount} ${entityPluralLower}. Demo mode will add a few seeded ${entityPluralLower} you can clean up afterwards.`
+    : '';
   // Show the Clean Up button whenever demo data exists, even if the demo
   // mode flag itself is no longer active.
   const hasLeftoverDemoData = !active && leftoverDemoCount > 0;
@@ -149,8 +152,8 @@ export const DemoModeCard = () => {
           <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))', mt: 0.5, lineHeight: 1.5 }}>
             {active
               ? `${stats.incidents} ${entityPluralLower}, ${stats.assets} assets, ${stats.users} users loaded. Real IOCs, live enrichment and AI agents you can interact with — only the ${entitySingularLower} itself is seeded.`
-              : disableStart
-                ? disableReason
+              : warnReason
+                ? warnReason
                 : `We seed one realistic ${entitySingularLower}, then everything else is real: live threat-feed IOCs, real enrichments and AI agents you can actually approve or question. One-click cleanup when you are done.`}
           </Typography>
         </Box>
@@ -232,7 +235,7 @@ export const DemoModeCard = () => {
                   {isCleaning ? 'Cleaning…' : `Clean up demo data (${leftoverDemoCount})`}
                 </Button>
               )}
-              <Tooltip title={disableStart ? disableReason : ''} arrow disableHoverListener={!disableStart}>
+              <Tooltip title={warnReason} arrow disableHoverListener={!warnReason}>
                 <span>
                   <Button
                     onClick={startDemo}
