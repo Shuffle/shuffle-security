@@ -633,6 +633,10 @@ const IncidentDetailPage = () => {
   const [obsFilterText, setObsFilterText] = useState('');
   const [obsSortField, setObsSortField] = useState<'first_seen' | 'last_seen' | 'type' | 'value'>('first_seen');
   const [obsSortDir, setObsSortDir] = useState<'asc' | 'desc'>('desc');
+  // Ignored observables (per-org) — uninteresting indicators the user has
+  // chosen to hide from the default Observables view. Toggle reveals them.
+  const ignoredObs = useIgnoredObservables();
+  const [showIgnoredObs, setShowIgnoredObs] = useState(false);
   const [editedCustomFields, setEditedCustomFields] = useState<Record<string, string | number | boolean>>({});
   const [editedLabels, setEditedLabels] = useState<string[]>([]);
   const [newLabelInput, setNewLabelInput] = useState('');
