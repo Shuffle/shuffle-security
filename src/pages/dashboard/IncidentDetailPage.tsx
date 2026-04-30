@@ -660,6 +660,12 @@ const IncidentDetailPage = () => {
   // Bumped to force a fresh capture of the sort rank cache (used by the
   // sort/filter controls and the explicit "Re-run correlations" button).
   const [obsSortRankEpoch, setObsSortRankEpoch] = useState(0);
+  // Wipe the frozen rank cache whenever the user touches sort/filter — that
+  // is the right moment to honour newly-arrived correlations in the order.
+  useEffect(() => {
+    obsSortRankRef.current = new Map();
+    setObsSortRankEpoch((n) => n + 1);
+  }, [obsSortField, obsSortDir, obsFilterText, obsFilterTypes, showIgnoredObs]);
   // Ignored observables (per-org) — uninteresting indicators the user has
   // chosen to hide from the default Observables view. Toggle reveals them.
   const ignoredObs = useIgnoredObservables();
