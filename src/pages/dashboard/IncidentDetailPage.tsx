@@ -803,6 +803,8 @@ const IncidentDetailPage = () => {
   useEffect(() => {
     try { localStorage.setItem(TIMELINE_COLLAPSED_STORAGE_KEY, timelineCollapsed ? '1' : '0'); } catch { /* ignore */ }
   }, [timelineCollapsed]);
+  // Anchor for the unified Timeline filters dropdown.
+  const [timelineFilterAnchor, setTimelineFilterAnchor] = useState<HTMLElement | null>(null);
   const [revisionDialogData, setRevisionDialogData] = useState<{ json: string; changedKeys: Set<string> } | null>(null);
   const initialTab = (() => {
     const t = searchParams.get('tab');
