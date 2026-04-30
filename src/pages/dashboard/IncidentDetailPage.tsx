@@ -64,6 +64,7 @@ import ForwardIcon from '@mui/icons-material/Forward';
 import CallMergeIcon from '@mui/icons-material/CallMerge';
 import CloseIcon from '@mui/icons-material/Close';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import LanguageIcon from '@mui/icons-material/Language';
 import SearchIcon from '@mui/icons-material/Search';
@@ -79,6 +80,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useDatastore } from '@/hooks/useDatastore';
+import { useIgnoredObservables } from '@/hooks/useIgnoredObservables';
 import { CorrelationRow, getEffectiveCorrelationCount, filterMeaningfulCorrelations, hasIocMatch } from '@/components/incidents/CorrelationRow';
 import CorrelationContextStrip from '@/components/incidents/CorrelationContextStrip';
 import { IocDetailsCard } from '@/components/incidents/IocDetailsCard';
@@ -631,6 +633,10 @@ const IncidentDetailPage = () => {
   const [obsFilterText, setObsFilterText] = useState('');
   const [obsSortField, setObsSortField] = useState<'first_seen' | 'last_seen' | 'type' | 'value'>('first_seen');
   const [obsSortDir, setObsSortDir] = useState<'asc' | 'desc'>('desc');
+  // Ignored observables (per-org) — uninteresting indicators the user has
+  // chosen to hide from the default Observables view. Toggle reveals them.
+  const ignoredObs = useIgnoredObservables();
+  const [showIgnoredObs, setShowIgnoredObs] = useState(false);
   const [editedCustomFields, setEditedCustomFields] = useState<Record<string, string | number | boolean>>({});
   const [editedLabels, setEditedLabels] = useState<string[]>([]);
   const [newLabelInput, setNewLabelInput] = useState('');
@@ -7000,6 +7006,38 @@ const IncidentDetailPage = () => {
                 sx={{ fontSize: '0.65rem', cursor: 'pointer', color: 'hsl(var(--muted-foreground))', bgcolor: 'rgba(255,255,255,0.05)' }}
               />
             )}
+            {/* Show / hide ignored observables — per-org list of indicators
+                the user has marked as uninteresting. Hidden by default. */}
+            {ignoredObs.ignoredKeys.size > 0 && (
+              <Tooltip
+                title={showIgnoredObs
+                  ? 'Hide observables you have marked as ignored'
+                  : 'Reveal observables you have marked as ignored'}
+                arrow
+              >
+                <Chip
+                  icon={showIgnoredObs
+                    ? <VisibilityIcon sx={{ fontSize: 12 }} />
+                    : <VisibilityOffIcon sx={{ fontSize: 12 }} />}
+                  label={showIgnoredObs
+                    ? `Hide ignored (${ignoredObs.ignoredKeys.size})`
+                    : `Show ignored (${ignoredObs.ignoredKeys.size})`}
+                  size="small"
+                  onClick={() => setShowIgnoredObs(s => !s)}
+                  sx={{
+                    fontSize: '0.65rem',
+                    height: 22,
+                    cursor: 'pointer',
+                    color: showIgnoredObs ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
+                    bgcolor: showIgnoredObs ? 'hsl(var(--primary) / 0.1)' : 'rgba(255,255,255,0.05)',
+                    border: '1px solid',
+                    borderColor: showIgnoredObs ? 'hsl(var(--primary) / 0.4)' : 'hsl(var(--border))',
+                    '& .MuiChip-icon': { ml: 0.75, mr: -0.25, color: 'inherit' },
+                    '&:hover': { bgcolor: showIgnoredObs ? 'hsl(var(--primary) / 0.18)' : 'rgba(255,255,255,0.08)' },
+                  }}
+                />
+              </Tooltip>
+            )}
           </Box>
 
           {/* Unified observables list (manual + enrichments) */}
@@ -7078,6 +7116,7 @@ const IncidentDetailPage = () => {
             const allObs = allObsRaw.filter(obs => {
               if (obsFilterTypes.length > 0 && !obsFilterTypes.includes(obs.type)) return false;
               if (filterLower && !obs.value.toLowerCase().includes(filterLower) && !obs.type.toLowerCase().includes(filterLower)) return false;
+              if (!showIgnoredObs && ignoredObs.isIgnored(obs.type, obs.value)) return false;
               return true;
             });
 
@@ -7156,6 +7195,7 @@ const IncidentDetailPage = () => {
                     const d = typeof ts === 'number' ? new Date(ts < 1e12 ? ts * 1000 : ts) : new Date(ts);
                     return isNaN(d.getTime()) ? String(ts) : d.toLocaleString();
                   };
+                  const isThisIgnored = ignoredObs.isIgnored(obs.type, obs.value);
                   return (
                     <Box
                       key={obsRowKey}
@@ -7169,8 +7209,9 @@ const IncidentDetailPage = () => {
                         borderRadius: 1,
                         bgcolor: 'hsl(var(--input))',
                         border: mismatch ? '1px solid rgba(251, 146, 60, 0.3)' : isExpanded ? '1px solid hsl(var(--primary) / 0.3)' : '1px solid hsl(var(--border-subtle))',
-                        transition: 'border-color 0.15s ease',
-                        '&:hover': { borderColor: 'hsl(var(--primary) / 0.2)' },
+                        opacity: isThisIgnored ? 0.55 : 1,
+                        transition: 'border-color 0.15s ease, opacity 0.15s ease',
+                        '&:hover': { borderColor: 'hsl(var(--primary) / 0.2)', opacity: isThisIgnored ? 0.85 : 1 },
                       }}
                     >
                       <Box
@@ -7277,6 +7318,33 @@ const IncidentDetailPage = () => {
                             </IconButton>
                           </span>
                         </Tooltip>
+                        {/* Ignore / unignore — per-org list of uninteresting
+                            observables, persisted in the `ignored-observables`
+                            datastore category. Hidden by default in the list. */}
+                        {(() => {
+                          const isIgn = ignoredObs.isIgnored(obs.type, obs.value);
+                          return (
+                            <Tooltip title={isIgn ? 'Stop ignoring this observable' : 'Hide this observable from the default view'} arrow>
+                              <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (isIgn) ignoredObs.unignore(obs.type, obs.value);
+                                  else ignoredObs.ignore(obs.type, obs.value);
+                                }}
+                                sx={{
+                                  p: 0.5,
+                                  color: isIgn ? 'hsl(var(--primary))' : 'text.disabled',
+                                  '&:hover': { color: 'hsl(var(--primary))' },
+                                }}
+                              >
+                                {isIgn
+                                  ? <VisibilityIcon sx={{ fontSize: 16 }} />
+                                  : <VisibilityOffIcon sx={{ fontSize: 16 }} />}
+                              </IconButton>
+                            </Tooltip>
+                          );
+                        })()}
                         {obs._source === 'manual' && (
                           <IconButton
                             size="small"
