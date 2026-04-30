@@ -4264,10 +4264,8 @@ const IncidentDetailPage = () => {
               <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, flexShrink: 0 }}>
                 <Loader2Icon
                   size={11}
-                  style={{
-                    color: 'hsl(var(--severity-medium))',
-                    animation: 'spin 1.2s linear infinite',
-                  }}
+                  className="animate-spin"
+                  style={{ color: 'hsl(var(--severity-medium))' }}
                 />
                 <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--severity-medium))' }}>
                   Running…
