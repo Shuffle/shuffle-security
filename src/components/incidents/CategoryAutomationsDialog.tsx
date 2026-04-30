@@ -692,7 +692,11 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
                               endAdornment: (
                                 <IconButton
                                   size="small"
-                                  onClick={() => setPromptEditor({ idx, value: prompt })}
+                                  onMouseDown={(e) => e.preventDefault()}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setPromptEditor({ idx, value: aiAgentPrompts[idx] ?? '' });
+                                  }}
                                   title="Open editor"
                                   sx={{
                                     color: 'hsl(var(--muted-foreground))',
