@@ -3249,10 +3249,22 @@ const IncidentDetailPage = () => {
             <HistoryIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
             <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Timeline</Typography>
             {revisionsLoading && <CircularProgress size={14} sx={{ color: '#ff6600' }} />}
+            <Tooltip title={timelineCollapsed ? 'Expand timeline' : 'Collapse timeline'} arrow>
+              <IconButton
+                size="small"
+                onClick={() => setTimelineCollapsed(v => !v)}
+                sx={{ ml: 0.25, width: 24, height: 24, color: 'text.secondary' }}
+              >
+                {timelineCollapsed ? <ExpandMoreIcon sx={{ fontSize: 18 }} /> : <ExpandLessIcon sx={{ fontSize: 18 }} />}
+              </IconButton>
+            </Tooltip>
           </Box>
+          {!timelineCollapsed && (
           <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             {([
               { key: 'revisions' as const, label: 'Changes', count: revisions.length },
+              { key: 'agent' as const, label: 'Agent', count: agentRuns.length },
+              { key: 'manual' as const, label: 'Comments', count: activity.length },
               { key: 'agent' as const, label: 'Agent', count: agentRuns.length },
               { key: 'manual' as const, label: 'Comments', count: activity.length },
               { key: 'tasks' as const, label: 'Tasks', count: tasks.filter(t => !t.disabled).length },
