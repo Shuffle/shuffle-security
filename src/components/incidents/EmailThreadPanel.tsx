@@ -214,10 +214,29 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
     }
   }, [demoDrawerOpen, demoStep]);
 
-  const messages = useMemo(
-    () => parseEmailThread(descriptionText, descriptionHtml),
-    [descriptionText, descriptionHtml],
+  // Prefer the structured adapter (Gmail/Outlook/generic) when
+  // rawOCSF.unmapped_original is available — it is far more reliable than
+  // regex-parsing the description text. Fall back to the legacy parser
+  // only when no provider payload is recognised.
+  const resolved: ResolvedEmailThread | null = useMemo(
+    () => resolveEmailThread(rawOCSF),
+    [rawOCSF],
   );
+
+  const messages = useMemo(
+    () => resolved?.messages?.length
+      ? resolved.messages
+      : parseEmailThread(descriptionText, descriptionHtml),
+    [resolved, descriptionText, descriptionHtml],
+  );
+
+  const sourceLabel = resolved?.source === 'gmail'
+    ? 'Gmail'
+    : resolved?.source === 'outlook'
+      ? 'Outlook'
+      : resolved?.source === 'generic'
+        ? 'Email'
+        : null;
 
   // Thread subject from first message
   const threadSubject = useMemo(() => {
