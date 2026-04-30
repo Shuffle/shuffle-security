@@ -26,6 +26,7 @@ import ForwardIcon from '@mui/icons-material/Forward';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import PersonIcon from '@mui/icons-material/Person';
 import DOMPurify from 'dompurify';
+import { resolveEmailThread, type ResolvedEmailThread } from '@/lib/emailThreadAdapters';
 
 export interface EmailMessage {
   id: string;
@@ -75,6 +76,10 @@ const hashColor = (s: string): string => {
  * Detect whether content is email-like by looking for common patterns.
  */
 export const isEmailContent = (text: string, html: string, rawOCSF?: any): boolean => {
+  // Strongest signal: rawOCSF.unmapped_original parses cleanly as a known
+  // email provider payload (Gmail / Outlook / generic envelope).
+  if (rawOCSF && resolveEmailThread(rawOCSF)) return true;
+
   // Check OCSF fields for email indicators
   if (rawOCSF) {
     const src = rawOCSF.metadata?.product?.name?.toLowerCase() || '';
@@ -209,10 +214,29 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
     }
   }, [demoDrawerOpen, demoStep]);
 
-  const messages = useMemo(
-    () => parseEmailThread(descriptionText, descriptionHtml),
-    [descriptionText, descriptionHtml],
+  // Prefer the structured adapter (Gmail/Outlook/generic) when
+  // rawOCSF.unmapped_original is available — it is far more reliable than
+  // regex-parsing the description text. Fall back to the legacy parser
+  // only when no provider payload is recognised.
+  const resolved: ResolvedEmailThread | null = useMemo(
+    () => resolveEmailThread(rawOCSF),
+    [rawOCSF],
   );
+
+  const messages = useMemo(
+    () => resolved?.messages?.length
+      ? resolved.messages
+      : parseEmailThread(descriptionText, descriptionHtml),
+    [resolved, descriptionText, descriptionHtml],
+  );
+
+  const sourceLabel = resolved?.source === 'gmail'
+    ? 'Gmail'
+    : resolved?.source === 'outlook'
+      ? 'Outlook'
+      : resolved?.source === 'generic'
+        ? 'Email'
+        : null;
 
   // Thread subject from first message
   const threadSubject = useMemo(() => {
@@ -295,6 +319,22 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
               color: '#ff6600',
             }}
           />
+          {sourceLabel && (
+            <Tooltip title={`Parsed from structured ${sourceLabel} payload (unmapped_original)`} arrow>
+              <Chip
+                label={sourceLabel}
+                size="small"
+                variant="outlined"
+                sx={{
+                  height: 18,
+                  fontSize: '0.65rem',
+                  bgcolor: 'transparent',
+                  borderColor: 'hsl(var(--border))',
+                  color: 'text.secondary',
+                }}
+              />
+            </Tooltip>
+          )}
         </Box>
         <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }} onClick={(e) => e.stopPropagation()}>
           {onReply && (
@@ -456,19 +496,44 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
                       )}
                     </Box>
                   )}
-                  {/* Body */}
+                  {/* Body — render sanitized HTML when available, otherwise plain text */}
                   <Box sx={{
                     pl: 5.5, // align with text after avatar
                   }}>
-                    <Typography variant="body2" sx={{
-                      whiteSpace: 'pre-wrap',
-                      fontSize: '0.82rem',
-                      lineHeight: 1.7,
-                      color: 'text.primary',
-                      wordBreak: 'break-word',
-                    }}>
-                      {msg.body}
-                    </Typography>
+                    {msg.bodyHtml ? (
+                      <Box
+                        sx={{
+                          fontSize: '0.82rem',
+                          lineHeight: 1.7,
+                          color: 'text.primary',
+                          wordBreak: 'break-word',
+                          '& a': { color: '#ff6600' },
+                          '& img': { maxWidth: '100%', height: 'auto' },
+                          '& blockquote': {
+                            borderLeft: '3px solid hsl(var(--border))',
+                            pl: 1.5,
+                            ml: 0,
+                            color: 'text.secondary',
+                          },
+                        }}
+                        dangerouslySetInnerHTML={{
+                          __html: DOMPurify.sanitize(msg.bodyHtml, {
+                            FORBID_TAGS: ['script', 'style', 'iframe', 'object', 'embed'],
+                            FORBID_ATTR: ['onerror', 'onload', 'onclick'],
+                          }),
+                        }}
+                      />
+                    ) : (
+                      <Typography variant="body2" sx={{
+                        whiteSpace: 'pre-wrap',
+                        fontSize: '0.82rem',
+                        lineHeight: 1.7,
+                        color: 'text.primary',
+                        wordBreak: 'break-word',
+                      }}>
+                        {msg.body}
+                      </Typography>
+                    )}
                   </Box>
                 </Box>
               </Collapse>
