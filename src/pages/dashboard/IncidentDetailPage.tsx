@@ -6136,10 +6136,17 @@ const IncidentDetailPage = () => {
                 Generate Report
               </MenuItem>
               {/* Visit Source */}
-              <MenuItem disabled>
-                <LinkIcon sx={{ fontSize: 16, mr: 1 }} />
-                Visit Source
-              </MenuItem>
+              <Tooltip
+                title="No source URL recorded for this incident"
+                placement="left"
+              >
+                <span>
+                  <MenuItem disabled sx={{ width: '100%' }}>
+                    <LinkIcon sx={{ fontSize: 16, mr: 1 }} />
+                    Visit Source
+                  </MenuItem>
+                </span>
+              </Tooltip>
               <Divider />
               {/* Resync */}
               <MenuItem
