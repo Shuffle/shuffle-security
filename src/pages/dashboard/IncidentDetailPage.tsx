@@ -4186,7 +4186,7 @@ const IncidentDetailPage = () => {
               <Box sx={{ mt: 0.75, ml: 4, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                 {initialTitle && (
                   <Typography sx={{ fontSize: '0.78rem', fontWeight: 600, color: 'hsl(var(--foreground))', lineHeight: 1.35 }}>
-                    {initialTitle}
+                    {decodeHtmlEntities(String(initialTitle))}
                   </Typography>
                 )}
                 {initialDescription && (
@@ -4200,7 +4200,7 @@ const IncidentDetailPage = () => {
                     WebkitBoxOrient: 'vertical',
                     overflow: 'hidden',
                   }}>
-                    {String(initialDescription).replace(/<[^>]*>/g, '').trim()}
+                    {decodeHtmlEntities(String(initialDescription).replace(/<[^>]*>/g, '').trim())}
                   </Typography>
                 )}
               </Box>
