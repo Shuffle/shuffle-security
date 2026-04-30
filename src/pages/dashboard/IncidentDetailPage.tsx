@@ -1276,6 +1276,13 @@ const IncidentDetailPage = () => {
     });
     return set;
   }, [obsCorrelations]);
+  // Filtered view of correlations that drops any whose key matches an
+  // ignored observable value. Used by every "Correlations (N)" badge and the
+  // timeline so the count agrees with what the user actually sees.
+  const visibleCorrelations = useMemo(
+    () => correlations.filter(c => !ignoredObs.isValueIgnored(c.key)),
+    [correlations, ignoredObs],
+  );
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingSaveRef = useRef(false);
   // Track the initial normalized values so auto-save doesn't fire on load
@@ -3277,7 +3284,7 @@ const IncidentDetailPage = () => {
               { key: 'manual' as const, label: 'Comments', count: activity.length },
               { key: 'tasks' as const, label: 'Tasks', count: tasks.filter(t => !t.disabled).length },
               { key: 'observables' as const, label: 'Observables', count: visibleObservablesCount },
-              { key: 'correlations' as const, label: 'Correlations', count: correlations.length },
+              { key: 'correlations' as const, label: 'Correlations', count: visibleCorrelations.length },
             ];
             const activeCount = filterDefs.filter(f => isFilterActive(f.key)).length;
             const allActive = activeCount === filterDefs.length;
@@ -3354,7 +3361,7 @@ const IncidentDetailPage = () => {
           { key: 'manual' as const, label: 'Comments', count: activity.length },
           { key: 'tasks' as const, label: 'Tasks', count: tasks.filter(t => !t.disabled).length },
           { key: 'observables' as const, label: 'Observables', count: visibleObservablesCount },
-          { key: 'correlations' as const, label: 'Correlations', count: correlations.length },
+          { key: 'correlations' as const, label: 'Correlations', count: visibleCorrelations.length },
         ]).map(({ key, label, count }) => {
           const active = isFilterActive(key);
           return (
@@ -3882,15 +3889,15 @@ const IncidentDetailPage = () => {
       // Per-observable correlations have moved inline onto the observable pill
       // itself so the user can see the match next to the indicator that
       // triggered it instead of as a separate timeline row.
-      if (isFilterActive('correlations') && correlationsDiscoveredAt && correlations.length > 0) {
+      if (isFilterActive('correlations') && correlationsDiscoveredAt && visibleCorrelations.length > 0) {
         items.push({
           type: 'step',
           kind: 'correlation-found',
           timestamp: correlationsDiscoveredAt,
           id: `step-corr-incident`,
-          label: `${correlations.length} Correlation${correlations.length === 1 ? '' : 's'}`,
-          detail: `shared attribute${correlations.length === 1 ? '' : 's'} across other incidents`,
-          count: correlations.length,
+          label: `${visibleCorrelations.length} Correlation${visibleCorrelations.length === 1 ? '' : 's'}`,
+          detail: `shared attribute${visibleCorrelations.length === 1 ? '' : 's'} across other incidents`,
+          count: visibleCorrelations.length,
         });
       }
     }
@@ -6165,7 +6172,7 @@ const IncidentDetailPage = () => {
                 { label: 'Details', count: null, tour: 'incident-tab-details' },
                 { label: 'Tasks', count: visibleTasks.length > 0 ? `${visibleTasks.filter(t => t.completed).length}/${visibleTasks.length}` : null, tour: 'incident-tab-tasks' },
                 { label: 'Observables', count: visibleObservablesCount > 0 ? visibleObservablesCount : null, loading: refreshingObservables, tour: 'incident-tab-observables' },
-                { label: 'Correlations', count: correlations.length > 0 ? correlations.length : null, loading: correlationsLoading, tour: 'incident-tab-correlations' },
+                { label: 'Correlations', count: visibleCorrelations.length > 0 ? visibleCorrelations.length : null, loading: correlationsLoading, tour: 'incident-tab-correlations' },
               ].map((tab, index) => (
                 <Box
                   key={tab.label}
@@ -7689,7 +7696,7 @@ const IncidentDetailPage = () => {
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
               <CircularProgress size={24} />
             </Box>
-          ) : correlations.length === 0 ? (
+          ) : visibleCorrelations.length === 0 ? (
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 4, gap: 1.5 }}>
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                 No correlations found for this incident
@@ -7725,7 +7732,7 @@ const IncidentDetailPage = () => {
               }}>
                 <LinkIcon sx={{ fontSize: 18, color: 'hsl(var(--muted-foreground))' }} />
                 <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                  {correlations.length} shared attribute{correlations.length !== 1 ? 's' : ''}
+                  {visibleCorrelations.length} shared attribute{visibleCorrelations.length !== 1 ? 's' : ''}
                 </Typography>
                 <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                   · linked across other datastore items
@@ -7753,7 +7760,7 @@ const IncidentDetailPage = () => {
 
               {/* Correlation list */}
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                {[...correlations].reverse().map((corr, idx) => (
+                {[...visibleCorrelations].reverse().map((corr, idx) => (
                   <CorrelationRow
                     key={corr.key || idx}
                     correlation={corr}
@@ -7764,7 +7771,7 @@ const IncidentDetailPage = () => {
                 ))}
               </Box>
               {/* STIX context for any IOC matches at the incident level. */}
-              <IocDetailsCard correlations={correlations} />
+              <IocDetailsCard correlations={visibleCorrelations} />
             </Box>
           )}
         </Box>
