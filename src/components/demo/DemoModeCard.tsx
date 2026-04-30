@@ -152,8 +152,8 @@ export const DemoModeCard = () => {
           <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))', mt: 0.5, lineHeight: 1.5 }}>
             {active
               ? `${stats.incidents} ${entityPluralLower}, ${stats.assets} assets, ${stats.users} users loaded. Real IOCs, live enrichment and AI agents you can interact with — only the ${entitySingularLower} itself is seeded.`
-              : disableStart
-                ? disableReason
+              : warnReason
+                ? warnReason
                 : `We seed one realistic ${entitySingularLower}, then everything else is real: live threat-feed IOCs, real enrichments and AI agents you can actually approve or question. One-click cleanup when you are done.`}
           </Typography>
         </Box>
