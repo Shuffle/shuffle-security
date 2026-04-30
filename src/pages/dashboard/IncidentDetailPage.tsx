@@ -3559,6 +3559,7 @@ const IncidentDetailPage = () => {
             to the message they relate to instead of floating at the top. */}
         {renderTimelineFeedItems()}
       </Box>
+      </>)}
     </>
   );
 
