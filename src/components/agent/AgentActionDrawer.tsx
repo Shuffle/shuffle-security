@@ -261,23 +261,9 @@ const DecisionItem = ({
             </Box>
           )}
 
-          {/* Tool badge */}
-          {decision.tool && (
-            <Box sx={{ px: 1.5, pb: 1 }}>
-              <Chip
-                icon={<Wrench size={10} />}
-                label={decision.tool}
-                size="small"
-                sx={{
-                  height: 20,
-                  fontSize: '0.65rem',
-                  bgcolor: 'hsla(var(--primary) / 0.08)',
-                  color: 'hsl(var(--primary))',
-                  '& .MuiChip-icon': { color: 'inherit', ml: 0.5 },
-                }}
-              />
-            </Box>
-          )}
+          {/* Tool badge — shows the integration logo when we can resolve one
+              from the authenticated apps list or the public Algolia catalog. */}
+          {decision.tool && <ToolBadge tool={decision.tool} />}
 
           {/* Result snippet (actions only) */}
           {type === 'action' && decision.result && (
