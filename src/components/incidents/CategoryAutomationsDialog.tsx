@@ -171,6 +171,20 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
   const [ingestionApps, setIngestionApps] = useState<ValidatedIngestionApp[]>([]);
   const [securityRulesText, setSecurityRulesText] = useState('');
   const [aiAgentPrompts, setAiAgentPrompts] = useState<string[]>(['']);
+  /** Per-prompt allow-list of app names. Indices align with aiAgentPrompts. */
+  const [aiAgentApps, setAiAgentApps] = useState<string[][]>([[]]);
+  const [appPickerForIdx, setAppPickerForIdx] = useState<number | null>(null);
+  const { data: authenticatedApps = [] } = useAuthenticatedApps();
+  const appImageByName = React.useMemo(() => {
+    const map = new Map<string, string>();
+    authenticatedApps.forEach((a: any) => {
+      const name = a?.app?.name;
+      if (name && !map.has(name)) {
+        map.set(name, a?.app?.large_image || a?.app?.small_image || '');
+      }
+    });
+    return map;
+  }, [authenticatedApps]);
   /**
    * Tracks which automation rows have their config section expanded.
    * Enabling an automation no longer auto-expands it — the user explicitly
