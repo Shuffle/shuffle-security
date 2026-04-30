@@ -311,73 +311,10 @@ const DecisionItem = ({
             </Box>
           )}
 
-          {/* Details (collapsible) — extra fields like category, confidence, runs, fields, run_details */}
-          {hasDetails && (
-            <Box sx={{ px: 1.5, pb: 1 }}>
-              <Box
-                onClick={() => setDetailsOpen((v) => !v)}
-                sx={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 0.5,
-                  cursor: 'pointer',
-                  userSelect: 'none',
-                  color: 'hsl(var(--muted-foreground))',
-                  '&:hover': { color: 'hsl(var(--foreground))' },
-                }}
-              >
-                {detailsOpen ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
-                <Typography sx={{
-                  fontSize: '0.6rem',
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.06em',
-                }}>
-                  Details · {extraEntries.length}
-                </Typography>
-              </Box>
-              {detailsOpen && (
-                <Box sx={{
-                  mt: 0.75,
-                  p: 1,
-                  borderRadius: 1,
-                  bgcolor: 'hsl(var(--background))',
-                  border: '1px solid hsl(var(--border))',
-                  display: 'grid',
-                  gridTemplateColumns: 'auto 1fr',
-                  rowGap: 0.5,
-                  columnGap: 1,
-                }}>
-                  {extraEntries.map(([k, v]) => (
-                    <Box key={k} sx={{ display: 'contents' }}>
-                      <Typography sx={{
-                        fontSize: '0.65rem',
-                        fontWeight: 600,
-                        color: 'hsl(var(--muted-foreground))',
-                        fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace',
-                      }}>
-                        {k}
-                      </Typography>
-                      <Typography sx={{
-                        fontSize: '0.7rem',
-                        color: 'hsl(var(--foreground))',
-                        fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace',
-                        whiteSpace: 'pre-wrap',
-                        wordBreak: 'break-word',
-                      }}>
-                        {typeof v === 'object' ? JSON.stringify(v, null, 2) : String(v)}
-                      </Typography>
-                    </Box>
-                  ))}
-                </Box>
-              )}
-            </Box>
-          )}
-
-          {/* Debug (collapsible) — full raw decision JSON */}
+          {/* Details (collapsible) — reason (markdown) + extra fields + nested Debug */}
           <Box sx={{ px: 1.5, pb: 1 }}>
             <Box
-              onClick={() => setDebugOpen((v) => !v)}
+              onClick={() => setDetailsOpen((v) => !v)}
               sx={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -385,41 +322,139 @@ const DecisionItem = ({
                 cursor: 'pointer',
                 userSelect: 'none',
                 color: 'hsl(var(--muted-foreground))',
-                opacity: 0.7,
-                '&:hover': { color: 'hsl(var(--foreground))', opacity: 1 },
+                '&:hover': { color: 'hsl(var(--foreground))' },
               }}
             >
-              {debugOpen ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
+              {detailsOpen ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
               <Typography sx={{
                 fontSize: '0.6rem',
                 fontWeight: 700,
                 textTransform: 'uppercase',
                 letterSpacing: '0.06em',
               }}>
-                Debug
+                Details
               </Typography>
             </Box>
-            {debugOpen && (
-              <Box sx={{
-                mt: 0.75,
-                p: 1,
-                borderRadius: 1,
-                bgcolor: 'hsl(var(--muted))',
-                border: '1px solid hsl(var(--border))',
-                overflow: 'auto',
-                maxHeight: 320,
-              }}>
-                <pre style={{
-                  margin: 0,
-                  fontSize: '0.68rem',
-                  fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace',
-                  color: 'hsl(var(--foreground))',
-                  whiteSpace: 'pre-wrap',
-                  wordBreak: 'break-word',
-                  lineHeight: 1.5,
-                }}>
-                  {JSON.stringify(decision, null, 2)}
-                </pre>
+            {detailsOpen && (
+              <Box sx={{ mt: 0.75 }}>
+                {/* Reason — rendered as Markdown at the top of details */}
+                {typeof decision.reason === 'string' && decision.reason.trim() && (
+                  <Box sx={{
+                    mb: nonReasonEntries.length > 0 ? 1 : 1,
+                    p: 1,
+                    borderRadius: 1,
+                    bgcolor: 'hsl(var(--background))',
+                    border: '1px solid hsl(var(--border))',
+                    '& p': {
+                      fontSize: '0.76rem',
+                      color: 'hsl(var(--foreground))',
+                      lineHeight: 1.6,
+                      m: 0,
+                      mb: 0.5,
+                    },
+                    '& p:last-child': { mb: 0 },
+                    '& strong': { color: 'hsl(var(--foreground))', fontWeight: 700 },
+                    '& code': {
+                      fontSize: '0.7rem',
+                      bgcolor: 'hsl(var(--muted))',
+                      px: 0.5,
+                      py: 0.15,
+                      borderRadius: 0.5,
+                      fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace',
+                    },
+                    '& ul, & ol': { fontSize: '0.76rem', pl: 2.25, m: 0, mb: 0.5 },
+                    '& a': { color: 'hsl(var(--primary))', textDecoration: 'none' },
+                  }}>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {decision.reason as string}
+                    </ReactMarkdown>
+                  </Box>
+                )}
+
+                {/* Other extra fields as key/value rows */}
+                {nonReasonEntries.length > 0 && (
+                  <Box sx={{
+                    mb: 1,
+                    p: 1,
+                    borderRadius: 1,
+                    bgcolor: 'hsl(var(--background))',
+                    border: '1px solid hsl(var(--border))',
+                    display: 'grid',
+                    gridTemplateColumns: 'auto 1fr',
+                    rowGap: 0.5,
+                    columnGap: 1,
+                  }}>
+                    {nonReasonEntries.map(([k, v]) => (
+                      <Box key={k} sx={{ display: 'contents' }}>
+                        <Typography sx={{
+                          fontSize: '0.65rem',
+                          fontWeight: 600,
+                          color: 'hsl(var(--muted-foreground))',
+                          fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace',
+                        }}>
+                          {k}
+                        </Typography>
+                        <Typography sx={{
+                          fontSize: '0.7rem',
+                          color: 'hsl(var(--foreground))',
+                          fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace',
+                          whiteSpace: 'pre-wrap',
+                          wordBreak: 'break-word',
+                        }}>
+                          {typeof v === 'object' ? JSON.stringify(v, null, 2) : String(v)}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                )}
+
+                {/* Debug — raw decision JSON */}
+                <Box
+                  onClick={() => setDebugOpen((v) => !v)}
+                  sx={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 0.5,
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    color: 'hsl(var(--muted-foreground))',
+                    opacity: 0.7,
+                    '&:hover': { color: 'hsl(var(--foreground))', opacity: 1 },
+                  }}
+                >
+                  {debugOpen ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
+                  <Typography sx={{
+                    fontSize: '0.58rem',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.06em',
+                  }}>
+                    Debug
+                  </Typography>
+                </Box>
+                {debugOpen && (
+                  <Box sx={{
+                    mt: 0.5,
+                    p: 1,
+                    borderRadius: 1,
+                    bgcolor: 'hsl(var(--muted))',
+                    border: '1px solid hsl(var(--border))',
+                    overflow: 'auto',
+                    maxHeight: 320,
+                  }}>
+                    <pre style={{
+                      margin: 0,
+                      fontSize: '0.68rem',
+                      fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace',
+                      color: 'hsl(var(--foreground))',
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-word',
+                      lineHeight: 1.5,
+                    }}>
+                      {JSON.stringify(decision, null, 2)}
+                    </pre>
+                  </Box>
+                )}
               </Box>
             )}
           </Box>
