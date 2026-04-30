@@ -496,19 +496,44 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
                       )}
                     </Box>
                   )}
-                  {/* Body */}
+                  {/* Body — render sanitized HTML when available, otherwise plain text */}
                   <Box sx={{
                     pl: 5.5, // align with text after avatar
                   }}>
-                    <Typography variant="body2" sx={{
-                      whiteSpace: 'pre-wrap',
-                      fontSize: '0.82rem',
-                      lineHeight: 1.7,
-                      color: 'text.primary',
-                      wordBreak: 'break-word',
-                    }}>
-                      {msg.body}
-                    </Typography>
+                    {msg.bodyHtml ? (
+                      <Box
+                        sx={{
+                          fontSize: '0.82rem',
+                          lineHeight: 1.7,
+                          color: 'text.primary',
+                          wordBreak: 'break-word',
+                          '& a': { color: '#ff6600' },
+                          '& img': { maxWidth: '100%', height: 'auto' },
+                          '& blockquote': {
+                            borderLeft: '3px solid hsl(var(--border))',
+                            pl: 1.5,
+                            ml: 0,
+                            color: 'text.secondary',
+                          },
+                        }}
+                        dangerouslySetInnerHTML={{
+                          __html: DOMPurify.sanitize(msg.bodyHtml, {
+                            FORBID_TAGS: ['script', 'style', 'iframe', 'object', 'embed'],
+                            FORBID_ATTR: ['onerror', 'onload', 'onclick'],
+                          }),
+                        }}
+                      />
+                    ) : (
+                      <Typography variant="body2" sx={{
+                        whiteSpace: 'pre-wrap',
+                        fontSize: '0.82rem',
+                        lineHeight: 1.7,
+                        color: 'text.primary',
+                        wordBreak: 'break-word',
+                      }}>
+                        {msg.body}
+                      </Typography>
+                    )}
                   </Box>
                 </Box>
               </Collapse>
