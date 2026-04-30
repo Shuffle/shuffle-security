@@ -34,6 +34,10 @@ import { toast } from 'sonner';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import DownloadIcon from '@mui/icons-material/Download';
 import PopupTextEditor from '@/components/shared/PopupTextEditor';
+import AppSearchDrawer from '@/components/shared/AppSearchDrawer';
+import { useAuthenticatedApps } from '@/hooks/useAuthenticatedApps';
+import AddIcon from '@mui/icons-material/Add';
+import { Tooltip } from '@mui/material';
 
 import { CategoryAutomation } from '@/services/datastore';
 import { extractValidatedIngestionApps, ValidatedIngestionApp, findIngestTicketsWorkflow, extractWorkflowAppNames } from '@/lib/ingestionDetection';
