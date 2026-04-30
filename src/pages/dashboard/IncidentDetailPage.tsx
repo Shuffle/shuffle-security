@@ -3256,80 +3256,66 @@ const IncidentDetailPage = () => {
             <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Timeline</Typography>
             {revisionsLoading && <CircularProgress size={14} sx={{ color: '#ff6600' }} />}
           </Box>
-          {!timelineCollapsed && (
-          <Box
-            onClick={(e) => e.stopPropagation()}
-            sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', justifyContent: 'flex-end', alignItems: 'center' }}
-          >
-            {([
+          {!timelineCollapsed && (() => {
+            const filterDefs = [
               { key: 'revisions' as const, label: 'Changes', count: revisions.length },
               { key: 'agent' as const, label: 'Agent', count: agentRuns.length },
               { key: 'manual' as const, label: 'Comments', count: activity.length },
               { key: 'tasks' as const, label: 'Tasks', count: tasks.filter(t => !t.disabled).length },
               { key: 'observables' as const, label: 'Observables', count: editedObservables.filter(o => !o.archived).length + enrichments.length },
               { key: 'correlations' as const, label: 'Correlations', count: correlations.length },
-            ]).map(({ key, label, count }) => {
-              const active = isFilterActive(key);
-              const isEmpty = count === 0;
-              return (
-                <Tooltip key={key} title={active ? `Hide ${label.toLowerCase()}` : `Show ${label.toLowerCase()}`} arrow>
+            ];
+            const activeCount = filterDefs.filter(f => isFilterActive(f.key)).length;
+            const allActive = activeCount === filterDefs.length;
+            return (
+              <Box
+                onClick={(e) => e.stopPropagation()}
+                sx={{ display: 'flex', alignItems: 'center', ml: 'auto' }}
+              >
+                <Tooltip title="Filter timeline" arrow>
                   <Chip
+                    icon={<FilterListIcon sx={{ fontSize: 14, ml: '6px !important', color: 'inherit !important' }} />}
                     label={
-                      <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.625 }}>
-                        <Box
-                          component="span"
-                          sx={{
-                            width: 6,
-                            height: 6,
-                            borderRadius: '50%',
-                            bgcolor: active ? '#ff6600' : 'transparent',
-                            border: active ? 'none' : '1px solid hsl(var(--border))',
-                            transition: 'background-color 120ms ease',
-                          }}
-                        />
-                        <span>{label}</span>
+                      <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
+                        <span>Filters</span>
                         <Box
                           component="span"
                           sx={{
                             fontSize: '0.65rem',
-                            opacity: 0.7,
+                            opacity: 0.8,
                             fontVariantNumeric: 'tabular-nums',
+                            px: 0.5,
+                            borderRadius: '4px',
+                            bgcolor: allActive ? 'transparent' : 'rgba(255, 102, 0, 0.18)',
+                            border: allActive ? 'none' : '1px solid rgba(255, 102, 0, 0.35)',
                           }}
                         >
-                          {count}
+                          {allActive ? 'All' : `${activeCount}/${filterDefs.length}`}
                         </Box>
                       </Box>
                     }
                     size="small"
-                    onClick={() => toggleTimelineFilter(key)}
+                    onClick={(e) => setTimelineFilterAnchor(e.currentTarget)}
                     sx={{
                       height: 24,
                       fontSize: '0.7rem',
                       borderRadius: '6px',
                       cursor: 'pointer',
-                      border: '1px solid',
-                      borderColor: active ? 'rgba(255, 102, 0, 0.45)' : 'hsl(var(--border))',
-                      bgcolor: active ? 'rgba(255, 102, 0, 0.1)' : 'transparent',
-                      color: active ? '#ff6600' : 'text.secondary',
-                      opacity: !active && isEmpty ? 0.45 : 1,
-                      transition: 'all 120ms ease',
+                      border: '1px solid hsl(var(--border))',
+                      bgcolor: 'transparent',
+                      color: 'text.secondary',
                       '& .MuiChip-label': { px: 0.875 },
-                      '&:hover': {
-                        bgcolor: active ? 'rgba(255, 102, 0, 0.16)' : 'hsl(var(--muted))',
-                        borderColor: active ? 'rgba(255, 102, 0, 0.6)' : 'hsl(var(--border))',
-                        opacity: 1,
-                      },
+                      '&:hover': { bgcolor: 'hsl(var(--muted))' },
                     }}
                   />
                 </Tooltip>
-              );
-            })}
-          </Box>
-          )}
+              </Box>
+            );
+          })()}
           {/* Chevron — far right, mirroring the Section pattern. */}
           {timelineCollapsed
-            ? <ExpandMoreIcon sx={{ color: 'text.secondary', ml: 'auto' }} />
-            : <ExpandLessIcon sx={{ color: 'text.secondary', ml: 'auto' }} />}
+            ? <ExpandMoreIcon sx={{ color: 'text.secondary', ml: timelineCollapsed ? 'auto' : 0.5 }} />
+            : <ExpandLessIcon sx={{ color: 'text.secondary', ml: 0.5 }} />}
         </Box>
       </Box>
 
