@@ -385,7 +385,11 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
   const [appSearchOpen, setAppSearchOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const isViewMode = !!run;
+  // Live-poll the run while it is in-progress. Returns the same reference
+  // when nothing changed, so the view does not re-render on every tick.
+  const liveRun = useExecutionPolling(run, { enabled: open && !!run });
+
+  const isViewMode = !!liveRun;
 
   const handleRunAgent = async () => {
     if (!agentInput.trim() || isRunning) return;
