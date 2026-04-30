@@ -163,6 +163,8 @@ export interface AppAuthCardProps {
   onSelectAuth?: (appId: string, authId: string) => void;
   /** Called to refresh auth entries (e.g. after OAuth popup closes) */
   onRefreshAuth?: () => Promise<void> | void;
+  /** When true, do NOT auto-fill URL fields with the param.example value. */
+  disableUrlPrefill?: boolean;
 }
 
 const containerVariants = {
