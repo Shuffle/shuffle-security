@@ -8354,9 +8354,13 @@ const IncidentDetailPage = () => {
       {/* Merge Dialog */}
       <MergeIncidentDialog
         open={showMergeDialog}
-        onClose={() => setShowMergeDialog(false)}
+        onClose={() => {
+          setShowMergeDialog(false);
+          setMergePreselectedId(undefined);
+        }}
         currentIncidentId={incident?.id || ''}
         currentIncidentTitle={incident?.title || ''}
+        preselectedTargetId={mergePreselectedId}
         onMergeComplete={() => {
           loadIncident(false);
         }}
