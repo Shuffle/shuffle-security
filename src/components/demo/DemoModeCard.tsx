@@ -235,7 +235,7 @@ export const DemoModeCard = () => {
                   {isCleaning ? 'Cleaning…' : `Clean up demo data (${leftoverDemoCount})`}
                 </Button>
               )}
-              <Tooltip title={disableStart ? disableReason : ''} arrow disableHoverListener={!disableStart}>
+              <Tooltip title={warnReason} arrow disableHoverListener={!warnReason}>
                 <span>
                   <Button
                     onClick={startDemo}
