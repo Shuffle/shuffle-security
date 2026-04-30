@@ -1436,11 +1436,15 @@ const IncidentsPage = () => {
   const handleCreateIncident = async (ocsf: OCSFIncidentFinding) => {
     const key = ocsf.finding_uid;
     await addItem(key, ocsf);
-    await fetchItems();
     trackPredefinedEvent(GA_EVENTS.INCIDENT_CREATE);
     // Auto-open the freshly created incident so the user can immediately
     // see it materialize (and watch background enrichments stream in).
+    // NOTE: do NOT await fetchItems() here — it paginates through all
+    // incidents (10+ pages) and was adding several seconds of delay before
+    // the detail page opened. Fire-and-forget so the list refreshes in the
+    // background while we navigate.
     navigate(`/incidents/${key}`);
+    fetchItems();
   };
 
   const resetToDefaults = () => {
