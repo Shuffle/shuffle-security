@@ -7006,6 +7006,38 @@ const IncidentDetailPage = () => {
                 sx={{ fontSize: '0.65rem', cursor: 'pointer', color: 'hsl(var(--muted-foreground))', bgcolor: 'rgba(255,255,255,0.05)' }}
               />
             )}
+            {/* Show / hide ignored observables — per-org list of indicators
+                the user has marked as uninteresting. Hidden by default. */}
+            {ignoredObs.ignoredKeys.size > 0 && (
+              <Tooltip
+                title={showIgnoredObs
+                  ? 'Hide observables you have marked as ignored'
+                  : 'Reveal observables you have marked as ignored'}
+                arrow
+              >
+                <Chip
+                  icon={showIgnoredObs
+                    ? <VisibilityIcon sx={{ fontSize: 12 }} />
+                    : <VisibilityOffIcon sx={{ fontSize: 12 }} />}
+                  label={showIgnoredObs
+                    ? `Hide ignored (${ignoredObs.ignoredKeys.size})`
+                    : `Show ignored (${ignoredObs.ignoredKeys.size})`}
+                  size="small"
+                  onClick={() => setShowIgnoredObs(s => !s)}
+                  sx={{
+                    fontSize: '0.65rem',
+                    height: 22,
+                    cursor: 'pointer',
+                    color: showIgnoredObs ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
+                    bgcolor: showIgnoredObs ? 'hsl(var(--primary) / 0.1)' : 'rgba(255,255,255,0.05)',
+                    border: '1px solid',
+                    borderColor: showIgnoredObs ? 'hsl(var(--primary) / 0.4)' : 'hsl(var(--border))',
+                    '& .MuiChip-icon': { ml: 0.75, mr: -0.25, color: 'inherit' },
+                    '&:hover': { bgcolor: showIgnoredObs ? 'hsl(var(--primary) / 0.18)' : 'rgba(255,255,255,0.08)' },
+                  }}
+                />
+              </Tooltip>
+            )}
           </Box>
 
           {/* Unified observables list (manual + enrichments) */}
