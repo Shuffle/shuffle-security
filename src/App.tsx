@@ -77,6 +77,13 @@ const SupportOnly = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+/** Legacy /incidents-simple/:id → /incidents/:id redirect (preserves the id and query string). */
+const RedirectIncidentsSimple = () => {
+  const { pathname, search } = window.location;
+  const id = pathname.split('/').filter(Boolean)[1] || '';
+  return <Navigate to={`/incidents/${id}${search}`} replace />;
+};
+
 const queryClient = new QueryClient();
 
 /** Inner app that reads theme context */
