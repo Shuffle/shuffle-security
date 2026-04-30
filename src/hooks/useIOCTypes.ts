@@ -75,7 +75,10 @@ export const DEFAULT_IOC_TYPES: IOCType[] = [
   // trailing class stops at whitespace, quotes, brackets, or commas so JSON
   // / HTML / CSV context is not swallowed.
   { name: 'url', regex: '(?:^|(?<=[^A-Za-z0-9._%+\\-]))(?:h(?:tt|xx)ps?(?:://|\\[://\\])|)[A-Za-z0-9](?:[A-Za-z0-9\\-]*[A-Za-z0-9])?(?:(?:\\.|\\[\\.\\]|\\(\\.\\))[A-Za-z0-9](?:[A-Za-z0-9\\-]*[A-Za-z0-9])?)*(?:\\.|\\[\\.\\]|\\(\\.\\))[A-Za-z]{2,24}(?:\\[?\\/\\]?|[?#])[^\\s"\'<>\\{\\}\\[\\],]*', description: 'URL — matches embedded URLs, including defanged forms (host[.]tld, hxxp://)', category: 'common', enabled: true },
-  { name: 'ipv4', regex: '^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$', description: 'IPv4 address (STIX ipv4-addr)', category: 'common', enabled: true },
+  // IPv4: each octet 0-255, but no leading zeros (e.g. "026" historically meant
+  // octal 22 — modern parsers either reject it or interpret unexpectedly, so we
+  // treat it as invalid). Strict octet: 25[0-5] | 2[0-4]X | 1XX | [1-9]?X.
+  { name: 'ipv4', regex: '^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$', description: 'IPv4 address (STIX ipv4-addr)', category: 'common', enabled: true },
   { name: 'ipv6', regex: '^(?:[A-Fa-f0-9]{1,4}:){7}[A-Fa-f0-9]{1,4}$|^::1$|^::$|^(?:[A-Fa-f0-9]{1,4}:){1,7}:$|^(?:[A-Fa-f0-9]{1,4}:){1,6}:[A-Fa-f0-9]{1,4}$', description: 'IPv6 address (STIX ipv6-addr)', category: 'common', enabled: true },
   // Domain regex: extracts the bare FQDN (host portion) from a string. The
   // domain may stand alone OR sit at the front of a URL — in both cases we
