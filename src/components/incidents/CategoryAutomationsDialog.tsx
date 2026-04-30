@@ -188,6 +188,58 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
     });
     return map;
   }, [authenticatedApps]);
+
+  /** Algolia-fetched metadata for app IDs that are NOT in the authenticated
+   *  list (allowed apps may include catalog-only apps). Cached for the
+   *  lifetime of the component. */
+  const [algoliaAppMeta, setAlgoliaAppMeta] = useState<Record<string, { name: string; image: string }>>({});
+  useEffect(() => {
+    // Collect all IDs currently referenced that we don't know yet
+    const allIds = new Set<string>();
+    aiAgentApps.forEach(arr => arr.forEach(id => { if (id) allIds.add(id); }));
+    const missing = [...allIds].filter(id =>
+      !appMetaById.has(id) && !algoliaAppMeta[id] && /^[a-f0-9]{16,}$/i.test(id),
+    );
+    if (missing.length === 0) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const { algoliasearch } = await import('algoliasearch');
+        const client = algoliasearch('JNSS5CFDZZ', '33e4e3564f4f060e96e0531957bed552');
+        const res: any = await (client as any).getObjects({
+          requests: missing.map(objectID => ({ indexName: 'appsearch', objectID })),
+        });
+        if (cancelled) return;
+        const next: Record<string, { name: string; image: string }> = {};
+        (res?.results || []).forEach((hit: any) => {
+          if (hit?.objectID) {
+            next[hit.objectID] = {
+              name: hit.name || hit.objectID,
+              image: hit.image_url || '',
+            };
+          }
+        });
+        if (Object.keys(next).length > 0) {
+          setAlgoliaAppMeta(prev => ({ ...prev, ...next }));
+        }
+      } catch {
+        /* ignore — image lookup is optional */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [aiAgentApps, appMetaById, algoliaAppMeta]);
+
+  /** Unified resolver: prefer authenticated apps, then Algolia cache. */
+  const resolveAppMeta = (key: string): { name: string; image: string } => {
+    return (
+      appMetaById.get(key) ||
+      algoliaAppMeta[key] || {
+        name: key,
+        image: '',
+      }
+    );
+  };
   /**
    * Tracks which automation rows have their config section expanded.
    * Enabling an automation no longer auto-expands it — the user explicitly
