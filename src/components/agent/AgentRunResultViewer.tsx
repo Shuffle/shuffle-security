@@ -115,6 +115,180 @@ export const hasOutputWarning = (run: AgentRun): boolean => {
   return errorPatterns.some(p => output.includes(p));
 };
 
+/**
+ * Diagnose what went wrong inside a "needs review" run output. Returns the
+ * kind of failure (auth, permission, not-found, rate-limit, network,
+ * validation, generic), an HTTP status if we could parse one, a snippet from
+ * the output that triggered the diagnosis, and a remediation hint that tells
+ * the user how to fix it.
+ *
+ * Searches the entire serialized result (not just `output`) so we catch
+ * 401/403 bodies that the upstream tool returned in nested fields like
+ * `result`, `error`, `body`, `data`, etc.
+ */
+export type OutputDiagnosis = {
+  kind: 'auth' | 'permission' | 'not_found' | 'rate_limit' | 'network' | 'validation' | 'generic';
+  status?: number;
+  title: string;
+  explanation: string;
+  remediation: string;
+  snippet?: string;
+};
+
+export const diagnoseOutputWarning = (run: AgentRun): OutputDiagnosis | null => {
+  const { parsed, raw } = parseRunResult(run);
+  if (!parsed || typeof parsed !== 'object') return null;
+
+  // Build a single searchable haystack from every string-y field we can find.
+  const haystackParts: string[] = [];
+  const collect = (v: unknown, depth = 0): void => {
+    if (depth > 6 || v == null) return;
+    if (typeof v === 'string') { haystackParts.push(v); return; }
+    if (typeof v === 'number' || typeof v === 'boolean') { haystackParts.push(String(v)); return; }
+    if (Array.isArray(v)) { v.forEach(item => collect(item, depth + 1)); return; }
+    if (typeof v === 'object') {
+      for (const val of Object.values(v as Record<string, unknown>)) collect(val, depth + 1);
+    }
+  };
+  collect(parsed);
+  if (raw && haystackParts.length === 0) haystackParts.push(raw);
+  const haystack = haystackParts.join('\n');
+  const lower = haystack.toLowerCase();
+
+  // Try to extract an explicit HTTP status code.
+  let status: number | undefined;
+  const statusPatterns = [
+    /\bhttp[\s/]?(\d{3})\b/i,
+    /\bstatus[\s:_-]+(\d{3})\b/i,
+    /\bstatus[_\s-]?code["\s:]+(\d{3})\b/i,
+    /\bcode["\s:]+(\d{3})\b/i,
+    /\[(\d{3})\]/,
+    /\((\d{3})\)/,
+    /\b(4\d{2}|5\d{2})\b/,
+  ];
+  for (const re of statusPatterns) {
+    const m = haystack.match(re);
+    if (m) {
+      const n = Number(m[1]);
+      if (n >= 400 && n < 600) { status = n; break; }
+    }
+  }
+
+  // Pull a short snippet around the first error keyword we find.
+  const findSnippet = (needles: string[]): string | undefined => {
+    for (const needle of needles) {
+      const i = lower.indexOf(needle);
+      if (i >= 0) {
+        const start = Math.max(0, i - 40);
+        const end = Math.min(haystack.length, i + 160);
+        return (start > 0 ? '…' : '') + haystack.slice(start, end).trim() + (end < haystack.length ? '…' : '');
+      }
+    }
+    return undefined;
+  };
+
+  if (
+    status === 401 ||
+    /\b(unauthori[sz]ed|invalid[_\s-]*(api[_\s-]*key|token|credentials?)|authentication[_\s-]*(failed|required)|missing[_\s-]*(api[_\s-]*key|token|authorization)|bearer[_\s-]*token|expired[_\s-]*token)\b/.test(lower)
+  ) {
+    return {
+      kind: 'auth',
+      status,
+      title: status === 401 ? 'Authentication failed (HTTP 401)' : 'Authentication failed',
+      explanation: 'The upstream service rejected the request because the credentials were missing, invalid, or expired.',
+      remediation: 'Open the integration in Apps → Authentication, reconnect or paste a fresh API key/token, then re-run the action.',
+      snippet: findSnippet(['401', 'unauthorized', 'invalid api', 'invalid token', 'authentication']),
+    };
+  }
+
+  if (
+    status === 403 ||
+    /\b(forbidden|permission[_\s-]*denied|not[_\s-]*allowed|access[_\s-]*denied|insufficient[_\s-]*(scope|permission|privileges?)|missing[_\s-]*scope)\b/.test(lower)
+  ) {
+    return {
+      kind: 'permission',
+      status,
+      title: status === 403 ? 'Permission denied (HTTP 403)' : 'Permission denied',
+      explanation: 'The credentials are valid, but the connected account does not have permission (or scope) to perform this action.',
+      remediation: 'Re-authenticate the integration with the missing scope, or grant the connected account permission for this resource in the source app.',
+      snippet: findSnippet(['403', 'forbidden', 'permission', 'scope', 'access denied']),
+    };
+  }
+
+  if (status === 429 || /\b(rate[_\s-]*limit|too[_\s-]*many[_\s-]*requests|quota[_\s-]*exceeded|throttled)\b/.test(lower)) {
+    return {
+      kind: 'rate_limit',
+      status,
+      title: status === 429 ? 'Rate limited (HTTP 429)' : 'Rate limited',
+      explanation: 'The upstream service is throttling requests from this integration.',
+      remediation: 'Wait a minute and re-run, or reduce how often this action fires. Check the integration\'s rate-limit settings if the problem keeps happening.',
+      snippet: findSnippet(['429', 'rate limit', 'too many', 'quota', 'throttled']),
+    };
+  }
+
+  if (status === 404 || /\b(not[_\s-]*found|no such|does not exist|unknown[_\s-]*(id|resource))\b/.test(lower)) {
+    return {
+      kind: 'not_found',
+      status,
+      title: status === 404 ? 'Resource not found (HTTP 404)' : 'Resource not found',
+      explanation: 'The action ran, but the target resource (record, ticket, channel, file) could not be located.',
+      remediation: 'Verify the ID or path the agent used is correct, and that the connected account can see that resource.',
+      snippet: findSnippet(['404', 'not found', 'no such', 'does not exist']),
+    };
+  }
+
+  if (status === 400 || status === 422 || /\b(bad[_\s-]*request|validation[_\s-]*(error|failed)|invalid[_\s-]*(parameter|field|argument|body|payload))\b/.test(lower)) {
+    return {
+      kind: 'validation',
+      status,
+      title: status ? `Invalid request (HTTP ${status})` : 'Invalid request',
+      explanation: 'The upstream service rejected the request because the parameters were missing or malformed.',
+      remediation: 'Check the action\'s required fields and the values the agent sent. The Debug section below shows the exact payload.',
+      snippet: findSnippet(['400', '422', 'bad request', 'validation', 'invalid']),
+    };
+  }
+
+  if (
+    (typeof status === 'number' && status >= 500) ||
+    /\b(timeout|timed[_\s-]*out|econnrefused|enotfound|network[_\s-]*error|connection[_\s-]*(refused|reset|closed)|service[_\s-]*unavailable|bad[_\s-]*gateway|gateway[_\s-]*timeout)\b/.test(lower)
+  ) {
+    return {
+      kind: 'network',
+      status,
+      title: status ? `Upstream error (HTTP ${status})` : 'Network or upstream error',
+      explanation: 'The integration could not reach the upstream service, or the service returned a server error.',
+      remediation: 'Re-run the action shortly. If it keeps failing, check the upstream service\'s status page and the integration\'s base URL.',
+      snippet: findSnippet(['500', '502', '503', '504', 'timeout', 'timed out', 'unavailable']),
+    };
+  }
+
+  const reason =
+    (typeof (parsed as { reason?: unknown }).reason === 'string' && (parsed as { reason: string }).reason) ||
+    (typeof (parsed as { error?: unknown }).error === 'string' && (parsed as { error: string }).error) ||
+    (typeof (parsed as { message?: unknown }).message === 'string' && (parsed as { message: string }).message) ||
+    undefined;
+
+  if ((parsed as { success?: unknown }).success === false || reason) {
+    return {
+      kind: 'generic',
+      status,
+      title: status ? `Action failed (HTTP ${status})` : 'Action failed',
+      explanation: reason || 'The action returned a failure but did not include a recognizable error code.',
+      remediation: 'Open the Debug section below to see the full response from the integration.',
+      snippet: reason,
+    };
+  }
+
+  return {
+    kind: 'generic',
+    status,
+    title: 'Output may need review',
+    explanation: 'The result contains words that often indicate a problem, but no specific error code was returned.',
+    remediation: 'Open the Debug section below to inspect the raw response.',
+    snippet: findSnippet(['error', 'failed', 'exception', 'could not']),
+  };
+};
+
 /** Check if a run's result matches a search query */
 export const runMatchesSearch = (run: AgentRun, query: string): boolean => {
   const q = query.toLowerCase();
@@ -166,6 +340,7 @@ const AgentRunResultViewer = ({ run }: AgentRunResultViewerProps) => {
   const isFailed = run.status?.toUpperCase() === 'FAILED' || run.status?.toUpperCase() === 'ABORTED';
   const failureInfo = getFailureInfo(run);
   const outputWarning = !isFailed && hasOutputWarning(run);
+  const diagnosis = outputWarning ? diagnoseOutputWarning(run) : null;
   const outputText = getOutputText(parsed);
   const datastoreRef = parseDatastoreReference(run);
   const refPath = datastoreRef ? getReferencePath(datastoreRef) : null;
@@ -208,8 +383,10 @@ const AgentRunResultViewer = ({ run }: AgentRunResultViewerProps) => {
         </Box>
       )}
 
-      {/* Output warning banner (unsure / needs review) */}
-      {outputWarning && (
+      {/* Output warning banner — uses the diagnosis to show the actual
+          error type (auth/permission/rate-limit/...) and a remediation hint
+          instead of a generic "may need review" message. */}
+      {outputWarning && diagnosis && (
         <Box sx={{
           display: 'flex',
           alignItems: 'flex-start',
@@ -222,13 +399,53 @@ const AgentRunResultViewer = ({ run }: AgentRunResultViewerProps) => {
           border: '1px solid hsla(var(--severity-medium) / 0.2)',
         }}>
           <HelpCircle size={14} style={{ color: 'hsl(var(--severity-medium))', marginTop: 2, flexShrink: 0 }} />
-          <Typography sx={{
-            fontSize: '0.78rem',
-            color: 'hsl(var(--severity-medium))',
-            lineHeight: 1.5,
-          }}>
-            This result may need review — the output contains error indicators
-          </Typography>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography sx={{
+              fontSize: '0.78rem',
+              fontWeight: 600,
+              color: 'hsl(var(--severity-medium))',
+              lineHeight: 1.4,
+              mb: 0.25,
+            }}>
+              {diagnosis.title}
+            </Typography>
+            <Typography sx={{
+              fontSize: '0.74rem',
+              color: 'hsl(var(--foreground))',
+              lineHeight: 1.5,
+              mb: 0.5,
+            }}>
+              {diagnosis.explanation}
+            </Typography>
+            <Typography sx={{
+              fontSize: '0.74rem',
+              color: 'hsl(var(--foreground))',
+              lineHeight: 1.5,
+            }}>
+              <Box component="span" sx={{ fontWeight: 600, color: 'hsl(var(--severity-medium))' }}>
+                How to fix:
+              </Box>{' '}
+              {diagnosis.remediation}
+            </Typography>
+            {diagnosis.snippet && (
+              <Box sx={{
+                mt: 0.75,
+                p: 0.75,
+                borderRadius: 0.5,
+                bgcolor: 'hsl(var(--background))',
+                border: '1px solid hsl(var(--border))',
+                fontSize: '0.7rem',
+                fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace',
+                color: 'hsl(var(--muted-foreground))',
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word',
+                maxHeight: 80,
+                overflow: 'auto',
+              }}>
+                {diagnosis.snippet}
+              </Box>
+            )}
+          </Box>
         </Box>
       )}
 
