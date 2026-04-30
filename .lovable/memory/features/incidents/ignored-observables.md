@@ -18,7 +18,15 @@ in the Shuffle datastore.
 ## Hook
 `useIgnoredObservables()` (in `src/hooks/useIgnoredObservables.ts`) returns
 `{ ignoredKeys, isIgnored(type,value), ignore(type,value,reason?), unignore(type,value), entries, refetch }`.
-Auto-fetches once on mount.
+
+**Listing strategy**: fetch the full category list ONCE on mount, then keep a
+local `Map<key, entry>` as the source of truth for the rest of the session.
+`ignore`/`unignore` mutate the local map immediately (optimistic) and fire the
+write/delete API in the background, rolling back on failure. We deliberately do
+NOT re-list the datastore after writes — doing so caused a flicker where the
+hidden observable would briefly disappear and then reappear if the API list
+endpoint had not yet caught up with the write. Do not switch this back to
+`useDatastore`'s default refetch-after-write pattern.
 
 ## UI on incident detail Observables tab
 - Each row has a VisibilityOff icon next to Search/Delete. Click toggles
