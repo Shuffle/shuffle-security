@@ -501,6 +501,7 @@ export const AppAuthCard = ({
   
   // Auto-populate URL fields with example values when auth config loads
   useEffect(() => {
+    if (disableUrlPrefill) return;
     if (!auth?.parameters || auth.parameters.length === 0) return;
     
     const urlDefaults: Record<string, string> = {};
