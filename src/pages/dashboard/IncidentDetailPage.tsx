@@ -6197,9 +6197,9 @@ const IncidentDetailPage = () => {
               {/* Changes tab removed — revisions now in Activity sidebar */}
             </Box>
 
-            {/* Right tab group island: Automation + Raw */}
+            {/* Right tab group island: Automation + Raw — hidden on small screens to prevent crowding */}
             <Box sx={{ 
-              display: 'flex', 
+              display: { xs: 'none', md: 'flex' }, 
               alignItems: 'center', 
               gap: 0.5, 
               p: 0.5,
