@@ -50,6 +50,10 @@ interface MergeIncidentDialogProps {
   currentIncidentId: string;
   currentIncidentTitle: string;
   onMergeComplete: () => void;
+  /** When set, the candidate with this id is preselected and the dialog opens
+   * directly on the confirmation step. Used by the merge-candidates banner so
+   * the user can review and confirm in one click. */
+  preselectedTargetId?: string;
 }
 
 const parseIncidentSummary = (item: { key: string; value: string; created?: number }): IncidentSummary | null => {
