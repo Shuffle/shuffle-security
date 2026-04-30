@@ -34,6 +34,10 @@ import { toast } from 'sonner';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import DownloadIcon from '@mui/icons-material/Download';
 import PopupTextEditor from '@/components/shared/PopupTextEditor';
+import AppSearchDrawer from '@/components/shared/AppSearchDrawer';
+import { useAuthenticatedApps } from '@/hooks/useAuthenticatedApps';
+import AddIcon from '@mui/icons-material/Add';
+import { Tooltip } from '@mui/material';
 
 import { CategoryAutomation } from '@/services/datastore';
 import { extractValidatedIngestionApps, ValidatedIngestionApp, findIngestTicketsWorkflow, extractWorkflowAppNames } from '@/lib/ingestionDetection';
@@ -167,6 +171,20 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
   const [ingestionApps, setIngestionApps] = useState<ValidatedIngestionApp[]>([]);
   const [securityRulesText, setSecurityRulesText] = useState('');
   const [aiAgentPrompts, setAiAgentPrompts] = useState<string[]>(['']);
+  /** Per-prompt allow-list of app names. Indices align with aiAgentPrompts. */
+  const [aiAgentApps, setAiAgentApps] = useState<string[][]>([[]]);
+  const [appPickerForIdx, setAppPickerForIdx] = useState<number | null>(null);
+  const { data: authenticatedApps = [] } = useAuthenticatedApps();
+  const appImageByName = React.useMemo(() => {
+    const map = new Map<string, string>();
+    authenticatedApps.forEach((a: any) => {
+      const name = a?.app?.name;
+      if (name && !map.has(name)) {
+        map.set(name, a?.app?.large_image || a?.app?.small_image || '');
+      }
+    });
+    return map;
+  }, [authenticatedApps]);
   /**
    * Tracks which automation rows have their config section expanded.
    * Enabling an automation no longer auto-expands it — the user explicitly
@@ -314,9 +332,21 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
             return numA - numB;
           });
         const prompts = actionOptions.map(o => o.value).filter(Boolean);
-        setAiAgentPrompts(prompts.length > 0 ? prompts : ['']);
+        const finalPrompts = prompts.length > 0 ? prompts : [''];
+        setAiAgentPrompts(finalPrompts);
+
+        // Parse parallel "apps" / "apps-N" options (comma-separated app names)
+        const appsByIdx: string[][] = finalPrompts.map((_, i) => {
+          const key = i === 0 ? 'apps' : `apps-${i + 1}`;
+          const opt = aiAutomation.options.find(o => o.key === key);
+          return opt?.value
+            ? opt.value.split(',').map(s => s.trim()).filter(Boolean)
+            : [];
+        });
+        setAiAgentApps(appsByIdx);
       } else {
         setAiAgentPrompts(['']);
+        setAiAgentApps([[]]);
       }
     }
   }, [open, initialAutomations]);
@@ -363,14 +393,25 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
         } else if (config.type === 'security_rules') {
           options = [{ key: config.optionKey || '', value: securityRulesText }];
         } else if (config.type === 'ai_agent') {
-          // Use "action", "action-2", "action-3" format
-          const validPrompts = aiAgentPrompts.filter(p => p.trim());
-          options = validPrompts.map((prompt, idx) => ({
-            key: idx === 0 ? 'action' : `action-${idx + 1}`,
-            value: prompt,
-          }));
+          // Use "action", "action-2", "action-3" format, with parallel
+          // "apps", "apps-2", … entries holding the per-prompt allow-list
+          // of app names (comma-separated).
+          const pairs = aiAgentPrompts
+            .map((prompt, idx) => ({ prompt, apps: aiAgentApps[idx] || [] }))
+            .filter(p => p.prompt.trim());
+          options = [];
+          pairs.forEach((p, idx) => {
+            options.push({
+              key: idx === 0 ? 'action' : `action-${idx + 1}`,
+              value: p.prompt,
+            });
+            options.push({
+              key: idx === 0 ? 'apps' : `apps-${idx + 1}`,
+              value: p.apps.join(','),
+            });
+          });
           if (options.length === 0) {
-            options = [{ key: 'action', value: '' }];
+            options = [{ key: 'action', value: '' }, { key: 'apps', value: '' }];
           }
         } else {
           options = [{ key: config.optionKey || '', value: '' }];
@@ -672,39 +713,137 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
 
                   {/* AI Agent Configuration - multiple prompts */}
                   {automation.enabled && automation.type === 'ai_agent' && expandedTypes['ai_agent'] && (
-                    <Box sx={{ px: 2, pb: 2, pt: 0.5, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                      {aiAgentPrompts.map((prompt, idx) => (
-                        <Box key={idx} sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                          <PopupTextEditor
-                            value={prompt}
-                            onChange={(next) => {
-                              const updated = [...aiAgentPrompts];
-                              updated[idx] = next;
-                              setAiAgentPrompts(updated);
-                              setHasChanges(true);
+                    <Box sx={{ px: 2, pb: 2, pt: 0.5, display: 'flex', flexDirection: 'column', gap: 1.25 }}>
+                      {aiAgentPrompts.map((prompt, idx) => {
+                        const apps = aiAgentApps[idx] || [];
+                        return (
+                          <Box
+                            key={idx}
+                            sx={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: 0.75,
+                              p: 1,
+                              border: '1px solid hsl(var(--border))',
+                              borderRadius: 1.5,
+                              bgcolor: 'hsl(var(--muted) / 0.2)',
                             }}
-                            placeholder={`Prompt ${idx + 1}...`}
-                            title={`Edit prompt ${idx + 1}`}
-                            subtitle="Full editor for the AI Agent prompt. More controls (permissions, variables) coming soon."
-                          />
-                          {aiAgentPrompts.length > 1 && (
-                            <IconButton
-                              size="small"
-                              onClick={() => {
-                                setAiAgentPrompts(aiAgentPrompts.filter((_, i) => i !== idx));
-                                setHasChanges(true);
-                              }}
-                              sx={{ color: 'text.secondary', '&:hover': { color: 'hsl(var(--destructive))' } }}
-                            >
-                              <CloseIcon sx={{ fontSize: 16 }} />
-                            </IconButton>
-                          )}
-                        </Box>
-                      ))}
+                          >
+                            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                              <PopupTextEditor
+                                value={prompt}
+                                onChange={(next) => {
+                                  const updated = [...aiAgentPrompts];
+                                  updated[idx] = next;
+                                  setAiAgentPrompts(updated);
+                                  setHasChanges(true);
+                                }}
+                                placeholder={`Prompt ${idx + 1}...`}
+                                title={`Edit prompt ${idx + 1}`}
+                                subtitle="Full editor for the AI Agent prompt."
+                              />
+                              {aiAgentPrompts.length > 1 && (
+                                <IconButton
+                                  size="small"
+                                  onClick={() => {
+                                    setAiAgentPrompts(aiAgentPrompts.filter((_, i) => i !== idx));
+                                    setAiAgentApps(aiAgentApps.filter((_, i) => i !== idx));
+                                    setHasChanges(true);
+                                  }}
+                                  sx={{ color: 'text.secondary', '&:hover': { color: 'hsl(var(--destructive))' } }}
+                                >
+                                  <CloseIcon sx={{ fontSize: 16 }} />
+                                </IconButton>
+                              )}
+                            </Box>
+
+                            {/* Per-prompt App Permissions */}
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                              <Typography sx={{
+                                fontSize: '0.65rem',
+                                fontWeight: 600,
+                                color: 'hsl(var(--muted-foreground))',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.05em',
+                              }}>
+                                Allowed apps
+                              </Typography>
+                              <Box sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 0.5,
+                                flexWrap: 'wrap',
+                                flex: 1,
+                              }}>
+                                {apps.length === 0 && (
+                                  <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', opacity: 0.7 }}>
+                                    All authenticated apps
+                                  </Typography>
+                                )}
+                                {apps.map((appName) => {
+                                  const img = appImageByName.get(appName) || `https://shuffler.io/images/apps/${appName}.png`;
+                                  return (
+                                    <Tooltip key={appName} title={`Remove ${appName.replace(/_/g, ' ')}`}>
+                                      <IconButton
+                                        size="small"
+                                        onClick={() => {
+                                          const updated = [...aiAgentApps];
+                                          updated[idx] = (updated[idx] || []).filter(n => n !== appName);
+                                          setAiAgentApps(updated);
+                                          setHasChanges(true);
+                                        }}
+                                        sx={{
+                                          width: 26,
+                                          height: 26,
+                                          border: '1px solid hsl(var(--severity-low) / 0.3)',
+                                          bgcolor: 'hsl(var(--severity-low) / 0.1)',
+                                          borderRadius: 1,
+                                          '&:hover': {
+                                            bgcolor: 'hsl(var(--destructive) / 0.15)',
+                                            borderColor: 'hsl(var(--destructive) / 0.4)',
+                                          },
+                                        }}
+                                      >
+                                        <Box
+                                          component="img"
+                                          src={img}
+                                          alt={appName}
+                                          sx={{ width: 16, height: 16, borderRadius: '50%', objectFit: 'contain' }}
+                                        />
+                                      </IconButton>
+                                    </Tooltip>
+                                  );
+                                })}
+                                <Tooltip title="Add allowed app">
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => setAppPickerForIdx(idx)}
+                                    sx={{
+                                      width: 24,
+                                      height: 24,
+                                      color: 'hsl(var(--muted-foreground))',
+                                      border: '1px dashed hsl(var(--border))',
+                                      borderRadius: 1,
+                                      '&:hover': {
+                                        bgcolor: 'hsl(var(--muted))',
+                                        borderStyle: 'solid',
+                                        color: 'hsl(var(--primary))',
+                                      },
+                                    }}
+                                  >
+                                    <AddIcon sx={{ fontSize: 14 }} />
+                                  </IconButton>
+                                </Tooltip>
+                              </Box>
+                            </Box>
+                          </Box>
+                        );
+                      })}
                       <Button
                         size="small"
                         onClick={() => {
                           setAiAgentPrompts([...aiAgentPrompts, '']);
+                          setAiAgentApps([...aiAgentApps, []]);
                           setHasChanges(true);
                         }}
                         sx={{ alignSelf: 'flex-start', textTransform: 'none', fontSize: '0.8rem', color: 'hsl(var(--severity-low))' }}
@@ -848,6 +987,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
             }));
             setSecurityRulesText('merge if always; deny if has_deleted_field');
             setAiAgentPrompts([`Provide a short triage plan for the incident in english and update it in the internal shuffle datastore with the same key and category 'shuffle-security_incidents'.   Make sure it is JSON formatted like {"tasks": []} so that we can inject it in existing data. Some incidents are duds and should be closed quickly. Others are important ones. Others are missing important details. Use the following format for each task, and ONLY update the relevant fields: [{"assignee": "AI Agent", "title": "Title of the task", "category": "triage/containment/recovery/communication/documentation", "completed": false, "createdBy": "ai-agent@shuffler.io"}]. ONLY output as JSON and nothing more.   If the incident has RELEVANT tasks, add to them if necessary. When done, ALWAYS make sure the "status" is inProgress.`, `Go through each task one by one if there are any. When starting them, self-assign yourself to make it clear you are working on it. Go in the order of incident response relevance, which is typically in order. If a task is irrelevant, set "disabled": true as a value for it.  Before starting, get "agent_permissions" from "shuffle-security_configuration". This has a list of permissions you NEED to follow. This extends the reach of tools and capabilities you are allowed to use. ONLY use the permissions that are enabled.`]);
+            setAiAgentApps([[], []]);
             setHasChanges(true);
           }}
           sx={{ textTransform: 'none', color: 'text.secondary', fontSize: '0.8rem' }}
@@ -868,6 +1008,23 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
           </Button>
         </Box>
       </DialogActions>
+
+      <AppSearchDrawer
+        open={appPickerForIdx !== null}
+        onClose={() => setAppPickerForIdx(null)}
+        title="Allow App"
+        subtitle="Restrict this AI Agent prompt to specific apps"
+        onQuickSelect={(app) => {
+          if (appPickerForIdx === null) return;
+          const updated = [...aiAgentApps];
+          const current = updated[appPickerForIdx] || [];
+          if (!current.includes(app.name)) {
+            updated[appPickerForIdx] = [...current, app.name];
+            setAiAgentApps(updated);
+            setHasChanges(true);
+          }
+        }}
+      />
     </Dialog>
   );
 };
