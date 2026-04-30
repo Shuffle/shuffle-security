@@ -234,12 +234,14 @@ export const CreateIncidentDialog = ({ open, onClose, onSubmit }: CreateIncident
         extensions: {
           custom_attributes: {
             tlp,
-            comments: [],
-            tasks: tasks, // Always include, even if empty array
-            observables: observables, // Always include, even if empty array
-            customFields: customFieldValues, // Always include, even if empty object
-            assignee: assignee.trim() || '',
-            attachments: [], // Initialize empty attachments array
+            // Only include the optional collections when the user actually
+            // populated them — comments / tasks / observables / customFields /
+            // assignee / attachments will be added later as they become
+            // necessary, instead of being seeded as empty defaults.
+            ...(tasks.length > 0 ? { tasks } : {}),
+            ...(observables.length > 0 ? { observables } : {}),
+            ...(Object.keys(customFieldValues).length > 0 ? { customFields: customFieldValues } : {}),
+            ...(assignee.trim() ? { assignee: assignee.trim() } : {}),
           },
         },
       },
