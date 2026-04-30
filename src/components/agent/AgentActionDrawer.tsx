@@ -495,9 +495,9 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
         {isViewMode ? (
           /* ── View Mode: decisions timeline + result ── */
           (() => {
-            const { parsed } = parseRunResult(run!);
+            const { parsed } = parseRunResult(liveRun!);
             const decisions: AgentDecision[] = Array.isArray(parsed?.decisions) ? parsed.decisions
-              : Array.isArray(run!.decisions) ? run!.decisions : [];
+              : Array.isArray(liveRun!.decisions) ? liveRun!.decisions : [];
             return (
               <Box>
                 {decisions.length > 0 && (
@@ -507,7 +507,7 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
                   <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 1 }}>
                     Result
                   </Typography>
-                  <AgentRunResultViewer run={run!} />
+                  <AgentRunResultViewer run={liveRun!} />
                 </Box>
               </Box>
             );
