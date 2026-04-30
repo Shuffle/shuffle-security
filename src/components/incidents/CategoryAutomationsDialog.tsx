@@ -393,14 +393,25 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
         } else if (config.type === 'security_rules') {
           options = [{ key: config.optionKey || '', value: securityRulesText }];
         } else if (config.type === 'ai_agent') {
-          // Use "action", "action-2", "action-3" format
-          const validPrompts = aiAgentPrompts.filter(p => p.trim());
-          options = validPrompts.map((prompt, idx) => ({
-            key: idx === 0 ? 'action' : `action-${idx + 1}`,
-            value: prompt,
-          }));
+          // Use "action", "action-2", "action-3" format, with parallel
+          // "apps", "apps-2", … entries holding the per-prompt allow-list
+          // of app names (comma-separated).
+          const pairs = aiAgentPrompts
+            .map((prompt, idx) => ({ prompt, apps: aiAgentApps[idx] || [] }))
+            .filter(p => p.prompt.trim());
+          options = [];
+          pairs.forEach((p, idx) => {
+            options.push({
+              key: idx === 0 ? 'action' : `action-${idx + 1}`,
+              value: p.prompt,
+            });
+            options.push({
+              key: idx === 0 ? 'apps' : `apps-${idx + 1}`,
+              value: p.apps.join(','),
+            });
+          });
           if (options.length === 0) {
-            options = [{ key: 'action', value: '' }];
+            options = [{ key: 'action', value: '' }, { key: 'apps', value: '' }];
           }
         } else {
           options = [{ key: config.optionKey || '', value: '' }];
