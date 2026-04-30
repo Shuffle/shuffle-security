@@ -41,7 +41,10 @@ export const parseDatastoreReference = (run: AgentRun): DatastoreReference | nul
 
 /** Core regex extraction from a raw string */
 const extractReference = (input: string): DatastoreReference | null => {
-  const keyMatch = input.match(/Key:\s*([a-f0-9]+)/i);
+  // Keys may contain hex, hyphens, underscores, dots, colons — match any
+  // non-whitespace, non-comma run so we capture the full key (not just the
+  // leading hex segment, which used to truncate IDs like "3-abc-def" to "3").
+  const keyMatch = input.match(/Key:\s*([^\s,]+)/i);
   const categoryMatch = input.match(/Category:\s*([\w-]+)/i);
 
   if (keyMatch && categoryMatch) {
