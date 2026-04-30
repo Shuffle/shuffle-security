@@ -69,8 +69,9 @@ const useLeftoverDemoCount = (active: boolean) => {
 
 export const DemoModeCard = () => {
   const { active, isSeeding, isCleaning, stats, startDemo, openTour, cleanup } = useDemo();
+  const { userInfo } = useAuth();
   const { data: workflows } = useWorkflows();
-  const { data: incidentCount = 0 } = useIncidentCount();
+  const { data: incidentCount = 0 } = useIncidentCount(userInfo?.active_org?.id);
   const { data: leftoverDemoCount = 0 } = useLeftoverDemoCount(active);
   const { singular: entitySingular, plural: entityPlural } = useEntityPreference();
   const t = (s: string) => applyEntityTerminology(s, entitySingular, entityPlural);
