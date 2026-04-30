@@ -137,7 +137,7 @@ const ThemedApp = () => {
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/incidents" element={<IncidentsPage />} />
               <Route path="/incidents-simple" element={<Navigate to="/incidents" replace />} />
-              <Route path="/incidents-simple/:id" element={<IncidentSimplePage />} />
+              <Route path="/incidents-simple/:id" element={<Navigate to="/incidents" replace />} />
               <Route path="/incidents/:id" element={<IncidentDetailPage />} />
               <Route path="/alerts" element={<IncidentsPage />} />
               <Route path="/alerts/:id" element={<IncidentDetailPage />} />
