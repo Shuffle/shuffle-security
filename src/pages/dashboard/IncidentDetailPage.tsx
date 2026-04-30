@@ -1346,7 +1346,7 @@ const IncidentDetailPage = () => {
   }, [id, subOrgs, parentOrg, userInfo?.active_org?.id, crossOrgId, searchParams]);
 
   // Fetch agent runs for this incident — deferred until incident loaded
-  const { runsForIncident: agentRuns, isLoading: agentRunsLoading } = useIncidentAgentRuns(!loading ? id : undefined);
+  const { runsForIncident: agentRuns, isLoading: agentRunsLoading, refetch: refetchAgentRuns } = useIncidentAgentRuns(!loading ? id : undefined);
   const [selectedAgentRun, setSelectedAgentRun] = useState<AgentRun | null>(null);
 
   // Load incident function (reusable for refresh)
@@ -5705,7 +5705,10 @@ const IncidentDetailPage = () => {
                 size="small"
                 onClick={async () => {
                   setIsRefreshing(true);
-                  await loadIncident(false);
+                  await Promise.all([
+                    loadIncident(false),
+                    refetchAgentRuns(),
+                  ]);
                   setIsRefreshing(false);
                 }}
                 disabled={loading || isRefreshing}
