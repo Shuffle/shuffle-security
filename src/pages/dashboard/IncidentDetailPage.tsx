@@ -80,7 +80,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useDatastore } from '@/hooks/useDatastore';
-import { useIgnoredObservables, ignoredObservableKey } from '@/hooks/useIgnoredObservables';
+import { useIgnoredObservables } from '@/hooks/useIgnoredObservables';
 import { CorrelationRow, getEffectiveCorrelationCount, filterMeaningfulCorrelations, hasIocMatch } from '@/components/incidents/CorrelationRow';
 import CorrelationContextStrip from '@/components/incidents/CorrelationContextStrip';
 import { IocDetailsCard } from '@/components/incidents/IocDetailsCard';
