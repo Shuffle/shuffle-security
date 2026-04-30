@@ -175,13 +175,16 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
   const [aiAgentApps, setAiAgentApps] = useState<string[][]>([[]]);
   const [appPickerForIdx, setAppPickerForIdx] = useState<number | null>(null);
   const { data: authenticatedApps = [] } = useAuthenticatedApps();
-  const appImageByName = React.useMemo(() => {
-    const map = new Map<string, string>();
+  /** Lookup table for app metadata (image, display name) keyed by both
+   *  app ID and app name, so that legacy stored values still resolve. */
+  const appMetaById = React.useMemo(() => {
+    const map = new Map<string, { name: string; image: string }>();
     authenticatedApps.forEach((a: any) => {
       const name = a?.app?.name;
-      if (name && !map.has(name)) {
-        map.set(name, a?.app?.large_image || a?.app?.small_image || '');
-      }
+      const id = a?.app?.id || a?.id;
+      const image = a?.app?.large_image || a?.app?.small_image || '';
+      if (id && !map.has(id)) map.set(id, { name: name || id, image });
+      if (name && !map.has(name)) map.set(name, { name, image });
     });
     return map;
   }, [authenticatedApps]);
