@@ -284,42 +284,49 @@ const AgentRunHeader = ({ run, onClick, showChevron, isExpanded }: AgentRunHeade
         </Box>
 
         {isSkipped && skipInfo.reason ? (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.25 }}>
-            <Typography sx={{
-              fontSize: '0.78rem',
-              color: 'hsl(var(--muted-foreground))',
-              fontStyle: 'italic',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-              maxWidth: 400,
-            }}>
-              {skipInfo.reason}
-            </Typography>
-          </Box>
+          <Tooltip title={skipInfo.reason} arrow placement="bottom-start">
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.25, minWidth: 0 }}>
+              <Typography sx={{
+                fontSize: '0.78rem',
+                color: 'hsl(var(--muted-foreground))',
+                fontStyle: 'italic',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                minWidth: 0,
+                flex: 1,
+              }}>
+                {skipInfo.reason}
+              </Typography>
+            </Box>
+          </Tooltip>
         ) : isFailed && failureInfo ? (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.25 }}>
-            <AlertTriangle size={12} style={{ color: 'hsl(var(--severity-critical))', flexShrink: 0 }} />
-            <Typography sx={{
-              fontSize: '0.78rem',
-              color: 'hsl(var(--severity-critical))',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-              maxWidth: 400,
-            }}>
-              {failureInfo.reason}
-            </Typography>
-          </Box>
+          <Tooltip title={failureInfo.reason} arrow placement="bottom-start">
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.25, minWidth: 0 }}>
+              <AlertTriangle size={12} style={{ color: 'hsl(var(--severity-critical))', flexShrink: 0 }} />
+              <Typography sx={{
+                fontSize: '0.78rem',
+                color: 'hsl(var(--severity-critical))',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                minWidth: 0,
+                flex: 1,
+              }}>
+                {failureInfo.reason}
+              </Typography>
+            </Box>
+          </Tooltip>
         ) : (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
             <Typography sx={{
               fontSize: '0.78rem',
               color: 'hsl(var(--muted-foreground))',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
-              maxWidth: 300,
+              minWidth: 0,
+              flex: 1,
             }}>
               {getRunSubtitle(run)}
             </Typography>
