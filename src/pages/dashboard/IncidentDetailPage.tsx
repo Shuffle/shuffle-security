@@ -651,10 +651,25 @@ const IncidentDetailPage = () => {
   const [obsFilterText, setObsFilterText] = useState('');
   const [obsSortField, setObsSortField] = useState<'first_seen' | 'last_seen' | 'type' | 'value'>('first_seen');
   const [obsSortDir, setObsSortDir] = useState<'asc' | 'desc'>('desc');
+  // Frozen sort-rank cache for the Observables tab. Captures (ioc, corr)
+  // values the FIRST time we see a given observable key, so when correlation
+  // lookups stream in later they don't yank rows around the list while the
+  // user is mid-click. Cleared explicitly when the user changes sort/filter
+  // or hits the manual refresh.
+  const obsSortRankRef = useRef<Map<string, { ioc: number; corr: number }>>(new Map());
+  // Bumped to force a fresh capture of the sort rank cache (used by the
+  // sort/filter controls and the explicit "Re-run correlations" button).
+  const [obsSortRankEpoch, setObsSortRankEpoch] = useState(0);
   // Ignored observables (per-org) — uninteresting indicators the user has
   // chosen to hide from the default Observables view. Toggle reveals them.
   const ignoredObs = useIgnoredObservables();
   const [showIgnoredObs, setShowIgnoredObs] = useState(false);
+  // Wipe the frozen rank cache whenever the user touches sort/filter — that
+  // is the right moment to honour newly-arrived correlations in the order.
+  useEffect(() => {
+    obsSortRankRef.current = new Map();
+    setObsSortRankEpoch((n) => n + 1);
+  }, [obsSortField, obsSortDir, obsFilterText, obsFilterTypes, showIgnoredObs]);
 
   // Single source of truth for "is this observable hidden?" — used by the
   // Observables list filter, the Observables tab badge, and the Timeline
@@ -7187,14 +7202,32 @@ const IncidentDetailPage = () => {
                 0,
               );
             };
+            // Read the cached IOC/correlation rank for this observable, or
+            // capture and freeze it on first sight. This is what stops a row
+            // from leaping to the top of the list mid-click when its
+            // correlation lookup finishes — the rank only updates on an
+            // explicit user action that bumps `obsSortRankEpoch`.
+            const rankFor = (o: any): { ioc: number; corr: number } => {
+              const k = `${o.type}::${o.value}`.toLowerCase();
+              const cache = obsSortRankRef.current;
+              const cached = cache.get(k);
+              if (cached) return cached;
+              const fresh = {
+                ioc: iocObservableKeys.has(k) ? 1 : 0,
+                corr: corrCountFor(o),
+              };
+              cache.set(k, fresh);
+              return fresh;
+            };
+            // void-read so the linter / reader knows this memo intentionally
+            // depends on the epoch counter (the ref itself is mutable).
+            void obsSortRankEpoch;
             const allObsRaw = Array.from(deduped.values()).sort((a, b) => {
               if (isDefaultSort) {
-                const aIoc = iocObservableKeys.has(`${a.type}::${a.value}`.toLowerCase()) ? 1 : 0;
-                const bIoc = iocObservableKeys.has(`${b.type}::${b.value}`.toLowerCase()) ? 1 : 0;
-                if (aIoc !== bIoc) return bIoc - aIoc;
-                const aCorr = corrCountFor(a);
-                const bCorr = corrCountFor(b);
-                if (aCorr !== bCorr) return bCorr - aCorr;
+                const ar = rankFor(a);
+                const br = rankFor(b);
+                if (ar.ioc !== br.ioc) return br.ioc - ar.ioc;
+                if (ar.corr !== br.corr) return br.corr - ar.corr;
               }
               let cmp = 0;
               if (obsSortField === 'first_seen' || obsSortField === 'last_seen') {
