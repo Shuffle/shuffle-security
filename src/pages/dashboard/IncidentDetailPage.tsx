@@ -2587,37 +2587,34 @@ const IncidentDetailPage = () => {
     };
   }, [incident]);
 
-  // Load known stakeholders from the users datastore for autocomplete
+  // Load known stakeholders from the users datastore for autocomplete.
+  // Uses the real list_cache endpoint via getDatastoreByCategory — the
+  // earlier /api/v1/datastores/<category> path was fictional.
   useEffect(() => {
     const loadKnownStakeholders = async () => {
       try {
-        const res = await fetch(
-          getApiUrl(`/api/v1/datastores/${DATASTORE_CATEGORIES.USERS}?limit=500`),
-          { credentials: 'include', headers: { ...getAuthHeader(), 'Content-Type': 'application/json' } }
-        );
-        const data = await res.json();
-        if (data.success && Array.isArray(data.data)) {
-          const all: Stakeholder[] = [];
-          for (const item of data.data) {
-            try {
-              const parsed = typeof item.value === 'string' ? JSON.parse(item.value) : item.value;
-              // Only show external stakeholders (not internal platform users)
-              const customAttrs = parsed?.metadata?.extensions?.custom_attributes;
-              const isExternal = customAttrs?.external === true;
-              if (!isExternal) continue;
-              all.push({
-                id: item.key || parsed?.user?.uid || `sh-${Date.now()}`,
-                name: parsed?.user?.name || item.key,
-                email: customAttrs?.email || '',
-                type: customAttrs?.stakeholder_type || 'technical',
-                role: parsed?.actor?.user?.type || '',
-                location: customAttrs?.location || '',
-                phone: customAttrs?.phone || '',
-              });
-            } catch { /* skip */ }
-          }
-          setKnownStakeholders(all);
+        const res = await getDatastoreByCategory(DATASTORE_CATEGORIES.USERS, 500);
+        if (!res.success || !Array.isArray(res.data)) return;
+        const all: Stakeholder[] = [];
+        for (const item of res.data) {
+          try {
+            const parsed = typeof item.value === 'string' ? JSON.parse(item.value) : item.value;
+            // Only show external stakeholders (not internal platform users)
+            const customAttrs = parsed?.metadata?.extensions?.custom_attributes;
+            const isExternal = customAttrs?.external === true;
+            if (!isExternal) continue;
+            all.push({
+              id: item.key || parsed?.user?.uid || `sh-${Date.now()}`,
+              name: parsed?.user?.name || item.key,
+              email: customAttrs?.email || '',
+              type: customAttrs?.stakeholder_type || 'technical',
+              role: parsed?.actor?.user?.type || '',
+              location: customAttrs?.location || '',
+              phone: customAttrs?.phone || '',
+            });
+          } catch { /* skip */ }
         }
+        setKnownStakeholders(all);
       } catch { /* silent */ }
     };
     loadKnownStakeholders();
