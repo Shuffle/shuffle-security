@@ -68,9 +68,23 @@ export interface DatastoreDiagnostics {
 }
 
 /**
- * Get current org ID from user info in localStorage
+ * Runtime-injected active org ID. AuthContext sets this synchronously when
+ * /api/v1/getinfo resolves, so callers don't need to wait for the
+ * `shuffle_user_info` localStorage write to land. Falls back to localStorage
+ * for cases where the service is imported before AuthContext mounts.
+ */
+let _runtimeOrgId: string | null = null;
+
+export const setRuntimeOrgId = (orgId: string | null) => {
+  _runtimeOrgId = orgId || null;
+};
+
+/**
+ * Get current org ID. Prefers the runtime value set by AuthContext, then
+ * falls back to localStorage so legacy callers keep working.
  */
 const getOrgId = (): string | null => {
+  if (_runtimeOrgId) return _runtimeOrgId;
   try {
     const userInfo = localStorage.getItem('shuffle_user_info');
     if (userInfo) {
