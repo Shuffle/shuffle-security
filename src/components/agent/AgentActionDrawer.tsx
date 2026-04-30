@@ -104,6 +104,49 @@ const DECISION_TYPE_CONFIG: Record<DecisionType, {
   },
 };
 
+// ── Tool Badge ────────────────────────────────────────────────────────────────
+
+/**
+ * Renders a decision's `tool` field as a chip with the integration's logo.
+ * Looks the logo up via useSourceAppImage (authenticated apps → Algolia
+ * fallback). Falls back to the wrench icon when no image resolves.
+ */
+const ToolBadge = ({ tool }: { tool: string }) => {
+  const image = useSourceAppImage(tool);
+  return (
+    <Box sx={{ px: 1.5, pb: 1 }}>
+      <Chip
+        icon={
+          image ? (
+            <Avatar
+              src={image}
+              alt={tool}
+              sx={{
+                width: 14,
+                height: 14,
+                bgcolor: 'transparent',
+                '& img': { objectFit: 'contain' },
+              }}
+            />
+          ) : (
+            <Wrench size={10} />
+          )
+        }
+        label={tool.replace(/_/g, ' ')}
+        size="small"
+        sx={{
+          height: 20,
+          fontSize: '0.65rem',
+          bgcolor: 'hsla(var(--primary) / 0.08)',
+          color: 'hsl(var(--primary))',
+          textTransform: 'capitalize',
+          '& .MuiChip-icon': { color: 'inherit', ml: 0.5 },
+        }}
+      />
+    </Box>
+  );
+};
+
 // ── Decision Item (per-card with collapsible Details) ─────────────────────────
 
 /** Fields rendered explicitly on the card — excluded from the Details dump. */
