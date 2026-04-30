@@ -76,13 +76,19 @@ export const useIgnoredObservables = () => {
         reason,
         ignored_at: Date.now(),
       };
-      return ds.addItem(key, payload);
+      // skipRefresh=false so the local items list updates immediately and
+      // the row disappears from the observables view on the same click.
+      const ok = await ds.addItem(key, payload, false);
+      return ok;
     },
     [ds],
   );
 
   const unignore = useCallback(
-    async (type: string, value: string) => ds.removeItem(ignoredObservableKey(type, value)),
+    async (type: string, value: string) => {
+      const ok = await ds.removeItem(ignoredObservableKey(type, value));
+      return ok;
+    },
     [ds],
   );
 
