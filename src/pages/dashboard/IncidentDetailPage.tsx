@@ -3889,15 +3889,15 @@ const IncidentDetailPage = () => {
       // Per-observable correlations have moved inline onto the observable pill
       // itself so the user can see the match next to the indicator that
       // triggered it instead of as a separate timeline row.
-      if (isFilterActive('correlations') && correlationsDiscoveredAt && correlations.length > 0) {
+      if (isFilterActive('correlations') && correlationsDiscoveredAt && visibleCorrelations.length > 0) {
         items.push({
           type: 'step',
           kind: 'correlation-found',
           timestamp: correlationsDiscoveredAt,
           id: `step-corr-incident`,
-          label: `${correlations.length} Correlation${correlations.length === 1 ? '' : 's'}`,
-          detail: `shared attribute${correlations.length === 1 ? '' : 's'} across other incidents`,
-          count: correlations.length,
+          label: `${visibleCorrelations.length} Correlation${visibleCorrelations.length === 1 ? '' : 's'}`,
+          detail: `shared attribute${visibleCorrelations.length === 1 ? '' : 's'} across other incidents`,
+          count: visibleCorrelations.length,
         });
       }
     }
