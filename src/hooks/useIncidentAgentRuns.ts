@@ -1,6 +1,10 @@
 /**
  * Hook to fetch and cache agent activity for the incidents context.
- * Uses React Query with a 60-second staleTime so it fires at most once per minute.
+ *
+ * - When called WITHOUT an incident key (e.g. list views), uses a 60s staleTime
+ *   so it fires at most once per minute.
+ * - When called WITH an incident key (detail page), polls every 15s and treats
+ *   data as immediately stale so in-flight runs become visible quickly.
  */
 
 import { useQuery } from '@tanstack/react-query';
@@ -9,23 +13,25 @@ import { getAgentRunsForIncident } from '@/lib/agentParsers';
 
 const AGENT_RUNS_QUERY_KEY = ['agent-activity-incidents'];
 
-/**
- * Fetch all recent agent runs (cached globally, max once per 60 s).
- * Call this from any component that needs agent run data for incidents.
- */
 export const useIncidentAgentRuns = (incidentKey?: string) => {
-  const { data: allRuns = [], isLoading, error } = useQuery<AgentRun[]>({
+  const isDetailContext = !!incidentKey;
+
+  const { data: allRuns = [], isLoading, error, refetch } = useQuery<AgentRun[]>({
     queryKey: AGENT_RUNS_QUERY_KEY,
     queryFn: async () => {
-      const result = await searchAgentActivity({ limit: 50 });
+      // Bump the limit on detail pages so we don't miss a fresh in-flight run
+      // when there are many recent executions.
+      const result = await searchAgentActivity({ limit: isDetailContext ? 100 : 50 });
       return result.success ? result.runs : [];
     },
-    staleTime: 60_000, // 60 seconds — won't refetch more than once per minute
-    gcTime: 5 * 60_000, // keep in cache for 5 minutes
-    refetchOnWindowFocus: false,
+    // On the incident detail page, refresh aggressively so newly-started runs
+    // show up quickly. On list/quick-view contexts keep the gentle 60s cache.
+    staleTime: isDetailContext ? 0 : 60_000,
+    refetchInterval: isDetailContext ? 15_000 : false,
+    refetchOnWindowFocus: isDetailContext,
+    gcTime: 5 * 60_000,
   });
 
-  // If an incident key is provided, filter to runs that reference it
   const runsForIncident = incidentKey
     ? getAgentRunsForIncident(allRuns, incidentKey)
     : [];
@@ -35,5 +41,6 @@ export const useIncidentAgentRuns = (incidentKey?: string) => {
     runsForIncident,
     isLoading,
     error,
+    refetch,
   };
 };
