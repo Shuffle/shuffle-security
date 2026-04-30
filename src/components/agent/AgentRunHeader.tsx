@@ -17,12 +17,13 @@ import {
   AlertTriangle,
   HelpCircle,
   MinusCircle,
+  ExternalLink,
 } from 'lucide-react';
 import { Tooltip } from '@mui/material';
 import { formatDistanceToNow } from 'date-fns';
 import { AgentRun } from '@/services/agentActivity';
 import { parseRunResult, getFailureInfo, hasOutputWarning } from '@/components/agent/AgentRunResultViewer';
-import { getAgentSkipInfo } from '@/lib/agentParsers';
+import { getAgentSkipInfo, parseDatastoreReference, isIncidentReference } from '@/lib/agentParsers';
 
 // ── Status config ──────────────────────────────────────────────────────────────
 
@@ -155,6 +156,12 @@ const AgentRunHeader = ({ run, onClick, showChevron, isExpanded }: AgentRunHeade
   const failureInfo = isFailed ? getFailureInfo(run) : null;
   const isUnsure = !isSkipped && !isFailed && hasOutputWarning(run);
 
+  // Pivot link — when this run references an incident via a Datastore block,
+  // expose a click-through so users can jump straight to the related incident
+  // from the Agent Activity view.
+  const dsRef = parseDatastoreReference(run);
+  const incidentKey = dsRef && isIncidentReference(dsRef) ? dsRef.key : null;
+
   return (
     <Box
       onClick={onClick}
@@ -236,6 +243,43 @@ const AgentRunHeader = ({ run, onClick, showChevron, isExpanded }: AgentRunHeade
             <Box sx={{ display: 'flex', alignItems: 'center', color: statusCfg.color }}>
               {statusCfg.icon}
             </Box>
+          )}
+          {incidentKey && (
+            <Tooltip title={`Open incident ${incidentKey}`} arrow>
+              <Box
+                component="a"
+                href={`/incidents/${incidentKey}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  px: 0.875,
+                  py: 0.25,
+                  ml: 0.5,
+                  borderRadius: 999,
+                  border: '1px solid hsl(var(--border))',
+                  bgcolor: 'hsl(var(--muted) / 0.4)',
+                  color: 'hsl(var(--muted-foreground))',
+                  fontSize: '0.7rem',
+                  fontWeight: 500,
+                  lineHeight: 1.4,
+                  textDecoration: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                  '&:hover': {
+                    borderColor: '#ff6600',
+                    color: '#ff6600',
+                    bgcolor: 'rgba(255, 102, 0, 0.08)',
+                  },
+                }}
+              >
+                <ExternalLink size={11} />
+                Open incident
+              </Box>
+            </Tooltip>
           )}
         </Box>
 
