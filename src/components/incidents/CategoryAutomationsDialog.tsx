@@ -174,8 +174,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
    * Keyed by automation type (e.g. 'workflow', 'webhook', 'security_rules').
    */
   const [expandedTypes, setExpandedTypes] = useState<Record<string, boolean>>({});
-  // Popup editor for AI Agent prompts
-  const [promptEditor, setPromptEditor] = useState<{ idx: number; value: string } | null>(null);
+  // (Popup editor lives inside the shared PopupTextEditor component.)
   const toggleExpanded = (type: string) =>
     setExpandedTypes(prev => ({ ...prev, [type]: !prev[type] }));
 
