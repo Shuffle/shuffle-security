@@ -192,6 +192,11 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
   const [expandedMessages, setExpandedMessages] = useState<Set<string>>(new Set());
   const [showReplyBox, setShowReplyBox] = useState(false);
   const [replyText, setReplyText] = useState('');
+  const [replyTo, setReplyTo] = useState('');
+  const [replyCc, setReplyCc] = useState('');
+  const [replyBcc, setReplyBcc] = useState('');
+  const [showCc, setShowCc] = useState(false);
+  const [showBcc, setShowBcc] = useState(false);
   // Default the thread to collapsed — the Activity timeline is the primary
   // narrative on the incident page; users can expand the email when they
   // need to read it. This avoids the long forwarded chain pushing the
