@@ -442,6 +442,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
   const enabledCount = automations.filter(a => a.enabled).length;
 
   return (
+    <>
     <Dialog
       open={open}
       onClose={onClose}
