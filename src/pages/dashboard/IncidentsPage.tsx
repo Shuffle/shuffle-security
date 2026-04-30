@@ -535,7 +535,7 @@ const IncidentsPage = () => {
     if (!isSupport || !error) return [];
 
     const fallbackRequestUrl = currentOrgId
-      ? getApiUrl(`/api/v1/orgs/${currentOrgId}/list_cache?category=${encodeURIComponent(DATASTORE_CATEGORIES.INCIDENTS)}&top=100`)
+      ? getApiUrl(`/api/v1/orgs/${currentOrgId}/list_cache?category=${encodeURIComponent(DATASTORE_CATEGORIES.INCIDENTS)}&top=50`)
       : 'Unknown';
 
     return [
@@ -593,8 +593,8 @@ const IncidentsPage = () => {
         const useRegionUrl = org.region_url && !isDevEnvironment();
         const baseUrl = useRegionUrl ? org.region_url!.replace(/\/+$/, '') : '';
         const url = baseUrl
-          ? `${baseUrl}/api/v1/orgs/${org.id}/list_cache?category=${encodeURIComponent(DATASTORE_CATEGORIES.INCIDENTS)}&top=100`
-          : getApiUrl(`/api/v1/orgs/${org.id}/list_cache?category=${encodeURIComponent(DATASTORE_CATEGORIES.INCIDENTS)}&top=100`);
+          ? `${baseUrl}/api/v1/orgs/${org.id}/list_cache?category=${encodeURIComponent(DATASTORE_CATEGORIES.INCIDENTS)}&top=50`
+          : getApiUrl(`/api/v1/orgs/${org.id}/list_cache?category=${encodeURIComponent(DATASTORE_CATEGORIES.INCIDENTS)}&top=50`);
         const response = await fetch(url, {
           method: 'GET',
           credentials: 'include',
