@@ -3329,6 +3329,7 @@ const IncidentDetailPage = () => {
         </Box>
       </Box>
 
+      {!timelineCollapsed && (<>
       {/* Comment Input */}
       <Box sx={{ p: 2, borderBottom: '1px solid hsl(var(--border-subtle))' }}>
         <Box sx={{ display: 'flex', gap: 1 }}>
