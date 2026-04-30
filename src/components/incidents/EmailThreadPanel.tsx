@@ -581,11 +581,18 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
                         sx={{
                           backgroundColor: '#ffffff',
                           color: '#1f1f1f',
+                          // Always-visible border so the white "page" reads
+                          // as a card in BOTH dark and light mode (in light
+                          // mode, white-on-white had no edge).
+                          border: '1px solid #d0d7de',
                           borderRadius: 1,
                           p: 2,
                           fontSize: '0.82rem',
                           lineHeight: 1.7,
                           wordBreak: 'break-word',
+                          boxShadow: (t) => t.palette.mode === 'dark'
+                            ? '0 1px 2px rgba(0,0,0,0.4)'
+                            : '0 1px 2px rgba(0,0,0,0.06)',
                           '& a': { color: '#1a73e8' },
                           '& img': { maxWidth: '100%', height: 'auto' },
                           '& blockquote': {
