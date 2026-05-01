@@ -202,6 +202,9 @@ export const continueAgentExecution = async (params: {
     agentic: 'true',
   });
   if (decisionId) qs.set('decision_id', decisionId);
+  // Backend expects this param to be present (even when null) on the
+  // agent continuation endpoint — matches the working form URL exactly.
+  qs.set('node_id', 'null');
   if (noteParam) qs.set('note', noteParam);
 
   const res = await shuffleFetch(
