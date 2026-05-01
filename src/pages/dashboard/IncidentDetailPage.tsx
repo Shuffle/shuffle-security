@@ -6891,7 +6891,7 @@ const IncidentDetailPage = () => {
       {activeTab === 1 && (
         /* Tasks Tab — uses the exact same kanban as the simplified view (/incidents-simple) */
         <TaskKanbanBoard
-          tasks={tasks}
+          tasks={visibleTasks}
           onTasksChange={setTasks}
           incidentId={id || 'new'}
           currentUser={currentUsername || 'You'}
