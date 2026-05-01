@@ -3723,7 +3723,7 @@ const IncidentDetailPage = () => {
               </Tooltip>
               <IconButton
                 size="small"
-                onClick={handleAddComment}
+                onClick={() => handleAddComment()}
                 disabled={!newComment.trim() && commentAttachments.length === 0}
                 sx={{
                   position: 'absolute',
