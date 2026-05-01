@@ -6062,12 +6062,35 @@ const IncidentDetailPage = () => {
             
             {/* Ask the AI agent — quick popover that posts an @AIAgent comment
                 into the Timeline. The existing agent handler picks it up. */}
-            <Tooltip title="Ask the AI agent">
+            <Tooltip title={
+              agentReadiness.isLoading
+                ? 'Checking AI agent status…'
+                : agentReadiness.active
+                  ? 'Ask the AI agent'
+                  : 'AI agent is not enabled — click to set it up'
+            }>
               <Button
                 size="small"
                 variant="outlined"
                 onClick={(e) => setAskAgentAnchor(e.currentTarget)}
                 startIcon={<AgentIcon size={14} />}
+                endIcon={
+                  !agentReadiness.isLoading ? (
+                    <Box
+                      sx={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        bgcolor: agentReadiness.active
+                          ? 'hsl(var(--severity-low))'
+                          : 'hsl(var(--severity-medium))',
+                        boxShadow: agentReadiness.active
+                          ? '0 0 6px hsl(var(--severity-low) / 0.6)'
+                          : 'none',
+                      }}
+                    />
+                  ) : undefined
+                }
                 sx={{
                   height: 32,
                   textTransform: 'none',
