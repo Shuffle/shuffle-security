@@ -207,11 +207,17 @@ export const useAgentReadiness = (): AgentReadinessStatus => {
       await refetchAll();
     } finally {
       setIsEnabling(false);
-      // Keep optimistic for a brief moment so UI doesn't flicker before
-      // the refetched config arrives.
-      setTimeout(() => setOptimistic(null), 1500);
+      // Keep optimistic=true sticky. The workflow list cache can lag well
+      // past any timeout, and the generate API already confirmed success.
+      // Only clear once the server-side state catches up (handled below).
     }
   }, [labels, matchingWorkflow, refetchWorkflows, refetchAll]);
+
+  // Clear optimistic flag once the server agrees we're active, so we never
+  // flicker back to "not enabled" after a successful enable().
+  useEffect(() => {
+    if (optimistic === true && serverActive) setOptimistic(null);
+  }, [optimistic, serverActive]);
 
   return {
     active,
