@@ -161,7 +161,7 @@ const AgentHandoffWatcher = () => {
           description: n.title || n.description || 'An agent run is paused waiting on your input.',
           duration: Infinity,
           action: {
-            label: 'Answer',
+            label: 'Answer now',
             onClick: () => setQuestionNotification(n),
           },
           cancel: {
