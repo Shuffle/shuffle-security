@@ -6258,7 +6258,7 @@ const IncidentDetailPage = () => {
                   <Button
                     size="small"
                     variant="contained"
-                    disabled={!askAgentText.trim() || askAgentSending}
+                    disabled={!askAgentText.trim() || askAgentSending || !agentReadiness.active}
                     onClick={async () => {
                       setAskAgentSending(true);
                       try {
