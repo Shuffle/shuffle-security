@@ -119,7 +119,8 @@ export const useAgentReadiness = (): AgentReadinessStatus => {
       // Step 1: ensure the Assign & Escalate workflow exists.
       let workflowId = matchingWorkflow?.id || null;
       if (!workflowId) {
-        await Promise.allSettled(
+        // Trust the generate API: success: true + an id means it's enabled.
+        const results = await Promise.allSettled(
           labels.map((label) =>
             fetch(getApiUrl('/api/v2/workflows/generate'), {
               method: 'POST',
@@ -127,16 +128,23 @@ export const useAgentReadiness = (): AgentReadinessStatus => {
               headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
               // schedule-based — no apps required
               body: JSON.stringify({ label, category: 'cases' }),
+            }).then(async (r) => {
+              try { return await r.json(); } catch { return null; }
             }),
           ),
         );
-        // Give the backend a beat to register the workflow.
-        await new Promise((r) => setTimeout(r, 2500));
-        const wfRes = await refetchWorkflows();
-        const wf = (wfRes.data || []).find(
-          (w) => labels.includes(w.name) && w.background_processing === true,
-        );
-        workflowId = wf?.id || null;
+        for (const r of results) {
+          if (r.status !== 'fulfilled' || !r.value) continue;
+          const body: any = r.value;
+          const id = body?.id || body?.workflow_id || body?.workflow?.id;
+          if (body?.success === true && id) {
+            workflowId = id;
+            break;
+          }
+          if (id && !workflowId) workflowId = id;
+        }
+        // Best-effort background refresh so cached lists catch up.
+        refetchWorkflows();
       }
 
       if (!workflowId) {
