@@ -38,12 +38,29 @@ import { motion, AnimatePresence, useMotionValue, type PanInfo } from 'framer-mo
 // from the default bottom-right anchor.
 const DEMO_OFFSET_KEY = 'shuffle:demo-drawer-offset';
 
+const clampOffset = (o: { x: number; y: number }): { x: number; y: number } => {
+  if (typeof window === 'undefined') return o;
+  // Anchor sits in the bottom-right (right: 24, bottom: 104). Negative x moves
+  // it leftward, negative y moves it upward. Clamp so it stays on screen even
+  // after viewport changes between sessions.
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const minX = -(vw - 120); // keep at least ~120px visible from the right edge
+  const maxX = 40;
+  const minY = -(vh - 200);
+  const maxY = 40;
+  return {
+    x: Math.min(Math.max(o.x, minX), maxX),
+    y: Math.min(Math.max(o.y, minY), maxY),
+  };
+};
+
 const readOffset = (): { x: number; y: number } => {
   try {
     const raw = localStorage.getItem(DEMO_OFFSET_KEY);
     if (!raw) return { x: 0, y: 0 };
     const parsed = JSON.parse(raw);
-    if (typeof parsed?.x === 'number' && typeof parsed?.y === 'number') return parsed;
+    if (typeof parsed?.x === 'number' && typeof parsed?.y === 'number') return clampOffset(parsed);
   } catch { /* ignore */ }
   return { x: 0, y: 0 };
 };

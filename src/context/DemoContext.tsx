@@ -479,6 +479,12 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
       // dock from a previous session. Users can still toggle after.
       setDockState('right');
       try { localStorage.setItem('shuffle_demo_dock', 'right'); } catch { /* ignore */ }
+      // Reset the floating drawer's drag offset so a previously-dragged
+      // (possibly off-screen) position never carries over into a new run.
+      try {
+        localStorage.removeItem('shuffle:demo-drawer-offset');
+        window.dispatchEvent(new CustomEvent('demo-offset-changed', { detail: { x: 0, y: 0 } }));
+      } catch { /* ignore */ }
       // Auto-collapse the sidebar to give the tour drawer + main content
       // more room. The DashboardLayout listens for this event.
       try {
