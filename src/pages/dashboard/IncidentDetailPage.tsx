@@ -719,6 +719,12 @@ const IncidentDetailPage = () => {
   const [commentAttachments, setCommentAttachments] = useState<FileAttachment[]>([]);
   const commentFileInputRef = useRef<HTMLInputElement>(null);
 
+  // "Ask the agent" popover state — quick way to send an @AIAgent question
+  // from the incident header without scrolling down to the comment box.
+  const [askAgentAnchor, setAskAgentAnchor] = useState<HTMLElement | null>(null);
+  const [askAgentText, setAskAgentText] = useState('');
+  const [askAgentSending, setAskAgentSending] = useState(false);
+
   // Persist the draft on every change. Empty string clears the saved draft so
   // we don't leak stale content between sessions.
   useEffect(() => {
