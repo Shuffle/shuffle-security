@@ -82,6 +82,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useDatastore } from '@/hooks/useDatastore';
 import { useIgnoredObservables } from '@/hooks/useIgnoredObservables';
+import { useAgentReadiness } from '@/hooks/useAgentReadiness';
 import { CorrelationRow, getEffectiveCorrelationCount, filterMeaningfulCorrelations, hasIocMatch } from '@/components/incidents/CorrelationRow';
 import CorrelationContextStrip from '@/components/incidents/CorrelationContextStrip';
 import { IocDetailsCard } from '@/components/incidents/IocDetailsCard';
