@@ -6198,7 +6198,7 @@ const IncidentDetailPage = () => {
                 value={askAgentText}
                 onChange={(e) => setAskAgentText(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && askAgentText.trim() && !askAgentSending) {
+                  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && askAgentText.trim() && !askAgentSending && agentReadiness.active) {
                     e.preventDefault();
                     (async () => {
                       setAskAgentSending(true);
