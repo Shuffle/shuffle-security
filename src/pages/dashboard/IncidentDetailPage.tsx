@@ -6058,6 +6058,156 @@ const IncidentDetailPage = () => {
               </Box>
             )}
             
+            {/* Ask the AI agent — quick popover that posts an @AIAgent comment
+                into the Timeline. The existing agent handler picks it up. */}
+            <Tooltip title="Ask the AI agent">
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={(e) => setAskAgentAnchor(e.currentTarget)}
+                startIcon={<AgentIcon size={14} />}
+                sx={{
+                  height: 32,
+                  textTransform: 'none',
+                  borderRadius: 1,
+                  borderColor: 'hsl(var(--border))',
+                  color: 'hsl(var(--foreground))',
+                  fontWeight: 600,
+                  fontSize: '0.75rem',
+                  px: 1.25,
+                  background: 'linear-gradient(135deg, rgba(255,133,68,0.08), rgba(236,81,124,0.08), rgba(156,90,242,0.08))',
+                  '&:hover': {
+                    borderColor: 'hsl(var(--primary))',
+                    background: 'linear-gradient(135deg, rgba(255,133,68,0.16), rgba(236,81,124,0.16), rgba(156,90,242,0.16))',
+                  },
+                }}
+              >
+                Ask agent
+              </Button>
+            </Tooltip>
+            <Popover
+              open={Boolean(askAgentAnchor)}
+              anchorEl={askAgentAnchor}
+              onClose={() => { setAskAgentAnchor(null); }}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+              transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+              PaperProps={{
+                sx: {
+                  mt: 1,
+                  width: 380,
+                  bgcolor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: 2,
+                  p: 2,
+                },
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                <AgentIcon size={16} />
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                  Ask the AI agent
+                </Typography>
+              </Box>
+              <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', display: 'block', mb: 1.5 }}>
+                Your question is posted to the Timeline as @AIAgent and the agent will reply there.
+              </Typography>
+              <TextField
+                autoFocus
+                multiline
+                minRows={3}
+                maxRows={8}
+                fullWidth
+                placeholder="What would you like the agent to do? e.g. Summarize this incident, look up the indicators, suggest next steps…"
+                value={askAgentText}
+                onChange={(e) => setAskAgentText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && askAgentText.trim() && !askAgentSending) {
+                    e.preventDefault();
+                    (async () => {
+                      setAskAgentSending(true);
+                      try {
+                        await handleAddComment(`@AIAgent ${askAgentText.trim()}`);
+                        setAskAgentText('');
+                        setAskAgentAnchor(null);
+                        toast.success('Sent to the AI agent');
+                      } finally {
+                        setAskAgentSending(false);
+                      }
+                    })();
+                  }
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    fontSize: '0.85rem',
+                    bgcolor: 'hsl(var(--background))',
+                  },
+                }}
+              />
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1 }}>
+                {[
+                  'Summarize this incident',
+                  'Investigate the indicators',
+                  'Suggest next steps',
+                  'Draft a response',
+                ].map((suggestion) => (
+                  <Chip
+                    key={suggestion}
+                    label={suggestion}
+                    size="small"
+                    onClick={() => setAskAgentText((cur) => (cur ? cur : suggestion))}
+                    sx={{
+                      height: 22,
+                      fontSize: '0.7rem',
+                      bgcolor: 'hsl(var(--muted) / 0.4)',
+                      border: '1px solid hsl(var(--border))',
+                      cursor: 'pointer',
+                      '&:hover': { bgcolor: 'hsl(var(--muted) / 0.7)' },
+                    }}
+                  />
+                ))}
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1.5 }}>
+                <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.7rem' }}>
+                  ⌘/Ctrl + Enter to send
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Button
+                    size="small"
+                    onClick={() => { setAskAgentAnchor(null); }}
+                    sx={{ height: 32, textTransform: 'none', color: 'hsl(var(--muted-foreground))' }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="contained"
+                    disabled={!askAgentText.trim() || askAgentSending}
+                    onClick={async () => {
+                      setAskAgentSending(true);
+                      try {
+                        await handleAddComment(`@AIAgent ${askAgentText.trim()}`);
+                        setAskAgentText('');
+                        setAskAgentAnchor(null);
+                        toast.success('Sent to the AI agent');
+                      } finally {
+                        setAskAgentSending(false);
+                      }
+                    }}
+                    startIcon={askAgentSending ? <CircularProgress size={12} sx={{ color: 'inherit' }} /> : <SendIcon sx={{ fontSize: 14 }} />}
+                    sx={{
+                      height: 32,
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      bgcolor: '#ff6600',
+                      '&:hover': { bgcolor: '#e65c00' },
+                    }}
+                  >
+                    Send
+                  </Button>
+                </Box>
+              </Box>
+            </Popover>
+
             <Tooltip title="Refresh">
               <IconButton 
                 size="small"
