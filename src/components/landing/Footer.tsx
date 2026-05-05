@@ -7,17 +7,21 @@ import TwitterIcon from '@mui/icons-material/Twitter';
 const footerLinks = {
   Product: [
     { label: 'Features', href: '#features' },
-    { label: 'Pricing', href: 'https://shuffler.io/pricing' },
+    { label: 'Usecases', href: '/usecases' },
     { label: 'Integrations', href: '/apps' },
+    { label: 'Pricing', href: 'https://shuffler.io/pricing' },
+  ],
+  Platform: [
+    { label: 'Incidents', href: '/incidents' },
+    { label: 'Detection Pipelines', href: '/detection' },
+    { label: 'Host Monitors', href: '/monitors' },
+    { label: 'Infrastructure', href: '/infrastructure' },
   ],
   Resources: [
-    { label: 'Documentation', href: 'https://shuffler.io/docs' },
+    { label: 'Documentation', href: '/docs' },
+    { label: 'Getting Started', href: '/docs/getting-started' },
     { label: 'API Reference', href: 'https://shuffler.io/docs/API' },
     { label: 'Community', href: 'https://discord.com/invite/B2CBzUm' },
-  ],
-  Company: [
-    { label: 'About', href: '/docs/about' },
-    { label: 'Blog', href: '/articles' },
     { label: 'Contact', href: 'https://shuffler.io/contact' },
   ],
 };
