@@ -188,8 +188,17 @@ const ShuffleMcpTestPage = () => {
           Shuffle MCP — library demo
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Three self-contained components from <code>@/Shuffle-MCPs</code>. Expand
-          "Show source" under each section to see the exact code that produced it.
+          Three self-contained components from{' '}
+          <Box
+            component="a"
+            href="https://www.npmjs.com/package/@shuffleio/shuffle-mcps"
+            target="_blank"
+            rel="noopener noreferrer"
+            sx={{ color: 'hsl(var(--primary))', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+          >
+            <code>@shuffleio/shuffle-mcps</code>
+          </Box>
+          . Expand "Show source" under each section to see the exact code that produced it.
         </Typography>
       </Box>
 
