@@ -84,89 +84,246 @@ const CollapsibleDescription = ({ description }: { description: string }) => {
   );
 };
 
-/** Singul actions catalog keyed by lowercase category fragment */
-const SINGUL_ACTIONS: Record<string, string[]> = {
-  'threat': ['get_ioc', 'search_indicator', 'enrich_hash', 'lookup_domain'],
-  'intel': ['get_ioc', 'search_indicator', 'enrich_hash', 'lookup_domain'],
-  'siem': ['search_logs', 'list_alerts', 'create_detection', 'close_alert'],
-  'email': ['list_emails', 'send_email', 'get_attachments', 'search_messages'],
-  'communication': ['send_message', 'list_channels', 'create_channel', 'get_user'],
-  'edr': ['list_detections', 'isolate_host', 'get_processes', 'run_script'],
-  'endpoint': ['list_detections', 'isolate_host', 'get_processes', 'run_script'],
-  'cloud': ['list_instances', 'get_iam_policies', 'list_buckets', 'get_logs'],
-  'ticket': ['create_ticket', 'list_tickets', 'update_ticket', 'close_ticket'],
-  'itsm': ['create_ticket', 'list_tickets', 'update_ticket', 'close_ticket'],
-  'case': ['create_case', 'list_cases', 'update_case', 'close_case'],
-  'vulnerab': ['list_vulnerabilities', 'scan_asset', 'get_cve', 'remediate'],
-  'network': ['list_rules', 'block_ip', 'get_traffic', 'create_rule'],
-  'identity': ['list_users', 'disable_user', 'reset_password', 'get_groups'],
+/**
+ * Singul standard actions catalog, keyed by lowercase category fragment.
+ * Mirrors the canonical action names exposed by https://singul.io —
+ * each name becomes the `{action}` segment in `POST /api/{action}`.
+ * Fields shown here are starter parameters; the full schema lives on
+ * the Singul side and is editable in the curl preview below.
+ */
+interface SingulAction {
+  name: string;
+  fields: { name: string; value: string }[];
+}
+
+const SINGUL_ACTIONS: Record<string, SingulAction[]> = {
+  'threat': [
+    { name: 'get_ioc', fields: [{ name: 'value', value: '1.2.3.4' }] },
+    { name: 'search_indicator', fields: [{ name: 'query', value: 'malicious.com' }] },
+    { name: 'enrich_hash', fields: [{ name: 'hash', value: 'd41d8cd98f00b204e9800998ecf8427e' }] },
+  ],
+  'intel': [
+    { name: 'get_ioc', fields: [{ name: 'value', value: '1.2.3.4' }] },
+    { name: 'search_indicator', fields: [{ name: 'query', value: 'malicious.com' }] },
+  ],
+  'siem': [
+    { name: 'search', fields: [{ name: 'query', value: 'event.type:login' }, { name: 'time_range', value: '24h' }] },
+    { name: 'list_alerts', fields: [{ name: 'severity', value: 'high' }] },
+    { name: 'close_alert', fields: [{ name: 'alert_id', value: '' }] },
+  ],
+  'email': [
+    { name: 'list_emails', fields: [{ name: 'folder', value: 'INBOX' }, { name: 'limit', value: '10' }] },
+    { name: 'send_email', fields: [{ name: 'to', value: 'user@example.com' }, { name: 'subject', value: 'Hello' }, { name: 'body', value: 'Test message' }] },
+    { name: 'get_attachments', fields: [{ name: 'message_id', value: '' }] },
+  ],
+  'communication': [
+    { name: 'send_message', fields: [{ name: 'channel', value: '#general' }, { name: 'message', value: 'Hello from Singul' }] },
+    { name: 'list_channels', fields: [] },
+    { name: 'create_channel', fields: [{ name: 'name', value: 'incident-response' }] },
+    { name: 'get_user', fields: [{ name: 'user_id', value: '' }] },
+  ],
+  'edr': [
+    { name: 'list_detections', fields: [{ name: 'severity', value: 'high' }] },
+    { name: 'isolate_host', fields: [{ name: 'host_id', value: '' }] },
+    { name: 'list_processes', fields: [{ name: 'host_id', value: '' }] },
+    { name: 'run_script', fields: [{ name: 'host_id', value: '' }, { name: 'script', value: 'whoami' }] },
+  ],
+  'endpoint': [
+    { name: 'list_detections', fields: [{ name: 'severity', value: 'high' }] },
+    { name: 'isolate_host', fields: [{ name: 'host_id', value: '' }] },
+  ],
+  'cloud': [
+    { name: 'list_instances', fields: [{ name: 'region', value: 'us-east-1' }] },
+    { name: 'list_buckets', fields: [] },
+    { name: 'get_logs', fields: [{ name: 'resource', value: '' }] },
+  ],
+  'ticket': [
+    { name: 'create_ticket', fields: [{ name: 'title', value: 'New incident' }, { name: 'description', value: '' }, { name: 'priority', value: 'medium' }] },
+    { name: 'list_tickets', fields: [{ name: 'status', value: 'open' }] },
+    { name: 'update_ticket', fields: [{ name: 'ticket_id', value: '' }, { name: 'status', value: 'in_progress' }] },
+    { name: 'close_ticket', fields: [{ name: 'ticket_id', value: '' }] },
+  ],
+  'itsm': [
+    { name: 'create_ticket', fields: [{ name: 'title', value: 'New incident' }, { name: 'priority', value: 'medium' }] },
+    { name: 'list_tickets', fields: [{ name: 'status', value: 'open' }] },
+  ],
+  'case': [
+    { name: 'create_case', fields: [{ name: 'title', value: 'New case' }, { name: 'severity', value: 'medium' }] },
+    { name: 'list_cases', fields: [{ name: 'status', value: 'open' }] },
+    { name: 'close_case', fields: [{ name: 'case_id', value: '' }] },
+  ],
+  'vulnerab': [
+    { name: 'list_vulnerabilities', fields: [{ name: 'severity', value: 'critical' }] },
+    { name: 'scan_asset', fields: [{ name: 'asset_id', value: '' }] },
+    { name: 'get_cve', fields: [{ name: 'cve_id', value: 'CVE-2024-0001' }] },
+  ],
+  'network': [
+    { name: 'list_rules', fields: [] },
+    { name: 'block_ip', fields: [{ name: 'ip', value: '1.2.3.4' }] },
+    { name: 'create_rule', fields: [{ name: 'name', value: 'block-bad-ip' }, { name: 'action', value: 'deny' }] },
+  ],
+  'identity': [
+    { name: 'list_users', fields: [] },
+    { name: 'disable_user', fields: [{ name: 'user_id', value: '' }] },
+    { name: 'reset_password', fields: [{ name: 'user_id', value: '' }] },
+  ],
 };
 
-function getSingulActions(categories?: string[]): string[] {
+function getSingulActions(categories?: string[]): SingulAction[] {
   if (!categories || categories.length === 0) return [];
-  const matched: string[] = [];
+  const matched: SingulAction[] = [];
+  const seen = new Set<string>();
   for (const cat of categories) {
     const normalized = cat.toLowerCase();
     for (const [key, actions] of Object.entries(SINGUL_ACTIONS)) {
       if (normalized.includes(key) || key.includes(normalized)) {
-        matched.push(...actions);
+        for (const a of actions) {
+          if (!seen.has(a.name)) {
+            seen.add(a.name);
+            matched.push(a);
+          }
+        }
       }
     }
   }
-  return [...new Set(matched)].slice(0, 8);
+  return matched.slice(0, 8);
 }
 
-const SingulActionsPreview = ({ categories }: { categories?: string[] }) => {
+function buildSingulCurl(appName: string, action: SingulAction | null): string {
+  const act = action?.name || '{action}';
+  const body = {
+    app: appName || '<appname>',
+    fields: action?.fields.length ? action.fields : [{ name: 'field1', value: 'value1' }],
+  };
+  return `curl -X POST https://singul.io/api/${act} \\
+  -H "Authorization: Bearer YOUR_TOKEN" \\
+  -H "Content-Type: application/json" \\
+  -d '${JSON.stringify(body, null, 2)}'`;
+}
+
+const SingulActionsPreview = ({ appName, categories }: { appName: string; categories?: string[] }) => {
   const actions = useMemo(() => getSingulActions(categories), [categories]);
   const isDisabled = actions.length === 0;
+  const [selected, setSelected] = useState<SingulAction | null>(null);
+  const [curl, setCurl] = useState<string>('');
+
+  useEffect(() => {
+    const initial = actions[0] || null;
+    setSelected(initial);
+    setCurl(buildSingulCurl(appName, initial));
+  }, [appName, actions]);
+
+  const handleSelect = (action: SingulAction) => {
+    setSelected(action);
+    setCurl(buildSingulCurl(appName, action));
+  };
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(curl);
+      toast.success('Copied curl command');
+    } catch {
+      toast.error('Copy failed');
+    }
+  };
 
   return (
-    <Box sx={{ mb: 3, opacity: 0.55, pointerEvents: 'none' }}>
+    <Box sx={{ mb: 3, opacity: isDisabled ? 0.55 : 1 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
         <Typography sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, fontSize: '0.95rem' }}>
           Try Singul actions
         </Typography>
         <Chip
-          label="Coming soon"
+          label="Preview"
           size="small"
           sx={{ height: 18, fontSize: '0.6rem', fontWeight: 500, backgroundColor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }}
         />
       </Box>
+
       <Box
         sx={{
           p: 2,
           borderRadius: 2,
           border: '1px dashed hsl(var(--border))',
           backgroundColor: 'hsl(var(--muted) / 0.3)',
-          minHeight: 72,
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: 0.75,
-          alignItems: isDisabled ? 'center' : 'flex-start',
-          justifyContent: isDisabled ? 'center' : 'flex-start',
+          pointerEvents: isDisabled ? 'none' : 'auto',
         }}
       >
-        {isDisabled ? (
-          <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', fontStyle: 'italic' }}>
-            No category detected for this app
-          </Typography>
-        ) : (
-          actions.map(action => (
-            <Chip
-              key={action}
-              label={action}
-              size="small"
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: isDisabled ? 0 : 1.5 }}>
+          {isDisabled ? (
+            <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', fontStyle: 'italic', mx: 'auto', py: 1 }}>
+              No category detected for this app
+            </Typography>
+          ) : (
+            actions.map(action => {
+              const isActive = selected?.name === action.name;
+              return (
+                <Chip
+                  key={action.name}
+                  label={action.name}
+                  size="small"
+                  onClick={() => handleSelect(action)}
+                  sx={{
+                    height: 24,
+                    fontSize: '0.7rem',
+                    fontFamily: "'JetBrains Mono', monospace",
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    backgroundColor: isActive ? 'hsl(var(--primary) / 0.15)' : 'hsl(var(--card))',
+                    color: isActive ? 'hsl(var(--primary))' : 'hsl(var(--foreground))',
+                    border: `1px solid ${isActive ? 'hsl(var(--primary))' : 'hsl(var(--border))'}`,
+                    '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.1)' },
+                  }}
+                />
+              );
+            })
+          )}
+        </Box>
+
+        {!isDisabled && (
+          <Box sx={{ position: 'relative' }}>
+            <Box
+              component="textarea"
+              value={curl}
+              onChange={(e: any) => setCurl(e.target.value)}
+              spellCheck={false}
               sx={{
-                height: 24,
-                fontSize: '0.7rem',
+                width: '100%',
+                minHeight: 180,
+                resize: 'vertical',
                 fontFamily: "'JetBrains Mono', monospace",
-                fontWeight: 500,
-                backgroundColor: 'hsl(var(--card))',
+                fontSize: '0.72rem',
+                lineHeight: 1.5,
                 color: 'hsl(var(--foreground))',
+                backgroundColor: 'hsl(var(--background))',
                 border: '1px solid hsl(var(--border))',
+                borderRadius: 1.5,
+                p: 1.5,
+                outline: 'none',
+                '&:focus': { borderColor: 'hsl(var(--primary))' },
               }}
             />
-          ))
+            <Button
+              size="small"
+              onClick={handleCopy}
+              sx={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                height: 26,
+                minWidth: 0,
+                px: 1.25,
+                fontSize: '0.65rem',
+                textTransform: 'none',
+                color: 'hsl(var(--muted-foreground))',
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                '&:hover': { backgroundColor: 'hsl(var(--muted))', color: 'hsl(var(--foreground))' },
+              }}
+            >
+              Copy
+            </Button>
+          </Box>
         )}
       </Box>
     </Box>
