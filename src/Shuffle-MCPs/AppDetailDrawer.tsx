@@ -190,33 +190,56 @@ function getSingulActions(categories?: string[]): SingulAction[] {
   return matched.slice(0, 8);
 }
 
-function buildSingulCurl(appName: string, action: SingulAction | null): string {
+function buildSingulCurl(
+  appName: string,
+  action: SingulAction | null,
+  opts?: { apiKey?: string | null; orgId?: string | null },
+): string {
   const act = action?.name || '{action}';
   const body = {
     app: appName || '<appname>',
     fields: action?.fields.length ? action.fields : [{ name: 'field1', value: 'value1' }],
   };
+  const token = opts?.apiKey || 'YOUR_TOKEN';
+  const orgLine = opts?.orgId ? `\n  -H "Org-Id: ${opts.orgId}" \\` : '';
   return `curl -X POST https://singul.io/api/${act} \\
-  -H "Authorization: Bearer YOUR_TOKEN" \\
+  -H "Authorization: Bearer ${token}" \\${orgLine}
   -d '${JSON.stringify(body, null, 2)}'`;
 }
 
-const SingulActionsPreview = ({ appName, categories }: { appName: string; categories?: string[] }) => {
+const SingulActionsPreview = ({
+  appName,
+  categories,
+  activeOrgId,
+}: {
+  appName: string;
+  categories?: string[];
+  activeOrgId?: string | null;
+}) => {
   const actions = useMemo(() => getSingulActions(categories), [categories]);
   const isDisabled = actions.length === 0;
   const [selected, setSelected] = useState<SingulAction | null>(null);
   const [curl, setCurl] = useState<string>('');
 
+  const curlOpts = useMemo(() => {
+    const apiKey = API_CONFIG.apiKey;
+    const trackedOrg = getTrackedOrgId();
+    // Only inject Org-Id when it differs from the host app's currently active org
+    const orgId = trackedOrg && activeOrgId && trackedOrg !== activeOrgId ? trackedOrg : null;
+    return { apiKey, orgId };
+  }, [activeOrgId]);
+
   useEffect(() => {
     const initial = actions[0] || null;
     setSelected(initial);
-    setCurl(buildSingulCurl(appName, initial));
-  }, [appName, actions]);
+    setCurl(buildSingulCurl(appName, initial, curlOpts));
+  }, [appName, actions, curlOpts]);
 
   const handleSelect = (action: SingulAction) => {
     setSelected(action);
-    setCurl(buildSingulCurl(appName, action));
+    setCurl(buildSingulCurl(appName, action, curlOpts));
   };
+
 
   const handleCopy = async () => {
     try {
