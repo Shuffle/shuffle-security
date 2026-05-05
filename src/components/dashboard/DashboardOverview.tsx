@@ -78,7 +78,7 @@ const TooltipContent = ({ active, payload, label }: any) => {
       borderRadius: 1.5,
       px: 1.25,
       py: 0.85,
-      boxShadow: `0 0 0 1px ${NEON.violet}33, 0 8px 24px hsl(0 0% 0% / 0.5)`,
+      boxShadow: '0 8px 24px hsl(0 0% 0% / 0.4)',
       backdropFilter: 'blur(12px)',
     }}>
       {label != null && (
@@ -88,7 +88,7 @@ const TooltipContent = ({ active, payload, label }: any) => {
       )}
       {payload.map((entry: any) => (
         <Box key={entry.name ?? entry.dataKey} sx={{ display: 'flex', alignItems: 'center', gap: 0.75, py: 0.15 }}>
-          <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: entry.color || entry.payload?.fill, flexShrink: 0, boxShadow: `0 0 6px ${entry.color || entry.payload?.fill}` }} />
+          <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: entry.color || entry.payload?.fill, flexShrink: 0 }} />
           <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.7rem' }}>
             {entry.name}
           </Typography>
@@ -383,7 +383,7 @@ export const DashboardOverview = ({
         <KpiTile
           icon={Flame}
           glow={NEON.magenta}
-          gradient={`radial-gradient(circle at 100% 0%, ${NEON.magenta} 0%, transparent 60%)`}
+          gradient={''}
           value={incidentStats.openCount}
           label="Open Incidents"
           delta={incidentStats.delta}
@@ -395,7 +395,7 @@ export const DashboardOverview = ({
         <KpiTile
           icon={AlertTriangle}
           glow={NEON.red}
-          gradient={`radial-gradient(circle at 100% 0%, ${NEON.red} 0%, transparent 60%)`}
+          gradient={''}
           value={incidentStats.criticalCount}
           label="Critical / High"
           isLoading={incidentsLoading}
@@ -405,7 +405,7 @@ export const DashboardOverview = ({
         <KpiTile
           icon={Monitor}
           glow={NEON.cyan}
-          gradient={`radial-gradient(circle at 100% 0%, ${NEON.cyan} 0%, transparent 60%)`}
+          gradient={''}
           value={monitorHostCount ?? 0}
           label={runningSensorCount ? `Hosts • ${runningSensorCount} sensors` : 'Host Monitors'}
           isLoading={monitorsLoading}
@@ -415,7 +415,7 @@ export const DashboardOverview = ({
         <KpiTile
           icon={ShieldAlert}
           glow={NEON.violet}
-          gradient={`radial-gradient(circle at 100% 0%, ${NEON.violet} 0%, transparent 60%)`}
+          gradient={''}
           value={vulnTotal}
           label={vulnCriticalPct ? `Vulnerabilities • ${vulnCriticalPct}% crit/high` : 'Vulnerabilities'}
           isLoading={vulnLoading}
@@ -441,7 +441,7 @@ export const DashboardOverview = ({
             <Box sx={{ display: 'flex', gap: 1.5 }}>
               {Object.entries(STATUS_COLORS).map(([label, color]) => (
                 <Box key={label} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: color, boxShadow: `0 0 6px ${color}` }} />
+                  <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: color }} />
                   <Typography sx={{ fontSize: '0.68rem', color: 'hsl(var(--muted-foreground))', fontWeight: 500 }}>{label}</Typography>
                 </Box>
               ))}
@@ -475,7 +475,7 @@ export const DashboardOverview = ({
                       stroke={c}
                       strokeWidth={2}
                       fill={`url(#ov-grad-${k.replace(/\s/g, '')})`}
-                      style={{ filter: `drop-shadow(0 0 6px ${c}66)` }}
+                     
                     />
                   ))}
                 </AreaChart>
@@ -518,7 +518,7 @@ export const DashboardOverview = ({
                       background={{ fill: 'hsl(var(--muted) / 0.15)' }}
                     >
                       {radialData.map((d, i) => (
-                        <Cell key={d.name} fill={i === 0 ? 'url(#radial-sensor)' : 'url(#radial-host)'} style={{ filter: `drop-shadow(0 0 8px ${d.fill}88)` }} />
+                        <Cell key={d.name} fill={i === 0 ? 'url(#radial-sensor)' : 'url(#radial-host)'} />
                       ))}
                     </RadialBar>
                     <RechartsTooltip content={<TooltipContent />} />
@@ -538,7 +538,7 @@ export const DashboardOverview = ({
                     lineHeight: 1,
                     letterSpacing: '-0.03em',
                     fontFamily: 'ui-monospace, monospace',
-                    textShadow: `0 0 24px ${NEON.cyan}66`,
+                    
                   }}>
                     {monitorTotal}
                   </Typography>
@@ -555,14 +555,14 @@ export const DashboardOverview = ({
             <Box sx={{ display: 'flex', justifyContent: 'space-around', pt: 1.5, borderTop: '1px solid hsl(var(--border))' }}>
               <Box sx={{ textAlign: 'center' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, justifyContent: 'center' }}>
-                  <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: NEON.violet, boxShadow: `0 0 6px ${NEON.violet}` }} />
+                  <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: NEON.violet }} />
                   <Typography sx={{ fontSize: '0.95rem', fontWeight: 700, color: 'hsl(var(--foreground))', fontFamily: 'ui-monospace, monospace' }}>{monitorHostCount ?? 0}</Typography>
                 </Box>
                 <Typography sx={{ fontSize: '0.62rem', color: 'hsl(var(--muted-foreground))', mt: 0.25, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Hosts</Typography>
               </Box>
               <Box sx={{ textAlign: 'center' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, justifyContent: 'center' }}>
-                  <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: NEON.cyan, boxShadow: `0 0 6px ${NEON.cyan}` }} />
+                  <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: NEON.cyan }} />
                   <Typography sx={{ fontSize: '0.95rem', fontWeight: 700, color: 'hsl(var(--foreground))', fontFamily: 'ui-monospace, monospace' }}>{runningSensorCount ?? 0}</Typography>
                 </Box>
                 <Typography sx={{ fontSize: '0.62rem', color: 'hsl(var(--muted-foreground))', mt: 0.25, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Sensors</Typography>
@@ -580,7 +580,7 @@ export const DashboardOverview = ({
         action={
           <Typography
             onClick={() => navigate('/vulnerabilities')}
-            sx={{ fontSize: '0.7rem', color: NEON.cyan, cursor: 'pointer', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', '&:hover': { textShadow: `0 0 8px ${NEON.cyan}` } }}
+            sx={{ fontSize: '0.7rem', color: NEON.cyan, cursor: 'pointer', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}
           >
             View all →
           </Typography>
@@ -606,7 +606,7 @@ export const DashboardOverview = ({
                 <RechartsTooltip content={<TooltipContent />} cursor={{ fill: 'hsl(var(--muted) / 0.15)' }} />
                 <Bar dataKey="value" radius={[6, 6, 0, 0]} maxBarSize={64}>
                   {vulnData.map((d) => (
-                    <Cell key={d.name} fill={`url(#${d.gradId})`} style={{ filter: `drop-shadow(0 0 8px ${d.color}77)` }} />
+                    <Cell key={d.name} fill={`url(#${d.gradId})`} />
                   ))}
                 </Bar>
               </BarChart>
