@@ -457,103 +457,21 @@ export default function AppDetailDrawer({
         ) : (
           <>
             {/* App header */}
-            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 2,
-                  mb: 3,
-                  p: 2.5,
-                  borderRadius: 3,
-                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%)',
-                  border: '1px solid hsl(var(--border))',
-                }}
-              >
-                <Avatar
-                  src={resolvedImage}
-                  alt={displayName}
-                  sx={{
-                    width: 56,
-                    height: 56,
-                    borderRadius: '14px',
-                    backgroundColor: 'hsl(var(--muted))',
-                    border: '2px solid',
-                    borderColor: hasValidAuth
-                      ? 'hsl(var(--severity-low))'
-                      : hasAnyAuth
-                        ? 'hsl(142 76% 36% / 0.3)'
-                        : 'hsl(var(--border))',
-                    p: 0.5,
-                    '& img': { objectFit: 'contain', borderRadius: '10px' },
-                  }}
-                >
-                  <Typography sx={{ fontSize: '1.2rem', fontWeight: 700 }}>{displayName.charAt(0).toUpperCase()}</Typography>
-                </Avatar>
-
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                    <Typography sx={{ color: 'hsl(var(--foreground))', fontWeight: 700, fontSize: '1rem', textTransform: 'capitalize' }}>
-                      {displayName}
-                    </Typography>
-                    {isAuthenticated && hasValidAuth && (
-                      <Chip icon={<CheckCircleIcon sx={{ fontSize: 14 }} />} label="Verified" size="small"
-                        sx={{ height: 22, backgroundColor: 'hsla(142, 76%, 36%, 0.15)', color: 'hsl(var(--severity-low))', fontWeight: 600, fontSize: '0.7rem', '& .MuiChip-icon': { color: 'hsl(var(--severity-low))' } }} />
-                    )}
-                    {isAuthenticated && !hasValidAuth && hasAnyAuth && (
-                      <Chip icon={<ErrorOutlineIcon sx={{ fontSize: 14 }} />} label="Pending" size="small"
-                        sx={{ height: 22, backgroundColor: 'hsla(38, 92%, 50%, 0.15)', color: 'hsl(var(--severity-medium))', fontWeight: 600, fontSize: '0.7rem', '& .MuiChip-icon': { color: 'hsl(var(--severity-medium))' } }} />
-                    )}
-                  </Box>
-
-                  {appInfo?.categories && appInfo.categories.length > 0 && (
-                    <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                      {appInfo.categories.slice(0, 3).map(cat => (
-                        <Chip key={cat} label={cat} size="small"
-                          sx={{ height: 18, fontSize: '0.6rem', fontWeight: 500, backgroundColor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))', textTransform: 'capitalize' }} />
-                      ))}
-                    </Box>
-                  )}
-                </Box>
-
-                {/* Add to canvas button (usecase page) */}
-                {onAddToCanvas && appName && (
-                  <Button
-                    onClick={() => {
-                      onAddToCanvas({ name: appName, icon: resolvedImage || '', algoliaId: resolvedAlgoliaId });
-                      onClose();
-                    }}
-                    variant="contained"
-                    size="small"
-                    sx={{
-                      textTransform: 'none', fontWeight: 600, fontSize: '0.72rem', borderRadius: 2, px: 1.5, py: 0.5, minHeight: 0, flexShrink: 0,
-                      bgcolor: '#FF6600', '&:hover': { bgcolor: '#e55c00' },
-                    }}
-                  >
-                    + Add
-                  </Button>
-                )}
-
-                {/* Activate toggle (non-usecase contexts) */}
-                {!onAddToCanvas && isAuthenticated && isActivated !== null && (
-                  <Button
-                    onClick={handleActivateToggle}
-                    disabled={activateLoading}
-                    variant={isActivated ? 'outlined' : 'contained'}
-                    size="small"
-                    sx={{
-                      textTransform: 'none', fontWeight: 600, fontSize: '0.72rem', borderRadius: 2, px: 1.5, py: 0.5, minHeight: 0, flexShrink: 0,
-                      ...(isActivated
-                        ? { color: 'hsl(var(--muted-foreground))', borderColor: 'hsl(var(--border))', '&:hover': { borderColor: 'hsl(var(--destructive))', color: 'hsl(var(--destructive))', bgcolor: 'hsla(var(--destructive) / 0.08)' } }
-                        : { bgcolor: '#FF6600', '&:hover': { bgcolor: '#e55c00' } }),
-                    }}
-                  >
-                    {activateLoading ? '…' : isActivated ? 'Deactivate' : 'Activate'}
-                  </Button>
-                )}
-              </Box>
-            </motion.div>
-
+            <AppTitleHeader
+              name={displayName}
+              image={resolvedImage}
+              hasValidAuth={hasValidAuth}
+              hasAnyAuth={hasAnyAuth}
+              isAuthenticated={isAuthenticated}
+              categories={appInfo?.categories}
+              isActivated={onAddToCanvas ? null : isActivated}
+              activateLoading={activateLoading}
+              onActivateToggle={handleActivateToggle}
+              onAdd={onAddToCanvas && appName ? () => {
+                onAddToCanvas({ name: appName, icon: resolvedImage || '', algoliaId: resolvedAlgoliaId });
+                onClose();
+              } : undefined}
+            />
 
             {/* Incident stats */}
             {isAuthenticated && incidentStats && incidentStats.ingested > 0 && (
@@ -596,55 +514,34 @@ export default function AppDetailDrawer({
             )}
 
             {/* Authentication section */}
-            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.1 }}>
-              <Box sx={{ mb: 3 }}>
-                <Typography sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, fontSize: '0.95rem', mb: 0.5 }}>
-                  Authentication
-                </Typography>
-                <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))', mb: 1.5 }}>
-                  {isAuthenticated
-                    ? authCount > 0
-                      ? `${authCount} configuration${authCount > 1 ? 's' : ''} found`
-                      : 'No authentication configured yet'
-                    : `Connect your ${displayName} account`}
-                </Typography>
-                {isAuthenticated && algoliaApp && resolvedAlgoliaId && (
-                  <AppAuthCard
-                    app={algoliaApp}
-                    authState={authState}
-                    isExpanded={authExpanded}
-                    onToggle={() => setAuthExpanded(prev => !prev)}
-                    onAuthChange={handleAuthChange}
-                    onTestConnection={(appId, authId) => handleTestConnection(appName || appId, authId)}
-                    onSaveAuth={(appId, creds) => handleSaveAuth(appId, creds, appName || undefined)}
-                    apiAuthEntries={matchingEntries}
-                    onRefreshAuth={refreshAuth}
-                  />
-                )}
-              </Box>
-            </motion.div>
+            <AppAuthSection
+              displayName={displayName}
+              algoliaApp={algoliaApp}
+              resolvedAlgoliaId={resolvedAlgoliaId}
+              authState={authState}
+              expanded={authExpanded}
+              onToggle={() => setAuthExpanded(prev => !prev)}
+              authCount={authCount}
+              isAuthenticated={isAuthenticated}
+              matchingEntries={matchingEntries}
+              onAuthChange={handleAuthChange}
+              onTestConnection={(appId, authId) => handleTestConnection(appName || appId, authId)}
+              onSaveAuth={(appId, creds) => handleSaveAuth(appId, creds, appName || undefined)}
+              onRefreshAuth={refreshAuth}
+            />
 
-            {/* MCP Chat */}
+            {/* MCP Chat + individual actions */}
             {isAuthenticated && (
-              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.15 }}>
-                <Box sx={{ mb: 3 }}>
-                  <Typography sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, fontSize: '0.95rem', mb: 1.5 }}>
-                    Try MCP
-                  </Typography>
-                  <AppMcpChat
-                    appName={appName || ''}
-                    appIcon={resolvedImage}
-                    appId={matchingEntries[0]?.app?.id || matchingEntries[0]?.id || appName || ''}
-                    categories={appInfo?.categories}
-                  />
-                </Box>
-
-                {/* Try Singul actions — disabled-look catalog */}
+              <>
+                <TryMcpSection
+                  appName={appName || ''}
+                  appIcon={resolvedImage}
+                  appId={matchingEntries[0]?.app?.id || matchingEntries[0]?.id || appName || ''}
+                  categories={appInfo?.categories}
+                />
                 <SingulActionsPreview appName={appName || ''} categories={appInfo?.categories} activeOrgId={activeOrgId} />
-              </motion.div>
+              </>
             )}
-
-
           </>
         )}
       </Box>
