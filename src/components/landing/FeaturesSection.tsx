@@ -12,9 +12,11 @@ interface FeatureSectionProps {
   color: string;
   reverse?: boolean;
   visual: React.ReactNode;
+  link?: string;
+  linkLabel?: string;
 }
 
-const FeatureSection = ({ title, highlight, description, bullets, color, reverse, visual }: FeatureSectionProps) => (
+const FeatureSection = ({ title, highlight, description, bullets, color, reverse, visual, link, linkLabel }: FeatureSectionProps) => (
   <Box 
     sx={{ 
       py: { xs: 10, md: 16 },
@@ -121,6 +123,38 @@ const FeatureSection = ({ title, highlight, description, bullets, color, reverse
                 </motion.div>
               ))}
             </Stack>
+            {link && (
+              <Box sx={{ mt: 5 }}>
+                <Box
+                  component={link.startsWith('http') ? 'a' : Link}
+                  {...(link.startsWith('http')
+                    ? { href: link, target: '_blank', rel: 'noopener noreferrer' }
+                    : { to: link })}
+                  sx={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    py: 1.25,
+                    px: 2.5,
+                    borderRadius: 2,
+                    background: `${color}12`,
+                    border: `1px solid ${color}30`,
+                    color,
+                    fontWeight: 600,
+                    fontSize: '0.95rem',
+                    textDecoration: 'none',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      background: `${color}1f`,
+                      borderColor: `${color}55`,
+                      transform: 'translateX(4px)',
+                    },
+                  }}
+                >
+                  {linkLabel || 'Learn more'} →
+                </Box>
+              </Box>
+            )}
           </motion.div>
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
@@ -529,36 +563,40 @@ const features: Omit<FeatureSectionProps, 'reverse'>[] = [
   {
     icon: null,
     title: 'Automatic Security',
-    highlight: 'For You',
-    description: 'Configure once, run forever. Enable or disable automatic capabilities at your whim—the platform does exactly what you tell it to, when you tell it to.',
+    highlight: 'You Control',
+    description: 'Configure once, run forever. Enable or disable automatic capabilities at your whim — the platform does exactly what you tell it to, when you tell it to.',
     bullets: [
       'Automatic triage and threat enrichment in seconds',
       'Suggested response actions you approve with one click',
-      'Works with any LLM—cloud APIs or your own models',
+      'Works with any LLM — cloud APIs or your own models',
       'Full transparency into every automated decision',
     ],
     color: '#FF6600',
     visual: <AIAgentVisual />,
+    link: '/agent',
+    linkLabel: 'See the AI Agent',
   },
   {
     icon: null,
     title: 'Universal',
     highlight: 'Reach',
-    description: 'One platform that connects everywhere. Cloud, on-prem, air-gapped—no environment is out of reach. Your security automation finally works everywhere your infrastructure lives.',
+    description: 'One platform that connects everywhere. Cloud, on-prem, air-gapped — no environment is out of reach. Your security automation finally works everywhere your infrastructure lives.',
     bullets: [
       'Native connectors for AWS, Azure, GCP, and more',
       'On-prem agents for internal and isolated networks',
       'Hybrid deployments that bridge everything',
-      'Zero trust—your data stays where you want it',
+      'Zero trust — your data stays where you want it',
     ],
     color: '#22c55e',
     visual: <UniversalReachVisual />,
+    link: '/infrastructure',
+    linkLabel: 'Explore the Infrastructure view',
   },
   {
     icon: null,
     title: '3,000+',
     highlight: 'MCP-Ready Integrations',
-    description: 'Use your existing tools, fill in the gaps. SIEM, Email, EDR, ITSM, Threat Intel—connect them all via MCP and find ANY information in ANY of your data sources.',
+    description: 'Use your existing tools, fill in the gaps. SIEM, Email, EDR, ITSM, Threat Intel — connect them all via MCP and find ANY information in ANY of your data sources.',
     bullets: [
       'Splunk, CrowdStrike, Sentinel, ServiceNow, and 3,000+ more',
       'All integrations are MCP-compatible out of the box',
@@ -567,20 +605,24 @@ const features: Omit<FeatureSectionProps, 'reverse'>[] = [
     ],
     color: '#8b5cf6',
     visual: <IntegrationsVisual />,
+    link: '/apps',
+    linkLabel: 'Browse the Apps catalog',
   },
   {
     icon: null,
-    title: 'Continuous',
-    highlight: 'Learning Loop',
-    description: 'Detection and response as an infinite cycle. Every alert outcome feeds back into the system, automatically tuning rules and eliminating false positives over time.',
+    title: 'Detection &',
+    highlight: 'Endpoint Visibility',
+    description: 'Do not have a SIEM? Use Shuffle Pipelines to ingest, parse and match Sigma rules with Tenzir — and deploy host monitors for endpoint compliance and remote response.',
     bullets: [
-      'Every analyst decision trains the detection engine',
-      'False positives auto-suppress after consistent dismissals',
-      'Response patterns become automated playbooks',
-      'Your security posture improves while you sleep',
+      'Shuffle Pipelines: Tenzir-powered ingest with Sigma rule matching',
+      'Host monitors for encryption, screenlock and software inventory',
+      'Run commands on any monitored endpoint from the browser',
+      'No SIEM required, no per-GB pricing — your hardware, your data',
     ],
     color: '#0ea5e9',
     visual: <DetectionLoopVisual />,
+    link: '/docs/shuffle-pipelines',
+    linkLabel: 'Read the Pipelines guide',
   },
 ];
 
