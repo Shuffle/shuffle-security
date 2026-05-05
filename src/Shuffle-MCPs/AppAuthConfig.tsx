@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/Shuffle-MCPs/toast';
 import {
   Box,
   Typography,
