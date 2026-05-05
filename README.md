@@ -15,22 +15,22 @@ Follow us on Twitter at [@shuffleio](https://twitter.com/shuffleio).
 <table align="center">
   <tr>
     <td width="50%" align="center">
-      <img alt="Incidents view" src="https://github.com/user-attachments/assets/6f8fef8e-83f2-4912-b14a-981ffca7980f" /><br/>
-      <sub><b>Handle incidents from any source</b><br/>One unified view for alerts, cases and tickets across every tool.</sub>
+      <a href="https://security.shuffler.io/incidents"><img alt="Incidents view" src="https://github.com/user-attachments/assets/6f8fef8e-83f2-4912-b14a-981ffca7980f" /></a><br/>
+      <sub><a href="https://security.shuffler.io/incidents"><b>Handle incidents from any source</b></a><br/>One unified view for alerts, cases and tickets across every tool.</sub>
     </td>
     <td width="50%" align="center">
-      <img alt="Automation for Incidents" src="public/screenshots/automation-for-incidents.png" /><br/>
-      <sub><b>Be in control of the automation</b><br/>Visual ingest and forward pipelines you can shape end-to-end.</sub>
+      <a href="https://security.shuffler.io/automation"><img alt="Automation for Incidents" src="public/screenshots/automation-for-incidents.png" /></a><br/>
+      <sub><a href="https://security.shuffler.io/automation"><b>Be in control of the automation</b></a><br/>Visual ingest and forward pipelines you can shape end-to-end.</sub>
     </td>
   </tr>
   <tr>
     <td width="50%" align="center">
-      <img alt="Host monitors" src="https://github.com/user-attachments/assets/2c0056c2-646b-431b-a78d-7a2673fd1a3b" /><br/>
-      <sub><b>Set up host monitors</b><br/>For compliance, vulnerabilities and response across your fleet.</sub>
+      <a href="https://security.shuffler.io/monitors"><img alt="Host monitors" src="https://github.com/user-attachments/assets/2c0056c2-646b-431b-a78d-7a2673fd1a3b" /></a><br/>
+      <sub><a href="https://security.shuffler.io/monitors"><b>Set up host monitors</b></a><br/>For compliance, vulnerabilities and response across your fleet.</sub>
     </td>
     <td width="50%" align="center">
-      <img alt="Vulnerabilities" src="https://github.com/user-attachments/assets/511cedd8-0a40-4e52-93cc-5638048a45dd" /><br/>
-      <sub><b>Track and manage vulnerabilities</b><br/>Stay on top of risk over time across every asset and user.</sub>
+      <a href="https://security.shuffler.io/vulnerabilities"><img alt="Vulnerabilities" src="https://github.com/user-attachments/assets/511cedd8-0a40-4e52-93cc-5638048a45dd" /></a><br/>
+      <sub><a href="https://security.shuffler.io/vulnerabilities"><b>Track and manage vulnerabilities</b></a><br/>Stay on top of risk over time across every asset and user.</sub>
     </td>
   </tr>
 </table>
