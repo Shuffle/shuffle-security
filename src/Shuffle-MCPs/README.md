@@ -8,7 +8,6 @@ Turn 3,000+ SaaS tools into MCP servers your agents can use. One search, one cli
 
 [![npm](https://img.shields.io/npm/v/@shuffleio/shuffle-mcps.svg)](https://www.npmjs.com/package/@shuffleio/shuffle-mcps)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://www.npmjs.com/package/@shuffleio/shuffle-mcps)
-[![upstream](https://img.shields.io/badge/upstream-Shuffle%2Fsingul.js-orange)](https://github.com/Shuffle/singul.js)
 
 </div>
 
