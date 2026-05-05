@@ -65,6 +65,7 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [internalSelectedApps, setInternalSelectedApps] = useState<AlgoliaSearchApp[]>(selectedApps);
   const [authenticatedApps, setAuthenticatedApps] = useState<AppAuthentication[]>(externalAuthenticatedApps || []);
+  const [drawerApp, setDrawerApp] = useState<AlgoliaSearchApp | null>(null);
   const hasInitialized = useRef(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -293,25 +294,29 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
   // Handle app selection
   const selectApp = useCallback((app: AlgoliaSearchApp) => {
     const authUrl = `${apiBaseUrl}${appAuthPath}?app_id=${app.objectID}&auth=${authToken}&source=shuffle`;
-    
+
     if (multiSelect) {
       const isAlreadySelected = internalSelectedApps.some((a) => a.objectID === app.objectID);
       const newSelection = isAlreadySelected
         ? internalSelectedApps.filter((a) => a.objectID !== app.objectID)
         : [...internalSelectedApps, app];
-      
+
       setInternalSelectedApps(newSelection);
       onSelectionChange?.(newSelection);
     } else {
-      onAppSelected?.({ app, authUrl });
-      
-      if (!preventDefault) {
-        window.open(authUrl, '_blank');
+      // If consumer wired up onAppSelected, defer entirely to them.
+      if (onAppSelected) {
+        onAppSelected({ app, authUrl });
+        if (!preventDefault) {
+          window.open(authUrl, '_blank');
+        }
+      } else if (!preventDefault) {
+        // New default: open built-in side drawer with the app + its existing
+        // authentications, instead of popping a new tab to shuffler.io.
+        setDrawerApp(app);
       }
-      
+
       setIsOpen(false);
-      setQuery('');
-      setResults([]);
     }
   }, [authToken, apiBaseUrl, appAuthPath, multiSelect, internalSelectedApps, onAppSelected, onSelectionChange, preventDefault]);
 
@@ -603,6 +608,78 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
           </div>
         )}
       </div>
+
+      {/* Built-in app auth drawer — shown when no custom onAppSelected handler is provided */}
+      {drawerApp && (() => {
+        const norm = (n: string) => (n || '').toLowerCase().replace(/[\s_\-]+/g, '_');
+        const matchingAuths = authenticatedApps.filter(
+          a => norm(a.app?.name || '') === norm(drawerApp.name)
+        );
+        const drawerAuthUrl = `${apiBaseUrl}${appAuthPath}?app_id=${drawerApp.objectID}&auth=${authToken}&source=shuffle`;
+        return (
+          <>
+            <div className="singul-drawer-backdrop" onClick={() => setDrawerApp(null)} />
+            <aside className="singul-drawer" role="dialog" aria-label={`${drawerApp.name} configuration`}>
+              <header className="singul-drawer-header">
+                <div className="singul-drawer-title-row">
+                  {drawerApp.image_url && (
+                    <img src={drawerApp.image_url} alt={drawerApp.name} className="singul-drawer-icon" />
+                  )}
+                  <div>
+                    <div className="singul-drawer-title">{drawerApp.name.replace(/_/g, ' ')}</div>
+                    <div className="singul-drawer-subtitle">App configuration</div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="singul-drawer-close"
+                  onClick={() => setDrawerApp(null)}
+                  aria-label="Close"
+                >×</button>
+              </header>
+
+              <div className="singul-drawer-body">
+                {drawerApp.description && (
+                  <p className="singul-drawer-desc">{drawerApp.description}</p>
+                )}
+
+                <div className="singul-drawer-section-title">
+                  Authentication
+                  <span className="singul-drawer-count">
+                    {matchingAuths.length} configuration{matchingAuths.length === 1 ? '' : 's'} found
+                  </span>
+                </div>
+
+                {matchingAuths.length > 0 ? (
+                  <ul className="singul-drawer-auth-list">
+                    {matchingAuths.map(a => (
+                      <li key={a.id} className="singul-drawer-auth-item">
+                        <div className="singul-drawer-auth-label">{a.label || 'Untitled'}</div>
+                        <div className="singul-drawer-auth-chips">
+                          {a.active && <span className="singul-chip singul-chip-configured">Configured</span>}
+                          {a.validation?.valid && <span className="singul-chip singul-chip-tested">Tested</span>}
+                          {!a.active && <span className="singul-chip singul-chip-inactive">Inactive</span>}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="singul-drawer-empty">No authentications yet for this app.</div>
+                )}
+
+                <a
+                  href={drawerAuthUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="singul-drawer-cta"
+                >
+                  {matchingAuths.length > 0 ? 'Manage authentication' : 'Add authentication'}
+                </a>
+              </div>
+            </aside>
+          </>
+        );
+      })()}
     </div>
   );
 });
