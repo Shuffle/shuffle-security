@@ -34,7 +34,7 @@ import AppMcpChat from '@/Shuffle-MCPs/AppMcpChat';
 import ApiCallViewer from '@/Shuffle-MCPs/ApiCallViewer';
 import type { AlgoliaSearchApp } from './shuffle-mcp.helpers';
 import { useAppAuth } from '@/Shuffle-MCPs/useAppAuth';
-import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
+import { API_CONFIG, getApiUrl, getAuthHeader, getTrackedOrgId } from '@/Shuffle-MCPs/api';
 // AuthContext detached — consumers can pass `isAuthenticated` as a prop. Defaults to true.
 
 interface AppInfo {
