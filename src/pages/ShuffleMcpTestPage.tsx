@@ -13,8 +13,17 @@ import {
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
-import { ShuffleMCP, AppSearchDrawer, AppDetailDrawer } from '@/Shuffle-MCPs';
+import {
+  ShuffleMCP,
+  AppSearchDrawer,
+  AppDetailDrawer,
+  AppAuthSection,
+  TryMcpSection,
+  SingulActionsPreview,
+  useAppLookup,
+} from '@/Shuffle-MCPs';
 import { API_CONFIG } from '@/Shuffle-MCPs/api';
+import { Box as MuiBox, TextField, Skeleton } from '@mui/material';
 
 /**
  * Demo page for the Shuffle-MCPs library.
@@ -66,6 +75,50 @@ const [appName, setAppName] = useState<string | null>(null);
     appName={appName}
   />
 </>`;
+
+const SNIPPET_AUTH_SECTION = `import { useState } from 'react';
+import { AppAuthSection, useAppLookup } from '@shuffleio/shuffle-mcps';
+
+// Pass any app name — the hook resolves icon, id, categories, auth entries.
+const lookup = useAppLookup('Gmail');
+const [open, setOpen] = useState(true);
+
+<AppAuthSection
+  displayName={lookup.displayName}
+  algoliaApp={lookup.algoliaApp}
+  resolvedAlgoliaId={lookup.algoliaId}
+  authState={lookup.authState}
+  expanded={open}
+  onToggle={() => setOpen(v => !v)}
+  authCount={lookup.authCount}
+  matchingEntries={lookup.matchingEntries}
+  onAuthChange={lookup.handleAuthChange}
+  onTestConnection={lookup.handleTestConnection}
+  onSaveAuth={lookup.handleSaveAuth}
+  onRefreshAuth={lookup.refreshAuth}
+/>`;
+
+const SNIPPET_TRY_MCP = `import { TryMcpSection, useAppLookup } from '@shuffleio/shuffle-mcps';
+
+const lookup = useAppLookup('Slack');
+
+<TryMcpSection
+  appName="Slack"
+  appIcon={lookup.image}
+  appId={lookup.algoliaId || 'Slack'}
+  categories={lookup.categories}
+/>`;
+
+const SNIPPET_TRY_ACTIONS = `import { SingulActionsPreview, useAppLookup } from '@shuffleio/shuffle-mcps';
+
+const lookup = useAppLookup('VirusTotal');
+
+// All actions across the default categories, sorted so the app's
+// matching category appears first and is auto-selected.
+<SingulActionsPreview
+  appName="VirusTotal"
+  categories={lookup.categories}
+/>`;
 
 function CodeBlock({ code }: { code: string }) {
   const [copied, setCopied] = useState(false);
@@ -177,9 +230,69 @@ function DemoSection({
   );
 }
 
+/** Tiny shared input + lookup wrapper used by the three section demos below. */
+function AppNamePicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <MuiBox sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+      <Typography variant="body2" color="text.secondary">App name:</Typography>
+      <TextField
+        size="small"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="e.g. Gmail, Slack, VirusTotal"
+        sx={{ width: 240 }}
+      />
+    </MuiBox>
+  );
+}
+
+function AuthSectionDemo({ appName }: { appName: string }) {
+  const lookup = useAppLookup(appName);
+  const [open, setOpen] = useState(true);
+  if (lookup.loading) return <Skeleton variant="rectangular" height={120} sx={{ borderRadius: 2 }} />;
+  return (
+    <AppAuthSection
+      displayName={lookup.displayName}
+      algoliaApp={lookup.algoliaApp}
+      resolvedAlgoliaId={lookup.algoliaId}
+      authState={lookup.authState}
+      expanded={open}
+      onToggle={() => setOpen((v) => !v)}
+      authCount={lookup.authCount}
+      matchingEntries={lookup.matchingEntries}
+      onAuthChange={lookup.handleAuthChange}
+      onTestConnection={lookup.handleTestConnection}
+      onSaveAuth={lookup.handleSaveAuth}
+      onRefreshAuth={lookup.refreshAuth}
+    />
+  );
+}
+
+function TryMcpDemo({ appName }: { appName: string }) {
+  const lookup = useAppLookup(appName);
+  if (lookup.loading) return <Skeleton variant="rectangular" height={200} sx={{ borderRadius: 2 }} />;
+  return (
+    <TryMcpSection
+      appName={appName}
+      appIcon={lookup.image}
+      appId={lookup.algoliaId || appName}
+      categories={lookup.categories}
+    />
+  );
+}
+
+function TryActionsDemo({ appName }: { appName: string }) {
+  const lookup = useAppLookup(appName);
+  if (lookup.loading) return <Skeleton variant="rectangular" height={300} sx={{ borderRadius: 2 }} />;
+  return <SingulActionsPreview appName={appName} categories={lookup.categories} />;
+}
+
 const ShuffleMcpTestPage = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [detailApp, setDetailApp] = useState<string | null>(null);
+  const [authApp, setAuthApp] = useState('Gmail');
+  const [mcpApp, setMcpApp] = useState('Slack');
+  const [actionsApp, setActionsApp] = useState('VirusTotal');
 
   return (
     <Container maxWidth="lg" sx={{ py: 6 }}>
@@ -233,6 +346,33 @@ const ShuffleMcpTestPage = () => {
               </Button>
             ))}
           </Stack>
+        </DemoSection>
+
+        <DemoSection
+          title="4. Authentication (standalone)"
+          description={<><code>&lt;AppAuthSection /&gt;</code> + <code>useAppLookup()</code> — drop the auth card anywhere by passing just an app name.</>}
+          code={SNIPPET_AUTH_SECTION}
+        >
+          <AppNamePicker value={authApp} onChange={setAuthApp} />
+          <AuthSectionDemo appName={authApp} />
+        </DemoSection>
+
+        <DemoSection
+          title="5. Try MCP (standalone)"
+          description={<><code>&lt;TryMcpSection /&gt;</code> — chat against an app's MCP tools. Resolves icon + id from the app name.</>}
+          code={SNIPPET_TRY_MCP}
+        >
+          <AppNamePicker value={mcpApp} onChange={setMcpApp} />
+          <TryMcpDemo appName={mcpApp} />
+        </DemoSection>
+
+        <DemoSection
+          title="6. Try individual actions (standalone)"
+          description={<><code>&lt;SingulActionsPreview /&gt;</code> — full curl/python catalog with Play. Sorts the app's category to the top.</>}
+          code={SNIPPET_TRY_ACTIONS}
+        >
+          <AppNamePicker value={actionsApp} onChange={setActionsApp} />
+          <TryActionsDemo appName={actionsApp} />
         </DemoSection>
       </Stack>
 
