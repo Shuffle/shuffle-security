@@ -211,6 +211,23 @@ function buildSingulCurl(
   -d '${JSON.stringify(body, null, 2)}'`;
 }
 
+function buildSingulPython(
+  appName: string,
+  action: SingulAction | null,
+): string {
+  const act = action?.name || 'send_message';
+  const app = appName || '<appname>';
+  const fields = action?.fields.length ? action.fields : [];
+  const fieldsStr = JSON.stringify(fields);
+  return `import singul
+
+response = singul.run("${app}", action="${act}", fields=${fieldsStr})
+
+print(response)`;
+}
+
+type SnippetLang = 'curl' | 'python';
+
 const SingulActionsPreview = ({
   appName,
   categories,
