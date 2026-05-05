@@ -230,7 +230,63 @@ function DemoSection({
   );
 }
 
-const ShuffleMcpTestPage = () => {
+/** Tiny shared input + lookup wrapper used by the three section demos below. */
+function AppNamePicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <MuiBox sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+      <Typography variant="body2" color="text.secondary">App name:</Typography>
+      <TextField
+        size="small"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="e.g. Gmail, Slack, VirusTotal"
+        sx={{ width: 240 }}
+      />
+    </MuiBox>
+  );
+}
+
+function AuthSectionDemo({ appName }: { appName: string }) {
+  const lookup = useAppLookup(appName);
+  const [open, setOpen] = useState(true);
+  if (lookup.loading) return <Skeleton variant="rectangular" height={120} sx={{ borderRadius: 2 }} />;
+  return (
+    <AppAuthSection
+      displayName={lookup.displayName}
+      algoliaApp={lookup.algoliaApp}
+      resolvedAlgoliaId={lookup.algoliaId}
+      authState={lookup.authState}
+      expanded={open}
+      onToggle={() => setOpen((v) => !v)}
+      authCount={lookup.authCount}
+      matchingEntries={lookup.matchingEntries}
+      onAuthChange={lookup.handleAuthChange}
+      onTestConnection={lookup.handleTestConnection}
+      onSaveAuth={lookup.handleSaveAuth}
+      onRefreshAuth={lookup.refreshAuth}
+    />
+  );
+}
+
+function TryMcpDemo({ appName }: { appName: string }) {
+  const lookup = useAppLookup(appName);
+  if (lookup.loading) return <Skeleton variant="rectangular" height={200} sx={{ borderRadius: 2 }} />;
+  return (
+    <TryMcpSection
+      appName={appName}
+      appIcon={lookup.image}
+      appId={lookup.algoliaId || appName}
+      categories={lookup.categories}
+    />
+  );
+}
+
+function TryActionsDemo({ appName }: { appName: string }) {
+  const lookup = useAppLookup(appName);
+  if (lookup.loading) return <Skeleton variant="rectangular" height={300} sx={{ borderRadius: 2 }} />;
+  return <SingulActionsPreview appName={appName} categories={lookup.categories} />;
+}
+
   const [searchOpen, setSearchOpen] = useState(false);
   const [detailApp, setDetailApp] = useState<string | null>(null);
 
