@@ -287,8 +287,12 @@ function TryActionsDemo({ appName }: { appName: string }) {
   return <SingulActionsPreview appName={appName} categories={lookup.categories} />;
 }
 
+const ShuffleMcpTestPage = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [detailApp, setDetailApp] = useState<string | null>(null);
+  const [authApp, setAuthApp] = useState('Gmail');
+  const [mcpApp, setMcpApp] = useState('Slack');
+  const [actionsApp, setActionsApp] = useState('VirusTotal');
 
   return (
     <Container maxWidth="lg" sx={{ py: 6 }}>
