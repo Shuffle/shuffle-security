@@ -22,6 +22,7 @@ import {
   SingulActionsPreview,
   useAppLookup,
 } from '@/Shuffle-MCPs';
+import { LandingNavbar } from '@/components/landing/LandingNavbar';
 import { API_CONFIG } from '@/Shuffle-MCPs/api';
 import { Box as MuiBox, TextField, Skeleton } from '@mui/material';
 
