@@ -152,9 +152,9 @@ When `apiKey` is set, status dots are populated: validated, configured, selected
 ### Backend / auth
 | Prop | Type | Default | Description |
 |---|---|---|---|
-| `authToken` | `string` | — | Required. Forwarded into the auth URL as `&auth=`. |
+| `apiKey` | `string` | — | Shuffle API key — canonical credential. Used as `Authorization: Bearer` on `/api/v1/apps/authentication` and `/api/v1/apps`, and forwarded into the auth handoff URL as `&auth=`. Enables status dots and merges private apps into search. |
+| `~~authToken~~` | `string` | — | **Deprecated.** Use `apiKey`. Only used for the auth handoff URL when `apiKey` is not set. Kept for backwards compatibility. |
 | `orgId` | `string` | — | Optional Shuffle organization ID. When set, every request the component issues (`/api/v1/apps/authentication`, `/api/v1/apps`) includes an `Org-Id: <orgId>` header, and the auth handoff URL gets `&org_id=<orgId>` appended. Omit to use the user's default org. |
-| `apiKey` | `string` | — | Bearer token. Enables status dots **and** loads the user's private apps from `/api/v1/apps`. |
 | `apiBaseUrl` | `string` | `"https://shuffler.io"` | API base URL |
 | `authPath` | `string` | `"/api/v1/apps/authentication"` | Authenticated-apps path |
 | `appAuthPath` | `string` | `"/appauth"` | OAuth handoff path |
