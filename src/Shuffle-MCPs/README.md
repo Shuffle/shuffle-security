@@ -146,15 +146,31 @@ When `apiKey` is set, the component also fetches the user's **private apps** fro
 | Prop | Type | Description |
 |---|---|---|
 | `authToken` | `string` | Required. Forwarded into the auth URL. |
+| `orgId` | `string` | Optional Shuffle organization ID. When set, every API call (`/api/v1/apps/authentication`, `/api/v1/apps`) is sent with an `Org-Id: <orgId>` header, and the auth URL gets `&org_id=<orgId>` appended. Default: not sent. |
 | `inline` | `boolean` | Inline results vs floating dropdown. |
 | `layout` | `'list' \| 'grid'` | Result layout. Default `'list'`. |
 | `initialFilterQuery` | `string` | Pre-filter without filling the input. |
-| `preventDefault` | `boolean` | Skip default `window.open(authUrl)` so you can handle selection. |
-| `onAppSelected` | `(detail) => void` | Fires on single-select pick. |
+| `preventDefault` | `boolean` | Skip the default click behavior (built-in drawer or `window.open(authUrl)`) so you can handle selection yourself. |
+| `onAppSelected` | `(detail) => void` | Fires on single-select pick. If provided, the built-in drawer is **not** opened — you take over. |
 | `multiSelect` | `boolean` | Allow selecting multiple apps. |
 | `apiKey` | `string` | Bearer token. Enables status dots and merges your private apps from `/api/v1/apps`. |
 | `showSourceFilter` | `boolean` | Toggle the All / Public / Private filter. Default `true`. |
 | `customStyles` | `CustomStyles` | Per-slot style overrides. |
+
+### Default click behavior
+
+When you do **not** pass `onAppSelected`, clicking an app opens a built-in right-side drawer that shows the app, its existing authentication entries (with Configured / Tested / Inactive chips), and a CTA that opens the Shuffle auth flow in a new tab. Pass `onAppSelected` to take over, or `preventDefault` to disable both.
+
+### Org scoping
+
+```tsx
+<ShuffleMCP
+  authToken={token}
+  apiKey={user.apiKey}
+  orgId={currentOrg.id}   // every request now scoped to this org
+/>
+```
+
 
 Full prop reference, framework setup (Next.js, Vue), styling slots, custom rendering, and publishing: [**LIBRARY.md**](./LIBRARY.md).
 
