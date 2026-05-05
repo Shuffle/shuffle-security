@@ -75,7 +75,7 @@ export default { components: { ShuffleMCP } /* ... */ };
 </Drawer>
 ```
 
-A full two-drawer reference (search → detail/auth) lives in [`src/components/shared/AppSearchDrawer.tsx`](../components/shared/AppSearchDrawer.tsx).
+A full two-drawer reference (search → detail/auth) lives in [`src/Shuffle-MCPs/AppSearchDrawer.tsx`](./AppSearchDrawer.tsx).
 
 ### Imperative search
 
