@@ -6168,7 +6168,7 @@ const IncidentDetailPage = () => {
                 </Typography>
               </Box>
               <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', display: 'block', mb: 1.5 }}>
-                Your question is posted to the Timeline as @AIAgent and the agent will reply there.
+                Your question is posted to the Timeline as @AIAgent and the agent will reply there. Observables, IOC matches, correlations, stakeholders and the top related incidents are auto-attached as context.
               </Typography>
               {!agentReadiness.isLoading && !agentReadiness.active && (
                 <Box
