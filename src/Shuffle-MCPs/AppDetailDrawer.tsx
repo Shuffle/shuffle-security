@@ -227,9 +227,50 @@ const SingulActionsPreview = ({ appName, categories }: { appName: string; catego
     }
   };
 
-  const handlePlay = () => {
-    if (!selected) return;
-    toast.info(`Run ${selected.name} — coming soon`);
+  const [playLoading, setPlayLoading] = useState(false);
+  const [playResult, setPlayResult] = useState<string | null>(null);
+
+  const handlePlay = async () => {
+    if (!curl || playLoading) return;
+    setPlayLoading(true);
+    setPlayResult(null);
+    try {
+      const res = await fetch(getApiUrl('/api/v1/apps/http/run'), {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+        body: JSON.stringify({
+          name: 'curl',
+          app_id: 'ebfe7d5c80000676588f86731db0a555',
+          environment: 'Cloud',
+          parameters: [{ name: 'statement', value: curl, schema: { type: 'string' } }],
+          app_name: 'http',
+          app_version: '1.4.0',
+        }),
+      });
+      const data = await res.json();
+      let output = data?.result;
+      if (typeof output === 'string') {
+        try { output = JSON.stringify(JSON.parse(output), null, 2); } catch {}
+      } else if (output != null) {
+        output = JSON.stringify(output, null, 2);
+      } else {
+        output = JSON.stringify(data, null, 2);
+      }
+      setPlayResult(output);
+      const parsed = (() => { try { return JSON.parse(data?.result || '{}'); } catch { return null; } })();
+      if (parsed?.success === false) {
+        toast.error(parsed.reason || 'Run failed');
+      } else {
+        toast.success(`Ran ${selected?.name || 'curl'}`);
+      }
+    } catch (err: any) {
+      const msg = err?.message || 'Run failed';
+      setPlayResult(msg);
+      toast.error(msg);
+    } finally {
+      setPlayLoading(false);
+    }
   };
 
   return (
