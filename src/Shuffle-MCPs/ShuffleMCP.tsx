@@ -7,7 +7,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, useImperativeHandle } from 'react';
 import { algoliasearch, SearchClient } from 'algoliasearch';
 import type { AlgoliaSearchApp, AppSelectedEvent, ShuffleMCPProps, AppAuthentication } from './shuffle-mcp.helpers';
-import SingulDrawer from './SingulDrawer';
+import AppDetailDrawer from './AppDetailDrawer';
 import './shuffle-mcp.css';
 
 const DEFAULT_ALGOLIA_APP_ID = 'JNSS5CFDZZ';
@@ -614,18 +614,15 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
         )}
       </div>
 
-      {/* Built-in app config drawer — shown when no custom onAppSelected handler is provided */}
+      {/* Built-in app config drawer — same drawer used by /incidents Add ingestion source */}
       {drawerApp && (
-        <SingulDrawer
-          app={drawerApp}
-          authenticatedApps={authenticatedApps}
-          apiKey={apiKey}
-          authToken={authToken}
-          orgId={orgId}
-          apiBaseUrl={apiBaseUrl}
-          appAuthPath={appAuthPath}
+        <AppDetailDrawer
+          open={true}
+          appName={drawerApp.name}
+          anchor="right"
+          width={560}
           onClose={() => setDrawerApp(null)}
-          onAuthRefresh={fetchAuthenticatedApps}
+          onRefresh={fetchAuthenticatedApps}
         />
       )}
     </div>
