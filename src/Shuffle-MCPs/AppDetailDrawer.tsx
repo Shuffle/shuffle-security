@@ -287,7 +287,7 @@ const SingulActionsPreview = ({
       const body = lang === 'python'
         ? {
             name: 'execute_python',
-            app_id: '',
+            app_id: '3e2bdf9d5069fe3f4746c29d68785a6a',
             environment: 'Cloud',
             parameters: [{ name: 'code', value: snippet, schema: { type: 'string' } }],
             app_name: 'Shuffle Tools',
