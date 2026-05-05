@@ -50,11 +50,10 @@ Follow us on Twitter at [@shuffleio](https://twitter.com/shuffleio).
 ```bash
 git clone https://github.com/shuffle/shuffle-security
 cd shuffle-security
-cp .env.example .env   # set DB_LOCATION, SHUFFLE_FILE_LOCATION, SHUFFLE_APP_HOTLOAD_LOCATION, SHUFFLE_OPENSEARCH_PASSWORD
 docker compose up -d
 ```
 
-Open **http://localhost:3002** (Shuffle Security UI). Backend on `:5001`, Shuffle Core UI on `:3001`.
+That is it. Open **http://localhost:3002**. Defaults in `.env` work out of the box — edit them only for production.
 
 Full guide: [shuffle/shuffle install docs](https://github.com/shuffle/shuffle/blob/master/.github/install-guide.md)
 
