@@ -728,6 +728,39 @@ const IncidentDetailPage = () => {
   const [askAgentSending, setAskAgentSending] = useState(false);
   const agentReadiness = useAgentReadiness();
 
+  // Builds the auto-attached context block sent with @AIAgent questions.
+  // Lives as a closure so it always reads the latest scoped state.
+  const buildAskAgentContext = (): string => {
+    try {
+      return buildAgentContextBlock({
+        incident: incident ? {
+          id: incident.id,
+          title: incident.title,
+          severity: (incident as any).severity,
+          status: (incident as any).status,
+          type: (incident as any).type,
+          source: (incident as any).source,
+          created: (incident as any).created,
+          assignee: (incident as any).assignee,
+        } : null,
+        observables: editedObservables || [],
+        enrichments: enrichments || [],
+        iocObservableKeys: iocObservableKeys instanceof Set ? iocObservableKeys : new Set<string>(),
+        correlationKeys: (visibleCorrelations || []).map((c: any) => String(c?.label || c?.key || '')).filter(Boolean),
+        stakeholders: (editedStakeholders || []) as any,
+        recentTimeline: (activity || [])
+          .filter((a: any) => a && a.type !== 'comment')
+          .slice(-12)
+          .map((a: any) => ({ type: a.type, user: a.user, content: a.content || a.details?.summary, timestamp: a.timestamp })),
+        mergeCandidates: mergeCandidates?.candidates || [],
+      });
+    } catch (e) {
+      console.warn('[AskAgent] Failed to build context block', e);
+      return '';
+    }
+  };
+
+
   // Persist the draft on every change. Empty string clears the saved draft so
   // we don't leak stale content between sessions.
   useEffect(() => {
