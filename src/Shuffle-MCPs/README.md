@@ -85,16 +85,22 @@ export default function App() {
 
 ## Recipes
 
-### Search → detail drawer
+### Search → detail drawer (default)
 
-The most common pattern. Set `preventDefault` and handle `onAppSelected` to chain into your own auth or detail UI:
+This is the **default** behavior — clicking an app opens the built-in side drawer with the app and its existing authentications. You don't need to wire anything up:
+
+```tsx
+<ShuffleMCP apiKey={user.apiKey} inline />
+```
+
+Want to take over with your own drawer instead? Pass `onAppSelected` (this disables the built-in drawer) and optionally `preventDefault` (to skip the legacy `window.open(authUrl)` fallback):
 
 ```tsx
 <ShuffleMCP
   apiKey={user.apiKey}
   inline
   preventDefault
-  onAppSelected={(d) => openDetailDrawer(d.app)}
+  onAppSelected={(d) => openMyOwnDrawer(d.app)}
 />
 ```
 
