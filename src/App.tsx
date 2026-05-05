@@ -49,6 +49,7 @@ import EntityReferencePage from '@/pages/dashboard/EntityReferencePage';
 import VulnerabilityDetailPage from '@/pages/dashboard/VulnerabilityDetailPage';
 
 import AppsPage from '@/pages/AppsPage';
+import ShuffleMcpTestPage from '@/pages/ShuffleMcpTestPage';
 import NotFound from './pages/NotFound';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { DemoProvider } from '@/context/DemoContext';
@@ -117,6 +118,7 @@ const ThemedApp = () => {
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/apps" element={<AppsPage />} />
+            <Route path="/shuffle-mcp-test" element={<ShuffleMcpTestPage />} />
             <Route path="/login" element={<AuthPage mode="login" />} />
             <Route path="/register" element={<AuthPage mode="register" />} />
             <Route path="/docs" element={<DocsPage />} />
