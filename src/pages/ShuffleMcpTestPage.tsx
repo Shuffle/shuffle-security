@@ -26,7 +26,6 @@ import {
   useAppLookup,
 } from '@/Shuffle-MCPs';
 import { LandingNavbar } from '@/components/landing/LandingNavbar';
-import { usePageMeta } from '@/hooks/usePageMeta';
 import { API_CONFIG } from '@/Shuffle-MCPs/api';
 import { Box as MuiBox, Skeleton } from '@mui/material';
 
@@ -355,12 +354,6 @@ function TryActionsDemo({ appName }: { appName: string }) {
 }
 
 const ShuffleMcpTestPage = () => {
-
-  usePageMeta({
-    title: 'Shuffle MCP Demo',
-    description: 'Try the Shuffle MCP demo. Search 3,000+ security app integrations and run live MCP actions in your browser.',
-    url: '/shuffle-mcp-demo',
-  });
   const [searchOpen, setSearchOpen] = useState(false);
   const [detailApp, setDetailApp] = useState<string | null>(null);
   const [authApp, setAuthApp] = useState('Gmail');
