@@ -76,32 +76,30 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
   const searchClient = useRef<SearchClient | null>(null);
 
   // Fetch authenticated apps when apiKey is provided
-  useEffect(() => {
-    if (apiKey) {
-      const fetchAuthenticatedApps = async () => {
-        try {
-          const response = await fetch(`${apiBaseUrl}${authPath}`, {
-            headers: {
-              'Authorization': `Bearer ${apiKey}`,
-              ...(orgId ? { 'Org-Id': orgId } : {}),
-            },
-          });
-          if (response.ok) {
-            const result = await response.json();
-            // Handle both { success: true, data: [...] } and direct array response
-            const authData = result.data || result;
-            if (Array.isArray(authData)) {
-              console.log('Loaded authenticated apps:', authData.length, authData.map(a => a.app?.name));
-              setAuthenticatedApps(authData);
-            }
-          }
-        } catch (error) {
-          console.error('Failed to fetch authenticated apps:', error);
+  const fetchAuthenticatedApps = useCallback(async () => {
+    if (!apiKey) return;
+    try {
+      const response = await fetch(`${apiBaseUrl}${authPath}`, {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          ...(orgId ? { 'Org-Id': orgId } : {}),
+        },
+      });
+      if (response.ok) {
+        const result = await response.json();
+        const authData = result.data || result;
+        if (Array.isArray(authData)) {
+          setAuthenticatedApps(authData);
         }
-      };
-      fetchAuthenticatedApps();
+      }
+    } catch (error) {
+      console.error('Failed to fetch authenticated apps:', error);
     }
-  }, [apiKey, apiBaseUrl, orgId]);
+  }, [apiKey, apiBaseUrl, authPath, orgId]);
+
+  useEffect(() => {
+    fetchAuthenticatedApps();
+  }, [fetchAuthenticatedApps]);
 
   // Fetch the user's private apps from /api/v1/apps when apiKey is provided.
   // These get merged into search results so users can find their own apps too.
