@@ -577,14 +577,19 @@ const DashboardPage = () => {
         if (res.ok) {
           const envs = await res.json();
           const now = Math.floor(Date.now() / 1000);
-          const running = Array.isArray(envs) && envs.some(
+          const runningEnvs = Array.isArray(envs) ? envs.filter(
             (e: any) => e.Type === 'onprem' && e.checkin > 0 && (now - e.checkin) < 300 && e.data_lake?.enabled === true
-          );
-          setHasRunningSensor(running);
-          const hasHost = Array.isArray(envs) && envs.some(
-            (e: any) => !e.archived && Array.isArray(e.sensor_hosts) && e.sensor_hosts.length > 0
-          );
-          setHasHostMonitor(hasHost);
+          ) : [];
+          setHasRunningSensor(runningEnvs.length > 0);
+          setRunningSensorCount(runningEnvs.length);
+          let hostCount = 0;
+          if (Array.isArray(envs)) {
+            for (const e of envs) {
+              if (!e.archived && Array.isArray(e.sensor_hosts)) hostCount += e.sensor_hosts.length;
+            }
+          }
+          setHasHostMonitor(hostCount > 0);
+          setHostMonitorCount(hostCount);
         } else {
           setHasRunningSensor(false);
           setHasHostMonitor(false);
