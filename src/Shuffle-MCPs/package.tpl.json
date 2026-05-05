@@ -53,7 +53,9 @@
     "framer-motion": ">=10",
     "sonner": ">=1",
     "lucide-react": ">=0.300.0",
-    "react-router-dom": ">=6"
+    "react-router-dom": ">=6",
+    "react-markdown": ">=8",
+    "remark-gfm": ">=3"
   },
   "peerDependenciesMeta": {
     "react-router-dom": { "optional": true }

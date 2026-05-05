@@ -38,6 +38,9 @@ export default defineConfig({
     'lucide-react',
     'react-router-dom',
     'react-router',
+    'react-markdown',
+    /^remark-/,
+    /^rehype-/,
   ],
   loader: {
     '.css': 'copy',

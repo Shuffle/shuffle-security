@@ -12,7 +12,13 @@
     "isolatedModules": true,
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
-    "lib": ["DOM", "DOM.Iterable", "ES2020"]
+    "lib": ["DOM", "DOM.Iterable", "ES2020"],
+    "baseUrl": "..",
+    "paths": {
+      "@/Shuffle-MCPs": ["Shuffle-MCPs/index.ts"],
+      "@/Shuffle-MCPs/*": ["Shuffle-MCPs/*"],
+      "@/assets/*": ["assets/*"]
+    }
   },
   "include": ["index.ts", "ShuffleMCP.tsx", "AppDetailDrawer.tsx", "shuffle-mcp.helpers.ts"],
   "exclude": ["dist", "node_modules"]
