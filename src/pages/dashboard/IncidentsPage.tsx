@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef, useSyncExternalStore } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useEntityLabel, useShowAutomation, useEntityText } from '@/hooks/useEntityLabel';
-import AppSearchDrawer from '@/components/shared/AppSearchDrawer';
+import AppSearchDrawer from '@/Shuffle-MCPs/AppSearchDrawer';
 import {
   Box,
   Card,

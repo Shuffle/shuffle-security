@@ -63,7 +63,7 @@ const deepParseJsonStrings = (obj: any, depth = 0): any => {
 import AgentIcon from '@/components/agent/AgentIcon';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 import { runAgent } from '@/services/agentRun';
-import AppSearchDrawer from '@/components/shared/AppSearchDrawer';
+import AppSearchDrawer from '@/Shuffle-MCPs/AppSearchDrawer';
 import type { AgentRun, AgentDecision } from '@/services/agentActivity';
 import AgentRunResultViewer, { parseRunResult } from '@/components/agent/AgentRunResultViewer';
 import AgentRunHeader from '@/components/agent/AgentRunHeader';

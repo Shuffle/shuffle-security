@@ -7,6 +7,7 @@
 export { ShuffleMCP, default } from './ShuffleMCP';
 export type { ShuffleMCPHandle } from './ShuffleMCP';
 export { default as AppDetailDrawer } from './AppDetailDrawer';
+export { default as AppSearchDrawer } from './AppSearchDrawer';
 export type {
   AlgoliaSearchApp,
   AppSelectedEvent,

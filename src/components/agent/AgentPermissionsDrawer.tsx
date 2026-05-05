@@ -43,7 +43,7 @@ import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import { runAgent } from '@/services/agentRun';
 import { deduplicateAuthApps, backfillAppImages } from '@/lib/utils';
-import AppSearchDrawer from '@/components/shared/AppSearchDrawer';
+import AppSearchDrawer from '@/Shuffle-MCPs/AppSearchDrawer';
 import { InputBase, Avatar } from '@mui/material';
 import type { AgentRun } from '@/services/agentActivity';
 import AgentRunResultViewer from '@/components/agent/AgentRunResultViewer';
