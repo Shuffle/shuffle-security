@@ -25,12 +25,12 @@ Follow us on Twitter at [@shuffleio](https://twitter.com/shuffleio).
   </tr>
   <tr>
     <td width="50%" align="center">
-      <img alt="Incident detail" src="https://github.com/user-attachments/assets/2c0056c2-646b-431b-a78d-7a2673fd1a3b" /><br/>
-      <sub><b>Investigate with full context</b><br/>Observables, correlations, IOCs and stakeholders in one place.</sub>
+      <img alt="Host monitors" src="https://github.com/user-attachments/assets/2c0056c2-646b-431b-a78d-7a2673fd1a3b" /><br/>
+      <sub><b>Set up host monitors</b><br/>For compliance, vulnerabilities and response across your fleet.</sub>
     </td>
     <td width="50%" align="center">
-      <img alt="AI Agent" src="https://github.com/user-attachments/assets/511cedd8-0a40-4e52-93cc-5638048a45dd" /><br/>
-      <sub><b>Let the AI agent do the heavy lifting</b><br/>Triage, enrich and respond — with approvals where it matters.</sub>
+      <img alt="Vulnerabilities" src="https://github.com/user-attachments/assets/511cedd8-0a40-4e52-93cc-5638048a45dd" /><br/>
+      <sub><b>Track and manage vulnerabilities</b><br/>Stay on top of risk over time across every asset and user.</sub>
     </td>
   </tr>
 </table>
