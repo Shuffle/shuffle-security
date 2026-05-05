@@ -19,7 +19,7 @@ Follow us on Twitter at [@shuffleio](https://twitter.com/shuffleio).
       <sub><b>Handle incidents from any source</b><br/>One unified view for alerts, cases and tickets across every tool.</sub>
     </td>
     <td width="50%" align="center">
-      <img alt="Automation pipeline" src="https://github.com/user-attachments/assets/e79ae7af-0db8-4d89-be62-706c223b198a" /><br/>
+      <img alt="Automation for Incidents" src="public/screenshots/automation-for-incidents.png" /><br/>
       <sub><b>Be in control of the automation</b><br/>Visual ingest and forward pipelines you can shape end-to-end.</sub>
     </td>
   </tr>
