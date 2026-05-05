@@ -292,8 +292,8 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
                 >
                   {/* Icon — rendered as link only when not in disable mode */}
                   <Box
-                    onClick={!onDisable ? () => appDetail.openApp(integration.name) : undefined}
-                    sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', cursor: !onDisable ? 'pointer' : 'default' }}
+                    onClick={!onDisable && appDetail ? () => appDetail.openApp(integration.name) : undefined}
+                    sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', cursor: !onDisable && appDetail ? 'pointer' : 'default' }}
                   >
                     {integration.icon && !failedImages.has(integration.id) ? (
                       <Box
