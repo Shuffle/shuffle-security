@@ -899,6 +899,7 @@ const DashboardPage = () => {
             </IconButton>
           )}
         </Box>
+        {!setupCollapsed && (<>
 
         {/* Progress bar */}
         <Box sx={{ mb: 2.5 }}>
