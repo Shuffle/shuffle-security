@@ -313,6 +313,7 @@ function AppNamePicker({ value, onChange }: { value: string; onChange: (v: strin
     </MuiBox>
   );
 }
+function AuthSectionDemo({ appName }: { appName: string }) {
   const lookup = useAppLookup(appName);
   const [open, setOpen] = useState(true);
   if (lookup.loading) return <Skeleton variant="rectangular" height={120} sx={{ borderRadius: 2 }} />;
