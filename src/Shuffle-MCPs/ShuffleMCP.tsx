@@ -620,7 +620,7 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
         const matchingAuths = authenticatedApps.filter(
           a => norm(a.app?.name || '') === norm(drawerApp.name)
         );
-        const drawerAuthUrl = `${apiBaseUrl}${appAuthPath}?app_id=${drawerApp.objectID}&auth=${authToken}&source=shuffle`;
+        const drawerAuthUrl = `${apiBaseUrl}${appAuthPath}?app_id=${drawerApp.objectID}&auth=${authToken}&source=shuffle${orgId ? `&org_id=${encodeURIComponent(orgId)}` : ''}`;
         return (
           <>
             <div className="singul-drawer-backdrop" onClick={() => setDrawerApp(null)} />
