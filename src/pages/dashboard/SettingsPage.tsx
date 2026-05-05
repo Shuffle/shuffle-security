@@ -13,6 +13,7 @@ import {
 import { getApiUrl, getAuthHeader, API_CONFIG } from '@/Shuffle-MCPs/api';
 import { useAuth } from '@/context/AuthContext';
 import { trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 // Settings types
 
@@ -27,6 +28,12 @@ interface Settings {
 }
 
 const SettingsPage = () => {
+
+  usePageMeta({
+    title: 'Settings',
+    description: 'User and account settings for Shuffle Security.',
+    url: '/settings',
+  });
   const [settings, setSettings] = useState<Settings | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');

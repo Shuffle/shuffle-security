@@ -79,6 +79,7 @@ const [appName, setAppName] = useState<string | null>(null);
 
 const SNIPPET_AUTH_SECTION = `import { useState } from 'react';
 import { AppAuthSection, useAppLookup } from '@shuffleio/shuffle-mcps';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 // Pass any app name — the hook resolves icon, id, categories, auth entries.
 const lookup = useAppLookup('Gmail');
@@ -289,6 +290,12 @@ function TryActionsDemo({ appName }: { appName: string }) {
 }
 
 const ShuffleMcpTestPage = () => {
+
+  usePageMeta({
+    title: 'Shuffle MCP Demo',
+    description: 'Try the Shuffle MCP demo. Search 3,000+ security app integrations and run live MCP actions in your browser.',
+    url: '/shuffle-mcp-demo',
+  });
   const [searchOpen, setSearchOpen] = useState(false);
   const [detailApp, setDetailApp] = useState<string | null>(null);
   const [authApp, setAuthApp] = useState('Gmail');

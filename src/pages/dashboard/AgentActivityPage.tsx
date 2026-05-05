@@ -28,6 +28,7 @@ import AgentPermissionsDrawer from '@/components/agent/AgentPermissionsDrawer';
 import AgentActionDrawer from '@/components/agent/AgentActionDrawer';
 import { useAgentPermissions } from '@/hooks/useAgentPermissions';
 import type { AgentRun } from '@/services/agentActivity';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 const STATUS_FILTERS = [
   { label: 'All', value: '' },
@@ -37,6 +38,12 @@ const STATUS_FILTERS = [
 ];
 
 const AgentActivityPage = () => {
+
+  usePageMeta({
+    title: 'AI Agent activity',
+    description: 'Monitor AI agent runs, decisions, and automated incident response activity.',
+    url: '/agent',
+  });
   const [searchParams] = useSearchParams();
   const {
     runs,

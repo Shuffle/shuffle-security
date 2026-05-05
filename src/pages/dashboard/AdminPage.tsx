@@ -21,6 +21,7 @@ import { useAuth } from '@/context/AuthContext';
 import { getRegionFlag } from '@/lib/regionFlag';
 import UsersPage from './UsersPage';
 import TenantManagement from '@/components/tenants/TenantManagement';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 const REGION_OPTIONS = [
   { value: '', label: 'Default (UK)' },
@@ -41,6 +42,12 @@ interface OrgDetails {
 }
 
 const AdminPage = () => {
+
+  usePageMeta({
+    title: 'Admin',
+    description: 'Admin panel for managing users, tenants, and organization-wide settings.',
+    url: '/admin',
+  });
   const location = useLocation();
   const navigate = useNavigate();
   const { userInfo, refreshUserInfo } = useAuth();

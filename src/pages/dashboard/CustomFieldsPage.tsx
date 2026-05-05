@@ -31,6 +31,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import { useDatastore } from '@/hooks/useDatastore';
 
 import { DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 const CATEGORY = DATASTORE_CATEGORIES.CUSTOM_FIELDS;
 
@@ -54,6 +55,12 @@ const fieldTypes: { value: FieldType; label: string }[] = [
 ];
 
 const CustomFieldsPage = () => {
+
+  usePageMeta({
+    title: 'Custom fields',
+    description: 'Define custom fields for incidents and cases.',
+    url: '/incidents/custom-fields',
+  });
   const { items, isLoading, error, fetchItems, addItem, removeItem } = useDatastore({ category: CATEGORY });
   const [fields, setFields] = useState<CustomField[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);

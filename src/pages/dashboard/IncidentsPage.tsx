@@ -149,6 +149,7 @@ type SortKey = 'title' | 'severity' | 'status' | 'assignee' | 'created' | 'edite
 
 // Status and severity colors now imported from shared config
 import { statusConfig, severityColors, severityOrder } from '@/config/incidentConfig';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 /**
  * Normalize any timestamp (Unix seconds, ms, µs, ns, ISO string, numeric string) to ms epoch.
@@ -361,6 +362,12 @@ interface Filters {
 }
 
 const IncidentsPage = () => {
+
+  usePageMeta({
+    title: 'Incidents',
+    description: 'Manage and triage security incidents, alerts, and cases in Shuffle Security.',
+    url: '/incidents',
+  });
   const { plural: entityPlural, singular: entitySingular, basePath: entityBasePath } = useEntityLabel();
   const t = useEntityText();
   const showAutomation = useShowAutomation();

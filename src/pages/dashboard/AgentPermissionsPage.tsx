@@ -30,6 +30,7 @@ import {
   ShieldOff,
 } from 'lucide-react';
 import { useAgentPermissions, RiskLevel, AgentPermissionCategory } from '@/hooks/useAgentPermissions';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   Radar: <Radar size={20} />,
@@ -62,6 +63,12 @@ const RISK_CONFIG: Record<RiskLevel, { label: string; color: string; bg: string;
 const AGENT_CONFIG_KEY = 'agent_local_config';
 
 const AgentPermissionsPage = () => {
+
+  usePageMeta({
+    title: 'AI Agent permissions',
+    description: 'Configure what your AI agent is allowed to do across incidents and integrations.',
+    url: '/agent/permissions',
+  });
   const {
     categories,
     isLoading,

@@ -35,6 +35,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 import { getApiUrl, getAuthHeader, API_CONFIG } from '@/Shuffle-MCPs/api';
 import { Link } from 'react-router-dom';
 import WebhookStatusBanner from '@/components/detection/WebhookStatusBanner';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 const SIGMA_NAMESPACE = 'sigma';
 
@@ -189,6 +190,12 @@ falsepositives:
 `;
 
 const RulesPage = () => {
+
+  usePageMeta({
+    title: 'Sigma rules',
+    description: 'Manage Sigma detection rules with AI-assisted authoring.',
+    url: '/detection/sigma',
+  });
   const [files, setFiles] = useState<ShuffleFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');

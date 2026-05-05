@@ -12,6 +12,7 @@ import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { useAuth } from '@/context/AuthContext';
 import { OnCallScheduleManager, type OnCallUser } from '@/components/users/OnCallScheduleManager';
 import { ScheduleHealthBanner } from '@/components/users/ScheduleHealthBanner';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 interface User extends OnCallUser {
   orgs?: string[];
@@ -19,6 +20,12 @@ interface User extends OnCallUser {
 }
 
 const UsersPage = ({ embedded }: { embedded?: boolean }) => {
+
+  usePageMeta({
+    title: 'Users',
+    description: 'Manage users, roles, and access in your organization.',
+    url: '/users',
+  });
   const [activeTab, setActiveTab] = useState(0);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);

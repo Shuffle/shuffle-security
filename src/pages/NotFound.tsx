@@ -3,8 +3,15 @@ import { useEffect } from "react";
 import { ArrowRight } from "lucide-react";
 import AgentIcon from "@/Shuffle-MCPs/AgentIcon";
 import shuffleInfraLogo from "@/assets/shuffle-infrastructure-logo.png";
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 const NotFound = () => {
+
+  usePageMeta({
+    title: 'Page not found',
+    description: 'The page you are looking for does not exist on Shuffle Security.',
+    url: '/404',
+  });
   const location = useLocation();
 
   useEffect(() => {

@@ -38,12 +38,19 @@ import { useIOCTypes } from '@/hooks/useIOCTypes';
 import { useEnrichmentStatus } from '@/hooks/useEnrichmentStatus';
 import { toast } from 'sonner';
 import ThreatIntelAutomationBanner from '@/components/incidents/ThreatIntelAutomationBanner';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 // Datastore keys for onboarding config
 const ONBOARDING_CONFIG_CATEGORY = 'shuffle-security_onboarding';
 const AUTOMATION_CONFIG_KEY = 'automation_config';
 
 const ThreatFeedsPage = () => {
+
+  usePageMeta({
+    title: 'Threat feeds',
+    description: 'Manage threat intelligence feeds and IOC sources, including MISP integrations.',
+    url: '/detection/threat-feeds',
+  });
   const { threatFeeds: feeds, isLoading, saveFeed, deleteFeed, toggleFeed, initializeDefaults, refetch } = useThreatFeeds();
   const { iocTypes } = useIOCTypes();
   const enrichmentStatus = useEnrichmentStatus();

@@ -190,6 +190,7 @@ interface DisplayIncident {
 
 // Status and severity colors now imported from shared config
 import { statusConfig, severityColors, getOCSFStatus } from '@/config/incidentConfig';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 /**
  * Normalize any timestamp (Unix seconds, ms, µs, ns, ISO string, numeric string) to ms epoch.
@@ -545,6 +546,11 @@ const Section = forwardRef<HTMLDivElement, {
 Section.displayName = 'Section';
 
 const IncidentDetailPage = () => {
+
+  usePageMeta({
+    title: 'Incident',
+    description: 'Incident details, observables, correlations, timeline, and AI agent triage.',
+  });
   const { id: rawId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();

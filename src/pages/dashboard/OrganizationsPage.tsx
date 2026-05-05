@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { useAuth } from '@/context/AuthContext';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 interface Organization {
   id: string;
@@ -29,6 +30,12 @@ interface Organization {
 }
 
 const OrganizationsPage = () => {
+
+  usePageMeta({
+    title: 'Organizations',
+    description: 'Manage organizations and tenant access in Shuffle Security.',
+    url: '/organizations',
+  });
   const [orgs, setOrgs] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');

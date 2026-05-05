@@ -44,6 +44,7 @@ import { DEFAULT_IOC_TYPES, IOCType, IOC_CATEGORIES, IOCCategory, DEFAULT_ENABLE
 import { DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
 import { toast } from 'sonner';
 import ThreatIntelAutomationBanner from '@/components/incidents/ThreatIntelAutomationBanner';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 const CATEGORY = DATASTORE_CATEGORIES.IOCS;
 
@@ -54,6 +55,12 @@ const getDefaultIOCTypes = (): IOCType[] =>
   }));
 
 const IOCTypesPage = () => {
+
+  usePageMeta({
+    title: 'IOC types',
+    description: 'Configure indicator of compromise (IOC) types and enrichment priorities.',
+    url: '/detection/ioc-types',
+  });
   const enrichmentStatus = useEnrichmentStatus();
   const { items, isLoading, error, fetchItems, addItem, removeItem } = useDatastore({ category: CATEGORY });
   const [iocTypes, setIocTypes] = useState<IOCType[]>([]);

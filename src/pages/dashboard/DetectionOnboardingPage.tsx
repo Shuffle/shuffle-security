@@ -39,6 +39,7 @@ import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import azureLogo from '@/assets/azure-logo.png';
 import gcpLogo from '@/assets/gcp-logo.png';
 import awsLogo from '@/assets/aws-logo.png';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 // Cloud provider icons with forwardRef for MUI compatibility
 const GCPIcon = forwardRef<HTMLImageElement, React.ImgHTMLAttributes<HTMLImageElement>>((props, ref) => (
@@ -89,6 +90,12 @@ interface Environment {
 const LAST_SENSOR_KEY = 'shuffle_last_sensor_id';
 
 const DetectionOnboardingPage = () => {
+
+  usePageMeta({
+    title: 'Detection',
+    description: 'Configure detection rules, pipelines, and threat detection sources.',
+    url: '/detection',
+  });
   const [environments, setEnvironments] = useState<Environment[]>([]);
   const [selectedEnvId, setSelectedEnvId] = useState<string>('');
   const [newEnvName, setNewEnvName] = useState('');

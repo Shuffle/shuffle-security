@@ -24,6 +24,7 @@ import {
 import { findIngestTicketsWorkflow, findForwardTicketsWorkflow, extractWorkflowAppNames } from '@/Shuffle-MCPs/ingestionDetection';
 import { trackOnboardingStep, trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
 import { refreshAllIntegrationStatus } from '@/Shuffle-MCPs/IntegrationStatus';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 // Datastore category for onboarding config (using shuffle-security_ prefix for consistency)
 const ONBOARDING_CONFIG_CATEGORY = 'shuffle-security_onboarding';
@@ -82,6 +83,12 @@ const ALL_STEPS = [
 ];
 
 const OnboardingPage = () => {
+
+  usePageMeta({
+    title: 'Onboarding',
+    description: 'Set up your Shuffle Security workspace. Connect data sources, authenticate apps, and enable automation.',
+    url: '/onboarding',
+  });
   const navigate = useNavigate();
   const location = useLocation();
   

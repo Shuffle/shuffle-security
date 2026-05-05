@@ -20,6 +20,7 @@ import { SIDEBAR_NAV } from '@/config/sidebarNav';
 import { TaskStatusesEditor } from '@/components/settings/TaskStatusesEditor';
 import { SlaEditor } from '@/components/settings/SlaEditor';
 import { useAuth } from '@/context/AuthContext';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 const TerminologySelector = () => {
   const { value } = useEntityPreference();
@@ -167,6 +168,12 @@ const SidebarTabsSelector = () => {
 };
 
 const OrgPreferencesPage = () => {
+
+  usePageMeta({
+    title: 'Organization preferences',
+    description: 'Configure terminology, sidebar visibility, SLA targets, and other organization-wide preferences.',
+    url: '/preferences',
+  });
   const showAutomation = useShowAutomation();
 
   return (

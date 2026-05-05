@@ -32,6 +32,7 @@ import { useCaseTemplates, CaseTemplate, TemplateTask } from '@/hooks/useCaseTem
 import { TaskEditor } from '@/components/incidents/TaskEditor';
 import { IncidentTask, taskCategories } from '@/components/incidents/CreateIncidentDialog';
 import { toast } from 'sonner';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 const severityColors: Record<string, string> = {
   critical: '#ef4444',
@@ -42,6 +43,12 @@ const severityColors: Record<string, string> = {
 };
 
 const TemplatesPage = () => {
+
+  usePageMeta({
+    title: 'Templates',
+    description: 'Browse incident response and automation templates.',
+    url: '/templates',
+  });
   const { 
     templates, 
     isLoading, 

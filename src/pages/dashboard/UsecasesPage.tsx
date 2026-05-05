@@ -1054,6 +1054,7 @@ function useApi() {
 // ============================================================================
 // Real sonner toast — visible UI feedback for success/error.
 import { toast as sonnerToast } from 'sonner';
+import { usePageMeta } from '@/hooks/usePageMeta';
 const toast = {
   success: (msg: string, opts?: { duration?: number; description?: string }) => {
     if (typeof window !== 'undefined') console.info('[toast]', msg);
@@ -3191,6 +3192,11 @@ function UsecaseCard({
  * an internal `/api/v1/getinfo` probe).
  */
 export default function UsecasesPage(props: UsecasesPageProps = {}) {
+  usePageMeta({
+    title: 'Usecases',
+    description: 'Browse and configure security automation usecases and data flows.',
+    url: '/usecases',
+  });
   useInjectScopedStyles();
   const { globalUrl, userdata, isLoaded, isLoggedIn, theme = 'system' } = props;
 

@@ -59,6 +59,7 @@ import { DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
 import { useVulnerabilities } from '@/hooks/useVulnerabilities';
 import { DashboardOverview } from '@/components/dashboard/DashboardOverview';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 // ── Setup Step ─────────────────────────────────────────────────────────────────
 
@@ -516,6 +517,12 @@ const NotificationRow = ({ notification, entityBasePath, onApprove, onQuickView,
 const ITEMS_PER_PAGE = 10;
 
 const DashboardPage = () => {
+
+  usePageMeta({
+    title: 'Dashboard',
+    description: 'Your Shuffle Security overview: setup progress, notifications, and key incident metrics.',
+    url: '/dashboard',
+  });
   const navigate = useNavigate();
   const { notifications, isLoading, refresh: refreshNotifications } = useAgentNotifications();
   const { singular: entitySingular, basePath: entityBasePath } = useEntityPreference();

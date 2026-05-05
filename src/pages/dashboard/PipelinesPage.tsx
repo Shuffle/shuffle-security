@@ -38,6 +38,7 @@ import { getApiUrl, getAuthHeader, API_CONFIG } from '@/Shuffle-MCPs/api';
 import { Link } from 'react-router-dom';
 import { askAI } from '@/services/ai';
 import WebhookStatusBanner from '@/components/detection/WebhookStatusBanner';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 interface Environment {
   id: string;
@@ -200,6 +201,12 @@ const DEFAULT_PIPELINES: DefaultPipeline[] = [
 ];
 
 const PipelinesPage = () => {
+
+  usePageMeta({
+    title: 'Pipelines',
+    description: 'Configure Tenzir detection pipelines and data ingestion.',
+    url: '/detection/pipelines',
+  });
   const [environments, setEnvironments] = useState<Environment[]>([]);
   const [pipelines, setPipelines] = useState<Pipeline[]>([]);
   const [isLoading, setIsLoading] = useState(true);

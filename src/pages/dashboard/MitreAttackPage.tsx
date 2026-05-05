@@ -21,8 +21,15 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { toast } from 'sonner';
 import { useMitreAttack } from '@/hooks/useMitreAttack';
 import { Skeleton } from '@/components/ui/skeleton';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 const MitreAttackPage = () => {
+
+  usePageMeta({
+    title: 'MITRE ATT&CK',
+    description: 'Explore the MITRE ATT&CK framework coverage in Shuffle Security.',
+    url: '/detection/mitre',
+  });
   const [searchParams, setSearchParams] = useSearchParams();
   const {
     tactics,
