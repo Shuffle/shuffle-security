@@ -168,7 +168,7 @@ const ThemedApp = () => {
               <Route path="/incidents/ioc-types" element={<Navigate to="/detection/ioc-types" replace />} />
               <Route path="/incidents/threat-feeds" element={<Navigate to="/detection/threat-feeds" replace />} />
               <Route path="/incidents/custom-fields" element={<CustomFieldsPage />} />
-              <Route path="/incidents/response-actions" element={<ResponseActionsPage />} />
+              <Route path="/incidents/response-actions" element={<SupportOnly><ResponseActionsPage /></SupportOnly>} />
               <Route path="/agent" element={<AgentActivityPage />} />
               <Route path="/infrastructure" element={<InfrastructurePage />} />
               <Route path="/infrastructure/flows/:flowId" element={<DataFlowDetailPage />} />
