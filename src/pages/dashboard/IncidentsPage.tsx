@@ -1349,8 +1349,32 @@ const IncidentsPage = () => {
       return sortDirection === 'asc' ? comparison : -comparison;
     });
 
+    // In demo mode, the focus phishing incident can occasionally be seeded
+    // more than once if a previous "Force generate" failed mid-flight or a
+    // background re-seed races the cleanup. Visually collapse those into a
+    // single row so the user always sees exactly ONE "Phishing email
+    // reported by Diego Ruiz" — the newest copy wins.
+    if (demoActive) {
+      let kept = false;
+      const deduped: typeof sorted = [];
+      // Walk newest-first regardless of current sort, then re-emit in
+      // original order so we don't disturb the user's chosen sort.
+      const newestFirst = [...sorted].sort((a, b) => (b.createdTs || 0) - (a.createdTs || 0));
+      const dropIds = new Set<string>();
+      for (const inc of newestFirst) {
+        if (/Phishing email reported by Diego Ruiz/i.test(inc.title || '')) {
+          if (kept) dropIds.add(inc.id);
+          else kept = true;
+        }
+      }
+      for (const inc of sorted) {
+        if (!dropIds.has(inc.id)) deduped.push(inc);
+      }
+      return deduped;
+    }
+
     return sorted;
-  }, [filteredIncidents, sortBy, sortDirection]);
+  }, [filteredIncidents, sortBy, sortDirection, demoActive]);
 
   // Determine if all selected incidents are already resolved
   const selectedIncidentsList = useMemo(() => incidents.filter(i => selectedIds.has(i.id)), [incidents, selectedIds]);
