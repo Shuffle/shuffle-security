@@ -732,7 +732,7 @@ const DashboardPage = () => {
     steps.sort((a, b) => a.priority - b.priority);
 
     return steps;
-  }, [authenticatedApps, workflows, hasRunningSensor]);
+  }, [authenticatedApps, workflows, hasRunningSensor, hasHostMonitor]);
 
   const handleIgnoreStep = (id: string) => {
     const next = [...ignoredSteps, id];
