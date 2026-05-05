@@ -668,7 +668,7 @@ const DashboardPage = () => {
         title: 'Set up host monitors',
         description: 'Deploy lightweight host monitors to check compliance, encryption, and posture.',
         icon: <Monitor size={20} />,
-        status: 'not-started',
+        status: hasHostMonitor === true ? 'complete' : 'not-started',
         ctaLabel: 'Set Up',
         ctaPath: '/monitors?add_host=true',
         priority: 1,
