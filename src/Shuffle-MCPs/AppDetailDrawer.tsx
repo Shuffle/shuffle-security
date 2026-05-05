@@ -84,6 +84,95 @@ const CollapsibleDescription = ({ description }: { description: string }) => {
   );
 };
 
+/** Singul actions catalog keyed by lowercase category fragment */
+const SINGUL_ACTIONS: Record<string, string[]> = {
+  'threat': ['get_ioc', 'search_indicator', 'enrich_hash', 'lookup_domain'],
+  'intel': ['get_ioc', 'search_indicator', 'enrich_hash', 'lookup_domain'],
+  'siem': ['search_logs', 'list_alerts', 'create_detection', 'close_alert'],
+  'email': ['list_emails', 'send_email', 'get_attachments', 'search_messages'],
+  'communication': ['send_message', 'list_channels', 'create_channel', 'get_user'],
+  'edr': ['list_detections', 'isolate_host', 'get_processes', 'run_script'],
+  'endpoint': ['list_detections', 'isolate_host', 'get_processes', 'run_script'],
+  'cloud': ['list_instances', 'get_iam_policies', 'list_buckets', 'get_logs'],
+  'ticket': ['create_ticket', 'list_tickets', 'update_ticket', 'close_ticket'],
+  'itsm': ['create_ticket', 'list_tickets', 'update_ticket', 'close_ticket'],
+  'case': ['create_case', 'list_cases', 'update_case', 'close_case'],
+  'vulnerab': ['list_vulnerabilities', 'scan_asset', 'get_cve', 'remediate'],
+  'network': ['list_rules', 'block_ip', 'get_traffic', 'create_rule'],
+  'identity': ['list_users', 'disable_user', 'reset_password', 'get_groups'],
+};
+
+function getSingulActions(categories?: string[]): string[] {
+  if (!categories || categories.length === 0) return [];
+  const matched: string[] = [];
+  for (const cat of categories) {
+    const normalized = cat.toLowerCase();
+    for (const [key, actions] of Object.entries(SINGUL_ACTIONS)) {
+      if (normalized.includes(key) || key.includes(normalized)) {
+        matched.push(...actions);
+      }
+    }
+  }
+  return [...new Set(matched)].slice(0, 8);
+}
+
+const SingulActionsPreview = ({ categories }: { categories?: string[] }) => {
+  const actions = useMemo(() => getSingulActions(categories), [categories]);
+  const isDisabled = actions.length === 0;
+
+  return (
+    <Box sx={{ mb: 3, opacity: 0.55, pointerEvents: 'none' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+        <Typography sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, fontSize: '0.95rem' }}>
+          Try Singul actions
+        </Typography>
+        <Chip
+          label="Coming soon"
+          size="small"
+          sx={{ height: 18, fontSize: '0.6rem', fontWeight: 500, backgroundColor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }}
+        />
+      </Box>
+      <Box
+        sx={{
+          p: 2,
+          borderRadius: 2,
+          border: '1px dashed hsl(var(--border))',
+          backgroundColor: 'hsl(var(--muted) / 0.3)',
+          minHeight: 72,
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 0.75,
+          alignItems: isDisabled ? 'center' : 'flex-start',
+          justifyContent: isDisabled ? 'center' : 'flex-start',
+        }}
+      >
+        {isDisabled ? (
+          <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', fontStyle: 'italic' }}>
+            No category detected for this app
+          </Typography>
+        ) : (
+          actions.map(action => (
+            <Chip
+              key={action}
+              label={action}
+              size="small"
+              sx={{
+                height: 24,
+                fontSize: '0.7rem',
+                fontFamily: "'JetBrains Mono', monospace",
+                fontWeight: 500,
+                backgroundColor: 'hsl(var(--card))',
+                color: 'hsl(var(--foreground))',
+                border: '1px solid hsl(var(--border))',
+              }}
+            />
+          ))
+        )}
+      </Box>
+    </Box>
+  );
+};
+
 interface AppDetailDrawerProps {
   open: boolean;
   onClose: () => void;
