@@ -18,10 +18,10 @@ services:
   backend:
     image: ghcr.io/shuffle/shuffle-backend:latest
     container_name: shuffle-backend
-    hostname: ${BACKEND_HOSTNAME}
+    hostname: ${BACKEND_HOSTNAME:-shuffle-backend}
     # Here for debugging:
     ports:
-      - "${BACKEND_PORT}:5001"
+      - "${BACKEND_PORT:-5001}:5001"
     networks:
       - shuffle
     volumes:
