@@ -83,17 +83,32 @@ export default function App() {
 }
 ```
 
-## Recipes
+## The three components
 
-### Search → detail drawer (default)
+The library exports three React components — use one, two, or all three. They share state, so you can mix-and-match.
 
-This is the **default** behavior — clicking an app opens the built-in side drawer with the app and its existing authentications. You don't need to wire anything up:
+| Component | What it does | Live demo |
+|---|---|---|
+| [`<ShuffleMCP />`](#1-shufflemcp--inline-search) | Inline search box that merges Algolia's 3,000+ public app catalog with the current user's private apps | [/shuffle-mcp-test §1](https://security.shuffler.io/shuffle-mcp-test) |
+| [`<AppSearchDrawer />`](#2-appsearchdrawer--full-search-drawer) | Right-side drawer wrapping `<ShuffleMCP />` plus a "Your apps" status row. This is the exact "Add Ingestion Source" drawer used in production | [/shuffle-mcp-test §2](https://security.shuffler.io/shuffle-mcp-test) |
+| [`<AppDetailDrawer />`](#3-appdetaildrawer--single-app-config) | Right-side drawer for a single app: list/edit/test authentications and try the MCP `tools/call` endpoint inline | [/shuffle-mcp-test §3](https://security.shuffler.io/shuffle-mcp-test) |
+
+### 1. `<ShuffleMCP />` — inline search
+
+Drop-in search component. By default, clicking a result opens `<AppDetailDrawer />` automatically.
 
 ```tsx
-<ShuffleMCP apiKey={user.apiKey} inline />
+import { ShuffleMCP } from 'shuffle-mcps';
+
+<ShuffleMCP
+  apiKey={user.apiKey}
+  inline
+  layout="grid"
+  gridColumns={3}
+/>
 ```
 
-Want to take over selection yourself (e.g. open your own drawer, route to a detail page, kick off a custom auth flow)? Pass `onAppSelected` — that disables the built-in drawer. Add `preventDefault` to also skip the legacy `window.open(authUrl)` fallback:
+Take over selection yourself (open your own modal, route to a detail page, kick off a custom auth flow):
 
 ```tsx
 <ShuffleMCP
@@ -101,13 +116,83 @@ Want to take over selection yourself (e.g. open your own drawer, route to a deta
   inline
   preventDefault
   onAppSelected={({ app, authUrl }) => {
-    // do whatever you want — navigate, open a modal, start auth, etc.
     navigate(`/integrations/${app.objectID}`);
   }}
 />
 ```
 
-Reference implementation: [`src/components/shared/AppSearchDrawer.tsx`](../components/shared/AppSearchDrawer.tsx).
+### 2. `<AppSearchDrawer />` — full search drawer
+
+The complete "Add Ingestion Source" experience: header, your authenticated apps strip, search, and the Shuffle Pipelines banner. Clicking an app opens `<AppDetailDrawer />` for auth + MCP testing.
+
+```tsx
+import { useState } from 'react';
+import { AppSearchDrawer } from 'shuffle-mcps';
+
+const [open, setOpen] = useState(false);
+
+<>
+  <button onClick={() => setOpen(true)}>Add integration</button>
+
+  <AppSearchDrawer
+    open={open}
+    onClose={() => setOpen(false)}
+    title="Add Ingestion Source"
+    subtitle="Search and authenticate a tool to ingest incidents from"
+  />
+</>
+```
+
+Useful props:
+
+| Prop | Type | Description |
+|---|---|---|
+| `open` | `boolean` | Controlled open state |
+| `onClose` | `() => void` | Called on close |
+| `title` / `subtitle` | `string` | Header copy |
+| `anchor` | `'left' \| 'right'` | Default `'right'` |
+| `width` | `number` | Drawer width in px. Default `560` |
+| `pinnedApps` | `Array<{ name, image_url, ... }>` | Apps pinned to the top of search results |
+| `onQuickSelect` | `(app) => void` | Skip the detail drawer and call this directly |
+| `onSelectOverride` | `(app) => boolean` | Intercept selection — return `true` to prevent default |
+| `priorityCategory` | `string` | Sort matching apps to the top of the "Your apps" strip |
+| `showPipelinesBanner` | `boolean` | Show the Shuffle Pipelines CTA |
+
+### 3. `<AppDetailDrawer />` — single-app config
+
+The right-side drawer that shows everything about one app: existing auth entries (with Configured / Tested / Inactive chips), an inline form to add or edit credentials, a **Test connection** button, an **Activate / Deactivate** toggle, and a built-in MCP `tools/call` chat to try it without leaving the page.
+
+```tsx
+import { useState } from 'react';
+import { AppDetailDrawer } from 'shuffle-mcps';
+
+const [appName, setAppName] = useState<string | null>(null);
+
+<>
+  <button onClick={() => setAppName('Gmail')}>Configure Gmail</button>
+
+  <AppDetailDrawer
+    open={appName !== null}
+    onClose={() => setAppName(null)}
+    appName={appName}
+  />
+</>
+```
+
+Useful props:
+
+| Prop | Type | Description |
+|---|---|---|
+| `open` | `boolean` | Controlled open state |
+| `onClose` | `() => void` | Called on close |
+| `appName` | `string \| null` | The app to load. Resolved against Algolia by name |
+| `anchor` | `'left' \| 'right'` | Default `'right'` |
+| `width` | `number` | Drawer width in px. Default `520` |
+| `onRefresh` | `() => void` | Called after a successful save/test, so the parent can re-fetch |
+| `onAddToCanvas` | `(info) => void` | Replaces the **Activate** CTA with **+ Add** — used by the workflow editor |
+| `isAuthenticated` | `boolean` | Whether the current user is signed in. Default `true` |
+
+Reference implementation in production: [`src/Shuffle-MCPs/AppSearchDrawer.tsx`](./AppSearchDrawer.tsx) and [`AppDetailDrawer.tsx`](./AppDetailDrawer.tsx).
 
 ### Predefined search
 
