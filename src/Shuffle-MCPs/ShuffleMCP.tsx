@@ -20,6 +20,7 @@ export interface ShuffleMCPHandle {
 
 export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
   authToken,
+  orgId,
   placeholder = 'Search apps...',
   layout = 'list',
   gridColumns = 3,
@@ -81,6 +82,7 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
           const response = await fetch(`${apiBaseUrl}${authPath}`, {
             headers: {
               'Authorization': `Bearer ${apiKey}`,
+              ...(orgId ? { 'Org-Id': orgId } : {}),
             },
           });
           if (response.ok) {
@@ -98,7 +100,7 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
       };
       fetchAuthenticatedApps();
     }
-  }, [apiKey, apiBaseUrl]);
+  }, [apiKey, apiBaseUrl, orgId]);
 
   // Fetch the user's private apps from /api/v1/apps when apiKey is provided.
   // These get merged into search results so users can find their own apps too.
@@ -110,7 +112,10 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
     const fetchPrivateApps = async () => {
       try {
         const response = await fetch(`${apiBaseUrl}${privateAppsPath}`, {
-          headers: { 'Authorization': `Bearer ${apiKey}` },
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            ...(orgId ? { 'Org-Id': orgId } : {}),
+          },
           credentials: 'include',
         });
         if (!response.ok) return;
@@ -143,7 +148,7 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
       }
     };
     fetchPrivateApps();
-  }, [apiKey, apiBaseUrl, privateAppsPath, disablePrivateApps]);
+  }, [apiKey, apiBaseUrl, privateAppsPath, disablePrivateApps, orgId]);
 
   // Auto-select validated apps when they're loaded (validated = tests ran successfully)
   useEffect(() => {
@@ -293,7 +298,7 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
 
   // Handle app selection
   const selectApp = useCallback((app: AlgoliaSearchApp) => {
-    const authUrl = `${apiBaseUrl}${appAuthPath}?app_id=${app.objectID}&auth=${authToken}&source=shuffle`;
+    const authUrl = `${apiBaseUrl}${appAuthPath}?app_id=${app.objectID}&auth=${authToken}&source=shuffle${orgId ? `&org_id=${encodeURIComponent(orgId)}` : ''}`;
 
     if (multiSelect) {
       const isAlreadySelected = internalSelectedApps.some((a) => a.objectID === app.objectID);
@@ -318,7 +323,7 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
 
       setIsOpen(false);
     }
-  }, [authToken, apiBaseUrl, appAuthPath, multiSelect, internalSelectedApps, onAppSelected, onSelectionChange, preventDefault]);
+  }, [authToken, apiBaseUrl, appAuthPath, orgId, multiSelect, internalSelectedApps, onAppSelected, onSelectionChange, preventDefault]);
 
   // Handle keyboard navigation
   const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
@@ -615,7 +620,7 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
         const matchingAuths = authenticatedApps.filter(
           a => norm(a.app?.name || '') === norm(drawerApp.name)
         );
-        const drawerAuthUrl = `${apiBaseUrl}${appAuthPath}?app_id=${drawerApp.objectID}&auth=${authToken}&source=shuffle`;
+        const drawerAuthUrl = `${apiBaseUrl}${appAuthPath}?app_id=${drawerApp.objectID}&auth=${authToken}&source=shuffle${orgId ? `&org_id=${encodeURIComponent(orgId)}` : ''}`;
         return (
           <>
             <div className="singul-drawer-backdrop" onClick={() => setDrawerApp(null)} />

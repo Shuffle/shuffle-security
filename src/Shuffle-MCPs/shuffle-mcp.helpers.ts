@@ -96,7 +96,14 @@ export interface AppAuthentication {
 export interface ShuffleMCPProps {
   // Required
   authToken: string;
-  
+
+  /**
+   * Optional Shuffle organization ID. When provided, every API call this
+   * component makes (Shuffle backend + Singul gateway) will include an
+   * `Org-Id: <orgId>` header so the request is scoped to that org.
+   */
+  orgId?: string;
+
   // Search Input
   placeholder?: string;
   
