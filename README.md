@@ -19,13 +19,13 @@ Follow us on Twitter at [@shuffleio](https://twitter.com/shuffleio).
       <sub><a href="https://security.shuffler.io/incidents"><b>Handle incidents from any source</b></a><br/>One unified view for alerts, cases and tickets across every tool.</sub>
     </td>
     <td width="50%" align="center">
-      <a href="https://security.shuffler.io/automation"><img alt="Automation for Incidents" src="public/screenshots/automation-for-incidents.png" /></a><br/>
+      <a href="https://security.shuffler.io/automation"><img alt="Automation pipeline" src="https://github.com/user-attachments/assets/e79ae7af-0db8-4d89-be62-706c223b198a" /></a><br/>
       <sub><a href="https://security.shuffler.io/automation"><b>Be in control of the automation</b></a><br/>Visual ingest and forward pipelines you can shape end-to-end.</sub>
     </td>
   </tr>
   <tr>
     <td width="50%" align="center">
-      <a href="https://security.shuffler.io/monitors"><img alt="Host monitors" src="https://github.com/user-attachments/assets/2c0056c2-646b-431b-a78d-7a2673fd1a3b" /></a><br/>
+      <a href="https://security.shuffler.io/monitors"><img alt="Automation for Incidents" src="public/screenshots/automation-for-incidents.png" /></a><br/>
       <sub><a href="https://security.shuffler.io/monitors"><b>Set up host monitors</b></a><br/>For compliance, vulnerabilities and response across your fleet.</sub>
     </td>
     <td width="50%" align="center">
