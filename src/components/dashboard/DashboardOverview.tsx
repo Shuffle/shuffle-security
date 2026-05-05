@@ -253,23 +253,13 @@ const Panel = ({ title, action, children, delay = 0, accent }: {
     <Box sx={{
       position: 'relative',
       p: 2.5,
-      borderRadius: 2.5,
+      borderRadius: 2,
       backgroundColor: 'hsl(var(--card))',
       border: '1px solid hsl(var(--border))',
       height: '100%',
       display: 'flex',
       flexDirection: 'column',
       overflow: 'hidden',
-      ...(accent && {
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          top: 0, left: 0, right: 0,
-          height: 1,
-          background: `linear-gradient(90deg, transparent 5%, ${accent}, transparent 95%)`,
-          opacity: 0.7,
-        },
-      }),
     }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, position: 'relative' }}>
         <Typography sx={{
