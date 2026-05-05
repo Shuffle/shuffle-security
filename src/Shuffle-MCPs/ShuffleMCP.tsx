@@ -82,6 +82,7 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
           const response = await fetch(`${apiBaseUrl}${authPath}`, {
             headers: {
               'Authorization': `Bearer ${apiKey}`,
+              ...(orgId ? { 'Org-Id': orgId } : {}),
             },
           });
           if (response.ok) {
