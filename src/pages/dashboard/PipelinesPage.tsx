@@ -34,7 +34,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import StorageIcon from '@mui/icons-material/Storage';
 import { toast } from 'sonner';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
-import { getApiUrl, getAuthHeader, API_CONFIG } from '@/config/api';
+import { getApiUrl, getAuthHeader, API_CONFIG } from '@/Shuffle-MCPs/api';
 import { Link } from 'react-router-dom';
 import { askAI } from '@/services/ai';
 import WebhookStatusBanner from '@/components/detection/WebhookStatusBanner';

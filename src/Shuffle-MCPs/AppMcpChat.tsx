@@ -15,7 +15,7 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
+import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import {
   THREAT_INTEL_PATTERNS,
   EMAIL_APP_PATTERNS,

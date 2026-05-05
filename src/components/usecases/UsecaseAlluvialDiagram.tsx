@@ -20,7 +20,7 @@ import { Plus, Webhook } from 'lucide-react';
 import AppSearchDrawer from '@/Shuffle-MCPs/AppSearchDrawer';
 import { useAuth } from '@/context/AuthContext';
 import { useAppDetail } from '@/context/AppDetailContext';
-import { getApiUrl, getAuthHeader } from '@/config/api';
+import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { deduplicateAuthApps, backfillAppImages, type AuthAppEntry } from '@/lib/utils';
 import {
   SIEM_PATTERNS,

@@ -30,7 +30,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import { useDatastore } from '@/hooks/useDatastore';
 
-import { DATASTORE_CATEGORIES } from '@/services/datastore';
+import { DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
 
 const CATEGORY = DATASTORE_CATEGORIES.CUSTOM_FIELDS;
 

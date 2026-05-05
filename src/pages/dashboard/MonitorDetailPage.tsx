@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Laptop, ArrowLeft, RefreshCw, Loader2 } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
-import { getApiUrl, getAuthHeader } from '@/config/api';
+import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { useHostActions } from '@/hooks/useHostActions';
 import { useVulnerabilities } from '@/hooks/useVulnerabilities';
 import { HostActionPopover } from '@/components/monitors/HostActionPopover';

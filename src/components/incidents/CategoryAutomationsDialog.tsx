@@ -31,7 +31,7 @@ import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import SecurityIcon from '@mui/icons-material/Security';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { toast } from 'sonner';
-import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
+import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import DownloadIcon from '@mui/icons-material/Download';
 import PopupTextEditor from '@/components/shared/PopupTextEditor';
 import AppSearchDrawer from '@/Shuffle-MCPs/AppSearchDrawer';
@@ -39,7 +39,7 @@ import { useAuthenticatedApps } from '@/hooks/useAuthenticatedApps';
 import AddIcon from '@mui/icons-material/Add';
 import { Tooltip } from '@mui/material';
 
-import { CategoryAutomation } from '@/services/datastore';
+import { CategoryAutomation } from '@/Shuffle-MCPs/datastore';
 import { extractValidatedIngestionApps, ValidatedIngestionApp, findIngestTicketsWorkflow, extractWorkflowAppNames } from '@/lib/ingestionDetection';
 import { IngestionSourceButton } from '@/components/incidents/IngestionSourceButton';
 

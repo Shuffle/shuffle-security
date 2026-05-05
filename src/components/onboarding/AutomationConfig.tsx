@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
-import { IntegrationStatus } from '@/components/layout/IntegrationStatus';
-import { AppAuthCard, type AppAuthState, type ApiAuthEntry as AppAuthApiEntry } from '@/components/onboarding/AppAuthConfig';
+import { IntegrationStatus } from '@/Shuffle-MCPs/IntegrationStatus';
+import { AppAuthCard, type AppAuthState, type ApiAuthEntry as AppAuthApiEntry } from '@/Shuffle-MCPs/AppAuthConfig';
 import type { AlgoliaSearchApp } from '@/Shuffle-MCPs';
 import {
   Box,
@@ -45,7 +45,7 @@ import {
   type IngestionCategory,
 } from '@/lib/ingestionDetection';
 import shuffleLogo from '@/assets/shuffle-logo.png';
-import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
+import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { useThreatFeeds, DEFAULT_THREAT_FEEDS, ThreatFeed } from '@/hooks/useThreatFeeds';
 import { getAutomationLabels } from '@/config/usecases';
 import { useEnrichmentStatus } from '@/hooks/useEnrichmentStatus';

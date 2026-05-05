@@ -5,7 +5,7 @@ import {
   setDatastoreItem, 
   deleteDatastoreItem, 
   DATASTORE_CATEGORIES 
-} from '@/services/datastore';
+} from '@/Shuffle-MCPs/datastore';
 
 export interface TemplateTask {
   title: string;

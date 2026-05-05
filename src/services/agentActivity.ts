@@ -3,7 +3,7 @@
  * Fetches workflow execution data for the AI agent from the Shuffle API.
  */
 
-import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
+import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 
 export interface AgentRunResult {
   action?: {

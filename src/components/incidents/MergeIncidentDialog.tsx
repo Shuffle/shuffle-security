@@ -24,7 +24,7 @@ import MergeIcon from '@mui/icons-material/CallMerge';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import { getDatastoreByCategory, setDatastoreItem, DATASTORE_CATEGORIES } from '@/services/datastore';
+import { getDatastoreByCategory, setDatastoreItem, DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
 import { mapOCSFSeverity, mapOCSFStatus, Observable } from '@/config/ocsfIncidentSchema';
 import { severityColors, statusConfig } from '@/config/incidentConfig';
 import { toast } from 'sonner';
@@ -257,7 +257,7 @@ export const MergeIncidentDialog = ({
         : {};
       
       // Fetch current incident's raw data fresh
-      const { getDatastoreItem } = await import('@/services/datastore');
+      const { getDatastoreItem } = await import('@/Shuffle-MCPs/datastore');
       const currentResult = await getDatastoreItem(currentIncidentId, DATASTORE_CATEGORIES.INCIDENTS);
       const currentRaw = currentResult.item ? JSON.parse(currentResult.item.value) : {};
 

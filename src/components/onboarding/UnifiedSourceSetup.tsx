@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { ShuffleMCP } from '@/Shuffle-MCPs';
 import type { AlgoliaSearchApp, ShuffleMCPHandle } from '@/Shuffle-MCPs';
-import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
+import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { getIngestionCategory, type IngestionCategory } from '@/lib/ingestionDetection';
 
 /** Fire-and-forget activate call for a newly selected app */

@@ -41,7 +41,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { useDatastore } from '@/hooks/useDatastore';
 import { DEFAULT_IOC_TYPES, IOCType, IOC_CATEGORIES, IOCCategory, DEFAULT_ENABLED_IOCS, normalizeDefaultIOCType } from '@/hooks/useIOCTypes';
-import { DATASTORE_CATEGORIES } from '@/services/datastore';
+import { DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
 import { toast } from 'sonner';
 import ThreatIntelAutomationBanner from '@/components/incidents/ThreatIntelAutomationBanner';
 
@@ -91,7 +91,7 @@ const IOCTypesPage = () => {
         
         void (async () => {
           try {
-            const { setDatastoreItems } = await import('@/services/datastore');
+            const { setDatastoreItems } = await import('@/Shuffle-MCPs/datastore');
             const bulkItems = defaults.map(ioc => ({ key: ioc.name, value: ioc }));
             const result = await setDatastoreItems(bulkItems, CATEGORY);
             if (!result.success) throw new Error(result.error || 'Failed to save default IOC types');
@@ -146,7 +146,7 @@ const IOCTypesPage = () => {
 
     void (async () => {
       try {
-        const { setDatastoreItems, deleteDatastoreItems, getDatastoreByCategory } = await import('@/services/datastore');
+        const { setDatastoreItems, deleteDatastoreItems, getDatastoreByCategory } = await import('@/Shuffle-MCPs/datastore');
         const allKeys: string[] = [];
         let cursor: string | undefined;
         for (let i = 0; i < 50; i++) {
@@ -262,7 +262,7 @@ const IOCTypesPage = () => {
 
     void (async () => {
       try {
-        const { setDatastoreItems } = await import('@/services/datastore');
+        const { setDatastoreItems } = await import('@/Shuffle-MCPs/datastore');
         const result = await setDatastoreItems(updatedTypes.map(type => ({ key: type.name, value: type })), CATEGORY);
         if (!result.success) throw new Error(result.error || 'Failed to save IOC type changes');
       } catch (err) {

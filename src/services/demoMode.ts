@@ -9,8 +9,8 @@
  * safety-net scan for items tagged `metadata.extensions.custom_attributes.demo`.
  */
 
-import { setDatastoreItems, setDatastoreItem, getDatastoreItem, deleteDatastoreItem, DATASTORE_CATEGORIES, getDatastoreByCategory } from '@/services/datastore';
-import { getApiUrl, getAuthHeader } from '@/config/api';
+import { setDatastoreItems, setDatastoreItem, getDatastoreItem, deleteDatastoreItem, DATASTORE_CATEGORIES, getDatastoreByCategory } from '@/Shuffle-MCPs/datastore';
+import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { restoreOriginalIngestTicketsApps } from '@/services/demoLiveEnvironment';
 import { DEFAULT_THREAT_FEEDS, type ThreatFeed } from '@/hooks/useThreatFeeds';
 import {

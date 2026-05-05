@@ -22,7 +22,7 @@ import {
   getFileDownloadUrl, 
   formatFileSize 
 } from '@/services/files';
-import { getAuthHeader } from '@/config/api';
+import { getAuthHeader } from '@/Shuffle-MCPs/api';
 import { toast } from 'sonner';
 
 interface FileAttachment {

@@ -10,7 +10,7 @@
  * both the real "enable usecase" UX and demo mode automatically.
  */
 
-import { getApiUrl, getAuthHeader } from '@/config/api';
+import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 
 export interface GenerateWorkflowOptions {
   /** Workflow label (e.g. "Ingest Tickets", "Enable Threat feeds"). */

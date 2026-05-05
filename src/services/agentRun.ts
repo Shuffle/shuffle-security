@@ -4,7 +4,7 @@
  * and parsing the response into a usable format.
  */
 
-import { getApiUrl, getAuthHeader } from '@/config/api';
+import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 
 // ── Request types ──────────────────────────────────────────────────────────────
 

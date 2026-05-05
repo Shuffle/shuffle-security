@@ -5,7 +5,7 @@
  * Uses the correct Shuffle cache API endpoints.
  */
 
-import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
+import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 
 export interface DatastoreItem {
   key: string;

@@ -32,7 +32,7 @@ import { toast } from 'sonner';
 import { askAI } from '@/services/ai';
 import { deleteFile, getFileDownloadUrl, formatFileSize, ShuffleFile, createAndUploadFile } from '@/services/files';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
-import { getApiUrl, getAuthHeader, API_CONFIG } from '@/config/api';
+import { getApiUrl, getAuthHeader, API_CONFIG } from '@/Shuffle-MCPs/api';
 import { Link } from 'react-router-dom';
 import WebhookStatusBanner from '@/components/detection/WebhookStatusBanner';
 

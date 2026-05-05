@@ -11,7 +11,7 @@
  * only inserted when the user explicitly clicks "Reset to Defaults".
  */
 
-import { getDatastoreByCategory, DATASTORE_CATEGORIES } from '@/services/datastore';
+import { getDatastoreByCategory, DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
 import { seedDefaultIOCTypes } from '@/hooks/useIOCTypes';
 
 let _initialized = false;

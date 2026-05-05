@@ -8,7 +8,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { toast } from 'sonner';
 import { Download, Forward } from 'lucide-react';
-import { getDatastoreByCategory, DATASTORE_CATEGORIES } from '@/services/datastore';
+import { getDatastoreByCategory, DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
 import {
   Box,
   Typography,
@@ -28,12 +28,12 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { AppAuthCard } from '@/components/onboarding/AppAuthConfig';
-import AppMcpChat from '@/components/app/AppMcpChat';
-import ApiCallViewer from '@/components/shared/ApiCallViewer';
+import { AppAuthCard } from '@/Shuffle-MCPs/AppAuthConfig';
+import AppMcpChat from '@/Shuffle-MCPs/AppMcpChat';
+import ApiCallViewer from '@/Shuffle-MCPs/ApiCallViewer';
 import type { AlgoliaSearchApp } from './shuffle-mcp.helpers';
-import { useAppAuth } from '@/hooks/useAppAuth';
-import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
+import { useAppAuth } from '@/Shuffle-MCPs/useAppAuth';
+import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { useAuth } from '@/context/AuthContext';
 
 interface AppInfo {

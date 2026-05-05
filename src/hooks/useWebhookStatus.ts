@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useWorkflows } from './useWorkflows';
-import { getApiUrl, getAuthHeader } from '@/config/api';
+import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 
 export interface WebhookStatus {
   /** Whether the webhook workflow exists */

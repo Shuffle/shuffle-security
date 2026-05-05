@@ -3,7 +3,7 @@
  * Used for multi-tenant views where parent orgs can see child org data.
  */
 import { useState, useEffect, useCallback } from 'react';
-import { getApiUrl, getAuthHeader } from '@/config/api';
+import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 
 export interface SubOrg {
   id: string;

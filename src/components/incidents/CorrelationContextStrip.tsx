@@ -17,7 +17,7 @@
 import { useEffect, useState } from 'react';
 import { Box, Typography, Chip, CircularProgress, Tooltip } from '@mui/material';
 import ScheduleIcon from '@mui/icons-material/Schedule';
-import { getDatastoreItem } from '@/services/datastore';
+import { getDatastoreItem } from '@/Shuffle-MCPs/datastore';
 
 interface CorrelationContextStripProps {
   /** The other incident keys referenced by this correlation (current incident already filtered out). */

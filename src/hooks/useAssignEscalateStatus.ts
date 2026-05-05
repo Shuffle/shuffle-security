@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useWorkflows } from './useWorkflows';
-import { getApiUrl, getAuthHeader } from '@/config/api';
+import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { getAutomationLabels } from '@/config/usecases';
 
 export interface AssignEscalateStatus {

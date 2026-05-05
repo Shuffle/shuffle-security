@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { ShuffleMCP } from '@/Shuffle-MCPs';
 import type { AlgoliaSearchApp, ShuffleMCPHandle } from '@/Shuffle-MCPs';
-import { API_CONFIG } from '@/config/api';
+import { API_CONFIG } from '@/Shuffle-MCPs/api';
 
 // Top integration options based on popularity
 const popularTools = [

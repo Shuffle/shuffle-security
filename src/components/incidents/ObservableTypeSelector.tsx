@@ -16,7 +16,7 @@ import AddIcon from '@mui/icons-material/Add';
 import BuildIcon from '@mui/icons-material/Build';
 import { IOC_CATEGORIES, IOCType, IOCCategory } from '@/hooks/useIOCTypes';
 import { useDatastore } from '@/hooks/useDatastore';
-import { DATASTORE_CATEGORIES } from '@/services/datastore';
+import { DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
 
 interface ObservableTypeSelectorProps {
   value: string;

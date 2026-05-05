@@ -1,4 +1,4 @@
-import { getApiUrl, getAuthHeader } from '@/config/api';
+import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 
 export interface ShuffleFile {
   id: string;

@@ -19,7 +19,7 @@
  * lookups stay isolated from the active org's data.
  */
 
-import { getApiUrl, getAuthHeader } from '@/config/api';
+import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 
 export interface AuthenticatedAppRaw {
   id?: string;
