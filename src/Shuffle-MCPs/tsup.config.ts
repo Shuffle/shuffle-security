@@ -39,9 +39,13 @@ export default defineConfig({
     'react-router-dom',
     'react-router',
     'react-markdown',
+    'remark-gfm',
     /^remark-/,
     /^rehype-/,
   ],
+  // Also pass noExternal=false equivalent via esbuild to ensure
+  // these are truly skipped even when tsup regex handling varies:
+  esbuildPlugins: [],
   loader: {
     '.css': 'copy',
     '.png': 'dataurl',
