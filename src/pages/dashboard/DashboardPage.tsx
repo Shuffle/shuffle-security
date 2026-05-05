@@ -529,8 +529,9 @@ const DashboardPage = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [filter, setFilter] = useState<'all' | 'approval' | 'question'>('all');
   const [hasRunningSensor, setHasRunningSensor] = useState<boolean | null>(null);
+  const [hasHostMonitor, setHasHostMonitor] = useState<boolean | null>(null);
 
-  // Check for running detection sensors
+  // Check for running detection sensors AND deployed host monitors
   useEffect(() => {
     const checkSensors = async () => {
       try {
@@ -545,11 +546,17 @@ const DashboardPage = () => {
             (e: any) => e.Type === 'onprem' && e.checkin > 0 && (now - e.checkin) < 300 && e.data_lake?.enabled === true
           );
           setHasRunningSensor(running);
+          const hasHost = Array.isArray(envs) && envs.some(
+            (e: any) => !e.archived && Array.isArray(e.sensor_hosts) && e.sensor_hosts.length > 0
+          );
+          setHasHostMonitor(hasHost);
         } else {
           setHasRunningSensor(false);
+          setHasHostMonitor(false);
         }
       } catch {
         setHasRunningSensor(false);
+        setHasHostMonitor(false);
       }
     };
     checkSensors();
@@ -661,7 +668,7 @@ const DashboardPage = () => {
         title: 'Set up host monitors',
         description: 'Deploy lightweight host monitors to check compliance, encryption, and posture.',
         icon: <Monitor size={20} />,
-        status: 'not-started',
+        status: hasHostMonitor === true ? 'complete' : 'not-started',
         ctaLabel: 'Set Up',
         ctaPath: '/monitors?add_host=true',
         priority: 1,
@@ -725,7 +732,7 @@ const DashboardPage = () => {
     steps.sort((a, b) => a.priority - b.priority);
 
     return steps;
-  }, [authenticatedApps, workflows, hasRunningSensor]);
+  }, [authenticatedApps, workflows, hasRunningSensor, hasHostMonitor]);
 
   const handleIgnoreStep = (id: string) => {
     const next = [...ignoredSteps, id];
