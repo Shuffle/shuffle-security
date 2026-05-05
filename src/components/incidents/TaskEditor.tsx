@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import AgentIcon from '@/components/agent/AgentIcon';
+import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
 import {
   Box,
   Typography,

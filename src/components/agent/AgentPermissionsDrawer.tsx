@@ -34,7 +34,7 @@ import {
 } from 'lucide-react';
 
 import AgentActionDrawer from '@/components/agent/AgentActionDrawer';
-import AgentIcon from '@/components/agent/AgentIcon';
+import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
 import LocalLLMConfig from '@/components/agent/LocalLLMConfig';
 import PermissionsPanel from '@/components/agent/PermissionsPanel';
 import AddIcon from '@mui/icons-material/Add';

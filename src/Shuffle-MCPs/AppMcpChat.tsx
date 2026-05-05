@@ -7,7 +7,7 @@ import {
   Chip,
   InputBase,
 } from '@mui/material';
-import AgentIcon from '@/components/agent/AgentIcon';
+import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
@@ -23,7 +23,7 @@ import {
   SIEM_PATTERNS,
   CASES_PATTERNS,
   COMMUNICATION_PATTERNS_NAMES,
-} from '@/lib/ingestionDetection';
+} from '@/Shuffle-MCPs/ingestionDetection';
 
 interface AppMcpChatProps {
   appName: string;

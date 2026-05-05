@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 import { toast } from 'sonner';
 import { setDatastoreItem, getDatastoreItem, DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
-import AgentIcon from '@/components/agent/AgentIcon';
+import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
 import { motion, AnimatePresence } from 'framer-motion';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';

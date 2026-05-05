@@ -14,7 +14,7 @@
  *      with a blank avatar.
  */
 import { useEffect, useState } from 'react';
-import { fetchAuthenticatedApps } from '@/services/authenticatedApps';
+import { fetchAuthenticatedApps } from '@/Shuffle-MCPs/authenticatedApps';
 
 /**
  * Sources that are NOT real integrations and therefore must not trigger any

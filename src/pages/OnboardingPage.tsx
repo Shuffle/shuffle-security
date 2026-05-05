@@ -20,8 +20,8 @@ import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { setDatastoreItem, getDatastoreItem } from '@/Shuffle-MCPs/datastore';
 import {
   isEmailApp, isIngestionApp, isThreatIntelApp,
-} from '@/lib/ingestionDetection';
-import { findIngestTicketsWorkflow, findForwardTicketsWorkflow, extractWorkflowAppNames } from '@/lib/ingestionDetection';
+} from '@/Shuffle-MCPs/ingestionDetection';
+import { findIngestTicketsWorkflow, findForwardTicketsWorkflow, extractWorkflowAppNames } from '@/Shuffle-MCPs/ingestionDetection';
 import { trackOnboardingStep, trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
 import { refreshAllIntegrationStatus } from '@/Shuffle-MCPs/IntegrationStatus';
 

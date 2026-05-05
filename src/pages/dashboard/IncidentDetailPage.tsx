@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef, forwardRef } from 'react';
 import DOMPurify from 'dompurify';
-import AgentIcon from '@/components/agent/AgentIcon';
+import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useEntityLabel, useTaskStatuses, useEntityText } from '@/hooks/useEntityLabel';
 import {
@@ -87,7 +87,7 @@ import { CorrelationRow, getEffectiveCorrelationCount, filterMeaningfulCorrelati
 import CorrelationContextStrip from '@/components/incidents/CorrelationContextStrip';
 import { IocDetailsCard } from '@/components/incidents/IocDetailsCard';
 import { useAuth } from '@/context/AuthContext';
-import { useAppDetail } from '@/context/AppDetailContext';
+import { useAppDetail } from '@/Shuffle-MCPs/AppDetailContext';
 import { useDemo } from '@/context/DemoContext';
 import { forceCreateSingleDemoIncidentReturningKey } from '@/services/demoMode';
 import { DATASTORE_CATEGORIES, getDatastoreItem, getDatastoreItemPublic, setDatastoreItem, getDatastoreByCategory } from '@/Shuffle-MCPs/datastore';

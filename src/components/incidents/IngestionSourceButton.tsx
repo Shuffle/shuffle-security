@@ -4,8 +4,8 @@ import BlockIcon from '@mui/icons-material/Block';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import DownloadIcon from '@mui/icons-material/Download';
-import { ValidatedIngestionApp } from '@/lib/ingestionDetection';
-import { useAppDetail } from '@/context/AppDetailContext';
+import { ValidatedIngestionApp } from '@/Shuffle-MCPs/ingestionDetection';
+import { useAppDetail } from '@/Shuffle-MCPs/AppDetailContext';
 
 interface IngestionSourceButtonProps {
   app: ValidatedIngestionApp;

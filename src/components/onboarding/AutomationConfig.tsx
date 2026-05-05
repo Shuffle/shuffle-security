@@ -43,7 +43,7 @@ import {
   isEmailApp, isThreatIntelApp, getIngestionCategory,
   normalizeAppName, extractValidatedIngestionApps,
   type IngestionCategory,
-} from '@/lib/ingestionDetection';
+} from '@/Shuffle-MCPs/ingestionDetection';
 import shuffleLogo from '@/assets/shuffle-logo.png';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { useThreatFeeds, DEFAULT_THREAT_FEEDS, ThreatFeed } from '@/hooks/useThreatFeeds';

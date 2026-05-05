@@ -11,7 +11,7 @@ import { Shield, Plus, RefreshCw, Search, Zap, ArrowRight, Wrench, Sparkles, Ale
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useVulnerabilities, Vulnerability, VulnSeverity, VulnCategory } from '@/hooks/useVulnerabilities';
 import { useAppAuth } from '@/Shuffle-MCPs/useAppAuth';
-import { isVulnScannerApp } from '@/lib/ingestionDetection';
+import { isVulnScannerApp } from '@/Shuffle-MCPs/ingestionDetection';
 import { askAI } from '@/services/ai';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';

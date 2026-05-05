@@ -50,7 +50,7 @@ import { getTimeAgo } from '@/components/agent/AgentRunHeader';
 import { useEntityPreference } from '@/hooks/useEntityLabel';
 import { useAppAuth } from '@/Shuffle-MCPs/useAppAuth';
 import { useWorkflows } from '@/hooks/useWorkflows';
-import { findIngestTicketsWorkflow } from '@/lib/ingestionDetection';
+import { findIngestTicketsWorkflow } from '@/Shuffle-MCPs/ingestionDetection';
 import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { toast } from 'sonner';
 import { DemoModeCard } from '@/components/demo/DemoModeCard';

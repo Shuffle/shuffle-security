@@ -34,7 +34,7 @@ import { getAutomationLabels } from '@/config/usecases';
 import {
   findIngestTicketsWorkflow,
   extractWorkflowAppNames,
-} from '@/lib/ingestionDetection';
+} from '@/Shuffle-MCPs/ingestionDetection';
 import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
 import { getDatastoreByCategory, setDatastoreItems, DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
 // Canonical seeders + workflow generator — SAME functions used by the

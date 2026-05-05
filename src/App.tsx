@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { ThemeProvider as MuiThemeProvider, CssBaseline, Box } from '@mui/material';
 import { Navigate } from 'react-router-dom';
-import { AppDetailProvider } from '@/context/AppDetailContext';
+import { AppDetailProvider } from '@/Shuffle-MCPs/AppDetailContext';
 import { trackReferralParams, initAnalytics } from '@/lib/analytics';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
