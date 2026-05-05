@@ -1,4 +1,4 @@
-import { useState, useEffect, type ReactNode } from 'react';
+import { useState, useEffect, useRef, type ReactNode } from 'react';
 import {
   Box,
   Typography,
@@ -9,10 +9,13 @@ import {
   Collapse,
   IconButton,
   Tooltip,
+  Popover,
+  Avatar,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import {
   ShuffleMCP,
   AppSearchDrawer,
@@ -25,7 +28,7 @@ import {
 import { LandingNavbar } from '@/components/landing/LandingNavbar';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { API_CONFIG } from '@/Shuffle-MCPs/api';
-import { Box as MuiBox, TextField, Skeleton } from '@mui/material';
+import { Box as MuiBox, Skeleton } from '@mui/material';
 
 /**
  * Demo page for the Shuffle-MCPs library.
@@ -235,20 +238,81 @@ function DemoSection({
 
 /** Tiny shared input + lookup wrapper used by the three section demos below. */
 function AppNamePicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const lookup = useAppLookup(value);
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const open = Boolean(anchorEl);
+
   return (
     <MuiBox sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
       <Typography variant="body2" color="text.secondary">App name:</Typography>
-      <TextField
+      <Button
+        ref={buttonRef}
+        onClick={() => setAnchorEl(buttonRef.current)}
+        variant="outlined"
         size="small"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="e.g. Gmail, Slack, VirusTotal"
-        sx={{ width: 240 }}
-      />
+        endIcon={<KeyboardArrowDownIcon />}
+        sx={{
+          textTransform: 'none',
+          color: 'hsl(var(--foreground))',
+          borderColor: 'hsl(var(--border))',
+          backgroundColor: 'hsl(var(--input))',
+          minWidth: 240,
+          height: 36,
+          justifyContent: 'space-between',
+          '&:hover': { borderColor: 'hsl(var(--primary))', backgroundColor: 'hsl(var(--input))' },
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, overflow: 'hidden' }}>
+          {lookup.image && (
+            <Avatar
+              src={lookup.image}
+              alt={value}
+              variant="rounded"
+              sx={{ width: 18, height: 18, backgroundColor: 'transparent' }}
+            />
+          )}
+          <Typography sx={{ fontSize: '0.85rem', fontWeight: 500 }} noWrap>
+            {value || 'Select app…'}
+          </Typography>
+        </Box>
+      </Button>
+      <Popover
+        open={open}
+        anchorEl={anchorEl}
+        onClose={() => setAnchorEl(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+        slotProps={{
+          paper: {
+            sx: {
+              mt: 0.5,
+              width: 420,
+              p: 1.5,
+              backgroundColor: 'hsl(var(--card))',
+              border: '1px solid hsl(var(--border))',
+              borderRadius: 2,
+            },
+          },
+        }}
+      >
+        <ShuffleMCP
+          inline
+          layout="grid"
+          gridColumns={1}
+          apiKey={API_CONFIG.apiKey || undefined}
+          showCategories={false}
+          showDescription={false}
+          preventDefault
+          onAppSelected={(detail) => {
+            onChange(detail.app.name);
+            setAnchorEl(null);
+          }}
+          customStyles={{ resultsContainer: { maxHeight: 320 } }}
+        />
+      </Popover>
     </MuiBox>
   );
 }
-
 function AuthSectionDemo({ appName }: { appName: string }) {
   const lookup = useAppLookup(appName);
   const [open, setOpen] = useState(true);
