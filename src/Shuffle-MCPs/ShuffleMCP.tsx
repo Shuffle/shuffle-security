@@ -7,6 +7,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, useImperativeHandle } from 'react';
 import { algoliasearch, SearchClient } from 'algoliasearch';
 import type { AlgoliaSearchApp, AppSelectedEvent, ShuffleMCPProps, AppAuthentication } from './shuffle-mcp.helpers';
+import SingulDrawer from './SingulDrawer';
 import './shuffle-mcp.css';
 
 const DEFAULT_ALGOLIA_APP_ID = 'JNSS5CFDZZ';
