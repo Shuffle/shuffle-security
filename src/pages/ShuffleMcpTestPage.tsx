@@ -76,7 +76,51 @@ const [appName, setAppName] = useState<string | null>(null);
   />
 </>`;
 
-function CodeBlock({ code }: { code: string }) {
+const SNIPPET_AUTH_SECTION = `import { useState } from 'react';
+import { AppAuthSection, useAppLookup } from '@shuffleio/shuffle-mcps';
+
+// Pass any app name — the hook resolves icon, id, categories, auth entries.
+const lookup = useAppLookup('Gmail');
+const [open, setOpen] = useState(true);
+
+<AppAuthSection
+  displayName={lookup.displayName}
+  algoliaApp={lookup.algoliaApp}
+  resolvedAlgoliaId={lookup.algoliaId}
+  authState={lookup.authState}
+  expanded={open}
+  onToggle={() => setOpen(v => !v)}
+  authCount={lookup.authCount}
+  matchingEntries={lookup.matchingEntries}
+  onAuthChange={lookup.handleAuthChange}
+  onTestConnection={lookup.handleTestConnection}
+  onSaveAuth={lookup.handleSaveAuth}
+  onRefreshAuth={lookup.refreshAuth}
+/>`;
+
+const SNIPPET_TRY_MCP = `import { TryMcpSection, useAppLookup } from '@shuffleio/shuffle-mcps';
+
+const lookup = useAppLookup('Slack');
+
+<TryMcpSection
+  appName="Slack"
+  appIcon={lookup.image}
+  appId={lookup.algoliaId || 'Slack'}
+  categories={lookup.categories}
+/>`;
+
+const SNIPPET_TRY_ACTIONS = `import { SingulActionsPreview, useAppLookup } from '@shuffleio/shuffle-mcps';
+
+const lookup = useAppLookup('VirusTotal');
+
+// All actions across the default categories, sorted so the app's
+// matching category appears first and is auto-selected.
+<SingulActionsPreview
+  appName="VirusTotal"
+  categories={lookup.categories}
+/>`;
+
+
   const [copied, setCopied] = useState(false);
   const handleCopy = async () => {
     try {
