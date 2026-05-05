@@ -12,7 +12,9 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  # Pinned so the published image always matches docker-compose.yml,
+  # regardless of the GitHub org / repo casing.
+  IMAGE_NAME: shuffle/shuffle-security
 
 jobs:
   build:
