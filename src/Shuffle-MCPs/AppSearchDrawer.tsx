@@ -173,9 +173,9 @@ export default function AppSearchDrawer({
         anchor={anchor}
         open={open && detailAppName === null}
         onClose={handleClose}
-        sx={{ zIndex: 9999 }}
-        PaperProps={{
-          sx: {
+        sx={{
+          zIndex: 9999,
+          '& .MuiDrawer-paper': {
             width,
             maxWidth: '100vw',
             background: 'linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%)',

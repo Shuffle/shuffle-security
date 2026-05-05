@@ -8,7 +8,6 @@ import {
   CircularProgress,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { Link } from 'react-router-dom';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { fetchAuthenticatedApps } from '@/Shuffle-MCPs/authenticatedApps';
 import { deduplicateAuthApps, backfillAppImages, type AuthAppEntry } from '@/Shuffle-MCPs/auth-utils';
@@ -449,8 +448,8 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
               ) : (
                 <IconButton
                   size="small"
-                  component={Link}
-                  to="/onboarding"
+                  component="a"
+                  href="/onboarding"
                   sx={{ 
                     width: 26,
                     height: 26,

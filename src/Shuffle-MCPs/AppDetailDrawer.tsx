@@ -27,12 +27,11 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
 import { AppAuthCard } from '@/Shuffle-MCPs/AppAuthConfig';
 import AppMcpChat from '@/Shuffle-MCPs/AppMcpChat';
 import ApiCallViewer from '@/Shuffle-MCPs/ApiCallViewer';
@@ -398,8 +397,8 @@ export default function AppDetailDrawer({
       anchor={anchor}
       open={open}
       onClose={handleClose}
-      PaperProps={{
-        sx: {
+      sx={{
+        '& .MuiDrawer-paper': {
           width,
           maxWidth: '100vw',
           background: 'linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%)',
@@ -429,8 +428,8 @@ export default function AppDetailDrawer({
           </Typography>
         </Box>
         <IconButton
-          component={Link}
-          to={`/apps/${encodeURIComponent(appName || '')}`}
+          component="a"
+          href={`/apps/${encodeURIComponent(appName || '')}`}
           size="small"
           sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--foreground))' } }}
         >

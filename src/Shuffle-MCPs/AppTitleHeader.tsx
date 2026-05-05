@@ -9,7 +9,7 @@
 
 import { Box, Typography, Avatar, Chip, Button } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import { motion } from 'framer-motion';
 
 export interface AppTitleHeaderProps {
