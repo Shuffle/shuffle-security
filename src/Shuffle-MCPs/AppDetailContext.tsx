@@ -34,3 +34,8 @@ export const useAppDetail = () => {
   }
   return context;
 };
+
+/** Safe variant: returns null if no provider is mounted. Useful for components used both inside and outside the dashboard. */
+export const useAppDetailOptional = () => {
+  return useContext(AppDetailContext) ?? null;
+};

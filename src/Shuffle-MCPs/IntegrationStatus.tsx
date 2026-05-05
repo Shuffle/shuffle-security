@@ -12,7 +12,7 @@ import { Link } from 'react-router-dom';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { fetchAuthenticatedApps } from '@/Shuffle-MCPs/authenticatedApps';
 import { deduplicateAuthApps, backfillAppImages, type AuthAppEntry } from '@/Shuffle-MCPs/auth-utils';
-import { useAppDetail } from '@/Shuffle-MCPs/AppDetailContext';
+import { useAppDetailOptional } from '@/Shuffle-MCPs/AppDetailContext';
 import { SIEM_PATTERNS, CASES_PATTERNS, EDR_PATTERNS, EMAIL_APP_PATTERNS } from '@/Shuffle-MCPs/ingestionDetection';
 
 interface Integration {
@@ -72,7 +72,7 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
   const [expanded, setExpanded] = useState(false);
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const appDetail = useAppDetail();
+  const appDetail = useAppDetailOptional();
 
   // Apply filter if provided (case-insensitive name match)
   const integrations = filterApps
@@ -292,8 +292,8 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
                 >
                   {/* Icon — rendered as link only when not in disable mode */}
                   <Box
-                    onClick={!onDisable ? () => appDetail.openApp(integration.name) : undefined}
-                    sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', cursor: !onDisable ? 'pointer' : 'default' }}
+                    onClick={!onDisable && appDetail ? () => appDetail.openApp(integration.name) : undefined}
+                    sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', cursor: !onDisable && appDetail ? 'pointer' : 'default' }}
                   >
                     {integration.icon && !failedImages.has(integration.id) ? (
                       <Box
